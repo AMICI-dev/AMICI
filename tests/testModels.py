@@ -58,7 +58,8 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     
                     if edata and self.solver.getSensitivityMethod() and self.solver.getSensitivityOrder():
                         if not modelName.startswith('model_neuron'):
-                            checkGradient(self.model, self.solver, edata)
+                            if(self.solver.getSensitivityOrder() and len(self.model.getParameterList())):
+                                checkDerivatives(self.model, self.solver, edata)
 
                     if modelName == 'model_neuron_o2':
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'],rtol=1e-3)
@@ -66,7 +67,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
                         
 
-def checkGradient(model, solver, edata):
+def checkDerivatives(model, solver, edata):
     """Finite differences check for likelihood gradient
     
     Arguments:
@@ -93,7 +94,7 @@ def checkGradient(model, solver, edata):
         
         solver.setSensitivityOrder(old_sensitivity_order)
         model.setParameters(old_parameters)
-        
+
         res = np.sum(rdata[symbol])
         return res
     
@@ -119,6 +120,8 @@ def checkGradient(model, solver, edata):
 
         res = rdata['s%s' % symbol]
         if not isinstance(res, float):
+            if len(res.shape) == 2:
+                res = np.sum(res, axis=(0,))
             if len(res.shape) == 3:
                 res = np.sum(res, axis=(0, 2))
         return res
@@ -135,15 +138,22 @@ def checkGradient(model, solver, edata):
     leastsquares_applicable = solver.getSensitivityMethod() == amici.AMICI_SENSI_FSA
 
     if 'ssigmay' in rdata.keys():
-        if rdata['ssigmay'].any():
-            leastsquares_applicable = False
+        if rdata['ssigmay'] is not None:
+            if rdata['ssigmay'].any():
+                leastsquares_applicable = False
 
     if leastsquares_applicable:
         for ip in range(model.np()):
             plist = [ip]
             err_norm = check_grad(func, grad, p[plist], 'res', p, [ip])
             print('sres: p[%d]: |error|_2: %f' % (ip, err_norm))
-    
+
+        checkResults(rdata, 'FIM', np.dot(rdata['sres'].transpose(),rdata['sres']), 1e-8, 1e-4)
+
+
+
+
+
     '''
     print()
     for ip in range(model.np()):
@@ -202,8 +212,11 @@ def checkResults(rdata, field, expected, atol, rtol):
     '''
 
     result = rdata[field]
-    adev = abs(result-expected)
-    rdev = abs((result-expected))/(abs(expected)+rtol)
+    if type(result) is float:
+        result = np.array(result);
+
+    adev = abs(result - expected)
+    rdev = abs((result - expected)) / (abs(expected) + rtol)
 
     if np.any(np.isnan(expected)):
         if len(expected) > 1 :
