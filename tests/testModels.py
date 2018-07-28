@@ -149,6 +149,7 @@ def checkDerivatives(model, solver, edata):
             print('sres: p[%d]: |error|_2: %f' % (ip, err_norm))
 
         checkResults(rdata, 'FIM', np.dot(rdata['sres'].transpose(),rdata['sres']), 1e-8, 1e-4)
+        checkResults(rdata, 'sllh', -np.dot(rdata['res'].transpose(),rdata['sres']), 1e-8, 1e-4)
 
 
 
@@ -213,7 +214,11 @@ def checkResults(rdata, field, expected, atol, rtol):
 
     result = rdata[field]
     if type(result) is float:
-        result = np.array(result);
+        result = np.array(result)
+
+    #if field == 'sres':
+    #    result = result.transpose()
+
 
     adev = abs(result - expected)
     rdev = abs((result - expected)) / (abs(expected) + rtol)

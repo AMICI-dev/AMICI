@@ -1117,7 +1117,7 @@ void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
         if (isNaN(edata->my.at(iyt_true)))
             continue;
         for (int ip = 0; ip < nplist(); ++ip) {
-            rdata->sres.at(iyt_true + ip * rdata->nt * rdata->nytrue) =
+            rdata->sres.at(iyt_true * nplist() + ip) =
             rdata->sy.at(iy + rdata->ny*(ip + it*nplist()))/rdata->sigmay.at(iyt);
         }
     }
@@ -1132,8 +1132,8 @@ void Model::fFIM(const int it, ReturnData *rdata) {
         for (int ip = 0; ip < nplist(); ++ip) {
             for (int jp = 0; jp < nplist(); ++jp) {
                 rdata->FIM.at(ip + nplist() * jp) +=
-                rdata->sres.at(iyt_true + ip * rdata->nt * rdata->nytrue)
-                * rdata->sres.at(iyt_true + jp * rdata->nt * rdata->nytrue);
+                rdata->sres.at(iyt_true * nplist() + ip)
+                * rdata->sres.at(iyt_true * nplist() + jp);
             }
         }
     }

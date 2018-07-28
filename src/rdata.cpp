@@ -224,9 +224,9 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
             sllh.at(ip) *= pcoefficient.at(ip);
         
         if(!sres.empty())
-            for (int ip = 0; ip < nplist; ++ip)
-                for (int iyt = 0; iyt < nytrue*nt; ++iyt)
-                    sres.at(iyt + ip * nytrue * nt) *= pcoefficient.at(ip);
+            for (int iyt = 0; iyt < nytrue*nt; ++iyt)
+                for (int ip = 0; ip < nplist; ++ip)
+                    sres.at((iyt * nplist + ip)) *= pcoefficient.at(ip);
         
         if(!FIM.empty())
             for (int ip = 0; ip < nplist; ++ip)
