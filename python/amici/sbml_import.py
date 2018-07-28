@@ -247,15 +247,16 @@ class SbmlImporter:
         """
         num_warning = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
         num_error = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_ERROR)
-        if num_warning:
-            for iError in range(num_warning):
-                # we ignore any info messages for now
-                error = self.sbml_doc.getErrorWithSeverity(iError, sbml.LIBSBML_SEV_WARNING)
-                category = error.getCategoryAsString()
-                severity = error.getSeverityAsString()
-                error_message = error.getMessage()
-                print('libSBML ' + severity + ' (' + category + '): ' + error_message)
-        if num_error:
+        num_fatal = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_FATAL)
+        if num_warning + num_error + num_fatal:
+            for iError in range(0, self.sbml_doc.getNumErrors()):
+                error = self.sbml_doc.getError(iError)
+                if error.getSeverity() >= sbml.LIBSBML_SEV_WARNING: # we ignore any info messages for now
+                    category = error.getCategoryAsString()
+                    severity = error.getSeverityAsString()
+                    error_message = error.getMessage()
+                    print('libSBML ' + severity + ' (' + category + '): ' + error_message)
+        if num_error + num_fatal:
             raise SBMLException('SBML Document failed to load (see error messages above)')
 
 
