@@ -149,16 +149,16 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const 
         createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParametersPreequilibration",
                                       edata.fixedParameters.data(), edata.fixedParametersPreequilibration.size());
     
-    if (edata.my.size())
+    if (!edata.my.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.my.data(),
                                       edata.nt, edata.nytrue);
-    if (edata.sigmay.size())
+    if (!edata.sigmay.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Y", edata.sigmay.data(),
                                       edata.nt, edata.nytrue);
-    if (edata.mz.size())
+    if (!edata.mz.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Z", edata.mz.data(),
                                       edata.nmaxevent, edata.nztrue);
-    if (edata.sigmaz.size())
+    if (!edata.sigmaz.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Z", edata.sigmaz.data(),
                                       edata.nmaxevent, edata.nztrue);
     

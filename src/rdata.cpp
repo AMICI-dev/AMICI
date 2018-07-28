@@ -222,6 +222,16 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
 
         for (int ip = 0; ip < nplist; ++ip)
             sllh.at(ip) *= pcoefficient.at(ip);
+        
+        if(!sres.empty())
+            for (int ip = 0; ip < nplist; ++ip)
+                for (int iyt = 0; iyt < nytrue*nt; ++iyt)
+                    sres.at(iyt + ip * nytrue * nt) *= pcoefficient.at(ip);
+        
+        if(!FIM.empty())
+            for (int ip = 0; ip < nplist; ++ip)
+                for (int jp = 0; jp < nplist; ++jp)
+                    FIM.at(jp + ip * nplist) *= pcoefficient.at(ip)*pcoefficient.at(jp);
 
 #define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                               \
     if (s##QUANT.size())                                                        \
