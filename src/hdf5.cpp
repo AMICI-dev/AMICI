@@ -137,17 +137,17 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const 
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
     
-    if (edata.ts.size())
+    if (!edata.ts.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/ts",
                                       edata.ts.data(), edata.nt);
     
-    if (edata.fixedParameters.size())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParameters",
+    if (!edata.fixedParameters.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/condition",
                                       edata.fixedParameters.data(), edata.fixedParameters.size());
     
-    if (edata.fixedParametersPreequilibration.size())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParametersPreequilibration",
-                                      edata.fixedParameters.data(), edata.fixedParametersPreequilibration.size());
+    if (!edata.fixedParametersPreequilibration.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/conditionPreequilibration",
+                                      edata.fixedParametersPreequilibration.data(), edata.fixedParametersPreequilibration.size());
     
     if (!edata.my.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.my.data(),
