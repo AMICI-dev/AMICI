@@ -8,6 +8,7 @@
 namespace amici {
 
 class Model;
+class ReturnData;
 
 /** @brief ExpData carries all information about experimental or condition-specific data */
 class ExpData {
@@ -31,6 +32,25 @@ class ExpData {
      * @param nztrue
      * @param nt
      * @param nmaxevent
+     * @param ts
+     * @param my
+     * @param sigmay
+     * @param mz
+     * @param sigmaz
+     */
+    ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
+            std::vector<realtype> const& ts,
+            std::vector<realtype> const& my,
+            std::vector<realtype> const& sigmay,
+            std::vector<realtype> const& mz,
+            std::vector<realtype> const& sigmaz);
+    
+    /**
+     * @brief ExpData
+     * @param nytrue
+     * @param nztrue
+     * @param nt
+     * @param nmaxevent
      * @param my
      * @param sigmay
      * @param mz
@@ -45,23 +65,70 @@ class ExpData {
     /**
      * constructor that initializes with Model
      *
-     * @param model pointer to model specification object @type Model
+     * @param model pointer to model specification object
      */
     ExpData(const Model &model);
+    
+    /**
+     * constructor that initializes with returnData, adds
+     *
+     * @param rdata return data pointer with stored simulation results
+     * @param sigma_y scalar standard deviations for all observables
+     * @param sigma_z scalar standard deviations for all event observables
+     */
+    ExpData(const ReturnData &rdata, realtype sigma_y, realtype sigma_z);
+    
+    /**
+     * constructor that initializes with returnData, adds
+     *
+     * @param rdata return data pointer with stored simulation results
+     * @param sigma_y vector of standard deviations for every observable
+     * @param sigma_z vector of standard deviations for every event observable
+     */
+    ExpData(const ReturnData &rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z);
 
     /**
      * @brief Copy constructor
      * @param other object to copy from
      */
     ExpData (const ExpData &other);
-
+    
+    /**
+     * set function that copies data from input to ExpData::ts
+     *
+     * @param timepoints timepoints
+     */
+    void setTimepoints(const double *timepoints);
+    /**
+     * set function that copies data from input to ExpData::my
+     *
+     * @param observedData observed data
+     */
     void setObservedData(const double *observedData);
+    /**
+     * set function that copies data from input to ExpData::sigmay
+     *
+     * @param observedDataStdDev standard deviation of observed data
+     */
     void setObservedDataStdDev(const double *observedDataStdDev);
+    /**
+     * set function that copies data from input to ExpData::mz
+     *
+     * @param observedEvents observed event data
+     */
     void setObservedEvents(const double *observedEvents);
+    /**
+     * set function that copies data from input to ExpData::sigmaz
+     *
+     * @param observedEventsStdDev standard deviation of observed event data
+     */
     void setObservedEventsStdDev(const double *observedEventsStdDev);
 
     ~ExpData();
 
+    /** observation timepoints (dimension: nt) */
+    std::vector<realtype> ts;
+    
     /** observed data (dimension: nt x nytrue, row-major) */
     std::vector<realtype> my;
     /** standard deviation of observed data (dimension: nt x nytrue, row-major) */

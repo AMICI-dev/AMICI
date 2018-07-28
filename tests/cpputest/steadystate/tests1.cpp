@@ -65,6 +65,17 @@ TEST(groupSteadystate, testCloneModel) {
     CHECK_TRUE(*modelA == *modelB);
 }
 
+TEST(groupSteadystate, testExpDataFromReturnData) {
+    auto model = getModel();
+    auto solver = model->getSolver();
+    
+    amici::hdf5::readModelDataFromHDF5(NEW_OPTION_FILE, *model, "/model_steadystate/nosensi/options");
+    amici::hdf5::readSolverSettingsFromHDF5(NEW_OPTION_FILE, *solver, "/model_steadystate/nosensi/options");
+    
+    auto rdata = runAmiciSimulation(*solver, nullptr, *model);
+    auto edata = amici::ExpData(*rdata, 0.1, 0.1);
+    runAmiciSimulation(*solver, &edata, *model);
+}
 
 TEST(groupSteadystate, testReuseSolver) {
     auto model = getModel();
