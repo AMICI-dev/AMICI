@@ -130,6 +130,40 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     return edata;
 }
 
+
+void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const std::string &hdf5Location)
+{
+        
+    if(!locationExists(file, hdf5Location))
+        createGroup(file, hdf5Location);
+    
+    if (edata.ts.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/ts",
+                                      edata.ts.data(), edata.nt);
+    
+    if (edata.fixedParameters.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParameters",
+                                      edata.fixedParameters.data(), edata.fixedParameters.size());
+    
+    if (edata.fixedParametersPreequilibration.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParametersPreequilibration",
+                                      edata.fixedParameters.data(), edata.fixedParametersPreequilibration.size());
+    
+    if (edata.my.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.my.data(),
+                                      edata.nt, edata.nytrue);
+    if (edata.sigmay.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Y", edata.sigmay.data(),
+                                      edata.nt, edata.nytrue);
+    if (edata.mz.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Z", edata.mz.data(),
+                                      edata.nmaxevent, edata.nztrue);
+    if (edata.sigmaz.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Z", edata.sigmaz.data(),
+                                      edata.nmaxevent, edata.nztrue);
+    
+}
+
 void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std::string &hdf5Location)
 {
 

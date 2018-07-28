@@ -101,7 +101,7 @@ class ReturnData {
      * nplist x ny, row-major) */
     std::vector<realtype> ssigmay;
     
-    /** observable (dimension: nt*ny) */
+    /** observable (dimension: nt*ny, row-major) */
     std::vector<realtype> res;
 
     /** parameter derivative of residual (dimension: nt*ny x nplist,

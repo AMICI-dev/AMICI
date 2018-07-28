@@ -69,15 +69,14 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     }
 
     x0.resize(nx, getNaN());
+    
+    res.resize(nt * model->nytrue, 0.0);
 
     llh = getNaN();
     chi2 = getNaN();
     if (sensi >= AMICI_SENSI_ORDER_FIRST){
         sllh.resize(nplist, getNaN());
         sx0.resize(nx * nplist, getNaN());
-        FIM.resize(nplist * nplist, 0.0);
-        res.resize(nt * model->nytrue, 0.0);
-        sres.resize(nt * model->nytrue * nplist, 0.0);
         
         if (sensi_meth == AMICI_SENSI_FSA || sensi >= AMICI_SENSI_ORDER_SECOND){
             // for second order we can fill in from the augmented states
@@ -85,6 +84,9 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
             sy.resize(nt * ny * nplist, 0.0);
             sz.resize(nmaxevent * nz * nplist, 0.0);
             srz.resize(nmaxevent * nz * nplist, 0.0);
+            
+            FIM.resize(nplist * nplist, 0.0);
+            sres.resize(nt * model->nytrue * nplist, 0.0);
         }
         
         ssigmay.resize(nt * model->ny * nplist, 0.0);

@@ -466,7 +466,6 @@ namespace amici {
         /** chi-squared function
          * @param it time index
          * @param rdata ReturnData instance to which result will be written
-         * @param edata ExpData instance containing observable data
          */
         void fchi2(const int it, ReturnData *rdata);
         
@@ -480,7 +479,6 @@ namespace amici {
         /** fisher information matrix function
          * @param it time index
          * @param rdata ReturnData instance to which result will be written
-         * @param edata ExpData instance containing observable data
          */
         void fFIM(const int it, ReturnData *rdata);
 

@@ -1084,51 +1084,56 @@ void Model::fdwdx(const realtype t, const N_Vector x) {
 }
 
 void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
-    if (edata && !rdata->res.empty()) {
-        for (int iy = 0; iy < nytrue; ++iy) {
-            int iyt_true = iy + it * edata->nytrue;
-            int iyt = iy + it * rdata->ny;
-            if (isNaN(edata->my.at(iyt_true)))
-                continue;
-            rdata->res.at(iyt_true) = (rdata->y.at(iyt) - edata->my.at(iyt_true))/rdata->sigmay.at(iyt);
-        }
+    if (!edata || rdata->res.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * edata->nytrue;
+        int iyt = iy + it * rdata->ny;
+        if (isNaN(edata->my.at(iyt_true)))
+            continue;
+        rdata->res.at(iyt_true) = (rdata->y.at(iyt) - edata->my.at(iyt_true))/rdata->sigmay.at(iyt);
     }
+
 }
     
 void Model::fchi2(const int it, ReturnData *rdata) {
-    if (!rdata->res.empty()) {
-        for (int iy = 0; iy < nytrue; ++iy) {
-            int iyt_true = iy + it * rdata->nytrue;
-            rdata->chi2 += pow(rdata->res.at(iyt_true), 2);
-        }
+    if (rdata->res.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * rdata->nytrue;
+        rdata->chi2 += pow(rdata->res.at(iyt_true), 2);
     }
 }
     
 void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
-    if (edata && !rdata->sres.empty()) {
-        for (int iy = 0; iy < nytrue; ++iy) {
-            int iyt_true = iy + it * edata->nytrue;
-            int iyt = iy + it * rdata->ny;
-            if (isNaN(edata->my.at(iyt_true)))
-                continue;
-            for (int ip = 0; ip < nplist(); ++ip) {
-                rdata->sres.at(iyt_true + ip * rdata->nt * rdata->nytrue) =
-                rdata->sy.at(iy + rdata->ny*(ip + it*nplist()))/rdata->sigmay.at(iyt);
-            }
+    if (!edata || rdata->sres.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * edata->nytrue;
+        int iyt = iy + it * rdata->ny;
+        if (isNaN(edata->my.at(iyt_true)))
+            continue;
+        for (int ip = 0; ip < nplist(); ++ip) {
+            rdata->sres.at(iyt_true + ip * rdata->nt * rdata->nytrue) =
+            rdata->sy.at(iy + rdata->ny*(ip + it*nplist()))/rdata->sigmay.at(iyt);
         }
     }
 }
     
 void Model::fFIM(const int it, ReturnData *rdata) {
-    if (!rdata->sres.empty()) {
-        for (int iy = 0; iy < nytrue; ++iy) {
-            int iyt_true = iy + it * rdata->nytrue;
-            for (int ip = 0; ip < nplist(); ++ip) {
-                for (int jp = 0; jp < nplist(); ++jp) {
-                    rdata->FIM.at(ip + nplist() * jp) +=
-                    rdata->sres.at(iyt_true + ip * rdata->nt * rdata->nytrue)
-                    * rdata->sres.at(iyt_true + jp * rdata->nt * rdata->nytrue);
-                }
+    if (rdata->sres.empty())
+        return;
+
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * rdata->nytrue;
+        for (int ip = 0; ip < nplist(); ++ip) {
+            for (int jp = 0; jp < nplist(); ++jp) {
+                rdata->FIM.at(ip + nplist() * jp) +=
+                rdata->sres.at(iyt_true + ip * rdata->nt * rdata->nytrue)
+                * rdata->sres.at(iyt_true + jp * rdata->nt * rdata->nytrue);
             }
         }
     }

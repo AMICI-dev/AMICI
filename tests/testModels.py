@@ -132,11 +132,7 @@ def checkGradient(model, solver, edata):
 
     rdata = amici.runAmiciSimulation(model, solver, edata)
 
-
-    if solver.getSensitivityMethod() == amici.AMICI_SENSI_FSA:
-        leastsquares_applicable = True
-    else:
-        leastsquares_applicable = False
+    leastsquares_applicable = solver.getSensitivityMethod() == amici.AMICI_SENSI_FSA
 
     if 'ssigmay' in rdata.keys():
         if rdata['ssigmay'].any():
