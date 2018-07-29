@@ -14,7 +14,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
     TestCase class for tests that were pregenerated using the the matlab code generation routines and cmake
     build routines
     
-    NOTE: requires having run scripts/buildTests.sh before to build the python modules for the test models
+    NOTE: requires having run `make python-tests` in /build/ before to build the python modules for the test models
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__), 'cpputest','expectedResults.h5')
@@ -58,15 +58,17 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     
                     if edata and self.solver.getSensitivityMethod() and self.solver.getSensitivityOrder():
                         if not modelName.startswith('model_neuron'):
-                            checkGradient(self.model, self.solver, edata)
+                            if(self.solver.getSensitivityOrder() and len(self.model.getParameterList())):
+                                checkDerivatives(self.model, self.solver, edata)
 
                     if modelName == 'model_neuron_o2':
-                        verifySimulationResults(rdata, expectedResults[subTest][case]['results'],rtol=1e-3)
+                        self.solver.setRelativeTolerance(1e-12)
+                        verifySimulationResults(rdata, expectedResults[subTest][case]['results'],atol=1e-6,rtol=1e-2)
                     else:
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
                         
 
-def checkGradient(model, solver, edata):
+def checkDerivatives(model, solver, edata):
     """Finite differences check for likelihood gradient
     
     Arguments:
@@ -93,7 +95,7 @@ def checkGradient(model, solver, edata):
         
         solver.setSensitivityOrder(old_sensitivity_order)
         model.setParameters(old_parameters)
-        
+
         res = np.sum(rdata[symbol])
         return res
     
@@ -119,6 +121,8 @@ def checkGradient(model, solver, edata):
 
         res = rdata['s%s' % symbol]
         if not isinstance(res, float):
+            if len(res.shape) == 2:
+                res = np.sum(res, axis=(0,))
             if len(res.shape) == 3:
                 res = np.sum(res, axis=(0, 2))
         return res
@@ -129,7 +133,29 @@ def checkGradient(model, solver, edata):
         plist = [ip]
         err_norm = check_grad(func, grad, p[plist], 'llh', p, [ip])
         print('sllh: p[%d]: |error|_2: %f' % (ip, err_norm))
-    
+
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+
+    leastsquares_applicable = solver.getSensitivityMethod() == amici.AMICI_SENSI_FSA
+
+    if 'ssigmay' in rdata.keys():
+        if rdata['ssigmay'] is not None:
+            if rdata['ssigmay'].any():
+                leastsquares_applicable = False
+
+    if leastsquares_applicable:
+        for ip in range(model.np()):
+            plist = [ip]
+            err_norm = check_grad(func, grad, p[plist], 'res', p, [ip])
+            print('sres: p[%d]: |error|_2: %f' % (ip, err_norm))
+
+        checkResults(rdata, 'FIM', np.dot(rdata['sres'].transpose(),rdata['sres']), 1e-8, 1e-4)
+        checkResults(rdata, 'sllh', -np.dot(rdata['res'].transpose(),rdata['sres']), 1e-8, 1e-4)
+
+
+
+
+
     '''
     print()
     for ip in range(model.np()):
@@ -188,8 +214,15 @@ def checkResults(rdata, field, expected, atol, rtol):
     '''
 
     result = rdata[field]
-    adev = abs(result-expected)
-    rdev = abs((result-expected))/(abs(expected)+rtol)
+    if type(result) is float:
+        result = np.array(result)
+
+    #if field == 'sres':
+    #    result = result.transpose()
+
+
+    adev = abs(result - expected)
+    rdev = abs((result - expected)) / (abs(expected) + rtol)
 
     if np.any(np.isnan(expected)):
         if len(expected) > 1 :
@@ -207,7 +240,13 @@ def checkResults(rdata, field, expected, atol, rtol):
         adev = adev[~np.isinf(expected)]
         rdev = rdev[~np.isinf(expected)]
 
-    assert np.all(np.logical_or(rdev <= rtol, adev <= atol))
+    if not np.all(np.logical_or(rdev <= rtol, adev <= atol)):
+        print('Failed to meet tolerances in ' + field + ':')
+        print('adev:')
+        print(adev[np.logical_and(rdev > rtol, adev > atol)])
+        print('rdev:')
+        print(rdev[np.logical_and(rdev > rtol, adev > atol)])
+        assert np.all(np.logical_or(rdev <= rtol, adev <= atol))
 
 
 
