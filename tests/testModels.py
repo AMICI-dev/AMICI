@@ -62,6 +62,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                                 checkDerivatives(self.model, self.solver, edata)
 
                     if modelName == 'model_neuron_o2':
+                        self.solver.setRelativeTolerance(1e-12)
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'],atol=1e-6,rtol=1e-3)
                     else:
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
