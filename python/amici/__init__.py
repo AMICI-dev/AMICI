@@ -88,7 +88,7 @@ def rdataToNumPyArrays(rdata):
     Raises:
         
     """
-    npReturnData = {}
+    npReturnData = {'ptr': rdata}
     fieldNames = ['t', 'x', 'x0', 'sx', 'sx0', 'y', 'sigmay', 'sy', 'ssigmay', 
                   'z', 'rz', 'sigmaz', 'sz', 'srz', 'ssigmaz', 'sllh', 's2llh', 
                   'J', 'xdot', 'status', 'llh', 'chi2', 'res', 'sres', 'FIM',
@@ -97,7 +97,7 @@ def rdataToNumPyArrays(rdata):
                   'order', 'numstepsB', 'numrhsevalsB', 'numerrtestfailsB', 'numnonlinsolvconvfailsB']
 
     for field in fieldNames:
-        npReturnData[field] = getFieldAsNumPyArray(rdata, field)
+        npReturnData[field] = getReturnDataFieldAsNumPyArray(rdata, field)
 
     return npReturnData
 
@@ -115,6 +115,7 @@ def edataToNumPyArrays(edata):
 
     """
     npExpData = {'ptr': edata}
+
     fieldNames = ['my', 'sigmay', 'mz', 'sigmaz','fixedParameters','fixedParametersPreequilibration']
 
     for field in fieldNames:
@@ -206,12 +207,34 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
                        }
     if field == 't':
         field = 'ts'
+        
+    return fieldAsNumpy(fieldDimensions, field, rdata)
 
-    attr = getattr(rdata, field)
-    if field in fieldDimensions.keys():
-        if len(attr) == 0:
-            return None
-        else:
-            return stdVec2ndarray(attr, *fieldDimensions[field]).copy()
-    else:
-        return float(attr)
+def getExpDataFieldAsNumPyArray(edata, field):
+    """ Convert ExpData field to numpy array with dimensions according to model dimensions in edata
+
+    Arguments:
+        edata: ExpData instance with experimental data
+        field: Name of field
+
+    Returns:
+        Field Data as numpy array with dimensions according to model dimensions in edata
+
+    Raises:
+
+    """
+
+    fieldDimensions = {# observables
+                       'my': [edata.nt, edata.nytrue],
+                       'sigmay': [edata.nt, edata.nytrue],
+
+                       # event observables
+                       'mz': [edata.nmaxevent, edata.nztrue],
+                       'sigmaz': [edata.nmaxevent, edata.nztrue],
+
+                       # fixed parameters
+                       'fixedParameters': [edata.fixedParameters.size()],
+                       'fixedParametersPreequilibration': [edata.fixedParametersPreequilibration.size()],
+                       }
+
+    return fieldAsNumpy(fieldDimensions, field, edata)

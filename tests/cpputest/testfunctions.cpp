@@ -60,8 +60,8 @@ void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdf
     std::string writePath = path + "/options";
     H5Ocopy(in.getId(), writePath.c_str(), out.getId(), writePath.c_str(), H5P_DEFAULT, H5P_DEFAULT);
     writePath = path + "/data";
-    if(hdf5::locationExists(in, writePath))
-        H5Ocopy(in.getId(), writePath.c_str(), out.getId(), writePath.c_str(), H5P_DEFAULT, H5P_DEFAULT);
+    if(edata)
+        hdf5::writeSimulationExpData(*edata, out, writePath);
 
     writePath = path + "/results";
     hdf5::writeReturnData(*rdata, out, writePath);
