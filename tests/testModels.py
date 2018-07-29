@@ -62,7 +62,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                                 checkDerivatives(self.model, self.solver, edata)
 
                     if modelName == 'model_neuron_o2':
-                        verifySimulationResults(rdata, expectedResults[subTest][case]['results'],rtol=1e-3)
+                        verifySimulationResults(rdata, expectedResults[subTest][case]['results'],atol=1e-6,rtol=1e-3)
                     else:
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
                         
@@ -241,8 +241,7 @@ def checkResults(rdata, field, expected, atol, rtol):
 
     if not np.all(np.logical_or(rdev <= rtol, adev <= atol)):
         print('Failed to meet tolerances in ' + field + ':')
-        print(adev)
-        print(rdev)
+        print('max adev: ' + str(adev.max()) + ', max atol: ' + str(rdev.max()))
         assert np.all(np.logical_or(rdev <= rtol, adev <= atol))
 
 
