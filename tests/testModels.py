@@ -241,7 +241,10 @@ def checkResults(rdata, field, expected, atol, rtol):
 
     if not np.all(np.logical_or(rdev <= rtol, adev <= atol)):
         print('Failed to meet tolerances in ' + field + ':')
-        print('max adev: ' + str(adev.max()) + ', max atol: ' + str(rdev.max()))
+        print('adev:')
+        print(adev[np.logical_or(rdev <= rtol, adev <= atol)])
+        print('rdev:')
+        print(rdev[np.logical_or(rdev <= rtol, adev <= atol)])
         assert np.all(np.logical_or(rdev <= rtol, adev <= atol))
 
 
