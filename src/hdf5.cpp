@@ -161,24 +161,24 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const 
                                       edata.ts.data(), edata.nt);
     
     if (!edata.fixedParameters.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParameters",
+        createAndWriteDouble1DDataset(file, hdf5Location + "/condition",
                                       edata.fixedParameters.data(), edata.fixedParameters.size());
     
     if (!edata.fixedParametersPreequilibration.empty())
-        createAndWriteDouble1DDataset(file, hdf5Location + "/fixedParametersPreequilibration",
-                                      edata.fixedParameters.data(), edata.fixedParametersPreequilibration.size());
+        createAndWriteDouble1DDataset(file, hdf5Location + "/conditionPreequilibration",
+                                      edata.fixedParametersPreequilibration.data(), edata.fixedParametersPreequilibration.size());
     
     if (!edata.my.empty())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/my", edata.my.data(),
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.my.data(),
                                       edata.nt, edata.nytrue);
     if (!edata.sigmay.empty())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmay", edata.sigmay.data(),
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Y", edata.sigmay.data(),
                                       edata.nt, edata.nytrue);
     if (!edata.mz.empty())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/mz", edata.mz.data(),
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Z", edata.mz.data(),
                                       edata.nmaxevent, edata.nztrue);
     if (!edata.sigmaz.empty())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/sigmaz", edata.sigmaz.data(),
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Z", edata.sigmaz.data(),
                                       edata.nmaxevent, edata.nztrue);
     
 }
@@ -201,6 +201,16 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
     if (!rdata.sllh.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
                                       rdata.sllh.data(), rdata.nplist);
+    
+    if (rdata.res.size())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/res",
+                                      rdata.res.data(), rdata.nt*rdata.nytrue);
+    if (rdata.sres.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/sres",
+                                      rdata.sres.data(), rdata.nt*rdata.nytrue, rdata.nplist);
+    if (rdata.FIM.size())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/FIM",
+                                      rdata.FIM.data(), rdata.nplist, rdata.nplist);
 
     if (!rdata.x0.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/x0", rdata.x0.data(), rdata.nx);

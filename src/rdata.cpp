@@ -49,8 +49,6 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     x.resize(nt * nx, 0.0);
     y.resize(nt * model->ny, 0.0);
     sigmay.resize(nt * model->ny, 0.0);
-    res.clear();
-    sres.clear();
 
     newton_numsteps.resize(2, 0);
     newton_numlinsteps.resize(newton_maxsteps*2, 0);
@@ -71,6 +69,8 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
     }
 
     x0.resize(nx, getNaN());
+    
+    res.resize(nt * model->nytrue, 0.0);
 
     llh = getNaN();
     chi2 = getNaN();
@@ -84,6 +84,9 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
             sy.resize(nt * ny * nplist, 0.0);
             sz.resize(nmaxevent * nz * nplist, 0.0);
             srz.resize(nmaxevent * nz * nplist, 0.0);
+            
+            FIM.resize(nplist * nplist, 0.0);
+            sres.resize(nt * model->nytrue * nplist, 0.0);
         }
         
         ssigmay.resize(nt * model->ny * nplist, 0.0);
@@ -219,6 +222,16 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
 
         for (int ip = 0; ip < nplist; ++ip)
             sllh.at(ip) *= pcoefficient.at(ip);
+        
+        if(!sres.empty())
+            for (int iyt = 0; iyt < nytrue*nt; ++iyt)
+                for (int ip = 0; ip < nplist; ++ip)
+                    sres.at((iyt * nplist + ip)) *= pcoefficient.at(ip);
+        
+        if(!FIM.empty())
+            for (int ip = 0; ip < nplist; ++ip)
+                for (int jp = 0; jp < nplist; ++jp)
+                    FIM.at(jp + ip * nplist) *= pcoefficient.at(ip)*pcoefficient.at(jp);
 
 #define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                               \
     if (s##QUANT.size())                                                        \

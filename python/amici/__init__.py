@@ -91,7 +91,7 @@ def rdataToNumPyArrays(rdata):
     npReturnData = {'ptr': rdata}
     fieldNames = ['t', 'x', 'x0', 'sx', 'sx0', 'y', 'sigmay', 'sy', 'ssigmay', 
                   'z', 'rz', 'sigmaz', 'sz', 'srz', 'ssigmaz', 'sllh', 's2llh', 
-                  'J', 'xdot', 'status', 'llh', 'chi2',
+                  'J', 'xdot', 'status', 'llh', 'chi2', 'res', 'sres', 'FIM',
                   'newton_numlinsteps', 'newton_numsteps', 
                   'numsteps', 'numrhsevals', 'numerrtestfails', 'numnonlinsolvconvfails', 
                   'order', 'numstepsB', 'numrhsevalsB', 'numerrtestfailsB', 'numnonlinsolvconvfailsB']
@@ -115,7 +115,8 @@ def edataToNumPyArrays(edata):
 
     """
     npExpData = {'ptr': edata}
-    fieldNames = ['my', 'sigmay', 'mz', 'sigmaz']
+
+    fieldNames = ['my', 'sigmay', 'mz', 'sigmaz','fixedParameters','fixedParametersPreequilibration']
 
     for field in fieldNames:
         npExpData[field] = getExpDataFieldAsNumPyArray(edata, field)
@@ -184,6 +185,10 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
                        # objective function
                        'sllh':  [rdata.nplist],
                        's2llh': [rdata.np, rdata.nplist],
+
+                       'res':   [rdata.nt * rdata.nytrue],
+                       'sres':  [rdata.nt * rdata.nytrue, rdata.nplist],
+                       'FIM':   [rdata.nplist, rdata.nplist],
                        
                        # diagnosis
                        'J':                       [rdata.nx, rdata.nx],
@@ -204,7 +209,6 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
         field = 'ts'
         
     return fieldAsNumpy(fieldDimensions, field, rdata)
-
 
 def getExpDataFieldAsNumPyArray(edata, field):
     """ Convert ExpData field to numpy array with dimensions according to model dimensions in edata
