@@ -1,4 +1,0 @@
-symengine
-python-libsbml
-h5py
-pkgconfig
