@@ -670,7 +670,7 @@ class SbmlImporter:
             else:
                 # yes sbml supports this but we wont, are you really expecting to be saved if you are trying to shoot
                 # yourself in the foot?
-                raise SBMLException('Ecountered currently unsupported element id ' + str(constant) + '!')
+                raise SBMLException('Encountered currently unsupported element id ' + str(constant) + '!')
 
 
     def getSparseSymbols(self,symbolName):
@@ -1310,7 +1310,7 @@ class SbmlImporter:
             C++ code for the specified expression
 
         Raises:
-            SBMLException: The specified expression containted an unsupported function
+            SBMLException: The specified expression contained an unsupported function
 
         """
         try:
@@ -1324,7 +1324,7 @@ def applyTemplate(sourceFile,targetFile,templateData):
     Arguments:
         sourceFile: relative or absolute path to template file
         targetFile: relative or absolute path to output file
-        templateData: dictionary with template keywords to substitute (key is template veriable without TemplateAmici.delimiter)
+        templateData: dictionary with template keywords to substitute (key is template variable without TemplateAmici.delimiter)
 
     Returns:
 
@@ -1375,7 +1375,7 @@ def getSymbolicDiagonal(matrix):
 def getRuleVars(rules):
     """Extract free symbols in SBML rule formulas.
 
-    Argumentss:
+    Arguments:
         rules: list of rules
 
     Returns:
