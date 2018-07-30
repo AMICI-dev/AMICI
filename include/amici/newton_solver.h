@@ -139,9 +139,9 @@ class NewtonSolverIterative : public NewtonSolver {
 
   private:
     /** number of tries  */
-    int newton_try;
+    int newton_try = 0;
     /** number of iterations  */
-    int i_newton;
+    int i_newton = 0;
     /** ???  */
     AmiVector ns_p;
     /** ???  */

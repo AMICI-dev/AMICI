@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cmath>
 #include <typeinfo>
+#include <utility>
 
 namespace amici {
 
@@ -45,7 +46,7 @@ void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
  * @param dJydx vector with values of state derivative of Jy
  * @param rdata pointer to return data instance
  */
-void Model::fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rdata) {
+void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata) {
 
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ x nx
@@ -161,7 +162,7 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
  * @param sx pointer to state sensitivities
  * @param rdata pointer to return data instance
  */
-void Model::fsJz(const int nroots, const std::vector<realtype> dJzdx, AmiVectorArray *sx, ReturnData *rdata) {
+void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVectorArray *sx, ReturnData *rdata) {
     // sJz           nJ x nplist()
     // dJzdp         nJ x nplist()
     // dJzdx         nmaxevent x nJ x nx
@@ -358,7 +359,7 @@ void Model::setParameterScale(AMICI_parameter_scaling pscale) {
     unscaleParameters(unscaledParameters.data());
 }
 
-void Model::setParameterScale(std::vector<AMICI_parameter_scaling> pscale) {
+void Model::setParameterScale(std::vector<AMICI_parameter_scaling> const& pscale) {
     this->pscale = pscale;
     unscaledParameters.resize(originalParameters.size());
     unscaleParameters(unscaledParameters.data());
@@ -448,18 +449,40 @@ int Model::plist(int pos) const{
 }
 
 
-Model::Model(const int nx, const int nxtrue, const int ny, const int nytrue,
-             const int nz, const int nztrue, const int ne, const int nJ,
-             const int nw, const int ndwdx, const int ndwdp, const int nnz,
-             const int ubw, const int lbw, const AMICI_o2mode o2mode,
-             const std::vector<realtype> p, const std::vector<realtype> k,
-             const std::vector<int> plist, const std::vector<realtype> idlist,
-             const std::vector<int> z2event)
-    : nx(nx), nxtrue(nxtrue), ny(ny), nytrue(nytrue),
-      nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
-      nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), o2mode(o2mode),
-      z2event(z2event),
-      idlist(idlist),
+Model::Model(const int nx,
+             const int nxtrue,
+             const int ny,
+             const int nytrue,
+             const int nz,
+             const int nztrue,
+             const int ne,
+             const int nJ,
+             const int nw,
+             const int ndwdx,
+             const int ndwdp,
+             const int nnz,
+             const int ubw,
+             const int lbw,
+             AMICI_o2mode o2mode,
+             const std::vector<realtype>& p,
+             std::vector<realtype>  k,
+             const std::vector<int>& plist,
+             std::vector<realtype>  idlist,
+             std::vector<int>  z2event)
+    : nx(nx), nxtrue(nxtrue),
+      ny(ny), nytrue(nytrue),
+      nz(nz), nztrue(nztrue),
+      ne(ne),
+      nw(nw),
+      ndwdx(ndwdx),
+      ndwdp(ndwdp),
+      nnz(nnz),
+      nJ(nJ),
+      ubw(ubw),
+      lbw(lbw),
+      o2mode(o2mode),
+      z2event(std::move(z2event)),
+      idlist(std::move(idlist)),
       sigmay(ny, 0.0),
       dsigmaydp(ny*plist.size(), 0.0),
       sigmaz(nz, 0.0),
@@ -493,7 +516,7 @@ Model::Model(const int nx, const int nxtrue, const int ny, const int nytrue,
       h(ne,0.0),
       unscaledParameters(p),
       originalParameters(p),
-      fixedParameters(k),
+      fixedParameters(std::move(k)),
       plist_(plist),
       pscale(std::vector<AMICI_parameter_scaling>(p.size(), AMICI_SCALING_NONE))
 {
@@ -523,8 +546,6 @@ Model::Model(const Model &other)
       deltaxB(other.deltaxB),
       deltaqB(other.deltaqB),
       dxdotdp(other.dxdotdp),
-
-      J(nullptr),
       my(other.my),
       mz(other.mz),
       dJydy(other.dJydy),
@@ -1139,7 +1160,7 @@ void Model::fFIM(const int it, ReturnData *rdata) {
     }
 }
     
-void Model::updateHeaviside(const std::vector<int> rootsfound) {
+void Model::updateHeaviside(const std::vector<int>& rootsfound) {
     for (int ie = 0; ie < ne; ie++) {
         h.at(ie) += rootsfound.at(ie);
     }

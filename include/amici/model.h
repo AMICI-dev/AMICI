@@ -73,9 +73,9 @@ namespace amici {
               const int ny, const int nytrue, const int nz, const int nztrue,
               const int ne, const int nJ, const int nw, const int ndwdx,
               const int ndwdp, const int nnz, const int ubw, const int lbw,
-              const AMICI_o2mode o2mode, const std::vector<realtype> p,
-              const std::vector<realtype> k, const std::vector<int> plist,
-              const std::vector<realtype> idlist, const std::vector<int> z2event);
+              amici::AMICI_o2mode o2mode, const std::vector<amici::realtype> &p,
+              std::vector<amici::realtype> k, const std::vector<int> &plist,
+              std::vector<amici::realtype> idlist, std::vector<int> z2event);
         
         /** Copy constructor
          * @param other object to copy from
@@ -261,14 +261,14 @@ namespace amici {
         
         void fsz_tf(const int *nroots, const int ie, ReturnData *rdata);
         
-        void fsJy(const int it, const std::vector<realtype> dJydx, ReturnData *rdata);
+        void fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata);
         
         void fdJydp(const int it, const ExpData *edata,
                    ReturnData *rdata);
         
         void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
         
-        void fsJz(const int nroots, const std::vector<realtype> dJzdx, AmiVectorArray *sx, ReturnData *rdata);
+        void fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVectorArray *sx, ReturnData *rdata);
         
         void fdJzdp(const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
@@ -334,7 +334,7 @@ namespace amici {
          * @brief setParameterScale
          * @param pscale
          */
-        void setParameterScale(std::vector<AMICI_parameter_scaling> pscale);
+        void setParameterScale(const std::vector<AMICI_parameter_scaling>& pscale);
 
         /**
          * @brief getParameters
@@ -490,7 +490,7 @@ namespace amici {
          it will give the right update to the heaviside variables (zero if no root
          was found)
          */
-        void updateHeaviside(const std::vector<int> rootsfound);
+        void updateHeaviside(const std::vector<int>& rootsfound);
         
         /**
          * updateHeavisideB updates the heaviside variables h on event occurences

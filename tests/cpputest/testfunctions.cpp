@@ -6,20 +6,21 @@
 #include <cxxabi.h>   // for __cxa_demangle
 #include <cstdio>
 #include <cmath>
+#include <utility>
 #include <unistd.h>
 
 extern std::unique_ptr<amici::Model> getModel();
 
 namespace amici {
 
-void simulateVerifyWrite(const std::string path)
+void simulateVerifyWrite(const std::string& path)
 {
     simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, path, TEST_ATOL, TEST_RTOL);
 }
 
 void simulateVerifyWrite(std::string path, double atol, double rtol)
 {
-    simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, path, atol, rtol);
+    simulateVerifyWrite(NEW_OPTION_FILE, HDFFILE, HDFFILEWRITE, std::move(path), atol, rtol);
 }
 
 void simulateWithDefaultOptions() {
@@ -30,7 +31,7 @@ void simulateWithDefaultOptions() {
     auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
 }
 
-void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdffileResults, const std::string hdffilewrite, std::string path, double atol, double rtol)
+void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& hdffileResults, const std::string& hdffilewrite, const std::string& path, double atol, double rtol)
 {
     using namespace amici;
     // read options from file
@@ -67,7 +68,7 @@ void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdf
     hdf5::writeReturnData(*rdata, out, writePath);
 
     // verify
-    verifyReturnData(hdffileResults.c_str(), resultPath.c_str(), rdata.get(), model.get(), atol, rtol);
+    verifyReturnData(hdffileResults, resultPath, rdata.get(), model.get(), atol, rtol);
     verifyReturnData(hdffilewrite, writePath, rdata.get(), model.get(), atol, rtol);
     //remove(hdffilewrite.c_str());
 }
@@ -279,14 +280,14 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
                             model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
             }
             
-            if(hdf5::locationExists(file, resultPath + "/ssigmay") || rdata->ssigmay.size()) {
+            if(hdf5::locationExists(file, resultPath + "/ssigmay") || !rdata->ssigmay.empty()) {
                 expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmay", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
                     checkEqualArray(&expected[ip * model->nt() * model->nytrue],
                             &rdata->ssigmay[ip * model->nt() * model->ny],
                             model->nt() * model->nytrue, atol, rtol, "ssigmay");
             }
-            if(hdf5::locationExists(file, resultPath + "/ssigmaz") || rdata->ssigmaz.size()) {
+            if(hdf5::locationExists(file, resultPath + "/ssigmaz") || !rdata->ssigmaz.empty()) {
                 if(model->nz>0) {
                     expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmaz", m, n, o);
                     for(int ip = 0; ip < model->nplist(); ++ip)
@@ -321,14 +322,14 @@ void printBacktrace(const int nMaxFrames) {
     for (int i = 0; i < nFrames; i++) {
         Dl_info info;
         if (dladdr(callstack[i], &info) && info.dli_sname) {
-            char *demangled = NULL;
+            char *demangled = nullptr;
             int status = -1;
             if (info.dli_sname[0] == '_')
-                demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
+                demangled = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
             snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n",
                      i, int(2 + sizeof(void*) * 2), callstack[i],
                      status == 0 ? demangled :
-                                   info.dli_sname == 0 ? symbols[i] : info.dli_sname,
+                                   info.dli_sname == nullptr ? symbols[i] : info.dli_sname,
                      (char *)callstack[i] - (char *)info.dli_saddr);
             free(demangled);
         } else {

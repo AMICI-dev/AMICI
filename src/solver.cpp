@@ -14,6 +14,7 @@
 
 namespace amici {
 
+extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 /**
  * @brief setupAMIs initialises the ami memory object
@@ -31,7 +32,7 @@ void Solver::setupAMI(ForwardProblem *fwd, Model *model) {
 
     /* Create solver memory object */
     ami_mem = AMICreate(lmm, iter);
-    if (ami_mem == NULL)
+    if (!ami_mem)
         throw AmiException("Failed to allocated solver memory!");
     try {
     /* Initialize AMIS solver*/
@@ -73,7 +74,7 @@ void Solver::setupAMI(ForwardProblem *fwd, Model *model) {
             
             auto plist = model->getParameterList();
             
-            if (sensi_meth == AMICI_SENSI_FSA && plist.size() > 0) {
+            if (sensi_meth == AMICI_SENSI_FSA && !plist.empty()) {
                 /* Set sensitivity analysis optional inputs */
                 auto par = model->getUnscaledParameters();
 
@@ -425,7 +426,6 @@ bool operator ==(const Solver &a, const Solver &b)
             return false;
 
     return (a.sensi_meth == b.sensi_meth)
-            && (a.sensi_meth == b.sensi_meth)
             && (a.interpType == b.interpType)
             && (a.lmm == b.lmm)
             && (a.iter == b.iter)

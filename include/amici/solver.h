@@ -17,8 +17,6 @@ class ForwardProblem;
 class BackwardProblem;
 class Model;
 class Solver;
-
-extern msgIdAndTxtFp warnMsgIdAndTxt;
 } // namespace amici
 
 

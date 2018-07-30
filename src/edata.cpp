@@ -6,6 +6,7 @@
 
 #include <cstring>
 #include <random>
+#include <utility>
 
 namespace amici {
 
@@ -22,22 +23,22 @@ ExpData::ExpData(int nytrue, int nztrue, int nt, int nmaxevent)
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
-                 const std::vector<realtype> &ts,
-                 const std::vector<realtype> &my,
-                 const std::vector<realtype> &sigmay,
-                 const std::vector<realtype> &mz,
-                 const std::vector<realtype> &sigmaz)
-    : ts(ts), my(my), sigmay(sigmay), mz(mz), sigmaz(sigmaz),
+                 std::vector<realtype> ts,
+                 std::vector<realtype> my,
+                 std::vector<realtype> sigmay,
+                 std::vector<realtype> mz,
+                 std::vector<realtype> sigmaz)
+    : ts(std::move(ts)), my(std::move(my)), sigmay(std::move(sigmay)), mz(std::move(mz)), sigmaz(std::move(sigmaz)),
       nytrue(nytrue), nztrue(nztrue), nt(nt), nmaxevent(nmaxevent)
 {
 }
     
 ExpData::ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
-                 const std::vector<realtype> &my,
-                 const std::vector<realtype> &sigmay,
-                 const std::vector<realtype> &mz,
-                 const std::vector<realtype> &sigmaz)
-: my(my), sigmay(sigmay), mz(mz), sigmaz(sigmaz),
+                 std::vector<realtype> my,
+                 std::vector<realtype> sigmay,
+                 std::vector<realtype> mz,
+                 std::vector<realtype> sigmaz)
+: my(std::move(my)), sigmay(std::move(sigmay)), mz(std::move(mz)), sigmaz(std::move(sigmaz)),
 nytrue(nytrue), nztrue(nztrue), nt(nt), nmaxevent(nmaxevent)
 {
 }
@@ -122,9 +123,6 @@ void ExpData::setObservedEventsStdDev(const double *observedEventsStdDev) {
     for (int imz = 0; imz < nztrue * nmaxevent; ++imz) {
         sigmaz.at(imz) = static_cast<const realtype>(observedEventsStdDev[imz]);
     }
-}
-
-ExpData::~ExpData() {
 }
 
 } // namespace amici

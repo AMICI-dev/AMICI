@@ -39,11 +39,11 @@ class ExpData {
      * @param sigmaz
      */
     ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
-            std::vector<realtype> const& ts,
-            std::vector<realtype> const& my,
-            std::vector<realtype> const& sigmay,
-            std::vector<realtype> const& mz,
-            std::vector<realtype> const& sigmaz);
+            std::vector<realtype> ts,
+            std::vector<realtype> my,
+            std::vector<realtype> sigmay,
+            std::vector<realtype> mz,
+            std::vector<realtype> sigmaz);
     
     /**
      * @brief ExpData
@@ -57,10 +57,10 @@ class ExpData {
      * @param sigmaz
      */
     ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
-            std::vector<realtype> const& my,
-            std::vector<realtype> const& sigmay,
-            std::vector<realtype> const& mz,
-            std::vector<realtype> const& sigmaz);
+            std::vector<realtype>  my,
+            std::vector<realtype>  sigmay,
+            std::vector<realtype>  mz,
+            std::vector<realtype>  sigmaz);
 
     /**
      * constructor that initializes with Model
@@ -93,6 +93,9 @@ class ExpData {
      */
     ExpData (const ExpData &other);
     
+
+    ~ExpData() = default;
+
     /**
      * set function that copies data from input to ExpData::ts
      *
@@ -123,8 +126,6 @@ class ExpData {
      * @param observedEventsStdDev standard deviation of observed event data
      */
     void setObservedEventsStdDev(const double *observedEventsStdDev);
-
-    ~ExpData();
 
     /** observation timepoints (dimension: nt) */
     std::vector<realtype> ts;
