@@ -121,7 +121,7 @@ void ReturnData::invalidate(const realtype t) {
             y.at(iy + ny * it) = getNaN();
     }
 
-    if (sx.size()) {
+    if (!sx.empty()) {
         for (int it = it_start; it < nt; it++){
             for (int ip = 0; ip < nplist; ip++) {
                 for (int ix = 0; ix < nx; ix++)
@@ -129,7 +129,7 @@ void ReturnData::invalidate(const realtype t) {
             }
         }
     }
-    if(sy.size()) {
+    if(!sy.empty()) {
         for (int it = it_start; it < nt; it++){
             for (int ip = 0; ip < nplist; ip++) {
                 for (int iy = 0; iy < ny; iy++)
@@ -234,7 +234,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
                     FIM.at(jp + ip * nplist) *= pcoefficient.at(ip)*pcoefficient.at(jp);
 
 #define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                               \
-    if (s##QUANT.size())                                                        \
+    if (!s##QUANT.empty())                                                        \
         for (int IND1 = 0; IND1 < N1T; ++IND1)                                  \
             for (int ip = 0; ip < nplist; ++ip)                                 \
                 for (int IND2 = 0; IND2 < N2; ++IND2) {                         \
@@ -252,7 +252,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     }
 
     if (o2mode == AMICI_O2MODE_FULL) { // full
-        if (s2llh.size() && sllh.size()) {
+        if (!s2llh.empty() && !sllh.empty()) {
             for (int ip = 0; ip < nplist; ++ip) {
                 for (int iJ = 1; iJ < nJ; ++iJ) {
                     s2llh[ip * nplist + (iJ - 1)] *=
@@ -265,7 +265,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
         }
 
 #define s2ChainRule(QUANT, IND1, N1T, N1, IND2, N2)                            \
-    if (s##QUANT.size())                                                       \
+    if (!s##QUANT.empty())                                                       \
         for (int ip = 0; ip < nplist; ++ip)                                    \
             for (int iJ = 1; iJ < nJ; ++iJ)                                    \
                 for (int IND1 = 0; IND1 < N1T; ++IND1)                         \
@@ -295,7 +295,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
         }
 
 #define s2vecChainRule(QUANT, IND1, N1T, N1, IND2, N2)                          \
-    if (s##QUANT.size())                                                        \
+    if (!s##QUANT.empty())                                                        \
         for (int ip = 0; ip < nplist; ++ip)                                     \
             for (int IND1 = 0; IND1 < N1T; ++IND1)                              \
                 for (int IND2 = 0; IND2 < N2; ++IND2) {                         \
@@ -314,7 +314,6 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
         s2vecChainRule(sigmaz, iz, nztrue, nz, ie, nmaxevent);
         s2vecChainRule(rz, iz, nztrue, nz, ie, nmaxevent);
     }
-    return;
 }
 
 void ReturnData::initializeObjectiveFunction()

@@ -104,12 +104,12 @@ public:
 
 void simulateWithDefaultOptions();
 
-void simulateVerifyWrite(const std::string path);
+void simulateVerifyWrite(const std::string& path);
 
 void simulateVerifyWrite(std::string path, double atol, double rtol);
 
-void simulateVerifyWrite(const std::string hdffileOptions, const std::string hdffileResults,
-                         const std::string hdffilewrite, std::string path,
+void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& hdffileResults,
+                         const std::string& hdffilewrite, const std::string& path,
                          double atol, double rtol);
 
 std::unique_ptr<ExpData> getTestExpData(const Model &model);

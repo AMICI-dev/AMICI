@@ -6,6 +6,7 @@
 
 #include <sundials/sundials_direct.h>
 #include <vector>
+#include <memory>
 
 namespace amici {
 

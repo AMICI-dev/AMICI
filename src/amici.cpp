@@ -67,14 +67,14 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     auto originalFixedParameters = model.getFixedParameters(); // to restore after simulation
     auto originalTimepoints = model.getTimepoints();
     if(edata) {
-        if(edata->fixedParameters.size()) {
+        if(!edata->fixedParameters.empty()) {
             // fixed parameter in model are superseded by those provided in edata
             if(edata->fixedParameters.size() != (unsigned) model.nk())
                 throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
                                    model.nk(), edata->fixedParameters.size());
             model.setFixedParameters(edata->fixedParameters);
         }
-        if(edata->ts.size()) {
+        if(!edata->ts.empty()) {
             // fixed parameter in model are superseded by those provided in edata
             model.setTimepoints(edata->ts);
         }
@@ -120,7 +120,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
  * @return void
  */
 void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) {
-    if(identifier != NULL && *identifier != '\0')
+    if(identifier && *identifier != '\0')
         fprintf(stderr, "[Error] %s: ", identifier);
     else
         fprintf(stderr, "[Error] ");
@@ -141,7 +141,7 @@ void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) {
  * @return void
  */
 void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
-    if(identifier != NULL && *identifier != '\0')
+    if(identifier && *identifier != '\0')
         printf("[Warning] %s: ", identifier);
     else
         printf("[Warning] ");

@@ -73,7 +73,7 @@ void createGroup(H5::H5File const& file,
                  std::string const& groupPath,
                  bool recursively) {
 
-    hid_t groupCreationPropertyList = H5P_DEFAULT;
+    auto groupCreationPropertyList = H5P_DEFAULT;
 
     if (recursively) {
         groupCreationPropertyList = H5Pcreate(H5P_LINK_CREATE);
@@ -202,13 +202,13 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
                                       rdata.sllh.data(), rdata.nplist);
     
-    if (rdata.res.size())
+    if (!rdata.res.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/res",
                                       rdata.res.data(), rdata.nt*rdata.nytrue);
-    if (rdata.sres.size())
+    if (!rdata.sres.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/sres",
                                       rdata.sres.data(), rdata.nt*rdata.nytrue, rdata.nplist);
-    if (rdata.FIM.size())
+    if (!rdata.FIM.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/FIM",
                                       rdata.FIM.data(), rdata.nplist, rdata.nplist);
 
@@ -561,7 +561,7 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
 
     if(locationExists(file, datasetPath + "/x0")) {
         auto x0 = getDoubleDataset1D(file, datasetPath + "/x0");
-        if(x0.size())
+        if(!x0.empty())
             model.setInitialStates(x0);
     }
 
@@ -569,7 +569,7 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
         hsize_t length0 = 0;
         hsize_t length1 = 0;
         auto sx0 = getDoubleDataset2D(file, datasetPath + "/sx0", length0, length1);
-        if(sx0.size()) {
+        if(!sx0.empty()) {
             if (length0 != (unsigned) model.nplist() && length1 != (unsigned) model.nx)
                 throw(AmiException("Dimension mismatch when reading sx0. Expected %dx%d, got %llu, %llu.",
                                    model.nx, model.nplist(), length0, length1));
@@ -620,7 +620,7 @@ std::vector<int> getIntDataset1D(const H5::H5File &file,
     hsize_t dim;
     dataspace.getSimpleExtentDims(&dim);
     std::vector<int> result(dim);
-    if(result.size())
+    if(!result.empty())
         dataset.read(result.data(), H5::PredType::NATIVE_INT);
     return result;
 }
@@ -638,7 +638,7 @@ std::vector<double> getDoubleDataset1D(const H5::H5File &file, const std::string
     hsize_t dim;
     dataspace.getSimpleExtentDims(&dim);
     std::vector<double> result(dim);
-    if(result.size())
+    if(!result.empty())
         dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
 
     return result;
@@ -662,7 +662,7 @@ std::vector<double> getDoubleDataset2D(const H5::H5File &file, const std::string
     n = dims[1];
 
     std::vector<double> result(m * n);
-    if(result.size())
+    if(!result.empty())
         dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
 
     return result;
@@ -686,7 +686,7 @@ std::vector<double> getDoubleDataset3D(const H5::H5File &file, const std::string
     o = dims[2];
 
     std::vector<double> result(m * n * o);
-    if(result.size())
+    if(!result.empty())
         dataset.read(result.data(), H5::PredType::NATIVE_DOUBLE);
 
     return result;

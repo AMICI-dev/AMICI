@@ -69,7 +69,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
 
     /* Compute steady state sensitvities */
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && rdata->sensi_meth != AMICI_SENSI_NONE)
-        newtonSolver.get()->getSensis(it, sx);
+        newtonSolver->getSensis(it, sx);
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     getNewtonOutput(rdata, model, newton_status, run_time, it);
@@ -322,8 +322,8 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
                             solver->getNonlinearSolverIteration()),
                 [](void *ptr) { CVodeFree(&ptr); }
     );
-    if (newton_sim == NULL)
-        throw AmiException("Failed to allocated solver memory!");
+    if (!newton_sim)
+        throw AmiException("Failed to allocate solver memory!");
     
     int status = CVodeInit(newton_sim.get(), CVodeSolver::fxdot, RCONST(tstart), x->getNVector());
     if(status != CV_SUCCESS)

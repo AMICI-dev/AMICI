@@ -128,7 +128,7 @@ void IDASolver::AMIGetRootInfo(int *rootsfound) {
          throw IDAException(status,"IDAGetRootInfo");
 }
 void IDASolver::AMISetErrHandlerFn() {
-    int status = IDASetErrHandlerFn(ami_mem, wrapErrHandlerFn, NULL);
+    int status = IDASetErrHandlerFn(ami_mem, wrapErrHandlerFn, nullptr);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetErrHandlerFn");
 }
@@ -196,7 +196,7 @@ void IDASolver::AMIGetSens(realtype *tret, AmiVectorArray *yySout) {
 }
 void IDASolver::AMIFree() {
     IDAFree(&ami_mem);
-    ami_mem = NULL;
+    ami_mem = nullptr;
 }
 
 void IDASolver::AMIAdjInit(long steps, int interp) {
@@ -236,20 +236,20 @@ int IDASolver::AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret,
     int status = IDASolve(ami_mem, tout, tret, yret->getNVector(), ypret->getNVector(), itask);
     if(status<0) {
         throw IntegrationFailure(status,*tret);
-    } else{
-        solverWasCalled = true;
-        return status;
     }
+
+    solverWasCalled = true;
+    return status;
 }
 int IDASolver::AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret,
                          realtype *tret, int itask, int *ncheckPtr) {
     int status = IDASolveF(ami_mem, tout, tret, yret->getNVector(), ypret->getNVector(), itask, ncheckPtr);
     if(status<0) {
         throw IntegrationFailure(status,*tret);
-    } else{
-        solverWasCalled = true;
-        return status;
     }
+
+    solverWasCalled = true;
+    return status;
 }
 void IDASolver::AMISolveB(realtype tBout, int itaskB) {
     int status = IDASolveB(ami_mem, tBout, itaskB);
@@ -404,7 +404,7 @@ void IDASolver::AMISetStopTime(realtype tstop) {
 }
                                             
 void IDASolver::turnOffRootFinding() {
-    int status = IDARootInit(ami_mem, 0, NULL);
+    int status = IDARootInit(ami_mem, 0, nullptr);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDARootInit");
 }
@@ -426,7 +426,7 @@ void IDASolver::turnOffRootFinding() {
     int IDASolver::fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx,
                   N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1,
                   N_Vector tmp2, N_Vector tmp3) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fJ(t,cj, x, dx, xdot, J);
         return model->checkFinite(N,J->data,"Jacobian");
     }
@@ -450,7 +450,7 @@ void IDASolver::turnOffRootFinding() {
     int IDASolver::fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
                    N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fJB(t, cj, x, dx, xB, dxB, JB);
         return model->checkFinite(NeqBdot,JB->data,"Jacobian");
     }
@@ -471,7 +471,7 @@ void IDASolver::turnOffRootFinding() {
     int IDASolver::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J,
                         void *user_data, N_Vector tmp1, N_Vector tmp2,
                         N_Vector tmp3) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fJSparse(t, cj, x, dx, J);
         return model->checkFinite(J->NNZ,J->data,"Jacobian");
     }
@@ -494,7 +494,7 @@ void IDASolver::turnOffRootFinding() {
     int IDASolver::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
                          SlsMat JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
         return model->checkFinite(JB->NNZ,JB->data,"Jacobian");
     }
@@ -564,7 +564,7 @@ void IDASolver::turnOffRootFinding() {
      **/
     int IDASolver::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv,
                    realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fJv(t, x, dx, v, Jv, cj);
         return model->checkFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
@@ -588,7 +588,7 @@ void IDASolver::turnOffRootFinding() {
     int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
                     N_Vector vB, N_Vector JvB, realtype cj, void *user_data,
                     N_Vector tmpB1, N_Vector tmpB2) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
         return model->checkFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
@@ -603,7 +603,7 @@ void IDASolver::turnOffRootFinding() {
      */
     int IDASolver::froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
                      void *user_data) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->froot(t,x,dx,root);
         return model->checkFinite(model->ne,root,"root function");
     }
@@ -618,7 +618,7 @@ void IDASolver::turnOffRootFinding() {
      */
     int IDASolver::fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fxdot(t,x,dx,xdot);
         return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
@@ -635,7 +635,7 @@ void IDASolver::turnOffRootFinding() {
      */
     int IDASolver::fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                       N_Vector dxB, N_Vector xBdot, void *user_data) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fxBdot(t, x, dx, xB, dxB, xBdot);
         return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
     }
@@ -652,7 +652,7 @@ void IDASolver::turnOffRootFinding() {
      */
     int IDASolver::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
                       void *user_data) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         model->fqBdot(t, x, dx, xB, dxB, qBdot);
         return model->checkFinite(model->nJ*model->nplist(),N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
@@ -675,7 +675,7 @@ void IDASolver::turnOffRootFinding() {
     int IDASolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                       N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-        Model_DAE *model = static_cast<Model_DAE*>(user_data);
+        auto model = static_cast<Model_DAE*>(user_data);
         for(int ip = 0; ip < model->nplist(); ip++){
             model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);
             if(model->checkFinite(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs") != AMICI_SUCCESS)

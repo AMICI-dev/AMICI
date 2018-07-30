@@ -144,7 +144,7 @@ void CVodeSolver::AMIGetRootInfo(int *rootsfound) {
 }
 
 void CVodeSolver::AMISetErrHandlerFn() {
-    int status = CVodeSetErrHandlerFn(ami_mem, wrapErrHandlerFn, NULL);
+    int status = CVodeSetErrHandlerFn(ami_mem, wrapErrHandlerFn, nullptr);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSetErrHandlerFn");
 }
@@ -179,9 +179,9 @@ void CVodeSolver::AMISetStabLimDetB(int which, int stldet) {
          throw CvodeException(status,"CVodeSetStabLimDetB");
 }
 
-void CVodeSolver::AMISetId(Model *model) { return; }
+void CVodeSolver::AMISetId(Model *model) { }
 
-void CVodeSolver::AMISetSuppressAlg(bool flag) { return; }
+void CVodeSolver::AMISetSuppressAlg(bool flag) { }
 
 void CVodeSolver::AMIReInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
     int status = CVodeReInit(ami_mem, t0, yy0->getNVector());
@@ -212,10 +212,10 @@ void CVodeSolver::AMIGetSens(realtype *tret, AmiVectorArray *yySout) {
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetSens");
 }
-    
+
 void CVodeSolver::AMIFree() {
     CVodeFree(&ami_mem);
-    ami_mem = NULL;
+    ami_mem = nullptr;
 }
 
 void CVodeSolver::AMIAdjInit(long steps, int interp) {
@@ -262,10 +262,10 @@ int CVodeSolver::AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret,
     int status = CVode(ami_mem, tout, yret->getNVector(), tret, itask);
     if(status<0) {
         throw IntegrationFailure(status,*tret);
-    } else{
-        solverWasCalled = true;
-        return status;
     }
+
+    solverWasCalled = true;
+    return status;
 }
 
 int CVodeSolver::AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret,
@@ -273,10 +273,10 @@ int CVodeSolver::AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret,
     int status = CVodeF(ami_mem, tout, yret->getNVector(), tret, itask, ncheckPtr);
     if(status<0) {
         throw IntegrationFailure(status,*tret);
-    } else{
-        solverWasCalled = true;
-        return status;
     }
+
+    solverWasCalled = true;
+    return status;
 }
 
 void CVodeSolver::AMISolveB(realtype tBout, int itaskB) {
@@ -446,11 +446,11 @@ void CVodeSolver::AMISetStopTime(realtype tstop) {
 }
 
 void CVodeSolver::turnOffRootFinding() {
-    int status = CVodeRootInit(ami_mem, 0, NULL);
+    int status = CVodeRootInit(ami_mem, 0, nullptr);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeRootInit");
 }
-    
+
     /** Jacobian of xdot with respect to states x
      * @param N number of state variables
      * @param t timepoint
@@ -466,11 +466,11 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
            DlsMat J, void *user_data, N_Vector tmp1,
            N_Vector tmp2, N_Vector tmp3) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fJ(t, x, xdot, J);
         return model->checkFinite(N,J->data,"Jacobian");
     }
-    
+
     /** Jacobian of xBdot with respect to adjoint state xB
      * @param NeqBdot number of adjoint state variables
      * @param t timepoint
@@ -487,11 +487,11 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
                    N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fJB(t, x, xB, xBdot, JB);
         return model->checkFinite(NeqBdot,JB->data,"Jacobian");
     }
-    
+
     /** J in sparse form (for sparse solvers from the SuiteSparse Package)
      * @param t timepoint
      * @param x Vector with the states
@@ -506,11 +506,11 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
                         void *user_data, N_Vector tmp1, N_Vector tmp2,
                         N_Vector tmp3) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fJSparse(t, x, J);
         return model->checkFinite(J->NNZ,J->data,"Jacobian");
     }
-    
+
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
      * @param t timepoint
      * @param x Vector with the states
@@ -526,11 +526,11 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                          SlsMat JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fJSparseB(t, x, xB, xBdot, JB);
         return model->checkFinite(JB->NNZ,JB->data,"Jacobian");
     }
-    
+
     /** J in banded form (for banded solvers)
      * @param N number of states
      * @param mupper upper matrix bandwidth
@@ -550,7 +550,7 @@ void CVodeSolver::turnOffRootFinding() {
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
         return fJ(N,t,x,xdot,J,user_data,tmp1,tmp2,tmp3);
     }
-    
+
     /** JB in banded form (for banded solvers)
      * @param NeqBdot number of states
      * @param mupper upper matrix bandwidth
@@ -572,7 +572,7 @@ void CVodeSolver::turnOffRootFinding() {
                        N_Vector tmp2B, N_Vector tmp3B) {
         return fJB(NeqBdot,t,x,xB,xBdot,JB,user_data,tmp1B,tmp2B,tmp3B);
     }
-    
+
     /** diagonalized Jacobian (for preconditioning)
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
@@ -581,11 +581,11 @@ void CVodeSolver::turnOffRootFinding() {
      **/
     int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
                       void *user_data) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fJDiag(t, JDiag, x);
         return model->checkFinite(model->nx,N_VGetArrayPointer(JDiag),"Jacobian");
     }
-    
+
     /** Matrix vector product of J with a vector v (for iterative solvers)
      * @param t timepoint
      * @param x Vector with the states
@@ -599,11 +599,11 @@ void CVodeSolver::turnOffRootFinding() {
      **/
     int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x, N_Vector xdot,
                    void *user_data, N_Vector tmp) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fJv(v,Jv,t,x);
         return model->checkFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
     }
-    
+
     /** Matrix vector product of JB with a vector v (for iterative solvers)
      * @param t timepoint
      * @param x Vector with the states
@@ -618,11 +618,11 @@ void CVodeSolver::turnOffRootFinding() {
      **/
     int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                     void *user_data, N_Vector tmpB) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fJvB(vB, JvB, t, x, xB);
         return model->checkFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
     }
-    
+
     /** Event trigger function for events
      * @param t timepoint
      * @param x Vector with the states
@@ -632,11 +632,11 @@ void CVodeSolver::turnOffRootFinding() {
      */
     int CVodeSolver::froot(realtype t, N_Vector x, realtype *root,
                      void *user_data) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->froot(t, x, root);
         return model->checkFinite(model->ne,root,"root function");
     }
-    
+
     /** residual function of the ODE
      * @param t timepoint
      * @param x Vector with the states
@@ -645,11 +645,11 @@ void CVodeSolver::turnOffRootFinding() {
      * @return status flag indicating successful execution
      */
     int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fxdot(t, x, xdot);
         return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
     }
-    
+
     /** Right hand side of differential equation for adjoint state xB
      * @param t timepoint
      * @param x Vector with the states
@@ -660,11 +660,11 @@ void CVodeSolver::turnOffRootFinding() {
      */
     int CVodeSolver::fxBdot(realtype t, N_Vector x, N_Vector xB,
                       N_Vector xBdot, void *user_data) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fxBdot(t, x, xB, xBdot);
         return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
     }
-    
+
     /** Right hand side of integral equation for quadrature states qB
      * @param t timepoint
      * @param x Vector with the states
@@ -675,11 +675,11 @@ void CVodeSolver::turnOffRootFinding() {
      */
     int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                       void *user_data) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fqBdot(t, x, xB, qBdot);
         return model->checkFinite(model->nplist()*model->nJ,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
     }
-    
+
     /** Right hand side of differential equation for state sensitivities sx
      * @param Ns number of parameters
      * @param t timepoint
@@ -697,7 +697,7 @@ void CVodeSolver::turnOffRootFinding() {
     int CVodeSolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                       N_Vector sx, N_Vector sxdot, void *user_data,
                       N_Vector tmp1, N_Vector tmp2) {
-        Model_ODE *model = static_cast<Model_ODE*>(user_data);
+        auto model = static_cast<Model_ODE*>(user_data);
         model->fsxdot(t, x, ip, sx, sxdot);
         return model->checkFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
