@@ -122,11 +122,6 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
         Ensure positivity of the state */
     x_newton = *x;
     N_VAbs(x_newton.getNVector(), x_newton.getNVector());
-    for (ix = 0; ix < model->nx; ix++) {
-        if (x_newton[ix] < newtonSolver->atol) {
-            x_newton[ix] = newtonSolver->atol;
-        }
-    }
     N_VDiv(xdot.getNVector(), x_newton.getNVector(), rel_x_newton.getNVector());
     double res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
     x_old = *x;
@@ -149,10 +144,6 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
         
         /* Try a full, undamped Newton step */
         N_VLinearSum(1.0, x_old.getNVector(), gamma, delta.getNVector(), x->getNVector());
-        /* Ensure positivity of the state */
-        for (ix = 0; ix < model->nx; ix++)
-            if ((*x)[ix] < newtonSolver->atol)
-                (*x)[ix] = newtonSolver->atol;
         
         /* Compute new xdot and residuals */
         model->fxdot(*t, x, &dx, &xdot);
@@ -169,8 +160,19 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             compNewStep = TRUE;
             /* Check residuals vs tolerances */
             converged = (res_abs < newtonSolver->atol) || (res_rel < newtonSolver->rtol);
-            /* increase dampening factor (superfluous, if converged) */
-            gamma = fmin(1.0, 2.0 * gamma);
+            
+            if (converged) {
+                /* Ensure positivity of the found state */
+                for (ix = 0; ix < model->nx; ix++) {
+                    if ((*x)[ix] < 0.0) {
+                        (*x)[ix] = 0.0;
+                        converged = FALSE;
+                    }
+                }
+            } else {
+                /* increase dampening factor (superfluous, if converged) */
+                gamma = fmin(1.0, 2.0 * gamma);
+            }
         } else {
             /* Reduce dampening factor */
             gamma = gamma / 4.0;
