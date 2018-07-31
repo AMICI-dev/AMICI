@@ -10,49 +10,38 @@
 
 namespace amici {
 
-ExpData::ExpData() : nytrue(0), nztrue(0), nt(0), nmaxevent(0) {}
+ExpData::ExpData() : nytrue(0), nztrue(0), nmaxevent(0) {}
 
-ExpData::ExpData(int nytrue, int nztrue, int nt, int nmaxevent)
-    : ExpData(nytrue, nztrue, nt, nmaxevent,
-              std::vector<realtype>(nt * nytrue),
-              std::vector<realtype>(nt * nytrue),
-              std::vector<realtype>(nmaxevent * nztrue),
-              std::vector<realtype>(nmaxevent * nztrue))
-
+ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
+                 std::vector<realtype> ts)
+    : nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent)
 {
+    setTimepoints(ts)
 }
 
-ExpData::ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
+ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts,
                  std::vector<realtype> my,
                  std::vector<realtype> sigmay,
                  std::vector<realtype> mz,
                  std::vector<realtype> sigmaz)
     : ts(std::move(ts)), my(std::move(my)), sigmay(std::move(sigmay)), mz(std::move(mz)), sigmaz(std::move(sigmaz)),
-      nytrue(nytrue), nztrue(nztrue), nt(nt), nmaxevent(nmaxevent)
-{
-}
-    
-ExpData::ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
-                 std::vector<realtype> my,
-                 std::vector<realtype> sigmay,
-                 std::vector<realtype> mz,
-                 std::vector<realtype> sigmaz)
-: my(std::move(my)), sigmay(std::move(sigmay)), mz(std::move(mz)), sigmaz(std::move(sigmaz)),
-nytrue(nytrue), nztrue(nztrue), nt(nt), nmaxevent(nmaxevent)
+      nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent)
 {
 }
 
 ExpData::ExpData(Model const& model)
-    : ExpData(model.nytrue, model.nztrue, model.nt(), model.nMaxEvent())
+    : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(), model.getTimepoints())
 {
-    ts = model.getTimepoints();
+    fixedParameters = model.getFixedParameters();
 }
 
 ExpData::ExpData(const ExpData &other)
-    : ExpData(other.nytrue, other.nztrue, other.nt, other.nmaxevent,
+    : ExpData(other.nytrue, other.nztrue, other.nmaxevent,
               other.ts, other.my, other.sigmay, other.mz, other.sigmaz)
 {
+    fixedParameters = other.fixedParameters;
+    fixedParametersPreequilibration = other.fixedParametersPreequilibration;
 }
     
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
@@ -61,15 +50,13 @@ ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
 }
     
 ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z)
-    : ExpData(rdata.nytrue, rdata.nztrue, rdata.nt, rdata.nmaxevent)
+    : ExpData(rdata.nytrue, rdata.nztrue, rdata.nmaxevent, rdata.ts)
 {
     if (sigma_y.size() != nytrue)
         throw AmiException("Dimension of sigma_y must be %d, was %d", nytrue, sigma_y.size());
         
     if (sigma_z.size() != nztrue)
         throw AmiException("Dimension of sigma_z must be %d, was %d", nztrue, sigma_z.size());
-        
-    ts = rdata.ts;
     
     std::random_device rd{};
     std::mt19937 gen{rd()};
@@ -78,7 +65,7 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
         if (sigma_y[iy] < 0.0)
             throw AmiException("All sigma_y must positive! sigma at index %d was %f", iy, sigma_y[iy]);
         std::normal_distribution<> e{0, sigma_y[iy]};
-        for (int it = 0; it < nt; ++it) {
+        for (int it = 0; it < nt(); ++it) {
             my.at(iy + rdata.nytrue * it) = rdata.y.at(iy + rdata.ny * it) + e(gen);
             sigmay.at(iy + rdata.ny * it) = sigma_y[iy];
         }
@@ -95,20 +82,30 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
     }
 }
 
-void ExpData::setTimepoints(const double *timepoints) {
-    for (int it = 0; it < nt; ++it) {
-        ts.at(it) = static_cast<const realtype>(timepoints[it]);
-    }
+void ExpData::setTimepoints(const std::vector<realtype> &ts) {
+    this->ts = ts;
+    my.clear();
+    my.resize(nt()*nytrue, getNaN());
+    sigmay.clear();
+    sigmay.resize(nt()*nytrue, getNaN());
+}
+    
+const std::vector<realtype> ExpData::getTimepoints() {
+    return ts;
+}
+    
+realtype ExpData::getTimepoint(int it) {
+    return ts.at(it);
 }
     
 void ExpData::setObservedData(const double *observedData) {
-    for (int imy = 0; imy < nytrue * nt; ++imy) {
+    for (int imy = 0; imy < nytrue * nt(); ++imy) {
         my.at(imy) = static_cast<const realtype>(observedData[imy]);
     }
 }
 
 void ExpData::setObservedDataStdDev(const double *observedDataStdDev) {
-    for (int imy = 0; imy < nytrue * nt; ++imy) {
+    for (int imy = 0; imy < nytrue * nt(); ++imy) {
         sigmay.at(imy) = static_cast<const realtype>(observedDataStdDev[imy]);
     }
 }

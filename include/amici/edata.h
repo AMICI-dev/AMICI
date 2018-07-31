@@ -21,16 +21,25 @@ class ExpData {
      * @brief ExpData
      * @param nytrue
      * @param nztrue
-     * @param nt
      * @param nmaxevent
      */
-    ExpData(int nytrue, int nztrue, int nt, int nmaxevent);
+    ExpData(int nytrue, int nztrue, int nmaxevent);
 
     /**
      * @brief ExpData
      * @param nytrue
      * @param nztrue
-     * @param nt
+     * @param nmaxevent
+     * @param ts
+     */
+    ExpData(int nytrue, int nztrue, int nmaxevent,
+            std::vector<realtype> ts);
+    
+    
+    /**
+     * @brief ExpData
+     * @param nytrue
+     * @param nztrue
      * @param nmaxevent
      * @param ts
      * @param my
@@ -38,29 +47,12 @@ class ExpData {
      * @param mz
      * @param sigmaz
      */
-    ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
+    ExpData(int nytrue, int nztrue, int nmaxevent,
             std::vector<realtype> ts,
             std::vector<realtype> my,
             std::vector<realtype> sigmay,
             std::vector<realtype> mz,
             std::vector<realtype> sigmaz);
-    
-    /**
-     * @brief ExpData
-     * @param nytrue
-     * @param nztrue
-     * @param nt
-     * @param nmaxevent
-     * @param my
-     * @param sigmay
-     * @param mz
-     * @param sigmaz
-     */
-    ExpData(int nytrue, int nztrue, int nt, int nmaxevent,
-            std::vector<realtype>  my,
-            std::vector<realtype>  sigmay,
-            std::vector<realtype>  mz,
-            std::vector<realtype>  sigmaz);
 
     /**
      * constructor that initializes with Model
@@ -95,13 +87,32 @@ class ExpData {
     
 
     ~ExpData() = default;
+    
+    /**
+     * number of timepoints
+     *
+     */
+     int nt();
 
     /**
      * set function that copies data from input to ExpData::ts
      *
      * @param timepoints timepoints
      */
-    void setTimepoints(const double *timepoints);
+    void setTimepoints(const std::vector<realtype> &ts);
+    /**
+     * get function that copies data from ExpData::ts to output
+     *
+     * @return ExpData::ts
+     */
+    const std::vector<realtype> getTimepoints();
+    /**
+     * get function that returns timepoint at index
+     *
+     * @param it timepoint index
+     * @return timepoint timepoint at index
+     */
+    realtype getTimepoint(int it);
     /**
      * set function that copies data from input to ExpData::my
      *
@@ -145,8 +156,6 @@ class ExpData {
     const int nytrue;
     /** number of event observables */
     const int nztrue;
-    /** number of timepoints */
-    const int nt;
     /** maximal number of event occurences */
     const int nmaxevent;
 
