@@ -413,7 +413,7 @@ void ForwardProblem::prepEventSensis(int ie) {
         if(model->z2event[iz] - 1 != ie)
             continue;
 
-        if (isNaN(edata->mz[nroots.at(ie) * rdata->nztrue + iz]))
+        if (isNaN(edata->observedEvents[nroots.at(ie) * rdata->nztrue + iz]))
             continue;
 
         model->fdzdp(t, ie, &x);
@@ -427,14 +427,14 @@ void ForwardProblem::prepEventSensis(int ie) {
         /* extract the value for the standard deviation, if the data
            value is NaN, use the parameter value. Store this value in the return
            struct */
-        if (isNaN(edata->sigmaz[nroots.at(ie) * rdata->nztrue + iz])) {
+        if (isNaN(edata->observedEventsStdDev[nroots.at(ie) * rdata->nztrue + iz])) {
             model->fdsigmazdp(t);
         } else {
             for (int ip = 0; ip < model->nplist(); ip++) {
                 model->dsigmazdp[iz + model->nz * ip] = 0;
             }
             model->sigmaz[iz] =
-                    edata->sigmaz[nroots.at(ie) * model->nztrue + iz];
+                    edata->observedEventsStdDev[nroots.at(ie) * model->nztrue + iz];
         }
         rdata->sigmaz[nroots.at(ie) * model->nz + iz] = model->sigmaz[iz];
         for (int ip = 0; ip < model->nplist(); ip++) {
@@ -570,7 +570,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
 
     if(edata) {
         for (int iy = 0; iy < model->nytrue; iy++) {
-            if (isNaN(edata->sigmay[it * rdata->nytrue + iy])) {
+            if (isNaN(edata->observedDataStdDev[it * rdata->nytrue + iy])) {
                 // TODO: it seems redundant to call this for every iy,
                 // should be only called once per it. Check with redundancy
                 // in prepDataSensis and Model::fdsigmaydp

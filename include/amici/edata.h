@@ -284,15 +284,15 @@ protected:
     std::vector<realtype> ts;
     
     /** observed data (dimension: nt x nytrue, row-major) */
-    std::vector<realtype> my;
+    std::vector<realtype> observedData;
     /** standard deviation of observed data (dimension: nt x nytrue, row-major) */
-    std::vector<realtype> sigmay;
+    std::vector<realtype> observedDataStdDev;
     
     /** observed events (dimension: nmaxevents x nztrue, row-major) */
-    std::vector<realtype> mz;
+    std::vector<realtype> observedEvents;
     /** standard deviation of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)*/
-    std::vector<realtype> sigmaz;
+    std::vector<realtype> observedEventsStdDev;
 };
 
 } // namespace amici

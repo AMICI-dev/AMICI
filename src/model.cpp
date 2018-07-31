@@ -835,8 +835,8 @@ void Model::fsigmay(const int it, const ExpData *edata, ReturnData *rdata) {
         /* extract the value for the standard deviation, if the data value
              is NaN, use the parameter value. Store this value in the return struct */
         if(edata){
-            if (!isNaN(edata->sigmay[it * edata->nytrue + iytrue])) {
-                sigmay.at(iytrue) = edata->sigmay[it * edata->nytrue + iytrue];
+            if (!isNaN(edata->observedDataStdDev[it * edata->nytrue + iytrue])) {
+                sigmay.at(iytrue) = edata->observedDataStdDev[it * edata->nytrue + iytrue];
             }
         }
         rdata->sigmay[it * rdata->ny + iytrue] = sigmay.at(iytrue);
@@ -861,7 +861,7 @@ void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
 
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydp to zero
     for (int iy = 0; iy < nytrue; iy++) {
-        if (!isNaN(edata->sigmay[it * rdata->nytrue + iy])) {
+        if (!isNaN(edata->observedDataStdDev[it * rdata->nytrue + iy])) {
             for (int ip = 0; ip < nplist(); ip++) {
                 dsigmaydp[ip * ny + iy] = 0.0;
             }
@@ -886,8 +886,8 @@ void Model::fsigmaz(const realtype t, const int ie, const int *nroots,
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (z2event.at(iztrue) - 1 == ie) {
             if(edata) {
-                if (!isNaN(edata->sigmaz[nroots[ie]*edata->nztrue + iztrue])) {
-                    sigmaz.at(iztrue) = edata->sigmaz[nroots[ie]*edata->nztrue + iztrue];
+                if (!isNaN(edata->observedEventsStdDev[nroots[ie]*edata->nztrue + iztrue])) {
+                    sigmaz.at(iztrue) = edata->observedEventsStdDev[nroots[ie]*edata->nztrue + iztrue];
                 }
             }
             rdata->sigmaz[nroots[ie]*rdata->nz + iztrue] = sigmaz.at(iztrue);
@@ -1111,9 +1111,9 @@ void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * edata->nytrue;
         int iyt = iy + it * rdata->ny;
-        if (isNaN(edata->my.at(iyt_true)))
+        if (isNaN(edata->observedData.at(iyt_true)))
             continue;
-        rdata->res.at(iyt_true) = (rdata->y.at(iyt) - edata->my.at(iyt_true))/rdata->sigmay.at(iyt);
+        rdata->res.at(iyt_true) = (rdata->y.at(iyt) - edata->observedData.at(iyt_true))/rdata->sigmay.at(iyt);
     }
 
 }
@@ -1135,7 +1135,7 @@ void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * edata->nytrue;
         int iyt = iy + it * rdata->ny;
-        if (isNaN(edata->my.at(iyt_true)))
+        if (isNaN(edata->observedData.at(iyt_true)))
             continue;
         for (int ip = 0; ip < nplist(); ++ip) {
             rdata->sres.at(iyt_true * nplist() + ip) =
@@ -1178,7 +1178,7 @@ void Model::updateHeavisideB(const int *rootsfound) {
      */
 void Model::getmy(const int it, const ExpData *edata){
     if(edata) {
-        std::copy_n(&edata->my[it*edata->nytrue], nytrue, my.begin());
+        std::copy_n(&edata->observedData[it*edata->nytrue], nytrue, my.begin());
     } else {
         std::fill(my.begin(), my.end(), getNaN());
     }
@@ -1227,7 +1227,7 @@ realtype Model::gett(const int it, const ReturnData *rdata) const {
      */
 void Model::getmz(const int nroots, const ExpData *edata) {
     if(edata){
-        std::copy_n(&edata->mz[nroots*edata->nztrue], nztrue, mz.begin());
+        std::copy_n(&edata->observedEvents[nroots*edata->nztrue], nztrue, mz.begin());
     } else {
         std::fill(mz.begin(), mz.end(), getNaN());
     }

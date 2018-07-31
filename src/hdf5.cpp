@@ -103,7 +103,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         if(locationExists(file,  hdf5Root + "/Y")) {
             auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
-            edata->my = my;
+            edata->observedData = my;
         } else {
             throw AmiException("Missing %s/Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
@@ -111,7 +111,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         if(locationExists(file,  hdf5Root + "/Sigma_Y")) {
             auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
-            edata->sigmay = sigmay;
+            edata->observedDataStdDev = sigmay;
         } else {
             throw AmiException("Missing %s/Sigma_Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
@@ -121,7 +121,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         if(locationExists(file,  hdf5Root + "/Z")) {
             auto mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
             checkEventDimensionsCompatible(m, n, model);
-            edata->mz = mz;
+            edata->observedEvents = mz;
         } else {
             throw AmiException("Missing %s/Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
@@ -129,7 +129,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         if(locationExists(file,  hdf5Root + "/Sigma_Z")) {
             auto sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
             checkEventDimensionsCompatible(m, n, model);
-            edata->sigmaz = sigmaz;
+            edata->observedEventsStdDev = sigmaz;
         } else {
             throw AmiException("Missing %s/Sigma_Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
