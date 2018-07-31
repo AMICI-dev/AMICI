@@ -16,7 +16,7 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts)
     : nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent)
 {
-    setTimepoints(ts)
+    setTimepoints(ts);
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
@@ -90,36 +90,146 @@ void ExpData::setTimepoints(const std::vector<realtype> &ts) {
     sigmay.resize(nt()*nytrue, getNaN());
 }
     
-const std::vector<realtype> ExpData::getTimepoints() {
+std::vector<realtype> ExpData::getTimepoints() const {
     return ts;
 }
     
-realtype ExpData::getTimepoint(int it) {
+realtype ExpData::getTimepoint(int it) const {
     return ts.at(it);
 }
     
-void ExpData::setObservedData(const double *observedData) {
-    for (int imy = 0; imy < nytrue * nt(); ++imy) {
-        my.at(imy) = static_cast<const realtype>(observedData[imy]);
+void ExpData::setObservedData(const std::vector<realtype> &observedData) {
+    if (observedData.size() == nt()*nytrue) {
+        my = observedData;
+    } else {
+        if (observedData.size() == 0) {
+            my.clear();
+        } else {
+            throw AmiException("Input observedData did not match dimensions nt (%i) x nytrue (%i), was %i", nt(), nytrue, observedData.size());
+        }
+    }
+}
+    
+void ExpData::setObservedData(const std::vector<realtype> &observedData, int iy) {
+    if (observedData.size() == nt()) {
+        for (int it = 0; it < nt(); ++it)
+            my.at(iy + it*nytrue) = observedData.at(iy);
+    } else {
+        throw AmiException("Input observedData did not match dimensions nt (%i), was %i", nt(), observedData.size());
+    }
+}
+    
+std::vector<realtype> ExpData::getObservedData() const {
+    return my;
+}
+    
+const realtype *ExpData::getObservedData(int it) const {
+    return &my.at(it*nytrue);
+}
+
+void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev) {
+    if (observedDataStdDev.size() == nt()*nytrue) {
+        sigmay = observedDataStdDev;
+    } else {
+        if (observedDataStdDev.size() == 0) {
+            sigmay.clear();
+        } else {
+            throw AmiException("Input observedDataStdDev did not match dimensions nt (%i) x nytrue (%i), was %i", nt(), nytrue, observedDataStdDev.size());
+        }
+    }
+}
+    
+void ExpData::setObservedDataStdDev(const realtype StdDev) {
+    std::fill(sigmay.begin() ,sigmay.end(), StdDev);
+}
+    
+void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev, int iy) {
+    if (observedDataStdDev.size() == nt()) {
+        for (int it = 0; it < nt(); ++it)
+            sigmay.at(iy + it*nytrue) = observedDataStdDev.at(iy);
+    } else {
+        throw AmiException("Input observedDataStdDev did not match dimensions nt (%i), was %i", nt(), observedDataStdDev.size());
+    }
+}
+    
+void ExpData::setObservedDataStdDev(const realtype StdDev, int iy) {
+    for (int it = 0; it < nt(); ++it)
+        sigmay.at(iy + it*nytrue) = StdDev;
+}
+    
+std::vector<realtype> ExpData::getObservedDataStdDev() const {
+    return sigmay;
+}
+
+const realtype *ExpData::getObservedDataStdDev(int it) const {
+    return &sigmay.at(it*nytrue);
+}
+    
+void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents) {
+    if (observedEvents.size() == nmaxevent*nztrue) {
+        mz = observedEvents;
+    } else {
+        if (observedEvents.size() == 0) {
+            mz.clear();
+        } else {
+            throw AmiException("Input observedEvents did not match dimensions nmaxevent (%i) x nztrue (%i), was %i", nmaxevent, nztrue, observedEvents.size());
+        }
+    }
+}
+    
+void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents, int iz) {
+    if (observedEvents.size() == nmaxevent) {
+        for (int ie = 0; ie < nmaxevent; ++ie)
+            mz.at(iz + ie*nztrue) = observedEvents.at(iz);
+    } else {
+        throw AmiException("Input observedEvents did not match dimensions nmaxevent (%i), was %i", nmaxevent, observedEvents.size());
     }
 }
 
-void ExpData::setObservedDataStdDev(const double *observedDataStdDev) {
-    for (int imy = 0; imy < nytrue * nt(); ++imy) {
-        sigmay.at(imy) = static_cast<const realtype>(observedDataStdDev[imy]);
+std::vector<realtype> ExpData::getObservedEvents() const {
+    return mz;
+}
+
+const realtype *ExpData::getObservedEvents(int ie) const {
+    return &mz.at(ie*nztrue);
+}
+    
+void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev) {
+    if (observedEventsStdDev.size() == nmaxevent*nztrue) {
+        sigmaz = observedEventsStdDev;
+    } else {
+        if (observedEventsStdDev.size() == 0) {
+            sigmaz.clear();
+        } else {
+            throw AmiException("Input observedEventsStdDev did not match dimensions nmaxevent (%i) x nztrue (%i), was %i", nmaxevent, nztrue, observedEventsStdDev.size());
+        }
+    }
+}
+    
+void ExpData::setObservedEventsStdDev(const realtype StdDev) {
+    std::fill(sigmaz.begin() ,sigmaz.end(), StdDev);
+}
+
+void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev, int iz) {
+    if (observedEventsStdDev.size() == nmaxevent) {
+        for (int ie = 0; ie < nmaxevent; ++ie)
+            sigmaz.at(iz + ie*nztrue) = observedEventsStdDev.at(iz);
+    } else {
+        throw AmiException("Input observedEventsStdDev did not match dimensions nmaxevent (%i), was %i", nmaxevent, observedEventsStdDev.size());
     }
 }
 
-void ExpData::setObservedEvents(const double *observedEvents) {
-    for (int imz = 0; imz < nztrue * nmaxevent; ++imz) {
-        mz.at(imz) = static_cast<const realtype>(observedEvents[imz]);
-    }
+void ExpData::setObservedEventsStdDev(const realtype StdDev, int iz) {
+    for (int ie = 0; ie < nmaxevent; ++ie)
+        sigmaz.at(iz + ie*nztrue) = StdDev;
 }
 
-void ExpData::setObservedEventsStdDev(const double *observedEventsStdDev) {
-    for (int imz = 0; imz < nztrue * nmaxevent; ++imz) {
-        sigmaz.at(imz) = static_cast<const realtype>(observedEventsStdDev[imz]);
-    }
+std::vector<realtype> ExpData::getObservedEventsStdDev() const {
+    return sigmaz;
+}
+
+const realtype *ExpData::getObservedEventsStdDev(int ie) const {
+    return &sigmaz.at(ie*nztrue);
 }
 
 } // namespace amici
