@@ -76,9 +76,9 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
-        solver->AMIReInit(*t, x, &dx);
+        solver->reInit(*t, x, &dx);
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && rdata->sensi_meth == AMICI_SENSI_FSA) {
-                solver->AMISensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
+                solver->sensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
         }
     }
 }
@@ -254,7 +254,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         *t = rdata->ts[it-1];
         model->fx0(x);
         /* Reinitialize old solver */
-        solver->AMIReInit(*t, x, &dx);
+        solver->reInit(*t, x, &dx);
     }
     
     /* Loop over steps and check for convergence */
@@ -274,7 +274,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
             if(status != CV_SUCCESS)
                 throw CvodeException(status,"Error when calling CVode during Newton preequilibration simulation");
         } else {
-            solver->AMISolve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
+            solver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
         }
 
         model->fxdot(*t, x, &dx, &xdot);

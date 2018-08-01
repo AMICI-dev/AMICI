@@ -8,7 +8,7 @@ add_library(Upstream::amici ALIAS amici)
 
 # CppUTest includes for memory leak detector
 set(CMAKE_CXX_FLAGS_OLD "${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include sstream -include CppUTest/MemoryLeakDetectorNewMacros.h")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include sstream -include functional -include CppUTest/MemoryLeakDetectorNewMacros.h")
 
 # Amici testing library
 add_library(amici-testing testfunctions.cpp)

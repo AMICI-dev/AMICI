@@ -26,70 +26,70 @@
 namespace amici {
 
 void IDASolver::init(AmiVector *x, AmiVector *dx, realtype t) {
-    int status = IDAInit(ami_mem, fxdot, RCONST(t), x->getNVector(), dx->getNVector());
+    int status = IDAInit(solverMemory.get(), fxdot, RCONST(t), x->getNVector(), dx->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAInit");
 }
 void IDASolver::binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) {
-    int status = IDAInitB(ami_mem, which, fxBdot, RCONST(t), xB->getNVector(), dxB->getNVector());
+    int status = IDAInitB(solverMemory.get(), which, fxBdot, RCONST(t), xB->getNVector(), dxB->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAInitB");
 }
 void IDASolver::qbinit(int which, AmiVector *qBdot) {
-    int status = IDAQuadInitB(ami_mem, which, fqBdot, qBdot->getNVector());
+    int status = IDAQuadInitB(solverMemory.get(), which, fqBdot, qBdot->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAQuadInitB");
 }
 void IDASolver::rootInit(int ne) {
-    int status = IDARootInit(ami_mem, ne, froot);
+    int status = IDARootInit(solverMemory.get(), ne, froot);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDARootInit");
 }
 void IDASolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
-    int status = IDASensInit(ami_mem, nplist, getSensitivityMethod(), fsxdot,
+    int status = IDASensInit(solverMemory.get(), nplist, getSensitivityMethod(), fsxdot,
                              sx->getNVectorArray(),sdx->getNVectorArray());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASensInit");
 }
 void IDASolver::setDenseJacFn() {
-    int status = IDADlsSetDenseJacFn(ami_mem, fJ);
+    int status = IDADlsSetDenseJacFn(solverMemory.get(), fJ);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDADlsSetDenseJacFn");
 }
 
 void IDASolver::setSparseJacFn() {
-    int status = IDASlsSetSparseJacFn(ami_mem, fJSparse);
+    int status = IDASlsSetSparseJacFn(solverMemory.get(), fJSparse);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDASlsSetSparseJacFn");
 }
 void IDASolver::setBandJacFn() {
-    int status = IDADlsSetBandJacFn(ami_mem, fJBand);
+    int status = IDADlsSetBandJacFn(solverMemory.get(), fJBand);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDADlsSetBandJacFn");
 }
 
 void IDASolver::setJacTimesVecFn() {
-    int status = IDASpilsSetJacTimesVecFn(ami_mem, fJv);
+    int status = IDASpilsSetJacTimesVecFn(solverMemory.get(), fJv);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpilsSetJacTimesVecFn");
 }
 void IDASolver::setDenseJacFnB(int which) {
-    int status = IDADlsSetDenseJacFnB(ami_mem, which, fJB);
+    int status = IDADlsSetDenseJacFnB(solverMemory.get(), which, fJB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDADlsSetDenseJacFnB");
 }
 void IDASolver::setSparseJacFnB(int which) {
-    int status = IDASlsSetSparseJacFnB(ami_mem, which, fJSparseB);
+    int status = IDASlsSetSparseJacFnB(solverMemory.get(), which, fJSparseB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASlsSetSparseJacFnB");
 }
 void IDASolver::setBandJacFnB(int which) {
-    int status = IDADlsSetBandJacFnB(ami_mem, which, fJBandB);
+    int status = IDADlsSetBandJacFnB(solverMemory.get(), which, fJBandB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDADlsSetBandJacFnB");
 }
 void IDASolver::setJacTimesVecFnB(int which) {
-    int status = IDASpilsSetJacTimesVecFnB(ami_mem, which, fJvB);
+    int status = IDASpilsSetJacTimesVecFnB(solverMemory.get(), which, fJvB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpilsSetJacTimesVecFnB");
 }
@@ -97,143 +97,140 @@ Solver *IDASolver::clone() const {
     return new IDASolver(*this);
 }
 
-void *IDASolver::AMICreate(int lmm, int iter) {
-    return IDACreate();
+void IDASolver::create(int lmm, int iter) {
+    solverMemory = std::unique_ptr<void, std::function<void(void *)>>(IDACreate(),
+                   [](void *ptr) { IDAFree(&ptr); });
 }
 
-void IDASolver::AMISStolerances(double rtol, double atol) {
-    int status = IDASStolerances(ami_mem, rtol, atol);
+void IDASolver::setSStolerances(double rtol, double atol) {
+    int status = IDASStolerances(solverMemory.get(), rtol, atol);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASStolerances");
 }
-void IDASolver::AMISensSStolerances(double rtol, double *atol) {
-    int status = IDASensSStolerances(ami_mem, rtol, atol);
+void IDASolver::setSensSStolerances(double rtol, double *atol) {
+    int status = IDASensSStolerances(solverMemory.get(), rtol, atol);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDASensEEtolerances");
 }
 
-void IDASolver::AMISetSensErrCon(bool error_corr) {
-    int status = IDASetSensErrCon(ami_mem, error_corr);
+void IDASolver::setSensErrCon(bool error_corr) {
+    int status = IDASetSensErrCon(solverMemory.get(), error_corr);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetSensErrCon");
 }
-void IDASolver::AMISetQuadErrConB(int which, bool flag) {
-    int status = IDASetQuadErrConB(ami_mem, which, flag);
+void IDASolver::setQuadErrConB(int which, bool flag) {
+    int status = IDASetQuadErrConB(solverMemory.get(), which, flag);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetQuadErrConB");
 }
-void IDASolver::AMIGetRootInfo(int *rootsfound) {
-    int status = IDAGetRootInfo(ami_mem, rootsfound);
+void IDASolver::getRootInfo(int *rootsfound) {
+    int status = IDAGetRootInfo(solverMemory.get(), rootsfound);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetRootInfo");
 }
-void IDASolver::AMISetErrHandlerFn() {
-    int status = IDASetErrHandlerFn(ami_mem, wrapErrHandlerFn, nullptr);
+void IDASolver::setErrHandlerFn() {
+    int status = IDASetErrHandlerFn(solverMemory.get(), wrapErrHandlerFn, nullptr);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetErrHandlerFn");
 }
-void IDASolver::AMISetUserData(Model *model) {
-    int status = IDASetUserData(ami_mem, model);
+void IDASolver::setUserData(Model *model) {
+    int status = IDASetUserData(solverMemory.get(), model);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetUserData");
 }
-void IDASolver::AMISetUserDataB(int which, Model *model) {
-    int status = IDASetUserDataB(ami_mem, which, model);
+void IDASolver::setUserDataB(int which, Model *model) {
+    int status = IDASetUserDataB(solverMemory.get(), which, model);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetUserDataB");
 }
-void IDASolver::AMISetMaxNumSteps(long mxsteps) {
-    int status = IDASetMaxNumSteps(ami_mem, mxsteps);
+void IDASolver::setMaxNumSteps(long mxsteps) {
+    int status = IDASetMaxNumSteps(solverMemory.get(), mxsteps);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetMaxNumSteps");
 }
-void IDASolver::AMISetStabLimDet(int stldet) {
+void IDASolver::setStabLimDet(int stldet) {
 }
 
-void IDASolver::AMISetStabLimDetB(int which, int stldet) {
+void IDASolver::setStabLimDetB(int which, int stldet) {
 }
 
-void IDASolver::AMISetId(Model *model) {
+void IDASolver::setId(Model *model) {
 
     N_Vector id = N_VMake_Serial(model->nx,const_cast<realtype*>(model->idlist.data()));
     
-    int status = IDASetId(ami_mem, id);
+    int status = IDASetId(solverMemory.get(), id);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDASetMaxNumSteps");
     
     N_VDestroy_Serial(id);
 }
 
-void IDASolver::AMISetSuppressAlg(bool flag) {
-    int status = IDASetSuppressAlg(ami_mem, flag);
+void IDASolver::setSuppressAlg(bool flag) {
+    int status = IDASetSuppressAlg(solverMemory.get(), flag);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetSuppressAlg");
 }
-void IDASolver::AMIReInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
-    int status = IDAReInit(ami_mem, t0, yy0->getNVector(), yp0->getNVector());
+void IDASolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
+    int status = IDAReInit(solverMemory.get(), t0, yy0->getNVector(), yp0->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAReInit");
 }
-void IDASolver::AMISensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) {
-    int status = IDASensReInit(ami_mem, ism, yS0->getNVectorArray(), ypS0->getNVectorArray());
+void IDASolver::sensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) {
+    int status = IDASensReInit(solverMemory.get(), ism, yS0->getNVectorArray(), ypS0->getNVectorArray());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASensReInit");
 }
-void IDASolver::AMISetSensParams(realtype *p, realtype *pbar, int *plist) {
-    int status = IDASetSensParams(ami_mem, p, pbar, plist);
+void IDASolver::setSensParams(realtype *p, realtype *pbar, int *plist) {
+    int status = IDASetSensParams(solverMemory.get(), p, pbar, plist);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetSensParams");
 }
-void IDASolver::AMIGetDky(realtype t, int k, AmiVector *dky) {
-    int status = IDAGetDky(ami_mem, t, k, dky->getNVector());
+void IDASolver::getDky(realtype t, int k, AmiVector *dky) {
+    int status = IDAGetDky(solverMemory.get(), t, k, dky->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetDky");
 }
-void IDASolver::AMIGetSens(realtype *tret, AmiVectorArray *yySout) {
-    int status = IDAGetSens(ami_mem, tret, yySout->getNVectorArray());
+void IDASolver::getSens(realtype *tret, AmiVectorArray *yySout) {
+    int status = IDAGetSens(solverMemory.get(), tret, yySout->getNVectorArray());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetSens");
 }
-void IDASolver::AMIFree() {
-    IDAFree(&ami_mem);
-    ami_mem = nullptr;
-}
 
-void IDASolver::AMIAdjInit(long steps, int interp) {
-    int status = IDAAdjInit(ami_mem, steps, interp);
+void IDASolver::adjInit(long steps, int interp) {
+    int status = IDAAdjInit(solverMemory.get(), steps, interp);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAAdjInit");
 }
-void IDASolver::AMICreateB(int lmm, int iter, int *which) {
-    int status = IDACreateB(ami_mem, which);
+void IDASolver::createB(int lmm, int iter, int *which) {
+    int status = IDACreateB(solverMemory.get(), which);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDACreateB");
 }
-void IDASolver::AMIReInitB(int which, realtype tB0, AmiVector *yyB0,
+void IDASolver::reInitB(int which, realtype tB0, AmiVector *yyB0,
                           AmiVector *ypB0) {
-    int status = IDAReInitB(ami_mem, which, tB0, yyB0->getNVector(), ypB0->getNVector());
+    int status = IDAReInitB(solverMemory.get(), which, tB0, yyB0->getNVector(), ypB0->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAReInitB");
 }
-void IDASolver::AMISStolerancesB(int which, realtype relTolB, realtype absTolB) {
-    int status = IDASStolerancesB(ami_mem, which, relTolB, absTolB);
+void IDASolver::setSStolerancesB(int which, realtype relTolB, realtype absTolB) {
+    int status = IDASStolerancesB(solverMemory.get(), which, relTolB, absTolB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASStolerancesB");
 }
-void IDASolver::AMIQuadReInitB(int which, AmiVector *yQB0) {
-    int status = IDAQuadReInitB(ami_mem, which, yQB0->getNVector());
+void IDASolver::quadReInitB(int which, AmiVector *yQB0) {
+    int status = IDAQuadReInitB(solverMemory.get(), which, yQB0->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAQuadReInitB");
 }
-void IDASolver::AMIQuadSStolerancesB(int which, realtype reltolQB,
+void IDASolver::quadSStolerancesB(int which, realtype reltolQB,
                                     realtype abstolQB) {
-    int status = IDAQuadSStolerancesB(ami_mem, which, reltolQB, abstolQB);
+    int status = IDAQuadSStolerancesB(solverMemory.get(), which, reltolQB, abstolQB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAQuadSStolerancesB");
 }
-int IDASolver::AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret,
+int IDASolver::solve(realtype tout, AmiVector *yret, AmiVector *ypret,
                         realtype *tret, int itask) {
-    int status = IDASolve(ami_mem, tout, tret, yret->getNVector(), ypret->getNVector(), itask);
+    int status = IDASolve(solverMemory.get(), tout, tret, yret->getNVector(), ypret->getNVector(), itask);
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     }
@@ -241,9 +238,9 @@ int IDASolver::AMISolve(realtype tout, AmiVector *yret, AmiVector *ypret,
     solverWasCalled = true;
     return status;
 }
-int IDASolver::AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret,
+int IDASolver::solveF(realtype tout, AmiVector *yret, AmiVector *ypret,
                          realtype *tret, int itask, int *ncheckPtr) {
-    int status = IDASolveF(ami_mem, tout, tret, yret->getNVector(), ypret->getNVector(), itask, ncheckPtr);
+    int status = IDASolveF(solverMemory.get(), tout, tret, yret->getNVector(), ypret->getNVector(), itask, ncheckPtr);
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     }
@@ -251,160 +248,160 @@ int IDASolver::AMISolveF(realtype tout, AmiVector *yret, AmiVector *ypret,
     solverWasCalled = true;
     return status;
 }
-void IDASolver::AMISolveB(realtype tBout, int itaskB) {
-    int status = IDASolveB(ami_mem, tBout, itaskB);
+void IDASolver::solveB(realtype tBout, int itaskB) {
+    int status = IDASolveB(solverMemory.get(), tBout, itaskB);
     if(status != IDA_SUCCESS)
          throw IntegrationFailure(status,tBout);
 }
-void IDASolver::AMISetMaxNumStepsB(int which, long mxstepsB) {
-    int status = IDASetMaxNumStepsB(ami_mem, which, mxstepsB);
+void IDASolver::setMaxNumStepsB(int which, long mxstepsB) {
+    int status = IDASetMaxNumStepsB(solverMemory.get(), which, mxstepsB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetMaxNumStepsB");
 }
-void IDASolver::AMIGetB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) {
-    int status = IDAGetB(ami_mem, which, tret, yy->getNVector(), yp->getNVector());
+void IDASolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) {
+    int status = IDAGetB(solverMemory.get(), which, tret, yy->getNVector(), yp->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetB");
 }
-void IDASolver::AMIGetQuadB(int which, realtype *tret, AmiVector *qB) {
-    int status = IDAGetQuadB(ami_mem, which, tret, qB->getNVector());
+void IDASolver::getQuadB(int which, realtype *tret, AmiVector *qB) {
+    int status = IDAGetQuadB(solverMemory.get(), which, tret, qB->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetQuadB");
 }
-void IDASolver::AMIDense(int nx) {
-    int status = IDADense(ami_mem, nx);
+void IDASolver::dense(int nx) {
+    int status = IDADense(solverMemory.get(), nx);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDADense");
 }
 
-void IDASolver::AMIDenseB(int which, int nx) {
-    int status = IDADenseB(ami_mem, which, nx);
+void IDASolver::denseB(int which, int nx) {
+    int status = IDADenseB(solverMemory.get(), which, nx);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDADenseB");
 }
                                             
-void IDASolver::AMIBand(int nx, int ubw, int lbw) {
-    int status = IDABand(ami_mem, nx, ubw, lbw);
+void IDASolver::band(int nx, int ubw, int lbw) {
+    int status = IDABand(solverMemory.get(), nx, ubw, lbw);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDABand");
 }
-void IDASolver::AMIBandB(int which, int nx, int ubw, int lbw) {
-    int status = IDABandB(ami_mem, which, nx, ubw, lbw);
+void IDASolver::bandB(int which, int nx, int ubw, int lbw) {
+    int status = IDABandB(solverMemory.get(), which, nx, ubw, lbw);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDABandB");
 }
-void IDASolver::AMIDiag() {
+void IDASolver::diag() {
     throw AmiException("Diag Solver was not implemented for DAEs");
 }
 
-void IDASolver::AMIDiagB(int which) {
+void IDASolver::diagB(int which) {
     throw AmiException("Diag Solver was not implemented for DAEs");
 }
 
-void IDASolver::AMISpgmr(int prectype, int maxl) {
-    int status = IDASpgmr(ami_mem, maxl);
+void IDASolver::spgmr(int prectype, int maxl) {
+    int status = IDASpgmr(solverMemory.get(), maxl);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpgmr");
 }
-void IDASolver::AMISpgmrB(int which, int prectype, int maxl) {
-    int status = IDASpgmrB(ami_mem, which, maxl);
+void IDASolver::spgmrB(int which, int prectype, int maxl) {
+    int status = IDASpgmrB(solverMemory.get(), which, maxl);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpgmrB");
 }
-void IDASolver::AMISpbcg(int prectype, int maxl) {
-    int status = IDASpbcg(ami_mem, maxl);
+void IDASolver::spbcg(int prectype, int maxl) {
+    int status = IDASpbcg(solverMemory.get(), maxl);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpbcg");
 }
-void IDASolver::AMISpbcgB(int which, int prectype, int maxl) {
-    int status = IDASpbcgB(ami_mem, which, maxl);
+void IDASolver::spbcgB(int which, int prectype, int maxl) {
+    int status = IDASpbcgB(solverMemory.get(), which, maxl);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpbcgB");
 }
-void IDASolver::AMISptfqmr(int prectype, int maxl) {
-    int status = IDASptfqmr(ami_mem, maxl);
+void IDASolver::sptfqmr(int prectype, int maxl) {
+    int status = IDASptfqmr(solverMemory.get(), maxl);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASptfqmr");
 }
-void IDASolver::AMISptfqmrB(int which, int prectype, int maxl) {
-    int status = IDASptfqmrB(ami_mem, which, maxl);
+void IDASolver::sptfqmrB(int which, int prectype, int maxl) {
+    int status = IDASptfqmrB(solverMemory.get(), which, maxl);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASptfqmrB");
 }
-void IDASolver::AMIKLU(int nx, int nnz, int sparsetype) {
-    int status = IDAKLU(ami_mem, nx, nnz, sparsetype);
+void IDASolver::klu(int nx, int nnz, int sparsetype) {
+    int status = IDAKLU(solverMemory.get(), nx, nnz, sparsetype);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAKLU");
 }
-void IDASolver::AMIKLUSetOrdering(int ordering) {
-    int status = IDAKLUSetOrdering(ami_mem, ordering);
+void IDASolver::kluSetOrdering(int ordering) {
+    int status = IDAKLUSetOrdering(solverMemory.get(), ordering);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAKLUSetOrdering");
 }
-void IDASolver::AMIKLUSetOrderingB(int which, int ordering) {
-    int status = IDAKLUSetOrderingB(ami_mem, which, ordering);
+void IDASolver::kluSetOrderingB(int which, int ordering) {
+    int status = IDAKLUSetOrderingB(solverMemory.get(), which, ordering);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAKLUSetOrderingB");
 }
-void IDASolver::AMIKLUB(int which, int nx, int nnz, int sparsetype) {
-    int status = IDAKLUB(ami_mem, which, nx, nnz, sparsetype);
+void IDASolver::kluB(int which, int nx, int nnz, int sparsetype) {
+    int status = IDAKLUB(solverMemory.get(), which, nx, nnz, sparsetype);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAKLUB");
 }
-void IDASolver::AMIGetNumSteps(void *ami_mem, long *numsteps) {
+void IDASolver::getNumSteps(void *ami_mem, long *numsteps) {
     int status = IDAGetNumSteps(ami_mem, numsteps);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetNumSteps");
 }
-void IDASolver::AMIGetNumRhsEvals(void *ami_mem, long *numrhsevals) {
+void IDASolver::getNumRhsEvals(void *ami_mem, long *numrhsevals) {
     int status = IDAGetNumResEvals(ami_mem, numrhsevals);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetNumResEvals");
 }
-void IDASolver::AMIGetNumErrTestFails(void *ami_mem, long *numerrtestfails) {
+void IDASolver::getNumErrTestFails(void *ami_mem, long *numerrtestfails) {
     int status = IDAGetNumErrTestFails(ami_mem, numerrtestfails);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetNumErrTestFails");
 }
-void IDASolver::AMIGetNumNonlinSolvConvFails(void *ami_mem,
+void IDASolver::getNumNonlinSolvConvFails(void *ami_mem,
                                             long *numnonlinsolvconvfails) {
     int status = IDAGetNumNonlinSolvConvFails(ami_mem, numnonlinsolvconvfails);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetNumNonlinSolvConvFails");
 }
-void IDASolver::AMIGetLastOrder(void *ami_mem, int *order) {
+void IDASolver::getLastOrder(void *ami_mem, int *order) {
     int status = IDAGetLastOrder(ami_mem, order);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetLastOrder");
 }
-void *IDASolver::AMIGetAdjBmem(void *ami_mem, int which) {
+void *IDASolver::getAdjBmem(void *ami_mem, int which) {
     return IDAGetAdjIDABmem(ami_mem, which);
 }
 
-void IDASolver::AMICalcIC(realtype tout1, AmiVector *x, AmiVector *dx) {
-    int status = IDACalcIC(ami_mem, IDA_YA_YDP_INIT, tout1);
+void IDASolver::calcIC(realtype tout1, AmiVector *x, AmiVector *dx) {
+    int status = IDACalcIC(solverMemory.get(), IDA_YA_YDP_INIT, tout1);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDACalcIC");
-    status = IDAGetConsistentIC(ami_mem, x->getNVector(), dx->getNVector());
+    status = IDAGetConsistentIC(solverMemory.get(), x->getNVector(), dx->getNVector());
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDACalcIC");
 }
 
-void IDASolver::AMICalcICB(int which, realtype tout1, AmiVector *xB,
+void IDASolver::calcICB(int which, realtype tout1, AmiVector *xB,
                           AmiVector *dxB) {
-    int status = IDACalcICB(ami_mem, which, tout1, xB->getNVector(), dxB->getNVector());
+    int status = IDACalcICB(solverMemory.get(), which, tout1, xB->getNVector(), dxB->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDACalcICB");
 }
     
-void IDASolver::AMISetStopTime(realtype tstop) {
-    int status = IDASetStopTime(ami_mem, tstop);
+void IDASolver::setStopTime(realtype tstop) {
+    int status = IDASetStopTime(solverMemory.get(), tstop);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetStopTime");
 }
                                             
 void IDASolver::turnOffRootFinding() {
-    int status = IDARootInit(ami_mem, 0, nullptr);
+    int status = IDARootInit(solverMemory.get(), 0, nullptr);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDARootInit");
 }
@@ -684,6 +681,4 @@ void IDASolver::turnOffRootFinding() {
         return AMICI_SUCCESS;
     }
                                             
-IDASolver::~IDASolver() { AMIFree(); }
-
 } // namespace amici

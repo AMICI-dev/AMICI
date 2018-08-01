@@ -63,9 +63,9 @@ void BackwardProblem::workBackwardProblem() {
         tnext = getTnext(discs, iroot, it);
 
         if (tnext < t) {
-            solver->AMISolveB(tnext, AMICI_NORMAL);
-            solver->AMIGetB(which, &t, &xB, &dxB);
-            solver->AMIGetQuadB(which, &t, &xQB);
+            solver->solveB(tnext, AMICI_NORMAL);
+            solver->getB(which, &t, &xB, &dxB);
+            solver->getQuadB(which, &t, &xQB);
         }
 
         /* handle discontinuity */
@@ -84,18 +84,18 @@ void BackwardProblem::workBackwardProblem() {
         }
 
         /* reinit states */
-        solver->AMIReInitB(which, t, &xB, &dxB);
-        solver->AMIQuadReInitB(which, &xQB);
-        solver->AMICalcICB(which, t, &xB, &dxB);
+        solver->reInitB(which, t, &xB, &dxB);
+        solver->quadReInitB(which, &xQB);
+        solver->calcICB(which, t, &xB, &dxB);
     }
 
     /* we still need to integrate from first datapoint to tstart */
     if (t > model->t0()) {
         if (model->nx > 0) {
             /* solve for backward problems */
-            solver->AMISolveB(model->t0(), AMICI_NORMAL);
-            solver->AMIGetQuadB(which, &(t), &xQB);
-            solver->AMIGetB(which, &(t), &xB, &dxB);
+            solver->solveB(model->t0(), AMICI_NORMAL);
+            solver->getQuadB(which, &(t), &xQB);
+            solver->getB(which, &(t), &xB, &dxB);
         }
     }
     

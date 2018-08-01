@@ -81,7 +81,7 @@ void ForwardProblem::workForwardProblem() {
      */
 
     try {
-        solver->setupAMI(this, model);
+        solver->setup(this, model);
     } catch (std::exception& ex) {
         throw AmiException("AMICI setup failed:\n(%s)",ex.what());
     } catch (...) {
@@ -114,7 +114,7 @@ void ForwardProblem::workForwardProblem() {
 
         if (rdata->sensi_meth == AMICI_SENSI_FSA &&
             rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-            solver->AMISetStopTime(nextTimepoint);
+            solver->setStopTime(nextTimepoint);
         }
 
         if (nextTimepoint > model->t0()) {
@@ -131,10 +131,10 @@ void ForwardProblem::workForwardProblem() {
                     int status;
                     if (rdata->sensi_meth == AMICI_SENSI_ASA &&
                             rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                        status = solver->AMISolveF(RCONST(nextTimepoint), &x, &dx,
+                        status = solver->solveF(RCONST(nextTimepoint), &x, &dx,
                                                    &(t), AMICI_NORMAL, &ncheck);
                     } else {
-                        status = solver->AMISolve(RCONST(nextTimepoint), &x, &dx,
+                        status = solver->solve(RCONST(nextTimepoint), &x, &dx,
                                                   &(t), AMICI_NORMAL);
                     }
 
@@ -202,7 +202,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     model->froot(t, &x, &dx, rootvals.data());
     
     if (!seflag) {
-        solver->AMIGetRootInfo(rootsfound.data());
+        solver->getRootInfo(rootsfound.data());
     }
 
     if (iroot < rdata->nmaxevent * model->ne) {
@@ -215,7 +215,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         /* only extract in the first event fired */
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST &&
             rdata->sensi_meth == AMICI_SENSI_FSA) {
-            solver->AMIGetSens(&(t), &sx);
+            solver->getSens(&(t), &sx);
         }
 
         /* only check this in the first event fired, otherwise this will always
@@ -275,7 +275,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
                         "Event was recorded but not reported as the number of "
                         "occured events exceeded (nmaxevents)*(number of "
                         "events in model definition)!");
-        solver->AMIReInit(t, &x, &dx); /* reinitialise so that we can continue in peace */
+        solver->reInit(t, &x, &dx); /* reinitialise so that we can continue in peace */
         return;
     }
 
@@ -316,14 +316,14 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 
     /* only reinitialise in the first event fired */
     if (!seflag) {
-        solver->AMIReInit(t, &x, &dx);
+        solver->reInit(t, &x, &dx);
 
         /* make time derivative consistent */
-        solver->AMICalcIC(t, &x, &dx);
+        solver->calcIC(t, &x, &dx);
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-                solver->AMISensReInit(solver->getInternalSensitivityMethod(), &sx, &sdx);
+                solver->sensReInit(solver->getInternalSensitivityMethod(), &sx, &sdx);
             }
         }
     }
@@ -555,7 +555,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
      */
 
     if (!std::isinf(rdata->ts[it]) && rdata->ts[it] > model->t0()) {
-        solver->AMIGetSens(&(t), &sx);
+        solver->getSens(&(t), &sx);
     }
     
     for (int ix = 0; ix < model->nx; ix++) {
