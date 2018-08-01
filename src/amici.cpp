@@ -74,9 +74,9 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
                                    model.nk(), edata->fixedParameters.size());
             model.setFixedParameters(edata->fixedParameters);
         }
-        if(!edata->ts.empty()) {
+        if(edata->nt()) {
             // fixed parameter in model are superseded by those provided in edata
-            model.setTimepoints(edata->ts);
+            model.setTimepoints(edata->getTimepoints());
         }
     }
     try{

@@ -828,15 +828,16 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-void Model::fsigmay(const int it, const ExpData *edata, ReturnData *rdata) {
+void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
     std::fill(sigmay.begin(),sigmay.end(),0.0);
     fsigmay(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
     for (int iytrue = 0; iytrue < nytrue; iytrue++) {
         /* extract the value for the standard deviation, if the data value
              is NaN, use the parameter value. Store this value in the return struct */
         if(edata){
-            if (!isNaN(edata->observedDataStdDev[it * edata->nytrue + iytrue])) {
-                sigmay.at(iytrue) = edata->observedDataStdDev[it * edata->nytrue + iytrue];
+            if (edata->isSetObservedDataStdDev(it, iytrue)) {
+                auto sigmay_edata = edata->getObservedDataStdDevPtr(it);
+                sigmay.at(iytrue) = sigmay_edata[iytrue];
             }
         }
         rdata->sigmay[it * rdata->ny + iytrue] = sigmay.at(iytrue);
@@ -860,8 +861,10 @@ void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
                     plist_.at(ip));
 
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydp to zero
-    for (int iy = 0; iy < nytrue; iy++) {
-        if (!isNaN(edata->observedDataStdDev[it * rdata->nytrue + iy])) {
+    if(edata){
+        for (int iy = 0; iy < nytrue; iy++) {
+            if (!edata->isSetObservedDataStdDev(it, iy))
+                continue;
             for (int ip = 0; ip < nplist(); ip++) {
                 dsigmaydp[ip * ny + iy] = 0.0;
             }
@@ -879,15 +882,17 @@ void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-void Model::fsigmaz(const realtype t, const int ie, const int *nroots,
-                     const ExpData *edata, ReturnData *rdata) {
+void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnData *rdata,
+                    const ExpData *edata) {
     std::fill(sigmaz.begin(),sigmaz.end(),0.0);
     fsigmaz(sigmaz.data(),t, unscaledParameters.data(),fixedParameters.data());
+    
+    auto sigmaz_edata = edata->getObservedEventsStdDevPtr(nroots[ie]);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (z2event.at(iztrue) - 1 == ie) {
             if(edata) {
-                if (!isNaN(edata->observedEventsStdDev[nroots[ie]*edata->nztrue + iztrue])) {
-                    sigmaz.at(iztrue) = edata->observedEventsStdDev[nroots[ie]*edata->nztrue + iztrue];
+                if (edata->isSetObservedEventsStdDev(nroots[ie],iztrue)) {
+                    sigmaz.at(iztrue) = sigmaz_edata[iztrue];
                 }
             }
             rdata->sigmaz[nroots[ie]*rdata->nz + iztrue] = sigmaz.at(iztrue);
@@ -898,10 +903,30 @@ void Model::fsigmaz(const realtype t, const int ie, const int *nroots,
 /** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
      * @param t current timepoint
      */
-void Model::fdsigmazdp(const realtype t) {
+void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, ReturnData *rdata, const ExpData *edata) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fdsigmazdp(&dsigmazdp.at(ip*nz),t, unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+        // get dsigmazdp slice (nz) for current event and parameter
+        fdsigmazdp(&dsigmazdp.at(ip*nz),
+                   t,
+                   unscaledParameters.data(),
+                   fixedParameters.data(),
+                   plist_.at(ip));
+    
+    // sigmas in edata override model-sigma -> for those sigmas, set dsigmazdp to zero
+    if(edata) {
+        for (int iz = 0; iz < nztrue; iz++) {
+            if (z2event.at(iz) - 1 == ie) {
+                if (!edata->isSetObservedEventsStdDev(nroots[ie],iz))
+                    continue;
+                for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+                    dsigmazdp.at(iz + nz * ip) = 0;
+            }
+        }
+    }
+    
+    // copy dsigmazdp slice for current event
+    std::copy(dsigmazdp.begin(), dsigmazdp.end(), &rdata->ssigmaz[nroots[ie] * nplist() * nz]);
 }
 
 /** negative log-likelihood of measurements y
@@ -1108,12 +1133,13 @@ void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
     if (!edata || rdata->res.empty())
         return;
     
+    auto observedData = edata->getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * edata->nytrue;
         int iyt = iy + it * rdata->ny;
-        if (isNaN(edata->observedData.at(iyt_true)))
+        if (!edata->isSetObservedData(it, iy))
             continue;
-        rdata->res.at(iyt_true) = (rdata->y.at(iyt) - edata->observedData.at(iyt_true))/rdata->sigmay.at(iyt);
+        rdata->res.at(iyt_true) = (rdata->y.at(iyt) - observedData[iy])/rdata->sigmay.at(iyt);
     }
 
 }
@@ -1135,7 +1161,7 @@ void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * edata->nytrue;
         int iyt = iy + it * rdata->ny;
-        if (isNaN(edata->observedData.at(iyt_true)))
+        if (!edata->isSetObservedData(it,iy))
             continue;
         for (int ip = 0; ip < nplist(); ++ip) {
             rdata->sres.at(iyt_true * nplist() + ip) =
@@ -1178,7 +1204,7 @@ void Model::updateHeavisideB(const int *rootsfound) {
      */
 void Model::getmy(const int it, const ExpData *edata){
     if(edata) {
-        std::copy_n(&edata->observedData[it*edata->nytrue], nytrue, my.begin());
+        std::copy_n(edata->getObservedDataPtr(it), nytrue, my.begin());
     } else {
         std::fill(my.begin(), my.end(), getNaN());
     }
@@ -1227,7 +1253,7 @@ realtype Model::gett(const int it, const ReturnData *rdata) const {
      */
 void Model::getmz(const int nroots, const ExpData *edata) {
     if(edata){
-        std::copy_n(&edata->observedEvents[nroots*edata->nztrue], nztrue, mz.begin());
+        std::copy_n(edata->getObservedEventsPtr(nroots), nztrue, mz.begin());
     } else {
         std::fill(mz.begin(), mz.end(), getNaN());
     }

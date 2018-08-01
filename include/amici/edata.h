@@ -92,7 +92,7 @@ class ExpData {
      * number of timepoints
      *
      */
-     int nt();
+     const int nt() const;
 
     /**
      * set function that copies data from input to ExpData::ts
@@ -132,7 +132,16 @@ class ExpData {
     void setObservedData(const std::vector<realtype> &observedData, int iy);
     
     /**
-     * get function that copies data from ExpData::my to output
+     * get function that checks whether data at specified indices has been set
+     *
+     * @param it time index
+     * @param iy observable index
+     * @return boolean specifying if data was set
+     */
+    bool isSetObservedData(int it, int iy) const;
+    
+    /**
+     * get function that copies data from ExpData::observedData to output
      *
      * @return observed data (dimension: nt x nytrue, row-major)
      */
@@ -144,17 +153,17 @@ class ExpData {
      * @param it timepoint index
      * @return observed data at index (dimension: nytrue)
      */
-    const realtype *getObservedData(int it) const;
+    const realtype *getObservedDataPtr(int it) const;
     
     /**
-     * set function that copies data from input to ExpData::sigmay
+     * set function that copies data from input to ExpData::observedDataStdDev
      *
      * @param observedDataStdDev standard deviation of observed data (dimension: nt x nytrue, row-major)
      */
     void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev);
     
     /**
-     * set function that sets all ExpData::sigmay to the input value
+     * set function that sets all ExpData::observedDataStdDev to the input value
      *
      * @param StdDev standard deviation (dimension: scalar)
      */
@@ -177,7 +186,16 @@ class ExpData {
     void setObservedDataStdDev(const realtype StdDev, int iy);
     
     /**
-     * get function that copies data from ExpData::sigmay to output
+     * get function that checks whether standard deviation of data at specified indices has been set
+     *
+     * @param it time index
+     * @param iy observable index
+     * @return boolean specifying if standard deviation of data was set
+     */
+    bool isSetObservedDataStdDev(int it, int iy) const;
+    
+    /**
+     * get function that copies data from ExpData::observedDataStdDev to output
      *
      * @return standard deviation of observed data
      */
@@ -189,12 +207,12 @@ class ExpData {
      * @param it timepoint index
      * @return standard deviation of observed data at index
      */
-    const realtype *getObservedDataStdDev(int it) const;
+    const realtype *getObservedDataStdDevPtr(int it) const;
     
     /**
-     * set function that copies data from input to ExpData::mz
+     * set function that copies observed event data from input to ExpData::observedEvents
      *
-     * @param observedEvents observed event data
+     * @param observedData observed data (dimension: nmaxevent x nztrue, row-major)
      */
     void setObservedEvents(const std::vector<realtype> &observedEvents);
     
@@ -205,6 +223,15 @@ class ExpData {
      * @param iz observed event data index
      */
     void setObservedEvents(const std::vector<realtype> &observedEvents, int iz);
+    
+    /**
+     * get function that checks whether event data at specified indices has been set
+     *
+     * @param ie event index
+     * @param iz event observable index
+     * @return boolean specifying if data was set
+     */
+    bool isSetObservedEvents(int ie, int iz) const;
     
     /**
      * get function that copies data from ExpData::mz to output
@@ -219,17 +246,17 @@ class ExpData {
      * @param ie event occurence
      * @return observed event data at ieth occurence
      */
-    const realtype *getObservedEvents(int ie) const;
+    const realtype *getObservedEventsPtr(int ie) const;
     
     /**
-     * set function that copies data from input to ExpData::sigmaz
+     * set function that copies data from input to ExpData::observedEventsStdDev
      *
      * @param observedEventsStdDev standard deviation of observed event data
      */
     void setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev);
     
     /**
-     * set function that sets all ExpData::sigmay to the input value
+     * set function that sets all ExpData::observedDataStdDev to the input value
      *
      * @param StdDev standard deviation (dimension: scalar)
      */
@@ -252,7 +279,16 @@ class ExpData {
     void setObservedEventsStdDev(const realtype StdDev, int iz);
     
     /**
-     * get function that copies data from ExpData::sigmaz to output
+     * get function that checks whether standard deviation of even data at specified indices has been set
+     *
+     * @param ie event index
+     * @param iz event observable index
+     * @return boolean specifying if standard deviation of event data was set
+     */
+    bool isSetObservedEventsStdDev(int ie, int iz) const;
+    
+    /**
+     * get function that copies data from ExpData::observedEventsStdDev to output
      *
      * @return standard deviation of observed event data
      */
@@ -264,7 +300,7 @@ class ExpData {
      * @param ie event occurence
      * @return standard deviation of observed event data at ieth occurence
      */
-    const realtype *getObservedEventsStdDev(int ie) const;
+    const realtype *getObservedEventsStdDevPtr(int ie) const;
     
     /** number of observables */
     const int nytrue;

@@ -103,7 +103,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         if(locationExists(file,  hdf5Root + "/Y")) {
             auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
-            edata->observedData = my;
+            edata->setObservedData(my);
         } else {
             throw AmiException("Missing %s/Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
@@ -111,7 +111,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         if(locationExists(file,  hdf5Root + "/Sigma_Y")) {
             auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
-            edata->observedDataStdDev = sigmay;
+            edata->setObservedDataStdDev(sigmay);
         } else {
             throw AmiException("Missing %s/Sigma_Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
@@ -121,7 +121,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         if(locationExists(file,  hdf5Root + "/Z")) {
             auto mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
             checkEventDimensionsCompatible(m, n, model);
-            edata->observedEvents = mz;
+            edata->setObservedEvents(mz);
         } else {
             throw AmiException("Missing %s/Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
@@ -129,7 +129,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         if(locationExists(file,  hdf5Root + "/Sigma_Z")) {
             auto sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
             checkEventDimensionsCompatible(m, n, model);
-            edata->observedEventsStdDev = sigmaz;
+            edata->setObservedEventsStdDev(sigmaz);
         } else {
             throw AmiException("Missing %s/Sigma_Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
@@ -144,7 +144,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     }
     
     if(locationExists(file,  hdf5Root + "/ts")) {
-        edata->ts = getDoubleDataset1D(file, hdf5Root + "/ts");
+        edata->setTimepoints(getDoubleDataset1D(file, hdf5Root + "/ts"));
     }
 
     return edata;
@@ -156,9 +156,9 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const 
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
     
-    if (!edata.ts.empty())
+    if (edata.nt())
         createAndWriteDouble1DDataset(file, hdf5Location + "/ts",
-                                      edata.ts.data(), edata.nt);
+                                      edata.getTimepoints().data(), edata.nt());
     
     if (!edata.fixedParameters.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/condition",
@@ -168,19 +168,18 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const 
         createAndWriteDouble1DDataset(file, hdf5Location + "/conditionPreequilibration",
                                       edata.fixedParametersPreequilibration.data(), edata.fixedParametersPreequilibration.size());
     
-    if (!edata.my.empty())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.my.data(),
-                                      edata.nt, edata.nytrue);
-    if (!edata.sigmay.empty())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Y", edata.sigmay.data(),
-                                      edata.nt, edata.nytrue);
-    if (!edata.mz.empty())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/Z", edata.mz.data(),
+    if (!edata.getObservedData().empty())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.getObservedData().data(),
+                                      edata.nt(), edata.nytrue);
+    if (!edata.getObservedDataStdDev().empty())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Y", edata.getObservedDataStdDev().data(),
+                                      edata.nt(), edata.nytrue);
+    if (!edata.getObservedEvents().empty())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Z", edata.getObservedEvents().data(),
                                       edata.nmaxevent, edata.nztrue);
-    if (!edata.sigmaz.empty())
-        createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Z", edata.sigmaz.data(),
+    if (!edata.getObservedEventsStdDev().empty())
+        createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Z", edata.getObservedEventsStdDev().data(),
                                       edata.nmaxevent, edata.nztrue);
-    
 }
 
 void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std::string &hdf5Location)

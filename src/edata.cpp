@@ -25,8 +25,7 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> sigmay,
                  std::vector<realtype> mz,
                  std::vector<realtype> sigmaz)
-    : ts(std::move(ts)), observedData(std::move(my)), observedDataStdDev(std::move(sigmay)), observedEvents(std::move(mz)), observedEventsStdDev(std::move(sigmaz)),
-      nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent)
+    : nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent), ts(std::move(ts)), observedData(std::move(my)), observedDataStdDev(std::move(sigmay)), observedEvents(std::move(mz)), observedEventsStdDev(std::move(sigmaz))
 {
 }
 
@@ -52,10 +51,10 @@ ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
 ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z)
     : ExpData(rdata.nytrue, rdata.nztrue, rdata.nmaxevent, rdata.ts)
 {
-    if (sigma_y.size() != nytrue)
+    if (sigma_y.size() != (unsigned) nytrue)
         throw AmiException("Dimension of sigma_y must be %d, was %d", nytrue, sigma_y.size());
         
-    if (sigma_z.size() != nztrue)
+    if (sigma_z.size() != (unsigned) nztrue)
         throw AmiException("Dimension of sigma_z must be %d, was %d", nztrue, sigma_z.size());
     
     std::random_device rd{};
@@ -93,13 +92,17 @@ void ExpData::setTimepoints(const std::vector<realtype> &ts) {
 std::vector<realtype> ExpData::getTimepoints() const {
     return ts;
 }
+
+const int ExpData::nt() const {
+    return ts.size();
+}
     
 realtype ExpData::getTimepoint(int it) const {
     return ts.at(it);
 }
     
 void ExpData::setObservedData(const std::vector<realtype> &observedData) {
-    if (observedData.size() == nt()*nytrue) {
+    if (observedData.size() == (unsigned) nt()*nytrue) {
         this->observedData = observedData;
     } else {
         if (observedData.size() == 0) {
@@ -111,7 +114,7 @@ void ExpData::setObservedData(const std::vector<realtype> &observedData) {
 }
     
 void ExpData::setObservedData(const std::vector<realtype> &observedData, int iy) {
-    if (observedData.size() == nt()) {
+    if (observedData.size() == (unsigned) nt()) {
         for (int it = 0; it < nt(); ++it)
             this->observedData.at(iy + it*nytrue) = observedData.at(iy);
     } else {
@@ -119,16 +122,27 @@ void ExpData::setObservedData(const std::vector<realtype> &observedData, int iy)
     }
 }
     
+bool ExpData::isSetObservedData(int it, int iy) const {
+    if (!observedData.empty()) {
+        return !isNaN(observedData.at(it * nytrue + iy));
+    } else {
+        return false;
+    }
+}
+    
 std::vector<realtype> ExpData::getObservedData() const {
     return observedData;
 }
     
-const realtype *ExpData::getObservedData(int it) const {
-    return &observedData.at(it*nytrue);
+const realtype *ExpData::getObservedDataPtr(int it) const {
+    if (!observedData.empty())
+        return &observedData.at(it*nytrue);
+    else
+        return nullptr;
 }
 
 void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev) {
-    if (observedDataStdDev.size() == nt()*nytrue) {
+    if (observedDataStdDev.size() == (unsigned) nt()*nytrue) {
         this->observedDataStdDev = observedDataStdDev;
     } else {
         if (observedDataStdDev.size() == 0) {
@@ -144,7 +158,7 @@ void ExpData::setObservedDataStdDev(const realtype StdDev) {
 }
     
 void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev, int iy) {
-    if (observedDataStdDev.size() == nt()) {
+    if (observedDataStdDev.size() == (unsigned) nt()) {
         for (int it = 0; it < nt(); ++it)
             this->observedDataStdDev.at(iy + it*nytrue) = observedDataStdDev.at(iy);
     } else {
@@ -157,16 +171,28 @@ void ExpData::setObservedDataStdDev(const realtype StdDev, int iy) {
         observedDataStdDev.at(iy + it*nytrue) = StdDev;
 }
     
+bool ExpData::isSetObservedDataStdDev(int it, int iy) const {
+    if (!observedDataStdDev.empty()) {
+        return !isNaN(observedDataStdDev.at(it * nytrue + iy));
+    } else {
+        return false;
+    }
+}
+    
 std::vector<realtype> ExpData::getObservedDataStdDev() const {
     return observedDataStdDev;
 }
 
-const realtype *ExpData::getObservedDataStdDev(int it) const {
-    return &observedDataStdDev.at(it*nytrue);
+const realtype *ExpData::getObservedDataStdDevPtr(int it) const {
+    if (!observedDataStdDev.empty()) {
+        return &observedDataStdDev.at(it*nytrue);
+    } else {
+        return nullptr;
+    }
 }
     
 void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents) {
-    if (observedEvents.size() == nmaxevent*nztrue) {
+    if (observedEvents.size() == (unsigned) nmaxevent*nztrue) {
         this->observedEvents = observedEvents;
     } else {
         if (observedEvents.size() == 0) {
@@ -178,11 +204,19 @@ void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents) {
 }
     
 void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents, int iz) {
-    if (observedEvents.size() == nmaxevent) {
+    if (observedEvents.size() == (unsigned) nmaxevent) {
         for (int ie = 0; ie < nmaxevent; ++ie)
             this->observedEvents.at(iz + ie*nztrue) = observedEvents.at(iz);
     } else {
         throw AmiException("Input observedEvents did not match dimensions nmaxevent (%i), was %i", nmaxevent, observedEvents.size());
+    }
+}
+    
+bool ExpData::isSetObservedEvents(int ie, int iz) const {
+    if (!observedEvents.size()) {
+        return !isNaN(observedEvents.at(ie * nztrue + iz));
+    } else {
+        return false;
     }
 }
 
@@ -190,12 +224,15 @@ std::vector<realtype> ExpData::getObservedEvents() const {
     return observedEvents;
 }
 
-const realtype *ExpData::getObservedEvents(int ie) const {
-    return &observedEvents.at(ie*nztrue);
+const realtype *ExpData::getObservedEventsPtr(int ie) const {
+    if (!observedEvents.empty())
+        return &observedEvents.at(ie*nztrue);
+    else
+        return nullptr;
 }
     
 void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev) {
-    if (observedEventsStdDev.size() == nmaxevent*nztrue) {
+    if (observedEventsStdDev.size() == (unsigned) nmaxevent*nztrue) {
         this->observedEventsStdDev = observedEventsStdDev;
     } else {
         if (observedEventsStdDev.size() == 0) {
@@ -211,7 +248,7 @@ void ExpData::setObservedEventsStdDev(const realtype StdDev) {
 }
 
 void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev, int iz) {
-    if (observedEventsStdDev.size() == nmaxevent) {
+    if (observedEventsStdDev.size() == (unsigned) nmaxevent) {
         for (int ie = 0; ie < nmaxevent; ++ie)
             this->observedEventsStdDev.at(iz + ie*nztrue) = observedEventsStdDev.at(iz);
     } else {
@@ -223,13 +260,24 @@ void ExpData::setObservedEventsStdDev(const realtype StdDev, int iz) {
     for (int ie = 0; ie < nmaxevent; ++ie)
         observedEventsStdDev.at(iz + ie*nztrue) = StdDev;
 }
+    
+bool ExpData::isSetObservedEventsStdDev(int ie, int iz) const {
+    if (!observedEventsStdDev.empty()) {
+        return !isNaN(observedEventsStdDev.at(ie * nztrue + iz));
+    } else {
+        return false;
+    }
+}
 
 std::vector<realtype> ExpData::getObservedEventsStdDev() const {
     return observedEventsStdDev;
 }
 
-const realtype *ExpData::getObservedEventsStdDev(int ie) const {
-    return &observedEventsStdDev.at(ie*nztrue);
+const realtype *ExpData::getObservedEventsStdDevPtr(int ie) const {
+    if (!observedEventsStdDev.empty())
+        return &observedEventsStdDev.at(ie*nztrue);
+    else
+        return nullptr;
 }
 
 } // namespace amici
