@@ -95,14 +95,10 @@ class BackwardProblem {
     std::vector<realtype> llhS0;
     /** adjoint state vector */
     AmiVector xB;
-    /** old adjoint state vector */
-    AmiVector xB_old;
     /** differential adjoint state vector */
     AmiVector dxB;
     /** quadrature state vector */
     AmiVector xQB;
-    /** old quadrature state vector */
-    AmiVector xQB_old;
     /** array of state vectors at discontinuities*/
     const AmiVectorArray x_disc;
     /** array of differential state vectors at discontinuities*/

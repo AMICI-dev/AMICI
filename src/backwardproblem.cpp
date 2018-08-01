@@ -18,10 +18,8 @@ namespace amici {
 BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
     llhS0(static_cast<decltype(llhS0)::size_type>(fwd->model->nJ * fwd->model->nplist()), 0.0),
     xB(fwd->model->nx),
-    xB_old(fwd->model->nx),
     dxB(fwd->model->nx),
     xQB(fwd->model->nJ*fwd->model->nplist()),
-    xQB_old(fwd->model->nJ*fwd->model->nplist()),
     x_disc(fwd->getStatesAtDiscontinuities()),
     xdot_disc(fwd->getRHSAtDiscontinuities()),
     xdot_old_disc(fwd->getRHSBeforeDiscontinuities()),
@@ -148,38 +146,34 @@ void BackwardProblem::handleEventB(int iroot) {
      * @param[out] iroot index of event @type int
      */
 
-    /* store current values */
-    xB_old = xB;
-    xQB_old = xQB;
-
     for (int ie = 0; ie < model->ne; ie++) {
 
-        if (rootidx[iroot * model->ne + ie] != 0) {
-
-            model->fdeltaqB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
-
-            model->fdeltaxB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
-
-            for (int ix = 0; ix < model->nxtrue; ++ix) {
-                for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                    xB[ix + iJ * model->nxtrue] +=
-                        model->deltaxB[ix + iJ * model->nxtrue];
-                    if (model->nz > 0) {
-                        xB[ix + iJ * model->nxtrue] +=
-                            dJzdx[iJ + ( ix + nroots[ie] * model->nx ) * model->nJ];
-                    }
-                }
-            }
-
-            for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                for (int ip = 0; ip < model->nplist(); ++ip) {
-                    xQB[ip + iJ * model->nplist()] +=
-                        model->deltaqB[ip + iJ * model->nplist()];
-                }
-            }
-
-            nroots[ie]--;
+        if (rootidx[iroot * model->ne + ie] == 0) {
+            continue;
         }
+
+        model->fdeltaqB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
+        model->fdeltaxB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
+
+        for (int ix = 0; ix < model->nxtrue; ++ix) {
+            for (int iJ = 0; iJ < model->nJ; ++iJ) {
+                xB[ix + iJ * model->nxtrue] +=
+                        model->deltaxB[ix + iJ * model->nxtrue];
+                if (model->nz > 0) {
+                    xB[ix + iJ * model->nxtrue] +=
+                            dJzdx[iJ + ( ix + nroots[ie] * model->nx ) * model->nJ];
+                }
+            }
+        }
+
+        for (int iJ = 0; iJ < model->nJ; ++iJ) {
+            for (int ip = 0; ip < model->nplist(); ++ip) {
+                xQB[ip + iJ * model->nplist()] +=
+                        model->deltaqB[ip + iJ * model->nplist()];
+            }
+        }
+
+        nroots[ie]--;
     }
 
     model->updateHeavisideB(&rootidx[iroot * model->ne]);
