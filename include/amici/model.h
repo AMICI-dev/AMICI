@@ -322,7 +322,7 @@ namespace amici {
          * @brief getParameterScale
          * @return
          */
-        std::vector<AMICI_parameter_scaling> getParameterScale() const;
+        std::vector<AMICI_parameter_scaling> const& getParameterScale() const;
 
         /**
          * @brief setParameterScale
@@ -340,7 +340,7 @@ namespace amici {
          * @brief getParameters
          * @return The user-set parameters (see also getUnscaledParameters)
          */
-        std::vector<realtype> getParameters() const;
+        std::vector<realtype> const& getParameters() const;
 
         /**
          * @brief setParameters
@@ -352,13 +352,13 @@ namespace amici {
          * @brief getUnscaledParameters
          * @return The unscaled parameters
          */
-        std::vector<realtype> getUnscaledParameters() const;
+        std::vector<realtype> const& getUnscaledParameters() const;
 
         /**
          * @brief getFixedParameters
          * @return
          */
-        std::vector<realtype> getFixedParameters() const;
+        std::vector<realtype> const& getFixedParameters() const;
 
         /**
          * @brief setFixedParameters
@@ -370,7 +370,7 @@ namespace amici {
          * @brief getTimepoints
          * @return
          */
-        std::vector<realtype> getTimepoints() const;
+        std::vector<realtype> const& getTimepoints() const;
 
         /**
          * @brief setTimepoints
@@ -389,7 +389,7 @@ namespace amici {
          * @brief getParameterList
          * @return
          */
-        std::vector<int> getParameterList() const;
+        std::vector<int> const& getParameterList() const;
 
         /**
          * @brief setParameterList
@@ -401,7 +401,7 @@ namespace amici {
          * @brief getInitialStates
          * @return
          */
-        std::vector<realtype> getInitialStates() const;
+        std::vector<realtype> const& getInitialStates() const;
 
         /**
          * @brief setInitialStates
@@ -413,7 +413,7 @@ namespace amici {
          * @brief getInitialStateSensitivities
          * @return
          */
-        std::vector<realtype> getInitialStateSensitivities() const;
+        std::vector<realtype> const& getInitialStateSensitivities() const;
 
         /**
          * @brief setInitialStateSensitivities

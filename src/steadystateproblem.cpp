@@ -37,13 +37,13 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* First, try to do Newton steps */
     starttime = clock();
 
-    auto newtonSolver = std::unique_ptr<NewtonSolver>(NewtonSolver::getSolver(t, x, solver->getLinearSolver(),
-                                                                              model, rdata,
-                                                                              solver->getNewtonMaxLinearSteps(),
-                                                                              solver->getNewtonMaxSteps(),
-                                                                              solver->getAbsoluteTolerance(),
-                                                                              solver->getRelativeTolerance()));
-                                                      
+    auto newtonSolver = NewtonSolver::getSolver(t, x, solver->getLinearSolver(),
+                                                model, rdata,
+                                                solver->getNewtonMaxLinearSteps(),
+                                                solver->getNewtonMaxSteps(),
+                                                solver->getAbsoluteTolerance(),
+                                                solver->getRelativeTolerance());
+
     int newton_status;
     try {
         applyNewtonsMethod(rdata, model, newtonSolver.get(), 1);
@@ -72,14 +72,13 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         newtonSolver->getSensis(it, sx);
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
-    getNewtonOutput(rdata, model, newton_status, run_time, it);
+    getNewtonOutput(rdata, newton_status, run_time, it);
     
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
-        solver->AMIReInit(*t, x, &dx);
-        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-            if (rdata->sensi_meth == AMICI_SENSI_FSA)
-                solver->AMISensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
+        solver->reInit(*t, x, &dx);
+        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && rdata->sensi_meth == AMICI_SENSI_FSA) {
+                solver->sensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
         }
     }
 }
@@ -197,12 +196,11 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
  */
 
 void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
-                                         Model *model, int newton_status,
+                                         int newton_status,
                                          double run_time, int it) {
     /**
      * Stores output of workSteadyStateProblem in return data
      *
-     * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] newton_status integer flag indicating when a steady state was
      * found
      * @param[in] run_time double coputation time of the solver in milliseconds
@@ -219,9 +217,7 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
         *t = rdata->ts[0];
 
         /* Write steady state to output */
-        for (int ix = 0; ix < model->nx; ix++) {
-            rdata->x0[ix] = (*x)[ix];
-        }
+        rdata->x0 = x->getVector();
     } else {
         *t = INFINITY;
     }
@@ -258,7 +254,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         *t = rdata->ts[it-1];
         model->fx0(x);
         /* Reinitialize old solver */
-        solver->AMIReInit(*t, x, &dx);
+        solver->reInit(*t, x, &dx);
     }
     
     /* Loop over steps and check for convergence */
@@ -278,7 +274,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
             if(status != CV_SUCCESS)
                 throw CvodeException(status,"Error when calling CVode during Newton preequilibration simulation");
         } else {
-            solver->AMISolve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
+            solver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
         }
 
         model->fxdot(*t, x, &dx, &xdot);

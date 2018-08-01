@@ -3,6 +3,8 @@
 
 #include "amici/vector.h"
 
+#include <memory>
+
 #include <klu.h>
 #include <nvector/nvector_serial.h> // DlsMat
 #include <sundials/sundials_dense.h>
@@ -24,7 +26,7 @@ class NewtonSolver {
   public:
     NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
 
-    static NewtonSolver *getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
+    static std::unique_ptr<NewtonSolver> getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
                                    ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol);
 
     void getStep(int ntry, int nnewt, AmiVector *delta);
@@ -86,9 +88,10 @@ class NewtonSolverDense : public NewtonSolver {
 
   public:
     NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
+    ~NewtonSolverDense() override;
+
     void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
-    virtual ~NewtonSolverDense();
 
   private:
     /** temporary storage of pivot array */
@@ -106,9 +109,10 @@ class NewtonSolverSparse : public NewtonSolver {
 
   public:
     NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
+    ~NewtonSolverSparse() override;
+
     void solveLinearSystem(AmiVector *rhs) override;
     void prepareLinearSystem(int ntry, int nnewt) override;
-    virtual ~NewtonSolverSparse();
 
   private:
     /** klu common storage? */
@@ -132,10 +136,11 @@ class NewtonSolverIterative : public NewtonSolver {
 
   public:
     NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
+    virtual ~NewtonSolverIterative() = default;
+
     void solveLinearSystem(AmiVector *rhs);
     void prepareLinearSystem(int ntry, int nnewt);
     void linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta);
-    virtual ~NewtonSolverIterative() = default;
 
   private:
     /** number of tries  */

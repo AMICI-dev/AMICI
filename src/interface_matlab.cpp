@@ -99,13 +99,9 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
     const char transA = amici_blasCBlasTransToBlasTrans(TransA);
     const char transB = amici_blasCBlasTransToBlasTrans(TransB);
 
-#if defined(_WIN32)
-    dgemm(&transA, &transB, &M_, &N_, &K_, &alpha, A, &lda_, B, &ldb_, &beta, C,
-          &ldc_);
-#else
-    dgemm_(&transA, &transB, &M_, &N_, &K_, &alpha, A, &lda_, B, &ldb_, &beta,
-           C, &ldc_);
-#endif
+    FORTRAN_WRAPPER(dgemm)(&transA, &transB,
+                           &M_, &N_, &K_,
+                           &alpha, A, &lda_, B, &ldb_, &beta, C, &ldc_);
 }
 
 /*!
@@ -141,12 +137,27 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
     const ptrdiff_t incY_ = incY;
     const char transA = amici_blasCBlasTransToBlasTrans(TransA);
 
-#if defined(_WIN32)
-    dgemv(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
-#else
-    dgemv_(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
-#endif
+    FORTRAN_WRAPPER(dgemv)(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
 }
+
+/**
+ * @brief Compute y = a*x + y
+ * @param n number of elements in y
+ * @param alpha scalar coefficient of x
+ * @param x vector of length n*incx
+ * @param incx x stride
+ * @param y vector of length n*incy
+ * @param incy y stride
+ */
+void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y, int incy) {
+
+    const ptrdiff_t n_ = n;
+    const ptrdiff_t incx_ = incx;
+    const ptrdiff_t incy_ = incy;
+
+    FORTRAN_WRAPPER(daxpy)(&n_, &alpha, x, &incx_, y, &incy_);
+}
+
 
 /*!
  * expDataFromMatlabCall parses the experimental data from the matlab call and
