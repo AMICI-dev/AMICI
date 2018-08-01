@@ -1,3 +1,4 @@
+#include "amici/cblas.h"
 #include "amici/model.h"
 #include "amici/forwardproblem.h"
 #include "amici/solver.h"
@@ -37,22 +38,27 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
   * @param edata pointer to ExpData instance
   * @param model pointer to Model instance
   * @param solver pointer to Solver instance
-  *
   */
 ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
                                Model *model, Solver *solver)
-    : rootidx(model->ne * model->ne * rdata->nmaxevent, 0),
-      nroots(model->ne, 0),
-      rootvals(model->ne, 0.0),
-      rvaltmp(model->ne, 0.0),
-      discs(rdata->nmaxevent * model->ne, 0.0),
+    : model(model),
+      rdata(rdata),
+      solver(solver),
+      edata(edata),
+      rootidx(static_cast<decltype (rootidx)::size_type>(model->ne * model->ne * rdata->nmaxevent), 0),
+      nroots(static_cast<decltype (nroots)::size_type>(model->ne), 0),
+      rootvals(static_cast<decltype (rootvals)::size_type>(model->ne), 0.0),
+      rvaltmp(static_cast<decltype (rvaltmp)::size_type>(model->ne), 0.0),
+      discs(static_cast<decltype (discs)::size_type>(rdata->nmaxevent * model->ne), 0.0),
       irdiscs(rdata->nmaxevent * model->ne, 0.0),
       x_disc(model->nx,model->nMaxEvent()*model->ne),
       xdot_disc(model->nx,model->nMaxEvent()*model->ne),
       xdot_old_disc(model->nx,model->nMaxEvent()*model->ne),
       dJydx(model->nJ * model->nx * model->nt(), 0.0),
       dJzdx(model->nJ * model->nx * model->nMaxEvent(), 0.0),
+      t(model->t0()),
       rootsfound(model->ne, 0),
+      Jtmp(NewDenseMat(model->nx,model->nx)),
       x(model->nx),
       x_old(model->nx),
       dx(model->nx),
@@ -62,12 +68,6 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       sx(model->nx,model->nplist()),
       sdx(model->nx,model->nplist())
 {
-    t = model->t0();
-    this->model = model;
-    this->solver = solver;
-    this->edata = edata;
-    this->rdata = rdata;
-    Jtmp = NewDenseMat(model->nx,model->nx);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -78,7 +78,6 @@ void ForwardProblem::workForwardProblem() {
     /**
      * workForwardProblem solves the forward problem. if forward sensitivities
      * are enabled this will also compute sensitivies
-     *
      */
 
     try {
@@ -93,67 +92,58 @@ void ForwardProblem::workForwardProblem() {
         rdata->initializeObjectiveFunction();
     }
     
-    int ncheck = 0; /* the number of (internal) checkpoints stored so far */
-    realtype tlastroot = 0; /* storage for last found root */
-
     /* if preequilibration is necessary, start Newton solver */
-    std::vector<realtype> originalFixedParameters = model->getFixedParameters(); // to restore after pre-equilibration
     if (solver->getNewtonPreequilibration() || (edata && !edata->fixedParametersPreequilibration.empty())) {
-        if(edata && !edata->fixedParametersPreequilibration.empty()) {
-            // Are there dedicated condition preequilibration parameters provided?
-            if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
-                throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
-                                   model->nk(), edata->fixedParametersPreequilibration.size());
-            model->setFixedParameters(edata->fixedParametersPreequilibration);
-        }
-        // pre-equilibrate
-        SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
-        sstate.workSteadyStateProblem(rdata, solver, model, -1);
+        handlePreequilibration();
     } else {
-        for (int ix = 0; ix < model->nx; ix++) {
-            rdata->x0[ix] = x[ix];
-            if (rdata->sensi_meth == AMICI_SENSI_FSA &&
-            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        rdata->x0 = x.getVector();
+        if (rdata->sensi_meth == AMICI_SENSI_FSA &&
+                rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+            for (int ix = 0; ix < model->nx; ix++) {
                 for (int ip = 0; ip < model->nplist(); ip++)
                     rdata->sx0[ip*model->nx + ix] = sx.at(ix,ip);
             }
         }
     }
-    model->setFixedParameters(originalFixedParameters);
+
+    int ncheck = 0; /* the number of (internal) checkpoints stored so far */
 
     /* loop over timepoints */
     for (int it = 0; it < rdata->nt; it++) {
+        auto nextTimepoint = rdata->ts[it];
+
         if (rdata->sensi_meth == AMICI_SENSI_FSA &&
             rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-            solver->AMISetStopTime(rdata->ts[it]);
+            solver->AMISetStopTime(nextTimepoint);
         }
-        if (rdata->ts[it] > model->t0()) {
-            while (t < rdata->ts[it]) {
-                if (model->nx > 0) {
-                    if (std::isinf(rdata->ts[it])) {
-                        SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
-                        sstate.workSteadyStateProblem(rdata, solver, model, it);
-                    } else {
-                        int status;
-                        if (rdata->sensi_meth == AMICI_SENSI_ASA &&
-                            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                            status = solver->AMISolveF(RCONST(rdata->ts[it]), &x, &dx,
-                                                       &(t), AMICI_NORMAL, &ncheck);
-                            
-                        } else {
-                            status = solver->AMISolve(RCONST(rdata->ts[it]), &x, &dx,
-                                                      &(t), AMICI_NORMAL);
-                        }
-                        if (status == AMICI_ILL_INPUT) {
-                            /* clustering of roots => turn off rootfinding */
-                            solver->turnOffRootFinding();
-                        }
-                        if (status == AMICI_ROOT_RETURN) {
-                            handleEvent(&tlastroot,FALSE);
-                        }
-                    }
+
+        if (nextTimepoint > model->t0()) {
+            while (t < nextTimepoint) {
+                if (model->nx == 0) {
+                    t = nextTimepoint;
+                    continue;
+                }
+
+                if (std::isinf(nextTimepoint)) {
+                    SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
+                    sstate.workSteadyStateProblem(rdata, solver, model, it);
                 } else {
-                    t = rdata->ts[it];
+                    int status;
+                    if (rdata->sensi_meth == AMICI_SENSI_ASA &&
+                            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+                        status = solver->AMISolveF(RCONST(nextTimepoint), &x, &dx,
+                                                   &(t), AMICI_NORMAL, &ncheck);
+                    } else {
+                        status = solver->AMISolve(RCONST(nextTimepoint), &x, &dx,
+                                                  &(t), AMICI_NORMAL);
+                    }
+
+                    if (status == AMICI_ILL_INPUT) {
+                        /* clustering of roots => turn off rootfinding */
+                        solver->turnOffRootFinding();
+                    } else if (status == AMICI_ROOT_RETURN) {
+                        handleEvent(&tlastroot, false);
+                    }
                 }
             }
         }
@@ -173,6 +163,30 @@ void ForwardProblem::workForwardProblem() {
     storeJacobianAndDerivativeInReturnData();
 }
 
+void ForwardProblem::handlePreequilibration()
+{
+    // Are there dedicated condition preequilibration parameters provided?
+    bool overrideFixedParameters = edata && !edata->fixedParametersPreequilibration.empty();
+
+    std::vector<realtype> originalFixedParameters; // to restore after pre-equilibration
+
+    if(overrideFixedParameters) {
+        if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
+            throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
+                               model->nk(), edata->fixedParametersPreequilibration.size());
+        originalFixedParameters = model->getFixedParameters();
+        model->setFixedParameters(edata->fixedParametersPreequilibration);
+    }
+
+    // pre-equilibrate
+    SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
+    sstate.workSteadyStateProblem(rdata, solver, model, -1);
+
+    if(overrideFixedParameters) { // Restore
+        model->setFixedParameters(originalFixedParameters);
+    }
+}
+
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
@@ -183,9 +197,6 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
      *
      * @param[out] tlastroot pointer to the timepoint of the last event 
      */
-
-    int ie;
-    int secondevent = 0;
 
     /* store heaviside information at event occurence */
     model->froot(t, &x, &dx, rootvals.data());
@@ -235,7 +246,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
              * is this really well defined then?), in that case just use the
              * last ie and hope for the best. */
             if (!seflag) {
-                for (ie = 0; ie < model->ne; ie++) {
+                for (int ie = 0; ie < model->ne; ie++) {
                     if (rootsfound.at(ie) == 1) {
                         /* only consider transitions false -> true */
                         model->fstau(t, ie, &x, &sx);
@@ -275,9 +286,11 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         applyEventSensiBolusFSA();
     }
 
+    int secondevent = 0;
+
     /* check whether we need to fire a secondary event */
     model->froot(t, &x, &dx, rootvals.data());
-    for (ie = 0; ie < model->ne; ie++) {
+    for (int ie = 0; ie < model->ne; ie++) {
         /* the same event should not trigger itself */
         if (rootsfound.at(ie) == 0) {
             /* check whether there was a zero-crossing */
@@ -350,46 +363,40 @@ void ForwardProblem::getEventOutput() {
         if (nroots.at(ie) >= rdata->nmaxevent)
             continue;
 
-        if (rootsfound.at(ie) == 1 || t == model->gett(rdata->nt - 1,rdata)) {
-            /* only consider transitions false
-             -> true  or event filling*/
-            
-            model->fz(nroots.at(ie), ie, t, &x, rdata);
-
-            if (edata) {
-                model->fsigmaz(t, ie, nroots.data(), edata, rdata);
-
-                model->fJz(nroots.at(ie), rdata, edata);
-
-                if (t == model->gett(rdata->nt - 1,rdata)) {
-                    // call from fillEvent at last
-                    // timepoint, add regularization
-                    // based on rz
-                    model->frz(nroots.at(ie), ie, t, &x, rdata);
-                    model->fJrz(nroots.at(ie), rdata, edata);
-                }
-            }
-
-            if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                prepEventSensis(ie);
-                if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-                    getEventSensisFSA(ie);
-                }
-            }
-            nroots.at(ie)++;
+        /* only consider transitions false -> true or event filling */
+        if (rootsfound.at(ie) != 1 && t != model->gett(rdata->nt - 1, rdata)) {
+            continue;
         }
+
+        model->fz(nroots.at(ie), ie, t, &x, rdata);
+
+        if (edata) {
+            model->fsigmaz(t, ie, nroots.data(), edata, rdata);
+            model->fJz(nroots.at(ie), rdata, edata);
+
+            if (t == model->gett(rdata->nt - 1,rdata)) {
+                // call from fillEvent at last
+                // timepoint, add regularization
+                // based on rz
+                model->frz(nroots.at(ie), ie, t, &x, rdata);
+                model->fJrz(nroots.at(ie), rdata, edata);
+            }
+        }
+
+        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+            prepEventSensis(ie);
+            if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+                getEventSensisFSA(ie);
+            }
+        }
+
+        nroots.at(ie)++;
     }
-    if (t == model->gett(rdata->nt - 1,rdata)) {
+
+    if (t == model->gett(rdata->nt - 1, rdata)) {
         // call from fillEvent at last timepoint
         // loop until all events are filled
-        bool continue_loop = false;
-        for (int ie = 0; ie < model->ne; ie++) {
-            if (nroots.at(ie) < rdata->nmaxevent) {
-                continue_loop = true;
-                break;
-            }
-        }
-        if(continue_loop)
+        if(std::any_of(nroots.cbegin(), nroots.cend(), [&](int curNRoots){ return curNRoots < rdata->nmaxevent; }))
             getEventOutput();
     }
 }
@@ -454,16 +461,8 @@ void ForwardProblem::prepEventSensis(int ie) {
     model->fdJzdp(nroots.at(ie), t, edata, rdata);
 
     if (rdata->sensi_meth == AMICI_SENSI_ASA && model->nz > 0) {
-        for (int iJ = 0; iJ < model->nJ; iJ++) {
-            for (int ip = 0; ip < model->nplist(); ip++) {
-                if (iJ == 0) {
-                    rdata->sllh[ip] -= model->dJzdp[ip];
-                } else {
-                    rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
-                            model->dJzdp[iJ + ip * model->nJ];
-                }
-            }
-        }
+        amici_daxpy(model->nplist(), -1.0, model->dJzdp.data(), 1, rdata->sllh.data(), 1);
+        amici_daxpy(model->nplist(), -1.0, &model->dJzdp[1], model->nJ, rdata->s2llh.data(), model->nJ - 1);
     }
 
 }
@@ -496,9 +495,7 @@ void ForwardProblem::handleDataPoint(int it) {
      * @param[in] it index of data point @type int
      */
 
-    for (int ix = 0; ix < model->nx; ix++) {
-        rdata->x.at(it*model->nx + ix) = x[ix];
-    }
+    std::copy_n(x.data(), model->nx, &rdata->x.at(it*model->nx));
     
     if (rdata->ts[it] > model->t0()) {
         solver->getDiagnosis(it, rdata);
@@ -611,9 +608,7 @@ void ForwardProblem::applyEventBolus() {
             /* only consider transitions false -> true */
             model->fdeltax(ie, t, &x, &xdot, &xdot_old);
 
-            for (int ix = 0; ix < model->nx; ix++) {
-                x[ix] += model->deltax[ix];
-            }
+            amici_daxpy(model->nx, 1.0, model->deltax.data(), 1, x.data(), 1);
         }
     }
 }
@@ -629,9 +624,7 @@ void ForwardProblem::applyEventSensiBolusFSA() {
             model->fdeltasx(ie, t, &x_old, &sx, &xdot, &xdot_old);
 
             for (int ip = 0; ip < model->nplist(); ip++) {
-                for (int ix = 0; ix < model->nx; ix++) {
-                    sx.at(ix,ip) += model->deltasx[ix + model->nx * ip];
-                }
+                amici_daxpy(model->nx, 1.0, &model->deltasx[model->nx * ip], 1, sx.data(ip), 1);
             }
         }
     }

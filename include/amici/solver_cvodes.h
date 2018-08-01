@@ -3,6 +3,7 @@
 
 #include "amici/solver.h"
 #include "amici/defines.h"
+#include "amici/vector.h"
 
 #include <cvodes/cvodes_dense.h>
 #include <sundials/sundials_sparse.h>

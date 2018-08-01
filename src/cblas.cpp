@@ -4,7 +4,7 @@
  *
  **/
 
-#include "amici/defines.h"
+#include "amici/cblas.h"
 
 #ifdef __APPLE__
 #include <Accelerate/Accelerate.h>
@@ -76,6 +76,19 @@ void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const double beta, double *Y, const int incY) {
     cblas_dgemv((CBLAS_ORDER)layout, (CBLAS_TRANSPOSE)TransA, M, N, alpha, A,
                 lda, X, incX, beta, Y, incY);
+}
+
+/**
+ * @brief Compute y = a*x + y
+ * @param n number of elements in y
+ * @param alpha scalar coefficient of x
+ * @param x vector of length n*incx
+ * @param incx x stride
+ * @param y vector of length n*incy
+ * @param incy y stride
+ */
+void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y, int incy) {
+    cblas_daxpy(n, alpha, x, incx, y, incy);
 }
 
 } // namespace amici
