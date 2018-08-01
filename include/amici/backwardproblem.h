@@ -24,7 +24,7 @@ class BackwardProblem {
   public:
     void workBackwardProblem();
 
-    BackwardProblem(ForwardProblem *fwd);
+    BackwardProblem(const ForwardProblem *fwd);
     
     /** accessor for t
      * @return t
@@ -71,24 +71,24 @@ class BackwardProblem {
     /** accessor for dJydx
      * @return dJydx
      */
-    std::vector<realtype> getdJydx() const {
+    std::vector<realtype> const& getdJydx() const {
         return dJydx;
     }
 
   private:
-    
-    Model *model;
-    ReturnData *rdata;
-    Solver *solver;
-    
+        
     void handleEventB(int iroot);
     
     void handleDataPointB(int it);
     
     void updateHeavisideB(int iroot);
     
-    realtype getTnext(const realtype *troot, const int iroot, const int it);
+    realtype getTnext(std::vector<realtype> const& troot, const int iroot, const int it);
     
+    Model *model;
+    ReturnData *rdata;
+    Solver *solver;
+
     /** current time */
     realtype t;
     /** parameter derivative of likelihood array */

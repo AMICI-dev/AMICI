@@ -51,50 +51,45 @@ void Solver::setupAMI(ForwardProblem *fwd, Model *model) {
     rootInit(model->ne);
     
     initializeLinearSolver(model);
-        
-    if (sensi >= AMICI_SENSI_ORDER_FIRST) {
-        
-        if (model->nx > 0) {
-            /* initialise sensitivities, this can either be user provided or
-             * come from the model definition */
-            std::vector<double> sx0 = model->getInitialStateSensitivities();
-            if (sx0.empty()) {
-                model->fsx0(fwd->getStateSensitivityPointer(), fwd->getStatePointer());
-            } else {
-                AmiVectorArray *sx = fwd->getStateSensitivityPointer();
-                for (int ip = 0; ip < model->nplist(); ip++) {
-                    for (int ix = 0; ix < model->nx; ix++) {
-                        sx->at(ix,ip) =
+
+    if (sensi >= AMICI_SENSI_ORDER_FIRST && model->nx > 0) {
+        /* initialise sensitivities, this can either be user provided or
+         * come from the model definition */
+        auto sx0 = model->getInitialStateSensitivities();
+        if (sx0.empty()) {
+            model->fsx0(fwd->getStateSensitivityPointer(), fwd->getStatePointer());
+        } else {
+            AmiVectorArray *sx = fwd->getStateSensitivityPointer();
+            for (int ip = 0; ip < model->nplist(); ip++) {
+                for (int ix = 0; ix < model->nx; ix++) {
+                    sx->at(ix,ip) =
                             (realtype)sx0.at(ix + model->nx * ip);
-                    }
                 }
-            }
-
-            model->fsdx0();
-            
-            auto plist = model->getParameterList();
-            
-            if (sensi_meth == AMICI_SENSI_FSA && !plist.empty()) {
-                /* Set sensitivity analysis optional inputs */
-                auto par = model->getUnscaledParameters();
-
-                /* Activate sensitivity calculations */
-                sensInit1(fwd->getStateSensitivityPointer(), fwd->getStateDerivativeSensitivityPointer(), plist.size());
-                AMISetSensParams(par.data(), nullptr, plist.data());
-                std::vector<realtype> atols(plist.size(),atol);
-                AMISensSStolerances( rtol, atols.data());
-                AMISetSensErrCon(TRUE);
             }
         }
 
-        if (sensi_meth == AMICI_SENSI_ASA)
-            if (model->nx > 0)
-                /* Allocate space for the adjoint computation */
-                AMIAdjInit(maxsteps, interpType);
+        model->fsdx0();
+
+        auto plist = model->getParameterList();
+
+        if (sensi_meth == AMICI_SENSI_FSA && !plist.empty()) {
+            /* Set sensitivity analysis optional inputs */
+            auto par = model->getUnscaledParameters();
+
+            /* Activate sensitivity calculations */
+            sensInit1(fwd->getStateSensitivityPointer(), fwd->getStateDerivativeSensitivityPointer(), plist.size());
+            AMISetSensParams(par.data(), nullptr, plist.data());
+            std::vector<realtype> atols(plist.size(),atol);
+            AMISensSStolerances( rtol, atols.data());
+            AMISetSensErrCon(true);
+        } else if (sensi_meth == AMICI_SENSI_ASA) {
+            /* Allocate space for the adjoint computation */
+            AMIAdjInit(maxsteps, interpType);
+        }
     }
 
     AMISetId(model);
-    AMISetSuppressAlg(TRUE);
+    AMISetSuppressAlg(true);
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if(model->nt()>1)
         AMICalcIC(model->t(1), fwd->getStatePointer(), fwd->getStateDerivativePointer());
@@ -146,11 +141,7 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     double quad_atol = isNaN(this->quad_atol) ? atol : this->quad_atol;
     
     /* Enable Quadrature Error Control */
-    if (std::isinf(quad_atol) || std::isinf(quad_rtol)) {
-        AMISetQuadErrConB(bwd->getwhich(), FALSE);
-    } else {
-        AMISetQuadErrConB(bwd->getwhich(), TRUE);
-    }
+    AMISetQuadErrConB(bwd->getwhich(), !std::isinf(quad_atol) && !std::isinf(quad_rtol));
 
     AMIQuadSStolerancesB(bwd->getwhich(), RCONST(quad_rtol),
                          RCONST(quad_atol));
@@ -170,7 +161,7 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
  * @param eh_data unused input
  */
 void Solver::wrapErrHandlerFn(int error_code, const char *module,
-                              const char *function, char *msg, void *eh_data) {
+                              const char *function, char *msg, void * /*eh_data*/) {
     char buffer[250];
     char buffid[250];
     sprintf(buffer, "AMICI ERROR: in module %s in function %s : %s ", module,
@@ -369,7 +360,6 @@ void Solver::initializeLinearSolverB(Model *model, const int which) {
              #else*/
             throw AmiException("Solver currently not supported!");
             /* #endif*/
-            break;
             
         case AMICI_LAPACKBAND:
             
@@ -382,7 +372,6 @@ void Solver::initializeLinearSolverB(Model *model, const int which) {
              #else*/
             throw AmiException("Solver currently not supported!");
             /* #endif*/
-            break;
             
         case AMICI_DIAG:
             AMIDiagB(which);
@@ -416,7 +405,6 @@ void Solver::initializeLinearSolverB(Model *model, const int which) {
             
         default:
             throw AmiException("Invalid local Solver!");
-            break;
     }
 }
 

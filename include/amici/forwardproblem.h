@@ -25,22 +25,12 @@ class ForwardProblem {
     ForwardProblem(ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver);
 
-    /** destructor */
     ~ForwardProblem() {
         DestroyMat(Jtmp);
     }
     
     void workForwardProblem();
-    
-    /** pointer to model instance */
-    Model *model;
-    /** pointer to return data instance */
-    ReturnData *rdata;
-    /** pointer to solver instance */
-    Solver *solver;
-    /** pointer to experimental data instance */
-    const ExpData *edata;
-    
+        
     /** accessor for t
      * @return t
      */
@@ -51,63 +41,63 @@ class ForwardProblem {
     /** accessor for sx
      * @return sx
      */
-    AmiVectorArray getStateSensitivity() const {
+    AmiVectorArray const& getStateSensitivity() const {
         return sx;
     }
     
     /** accessor for x_disc
      * @return x_disc
      */
-    AmiVectorArray getStatesAtDiscontinuities() const {
+    AmiVectorArray const& getStatesAtDiscontinuities() const {
         return x_disc;
     }
     
     /** accessor for xdot_disc
      * @return xdot_disc
      */
-    AmiVectorArray getRHSAtDiscontinuities() const {
+    AmiVectorArray const& getRHSAtDiscontinuities() const {
         return xdot_disc;
     }
     
     /** accessor for xdot_old_disc
      * @return xdot_old_disc
      */
-    AmiVectorArray getRHSBeforeDiscontinuities() const {
+    AmiVectorArray const& getRHSBeforeDiscontinuities() const {
         return xdot_old_disc;
     }
     
     /** accessor for nroots
      * @return nroots
      */
-    std::vector<int> getNumberOfRoots() const {
+    std::vector<int> const& getNumberOfRoots() const {
         return nroots;
     }
     
     /** accessor for discs
      * @return discs
      */
-    std::vector<realtype> getDiscontinuities() const {
+    std::vector<realtype> const& getDiscontinuities() const {
         return discs;
     }
     
     /** accessor for rootidx
      * @return rootidx
      */
-    std::vector<int> getRootIndexes() const {
+    std::vector<int> const& getRootIndexes() const {
         return rootidx;
     }
     
     /** accessor for dJydx
      * @return dJydx
      */
-   std::vector<realtype> getDJydx() const {
+   std::vector<realtype> const& getDJydx() const {
         return dJydx;
     }
     
     /** accessor for dJzdx
      * @return dJzdx
      */
-    std::vector<realtype> getDJzdx() const {
+    std::vector<realtype> const& getDJzdx() const {
         return dJzdx;
     }
     
@@ -146,7 +136,20 @@ class ForwardProblem {
         return &sdx;
     }
     
+    /** pointer to model instance */
+    Model *model;
+    /** pointer to return data instance */
+    ReturnData *rdata;
+    /** pointer to solver instance */
+    Solver *solver;
+    /** pointer to experimental data instance */
+    const ExpData *edata;
+
   private:
+    /**
+     * @brief Perform preequilibration
+     */
+    void handlePreequilibration();
 
     void handleEvent(realtype *tlastroot,const bool seflag);
 
@@ -229,6 +232,10 @@ class ForwardProblem {
     AmiVectorArray sx;
     /** differential sensitivity state vector array (dimension: nx x nplist, row-major) */
     AmiVectorArray sdx;
+
+    /** storage for last found root */
+    realtype tlastroot = 0.0;
+
 };
 
 

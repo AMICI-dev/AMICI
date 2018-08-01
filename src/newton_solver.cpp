@@ -33,7 +33,7 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *
 /* ----------------------------------------------------------------------------------
  */
 
-NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
+std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
                                       ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
@@ -53,13 +53,13 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType,
      * @return solver NewtonSolver according to the specified linsolType
      */
 
-    NewtonSolver *solver = nullptr;
+    std::unique_ptr<NewtonSolver> solver;
 
     switch (linsolType) {
 
     /* DIRECT SOLVERS */
     case AMICI_DENSE:
-        solver = new NewtonSolverDense(t, x, model, rdata);
+        solver.reset(new NewtonSolverDense(t, x, model, rdata));
         break;
 
     case AMICI_BAND:
@@ -79,7 +79,7 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType,
         throw NewtonFailure("Solver currently not supported!");
 
     case AMICI_SPBCG:
-        solver = new NewtonSolverIterative(t, x, model, rdata);
+        solver.reset(new NewtonSolverIterative(t, x, model, rdata));
         break;
 
     case AMICI_SPTFQMR:
@@ -87,7 +87,7 @@ NewtonSolver *NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType,
 
     /* SPARSE SOLVERS */
     case AMICI_KLU:
-        solver = new NewtonSolverSparse(t, x, model, rdata);
+        solver.reset(new NewtonSolverSparse(t, x, model, rdata));
         break;
     default:
         throw NewtonFailure("Invalid Choice of Solver!");
@@ -269,18 +269,16 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
         klu_free_symbolic(&symbolic, &common);
     symbolic = klu_analyze(model->nx, Jtmp->indexptrs,
                            Jtmp->indexvals, &common);
-    if (symbolic) {
-        if(numeric) /* if numeric was already created free first to avoid memory leak */
-            klu_free_numeric(&numeric, &common);
-        numeric = klu_factor(Jtmp->indexptrs, Jtmp->indexvals,
-                             Jtmp->data, symbolic, &common);
-        if (numeric) {
-            return;
-        } else {
-            throw NewtonFailure("KLU factorization failed!");
-        }
-    } else {
+    if (!symbolic) {
         throw NewtonFailure("KLU symbolic analysis failed!");
+    }
+
+    if(numeric) /* if numeric was already created free first to avoid memory leak */
+        klu_free_numeric(&numeric, &common);
+    numeric = klu_factor(Jtmp->indexptrs, Jtmp->indexvals,
+                         Jtmp->data, symbolic, &common);
+    if (!numeric) {
+        throw NewtonFailure("KLU factorization failed!");
     }
 }
 

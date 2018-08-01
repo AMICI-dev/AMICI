@@ -1,5 +1,4 @@
 #include "amici/model.h"
-
 #include "amici/amici.h"
 
 #include <cstring>
@@ -349,7 +348,7 @@ int Model::nt() const {
     return ts.size();
 }
 
-std::vector<AMICI_parameter_scaling> Model::getParameterScale() const {
+const std::vector<AMICI_parameter_scaling> &Model::getParameterScale() const {
     return pscale;
 }
 
@@ -365,7 +364,7 @@ void Model::setParameterScale(std::vector<AMICI_parameter_scaling> const& pscale
     unscaleParameters(unscaledParameters.data());
 }
 
-std::vector<realtype> Model::getParameters() const {
+std::vector<realtype> const& Model::getParameters() const {
     return originalParameters;
 }
 
@@ -377,11 +376,11 @@ void Model::setParameters(const std::vector<realtype> &p) {
     unscaleParameters(this->unscaledParameters.data());
 }
 
-std::vector<realtype> Model::getUnscaledParameters() const {
+const std::vector<realtype> &Model::getUnscaledParameters() const {
     return unscaledParameters;
 }
 
-std::vector<realtype> Model::getFixedParameters() const {
+const std::vector<realtype> &Model::getFixedParameters() const {
     return fixedParameters;
 }
 
@@ -391,7 +390,7 @@ void Model::setFixedParameters(const std::vector<realtype> &k) {
     this->fixedParameters = k;
 }
 
-std::vector<realtype> Model::getTimepoints() const {
+std::vector<realtype> const& Model::getTimepoints() const {
     return ts;
 }
 
@@ -403,7 +402,7 @@ double Model::t(int idx) const {
     return ts.at(idx);
 }
 
-std::vector<int> Model::getParameterList() const {
+const std::vector<int> &Model::getParameterList() const {
     return plist_;
 }
 
@@ -416,7 +415,7 @@ void Model::setParameterList(const std::vector<int> &plist) {
     initializeVectors();
 }
 
-std::vector<realtype> Model::getInitialStates() const {
+std::vector<realtype> const& Model::getInitialStates() const {
     return x0data;
 }
 
@@ -426,7 +425,7 @@ void Model::setInitialStates(const std::vector<realtype> &x0) {
     this->x0data = x0;
 }
 
-std::vector<realtype> Model::getInitialStateSensitivities() const {
+const std::vector<realtype> &Model::getInitialStateSensitivities() const {
     return sx0data;
 }
 
