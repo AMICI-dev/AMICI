@@ -1,3 +1,4 @@
+#include "amici/cblas.h"
 #include "amici/model.h"
 #include "amici/forwardproblem.h"
 #include "amici/solver.h"
@@ -461,16 +462,8 @@ void ForwardProblem::prepEventSensis(int ie) {
     model->fdJzdp(nroots.at(ie), t, edata, rdata);
 
     if (rdata->sensi_meth == AMICI_SENSI_ASA && model->nz > 0) {
-        for (int iJ = 0; iJ < model->nJ; iJ++) {
-            for (int ip = 0; ip < model->nplist(); ip++) {
-                if (iJ == 0) {
-                    rdata->sllh[ip] -= model->dJzdp[ip];
-                } else {
-                    rdata->s2llh[(iJ - 1) + ip * (model->nJ - 1)] -=
-                            model->dJzdp[iJ + ip * model->nJ];
-                }
-            }
-        }
+        amici_daxpy(model->nplist(), -1.0, model->dJzdp.data(), 1, rdata->sllh.data(), 1);
+        amici_daxpy(model->nplist(), -1.0, &model->dJzdp[1], model->nJ, rdata->s2llh.data(), model->nJ - 1);
     }
 
 }
@@ -503,9 +496,7 @@ void ForwardProblem::handleDataPoint(int it) {
      * @param[in] it index of data point @type int
      */
 
-    for (int ix = 0; ix < model->nx; ix++) {
-        rdata->x.at(it*model->nx + ix) = x[ix];
-    }
+    std::copy_n(x.data(), model->nx, &rdata->x.at(it*model->nx));
     
     if (rdata->ts[it] > model->t0()) {
         solver->getDiagnosis(it, rdata);
@@ -618,9 +609,7 @@ void ForwardProblem::applyEventBolus() {
             /* only consider transitions false -> true */
             model->fdeltax(ie, t, &x, &xdot, &xdot_old);
 
-            for (int ix = 0; ix < model->nx; ix++) {
-                x[ix] += model->deltax[ix];
-            }
+            amici_daxpy(model->nx, 1.0, model->deltax.data(), 1, x.data(), 1);
         }
     }
 }
@@ -636,9 +625,7 @@ void ForwardProblem::applyEventSensiBolusFSA() {
             model->fdeltasx(ie, t, &x_old, &sx, &xdot, &xdot_old);
 
             for (int ip = 0; ip < model->nplist(); ip++) {
-                for (int ix = 0; ix < model->nx; ix++) {
-                    sx.at(ix,ip) += model->deltasx[ix + model->nx * ip];
-                }
+                amici_daxpy(model->nx, 1.0, &model->deltasx[model->nx * ip], 1, sx.data(ip), 1);
             }
         }
     }
