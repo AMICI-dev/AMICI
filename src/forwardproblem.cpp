@@ -371,7 +371,7 @@ void ForwardProblem::getEventOutput() {
         model->fz(nroots.at(ie), ie, t, &x, rdata);
 
         if (edata) {
-            model->fsigmaz(t, ie, nroots.data(), edata, rdata);
+            model->fsigmaz(t, ie, nroots.data(), rdata, edata);
             model->fJz(nroots.at(ie), rdata, edata);
 
             if (t == model->gett(rdata->nt - 1,rdata)) {
