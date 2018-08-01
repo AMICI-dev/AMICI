@@ -116,35 +116,34 @@ void ForwardProblem::workForwardProblem() {
             rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             solver->AMISetStopTime(nextTimepoint);
         }
+
         if (nextTimepoint > model->t0()) {
             while (t < nextTimepoint) {
-                if (model->nx > 0) {
-                    if (std::isinf(nextTimepoint)) {
-                        SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
-                        sstate.workSteadyStateProblem(rdata, solver, model, it);
-                    } else {
-                        int status;
-                        if (rdata->sensi_meth == AMICI_SENSI_ASA &&
-                            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-                            status = solver->AMISolveF(RCONST(nextTimepoint), &x, &dx,
-                                                       &(t), AMICI_NORMAL, &ncheck);
-                            
-                        } else {
-                            status = solver->AMISolve(RCONST(nextTimepoint), &x, &dx,
-                                                      &(t), AMICI_NORMAL);
-                        }
-
-                        if (status == AMICI_ILL_INPUT) {
-                            /* clustering of roots => turn off rootfinding */
-                            solver->turnOffRootFinding();
-                        }
-
-                        if (status == AMICI_ROOT_RETURN) {
-                            handleEvent(&tlastroot, false);
-                        }
-                    }
-                } else {
+                if (model->nx == 0) {
                     t = nextTimepoint;
+                    continue;
+                }
+
+                if (std::isinf(nextTimepoint)) {
+                    SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
+                    sstate.workSteadyStateProblem(rdata, solver, model, it);
+                } else {
+                    int status;
+                    if (rdata->sensi_meth == AMICI_SENSI_ASA &&
+                            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+                        status = solver->AMISolveF(RCONST(nextTimepoint), &x, &dx,
+                                                   &(t), AMICI_NORMAL, &ncheck);
+                    } else {
+                        status = solver->AMISolve(RCONST(nextTimepoint), &x, &dx,
+                                                  &(t), AMICI_NORMAL);
+                    }
+
+                    if (status == AMICI_ILL_INPUT) {
+                        /* clustering of roots => turn off rootfinding */
+                        solver->turnOffRootFinding();
+                    } else if (status == AMICI_ROOT_RETURN) {
+                        handleEvent(&tlastroot, false);
+                    }
                 }
             }
         }
