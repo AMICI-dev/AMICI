@@ -201,7 +201,6 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
     /**
      * Stores output of workSteadyStateProblem in return data
      *
-     * @param[in] model pointer to the AMICI model object @type Model
      * @param[in] newton_status integer flag indicating when a steady state was
      * found
      * @param[in] run_time double coputation time of the solver in milliseconds
