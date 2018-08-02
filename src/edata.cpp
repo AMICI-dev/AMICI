@@ -26,12 +26,16 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts,
-                 std::vector<realtype> my,
-                 std::vector<realtype> sigmay,
-                 std::vector<realtype> mz,
-                 std::vector<realtype> sigmaz)
-    : nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent), ts(std::move(ts)), observedData(std::move(my)), observedDataStdDev(std::move(sigmay)), observedEvents(std::move(mz)), observedEventsStdDev(std::move(sigmaz))
+                 std::vector<realtype> observedData,
+                 std::vector<realtype> observedDataStdDev,
+                 std::vector<realtype> observedEvents,
+                 std::vector<realtype> observedEventsStdDev)
+    : nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent), ts(std::move(ts))
 {
+    setObservedData(observedData);
+    setObservedDataStdDev(observedDataStdDev);
+    setObservedEvents(observedEvents);
+    setObservedEventsStdDev(observedEventsStdDev);
 }
 
 ExpData::ExpData(Model const& model)
@@ -67,17 +71,12 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
     
     realtype sigma;
     
+    checkSigmaPositivity(sigma_y, "sigma_y");
+    checkSigmaPositivity(sigma_z, "sigma_z");
+    
     for (int iy = 0; iy < nytrue; ++iy) {
         for (int it = 0; it < nt(); ++it) {
-            if (sigma_y.size() == (unsigned) nytrue) {
-                if (sigma_y.at(iy) < 0.0)
-                    throw AmiException("All sigma_y must positive! sigma at index %d was %f", iy, sigma_y[iy]);
-                sigma = sigma_y.at(iy);
-            } else {
-                if (sigma_y.at(iy + nytrue * it) < 0.0)
-                    throw AmiException("All sigma_y must positive! sigma at index %d was %f", iy + nytrue * it, sigma_y[iy + nytrue * it]);
-                sigma = sigma_y.at(iy + nytrue * it);
-            }
+            sigma = sigma_y.at(iy) ? sigma_y.size() == (unsigned) nytrue : sigma_y.at(iy + nytrue * it);
             std::normal_distribution<> e{0, sigma};
             observedData.at(iy + nytrue * it) = rdata.y.at(iy + rdata.ny * it) + e(gen);
             observedDataStdDev.at(iy + nytrue * it) = sigma;
@@ -86,15 +85,7 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
     
     for (int iz = 0; iz < nztrue; ++iz) {
         for (int ie = 0; ie < nmaxevent; ++ie) {
-            if (sigma_z.size() == (unsigned) nztrue) {
-                if (sigma_z.at(iz) < 0.0)
-                    throw AmiException("All sigma_z must positive! sigma at index %d was %f", iz, sigma_z.at(iz));
-                sigma = sigma_z.at(iz);
-            } else {
-                if (sigma_z.at(iz + rdata.nztrue * ie) < 0.0)
-                    throw AmiException("All sigma_z must positive! sigma at index %d was %f", iz + rdata.nztrue * ie, sigma_z.at(iz + rdata.nztrue * ie));
-                sigma = sigma_z.at(iz + rdata.nztrue * ie);
-            }
+            sigma = sigma_z.at(iz) ? sigma_z.size() == (unsigned) nztrue : sigma_z.at(iz + nztrue * ie);
             std::normal_distribution<> e{0, sigma};
             observedEvents.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie) + e(gen);
             observedDataStdDev.at(iz + rdata.nztrue * ie) = sigma;
@@ -121,8 +112,7 @@ realtype ExpData::getTimepoint(int it) const {
 }
     
 void ExpData::setObservedData(const std::vector<realtype> &observedData) {
-    if (observedData.size() != (unsigned) nt()*nytrue && !observedData.empty())
-        throw AmiException("Input observedData did not match dimensions nmaxevent (%i) x nztrue (%i), was %i", nt(), nytrue, observedData.size());
+    checkDataDimension(observedData, "observedData");
         
     if (observedData.size() == (unsigned) nt()*nytrue)
         this->observedData = std::move(observedData);
@@ -154,8 +144,8 @@ const realtype *ExpData::getObservedDataPtr(int it) const {
 }
 
 void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev) {
-    if (observedDataStdDev.size() != (unsigned) nt()*nytrue && !observedDataStdDev.empty())
-        throw AmiException("Input observedDataStdDev did not match dimensions nmaxevent (%i) x nztrue (%i), was %i", nt(), nytrue, observedDataStdDev.size());
+    checkDataDimension(observedDataStdDev, "observedDataStdDev");
+    checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
     
     if (observedDataStdDev.size() == (unsigned) nt()*nytrue)
         this->observedDataStdDev = std::move(observedDataStdDev);
@@ -164,18 +154,21 @@ void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStd
 }
     
 void ExpData::setObservedDataStdDev(const realtype stdDev) {
+    checkSigmaPositivity(stdDev, "stdDev");
     std::fill(observedDataStdDev.begin() ,observedDataStdDev.end(), stdDev);
 }
     
 void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev, int iy) {
     if (observedDataStdDev.size() != (unsigned) nt())
         throw AmiException("Input observedDataStdDev did not match dimensions nt (%i), was %i", nt(), observedDataStdDev.size());
+    checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
     
     for (int it = 0; it < nt(); ++it)
         this->observedDataStdDev.at(iy + it*nytrue) = observedDataStdDev.at(iy);
 }
     
 void ExpData::setObservedDataStdDev(const realtype stdDev, int iy) {
+    checkSigmaPositivity(stdDev, "stdDev");
     for (int it = 0; it < nt(); ++it)
         observedDataStdDev.at(iy + it*nytrue) = stdDev;
 }
@@ -196,8 +189,7 @@ const realtype *ExpData::getObservedDataStdDevPtr(int it) const {
 }
     
 void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents) {
-    if (observedEvents.size() != (unsigned) nmaxevent*nztrue && !observedEvents.empty())
-        throw AmiException("Input observedEvents did not match dimensions nmaxevent (%i) x nztrue (%i), was %i", nmaxevent, nztrue, observedEvents.size());
+    checkEventsDimension(observedEvents, "observedEvents");
     
     if (observedEvents.size() == (unsigned) nmaxevent*nztrue)
         this->observedEvents = std::move(observedEvents);
@@ -230,8 +222,8 @@ const realtype *ExpData::getObservedEventsPtr(int ie) const {
 }
     
 void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev) {
-    if (observedEventsStdDev.size() != (unsigned) nmaxevent*nztrue && !observedEventsStdDev.empty())
-        throw AmiException("Input observedEventsStdDev did not match dimensions nmaxevent (%i) x nztrue (%i), was %i", nmaxevent, nztrue, observedEventsStdDev.size());
+    checkEventsDimension(observedEventsStdDev, "observedEventsStdDev");
+    checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
         
     if (observedEventsStdDev.size() == (unsigned) nmaxevent*nztrue)
         this->observedEventsStdDev = std::move(observedEventsStdDev);
@@ -240,18 +232,22 @@ void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEvent
 }
     
 void ExpData::setObservedEventsStdDev(const realtype stdDev) {
+    checkSigmaPositivity(stdDev, "stdDev");
     std::fill(observedEventsStdDev.begin() ,observedEventsStdDev.end(), stdDev);
 }
 
 void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev, int iz) {
     if (observedEventsStdDev.size() != (unsigned) nmaxevent)
         throw AmiException("Input observedEventsStdDev did not match dimensions nmaxevent (%i), was %i", nmaxevent, observedEventsStdDev.size());
+    checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
         
     for (int ie = 0; ie < nmaxevent; ++ie)
         this->observedEventsStdDev.at(iz + ie*nztrue) = observedEventsStdDev.at(iz);
 }
 
 void ExpData::setObservedEventsStdDev(const realtype stdDev, int iz) {
+    checkSigmaPositivity(stdDev, "stdDev");
+    
     for (int ie = 0; ie < nmaxevent; ++ie)
         observedEventsStdDev.at(iz + ie*nztrue) = stdDev;
 }
@@ -272,6 +268,26 @@ const realtype *ExpData::getObservedEventsStdDevPtr(int ie) const {
         return &observedEventsStdDev.at(ie*nztrue);
    
     return nullptr;
+}
+    
+void ExpData::checkDataDimension(std::vector<realtype> input, const char *fieldname) const {
+    if (input.size() != (unsigned) nt()*nytrue && !input.empty())
+        throw AmiException("Input %s did not match dimensions nt (%i) x nytrue (%i), was %i", fieldname, nt(), nytrue, input.size());
+}
+    
+void ExpData::checkEventsDimension(std::vector<realtype> input, const char *fieldname) const {
+    if (input.size() != (unsigned) nmaxevent*nztrue && !input.empty())
+        throw AmiException("Input %s did not match dimensions nt (%i) x nytrue (%i), was %i", fieldname, nmaxevent, nztrue, input.size());
+}
+
+void ExpData::checkSigmaPositivity(std::vector<realtype> sigmaVector, const char *vectorName) const {
+    for (auto&& sigma : sigmaVector)
+        checkSigmaPositivity(sigma, vectorName);
+}
+
+void ExpData::checkSigmaPositivity(realtype sigma, const char *sigmaName) const {
+    if (sigma <= 0.0)
+        throw AmiException("Encountered sigma <= 0 in %s! value: %f", sigmaName, sigma);
 }
 
 } // namespace amici

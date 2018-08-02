@@ -18,7 +18,7 @@ class ExpData {
     ExpData();
 
     /**
-     * @brief ExpData
+     * constructor that only initializes dimensions
      * @param nytrue
      * @param nztrue
      * @param nmaxevent
@@ -26,33 +26,35 @@ class ExpData {
     ExpData(int nytrue, int nztrue, int nmaxevent);
 
     /**
-     * @brief ExpData
-     * @param nytrue
-     * @param nztrue
-     * @param nmaxevent
-     * @param ts
+     * constructor that initializes timepoints from vectors
+     *
+     * @param nytrue               (dimension: scalar)
+     * @param nztrue               (dimension: scalar)
+     * @param nmaxevent            (dimension: scalar)
+     * @param ts                   (dimension: nt)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent,
             std::vector<realtype> ts);
     
     
     /**
-     * @brief ExpData
-     * @param nytrue
-     * @param nztrue
-     * @param nmaxevent
-     * @param ts
-     * @param my
-     * @param sigmay
-     * @param mz
-     * @param sigmaz
+     * constructor that initializes timepoints and data from vectors
+     *
+     * @param nytrue               (dimension: scalar)
+     * @param nztrue               (dimension: scalar)
+     * @param nmaxevent            (dimension: scalar)
+     * @param ts                   (dimension: nt)
+     * @param observedData         (dimension: nt x nytrue, row-major)
+     * @param observedDataStdDev   (dimension: nt x nytrue, row-major)
+     * @param observedEvents       (dimension: nmaxevent x nztrue, row-major)
+     * @param observedEventsStdDev (dimension: nmaxevent x nztrue, row-major)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent,
             std::vector<realtype> ts,
             std::vector<realtype> my,
             std::vector<realtype> sigmay,
             std::vector<realtype> mz,
-            std::vector<realtype> sigmaz);
+            std::vector<realtype> observedEventsStdDev);
 
     /**
      * constructor that initializes with Model
@@ -74,8 +76,8 @@ class ExpData {
      * constructor that initializes with returnData, adds
      *
      * @param rdata return data pointer with stored simulation results
-     * @param sigma_y vector of standard deviations for observables (dimension: nytrue or nytrue x nt, row-major)
-     * @param sigma_z vector of standard deviations for event observables (dimension: nztrue or nztrue x nmaxevent, row-major)
+     * @param sigma_y vector of standard deviations for observables (dimension: nytrue or nt x nytrue, row-major)
+     * @param sigma_z vector of standard deviations for event observables (dimension: nztrue or nmaxevent x nztrue, row-major)
      */
     ExpData(const ReturnData &rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z);
 
@@ -317,6 +319,39 @@ class ExpData {
     std::vector<realtype> fixedParametersPreequilibration;
 
 protected:
+    
+    /**
+     * checker for dimensions of input observedData or observedDataStdDev
+     *
+     * @param input vector input to be checked
+     * @param fieldname name of the input
+     */
+    void checkDataDimension(std::vector<realtype> input, const char *fieldname) const;
+    
+    /**
+     * checker for dimensions of input observedEvents or observedEventsStdDev
+     *
+     * @param input vector input to be checked
+     * @param fieldname name of the input
+     */
+    void checkEventsDimension(std::vector<realtype> input, const char *fieldname) const;
+    
+    /**
+     * checks input vector of sigmas for not strictly positive values
+     *
+     * @param sigmaVector vector input to be checked
+     * @param vectorName name of the input
+     */
+    void checkSigmaPositivity(std::vector<realtype> sigmaVector, const char *vectorName) const;
+    
+    /**
+     * checks input scalar sigma for not strictly positive value
+     *
+     * @param sigma input to be checked
+     * @param sigmaName name of the input
+     */
+    void checkSigmaPositivity(realtype sigma, const char *sigmaName) const;
+    
     /** observation timepoints (dimension: nt) */
     std::vector<realtype> ts;
     
