@@ -30,8 +30,8 @@ matrix:
       env: ENABLE_GCOV_COVERAGE=TRUE
       after_success: 
         - ./scripts/run-codecov.sh
-        - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -X fix -cF python
-        - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -cF cpp
+        - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -X fix -F python
+        - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
     - os: osx
       osx_image: xcode9.3
       compiler: clang
