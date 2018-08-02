@@ -904,20 +904,19 @@ void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnDat
      */
 void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, ReturnData *rdata, const ExpData *edata) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+    for(int ip = 0; (unsigned)ip < plist_.size(); ip++) {
         // get dsigmazdp slice (nz) for current event and parameter
         fdsigmazdp(&dsigmazdp.at(ip*nz),
                    t,
                    unscaledParameters.data(),
                    fixedParameters.data(),
                    plist_.at(ip));
+    }
     
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmazdp to zero
     if(edata) {
         for (int iz = 0; iz < nztrue; iz++) {
-            if (z2event.at(iz) - 1 == ie) {
-                if (!edata->isSetObservedEventsStdDev(nroots[ie],iz))
-                    continue;
+            if (z2event.at(iz) - 1 == ie && !edata->isSetObservedEventsStdDev(nroots[ie],iz)) {
                 for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
                     dsigmazdp.at(iz + nz * ip) = 0;
             }

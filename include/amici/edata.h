@@ -74,8 +74,8 @@ class ExpData {
      * constructor that initializes with returnData, adds
      *
      * @param rdata return data pointer with stored simulation results
-     * @param sigma_y vector of standard deviations for every observable
-     * @param sigma_z vector of standard deviations for every event observable
+     * @param sigma_y vector of standard deviations for observables (dimension: nytrue or nytrue x nt, row-major)
+     * @param sigma_z vector of standard deviations for event observables (dimension: nztrue or nztrue x nmaxevent, row-major)
      */
     ExpData(const ReturnData &rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z);
 
@@ -106,7 +106,7 @@ class ExpData {
      *
      * @return ExpData::ts
      */
-    std::vector<realtype> getTimepoints() const;
+    std::vector<realtype> const& getTimepoints() const;
     
     /**
      * get function that returns timepoint at index
@@ -145,7 +145,7 @@ class ExpData {
      *
      * @return observed data (dimension: nt x nytrue, row-major)
      */
-    std::vector<realtype> getObservedData() const;
+    std::vector<realtype> const& getObservedData() const;
     
     /**
      * get function that returns a pointer to observed data at index
@@ -167,7 +167,7 @@ class ExpData {
      *
      * @param StdDev standard deviation (dimension: scalar)
      */
-    void setObservedDataStdDev(const realtype StdDev);
+    void setObservedDataStdDev(const realtype stdDev);
     
     /**
      * set function that copies standard deviation of observed data for specific observable
@@ -183,7 +183,7 @@ class ExpData {
      * @param StdDev standard deviation (dimension: scalar)
      * @param iy observed data index
      */
-    void setObservedDataStdDev(const realtype StdDev, int iy);
+    void setObservedDataStdDev(const realtype stdDev, int iy);
     
     /**
      * get function that checks whether standard deviation of data at specified indices has been set
@@ -199,7 +199,7 @@ class ExpData {
      *
      * @return standard deviation of observed data
      */
-    std::vector<realtype> getObservedDataStdDev() const;
+    std::vector<realtype> const& getObservedDataStdDev() const;
     
     /**
      * get function that returns a pointer to standard deviation of observed data at index
@@ -238,7 +238,7 @@ class ExpData {
      *
      * @return observed event data
      */
-    std::vector<realtype> getObservedEvents() const;
+    std::vector<realtype> const& getObservedEvents() const;
     
     /**
      * get function that returns a pointer to observed data at ieth occurence
@@ -276,7 +276,7 @@ class ExpData {
      * @param StdDev standard deviation (dimension: scalar)
      * @param iz observed data index
      */
-    void setObservedEventsStdDev(const realtype StdDev, int iz);
+    void setObservedEventsStdDev(const realtype stdDev, int iz);
     
     /**
      * get function that checks whether standard deviation of even data at specified indices has been set
@@ -292,7 +292,7 @@ class ExpData {
      *
      * @return standard deviation of observed event data
      */
-    std::vector<realtype> getObservedEventsStdDev() const;
+    std::vector<realtype> const& getObservedEventsStdDev() const;
     
     /**
      * get function that returns a pointer to standard deviation of observed event data at ieth occurence
