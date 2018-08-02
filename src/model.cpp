@@ -900,8 +900,12 @@ void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnDat
 }
 
 /** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
-     * @param t current timepoint
-     */
+ * @param t current timepoint
+ * @param ie event index
+ * @param nroots array with event numbers
+ * @param rdata pointer to return data instance
+ * @param edata pointer to experimental data instance
+ */
 void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, ReturnData *rdata, const ExpData *edata) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++) {

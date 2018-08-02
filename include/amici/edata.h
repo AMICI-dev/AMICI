@@ -91,13 +91,14 @@ class ExpData {
     /**
      * number of timepoints
      *
+     * @return number of timepoints
      */
      const int nt() const;
 
     /**
      * set function that copies data from input to ExpData::ts
      *
-     * @param timepoints timepoints
+     * @param ts timepoints
      */
     void setTimepoints(const std::vector<realtype> &ts);
     
@@ -151,7 +152,7 @@ class ExpData {
      * get function that returns a pointer to observed data at index
      *
      * @param it timepoint index
-     * @return observed data at index (dimension: nytrue)
+     * @return pointer to observed data at index (dimension: nytrue)
      */
     const realtype *getObservedDataPtr(int it) const;
     
@@ -165,7 +166,7 @@ class ExpData {
     /**
      * set function that sets all ExpData::observedDataStdDev to the input value
      *
-     * @param StdDev standard deviation (dimension: scalar)
+     * @param stdDev standard deviation (dimension: scalar)
      */
     void setObservedDataStdDev(const realtype stdDev);
     
@@ -180,7 +181,7 @@ class ExpData {
     /**
      * set function that sets all standard deviation of a specific observable to the input value
      *
-     * @param StdDev standard deviation (dimension: scalar)
+     * @param stdDev standard deviation (dimension: scalar)
      * @param iy observed data index
      */
     void setObservedDataStdDev(const realtype stdDev, int iy);
@@ -205,21 +206,21 @@ class ExpData {
      * get function that returns a pointer to standard deviation of observed data at index
      *
      * @param it timepoint index
-     * @return standard deviation of observed data at index
+     * @return pointer to standard deviation of observed data at index
      */
     const realtype *getObservedDataStdDevPtr(int it) const;
     
     /**
      * set function that copies observed event data from input to ExpData::observedEvents
      *
-     * @param observedData observed data (dimension: nmaxevent x nztrue, row-major)
+     * @param observedEvents observed data (dimension: nmaxevent x nztrue, row-major)
      */
     void setObservedEvents(const std::vector<realtype> &observedEvents);
     
     /**
      * set function that copies observed event data for specific event observable
      *
-     * @param observedData observed data (dimension: nmaxevent)
+     * @param observedEvents observed data (dimension: nmaxevent)
      * @param iz observed event data index
      */
     void setObservedEvents(const std::vector<realtype> &observedEvents, int iz);
@@ -244,7 +245,7 @@ class ExpData {
      * get function that returns a pointer to observed data at ieth occurence
      *
      * @param ie event occurence
-     * @return observed event data at ieth occurence
+     * @return pointer to observed event data at ieth occurence
      */
     const realtype *getObservedEventsPtr(int ie) const;
     
@@ -258,22 +259,22 @@ class ExpData {
     /**
      * set function that sets all ExpData::observedDataStdDev to the input value
      *
-     * @param StdDev standard deviation (dimension: scalar)
+     * @param stdDev standard deviation (dimension: scalar)
      */
-    void setObservedEventsStdDev(const realtype StdDev);
+    void setObservedEventsStdDev(const realtype stdDev);
     
     /**
      * set function that copies standard deviation of observed data for specific observable
      *
      * @param observedEventsStdDev standard deviation of observed data (dimension: nmaxevent)
-     * @param iy observed data index
+     * @param iz observed data index
      */
     void setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev, int iz);
     
     /**
      * set function that sets all standard deviation of a specific observable to the input value
      *
-     * @param StdDev standard deviation (dimension: scalar)
+     * @param stdDev standard deviation (dimension: scalar)
      * @param iz observed data index
      */
     void setObservedEventsStdDev(const realtype stdDev, int iz);
@@ -298,7 +299,7 @@ class ExpData {
      * get function that returns a pointer to standard deviation of observed event data at ieth occurence
      *
      * @param ie event occurence
-     * @return standard deviation of observed event data at ieth occurence
+     * @return pointer to standard deviation of observed event data at ieth occurence
      */
     const realtype *getObservedEventsStdDevPtr(int ie) const;
     
