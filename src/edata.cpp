@@ -12,6 +12,11 @@ namespace amici {
 
 ExpData::ExpData() : nytrue(0), nztrue(0), nmaxevent(0) {}
 
+ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
+    : nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent)
+{
+}
+
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts)
     : nytrue(nytrue), nztrue(nztrue), nmaxevent(nmaxevent)
