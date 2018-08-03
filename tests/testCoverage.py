@@ -15,7 +15,7 @@ import testModels
 import testSBML
 
 # only consider amici module and ignore the swig generated amici.py
-cov = coverage.Coverage(source=['amici'],omit=['*/amici.py'])
+cov = coverage.Coverage(source=['amici'],omit=['*/amici.py','*/amici_without_hdf5.py'])
 
 # ignore code blocks containing import statements
 cov.exclude('import')

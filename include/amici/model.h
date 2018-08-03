@@ -229,14 +229,14 @@ namespace amici {
         void fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
-        void fsigmay(const int it, const ExpData *edata, ReturnData *rdata);
+        void fsigmay(const int it, ReturnData *rdata, const ExpData *edata);
         
         void fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata);
         
-        void fsigmaz(const realtype t, const int ie, const int *nroots,
-                      const ExpData *edata, ReturnData *rdata);
+        void fsigmaz(const realtype t, const int ie, const int *nroots, ReturnData *rdata,
+                     const ExpData *edata);
         
-        void fdsigmazdp(const realtype t);
+        void fdsigmazdp(const realtype t, const int ie, const int *nroots, ReturnData *rdata, const ExpData *edata);
         
         void fJy(const int it, ReturnData *rdata, const ExpData *edata);
         

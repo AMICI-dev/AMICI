@@ -371,7 +371,7 @@ void ForwardProblem::getEventOutput() {
         model->fz(nroots.at(ie), ie, t, &x, rdata);
 
         if (edata) {
-            model->fsigmaz(t, ie, nroots.data(), edata, rdata);
+            model->fsigmaz(t, ie, nroots.data(), rdata, edata);
             model->fJz(nroots.at(ie), rdata, edata);
 
             if (t == model->gett(rdata->nt - 1,rdata)) {
@@ -415,12 +415,9 @@ void ForwardProblem::prepEventSensis(int ie) {
 
     if(!edata)
         return;
-
+    
     for (int iz = 0; iz < model->nztrue; iz++) {
         if(model->z2event[iz] - 1 != ie)
-            continue;
-
-        if (isNaN(edata->mz[nroots.at(ie) * rdata->nztrue + iz]))
             continue;
 
         model->fdzdp(t, ie, &x);
@@ -434,21 +431,9 @@ void ForwardProblem::prepEventSensis(int ie) {
         /* extract the value for the standard deviation, if the data
            value is NaN, use the parameter value. Store this value in the return
            struct */
-        if (isNaN(edata->sigmaz[nroots.at(ie) * rdata->nztrue + iz])) {
-            model->fdsigmazdp(t);
-        } else {
-            for (int ip = 0; ip < model->nplist(); ip++) {
-                model->dsigmazdp[iz + model->nz * ip] = 0;
-            }
-            model->sigmaz[iz] =
-                    edata->sigmaz[nroots.at(ie) * model->nztrue + iz];
-        }
-        rdata->sigmaz[nroots.at(ie) * model->nz + iz] = model->sigmaz[iz];
-        for (int ip = 0; ip < model->nplist(); ip++) {
-            rdata->ssigmaz[(nroots.at(ie)*model->np()+ip) * model->nz + iz] =
-                    model->dsigmazdp[iz + model->nz * ip];
-        }
     }
+    model->fsigmaz(t, ie, nroots.data(), rdata, edata);
+    model->fdsigmazdp(t, ie, nroots.data(), rdata, edata);
     model->fdJzdz(nroots.at(ie), rdata, edata);
     model->fdJzdsigma(nroots.at(ie), rdata, edata);
 
@@ -512,7 +497,7 @@ void ForwardProblem::getDataOutput(int it) {
      */
 
     model->fy(it, rdata);
-    model->fsigmay(it, edata, rdata);
+    model->fsigmay(it, rdata, edata);
     model->fJy(it, rdata, edata);
     model->fres(it, rdata, edata);
     model->fchi2(it, rdata);
@@ -564,27 +549,8 @@ void ForwardProblem::getDataSensisFSA(int it) {
                     sx.at(ix,ip);
         }
     }
-
-    if(edata) {
-        for (int iy = 0; iy < model->nytrue; iy++) {
-            if (isNaN(edata->sigmay[it * rdata->nytrue + iy])) {
-                // TODO: it seems redundant to call this for every iy,
-                // should be only called once per it. Check with redundancy
-                // in prepDataSensis and Model::fdsigmaydp
-                model->fdsigmaydp(it, rdata, edata);
-            } else {
-                for (int ip = 0; ip < model->nplist(); ip++) {
-                    model->dsigmaydp[ip * model->ny + iy] = 0;
-                }
-            }
-            for (int ip = 0; ip < model->nplist(); ip++) {
-                rdata->ssigmay[(it * model->nplist() + ip) * model->ny + iy] =
-                        model->dsigmaydp[ip * model->ny + iy];
-            }
-        }
-    } else {
-        std::fill_n(&rdata->ssigmay[it * model->nplist() * model->ny], model->nytrue * model->nplist(), 0.0);
-    }
+    
+    model->fdsigmaydp(it, rdata, edata);
 
     if (model->ny > 0) {
         model->fsy(it, rdata);
