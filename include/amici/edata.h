@@ -51,9 +51,9 @@ class ExpData {
      */
     ExpData(int nytrue, int nztrue, int nmaxevent,
             std::vector<realtype> ts,
-            std::vector<realtype> my,
-            std::vector<realtype> sigmay,
-            std::vector<realtype> mz,
+            std::vector<realtype> observedData,
+            std::vector<realtype> observedDataStdDev,
+            std::vector<realtype> observedEvents,
             std::vector<realtype> observedEventsStdDev);
 
     /**
