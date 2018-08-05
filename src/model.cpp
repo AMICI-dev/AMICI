@@ -49,9 +49,6 @@ void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
  * @param rdata pointer to return data instance
  */
 void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata) {
-
-    if (ny < 1)
-        reutrn;
     
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ x nx
@@ -62,12 +59,12 @@ void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *r
     amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, nJ,
                 nplist(), nx, 1.0, &dJydx.at(it*nJ*nx), nJ, getsx(it,rdata), nx, 0.0,
                 multResult.data(), nJ);
-    
+
     // multResult    nJ x nplist()
     // dJydp         nJ x nplist()
     // dJydxTmp      nJ x nx
     // sxTmp         nx x nplist()
-    
+
     // sJy += multResult + dJydp
     for (int iJ = 0; iJ < nJ; ++iJ) {
         if (iJ == 0)
@@ -76,7 +73,7 @@ void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *r
         else
             for (int ip = 0; ip < nplist(); ++ip)
                 rdata->s2llh.at((iJ - 1) + ip * (nJ - 1)) -=
-                multResult.at(iJ + ip * nJ) + dJydp.at(iJ + ip * nJ);
+                        multResult.at(iJ + ip * nJ) + dJydp.at(iJ + ip * nJ);
     }
 }
 

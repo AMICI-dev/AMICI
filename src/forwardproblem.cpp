@@ -495,7 +495,7 @@ void ForwardProblem::getDataOutput(int it) {
      *
      * @param[in] it index of current timepoint @type int
      */
-    
+
     model->fy(it, rdata);
     model->fsigmay(it, rdata, edata);
     model->fJy(it, rdata, edata);
@@ -504,8 +504,7 @@ void ForwardProblem::getDataOutput(int it) {
     
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && model->nplist() > 0) {
         prepDataSensis(it);
-        
-        if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi_meth == AMICI_SENSI_FSA)
             getDataSensisFSA(it);
     }
 }
