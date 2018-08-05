@@ -13,7 +13,7 @@ namespace amici {
  * @param rdata pointer to return data instance
  */
 void Model::fsy(const int it, ReturnData *rdata) {
-    if (ny<1)
+    if (!ny)
         return;
     
     // copy dydp for current time to sy
@@ -49,7 +49,7 @@ void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
  * @param rdata pointer to return data instance
  */
 void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata) {
-    
+
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ x nx
     // sx           rdata->nt x nx x nplist()
@@ -116,7 +116,7 @@ void Model::fdJydp(const int it, const ExpData *edata,
     if (rdata->sensi_meth != AMICI_SENSI_ASA)
         return;
 
-    if(ny < 1)
+    if(!ny)
         return;
 
     for (int iJ = 0; iJ < nJ; iJ++) {
@@ -639,8 +639,10 @@ void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiV
   * @param rdata pointer to return data instance
   */
 void Model::fy(int it, ReturnData *rdata) {
-    if (ny>0)
-        fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
+    if (!ny)
+        return;
+    
+    fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
 /** partial derivative of observables y w.r.t. model parameters p
@@ -648,7 +650,7 @@ void Model::fy(int it, ReturnData *rdata) {
      * @param rdata pointer to return data instance
      */
 void Model::fdydp(const int it, ReturnData *rdata) {
-    if (ny<1)
+    if (!ny)
         return;
     
     std::fill(dydp.begin(),dydp.end(),0.0);
@@ -670,7 +672,7 @@ void Model::fdydp(const int it, ReturnData *rdata) {
      * @param rdata pointer to return data instance
      */
 void Model::fdydx(const int it, ReturnData *rdata) {
-    if (ny<1)
+    if (!ny)
         return;
     
     std::fill(dydx.begin(),dydx.end(),0.0);
@@ -838,7 +840,7 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
      * @param rdata pointer to return data instance
      */
 void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
-    if (ny<1)
+    if (!ny)
         return;
     
     std::fill(sigmay.begin(),sigmay.end(),0.0);
@@ -862,7 +864,7 @@ void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
      * @param edata pointer to ExpData data instance holding sigma values
      */
 void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
-    if (ny<1)
+    if (!ny)
         return;
     
     std::fill(dsigmaydp.begin(), dsigmaydp.end(), 0.0);
