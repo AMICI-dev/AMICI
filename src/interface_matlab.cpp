@@ -238,7 +238,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         
         mxArray *dataSigmaYT;
         mexCallMATLAB(1, &dataSigmaYT, 1, &dataSigmaY, "transpose");
-        std::vector<realtype> observedDataSigma = mxArrayToVector(dataSigmaYT, nt_sigmay * nt_sigmay);
+        std::vector<realtype> observedDataSigma = mxArrayToVector(dataSigmaYT, ny_sigmay * nt_sigmay);
         edata->setObservedDataStdDev(observedDataSigma);
     } else {
         throw AmiException("Field Sigma_Y not specified as field in data struct!");
