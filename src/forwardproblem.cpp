@@ -504,9 +504,8 @@ void ForwardProblem::getDataOutput(int it) {
     
     if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && model->nplist() > 0) {
         prepDataSensis(it);
-        if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi_meth == AMICI_SENSI_FSA)
             getDataSensisFSA(it);
-        }
     }
 }
 
@@ -552,13 +551,11 @@ void ForwardProblem::getDataSensisFSA(int it) {
     
     model->fdsigmaydp(it, rdata, edata);
 
-    if (model->ny > 0) {
-        model->fsy(it, rdata);
-        if (edata) {
-            model->fsJy(it, dJydx, rdata);
-            model->fsres(it, rdata, edata);
-            model->fFIM(it, rdata);
-        }
+    model->fsy(it, rdata);
+    if (edata) {
+        model->fsJy(it, dJydx, rdata);
+        model->fsres(it, rdata, edata);
+        model->fFIM(it, rdata);
     }
 }
 
