@@ -180,31 +180,17 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
     if (!mxGetPr(prhs[RHS_DATA]))
         return nullptr;
 
-    int nt_my = 0, ny_my = 0, nt_sigmay = 0,
-        ny_sigmay = 0; /* integers with problem dimensionality */
-    int ne_mz = 0, nz_mz = 0, ne_sigmaz = 0,
-        nz_sigmaz = 0; /* integers with problem dimensionality */
-
     auto edata = std::unique_ptr<ExpData>(new ExpData(model));
-    
-    /* Check whether data and events are empty */
-    auto observedData = edata->getObservedData();
-    auto observedEvents = edata->getObservedEvents();
-    if (observedData.empty() && observedEvents.empty()) {
-        // if my and mz are both empty, no (or empty) data was provided
-        // in that case we simply return a nullptr for easier checking.
-        return nullptr;
-    }
     
     // Y
     if (mxArray *dataY = mxGetProperty(prhs[RHS_DATA], 0, "Y")) {
-        ny_my = (int)mxGetN(dataY);
+        auto ny_my = static_cast<int>(mxGetN(dataY));
         if (ny_my != model.nytrue) {
             throw AmiException("Number of observables in data matrix (%i) does "
                                "not match model ny (%i)",
                                ny_my, model.nytrue);
         }
-        nt_my = (int)mxGetM(dataY);
+        auto nt_my = static_cast<int>(mxGetM(dataY));
         if (nt_my != model.nt()) {
             throw AmiException("Number of time-points in data matrix does (%i) "
                                "not match provided time vector (%i)",
@@ -221,13 +207,13 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
     
     // Sigma Y
     if (mxArray *dataSigmaY = mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Y")) {
-        ny_sigmay = (int)mxGetN(dataSigmaY);
+        auto ny_sigmay = static_cast<int>(mxGetN(dataSigmaY));
         if (ny_sigmay != model.nytrue) {
             throw AmiException("Number of observables in data-sigma matrix (%i) "
                                "does not match model ny (%i)",
                                ny_sigmay, model.nytrue);
         }
-        nt_sigmay = (int)mxGetM(dataSigmaY);
+        auto nt_sigmay = static_cast<int>(mxGetM(dataSigmaY));
         if (nt_sigmay != model.nt()) {
             throw AmiException("Number of time-points in data-sigma matrix (%i) "
                                "does not match provided time vector (%i)",
@@ -244,13 +230,13 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
     
     // Z
     if (mxArray *dataZ = mxGetProperty(prhs[RHS_DATA], 0, "Z")) {
-        nz_mz = (int)mxGetN(dataZ);
+        auto nz_mz = static_cast<int>(mxGetN(dataZ));
         if (nz_mz != model.nztrue) {
             throw AmiException("Number of events in event matrix (%i) does not "
                                "match provided nz (%i)",
                                nz_mz, model.nztrue);
         }
-        ne_mz = (int)mxGetM(dataZ);
+        auto ne_mz = static_cast<int>(mxGetM(dataZ));
         if (ne_mz != model.nMaxEvent()) {
             throw AmiException("Number of time-points in event matrix (%i) does "
                                "not match provided nmaxevent (%i)",
@@ -266,13 +252,13 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
     
     // Sigma Z
     if (mxArray *dataSigmaZ = mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Z")) {
-        nz_sigmaz = (int)mxGetN(dataSigmaZ);
+        auto nz_sigmaz = static_cast<int>(mxGetN(dataSigmaZ));
         if (nz_sigmaz != model.nztrue) {
             throw AmiException("Number of events in event-sigma matrix (%i) does "
                                "not match provided nz (%i)",
                                nz_sigmaz, model.nztrue);
         }
-        ne_sigmaz = (int)mxGetM(dataSigmaZ);
+        auto ne_sigmaz = static_cast<int>(mxGetM(dataSigmaZ));
         if (ne_sigmaz != model.nMaxEvent()) {
             throw AmiException("Number of time-points in event-sigma matrix (%i) "
                                "does not match provided nmaxevent (%i)",
