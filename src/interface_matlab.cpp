@@ -159,11 +159,12 @@ void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y
 }
 
 /** conversion from mxArray to vector<realtype>
- *  @param x input
- *  @return int_x casted value
- */
-std::vector<realtype> mxArrayToVector(mxArray *mexData, int dataLength){
-    return {mxGetPr(mexData), mxGetPr(mexData) + dataLength};
+  * @param array Matlab array to create vector from
+  * @param length Number of elements in array
+  * @return std::vector with data from array
+  */
+std::vector<realtype> mxArrayToVector(const mxArray *array, int length) {
+    return {mxGetPr(array), mxGetPr(array) + length};
 }
 
 /*!
