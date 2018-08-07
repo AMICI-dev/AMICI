@@ -163,9 +163,7 @@ void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y
  *  @return int_x casted value
  */
 std::vector<realtype> mxArrayToVector(mxArray *mexData, int dataLength){
-    std::vector<realtype> dataVector(dataLength);
-    std::copy(mxGetPr(mexData), mxGetPr(mexData) + dataLength, dataVector.begin());
-    return(dataVector);
+    return {mxGetPr(mexData), mxGetPr(mexData) + dataLength};
 }
 
 /*!
@@ -189,8 +187,8 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
     ExpData *edata = new ExpData(model);
     
     /* Check whether data and events are empty */
-    std::vector<realtype> observedData = edata->getObservedData();
-    std::vector<realtype> observedEvents = edata->getObservedEvents();
+    auto observedData = edata->getObservedData();
+    auto observedEvents = edata->getObservedEvents();
     if (observedData.empty() && observedEvents.empty()) {
         // if my and mz are both empty, no (or empty) data was provided
         // in that case we simply return a nullptr for easier checking.
@@ -214,7 +212,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         }
         mxArray *dataYT;
         mexCallMATLAB(1, &dataYT, 1, &dataY, "transpose");
-        std::vector<realtype> observedData = mxArrayToVector(dataYT, ny_my * nt_my);
+        auto observedData = mxArrayToVector(dataYT, ny_my * nt_my);
         edata->setObservedData(observedData);
         
     } else {
@@ -238,7 +236,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         
         mxArray *dataSigmaYT;
         mexCallMATLAB(1, &dataSigmaYT, 1, &dataSigmaY, "transpose");
-        std::vector<realtype> observedDataSigma = mxArrayToVector(dataSigmaYT, ny_sigmay * nt_sigmay);
+        auto observedDataSigma = mxArrayToVector(dataSigmaYT, ny_sigmay * nt_sigmay);
         edata->setObservedDataStdDev(observedDataSigma);
     } else {
         throw AmiException("Field Sigma_Y not specified as field in data struct!");
@@ -260,7 +258,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         }
         mxArray *dataZT;
         mexCallMATLAB(1, &dataZT, 1, &dataZ, "transpose");
-        std::vector<realtype> observedEvents = mxArrayToVector(dataZT, nz_mz * ne_mz);
+        auto observedEvents = mxArrayToVector(dataZT, nz_mz * ne_mz);
         edata->setObservedEvents(observedEvents);
     } else {
         throw AmiException("Field Z not specified as field in data struct!");
@@ -282,7 +280,7 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         }
         mxArray *dataSigmaZT;
         mexCallMATLAB(1, &dataSigmaZT, 1, &dataSigmaZ, "transpose");
-        std::vector<realtype> observedEventsSigma = mxArrayToVector(dataSigmaZT, nz_sigmaz * ne_sigmaz);
+        auto observedEventsSigma = mxArrayToVector(dataSigmaZT, nz_sigmaz * ne_sigmaz);
         edata->setObservedEventsStdDev(observedEventsSigma);
     } else {
         throw AmiException("Field Sigma_Z not specified as field in data struct!");
