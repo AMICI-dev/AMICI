@@ -175,7 +175,7 @@ std::vector<realtype> mxArrayToVector(mxArray *mexData, int dataLength){
  * dimension checks
  * @return edata pointer to experimental data object
  */
-ExpData *expDataFromMatlabCall(const mxArray *prhs[],
+std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
                                Model const &model) {
     if (!mxGetPr(prhs[RHS_DATA]))
         return nullptr;
@@ -184,7 +184,8 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         ny_sigmay = 0; /* integers with problem dimensionality */
     int ne_mz = 0, nz_mz = 0, ne_sigmaz = 0,
         nz_sigmaz = 0; /* integers with problem dimensionality */
-    ExpData *edata = new ExpData(model);
+
+    auto edata = std::unique_ptr<ExpData>(new ExpData(model));
     
     /* Check whether data and events are empty */
     auto observedData = edata->getObservedData();
@@ -192,7 +193,6 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
     if (observedData.empty() && observedEvents.empty()) {
         // if my and mz are both empty, no (or empty) data was provided
         // in that case we simply return a nullptr for easier checking.
-        delete(edata);
         return nullptr;
     }
     
@@ -546,7 +546,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     std::unique_ptr<amici::ExpData> edata;
     if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
         try {
-            edata.reset(amici::expDataFromMatlabCall(prhs, *model));
+            edata = std::move(amici::expDataFromMatlabCall(prhs, *model));
         } catch (amici::AmiException& ex) {
             amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
