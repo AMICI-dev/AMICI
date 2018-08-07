@@ -8,7 +8,7 @@ branches:
 
 matrix:
   fast_finish: true
-  include: 
+  include:
     - os: linux
       dist: xenial
       compiler: gcc
@@ -36,10 +36,10 @@ matrix:
     - os: osx
       osx_image: xcode9.3
       compiler: clang
-      before_install: 
+      before_install:
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
-	- travis_wait brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
+        - travis_wait brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
         - brew upgrade python
       after_success: 
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
