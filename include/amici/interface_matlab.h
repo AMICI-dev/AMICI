@@ -43,7 +43,7 @@ ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs);
  * @param[in] prhs user input @type *mxArray
  * @return edata: experimental data struct @type *ExpData
  */
-ExpData *expDataFromMatlabCall(const mxArray *prhs[], const Model &model);
+std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[], const Model &model);
 
 void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
                  const int M, const int N, const double alpha, const double *A,

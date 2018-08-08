@@ -158,6 +158,14 @@ void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y
     FORTRAN_WRAPPER(daxpy)(&n_, &alpha, x, &incx_, y, &incy_);
 }
 
+/** conversion from mxArray to vector<realtype>
+  * @param array Matlab array to create vector from
+  * @param length Number of elements in array
+  * @return std::vector with data from array
+  */
+std::vector<realtype> mxArrayToVector(const mxArray *array, int length) {
+    return {mxGetPr(array), mxGetPr(array) + length};
+}
 
 /*!
  * expDataFromMatlabCall parses the experimental data from the matlab call and
@@ -168,32 +176,22 @@ void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y
  * dimension checks
  * @return edata pointer to experimental data object
  */
-ExpData *expDataFromMatlabCall(const mxArray *prhs[],
+std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
                                Model const &model) {
     if (!mxGetPr(prhs[RHS_DATA]))
         return nullptr;
 
-    int nt_my = 0, ny_my = 0, nt_sigmay = 0,
-        ny_sigmay = 0; /* integers with problem dimensionality */
-    int ne_mz = 0, nz_mz = 0, ne_sigmaz = 0,
-        nz_sigmaz = 0; /* integers with problem dimensionality */
-    ExpData *edata = new ExpData(model);
-    if (edata->my.empty() && edata->mz.empty()) {
-        // if my and mz are both empty, no (or empty) data was provided
-        // in that case we simply return a nullptr for easier checking.
-        delete(edata);
-        return nullptr;
-    }
-    
+    auto edata = std::unique_ptr<ExpData>(new ExpData(model));
+
     // Y
     if (mxArray *dataY = mxGetProperty(prhs[RHS_DATA], 0, "Y")) {
-        ny_my = (int)mxGetN(dataY);
+        auto ny_my = static_cast<int>(mxGetN(dataY));
         if (ny_my != model.nytrue) {
             throw AmiException("Number of observables in data matrix (%i) does "
                                "not match model ny (%i)",
                                ny_my, model.nytrue);
         }
-        nt_my = (int)mxGetM(dataY);
+        auto nt_my = static_cast<int>(mxGetM(dataY));
         if (nt_my != model.nt()) {
             throw AmiException("Number of time-points in data matrix does (%i) "
                                "not match provided time vector (%i)",
@@ -201,7 +199,8 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         }
         mxArray *dataYT;
         mexCallMATLAB(1, &dataYT, 1, &dataY, "transpose");
-        edata->setObservedData(mxGetPr(dataYT));
+        auto observedData = mxArrayToVector(dataYT, ny_my * nt_my);
+        edata->setObservedData(observedData);
         
     } else {
         throw AmiException("Field Y not specified as field in data struct!");
@@ -209,13 +208,13 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
     
     // Sigma Y
     if (mxArray *dataSigmaY = mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Y")) {
-        ny_sigmay = (int)mxGetN(dataSigmaY);
+        auto ny_sigmay = static_cast<int>(mxGetN(dataSigmaY));
         if (ny_sigmay != model.nytrue) {
             throw AmiException("Number of observables in data-sigma matrix (%i) "
                                "does not match model ny (%i)",
                                ny_sigmay, model.nytrue);
         }
-        nt_sigmay = (int)mxGetM(dataSigmaY);
+        auto nt_sigmay = static_cast<int>(mxGetM(dataSigmaY));
         if (nt_sigmay != model.nt()) {
             throw AmiException("Number of time-points in data-sigma matrix (%i) "
                                "does not match provided time vector (%i)",
@@ -224,20 +223,21 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         
         mxArray *dataSigmaYT;
         mexCallMATLAB(1, &dataSigmaYT, 1, &dataSigmaY, "transpose");
-        edata->setObservedDataStdDev(mxGetPr(dataSigmaYT));
+        auto observedDataSigma = mxArrayToVector(dataSigmaYT, ny_sigmay * nt_sigmay);
+        edata->setObservedDataStdDev(observedDataSigma);
     } else {
         throw AmiException("Field Sigma_Y not specified as field in data struct!");
     }
     
     // Z
     if (mxArray *dataZ = mxGetProperty(prhs[RHS_DATA], 0, "Z")) {
-        nz_mz = (int)mxGetN(dataZ);
+        auto nz_mz = static_cast<int>(mxGetN(dataZ));
         if (nz_mz != model.nztrue) {
             throw AmiException("Number of events in event matrix (%i) does not "
                                "match provided nz (%i)",
                                nz_mz, model.nztrue);
         }
-        ne_mz = (int)mxGetM(dataZ);
+        auto ne_mz = static_cast<int>(mxGetM(dataZ));
         if (ne_mz != model.nMaxEvent()) {
             throw AmiException("Number of time-points in event matrix (%i) does "
                                "not match provided nmaxevent (%i)",
@@ -245,20 +245,21 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         }
         mxArray *dataZT;
         mexCallMATLAB(1, &dataZT, 1, &dataZ, "transpose");
-        edata->setObservedEvents(mxGetPr(dataZT));
+        auto observedEvents = mxArrayToVector(dataZT, nz_mz * ne_mz);
+        edata->setObservedEvents(observedEvents);
     } else {
         throw AmiException("Field Z not specified as field in data struct!");
     }
     
     // Sigma Z
     if (mxArray *dataSigmaZ = mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Z")) {
-        nz_sigmaz = (int)mxGetN(dataSigmaZ);
+        auto nz_sigmaz = static_cast<int>(mxGetN(dataSigmaZ));
         if (nz_sigmaz != model.nztrue) {
             throw AmiException("Number of events in event-sigma matrix (%i) does "
                                "not match provided nz (%i)",
                                nz_sigmaz, model.nztrue);
         }
-        ne_sigmaz = (int)mxGetM(dataSigmaZ);
+        auto ne_sigmaz = static_cast<int>(mxGetM(dataSigmaZ));
         if (ne_sigmaz != model.nMaxEvent()) {
             throw AmiException("Number of time-points in event-sigma matrix (%i) "
                                "does not match provided nmaxevent (%i)",
@@ -266,7 +267,8 @@ ExpData *expDataFromMatlabCall(const mxArray *prhs[],
         }
         mxArray *dataSigmaZT;
         mexCallMATLAB(1, &dataSigmaZT, 1, &dataSigmaZ, "transpose");
-        edata->setObservedEventsStdDev(mxGetPr(dataSigmaZT));
+        auto observedEventsSigma = mxArrayToVector(dataSigmaZT, nz_sigmaz * ne_sigmaz);
+        edata->setObservedEventsStdDev(observedEventsSigma);
     } else {
         throw AmiException("Field Sigma_Z not specified as field in data struct!");
         
@@ -531,7 +533,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     std::unique_ptr<amici::ExpData> edata;
     if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
         try {
-            edata.reset(amici::expDataFromMatlabCall(prhs, *model));
+            edata = std::move(amici::expDataFromMatlabCall(prhs, *model));
         } catch (amici::AmiException& ex) {
             amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
