@@ -13,5 +13,6 @@ The interface was designed to provide routines for efficient gradient computatio
 
 ## Current build status
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c03ff7875a3b47ac92599ee681a725fb)](https://app.codacy.com/app/FFroehlich/AMICI?utm_source=github.com&utm_medium=referral&utm_content=ICB-DCM/AMICI&utm_campaign=badger)
 [![Build Status](https://travis-ci.org/ICB-DCM/AMICI.svg?branch=master)](https://travis-ci.org/ICB-DCM/AMICI)
 [![CodeCov](https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg)](https://codecov.io/gh/ICB-DCM/AMICI)
