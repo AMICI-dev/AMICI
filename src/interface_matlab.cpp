@@ -182,7 +182,7 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
         return nullptr;
 
     auto edata = std::unique_ptr<ExpData>(new ExpData(model));
-    
+
     // Y
     if (mxArray *dataY = mxGetProperty(prhs[RHS_DATA], 0, "Y")) {
         auto ny_my = static_cast<int>(mxGetN(dataY));
