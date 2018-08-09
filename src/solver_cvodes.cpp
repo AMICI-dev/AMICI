@@ -278,7 +278,7 @@ int CVodeSolver::solveF(realtype tout, AmiVector *yret, AmiVector *ypret,
 void CVodeSolver::solveB(realtype tBout, int itaskB) {
     int status = CVodeB(solverMemory.get(), tBout, itaskB);
     if(status != CV_SUCCESS)
-         throw IntegrationFailure(status,tBout);
+         throw IntegrationFailureB(status,tBout);
 }
 
 void CVodeSolver::setMaxNumStepsB(int which, long mxstepsB) {
