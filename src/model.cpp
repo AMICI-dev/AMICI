@@ -423,9 +423,12 @@ std::vector<realtype> const& Model::getInitialStates() const {
 }
 
 void Model::setInitialStates(const std::vector<realtype> &x0) {
-    if(x0.size() != (unsigned) nx)
+    if(x0.size() != (unsigned) nx && x0.size() != 0)
         throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
-    this->x0data = x0;
+    if (x0.size() == 0)
+        this->x0data.clear();
+    else
+        this->x0data = x0;
 }
 
 const std::vector<realtype> &Model::getInitialStateSensitivities() const {
@@ -433,9 +436,12 @@ const std::vector<realtype> &Model::getInitialStateSensitivities() const {
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
-    if(sx0.size() != (unsigned) nx * nplist())
+    if(sx0.size() != (unsigned) nx * nplist() && sx0.size() != 0)
         throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
-    this->sx0data = sx0;
+    if (sx0.size() == 0)
+        this->sx0data.clear();
+    else
+        this->sx0data = sx0;
 }
 
 double Model::t0() const{
