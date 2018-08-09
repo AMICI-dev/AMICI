@@ -473,10 +473,10 @@ Model::Model(const int nx,
              const int lbw,
              AMICI_o2mode o2mode,
              const std::vector<realtype>& p,
-             std::vector<realtype>  k,
+             std::vector<realtype> k,
              const std::vector<int>& plist,
-             std::vector<realtype>  idlist,
-             std::vector<int>  z2event)
+             std::vector<realtype> idlist,
+             std::vector<int> z2event)
     : nx(nx), nxtrue(nxtrue),
       ny(ny), nytrue(nytrue),
       nz(nz), nztrue(nztrue),
@@ -529,6 +529,7 @@ Model::Model(const int nx,
       pscale(std::vector<AMICI_parameter_scaling>(p.size(), AMICI_SCALING_NONE))
 {
     J = SparseNewMat(nx, nx, nnz, CSC_MAT);
+    requireSensitivitiesForAllParameters();
 }
 
 Model::Model(const Model &other)
