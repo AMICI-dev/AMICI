@@ -64,6 +64,10 @@ class IDASolver : public Solver {
     
     const Model *getModel() const override;
     
+    bool getMallocDone() const override;
+    
+    bool getAdjMallocDone() const override;
+    
     static int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data);
     

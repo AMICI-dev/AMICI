@@ -1112,6 +1112,9 @@ class Solver {
     virtual int nplist() const = 0;
     virtual int nx() const = 0;
     virtual const Model *getModel() const = 0;
+    
+    virtual bool getMallocDone() const = 0;
+    virtual bool getAdjMallocDone() const = 0;
 
 protected:
     

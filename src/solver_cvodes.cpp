@@ -224,7 +224,7 @@ void CVodeSolver::adjInit() {
 
 void CVodeSolver::allocateSolverB(int *which) {
     int status = CVodeCreateB(solverMemory.get(),(int) lmm, (int) iter, which);
-    if (*which + 1 > solverMemoryB.size())
+    if (*which + 1 > (int) solverMemoryB.size())
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
     (getAdjBmem(solverMemory.get(), *which), [](void *ptr){});
@@ -474,6 +474,20 @@ const Model *CVodeSolver::getModel() const {
     return static_cast<Model *>(cv_mem->cv_user_data);
 }
 
+bool CVodeSolver::getMallocDone() const {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return cv_mem->cv_MallocDone;
+}
+    
+bool CVodeSolver::getAdjMallocDone() const {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return cv_mem->cv_adjMallocDone;
+}
+    
     /** Jacobian of xdot with respect to states x
      * @param N number of state variables
      * @param t timepoint

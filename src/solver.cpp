@@ -414,11 +414,14 @@ bool operator ==(const Solver &a, const Solver &b)
 }
     
 void Solver::setTolerances() {
+    if (!getMallocDone())
+        return;
+    
     setSStolerances(RCONST(this->rtol), RCONST(this->atol));
 }
     
 void Solver::setTolerancesFSA() {
-    if (sensi < AMICI_SENSI_ORDER_FIRST)
+    if (sensi < AMICI_SENSI_ORDER_FIRST || !getMallocDone())
         return;
     
     if(nplist()) {
@@ -429,7 +432,7 @@ void Solver::setTolerancesFSA() {
 }
     
 void Solver::setTolerancesASA(int which) {
-    if (sensi < AMICI_SENSI_ORDER_FIRST)
+    if (sensi < AMICI_SENSI_ORDER_FIRST || !getAdjMallocDone())
         return;
     
     /* specify integration tolerances for backward problem */
@@ -437,7 +440,7 @@ void Solver::setTolerancesASA(int which) {
 }
     
 void Solver::setQuadTolerancesASA(int which) {
-    if (sensi < AMICI_SENSI_ORDER_FIRST)
+    if (sensi < AMICI_SENSI_ORDER_FIRST || !getAdjMallocDone())
         return;
     
     double quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
@@ -460,8 +463,7 @@ void Solver::setSensitivityTolerances() {
         setTolerancesFSA();
     else if (sensi_meth == AMICI_SENSI_ASA) {
         for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-            if(solverMemoryB.at(iMem))
-                setTolerancesASA(iMem);
+            setTolerancesASA(iMem);
     }
 }
     
