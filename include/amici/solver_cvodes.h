@@ -77,6 +77,8 @@ class CVodeSolver : public Solver {
     
     int nx() const override;
     
+    const Model *getModel() const override;
+    
     static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
     
     static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
@@ -88,7 +90,7 @@ class CVodeSolver : public Solver {
                   N_Vector tmp2, N_Vector tmp3);
     
 protected:
-    void create(int lmm, int iter) override;
+    void allocateSolver() override;
 
     void setSStolerances(double rtol, double atol) override;
 
@@ -116,9 +118,9 @@ protected:
 
     void setSensParams(realtype *p, realtype *pbar, int *plist) override;
 
-    void adjInit(long int steps, int interp) override;
+    void adjInit() override;
 
-    void createB(int lmm, int iter, int *which) override;
+    void allocateSolverB(int *which) override;
 
     void setSStolerancesB(int which, realtype relTolB,
                          realtype absTolB) override;

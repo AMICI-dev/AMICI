@@ -62,6 +62,8 @@ class IDASolver : public Solver {
     
     int nx() const override;
     
+    const Model *getModel() const override;
+    
     static int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data);
     
@@ -75,7 +77,7 @@ class IDASolver : public Solver {
 
   protected:
     
-    void create(int lmm, int iter) override;
+    void allocateSolver() override;
     
     void setSStolerances(double rtol, double atol) override;
     
@@ -103,9 +105,9 @@ class IDASolver : public Solver {
     
     void setSensParams(realtype *p, realtype *pbar, int *plist) override;
     
-    void adjInit(long int steps, int interp) override;
+    void adjInit() override;
     
-    void createB(int lmm, int iter, int *which) override;
+    void allocateSolverB(int *which) override;
     
     void setMaxNumStepsB(int which, long int mxstepsB) override;
     

@@ -98,7 +98,7 @@ Solver *IDASolver::clone() const {
     return new IDASolver(*this);
 }
 
-void IDASolver::create(int lmm, int iter) {
+void IDASolver::allocateSolver() {
     solverMemory = std::unique_ptr<void, std::function<void(void *)>>(IDACreate(),
                    [](void *ptr) { IDAFree(&ptr); });
 }
@@ -197,12 +197,12 @@ void IDASolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
          throw IDAException(status,"IDAGetSens");
 }
 
-void IDASolver::adjInit(long steps, int interp) {
-    int status = IDAAdjInit(solverMemory.get(), steps, interp);
+void IDASolver::adjInit() {
+    int status = IDAAdjInit(solverMemory.get(), (long) maxsteps, (int) interpType);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAAdjInit");
 }
-void IDASolver::createB(int lmm, int iter, int *which) {
+void IDASolver::allocateSolverB(int *which) {
     int status = IDACreateB(solverMemory.get(), which);
     if (*which + 1 > solverMemoryB.size())
         solverMemoryB.resize(*which + 1);
@@ -423,6 +423,13 @@ int IDASolver::nx() const {
         throw AmiException("Solver has not been allocated, information is not available");
     auto IDA_mem = (IDAMem) solverMemory.get();
     return NV_LENGTH_S(IDA_mem->ida_yy0);
+}
+    
+const Model *IDASolver::getModel() const {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto ida_mem = (IDAMem) solverMemory.get();
+    return static_cast<Model *>(ida_mem->ida_user_data);
 }
     
     /** Jacobian of xdot with respect to states x

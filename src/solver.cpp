@@ -26,7 +26,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
     model->initialize(fwd->getStatePointer(), fwd->getStateDerivativePointer());
 
     /* Create solver memory object */
-    create((int) lmm, (int) iter);
+    allocateSolver();
     if (!solverMemory)
         throw AmiException("Failed to allocated solver memory!");
 
@@ -79,7 +79,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
             setTolerancesFSA();
         } else if (sensi_meth == AMICI_SENSI_ASA) {
             /* Allocate space for the adjoint computation */
-            adjInit(maxsteps, (int) interpType);
+            adjInit();
         }
     }
 
@@ -111,7 +111,7 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     bwd->getxQBptr()->reset();
 
     /* allocate memory for the backward problem */
-    createB((int) lmm, (int) iter, bwd->getwhichptr());
+    allocateSolverB(bwd->getwhichptr());
 
     /* initialise states */
     binit(bwd->getwhich(), bwd->getxBptr(), bwd->getdxBptr(), bwd->gett());
@@ -237,7 +237,7 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
  *
  * @param model pointer to the model object
  */
-void Solver::initializeLinearSolver(Model *model) {
+void Solver::initializeLinearSolver(const Model *model) {
     /* Attach linear solver module */
 
     switch (linsol) {
@@ -314,7 +314,7 @@ void Solver::initializeLinearSolver(Model *model) {
      * @param model pointer to the model object
      * @param which index of the backward problem
      */
-void Solver::initializeLinearSolverB(Model *model, const int which) {
+void Solver::initializeLinearSolverB(const Model *model, const int which) {
     switch (linsol) {
             
             /* DIRECT SOLVERS */

@@ -110,8 +110,9 @@ Solver *CVodeSolver::clone() const {
     return new CVodeSolver(*this);
 }
 
-void CVodeSolver::create(int lmm, int iter) {
-    solverMemory = std::unique_ptr<void, std::function<void(void *)>>(CVodeCreate(lmm, iter),
+void CVodeSolver::allocateSolver() {
+    solverMemory = std::unique_ptr<void, std::function<void(void *)>>
+    (CVodeCreate((int) lmm,(int) iter),
                    [](void *ptr) { CVodeFree(&ptr); });
 }
 
@@ -215,14 +216,14 @@ void CVodeSolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
          throw CvodeException(status,"CVodeGetSens");
 }
 
-void CVodeSolver::adjInit(long steps, int interp) {
-    int status = CVodeAdjInit(solverMemory.get(), steps, interp);
+void CVodeSolver::adjInit() {
+    int status = CVodeAdjInit(solverMemory.get(), (long) maxsteps, (int) interpType);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeAdjInit");
 }
 
-void CVodeSolver::createB(int lmm, int iter, int *which) {
-    int status = CVodeCreateB(solverMemory.get(), lmm, iter, which);
+void CVodeSolver::allocateSolverB(int *which) {
+    int status = CVodeCreateB(solverMemory.get(),(int) lmm, (int) iter, which);
     if (*which + 1 > solverMemoryB.size())
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
@@ -464,6 +465,13 @@ int CVodeSolver::nx() const {
         throw AmiException("Solver has not been allocated, information is not available");
     auto cv_mem = (CVodeMem) solverMemory.get();
     return NV_LENGTH_S(cv_mem->cv_zn[0]);
+}
+    
+const Model *CVodeSolver::getModel() const {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return static_cast<Model *>(cv_mem->cv_user_data);
 }
 
     /** Jacobian of xdot with respect to states x

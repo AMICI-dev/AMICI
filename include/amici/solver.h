@@ -484,9 +484,10 @@ class Solver {
      */
     void setLinearMultistepMethod(LinearMultistepMethod lmm) {
         if(solverMemory)
-            throw AmiException("Solver object was already set up, the linear multistep method can no longer be changed!");
-        
+            throw AmiException("Solver object was already set up, the linear system multistep method can no longer be changed!");
         this->lmm = lmm;
+        /*if(solverMemory)
+            allocateSolver();*/
     }
 
     /**
@@ -503,9 +504,10 @@ class Solver {
      */
     void setNonlinearSolverIteration(NonlinearSolverIteration iter) {
         if(solverMemory)
-            throw AmiException("Solver object was already set up, the nonlinear solver interation can no longer be changed!");
-
+            throw AmiException("Solver object was already set up, the nonlinear system solution method can no longer be changed!");
         this->iter = iter;
+        /*if(solverMemory)
+            allocateSolver();*/
     }
 
     /**
@@ -523,7 +525,6 @@ class Solver {
     void setInterpolationType(InterpolationType interpType) {
         if(!solverMemoryB.empty())
             throw AmiException("Adjoint solver object was already set up, the interpolation type can no longer be changed!");
-        
         this->interpType = interpType;
     }
 
@@ -589,8 +590,9 @@ class Solver {
     void setLinearSolver(LinearSolver linsol) {
         if(solverMemory)
             throw AmiException("Solver object was already set up, the linear solver can no longer be changed!");
-        
         this->linsol = linsol;
+        /*if(solverMemory)
+            initializeLinearSolver(getModel());*/
     }
 
     /**
@@ -733,10 +735,8 @@ class Solver {
      * Create specifies solver method and initializes solver memory for the
      * forward problem
      *
-     * @param lmm linear multistep method CV_ADAMS or CV_BDF
-     * @param iter nonlinear solver method CV_NEWTON or CV_FUNCTIONAL
      */
-    virtual void create(int lmm, int iter) = 0;
+    virtual void allocateSolver() = 0;
 
     /**
      * SStolerances sets scalar relative and absolute tolerances for the forward
@@ -872,17 +872,17 @@ class Solver {
      * @param interp interpolation type, can be CV_POLYNOMIAL or CV_HERMITE
      *
      */
-    virtual void adjInit(long int steps, int interp) = 0;
+    virtual void adjInit() = 0;
     
     /**
-     * CreateB specifies solver method and initializes solver memory for the
+     * specifies solver method and initializes solver memory for the
      * backward problem
      *
      * @param which identifier of the backwards problem
      * @param lmm linear multistep method CV_ADAMS or CV_BDF
      * @param iter nonlinear solver method CV_NEWTON or CV_FUNCTIONAL
      */
-    virtual void createB(int lmm, int iter, int *which) = 0;
+    virtual void allocateSolverB(int *which) = 0;
 
     /**
      * SStolerancesB sets relative and absolute tolerances for the backward
@@ -1106,11 +1106,12 @@ class Solver {
      */
     virtual void getLastOrder(void *ami_mem, int *order) const = 0;
 
-    void initializeLinearSolver(Model *model);
-    void initializeLinearSolverB(Model *model, int which);
+    void initializeLinearSolver(const Model *model);
+    void initializeLinearSolverB(const Model *model, const int which);
     
     virtual int nplist() const = 0;
     virtual int nx() const = 0;
+    virtual const Model *getModel() const = 0;
 
 protected:
     
@@ -1166,25 +1167,28 @@ protected:
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */
     InternalSensitivityMethod ism = InternalSensitivityMethod::SIMULTANEOUS;
+    
+    /** specifies the linear multistep method.
+     */
+    LinearMultistepMethod lmm = LinearMultistepMethod::BDF;
+    
+    /**
+     * specifies the type of nonlinear solver iteration
+     */
+    NonlinearSolverIteration iter = NonlinearSolverIteration::NEWTON;
+    
+    /** interpolation type for the forward problem solution which
+     * is then used for the backwards problem.
+     */
+    InterpolationType interpType = InterpolationType::HERMITE;
+    
+    /** maximum number of allowed integration steps */
+    int maxsteps = 10000;
 
 private:
         
     /** method for sensitivity computation */
     AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
-
-    /** interpolation type for the forward problem solution which
-     * is then used for the backwards problem.
-     */
-    InterpolationType interpType = InterpolationType::HERMITE;
-
-    /** specifies the linear multistep method.
-     */
-    LinearMultistepMethod lmm = LinearMultistepMethod::BDF;
-
-    /**
-     * specifies the type of nonlinear solver iteration
-     */
-    NonlinearSolverIteration iter = NonlinearSolverIteration::NEWTON;
 
     /** flag controlling stability limit detection */
     booleantype stldet = true;
@@ -1211,9 +1215,6 @@ private:
 
     /** relative tolerances for integration */
     double rtol = 1e-8;
-
-    /** maximum number of allowed integration steps */
-    int maxsteps = 10000;
 
     /** absolute tolerances for backward quadratures */
     double quad_atol = 1e-12;
