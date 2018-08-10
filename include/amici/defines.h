@@ -91,7 +91,7 @@ typedef enum AMICI_sensi_meth_TAG {
 } AMICI_sensi_meth;
 
 /** linear solvers for CVODES/IDAS */
-enum LinearSolver {
+enum class LinearSolver {
     AMICI_DENSE       = 1,
     AMICI_BAND        = 2,
     AMICI_LAPACKDENSE = 3,
@@ -104,32 +104,32 @@ enum LinearSolver {
 };
 
 /** CVODES/IDAS forward sensitivity computation method */
-enum InternalSensitivityMethod {
+enum class InternalSensitivityMethod {
     SIMULTANEOUS = 1,
     STAGGERED = 2,
     STAGGERED1 = 3
 };
 
 /** CVODES/IDAS state interpolation for adjoint sensitivity analysis */
-enum InterpolationType {
+enum class InterpolationType {
     HERMITE = 1,
     POLYNOMIAL = 2
 };
 
 /** CVODES/IDAS linear multistep method */
-enum LinearMultistepMethod {
+enum class LinearMultistepMethod {
     ADAMS = 1,
     BDF = 2
 };
 
 /** CVODES/IDAS Nonlinear Iteration method */
-enum NonlinearSolverIteration {
+enum class NonlinearSolverIteration {
     FUNCTIONAL = 1,
     NEWTON = 2
 };
 
 /** KLU state reordering */
-enum StateOrdering {
+enum class StateOrdering {
     AMD,
     COLAMD,
     natural

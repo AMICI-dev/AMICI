@@ -15,20 +15,20 @@
 namespace amici {
 
 // Ensure AMICI options are in sync with Sundials options
-static_assert(InternalSensitivityMethod::SIMULTANEOUS == CV_SIMULTANEOUS, "");
-static_assert(InternalSensitivityMethod::STAGGERED == CV_STAGGERED, "");
-static_assert(InternalSensitivityMethod::STAGGERED1 == CV_STAGGERED1, "");
+static_assert((int)InternalSensitivityMethod::SIMULTANEOUS == CV_SIMULTANEOUS, "");
+static_assert((int)InternalSensitivityMethod::STAGGERED == CV_STAGGERED, "");
+static_assert((int)InternalSensitivityMethod::STAGGERED1 == CV_STAGGERED1, "");
 
-static_assert(InterpolationType::HERMITE == CV_HERMITE, "");
-static_assert(InterpolationType::POLYNOMIAL == CV_POLYNOMIAL, "");
+static_assert((int)InterpolationType::HERMITE == CV_HERMITE, "");
+static_assert((int)InterpolationType::POLYNOMIAL == CV_POLYNOMIAL, "");
 
-static_assert(LinearMultistepMethod::ADAMS == CV_ADAMS, "");
-static_assert(LinearMultistepMethod::BDF == CV_BDF, "");
+static_assert((int)LinearMultistepMethod::ADAMS == CV_ADAMS, "");
+static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
     
-static_assert(NonlinearSolverIteration::FUNCTIONAL == CV_FUNCTIONAL, "");
-static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
+static_assert((int)NonlinearSolverIteration::FUNCTIONAL == CV_FUNCTIONAL, "");
+static_assert((int)NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
 
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
@@ -323,7 +323,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
             if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-                solver->sensReInit(solver->getInternalSensitivityMethod(), &sx, &sdx);
+                solver->sensReInit(&sx, &sdx);
             }
         }
     }

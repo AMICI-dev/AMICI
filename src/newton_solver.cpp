@@ -33,7 +33,7 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *
 /* ----------------------------------------------------------------------------------
  */
 
-std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
+std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x, LinearSolver linsolType, Model *model,
                                       ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
@@ -58,35 +58,35 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x,
     switch (linsolType) {
 
     /* DIRECT SOLVERS */
-    case AMICI_DENSE:
+    case LinearSolver::AMICI_DENSE:
         solver.reset(new NewtonSolverDense(t, x, model, rdata));
         break;
 
-    case AMICI_BAND:
+    case LinearSolver::AMICI_BAND:
         throw NewtonFailure("Solver currently not supported!");
 
-    case AMICI_LAPACKDENSE:
+    case LinearSolver::AMICI_LAPACKDENSE:
         throw NewtonFailure("Solver currently not supported!");
 
-    case AMICI_LAPACKBAND:
+    case LinearSolver::AMICI_LAPACKBAND:
         throw NewtonFailure("Solver currently not supported!");
 
-    case AMICI_DIAG:
+    case LinearSolver::AMICI_DIAG:
         throw NewtonFailure("Solver currently not supported!");
 
     /* ITERATIVE SOLVERS */
-    case AMICI_SPGMR:
+    case LinearSolver::AMICI_SPGMR:
         throw NewtonFailure("Solver currently not supported!");
 
-    case AMICI_SPBCG:
+    case LinearSolver::AMICI_SPBCG:
         solver.reset(new NewtonSolverIterative(t, x, model, rdata));
         break;
 
-    case AMICI_SPTFQMR:
+    case LinearSolver::AMICI_SPTFQMR:
         throw NewtonFailure("Solver currently not supported!");
 
     /* SPARSE SOLVERS */
-    case AMICI_KLU:
+    case LinearSolver::AMICI_KLU:
         solver.reset(new NewtonSolverSparse(t, x, model, rdata));
         break;
     default:

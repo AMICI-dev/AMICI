@@ -78,7 +78,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     if (it == AMICI_PREEQUILIBRATE) {
         solver->reInit(*t, x, &dx);
         if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && rdata->sensi_meth == AMICI_SENSI_FSA) {
-                solver->sensReInit(solver->getInternalSensitivityMethod(), sx, &sdx);
+                solver->sensReInit( sx, &sdx);
         }
     }
 }
@@ -314,8 +314,8 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
     
     /* Create new CVode object */
     auto newton_sim = std::unique_ptr<void, std::function<void(void *)>>(
-                CVodeCreate(solver->getLinearMultistepMethod(),
-                            solver->getNonlinearSolverIteration()),
+                CVodeCreate((int) solver->getLinearMultistepMethod(),
+                            (int) solver->getNonlinearSolverIteration()),
                 [](void *ptr) { CVodeFree(&ptr); }
     );
     if (!newton_sim)
@@ -348,7 +348,7 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
     
     switch(solver->getLinearSolver()) {
             
-    case AMICI_DENSE:
+    case LinearSolver::AMICI_DENSE:
         /* Set up dense solver */
         status = CVDense(newton_sim.get(), model->nx);
         if(status != CV_SUCCESS)
@@ -359,7 +359,7 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
             throw CvodeException(status,"CVDlsSetDenseJacFn");
         break;
         
-    case AMICI_KLU:
+    case LinearSolver::AMICI_KLU:
         /* Set up KLU solver */
         status = CVKLU(newton_sim.get(), model->nx, model->nnz, CSC_MAT);
         if(status != CV_SUCCESS)
@@ -371,7 +371,7 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
             throw CvodeException(status,"CVSlsSetSparseJacFn");
     
         /* Provide ordering to KLU solver */
-        status = CVKLUSetOrdering(newton_sim.get(), solver->getStateOrdering());
+        status = CVKLUSetOrdering(newton_sim.get(), (int) solver->getStateOrdering());
         if(status != CV_SUCCESS)
             throw CvodeException(status,"CVKLUSetOrdering");
         break;
