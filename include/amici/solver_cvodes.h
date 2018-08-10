@@ -37,6 +37,57 @@ class CVodeSolver : public Solver {
      */
     virtual Solver* clone() const override;
     
+    void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
+    
+    void sensReInit( AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
+    
+    void reInitB(int which, realtype tB0, AmiVector *yyB0,
+                 AmiVector *ypB0) override;
+    
+    void quadReInitB(int which, AmiVector *yQB0) override;
+    
+    int solve(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
+              int itask) override;
+    
+    int solveF(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
+               int itask, int *ncheckPtr) override;
+    
+    void solveB(realtype tBout, int itaskB) override;
+    
+    void getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) const override;
+    
+    void getDky(realtype t, int k, AmiVector *dky) const override;
+    
+    void getSens(realtype *tret, AmiVectorArray *yySout) const override;
+    
+    void getQuadB(int which, realtype *tret, AmiVector *qB) const override;
+    
+    void getRootInfo(int *rootsfound) const override;
+    
+    void calcIC(realtype tout1, AmiVector *x, AmiVector *dx) override;
+    
+    void calcICB(int which, realtype tout1, AmiVector *xB,
+                 AmiVector *dxB) override;
+    
+    void setStopTime(realtype tstop) override;
+    
+    void turnOffRootFinding() override;
+    
+    int nplist() const override;
+    
+    int nx() const override;
+    
+    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+    
+    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
+                        void *user_data, N_Vector tmp1, N_Vector tmp2,
+                        N_Vector tmp3);
+    
+    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
+                  DlsMat J, void *user_data, N_Vector tmp1,
+                  N_Vector tmp2, N_Vector tmp3);
+    
+protected:
     void create(int lmm, int iter) override;
 
     void setSStolerances(double rtol, double atol) override;
@@ -46,8 +97,6 @@ class CVodeSolver : public Solver {
     void setSensErrCon(bool error_corr) override;
 
     void setQuadErrConB(int which, bool flag) override;
-
-    void getRootInfo(int *rootsfound) override;
 
     void setErrHandlerFn() override;
 
@@ -65,55 +114,19 @@ class CVodeSolver : public Solver {
 
     void setSuppressAlg(bool flag) override;
 
-    void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
-
-    void sensReInit( AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
-
     void setSensParams(realtype *p, realtype *pbar, int *plist) override;
-
-    void getDky(realtype t, int k, AmiVector *dky) override;
-
-    void getSens(realtype *tret, AmiVectorArray *yySout) override;
 
     void adjInit(long int steps, int interp) override;
 
     void createB(int lmm, int iter, int *which) override;
 
-    void reInitB(int which, realtype tB0, AmiVector *yyB0,
-                   AmiVector *ypB0) override;
-
     void setSStolerancesB(int which, realtype relTolB,
                          realtype absTolB) override;
-
-    void quadReInitB(int which, AmiVector *yQB0) override;
 
     void quadSStolerancesB(int which, realtype reltolQB,
                              realtype abstolQB) override;
 
-    int solve(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
-                 int itask) override;
-
-    int solveF(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
-                  int itask, int *ncheckPtr) override;
-    
-
-    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
-    
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3);
-    
-    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
-                  DlsMat J, void *user_data, N_Vector tmp1,
-                  N_Vector tmp2, N_Vector tmp3);
-
-    void solveB(realtype tBout, int itaskB) override;
-
     void setMaxNumStepsB(int which, long int mxstepsB) override;
-
-    void getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) override;
-
-    void getQuadB(int which, realtype *tret, AmiVector *qB) override;
 
     void dense(int nx) override;
 
@@ -147,40 +160,24 @@ class CVodeSolver : public Solver {
 
     void kluB(int which, int nx, int nnz, int sparsetype) override;
 
-    void getNumSteps(void *ami_mem, long int *numsteps) override;
+    void getNumSteps(void *ami_mem, long int *numsteps) const override;
 
-    void getNumRhsEvals(void *ami_mem, long int *numrhsevals) override;
+    void getNumRhsEvals(void *ami_mem, long int *numrhsevals) const override;
 
     void getNumErrTestFails(void *ami_mem,
-                              long int *numerrtestfails) override;
+                              long int *numerrtestfails) const override;
 
     void getNumNonlinSolvConvFails(void *ami_mem,
-                                     long int *numnonlinsolvconvfails) override;
+                                     long int *numnonlinsolvconvfails) const override;
 
-    void getLastOrder(void *ami_ami_mem, int *order) override;
+    void getLastOrder(void *ami_ami_mem, int *order) const override;
 
     void *getAdjBmem(void *ami_mem, int which) override;
-
-
-    void calcIC(realtype tout1, AmiVector *x, AmiVector *dx) override;
-
-    void calcICB(int which, realtype tout1, AmiVector *xB,
-                   AmiVector *dxB) override;
-
-    void setStopTime(realtype tstop) override;
-
-    void turnOffRootFinding() override;
-
-    int nplist() override;
-    int nx() override;
     
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, CVodeSolver &r, const unsigned int version);
 
     friend bool operator ==(const CVodeSolver &a, const CVodeSolver &b);
-
-
-  protected:
     
     void init(AmiVector *x, AmiVector *dx, realtype t) override;
 

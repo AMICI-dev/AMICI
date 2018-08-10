@@ -49,6 +49,8 @@ void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& h
 
     // simulate & verify
     auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
+    
+    auto rdata_resimulation = runAmiciSimulation(*solver, edata.get(), *model);
     std::string resultPath = path + "/results";
     
     // write
@@ -67,8 +69,11 @@ void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& h
     writePath = path + "/results";
     hdf5::writeReturnData(*rdata, out, writePath);
 
-    // verify
+    // verify simulated results
     verifyReturnData(hdffileResults, resultPath, rdata.get(), model.get(), atol, rtol);
+    // verify resimulated results
+    verifyReturnData(hdffileResults, resultPath, rdata_resimulation.get(), model.get(), atol, rtol);
+    // verify written results
     verifyReturnData(hdffilewrite, writePath, rdata.get(), model.get(), atol, rtol);
     //remove(hdffilewrite.c_str());
 }

@@ -186,7 +186,7 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
  * @param it time-point index
  * @param rdata pointer to the return data object
  */
-void Solver::getDiagnosis(const int it, ReturnData *rdata) {
+void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     long int number;
 
     if(solverWasCalled && solverMemory) {
@@ -214,7 +214,7 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) {
  * @param rdata pointer to the return data object
  * @param bwd pointer to backward problem
  */
-void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) {
+void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
     long int number;
     
     if(solverWasCalled && solverMemoryB.at(which)) {

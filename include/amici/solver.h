@@ -85,11 +85,11 @@ class Solver {
      * @param tret time at which the sensitivities should be computed
      * @param yySout vector with sensitivities
      */
-    virtual void getSens(realtype *tret, AmiVectorArray *yySout) = 0;
+    virtual void getSens(realtype *tret, AmiVectorArray *yySout) const = 0;
 
-    void getDiagnosis(const int it, ReturnData *rdata);
+    void getDiagnosis(const int it, ReturnData *rdata) const;
 
-    void getDiagnosisB(const int it, ReturnData *rdata, int which);
+    void getDiagnosisB(const int it, ReturnData *rdata, int which) const;
 
     /**
      * getRootInfo extracts information which event occured
@@ -97,7 +97,7 @@ class Solver {
      * @param rootsfound array with flags indicating whether the respective
      * event occured
      */
-    virtual void getRootInfo(int *rootsfound) = 0;
+    virtual void getRootInfo(int *rootsfound) const = 0;
 
     /**
      * ReInit reinitializes the states in the solver after an event occurence
@@ -212,7 +212,7 @@ class Solver {
       * @param yp adjoint derivative state variables (DAE only)
       */
     virtual void getB(int which, realtype *tret, AmiVector *yy,
-                        AmiVector *yp) = 0;
+                        AmiVector *yp) const = 0;
 
     /**
       * getQuadB returns the current adjoint states
@@ -221,7 +221,7 @@ class Solver {
       * @param tret time at which the adjoint states should be computed
       * @param qB adjoint quadrature state variables
       */
-    virtual void getQuadB(int which, realtype *tret, AmiVector *qB) = 0;
+    virtual void getQuadB(int which, realtype *tret, AmiVector *qB) const = 0;
 
     /**
       * ReInitB reinitializes the adjoint states after an event occurence
@@ -863,7 +863,7 @@ class Solver {
      * @param k derivative order
      * @param dky interpolated solution
      */
-    virtual void getDky(realtype t, int k, AmiVector *dky) = 0;
+    virtual void getDky(realtype t, int k, AmiVector *dky) const = 0;
 
     /**
      * AdjInit initializes the adjoint problem
@@ -1063,7 +1063,7 @@ class Solver {
      * forward or backward problem)
      * @param numsteps output array
      */
-    virtual void getNumSteps(void *ami_mem, long int *numsteps) = 0;
+    virtual void getNumSteps(void *ami_mem, long int *numsteps) const = 0;
 
     /**
      * getNumRhsEvals reports the number of right hand evaluations
@@ -1072,7 +1072,7 @@ class Solver {
      * forward or backward problem)
      * @param numrhsevals output array
      */
-    virtual void getNumRhsEvals(void *ami_mem, long int *numrhsevals) = 0;
+    virtual void getNumRhsEvals(void *ami_mem, long int *numrhsevals) const = 0;
 
     /**
      * getNumErrTestFails reports the number of local error test failures
@@ -1082,7 +1082,7 @@ class Solver {
      * @param numerrtestfails output array
      */
     virtual void getNumErrTestFails(void *ami_mem,
-                                      long int *numerrtestfails) = 0;
+                                      long int *numerrtestfails) const = 0;
 
     /**
      * getNumNonlinSolvConvFails reports the number of nonlinear convergence
@@ -1094,7 +1094,7 @@ class Solver {
      */
     virtual void
     getNumNonlinSolvConvFails(void *ami_mem,
-                                 long int *numnonlinsolvconvfails) = 0;
+                                 long int *numnonlinsolvconvfails) const = 0;
 
     /**
      * Reports the order of the integration method during the
@@ -1104,13 +1104,13 @@ class Solver {
      * forward or backward problem)
      * @param order output array
      */
-    virtual void getLastOrder(void *ami_mem, int *order) = 0;
+    virtual void getLastOrder(void *ami_mem, int *order) const = 0;
 
     void initializeLinearSolver(Model *model);
     void initializeLinearSolverB(Model *model, int which);
     
-    virtual int nplist() = 0;
-    virtual int nx() = 0;
+    virtual int nplist() const = 0;
+    virtual int nx() const = 0;
 
 protected:
     

@@ -139,7 +139,7 @@ void CVodeSolver::setQuadErrConB(int which, bool flag) {
          throw CvodeException(status,"CVodeSetQuadErrConB");
 }
 
-void CVodeSolver::getRootInfo(int *rootsfound) {
+void CVodeSolver::getRootInfo(int *rootsfound) const {
     int status = CVodeGetRootInfo(solverMemory.get(), rootsfound);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetRootInfo");
@@ -203,13 +203,13 @@ void CVodeSolver::setSensParams(realtype *p, realtype *pbar, int *plist) {
          throw CvodeException(status,"CVodeSetSensParams");
 }
 
-void CVodeSolver::getDky(realtype t, int k, AmiVector *dky) {
+void CVodeSolver::getDky(realtype t, int k, AmiVector *dky) const {
     int status = CVodeGetDky(solverMemory.get(), t, k, dky->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetDky");
 }
 
-void CVodeSolver::getSens(realtype *tret, AmiVectorArray *yySout) {
+void CVodeSolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
     int status = CVodeGetSens(solverMemory.get(), tret, yySout->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetSens");
@@ -292,13 +292,13 @@ void CVodeSolver::setMaxNumStepsB(int which, long mxstepsB) {
          throw CvodeException(status,"CVodeSetMaxNumStepsB");
 }
 
-void CVodeSolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) {
+void CVodeSolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) const {
     int status = CVodeGetB(solverMemory.get(), which, tret, yy->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetB");
 }
 
-void CVodeSolver::getQuadB(int which, realtype *tret, AmiVector *qB) {
+void CVodeSolver::getQuadB(int which, realtype *tret, AmiVector *qB) const {
     int status = CVodeGetQuadB(solverMemory.get(), which, tret, qB->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetQuadB");
@@ -400,32 +400,32 @@ void CVodeSolver::kluB(int which, int nx, int nnz, int sparsetype) {
          throw CvodeException(status,"CVKLUB");
 }
 
-void CVodeSolver::getNumSteps(void *ami_mem, long *numsteps) {
+void CVodeSolver::getNumSteps(void *ami_mem, long *numsteps) const {
     int status = CVodeGetNumSteps(ami_mem, numsteps);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetNumSteps");
 }
 
-void CVodeSolver::getNumRhsEvals(void *ami_mem, long *numrhsevals) {
+void CVodeSolver::getNumRhsEvals(void *ami_mem, long *numrhsevals) const {
     int status = CVodeGetNumRhsEvals(ami_mem, numrhsevals);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetNumRhsEvals");
 }
 
-void CVodeSolver::getNumErrTestFails(void *ami_mem, long *numerrtestfails) {
+void CVodeSolver::getNumErrTestFails(void *ami_mem, long *numerrtestfails) const {
     int status = CVodeGetNumErrTestFails(ami_mem, numerrtestfails);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetNumErrTestFails");
 }
 
 void CVodeSolver::getNumNonlinSolvConvFails(void *ami_mem,
-                                              long *numnonlinsolvconvfails) {
+                                              long *numnonlinsolvconvfails) const {
     int status = CVodeGetNumNonlinSolvConvFails(ami_mem, numnonlinsolvconvfails);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetNumNonlinSolvConvFails");
 }
 
-void CVodeSolver::getLastOrder(void *ami_mem, int *order) {
+void CVodeSolver::getLastOrder(void *ami_mem, int *order) const {
     int status = CVodeGetLastOrder(ami_mem, order);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetLastOrder");
@@ -452,14 +452,14 @@ void CVodeSolver::turnOffRootFinding() {
          throw CvodeException(status,"CVodeRootInit");
 }
     
-int CVodeSolver::nplist() {
+int CVodeSolver::nplist() const {
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
     auto cv_mem = (CVodeMem) solverMemory.get();
     return cv_mem->cv_Ns;
 }
 
-int CVodeSolver::nx() {
+int CVodeSolver::nx() const {
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
     auto cv_mem = (CVodeMem) solverMemory.get();

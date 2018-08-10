@@ -124,7 +124,7 @@ void IDASolver::setQuadErrConB(int which, bool flag) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetQuadErrConB");
 }
-void IDASolver::getRootInfo(int *rootsfound) {
+void IDASolver::getRootInfo(int *rootsfound) const {
     int status = IDAGetRootInfo(solverMemory.get(), rootsfound);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetRootInfo");
@@ -186,12 +186,12 @@ void IDASolver::setSensParams(realtype *p, realtype *pbar, int *plist) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetSensParams");
 }
-void IDASolver::getDky(realtype t, int k, AmiVector *dky) {
+void IDASolver::getDky(realtype t, int k, AmiVector *dky) const {
     int status = IDAGetDky(solverMemory.get(), t, k, dky->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetDky");
 }
-void IDASolver::getSens(realtype *tret, AmiVectorArray *yySout) {
+void IDASolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
     int status = IDAGetSens(solverMemory.get(), tret, yySout->getNVectorArray());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetSens");
@@ -263,12 +263,12 @@ void IDASolver::setMaxNumStepsB(int which, long mxstepsB) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetMaxNumStepsB");
 }
-void IDASolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) {
+void IDASolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) const {
     int status = IDAGetB(solverMemory.get(), which, tret, yy->getNVector(), yp->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetB");
 }
-void IDASolver::getQuadB(int which, realtype *tret, AmiVector *qB) {
+void IDASolver::getQuadB(int which, realtype *tret, AmiVector *qB) const {
     int status = IDAGetQuadB(solverMemory.get(), which, tret, qB->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetQuadB");
@@ -353,28 +353,28 @@ void IDASolver::kluB(int which, int nx, int nnz, int sparsetype) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAKLUB");
 }
-void IDASolver::getNumSteps(void *ami_mem, long *numsteps) {
+void IDASolver::getNumSteps(void *ami_mem, long *numsteps) const {
     int status = IDAGetNumSteps(ami_mem, numsteps);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetNumSteps");
 }
-void IDASolver::getNumRhsEvals(void *ami_mem, long *numrhsevals) {
+void IDASolver::getNumRhsEvals(void *ami_mem, long *numrhsevals) const {
     int status = IDAGetNumResEvals(ami_mem, numrhsevals);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetNumResEvals");
 }
-void IDASolver::getNumErrTestFails(void *ami_mem, long *numerrtestfails) {
+void IDASolver::getNumErrTestFails(void *ami_mem, long *numerrtestfails) const {
     int status = IDAGetNumErrTestFails(ami_mem, numerrtestfails);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetNumErrTestFails");
 }
 void IDASolver::getNumNonlinSolvConvFails(void *ami_mem,
-                                            long *numnonlinsolvconvfails) {
+                                            long *numnonlinsolvconvfails) const {
     int status = IDAGetNumNonlinSolvConvFails(ami_mem, numnonlinsolvconvfails);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetNumNonlinSolvConvFails");
 }
-void IDASolver::getLastOrder(void *ami_mem, int *order) {
+void IDASolver::getLastOrder(void *ami_mem, int *order) const {
     int status = IDAGetLastOrder(ami_mem, order);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetLastOrder");
@@ -411,14 +411,14 @@ void IDASolver::turnOffRootFinding() {
         throw IDAException(status,"IDARootInit");
 }
 
-int IDASolver::nplist() {
+int IDASolver::nplist() const {
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
     auto IDA_mem = (IDAMem) solverMemory.get();
     return IDA_mem->ida_Ns;
 }
 
-int IDASolver::nx() {
+int IDASolver::nx() const {
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
     auto IDA_mem = (IDAMem) solverMemory.get();
