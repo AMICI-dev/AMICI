@@ -22,17 +22,19 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
  * @param model pointer to the model object
  */
 void Solver::setup(ForwardProblem *fwd, Model *model) {
+    
     model->initialize(fwd->getStatePointer(), fwd->getStateDerivativePointer());
 
     /* Create solver memory object */
-    create(lmm, iter);
+    create((int) lmm, (int) iter);
     if (!solverMemory)
         throw AmiException("Failed to allocated solver memory!");
 
     /* Initialize AMIS solver*/
     init(fwd->getStatePointer(), fwd->getStateDerivativePointer(), model->t0());
-    /* Specify integration tolerances */
-    setSStolerances(RCONST(rtol), RCONST(atol));
+
+    setTolerances();
+    
     /* Set optional inputs */
     setErrHandlerFn();
     /* attaches userdata*/
@@ -73,12 +75,11 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
             /* Activate sensitivity calculations */
             sensInit1(fwd->getStateSensitivityPointer(), fwd->getStateDerivativeSensitivityPointer(), plist.size());
             setSensParams(par.data(), nullptr, plist.data());
-            std::vector<realtype> atols(plist.size(),atol);
-            setSensSStolerances( rtol, atols.data());
-            setSensErrCon(true);
+            
+            setTolerancesFSA();
         } else if (sensi_meth == AMICI_SENSI_ASA) {
             /* Allocate space for the adjoint computation */
-            adjInit(maxsteps, interpType);
+            adjInit(maxsteps, (int) interpType);
         }
     }
 
@@ -95,6 +96,8 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
  * @param model pointer to the model object
  */
 void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
+    if (!solverMemory)
+        throw AmiException("Solver for the forward problem must be setup first");
 
     /* write initial conditions */
     std::vector<realtype> dJydx = bwd->getdJydx();
@@ -108,13 +111,10 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     bwd->getxQBptr()->reset();
 
     /* allocate memory for the backward problem */
-    createB(lmm, iter, bwd->getwhichptr());
+    createB((int) lmm, (int) iter, bwd->getwhichptr());
 
     /* initialise states */
     binit(bwd->getwhich(), bwd->getxBptr(), bwd->getdxBptr(), bwd->gett());
-
-    /* specify integration tolerances for backward problem */
-    setSStolerancesB(bwd->getwhich(), RCONST(rtol), RCONST(atol));
 
     /* Attach user data */
     setUserDataB(bwd->getwhich(), model);
@@ -127,14 +127,8 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
     
-    double quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
-    double quad_atol = isNaN(this->quad_atol) ? atol : this->quad_atol;
-    
-    /* Enable Quadrature Error Control */
-    setQuadErrConB(bwd->getwhich(), !std::isinf(quad_atol) && !std::isinf(quad_rtol));
-
-    quadSStolerancesB(bwd->getwhich(), RCONST(quad_rtol),
-                         RCONST(quad_atol));
+    setTolerancesASA(bwd->getwhich());
+    setQuadTolerancesASA(bwd->getwhich());
 
     setStabLimDetB(bwd->getwhich(), stldet);
 }
@@ -220,28 +214,26 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) {
  * @param rdata pointer to the return data object
  * @param bwd pointer to backward problem
  */
-void Solver::getDiagnosisB(const int it, ReturnData *rdata, const BackwardProblem *bwd) {
+void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) {
     long int number;
-
-    void *ami_memB = getAdjBmem(solverMemory.get(), bwd->getwhich());
     
-    if(solverWasCalled && ami_memB) {
-        getNumSteps(ami_memB, &number);
+    if(solverWasCalled && solverMemoryB.at(which)) {
+        getNumSteps(solverMemoryB.at(which).get(), &number);
         rdata->numstepsB[it] = (double)number;
         
-        getNumRhsEvals(ami_memB, &number);
+        getNumRhsEvals(solverMemoryB.at(which).get(), &number);
         rdata->numrhsevalsB[it] = (double)number;
         
-        getNumErrTestFails(ami_memB, &number);
+        getNumErrTestFails(solverMemoryB.at(which).get(), &number);
         rdata->numerrtestfailsB[it] = (double)number;
         
-        getNumNonlinSolvConvFails(ami_memB, &number);
+        getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
         rdata->numnonlinsolvconvfailsB[it] = (double)number;
     }
 }
 
 /**
- * setLinearSolver sets the linear solver for the forward problem
+ * initializeLinearSolver sets the linear solver for the forward problem
  *
  * @param model pointer to the model object
  */
@@ -252,17 +244,17 @@ void Solver::initializeLinearSolver(Model *model) {
 
             /* DIRECT SOLVERS */
             
-        case AMICI_DENSE:
+        case LinearSolver::AMICI_DENSE:
             dense(model->nx);
             setDenseJacFn();
             break;
             
-        case AMICI_BAND:
+        case LinearSolver::AMICI_BAND:
             band(model->nx, model->ubw, model->lbw);
             setBandJacFn();
             break;
             
-        case AMICI_LAPACKDENSE:
+        case LinearSolver::AMICI_LAPACKDENSE:
             throw AmiException("Solver currently not supported!");
             /* status = CVLapackDense(ami_mem, nx);
              if (status != AMICI_SUCCESS) return;
@@ -271,7 +263,7 @@ void Solver::initializeLinearSolver(Model *model) {
              if (status != AMICI_SUCCESS) return;
              */
             
-        case AMICI_LAPACKBAND:
+        case LinearSolver::AMICI_LAPACKBAND:
             throw AmiException("Solver currently not supported!");
             /* status = CVLapackBand(ami_mem, nx);
              if (status != AMICI_SUCCESS) return;
@@ -280,34 +272,34 @@ void Solver::initializeLinearSolver(Model *model) {
              if (status != AMICI_SUCCESS) return;
              */
             
-        case AMICI_DIAG:
+        case LinearSolver::AMICI_DIAG:
             diag();
             break;
             
             
             /* ITERATIVE SOLVERS */
             
-        case AMICI_SPGMR:
+        case LinearSolver::AMICI_SPGMR:
             spgmr(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
             
-        case AMICI_SPBCG:
+        case LinearSolver::AMICI_SPBCG:
             spbcg(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
             
-        case AMICI_SPTFQMR:
+        case LinearSolver::AMICI_SPTFQMR:
             sptfqmr(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
             
             /* SPARSE SOLVERS */
             
-        case AMICI_KLU:
+        case LinearSolver::AMICI_KLU:
             klu(model->nx, model->nnz, CSC_MAT);
             setSparseJacFn();
-            kluSetOrdering(getStateOrdering());
+            kluSetOrdering((int) getStateOrdering());
             break;
             
         default:
@@ -327,17 +319,17 @@ void Solver::initializeLinearSolverB(Model *model, const int which) {
             
             /* DIRECT SOLVERS */
             
-        case AMICI_DENSE:
+        case LinearSolver::AMICI_DENSE:
             denseB(which, model->nx);
             setDenseJacFnB(which);
             break;
             
-        case AMICI_BAND:
+        case LinearSolver::AMICI_BAND:
             bandB(which, model->nx, model->ubw, model->lbw);
             setBandJacFnB(which);
             break;
             
-        case AMICI_LAPACKDENSE:
+        case LinearSolver::AMICI_LAPACKDENSE:
             
             /* #if SUNDIALS_BLAS_LAPACK
              status = CVLapackDenseB(ami_mem, bwd->getwhich(), nx);
@@ -349,7 +341,7 @@ void Solver::initializeLinearSolverB(Model *model, const int which) {
             throw AmiException("Solver currently not supported!");
             /* #endif*/
             
-        case AMICI_LAPACKBAND:
+        case LinearSolver::AMICI_LAPACKBAND:
             
             /* #if SUNDIALS_BLAS_LAPACK
              status = CVLapackBandB(ami_mem, bwd->getwhich(), nx, ubw, lbw);
@@ -361,34 +353,34 @@ void Solver::initializeLinearSolverB(Model *model, const int which) {
             throw AmiException("Solver currently not supported!");
             /* #endif*/
             
-        case AMICI_DIAG:
+        case LinearSolver::AMICI_DIAG:
             diagB(which);
             setDenseJacFnB(which);
             break;
             
             /* ITERATIVE SOLVERS */
             
-        case AMICI_SPGMR:
+        case LinearSolver::AMICI_SPGMR:
             spgmrB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
             
-        case AMICI_SPBCG:
+        case LinearSolver::AMICI_SPBCG:
             spbcgB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
             
-        case AMICI_SPTFQMR:
+        case LinearSolver::AMICI_SPTFQMR:
             sptfqmrB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
             
             /* SPARSE SOLVERS */
             
-        case AMICI_KLU:
+        case LinearSolver::AMICI_KLU:
             kluB(which, model->nx, model->nnz, CSC_MAT);
             setSparseJacFnB(which);
-            kluSetOrderingB(which, getStateOrdering());
+            kluSetOrderingB(which, (int) getStateOrdering());
             break;
             
         default:
@@ -420,6 +412,58 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.maxstepsB == b.maxstepsB)
             && (a.sensi == b.sensi);
 }
+    
+void Solver::setTolerances() {
+    setSStolerances(RCONST(this->rtol), RCONST(this->atol));
+}
+    
+void Solver::setTolerancesFSA() {
+    if (sensi < AMICI_SENSI_ORDER_FIRST)
+        return;
+    
+    if(nplist()) {
+        std::vector<realtype> atols(nplist(),atol);
+        setSensSStolerances(rtol, atols.data());
+        setSensErrCon(true);
+    }
+}
+    
+void Solver::setTolerancesASA(int which) {
+    if (sensi < AMICI_SENSI_ORDER_FIRST)
+        return;
+    
+    /* specify integration tolerances for backward problem */
+    setSStolerancesB(which, RCONST(rtol), RCONST(atol));
+}
+    
+void Solver::setQuadTolerancesASA(int which) {
+    if (sensi < AMICI_SENSI_ORDER_FIRST)
+        return;
+    
+    double quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
+    double quad_atol = isNaN(this->quad_atol) ? atol : this->quad_atol;
+    
+    /* Enable Quadrature Error Control */
+    setQuadErrConB(which,
+                   !std::isinf(quad_atol) && !std::isinf(quad_rtol));
+    
+    quadSStolerancesB(which,
+                      RCONST(quad_rtol),
+                      RCONST(quad_atol));
+}
 
+void Solver::setSensitivityTolerances() {
+    if (sensi < AMICI_SENSI_ORDER_FIRST)
+        return;
+    
+    if (sensi_meth == AMICI_SENSI_FSA)
+        setTolerancesFSA();
+    else if (sensi_meth == AMICI_SENSI_ASA) {
+        for (int iMem = 0; iMem < solverMemoryB.size(); ++iMem)
+            if(solverMemoryB.at(iMem))
+                setTolerancesASA(iMem);
+    }
+}
+    
 
 } // namespace amici

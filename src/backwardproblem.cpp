@@ -192,7 +192,7 @@ void BackwardProblem::handleDataPointB(int it) {
             xB[ix + iJ * model->nxtrue] +=
                 dJydx[iJ + ( ix + it * model->nx ) * model->nJ];
     }
-    solver->getDiagnosisB(it, rdata, this);
+    solver->getDiagnosisB(it, rdata, this->which);
 }
     
 /**

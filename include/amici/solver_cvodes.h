@@ -67,7 +67,7 @@ class CVodeSolver : public Solver {
 
     void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
 
-    void sensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
+    void sensReInit( AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
 
     void setSensParams(realtype *p, realtype *pbar, int *plist) override;
 
@@ -171,6 +171,9 @@ class CVodeSolver : public Solver {
 
     void turnOffRootFinding() override;
 
+    int nplist() override;
+    int nx() override;
+    
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, CVodeSolver &r, const unsigned int version);
 

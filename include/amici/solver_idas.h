@@ -49,7 +49,7 @@ class IDASolver : public Solver {
 
     void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
 
-    void sensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
+    void sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
 
     void setSensParams(realtype *p, realtype *pbar, int *plist) override;
 
@@ -140,6 +140,9 @@ class IDASolver : public Solver {
     void setStopTime(realtype tstop) override;
 
     void turnOffRootFinding() override;
+    
+    int nplist() override;
+    int nx() override;
 
 
   protected:

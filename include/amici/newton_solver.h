@@ -2,6 +2,7 @@
 #define amici_newton_solver_h
 
 #include "amici/vector.h"
+#include "amici/defines.h"
 
 #include <memory>
 
@@ -26,7 +27,7 @@ class NewtonSolver {
   public:
     NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
 
-    static std::unique_ptr<NewtonSolver> getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
+    static std::unique_ptr<NewtonSolver> getSolver(realtype *t, AmiVector *x, LinearSolver linsolType, Model *model,
                                    ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol);
 
     void getStep(int ntry, int nnewt, AmiVector *delta);

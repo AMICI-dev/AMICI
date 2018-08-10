@@ -4,6 +4,7 @@
 #include "amici/exception.h"
 
 #include <cvodes/cvodes.h>
+#include <cvodes/cvodes_impl.h>
 /*#include <cvodes/cvodes_lapack.h>*/
 #include <cvodes/cvodes_band.h>
 #include <cvodes/cvodes_bbdpre.h>
@@ -190,8 +191,8 @@ void CVodeSolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
          throw CvodeException(status,"CVodeReInit");
 }
 
-void CVodeSolver::sensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) {
-    int status = CVodeSensReInit(solverMemory.get(), ism, yS0->getNVectorArray());
+void CVodeSolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
+    int status = CVodeSensReInit(solverMemory.get(), (int) ism, yS0->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensReInit");
 }
@@ -222,6 +223,9 @@ void CVodeSolver::adjInit(long steps, int interp) {
 
 void CVodeSolver::createB(int lmm, int iter, int *which) {
     int status = CVodeCreateB(solverMemory.get(), lmm, iter, which);
+    if (*which > solverMemoryB.size())
+        solverMemoryB.resize(*which);
+    solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>(getAdjBmem(solverMemory.get(), *which));
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeCreateB");
 }
@@ -445,6 +449,20 @@ void CVodeSolver::turnOffRootFinding() {
     int status = CVodeRootInit(solverMemory.get(), 0, nullptr);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeRootInit");
+}
+    
+int CVodeSolver::nplist() {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return cv_mem->cv_Ns;
+}
+
+int CVodeSolver::nx() {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return NV_LENGTH_S(cv_mem->cv_zn[0]);
 }
 
     /** Jacobian of xdot with respect to states x
@@ -697,7 +715,7 @@ void CVodeSolver::turnOffRootFinding() {
         model->fsxdot(t, x, ip, sx, sxdot);
         return model->checkFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
-
+    
     bool operator ==(const CVodeSolver &a, const CVodeSolver &b)
     {
         return static_cast<Solver const&>(a) == static_cast<Solver const&>(b);
