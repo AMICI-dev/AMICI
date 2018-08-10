@@ -396,7 +396,7 @@ class Solver {
         if (sensi_meth != AMICI_SENSI_ASA)
             return;
         
-        for (int iMem = 0; iMem < solverMemoryB.size(); ++iMem)
+        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
             if(solverMemoryB.at(iMem))
                 setQuadTolerancesASA(iMem);
     }
@@ -422,7 +422,7 @@ class Solver {
         if (sensi_meth != AMICI_SENSI_ASA)
             return;
         
-        for (int iMem = 0; iMem < solverMemoryB.size(); ++iMem)
+        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
             if(solverMemoryB.at(iMem))
                 setTolerancesASA(iMem);
     }
@@ -465,7 +465,7 @@ class Solver {
             throw AmiException("maxsteps must be a non-negative number");
         
         this->maxstepsB = maxsteps;
-        for (int iMem = 0; iMem < solverMemoryB.size(); ++iMem)
+        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
             if(solverMemoryB.at(iMem))
                 setMaxNumStepsB(iMem,this->maxstepsB);
     }
@@ -543,7 +543,7 @@ class Solver {
         this->ordering = ordering;
         if (solverMemory && linsol == LinearSolver::AMICI_KLU) {
             kluSetOrdering((int)ordering);
-            for (int iMem = 0; iMem < solverMemoryB.size(); ++iMem)
+            for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
                 if(solverMemoryB.at(iMem))
                     kluSetOrderingB(iMem, (int) ordering);
         }
@@ -568,7 +568,7 @@ class Solver {
         this->stldet = stldet;
         if (solverMemory) {
             setStabLimDet(stldet);
-            for (int iMem = 0; iMem < solverMemoryB.size(); ++iMem)
+            for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
                 if(solverMemoryB.at(iMem))
                     setStabLimDetB(iMem,stldet);
         }

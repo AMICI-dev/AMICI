@@ -223,9 +223,10 @@ void CVodeSolver::adjInit(long steps, int interp) {
 
 void CVodeSolver::createB(int lmm, int iter, int *which) {
     int status = CVodeCreateB(solverMemory.get(), lmm, iter, which);
-    if (*which > solverMemoryB.size())
-        solverMemoryB.resize(*which);
-    solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>(getAdjBmem(solverMemory.get(), *which));
+    if (*which + 1 > solverMemoryB.size())
+        solverMemoryB.resize(*which + 1);
+    solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
+    (getAdjBmem(solverMemory.get(), *which), [](void *ptr){});
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeCreateB");
 }

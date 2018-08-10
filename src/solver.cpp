@@ -189,7 +189,7 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
 void Solver::getDiagnosis(const int it, ReturnData *rdata) {
     long int number;
 
-    if(solverWasCalled) {
+    if(solverWasCalled && solverMemory) {
         getNumSteps(solverMemory.get(), &number);
         rdata->numsteps[it] = number;
         
@@ -459,7 +459,7 @@ void Solver::setSensitivityTolerances() {
     if (sensi_meth == AMICI_SENSI_FSA)
         setTolerancesFSA();
     else if (sensi_meth == AMICI_SENSI_ASA) {
-        for (int iMem = 0; iMem < solverMemoryB.size(); ++iMem)
+        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
             if(solverMemoryB.at(iMem))
                 setTolerancesASA(iMem);
     }

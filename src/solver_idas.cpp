@@ -204,7 +204,10 @@ void IDASolver::adjInit(long steps, int interp) {
 }
 void IDASolver::createB(int lmm, int iter, int *which) {
     int status = IDACreateB(solverMemory.get(), which);
-    solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>(getAdjBmem(solverMemory.get(), *which));
+    if (*which + 1 > solverMemoryB.size())
+        solverMemoryB.resize(*which + 1);
+    solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
+    (getAdjBmem(solverMemory.get(), *which), [](void *ptr){});
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDACreateB");
 }
