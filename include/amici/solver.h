@@ -87,8 +87,23 @@ class Solver {
      */
     virtual void getSens(realtype *tret, AmiVectorArray *yySout) const = 0;
 
+    /**
+     * getDiagnosis extracts diagnosis information from solver memory block and
+     * writes them into the return data object
+     *
+     * @param it time-point index
+     * @param rdata pointer to the return data object
+     */
     void getDiagnosis(const int it, ReturnData *rdata) const;
 
+    /**
+     * getDiagnosisB extracts diagnosis information from solver memory block and
+     * writes them into the return data object for the backward problem
+     *
+     * @param it time-point index
+     * @param rdata pointer to the return data object
+     * @param which identifier of the backwards problem
+     */
     void getDiagnosisB(const int it, ReturnData *rdata, int which) const;
 
     /**
@@ -112,7 +127,6 @@ class Solver {
      * SensReInit reinitializes the state sensitivites in the solver after an
      * event occurence
      *
-     * @param ism sensitivity mode
      * @param yS0 new state sensitivity
      * @param ypS0 new derivative state sensitivities (DAE only)
      */
@@ -734,7 +748,6 @@ class Solver {
     /**
      * Create specifies solver method and initializes solver memory for the
      * forward problem
-     *
      */
     virtual void allocateSolver() = 0;
 
@@ -868,9 +881,6 @@ class Solver {
     /**
      * AdjInit initializes the adjoint problem
      *
-     * @param steps number of integration points between checkpoints
-     * @param interp interpolation type, can be CV_POLYNOMIAL or CV_HERMITE
-     *
      */
     virtual void adjInit() = 0;
     
@@ -879,8 +889,6 @@ class Solver {
      * backward problem
      *
      * @param which identifier of the backwards problem
-     * @param lmm linear multistep method CV_ADAMS or CV_BDF
-     * @param iter nonlinear solver method CV_NEWTON or CV_FUNCTIONAL
      */
     virtual void allocateSolverB(int *which) = 0;
 
@@ -1109,11 +1117,36 @@ class Solver {
     void initializeLinearSolver(const Model *model);
     void initializeLinearSolverB(const Model *model, const int which);
     
+    /**
+     * Accessor function to the number of sensitivity parameters in the model stored in the user data
+     *
+     * @return number of sensitivity parameters
+     */
     virtual int nplist() const = 0;
+    /**
+     * Accessor function to the number of state variables in the model stored in the user data
+     *
+     * @return number of state variables
+     */
     virtual int nx() const = 0;
+    /**
+     * Accessor function to the model stored in the user data
+     *
+     * @return user data model
+     */
     virtual const Model *getModel() const = 0;
     
+    /**
+     * checks whether memory for the forward problem has been allocated
+     *
+     * @return solverMemory->(cv|ida)__MallocDone
+     */
     virtual bool getMallocDone() const = 0;
+    /**
+     * checks whether memory for the backward problem has been allocated
+     *
+     * @return solverMemory->(cv|ida)__adjMallocDone
+     */
     virtual bool getAdjMallocDone() const = 0;
 
 protected:
@@ -1153,8 +1186,6 @@ protected:
     
     /**
      * updates all senstivivity solver tolerances according to the currently specified member variables
-     *
-     * @param which identifier of the backwards problem
      */
     void setSensitivityTolerances();
     

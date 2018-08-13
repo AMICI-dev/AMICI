@@ -178,14 +178,7 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
 
     warnMsgIdAndTxt(buffid, buffer);
 }
-
-/**
- * getDiagnosis extracts diagnosis information from solver memory block and
- * writes them into the return data object
- *
- * @param it time-point index
- * @param rdata pointer to the return data object
- */
+    
 void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     long int number;
 
@@ -206,14 +199,6 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     }
 }
 
-/**
- * getDiagnosisB extracts diagnosis information from solver memory block and
- * writes them into the return data object for the backward problem
- *
- * @param it time-point index
- * @param rdata pointer to the return data object
- * @param bwd pointer to backward problem
- */
 void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
     long int number;
     
