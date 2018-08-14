@@ -480,11 +480,11 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver, const st
     }
 
     if(attributeExists(file, datasetPath, "sensi_meth")) {
-        solver.setSensitivityMethod(static_cast<AMICI_sensi_meth>(getIntScalarAttribute(file, datasetPath, "sensi_meth")));
+        solver.setSensitivityMethod(static_cast<SensitivityMethod>(getIntScalarAttribute(file, datasetPath, "sensi_meth")));
     }
 
     if(attributeExists(file, datasetPath, "sensi")) {
-        solver.setSensitivityOrder(static_cast<AMICI_sensi_order>(getIntScalarAttribute(file, datasetPath, "sensi")));
+        solver.setSensitivityOrder(static_cast<SensitivityOrder>(getIntScalarAttribute(file, datasetPath, "sensi")));
     }
 
     if(attributeExists(file, datasetPath, "newton_maxsteps")) {
@@ -527,14 +527,14 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
 
     if(locationExists(file, datasetPath + "/pscale")) {
         auto pscaleInt = getIntDataset1D(file, datasetPath + "/pscale");
-        std::vector<AMICI_parameter_scaling> pscale(pscaleInt.size());
+        std::vector<ParameterScaling> pscale(pscaleInt.size());
         for(int i = 0; (unsigned)i < pscaleInt.size(); ++i)
-            pscale[i] = static_cast<AMICI_parameter_scaling>(pscaleInt[i]);
+            pscale[i] = static_cast<ParameterScaling>(pscaleInt[i]);
         model.setParameterScale(pscale);
     } else if (attributeExists(file, datasetPath, "pscale")) {
         // if pscale is the same for all parameters,
         // it can be set as scalar attribute for convenience
-        model.setParameterScale(static_cast<AMICI_parameter_scaling>(getDoubleScalarAttribute(file,  datasetPath, "pscale")));
+        model.setParameterScale(static_cast<ParameterScaling>(getDoubleScalarAttribute(file,  datasetPath, "pscale")));
     }
 
     if(attributeExists(file, datasetPath, "nmaxevent")) {

@@ -68,7 +68,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Compute steady state sensitvities */
-    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && rdata->sensi_meth != AMICI_SENSI_NONE)
+    if (rdata->sensi >= SensitivityOrder::first && rdata->sensi_meth != SensitivityMethod::none)
         newtonSolver->getSensis(it, sx);
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
@@ -77,7 +77,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
         solver->reInit(*t, x, &dx);
-        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi >= SensitivityOrder::first && rdata->sensi_meth == SensitivityMethod::forward) {
                 solver->sensReInit( sx, &sdx);
         }
     }
@@ -348,7 +348,7 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
     
     switch(solver->getLinearSolver()) {
             
-    case LinearSolver::AMICI_DENSE:
+    case LinearSolver::dense:
         /* Set up dense solver */
         status = CVDense(newton_sim.get(), model->nx);
         if(status != CV_SUCCESS)
@@ -359,7 +359,7 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
             throw CvodeException(status,"CVDlsSetDenseJacFn");
         break;
         
-    case LinearSolver::AMICI_KLU:
+    case LinearSolver::KLU:
         /* Set up KLU solver */
         status = CVKLU(newton_sim.get(), model->nx, model->nnz, CSC_MAT);
         if(status != CV_SUCCESS)

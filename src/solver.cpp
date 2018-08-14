@@ -48,7 +48,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
     
     initializeLinearSolver(model);
 
-    if (sensi >= AMICI_SENSI_ORDER_FIRST && model->nx > 0) {
+    if (sensi >= SensitivityOrder::first && model->nx > 0) {
         /* initialise sensitivities, this can either be user provided or
          * come from the model definition */
         auto sx0 = model->getInitialStateSensitivities();
@@ -68,7 +68,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
 
         auto plist = model->getParameterList();
 
-        if (sensi_meth == AMICI_SENSI_FSA && !plist.empty()) {
+        if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {
             /* Set sensitivity analysis optional inputs */
             auto par = model->getUnscaledParameters();
 
@@ -77,7 +77,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
             setSensParams(par.data(), nullptr, plist.data());
             
             setTolerancesFSA();
-        } else if (sensi_meth == AMICI_SENSI_ASA) {
+        } else if (sensi_meth == SensitivityMethod::adjoint) {
             /* Allocate space for the adjoint computation */
             adjInit();
         }
@@ -229,17 +229,17 @@ void Solver::initializeLinearSolver(const Model *model) {
 
             /* DIRECT SOLVERS */
             
-        case LinearSolver::AMICI_DENSE:
+        case LinearSolver::dense:
             dense(model->nx);
             setDenseJacFn();
             break;
             
-        case LinearSolver::AMICI_BAND:
+        case LinearSolver::band:
             band(model->nx, model->ubw, model->lbw);
             setBandJacFn();
             break;
             
-        case LinearSolver::AMICI_LAPACKDENSE:
+        case LinearSolver::LAPACKDense:
             throw AmiException("Solver currently not supported!");
             /* status = CVLapackDense(ami_mem, nx);
              if (status != AMICI_SUCCESS) return;
@@ -248,7 +248,7 @@ void Solver::initializeLinearSolver(const Model *model) {
              if (status != AMICI_SUCCESS) return;
              */
             
-        case LinearSolver::AMICI_LAPACKBAND:
+        case LinearSolver::LAPACKBand:
             throw AmiException("Solver currently not supported!");
             /* status = CVLapackBand(ami_mem, nx);
              if (status != AMICI_SUCCESS) return;
@@ -257,31 +257,31 @@ void Solver::initializeLinearSolver(const Model *model) {
              if (status != AMICI_SUCCESS) return;
              */
             
-        case LinearSolver::AMICI_DIAG:
+        case LinearSolver::diag:
             diag();
             break;
             
             
             /* ITERATIVE SOLVERS */
             
-        case LinearSolver::AMICI_SPGMR:
+        case LinearSolver::SPGMR:
             spgmr(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
             
-        case LinearSolver::AMICI_SPBCG:
+        case LinearSolver::SPBCG:
             spbcg(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
             
-        case LinearSolver::AMICI_SPTFQMR:
+        case LinearSolver::SPTFQMR:
             sptfqmr(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
             
             /* SPARSE SOLVERS */
             
-        case LinearSolver::AMICI_KLU:
+        case LinearSolver::KLU:
             klu(model->nx, model->nnz, CSC_MAT);
             setSparseJacFn();
             kluSetOrdering((int) getStateOrdering());
@@ -304,17 +304,17 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
             
             /* DIRECT SOLVERS */
             
-        case LinearSolver::AMICI_DENSE:
+        case LinearSolver::dense:
             denseB(which, model->nx);
             setDenseJacFnB(which);
             break;
             
-        case LinearSolver::AMICI_BAND:
+        case LinearSolver::band:
             bandB(which, model->nx, model->ubw, model->lbw);
             setBandJacFnB(which);
             break;
             
-        case LinearSolver::AMICI_LAPACKDENSE:
+        case LinearSolver::LAPACKDense:
             
             /* #if SUNDIALS_BLAS_LAPACK
              status = CVLapackDenseB(ami_mem, bwd->getwhich(), nx);
@@ -326,7 +326,7 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
             throw AmiException("Solver currently not supported!");
             /* #endif*/
             
-        case LinearSolver::AMICI_LAPACKBAND:
+        case LinearSolver::LAPACKBand:
             
             /* #if SUNDIALS_BLAS_LAPACK
              status = CVLapackBandB(ami_mem, bwd->getwhich(), nx, ubw, lbw);
@@ -338,31 +338,31 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
             throw AmiException("Solver currently not supported!");
             /* #endif*/
             
-        case LinearSolver::AMICI_DIAG:
+        case LinearSolver::diag:
             diagB(which);
             setDenseJacFnB(which);
             break;
             
             /* ITERATIVE SOLVERS */
             
-        case LinearSolver::AMICI_SPGMR:
+        case LinearSolver::SPGMR:
             spgmrB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
             
-        case LinearSolver::AMICI_SPBCG:
+        case LinearSolver::SPBCG:
             spbcgB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
             
-        case LinearSolver::AMICI_SPTFQMR:
+        case LinearSolver::SPTFQMR:
             sptfqmrB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
             
             /* SPARSE SOLVERS */
             
-        case LinearSolver::AMICI_KLU:
+        case LinearSolver::KLU:
             kluB(which, model->nx, model->nnz, CSC_MAT);
             setSparseJacFnB(which);
             kluSetOrderingB(which, (int) getStateOrdering());
@@ -406,7 +406,7 @@ void Solver::setTolerances() {
 }
     
 void Solver::setTolerancesFSA() {
-    if (sensi < AMICI_SENSI_ORDER_FIRST || !getMallocDone())
+    if (sensi < SensitivityOrder::first || !getMallocDone())
         return;
     
     if(nplist()) {
@@ -417,7 +417,7 @@ void Solver::setTolerancesFSA() {
 }
     
 void Solver::setTolerancesASA(int which) {
-    if (sensi < AMICI_SENSI_ORDER_FIRST || !getAdjMallocDone())
+    if (sensi < SensitivityOrder::first || !getAdjMallocDone())
         return;
     
     /* specify integration tolerances for backward problem */
@@ -425,7 +425,7 @@ void Solver::setTolerancesASA(int which) {
 }
     
 void Solver::setQuadTolerancesASA(int which) {
-    if (sensi < AMICI_SENSI_ORDER_FIRST || !getAdjMallocDone())
+    if (sensi < SensitivityOrder::first || !getAdjMallocDone())
         return;
     
     double quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
@@ -441,12 +441,12 @@ void Solver::setQuadTolerancesASA(int which) {
 }
 
 void Solver::setSensitivityTolerances() {
-    if (sensi < AMICI_SENSI_ORDER_FIRST)
+    if (sensi < SensitivityOrder::first)
         return;
     
-    if (sensi_meth == AMICI_SENSI_FSA)
+    if (sensi_meth == SensitivityMethod::forward)
         setTolerancesFSA();
-    else if (sensi_meth == AMICI_SENSI_ASA) {
+    else if (sensi_meth == SensitivityMethod::adjoint) {
         for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
             setTolerancesASA(iMem);
     }

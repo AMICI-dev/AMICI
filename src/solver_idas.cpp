@@ -47,7 +47,7 @@ void IDASolver::rootInit(int ne) {
          throw IDAException(status,"IDARootInit");
 }
 void IDASolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
-    int status = IDASensInit(solverMemory.get(), nplist, getSensitivityMethod(), fsxdot,
+    int status = IDASensInit(solverMemory.get(), nplist, static_cast<int>(getSensitivityMethod()), fsxdot,
                              sx->getNVectorArray(),sdx->getNVectorArray());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASensInit");
@@ -177,7 +177,7 @@ void IDASolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
          throw IDAException(status,"IDAReInit");
 }
 void IDASolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
-    int status = IDASensReInit(solverMemory.get(), (int) ism, yS0->getNVectorArray(), ypS0->getNVectorArray());
+    int status = IDASensReInit(solverMemory.get(), static_cast<int>(ism), yS0->getNVectorArray(), ypS0->getNVectorArray());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASensReInit");
 }
@@ -198,13 +198,13 @@ void IDASolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
 }
 
 void IDASolver::adjInit() {
-    int status = IDAAdjInit(solverMemory.get(), (long) maxsteps, (int) interpType);
+    int status = IDAAdjInit(solverMemory.get(), static_cast<int>(maxsteps), static_cast<int>(interpType));
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAAdjInit");
 }
 void IDASolver::allocateSolverB(int *which) {
     int status = IDACreateB(solverMemory.get(), which);
-    if (*which + 1 > (int) solverMemoryB.size())
+    if (*which + 1 > static_cast<int>(solverMemoryB.size()))
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
     (getAdjBmem(solverMemory.get(), *which), [](void *ptr){});

@@ -52,7 +52,7 @@ void CVodeSolver::rootInit(int ne) {
 }
 
 void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
-    int status = CVodeSensInit1(solverMemory.get(), nplist, getSensitivityMethod(), fsxdot,
+    int status = CVodeSensInit1(solverMemory.get(), nplist, static_cast<int>(getSensitivityMethod()), fsxdot,
                           sx->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensInit1");
@@ -112,7 +112,7 @@ Solver *CVodeSolver::clone() const {
 
 void CVodeSolver::allocateSolver() {
     solverMemory = std::unique_ptr<void, std::function<void(void *)>>
-    (CVodeCreate((int) lmm,(int) iter),
+    (CVodeCreate(static_cast<int>(lmm), static_cast<int>(iter)),
                    [](void *ptr) { CVodeFree(&ptr); });
 }
 
@@ -193,7 +193,7 @@ void CVodeSolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
 }
 
 void CVodeSolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
-    int status = CVodeSensReInit(solverMemory.get(), (int) ism, yS0->getNVectorArray());
+    int status = CVodeSensReInit(solverMemory.get(), static_cast<int>(ism), yS0->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensReInit");
 }
@@ -217,14 +217,14 @@ void CVodeSolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
 }
 
 void CVodeSolver::adjInit() {
-    int status = CVodeAdjInit(solverMemory.get(), (long) maxsteps, (int) interpType);
+    int status = CVodeAdjInit(solverMemory.get(), static_cast<int>(maxsteps), static_cast<int>(interpType));
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeAdjInit");
 }
 
 void CVodeSolver::allocateSolverB(int *which) {
-    int status = CVodeCreateB(solverMemory.get(),(int) lmm, (int) iter, which);
-    if (*which + 1 > (int) solverMemoryB.size())
+    int status = CVodeCreateB(solverMemory.get(), static_cast<int>(lmm), static_cast<int>(iter), which);
+    if (*which + 1 > static_cast<int>(solverMemoryB.size()))
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
     (getAdjBmem(solverMemory.get(), *which), [](void *ptr){});

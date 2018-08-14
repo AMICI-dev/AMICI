@@ -58,35 +58,35 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x,
     switch (linsolType) {
 
     /* DIRECT SOLVERS */
-    case LinearSolver::AMICI_DENSE:
+    case LinearSolver::dense:
         solver.reset(new NewtonSolverDense(t, x, model, rdata));
         break;
 
-    case LinearSolver::AMICI_BAND:
+    case LinearSolver::band:
         throw NewtonFailure("Solver currently not supported!");
 
-    case LinearSolver::AMICI_LAPACKDENSE:
+    case LinearSolver::LAPACKDense:
         throw NewtonFailure("Solver currently not supported!");
 
-    case LinearSolver::AMICI_LAPACKBAND:
+    case LinearSolver::LAPACKBand:
         throw NewtonFailure("Solver currently not supported!");
 
-    case LinearSolver::AMICI_DIAG:
+    case LinearSolver::diag:
         throw NewtonFailure("Solver currently not supported!");
 
     /* ITERATIVE SOLVERS */
-    case LinearSolver::AMICI_SPGMR:
+    case LinearSolver::SPGMR:
         throw NewtonFailure("Solver currently not supported!");
 
-    case LinearSolver::AMICI_SPBCG:
+    case LinearSolver::SPBCG:
         solver.reset(new NewtonSolverIterative(t, x, model, rdata));
         break;
 
-    case LinearSolver::AMICI_SPTFQMR:
+    case LinearSolver::SPTFQMR:
         throw NewtonFailure("Solver currently not supported!");
 
     /* SPARSE SOLVERS */
-    case LinearSolver::AMICI_KLU:
+    case LinearSolver::KLU:
         solver.reset(new NewtonSolverSparse(t, x, model, rdata));
         break;
     default:

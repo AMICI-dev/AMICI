@@ -1144,7 +1144,7 @@ class SbmlImporter:
                         'LBW': str(self.n_species),
                         'NP': str(self.n_parameters),
                         'NK': str(self.n_fixed_parameters),
-                        'O2MODE': 'amici::AMICI_O2MODE_NONE',
+                        'O2MODE': 'amici::SecondOrderMode::none',
                         'PARAMETERS': str(self.parameterValues)[1:-1],
                         'FIXED_PARAMETERS': str(self.fixedParameterValues)[1:-1],
                         'PARAMETER_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('parameter'),

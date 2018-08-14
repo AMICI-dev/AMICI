@@ -203,7 +203,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     expected = hdf5::getDoubleDataset1D(file, resultPath + "/x0");
     checkEqualArray(expected, rdata->x0, atol, rtol, "x0");
 
-    if(rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+    if(rdata->sensi >= SensitivityOrder::first) {
         verifyReturnDataSensitivities(file, resultPath, rdata, model, atol, rtol);
     } else {
         CHECK_EQUAL(0, rdata->sllh.size());
@@ -222,7 +222,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
         CHECK_TRUE(rdata->sllh.empty());
     }
 
-    if(rdata->sensi_meth == AMICI_SENSI_FSA) {
+    if(rdata->sensi_meth == SensitivityMethod::forward) {
     
         if(hdf5::locationExists(file, resultPath + "/sx0")) {
             expected = hdf5::getDoubleDataset2D(file, resultPath + "/sx0", m, n);
@@ -247,7 +247,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
         
         
         /* TODO REMOVE ASAP */
-        if(rdata->sensi < AMICI_SENSI_ORDER_SECOND) {
+        if(rdata->sensi < SensitivityOrder::second) {
         /* /TODO REMOVE ASAP */
             
             if(hdf5::locationExists(file, resultPath + "/sx")) {
@@ -307,7 +307,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
 
     }
 
-    if(rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
+    if(rdata->sensi >= SensitivityOrder::second) {
         expected = hdf5::getDoubleDataset2D(file, resultPath + "/s2llh", m, n);
         checkEqualArray(expected, rdata->s2llh, atol, rtol, "s2llh");
     } else {

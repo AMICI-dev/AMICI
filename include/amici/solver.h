@@ -253,7 +253,7 @@ class Solver {
     /** sensitivity method
      * @return method enum
      */
-    AMICI_sensi_meth getSensitivityMethod() const{
+    SensitivityMethod getSensitivityMethod() const{
         return sensi_meth;
     }
 
@@ -261,7 +261,7 @@ class Solver {
      * @brief setSensitivityMethod
      * @param sensi_meth
      */
-    void setSensitivityMethod(AMICI_sensi_meth sensi_meth) {
+    void setSensitivityMethod(SensitivityMethod sensi_meth) {
         this->sensi_meth = sensi_meth;
     }
 
@@ -322,7 +322,7 @@ class Solver {
      * @brief returns the sensitvity order
      * @return sensitivity order
      */
-    AMICI_sensi_order getSensitivityOrder() const {
+    SensitivityOrder getSensitivityOrder() const {
         return sensi;
     }
 
@@ -330,7 +330,7 @@ class Solver {
      * @brief sets the sensitvity order
      * @param sensi sensitivity order
      */
-    void setSensitivityOrder(AMICI_sensi_order sensi) {
+    void setSensitivityOrder(SensitivityOrder sensi) {
         this->sensi = sensi;
         
         if (!solverMemory)
@@ -407,7 +407,7 @@ class Solver {
         
         this->quad_rtol = rtol;
         
-        if (sensi_meth != AMICI_SENSI_ASA)
+        if (sensi_meth != SensitivityMethod::adjoint)
             return;
         
         for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
@@ -433,7 +433,7 @@ class Solver {
         
         this->quad_atol = atol;
         
-        if (sensi_meth != AMICI_SENSI_ASA)
+        if (sensi_meth != SensitivityMethod::adjoint)
             return;
         
         for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
@@ -556,7 +556,7 @@ class Solver {
      */
     void setStateOrdering(StateOrdering ordering) {
         this->ordering = ordering;
-        if (solverMemory && linsol == LinearSolver::AMICI_KLU) {
+        if (solverMemory && linsol == LinearSolver::KLU) {
             kluSetOrdering((int)ordering);
             for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
                 if(solverMemoryB.at(iMem))
@@ -1200,7 +1200,7 @@ protected:
     
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */
-    InternalSensitivityMethod ism = InternalSensitivityMethod::SIMULTANEOUS;
+    InternalSensitivityMethod ism = InternalSensitivityMethod::simultaneous;
     
     /** specifies the linear multistep method.
      */
@@ -1209,12 +1209,12 @@ protected:
     /**
      * specifies the type of nonlinear solver iteration
      */
-    NonlinearSolverIteration iter = NonlinearSolverIteration::NEWTON;
+    NonlinearSolverIteration iter = NonlinearSolverIteration::newton;
     
     /** interpolation type for the forward problem solution which
      * is then used for the backwards problem.
      */
-    InterpolationType interpType = InterpolationType::HERMITE;
+    InterpolationType interpType = InterpolationType::hermite;
     
     /** maximum number of allowed integration steps */
     int maxsteps = 10000;
@@ -1222,7 +1222,7 @@ protected:
 private:
         
     /** method for sensitivity computation */
-    AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
+    SensitivityMethod sensi_meth = SensitivityMethod::forward;
 
     /** flag controlling stability limit detection */
     booleantype stldet = true;
@@ -1242,7 +1242,7 @@ private:
     bool newton_preeq = false;
 
     /** linear solver specification */
-    LinearSolver linsol = LinearSolver::AMICI_KLU;
+    LinearSolver linsol = LinearSolver::KLU;
 
     /** absolute tolerances for integration */
     double atol = 1e-16;
@@ -1260,7 +1260,7 @@ private:
     int maxstepsB = 0;
 
     /** flag indicating whether sensitivities are supposed to be computed */
-    AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
+    SensitivityOrder sensi = SensitivityOrder::none;
 };
 
 bool operator ==(const Solver &a, const Solver &b);

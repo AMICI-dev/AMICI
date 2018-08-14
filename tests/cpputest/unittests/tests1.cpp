@@ -44,14 +44,14 @@ TEST_GROUP(model)
 };
 
 TEST(model, testScalingLin) {
-    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
+    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                      std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                      std::vector<realtype>(0,0.0),std::vector<int>(0,1));
 
     std::vector<double> p {1};
     model.setParameters(p);
 
-    model.setParameterScale(AMICI_SCALING_NONE);
+    model.setParameterScale(ParameterScaling::none);
     double unscaled[1];
     model.unscaleParameters(unscaled);
 
@@ -59,14 +59,14 @@ TEST(model, testScalingLin) {
 }
 
 TEST(model, testScalingLog) {
-    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
+    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                      std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                      std::vector<realtype>(0,0.0),std::vector<int>(0,1));
 
     std::vector<double> p {1};
     model.setParameters(p);
 
-    model.setParameterScale(AMICI_SCALING_LN);
+    model.setParameterScale(ParameterScaling::ln);
     double unscaled[1];
     model.unscaleParameters(unscaled);
 
@@ -74,14 +74,14 @@ TEST(model, testScalingLog) {
 }
 
 TEST(model, testScalingLog10) {
-    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
+    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                      std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                      std::vector<realtype>(0,0.0),std::vector<int>(0,1));
 
     std::vector<double> p {1};
     model.setParameters(p);
 
-    model.setParameterScale(AMICI_SCALING_LOG10);
+    model.setParameterScale(ParameterScaling::log10);
     double unscaled[1];
     model.unscaleParameters(unscaled);
 
@@ -200,7 +200,7 @@ TEST_GROUP(edata)
     std::unique_ptr<amici::Model> model = getModel();
     
 
-    Model_Test model_dim = Model_Test(nx, nx, ny, ny, nz, nz, nmaxevent, 0, 0, 0, 0, 0, 0, 0, AMICI_O2MODE_NONE,
+    Model_Test model_dim = Model_Test(nx, nx, ny, ny, nz, nz, nmaxevent, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                            std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                            std::vector<realtype>(0,0.0),std::vector<int>(0,1));
     void setup() {
