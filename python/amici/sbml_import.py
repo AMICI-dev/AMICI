@@ -784,6 +784,8 @@ class SbmlImporter:
 
         # add user-provided observables or make all species observable
         if(observables):
+            # Replace logX(.) by log(X,.) since symengine cannot parse the former
+            observables = { key: re.sub(r'(^|\W)log(\d+)\(', r'\1log(\2, ', formula) for key, formula in observables.items() }
             self.observables = sp.DenseMatrix([observables[observable]['formula'] for observable in observables])
             observableNames = [observables[observable]['name'] if 'name' in observables[observable].keys()
                                else 'y' + str(index)
