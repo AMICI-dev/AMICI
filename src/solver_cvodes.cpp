@@ -476,14 +476,14 @@ const Model *CVodeSolver::getModel() const {
 
 bool CVodeSolver::getMallocDone() const {
     if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
+        return false;
     auto cv_mem = (CVodeMem) solverMemory.get();
     return cv_mem->cv_MallocDone;
 }
     
 bool CVodeSolver::getAdjMallocDone() const {
     if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
+        return false;
     auto cv_mem = (CVodeMem) solverMemory.get();
     return cv_mem->cv_adjMallocDone;
 }

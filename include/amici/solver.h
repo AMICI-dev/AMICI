@@ -253,379 +253,216 @@ class Solver {
     /** sensitivity method
      * @return method enum
      */
-    SensitivityMethod getSensitivityMethod() const{
-        return sensi_meth;
-    }
+    SensitivityMethod getSensitivityMethod() const;
 
     /**
      * @brief setSensitivityMethod
      * @param sensi_meth
      */
-    void setSensitivityMethod(SensitivityMethod sensi_meth) {
-        this->sensi_meth = sensi_meth;
-    }
+    void setSensitivityMethod(SensitivityMethod sensi_meth);
 
     /**
      * @brief getNewtonMaxSteps
      * @return
      */
-    int getNewtonMaxSteps() const {
-        return newton_maxsteps;
-    }
+    int getNewtonMaxSteps() const;
 
     /**
      * @brief setNewtonMaxSteps
      * @param newton_maxsteps
      */
-    void setNewtonMaxSteps(int newton_maxsteps) {
-        if(newton_maxlinsteps < 0)
-            throw AmiException("newton_maxsteps must be a non-negative number");
-        this->newton_maxsteps = newton_maxsteps;
-    }
+    void setNewtonMaxSteps(int newton_maxsteps);
 
     /**
      * @brief getNewtonPreequilibration
      * @return
      */
-    bool getNewtonPreequilibration() const {
-        return newton_preeq;
-    }
+    bool getNewtonPreequilibration() const;
 
     /**
      * @brief setNewtonPreequilibration
      * @param newton_preeq
      */
-    void setNewtonPreequilibration(bool newton_preeq) {
-        this->newton_preeq = newton_preeq;
-    }
-
+    void setNewtonPreequilibration(bool newton_preeq);
 
     /**
      * @brief getNewtonMaxLinearSteps
      * @return
      */
-    int getNewtonMaxLinearSteps() const {
-        return newton_maxlinsteps;
-    }
+    int getNewtonMaxLinearSteps() const;
 
     /**
      * @brief setNewtonMaxLinearSteps
      * @param newton_maxlinsteps
      */
-    void setNewtonMaxLinearSteps(int newton_maxlinsteps) {
-        if(newton_maxlinsteps < 0)
-            throw AmiException("newton_maxlinsteps must be a non-negative number");
-        this->newton_maxlinsteps = newton_maxlinsteps;
-    }
+    void setNewtonMaxLinearSteps(int newton_maxlinsteps);
 
     /**
      * @brief returns the sensitvity order
      * @return sensitivity order
      */
-    SensitivityOrder getSensitivityOrder() const {
-        return sensi;
-    }
+    SensitivityOrder getSensitivityOrder() const;
 
     /**
      * @brief sets the sensitvity order
      * @param sensi sensitivity order
      */
-    void setSensitivityOrder(SensitivityOrder sensi) {
-        this->sensi = sensi;
-        
-        if (!solverMemory)
-            return;
-        
-        setSensitivityTolerances();
-    }
+    void setSensitivityOrder(SensitivityOrder sensi);
 
     /**
-     * @brief returns the relative tolerances for the forward problem
+     * @brief returns the relative tolerances for the forward & backward problem
      * @return relative tolerances
      */
-    double getRelativeTolerance() const {
-        return rtol;
-    }
+    double getRelativeTolerance() const;
 
     /**
-     * @brief sets the relative tolerances for the forward problem
+     * @brief sets the relative tolerances for the forward & backward problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeTolerance(double rtol) {
-        if(rtol < 0)
-            throw AmiException("rtol must be a non-negative number");
-        
-        this->rtol = rtol;
-
-        if (!solverMemory)
-            return;
-        
-        setTolerances();
-        setSensitivityTolerances();
-    }
-
+    void setRelativeTolerance(double rtol);
+    
     /**
-     * @brief returns the absolute tolerances for the forward problem
+     * @brief returns the absolute tolerances for the forward & backward problem
      * @return absolute tolerances
      */
-    double getAbsoluteTolerance() const {
-        return atol;
-    }
+    double getAbsoluteTolerance() const;
 
     /**
-     * @brief sets the absolute tolerances for the forward problem
+     * @brief sets the absolute tolerances for the forward & backward problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteTolerance(double atol) {
-        if(atol < 0)
-            throw AmiException("atol must be a non-negative number");
-        
-        this->atol = atol;
-        
-        if (!solverMemory)
-            return;
-        
-        setTolerances();
-        setSensitivityTolerances();
-    }
+    void setAbsoluteTolerance(double atol);
 
     /**
      * @brief returns the relative tolerance for the quadrature problem
      * @return relative tolerance
      */
-    double getRelativeToleranceQuadratures() const {
-        return quad_rtol;
-    }
+    double getRelativeToleranceQuadratures() const;
 
     /**
      * @brief sets the relative tolerance for the quadrature problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceQuadratures(double rtol) {
-        if(rtol < 0)
-            throw AmiException("rtol must be a non-negative number");
-        
-        this->quad_rtol = rtol;
-        
-        if (sensi_meth != SensitivityMethod::adjoint)
-            return;
-        
-        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-            if(solverMemoryB.at(iMem))
-                setQuadTolerancesASA(iMem);
-    }
+    void setRelativeToleranceQuadratures(double rtol);
 
     /**
      * @brief returns the absolute tolerance for the quadrature problem
      * @return absolute tolerance
      */
-    double getAbsoluteToleranceQuadratures() const {
-        return quad_atol;
-    }
+    double getAbsoluteToleranceQuadratures() const;
 
     /**
      * @brief sets the absolute tolerance for the quadrature problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceQuadratures(double atol) {
-        if (atol < 0)
-            throw AmiException("atol must be a non-negative number");
-        
-        this->quad_atol = atol;
-        
-        if (sensi_meth != SensitivityMethod::adjoint)
-            return;
-        
-        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-            if(solverMemoryB.at(iMem))
-                setTolerancesASA(iMem);
-    }
+    void setAbsoluteToleranceQuadratures(double atol);
 
     /**
      * @brief returns the maximum number of solver steps for the forward problem
      * @return maximum number of solver steps
      */
-    int getMaxSteps() const {
-        return maxsteps;
-    }
+    int getMaxSteps() const;
 
     /**
      * @brief sets the maximum number of solver steps for the forward problem
      * @param maxsteps maximum number of solver steps (non-negative number)
      */
-    void setMaxSteps(int maxsteps) {
-        if (maxsteps < 0)
-            throw AmiException("maxsteps must be a non-negative number");
-        
-        this->maxsteps = maxsteps;
-        if(solverMemory)
-            setMaxNumSteps(this->maxsteps);
-    }
+    void setMaxSteps(int maxsteps);
 
     /**
      * @brief returns the maximum number of solver steps for the backward problem
      * @return maximum number of solver steps
      */
-    int getMaxStepsBackwardProblem() const {
-        return maxstepsB;
-    }
-
+    int getMaxStepsBackwardProblem() const;
     /**
      * @brief sets the maximum number of solver steps for the backward problem
      * @param maxsteps maximum number of solver steps (non-negative number)
      */
-    void setMaxStepsBackwardProblem(int maxsteps) {
-        if (maxsteps < 0)
-            throw AmiException("maxsteps must be a non-negative number");
-        
-        this->maxstepsB = maxsteps;
-        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-            if(solverMemoryB.at(iMem))
-                setMaxNumStepsB(iMem,this->maxstepsB);
-    }
+    void setMaxStepsBackwardProblem(int maxsteps);
 
     /**
      * @brief returns the linear system multistep method
      * @return linear system multistep method
      */
-    LinearMultistepMethod getLinearMultistepMethod() const {
-        return lmm;
-    }
+    LinearMultistepMethod getLinearMultistepMethod() const;
 
     /**
      * @brief sets the linear system multistep method
      * @param lmm linear system multistep method
      */
-    void setLinearMultistepMethod(LinearMultistepMethod lmm) {
-        if(solverMemory)
-            throw AmiException("Solver object was already set up, the linear system multistep method can no longer be changed!");
-        this->lmm = lmm;
-        /*if(solverMemory)
-            allocateSolver();*/
-    }
+    void setLinearMultistepMethod(LinearMultistepMethod lmm);
 
     /**
      * @brief returns the nonlinear system solution method
      * @return
      */
-    NonlinearSolverIteration getNonlinearSolverIteration() const {
-        return iter;
-    }
+    NonlinearSolverIteration getNonlinearSolverIteration() const;
 
     /**
      * @brief sets the nonlinear system solution method
      * @param iter nonlinear system solution method
      */
-    void setNonlinearSolverIteration(NonlinearSolverIteration iter) {
-        if(solverMemory)
-            throw AmiException("Solver object was already set up, the nonlinear system solution method can no longer be changed!");
-        this->iter = iter;
-        /*if(solverMemory)
-            allocateSolver();*/
-    }
+    void setNonlinearSolverIteration(NonlinearSolverIteration iter);
 
     /**
      * @brief getInterpolationType
      * @return
      */
-    InterpolationType getInterpolationType() const {
-        return interpType;
-    }
+    InterpolationType getInterpolationType() const;
 
     /**
      * @brief sets the interpolation of the forward solution that is used for the backwards problem
      * @param interpType interpolation type
      */
-    void setInterpolationType(InterpolationType interpType) {
-        if(!solverMemoryB.empty())
-            throw AmiException("Adjoint solver object was already set up, the interpolation type can no longer be changed!");
-        this->interpType = interpType;
-    }
+    void setInterpolationType(InterpolationType interpType);
 
     /**
      * @brief sets KLU state ordering mode
      * @return
      */
-    StateOrdering getStateOrdering() const {
-        return ordering;
-    }
+    StateOrdering getStateOrdering() const;
 
     /**
      * @brief sets KLU state ordering mode (only applies when linsol is set to amici.AMICI_KLU)
      * @param ordering state ordering
      */
-    void setStateOrdering(StateOrdering ordering) {
-        this->ordering = ordering;
-        if (solverMemory && linsol == LinearSolver::KLU) {
-            kluSetOrdering((int)ordering);
-            for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-                if(solverMemoryB.at(iMem))
-                    kluSetOrderingB(iMem, (int) ordering);
-        }
-    }
+    void setStateOrdering(StateOrdering ordering);
 
     /**
      * @brief returns stability limit detection mode
      * @return stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
      */
-    int getStabilityLimitFlag() const {
-        return stldet;
-    }
+    int getStabilityLimitFlag() const;
 
     /**
      * @brief set stability limit detection mode
      * @param stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
      */
-    void setStabilityLimitFlag(int stldet) {
-        if (stldet != TRUE && stldet != FALSE)
-            throw AmiException("Invalid stldet flag, valid values are %i or %i",TRUE,FALSE);
-
-        this->stldet = stldet;
-        if (solverMemory) {
-            setStabLimDet(stldet);
-            for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-                if(solverMemoryB.at(iMem))
-                    setStabLimDetB(iMem,stldet);
-        }
-    }
+    void setStabilityLimitFlag(int stldet);
 
     /**
      * @brief getLinearSolver
      * @return
      */
-    LinearSolver getLinearSolver() const {
-        return linsol;
-    }
+    LinearSolver getLinearSolver() const;
 
     /**
      * @brief setLinearSolver
      * @param linsol
      */
-    void setLinearSolver(LinearSolver linsol) {
-        if(solverMemory)
-            throw AmiException("Solver object was already set up, the linear solver can no longer be changed!");
-        this->linsol = linsol;
-        /*if(solverMemory)
-            initializeLinearSolver(getModel());*/
-    }
+    void setLinearSolver(LinearSolver linsol);
 
     /**
      * @brief returns the internal sensitivity method
      * @return internal sensitivity method
      */
-    InternalSensitivityMethod getInternalSensitivityMethod() const {
-        return ism;
-    }
+    InternalSensitivityMethod getInternalSensitivityMethod() const;
 
     /**
      * @brief sets the internal sensitivity method
      * @param ism internal sensitivity method
      */
-    void setInternalSensitivityMethod(InternalSensitivityMethod ism) {
-        if(solverMemory)
-            throw AmiException("Solver object was already set up, the sensitivity method can no longer be changed!");
-        this->ism = ism;
-    }
+    void setInternalSensitivityMethod(InternalSensitivityMethod ism);
 
     /**
      * @brief Serialize Solver (see boost::serialization::serialize)

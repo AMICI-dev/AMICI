@@ -434,14 +434,14 @@ const Model *IDASolver::getModel() const {
     
 bool IDASolver::getMallocDone() const {
     if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
+        return false;
     auto ida_mem = (IDAMem) solverMemory.get();
     return ida_mem->ida_MallocDone;
 }
 
 bool IDASolver::getAdjMallocDone() const {
     if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
+        return false;
     auto ida_mem = (IDAMem) solverMemory.get();
     return ida_mem->ida_adjMallocDone;
 }
