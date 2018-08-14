@@ -28,7 +28,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.pscale == s.pscale);
     CHECK_EQUAL(r.o2mode, s.o2mode);
     CHECK_EQUAL(r.sensi, s.sensi);
-    CHECK_EQUAL(r.sensi_meth, s.sensi_meth);
+    CHECK_EQUAL(static_cast<int>(r.sensi_meth), static_cast<int>(s.sensi_meth));
 
     using amici::checkEqualArray;
     checkEqualArray(r.ts, s.ts, 1e-16, 1e-16, "ts");
