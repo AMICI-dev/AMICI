@@ -26,8 +26,8 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_EQUAL(r.nt, s.nt);
     CHECK_EQUAL(r.newton_maxsteps, s.newton_maxsteps);
     CHECK_TRUE(r.pscale == s.pscale);
-    CHECK_EQUAL(r.o2mode, s.o2mode);
-    CHECK_EQUAL(r.sensi, s.sensi);
+    CHECK_EQUAL(static_cast<int>(r.o2mode), static_cast<int>(s.o2mode));
+    CHECK_EQUAL(static_cast<int>(r.sensi), static_cast<int>(s.sensi));
     CHECK_EQUAL(static_cast<int>(r.sensi_meth), static_cast<int>(s.sensi_meth));
 
     using amici::checkEqualArray;
