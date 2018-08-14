@@ -97,7 +97,7 @@ TEST(dataSerialization, testFile) {
     int nx = 3;
     int nz = 4;
     amici::CVodeSolver solver;
-    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
+    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::SecondOrderMode::none,
                                              std::vector<realtype>(np,0.0),std::vector<realtype>(nk,0.0),std::vector<int>(np,0),
                                              std::vector<realtype>(nx,0.0),std::vector<int>(nz,0));
 
@@ -150,7 +150,7 @@ TEST(dataSerialization, testString) {
     int nx = 3;
     int nz = 4;
     amici::CVodeSolver solver;
-    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
+    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::SecondOrderMode::none,
                                              std::vector<realtype>(np,0.0),std::vector<realtype>(nk,0.0),std::vector<int>(np,0),
                                              std::vector<realtype>(nx,0.0),std::vector<int>(nz,0));
 
