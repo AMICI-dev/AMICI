@@ -394,20 +394,20 @@ class SbmlImporter:
         self.symbols['species']['sym'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
         self.symbols['species']['name'] = [spec.getName() for spec in species]
         self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
-        self.constantSpecies = [species_element.getId() if species_element.getConstant() else None
-                                for species_element in species]
-        self.boundaryConditionSpecies = [species_element.getId() if species_element.getBoundaryCondition() else None
-                                         for species_element in species]
+        self.constantSpecies = [species_element.getId() for species_element in species if species_element.getConstant()]
+        self.boundaryConditionSpecies = [species_element.getId() for species_element in species if species_element.getBoundaryCondition()]
         self.speciesHasOnlySubstanceUnits = [specie.getHasOnlySubstanceUnits() for specie in species]
 
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
 
-        self.speciesInitial = sp.DenseMatrix([sp.sympify(conc) if not math.isnan(conc) else
-                                              sp.sympify(amounts[index])/self.speciesCompartment[index] if not
-                                              math.isnan(amounts[index]) else
-                                              self.symbols['species']['sym'][index]
-                                              for index, conc in enumerate(concentrations)])
+        def getSpeciesInitial(index, conc):
+            if not math.isnan(conc):
+                return sp.sympify(conc)
+            if not math.isnan(amounts[index]):
+                return sp.sympify(amounts[index]) / self.speciesCompartment[index]
+            return self.symbols['species']['sym'][index]
+        self.speciesInitial = sp.DenseMatrix([getSpeciesInitial(index, conc) for index, conc in enumerate(concentrations)])
 
         if self.sbml.isSetConversionFactor():
             conversionFactor = self.sbml.getConversionFactor()
@@ -428,7 +428,11 @@ class SbmlImporter:
         Raises:
 
         """
-
+        # Ensure specified constant parameters exist in the model
+        for parameter in constantParameters:
+            if not self.sbml.getParameter(parameter):
+                raise KeyError('Cannot make %s a constant parameter: Parameter does not exist.' % parameter)
+            
         fixedParameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() in constantParameters ]
         parameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() not in constantParameters ]
 
@@ -485,7 +489,7 @@ class SbmlImporter:
 
         for reactionIndex, reaction in enumerate(reactions):
 
-            for elementList, sign  in [(reaction.getListOfReactants(), -1.0),
+            for elementList, sign in [(reaction.getListOfReactants(), -1.0),
                                        (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
                 for index, element in enumerate(elementList):
@@ -1426,3 +1430,45 @@ def assignmentRules2observables(sbml, filter = lambda *_: True):
         sbml.removeParameter(parameterId)
 
     return observables
+
+
+def constantSpeciesToParameters(sbml_model):
+    """
+    Convert constant species in the SBML model to constant parameters
+    
+    Arguments:
+            sbml_model: libsbml model instance
+    Returns:
+            species IDs that have been turned into constants
+    Raises:
+
+    """
+    transformable = []
+    for species in sbml_model.getListOfSpecies():
+        if not species.getConstant() and not species.getBoundaryCondition():
+            continue
+        if species.getHasOnlySubstanceUnits():
+            print("Ignoring %s which has only substance units. Conversion not yet implemented." % species.getId())
+            continue
+        if np.isnan(species.getInitialConcentration()):
+            print("Ignoring %s which has no initial concentration. Amount conversion not yet implemented." % species.getId())
+            continue
+        transformable.append(species.getId())
+
+    # Must not remove species while iterating over getListOfSpecies()
+    for speciesId in transformable:
+        species = sbml_model.removeSpecies(speciesId)
+        par = sbml_model.createParameter()
+        par.setId(species.getId())
+        par.setConstant(True)
+        par.setValue(species.getInitialConcentration())
+        par.setUnits(species.getUnits())
+    
+    # Remove from reactants and products
+    for reaction in sbml_model.getListOfReactions():
+        for speciesId in transformable:
+            reaction.removeReactant(speciesId)
+            reaction.removeProduct(speciesId)
+    
+    return transformable
+    
