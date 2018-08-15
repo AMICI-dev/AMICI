@@ -452,7 +452,7 @@ void Solver::setSensitivityTolerances() {
     
     if (sensi_meth == SensitivityMethod::forward)
         setTolerancesFSA();
-    else if (sensi_meth == SensitivityMethod::adjoint) {
+    else if (sensi_meth == SensitivityMethod::adjoint && getAdjMallocDone()) {
         for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
             setTolerancesASA(iMem);
     }
