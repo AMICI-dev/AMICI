@@ -125,7 +125,7 @@ void ExpData::setObservedData(const std::vector<realtype> &observedData, int iy)
         throw AmiException("Input observedData did not match dimensions nt (%i), was %i", nt(), observedData.size());
     
     for (int it = 0; it < nt(); ++it)
-        this->observedData.at(iy + it*nytrue) = observedData.at(iy);
+        this->observedData.at(iy + it*nytrue) = observedData.at(it);
 }
     
 bool ExpData::isSetObservedData(int it, int iy) const {
@@ -164,7 +164,7 @@ void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStd
     checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
     
     for (int it = 0; it < nt(); ++it)
-        this->observedDataStdDev.at(iy + it*nytrue) = observedDataStdDev.at(iy);
+        this->observedDataStdDev.at(iy + it*nytrue) = observedDataStdDev.at(it);
 }
     
 void ExpData::setObservedDataStdDev(const realtype stdDev, int iy) {
@@ -203,7 +203,7 @@ void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents, int
     }
     
     for (int ie = 0; ie < nmaxevent; ++ie)
-        this->observedEvents.at(iz + ie*nztrue) = observedEvents.at(iz);
+        this->observedEvents.at(iz + ie*nztrue) = observedEvents.at(ie);
 }
     
 bool ExpData::isSetObservedEvents(int ie, int iz) const {
@@ -242,7 +242,7 @@ void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEvent
     checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
         
     for (int ie = 0; ie < nmaxevent; ++ie)
-        this->observedEventsStdDev.at(iz + ie*nztrue) = observedEventsStdDev.at(iz);
+        this->observedEventsStdDev.at(iz + ie*nztrue) = observedEventsStdDev.at(ie);
 }
 
 void ExpData::setObservedEventsStdDev(const realtype stdDev, int iz) {
