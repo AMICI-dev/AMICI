@@ -136,7 +136,7 @@ namespace amici {
         AmiException("IDA routine %s failed with error code (%i)",function,error_code){}
     };
     
-    /** @brief integration failure exception
+    /** @brief integration failure exception for the forward problem
      * this exception should be thrown when an integration failure occured
      * for this exception we can assume that we can recover from the exception
      * and return a solution struct to the user
@@ -152,7 +152,29 @@ namespace amici {
          * @param[in] t time of integration failure
          */
         IntegrationFailure(int code, realtype t) :
-        AmiException("AMICI failed to integrate the problem") {
+        AmiException("AMICI failed to integrate the forward problem") {
+            error_code = code;
+            time = t;
+        }
+    };
+    
+    /** @brief integration failure exception for the backward problem
+     * this exception should be thrown when an integration failure occured
+     * for this exception we can assume that we can recover from the exception
+     * and return a solution struct to the user
+     */
+    class IntegrationFailureB : public AmiException  {
+    public:
+        /** error code returned by cvode/ida */
+        int error_code;
+        /** time of integration failure */
+        realtype time;
+        /** constructor
+         * @param[in] code error code returned by cvode/ida
+         * @param[in] t time of integration failure
+         */
+        IntegrationFailureB(int code, realtype t) :
+        AmiException("AMICI failed to integrate the backward problem") {
             error_code = code;
             time = t;
         }

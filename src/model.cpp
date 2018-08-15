@@ -23,7 +23,7 @@ void Model::fsy(const int it, ReturnData *rdata) {
     // dydx A[ny,nx] * sx B[nx,nplist] = sy C[ny,nplist]
     //        M  K          K  N              M  N
     //        lda           ldb               ldc
-    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, ny, nplist(), nx,
+    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, ny, nplist(), nx,
                 1.0, dydx.data(), ny, getsx(it,rdata), nx, 1.0,
                 &rdata->sy[it*nplist()*ny], ny);
 }
@@ -56,7 +56,7 @@ void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *r
     std::vector<realtype> multResult(nJ * nplist(), 0);
 
     // C := alpha*op(A)*op(B) + beta*C,
-    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, nJ,
+    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
                 nplist(), nx, 1.0, &dJydx.at(it*nJ*nx), nJ, getsx(it,rdata), nx, 0.0,
                 multResult.data(), nJ);
 
@@ -99,21 +99,21 @@ void Model::fdJydp(const int it, const ExpData *edata,
             continue;
 
         // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
                     nJ, nplist(), ny,
                     1.0, &dJydy.at(iyt*nJ*ny), nJ,
                     dydp.data(), ny,
                     1.0, dJydp.data(), nJ);
 
         // dJydp = 1.0 * dJydp +  1.0 * dJydsigma * dsigmaydp
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
                     nJ, nplist(), ny,
                     1.0, &dJydsigma.at(iyt*nJ*ny), nJ,
                     dsigmaydp.data(), ny,
                     1.0, dJydp.data(), nJ);
     }
 
-    if (rdata->sensi_meth != AMICI_SENSI_ASA)
+    if (rdata->sensi_meth != SensitivityMethod::adjoint)
         return;
 
     if(!ny)
@@ -151,7 +151,7 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
     //         slice                                slice
     //             M  K            K  N                M  N
     //             lda             ldb                 ldc
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
                     nJ, nx, ny, 1.0, &dJydy.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
                     &dJydx->at(it*nx*nJ), nJ);
     }
@@ -182,7 +182,7 @@ void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVector
     }
 
     // C := alpha*op(A)*op(B) + beta*C,
-    amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans, nJ,
+    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
                 nplist(), nx, 1.0, &dJzdx.at(nroots*nx*nJ), nJ, sxTmp.data(), nx, 1.0,
                 multResult.data(), nJ);
 
@@ -220,22 +220,22 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
 
         if (t < rdata->ts.at(rdata->ts.size() - 1)) {
             // with z
-            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
                         nJ, nplist(), nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
                         1.0, dJzdp.data(), nJ);
         } else {
             // with rz
-            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
-                        AMICI_BLAS_NoTrans, nJ, nplist(), nz, 1.0,
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
                         &dJrzdsigma.at(izt*nz*nJ), nJ, dsigmazdp.data(), nz, 1.0,
                         dJzdp.data(), nJ);
             
-            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
                         nJ, nplist(), nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
                         1.0, dJzdp.data(), nJ);
         }
 
-        amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans, AMICI_BLAS_NoTrans,
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
                     nJ, nplist(), nz, 1.0, &dJzdsigma.at(izt*nz*nJ), nJ,
                     dsigmazdp.data(), nz, 1.0, dJzdp.data(), nJ);
     }
@@ -260,13 +260,13 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
         
         if (t < rdata->ts.at(rdata->ts.size() - 1)) {
             // z
-            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
-                        AMICI_BLAS_NoTrans, nJ, nx, nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ,
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nx, nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ,
                         dzdx.data(), nz, 1.0, &dJzdx->at(nroots*nx*nJ), nJ);
         } else {
             // rz
-            amici_dgemm(AMICI_BLAS_ColMajor, AMICI_BLAS_NoTrans,
-                        AMICI_BLAS_NoTrans, nJ, nx, nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ,
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nx, nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ,
                         drzdx.data(), nz, 1.0, &dJzdx->at(nroots*nx*nJ), nJ);
         }
     }
@@ -351,17 +351,17 @@ int Model::nt() const {
     return ts.size();
 }
 
-const std::vector<AMICI_parameter_scaling> &Model::getParameterScale() const {
+const std::vector<ParameterScaling> &Model::getParameterScale() const {
     return pscale;
 }
 
-void Model::setParameterScale(AMICI_parameter_scaling pscale) {
+void Model::setParameterScale(ParameterScaling pscale) {
     this->pscale.assign(this->pscale.size(), pscale);
     unscaledParameters.resize(originalParameters.size());
     unscaleParameters(unscaledParameters.data());
 }
 
-void Model::setParameterScale(std::vector<AMICI_parameter_scaling> const& pscale) {
+void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
     this->pscale = pscale;
     unscaledParameters.resize(originalParameters.size());
     unscaleParameters(unscaledParameters.data());
@@ -423,9 +423,12 @@ std::vector<realtype> const& Model::getInitialStates() const {
 }
 
 void Model::setInitialStates(const std::vector<realtype> &x0) {
-    if(x0.size() != (unsigned) nx)
+    if(x0.size() != (unsigned) nx && x0.size() != 0)
         throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
-    this->x0data = x0;
+    if (x0.size() == 0)
+        this->x0data.clear();
+    else
+        this->x0data = x0;
 }
 
 const std::vector<realtype> &Model::getInitialStateSensitivities() const {
@@ -433,9 +436,12 @@ const std::vector<realtype> &Model::getInitialStateSensitivities() const {
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
-    if(sx0.size() != (unsigned) nx * nplist())
+    if(sx0.size() != (unsigned) nx * nplist() && sx0.size() != 0)
         throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
-    this->sx0data = sx0;
+    if (sx0.size() == 0)
+        this->sx0data.clear();
+    else
+        this->sx0data = sx0;
 }
 
 double Model::t0() const{
@@ -465,12 +471,12 @@ Model::Model(const int nx,
              const int nnz,
              const int ubw,
              const int lbw,
-             AMICI_o2mode o2mode,
+             SecondOrderMode o2mode,
              const std::vector<realtype>& p,
-             std::vector<realtype>  k,
+             std::vector<realtype> k,
              const std::vector<int>& plist,
-             std::vector<realtype>  idlist,
-             std::vector<int>  z2event)
+             std::vector<realtype> idlist,
+             std::vector<int> z2event)
     : nx(nx), nxtrue(nxtrue),
       ny(ny), nytrue(nytrue),
       nz(nz), nztrue(nztrue),
@@ -520,9 +526,10 @@ Model::Model(const int nx,
       originalParameters(p),
       fixedParameters(std::move(k)),
       plist_(plist),
-      pscale(std::vector<AMICI_parameter_scaling>(p.size(), AMICI_SCALING_NONE))
+      pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
 {
     J = SparseNewMat(nx, nx, nnz, CSC_MAT);
+    requireSensitivitiesForAllParameters();
 }
 
 Model::Model(const Model &other)
@@ -1344,13 +1351,13 @@ void Model::unscaleParameters(double *bufferUnscaled) const
          */
     for (int ip = 0; ip < np(); ++ip) {
         switch (pscale[ip]) {
-        case AMICI_SCALING_LOG10:
+        case ParameterScaling::log10:
             bufferUnscaled[ip] = pow(10, originalParameters[ip]);
             break;
-        case AMICI_SCALING_LN:
+        case ParameterScaling::ln:
             bufferUnscaled[ip] = exp(originalParameters[ip]);
             break;
-        case AMICI_SCALING_NONE:
+        case ParameterScaling::none:
             bufferUnscaled[ip] = originalParameters[ip];
             break;
         }

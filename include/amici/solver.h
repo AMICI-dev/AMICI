@@ -74,7 +74,6 @@ class Solver {
      */
     virtual Solver* clone() const = 0;
 
-
     void setup(ForwardProblem *fwd, Model *model);
 
     void setupAMIB(BackwardProblem *bwd, Model *model);
@@ -86,11 +85,26 @@ class Solver {
      * @param tret time at which the sensitivities should be computed
      * @param yySout vector with sensitivities
      */
-    virtual void getSens(realtype *tret, AmiVectorArray *yySout) = 0;
+    virtual void getSens(realtype *tret, AmiVectorArray *yySout) const = 0;
 
-    void getDiagnosis(const int it, ReturnData *rdata);
+    /**
+     * getDiagnosis extracts diagnosis information from solver memory block and
+     * writes them into the return data object
+     *
+     * @param it time-point index
+     * @param rdata pointer to the return data object
+     */
+    void getDiagnosis(const int it, ReturnData *rdata) const;
 
-    void getDiagnosisB(const int it, ReturnData *rdata, const BackwardProblem *bwd);
+    /**
+     * getDiagnosisB extracts diagnosis information from solver memory block and
+     * writes them into the return data object for the backward problem
+     *
+     * @param it time-point index
+     * @param rdata pointer to the return data object
+     * @param which identifier of the backwards problem
+     */
+    void getDiagnosisB(const int it, ReturnData *rdata, int which) const;
 
     /**
      * getRootInfo extracts information which event occured
@@ -98,7 +112,7 @@ class Solver {
      * @param rootsfound array with flags indicating whether the respective
      * event occured
      */
-    virtual void getRootInfo(int *rootsfound) = 0;
+    virtual void getRootInfo(int *rootsfound) const = 0;
 
     /**
      * ReInit reinitializes the states in the solver after an event occurence
@@ -113,11 +127,10 @@ class Solver {
      * SensReInit reinitializes the state sensitivites in the solver after an
      * event occurence
      *
-     * @param ism sensitivity mode
      * @param yS0 new state sensitivity
      * @param ypS0 new derivative state sensitivities (DAE only)
      */
-    virtual void sensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) = 0;
+    virtual void sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) = 0;
 
     /**
      * CalcIC calculates consistent initial conditions, assumes initial
@@ -213,7 +226,7 @@ class Solver {
       * @param yp adjoint derivative state variables (DAE only)
       */
     virtual void getB(int which, realtype *tret, AmiVector *yy,
-                        AmiVector *yp) = 0;
+                        AmiVector *yp) const = 0;
 
     /**
       * getQuadB returns the current adjoint states
@@ -222,7 +235,7 @@ class Solver {
       * @param tret time at which the adjoint states should be computed
       * @param qB adjoint quadrature state variables
       */
-    virtual void getQuadB(int which, realtype *tret, AmiVector *qB) = 0;
+    virtual void getQuadB(int which, realtype *tret, AmiVector *qB) const = 0;
 
     /**
       * ReInitB reinitializes the adjoint states after an event occurence
@@ -240,305 +253,216 @@ class Solver {
     /** sensitivity method
      * @return method enum
      */
-    AMICI_sensi_meth getSensitivityMethod() const{
-        return sensi_meth;
-    }
+    SensitivityMethod getSensitivityMethod() const;
 
     /**
      * @brief setSensitivityMethod
      * @param sensi_meth
      */
-    void setSensitivityMethod(AMICI_sensi_meth sensi_meth) {
-        this->sensi_meth = sensi_meth;
-    }
+    void setSensitivityMethod(SensitivityMethod sensi_meth);
 
     /**
      * @brief getNewtonMaxSteps
      * @return
      */
-    int getNewtonMaxSteps() const {
-        return newton_maxsteps;
-    }
+    int getNewtonMaxSteps() const;
 
     /**
      * @brief setNewtonMaxSteps
      * @param newton_maxsteps
      */
-    void setNewtonMaxSteps(int newton_maxsteps) {
-        this->newton_maxsteps = newton_maxsteps;
-    }
+    void setNewtonMaxSteps(int newton_maxsteps);
 
     /**
      * @brief getNewtonPreequilibration
      * @return
      */
-    bool getNewtonPreequilibration() const {
-        return newton_preeq;
-    }
+    bool getNewtonPreequilibration() const;
 
     /**
      * @brief setNewtonPreequilibration
      * @param newton_preeq
      */
-    void setNewtonPreequilibration(bool newton_preeq) {
-        this->newton_preeq = newton_preeq;
-    }
-
+    void setNewtonPreequilibration(bool newton_preeq);
 
     /**
      * @brief getNewtonMaxLinearSteps
      * @return
      */
-    int getNewtonMaxLinearSteps() const {
-        return newton_maxlinsteps;
-    }
+    int getNewtonMaxLinearSteps() const;
 
     /**
      * @brief setNewtonMaxLinearSteps
      * @param newton_maxlinsteps
      */
-    void setNewtonMaxLinearSteps(int newton_maxlinsteps) {
-        this->newton_maxlinsteps = newton_maxlinsteps;
-    }
+    void setNewtonMaxLinearSteps(int newton_maxlinsteps);
 
     /**
-     * @brief getSensitivityOrder
+     * @brief returns the sensitvity order
+     * @return sensitivity order
+     */
+    SensitivityOrder getSensitivityOrder() const;
+
+    /**
+     * @brief sets the sensitvity order
+     * @param sensi sensitivity order
+     */
+    void setSensitivityOrder(SensitivityOrder sensi);
+
+    /**
+     * @brief returns the relative tolerances for the forward & backward problem
+     * @return relative tolerances
+     */
+    double getRelativeTolerance() const;
+
+    /**
+     * @brief sets the relative tolerances for the forward & backward problem
+     * @param rtol relative tolerance (non-negative number)
+     */
+    void setRelativeTolerance(double rtol);
+    
+    /**
+     * @brief returns the absolute tolerances for the forward & backward problem
+     * @return absolute tolerances
+     */
+    double getAbsoluteTolerance() const;
+
+    /**
+     * @brief sets the absolute tolerances for the forward & backward problem
+     * @param atol absolute tolerance (non-negative number)
+     */
+    void setAbsoluteTolerance(double atol);
+
+    /**
+     * @brief returns the relative tolerance for the quadrature problem
+     * @return relative tolerance
+     */
+    double getRelativeToleranceQuadratures() const;
+
+    /**
+     * @brief sets the relative tolerance for the quadrature problem
+     * @param rtol relative tolerance (non-negative number)
+     */
+    void setRelativeToleranceQuadratures(double rtol);
+
+    /**
+     * @brief returns the absolute tolerance for the quadrature problem
+     * @return absolute tolerance
+     */
+    double getAbsoluteToleranceQuadratures() const;
+
+    /**
+     * @brief sets the absolute tolerance for the quadrature problem
+     * @param atol absolute tolerance (non-negative number)
+     */
+    void setAbsoluteToleranceQuadratures(double atol);
+
+    /**
+     * @brief returns the maximum number of solver steps for the forward problem
+     * @return maximum number of solver steps
+     */
+    int getMaxSteps() const;
+
+    /**
+     * @brief sets the maximum number of solver steps for the forward problem
+     * @param maxsteps maximum number of solver steps (non-negative number)
+     */
+    void setMaxSteps(int maxsteps);
+
+    /**
+     * @brief returns the maximum number of solver steps for the backward problem
+     * @return maximum number of solver steps
+     */
+    int getMaxStepsBackwardProblem() const;
+    /**
+     * @brief sets the maximum number of solver steps for the backward problem
+     * @param maxsteps maximum number of solver steps (non-negative number)
+     */
+    void setMaxStepsBackwardProblem(int maxsteps);
+
+    /**
+     * @brief returns the linear system multistep method
+     * @return linear system multistep method
+     */
+    LinearMultistepMethod getLinearMultistepMethod() const;
+
+    /**
+     * @brief sets the linear system multistep method
+     * @param lmm linear system multistep method
+     */
+    void setLinearMultistepMethod(LinearMultistepMethod lmm);
+
+    /**
+     * @brief returns the nonlinear system solution method
      * @return
      */
-    AMICI_sensi_order getSensitivityOrder() const {
-        return sensi;
-    }
+    NonlinearSolverIteration getNonlinearSolverIteration() const;
 
     /**
-     * @brief setSensitivityOrder
-     * @param sensi
+     * @brief sets the nonlinear system solution method
+     * @param iter nonlinear system solution method
      */
-    void setSensitivityOrder(AMICI_sensi_order sensi) {
-        switch (sensi) {
-        case AMICI_SENSI_ORDER_NONE:
-        case AMICI_SENSI_ORDER_FIRST:
-        case AMICI_SENSI_ORDER_SECOND:
-            break;
-        default:
-            throw(AmiException("Invalid sensitivity order. Must be one of AMICI_sensi_order."));
-        }
-
-        this->sensi = sensi;
-    }
-
-    /**
-     * @brief getRelativeTolerance
-     * @return
-     */
-    double getRelativeTolerance() const {
-        return rtol;
-    }
-
-    /**
-     * @brief setRelativeTolerance
-     * @param rtol
-     */
-    void setRelativeTolerance(double rtol) {
-        this->rtol = rtol;
-    }
-
-    /**
-     * @brief getAbsoluteTolerance
-     * @return
-     */
-    double getAbsoluteTolerance() const {
-        return atol;
-    }
-
-    /**
-     * @brief setAbsoluteTolerance
-     * @param atol
-     */
-    void setAbsoluteTolerance(double atol) {
-        this->atol = atol;
-    }
-
-    /**
-     * @brief getRelativeToleranceQuadratures
-     * @return
-     */
-    double getRelativeToleranceQuadratures() const {
-        return quad_rtol;
-    }
-
-    /**
-     * @brief setRelativeToleranceQuadratures
-     * @param rtol
-     */
-    void setRelativeToleranceQuadratures(double rtol) {
-        this->quad_rtol = rtol;
-    }
-
-    /**
-     * @brief getAbsoluteToleranceQuadratures
-     * @return
-     */
-    double getAbsoluteToleranceQuadratures() const {
-        return quad_atol;
-    }
-
-    /**
-     * @brief setAbsoluteToleranceQuadratures
-     * @param atol
-     */
-    void setAbsoluteToleranceQuadratures(double atol) {
-        this->quad_atol = atol;
-    }
-
-    /**
-     * @brief getMaxSteps
-     * @return
-     */
-    int getMaxSteps() const {
-        return maxsteps;
-    }
-
-    /**
-     * @brief setMaxSteps
-     * @param maxsteps
-     */
-    void setMaxSteps(int maxsteps) {
-        this->maxsteps = maxsteps;
-    }
-
-    /**
-     * @brief getMaxStepsBackwardProblem
-     * @return
-     */
-    int getMaxStepsBackwardProblem() const {
-        return maxstepsB;
-    }
-
-    /**
-     * @brief setMaxStepsBackwardProblem
-     * @param maxsteps
-     */
-    void setMaxStepsBackwardProblem(int maxsteps) {
-        this->maxstepsB = maxsteps;
-    }
-
-    /**
-     * @brief getLinearMultistepMethod
-     * @return
-     */
-    LinearMultistepMethod getLinearMultistepMethod() const {
-        return lmm;
-    }
-
-    /**
-     * @brief setLinearMultistepMethod
-     * @param lmm
-     */
-    void setLinearMultistepMethod(LinearMultistepMethod lmm) {
-        if(lmm != ADAMS && lmm != BDF)
-            throw AmiException("Illegal value for lmm!");
-
-        this->lmm = lmm;
-    }
-
-    /**
-     * @brief getNonlinearSolverIteration
-     * @return
-     */
-    NonlinearSolverIteration getNonlinearSolverIteration() const {
-        return iter;
-    }
-
-    /**
-     * @brief setNonlinearSolverIteration
-     * @param iter
-     */
-    void setNonlinearSolverIteration(NonlinearSolverIteration iter) {
-        if(iter != NEWTON && iter != FUNCTIONAL)
-            throw AmiException("Illegal value for iter!");
-
-        this->iter = iter;
-    }
+    void setNonlinearSolverIteration(NonlinearSolverIteration iter);
 
     /**
      * @brief getInterpolationType
      * @return
      */
-    InterpolationType getInterpolationType() const {
-        return interpType;
-    }
+    InterpolationType getInterpolationType() const;
 
     /**
-     * @brief setInterpolationType
-     * @param interpType
+     * @brief sets the interpolation of the forward solution that is used for the backwards problem
+     * @param interpType interpolation type
      */
-    void setInterpolationType(InterpolationType interpType) {
-        this->interpType = interpType;
-    }
+    void setInterpolationType(InterpolationType interpType);
 
     /**
-     * @brief getStateOrdering
+     * @brief sets KLU state ordering mode
      * @return
      */
-    StateOrdering getStateOrdering() const {
-        return ordering;
-    }
+    StateOrdering getStateOrdering() const;
 
     /**
-     * @brief setStateOrdering
-     * @param ordering
+     * @brief sets KLU state ordering mode (only applies when linsol is set to amici.AMICI_KLU)
+     * @param ordering state ordering
      */
-    void setStateOrdering(StateOrdering ordering) {
-        this->ordering = ordering;
-    }
+    void setStateOrdering(StateOrdering ordering);
 
     /**
-     * @brief getStabilityLimitFlag
-     * @return
+     * @brief returns stability limit detection mode
+     * @return stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
      */
-    int getStabilityLimitFlag() const {
-        return stldet;
-    }
+    int getStabilityLimitFlag() const;
 
     /**
-     * @brief setStabilityLimitFlag
-     * @param stldet
+     * @brief set stability limit detection mode
+     * @param stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
      */
-    void setStabilityLimitFlag(int stldet) {
-        this->stldet = stldet;
-    }
+    void setStabilityLimitFlag(int stldet);
 
     /**
      * @brief getLinearSolver
      * @return
      */
-    LinearSolver getLinearSolver() const {
-        return linsol;
-    }
+    LinearSolver getLinearSolver() const;
 
     /**
      * @brief setLinearSolver
      * @param linsol
      */
-    void setLinearSolver(LinearSolver linsol) {
-        this->linsol = linsol;
-    }
+    void setLinearSolver(LinearSolver linsol);
 
     /**
-     * @brief getInternalSensitivityMethod
-     * @return
+     * @brief returns the internal sensitivity method
+     * @return internal sensitivity method
      */
-    InternalSensitivityMethod getInternalSensitivityMethod() const {
-        return ism;
-    }
+    InternalSensitivityMethod getInternalSensitivityMethod() const;
 
     /**
-     * @brief setInternalSensitivityMethod
-     * @param ism
+     * @brief sets the internal sensitivity method
+     * @param ism internal sensitivity method
      */
-    void setInternalSensitivityMethod(InternalSensitivityMethod ism) {
-        this->ism = ism;
-    }
+    void setInternalSensitivityMethod(InternalSensitivityMethod ism);
 
     /**
      * @brief Serialize Solver (see boost::serialization::serialize)
@@ -661,11 +585,8 @@ class Solver {
     /**
      * Create specifies solver method and initializes solver memory for the
      * forward problem
-     *
-     * @param lmm linear multistep method CV_ADAMS or CV_BDF
-     * @param iter nonlinear solver method CV_NEWTON or CV_FUNCTIONAL
      */
-    virtual void create(int lmm, int iter) = 0;
+    virtual void allocateSolver() = 0;
 
     /**
      * SStolerances sets scalar relative and absolute tolerances for the forward
@@ -792,26 +713,21 @@ class Solver {
      * @param k derivative order
      * @param dky interpolated solution
      */
-    virtual void getDky(realtype t, int k, AmiVector *dky) = 0;
+    virtual void getDky(realtype t, int k, AmiVector *dky) const = 0;
 
     /**
      * AdjInit initializes the adjoint problem
      *
-     * @param steps number of integration points between checkpoints
-     * @param interp interpolation type, can be CV_POLYNOMIAL or CV_HERMITE
-     *
      */
-    virtual void adjInit(long int steps, int interp) = 0;
+    virtual void adjInit() = 0;
     
     /**
-     * CreateB specifies solver method and initializes solver memory for the
+     * specifies solver method and initializes solver memory for the
      * backward problem
      *
      * @param which identifier of the backwards problem
-     * @param lmm linear multistep method CV_ADAMS or CV_BDF
-     * @param iter nonlinear solver method CV_NEWTON or CV_FUNCTIONAL
      */
-    virtual void createB(int lmm, int iter, int *which) = 0;
+    virtual void allocateSolverB(int *which) = 0;
 
     /**
      * SStolerancesB sets relative and absolute tolerances for the backward
@@ -992,7 +908,7 @@ class Solver {
      * forward or backward problem)
      * @param numsteps output array
      */
-    virtual void getNumSteps(void *ami_mem, long int *numsteps) = 0;
+    virtual void getNumSteps(void *ami_mem, long int *numsteps) const = 0;
 
     /**
      * getNumRhsEvals reports the number of right hand evaluations
@@ -1001,7 +917,7 @@ class Solver {
      * forward or backward problem)
      * @param numrhsevals output array
      */
-    virtual void getNumRhsEvals(void *ami_mem, long int *numrhsevals) = 0;
+    virtual void getNumRhsEvals(void *ami_mem, long int *numrhsevals) const = 0;
 
     /**
      * getNumErrTestFails reports the number of local error test failures
@@ -1011,7 +927,7 @@ class Solver {
      * @param numerrtestfails output array
      */
     virtual void getNumErrTestFails(void *ami_mem,
-                                      long int *numerrtestfails) = 0;
+                                      long int *numerrtestfails) const = 0;
 
     /**
      * getNumNonlinSolvConvFails reports the number of nonlinear convergence
@@ -1023,7 +939,7 @@ class Solver {
      */
     virtual void
     getNumNonlinSolvConvFails(void *ami_mem,
-                                 long int *numnonlinsolvconvfails) = 0;
+                                 long int *numnonlinsolvconvfails) const = 0;
 
     /**
      * Reports the order of the integration method during the
@@ -1033,8 +949,45 @@ class Solver {
      * forward or backward problem)
      * @param order output array
      */
-    virtual void getLastOrder(void *ami_mem, int *order) = 0;
+    virtual void getLastOrder(void *ami_mem, int *order) const = 0;
 
+    void initializeLinearSolver(const Model *model);
+    void initializeLinearSolverB(const Model *model, const int which);
+    
+    /**
+     * Accessor function to the number of sensitivity parameters in the model stored in the user data
+     *
+     * @return number of sensitivity parameters
+     */
+    virtual int nplist() const = 0;
+    /**
+     * Accessor function to the number of state variables in the model stored in the user data
+     *
+     * @return number of state variables
+     */
+    virtual int nx() const = 0;
+    /**
+     * Accessor function to the model stored in the user data
+     *
+     * @return user data model
+     */
+    virtual const Model *getModel() const = 0;
+    
+    /**
+     * checks whether memory for the forward problem has been allocated
+     *
+     * @return solverMemory->(cv|ida)__MallocDone
+     */
+    virtual bool getMallocDone() const = 0;
+    /**
+     * checks whether memory for the backward problem has been allocated
+     *
+     * @return solverMemory->(cv|ida)__adjMallocDone
+     */
+    virtual bool getAdjMallocDone() const = 0;
+
+protected:
+    
     /**
      * getAdjBmem retrieves the solver memory instance for the backward problem
      *
@@ -1043,41 +996,76 @@ class Solver {
      * @return ami_memB pointer to the backward solver memory instance
      */
     virtual void *getAdjBmem(void *ami_mem, int which) = 0;
-
-    void initializeLinearSolver(Model *model);
-    void initializeLinearSolverB(Model *model, int which);
-
-protected:
+        
+    /**
+     * updates solver tolerances according to the currently specified member variables
+     */
+    void setTolerances();
+        
+    /**
+     * updates FSA solver tolerances according to the currently specified member variables
+     */
+    void setTolerancesFSA();
+        
+    /**
+     * updates ASA solver tolerances according to the currently specified member variables
+     *
+     * @param which identifier of the backwards problem
+     */
+    void setTolerancesASA(int which);
+    
+    /**
+     * updates ASA quadrature solver tolerances according to the currently specified member variables
+     *
+     * @param which identifier of the backwards problem
+     */
+    void setQuadTolerancesASA(int which);
+    
+    /**
+     * updates all senstivivity solver tolerances according to the currently specified member variables
+     */
+    void setSensitivityTolerances();
     
     /** pointer to solver memory block */
     std::unique_ptr<void, std::function<void(void *)>> solverMemory;
     
+    /** pointer to solver memory block */
+    std::vector<std::unique_ptr<void, std::function<void(void *)>>> solverMemoryB;
+    
     /** flag indicating whether the solver was called */
     bool solverWasCalled = false;
-
-private:
-    /** method for sensitivity computation */
-    AMICI_sensi_meth sensi_meth = AMICI_SENSI_FSA;
-
-    /** interpolation type for the forward problem solution which
-     * is then used for the backwards problem.
-     */
-    InterpolationType interpType = HERMITE;
-
+    
+    /** internal sensitivity method flag used to select the sensitivity solution
+     * method. Only applies for Forward Sensitivities. */
+    InternalSensitivityMethod ism = InternalSensitivityMethod::simultaneous;
+    
     /** specifies the linear multistep method.
      */
-    LinearMultistepMethod lmm = BDF;
-
+    LinearMultistepMethod lmm = LinearMultistepMethod::BDF;
+    
     /**
      * specifies the type of nonlinear solver iteration
      */
-    NonlinearSolverIteration iter = NEWTON;
+    NonlinearSolverIteration iter = NonlinearSolverIteration::newton;
+    
+    /** interpolation type for the forward problem solution which
+     * is then used for the backwards problem.
+     */
+    InterpolationType interpType = InterpolationType::hermite;
+    
+    /** maximum number of allowed integration steps */
+    int maxsteps = 10000;
+
+private:
+        
+    /** method for sensitivity computation */
+    SensitivityMethod sensi_meth = SensitivityMethod::forward;
 
     /** flag controlling stability limit detection */
     booleantype stldet = true;
 
     /** state ordering */
-    StateOrdering ordering = AMD;
+    StateOrdering ordering = StateOrdering::AMD;
 
 
     /** maximum number of allowed Newton steps for steady state computation */
@@ -1090,21 +1078,14 @@ private:
     /** Preequilibration of model via Newton solver? */
     bool newton_preeq = false;
 
-    /** internal sensitivity method flag used to select the sensitivity solution
-     * method. Only applies for Forward Sensitivities. */
-    InternalSensitivityMethod ism = SIMULTANEOUS;
-
     /** linear solver specification */
-    LinearSolver linsol = AMICI_KLU;
+    LinearSolver linsol = LinearSolver::KLU;
 
     /** absolute tolerances for integration */
     double atol = 1e-16;
 
     /** relative tolerances for integration */
     double rtol = 1e-8;
-
-    /** maximum number of allowed integration steps */
-    int maxsteps = 10000;
 
     /** absolute tolerances for backward quadratures */
     double quad_atol = 1e-12;
@@ -1116,7 +1097,7 @@ private:
     int maxstepsB = 0;
 
     /** flag indicating whether sensitivities are supposed to be computed */
-    AMICI_sensi_order sensi = AMICI_SENSI_ORDER_NONE;
+    SensitivityOrder sensi = SensitivityOrder::none;
 };
 
 bool operator ==(const Solver &a, const Solver &b);

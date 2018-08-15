@@ -43,7 +43,7 @@ namespace amici {
         Model()
         : nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
         ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
-        o2mode(AMICI_O2MODE_NONE) {}
+        o2mode(SecondOrderMode::none) {}
         
         /** constructor with model dimensions
          * @param nx number of state variables
@@ -73,7 +73,7 @@ namespace amici {
               const int ny, const int nytrue, const int nz, const int nztrue,
               const int ne, const int nJ, const int nw, const int ndwdx,
               const int ndwdp, const int nnz, const int ubw, const int lbw,
-              amici::AMICI_o2mode o2mode, const std::vector<amici::realtype> &p,
+              amici::SecondOrderMode o2mode, const std::vector<amici::realtype> &p,
               std::vector<amici::realtype> k, const std::vector<int> &plist,
               std::vector<amici::realtype> idlist, std::vector<int> z2event);
         
@@ -322,19 +322,19 @@ namespace amici {
          * @brief getParameterScale
          * @return
          */
-        std::vector<AMICI_parameter_scaling> const& getParameterScale() const;
+        std::vector<ParameterScaling> const& getParameterScale() const;
 
         /**
          * @brief setParameterScale
          * @param pscale
          */
-        void setParameterScale(AMICI_parameter_scaling pscale);
+        void setParameterScale(ParameterScaling pscale);
 
         /**
          * @brief setParameterScale
          * @param pscale
          */
-        void setParameterScale(const std::vector<AMICI_parameter_scaling>& pscale);
+        void setParameterScale(const std::vector<ParameterScaling>& pscale);
 
         /**
          * @brief getParameters
@@ -658,7 +658,7 @@ namespace amici {
         const int lbw;
         /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
          * directional or full second order derivative will be computed */
-        const AMICI_o2mode o2mode;
+        const SecondOrderMode o2mode;
         /** index indicating to which event an event output belongs */
         const std::vector<int> z2event;
         /** flag array for DAE equations */
@@ -1246,7 +1246,7 @@ namespace amici {
         int nmaxevent = 10;
 
         /** parameter transformation of `originalParameters` (dimension np) */
-        std::vector<AMICI_parameter_scaling> pscale;
+        std::vector<ParameterScaling> pscale;
 
         /** starting time */
         double tstart = 0.0;

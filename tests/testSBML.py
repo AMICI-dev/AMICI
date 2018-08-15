@@ -28,7 +28,8 @@ class TestAmiciSBMLModel(unittest.TestCase):
         observables = amici.assignmentRules2observables(sbml, filter=lambda variableId: 
                                                         variableId.startswith('observable_') and not variableId.endswith('_sigma'))
         
-        sbmlImporter.sbml2amici('test_model_steadystate_scaled', 'test_model_steadystate_scaled', 
+        sbmlImporter.sbml2amici('test_model_steadystate_scaled',
+                                'test_model_steadystate_scaled',
                                 observables=observables,
                                 constantParameters=['k4'],
                                 sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})

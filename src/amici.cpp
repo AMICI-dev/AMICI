@@ -90,7 +90,11 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     } catch (amici::IntegrationFailure& ex) {
         rdata->invalidate(ex.time);
         rdata->status = ex.error_code;
-        amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed at t = %f:\n%s\nError occured in:\n%s",ex.time,ex.what(),ex.getBacktrace());
+        amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI forward simulation failed at t = %f:\n%s\n",ex.time,ex.what());
+    } catch (amici::IntegrationFailureB& ex) {
+        rdata->invalidateLLH();
+        rdata->status = ex.error_code;
+        amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI backward simulation failed at t = %f:\n%s\n",ex.time,ex.what());
     } catch (amici::AmiException& ex) {
         rdata->invalidate(model.t0());
         rdata->status = AMICI_ERROR;

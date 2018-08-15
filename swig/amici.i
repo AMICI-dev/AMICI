@@ -60,5 +60,5 @@ using namespace amici;
 // Expose vectors
 %template(DoubleVector) std::vector<realtype>;
 %template(IntVector) std::vector<int>;
-%template(ParameterScalingVector) std::vector<amici::AMICI_parameter_scaling>;
+%template(ParameterScalingVector) std::vector<amici::ParameterScaling>;
 %template(StringVector) std::vector<std::string>;
