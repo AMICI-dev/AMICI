@@ -12,7 +12,8 @@ matrix:
     - os: linux
       services: docker
       before_install: 
-            - sudo add-apt-repository http://us.archive.ubuntu.com/ubuntu/
+            - sudo add-apt-repository -y 'deb http://us.archive.ubuntu.com/ubuntu/ xenial main restricted'
+            - sudo add-apt-repository -y 'deb http://gb.archive.ubuntu.com/ubuntu/ xenial-updates main restricted'
             - sudo apt-get update -q
             - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev valgrind lcov graphviz doxygen doxygen-latex cppcheck swig3.0 libboost-serialization-dev
             # Python distutils only looks for `swig` and does not find `swig3.0`
