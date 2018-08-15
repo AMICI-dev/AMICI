@@ -75,7 +75,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &const_cast<int &>(u.nJ);
     ar &const_cast<int &>(u.ubw);
     ar &const_cast<int &>(u.lbw);
-    ar &const_cast<amici::AMICI_o2mode &>(u.o2mode);
+    ar &const_cast<amici::SecondOrderMode &>(u.o2mode);
     ar &const_cast<std::vector<int> &>(u.z2event);
     ar &const_cast<std::vector<realtype> &>(u.idlist);
     ar &u.h;
@@ -111,9 +111,9 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &const_cast<int &>(r.nt);
     ar &const_cast<int &>(r.newton_maxsteps);
     ar &r.pscale;
-    ar &const_cast<amici::AMICI_o2mode &>(r.o2mode);
-    ar &const_cast<amici::AMICI_sensi_order &>(r.sensi);
-    ar &const_cast<amici::AMICI_sensi_meth &>(r.sensi_meth);
+    ar &const_cast<amici::SecondOrderMode &>(r.o2mode);
+    ar &const_cast<amici::SensitivityOrder &>(r.sensi);
+    ar &const_cast<amici::SensitivityMethod &>(r.sensi_meth);
 
     ar &r.ts;
     ar &r.xdot;

@@ -49,7 +49,7 @@ void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& h
 
     // simulate & verify
     auto rdata = runAmiciSimulation(*solver, edata.get(), *model);
-    
+    // perform second simulation to check reuse of solver and model object
     auto rdata_resimulation = runAmiciSimulation(*solver, edata.get(), *model);
     std::string resultPath = path + "/results";
     
