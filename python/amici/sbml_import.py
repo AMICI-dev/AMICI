@@ -1462,13 +1462,13 @@ def constantSpeciesToParameters(sbml_model):
         par.setId(species.getId())
         par.setConstant(True)
         par.setValue(species.getInitialConcentration())
-        par.setUnits(species.getUnits())      
+        par.setUnits(species.getUnits())
     
     # Remove from reactants and products
     for reaction in sbml_model.getListOfReactions():
         for speciesId in transformable:
             reaction.removeReactant(speciesId)
-            reaction.removeProduct(speciesId)         
+            reaction.removeProduct(speciesId)
     
     return transformable
     
