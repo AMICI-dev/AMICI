@@ -164,11 +164,11 @@ fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
 switch(this.o2flag)
     case 1
-        fprintf(fid,'                    amici::AMICI_O2MODE_FULL,\n');
+        fprintf(fid,'                    amici::SecondOrderMode::full,\n');
     case 2
-        fprintf(fid,'                    amici::AMICI_O2MODE_DIR,\n');
+        fprintf(fid,'                    amici::SecondOrderMode::directional,\n');
     otherwise
-        fprintf(fid,'                    amici::AMICI_O2MODE_NONE,\n');
+        fprintf(fid,'                    amici::SecondOrderMode::none,\n');
 end
 fprintf(fid,['                    std::vector<realtype>(' num2str(this.np) ',1.0),\n']);
 fprintf(fid,['                    std::vector<realtype>(' num2str(this.nk) ',1.0),\n']);

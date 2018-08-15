@@ -55,7 +55,7 @@ public:
                     384,
                     8,
                     154,
-                    amici::AMICI_O2MODE_FULL,
+                    amici::SecondOrderMode::full,
                     std::vector<realtype>(17,1.0),
                     std::vector<realtype>(2,1.0),
                     std::vector<int>(),

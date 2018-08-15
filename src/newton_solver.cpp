@@ -33,7 +33,7 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *
 /* ----------------------------------------------------------------------------------
  */
 
-std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x, int linsolType, Model *model,
+std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x, LinearSolver linsolType, Model *model,
                                       ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
@@ -58,35 +58,35 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x,
     switch (linsolType) {
 
     /* DIRECT SOLVERS */
-    case AMICI_DENSE:
+    case LinearSolver::dense:
         solver.reset(new NewtonSolverDense(t, x, model, rdata));
         break;
 
-    case AMICI_BAND:
+    case LinearSolver::band:
         throw NewtonFailure("Solver currently not supported!");
 
-    case AMICI_LAPACKDENSE:
+    case LinearSolver::LAPACKDense:
         throw NewtonFailure("Solver currently not supported!");
 
-    case AMICI_LAPACKBAND:
+    case LinearSolver::LAPACKBand:
         throw NewtonFailure("Solver currently not supported!");
 
-    case AMICI_DIAG:
+    case LinearSolver::diag:
         throw NewtonFailure("Solver currently not supported!");
 
     /* ITERATIVE SOLVERS */
-    case AMICI_SPGMR:
+    case LinearSolver::SPGMR:
         throw NewtonFailure("Solver currently not supported!");
 
-    case AMICI_SPBCG:
+    case LinearSolver::SPBCG:
         solver.reset(new NewtonSolverIterative(t, x, model, rdata));
         break;
 
-    case AMICI_SPTFQMR:
+    case LinearSolver::SPTFQMR:
         throw NewtonFailure("Solver currently not supported!");
 
     /* SPARSE SOLVERS */
-    case AMICI_KLU:
+    case LinearSolver::KLU:
         solver.reset(new NewtonSolverSparse(t, x, model, rdata));
         break;
     default:

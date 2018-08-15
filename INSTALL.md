@@ -19,6 +19,52 @@ The GIT repository can currently be found at https://github.com/ICB-DCM/AMICI an
 
 If AMICI was downloaded as a zip, it needs to be unpacked in a convenient directory. If AMICI was obtained via cloning of the git repository, no further unpacking is necessary.
 
+### Dependencies
+
+The MATLAB interface only depends on the symbolic toolbox, which is needed for model compilation, but not simulation.
+
+#### Symbolic Engine
+
+The MATLAB interface requires the symbolic toolbox for model compilation. The symbolic toolbox is not required for model simulation.
+
+#### Math Kernel Library (MKL)
+
+The python and C++ interfaces require a system installation of  `BLAS`. AMICI has been tested with various native and general purpose MKL implementations such as
+Accelerate, Intel MKL, cblas, openblas, atlas. The matlab interface uses the MATLAB MKL, which requires no prior installation.
+
+#### HDF5
+
+The python and C++ interfaces provide routines to read and write options and results in [hdf5](https://support.hdfgroup.org/HDF5/) format. For the python interface, the installation of hdf5 is optional, but for the C++ interace it is required. 
+HDF can be installed using package managers such as [brew](https://brew.sh) or [apt](https://wiki.debian.org/Apt):
+
+    brew install hdf5
+
+or
+
+    apt-get install libhdf5-serial-dev
+
+
+#### SWIG
+
+The python interface requires [SWIG](http://www.swig.org), which has to be installed by the user. 
+Swig can be installed using package managers such as [brew](https://brew.sh) or [apt](https://wiki.debian.org/Apt):
+
+    brew install swig
+    
+or
+    
+    apt-get install swig3.0
+    
+We note here that some linux package managers may provide swig executables as `swig3.0`, but installation as `swig` is required. This can be fixed using, e.g., symbolic links:
+
+    mkdir -p ~/bin/ && ln -s $(which swig3.0) ~/bin/swig && export PATH=~/bin/:$PATH
+
+#### python packages
+
+The python interface requires the python packages `pkgconfig` and `numpy` to be installed before AMICI can be installed. These can be installed via `pip`:
+
+    pip3 install pkgconfig numpy
+
 ### MATLAB
 
 To use AMICI from MATLAB, start MATLAB and add the AMICI/matlab direcory to the MATLAB path. To add all toolbox directories to the MATLAB path, execute the matlab script
@@ -33,12 +79,12 @@ For the compilation of .mex files, MATLAB needs to be configured with a working 
 
     mex -setup c
 
-For a list of supported compilers we refer to the mathworks documentation: [mathworks.com](http://mathworks.com/support/compilers/R2017a/index.html)
+For a list of supported compilers we refer to the mathworks documentation: [mathworks.com](http://mathworks.com/support/compilers/R2018b/index.html)
 Note that Microsoft Visual Studio compilers are currently not supported.
 
-###  Python
+###  python
 
-To use AMICI from Python, install the module using pip  
+To use AMICI from python, install the module and all other requirements using pip  
 
     pip3 install amici
     
@@ -66,7 +112,7 @@ In CMake-based packages, amici can be linked via
 
 The MATLAB interface requires the Mathworks Symbolic Toolbox for model generation via `amiwrap(...)`, but not for execution of precompiled models. Currently MATLAB R2018a or newer is not supported (see https://github.com/ICB-DCM/AMICI/issues/307)
 
-The Python interface requires Python 3.6 or newer and `cblas` library to be installed. Windows installations via pip are currently not supported, but users may try to install amici using the build scripts provided for the C++ interface (these will by default automatically install the python module).
+The python interface requires python 3.6 or newer and `cblas` library to be installed. Windows installations via pip are currently not supported, but users may try to install amici using the build scripts provided for the C++ interface (these will by default automatically install the python module).
 
 The C++ interface requires `cmake` and `cblas` to be installed.
 

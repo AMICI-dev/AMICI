@@ -206,13 +206,13 @@ class ReturnData {
     /** maximal number of newton iterations for steady state calculation */
     const int newton_maxsteps;
     /** scaling of parameterization (lin,log,log10) */
-    std::vector<AMICI_parameter_scaling> pscale;
+    std::vector<ParameterScaling> pscale;
     /** flag indicating whether second order sensitivities were requested */
-    const AMICI_o2mode o2mode;
+    const SecondOrderMode o2mode;
     /** sensitivity order */
-    const AMICI_sensi_order sensi;
+    const SensitivityOrder sensi;
     /** sensitivity method */
-    const AMICI_sensi_meth sensi_meth;
+    const SensitivityMethod sensi_meth;
 
     /**
      * @brief Serialize ReturnData (see boost::serialization::serialize)

@@ -89,7 +89,7 @@ def checkDerivatives(model, solver, edata):
         old_sensitivity_order = solver.getSensitivityOrder()
         old_parameters = model.getParameters()
         
-        solver.setSensitivityOrder(amici.AMICI_SENSI_ORDER_NONE)
+        solver.setSensitivityOrder(amici.SensitivityOrder_none)
         model.setParameters(amici.DoubleVector(p))
         rdata = amici.runAmiciSimulation(model, solver, edata)
         
@@ -136,7 +136,7 @@ def checkDerivatives(model, solver, edata):
 
     rdata = amici.runAmiciSimulation(model, solver, edata)
 
-    leastsquares_applicable = solver.getSensitivityMethod() == amici.AMICI_SENSI_FSA
+    leastsquares_applicable = solver.getSensitivityMethod() == amici.SensitivityMethod_forward
 
     if 'ssigmay' in rdata.keys():
         if rdata['ssigmay'] is not None:

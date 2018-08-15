@@ -53,7 +53,7 @@ public:
                     9,
                     2,
                     2,
-                    amici::AMICI_O2MODE_NONE,
+                    amici::SecondOrderMode::none,
                     std::vector<realtype>(3,1.0),
                     std::vector<realtype>(1,1.0),
                     std::vector<int>(),

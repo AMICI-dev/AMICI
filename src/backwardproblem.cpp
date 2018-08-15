@@ -46,8 +46,8 @@ void BackwardProblem::workBackwardProblem() {
      * workForwardProblem should be called before this is function is called
      */
 
-    if (model->nx <= 0 || rdata->sensi < AMICI_SENSI_ORDER_FIRST ||
-        rdata->sensi_meth != AMICI_SENSI_ASA || model->nplist() == 0) {
+    if (model->nx <= 0 || rdata->sensi < SensitivityOrder::first ||
+        rdata->sensi_meth != SensitivityMethod::adjoint || model->nplist() == 0) {
         return;
     }
     
@@ -192,7 +192,7 @@ void BackwardProblem::handleDataPointB(int it) {
             xB[ix + iJ * model->nxtrue] +=
                 dJydx[iJ + ( ix + it * model->nx ) * model->nJ];
     }
-    solver->getDiagnosisB(it, rdata, this);
+    solver->getDiagnosisB(it, rdata, this->which);
 }
     
 /**

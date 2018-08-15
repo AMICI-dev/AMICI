@@ -1,5 +1,5 @@
 language: generic
-sudo: false
+sudo: required
 
 branches:
   only:
@@ -10,23 +10,17 @@ matrix:
   fast_finish: true
   include:
     - os: linux
-      dist: xenial
+      services: docker
+      before_install: 
+            - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev valgrind lcov cppcheck  libboost-serialization-dev
+            - sudo add-apt-repository -y 'deb http://us.archive.ubuntu.com/ubuntu/ xenial main universe restricted'
+            - sudo add-apt-repository -y 'deb http://gb.archive.ubuntu.com/ubuntu/ xenial-updates main restricted'
+            - sudo apt-get update -q
+            - sudo apt-get install swig3.0
+            # Python distutils only looks for `swig` and does not find `swig3.0`
+            - mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH
+            - pyenv shell 2.7 3.6
       compiler: gcc
-      addons:
-        apt:
-          update: true
-          packages:
-            - libhdf5-serial-dev
-            - zlib1g-dev
-            - libatlas-base-dev
-            - valgrind
-            - lcov
-            - graphviz
-            - doxygen
-            - doxygen-latex
-            - cppcheck
-            - swig3.0
-            - libboost-serialization-dev
       env: ENABLE_GCOV_COVERAGE=TRUE
       after_success: 
         - ./scripts/run-codecov.sh
@@ -41,6 +35,7 @@ matrix:
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - travis_wait brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
         - brew upgrade python
+        - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
       after_success: 
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
       deploy:
@@ -54,12 +49,7 @@ matrix:
           branch: master
 
 install:
-    # Python distutils only looks for `swig` and does not find `swig3.0`
     - export BASE_DIR=`pwd`
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi
-    - pyenv versions
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pyenv shell 2.7 3.6; fi
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH; fi
     - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy scipy
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh

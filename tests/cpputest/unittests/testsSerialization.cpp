@@ -26,9 +26,9 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_EQUAL(r.nt, s.nt);
     CHECK_EQUAL(r.newton_maxsteps, s.newton_maxsteps);
     CHECK_TRUE(r.pscale == s.pscale);
-    CHECK_EQUAL(r.o2mode, s.o2mode);
-    CHECK_EQUAL(r.sensi, s.sensi);
-    CHECK_EQUAL(r.sensi_meth, s.sensi_meth);
+    CHECK_EQUAL(static_cast<int>(r.o2mode), static_cast<int>(s.o2mode));
+    CHECK_EQUAL(static_cast<int>(r.sensi), static_cast<int>(s.sensi));
+    CHECK_EQUAL(static_cast<int>(r.sensi_meth), static_cast<int>(s.sensi_meth));
 
     using amici::checkEqualArray;
     checkEqualArray(r.ts, s.ts, 1e-16, 1e-16, "ts");
@@ -97,7 +97,7 @@ TEST(dataSerialization, testFile) {
     int nx = 3;
     int nz = 4;
     amici::CVodeSolver solver;
-    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
+    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::SecondOrderMode::none,
                                              std::vector<realtype>(np,0.0),std::vector<realtype>(nk,0.0),std::vector<int>(np,0),
                                              std::vector<realtype>(nx,0.0),std::vector<int>(nz,0));
 
@@ -150,7 +150,7 @@ TEST(dataSerialization, testString) {
     int nx = 3;
     int nz = 4;
     amici::CVodeSolver solver;
-    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::AMICI_O2MODE_NONE,
+    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15, amici::SecondOrderMode::none,
                                              std::vector<realtype>(np,0.0),std::vector<realtype>(nk,0.0),std::vector<int>(np,0),
                                              std::vector<realtype>(nx,0.0),std::vector<int>(nz,0));
 

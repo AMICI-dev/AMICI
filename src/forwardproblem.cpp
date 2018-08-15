@@ -15,20 +15,20 @@
 namespace amici {
 
 // Ensure AMICI options are in sync with Sundials options
-static_assert(InternalSensitivityMethod::SIMULTANEOUS == CV_SIMULTANEOUS, "");
-static_assert(InternalSensitivityMethod::STAGGERED == CV_STAGGERED, "");
-static_assert(InternalSensitivityMethod::STAGGERED1 == CV_STAGGERED1, "");
+static_assert((int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS, "");
+static_assert((int)InternalSensitivityMethod::staggered == CV_STAGGERED, "");
+static_assert((int)InternalSensitivityMethod::staggered1 == CV_STAGGERED1, "");
 
-static_assert(InterpolationType::HERMITE == CV_HERMITE, "");
-static_assert(InterpolationType::POLYNOMIAL == CV_POLYNOMIAL, "");
+static_assert((int)InterpolationType::hermite == CV_HERMITE, "");
+static_assert((int)InterpolationType::polynomial == CV_POLYNOMIAL, "");
 
-static_assert(LinearMultistepMethod::ADAMS == CV_ADAMS, "");
-static_assert(LinearMultistepMethod::BDF == CV_BDF, "");
+static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
+static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
     
-static_assert(NonlinearSolverIteration::FUNCTIONAL == CV_FUNCTIONAL, "");
-static_assert(NonlinearSolverIteration::NEWTON == CV_NEWTON, "");
+static_assert((int)NonlinearSolverIteration::functional == CV_FUNCTIONAL, "");
+static_assert((int)NonlinearSolverIteration::newton == CV_NEWTON, "");
 
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
@@ -97,8 +97,8 @@ void ForwardProblem::workForwardProblem() {
         handlePreequilibration();
     } else {
         rdata->x0 = x.getVector();
-        if (rdata->sensi_meth == AMICI_SENSI_FSA &&
-                rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        if (rdata->sensi_meth == SensitivityMethod::forward &&
+            rdata->sensi >= SensitivityOrder::first) {
             for (int ix = 0; ix < model->nx; ix++) {
                 for (int ip = 0; ip < model->nplist(); ip++)
                     rdata->sx0[ip*model->nx + ix] = sx.at(ix,ip);
@@ -112,8 +112,8 @@ void ForwardProblem::workForwardProblem() {
     for (int it = 0; it < rdata->nt; it++) {
         auto nextTimepoint = rdata->ts[it];
 
-        if (rdata->sensi_meth == AMICI_SENSI_FSA &&
-            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        if (rdata->sensi_meth == SensitivityMethod::forward &&
+            rdata->sensi >= SensitivityOrder::first) {
             solver->setStopTime(nextTimepoint);
         }
 
@@ -129,8 +129,8 @@ void ForwardProblem::workForwardProblem() {
                     sstate.workSteadyStateProblem(rdata, solver, model, it);
                 } else {
                     int status;
-                    if (rdata->sensi_meth == AMICI_SENSI_ASA &&
-                            rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+                    if (rdata->sensi_meth == SensitivityMethod::adjoint &&
+                            rdata->sensi >= SensitivityOrder::first) {
                         status = solver->solveF(RCONST(nextTimepoint), &x, &dx,
                                                    &(t), AMICI_NORMAL, &ncheck);
                     } else {
@@ -213,8 +213,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 
     if (!seflag) {
         /* only extract in the first event fired */
-        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST &&
-            rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi >= SensitivityOrder::first &&
+            rdata->sensi_meth == SensitivityMethod::forward) {
             solver->getSens(&(t), &sx);
         }
 
@@ -233,10 +233,10 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 
     /* if we need to do forward sensitivities later on we need to store the old
      * x and the old xdot */
-    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+    if (rdata->sensi >= SensitivityOrder::first) {
         /* store x and xdot to compute jump in sensitivities */
         x_old = x;
-        if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi_meth == SensitivityMethod::forward) {
             model->fxdot(t, &x, &dx, &xdot);
             xdot_old = xdot;
             dx_old = dx;
@@ -253,7 +253,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
                     }
                 }
             }
-        } else if (rdata->sensi_meth == AMICI_SENSI_ASA) {
+        } else if (rdata->sensi_meth == SensitivityMethod::adjoint) {
             /* store x to compute jump in discontinuity */
             if (iroot < rdata->nmaxevent * model->ne) {
                 x_disc[iroot] = x;
@@ -279,8 +279,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         return;
     }
 
-    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST
-            && rdata->sensi_meth == AMICI_SENSI_FSA) {
+    if (rdata->sensi >= SensitivityOrder::first
+            && rdata->sensi_meth == SensitivityMethod::forward) {
         /* compute the new xdot  */
         model->fxdot(t, &x, &dx, &xdot);
         applyEventSensiBolusFSA();
@@ -321,9 +321,9 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         /* make time derivative consistent */
         solver->calcIC(t, &x, &dx);
 
-        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-            if (rdata->sensi_meth == AMICI_SENSI_FSA) {
-                solver->sensReInit(solver->getInternalSensitivityMethod(), &sx, &sdx);
+        if (rdata->sensi >= SensitivityOrder::first) {
+            if (rdata->sensi_meth == SensitivityMethod::forward) {
+                solver->sensReInit(&sx, &sdx);
             }
         }
     }
@@ -383,9 +383,9 @@ void ForwardProblem::getEventOutput() {
             }
         }
 
-        if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+        if (rdata->sensi >= SensitivityOrder::first) {
             prepEventSensis(ie);
-            if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+            if (rdata->sensi_meth == SensitivityMethod::forward) {
                 getEventSensisFSA(ie);
             }
         }
@@ -445,7 +445,7 @@ void ForwardProblem::prepEventSensis(int ie) {
     model->fdJzdx(&dJzdx, nroots.at(ie), t, edata, rdata);
     model->fdJzdp(nroots.at(ie), t, edata, rdata);
 
-    if (rdata->sensi_meth == AMICI_SENSI_ASA && model->nz > 0) {
+    if (rdata->sensi_meth == SensitivityMethod::adjoint && model->nz > 0) {
         amici_daxpy(model->nplist(), -1.0, model->dJzdp.data(), 1, rdata->sllh.data(), 1);
         amici_daxpy(model->nplist(), -1.0, &model->dJzdp[1], model->nJ, rdata->s2llh.data(), model->nJ - 1);
     }
@@ -502,9 +502,9 @@ void ForwardProblem::getDataOutput(int it) {
     model->fres(it, rdata, edata);
     model->fchi2(it, rdata);
     
-    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST && model->nplist() > 0) {
+    if (rdata->sensi >= SensitivityOrder::first && model->nplist() > 0) {
         prepDataSensis(it);
-        if (rdata->sensi_meth == AMICI_SENSI_FSA)
+        if (rdata->sensi_meth == SensitivityMethod::forward)
             getDataSensisFSA(it);
     }
 }

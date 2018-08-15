@@ -5,6 +5,8 @@ AMICI provides a multilanguage (Python, C++, Matlab) interface for the SUNDIALS 
 
 The interface was designed to provide routines for efficient gradient computation in parameter estimation of biochemical reaction models but is also applicable to a wider range of differential equation constrained optimization problems.
 
+Online documentation is available as [github-pages](http://icb-dcm.github.io/AMICI/).
+
 ## Publications
 
 [Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017). Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks. Plos Computational Biology, 13(1), e1005331. doi: 10.1371/journal.pcbi.1005331](https://doi.org/10.1371/journal.pcbi.1005331)

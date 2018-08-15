@@ -4,6 +4,7 @@
 #include "amici/exception.h"
 
 #include <cvodes/cvodes.h>
+#include <cvodes/cvodes_impl.h>
 /*#include <cvodes/cvodes_lapack.h>*/
 #include <cvodes/cvodes_band.h>
 #include <cvodes/cvodes_bbdpre.h>
@@ -51,7 +52,7 @@ void CVodeSolver::rootInit(int ne) {
 }
 
 void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
-    int status = CVodeSensInit1(solverMemory.get(), nplist, getSensitivityMethod(), fsxdot,
+    int status = CVodeSensInit1(solverMemory.get(), nplist, static_cast<int>(getSensitivityMethod()), fsxdot,
                           sx->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensInit1");
@@ -109,8 +110,9 @@ Solver *CVodeSolver::clone() const {
     return new CVodeSolver(*this);
 }
 
-void CVodeSolver::create(int lmm, int iter) {
-    solverMemory = std::unique_ptr<void, std::function<void(void *)>>(CVodeCreate(lmm, iter),
+void CVodeSolver::allocateSolver() {
+    solverMemory = std::unique_ptr<void, std::function<void(void *)>>
+    (CVodeCreate(static_cast<int>(lmm), static_cast<int>(iter)),
                    [](void *ptr) { CVodeFree(&ptr); });
 }
 
@@ -138,7 +140,7 @@ void CVodeSolver::setQuadErrConB(int which, bool flag) {
          throw CvodeException(status,"CVodeSetQuadErrConB");
 }
 
-void CVodeSolver::getRootInfo(int *rootsfound) {
+void CVodeSolver::getRootInfo(int *rootsfound) const {
     int status = CVodeGetRootInfo(solverMemory.get(), rootsfound);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetRootInfo");
@@ -190,8 +192,8 @@ void CVodeSolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
          throw CvodeException(status,"CVodeReInit");
 }
 
-void CVodeSolver::sensReInit(int ism, AmiVectorArray *yS0, AmiVectorArray *ypS0) {
-    int status = CVodeSensReInit(solverMemory.get(), ism, yS0->getNVectorArray());
+void CVodeSolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
+    int status = CVodeSensReInit(solverMemory.get(), static_cast<int>(ism), yS0->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeSensReInit");
 }
@@ -202,26 +204,30 @@ void CVodeSolver::setSensParams(realtype *p, realtype *pbar, int *plist) {
          throw CvodeException(status,"CVodeSetSensParams");
 }
 
-void CVodeSolver::getDky(realtype t, int k, AmiVector *dky) {
+void CVodeSolver::getDky(realtype t, int k, AmiVector *dky) const {
     int status = CVodeGetDky(solverMemory.get(), t, k, dky->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetDky");
 }
 
-void CVodeSolver::getSens(realtype *tret, AmiVectorArray *yySout) {
+void CVodeSolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
     int status = CVodeGetSens(solverMemory.get(), tret, yySout->getNVectorArray());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetSens");
 }
 
-void CVodeSolver::adjInit(long steps, int interp) {
-    int status = CVodeAdjInit(solverMemory.get(), steps, interp);
+void CVodeSolver::adjInit() {
+    int status = CVodeAdjInit(solverMemory.get(), static_cast<int>(maxsteps), static_cast<int>(interpType));
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeAdjInit");
 }
 
-void CVodeSolver::createB(int lmm, int iter, int *which) {
-    int status = CVodeCreateB(solverMemory.get(), lmm, iter, which);
+void CVodeSolver::allocateSolverB(int *which) {
+    int status = CVodeCreateB(solverMemory.get(), static_cast<int>(lmm), static_cast<int>(iter), which);
+    if (*which + 1 > static_cast<int>(solverMemoryB.size()))
+        solverMemoryB.resize(*which + 1);
+    solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
+    (getAdjBmem(solverMemory.get(), *which), [](void *ptr){});
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeCreateB");
 }
@@ -278,7 +284,7 @@ int CVodeSolver::solveF(realtype tout, AmiVector *yret, AmiVector *ypret,
 void CVodeSolver::solveB(realtype tBout, int itaskB) {
     int status = CVodeB(solverMemory.get(), tBout, itaskB);
     if(status != CV_SUCCESS)
-         throw IntegrationFailure(status,tBout);
+         throw IntegrationFailureB(status,tBout);
 }
 
 void CVodeSolver::setMaxNumStepsB(int which, long mxstepsB) {
@@ -287,13 +293,13 @@ void CVodeSolver::setMaxNumStepsB(int which, long mxstepsB) {
          throw CvodeException(status,"CVodeSetMaxNumStepsB");
 }
 
-void CVodeSolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) {
+void CVodeSolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) const {
     int status = CVodeGetB(solverMemory.get(), which, tret, yy->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetB");
 }
 
-void CVodeSolver::getQuadB(int which, realtype *tret, AmiVector *qB) {
+void CVodeSolver::getQuadB(int which, realtype *tret, AmiVector *qB) const {
     int status = CVodeGetQuadB(solverMemory.get(), which, tret, qB->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetQuadB");
@@ -395,32 +401,32 @@ void CVodeSolver::kluB(int which, int nx, int nnz, int sparsetype) {
          throw CvodeException(status,"CVKLUB");
 }
 
-void CVodeSolver::getNumSteps(void *ami_mem, long *numsteps) {
+void CVodeSolver::getNumSteps(void *ami_mem, long *numsteps) const {
     int status = CVodeGetNumSteps(ami_mem, numsteps);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetNumSteps");
 }
 
-void CVodeSolver::getNumRhsEvals(void *ami_mem, long *numrhsevals) {
+void CVodeSolver::getNumRhsEvals(void *ami_mem, long *numrhsevals) const {
     int status = CVodeGetNumRhsEvals(ami_mem, numrhsevals);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetNumRhsEvals");
 }
 
-void CVodeSolver::getNumErrTestFails(void *ami_mem, long *numerrtestfails) {
+void CVodeSolver::getNumErrTestFails(void *ami_mem, long *numerrtestfails) const {
     int status = CVodeGetNumErrTestFails(ami_mem, numerrtestfails);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetNumErrTestFails");
 }
 
 void CVodeSolver::getNumNonlinSolvConvFails(void *ami_mem,
-                                              long *numnonlinsolvconvfails) {
+                                              long *numnonlinsolvconvfails) const {
     int status = CVodeGetNumNonlinSolvConvFails(ami_mem, numnonlinsolvconvfails);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetNumNonlinSolvConvFails");
 }
 
-void CVodeSolver::getLastOrder(void *ami_mem, int *order) {
+void CVodeSolver::getLastOrder(void *ami_mem, int *order) const {
     int status = CVodeGetLastOrder(ami_mem, order);
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeGetLastOrder");
@@ -446,7 +452,42 @@ void CVodeSolver::turnOffRootFinding() {
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeRootInit");
 }
+    
+int CVodeSolver::nplist() const {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return cv_mem->cv_Ns;
+}
 
+int CVodeSolver::nx() const {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return NV_LENGTH_S(cv_mem->cv_zn[0]);
+}
+    
+const Model *CVodeSolver::getModel() const {
+    if (!solverMemory)
+        throw AmiException("Solver has not been allocated, information is not available");
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return static_cast<Model *>(cv_mem->cv_user_data);
+}
+
+bool CVodeSolver::getMallocDone() const {
+    if (!solverMemory)
+        return false;
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return cv_mem->cv_MallocDone;
+}
+    
+bool CVodeSolver::getAdjMallocDone() const {
+    if (!solverMemory)
+        return false;
+    auto cv_mem = (CVodeMem) solverMemory.get();
+    return cv_mem->cv_adjMallocDone;
+}
+    
     /** Jacobian of xdot with respect to states x
      * @param N number of state variables
      * @param t timepoint
@@ -697,7 +738,7 @@ void CVodeSolver::turnOffRootFinding() {
         model->fsxdot(t, x, ip, sx, sxdot);
         return model->checkFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
     }
-
+    
     bool operator ==(const CVodeSolver &a, const CVodeSolver &b)
     {
         return static_cast<Solver const&>(a) == static_cast<Solver const&>(b);
