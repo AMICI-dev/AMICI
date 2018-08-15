@@ -394,20 +394,20 @@ class SbmlImporter:
         self.symbols['species']['sym'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
         self.symbols['species']['name'] = [spec.getName() for spec in species]
         self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
-        self.constantSpecies = [species_element.getId() if species_element.getConstant() else None
-                                for species_element in species]
-        self.boundaryConditionSpecies = [species_element.getId() if species_element.getBoundaryCondition() else None
-                                         for species_element in species]
+        self.constantSpecies = [species_element.getId() for species_element in species if species_element.getConstant()]
+        self.boundaryConditionSpecies = [species_element.getId() for species_element in species if species_element.getBoundaryCondition()]
         self.speciesHasOnlySubstanceUnits = [specie.getHasOnlySubstanceUnits() for specie in species]
 
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
 
-        self.speciesInitial = sp.DenseMatrix([sp.sympify(conc) if not math.isnan(conc) else
-                                              sp.sympify(amounts[index])/self.speciesCompartment[index] if not
-                                              math.isnan(amounts[index]) else
-                                              self.symbols['species']['sym'][index]
-                                              for index, conc in enumerate(concentrations)])
+        def getSpeciesInitial(index, conc):
+            if not math.isnan(conc):
+                return sp.sympify(conc)
+            if not math.isnan(amounts[index]):
+                return sp.sympify(amounts[index]) / self.speciesCompartment[index]
+            return self.symbols['species']['sym'][index]
+        self.speciesInitial = sp.DenseMatrix([getSpeciesInitial(index, conc) for index, conc in enumerate(concentrations)])
 
         if self.sbml.isSetConversionFactor():
             conversionFactor = self.sbml.getConversionFactor()
@@ -485,7 +485,7 @@ class SbmlImporter:
 
         for reactionIndex, reaction in enumerate(reactions):
 
-            for elementList, sign  in [(reaction.getListOfReactants(), -1.0),
+            for elementList, sign in [(reaction.getListOfReactants(), -1.0),
                                        (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
                 for index, element in enumerate(elementList):
