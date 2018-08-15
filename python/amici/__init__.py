@@ -116,7 +116,13 @@ def edataToNumPyArrays(edata):
     """
     npExpData = {'ptr': edata}
 
-    fieldNames = ['my', 'sigmay', 'mz', 'sigmaz','fixedParameters','fixedParametersPreequilibration']
+    fieldNames = ['observedData', 'observedDataStdDev', 'observedEvents', 'observedEventsStdDev', 'fixedParameters',
+                  'fixedParametersPreequilibration']
+
+    edata.observedData = edata.getObservedData()
+    edata.observedDataStdDev = edata.getObservedDataStdDev()
+    edata.observedEvents = edata.getObservedEvents()
+    edata.observedEventsStdDev = edata.getObservedEventsStdDev()
 
     for field in fieldNames:
         npExpData[field] = getExpDataFieldAsNumPyArray(edata, field)
@@ -159,7 +165,7 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
         Field Data as numpy array with dimensions according to model dimensions in rdata
 
     Raises:
-        
+
     """
 
     fieldDimensions = {'ts':  [rdata.nt],
@@ -167,13 +173,13 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
                        'x0':  [rdata.nx],
                        'sx':  [rdata.nt, rdata.nplist, rdata.nx],
                        'sx0': [rdata.nplist, rdata.nx],
-                       
+
                        # observables
                        'y':       [rdata.nt, rdata.ny],
                        'sigmay':  [rdata.nt, rdata.ny],
                        'sy':      [rdata.nt, rdata.nplist, rdata.ny],
                        'ssigmay': [rdata.nt, rdata.nplist, rdata.ny],
-                       
+
                        # event observables
                        'z':       [rdata.nmaxevent, rdata.nz],
                        'rz':      [rdata.nmaxevent, rdata.nz],
@@ -189,7 +195,7 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
                        'res':   [rdata.nt * rdata.nytrue],
                        'sres':  [rdata.nt * rdata.nytrue, rdata.nplist],
                        'FIM':   [rdata.nplist, rdata.nplist],
-                       
+
                        # diagnosis
                        'J':                       [rdata.nx, rdata.nx],
                        'xdot':                    [rdata.nx],
@@ -207,7 +213,7 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
                        }
     if field == 't':
         field = 'ts'
-        
+
     return fieldAsNumpy(fieldDimensions, field, rdata)
 
 def getExpDataFieldAsNumPyArray(edata, field):
@@ -225,12 +231,12 @@ def getExpDataFieldAsNumPyArray(edata, field):
     """
 
     fieldDimensions = {# observables
-                       'my': [edata.nt, edata.nytrue],
-                       'sigmay': [edata.nt, edata.nytrue],
+                       'observedData': [edata.nt(), edata.nytrue],
+                       'observedDataStdDev': [edata.nt(), edata.nytrue],
 
                        # event observables
-                       'mz': [edata.nmaxevent, edata.nztrue],
-                       'sigmaz': [edata.nmaxevent, edata.nztrue],
+                       'observedEvents': [edata.nmaxevent, edata.nztrue],
+                       'observedEventsStdDev': [edata.nmaxevent, edata.nztrue],
 
                        # fixed parameters
                        'fixedParameters': [edata.fixedParameters.size()],
