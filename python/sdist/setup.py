@@ -101,6 +101,7 @@ else:
 
 # Enable coverage?
 if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
+    print("ENABLE_GCOV_COVERAGE was set to TRUE. Building AMICI with debug and coverage symbols.")
     cxx_flags.extend(['-g', '-O0',  '--coverage'])
     amici_module_linker_flags.append('--coverage')
 
