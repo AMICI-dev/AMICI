@@ -214,7 +214,7 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
     
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
-        *t = rdata->ts[0];
+        *t = rdata->ts.at(0);
 
         /* Write steady state to output */
         rdata->x0 = x->getVector();
