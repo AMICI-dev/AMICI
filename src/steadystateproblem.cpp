@@ -68,7 +68,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Compute steady state sensitvities */
-    if (rdata->sensi >= SensitivityOrder::first && rdata->sensi_meth != SensitivityMethod::none)
+    if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        solver->getSensitivityMethod() != SensitivityMethod::none)
         newtonSolver->getSensis(it, sx);
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
@@ -77,7 +78,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
         solver->reInit(*t, x, &dx);
-        if (rdata->sensi >= SensitivityOrder::first && rdata->sensi_meth == SensitivityMethod::forward) {
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            solver->getSensitivityMethod() == SensitivityMethod::forward) {
                 solver->sensReInit( sx, &sdx);
         }
     }
@@ -251,7 +253,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         model->fx0(x);
     } else {
         /* Carry on simulating from last point */
-        *t = rdata->ts[it-1];
+        *t = model->t(it-1);
         model->fx0(x);
         /* Reinitialize old solver */
         solver->reInit(*t, x, &dx);

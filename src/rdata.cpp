@@ -35,8 +35,6 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
      * bool
      */
 
-    ts = model->getTimepoints();
-
     xdot.resize(nx, getNaN());
 
     J.resize(nx * nx, getNaN());

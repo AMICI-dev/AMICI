@@ -46,8 +46,8 @@ void BackwardProblem::workBackwardProblem() {
      * workForwardProblem should be called before this is function is called
      */
 
-    if (model->nx <= 0 || rdata->sensi < SensitivityOrder::first ||
-        rdata->sensi_meth != SensitivityMethod::adjoint || model->nplist() == 0) {
+    if (model->nx <= 0 || solver->getSensitivityOrder() < SensitivityOrder::first ||
+        solver->getSensitivityMethod() != SensitivityMethod::adjoint || model->nplist() == 0) {
         return;
     }
     
