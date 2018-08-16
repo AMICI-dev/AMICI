@@ -20,13 +20,15 @@ ReturnData::ReturnData()
       sensi(SensitivityOrder::none), sensi_meth(SensitivityMethod::none) {}
 
 ReturnData::ReturnData(Solver const& solver, const Model *model)
-    : np(model->np()), nk(model->nk()), nx(model->nx), nxtrue(model->nxtrue),
+    : ts(model->getTimepoints()),
+      np(model->np()), nk(model->nk()), nx(model->nx), nxtrue(model->nxtrue),
       ny(model->ny), nytrue(model->nytrue), nz(model->nz),
       nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
       nplist(model->nplist()), nmaxevent(model->nMaxEvent()), nt(model->nt()),
       newton_maxsteps(solver.getNewtonMaxSteps()), pscale(model->getParameterScale()),
       o2mode(model->o2mode), sensi(solver.getSensitivityOrder()),
-      sensi_meth(static_cast<SensitivityMethod>(solver.getSensitivityMethod())) {
+      sensi_meth(static_cast<SensitivityMethod>(solver.getSensitivityMethod()))
+    {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
@@ -35,6 +37,8 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
      * bool
      */
 
+    
+          
     xdot.resize(nx, getNaN());
 
     J.resize(nx * nx, getNaN());
