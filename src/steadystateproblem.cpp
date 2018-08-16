@@ -58,8 +58,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                 applyNewtonsMethod(rdata, model, newtonSolver.get(), 2);
                 newton_status = 3;
             } catch(NewtonFailure& ex) {
-                // TODO: more informative NewtonFailure to give more informative error code
-                throw amici::IntegrationFailure(AMICI_CONV_FAILURE,*t);
+                throw amici::IntegrationFailure(ex.error_code,*t);
             }
         }
     } catch(...) {
@@ -68,7 +67,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Compute steady state sensitvities */
-    if (rdata->sensi >= SensitivityOrder::first && rdata->sensi_meth != SensitivityMethod::none)
+    if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        solver->getSensitivityMethod() != SensitivityMethod::none)
         newtonSolver->getSensis(it, sx);
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
@@ -77,7 +77,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
         solver->reInit(*t, x, &dx);
-        if (rdata->sensi >= SensitivityOrder::first && rdata->sensi_meth == SensitivityMethod::forward) {
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            solver->getSensitivityMethod() == SensitivityMethod::forward) {
                 solver->sensReInit( sx, &sdx);
         }
     }
@@ -135,9 +136,12 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             try{
                 delta = xdot;
                 newtonSolver->getStep(newton_try, i_newtonstep, &delta);
+            } catch(NewtonFailure const& ex) {
+                rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
+                throw;
             } catch(std::exception const& ex) {
                 rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
-                throw NewtonFailure("Newton method failed to compute new step!");
+                throw NewtonFailure(AMICI_ERROR,"Newton method failed to compute new step!");
             }
         }
         
@@ -185,7 +189,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     /* Set return values */
     rdata->newton_numsteps[newton_try-1] = i_newtonstep;
     if (!converged)
-        throw NewtonFailure("Newton method failed to converge!");
+        throw NewtonFailure(AMICI_CONV_FAILURE,"applyNewtonsMethod");
 }
 
 /* ----------------------------------------------------------------------------------
@@ -214,7 +218,7 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
     
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
-        *t = rdata->ts[0];
+        *t = rdata->ts.at(0);
 
         /* Write steady state to output */
         rdata->x0 = x->getVector();
@@ -251,7 +255,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         model->fx0(x);
     } else {
         /* Carry on simulating from last point */
-        *t = rdata->ts[it-1];
+        *t = model->t(it-1);
         model->fx0(x);
         /* Reinitialize old solver */
         solver->reInit(*t, x, &dx);
@@ -297,7 +301,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         /* increase counter, check for maxsteps */
         it_newton++;
         if (it_newton >= solver->getMaxSteps())
-            throw NewtonFailure("Simulation based steady state failed to converge");
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK,"getSteadystateSimulation");
     }
 }
 
@@ -377,7 +381,7 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
         break;
             
     default:
-        throw NewtonFailure("Invalid Choice of Solver!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "createSteadystateSimSolver");
     }
     return newton_sim;
 }

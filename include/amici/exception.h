@@ -30,8 +30,8 @@ namespace amici {
     public:
         AmiException(char const* fmt, ...) : std::exception() {
             /** constructor with printf style interface
-             * @param[in] fmt error message with printf format
-             * @param[in] ... printf formating variables
+             * @param fmt error message with printf format
+             * @param ... printf formating variables
              */
             va_list ap;
             va_start(ap, fmt);
@@ -117,11 +117,11 @@ namespace amici {
     class CvodeException : public AmiException  {
     public:
         /** constructor
-         * @param[in] error_code error code returned by cvode function
-         * @param[in] function cvode function name
+         * @param error_code error code returned by cvode function
+         * @param function cvode function name
          */
         CvodeException(const int error_code, const char *function) :
-        AmiException("Cvode routine %s failed with error code (%i)",function,error_code){}
+        AmiException("Cvode routine %s failed with error code %i",function,error_code){}
     };
     
     /** @brief ida exception handler class
@@ -129,11 +129,11 @@ namespace amici {
     class IDAException : public AmiException  {
     public:
         /** constructor
-         * @param[in] error_code error code returned by ida function
-         * @param[in] function ida function name
+         * @param error_code error code returned by ida function
+         * @param function ida function name
          */
         IDAException(const int error_code, const char *function) :
-        AmiException("IDA routine %s failed with error code (%i)",function,error_code){}
+        AmiException("IDA routine %s failed with error code %i",function,error_code){}
     };
     
     /** @brief integration failure exception for the forward problem
@@ -148,8 +148,8 @@ namespace amici {
         /** time of integration failure */
         realtype time;
         /** constructor
-         * @param[in] code error code returned by cvode/ida
-         * @param[in] t time of integration failure
+         * @param code error code returned by cvode/ida
+         * @param t time of integration failure
          */
         IntegrationFailure(int code, realtype t) :
         AmiException("AMICI failed to integrate the forward problem") {
@@ -170,8 +170,8 @@ namespace amici {
         /** time of integration failure */
         realtype time;
         /** constructor
-         * @param[in] code error code returned by cvode/ida
-         * @param[in] t time of integration failure
+         * @param code error code returned by cvode/ida
+         * @param t time of integration failure
          */
         IntegrationFailureB(int code, realtype t) :
         AmiException("AMICI failed to integrate the backward problem") {
@@ -188,7 +188,7 @@ namespace amici {
     class SetupFailure : public AmiException {
     public:
         /** constructor, simply calls AmiException constructor
-         * @param[in] msg
+         * @param msg
          */
         SetupFailure(const char *msg) : AmiException(msg) {}
     };
@@ -200,10 +200,16 @@ namespace amici {
      */
     class NewtonFailure : public AmiException {
     public:
+        /** error code returned by solver */
+        int error_code;
         /** constructor, simply calls AmiException constructor
-         * @param[in] msg
+         * @param function name of the function in which the error occured
+         * @param code error code
          */
-        NewtonFailure(const char *msg) : AmiException(msg) {}
+        NewtonFailure(int code, const char *function) :
+        AmiException("NewtonSolver routine %s failed with error code %i",function,code) {
+            error_code = code;
+        }
     };
     
     

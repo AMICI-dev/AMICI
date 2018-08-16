@@ -63,34 +63,34 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x,
         break;
 
     case LinearSolver::band:
-        throw NewtonFailure("Solver currently not supported!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
 
     case LinearSolver::LAPACKDense:
-        throw NewtonFailure("Solver currently not supported!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
 
     case LinearSolver::LAPACKBand:
-        throw NewtonFailure("Solver currently not supported!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
 
     case LinearSolver::diag:
-        throw NewtonFailure("Solver currently not supported!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
 
     /* ITERATIVE SOLVERS */
     case LinearSolver::SPGMR:
-        throw NewtonFailure("Solver currently not supported!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
 
     case LinearSolver::SPBCG:
         solver.reset(new NewtonSolverIterative(t, x, model, rdata));
         break;
 
     case LinearSolver::SPTFQMR:
-        throw NewtonFailure("Solver currently not supported!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
 
     /* SPARSE SOLVERS */
     case LinearSolver::KLU:
         solver.reset(new NewtonSolverSparse(t, x, model, rdata));
         break;
     default:
-        throw NewtonFailure("Invalid Choice of Solver!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
     }
 
     solver->atol = atol;
@@ -191,7 +191,7 @@ void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
     model->fJ(*t, 0.0, x, &dx, &xdot, Jtmp);
     int status = DenseGETRF(Jtmp, pivots);
     if(status != AMICI_SUCCESS)
-        throw NewtonFailure("Dense factorization failed!");
+        throw NewtonFailure(status, "DenseGETRF");
 }
 
 /* ----------------------------------------------------------------------------------
@@ -241,6 +241,9 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, 
 
     /* Initialize the KLU solver */
     klu_status = klu_defaults(&common);
+    /* Check if KLU was initialized successfully */
+    if (klu_status != 1)
+        throw NewtonFailure(common.status, "klu_defaults");
     Jtmp = SparseNewMat(model->nx, model->nx, model->nnz, CSC_MAT);
 }
 
@@ -257,10 +260,6 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
      * @param nnewt integer number of current Newton step
      */
 
-    /* Check if KLU was initialized successfully */
-    if (klu_status != 1)
-        throw NewtonFailure("KLU was not initialized!");
-
     /* Get sparse Jacobian */
     model->fJSparse(*t, 0.0, x, &dx, &xdot, Jtmp);
 
@@ -270,7 +269,7 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
     symbolic = klu_analyze(model->nx, Jtmp->indexptrs,
                            Jtmp->indexvals, &common);
     if (!symbolic) {
-        throw NewtonFailure("KLU symbolic analysis failed!");
+        throw NewtonFailure(common.status,"klu_analyze");
     }
 
     if(numeric) /* if numeric was already created free first to avoid memory leak */
@@ -278,7 +277,7 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
     numeric = klu_factor(Jtmp->indexptrs, Jtmp->indexvals,
                          Jtmp->data, symbolic, &common);
     if (!numeric) {
-        throw NewtonFailure("KLU factorization failed!");
+        throw NewtonFailure(common.status,"klu_factor");
     }
 }
 
@@ -296,7 +295,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
     /* Pass pointer to the linear solver */
     klu_status = klu_solve(symbolic, numeric, model->nx, 1, rhs->data(), &common);
     if (klu_status != 1)
-        throw NewtonFailure("KLU solver failed");
+        throw NewtonFailure(common.status, "klu_solve");
 }
 
 /* ----------------------------------------------------------------------------------
@@ -350,7 +349,7 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
     newton_try = ntry;
     i_newton = nnewt;
     if (nnewt == -1) {
-        throw NewtonFailure("Linear solver SPBCG does not support sensitivity computation for steady state problems.");
+        throw AmiException("Linear solver SPBCG does not support sensitivity computation for steady state problems.");
     }
 }
 
@@ -472,7 +471,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
         // Scale back
         N_VDiv(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
     }
-    throw NewtonFailure("SPBCG solver failed to converge");
+    throw NewtonFailure(AMICI_CONV_FAILURE, "linsolveSPBCG");
 }
     
 

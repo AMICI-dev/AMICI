@@ -282,7 +282,8 @@ void Model::initialize(AmiVector *x, AmiVector *dx) {
     
     fdx0(x, dx);
     
-    initHeaviside(x,dx);
+    if(ne)
+        initHeaviside(x,dx);
     
 }
 

@@ -115,7 +115,7 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &const_cast<amici::SensitivityOrder &>(r.sensi);
     ar &const_cast<amici::SensitivityMethod &>(r.sensi_meth);
 
-    ar &r.ts;
+    ar &const_cast<std::vector<realtype> &>(r.ts);
     ar &r.xdot;
     ar &r.J;
     ar &r.z & r.sigmaz;

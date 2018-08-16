@@ -5,6 +5,7 @@
 #include <amici/solver_cvodes.h>
 #include <amici/symbolic_functions.h>
 #include <amici/model_ode.h>
+#include <amici/forwardproblem.h>
 
 #include <cstring>
 #include <cmath>
@@ -14,12 +15,14 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-
 std::unique_ptr<amici::Model> getModel() {
     return std::unique_ptr<amici::Model>(new amici::Model_Test());
 }
 
 using namespace amici;
+
+void testSolverGetterSetters(CVodeSolver solver, SensitivityMethod sensi_meth, SensitivityOrder sensi, InternalSensitivityMethod ism, InterpolationType interp,
+                                  NonlinearSolverIteration iter, LinearMultistepMethod lmm, int steps, int badsteps, double tol, double badtol);
 
 TEST_GROUP(amici)
 {
@@ -403,4 +406,124 @@ TEST(edata, testSettersGetters) {
     checkEqualArray(edata.getObservedEvents(), empty, TEST_ATOL, TEST_RTOL, "ObservedEvents");
     checkEqualArray(edata.getObservedEventsStdDev(), empty, TEST_ATOL, TEST_RTOL, "ObservedEventsStdDev");
 }
+
+TEST_GROUP(solver)
+{
+    int nx = 1, ny = 2, nz = 3, ne = 0;
+    double tol, badtol;
+    std::vector<realtype> timepoints = {1, 2, 3, 4};
+    
+    std::unique_ptr<amici::Model> model = getModel();
+    SensitivityMethod sensi_meth;
+    SensitivityOrder  sensi;
+    int steps, badsteps;
+    LinearMultistepMethod lmm;
+    NonlinearSolverIteration iter;
+    InternalSensitivityMethod ism;
+    InterpolationType interp;
+    
+    
+    Model_Test model_dim = Model_Test(nx, nx, ny, ny, nz, nz, ne, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
+                                      std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
+                                      std::vector<realtype>(0,0.0),std::vector<int>(0,1));
+    
+    CVodeSolver solver = CVodeSolver();
+    
+    void setup() {
+        tol = 0.01;
+        badtol = -0.01;
+        sensi_meth = SensitivityMethod::adjoint;
+        sensi = SensitivityOrder::first;
+        steps = 1000;
+        badsteps = -1;
+        lmm = LinearMultistepMethod::adams;
+        iter = NonlinearSolverIteration::functional;
+        ism = InternalSensitivityMethod::staggered1;
+        interp = InterpolationType::polynomial;
+    }
+    
+    void teardown() {
+        
+    }
+};
+
+TEST(solver, testSettersGettersNoSetup) {
+    testSolverGetterSetters(solver,sensi_meth,sensi,ism,interp,iter,lmm,steps,badsteps,tol,badtol);
+}
+                
+TEST(solver, testSettersGettersWithSetup) {
+    
+    solver.setSensitivityMethod(sensi_meth);
+    CHECK_EQUAL(static_cast<int>(solver.getSensitivityMethod()), static_cast<int>(sensi_meth));
+    
+    auto rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model_dim));
+    auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),nullptr,&model_dim,&solver));
+    
+    model_dim.setInitialStates(std::vector<realtype>{0});
+    
+    solver.setup(fwd.get(), &model_dim);
+    
+    testSolverGetterSetters(solver,sensi_meth,sensi,ism,interp,iter,lmm,steps,badsteps,tol,badtol);
+}
+
+void testSolverGetterSetters(CVodeSolver solver, SensitivityMethod sensi_meth, SensitivityOrder sensi, InternalSensitivityMethod ism, InterpolationType interp,
+                             NonlinearSolverIteration iter, LinearMultistepMethod lmm, int steps, int badsteps, double tol, double badtol) {
+    
+    solver.setSensitivityMethod(sensi_meth);
+    CHECK_EQUAL(static_cast<int>(solver.getSensitivityMethod()), static_cast<int>(sensi_meth));
+    
+    solver.setSensitivityOrder(sensi);
+    CHECK_EQUAL(static_cast<int>(solver.getSensitivityOrder()), static_cast<int>(sensi));
+    
+    solver.setInternalSensitivityMethod(ism);
+    CHECK_EQUAL(static_cast<int>(solver.getInternalSensitivityMethod()), static_cast<int>(ism));
+    
+    solver.setInterpolationType(interp);
+    CHECK_EQUAL(static_cast<int>(solver.getInterpolationType()), static_cast<int>(interp));
+    
+    solver.setNonlinearSolverIteration(iter);
+    CHECK_EQUAL(static_cast<int>(solver.getNonlinearSolverIteration()), static_cast<int>(iter));
+    
+    solver.setLinearMultistepMethod(lmm);
+    CHECK_EQUAL(static_cast<int>(solver.getLinearMultistepMethod ()), static_cast<int>(lmm));
+    
+    solver.setNewtonPreequilibration(true);
+    CHECK_EQUAL(solver.getNewtonPreequilibration(), true);
+    
+    solver.setStabilityLimitFlag(true);
+    CHECK_EQUAL(solver.getStabilityLimitFlag(), true);
+    
+    CHECK_THROWS(AmiException,solver.setNewtonMaxSteps(badsteps));
+    solver.setNewtonMaxSteps(steps);
+    CHECK_EQUAL(solver.getNewtonMaxSteps(), steps);
+    
+    CHECK_THROWS(AmiException,solver.setNewtonMaxLinearSteps(badsteps));
+    solver.setNewtonMaxLinearSteps(steps);
+    CHECK_EQUAL(solver.getNewtonMaxLinearSteps(), steps);
+    
+    CHECK_THROWS(AmiException,solver.setMaxSteps(badsteps));
+    solver.setMaxSteps(steps);
+    CHECK_EQUAL(solver.getMaxSteps(), steps);
+    
+    CHECK_THROWS(AmiException,solver.setMaxStepsBackwardProblem(badsteps));
+    solver.setMaxStepsBackwardProblem(steps);
+    CHECK_EQUAL(solver.getMaxStepsBackwardProblem(), steps);
+    
+    CHECK_THROWS(AmiException,solver.setRelativeTolerance(badtol));
+    solver.setRelativeTolerance(tol);
+    CHECK_EQUAL(solver.getRelativeTolerance(), tol);
+    
+    CHECK_THROWS(AmiException,solver.setAbsoluteTolerance(badtol));
+    solver.setAbsoluteTolerance(tol);
+    CHECK_EQUAL(solver.getAbsoluteTolerance(), tol);
+    
+    CHECK_THROWS(AmiException,solver.setRelativeToleranceQuadratures(badtol));
+    solver.setRelativeToleranceQuadratures(tol);
+    CHECK_EQUAL(solver.getRelativeToleranceQuadratures(), tol);
+    
+    CHECK_THROWS(AmiException,solver.setAbsoluteToleranceQuadratures(badtol));
+    solver.setAbsoluteToleranceQuadratures(tol);
+    CHECK_EQUAL(solver.getAbsoluteToleranceQuadratures(), tol);
+}
+
 

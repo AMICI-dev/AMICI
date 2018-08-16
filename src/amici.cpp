@@ -58,11 +58,7 @@ msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
  */
 std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model) {
     
-    auto rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model));
-    
-    if (model.nx <= 0) {
-        return rdata;
-    }
+    std::unique_ptr<ReturnData> rdata;
     
     auto originalFixedParameters = model.getFixedParameters(); // to restore after simulation
     auto originalTimepoints = model.getTimepoints();
@@ -79,7 +75,15 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
             model.setTimepoints(edata->getTimepoints());
         }
     }
+    
     try{
+        rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model));
+        if (model.nx <= 0) {
+            model.setFixedParameters(originalFixedParameters);
+            model.setTimepoints(originalTimepoints);
+            return rdata;
+        }
+        
         auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),edata,&model,&solver));
         fwd->workForwardProblem();
 

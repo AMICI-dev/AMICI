@@ -1000,31 +1000,31 @@ protected:
     /**
      * updates solver tolerances according to the currently specified member variables
      */
-    void setTolerances();
+    void applyTolerances();
         
     /**
      * updates FSA solver tolerances according to the currently specified member variables
      */
-    void setTolerancesFSA();
+    void applyTolerancesFSA();
         
     /**
      * updates ASA solver tolerances according to the currently specified member variables
      *
      * @param which identifier of the backwards problem
      */
-    void setTolerancesASA(int which);
+    void applyTolerancesASA(int which);
     
     /**
      * updates ASA quadrature solver tolerances according to the currently specified member variables
      *
      * @param which identifier of the backwards problem
      */
-    void setQuadTolerancesASA(int which);
+    void applyQuadTolerancesASA(int which);
     
     /**
      * updates all senstivivity solver tolerances according to the currently specified member variables
      */
-    void setSensitivityTolerances();
+    void applySensitivityTolerances();
     
     /** pointer to solver memory block */
     std::unique_ptr<void, std::function<void(void *)>> solverMemory;

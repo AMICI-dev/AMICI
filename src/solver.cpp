@@ -33,7 +33,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
     /* Initialize AMIS solver*/
     init(fwd->getStatePointer(), fwd->getStateDerivativePointer(), model->t0());
 
-    setTolerances();
+    applyTolerances();
     
     /* Set optional inputs */
     setErrHandlerFn();
@@ -76,7 +76,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
             sensInit1(fwd->getStateSensitivityPointer(), fwd->getStateDerivativeSensitivityPointer(), plist.size());
             setSensParams(par.data(), nullptr, plist.data());
             
-            setTolerancesFSA();
+            applyTolerancesFSA();
         } else if (sensi_meth == SensitivityMethod::adjoint) {
             /* Allocate space for the adjoint computation */
             adjInit();
@@ -127,8 +127,8 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
     
-    setTolerancesASA(bwd->getwhich());
-    setQuadTolerancesASA(bwd->getwhich());
+    applyTolerancesASA(bwd->getwhich());
+    applyQuadTolerancesASA(bwd->getwhich());
 
     setStabLimDetB(bwd->getwhich(), stldet);
 }
@@ -398,16 +398,16 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.sensi == b.sensi);
 }
     
-void Solver::setTolerances() {
+void Solver::applyTolerances() {
     if (!getMallocDone())
-        throw AmiException(("Solver instance was not yet set up, the tolerances cannot be set yet!"));
+        throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
     
     setSStolerances(RCONST(this->rtol), RCONST(this->atol));
 }
     
-void Solver::setTolerancesFSA() {
+void Solver::applyTolerancesFSA() {
     if (!getMallocDone())
-        throw AmiException(("Solver instance was not yet set up, the tolerances cannot be set yet!"));
+        throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
     
     if (sensi < SensitivityOrder::first)
         return;
@@ -419,9 +419,9 @@ void Solver::setTolerancesFSA() {
     }
 }
     
-void Solver::setTolerancesASA(int which) {
+void Solver::applyTolerancesASA(int which) {
     if (!getAdjMallocDone())
-        throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be set yet!"));
+        throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be applied yet!"));
     
     if (sensi < SensitivityOrder::first)
         return;
@@ -430,8 +430,11 @@ void Solver::setTolerancesASA(int which) {
     setSStolerancesB(which, RCONST(rtol), RCONST(atol));
 }
     
-void Solver::setQuadTolerancesASA(int which) {
-    if (sensi < SensitivityOrder::first || !getAdjMallocDone())
+void Solver::applyQuadTolerancesASA(int which) {
+    if (!getAdjMallocDone())
+        throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be applied yet!"));
+    
+    if (sensi < SensitivityOrder::first)
         return;
     
     double quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
@@ -446,15 +449,15 @@ void Solver::setQuadTolerancesASA(int which) {
                       RCONST(quad_atol));
 }
 
-void Solver::setSensitivityTolerances() {
+void Solver::applySensitivityTolerances() {
     if (sensi < SensitivityOrder::first)
         return;
     
     if (sensi_meth == SensitivityMethod::forward)
-        setTolerancesFSA();
+        applyTolerancesFSA();
     else if (sensi_meth == SensitivityMethod::adjoint && getAdjMallocDone()) {
         for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-            setTolerancesASA(iMem);
+            applyTolerancesASA(iMem);
     }
 }
     
@@ -502,7 +505,7 @@ void Solver::setSensitivityOrder(SensitivityOrder sensi) {
     this->sensi = sensi;
     
     if(getMallocDone())
-        setSensitivityTolerances();
+        applySensitivityTolerances();
 }
 
 double Solver::getRelativeTolerance() const {
@@ -516,8 +519,8 @@ void Solver::setRelativeTolerance(double rtol) {
     this->rtol = rtol;
     
     if(getMallocDone()) {
-        setTolerances();
-        setSensitivityTolerances();
+        applyTolerances();
+        applySensitivityTolerances();
     }
 }
 
@@ -532,8 +535,8 @@ void Solver::setAbsoluteTolerance(double atol) {
     this->atol = atol;
     
     if(getMallocDone()) {
-        setTolerances();
-        setSensitivityTolerances();
+        applyTolerances();
+        applySensitivityTolerances();
     }
 }
 
@@ -552,7 +555,7 @@ void Solver::setRelativeToleranceQuadratures(double rtol) {
     
     for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
         if(solverMemoryB.at(iMem))
-            setQuadTolerancesASA(iMem);
+            applyQuadTolerancesASA(iMem);
 }
 
 double Solver::getAbsoluteToleranceQuadratures() const {
@@ -570,7 +573,7 @@ void Solver::setAbsoluteToleranceQuadratures(double atol) {
     
     for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
         if(solverMemoryB.at(iMem))
-            setTolerancesASA(iMem);
+            applyTolerancesASA(iMem);
 }
 
 int Solver::getMaxSteps() const {

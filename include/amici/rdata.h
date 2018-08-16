@@ -45,7 +45,7 @@ class ReturnData {
     applyChainRuleFactorToSimulationResults(const Model *model);
 
     /** timepoints (dimension: nt) */
-    std::vector<realtype> ts;
+    const std::vector<realtype> ts;
 
     /** time derivative (dimension: nx) */
     std::vector<realtype> xdot;
