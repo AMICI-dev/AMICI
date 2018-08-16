@@ -121,7 +121,7 @@ namespace amici {
          * @param[in] function cvode function name
          */
         CvodeException(const int error_code, const char *function) :
-        AmiException("Cvode routine %s failed with error code (%i)",function,error_code){}
+        AmiException("Cvode routine %s failed with error code %i",function,error_code){}
     };
     
     /** @brief ida exception handler class
@@ -133,7 +133,7 @@ namespace amici {
          * @param[in] function ida function name
          */
         IDAException(const int error_code, const char *function) :
-        AmiException("IDA routine %s failed with error code (%i)",function,error_code){}
+        AmiException("IDA routine %s failed with error code %i",function,error_code){}
     };
     
     /** @brief integration failure exception for the forward problem
@@ -200,10 +200,15 @@ namespace amici {
      */
     class NewtonFailure : public AmiException {
     public:
+        /** error code returned by solver */
+        int error_code;
         /** constructor, simply calls AmiException constructor
          * @param[in] msg
          */
-        NewtonFailure(const char *msg) : AmiException(msg) {}
+        NewtonFailure(int code, const char *function) :
+        AmiException("NewtonSolver routine %s failed with error code %i",function,code) {
+            error_code = code;
+        }
     };
     
     

@@ -58,8 +58,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                 applyNewtonsMethod(rdata, model, newtonSolver.get(), 2);
                 newton_status = 3;
             } catch(NewtonFailure& ex) {
-                // TODO: more informative NewtonFailure to give more informative error code
-                throw amici::IntegrationFailure(AMICI_CONV_FAILURE,*t);
+                throw amici::IntegrationFailure(ex.error_code,*t);
             }
         }
     } catch(...) {
@@ -137,9 +136,12 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             try{
                 delta = xdot;
                 newtonSolver->getStep(newton_try, i_newtonstep, &delta);
+            } catch(NewtonFailure const& ex) {
+                rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
+                throw ex;
             } catch(std::exception const& ex) {
                 rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
-                throw NewtonFailure("Newton method failed to compute new step!");
+                throw NewtonFailure(AMICI_ERROR,"Newton method failed to compute new step!");
             }
         }
         
@@ -187,7 +189,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     /* Set return values */
     rdata->newton_numsteps[newton_try-1] = i_newtonstep;
     if (!converged)
-        throw NewtonFailure("Newton method failed to converge!");
+        throw NewtonFailure(AMICI_CONV_FAILURE,"applyNewtonsMethod");
 }
 
 /* ----------------------------------------------------------------------------------
@@ -299,7 +301,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         /* increase counter, check for maxsteps */
         it_newton++;
         if (it_newton >= solver->getMaxSteps())
-            throw NewtonFailure("Simulation based steady state failed to converge");
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK,"getSteadystateSimulation");
     }
 }
 
@@ -379,7 +381,7 @@ std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createS
         break;
             
     default:
-        throw NewtonFailure("Invalid Choice of Solver!");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "createSteadystateSimSolver");
     }
     return newton_sim;
 }
