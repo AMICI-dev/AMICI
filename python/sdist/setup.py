@@ -151,9 +151,11 @@ class my_install_lib(install_lib):
         """
         if 'ENABLE_AMICI_DEBUGGING' in os.environ and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' and sys.platform == 'darwin':
             search_dir = os.path.join(os.getcwd(),self.build_dir,'amici')
+            target_dir = os.path.join(self.install_dir,'amici','libs')
             for file in os.listdir(search_dir):
                 if file.endswith('.so'):
                     sp = subprocess.run(['dsymutil',os.path.join(search_dir,file),
+                                         '--oso-prepend-path=' + target_dir,
                                          '-o',os.path.join(search_dir,file + '.dSYM')])
 
 
@@ -181,7 +183,7 @@ class my_build_ext(build_ext):
             # Module build directory where we want to copy the generated libs
             # to
 
-            target_dir = os.path.join(self.build_lib, 'amici/libs')
+            target_dir = os.path.join(self.build_lib, 'amici','libs')
             self.mkpath(target_dir)
 
             # Copy the generated libs
