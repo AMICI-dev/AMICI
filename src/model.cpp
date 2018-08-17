@@ -399,10 +399,8 @@ std::vector<realtype> const& Model::getTimepoints() const {
 }
 
 void Model::setTimepoints(const std::vector<realtype> &ts) {
-    if (ts.size() > 2)
-        for ( auto i = ts.begin()+1; i != ts.end(); ++i )
-            if(*i < *(i-1))
-                throw AmiException("Encountered non-monotonic timepoints (%f > %f), please order timepoints such that they are monotonically increasing!",*(i-1),*i);
+    if (!std::is_sorted(ts.begin(), ts.end()))
+        throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
     this->ts = std::move(ts);
 }
 
