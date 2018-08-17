@@ -124,7 +124,7 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector *delta) {
 /* ----------------------------------------------------------------------------------
  */
 
-void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
+void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
     /**
      * Computes steady state sensitivities
      *
@@ -140,16 +140,8 @@ void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
             sx->at(ix,ip) = -model->dxdotdp[model->nx * ip + ix];
         }
         solveLinearSystem(&((*sx)[ip]));
-        
-        /* Copy result to return data */
-        if (it == AMICI_PREEQUILIBRATE) {
-            for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx0[ip * model->nx + ix] = sx->at(ix,ip);
-            }
-        }
     }
 }
-
 /* ----------------------------------------------------------------------------------
  */
 /* - Dense linear solver

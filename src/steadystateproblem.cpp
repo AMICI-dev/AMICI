@@ -67,10 +67,23 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Compute steady state sensitvities */
-    //if (newton_status == 1 || newton_status == 3)
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() != SensitivityMethod::none)
-            newtonSolver->getSensis(it, sx);
+    
+    if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        solver->getSensitivityMethod() != SensitivityMethod::none)
+        // for newton_status == 2 the sensis were computed via FSA
+        if (newton_status == 1 || newton_status == 3)
+            newtonSolver->computeNewtonSensis(sx);
+    
+        if (it == AMICI_PREEQUILIBRATE) {
+            for (int ip = 0; ip < model->nplist(); ip++) {
+                for (int ix = 0; ix < model->nx; ix++) {
+                    rdata->sx0[ip * model->nx + ix] = sx->at(ix,ip);
+                }
+            }
+        }
+    
+    
+    
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     getNewtonOutput(rdata, newton_status, run_time, it);
@@ -276,11 +289,10 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
          multiplication with 10 ensures nonzero difference and should ensure stable computation
          value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
          */
-        if (it<1) {
+        if (it<1)
             newtonSimSolver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
-        } else {
+        else
             solver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
-        }
 
         model->fxdot(*t, x, &dx, &xdot);
         res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
@@ -288,11 +300,10 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         /* Ensure positivity and compute relative residual */
         x_newton = *x;
         N_VAbs(x_newton.getNVector(), x_newton.getNVector());
-        for (int ix = 0; ix < model->nx; ix++) {
-            if (x_newton[ix] < solver->getAbsoluteTolerance()) {
+        for (int ix = 0; ix < model->nx; ix++)
+            if (x_newton[ix] < solver->getAbsoluteTolerance())
                 x_newton[ix] = solver->getAbsoluteTolerance();
-            }
-        }
+        
         N_VDiv(xdot.getNVector(), x_newton.getNVector(), rel_x_newton.getNVector());
         res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
         
@@ -304,7 +315,12 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         if (it_newton >= solver->getMaxSteps())
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,"getSteadystateSimulation");
     }
-    solver->getSens(t, sx);
+    if (solver->getSensitivityOrder()>SensitivityOrder::none) {
+        if (it<1)
+            newtonSimSolver->getSens(t, sx);
+        else
+            solver->getSens(t, sx);
+    }
 }
 
 std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
@@ -338,7 +354,7 @@ std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
     }
     newton_solver->setSensitivityOrder(solver->getSensitivityOrder());
     if (solver->getSensitivityMethod() != SensitivityMethod::none)
-        newton_solver->setSensitivityMethod(SensitivityMethod::none); //need forward to compute sx0
+        newton_solver->setSensitivityMethod(SensitivityMethod::forward); //need forward to compute sx0
     else
         newton_solver->setSensitivityMethod(SensitivityMethod::none);
     

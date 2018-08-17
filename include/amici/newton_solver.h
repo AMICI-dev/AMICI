@@ -32,7 +32,7 @@ class NewtonSolver {
 
     void getStep(int ntry, int nnewt, AmiVector *delta);
 
-    void getSensis(const int it, AmiVectorArray *sx);
+    void computeNewtonSensis(AmiVectorArray *sx);
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
