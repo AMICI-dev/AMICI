@@ -154,9 +154,9 @@ class my_install_lib(install_lib):
             target_dir = os.path.join(self.install_dir,'amici','libs')
             for file in os.listdir(search_dir):
                 if file.endswith('.so'):
-                    sp = subprocess.run(['dsymutil',os.path.join(search_dir,file),
-                                         '--oso-prepend-path=' + target_dir,
-                                         '-o',os.path.join(search_dir,file + '.dSYM')])
+                    subprocess.run(['dsymutil',os.path.join(search_dir,file),
+                                    '--oso-prepend-path=' + target_dir,
+                                    '-o',os.path.join(search_dir,file + '.dSYM')])
 
 
         # Continue with the actual installation
