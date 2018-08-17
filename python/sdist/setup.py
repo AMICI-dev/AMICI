@@ -15,6 +15,8 @@ Requires:
 from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.sdist import sdist
+from setuptools.command.install import install
+
 import os
 import sys
 import glob
@@ -103,7 +105,7 @@ else:
 if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
     print("ENABLE_GCOV_COVERAGE was set to TRUE. Building AMICI with debug and coverage symbols.")
     cxx_flags.extend(['-g', '-O0',  '--coverage'])
-    amici_module_linker_flags.append('--coverage')
+    amici_module_linker_flags.extend(['--coverage','-g'])
 
 libamici = setup_clibs.getLibAmici(
     h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg, extra_compiler_flags=cxx_flags)
@@ -134,6 +136,27 @@ amici_module = Extension(
 )
 
 
+class my_install(install):
+    """Custom install to allow preserving of debug symbols"""
+    def run(self):
+        """strip debug symbols
+
+        Returns:
+
+        """
+        if 'ENABLE_GCOV_COVERAGE' in os.environ \
+        and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE' \
+        and sys.platform == 'darwin':
+            build_dir = os.path.join(self.build_lib,'amici')
+            for file in os.listdir(build_dir):
+                if file.endswith('.so'):
+                    sp = subprocess.run(['dsymutil',os.path.join(self.build_lib,'amici',file),
+                                         '-o',os.path.join(self.build_lib,'amici',file + '.dSYM')])
+
+
+        install.run(self)
+
+
 class my_build_ext(build_ext):
     """Custom build_ext to allow keeping otherwise temporary static libs"""
 
@@ -153,6 +176,7 @@ class my_build_ext(build_ext):
 
             # Module build directory where we want to copy the generated libs
             # to
+
             target_dir = os.path.join(self.build_lib, 'amici/libs')
             self.mkpath(target_dir)
 
@@ -162,6 +186,7 @@ class my_build_ext(build_ext):
                                          (build_clib.build_clib, os.sep, lib))
                 assert len(
                     libfilenames) == 1, "Found unexpected number of files: " % libfilenames
+
                 copyfile(libfilenames[0],
                          os.path.join(target_dir, os.path.basename(libfilenames[0])))
 
@@ -268,7 +293,8 @@ def main():
         name='amici',
         cmdclass={
             'sdist': my_sdist,
-            'build_ext': my_build_ext
+            'build_ext': my_build_ext,
+            'install': my_install
         },
         version=getPackageVersion(),
         description='Advanced multi-language Interface to CVODES and IDAS (%s)',
