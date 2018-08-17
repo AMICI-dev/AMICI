@@ -15,7 +15,7 @@ Requires:
 from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.sdist import sdist
-from setuptools.command.install import install
+from setuptools.command.install_lib import install_lib
 
 import os
 import sys
@@ -103,9 +103,14 @@ else:
 
 # Enable coverage?
 if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
-    print("ENABLE_GCOV_COVERAGE was set to TRUE. Building AMICI with debug and coverage symbols.")
+    print("ENABLE_GCOV_COVERAGE was set to TRUE. Building AMICI with coverage symbols.")
     cxx_flags.extend(['-g', '-O0',  '--coverage'])
     amici_module_linker_flags.extend(['--coverage','-g'])
+
+if 'ENABLE_AMICI_DEBUGGING' in os.environ and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
+    print("ENABLE_AMICI_DEBUGGING was set to TRUE. Building AMICI with debug symbols.")
+    cxx_flags.extend(['-g', '-O0'])
+    amici_module_linker_flags.extend(['-g'])
 
 libamici = setup_clibs.getLibAmici(
     h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg, extra_compiler_flags=cxx_flags)
@@ -136,7 +141,7 @@ amici_module = Extension(
 )
 
 
-class my_install(install):
+class my_install_lib(install_lib):
     """Custom install to allow preserving of debug symbols"""
     def run(self):
         """strip debug symbols
@@ -144,17 +149,16 @@ class my_install(install):
         Returns:
 
         """
-        if 'ENABLE_GCOV_COVERAGE' in os.environ \
-        and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE' \
-        and sys.platform == 'darwin':
-            build_dir = os.path.join(self.build_lib,'amici')
-            for file in os.listdir(build_dir):
+        if 'ENABLE_AMICI_DEBUGGING' in os.environ and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' and sys.platform == 'darwin':
+            search_dir = os.path.join(os.getcwd(),self.build_dir,'amici')
+            for file in os.listdir(search_dir):
                 if file.endswith('.so'):
-                    sp = subprocess.run(['dsymutil',os.path.join(self.build_lib,'amici',file),
-                                         '-o',os.path.join(self.build_lib,'amici',file + '.dSYM')])
+                    sp = subprocess.run(['dsymutil',os.path.join(search_dir,file),
+                                         '-o',os.path.join(search_dir,file + '.dSYM')])
 
 
-        install.run(self)
+        # Continue with the actual installation
+        install_lib.run(self)
 
 
 class my_build_ext(build_ext):
@@ -294,7 +298,7 @@ def main():
         cmdclass={
             'sdist': my_sdist,
             'build_ext': my_build_ext,
-            'install': my_install
+            'install_lib': my_install_lib
         },
         version=getPackageVersion(),
         description='Advanced multi-language Interface to CVODES and IDAS (%s)',
