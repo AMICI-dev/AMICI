@@ -502,8 +502,10 @@ class SbmlImporter:
                         else:
                             # dont put the symbol if it wont get replaced by a rule
                             elements[index]['stoichiometry'] = sp.sympify(element.getStoichiometry())
-                    else:
+                    elif element.isSetStoichiometry():
                         elements[index]['stoichiometry'] = sp.sympify(element.getStoichiometry())
+                    else:
+                        elements[index]['stoichiometry'] = sp.sympify(1.0)
 
                 for index in elements.keys():
                     if not (elements[index]['species'] in self.constantSpecies
