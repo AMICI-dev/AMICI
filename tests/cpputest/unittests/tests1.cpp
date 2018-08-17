@@ -457,11 +457,13 @@ TEST(solver, testSettersGettersWithSetup) {
     CHECK_EQUAL(static_cast<int>(solver.getSensitivityMethod()), static_cast<int>(sensi_meth));
     
     auto rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model_dim));
-    auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),nullptr,&model_dim,&solver));
+    AmiVector x(nx), dx(nx);
+    AmiVectorArray sx(nx,1), sdx(nx,1);
+    
     
     model_dim.setInitialStates(std::vector<realtype>{0});
     
-    solver.setup(fwd.get(), &model_dim);
+    solver.setup(&x,&dx,&sx,&sdx, &model_dim);
     
     testSolverGetterSetters(solver,sensi_meth,sensi,ism,interp,iter,lmm,steps,badsteps,tol,badtol);
 }
