@@ -71,7 +71,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
         solver->getSensitivityMethod() != SensitivityMethod::none)
         // for newton_status == 2 the sensis were computed via FSA
-        if (newton_status == 1 || newton_status == 3)
+        if (newton_status == 1 || newton_status == 3 || !model->getFSASteadyStateSensitivityFlag())
             newtonSolver->computeNewtonSensis(sx);
     
         if (it == AMICI_PREEQUILIBRATE) {
@@ -315,10 +315,11 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         if (it_newton >= solver->getMaxSteps())
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,"getSteadystateSimulation");
     }
-    if (solver->getSensitivityOrder()>SensitivityOrder::none) {
-        if (it<1)
+    if (it<1) {
+        if (newtonSimSolver->getSensitivityOrder()>SensitivityOrder::none)
             newtonSimSolver->getSens(t, sx);
-        else
+    } else {
+        if (solver->getSensitivityOrder()>SensitivityOrder::none)
             solver->getSens(t, sx);
     }
 }
@@ -353,7 +354,7 @@ std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
             throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "createSteadystateSimSolver");
     }
     newton_solver->setSensitivityOrder(solver->getSensitivityOrder());
-    if (solver->getSensitivityMethod() != SensitivityMethod::none)
+    if (solver->getSensitivityMethod() != SensitivityMethod::none && model->getFSASteadyStateSensitivityFlag())
         newton_solver->setSensitivityMethod(SensitivityMethod::forward); //need forward to compute sx0
     else
         newton_solver->setSensitivityMethod(SensitivityMethod::none);

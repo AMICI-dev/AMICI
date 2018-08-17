@@ -627,6 +627,22 @@ namespace amici {
          * @return the ids
          */
         virtual std::vector<std::string> getObservableIds() const { return std::vector<std::string>(); }
+        
+        /**
+         * @brief sets the FSASteadyStateSensitivities flag
+         * @param flag flag value
+         */
+        void setFSASteadyStateSensitivityFlag (const bool flag) {
+            FSASteadyStateSensitivities = flag;
+        }
+        
+        /**
+         * @brief gets the FSASteadyStateSensitivities flag
+         * @return flag value
+         */
+        bool getFSASteadyStateSensitivityFlag () const {
+            return FSASteadyStateSensitivities;
+        }
 
         /** number of states */
         const int nx;
@@ -1250,6 +1266,10 @@ namespace amici {
 
         /** starting time */
         double tstart = 0.0;
+        
+        /** flag indicating whether steadystate sensivities are to be computed
+         via FSA when steadyStateSimulation is used */
+        bool FSASteadyStateSensitivities = false;
 
     };
 
