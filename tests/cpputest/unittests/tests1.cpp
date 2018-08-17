@@ -37,8 +37,14 @@ TEST_GROUP(amici)
 
 TEST_GROUP(model)
 {
+    Model_Test model = Model_Test(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
+                     std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
+                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
+    std::vector<double> p {1};
+    double unscaled[1];
+    
     void setup() {
-
+        model.setParameters(p);
     }
 
     void teardown() {
@@ -47,48 +53,28 @@ TEST_GROUP(model)
 };
 
 TEST(model, testScalingLin) {
-    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
-                     std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
-                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
-
-    std::vector<double> p {1};
-    model.setParameters(p);
-
     model.setParameterScale(ParameterScaling::none);
-    double unscaled[1];
     model.unscaleParameters(unscaled);
 
     CHECK_EQUAL(p[0], unscaled[0]);
 }
 
 TEST(model, testScalingLog) {
-    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
-                     std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
-                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
-
-    std::vector<double> p {1};
-    model.setParameters(p);
-
     model.setParameterScale(ParameterScaling::ln);
-    double unscaled[1];
     model.unscaleParameters(unscaled);
 
     DOUBLES_EQUAL(exp(p[0]), unscaled[0], 1e-16);
 }
 
 TEST(model, testScalingLog10) {
-    Model_Test model(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
-                     std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
-                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
-
-    std::vector<double> p {1};
-    model.setParameters(p);
-
     model.setParameterScale(ParameterScaling::log10);
-    double unscaled[1];
     model.unscaleParameters(unscaled);
 
     DOUBLES_EQUAL(pow(10, p[0]), unscaled[0], 1e-16);
+}
+
+TEST(model, testSetTimepoints) {
+    CHECK_THROWS(AmiException,model.setTimepoints(std::vector<realtype>{0.0,1.0,0.5}))
 }
 
 
@@ -339,6 +325,8 @@ TEST(edata, testDimensionChecks) {
     CHECK_THROWS(AmiException,edata.setObservedDataStdDev(bad_single_y_std,0))
     CHECK_THROWS(AmiException,edata.setObservedEvents(bad_single_z,0))
     CHECK_THROWS(AmiException,edata.setObservedEventsStdDev(bad_single_y_std,0))
+    
+    CHECK_THROWS(AmiException,edata.setTimepoints(std::vector<realtype>{0.0,1.0,0.5}))
 }
 
 TEST(edata, testSettersGetters) {

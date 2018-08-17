@@ -94,6 +94,11 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
 }
     
 void ExpData::setTimepoints(const std::vector<realtype> &ts) {
+    if (ts.size() > 2)
+        for ( auto i = ts.begin()+1; i != ts.end(); ++i )
+            if(*i < *(i-1))
+                throw AmiException("Encountered non-monotonic timepoints (%f > %f), please order timepoints such that they are monotonically increasing!",*(i-1),*i);
+
     this->ts = std::move(ts);
     observedData.resize(nt()*nytrue, getNaN());
     observedDataStdDev.resize(nt()*nytrue, getNaN());
