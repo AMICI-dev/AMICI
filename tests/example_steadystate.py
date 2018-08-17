@@ -197,6 +197,43 @@ def writeSensiFwdSimPreeq(filename):
     ex.writeToFile(filename, '/model_steadystate/sensifwdsimpreeq/')
 
 
+def writeSensiFwdSimPreeqFSA(filename):
+    ex = ExampleSteadystate()
+
+    ex.data = {}
+    ex.data['Y'] = np.array(
+        [[0.8410,1.6662,0.3813],
+        [0.7834,1.6230,0.2233],
+        [0.8187,1.5386,0.2208],
+        [0.7906,1.4476,0.2358],
+        [0.7184,1.3543,0.1409],
+        [0.6627,1.2840,0.1268],
+        [0.7099,1.1786,0.1289],
+        [0.7104,1.1362,0.1768],
+        [0.7089,1.0326,0.1127],
+        [0.6035,0.9752,0.0923]])
+    ex.data['Sigma_Y'] = np.ones(shape=ex.data['Y'].shape)
+    ex.data['Sigma_Z'] = []
+    ex.data['Z'] = []
+    ex.data['condition'] = ex.modelOptions['kappa']
+    ex.data['conditionPreequilibration'] = [0.1, 0.4, 0.7, 0.5]
+    ex.data['t'] = np.linspace(0, 5, 10)
+
+    ex.modelOptions['ts'] = np.linspace(0, 5, 10)
+    ex.modelOptions['FSASteadyStateSensitivityFlag'] = 1
+    ex.solverOptions['sensi'] = 1
+    ex.solverOptions['sensi_meth'] = 1
+    ex.solverOptions['newton_preeq'] = True
+    ex.solverOptions['atol'] = 10 ** -16
+    ex.solverOptions['rtol'] = 10 ** -12
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
+    ex.solverOptions['linsol'] = 9
+    ex.solverOptions['maxsteps'] = 10000
+    ex.solverOptions['newton_maxsteps'] = 0
+
+    ex.writeToFile(filename, '/model_steadystate/sensifwdsimpreeqFSA/')
+
+
 def writeSensiAdjSimPreeq(filename):
     ex = ExampleSteadystate()
 
@@ -231,6 +268,42 @@ def writeSensiAdjSimPreeq(filename):
     ex.solverOptions['newton_maxsteps'] = 0
 
     ex.writeToFile(filename, '/model_steadystate/sensiadjsimpreeq/')
+
+def writeSensiAdjSimPreeqFSA(filename):
+    ex = ExampleSteadystate()
+
+    ex.data = {}
+    ex.data['Y'] = np.array(
+        [[0.8410,1.6662,0.3813],
+        [0.7834,1.6230,0.2233],
+        [0.8187,1.5386,0.2208],
+        [0.7906,1.4476,0.2358],
+        [0.7184,1.3543,0.1409],
+        [0.6627,1.2840,0.1268],
+        [0.7099,1.1786,0.1289],
+        [0.7104,1.1362,0.1768],
+        [0.7089,1.0326,0.1127],
+        [0.6035,0.9752,0.0923]])
+    ex.data['Sigma_Y'] = np.ones(shape=ex.data['Y'].shape)
+    ex.data['Sigma_Z'] = []
+    ex.data['Z'] = []
+    ex.data['condition'] = ex.modelOptions['kappa']
+    ex.data['conditionPreequilibration'] = [0.1, 0.4, 0.7, 0.5]
+    ex.data['t'] = np.linspace(0, 5, 10)
+
+    ex.modelOptions['ts'] = np.linspace(0, 5, 10)
+    ex.modelOptions['FSASteadyStateSensitivityFlag'] = 1
+    ex.solverOptions['sensi'] = 1
+    ex.solverOptions['sensi_meth'] = 2
+    ex.solverOptions['newton_preeq'] = True
+    ex.solverOptions['atol'] = 10 ** -16
+    ex.solverOptions['rtol'] = 10 ** -12
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
+    ex.solverOptions['linsol'] = 9
+    ex.solverOptions['maxsteps'] = 10000
+    ex.solverOptions['newton_maxsteps'] = 0
+
+    ex.writeToFile(filename, '/model_steadystate/sensiadjsimpreeqFSA/')
 
 def writeSensiFwdByhandPreeq(filename):
     ex = ExampleSteadystate()
@@ -310,7 +383,9 @@ def main():
     writeSensiFwdNewtonPreeq(filename)
     writeSensiAdjNewtonPreeq(filename)
     writeSensiFwdSimPreeq(filename)
+    writeSensiFwdSimPreeqFSA(filename)
     writeSensiAdjSimPreeq(filename)
+    writeSensiAdjSimPreeqFSA(filename)
     writeSensiFwdByhandPreeq(filename)
     writeSensiAdjByhandPreeq(filename)
     
