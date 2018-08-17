@@ -69,7 +69,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* Compute steady state sensitvities */
     
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() != SensitivityMethod::none)
+        solver->getSensitivityMethod() != SensitivityMethod::none) {
         // for newton_status == 2 the sensis were computed via FSA
         if (newton_status == 1 || newton_status == 3 || !model->getFSASteadyStateSensitivityFlag())
             newtonSolver->computeNewtonSensis(sx);
@@ -81,6 +81,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                 }
             }
         }
+    }
     
     
     
