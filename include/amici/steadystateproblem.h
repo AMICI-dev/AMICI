@@ -3,6 +3,7 @@
 
 #include "amici/defines.h"
 #include "amici/vector.h"
+#include "amici/solver_cvodes.h"
 #include <amici/newton_solver.h>
 
 #include <nvector/nvector_serial.h>
@@ -39,7 +40,7 @@ class SteadystateProblem {
     void getSteadystateSimulation(ReturnData *rdata, Solver *solver,
                                   Model *model, int it);
     
-    std::unique_ptr<void, std::function<void(void *)>> createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart);
+    std::unique_ptr<CVodeSolver> createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart);
 
     /** default constructor
      * @param t pointer to time variable

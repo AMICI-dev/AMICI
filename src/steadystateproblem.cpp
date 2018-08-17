@@ -26,10 +26,10 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
      * restarts Newton solver, if integration fails.
      * Computes steady state sensitivities
      *
-     * @param[in] solver pointer to the AMICI solver object @type Solver
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] it integer with the index of the current time step
-     * @param[out] rdata pointer to the return data object @type ReturnData
+     * @param solver pointer to the AMICI solver object
+     * @param model pointer to the AMICI model object
+     * @param it integer with the index of the current time step
+     * @param rdata pointer to the return data object
      */
     double run_time;
     clock_t starttime;
@@ -67,9 +67,10 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Compute steady state sensitvities */
-    if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() != SensitivityMethod::none)
-        newtonSolver->getSensis(it, sx);
+    //if (newton_status == 1 || newton_status == 3)
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            solver->getSensitivityMethod() != SensitivityMethod::none)
+            newtonSolver->getSensis(it, sx);
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     getNewtonOutput(rdata, newton_status, run_time, it);
@@ -78,9 +79,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     if (it == AMICI_PREEQUILIBRATE) {
         solver->reInit(*t, x, &dx);
         if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() == SensitivityMethod::forward) {
+            solver->getSensitivityMethod() == SensitivityMethod::forward)
                 solver->sensReInit( sx, &sdx);
-        }
     }
 }
 
@@ -99,11 +99,11 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
      * Runs the Newton solver iterations and checks for convergence to steady
      * state
      *
-     * @param[out] rdata pointer to the return data object @type ReturnData
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] newtonSolver pointer to the NewtonSolver object @type
+     * @param rdata pointer to the return data object
+     * @param model pointer to the AMICI model object
+     * @param newtonSolver pointer to the NewtonSolver object @type
      * NewtonSolver
-     * @param[in] newton_try integer start number of Newton solver (1 or 2)
+     * @param newton_try integer start number of Newton solver (1 or 2)
      */
     int i_newtonstep = 0;
     int ix = 0;
@@ -205,11 +205,11 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
     /**
      * Stores output of workSteadyStateProblem in return data
      *
-     * @param[in] newton_status integer flag indicating when a steady state was
+     * @param newton_status integer flag indicating when a steady state was
      * found
-     * @param[in] run_time double coputation time of the solver in milliseconds
-     * @param[out] rdata pointer to the return data object @type ReturnData
-     * @param[in] it current timepoint index, <0 indicates preequilibration @type int
+     * @param run_time double coputation time of the solver in milliseconds
+     * @param rdata pointer to the return data object
+     * @param it current timepoint index, <0 indicates preequilibration
      */
 
     /* Get time for Newton solve */
@@ -239,26 +239,29 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
     /**
      * Forward simulation is launched, if Newton solver fails in first try
      *
-     * @param[in] solver pointer to the AMICI solver object @type Solver
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[out] rdata pointer to the return data object @type ReturnData
-     * @param[in] it current timepoint index, <0 indicates preequilibration @type int
+     * @param solver pointer to the AMICI solver object
+     * @param model pointer to the AMICI model object
+     * @param rdata pointer to the return data object
+     * @param it current timepoint index, <0 indicates preequilibration
      */
  
-    std::unique_ptr<void, std::function<void(void *)>> newton_sim;
+    std::unique_ptr<CVodeSolver> newtonSimSolver;
 
     /* Newton solver did not work, so try a simulation */
     if (it<1) {
         /* Preequilibration: Create a new CVode object for simulation */
         *t = model->t0();
-        newton_sim = createSteadystateSimSolver(solver, model, *t);
-        model->fx0(x);
+        newtonSimSolver = createSteadystateSimSolver(solver, model, *t);
     } else {
         /* Carry on simulating from last point */
         *t = model->t(it-1);
         model->fx0(x);
+        model->fsx0(sx, x);
         /* Reinitialize old solver */
         solver->reInit(*t, x, &dx);
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            solver->getSensitivityMethod() == SensitivityMethod::forward)
+            solver->sensReInit(sx, sx); // use sx as dummy for second argument
     }
     
     /* Loop over steps and check for convergence */
@@ -274,9 +277,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
          value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
          */
         if (it<1) {
-            int status = CVode(newton_sim.get(), std::max(*t,1.0) * 10, x->getNVector(), t, AMICI_ONE_STEP);
-            if(status != CV_SUCCESS)
-                throw CvodeException(status,"Error when calling CVode during Newton preequilibration simulation");
+            newtonSimSolver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
         } else {
             solver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
         }
@@ -303,87 +304,48 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         if (it_newton >= solver->getMaxSteps())
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,"getSteadystateSimulation");
     }
+    solver->getSens(t, sx);
 }
 
-std::unique_ptr<void, std::function<void (void *)> > SteadystateProblem::createSteadystateSimSolver(
+std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
         Solver *solver, Model *model, realtype tstart)
 {
     /**
      * New CVode object for preequilibration simulation is created
      *
-     * @param[in] solver pointer to the AMICI solver object @type Solver
-     * @param[in] model pointer to the AMICI model object @type Model
-     * @param[in] tstart time point for starting Newton simulation @type realtype
+     * @param solver pointer to the AMICI solver object
+     * @param model pointer to the AMICI model object
+     * @param tstart time point for starting Newton simulation
      */
     
     /* Create new CVode object */
-    auto newton_sim = std::unique_ptr<void, std::function<void(void *)>>(
-                CVodeCreate((int) solver->getLinearMultistepMethod(),
-                            (int) solver->getNonlinearSolverIteration()),
-                [](void *ptr) { CVodeFree(&ptr); }
-    );
-    if (!newton_sim)
-        throw AmiException("Failed to allocate solver memory!");
     
-    int status = CVodeInit(newton_sim.get(), CVodeSolver::fxdot, RCONST(tstart), x->getNVector());
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVodeInit");
+    auto newton_solver = std::unique_ptr<CVodeSolver>(new CVodeSolver());
     
-    /* Specify integration tolerances */
-    status = CVodeSStolerances(newton_sim.get(), RCONST(solver->getRelativeTolerance()),
-                               RCONST(solver->getAbsoluteTolerance()));
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVodeSStolerances");
-    
-    /* attaches userdata*/
-    status = CVodeSetUserData(newton_sim.get(), model);
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVodeSetUserData");
-    
-    /* specify maximal number of steps */
-    status = CVodeSetMaxNumSteps(newton_sim.get(), solver->getMaxSteps());
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVodeSetMaxNumSteps");
-    
-    /* activates stability limit detection */
-    status = CVodeSetStabLimDet(newton_sim.get(), solver->getStabilityLimitFlag());
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVodeSetStabLimDet");
-    
+    newton_solver->setLinearMultistepMethod(solver->getLinearMultistepMethod());
+    newton_solver->setNonlinearSolverIteration(solver->getNonlinearSolverIteration());
+    newton_solver->setAbsoluteTolerance(solver->getAbsoluteTolerance());
+    newton_solver->setRelativeTolerance(solver->getRelativeTolerance());
+    newton_solver->setMaxSteps(solver->getMaxSteps());
+    newton_solver->setStabilityLimitFlag(solver->getStabilityLimitFlag());
     switch(solver->getLinearSolver()) {
-            
-    case LinearSolver::dense:
-        /* Set up dense solver */
-        status = CVDense(newton_sim.get(), model->nx);
-        if(status != CV_SUCCESS)
-            throw CvodeException(status,"CVDense");
-
-        status = CVDlsSetDenseJacFn(newton_sim.get(), CVodeSolver::fJ);
-        if(status != CV_SUCCESS)
-            throw CvodeException(status,"CVDlsSetDenseJacFn");
-        break;
-        
-    case LinearSolver::KLU:
-        /* Set up KLU solver */
-        status = CVKLU(newton_sim.get(), model->nx, model->nnz, CSC_MAT);
-        if(status != CV_SUCCESS)
-            throw CvodeException(status,"CVKLU");
-    
-        /* Pass Jacobian function to KLU solver */
-        status = CVSlsSetSparseJacFn(newton_sim.get(), CVodeSolver::fJSparse);
-        if(status != CV_SUCCESS)
-            throw CvodeException(status,"CVSlsSetSparseJacFn");
-    
-        /* Provide ordering to KLU solver */
-        status = CVKLUSetOrdering(newton_sim.get(), (int) solver->getStateOrdering());
-        if(status != CV_SUCCESS)
-            throw CvodeException(status,"CVKLUSetOrdering");
-        break;
-            
-    default:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "createSteadystateSimSolver");
+        case LinearSolver::dense:
+        case LinearSolver::KLU:
+            newton_solver->setLinearSolver(solver->getLinearSolver());
+            break;
+        default:
+            throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "createSteadystateSimSolver");
     }
-    return newton_sim;
+    newton_solver->setSensitivityOrder(solver->getSensitivityOrder());
+    if (solver->getSensitivityMethod() != SensitivityMethod::none)
+        newton_solver->setSensitivityMethod(SensitivityMethod::none); //need forward to compute sx0
+    else
+        newton_solver->setSensitivityMethod(SensitivityMethod::none);
+    
+    // use x and sx as dummies for dx and sdx (they wont get touched in a CVodeSolver)
+    newton_solver->setup(x,x,sx,sx,model);
+    
+    return newton_solver;
 }
 
 } // namespace amici
