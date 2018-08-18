@@ -329,11 +329,12 @@ std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
         Solver *solver, Model *model, realtype tstart)
 {
     /**
-     * New CVode object for preequilibration simulation is created
+     * initialize CVodeSolver instance for preequilibration simulation
      *
      * @param solver pointer to the AMICI solver object
      * @param model pointer to the AMICI model object
      * @param tstart time point for starting Newton simulation
+     * @return solver instance
      */
     
     /* Create new CVode object */

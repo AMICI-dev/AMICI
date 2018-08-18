@@ -128,7 +128,6 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
     /**
      * Computes steady state sensitivities
      *
-     * @param it integer index of current time step
      * @param sx pointer to state variable sensitivities
      */
     prepareLinearSystem(0, -1);
