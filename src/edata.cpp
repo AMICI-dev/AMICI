@@ -76,7 +76,7 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
     
     for (int iy = 0; iy < nytrue; ++iy) {
         for (int it = 0; it < nt(); ++it) {
-            sigma = sigma_y.at(iy) ? sigma_y.size() == (unsigned) nytrue : sigma_y.at(iy + nytrue * it);
+            sigma = sigma_y.size() == (unsigned) nytrue ? sigma_y.at(iy) : sigma_y.at(iy + nytrue * it);
             std::normal_distribution<> e{0, sigma};
             observedData.at(iy + nytrue * it) = rdata.y.at(iy + rdata.ny * it) + e(gen);
             observedDataStdDev.at(iy + nytrue * it) = sigma;
@@ -85,7 +85,7 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
     
     for (int iz = 0; iz < nztrue; ++iz) {
         for (int ie = 0; ie < nmaxevent; ++ie) {
-            sigma = sigma_z.at(iz) ? sigma_z.size() == (unsigned) nztrue : sigma_z.at(iz + nztrue * ie);
+            sigma = sigma_z.size() == (unsigned) nztrue ? sigma_z.at(iz) : sigma_z.at(iz + nztrue * ie);
             std::normal_distribution<> e{0, sigma};
             observedEvents.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie) + e(gen);
             observedDataStdDev.at(iz + rdata.nztrue * ie) = sigma;
