@@ -7,6 +7,7 @@
 #include <cstring>
 #include <random>
 #include <utility>
+#include <iterator>
 
 namespace amici {
 

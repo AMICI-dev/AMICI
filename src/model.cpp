@@ -5,6 +5,7 @@
 #include <cmath>
 #include <typeinfo>
 #include <utility>
+#include <iterator>
 
 namespace amici {
 
