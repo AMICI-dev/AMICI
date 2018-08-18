@@ -193,6 +193,19 @@ double Dmin(int id, double a, double b, double c) {
 }
 
 /**
+ * specialized pow functions that assumes positivity of the first argument
+ *
+ * @param base base
+ * @param exponent exponent
+ * @return pow(max(base,0.0),exponen)
+ *
+ */
+double pos_pow(double base, double exponent) {
+    // we do NOT want to propagate NaN values here, if base is nan, so should the output be
+    return pow(std::max(base, 0.0),exponent);
+}
+    
+/**
  * spline function, takes variable argument pairs (ti,pi) with `ti`: location of
  * node i and
  * `pi`: spline value at node i. the last two arguments are always `ss`: flag

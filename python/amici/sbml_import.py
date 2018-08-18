@@ -260,7 +260,8 @@ class SbmlImporter:
             raise SBMLException('SBML Document failed to load (see error messages above)')
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}, verbose=False):
+    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={},
+                   verbose=False, assume_pow_positivity=False):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Arguments:
@@ -271,6 +272,8 @@ class SbmlImporter:
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
             constantParameters: list of SBML Ids identifying constant parameters
             verbose: more verbose output if True
+            assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
+                                   state variables that may become negative due to numerical errors
         Returns:
 
         Raises:
@@ -282,7 +285,7 @@ class SbmlImporter:
         self.processSBML(constantParameters)
         self.computeModelEquations(observables, sigmas)
         self.prepareModelFolder()
-        self.generateCCode()
+        self.generateCCode(assume_pow_positivity)
         self.compileCCode(verbose)
 
 
@@ -914,10 +917,13 @@ class SbmlImporter:
 
 
 
-    def generateCCode(self):
+    def generateCCode(self, assume_pow_positivity):
         """Create C++ code files for the model based on.
 
         Arguments:
+            assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
+                                   state variables that may become negative due to numerical errors
+
 
         Returns:
 
@@ -928,7 +934,7 @@ class SbmlImporter:
             self.writeIndexFiles(name)
 
         for function in self.functions.keys():
-            self.writeFunctionFile(function)
+            self.writeFunctionFile(function, assume_pow_positivity)
 
         self.writeWrapfunctionsCPP()
         self.writeWrapfunctionsHeader()
@@ -998,12 +1004,14 @@ class SbmlImporter:
         with open(os.path.join(self.modelPath,name + '.h'), 'w') as fileout:
             fileout.write('\n'.join(lines))
 
-
-    def writeFunctionFile(self,function):
+    def writeFunctionFile(self, function, assume_pow_positivity):
         """Write the function `function`.
 
         Arguments:
             function: name of the function to be written (see self.functions)
+            assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
+                                   state variables that may become negative due to numerical errors
+
 
         Returns:
 
@@ -1040,6 +1048,8 @@ class SbmlImporter:
 
         # function body
         body = self.getFunctionBody(function)
+        if assume_pow_positivity:
+            body = [re.sub(r'(^|\W)pow(\d+)\(', r'\1pos_pow(', line) for line in body]
         self.functions[function]['body'] = body
         lines += body
         lines.append('}')

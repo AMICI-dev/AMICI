@@ -134,6 +134,11 @@ TEST(symbolicFunctions, testDMax) {
     CHECK_EQUAL(1, amici::Dmax(2, -1, 2, 0));
 }
 
+TEST(symbolicFunctions, testpos_pow) {
+    CHECK_EQUAL(0, amici::pos_pow(-0.1, 3));
+    CHECK_EQUAL(pow(0.1, 3), amici::pos_pow(0.1, 3));
+}
+
 TEST_GROUP(amiciSolver)
 {
     void setup() {
