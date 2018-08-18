@@ -151,7 +151,6 @@ class my_install_lib(install_lib):
         """
         if 'ENABLE_AMICI_DEBUGGING' in os.environ and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' and sys.platform == 'darwin':
             search_dir = os.path.join(os.getcwd(),self.build_dir,'amici')
-            target_dir = os.path.join(self.install_dir,'amici','libs')
             for file in os.listdir(search_dir):
                 if file.endswith('.so'):
                     subprocess.run(['dsymutil',os.path.join(search_dir,file),
