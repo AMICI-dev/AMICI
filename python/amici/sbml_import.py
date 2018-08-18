@@ -1049,7 +1049,7 @@ class SbmlImporter:
         # function body
         body = self.getFunctionBody(function)
         if assume_pow_positivity:
-            body = [re.sub(r'(^|\W)pow(\d+)\(', r'\1pos_pow(', line) for line in body]
+            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line) for line in body]
         self.functions[function]['body'] = body
         lines += body
         lines.append('}')
