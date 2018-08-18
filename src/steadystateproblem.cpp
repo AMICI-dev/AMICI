@@ -87,7 +87,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
-    getNewtonOutput(rdata, newton_status, run_time, it);
+    getNewtonOutput(rdata, model, newton_status, run_time, it);
     
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
@@ -213,7 +213,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
 /* ----------------------------------------------------------------------------------
  */
 
-void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
+void SteadystateProblem::getNewtonOutput(ReturnData *rdata,const Model *model,
                                          int newton_status,
                                          double run_time, int it) {
     /**
@@ -222,7 +222,8 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
      * @param newton_status integer flag indicating when a steady state was
      * found
      * @param run_time double coputation time of the solver in milliseconds
-     * @param rdata pointer to the return data object
+     * @param rdata pointer to the return data instance
+     * @param rdata pointer to the model instance
      * @param it current timepoint index, <0 indicates preequilibration
      */
 
@@ -232,7 +233,7 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,
     
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
-        *t = rdata->ts.at(0);
+        *t = model->t0();
 
         /* Write steady state to output */
         rdata->x0 = x->getVector();

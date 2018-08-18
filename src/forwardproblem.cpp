@@ -195,7 +195,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     /**
      * handleEvent executes everything necessary for the handling of events
      *
-     * @param[out] tlastroot pointer to the timepoint of the last event 
+     * @param tlastroot pointer to the timepoint of the last event
      */
 
     /* store heaviside information at event occurence */
@@ -410,7 +410,7 @@ void ForwardProblem::prepEventSensis(int ie) {
      * prepEventSensis preprocesses the provided experimental data to compute
      * event sensitivities via adjoint or forward methods later on
      *
-     * @param[in] ie index of current event @type int
+     * @param ie index of current event
      */
 
     if(!edata)
@@ -457,7 +457,7 @@ void ForwardProblem::getEventSensisFSA(int ie) {
      * getEventSensisFSA extracts event information for forward sensitivity
      * analysis
      *
-     * @param[in] ie index of event type @type int
+     * @param ie index of event type
      */
     if (t == model->t(model->nt() - 1)) {
         // call from fillEvent at last timepoint
@@ -477,7 +477,7 @@ void ForwardProblem::handleDataPoint(int it) {
      * handleDataPoint executes everything necessary for the handling of data
      * points
      *
-     * @param[in] it index of data point @type int
+     * @param it index of data point
      */
 
     std::copy_n(x.data(), model->nx, &rdata->x.at(it*model->nx));
@@ -493,7 +493,7 @@ void ForwardProblem::getDataOutput(int it) {
     /**
      * getDataOutput extracts output information for data-points
      *
-     * @param[in] it index of current timepoint @type int
+     * @param it index of current timepoint
      */
 
     model->fy(it, rdata);
@@ -514,7 +514,7 @@ void ForwardProblem::prepDataSensis(int it) {
      * prepDataSensis preprocesses the provided experimental data to compute
      * sensitivities via adjoint or forward methods later on
      *
-     * @param[in] it index of current timepoint @type int
+     * @param it index of current timepoint
      */
 
     model->fdydx(it, rdata);
@@ -535,7 +535,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
      * getDataSensisFSA extracts data information for forward sensitivity
      * analysis
      *
-     * @param[in] it index of current timepoint @type int
+     * @param it index of current timepoint
      */
 
     if (!std::isinf(model->t(it)) && model->t(it) > model->t0()) {
@@ -563,7 +563,7 @@ void ForwardProblem::applyEventBolus() {
     /**
      * applyEventBolus applies the event bolus to the current state
      *
-     * @param[in] model pointer to model specification object @type Model
+     * @param model pointer to model specification object
      */
 
     for (int ie = 0; ie < model->ne; ie++) {
