@@ -155,7 +155,6 @@ class my_install_lib(install_lib):
             for file in os.listdir(search_dir):
                 if file.endswith('.so'):
                     subprocess.run(['dsymutil',os.path.join(search_dir,file),
-                                    '--oso-prepend-path=' + target_dir,
                                     '-o',os.path.join(search_dir,file + '.dSYM')])
 
 
