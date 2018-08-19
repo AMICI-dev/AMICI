@@ -223,7 +223,7 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,const Model *model,
      * found
      * @param run_time double coputation time of the solver in milliseconds
      * @param rdata pointer to the return data instance
-     * @param rdata pointer to the model instance
+     * @param model pointer to the model instance
      * @param it current timepoint index, <0 indicates preequilibration
      */
 
