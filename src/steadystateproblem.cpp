@@ -317,13 +317,10 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         if (it_newton >= solver->getMaxSteps())
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,"getSteadystateSimulation");
     }
-    if (it<1) {
-        if (newtonSimSolver->getSensitivityOrder()>SensitivityOrder::none)
-            newtonSimSolver->getSens(t, sx);
-    } else {
-        if (solver->getSensitivityOrder()>SensitivityOrder::none)
-            solver->getSens(t, sx);
-    }
+    if (it<1 && newtonSimSolver->getSensitivityOrder()>SensitivityOrder::none)
+        newtonSimSolver->getSens(t, sx);
+    else if (it>=0 && solver->getSensitivityOrder()>SensitivityOrder::none)
+        solver->getSens(t, sx);
 }
 
 std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
