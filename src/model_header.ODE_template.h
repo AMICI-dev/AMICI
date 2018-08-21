@@ -36,6 +36,7 @@ extern void sigmay_TPL_MODELNAME(double *sigmay, const realtype t, const realtyp
 extern void sxdot_TPL_MODELNAME(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp);
 extern void w_TPL_MODELNAME(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
 extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p, const realtype *k);
+extern void sx0_TPL_MODELNAME(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
 extern void xBdot_TPL_MODELNAME(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void y_TPL_MODELNAME(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
@@ -589,6 +590,7 @@ public:
      * @param ip sensitivity index
      **/
     virtual void fsx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) override {
+        sx0_TPL_MODELNAME(sx0, t, x0, p, k, ip);
     }
 
     /** model specific implementation of fsxdot
