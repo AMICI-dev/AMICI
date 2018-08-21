@@ -161,7 +161,8 @@ class SbmlImporter:
             'x0': {'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
             'sx0': {
                 'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
-                             ' const realtype *k, const int ip)'},
+                             ' const realtype *k, const int ip)',
+                'sensitivity': True},
             'xBdot': {
                 'signature': '(realtype *xBdot, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
@@ -216,9 +217,6 @@ class SbmlImporter:
         if len(self.sbml_doc.getModel().getListOfFunctionDefinitions()) > 0:
             convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
             self.sbml_doc.convert(convertConfig)
-
-        convertConfig = sbml.SBMLInitialAssignmentConverter().getDefaultProperties()
-        self.sbml_doc.convert(convertConfig)
 
         convertConfig = sbml.SBMLLocalParameterConverter().getDefaultProperties()
         self.sbml_doc.convert(convertConfig)
@@ -408,16 +406,31 @@ class SbmlImporter:
             if not math.isnan(conc):
                 return sp.sympify(conc)
             if not math.isnan(amounts[index]):
-                return sp.sympify(amounts[index]) / self.speciesCompartment[index]
+                return sp.sympify(amounts[index]) \
+                       / self.speciesCompartment[index]
             return self.symbols['species']['sym'][index]
-        self.speciesInitial = sp.DenseMatrix([getSpeciesInitial(index, conc) for index, conc in enumerate(concentrations)])
+        self.speciesInitial = sp.DenseMatrix([getSpeciesInitial(index, conc)
+                                              for index, conc
+                                              in enumerate(concentrations)])
+
+        initial_assignments = self.sbml.getListOfInitialAssignments()
+        for initial_assignment in initial_assignments:
+            index = [spec.getId() for spec in self.sbml.getListOfSpecies()]\
+                .index(
+                    initial_assignment.getId()
+                )
+            self.speciesInitial[index] = sp.sympify(
+                sbml.formulaToL3String(initial_assignment.getMath())
+            )
+
+
 
         if self.sbml.isSetConversionFactor():
-            conversionFactor = self.sbml.getConversionFactor()
+            conversion_factor = self.sbml.getConversionFactor()
         else:
-            conversionFactor = 1.0
+            conversion_factor = 1.0
         self.speciesConversionFactor = sp.DenseMatrix([sp.sympify(specie.getConversionFactor()) if
-                                                       specie.isSetConversionFactor() else conversionFactor
+                                                       specie.isSetConversionFactor() else conversion_factor
                                                        for specie in species])
 
 
