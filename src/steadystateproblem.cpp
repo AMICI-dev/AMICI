@@ -91,6 +91,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     
     /* Reinitialize solver with preequilibrated state */
     if (it == AMICI_PREEQUILIBRATE) {
+        model->fx0_fixedParameters(x);
         solver->reInit(*t, x, &dx);
         if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
             solver->getSensitivityMethod() == SensitivityMethod::forward)

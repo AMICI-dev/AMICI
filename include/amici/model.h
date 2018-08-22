@@ -172,7 +172,15 @@ namespace amici {
         virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                              AmiVector *v, AmiVector *nJv, realtype cj) = 0;
         
+        /** Initial states
+         * @param x pointer to state variables
+         */
         void fx0(AmiVector *x);
+        
+        /** Sets only those initial states that are specified via fixedParmeters
+         * @param x pointer to state variables
+         */
+        void fx0_fixedParameters(AmiVector *x);
         
         /** Initial value for time derivative of states (only necessary for DAEs)
          * @param x0 Vector with the initial states
@@ -722,6 +730,15 @@ namespace amici {
          **/
         virtual void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
+        }
+        
+        /** model specific implementation of fx0
+         * @param x0 initial state
+         * @param t initial time
+         * @param p parameter vector
+         * @param k constant vector
+         **/
+        virtual void fx0_fixedParameters(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
         }
         
         /** model specific implementation of fsx0

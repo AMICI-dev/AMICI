@@ -158,7 +158,10 @@ class SbmlImporter:
             'w': {
                 'signature': '(realtype *w, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h)'},
-            'x0': {'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
+            'x0': {
+                'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
+            'x0_fixedParameters': {
+                'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
             'sx0': {
                 'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
                              ' const realtype *k, const int ip)',
@@ -786,6 +789,16 @@ class SbmlImporter:
         self.functions['JSparse']['rowVals'] = self.getSparseSymbols('J')
 
         self.functions['x0']['sym'] = self.speciesInitial
+
+        self.functions['x0_fixedParameters']['sym'] = \
+             sp.DenseMatrix(
+                 [init
+                 if any([sym in init.free_symbols
+                         for sym in self.symbols['fixed_parameter']['sym']])
+                 else 0.0
+                 for init in self.speciesInitial])
+
+
         self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
 
 
