@@ -161,7 +161,8 @@ class SbmlImporter:
             'x0': {
                 'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
             'x0_fixedParameters': {
-                'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
+                'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)',
+                'variable': 'x0',},
             'sx0': {
                 'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
                              ' const realtype *k, const int ip)',
@@ -1309,8 +1310,11 @@ class SbmlImporter:
 
         """
 
-        lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + self.printWithException(math) + ';'
-                if not math == 0 else '' for index, math in enumerate(symbols)]
+        lines = [' ' * indentLevel + variable + '[' + str(index) + '] = '
+                 + self.printWithException(math) + ';'
+                 if not (math == 0 or math == 0.0)
+                 else ''
+                 for index, math in enumerate(symbols)]
 
         try:
             lines.remove('')
