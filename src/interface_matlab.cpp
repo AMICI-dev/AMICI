@@ -49,13 +49,13 @@ enum mexRhsArguments {
  * @return cblastrans CBlas readable CHAR indicating transposition and complex
  * conjugation
  */
-char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
+char amici_blasCBlasTransToBlasTrans(BLASTranspose trans) {
     switch (trans) {
-    case AMICI_BLAS_NoTrans:
+    case BLASTranspose::noTrans:
         return 'N';
-    case AMICI_BLAS_Trans:
+    case BLASTranspose::trans:
         return 'T';
-    case AMICI_BLAS_ConjTrans:
+    case BLASTranspose::conjTrans:
         return 'C';
     }
 }
@@ -79,16 +79,16 @@ char amici_blasCBlasTransToBlasTrans(AMICI_BLAS_TRANSPOSE trans) {
  * @param B         matrix B
  * @param ldb       leading dimension of B (k or n)
  * @param beta      coefficient beta
- * @param[in,out] C     matrix C
+ * @param C         matrix C
  * @param ldc       leading dimension of C (m or n)
  * @return void
  */
-void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
-                 AMICI_BLAS_TRANSPOSE TransB, const int M, const int N,
+void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
+                 BLASTranspose TransB, const int M, const int N,
                  const int K, const double alpha, const double *A,
                  const int lda, const double *B, const int ldb,
                  const double beta, double *C, const int ldc) {
-    //assert(layout == AMICI_BLAS_RowMajor);
+    assert(layout == BLASLayout::rowMajor);
 
     const ptrdiff_t M_ = M;
     const ptrdiff_t N_ = N;
@@ -120,15 +120,15 @@ void amici_dgemm(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
  * @param X         vector X
  * @param incX      increment for entries of X
  * @param beta      coefficient beta
- * @param[in,out] Y     vector Y
+ * @param Y         vector Y
  * @param incY      increment for entries of Y
  * @return void
  */
-void amici_dgemv(AMICI_BLAS_LAYOUT layout, AMICI_BLAS_TRANSPOSE TransA,
+void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
                  const int M, const int N, const double alpha, const double *A,
                  const int lda, const double *X, const int incX,
                  const double beta, double *Y, const int incY) {
-    assert(layout == AMICI_BLAS_RowMajor);
+    assert(layout == BLASLayout::rowMajor);
 
     const ptrdiff_t M_ = M;
     const ptrdiff_t N_ = N;
@@ -345,7 +345,7 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi")) {
-            solver.setSensitivityOrder(static_cast<AMICI_sensi_order>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi")))));
+            solver.setSensitivityOrder(static_cast<SensitivityOrder>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi")))));
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ism")) {
@@ -353,7 +353,7 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")) {
-            solver.setSensitivityMethod(static_cast<AMICI_sensi_meth>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")))));
+            solver.setSensitivityMethod(static_cast<SensitivityMethod>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")))));
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")) {
@@ -391,13 +391,13 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
 
         if (mxArray *a = mxGetProperty(prhs[RHS_OPTIONS], 0, "pscale")) {
             if(mxGetM(a) == 1 && mxGetN(a) == 1) {
-                model.setParameterScale(static_cast<AMICI_parameter_scaling>(dbl2int(mxGetScalar(a))));
+                model.setParameterScale(static_cast<ParameterScaling>(dbl2int(mxGetScalar(a))));
             } else if((mxGetM(a) == 1 && mxGetN(a) == model.np())
                       || (mxGetN(a) == 1 && mxGetM(a) == model.np())) {
                 auto pscaleArray = static_cast<double *>(mxGetData(a));
-                std::vector<AMICI_parameter_scaling> pscale(model.np());
+                std::vector<ParameterScaling> pscale(model.np());
                 for(int ip = 0; ip < model.np(); ++ip) {
-                    pscale[ip] = static_cast<AMICI_parameter_scaling>(dbl2int(pscaleArray[ip]));
+                    pscale[ip] = static_cast<ParameterScaling>(dbl2int(pscaleArray[ip]));
                 }
                 model.setParameterScale(pscale);
             } else {
@@ -537,8 +537,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         } catch (amici::AmiException& ex) {
             amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
-    } else if (solver->getSensitivityOrder() >= amici::AMICI_SENSI_ORDER_FIRST &&
-               solver->getSensitivityMethod() == amici::AMICI_SENSI_ASA) {
+    } else if (solver->getSensitivityOrder() >= amici::SensitivityOrder::first &&
+               solver->getSensitivityMethod() == amici::SensitivityMethod::adjoint) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
     }
     
