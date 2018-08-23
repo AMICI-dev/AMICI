@@ -262,7 +262,8 @@ class SbmlImporter:
             raise SBMLException('SBML Document failed to load (see error messages above)')
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={},
+    def sbml2amici(self, modelName, output_dir=None, observables=None,
+                   constantParameters=None, sigmas=None,
                    verbose=False, assume_pow_positivity=False):
         """Generate AMICI C++ files for the model provided to the constructor.
         
@@ -281,6 +282,14 @@ class SbmlImporter:
         Raises:
 
         """
+        if observables is None:
+            observables = {}
+
+        if constantParameters is None:
+            constantParameters = []
+
+        if sigmas is None:
+            sigmas = {}
 
         self.setName(modelName)
         self.setPaths(output_dir)
@@ -328,7 +337,7 @@ class SbmlImporter:
                 os.makedirs(dir)
 
 
-    def processSBML(self, constantParameters=[]):
+    def processSBML(self, constantParameters=None):
         """Read parameters, species, reactions, and so on from SBML model
 
         Arguments:
@@ -339,6 +348,10 @@ class SbmlImporter:
         Raises:
 
         """
+
+        if constantParameters is None:
+            constantParameters = []
+
         self.checkSupport()
         self.processParameters(constantParameters)
         self.processSpecies()
@@ -438,7 +451,7 @@ class SbmlImporter:
                                                        for specie in species])
 
 
-    def processParameters(self, constantParameters=[]):
+    def processParameters(self, constantParameters=None):
         """Get parameter information from SBML model.
 
         Arguments:
@@ -448,6 +461,10 @@ class SbmlImporter:
         Raises:
 
         """
+
+        if constantParameters is None:
+            constantParameters = []
+
         # Ensure specified constant parameters exist in the model
         for parameter in constantParameters:
             if not self.sbml.getParameter(parameter):
@@ -736,7 +753,7 @@ class SbmlImporter:
         sparseList = sp.DenseMatrix(sparseList)
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
-    def computeModelEquations(self, observables={}, sigmas={}):
+    def computeModelEquations(self, observables=None, sigmas=None):
         """Perform symbolic computations required to populate functions in `self.functions`.
 
         Arguments:
@@ -749,6 +766,12 @@ class SbmlImporter:
         Raises:
 
         """
+
+        if observables is None:
+            observables = {}
+
+        if sigmas is None:
+            sigmas = {}
 
         # core
         self.functions['xdot']['sym'] = self.stoichiometricMatrix * self.symbols['flux']['sym']
@@ -803,7 +826,8 @@ class SbmlImporter:
         self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
 
 
-    def computeModelEquationsObjectiveFunction(self, observables={}, sigmas={}):
+    def computeModelEquationsObjectiveFunction(self, observables=None,
+                                               sigmas=None):
         """Perform symbolic computations required for objective function evaluation.
 
         Arguments:
@@ -816,6 +840,13 @@ class SbmlImporter:
         Raises:
 
         """
+
+        if observables is None:
+            observables = {}
+
+        if sigmas is None:
+            sigmas = {}
+
         speciesSyms = self.symbols['species']['sym']
 
         # add user-provided observables or make all species observable

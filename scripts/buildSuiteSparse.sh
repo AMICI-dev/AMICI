@@ -4,8 +4,8 @@
 #
 set -e
 
-AMICI_PATH="`dirname \"$BASH_SOURCE\"`"
-AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
+SCRIPT_PATH=$(dirname $BASH_SOURCE)
+AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 SUITESPARSE_ROOT="${AMICI_PATH}/ThirdParty/SuiteSparse"
 

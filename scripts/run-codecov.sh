@@ -1,8 +1,8 @@
 #!/bin/bash
 # Check code coverage via codecov
 
-AMICI_PATH="`dirname \"$0\"`"
-AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
+SCRIPT_PATH=$(dirname $BASH_SOURCE)
+AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 lcov --base-directory ${AMICI_PATH} --directory ${AMICI_PATH} --zerocounters -q
 

@@ -373,9 +373,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
      */
     
     double rho;
-    double rho1;
     double alpha;
-    double beta;
     double omega;
     double res;
     
@@ -413,9 +411,9 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     for (int i_linstep = 0; i_linstep < maxlinsteps;
          i_linstep++) {
         // Compute factors
-        rho1 = rho;
+        double rho1 = rho;
         rho = N_VDotProd(ns_rt.getNVector(), ns_r.getNVector());
-        beta = rho * alpha / (rho1 * omega);
+        double beta = rho * alpha / (rho1 * omega);
         
         // ns_p = ns_r + beta * (ns_p - omega * ns_v);
         N_VLinearSum(1.0, ns_p.getNVector(), -omega, ns_v.getNVector(), ns_p.getNVector());

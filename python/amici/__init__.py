@@ -89,11 +89,11 @@ def rdataToNumPyArrays(rdata):
         
     """
     npReturnData = {'ptr': rdata}
-    fieldNames = ['t', 'x', 'x0', 'sx', 'sx0', 'y', 'sigmay', 'sy', 'ssigmay', 
-                  'z', 'rz', 'sigmaz', 'sz', 'srz', 'ssigmaz', 'sllh', 's2llh', 
+    fieldNames = ['t', 'x', 'x0', 'sx', 'sx0', 'y', 'sigmay', 'sy', 'ssigmay',
+                  'z', 'rz', 'sigmaz', 'sz', 'srz', 'ssigmaz', 'sllh', 's2llh',
                   'J', 'xdot', 'status', 'llh', 'chi2', 'res', 'sres', 'FIM',
-                  'newton_numlinsteps', 'newton_numsteps', 
-                  'numsteps', 'numrhsevals', 'numerrtestfails', 'numnonlinsolvconvfails', 
+                  'newton_numlinsteps', 'newton_numsteps',
+                  'numsteps', 'numrhsevals', 'numerrtestfails', 'numnonlinsolvconvfails',
                   'order', 'numstepsB', 'numrhsevalsB', 'numerrtestfailsB', 'numnonlinsolvconvfailsB']
 
     for field in fieldNames:
