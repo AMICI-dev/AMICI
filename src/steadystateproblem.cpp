@@ -262,13 +262,6 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
     } else {
         /* Carry on simulating from last point */
         *t = model->t(it-1);
-        model->fx0(x);
-        model->fsx0(sx, x);
-        /* Reinitialize old solver */
-        solver->reInit(*t, x, &dx);
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() == SensitivityMethod::forward)
-            solver->sensReInit(sx, sx); // use sx as dummy for second argument
     }
     
     /* Loop over steps and check for convergence */
