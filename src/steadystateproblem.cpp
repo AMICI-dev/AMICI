@@ -88,15 +88,6 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     getNewtonOutput(rdata, model, newton_status, run_time, it);
-    
-    /* Reinitialize solver with preequilibrated state */
-    if (it == AMICI_PREEQUILIBRATE) {
-        model->fx0_fixedParameters(x);
-        solver->reInit(*t, x, &dx);
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() == SensitivityMethod::forward)
-                solver->sensReInit( sx, &sdx);
-    }
 }
 
 /* ----------------------------------------------------------------------------------

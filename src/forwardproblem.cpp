@@ -185,6 +185,12 @@ void ForwardProblem::handlePreequilibration()
     if(overrideFixedParameters) { // Restore
         model->setFixedParameters(originalFixedParameters);
     }
+    
+    model->fx0_fixedParameters(&x);
+    solver->reInit(t, &x, &dx);
+    if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        solver->getSensitivityMethod() == SensitivityMethod::forward)
+        solver->sensReInit( &sx, &sdx);
 }
 
 /* ------------------------------------------------------------------------ */
