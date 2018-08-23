@@ -220,7 +220,7 @@ def writeSensiFwdSimPreeqFSA(filename):
     ex.data['t'] = np.linspace(0, 5, 10)
 
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
-    ex.modelOptions['FSASteadyStateSensitivityFlag'] = 1
+    ex.modelOptions['steadyStateSensitivityMode'] = 1
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 1
     ex.solverOptions['newton_preeq'] = True
@@ -292,7 +292,7 @@ def writeSensiAdjSimPreeqFSA(filename):
     ex.data['t'] = np.linspace(0, 5, 10)
 
     ex.modelOptions['ts'] = np.linspace(0, 5, 10)
-    ex.modelOptions['FSASteadyStateSensitivityFlag'] = 1
+    ex.modelOptions['steadyStateSensitivityMode'] = 1
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sensi_meth'] = 2
     ex.solverOptions['newton_preeq'] = True

@@ -638,18 +638,18 @@ namespace amici {
         
         /**
          * @brief sets the mode how sensitivities are computed in the steadystate simulation
-         * @param mode steadyStateSenitivityMode
+         * @param mode steadyStateSensitivityMode
          */
-        void setSteadyStateSenitivityMode (const SteadyStateSenitivityMode mode) {
-            steadyStateSenitivityMode = mode;
+        void setSteadyStateSensitivityMode (const SteadyStateSensitivityMode mode) {
+            steadyStateSensitivityMode = mode;
         }
         
         /**
          * @brief gets the mode how sensitivities are computed in the steadystate simulation
          * @return flag value
          */
-        SteadyStateSenitivityMode getSteadyStateSenitivityMode () const {
-            return steadyStateSenitivityMode;
+        SteadyStateSensitivityMode getSteadyStateSensitivityMode () const {
+            return steadyStateSensitivityMode;
         }
 
         /** number of states */
@@ -1286,7 +1286,7 @@ namespace amici {
         
         /** flag indicating whether steadystate sensivities are to be computed
          via FSA when steadyStateSimulation is used */
-        SteadyStateSenitivityMode steadyStateSenitivityMode = SteadyStateSenitivityMode::newtonOnly;
+        SteadyStateSensitivityMode steadyStateSensitivityMode = SteadyStateSensitivityMode::newtonOnly;
 
     };
 

@@ -137,7 +137,7 @@ enum class StateOrdering {
 };
   
 /** Sensitivity computation mode in steadyStateProblem */
-enum class SteadyStateSenitivityMode {
+enum class SteadyStateSensitivityMode {
     newtonOnly,
     simulationFSA
 };
