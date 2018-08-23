@@ -637,19 +637,19 @@ namespace amici {
         virtual std::vector<std::string> getObservableIds() const { return std::vector<std::string>(); }
         
         /**
-         * @brief sets the FSASteadyStateSensitivities flag
-         * @param flag flag value
+         * @brief sets the mode how sensitivities are computed in the steadystate simulation
+         * @param mode steadyStateSenitivityMode
          */
-        void setFSASteadyStateSensitivityFlag (const bool flag) {
-            FSASteadyStateSensitivities = flag;
+        void setSteadyStateSenitivityMode (const SteadyStateSenitivityMode mode) {
+            steadyStateSenitivityMode = mode;
         }
         
         /**
-         * @brief gets the FSASteadyStateSensitivities flag
+         * @brief gets the mode how sensitivities are computed in the steadystate simulation
          * @return flag value
          */
-        bool getFSASteadyStateSensitivityFlag () const {
-            return FSASteadyStateSensitivities;
+        SteadyStateSenitivityMode getSteadyStateSenitivityMode () const {
+            return steadyStateSenitivityMode;
         }
 
         /** number of states */
@@ -1286,7 +1286,7 @@ namespace amici {
         
         /** flag indicating whether steadystate sensivities are to be computed
          via FSA when steadyStateSimulation is used */
-        bool FSASteadyStateSensitivities = false;
+        SteadyStateSenitivityMode steadyStateSenitivityMode = SteadyStateSenitivityMode::newtonOnly;
 
     };
 
