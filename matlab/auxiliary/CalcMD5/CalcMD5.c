@@ -220,11 +220,12 @@ void MD5Update(MD5_CTX *context, UCHAR *input, UINT inputLen)
   
   /*  Transform as many times as possible: */
   if (inputLen >= partLen) {
+    int i;
     memcpy((POINTER)&context->buffer[index], (POINTER)input, partLen);
     MD5Transform(context->state, context->buffer);
     
     inputLenM63 = inputLen - 63;
-    for (int i = partLen; i < inputLenM63; i += 64) {
+    for (i = partLen; i < inputLenM63; i += 64) {
       MD5Transform(context->state, &input[i]);
     }
     
