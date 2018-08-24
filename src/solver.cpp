@@ -18,12 +18,15 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 /**
  * @brief setupAMIs initialises the ami memory object
- * @param fwd pointer to forward problem
+ * @param x state vector
+ * @param dx state derivative vector (DAE only)
+ * @param sx state sensitivity vector
+ * @param sdx state derivative sensitivity vector (DAE only)
  * @param model pointer to the model object
  */
-void Solver::setup(ForwardProblem *fwd, Model *model) {
+void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArray *sdx, Model *model) {
     
-    model->initialize(fwd->getStatePointer(), fwd->getStateDerivativePointer());
+    model->initialize(x, dx);
 
     /* Create solver memory object */
     allocateSolver();
@@ -31,7 +34,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
         throw AmiException("Failed to allocated solver memory!");
 
     /* Initialize AMIS solver*/
-    init(fwd->getStatePointer(), fwd->getStateDerivativePointer(), model->t0());
+    init(x, dx, model->t0());
 
     applyTolerances();
     
@@ -53,9 +56,8 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
          * come from the model definition */
         auto sx0 = model->getInitialStateSensitivities();
         if (sx0.empty()) {
-            model->fsx0(fwd->getStateSensitivityPointer(), fwd->getStatePointer());
+            model->fsx0(sx, x);
         } else {
-            AmiVectorArray *sx = fwd->getStateSensitivityPointer();
             for (int ip = 0; ip < model->nplist(); ip++) {
                 for (int ix = 0; ix < model->nx; ix++) {
                     sx->at(ix,ip) =
@@ -73,7 +75,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
             auto par = model->getUnscaledParameters();
 
             /* Activate sensitivity calculations */
-            sensInit1(fwd->getStateSensitivityPointer(), fwd->getStateDerivativeSensitivityPointer(), plist.size());
+            sensInit1(sx, sdx, plist.size());
             setSensParams(par.data(), nullptr, plist.data());
             
             applyTolerancesFSA();
@@ -87,7 +89,7 @@ void Solver::setup(ForwardProblem *fwd, Model *model) {
     setSuppressAlg(true);
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if(model->nt()>1)
-        calcIC(model->t(1), fwd->getStatePointer(), fwd->getStateDerivativePointer());
+        calcIC(model->t(1), x, dx);
 }
 
 /**

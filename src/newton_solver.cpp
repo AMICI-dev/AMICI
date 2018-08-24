@@ -124,11 +124,10 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector *delta) {
 /* ----------------------------------------------------------------------------------
  */
 
-void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
+void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
     /**
      * Computes steady state sensitivities
      *
-     * @param it integer index of current time step
      * @param sx pointer to state variable sensitivities
      */
     prepareLinearSystem(0, -1);
@@ -140,16 +139,8 @@ void NewtonSolver::getSensis(const int it, AmiVectorArray *sx) {
             sx->at(ix,ip) = -model->dxdotdp[model->nx * ip + ix];
         }
         solveLinearSystem(&((*sx)[ip]));
-        
-        /* Copy result to return data */
-        if (it == AMICI_PREEQUILIBRATE) {
-            for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx0[ip * model->nx + ix] = sx->at(ix,ip);
-            }
-        }
     }
 }
-
 /* ----------------------------------------------------------------------------------
  */
 /* - Dense linear solver
@@ -382,9 +373,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
      */
     
     double rho;
-    double rho1;
     double alpha;
-    double beta;
     double omega;
     double res;
     
@@ -422,9 +411,9 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     for (int i_linstep = 0; i_linstep < maxlinsteps;
          i_linstep++) {
         // Compute factors
-        rho1 = rho;
+        double rho1 = rho;
         rho = N_VDotProd(ns_rt.getNVector(), ns_r.getNVector());
-        beta = rho * alpha / (rho1 * omega);
+        double beta = rho * alpha / (rho1 * omega);
         
         // ns_p = ns_r + beta * (ns_p - omega * ns_v);
         N_VLinearSum(1.0, ns_p.getNVector(), -omega, ns_v.getNVector(), ns_p.getNVector());

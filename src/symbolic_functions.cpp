@@ -193,6 +193,19 @@ double Dmin(int id, double a, double b, double c) {
 }
 
 /**
+ * specialized pow functions that assumes positivity of the first argument
+ *
+ * @param base base
+ * @param exponent exponent
+ * @return pow(max(base,0.0),exponen)
+ *
+ */
+double pos_pow(double base, double exponent) {
+    // we do NOT want to propagate NaN values here, if base is nan, so should the output be
+    return pow(std::max(base, 0.0),exponent);
+}
+    
+/**
  * spline function, takes variable argument pairs (ti,pi) with `ti`: location of
  * node i and
  * `pi`: spline value at node i. the last two arguments are always `ss`: flag
@@ -221,15 +234,12 @@ double spline(double t, int num, ...) {
     double *c = (double *)alloca(num * sizeof(double));
     double *d = (double *)alloca(num * sizeof(double));
 
-    int i;
-    int j;
-
     /* Variable list type macro */
     /* initialize valist for num number of arguments */
     va_start(valist, num);
 
-    for (i = 0; i < 2 * num; i += 2) {
-        j = i / 2;
+    for (int i = 0; i < 2 * num; i += 2) {
+        int j = i / 2;
         ts[j] = va_arg(valist, double);
         us[j] = va_arg(valist, double);
     }
@@ -276,14 +286,11 @@ double spline_pos(double t, int num, ...) {
     double *c = (double *)alloca(num * sizeof(double));
     double *d = (double *)alloca(num * sizeof(double));
 
-    int i;
-    int j;
-
     /* initialize valist for num number of arguments */
     va_start(valist, num);
 
-    for (i = 0; i < 2 * num; i += 2) {
-        j = i / 2;
+    for (int i = 0; i < 2 * num; i += 2) {
+        int j = i / 2;
         ts[j] = va_arg(valist, double);
         us[j] = va_arg(valist, double);
         uslog[j] = log(us[j]);
@@ -331,18 +338,14 @@ double Dspline(int id, double t, int num, ...) {
     double *b = (double *)alloca(num * sizeof(double));
     double *c = (double *)alloca(num * sizeof(double));
     double *d = (double *)alloca(num * sizeof(double));
-
-    int i;
-    int j;
-    int did;
-
-    did = id / 2 - 2;
+    
+    int did = id / 2 - 2;
 
     /* initialize valist for num number of arguments */
     va_start(valist, num);
 
-    for (i = 0; i < 2 * num; i += 2) {
-        j = i / 2;
+    for (int i = 0; i < 2 * num; i += 2) {
+        int j = i / 2;
         ts[j] = va_arg(valist, double);
         ps[j] = va_arg(valist, double);
         us[j] = 0.0;
@@ -395,17 +398,13 @@ double Dspline_pos(int id, double t, int num, ...) {
     double uspline_pos;
     double suspline;
 
-    int i;
-    int j;
-    int did;
-
-    did = id / 2 - 2;
+    int did = id / 2 - 2;
 
     /* initialize valist for num number of arguments */
     va_start(valist, num);
 
-    for (i = 0; i < 2 * num; i += 2) {
-        j = i / 2;
+    for (int i = 0; i < 2 * num; i += 2) {
+        int j = i / 2;
         ts[j] = va_arg(valist, double);
         us[j] = va_arg(valist, double);
         uslog[j] = log(us[j]);
@@ -487,19 +486,14 @@ double DDspline_pos(int id1, int id2, double t, int num, ...) {
     double su1spline;
     double su2spline;
 
-    int i;
-    int j;
-    int did1;
-    int did2;
-
-    did1 = id1 / 2 - 2;
-    did2 = id2 / 2 - 2;
+    int did1 = id1 / 2 - 2;
+    int did2 = id2 / 2 - 2;
 
     /* initialize valist for num number of arguments */
     va_start(valist, num);
 
-    for (i = 0; i < 2 * num; i += 2) {
-        j = i / 2;
+    for (int i = 0; i < 2 * num; i += 2) {
+        int j = i / 2;
         ts[j] = va_arg(valist, double);
         us[j] = va_arg(valist, double);
         uslog[j] = log(us[j]);

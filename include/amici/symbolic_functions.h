@@ -12,6 +12,8 @@ double Dmin(int id, double a, double b, double c);
 double max(double a, double b, double c);
 double Dmax(int id, double a, double b, double c);
 
+double pos_pow(double base, double exponent);
+    
 int isNaN(double what);
 int isInf(double what);
 double getNaN();

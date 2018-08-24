@@ -1,6 +1,6 @@
 #!/bin/bash
-AMICI_PATH="`dirname \"$0\"`"
-AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
+SCRIPT_PATH=$(dirname $BASH_SOURCE)
+AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 # run tests
 cd ${AMICI_PATH}/build

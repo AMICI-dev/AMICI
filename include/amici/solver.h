@@ -74,7 +74,7 @@ class Solver {
      */
     virtual Solver* clone() const = 0;
 
-    void setup(ForwardProblem *fwd, Model *model);
+    void setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArray *sdx, Model *model);
 
     void setupAMIB(BackwardProblem *bwd, Model *model);
 

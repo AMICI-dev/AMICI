@@ -4,13 +4,13 @@
 #
 set -e
 
-AMICI_PATH="`dirname \"$BASH_SOURCE\"`"
-AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
+SCRIPT_PATH=$(dirname $BASH_SOURCE)
+AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 # Cpputest
 mkdir -p ${AMICI_PATH}/ThirdParty
 cd ${AMICI_PATH}/ThirdParty
-CPPUTEST_BUILD_DIR=${AMICI_PATH}/ThirdParty/cpputest-master/
+export CPPUTEST_BUILD_DIR=${AMICI_PATH}/ThirdParty/cpputest-master/
 
 if [ ! -d "cpputest-master" ]; then
     if [ ! -e "cpputest-master.zip" ]; then

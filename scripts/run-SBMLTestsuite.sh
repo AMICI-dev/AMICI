@@ -1,10 +1,4 @@
 #!/bin/bash
-# Check test suite with valgrind
-# Note: CppuTest memcheck should be disabled
-# Note: Consider using ctest -T memcheck instead
-
-AMICI_PATH="`dirname \"$0\"`"
-AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
 
 set -e
 

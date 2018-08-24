@@ -205,7 +205,7 @@ void MD5Init(MD5_CTX *context)
 void MD5Update(MD5_CTX *context, UCHAR *input, UINT inputLen)
 {
   UINT index, partLen;
-  int i, inputLenM63;
+  int inputLenM63;
 
   /*  Compute number of bytes mod 64: */
   index = (UINT)((context->count[0] >> 3) & 0x3F);
@@ -220,6 +220,7 @@ void MD5Update(MD5_CTX *context, UCHAR *input, UINT inputLen)
   
   /*  Transform as many times as possible: */
   if (inputLen >= partLen) {
+    int i;
     memcpy((POINTER)&context->buffer[index], (POINTER)input, partLen);
     MD5Transform(context->state, context->buffer);
     

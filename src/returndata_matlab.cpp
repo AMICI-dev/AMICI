@@ -76,18 +76,18 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
         writeMatlabField2(matlabSolutionStruct, "y", rdata->y, rdata->nt, rdata->ny, perm1);
         writeMatlabField2(matlabSolutionStruct, "sigmay", rdata->sigmay, rdata->nt, rdata->ny, perm1);
     }
-    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
+    if (rdata->sensi >= SensitivityOrder::first) {
         writeMatlabField1(matlabSolutionStruct, "sllh", rdata->sllh, rdata->nplist);
         writeMatlabField2(matlabSolutionStruct, "sx0",  rdata->sx0, rdata->nplist, rdata->nx, perm0);
 
-        if (rdata->sensi_meth == AMICI_SENSI_FSA) {
+        if (rdata->sensi_meth == SensitivityMethod::forward) {
             writeMatlabField3(matlabSolutionStruct, "sx", rdata->sx, rdata->nt, rdata->nplist, rdata->nx, perm2);
             if (rdata->ny > 0) {
                 writeMatlabField3(matlabSolutionStruct, "sy", rdata->sy, rdata->nt, rdata->nplist, rdata->ny, perm2);
             }
             if ((rdata->nz > 0) & (rdata->ne > 0)) {
                 writeMatlabField3(matlabSolutionStruct, "srz", rdata->srz, rdata->nmaxevent, rdata->nplist, rdata->nz, perm2);
-                if (rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
+                if (rdata->sensi >= SensitivityOrder::second) {
                     writeMatlabField4(matlabSolutionStruct, "s2rz", rdata->s2rz, rdata->nmaxevent, rdata->nplist, rdata->nztrue,
                                rdata->nplist, perm3);
                 }
@@ -102,7 +102,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
             writeMatlabField3(matlabSolutionStruct, "ssigmaz", rdata->ssigmaz, rdata->nmaxevent, rdata->nplist, rdata->nz, perm2);
         }
 
-        if (rdata->sensi >= AMICI_SENSI_ORDER_SECOND) {
+        if (rdata->sensi >= SensitivityOrder::second) {
             writeMatlabField2(matlabSolutionStruct, "s2llh", rdata->s2llh, rdata->nplist, rdata->nJ - 1, perm1);
         }
     }
@@ -159,8 +159,8 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         writeMatlabField2(matlabDiagnosisStruct, "newton_numlinsteps", rdata->newton_numlinsteps, rdata->newton_maxsteps, 2, perm1);
         writeMatlabField0(matlabDiagnosisStruct, "newton_time", rdata->newton_time);
     }
-    if (rdata->sensi >= AMICI_SENSI_ORDER_FIRST) {
-        if (rdata->sensi_meth == AMICI_SENSI_ASA) {
+    if (rdata->sensi >= SensitivityOrder::first) {
+        if (rdata->sensi_meth == SensitivityMethod::adjoint) {
             writeMatlabField1(matlabDiagnosisStruct, "numstepsB", rdata->numstepsB, rdata->nt);
             writeMatlabField1(matlabDiagnosisStruct, "numrhsevalsB", rdata->numrhsevalsB, rdata->nt);
             writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numerrtestfailsB, rdata->nt);

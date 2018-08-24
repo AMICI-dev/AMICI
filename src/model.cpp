@@ -5,6 +5,7 @@
 #include <cmath>
 #include <typeinfo>
 #include <utility>
+#include <algorithm>
 
 namespace amici {
 
@@ -399,7 +400,9 @@ std::vector<realtype> const& Model::getTimepoints() const {
 }
 
 void Model::setTimepoints(const std::vector<realtype> &ts) {
-    this->ts = ts;
+    if (!std::is_sorted(ts.begin(), ts.end()))
+        throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
+    this->ts = std::move(ts);
 }
 
 double Model::t(int idx) const {
@@ -611,12 +614,14 @@ void Model::initializeVectors()
     stau.resize(nplist(), 0.0);
 }
 
-/** Initial states
- * @param x pointer to state variables
- */
+
 void Model::fx0(AmiVector *x) {
     x->reset();
     fx0(x->data(),tstart, unscaledParameters.data(),fixedParameters.data());
+}
+
+void Model::fx0_fixedParameters(AmiVector *x) {
+    fx0_fixedParameters(x->data(),tstart, unscaledParameters.data(),fixedParameters.data());
 }
 
 void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}

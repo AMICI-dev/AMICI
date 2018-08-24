@@ -158,10 +158,15 @@ class SbmlImporter:
             'w': {
                 'signature': '(realtype *w, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h)'},
-            'x0': {'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
+            'x0': {
+                'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
+            'x0_fixedParameters': {
+                'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)',
+                'variable': 'x0',},
             'sx0': {
                 'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
-                             ' const realtype *k, const int ip)'},
+                             ' const realtype *k, const int ip)',
+                'sensitivity': True},
             'xBdot': {
                 'signature': '(realtype *xBdot, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
@@ -217,9 +222,6 @@ class SbmlImporter:
             convertConfig = sbml.SBMLFunctionDefinitionConverter().getDefaultProperties()
             self.sbml_doc.convert(convertConfig)
 
-        convertConfig = sbml.SBMLInitialAssignmentConverter().getDefaultProperties()
-        self.sbml_doc.convert(convertConfig)
-
         convertConfig = sbml.SBMLLocalParameterConverter().getDefaultProperties()
         self.sbml_doc.convert(convertConfig)
 
@@ -260,7 +262,9 @@ class SbmlImporter:
             raise SBMLException('SBML Document failed to load (see error messages above)')
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables={}, constantParameters=[], sigmas={}, verbose=False):
+    def sbml2amici(self, modelName, output_dir=None, observables=None,
+                   constantParameters=None, sigmas=None,
+                   verbose=False, assume_pow_positivity=False):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Arguments:
@@ -271,18 +275,28 @@ class SbmlImporter:
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
             constantParameters: list of SBML Ids identifying constant parameters
             verbose: more verbose output if True
+            assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
+                                   state variables that may become negative due to numerical errors
         Returns:
 
         Raises:
 
         """
+        if observables is None:
+            observables = {}
+
+        if constantParameters is None:
+            constantParameters = []
+
+        if sigmas is None:
+            sigmas = {}
 
         self.setName(modelName)
         self.setPaths(output_dir)
         self.processSBML(constantParameters)
         self.computeModelEquations(observables, sigmas)
         self.prepareModelFolder()
-        self.generateCCode()
+        self.generateCCode(assume_pow_positivity)
         self.compileCCode(verbose)
 
 
@@ -323,7 +337,7 @@ class SbmlImporter:
                 os.makedirs(dir)
 
 
-    def processSBML(self, constantParameters=[]):
+    def processSBML(self, constantParameters=None):
         """Read parameters, species, reactions, and so on from SBML model
 
         Arguments:
@@ -334,6 +348,10 @@ class SbmlImporter:
         Raises:
 
         """
+
+        if constantParameters is None:
+            constantParameters = []
+
         self.checkSupport()
         self.processParameters(constantParameters)
         self.processSpecies()
@@ -405,20 +423,35 @@ class SbmlImporter:
             if not math.isnan(conc):
                 return sp.sympify(conc)
             if not math.isnan(amounts[index]):
-                return sp.sympify(amounts[index]) / self.speciesCompartment[index]
+                return sp.sympify(amounts[index]) \
+                       / self.speciesCompartment[index]
             return self.symbols['species']['sym'][index]
-        self.speciesInitial = sp.DenseMatrix([getSpeciesInitial(index, conc) for index, conc in enumerate(concentrations)])
+        self.speciesInitial = sp.DenseMatrix([getSpeciesInitial(index, conc)
+                                              for index, conc
+                                              in enumerate(concentrations)])
+
+        initial_assignments = self.sbml.getListOfInitialAssignments()
+        for initial_assignment in initial_assignments:
+            index = [spec.getId() for spec in self.sbml.getListOfSpecies()]\
+                .index(
+                    initial_assignment.getId()
+                )
+            self.speciesInitial[index] = sp.sympify(
+                sbml.formulaToL3String(initial_assignment.getMath())
+            )
+
+
 
         if self.sbml.isSetConversionFactor():
-            conversionFactor = self.sbml.getConversionFactor()
+            conversion_factor = self.sbml.getConversionFactor()
         else:
-            conversionFactor = 1.0
+            conversion_factor = 1.0
         self.speciesConversionFactor = sp.DenseMatrix([sp.sympify(specie.getConversionFactor()) if
-                                                       specie.isSetConversionFactor() else conversionFactor
+                                                       specie.isSetConversionFactor() else conversion_factor
                                                        for specie in species])
 
 
-    def processParameters(self, constantParameters=[]):
+    def processParameters(self, constantParameters=None):
         """Get parameter information from SBML model.
 
         Arguments:
@@ -428,6 +461,10 @@ class SbmlImporter:
         Raises:
 
         """
+
+        if constantParameters is None:
+            constantParameters = []
+
         # Ensure specified constant parameters exist in the model
         for parameter in constantParameters:
             if not self.sbml.getParameter(parameter):
@@ -716,7 +753,7 @@ class SbmlImporter:
         sparseList = sp.DenseMatrix(sparseList)
         return sparseMatrix, symbolList, sparseList, symbolColPtrs, symbolRowVals
 
-    def computeModelEquations(self, observables={}, sigmas={}):
+    def computeModelEquations(self, observables=None, sigmas=None):
         """Perform symbolic computations required to populate functions in `self.functions`.
 
         Arguments:
@@ -729,6 +766,12 @@ class SbmlImporter:
         Raises:
 
         """
+
+        if observables is None:
+            observables = {}
+
+        if sigmas is None:
+            sigmas = {}
 
         # core
         self.functions['xdot']['sym'] = self.stoichiometricMatrix * self.symbols['flux']['sym']
@@ -770,10 +813,21 @@ class SbmlImporter:
         self.functions['JSparse']['rowVals'] = self.getSparseSymbols('J')
 
         self.functions['x0']['sym'] = self.speciesInitial
+
+        self.functions['x0_fixedParameters']['sym'] = \
+             sp.DenseMatrix(
+                 [init
+                 if any([sym in init.free_symbols
+                         for sym in self.symbols['fixed_parameter']['sym']])
+                 else 0.0
+                 for init in self.speciesInitial])
+
+
         self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
 
 
-    def computeModelEquationsObjectiveFunction(self, observables={}, sigmas={}):
+    def computeModelEquationsObjectiveFunction(self, observables=None,
+                                               sigmas=None):
         """Perform symbolic computations required for objective function evaluation.
 
         Arguments:
@@ -786,6 +840,13 @@ class SbmlImporter:
         Raises:
 
         """
+
+        if observables is None:
+            observables = {}
+
+        if sigmas is None:
+            sigmas = {}
+
         speciesSyms = self.symbols['species']['sym']
 
         # add user-provided observables or make all species observable
@@ -914,10 +975,13 @@ class SbmlImporter:
 
 
 
-    def generateCCode(self):
+    def generateCCode(self, assume_pow_positivity):
         """Create C++ code files for the model based on.
 
         Arguments:
+            assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
+                                   state variables that may become negative due to numerical errors
+
 
         Returns:
 
@@ -928,7 +992,7 @@ class SbmlImporter:
             self.writeIndexFiles(name)
 
         for function in self.functions.keys():
-            self.writeFunctionFile(function)
+            self.writeFunctionFile(function, assume_pow_positivity)
 
         self.writeWrapfunctionsCPP()
         self.writeWrapfunctionsHeader()
@@ -998,12 +1062,14 @@ class SbmlImporter:
         with open(os.path.join(self.modelPath,name + '.h'), 'w') as fileout:
             fileout.write('\n'.join(lines))
 
-
-    def writeFunctionFile(self,function):
+    def writeFunctionFile(self, function, assume_pow_positivity):
         """Write the function `function`.
 
         Arguments:
             function: name of the function to be written (see self.functions)
+            assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
+                                   state variables that may become negative due to numerical errors
+
 
         Returns:
 
@@ -1040,6 +1106,8 @@ class SbmlImporter:
 
         # function body
         body = self.getFunctionBody(function)
+        if assume_pow_positivity:
+            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line) for line in body]
         self.functions[function]['body'] = body
         lines += body
         lines.append('}')
@@ -1273,8 +1341,11 @@ class SbmlImporter:
 
         """
 
-        lines = [' ' * indentLevel + variable + '[' + str(index) + '] = ' + self.printWithException(math) + ';'
-                if not math == 0 else '' for index, math in enumerate(symbols)]
+        lines = [' ' * indentLevel + variable + '[' + str(index) + '] = '
+                 + self.printWithException(math) + ';'
+                 if not (math == 0 or math == 0.0)
+                 else ''
+                 for index, math in enumerate(symbols)]
 
         try:
             lines.remove('')

@@ -7,6 +7,7 @@
 #include <cstring>
 #include <random>
 #include <utility>
+#include <algorithm>
 
 namespace amici {
 
@@ -94,6 +95,9 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
 }
     
 void ExpData::setTimepoints(const std::vector<realtype> &ts) {
+    if (!std::is_sorted(ts.begin(), ts.end()))
+        throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
+
     this->ts = std::move(ts);
     observedData.resize(nt()*nytrue, getNaN());
     observedDataStdDev.resize(nt()*nytrue, getNaN());

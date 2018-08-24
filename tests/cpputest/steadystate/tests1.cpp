@@ -131,8 +131,16 @@ TEST(groupSteadystate, testSensiFwdSimPreeq) {
     amici::simulateVerifyWrite("/model_steadystate/sensifwdsimpreeq/");
 }
 
+TEST(groupSteadystate, testSensiFwdSimPreeqFSA) {
+    amici::simulateVerifyWrite("/model_steadystate/sensifwdsimpreeqFSA/");
+}
+
 TEST(groupSteadystate, testSensiAdjSimPreeq) {
     amici::simulateVerifyWrite("/model_steadystate/sensiadjsimpreeq/");
+}
+
+TEST(groupSteadystate, testSensiAdjSimPreeqFSA) {
+    amici::simulateVerifyWrite("/model_steadystate/sensiadjsimpreeqFSA/");
 }
 
 TEST(groupSteadystate, testSensiFwdByhandPreeq) {

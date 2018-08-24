@@ -540,6 +540,11 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
     if(attributeExists(file, datasetPath, "nmaxevent")) {
         model.setNMaxEvent(getIntScalarAttribute(file, datasetPath, "nmaxevent"));
     }
+    
+    if(attributeExists(file, datasetPath, "steadyStateSensitivityMode")) {
+        model.setSteadyStateSensitivityMode(static_cast<SteadyStateSensitivityMode>(
+                getIntScalarAttribute(file, datasetPath, "steadyStateSensitivityMode")));
+    }
 
     if(locationExists(file, datasetPath + "/theta")) {
         model.setParameters(getDoubleDataset1D(file, datasetPath + "/theta"));

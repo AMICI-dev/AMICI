@@ -1,8 +1,8 @@
 #!/bin/bash
 # generate code documentation via doxygen
 
-AMICI_PATH="`dirname \"$0\"`"
-AMICI_PATH="`( cd \"$AMICI_PATH/..\" && pwd )`"
+SCRIPT_PATH=$(dirname $BASH_SOURCE)
+AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 # build mtocpp
 cd ${AMICI_PATH}/ThirdParty
