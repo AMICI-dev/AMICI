@@ -1486,12 +1486,12 @@ class TemplateAmici(Template):
     delimiter = 'TPL_'
 
 
-def assignmentRules2observables(sbml, filter = lambda *_: True):
+def assignmentRules2observables(sbml_model, filter_function=lambda *_: True):
     """Turn assignment rules into observables.
 
     Arguments:
-        sbml: an sbml Model instance
-        filter: callback function taking assignment variable as input and returning True/False to indicate if the respective rule should be turned into an observable
+        sbml_model: an sbml Model instance
+        filter_function: callback function taking assignment variable as input and returning True/False to indicate if the respective rule should be turned into an observable
 
     Returns:
         A dictionary(observableId:{'name':observableNamem,'formula':formulaString})
@@ -1500,14 +1500,14 @@ def assignmentRules2observables(sbml, filter = lambda *_: True):
 
     """
     observables = {}
-    for p in sbml.getListOfParameters():
+    for p in sbml_model.getListOfParameters():
         parameterId = p.getId()
-        if filter(parameterId):
-            observables[parameterId] = {'name': p.getName(), 'formula': sbml.getAssignmentRuleByVariable(parameterId).getFormula()}
+        if filter_function(parameterId):
+            observables[parameterId] = {'name': p.getName(), 'formula': sbml_model.getAssignmentRuleByVariable(parameterId).getFormula()}
 
     for parameterId in observables:
-        sbml.removeRuleByVariable(parameterId)
-        sbml.removeParameter(parameterId)
+        sbml_model.removeRuleByVariable(parameterId)
+        sbml_model.removeParameter(parameterId)
 
     return observables
 
