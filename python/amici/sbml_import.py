@@ -852,8 +852,14 @@ class SbmlImporter:
         # add user-provided observables or make all species observable
         if(observables):
             # Replace logX(.) by log(., X) since symengine cannot parse the former
+            # also replace symengine-incompatible sbml log(basis, x)
             for observable in observables:
                 observables[observable]['formula'] = re.sub(r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(', observables[observable]['formula'])
+                repl = replaceLogAB(observables[observable]['formula'])
+                if repl != observables[observable]['formula']:
+                    print('Replaced "%s" by "%s", assuming first argument to log() was the basis.' % (observables[observable]['formula'], repl))
+                    observables[observable]['formula'] = repl
+
             self.observables = sp.DenseMatrix([observables[observable]['formula'] for observable in observables])
             observableNames = [observables[observable]['name'] if 'name' in observables[observable].keys()
                                else 'y' + str(index)
@@ -1550,4 +1556,47 @@ def constantSpeciesToParameters(sbml_model):
             reaction.removeProduct(speciesId)
     
     return transformable
+
+def replaceLogAB(x):
+    """
+    Replace log(a, b) in the given string by ln(b)/ln(a)
+
+    Works for nested parentheses and nested 'log's. This can be used to circumvent
+    the incompatible argument order between symengine (log(x, basis)) and libsbml
+    (log(basis, x)).
+
+    Arguments:
+            x: string to replace
+    Returns:
+            string with replaced 'log's
+    Raises:
+
+    """
+
+    match = re.search(r'(^|\W)log\(', x)
+    if not match:
+        return x
+
+    # index of 'l' of 'log'
+    logStart = match.start() if match.end() - match.start() == 4 else match.start() + 1
+    level = 0 # parenthesis level
+    posComma = -1 # position of comma in log(a,b)
+    for i in range(logStart + 4, len(x)):
+        if x[i] == '(':
+            level += 1
+        elif x[i] == ')':
+            level -= 1
+            if level == -1: break
+        elif x[i] == ',' and level == 0:
+            posComma = i
+
+    if posComma < 0:
+        # was log(a), not log(a,b), so nothing to replace
+        return x
+
+    replacement = '{prefix}ln({a})/ln({basis}){suffix}'.format(prefix = x[:logStart],
+                                                               suffix = x[i+1:],
+                                                               basis = x[logStart+4 : posComma],
+                                                               a = x[posComma+1 : i])
+    return replaceLogAB(replacement)
     
