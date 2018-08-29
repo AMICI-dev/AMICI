@@ -499,7 +499,7 @@ void Model::setFixedParameterByName(std::string par_name, realtype value) {
     if(!hasFixedParameterNames())
         throw AmiException("Could not access fixed parameters by name as they are not set");
     
-    auto par_names = getParameterNames();
+    auto par_names = getFixedParameterNames();
     bool found = false;
     for(int ik = 0; ik < nk(); ++ik)
         if(par_names.at(ik) == par_name) {

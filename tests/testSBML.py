@@ -43,15 +43,19 @@ class TestAmiciSBMLModel(unittest.TestCase):
         model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 60))) 
         solver = model.getSolver()
         rdata = amici.runAmiciSimulation(model, solver)
+        edata = [amici.ExpData(rdata, 0.01, 0)]
+        rdata = amici.runAmiciSimulations(model, solver, edata)
+
+        df_res = amici.getResidualsAsDataFrame(model, edata, rdata)
 
         model.getParameterById('p1')
         model.setParameterById('p1',2.0)
-        model.getParameterByName('')
-        model.setParameterByName('', 2.0)
+        model.getParameterByName('p1')
+        model.setParameterByName('p1', 2.0)
         model.getFixedParameterById('k0')
         model.setFixedParameterById('k0', 2.0)
-        model.getFixedParameterByName('')
-        model.setFixedParameterByName('', 2.0)
+        model.getFixedParameterByName('k0')
+        model.setFixedParameterByName('k0', 2.0)
 
 
 if __name__ == '__main__':

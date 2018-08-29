@@ -26,6 +26,10 @@ Attributes:
 
 import os
 import numpy as np
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 
 # If this file is inside the amici package, import swig interface,
 # otherwise we are inside the git repository, then don't
@@ -74,6 +78,35 @@ def runAmiciSimulation(model, solver, edata=None):
 
     rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
+
+def ExpData(rdata, sigma_y, sigma_x):
+    return amici.ExpData(rdata['ptr'].get(), sigma_y, sigma_x)
+
+
+def runAmiciSimulations(model, solver, edata_list):
+    """ Convenience wrapper for loops of amici.runAmiciSimulation
+
+    Arguments:
+        model: Model instance
+        solver: Solver instance, must be generated from Model.getSolver()
+        edata_list: list of ExpData instances (optional)
+
+    Returns:
+        list of ReturnData objects with simulation results
+
+    Raises:
+
+    """
+    rdata_list = []
+    for edata in edata_list:
+        rdata = runAmiciSimulation(
+            model,
+            solver,
+            edata,
+        )
+        rdata_list.append(rdata)
+
+    return rdata_list
 
 
 def rdataToNumPyArrays(rdata):
@@ -244,3 +277,208 @@ def getExpDataFieldAsNumPyArray(edata, field):
                        }
 
     return fieldAsNumpy(fieldDimensions, field, edata)
+
+
+def getDataObservablesAsDataFrame(model, edata_list):
+    """ Write Observables from experimental data as DataFrame
+
+    Arguments:
+        model: Model instance
+        edata_list: list of ExpData instances with experimental data
+
+    Returns:
+        pandas DataFrame with conditions and observables
+
+    Raises:
+        ImportError if pandas is not installed
+    """
+
+    if pd is None:
+        raise ImportError('This function is only available if the pandas '
+                          'package is installed')
+
+    cols = _get_extended_observable_cols(model)
+    df_edata = pd.DataFrame(columns=cols)
+
+    for edata in edata_list:
+        npdata = edataToNumPyArrays(edata)
+        for i_time, timepoint in enumerate(edata.getTimepoints()):
+            datadict = {
+                'time': timepoint,
+                'datatype': 'data'
+            }
+            for i_obs, obs in enumerate(_get_names_or_ids(model,
+                                                          'Observable')):
+                datadict[obs] = npdata['observedData'][i_time, i_obs]
+                datadict[obs + '_std'] = npdata['observedDataStdDev'][
+                    i_time, i_obs]
+
+                _fill_conditions_dict(datadict, model, edata)
+
+            df_edata.loc[len(df_edata)] = datadict
+
+    return df_edata
+
+
+def getSimulationObservablesAsDataFrame(model, edata_list, rdata_list):
+    """ Write Observables from simulation results as DataFrame
+
+    Arguments:
+        model: Model instance
+        edata_list: list of ExpData instances with experimental data
+        rdata_list: list of ReturnData instances corresponding to ExpData
+
+    Returns:
+        pandas DataFrame with conditions and observables
+
+    Raises:
+        ImportError if pandas is not installed
+    """
+    if pd is None:
+        raise ImportError('This function is only available if the pandas '
+                          'package is installed')
+
+    cols = _get_extended_observable_cols(model)
+    df_rdata = pd.DataFrame(columns=cols)
+
+    for edata, rdata in zip(edata_list, rdata_list):
+        for i_time, timepoint in enumerate(rdata['t']):
+            datadict = {
+                'time': timepoint,
+                'datatype': 'simulation'
+            }
+            for i_obs, obs in enumerate(_get_names_or_ids(model,
+                                                          'Observable')):
+                datadict[obs] = rdata['y'][i_time, i_obs]
+                datadict[obs + '_std'] = rdata['sigmay'][i_time, i_obs]
+
+            _fill_conditions_dict(datadict, model, edata)
+
+            df_rdata.loc[len(df_rdata)] = datadict
+
+    return df_rdata
+
+
+def getSimulationStatesAsDataFrame(model, edata_list, rdata_list):
+    """ Compute model residuals according to a list of ReturnData and ExpData
+
+    Arguments:
+        model: Model instance
+        edata_list: list of ExpData instances with experimental data
+        rdata_list: list of ReturnData instances corresponding to ExpData
+
+    Returns:
+        pandas DataFrame with conditions and observables
+
+    Raises:
+        ImportError if pandas is not installed
+    """
+    if pd is None:
+        raise ImportError('This function is only available if the pandas '
+                          'package is installed')
+
+    cols = _get_extended_observable_cols(model)
+    df_rdata = pd.DataFrame(columns=cols)
+
+    for edata, rdata in zip(edata_list, rdata_list):
+        for i_time, timepoint in enumerate(rdata['t']):
+            datadict = {
+                'time': timepoint,
+                'datatype': 'simulation'
+            }
+            for i_state, obs in enumerate(_get_names_or_ids(model, 'State')):
+                datadict[obs] = rdata['x'][i_time, i_state]
+                datadict[obs + '_std'] = rdata['sigmay'][i_time, i_state]
+            df_rdata.loc[len(df_rdata)] = datadict
+
+            _fill_conditions_dict(datadict, model, edata)
+    return df_rdata
+
+
+def getResidualsAsDataFrame(model, edata_list, rdata_list):
+    """ Convert a list of ExpData to pandas DataFrame
+
+    Arguments:
+        model: Model instance
+        edata_list: list of ExpData instances with experimental data
+        rdata_list: list of ReturnData instances corresponding to ExpData
+
+    Returns:
+        pandas DataFrame with conditions and observables
+
+    Raises:
+        ImportError if pandas is not installed
+    """
+    if pd is None:
+        raise ImportError('This function is only available if the pandas '
+                          'package is installed')
+
+    df_edata = getDataObservablesAsDataFrame(model, edata_list)
+    df_rdata = getSimulationObservablesAsDataFrame(model, edata_list, rdata_list)
+
+    cols = _get_observable_cols(model)
+
+    df_res = pd.DataFrame(columns=cols)
+
+    for row in df_rdata.index:
+        datadict = {
+            'time': df_rdata.loc[row]['time']
+        }
+        for obs in _get_names_or_ids(model, 'Observable'):
+            datadict[obs] = abs(
+                (df_edata.loc[row][obs] - df_rdata.loc[row][obs]) /
+                df_rdata.loc[row][obs + '_std'])
+        for i_par, par in enumerate(_get_names_or_ids(model, 'FixedParameter')):
+            datadict[par] = df_rdata.loc[row][par]
+            datadict[par + '_preeq'] = df_rdata.loc[row][par + '_preeq']
+        df_res.loc[len(df_res)] = datadict
+
+    return df_res
+
+
+def _fill_conditions_dict(datadict, model, edata):
+    for i_par, par in enumerate(model.getFixedParameterNames()):
+        if edata.fixedParameters.size():
+            datadict[par] = edata.fixedParameters[i_par]
+        else:
+            datadict[par] = model.getFixedParameters()[i_par]
+
+        if edata.fixedParametersPreequilibration.size():
+            datadict[par + '_preeq'] = \
+                edata.fixedParametersPreequilibration[i_par]
+        else:
+            datadict[par + '_preeq'] = float('nan')
+    return datadict
+
+
+def _get_extended_observable_cols(model):
+    return \
+        ['time', 'datatype'] + \
+        _get_names_or_ids(model, 'FixedParameter') + \
+        [name + '_preeq' for name in _get_names_or_ids(model, 'FixedParameter')] + \
+        _get_names_or_ids(model, 'Observable') + \
+        [name + '_std' for name in _get_names_or_ids(model, 'Observable')]
+
+
+def _get_observable_cols(model):
+    return \
+        ['time'] + \
+        _get_names_or_ids(model, 'FixedParameter') + \
+        [name + '_preeq' for name in _get_names_or_ids(model, 'FixedParameter')] + \
+        _get_names_or_ids(model, 'Observable')
+
+
+def _get_state_cols(model):
+    return \
+        ['time'] + \
+        _get_names_or_ids(model, 'FixedParameter') + \
+        [name + '_preeq' for name in _get_names_or_ids(model, 'FixedParameter')] + \
+        _get_names_or_ids(model, 'State')
+
+def _get_names_or_ids(model, variable):
+    namegetter = getattr(model, 'get' + variable + 'Names')
+    idgetter = getattr(model, 'get' + variable + 'Ids')
+    if set(namegetter()) == len(namegetter()):
+        return list(namegetter())
+    else:
+        return list(idgetter())
