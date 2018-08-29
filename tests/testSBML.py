@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-import h5py
 import amici
 import unittest
-import importlib
 import os
-import re
 import numpy as np
+import pickle
 
 class TestAmiciSBMLModel(unittest.TestCase):
     '''
@@ -25,13 +23,17 @@ class TestAmiciSBMLModel(unittest.TestCase):
         sbmlImporter = amici.SbmlImporter(sbmlFile)
         sbml = sbmlImporter.sbml
 
-        observables = amici.assignmentRules2observables(sbml, filter=lambda variableId: 
-                                                        variableId.startswith('observable_') and not variableId.endswith('_sigma'))
+        observables = amici.assignmentRules2observables(
+            sbml,
+            filter_function=lambda variableId:
+                variableId.startswith('observable_') and
+                not variableId.endswith('_sigma')
+        )
         
         sbmlImporter.sbml2amici('test_model_steadystate_scaled',
                                 'test_model_steadystate_scaled',
                                 observables=observables,
-                                constantParameters=['k4'],
+                                constantParameters=['k0'],
                                 sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
 
         sys.path.insert(0, 'test_model_steadystate_scaled')
