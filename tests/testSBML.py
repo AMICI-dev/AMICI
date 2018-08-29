@@ -44,6 +44,15 @@ class TestAmiciSBMLModel(unittest.TestCase):
         solver = model.getSolver()
         rdata = amici.runAmiciSimulation(model, solver)
 
+        model.getParameterById('p1')
+        model.setParameterById('p1',2.0)
+        model.getParameterByName('')
+        model.setParameterByName('', 2.0)
+        model.getFixedParameterById('k0')
+        model.setFixedParameterById('k0', 2.0)
+        model.getFixedParameterByName('')
+        model.setFixedParameterByName('', 2.0)
+
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()

@@ -372,12 +372,72 @@ void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
 std::vector<realtype> const& Model::getParameters() const {
     return originalParameters;
 }
+    
+realtype Model::getParameterById(std::string par_id) const {
+    if(!hasParameterIds())
+        throw AmiException("Could not access parameters by id as they are not set");
+    
+    auto par_ids = getParameterIds();
+    for(int ip = 0; ip < np(); ++ip)
+        if(par_ids.at(ip) == par_id)
+            return originalParameters.at(ip);
+    
+    throw AmiException("Could not find parameter with specified id");
+}
+    
+realtype Model::getParameterByName(std::string par_name) const {
+    if(!hasParameterNames())
+    throw AmiException("Could not access parameters by name as they are not set");
+    
+    auto par_names = getParameterNames();
+    for(int ip = 0; ip < np(); ++ip)
+        if(par_names.at(ip) == par_name)
+            return originalParameters.at(ip);
+    
+    throw AmiException("Could not find parameter with specified name");
+}
 
 void Model::setParameters(const std::vector<realtype> &p) {
     if(p.size() != (unsigned) this->originalParameters.size())
         throw AmiException("Dimension mismatch. Size of parameters does not match number of model parameters.");
     this->originalParameters = p;
     this->unscaledParameters.resize(originalParameters.size());
+    unscaleParameters(this->unscaledParameters.data());
+}
+    
+void Model::setParameterById(std::string par_id, realtype value) {
+    if(!hasParameterIds())
+        throw AmiException("Could not access parameters by id as they are not set");
+    
+    auto par_ids = getParameterIds();
+    bool found = false;
+    for(int ip = 0; ip < np(); ++ip)
+        if(par_ids.at(ip) == par_id) {
+            originalParameters.at(ip) = value;
+            found = true;
+        }
+    
+    if(!found)
+        throw AmiException("Could not find parameter with specified id");
+    
+    unscaleParameters(this->unscaledParameters.data());
+}
+
+void Model::setParameterByName(std::string par_name, realtype value) {
+    if(!hasParameterNames())
+        throw AmiException("Could not access parameters by name as they are not set");
+    
+    auto par_names = getParameterNames();
+    bool found = false;
+    for(int ip = 0; ip < np(); ++ip)
+        if(par_names.at(ip) == par_name) {
+            originalParameters.at(ip) = value;
+            found = true;
+        }
+    
+    if(!found)
+        throw AmiException("Could not find parameter with specified name");
+    
     unscaleParameters(this->unscaledParameters.data());
 }
 
@@ -388,6 +448,30 @@ const std::vector<realtype> &Model::getUnscaledParameters() const {
 const std::vector<realtype> &Model::getFixedParameters() const {
     return fixedParameters;
 }
+    
+realtype Model::getFixedParameterById(std::string par_id) const {
+    if(!hasFixedParameterIds())
+        throw AmiException("Could not access fixed parameters by id as they are not set");
+    
+    auto par_ids = getFixedParameterIds();
+    for(int ik = 0; ik < nk(); ++ik)
+        if(par_ids.at(ik) == par_id)
+            return fixedParameters.at(ik);
+    
+    throw AmiException("Could not find fixed parameter with specified id");
+}
+
+realtype Model::getFixedParameterByName(std::string par_name) const {
+    if(!hasFixedParameterNames())
+        throw AmiException("Could not access fixed parameters by name as they are not set");
+    
+    auto par_names = getFixedParameterNames();
+    for(int ik = 0; ik < nk(); ++ik)
+        if(par_names.at(ik) == par_name)
+            return fixedParameters.at(ik);
+    
+    throw AmiException("Could not find fixed parameter with specified name");
+}
 
 void Model::setFixedParameters(const std::vector<realtype> &k) {
     if(k.size() != (unsigned) this->fixedParameters.size())
@@ -395,6 +479,40 @@ void Model::setFixedParameters(const std::vector<realtype> &k) {
     this->fixedParameters = k;
 }
 
+void Model::setFixedParameterById(std::string par_id, realtype value) {
+    if(!hasFixedParameterIds())
+        throw AmiException("Could not access fixed parameters by id as they are not set");
+    
+    auto par_ids = getFixedParameterIds();
+    bool found = false;
+    for(int ik = 0; ik < nk(); ++ik)
+        if(par_ids.at(ik) == par_id) {
+            fixedParameters.at(ik) = value;
+            found = true;
+    }
+    
+    if(!found)
+        throw AmiException("Could not find fixed parameter with specified id");
+}
+
+void Model::setFixedParameterByName(std::string par_name, realtype value) {
+    if(!hasFixedParameterNames())
+        throw AmiException("Could not access fixed parameters by name as they are not set");
+    
+    auto par_names = getParameterNames();
+    bool found = false;
+    for(int ik = 0; ik < nk(); ++ik)
+        if(par_names.at(ik) == par_name) {
+            fixedParameters.at(ik) = value;
+            found = true;
+        }
+    
+    if(!found)
+        throw AmiException("Could not find fixed parameter with specified name");
+}
+
+    
+    
 std::vector<realtype> const& Model::getTimepoints() const {
     return ts;
 }

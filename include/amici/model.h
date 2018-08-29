@@ -375,6 +375,39 @@ namespace amici {
         void setFixedParameters(std::vector<realtype> const&k);
 
         /**
+         * @brief Get value of model parameter with the specified Id
+         * @param par_id parameter id
+         * @return parameter value
+         */
+        realtype getFixedParameterById(std::string par_id) const;
+        
+        /**
+         * @brief Get value of model parameter with the specified name,
+         if multiple parameters have the same name,
+         the first parameter with matching name is returned
+         
+         * @param par_name parameter name
+         * @return parameter value
+         */
+        realtype getFixedParameterByName(std::string par_name) const;
+        
+        /**
+         * @brief Get value of model parameter with the specified Id
+         * @param par_id parameter id
+         * @param value parameter value
+         */
+        void setFixedParameterById(std::string par_id, realtype value);
+        
+        /**
+         * @brief Get value of model parameter with the specified name,
+         if multiple parameters have the same name,
+         the all parameter with matching name are set
+         * @param par_name parameter id
+         * @param value parameter value
+         */
+        void setFixedParameterByName(std::string par_name, realtype value);
+        
+        /**
          * @brief getTimepoints
          * @return
          */
@@ -598,7 +631,42 @@ namespace amici {
          * @brief Get ids of the model parameters
          * @return the ids
          */
-        virtual std::vector<std::string> getParameterIds() const { return std::vector<std::string>(); }
+        virtual std::vector<std::string> getParameterIds() const {
+            return std::vector<std::string>();
+        }
+        
+        /**
+         * @brief Get value of model parameter with the specified Id
+         * @param par_id parameter id
+         * @return parameter value
+         */
+        realtype getParameterById(std::string par_id) const;
+        
+        /**
+         * @brief Get value of model parameter with the specified name,
+            if multiple parameters have the same name,
+            the first parameter with matching name is returned
+         
+         * @param par_name parameter name
+         * @return parameter value
+         */
+        realtype getParameterByName(std::string par_name) const;
+        
+        /**
+         * @brief Get value of model parameter with the specified Id
+         * @param par_id parameter id
+         * @param value parameter value
+         */
+        void setParameterById(std::string par_id, realtype value);
+        
+        /**
+         * @brief Get value of model parameter with the specified name,
+            if multiple parameters have the same name,
+            the all parameter with matching name are set
+         * @param par_name parameter id
+         * @param value parameter value
+         */
+        void setParameterByName(std::string par_name, realtype value);
         
         /**
          * @brief Reports whether the model has state ids set.
@@ -610,7 +678,9 @@ namespace amici {
          * @brief Get ids of the model states
          * @return the ids
          */
-        virtual std::vector<std::string> getStateIds() const { return std::vector<std::string>(); }
+        virtual std::vector<std::string> getStateIds() const {
+            return std::vector<std::string>();
+        }
         
         /**
          * @brief Reports whether the model has fixed parameter ids set.
@@ -622,7 +692,9 @@ namespace amici {
          * @brief Get ids of the fixed model parameters
          * @return the ids
          */
-        virtual std::vector<std::string> getFixedParameterIds() const { return std::vector<std::string>(); }
+        virtual std::vector<std::string> getFixedParameterIds() const {
+            return std::vector<std::string>();
+        }
         
         /**
          * @brief Reports whether the model has observable ids set.
@@ -634,7 +706,9 @@ namespace amici {
          * @brief Get ids of the observables
          * @return the ids
          */
-        virtual std::vector<std::string> getObservableIds() const { return std::vector<std::string>(); }
+        virtual std::vector<std::string> getObservableIds() const {
+            return std::vector<std::string>();
+        }
         
         /**
          * @brief sets the mode how sensitivities are computed in the steadystate simulation
