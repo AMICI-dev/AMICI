@@ -1486,28 +1486,45 @@ class TemplateAmici(Template):
     delimiter = 'TPL_'
 
 
-def assignmentRules2observables(sbml_model, filter_function=lambda *_: True):
+def assignmentRules2observables(sbml_model,
+                                filter_function=lambda *_: True,
+                                filter_by_name=False):
     """Turn assignment rules into observables.
 
     Arguments:
         sbml_model: an sbml Model instance
-        filter_function: callback function taking assignment variable as input and returning True/False to indicate if the respective rule should be turned into an observable
+        filter_function: callback function taking assignment variable as input
+        and returning True/False to indicate if the respective rule should be
+        turned into an observable
+        filter_by_name: boolean indicating whether assignment variables are
+        selected by name or by id
+
 
     Returns:
-        A dictionary(observableId:{'name':observableNamem,'formula':formulaString})
+        A dictionary(observableId:{'name':observableNamem,
+                                   'formula':formulaString})
 
     Raises:
 
     """
     observables = {}
     for p in sbml_model.getListOfParameters():
-        parameterId = p.getId()
-        if filter_function(parameterId):
-            observables[parameterId] = {'name': p.getName(), 'formula': sbml_model.getAssignmentRuleByVariable(parameterId).getFormula()}
+        parameter_id = p.getId()
+        if filter_by_name:
+            filter_variable = p.getName()
+        else:
+            filter_variable = parameter_id
+        if filter_function(filter_variable):
+            observables[parameter_id] = {
+                'name': p.getName(),
+                'formula': sbml_model.getAssignmentRuleByVariable(
+                    parameter_id
+                ).getFormula()
+            }
 
-    for parameterId in observables:
-        sbml_model.removeRuleByVariable(parameterId)
-        sbml_model.removeParameter(parameterId)
+    for parameter_id in observables:
+        sbml_model.removeRuleByVariable(parameter_id)
+        sbml_model.removeParameter(parameter_id)
 
     return observables
 
