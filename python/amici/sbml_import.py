@@ -84,31 +84,39 @@ class SbmlImporter:
         self.functions = {
             'J': {
                 'signature': '(realtype *J, const realtype t, const realtype *x, const double *p,'
-                             ' const double *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
+                             ' const double *k, const realtype *h, '
+                             'const realtype *w, const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'JB': {
                 'signature': '(realtype *JB, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
-                             ' const realtype *dwdx)'},
+                             ' const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'JDiag': {
                 'signature': '(realtype *JDiag, const realtype t, const realtype *x, const realtype *p,'
-                             ' const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
+                             ' const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'JSparse': {
                 'signature': '(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)',
-                'symbol': 'sparseList'},
+                'symbol': 'sparseList',
+                'assume_pow_positivity': True,},
             'JSparseB': {
                 'signature': '(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
                              ' const realtype *dwdx)',
-                'symbol': 'sparseList'},
+                'symbol': 'sparseList',
+                'assume_pow_positivity': True,},
             'Jv': {
                 'signature': '(realtype *Jv, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *v, const realtype *w,'
-                             ' const realtype *dwdx)'},
+                             ' const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'JvB': {
                 'signature': '(realtype *JvB, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *vB,'
-                             ' const realtype *w, const realtype *dwdx)'},
+                             ' const realtype *w, const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'Jy': {
                 'signature': '(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y,'
                              ' const double *sigmay, const double *my)',
@@ -125,16 +133,19 @@ class SbmlImporter:
             'dwdp': {
                 'signature': '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *w)',
-                'symbol': 'sparseList'},
+                'symbol': 'sparseList',
+                'assume_pow_positivity': True,},
             'dwdx': {
                 'signature': '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *w)',
-                'symbol': 'sparseList'},
+                'symbol': 'sparseList',
+                'assume_pow_positivity': True,},
             'dxdotdp': {
                 'signature': '(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const int ip, const realtype *w,'
                              ' const realtype *dwdp)',
-                'sensitivity': True},
+                'sensitivity': True,
+                'assume_pow_positivity': True,},
             'dydx': {
                 'signature': '(double *dydx, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h)'},
@@ -150,16 +161,19 @@ class SbmlImporter:
                 'signature': '(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
                              ' const realtype *dwdp)',
-                'sensitivity': True},
+                'sensitivity': True,
+                'assume_pow_positivity': True,},
             'sigmay': {'signature': '(double *sigmay, const realtype t, const realtype *p, const realtype *k)',
                         'variable': 'sigmay'},
             'sxdot': {
                 'signature': '(realtype *sxdot, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const int ip, const realtype *sx,'
-                             ' const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp)'},
+                             ' const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp)',
+                'assume_pow_positivity': True,},
             'w': {
                 'signature': '(realtype *w, const realtype t, const realtype *x, const realtype *p,'
-                             ' const realtype *k, const realtype *h)'},
+                             ' const realtype *k, const realtype *h)',
+                'assume_pow_positivity': True,},
             'x0': {
                 'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
             'x0_fixedParameters': {
@@ -177,10 +191,12 @@ class SbmlImporter:
             'xBdot': {
                 'signature': '(realtype *xBdot, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
-                             ' const realtype *dwdx)'},
+                             ' const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'xdot': {
                 'signature': '(realtype *xdot, const realtype t, const realtype *x, const realtype *p,'
-                             ' const realtype *k, const realtype *h, const realtype *w)'},
+                             ' const realtype *k, const realtype *h, const realtype *w)',
+                'assume_pow_positivity': True,},
             'y': {
                 'signature': '(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k,'
                              ' const realtype *h)'}
@@ -1159,12 +1175,20 @@ class SbmlImporter:
 
         lines.append('')
 
-        lines.append('void ' + function + '_' + self.modelName + signature + '{')
+        lines.append('void ' + function + '_' +
+                     self.modelName + signature + '{')
 
         # function body
         body = self.getFunctionBody(function)
-        if assume_pow_positivity:
-            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line) for line in body]
+        if assume_pow_positivity \
+                and 'assume_pow_positivity' in self.functions[function].keys()\
+                and self.functions[function]['assume_pow_positivity']:
+            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line) for line
+                    in body]
+            # execute this twice to catch cases where the ending ( would be the
+            # starting (^|\W) for the following match
+            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line) for line
+                    in body]
         self.functions[function]['body'] = body
         lines += body
         lines.append('}')
