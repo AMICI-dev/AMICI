@@ -25,6 +25,7 @@ Attributes:
 """
 
 import os
+import copy
 import numpy as np
 try:
     import pandas as pd
@@ -313,7 +314,7 @@ def getDataObservablesAsDataFrame(model, edata_list):
                 datadict[obs + '_std'] = npdata['observedDataStdDev'][
                     i_time, i_obs]
 
-                _fill_conditions_dict(datadict, model, edata)
+            _fill_conditions_dict(datadict, model, edata)
 
             df_edata.loc[len(df_edata)] = datadict
 
@@ -436,8 +437,22 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list):
     return df_res
 
 
-def _fill_conditions_dict(datadict, model, edata):
-    for i_par, par in enumerate(model.getFixedParameterNames()):
+def _fill_conditions_dict(datadict, model, edata) -> dict:
+    """ Helper function that fills in condition parameters from model and edata
+
+    Arguments:
+        datadict: dictionary in which condition parameters will be inserted
+        as key value pairs
+        model: Model instance
+        edata: ExpData instance
+
+    Returns:
+        dictionary with filled condition parameters
+
+    Raises:
+
+    """
+    for i_par, par in enumerate(_get_names_or_ids(model, 'FixedParameter')):
         if edata.fixedParameters.size():
             datadict[par] = edata.fixedParameters[i_par]
         else:
@@ -451,7 +466,18 @@ def _fill_conditions_dict(datadict, model, edata):
     return datadict
 
 
-def _get_extended_observable_cols(model):
+def _get_extended_observable_cols(model) -> list:
+    """ Construction helper for extended observable dataframe headers
+
+    Arguments:
+        model: Model instance
+
+    Returns:
+        column names as list
+
+    Raises:
+
+    """
     return \
         ['time', 'datatype'] + \
         _get_names_or_ids(model, 'FixedParameter') + \
@@ -461,6 +487,17 @@ def _get_extended_observable_cols(model):
 
 
 def _get_observable_cols(model):
+    """ Construction helper for observable dataframe headers
+
+    Arguments:
+        model: Model instance
+
+    Returns:
+        column names as list
+
+    Raises:
+
+    """
     return \
         ['time'] + \
         _get_names_or_ids(model, 'FixedParameter') + \
@@ -469,16 +506,154 @@ def _get_observable_cols(model):
 
 
 def _get_state_cols(model):
+    """ Construction helper for state dataframe headers
+
+    Arguments:
+        model: Model instance
+
+    Returns:
+        column names as list
+
+    Raises:
+
+    """
     return \
         ['time'] + \
         _get_names_or_ids(model, 'FixedParameter') + \
         [name + '_preeq' for name in _get_names_or_ids(model, 'FixedParameter')] + \
         _get_names_or_ids(model, 'State')
 
+
 def _get_names_or_ids(model, variable):
+    """ Obtains a unique list of identifiers for the specified variable
+        first tries model.getVariableNames and then uses model.getVariableIds
+
+    Arguments:
+        model: Model instance
+        variable: variable name 
+
+    Returns:
+        column names as list
+
+    Raises:
+
+    """
+    variable_options = ['Parameter','FixedParameter','Observable','State']
+    if variable not in variable_options:
+        raise ValueError('variable must be in ' str(variable_options))
     namegetter = getattr(model, 'get' + variable + 'Names')
     idgetter = getattr(model, 'get' + variable + 'Ids')
     if set(namegetter()) == len(namegetter()):
         return list(namegetter())
     else:
         return list(idgetter())
+
+
+def _get_specialized_fixed_parameters(model, condition, overwrite) -> list:
+    """ Copies values in condition and overwrites them according to key
+    value pairs specified in overwrite
+
+    Arguments:
+        model: Model instance
+        condition: dict/pd.Series containing FixedParameter values
+        overwrite: dict specifying which values in condition are to be replaced
+
+    Returns:
+        overwritten FixedParameter as list
+
+    Raises:
+
+    """
+    cond = copy.deepcopy(condition)
+    for field in overwrite:
+        cond[field] = overwrite[field]
+    return [cond[name] for name in _get_names_or_ids(model, 'FixedParameter')]
+
+
+def constructEdataFromDataFrame(df, model, condition) -> amici.ExpData:
+    """ Constructs an ExpData instance according to the provided Model and DataFrame
+
+    Arguments:
+        df: pd.DataFrame with Observable Names/Ids as columns
+            standard deviations may be specified by appending '_std' as suffix
+        model: Model instance
+        condition: pd.Series with FixedParameter Names/Ids as columns
+            preequilibration conditions may be specified by appending '_preeq' as suffix
+
+    Returns:
+        ExpData instance
+
+    Raises:
+
+    """
+    edata = amici.ExpData(model.get())
+
+    # timepoints
+    df = df.sort_values(by='time',ascending=True)
+    edata.setTimepoints(amici.DoubleVector(df['time'].values))
+
+    overwrite = {}
+    for par in list(_get_names_or_ids(model, 'FixedParameter')):
+        if par + '_preeq' in condition.keys() \
+                and not math.isnan(condition['k0_preeq']):
+            overwrite[par] = condition[par + '_preeq']
+
+    # fixedParameters
+    edata.fixedParameters = amici.DoubleVector(
+        condition[_get_names_or_ids(model, 'FixedParameter')].values
+    )
+
+    if any([overwrite[key] != condition[key] for key in overwrite.keys()]):
+        edata.fixedParametersPreequilibration = amici.DoubleVector(
+            _get_specialized_fixed_parameters(model, condition, overwrite)
+        )
+
+    # data
+    for obs_index, obs in enumerate(_get_names_or_ids(model, 'Observable')):
+        if obs in df.keys():
+            edata.setObservedData(amici.DoubleVector(df[obs].values), obs_index)
+        if obs + '_std' in df.keys():
+            edata.setObservedDataStdDev(
+                amici.DoubleVector(df[obs + '_std'].values),
+                obs_index
+            )
+
+    return edata
+
+
+def getEdataFromDataFrame(model, df):
+    """ Constructs a ExpData instance according to the provided Model and DataFrame
+
+    Arguments:
+        df: pd.DataFrame with Observable Names/Ids, FixedParameter Names/Ids and time as columns
+            standard deviations may be specified by appending '_std' as suffix
+            preequilibration fixedParameters may be specified by appending '_preeq' as suffix
+        model: Model instance
+
+    Returns:
+        ExpData instance
+
+    Raises:
+
+    """
+    edata_list = []
+    # aggregate features that define a condition
+    condition_parameters = _get_names_or_ids(model, 'FixedParameter')
+    for par in _get_names_or_ids(model, 'FixedParameter'):
+        if par + '_preeq' in df.columns:
+            condition_parameters.append(par + '_preeq')
+    conditions = df[condition_parameters].drop_duplicates()
+
+    for row_index, row in conditions.iterrows():
+        # subselect rows that match condition
+        selected = np.ones((len(df),), dtype=bool)
+        for par_label, par in row.iteritems():
+            if math.isnan(par):
+                selected = selected & np.isnan(df[par_label].values)
+            else:
+                selected = selected & (df[par_label] == par)
+        edata_df = df[selected]
+
+        edata_list.append(constructEdataFromDataFrame(edata_df, model, row))
+
+    return edata_list

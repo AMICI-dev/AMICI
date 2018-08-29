@@ -46,6 +46,44 @@ class TestAmiciSBMLModel(unittest.TestCase):
         edata = [amici.ExpData(rdata, 0.01, 0)]
         rdata = amici.runAmiciSimulations(model, solver, edata)
 
+        # check roundtripping of DataFrame conversion
+        df_edata = amici.getDataObservablesAsDataFrame(model, edata)
+        edata_reconstructed = amici.getEdataFromDataFrame(model, df_edata)
+
+        self.assertTrue(
+            np.isclose(
+                amici.edataToNumPyArrays(edata[0])
+                ['observedData'],
+                amici.edataToNumPyArrays(edata_reconstructed[0])
+                ['observedData'],
+            ).all()
+        )
+        self.assertTrue(
+            np.isclose(
+                amici.edataToNumPyArrays(edata[0])
+                ['observedDataStdDev'],
+                amici.edataToNumPyArrays(edata_reconstructed[0])
+                ['observedDataStdDev'],
+            ).all()
+        )
+        if edata[0].fixedParameters.size():
+            self.assertListEqual(
+                list(edata[0].fixedParameters),
+                list(edata_reconstructed[0].fixedParameters),
+            )
+        else:
+            self.assertListEqual(
+                list(model.getFixedParameters()),
+                list(edata_reconstructed[0].fixedParameters),
+            )
+
+        self.assertListEqual(
+            list(edata[0].fixedParametersPreequilibration),
+            list(edata_reconstructed[0].fixedParametersPreequilibration),
+        )
+
+
+
         df_res = amici.getResidualsAsDataFrame(model, edata, rdata)
 
         model.getParameterById('p1')
