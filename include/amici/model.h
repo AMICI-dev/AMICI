@@ -196,6 +196,13 @@ namespace amici {
 
         void fsx0(AmiVectorArray *sx, const AmiVector *x);
         
+        /** Sets only those initial states sensitivities that are affected from fx0 fixedParmeters
+         * @param sx pointer to state sensitivity variables
+         * @param x pointer to state variables
+         **/
+        
+        void fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x);
+        
         /** Sensitivity of derivative initial states sensitivities sdx0 (only
          *  necessary for DAEs)
          **/
@@ -815,6 +822,15 @@ namespace amici {
         virtual void fx0_fixedParameters(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
         }
         
+        /** model specific implementation of fx0
+         * @param x0 initial state
+         * @param t initial time
+         * @param p parameter vector
+         * @param k constant vector
+         **/
+        virtual void fsx0_fixedParameters(realtype *sx0, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip) {
+        }
+        
         /** model specific implementation of fsx0
          * @param sx0 initial state sensitivities
          * @param t initial time
@@ -823,7 +839,7 @@ namespace amici {
          * @param k constant vector
          * @param ip sensitivity index
          **/
-        virtual void fsx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) {
+        virtual void fsx0(realtype *sx0, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         

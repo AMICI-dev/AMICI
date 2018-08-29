@@ -72,6 +72,8 @@ class SbmlImporter:
 
         """
 
+        self.reinit_fixed_parameter_initial_conditions = False
+
         self.check_validity = check_validity
 
         self.loadSBMLFile(SBMLFile)
@@ -166,6 +168,11 @@ class SbmlImporter:
             'sx0': {
                 'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
                              ' const realtype *k, const int ip)',
+                'sensitivity': True},
+            'sx0_fixedParameters': {
+                'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
+                             ' const realtype *k, const int ip)',
+                'variable': 'sx0',
                 'sensitivity': True},
             'xBdot': {
                 'signature': '(realtype *xBdot, const realtype t, const realtype *x, const realtype *p,'
@@ -262,9 +269,16 @@ class SbmlImporter:
             raise SBMLException('SBML Document failed to load (see error messages above)')
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables=None,
-                   constantParameters=None, sigmas=None,
-                   verbose=False, assume_pow_positivity=False):
+    def sbml2amici(self,
+                   modelName,
+                   output_dir=None,
+                   observables=None,
+                   constantParameters=None,
+                   sigmas=None,
+                   verbose=False,
+                   assume_pow_positivity=False,
+                   reinit_fixed_parameter_initial_conditions=False,
+                   ):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Arguments:
@@ -290,6 +304,9 @@ class SbmlImporter:
 
         if sigmas is None:
             sigmas = {}
+
+        self.reinit_fixed_parameter_initial_conditions = \
+            reinit_fixed_parameter_initial_conditions
 
         self.setName(modelName)
         self.setPaths(output_dir)
@@ -814,13 +831,18 @@ class SbmlImporter:
 
         self.functions['x0']['sym'] = self.speciesInitial
 
-        self.functions['x0_fixedParameters']['sym'] = \
-             sp.DenseMatrix(
-                 [init
-                 if any([sym in init.free_symbols
-                         for sym in self.symbols['fixed_parameter']['sym']])
-                 else 0.0
-                 for init in self.speciesInitial])
+        if self.reinit_fixed_parameter_initial_conditions:
+            self.functions['x0_fixedParameters']['sym'] = \
+                 sp.DenseMatrix(
+                     [init
+                     if any([sym in init.free_symbols
+                             for sym in self.symbols['fixed_parameter']['sym']])
+                     else 0.0
+                     for init in self.speciesInitial])
+        else:
+            self.functions['x0_fixedParameters']['sym'] = \
+                sp.DenseMatrix(
+                    [0.0 for init in self.speciesInitial])
 
 
         self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
@@ -903,29 +925,58 @@ class SbmlImporter:
         Raises:
 
         """
-        self.functions['dydp']['sym'] = self.functions['y']['sym']\
-                                                .jacobian(self.symbols['parameter']['sym'])
-        self.functions['dsigmaydp']['sym'] = self.functions['sigmay']['sym']\
-                                                .jacobian(self.symbols['parameter']['sym'])
-        self.functions['dydx']['sym'] = self.functions['y']['sym']\
-                                                .jacobian(self.symbols['species']['sym']).transpose()
+        self.functions['dydp']['sym'] = \
+            self.functions['y']['sym'].jacobian(
+                self.symbols['parameter']['sym']
+            )
 
-        self.functions['dwdp']['sym'] = self.fluxVector.jacobian(self.symbols['parameter']['sym'])
+        self.functions['dsigmaydp']['sym'] = \
+            self.functions['sigmay']['sym'].jacobian(
+                self.symbols['parameter']['sym']
+            )
+
+        self.functions['dydx']['sym'] = \
+            self.functions['y']['sym'].jacobian(
+                self.symbols['species']['sym']
+            ).transpose()
+
+        self.functions['dwdp']['sym'] = \
+            self.fluxVector.jacobian(
+                self.symbols['parameter']['sym']
+            )
 
         self.functions['dwdp']['sparseSym'],\
         self.symbols['dwdp']['sym'],\
-        self.functions['dwdp']['sparseList'] = self.getSparseSymbols('dwdp')[0:3]
+        self.functions['dwdp']['sparseList'] = \
+            self.getSparseSymbols('dwdp')[0:3]
 
-        self.functions['dxdotdp']['sym'] = self.functions['xdot']['sym']\
-                                                      .jacobian(self.symbols['parameter']['sym'])\
-                                                  + self.stoichiometricMatrix\
-                                                    * self.functions['dwdp']['sparseSym']
+        self.functions['dxdotdp']['sym'] = \
+            self.functions['xdot']['sym'].jacobian(
+                self.symbols['parameter']['sym']
+            ) + self.stoichiometricMatrix * self.functions['dwdp']['sparseSym']
         self.symbols['dxdotdp']['sym'] = getSymbols('dxdotdp',self.n_species)
-        self.functions['sx0']['sym'] = self.speciesInitial.jacobian(self.symbols['parameter']['sym'])
+        self.functions['sx0']['sym'] = \
+            self.speciesInitial.jacobian(
+                self.symbols['parameter']['sym']
+            )
+
+        self.functions['sx0_fixedParameters']['sym'] = \
+            self.functions['x0_fixedParameters']['sym'].jacobian(
+                self.symbols['parameter']['sym']
+            )
+
+        if self.reinit_fixed_parameter_initial_conditions \
+                and any([math != 0 and math != 0.0 for math in
+                         self.functions['sx0_fixedParameters']['sym']]):
+            raise Exception('Currently there is no support for Parameter and'
+                            'FixedParameter dependent initial conditions when'
+                            'reinit_fixed_parameter_initial_conditions is '
+                            'enabled')
 
 
     def computeModelEquationsForwardSensitivites(self):
-        """Perform symbolic computations required for forward sensitivity analysis.
+        """Perform symbolic computations required for forward sensitivity
+        analysis.
 
         Arguments:
 
@@ -1145,8 +1196,20 @@ class SbmlImporter:
             symbol = self.functions[function]['sym']
         lines = []
 
-
-        if('sensitivity' in self.functions[function].keys()):
+        if function == 'sx0_fixedParameters':
+            # here we specifically want to overwrite some of the values with 0
+            lines.append(' ' * 4 + 'switch(ip) {')
+            for ipar in range(0, self.n_parameters):
+                lines.append(' ' * 8 + 'case ' + str(ipar) + ':')
+                for index, formula in enumerate(
+                        self.functions['x0_fixedParameters']['sym']
+                ):
+                    if formula != 0 and formula != 0.0:
+                        lines.append(' ' * 12
+                                     + 'sx0[' + str(index) + '] = 0.0;')
+                lines.append(' ' * 12 + 'break;')
+            lines.append('}')
+        elif('sensitivity' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(ip) {')
             for ipar in range(0,self.n_parameters):
                 lines.append(' ' * 8 + 'case ' + str(ipar) + ':')

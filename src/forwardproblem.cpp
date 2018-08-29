@@ -105,8 +105,12 @@ void ForwardProblem::workForwardProblem() {
             }
         }
     }
-
+    
     int ncheck = 0; /* the number of (internal) checkpoints stored so far */
+    
+    /* perform presimulation if necessary */
+    if (edata && edata->t_presim > 0)
+        handlePresimulation(&ncheck);
 
     /* loop over timepoints */
     for (int it = 0; it < model->nt(); it++) {
@@ -186,11 +190,58 @@ void ForwardProblem::handlePreequilibration()
         model->setFixedParameters(originalFixedParameters);
     }
     
+    updateAndReinitStatesAndSensitivities();
+}
+    
+void ForwardProblem::updateAndReinitStatesAndSensitivities()
+{
     model->fx0_fixedParameters(&x);
     solver->reInit(t, &x, &dx);
+    rdata->x0 = std::move(x.getVector());
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() == SensitivityMethod::forward)
+        solver->getSensitivityMethod() == SensitivityMethod::forward) {
+        model->fsx0_fixedParameters(&sx, &x);
         solver->sensReInit( &sx, &sdx);
+        for (int ip = 0; ip < model->nplist(); ip++) {
+            for (int ix = 0; ix < model->nx; ix++) {
+                rdata->sx0[ip * model->nx + ix] = sx.at(ix,ip);
+            }
+        }
+    }
+}
+    
+void ForwardProblem::handlePresimulation(int *ncheck)
+{
+    // Are there dedicated condition preequilibration parameters provided?
+    bool overrideFixedParameters = edata && !edata->fixedParametersPresimulation.empty();
+    
+    std::vector<realtype> originalFixedParameters; // to restore after pre-equilibration
+    
+    if(overrideFixedParameters) {
+        if(edata->fixedParametersPresimulation.size() != (unsigned) model->nk())
+        throw AmiException("Number of fixed parameters (%d) in model does not match presimulation parameters in ExpData (%zd).",
+                           model->nk(), edata->fixedParametersPresimulation.size());
+        originalFixedParameters = model->getFixedParameters();
+        model->setFixedParameters(edata->fixedParametersPresimulation);
+    }
+    t = model->t0() - edata->t_presim;
+    updateAndReinitStatesAndSensitivities();
+    
+    
+    if (solver->getSensitivityMethod() == SensitivityMethod::adjoint &&
+        solver->getSensitivityOrder() >= SensitivityOrder::first) {
+        solver->solveF(RCONST(model->t0()), &x, &dx,
+                       &(t), AMICI_NORMAL, ncheck);
+    } else {
+        solver->solve(RCONST(model->t0()), &x, &dx,
+                      &(t), AMICI_NORMAL);
+    }
+    
+    if(overrideFixedParameters) {
+        model->setFixedParameters(originalFixedParameters);
+    }
+    t = model->t0();
+    updateAndReinitStatesAndSensitivities();
 }
 
 /* ------------------------------------------------------------------------ */

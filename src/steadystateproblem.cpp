@@ -73,19 +73,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         // for newton_status == 2 the sensis were computed via FSA
         if (newton_status == 1 || newton_status == 3 || model->getSteadyStateSensitivityMode() != SteadyStateSensitivityMode::simulationFSA)
             newtonSolver->computeNewtonSensis(sx);
-    
-        if (it == AMICI_PREEQUILIBRATE) {
-            for (int ip = 0; ip < model->nplist(); ip++) {
-                for (int ix = 0; ix < model->nx; ix++) {
-                    rdata->sx0[ip * model->nx + ix] = sx->at(ix,ip);
-                }
-            }
-        }
     }
     
-    
-    
-
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     getNewtonOutput(rdata, model, newton_status, run_time, it);
 }
@@ -226,9 +215,6 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,const Model *model,
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
         *t = model->t0();
-
-        /* Write steady state to output */
-        rdata->x0 = x->getVector();
     } else {
         *t = INFINITY;
     }

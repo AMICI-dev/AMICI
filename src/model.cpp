@@ -741,6 +741,12 @@ void Model::fx0(AmiVector *x) {
 void Model::fx0_fixedParameters(AmiVector *x) {
     fx0_fixedParameters(x->data(),tstart, unscaledParameters.data(),fixedParameters.data());
 }
+    
+void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
+    for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
+        fsx0_fixedParameters(sx->data(ip),tstart,x->data(), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+}
+
 
 void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
 
