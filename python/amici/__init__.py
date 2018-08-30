@@ -429,7 +429,7 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list):
             datadict[obs] = abs(
                 (df_edata.loc[row][obs] - df_rdata.loc[row][obs]) /
                 df_rdata.loc[row][obs + '_std'])
-        for i_par, par in enumerate(_get_names_or_ids(model, 'FixedParameter')):
+        for par in _get_names_or_ids(model, 'FixedParameter'):
             datadict[par] = df_rdata.loc[row][par]
             datadict[par + '_preeq'] = df_rdata.loc[row][par + '_preeq']
         df_res.loc[len(df_res)] = datadict
@@ -530,7 +530,7 @@ def _get_names_or_ids(model, variable):
 
     Arguments:
         model: Model instance
-        variable: variable name 
+        variable: variable name
 
     Returns:
         column names as list
@@ -644,7 +644,7 @@ def getEdataFromDataFrame(model, df):
             condition_parameters.append(par + '_preeq')
     conditions = df[condition_parameters].drop_duplicates()
 
-    for row_index, row in conditions.iterrows():
+    for row in conditions.rows():
         # subselect rows that match condition
         selected = np.ones((len(df),), dtype=bool)
         for par_label, par in row.iteritems():
