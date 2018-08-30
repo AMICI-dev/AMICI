@@ -437,7 +437,7 @@ namespace amici {
 
         /**
          * @brief Set the timepoint vector
-         * @param timepoint vector
+         * @param ts timepoint vector
          */
         void setTimepoints(std::vector<realtype> const& ts);
 
@@ -456,7 +456,7 @@ namespace amici {
 
         /**
          * @brief Set the list of parameters for which sensitivities are computed
-         * @param list of parameter indices
+         * @param plist list of parameter indices
          */
         void setParameterList(std::vector<int> const& plist);
 
@@ -839,7 +839,7 @@ namespace amici {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
         
-        /** model specific implementation of fx0
+        /** model specific implementation of fx0_fixedParameters
          * @param x0 initial state
          * @param t initial time
          * @param p parameter vector
@@ -848,11 +848,13 @@ namespace amici {
         virtual void fx0_fixedParameters(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
         }
         
-        /** model specific implementation of fx0
-         * @param x0 initial state
+        /** model specific implementation of fsx0_fixedParameters
+         * @param sx0 initial state sensitivities
          * @param t initial time
+         * @param x0 initial state
          * @param p parameter vector
          * @param k constant vector
+         * @param ip sensitivity index
          **/
         virtual void fsx0_fixedParameters(realtype *sx0, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip) {
         }

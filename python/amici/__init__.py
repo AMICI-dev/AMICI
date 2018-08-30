@@ -30,6 +30,7 @@ import numpy as np
 try:
     import pandas as pd
 except ImportError:
+    # placeholder for pandas package
     pd = None
 
 # If this file is inside the amici package, import swig interface,
@@ -80,8 +81,21 @@ def runAmiciSimulation(model, solver, edata=None):
     rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
 
-def ExpData(rdata, sigma_y, sigma_x):
-    return amici.ExpData(rdata['ptr'].get(), sigma_y, sigma_x)
+def ExpData(rdata, sigma_y, sigma_z):
+    """ Convenience wrapper for ExpData constructor
+
+    Arguments:
+        rdata: rdataToNumPyArrays output
+        sigma_y: standard deviation for ObservableData
+        sigma_z: standard deviation for EventData
+
+    Returns:
+        ExpData Instance
+
+    Raises:
+
+    """
+    return amici.ExpData(rdata['ptr'].get(), sigma_y, sigma_z)
 
 
 def runAmiciSimulations(model, solver, edata_list):
@@ -570,7 +584,7 @@ def _get_specialized_fixed_parameters(model, condition, overwrite) -> list:
     return [cond[name] for name in _get_names_or_ids(model, 'FixedParameter')]
 
 
-def constructEdataFromDataFrame(df, model, condition) -> amici.ExpData:
+def constructEdataFromDataFrame(df, model, condition):
     """ Constructs an ExpData instance according to the provided Model and DataFrame
 
     Arguments:
