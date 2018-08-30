@@ -295,35 +295,39 @@ namespace amici {
         
         void initHeaviside(AmiVector *x, AmiVector *dx);
         
-        /** number of paramaeters wrt to which sensitivities are computed
+        /**
+         * @brief number of paramaeters wrt to which sensitivities are computed
          * @return length of sensitivity index vector
          */
         int nplist() const;
 
-        /** total number of model parameters
+        /**
+         * @brief total number of model parameters
          * @return length of parameter vector
          */
         int np() const;
 
-        /** number of constants
+        /**
+         * @brief number of constants
          * @return length of constant vector
          */
         int nk() const;
 
-        /** constants
+        /**
+         * @brief fixed parameters
          * @return pointer to constants array
          */
         const double *k() const;
 
         /**
          * @brief Get nmaxevent
-         * @return nmaxevent
+         * @return maximum number of events that may occur for each type
          */
         int nMaxEvent() const;
 
         /**
-         * @brief setNMaxEvent
-         * @param nmaxevent
+         * @brief Set nmaxevent
+         * @param nmaxevent maximum number of events that may occur for each type
          */
         void setNMaxEvent(int nmaxevent);
 
@@ -334,161 +338,174 @@ namespace amici {
         int nt() const;
 
         /**
-         * @brief getParameterScale
-         * @return
+         * @brief Get ParameterScale for each parameter
+         * @return vector of parameter scale
          */
         std::vector<ParameterScaling> const& getParameterScale() const;
 
         /**
-         * @brief setParameterScale
-         * @param pscale
+         * @brief Set ParameterScale for each parameter
+         * @param pscale scalar parameter scale for all parameters
          */
         void setParameterScale(ParameterScaling pscale);
 
         /**
-         * @brief setParameterScale
-         * @param pscale
+         * @brief Set ParameterScale for each parameter
+         * @param pscale vector of parameter scales
          */
         void setParameterScale(const std::vector<ParameterScaling>& pscale);
 
         /**
-         * @brief getParameters
+         * @brief Get the parameter vector
          * @return The user-set parameters (see also getUnscaledParameters)
          */
         std::vector<realtype> const& getParameters() const;
 
         /**
-         * @brief setParameters
-         * @param p
+         * @brief Sets the parameter vector
+         * @param p vector of parameters
          */
         void setParameters(std::vector<realtype> const&p);
 
         /**
-         * @brief getUnscaledParameters
-         * @return The unscaled parameters
+         * @brief Gets parameters with transformation according to ParameterScale applied
+         * @return unscaled parameters
          */
         std::vector<realtype> const& getUnscaledParameters() const;
 
         /**
-         * @brief getFixedParameters
-         * @return
+         * @brief Gets the fixedParameter member
+         * @return vector of fixed parameters
          */
         std::vector<realtype> const& getFixedParameters() const;
 
         /**
-         * @brief setFixedParameters
-         * @param k
+         * @brief Sets the fixedParameter member
+         * @param k vector of fixed parameters
          */
         void setFixedParameters(std::vector<realtype> const&k);
 
         /**
-         * @brief Get value of model parameter with the specified Id
+         * @brief Get value of fixed parameter with the specified Id
          * @param par_id parameter id
          * @return parameter value
          */
-        realtype getFixedParameterById(std::string par_id) const;
+        realtype getFixedParameterById(std::string const& par_id) const;
         
         /**
-         * @brief Get value of model parameter with the specified name,
+         * @brief Get value of fixed parameter with the specified name,
          if multiple parameters have the same name,
          the first parameter with matching name is returned
-         
          * @param par_name parameter name
          * @return parameter value
          */
-        realtype getFixedParameterByName(std::string par_name) const;
+        realtype getFixedParameterByName(std::string const& par_name) const;
         
         /**
-         * @brief Get value of model parameter with the specified Id
-         * @param par_id parameter id
-         * @param value parameter value
+         * @brief Set value of first fixed parameter with the specified id
+         * @param par_id fixed parameter id
+         * @param value fixed parameter value
          */
-        void setFixedParameterById(std::string par_id, realtype value);
+        void setFixedParameterById(std::string const& par_id, realtype value);
         
         /**
-         * @brief Get value of model parameter with the specified name,
-         if multiple parameters have the same name,
-         the all parameter with matching name are set
-         * @param par_name parameter id
-         * @param value parameter value
+         * @brief Set values of all fixed parameters with the id matching the specified regex
+         * @param par_id_regex fixed parameter name regex
+         * @param value fixed parameter value
          */
-        void setFixedParameterByName(std::string par_name, realtype value);
+        void setFixedParametersByIdRegex(std::string const& par_id_regex, realtype value);
         
         /**
-         * @brief getTimepoints
-         * @return
+         * @brief Set value of first fixed parameter with the specified name,
+         * @param par_name fixed parameter id
+         * @param value fixed parameter value
+         */
+        void setFixedParameterByName(std::string const& par_name, realtype value);
+        
+        /**
+         * @brief Set value of all fixed parameters with name matching the specified regex,
+         * @param par_name_regex fixed parameter name regex
+         * @param value fixed parameter value
+         */
+        void setFixedParametersByNameRegex(std::string const& par_name_regex, realtype value);
+        
+        /**
+         * @brief Get the timepoint vector
+         * @return timepoint vector
          */
         std::vector<realtype> const& getTimepoints() const;
 
         /**
-         * @brief setTimepoints
-         * @param ts
+         * @brief Set the timepoint vector
+         * @param timepoint vector
          */
         void setTimepoints(std::vector<realtype> const& ts);
 
         /**
          * @brief Get timepoint for given index
-         * @param idx
-         * @return
+         * @param idx timepoint index
+         * @return timepoint
          */
         double t(int idx) const;
 
         /**
-         * @brief getParameterList
-         * @return
+         * @brief Get the list of parameters for which sensitivities are computed
+         * @return list of parameter indices
          */
         std::vector<int> const& getParameterList() const;
 
         /**
-         * @brief setParameterList
-         * @param plist
+         * @brief Set the list of parameters for which sensitivities are computed
+         * @param list of parameter indices
          */
         void setParameterList(std::vector<int> const& plist);
 
         /**
-         * @brief getInitialStates
-         * @return
+         * @brief Get the initial states
+         * @return initial state vector
          */
         std::vector<realtype> const& getInitialStates() const;
 
         /**
-         * @brief setInitialStates
-         * @param x0
+         * @brief Set the initial states
+         * @param x0 initial state vector
          */
         void setInitialStates(std::vector<realtype> const& x0);
 
         /**
-         * @brief getInitialStateSensitivities
-         * @return
+         * @brief Get the initial states sensitivities
+         * @return vector of initial state sensitivities
          */
         std::vector<realtype> const& getInitialStateSensitivities() const;
 
         /**
-         * @brief setInitialStateSensitivities
-         * @param sx0
+         * @brief Set the initial state sensitivities
+         * @param sx0 vector of initial state sensitivities
          */
         void setInitialStateSensitivities(std::vector<realtype> const& sx0);
 
-        /** initial timepoint
-         *  @return timepoint
+        /**
+         * @brief get simulation start time
+         * @return simulation start time
          */
         double t0() const;
 
         /**
-         * @brief setT0
-         * @param t0
+         * @brief set simulation start time
+         * @param t0 simulation start time
          */
         void setT0(double t0);
 
-        /** entry in parameter list
-          * @param pos index
-          * @return entry
-          */
+        /**
+         * @brief entry in parameter list
+         * @param pos index
+         * @return entry
+         */
         int plist(int pos) const;
 
         /**
-         * @brief unscaleParameters
-         * @param bufferUnscaled
+         * @brief apply ParameterScales to provided parameters
+         * @param bufferUnscaled parameters
          */
         void unscaleParameters(double *bufferUnscaled) const;
 
@@ -561,9 +578,9 @@ namespace amici {
 
         /**
          * @brief Check equality of data members
-         * @param a
-         * @param b
-         * @return
+         * @param a first model instance
+         * @param b second model instance
+         * @return equality
          */
         friend bool operator ==(const Model &a, const Model &b);
         
@@ -572,9 +589,9 @@ namespace amici {
         /**
          * @brief Check if the given array has only finite elements.
          * If not try to give hints by which other fields this could be caused.
-         * @param N
-         * @param array
-         * @param fun
+         * @param N number of datapoints in array
+         * @param array arrays of values
+         * @param fun name of the fucntion that generated the values
          * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
          */
         int checkFinite(const int N,const realtype *array, const char* fun) const;
@@ -582,7 +599,7 @@ namespace amici {
 
         /**
          * @brief Reports whether the model has parameter names set.
-         * @return
+         * @return boolean indicating whether parameter names were set
          */
         virtual bool hasParameterNames() const { return np() && !getParameterNames().empty(); }
 
@@ -594,7 +611,7 @@ namespace amici {
 
         /**
          * @brief Reports whether the model has state names set.
-         * @return
+         * @return boolean indicating whether state names were set
          */
         virtual bool hasStateNames() const { return nx && !getStateNames().empty(); }
 
@@ -606,7 +623,7 @@ namespace amici {
 
         /**
          * @brief Reports whether the model has fixed parameter names set.
-         * @return
+         * @return boolean indicating whether fixed parameter names were set
          */
         virtual bool hasFixedParameterNames() const { return nk() && !getFixedParameterNames().empty(); }
 
@@ -618,7 +635,7 @@ namespace amici {
 
         /**
          * @brief Reports whether the model has observable names set.
-         * @return
+         * @return boolean indicating whether observabke names were set
          */
         virtual bool hasObservableNames() const { return ny && !getObservableNames().empty(); }
 
@@ -630,7 +647,7 @@ namespace amici {
         
         /**
          * @brief Reports whether the model has parameter ids set.
-         * @return
+         * @return boolean indicating whether parameter ids were set
          */
         virtual bool hasParameterIds() const { return np() && !getParameterIds().empty(); }
         
@@ -643,37 +660,46 @@ namespace amici {
         }
         
         /**
-         * @brief Get value of model parameter with the specified Id
+         * @brief Get value of first model parameter with the specified id
          * @param par_id parameter id
          * @return parameter value
          */
-        realtype getParameterById(std::string par_id) const;
+        realtype getParameterById(std::string const& par_id) const;
         
         /**
-         * @brief Get value of model parameter with the specified name,
-            if multiple parameters have the same name,
-            the first parameter with matching name is returned
-         
+         * @brief Get value of first model parameter with the specified name,
          * @param par_name parameter name
          * @return parameter value
          */
-        realtype getParameterByName(std::string par_name) const;
+        realtype getParameterByName(std::string const& par_name) const;
         
         /**
-         * @brief Get value of model parameter with the specified Id
+         * @brief Set value of first model parameter with the specified id
          * @param par_id parameter id
          * @param value parameter value
          */
-        void setParameterById(std::string par_id, realtype value);
+        void setParameterById(std::string const& par_id, realtype value);
         
         /**
-         * @brief Get value of model parameter with the specified name,
-            if multiple parameters have the same name,
-            the all parameter with matching name are set
-         * @param par_name parameter id
+         * @brief Set all values of model parameters with ids matching the specified regex
+         * @param par_id_regex parameter id regex
          * @param value parameter value
          */
-        void setParameterByName(std::string par_name, realtype value);
+        void setParametersByIdRegex(std::string const& par_id_regex, realtype value);
+        
+        /**
+         * @brief Set value of first model parameter with the specified name
+         * @param par_name parameter name
+         * @param value parameter value
+         */
+        void setParameterByName(std::string const& par_name, realtype value);
+        
+        /**
+         * @brief Set all values of all model parameters with names matching the specified regex
+         * @param par_name_regex parameter name regex
+         * @param value parameter value
+         */
+        void setParametersByNameRegex(std::string const& par_name_regex, realtype value);
         
         /**
          * @brief Reports whether the model has state ids set.
@@ -691,7 +717,7 @@ namespace amici {
         
         /**
          * @brief Reports whether the model has fixed parameter ids set.
-         * @return
+         * @return boolean indicating whether fixed parameter ids were set
          */
         virtual bool hasFixedParameterIds() const { return nk() && !getFixedParameterIds().empty(); }
         
@@ -705,7 +731,7 @@ namespace amici {
         
         /**
          * @brief Reports whether the model has observable ids set.
-         * @return
+         * @return boolean indicating whether observale ids were set
          */
         virtual bool hasObservableIds() const { return ny && !getObservableIds().empty(); }
         
