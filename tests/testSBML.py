@@ -25,9 +25,9 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
         observables = amici.assignmentRules2observables(
             sbml,
-            filter_function=lambda variableId:
-                variableId.startswith('observable_') and
-                not variableId.endswith('_sigma')
+            filter_function=lambda variable:
+                variable.getId().startswith('observable_') and
+                not variable.getId().endswith('_sigma')
         )
         
         sbmlImporter.sbml2amici('test_model_steadystate_scaled',
@@ -82,8 +82,20 @@ class TestAmiciSBMLModel(unittest.TestCase):
             list(edata_reconstructed[0].fixedParametersPreequilibration),
         )
 
-
-
+        df_state = amici.getSimulationStatesAsDataFrame(model, edata, rdata)
+        self.assertTrue(
+            np.isclose(
+                rdata[0]['x'],
+                df_state[list(model.getStateIds())].values
+            ).all()
+        )
+        df_obs = amici.getSimulationObservablesAsDataFrame(model, edata, rdata)
+        self.assertTrue(
+            np.isclose(
+                rdata[0]['y'],
+                df_obs[list(model.getObservableIds())].values
+            ).all()
+        )
         df_res = amici.getResidualsAsDataFrame(model, edata, rdata)
 
         model.getParameterById('p1')

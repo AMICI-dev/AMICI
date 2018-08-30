@@ -378,21 +378,21 @@ def getSimulationStatesAsDataFrame(model, edata_list, rdata_list):
         raise ImportError('This function is only available if the pandas '
                           'package is installed')
 
-    cols = _get_extended_observable_cols(model)
+    cols = _get_state_cols(model)
     df_rdata = pd.DataFrame(columns=cols)
 
     for edata, rdata in zip(edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
             datadict = {
                 'time': timepoint,
-                'datatype': 'simulation'
             }
-            for i_state, obs in enumerate(_get_names_or_ids(model, 'State')):
-                datadict[obs] = rdata['x'][i_time, i_state]
-                datadict[obs + '_std'] = rdata['sigmay'][i_time, i_state]
-            df_rdata.loc[len(df_rdata)] = datadict
+
+            for i_state, state in enumerate(_get_names_or_ids(model, 'State')):
+                datadict[state] = rdata['x'][i_time, i_state]
 
             _fill_conditions_dict(datadict, model, edata)
+
+            df_rdata.loc[len(df_rdata)] = datadict
     return df_rdata
 
 
@@ -644,16 +644,16 @@ def getEdataFromDataFrame(model, df):
             condition_parameters.append(par + '_preeq')
     conditions = df[condition_parameters].drop_duplicates()
 
-    for row in conditions.rows():
+    for row in conditions.iterrows():
         # subselect rows that match condition
         selected = np.ones((len(df),), dtype=bool)
-        for par_label, par in row.iteritems():
+        for par_label, par in row[1].iteritems():
             if math.isnan(par):
                 selected = selected & np.isnan(df[par_label].values)
             else:
                 selected = selected & (df[par_label] == par)
         edata_df = df[selected]
 
-        edata_list.append(constructEdataFromDataFrame(edata_df, model, row))
+        edata_list.append(constructEdataFromDataFrame(edata_df, model, row[1]))
 
     return edata_list
