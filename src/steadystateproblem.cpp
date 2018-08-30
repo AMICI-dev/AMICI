@@ -53,7 +53,9 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
             /* Newton solver did not find a steady state, so try integration */
             getSteadystateSimulation(rdata, solver, model, it);
             newton_status = 2;
-        } catch(AmiException& ex) {// may be integration failure from AmiSolve, so NewtonFailure won't do for all cases
+        } catch(AmiException& ex) {
+            /* may be integration failure from AmiSolve, so NewtonFailure
+               won't do for all cases */
             try {
                 applyNewtonsMethod(rdata, model, newtonSolver.get(), 2);
                 newton_status = 3;
@@ -69,11 +71,9 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* Compute steady state sensitvities */
     
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() != SensitivityMethod::none) {
+        (newton_status == 1 || newton_status == 3 || model->getSteadyStateSensitivityMode() != SteadyStateSensitivityMode::simulationFSA))
         // for newton_status == 2 the sensis were computed via FSA
-        if (newton_status == 1 || newton_status == 3 || model->getSteadyStateSensitivityMode() != SteadyStateSensitivityMode::simulationFSA)
-            newtonSolver->computeNewtonSensis(sx);
-    }
+        newtonSolver->computeNewtonSensis(sx);
     
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     getNewtonOutput(rdata, model, newton_status, run_time, it);

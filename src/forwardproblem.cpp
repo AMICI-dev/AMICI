@@ -198,15 +198,15 @@ void ForwardProblem::updateAndReinitStatesAndSensitivities()
     model->fx0_fixedParameters(&x);
     solver->reInit(t, &x, &dx);
     rdata->x0 = std::move(x.getVector());
-    if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() == SensitivityMethod::forward) {
+    if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
         model->fsx0_fixedParameters(&sx, &x);
-        solver->sensReInit( &sx, &sdx);
-        for (int ip = 0; ip < model->nplist(); ip++) {
-            for (int ix = 0; ix < model->nx; ix++) {
-                rdata->sx0[ip * model->nx + ix] = sx.at(ix,ip);
-            }
-        }
+        
+        for (int ip = 0; ip < model->nplist(); ip++)
+            for (int ix = 0; ix < model->nx; ix++)
+                rdata->sx0[ip * model->nx + ix] = sx.at(ix, ip);
+        
+        if(solver->getSensitivityMethod() == SensitivityMethod::forward)
+            solver->sensReInit(&sx, &sdx);
     }
 }
     
