@@ -24,6 +24,8 @@ class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
     
     Attributes:
+        reinit_fixed_parameter_initial_conditions: flag indicating whether *x0_fixedParameter functions are to be
+        generated
         check_validity: flag indicating whether the validity of the SBML document should be checked
         codeprinter: codeprinter that allows export of symbolic variables as C++ code
         functions: dict carrying function specific definitions
@@ -307,6 +309,10 @@ class SbmlImporter:
             verbose: more verbose output if True
             assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
                                    state variables that may become negative due to numerical errors
+            reinit_fixed_parameter_initial_conditions: if set to true, initial conditions depending on 
+                                                       fixedParameters will be reinitialized after presimulation
+                                                       and preequilibration
+
         Returns:
 
         Raises:

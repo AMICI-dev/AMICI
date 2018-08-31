@@ -22,6 +22,7 @@ Attributes:
     amiciSrcPath: absolute path of the amici source directory
     amiciModulePath: absolute root path of the amici module
     hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
+    pd: placeholder variable for pandas module
 """
 
 import os
@@ -30,7 +31,6 @@ import numpy as np
 try:
     import pandas as pd
 except ImportError:
-    # placeholder for pandas package
     pd = None
 
 # If this file is inside the amici package, import swig interface,
@@ -620,7 +620,8 @@ def constructEdataFromDataFrame(df, model, condition):
     df = df.sort_values(by='time',ascending=True)
     edata.setTimepoints(amici.DoubleVector(df['time'].values))
 
-    overwrite = {}
+    overwrite_preeq = {}
+    overwrite_presim = {}
     for par in list(_get_names_or_ids(model, 'FixedParameter')):
         if par + '_preeq' in condition.keys() \
                 and not math.isnan(condition[par + '_preeq']):
