@@ -1,1 +1,1 @@
-../../amici/pands.py
+../../amici/pandas.py
