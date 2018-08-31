@@ -360,7 +360,7 @@ def getSimulationObservablesAsDataFrame(model, edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
             datadict = {
                 'time': timepoint,
-                'datatype': 'simulation'
+                'datatype': 'simulation',
             }
             for i_obs, obs in enumerate(_get_names_or_ids(model,
                                                           'Observable')):
@@ -438,6 +438,7 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list):
     for row in df_rdata.index:
         datadict = {
             'time': df_rdata.loc[row]['time']
+            't_presim': df_rdata.loc[row]['t_presim']
         }
         for obs in _get_names_or_ids(model, 'Observable'):
             datadict[obs] = abs(
@@ -446,6 +447,7 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list):
         for par in _get_names_or_ids(model, 'FixedParameter'):
             datadict[par] = df_rdata.loc[row][par]
             datadict[par + '_preeq'] = df_rdata.loc[row][par + '_preeq']
+            datadict[par + '_presim'] = df_rdata.loc[row][par + '_presim']
         df_res.loc[len(df_res)] = datadict
 
     return df_res
@@ -466,6 +468,8 @@ def _fill_conditions_dict(datadict, model, edata) -> dict:
     Raises:
 
     """
+    datadict['t_presim'] = edata.t_presim
+    
     for i_par, par in enumerate(_get_names_or_ids(model, 'FixedParameter')):
         if edata.fixedParameters.size():
             datadict[par] = edata.fixedParameters[i_par]
@@ -476,7 +480,13 @@ def _fill_conditions_dict(datadict, model, edata) -> dict:
             datadict[par + '_preeq'] = \
                 edata.fixedParametersPreequilibration[i_par]
         else:
-            datadict[par + '_preeq'] = float('nan')
+            datadict[par + '_preeq'] = np.nan
+
+        if edata.fixedParametersPresimulation.size():
+            datadict[par + '_presim'] = \
+                edata.fixedParametersPresimulation[i_par]
+        else:
+            datadict[par + '_presim'] = np.nan
     return datadict
 
 
@@ -493,9 +503,10 @@ def _get_extended_observable_cols(model) -> list:
 
     """
     return \
-        ['time', 'datatype'] + \
+        ['time', 'datatype','t_presim'] + \
         _get_names_or_ids(model, 'FixedParameter') + \
         [name + '_preeq' for name in _get_names_or_ids(model, 'FixedParameter')] + \
+        [name + '_presim' for name in _get_names_or_ids(model, 'FixedParameter')] + \
         _get_names_or_ids(model, 'Observable') + \
         [name + '_std' for name in _get_names_or_ids(model, 'Observable')]
 
@@ -513,9 +524,10 @@ def _get_observable_cols(model):
 
     """
     return \
-        ['time'] + \
+        ['time','t_presim'] + \
         _get_names_or_ids(model, 'FixedParameter') + \
         [name + '_preeq' for name in _get_names_or_ids(model, 'FixedParameter')] + \
+        [name + '_presim' for name in _get_names_or_ids(model, 'FixedParameter')] + \
         _get_names_or_ids(model, 'Observable')
 
 
@@ -532,9 +544,10 @@ def _get_state_cols(model):
 
     """
     return \
-        ['time'] + \
+        ['time','t_presim'] + \
         _get_names_or_ids(model, 'FixedParameter') + \
         [name + '_preeq' for name in _get_names_or_ids(model, 'FixedParameter')] + \
+        [name + '_presim' for name in _get_names_or_ids(model, 'FixedParameter')] + \
         _get_names_or_ids(model, 'State')
 
 
@@ -593,6 +606,7 @@ def constructEdataFromDataFrame(df, model, condition):
         model: Model instance
         condition: pd.Series with FixedParameter Names/Ids as columns
             preequilibration conditions may be specified by appending '_preeq' as suffix
+            presimulation conditions may be specified by appending '_presim' as suffix
 
     Returns:
         ExpData instance
@@ -609,18 +623,29 @@ def constructEdataFromDataFrame(df, model, condition):
     overwrite = {}
     for par in list(_get_names_or_ids(model, 'FixedParameter')):
         if par + '_preeq' in condition.keys() \
-                and not math.isnan(condition['k0_preeq']):
-            overwrite[par] = condition[par + '_preeq']
+                and not math.isnan(condition[par + '_preeq']):
+            overwrite_preeq[par] = condition[par + '_preeq']
+        if par + '_presim' in condition.keys() \
+                and not math.isnan(condition[par + '_presim']):
+            overwrite_presim[par] = condition[par + '_presim']
 
     # fixedParameters
     edata.fixedParameters = amici.DoubleVector(
         condition[_get_names_or_ids(model, 'FixedParameter')].values
     )
 
-    if any([overwrite[key] != condition[key] for key in overwrite.keys()]):
+    if any([overwrite_preeq[key] != condition[key] for key in overwrite_preeq.keys()]):
         edata.fixedParametersPreequilibration = amici.DoubleVector(
-            _get_specialized_fixed_parameters(model, condition, overwrite)
+            _get_specialized_fixed_parameters(model, condition, overwrite_preeq)
         )
+
+    if any([overwrite_presim[key] != condition[key] for key in overwrite_presim.keys()]):
+        edata.fixedParametersPresimulation = amici.DoubleVector(
+            _get_specialized_fixed_parameters(model, condition, overwrite_presim)
+        )
+
+    if 't_presim' in condition.keys():
+        edata.t_presim = condition['t_presim']
 
     # data
     for obs_index, obs in enumerate(_get_names_or_ids(model, 'Observable')):
@@ -642,6 +667,8 @@ def getEdataFromDataFrame(model, df):
         df: pd.DataFrame with Observable Names/Ids, FixedParameter Names/Ids and time as columns
             standard deviations may be specified by appending '_std' as suffix
             preequilibration fixedParameters may be specified by appending '_preeq' as suffix
+            presimulation fixedParameters may be specified by appending '_presim' as suffix
+            presimulation time may be specified as 't_presim' column
         model: Model instance
 
     Returns:
@@ -656,6 +683,10 @@ def getEdataFromDataFrame(model, df):
     for par in _get_names_or_ids(model, 'FixedParameter'):
         if par + '_preeq' in df.columns:
             condition_parameters.append(par + '_preeq')
+        if par + '_presim' in df.columns:
+            condition_parameters.append(par + '_presim')
+    if 't_presim' in df.columns:
+            condition_parameters.append('t_presim')
     conditions = df[condition_parameters].drop_duplicates()
 
     for row in conditions.iterrows():

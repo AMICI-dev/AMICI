@@ -12,14 +12,50 @@ class TestAmiciSBMLModel(unittest.TestCase):
     TestCase class for testing SBML import and simulation from AMICI python interface
     '''
 
-    expectedResultsFile = os.path.join(os.path.dirname(__file__), 'cpputest','expectedResults.h5')
+    expectedResultsFile = os.path.join(os.path.dirname(__file__),
+                                       'cpputest','expectedResults.h5')
 
-    def runTest(self):
+    def test_presimulation(self):
+        sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python',
+                                'examples', 'example_presimulation',
+                                'model_presimulation.xml')
+
+        sbmlImporter = amici.SbmlImporter(sbmlFile)
+        sbml = sbmlImporter.sbml
+
+        constantParameters = ['DRUG_0', 'KIN_0']
+
+        observables = amici.assignmentRules2observables(
+            sbmlImporter.sbml,  # the libsbml model object
+            filter_function=lambda variable: variable.getName() == 'pPROT'
+        )
+        sbmlImporter.sbml2amici('test_model_presimulation',
+                                'test_model_presimulation',
+                                verbose=False,
+                                observables=observables,
+                                constantParameters=constantParameters,
+                                reinit_fixed_parameter_initial_conditions=True)
+        sys.path.insert(0, 'test_model_presimulation')
+        import test_model_presimulation as modelModule
+        model = modelModule.getModel()
+        solver = model.getSolver()
+        model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 61)))
+
+        rdata = amici.runAmiciSimulation(model, solver)
+        edata = amici.ExpData(rdata, 0.1, 0.0)
+        edata.fixedParameters = amici.DoubleVector([10, 2])
+        edata.fixedParametersPresimulation = amici.DoubleVector([10, 2])
+        edata.fixedParametersPreequilibration = amici.DoubleVector([3, 0])
+        amici.runAmiciSimulation(model, solver, edata)
+
+    def test_steadystate_scaled(self):
         '''
         Test SBML import and simulation from AMICI python interface
         '''
 
-        sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python', 'examples', 'example_steadystate', 'model_steadystate_scaled.xml')
+        sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python',
+                                'examples', 'example_steadystate',
+                                'model_steadystate_scaled.xml')
         sbmlImporter = amici.SbmlImporter(sbmlFile)
         sbml = sbmlImporter.sbml
 
@@ -34,7 +70,8 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                 'test_model_steadystate_scaled',
                                 observables=observables,
                                 constantParameters=['k0'],
-                                sigmas={'observable_x1withsigma': 'observable_x1withsigma_sigma'})
+                                sigmas={'observable_x1withsigma':
+                                            'observable_x1withsigma_sigma'})
 
         sys.path.insert(0, 'test_model_steadystate_scaled')
         import test_model_steadystate_scaled as modelModule

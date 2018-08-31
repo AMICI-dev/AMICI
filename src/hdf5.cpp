@@ -143,6 +143,14 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         edata->fixedParametersPreequilibration = getDoubleDataset1D(file, hdf5Root + "/conditionPreequilibration");
     }
     
+    if(locationExists(file,  hdf5Root + "/conditionPresimulation")) {
+        edata->fixedParametersPresimulation = getDoubleDataset1D(file, hdf5Root + "/conditionPresimulation");
+    }
+    
+    if(attributeExists(file, hdf5Root, "t_presim")) {
+        edata->t_presim = getDoubleScalarAttribute(file, hdf5Root, "t_presim");
+    }
+    
     if(locationExists(file,  hdf5Root + "/ts")) {
         edata->setTimepoints(getDoubleDataset1D(file, hdf5Root + "/ts"));
     }
@@ -167,6 +175,12 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const 
     if (!edata.fixedParametersPreequilibration.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/conditionPreequilibration",
                                       edata.fixedParametersPreequilibration.data(), edata.fixedParametersPreequilibration.size());
+    
+    if (!edata.fixedParametersPresimulation.empty())
+        createAndWriteDouble1DDataset(file, hdf5Location + "/conditionPresimulation",
+                                      edata.fixedParametersPresimulation.data(), edata.fixedParametersPresimulation.size());
+    
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "t_presim", &edata.t_presim, 1);
     
     if (!edata.getObservedData().empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.getObservedData().data(),
