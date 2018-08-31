@@ -50,7 +50,7 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
-    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy scipy pandas
+    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy scipy
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh

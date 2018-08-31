@@ -412,8 +412,9 @@ namespace amici {
          * @brief Set values of all fixed parameters with the id matching the specified regex
          * @param par_id_regex fixed parameter name regex
          * @param value fixed parameter value
+         * @return number of fixed parameter ids that matched the regex
          */
-        void setFixedParametersByIdRegex(std::string const& par_id_regex, realtype value);
+        int setFixedParametersByIdRegex(std::string const& par_id_regex, realtype value);
         
         /**
          * @brief Set value of first fixed parameter with the specified name,
@@ -426,8 +427,9 @@ namespace amici {
          * @brief Set value of all fixed parameters with name matching the specified regex,
          * @param par_name_regex fixed parameter name regex
          * @param value fixed parameter value
+         * @return number of fixed parameter names that matched the regex
          */
-        void setFixedParametersByNameRegex(std::string const& par_name_regex, realtype value);
+        int setFixedParametersByNameRegex(std::string const& par_name_regex, realtype value);
         
         /**
          * @brief Get the timepoint vector
@@ -684,8 +686,9 @@ namespace amici {
          * @brief Set all values of model parameters with ids matching the specified regex
          * @param par_id_regex parameter id regex
          * @param value parameter value
+         * @return number of parameter ids that matched the regex
          */
-        void setParametersByIdRegex(std::string const& par_id_regex, realtype value);
+        int setParametersByIdRegex(std::string const& par_id_regex, realtype value);
         
         /**
          * @brief Set value of first model parameter with the specified name
@@ -698,8 +701,9 @@ namespace amici {
          * @brief Set all values of all model parameters with names matching the specified regex
          * @param par_name_regex parameter name regex
          * @param value parameter value
+         * @return number of fixed parameter names that matched the regex
          */
-        void setParametersByNameRegex(std::string const& par_name_regex, realtype value);
+        int setParametersByNameRegex(std::string const& par_name_regex, realtype value);
         
         /**
          * @brief Reports whether the model has state ids set.

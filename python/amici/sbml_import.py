@@ -357,7 +357,9 @@ class SbmlImporter:
         """Set output paths for the model and create if necessary
 
         Arguments:
-            output_dir: relative or absolute path where the generated model code is to be placed. will be created if does not exists. defaults to `pwd`/amici-$modelname.
+            output_dir: relative or absolute path where the generated model
+            code is to be placed. will be created if does not exists.
+            defaults to `pwd`/amici-$modelname.
 
         Returns:
 
@@ -380,7 +382,8 @@ class SbmlImporter:
         """Read parameters, species, reactions, and so on from SBML model
 
         Arguments:
-            constantParameters: list of SBML Ids identifying constant parameters
+            constantParameters: list of SBML Ids identifying
+            constant parameters
 
         Returns:
 
@@ -414,24 +417,31 @@ class SbmlImporter:
 
         """
         if len(self.sbml.getListOfSpecies()) == 0:
-            raise SBMLException('Models without species are currently not supported!')
+            raise SBMLException('Models without species '
+                                'are currently not supported!')
 
-        if len(self.sbml.all_elements_from_plugins) > 0:
+        if hasattr(self.sbml, 'all_elements_from_plugins') \
+                and len(self.sbml.all_elements_from_plugins) > 0:
             raise SBMLException('SBML extensions are currently not supported!')
 
         if len(self.sbml.getListOfEvents()) > 0:
             raise SBMLException('Events are currently not supported!')
 
-        if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
-            raise SBMLException('Algebraic and rate rules are currently not supported!')
+        if any([not(rule.isAssignment())
+                for rule in self.sbml.getListOfRules()]):
+            raise SBMLException('Algebraic and rate '
+                                'rules are currently not supported!')
 
-        if any([reaction.getFast() for reaction in self.sbml.getListOfReactions()]):
+        if any([reaction.getFast()
+                for reaction in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
 
         if any([any([not element.getStoichiometryMath() is None
-                for element in list(reaction.getListOfReactants()) + list(reaction.getListOfProducts())])
+                for element in list(reaction.getListOfReactants())
+                + list(reaction.getListOfProducts())])
                 for reaction in self.sbml.getListOfReactions()]):
-            raise SBMLException('Non-unity stoichiometry is currently not supported!')
+            raise SBMLException('Non-unity stoichiometry is'
+                                ' currently not supported!')
 
 
     def processSpecies(self):
@@ -447,13 +457,25 @@ class SbmlImporter:
         species = self.sbml.getListOfSpecies()
         self.n_species = len(species)
         self.speciesIndex = {species_element.getId(): species_index
-                             for species_index, species_element in enumerate(species)}
-        self.symbols['species']['sym'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
+                             for species_index, species_element
+                             in enumerate(species)}
+        self.symbols['species']['sym'] = sp.DenseMatrix(
+            [symbols(spec.getId()) for spec in species]
+        )
         self.symbols['species']['name'] = [spec.getName() for spec in species]
-        self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
-        self.constantSpecies = [species_element.getId() for species_element in species if species_element.getConstant()]
-        self.boundaryConditionSpecies = [species_element.getId() for species_element in species if species_element.getBoundaryCondition()]
-        self.speciesHasOnlySubstanceUnits = [specie.getHasOnlySubstanceUnits() for specie in species]
+        self.speciesCompartment = sp.DenseMatrix(
+            [symbols(spec.getCompartment()) for spec in species]
+        )
+        self.constantSpecies = [species_element.getId()
+                                for species_element in species
+                                if species_element.getConstant()]
+        self.boundaryConditionSpecies = [
+            species_element.getId()
+            for species_element in species
+            if species_element.getBoundaryCondition()
+        ]
+        self.speciesHasOnlySubstanceUnits = [specie.getHasOnlySubstanceUnits()
+                                             for specie in species]
 
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
@@ -479,15 +501,17 @@ class SbmlImporter:
                 sbml.formulaToL3String(initial_assignment.getMath())
             )
 
-
-
         if self.sbml.isSetConversionFactor():
             conversion_factor = self.sbml.getConversionFactor()
         else:
             conversion_factor = 1.0
-        self.speciesConversionFactor = sp.DenseMatrix([sp.sympify(specie.getConversionFactor()) if
-                                                       specie.isSetConversionFactor() else conversion_factor
-                                                       for specie in species])
+
+        self.speciesConversionFactor = sp.DenseMatrix([
+             sp.sympify(specie.getConversionFactor())
+             if specie.isSetConversionFactor()
+             else conversion_factor
+             for specie in species
+        ])
 
 
     def processParameters(self, constantParameters=None):
