@@ -76,3 +76,9 @@ notifications:
     urls:
       - https://icb-mmost.helmholtz-muenchen.de/hooks/ux65x1zqbpr8xy7nr9sexidhgy
     on_success: change
+
+# cache dependencies
+cache: 
+  - pip
+  - directories:
+    - ${HOME}/Library/Caches/Homebrew

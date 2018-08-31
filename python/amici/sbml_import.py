@@ -309,7 +309,7 @@ class SbmlImporter:
             verbose: more verbose output if True
             assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
                                    state variables that may become negative due to numerical errors
-            reinit_fixed_parameter_initial_conditions: if set to true, initial conditions depending on 
+            reinit_fixed_parameter_initial_conditions: if set to true, initial conditions depending on
                                                        fixedParameters will be reinitialized after presimulation
                                                        and preequilibration
 
