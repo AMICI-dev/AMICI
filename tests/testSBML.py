@@ -135,15 +135,6 @@ class TestAmiciSBMLModel(unittest.TestCase):
         )
         df_res = amici.getResidualsAsDataFrame(model, edata, rdata)
 
-        model.getParameterById('p1')
-        model.setParameterById('p1',2.0)
-        model.getParameterByName('p1')
-        model.setParameterByName('p1', 2.0)
-        model.getFixedParameterById('k0')
-        model.setFixedParameterById('k0', 2.0)
-        model.getFixedParameterByName('k0')
-        model.setFixedParameterByName('k0', 2.0)
-
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()

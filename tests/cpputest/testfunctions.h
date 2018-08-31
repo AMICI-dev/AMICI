@@ -26,11 +26,18 @@ class ExpData;
 #define TEST_ATOL 1e-10
 #define TEST_RTOL 1e-05
 
+/**
+ * @brief helper function to initialize default names/ids
+ * @param name name of variables
+ * @param length number of variables
+ * @return default names/ids
+ */
+std::vector<std::string> getVariableNames(const char* name, int length);
 
 /**
-     * @brief The Model_Test class is a model-unspecific implementation
-     of model designed for unit testing.
-     */
+ * @brief The Model_Test class is a model-unspecific implementation
+ of model designed for unit testing.
+ */
 class Model_Test : public Model {
 public:
 
@@ -100,6 +107,50 @@ public:
                      AmiVector *v, AmiVector *nJv, realtype cj) override {
         throw AmiException("not implemented");
     }
+
+    virtual std::vector<std::string> getParameterNames() const override
+    {
+        return getVariableNames("p", np());
+    }
+    
+    virtual std::vector<std::string> getStateNames() const override
+    {
+        return getVariableNames("x", nx);
+    }
+    
+    virtual std::vector<std::string> getFixedParameterNames() const override
+    {
+        return getVariableNames("k", nk());
+        
+    }
+    
+    virtual std::vector<std::string> getObservableNames() const override
+    {
+        return getVariableNames("y", ny);
+    }
+    
+    virtual std::vector<std::string> getParameterIds() const override
+    {
+        return getVariableNames("p", np());
+    }
+    
+    virtual std::vector<std::string> getStateIds() const override
+    {
+        return getVariableNames("x", nx);
+    }
+    
+    virtual std::vector<std::string> getFixedParameterIds() const override
+    {
+        return getVariableNames("k", nk());
+        
+    }
+    
+    virtual std::vector<std::string> getObservableIds() const override
+    {
+        return getVariableNames("y", ny);
+    }
+
+
 };
 
 void simulateWithDefaultOptions();

@@ -396,7 +396,7 @@ int setValueByIdRegex(std::vector<std::string> ids, std::vector<realtype> values
                   std::string const& regex, const char* value_name, const char* id_name) {
     std::regex pattern (regex);
     int n_found = 0;
-    for(int ip = 0; ip < ids.size(); ++ip) {
+    for(int ip = 0; ip < static_cast<int>(ids.size()); ++ip) {
         if(std::regex_match(ids.at(ip), pattern)) {
             values.at(ip) = value;
             ++n_found;
