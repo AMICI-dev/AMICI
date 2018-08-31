@@ -1537,15 +1537,6 @@ int Model::checkFinite(const int N, const realtype *array, const char *fun) cons
 
 void Model::unscaleParameters(double *bufferUnscaled) const
 {
-    /**
-         * unscaleParameters removes parameter scaling according to the parameter
-         * scaling in pscale
-         *
-         * @param[out] bufferUnscaled unscaled parameters are written to the array
-         * @type double
-         *
-         * @return status flag indicating success of execution @type int
-         */
     for (int ip = 0; ip < np(); ++ip) {
         switch (pscale[ip]) {
         case ParameterScaling::log10:
