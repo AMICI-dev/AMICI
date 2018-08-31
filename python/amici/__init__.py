@@ -437,7 +437,7 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list):
 
     for row in df_rdata.index:
         datadict = {
-            'time': df_rdata.loc[row]['time']
+            'time': df_rdata.loc[row]['time'],
             't_presim': df_rdata.loc[row]['t_presim']
         }
         for obs in _get_names_or_ids(model, 'Observable'):
