@@ -373,31 +373,56 @@ void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
 std::vector<realtype> const& Model::getParameters() const {
     return originalParameters;
 }
+
+realtype getValueById(std::vector<std::string> ids, std::vector<realtype> values,
+                      std::string const& id, const char* value_name, const char* id_name) {
+    auto it = std::find(ids.begin(), ids.end(), id);
+    if(it != ids.end())
+        return values.at(it - ids.begin());
+    
+    throw AmiException("Could not find %s with specified %s", value_name, id_name);
+}
+    
+void setValueById(std::vector<std::string> ids, std::vector<realtype> values, realtype value,
+                      std::string const& id, const char* value_name, const char* id_name) {
+    auto it = std::find(ids.begin(), ids.end(), id);
+    if(it != ids.end())
+        values.at(it - ids.begin()) = value;
+    else
+        throw AmiException("Could not find %s with specified %s", value_name, id_name);
+}
+    
+int setValueByIdRegex(std::vector<std::string> ids, std::vector<realtype> values, realtype value,
+                  std::string const& regex, const char* value_name, const char* id_name) {
+    std::regex pattern (regex);
+    int n_found = 0;
+    for(int ip = 0; ip < ids.size(); ++ip) {
+        if(std::regex_match(ids.at(ip), pattern)) {
+            values.at(ip) = value;
+            ++n_found;
+        }
+    }
+    
+    if(n_found == 0)
+        throw AmiException("Could not find %s with specified %s", value_name, id_name);
+    
+    return n_found;
+}
     
 realtype Model::getParameterById(std::string const& par_id) const {
     if(!hasParameterIds())
         throw AmiException("Could not access parameters by id as they are not set");
-    
-    auto par_ids = getParameterIds();
-    auto it = std::find(par_ids.begin(), par_ids.end(), par_id);
-    
-    if(it != par_ids.end())
-        return originalParameters.at(it - par_ids.begin());
-    else
-        throw AmiException("Could not find parameter with specified id");
+    return getValueById(getParameterIds(), originalParameters, par_id, "parameters", "id");
 }
     
 realtype Model::getParameterByName(std::string const& par_name) const {
     if(!hasParameterNames())
-    throw AmiException("Could not access parameters by name as they are not set");
-    
-    auto par_names = getParameterNames();
-    auto it = std::find(par_names.begin(), par_names.end(), par_name);
-    
-    if(it != par_names.end())
-        return originalParameters.at(it - par_names.begin());
-    else
-        throw AmiException("Could not find parameter with specified name");
+        throw AmiException("Could not access parameters by name as they are not set");
+    return getValueById(getParameterNames(),
+                        originalParameters,
+                        par_name,
+                        "parameters",
+                        "name");
 }
 
 void Model::setParameters(const std::vector<realtype> &p) {
@@ -412,34 +437,24 @@ void Model::setParameterById(std::string const& par_id, realtype value) {
     if(!hasParameterIds())
         throw AmiException("Could not access parameters by id as they are not set");
     
-    auto par_ids = getParameterIds();
-    auto it = std::find(par_ids.begin(), par_ids.end(), par_id);
-    
-    if(it != par_ids.end()) {
-        originalParameters.at(it - par_ids.begin()) = value;
-        unscaleParameters(this->unscaledParameters.data());
-    } else {
-        throw AmiException("Could not find parameter with specified id");
-    }
+    setValueById(getParameterIds(),
+                 originalParameters,
+                 value,
+                 par_id,
+                 "parameter",
+                 "id");
+    unscaleParameters(this->unscaledParameters.data());
 }
     
 int Model::setParametersByIdRegex(std::string const& par_id_regex, realtype value) {
     if(!hasParameterIds())
         throw AmiException("Could not access parameters by id as they are not set");
-    
-    auto par_ids = getParameterIds();
-    std::regex pattern (par_id_regex);
-    int n_found = 0;
-    for(int ip = 0; ip < np(); ++ip) {
-        if(std::regex_match(par_ids.at(ip), pattern)) {
-            originalParameters.at(ip) = value;
-            ++n_found;
-        }
-    }
-    
-    if(n_found == 0)
-        throw AmiException("Could not find parameter with specified id");
-    
+    int n_found = setValueByIdRegex(getParameterIds(),
+                                    originalParameters,
+                                    value,
+                                    par_id_regex,
+                                    "parameter",
+                                    "id");
     unscaleParameters(this->unscaledParameters.data());
     return n_found;
 }
@@ -448,36 +463,27 @@ void Model::setParameterByName(std::string const& par_name, realtype value) {
     if(!hasParameterNames())
         throw AmiException("Could not access parameters by name as they are not set");
     
-    auto par_names = getParameterNames();
-    auto it = std::find(par_names.begin(), par_names.end(), par_name);
-    
-    if(it != par_names.end()) {
-        originalParameters.at(it - par_names.begin()) = value;
-        unscaleParameters(this->unscaledParameters.data());
-    } else {
-        throw AmiException("Could not find parameter with specified name");
-    }
+    setValueById(getParameterNames(),
+                 originalParameters,
+                 value,
+                 par_name,
+                 "parameter",
+                 "name");
+    unscaleParameters(this->unscaledParameters.data());
 }
 
 int Model::setParametersByNameRegex(std::string const& par_name_regex, realtype value) {
     if(!hasParameterNames())
         throw AmiException("Could not access parameters by name as they are not set");
     
-    auto par_names = getParameterNames();
-    std::regex pattern (par_name_regex);
-    int n_found = 0;
-    for(int ip = 0; ip < np(); ++ip) {
-        if(std::regex_match(par_names.at(ip), pattern)) {
-            originalParameters.at(ip) = value;
-            ++n_found;
-        }
-    }
-    
-    if(n_found == 0)
-        throw AmiException("Could not find parameter with specified name");
+    int n_found = setValueByIdRegex(getParameterNames(),
+                                    originalParameters,
+                                    value,
+                                    par_name_regex,
+                                    "parameter",
+                                    "name");
     
     unscaleParameters(this->unscaledParameters.data());
-    
     return n_found;
 }
 
@@ -493,26 +499,22 @@ realtype Model::getFixedParameterById(std::string const& par_id) const {
     if(!hasFixedParameterIds())
         throw AmiException("Could not access fixed parameters by id as they are not set");
     
-    auto par_ids = getFixedParameterIds();
-    auto it = std::find(par_ids.begin(), par_ids.end(), par_id);
-    
-    if(it != par_ids.end())
-        return fixedParameters.at(it - par_ids.begin());
-    else
-        throw AmiException("Could not find fixed parameter with specified id");
+    return getValueById(getFixedParameterIds(),
+                        fixedParameters,
+                        par_id,
+                        "fixedParameters",
+                        "id");
 }
 
 realtype Model::getFixedParameterByName(std::string const& par_name) const {
     if(!hasFixedParameterNames())
         throw AmiException("Could not access fixed parameters by name as they are not set");
     
-    auto par_names = getFixedParameterNames();
-    auto it = std::find(par_names.begin(), par_names.end(), par_name);
-    
-    if(it != par_names.end())
-        return fixedParameters.at(it - par_names.begin());
-    else
-        throw AmiException("Could not find fixed parameter with specified id");
+    return getValueById(getFixedParameterNames(),
+                        fixedParameters,
+                        par_name,
+                        "fixedParameters",
+                        "name");
 }
 
 void Model::setFixedParameters(const std::vector<realtype> &k) {
@@ -525,66 +527,48 @@ void Model::setFixedParameterById(std::string const& par_id, realtype value) {
     if(!hasFixedParameterIds())
         throw AmiException("Could not access fixed parameters by id as they are not set");
     
-    auto par_ids = getFixedParameterIds();
-    auto it = std::find(par_ids.begin(), par_ids.end(), par_id);
-    
-    if(it != par_ids.end())
-        fixedParameters.at(it - par_ids.begin()) = value;
-    else
-        throw AmiException("Could not find fixed parameter with specified id");
+    setValueById(getFixedParameterIds(),
+                 fixedParameters,
+                 value,
+                 par_id,
+                 "fixedParameters",
+                 "id");
 }
     
 int Model::setFixedParametersByIdRegex(std::string const& par_id_regex, realtype value) {
     if(!hasFixedParameterIds())
         throw AmiException("Could not access fixed parameters by id as they are not set");
     
-    auto par_ids = getFixedParameterIds();
-    std::regex pattern (par_id_regex);
-    int n_found = 0;
-    for(int ik = 0; ik < nk(); ++ik) {
-        if(std::regex_match(par_ids.at(ik), pattern)) {
-            fixedParameters.at(ik) = value;
-            ++n_found;
-        }
-    }
-    
-    if(n_found == 0)
-        throw AmiException("Could not find fixed parameter with specified id");
-    
-    return n_found;
+    return  setValueByIdRegex(getFixedParameterIds(),
+                              fixedParameters,
+                              value,
+                              par_id_regex,
+                              "fixedParameters",
+                              "id");
 }
 
 void Model::setFixedParameterByName(std::string const& par_name, realtype value) {
     if(!hasFixedParameterNames())
         throw AmiException("Could not access fixed parameters by name as they are not set");
     
-    auto par_names = getFixedParameterNames();
-    auto it = std::find(par_names.begin(), par_names.end(), par_name);
-    
-    if(it != par_names.end())
-        fixedParameters.at(it - par_names.begin()) = value;
-    else
-        throw AmiException("Could not find fixed parameter with specified name");
+    setValueById(getFixedParameterNames(),
+                 fixedParameters,
+                 value,
+                 par_name,
+                 "fixedParameters",
+                 "name");
 }
     
 int Model::setFixedParametersByNameRegex(std::string const& par_name_regex, realtype value) {
     if(!hasFixedParameterNames())
-    throw AmiException("Could not access fixed parameters by name as they are not set");
+        throw AmiException("Could not access fixed parameters by name as they are not set");
     
-    auto par_names = getFixedParameterNames();
-    std::regex pattern (par_name_regex);
-    int n_found = 0;
-    for(int ik = 0; ik < nk(); ++ik) {
-        if(std::regex_match(par_names.at(ik), pattern)) {
-            fixedParameters.at(ik) = value;
-            ++n_found;
-        }
-    }
-    
-    if(n_found == 0)
-        throw AmiException("Could not find fixed parameter with specified name");
-    
-    return n_found;
+    return  setValueByIdRegex(getFixedParameterIds(),
+                              fixedParameters,
+                              value,
+                              par_name_regex,
+                              "fixedParameters",
+                              "name");
 }
 
 std::vector<realtype> const& Model::getTimepoints() const {
