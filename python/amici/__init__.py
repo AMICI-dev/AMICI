@@ -54,6 +54,8 @@ amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
 
 from .sbml_import import *
+from .numpy import *
+from .pandas import *
 
 
 def runAmiciSimulation(model, solver, edata=None):

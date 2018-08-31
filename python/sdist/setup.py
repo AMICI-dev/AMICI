@@ -306,7 +306,7 @@ def main():
         long_description_content_type="text/markdown",
         url='https://github.com/ICB-DCM/AMICI',
         author='Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor',
-        author_email='fabian.froehlich@helmholtz-muenchen.de',
+        author_email='fabian_froehlich@hms.harvard.edu',
         license='BSD',
         libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
