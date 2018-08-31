@@ -1632,7 +1632,7 @@ def constantSpeciesToParameters(sbml_model):
         if species.getHasOnlySubstanceUnits():
             print("Ignoring %s which has only substance units. Conversion not yet implemented." % species.getId())
             continue
-        if np.isnan(species.getInitialConcentration()):
+        if math.isnan(species.getInitialConcentration()):
             print("Ignoring %s which has no initial concentration. Amount conversion not yet implemented." % species.getId())
             continue
         transformable.append(species.getId())
