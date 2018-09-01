@@ -82,3 +82,4 @@ cache:
   - pip
   - directories:
     - ${HOME}/Library/Caches/Homebrew
+  - timeout: 600

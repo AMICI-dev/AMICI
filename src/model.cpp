@@ -374,26 +374,53 @@ std::vector<realtype> const& Model::getParameters() const {
     return originalParameters;
 }
 
+/**
+ * @brief local helper function to get parameters
+ * @param ids vector of name/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param id name/id to look for in the vector
+ * @param value_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ * @return value of the selected parameter
+ */
 realtype getValueById(std::vector<std::string> const& ids, std::vector<realtype> const& values,
-                      std::string const& id, const char* value_name, const char* id_name) {
+                      std::string const& id, const char* variable_name, const char* id_name) {
     auto it = std::find(ids.begin(), ids.end(), id);
     if(it != ids.end())
         return values.at(it - ids.begin());
     
-    throw AmiException("Could not find %s with specified %s", value_name, id_name);
+    throw AmiException("Could not find %s with specified %s", variable_name, id_name);
 }
-    
+
+/**
+ * @brief local helper function to set parameters
+ * @param ids vector of names/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param value for the selected parameter
+ * @param id name/id to look for in the vector
+ * @param value_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ */
 void setValueById(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
-                      std::string const& id, const char* value_name, const char* id_name) {
+                      std::string const& id, const char* variable_name, const char* id_name) {
     auto it = std::find(ids.begin(), ids.end(), id);
     if(it != ids.end())
         values.at(it - ids.begin()) = value;
     else
-        throw AmiException("Could not find %s with specified %s", value_name, id_name);
+        throw AmiException("Could not find %s with specified %s", variable_name, id_name);
 }
-    
+
+/**
+ * @brief local helper function to set parameters via regex
+ * @param ids vector of names/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param value for the selected parameter
+ * @param regex string according to which names/ids are to be matched
+ * @param value_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ */
 int setValueByIdRegex(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
-                  std::string const& regex, const char* value_name, const char* id_name) {
+                  std::string const& regex, const char* variable_name, const char* id_name) {
     std::regex pattern (regex);
     int n_found = 0;
     for(const auto &id: ids) {
@@ -404,7 +431,7 @@ int setValueByIdRegex(std::vector<std::string> const& ids, std::vector<realtype>
     }
     
     if(n_found == 0)
-        throw AmiException("Could not find %s with specified %s", value_name, id_name);
+        throw AmiException("Could not find %s with specified %s", variable_name, id_name);
     
     return n_found;
 }

@@ -22,7 +22,6 @@ Attributes:
     amiciSrcPath: absolute path of the amici source directory
     amiciModulePath: absolute root path of the amici module
     hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
-    pd: placeholder variable for pandas module
 """
 
 import os
