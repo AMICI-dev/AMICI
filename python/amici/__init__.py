@@ -118,27 +118,3 @@ def runAmiciSimulations(model, solver, edata_list):
         rdata_list.append(rdata)
 
     return rdata_list
-
-
-def fieldAsNumpy(fieldDimensions, field, data):
-    """ Convert data object field to numpy array with dimensions according to specified field dimensions
-
-    Arguments:
-        fieldDimensions: dimension specifications dict({field: list([dim1, dim2, ...])})
-        data: object with fields
-        field: Name of field
-
-    Returns:
-        Field Data as numpy array with dimensions according to specified field dimensions
-
-    Raises:
-
-    """
-    attr = getattr(data, field)
-    if field in fieldDimensions.keys():
-        if len(attr) == 0:
-            return None
-        else:
-            return stdVec2ndarray(attr, *fieldDimensions[field]).copy()
-    else:
-        return float(attr)
