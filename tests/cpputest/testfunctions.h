@@ -121,7 +121,6 @@ public:
     virtual std::vector<std::string> getFixedParameterNames() const override
     {
         return getVariableNames("k", nk());
-        
     }
     
     virtual std::vector<std::string> getObservableNames() const override
@@ -142,7 +141,6 @@ public:
     virtual std::vector<std::string> getFixedParameterIds() const override
     {
         return getVariableNames("k", nk());
-        
     }
     
     virtual std::vector<std::string> getObservableIds() const override

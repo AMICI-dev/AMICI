@@ -97,33 +97,33 @@ TEST(model, testNameIdGetterSetter){
     DOUBLES_EQUAL(model.getParameterById("p0"), 3.0, 1e-16);
     CHECK_THROWS(AmiException,model.getParameterById("p1"));
     DOUBLES_EQUAL(model.setParametersByIdRegex("p[\\d]+",5.0), p.size(), 1e-16);
-    for (auto ip: p)
+    for (const auto &ip: model.getParameters())
        DOUBLES_EQUAL(ip, 5.0, 1e-16)
-    CHECK_THROWS(AmiException,model.setParametersByIdRegex("k[\\d]+",5.0));
+    CHECK_THROWS(AmiException,model.setParametersByIdRegex("k[\\d]+", 5.0));
     
     model.setParameterByName("p0",3.0);
     DOUBLES_EQUAL(model.getParameterByName("p0"), 3.0, 1e-16);
     CHECK_THROWS(AmiException,model.getParameterByName("p1"));
     DOUBLES_EQUAL(model.setParametersByNameRegex("p[\\d]+",5.0), p.size(), 1e-16);
-    for (auto ip: p)
+    for (const auto &ip: model.getParameters())
         DOUBLES_EQUAL(ip, 5.0, 1e-16)
-    CHECK_THROWS(AmiException,model.setParametersByNameRegex("k[\\d]+",5.0));
+    CHECK_THROWS(AmiException,model.setParametersByNameRegex("k[\\d]+", 5.0));
     
     model.setFixedParameterById("k0",3.0);
     DOUBLES_EQUAL(model.getFixedParameterById("k0"), 3.0, 1e-16);
     CHECK_THROWS(AmiException,model.getFixedParameterById("k4"));
     DOUBLES_EQUAL(model.setFixedParametersByIdRegex("k[\\d]+",5.0), k.size(), 1e-16);
-    for (auto ik: k)
+    for (const auto &ik: model.getFixedParameters())
         DOUBLES_EQUAL(ik, 5.0, 1e-16)
-    CHECK_THROWS(AmiException,model.setFixedParametersByIdRegex("p[\\d]+",3.0));
+    CHECK_THROWS(AmiException,model.setFixedParametersByIdRegex("p[\\d]+", 5.0));
     
-    model.setParameterByName("p0",3.0);
-    DOUBLES_EQUAL(model.getParameterByName("p0"),3.0, 1e-16);
-    CHECK_THROWS(AmiException,model.getParameterByName("p1"));
-    DOUBLES_EQUAL(model.setParametersByNameRegex("k[\\d]+",5.0), k.size(), 1e-16);
-    for (auto ik: k)
+    model.setFixedParameterByName("k0",3.0);
+    DOUBLES_EQUAL(model.getFixedParameterByName("k0"),3.0, 1e-16);
+    CHECK_THROWS(AmiException,model.getFixedParameterByName("k4"));
+    DOUBLES_EQUAL(model.setFixedParametersByNameRegex("k[\\d]+",5.0), k.size(), 1e-16);
+    for (const auto &ik: model.getFixedParameters())
         DOUBLES_EQUAL(ik, 5.0, 1e-16)
-    CHECK_THROWS(AmiException,model.setFixedParametersByNameRegex("p[\\d]+",3.0));
+    CHECK_THROWS(AmiException,model.setFixedParametersByNameRegex("p[\\d]+", 5.0));
 }
 
 

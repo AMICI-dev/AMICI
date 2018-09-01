@@ -374,7 +374,7 @@ std::vector<realtype> const& Model::getParameters() const {
     return originalParameters;
 }
 
-realtype getValueById(std::vector<std::string> ids, std::vector<realtype> values,
+realtype getValueById(std::vector<std::string> const& ids, std::vector<realtype> const& values,
                       std::string const& id, const char* value_name, const char* id_name) {
     auto it = std::find(ids.begin(), ids.end(), id);
     if(it != ids.end())
@@ -383,7 +383,7 @@ realtype getValueById(std::vector<std::string> ids, std::vector<realtype> values
     throw AmiException("Could not find %s with specified %s", value_name, id_name);
 }
     
-void setValueById(std::vector<std::string> ids, std::vector<realtype> values, realtype value,
+void setValueById(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
                       std::string const& id, const char* value_name, const char* id_name) {
     auto it = std::find(ids.begin(), ids.end(), id);
     if(it != ids.end())
@@ -392,13 +392,13 @@ void setValueById(std::vector<std::string> ids, std::vector<realtype> values, re
         throw AmiException("Could not find %s with specified %s", value_name, id_name);
 }
     
-int setValueByIdRegex(std::vector<std::string> ids, std::vector<realtype> values, realtype value,
+int setValueByIdRegex(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
                   std::string const& regex, const char* value_name, const char* id_name) {
     std::regex pattern (regex);
     int n_found = 0;
-    for(int ip = 0; ip < static_cast<int>(ids.size()); ++ip) {
-        if(std::regex_match(ids.at(ip), pattern)) {
-            values.at(ip) = value;
+    for(const auto &id: ids) {
+        if(std::regex_match(id, pattern)) {
+            values.at(&id - &ids[0]) = value;
             ++n_found;
         }
     }
