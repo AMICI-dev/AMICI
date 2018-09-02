@@ -1,5 +1,8 @@
 import pandas as pd
-from .numpy import *
+import numpy as np
+import math
+from .numpy import edataToNumPyArrays
+from amici import DoubleVector, ExpData
 
 def getDataObservablesAsDataFrame(model, edata_list):
     """ Write Observables from experimental data as DataFrame
@@ -175,13 +178,13 @@ def _fill_conditions_dict(datadict, model, edata) -> dict:
             datadict[par + '_preeq'] = \
                 edata.fixedParametersPreequilibration[i_par]
         else:
-            datadict[par + '_preeq'] = np.nan
+            datadict[par + '_preeq'] = math.nan
 
         if edata.fixedParametersPresimulation.size():
             datadict[par + '_presim'] = \
                 edata.fixedParametersPresimulation[i_par]
         else:
-            datadict[par + '_presim'] = np.nan
+            datadict[par + '_presim'] = math.nan
     return datadict
 
 
@@ -315,11 +318,11 @@ def constructEdataFromDataFrame(df, model, condition):
     Raises:
 
     """
-    edata = amici.ExpData(model.get())
+    edata = ExpData(model.get())
 
     # timepoints
     df = df.sort_values(by='time', ascending=True)
-    edata.setTimepoints(amici.DoubleVector(df['time'].values))
+    edata.setTimepoints(DoubleVector(df['time'].values))
 
     overwrite_preeq = {}
     overwrite_presim = {}
@@ -332,20 +335,20 @@ def constructEdataFromDataFrame(df, model, condition):
             overwrite_presim[par] = condition[par + '_presim']
 
     # fixedParameters
-    edata.fixedParameters = amici.DoubleVector(
+    edata.fixedParameters = DoubleVector(
         condition[_get_names_or_ids(model, 'FixedParameter')].values
     )
 
     if any([overwrite_preeq[key] != condition[key] for key in
             overwrite_preeq.keys()]):
-        edata.fixedParametersPreequilibration = amici.DoubleVector(
+        edata.fixedParametersPreequilibration = DoubleVector(
             _get_specialized_fixed_parameters(model, condition,
                                               overwrite_preeq)
         )
 
     if any([overwrite_presim[key] != condition[key] for key in
             overwrite_presim.keys()]):
-        edata.fixedParametersPresimulation = amici.DoubleVector(
+        edata.fixedParametersPresimulation = DoubleVector(
             _get_specialized_fixed_parameters(model, condition,
                                               overwrite_presim)
         )
@@ -356,11 +359,11 @@ def constructEdataFromDataFrame(df, model, condition):
     # data
     for obs_index, obs in enumerate(_get_names_or_ids(model, 'Observable')):
         if obs in df.keys():
-            edata.setObservedData(amici.DoubleVector(df[obs].values),
+            edata.setObservedData(DoubleVector(df[obs].values),
                                   obs_index)
         if obs + '_std' in df.keys():
             edata.setObservedDataStdDev(
-                amici.DoubleVector(df[obs + '_std'].values),
+                DoubleVector(df[obs + '_std'].values),
                 obs_index
             )
 

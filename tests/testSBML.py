@@ -15,6 +15,10 @@ class TestAmiciSBMLModel(unittest.TestCase):
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
                                        'cpputest','expectedResults.h5')
 
+    def runTest(self):
+        self.test_presimulation()
+        self.test_steadystate_scaled()
+
     def test_presimulation(self):
         sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python',
                                 'examples', 'example_presimulation',

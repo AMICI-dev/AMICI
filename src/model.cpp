@@ -379,7 +379,7 @@ std::vector<realtype> const& Model::getParameters() const {
  * @param ids vector of name/ids of (fixed)Parameters
  * @param values values of the (fixed)Parameters
  * @param id name/id to look for in the vector
- * @param value_name string indicating what variable we are lookin at
+ * @param variable_name string indicating what variable we are lookin at
  * @param id_name string indicating whether name or id was specified
  * @return value of the selected parameter
  */
@@ -398,7 +398,7 @@ realtype getValueById(std::vector<std::string> const& ids, std::vector<realtype>
  * @param values values of the (fixed)Parameters
  * @param value for the selected parameter
  * @param id name/id to look for in the vector
- * @param value_name string indicating what variable we are lookin at
+ * @param variable_name string indicating what variable we are lookin at
  * @param id_name string indicating whether name or id was specified
  */
 void setValueById(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
@@ -416,8 +416,9 @@ void setValueById(std::vector<std::string> const& ids, std::vector<realtype> &va
  * @param values values of the (fixed)Parameters
  * @param value for the selected parameter
  * @param regex string according to which names/ids are to be matched
- * @param value_name string indicating what variable we are lookin at
+ * @param variable_name string indicating what variable we are lookin at
  * @param id_name string indicating whether name or id was specified
+ * @return number of matched names/ids
  */
 int setValueByIdRegex(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
                   std::string const& regex, const char* variable_name, const char* id_name) {

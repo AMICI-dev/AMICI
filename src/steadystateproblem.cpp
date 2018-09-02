@@ -1,4 +1,5 @@
 #include "amici/steadystateproblem.h"
+#include "amici/defines.h"
 #include "amici/model.h"
 #include "amici/solver.h"
 #include "amici/solver_cvodes.h"
@@ -44,21 +45,21 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                                                 solver->getAbsoluteTolerance(),
                                                 solver->getRelativeTolerance());
 
-    int newton_status;
+    auto newton_status = NewtonStatus::failed;
     try {
         applyNewtonsMethod(rdata, model, newtonSolver.get(), 1);
-        newton_status = 1;
+        newton_status = NewtonStatus::newt;
     } catch(NewtonFailure& ex) {
         try {
             /* Newton solver did not find a steady state, so try integration */
             getSteadystateSimulation(rdata, solver, model, it);
-            newton_status = 2;
+            newton_status = NewtonStatus::newt_sim;
         } catch(AmiException& ex) {
             /* may be integration failure from AmiSolve, so NewtonFailure
                won't do for all cases */
             try {
                 applyNewtonsMethod(rdata, model, newtonSolver.get(), 2);
-                newton_status = 3;
+                newton_status = NewtonStatus::newt_sim_newt;
             } catch(NewtonFailure& ex) {
                 throw amici::IntegrationFailure(ex.error_code,*t);
             }
@@ -71,7 +72,9 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* Compute steady state sensitvities */
     
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        (newton_status == 1 || newton_status == 3 || model->getSteadyStateSensitivityMode() != SteadyStateSensitivityMode::simulationFSA))
+        (newton_status == NewtonStatus::newt ||
+         newton_status == NewtonStatus::newt_sim_newt ||
+         model->getSteadyStateSensitivityMode() != SteadyStateSensitivityMode::simulationFSA))
         // for newton_status == 2 the sensis were computed via FSA
         newtonSolver->computeNewtonSensis(sx);
     
@@ -195,7 +198,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
  */
 
 void SteadystateProblem::getNewtonOutput(ReturnData *rdata,const Model *model,
-                                         int newton_status,
+                                         NewtonStatus newton_status,
                                          double run_time, int it) {
     /**
      * Stores output of workSteadyStateProblem in return data
@@ -210,7 +213,7 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,const Model *model,
 
     /* Get time for Newton solve */
     rdata->newton_time = run_time;
-    rdata->newton_status = newton_status;
+    rdata->newton_status = static_cast<int>(newton_status) ;
     
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
