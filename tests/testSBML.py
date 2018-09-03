@@ -5,7 +5,6 @@ import amici
 import unittest
 import os
 import numpy as np
-import pickle
 
 class TestAmiciSBMLModel(unittest.TestCase):
     '''
@@ -25,7 +24,6 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                 'model_presimulation.xml')
 
         sbmlImporter = amici.SbmlImporter(sbmlFile)
-        sbml = sbmlImporter.sbml
 
         constantParameters = ['DRUG_0', 'KIN_0']
 
@@ -50,7 +48,9 @@ class TestAmiciSBMLModel(unittest.TestCase):
         edata.fixedParameters = amici.DoubleVector([10, 2])
         edata.fixedParametersPresimulation = amici.DoubleVector([10, 2])
         edata.fixedParametersPreequilibration = amici.DoubleVector([3, 0])
-        amici.runAmiciSimulation(model, solver, edata)
+        self.assertIsInstance(
+            amici.runAmiciSimulation(model, solver, edata),
+            dict)
 
     def test_steadystate_scaled(self):
         '''
@@ -61,10 +61,9 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                 'examples', 'example_steadystate',
                                 'model_steadystate_scaled.xml')
         sbmlImporter = amici.SbmlImporter(sbmlFile)
-        sbml = sbmlImporter.sbml
 
         observables = amici.assignmentRules2observables(
-            sbml,
+            sbmlImporter.sbml,
             filter_function=lambda variable:
                 variable.getId().startswith('observable_') and
                 not variable.getId().endswith('_sigma')
@@ -137,7 +136,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
                 df_obs[list(model.getObservableIds())].values
             ).all()
         )
-        df_res = amici.getResidualsAsDataFrame(model, edata, rdata)
+        amici.getResidualsAsDataFrame(model, edata, rdata)
 
 
 if __name__ == '__main__':
