@@ -25,7 +25,7 @@ matrix:
       after_success: 
         - ./scripts/run-codecov.sh
         - cat coverage_py.xml
-        - bash <(curl -s https://codecov.io/bash) -f coverage.info -F cpp
+        - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
         
     - os: osx
@@ -71,12 +71,6 @@ script:
 
 after_failure:
     - ls -alR
-
-notifications:
-  webhooks: 
-    urls:
-      - https://icb-mmost.helmholtz-muenchen.de/hooks/ux65x1zqbpr8xy7nr9sexidhgy
-    on_success: change
 
 # cache dependencies
 cache: 
