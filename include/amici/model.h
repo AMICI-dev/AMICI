@@ -1023,6 +1023,11 @@ namespace amici {
             return steadyStateSensitivityMode;
         }
         
+        /**
+         * @brief set whether initial states depending on fixedParmeters are to be reinitialized
+         * after preequilibration and presimulation
+         * @param flag true/false
+         */
         void setReinitializeFixedParameterInitialStates(bool flag) {
             if (flag && !isFixedParameterStateReinitializationAllowed())
                 throw AmiException("State reinitialization cannot be enabled for this model"
@@ -1032,6 +1037,11 @@ namespace amici {
             reinitializeFixedParameterInitialStates = flag;
         }
         
+        /**
+         * @brief get whether initial states depending on fixedParmeters are to be reinitialized
+         * after preequilibration and presimulation
+         * @return flag true/false
+         */
         bool getReinitializeFixedParameterInitialStates() const {
             return reinitializeFixedParameterInitialStates;
         }
@@ -1634,7 +1644,7 @@ namespace amici {
          * @param rdata pointer to return data instance
          * @return z slice
          */
-        const realtype *getsz(const int nroots, const int nplist, const ReturnData *rdata) const;
+        const realtype *getsz(const int nroots, const int ip, const ReturnData *rdata) const;
         
         /** create srz slice at event
          * @param nroots event occurence
@@ -1642,7 +1652,7 @@ namespace amici {
          * @param rdata pointer to return data instance
          * @return rz slice
          */
-        const realtype *getsrz(const int nroots, const int nplist, const ReturnData *rdata) const;
+        const realtype *getsrz(const int nroots, const int ip, const ReturnData *rdata) const;
         
         /** function indicating whether reinitialization of states depending on
          fixed parameters is permissible
