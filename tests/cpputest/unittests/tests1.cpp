@@ -131,8 +131,6 @@ TEST(model, reinitializeFixedParameterInitialStates){
     CHECK_TRUE(!model.getReinitializeFixedParameterInitialStates());
     AmiVector x(nx);
     AmiVectorArray sx(model.np(),nx);
-    CHECK_THROWS(AmiException, model.fx0_fixedParameters(&x))
-    CHECK_THROWS(AmiException, model.fsx0_fixedParameters(&sx, &x))
 }
 
 TEST_GROUP(symbolicFunctions)

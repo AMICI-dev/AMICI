@@ -763,8 +763,8 @@ public:
      * @return flag inidication whether reinitialization of states depending on
      fixed parameters is permissible
      */
-    virtual bool isFixedParameterStateReinitializationAllowed() const {
-        return {TPL_REINIT_FIXPAR_INITCOND};
+    virtual bool isFixedParameterStateReinitializationAllowed() const override {
+        return TPL_REINIT_FIXPAR_INITCOND;
     }
     
 };

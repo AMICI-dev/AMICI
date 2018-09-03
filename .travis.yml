@@ -24,7 +24,6 @@ matrix:
       env: ENABLE_GCOV_COVERAGE=TRUE
       after_success: 
         - ./scripts/run-codecov.sh
-        - cat coverage_py.xml
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
         

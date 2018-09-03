@@ -14,6 +14,13 @@ class TestAmiciSBMLModel(unittest.TestCase):
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
                                        'cpputest','expectedResults.h5')
 
+    def setUp(self):
+        self.resetdir = os.getcwd()
+        os.chdir(os.path.dirname(__file__))
+
+    def tearDown(self):
+        os.chdir(self.resetdir)
+
     def runTest(self):
         self.test_presimulation()
         self.test_steadystate_scaled()
@@ -31,7 +38,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
             sbmlImporter.sbml,  # the libsbml model object
             filter_function=lambda variable: variable.getName() == 'pPROT'
         )
-        outdir = os.path.join('tests', 'test_model_presimulation')
+        outdir = 'test_model_presimulation'
         sbmlImporter.sbml2amici('test_model_presimulation',
                                 outdir,
                                 verbose=False,
@@ -70,7 +77,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
                 not variable.getId().endswith('_sigma')
         )
 
-        outdir = os.path.join('tests', 'test_model_steadystate_scaled')
+        outdir = 'test_model_steadystate_scaled'
         sbmlImporter.sbml2amici('test_model_steadystate_scaled',
                                 outdir,
                                 observables=observables,
