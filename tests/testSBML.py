@@ -31,17 +31,18 @@ class TestAmiciSBMLModel(unittest.TestCase):
             sbmlImporter.sbml,  # the libsbml model object
             filter_function=lambda variable: variable.getName() == 'pPROT'
         )
+        outdir = os.path.join('tests', 'test_model_presimulation')
         sbmlImporter.sbml2amici('test_model_presimulation',
-                                'test_model_presimulation',
+                                outdir,
                                 verbose=False,
                                 observables=observables,
-                                constantParameters=constantParameters,
-                                reinit_fixed_parameter_initial_conditions=True)
-        sys.path.insert(0, 'test_model_presimulation')
+                                constantParameters=constantParameters)
+        sys.path.insert(0, outdir)
         import test_model_presimulation as modelModule
         model = modelModule.getModel()
         solver = model.getSolver()
         model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 61)))
+        model.setReinitializeFixedParameterInitialStates(True)
 
         rdata = amici.runAmiciSimulation(model, solver)
         edata = amici.ExpData(rdata, 0.1, 0.0)
@@ -68,15 +69,16 @@ class TestAmiciSBMLModel(unittest.TestCase):
                 variable.getId().startswith('observable_') and
                 not variable.getId().endswith('_sigma')
         )
-        
+
+        outdir = os.path.join('tests', 'test_model_steadystate_scaled')
         sbmlImporter.sbml2amici('test_model_steadystate_scaled',
-                                'test_model_steadystate_scaled',
+                                outdir,
                                 observables=observables,
                                 constantParameters=['k0'],
                                 sigmas={'observable_x1withsigma':
                                             'observable_x1withsigma_sigma'})
 
-        sys.path.insert(0, 'test_model_steadystate_scaled')
+        sys.path.insert(0, outdir)
         import test_model_steadystate_scaled as modelModule
 
         model = modelModule.getModel()

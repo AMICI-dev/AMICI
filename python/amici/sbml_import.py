@@ -74,7 +74,7 @@ class SbmlImporter:
 
         """
 
-        self.reinit_fixed_parameter_initial_conditions = False
+        self.allow_reinit_fixpar_initcond = False
 
         self.check_validity = check_validity
 
@@ -295,7 +295,6 @@ class SbmlImporter:
                    sigmas=None,
                    verbose=False,
                    assume_pow_positivity=False,
-                   reinit_fixed_parameter_initial_conditions=False,
                    ):
         """Generate AMICI C++ files for the model provided to the constructor.
         
@@ -309,9 +308,6 @@ class SbmlImporter:
             verbose: more verbose output if True
             assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
                                    state variables that may become negative due to numerical errors
-            reinit_fixed_parameter_initial_conditions: if set to true, initial conditions depending on
-                                                       fixedParameters will be reinitialized after presimulation
-                                                       and preequilibration
 
         Returns:
 
@@ -326,9 +322,6 @@ class SbmlImporter:
 
         if sigmas is None:
             sigmas = {}
-
-        self.reinit_fixed_parameter_initial_conditions = \
-            reinit_fixed_parameter_initial_conditions
 
         self.setName(modelName)
         self.setPaths(output_dir)
@@ -877,18 +870,13 @@ class SbmlImporter:
 
         self.functions['x0']['sym'] = self.speciesInitial
 
-        if self.reinit_fixed_parameter_initial_conditions:
-            self.functions['x0_fixedParameters']['sym'] = \
-                 sp.DenseMatrix(
-                     [init
-                     if any([sym in init.free_symbols
-                             for sym in self.symbols['fixed_parameter']['sym']])
-                     else 0.0
-                     for init in self.speciesInitial])
-        else:
-            self.functions['x0_fixedParameters']['sym'] = \
-                sp.DenseMatrix(
-                    [0.0 for init in self.speciesInitial])
+        self.functions['x0_fixedParameters']['sym'] = \
+             sp.DenseMatrix(
+                 [init
+                 if any([sym in init.free_symbols
+                         for sym in self.symbols['fixed_parameter']['sym']])
+                 else 0.0
+                 for init in self.speciesInitial])
 
 
         self.functions['JDiag']['sym'] = getSymbolicDiagonal(self.functions['J']['sym'])
@@ -1011,13 +999,11 @@ class SbmlImporter:
                 self.symbols['parameter']['sym']
             )
 
-        if self.reinit_fixed_parameter_initial_conditions \
-                and any([math != 0 and math != 0.0 for math in
-                         self.functions['sx0_fixedParameters']['sym']]):
-            raise Exception('Currently there is no support for Parameter and'
-                            'FixedParameter dependent initial conditions when'
-                            'reinit_fixed_parameter_initial_conditions is '
-                            'enabled')
+        if any([math != 0 and math != 0.0 for math in
+                self.functions['sx0_fixedParameters']['sym']]):
+            self.allow_reinit_fixpar_initcond = False
+        else:
+            self.allow_reinit_fixpar_initcond = True
 
 
     def computeModelEquationsForwardSensitivites(self):
@@ -1337,27 +1323,47 @@ class SbmlImporter:
                         'NEVENT': '0',
                         'NOBJECTIVE': '1',
                         'NW': str(len(self.symbols['flux']['sym'])),
-                        'NDWDDX': str(len(self.functions['dwdx']['sparseList'])),
-                        'NDWDP': str(len(self.functions['dwdp']['sparseList'])),
-                        'NNZ': str(len(self.functions['JSparse']['sparseList'])),
+                        'NDWDDX':
+                            str(len(self.functions['dwdx']['sparseList'])),
+                        'NDWDP':
+                            str(len(self.functions['dwdp']['sparseList'])),
+                        'NNZ':
+                            str(len(self.functions['JSparse']['sparseList'])),
                         'UBW': str(self.n_species),
                         'LBW': str(self.n_species),
                         'NP': str(self.n_parameters),
                         'NK': str(self.n_fixed_parameters),
                         'O2MODE': 'amici::SecondOrderMode::none',
                         'PARAMETERS': str(self.parameterValues)[1:-1],
-                        'FIXED_PARAMETERS': str(self.fixedParameterValues)[1:-1],
-                        'PARAMETER_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('parameter'),
-                        'STATE_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('species'),
-                        'FIXED_PARAMETER_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('fixed_parameter'),
-                        'OBSERVABLE_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('observable'),
-                        'PARAMETER_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('parameter'),
-                        'STATE_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('species'),
-                        'FIXED_PARAMETER_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('fixed_parameter'),
-                        'OBSERVABLE_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('observable'),
+                        'FIXED_PARAMETERS':
+                            str(self.fixedParameterValues)[1:-1],
+                        'PARAMETER_NAMES_INITIALIZER_LIST':
+                            self.getSymbolNameInitializerList('parameter'),
+                        'STATE_NAMES_INITIALIZER_LIST':
+                            self.getSymbolNameInitializerList('species'),
+                        'FIXED_PARAMETER_NAMES_INITIALIZER_LIST':
+                            self.getSymbolNameInitializerList(
+                                'fixed_parameter'
+                            ),
+                        'OBSERVABLE_NAMES_INITIALIZER_LIST':
+                            self.getSymbolNameInitializerList('observable'),
+                        'PARAMETER_IDS_INITIALIZER_LIST':
+                            self.getSymbolIDInitializerList('parameter'),
+                        'STATE_IDS_INITIALIZER_LIST':
+                            self.getSymbolIDInitializerList('species'),
+                        'FIXED_PARAMETER_IDS_INITIALIZER_LIST':
+                            self.getSymbolIDInitializerList('fixed_parameter'),
+                        'OBSERVABLE_IDS_INITIALIZER_LIST':
+                            self.getSymbolIDInitializerList('observable'),
+                        'REINIT_FIXPAR_INITCOND':
+                            'true' if self.allow_reinit_fixpar_initcond else
+                            'false',
                         }
-        applyTemplate(os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
-                      os.path.join(self.modelPath, str(self.modelName) + '.h'), templateData)
+        applyTemplate(os.path.join(amiciSrcPath,
+                                   'model_header.ODE_template.h'),
+                      os.path.join(self.modelPath,
+                                   str(self.modelName) + '.h'),
+                                   templateData)
 
     def getSymbolNameInitializerList(self, name):
         """Get SBML name initializer list for vector of names for the given model entity

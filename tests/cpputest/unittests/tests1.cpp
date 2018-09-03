@@ -92,7 +92,6 @@ TEST(model, testSetTimepoints) {
 }
 
 TEST(model, testNameIdGetterSetter){
-    
     model.setParameterById("p0",3.0);
     DOUBLES_EQUAL(model.getParameterById("p0"), 3.0, 1e-16);
     CHECK_THROWS(AmiException,model.getParameterById("p1"));
@@ -126,6 +125,15 @@ TEST(model, testNameIdGetterSetter){
     CHECK_THROWS(AmiException,model.setFixedParametersByNameRegex("p[\\d]+", 5.0));
 }
 
+TEST(model, reinitializeFixedParameterInitialStates){
+    CHECK_THROWS(AmiException, model.setReinitializeFixedParameterInitialStates(true));
+    model.setReinitializeFixedParameterInitialStates(false);
+    CHECK_TRUE(!model.getReinitializeFixedParameterInitialStates());
+    AmiVector x(nx);
+    AmiVectorArray sx(model.np(),nx);
+    CHECK_THROWS(AmiException, model.fx0_fixedParameters(&x))
+    CHECK_THROWS(AmiException, model.fsx0_fixedParameters(&sx, &x))
+}
 
 TEST_GROUP(symbolicFunctions)
 {

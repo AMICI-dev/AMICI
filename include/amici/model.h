@@ -208,91 +208,327 @@ namespace amici {
          **/
         virtual void fsdx0();
         
+        /** Sensitivity of event timepoint, total derivative
+         * @param t current timepoint
+         * @param ie event index
+         * @param x pointer to state variables
+         * @param sx pointer to state sensitivity variables
+         */
         void fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx);
-        
+       
+        /** Observables / measurements
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         */
         void fy(int it, ReturnData *rdata);
         
+        /** partial derivative of observables y w.r.t. model parameters p
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         */
         void fdydp(const int it, ReturnData *rdata);
         
+        /** partial derivative of observables y w.r.t. state variables x
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         */
         void fdydx(const int it, ReturnData *rdata);
         
+        /** Event-resolved output
+         * @param nroots number of events for event index
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         * @param rdata pointer to return data instance
+         */
         void fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
         
+        /** Sensitivity of z, total derivative
+         * @param nroots number of events for event index
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         * @param sx current state sensitivities
+         * @param rdata pointer to return data instance
+         */
         void fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
         
+        /** Event root function of events (equal to froot but does not include
+         * non-output events)
+         * @param nroots number of events for event index
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         * @param rdata pointer to return data instance
+         */
         void frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
         
+        /** Sensitivity of rz, total derivative
+         * @param nroots number of events for event index
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         * @param sx current state sensitivities
+         * @param rdata pointer to return data instance
+         */
         void fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
         
+        /** partial derivative of event-resolved output z w.r.t. to model parameters p
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         */
         void fdzdp(const realtype t, const int ie, const AmiVector *x);
         
+        /** partial derivative of event-resolved output z w.r.t. to model states x
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         */
         void fdzdx(const realtype t, const int ie, const AmiVector *x);
         
+        /** Sensitivity of event-resolved root output w.r.t. to model parameters p
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         */
         void fdrzdp(const realtype t, const int ie, const AmiVector *x);
         
+        /** Sensitivity of event-resolved measurements rz w.r.t. to model states x
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         */
         void fdrzdx(const realtype t, const int ie, const AmiVector *x);
         
+        /** State update functions for events
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         * @param xdot current residual function values
+         * @param xdot_old value of residual function before event
+         */
         void fdeltax(const int ie, const realtype t, const AmiVector *x,
                              const AmiVector *xdot, const AmiVector *xdot_old);
         
+        /** Sensitivity update functions for events, total derivative
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         * @param sx current state sensitivity
+         * @param xdot current residual function values
+         * @param xdot_old value of residual function before event
+         */
         void fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
+        /** Adjoint state update functions for events
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         * @param xB current adjoint state
+         * @param xdot current residual function values
+         * @param xdot_old value of residual function before event
+         */
         void fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
+        /** Quadrature state update functions for events
+         * @param ie event index
+         * @param t current timepoint
+         * @param x current state
+         * @param xB current adjoint state
+         * @param xdot current residual function values
+         * @param xdot_old value of residual function before event
+         */
         void fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                               const AmiVector *xdot, const AmiVector *xdot_old);
         
+        /** Standard deviation of measurements
+         * @param it timepoint index
+         * @param edata pointer to experimental data instance
+         * @param rdata pointer to return data instance
+         */
         void fsigmay(const int it, ReturnData *rdata, const ExpData *edata);
         
+        /** partial derivative of standard deviation of measurements w.r.t. model
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to ExpData data instance holding sigma values
+         */
         void fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata);
         
+        /** Standard deviation of events
+         * @param t current timepoint
+         * @param ie event index
+         * @param nroots array with event numbers
+         * @param edata pointer to experimental data instance
+         * @param rdata pointer to return data instance
+         */
         void fsigmaz(const realtype t, const int ie, const int *nroots, ReturnData *rdata,
                      const ExpData *edata);
         
+        /** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
+         * @param t current timepoint
+         * @param ie event index
+         * @param nroots array with event numbers
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fdsigmazdp(const realtype t, const int ie, const int *nroots, ReturnData *rdata, const ExpData *edata);
         
+        /** negative log-likelihood of measurements y
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fJy(const int it, ReturnData *rdata, const ExpData *edata);
         
+        /** negative log-likelihood of event-resolved measurements z
+         * @param nroots event index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fJz(const int nroots, ReturnData *rdata, const ExpData *edata);
         
+        /** regularization of negative log-likelihood with roots of event-resolved
+         * measurements rz
+         * @param nroots event index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fJrz(const int nroots, ReturnData *rdata, const ExpData *edata);
 
+        /** partial derivative of time-resolved measurement negative log-likelihood Jy
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fdJydy(const int it, const ReturnData *rdata, const ExpData *edata);
         
+        /** Sensitivity of time-resolved measurement negative log-likelihood Jy
+         * w.r.t. standard deviation sigma
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fdJydsigma(const int it, const ReturnData *rdata, const ExpData *edata);
         
+        /** partial derivative of event measurement negative log-likelihood Jz
+         * @param nroots event index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fdJzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
+        /** Sensitivity of event measurement negative log-likelihood Jz
+         * w.r.t. standard deviation sigmaz
+         * @param nroots event index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fdJzdsigma(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
+        /** partial derivative of event measurement negative log-likelihood Jz
+         * @param nroots event index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fdJrzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
         
+        /** Sensitivity of event measurement negative log-likelihood Jz
+         * w.r.t. standard deviation sigmaz
+         * @param nroots event index
+         * @param rdata pointer to return data instance
+         * @param edata pointer to experimental data instance
+         */
         void fdJrzdsigma(const int nroots,const ReturnData *rdata, const ExpData *edata);
                 
-        // Generic implementations
+        /** Sensitivity of measurements y, total derivative sy = dydx * sx + dydp
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         */
         void fsy(const int it, ReturnData *rdata);
         
+        /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
+         * total derivative
+         * @param nroots number of events for event index
+         * @param ie event index
+         * @param rdata pointer to return data instance
+         */
         void fsz_tf(const int *nroots, const int ie, ReturnData *rdata);
         
+        /** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
+         * derivative
+         * @param it timepoint index
+         * @param dJydx vector with values of state derivative of Jy
+         * @param rdata pointer to return data instance
+         */
         void fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata);
         
+        /** Compute sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
+         * parameters for the given timepoint. Add result to respective fields in rdata.
+         * @param it timepoint index
+         * @param edata pointer to experimental data instance
+         * @param rdata pointer to return data instance
+         */
         void fdJydp(const int it, const ExpData *edata,
                    ReturnData *rdata);
         
+        /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
+         * state variables
+         * @param dJydx pointer to vector with values of state derivative of Jy
+         * @param it timepoint index
+         * @param edata pointer to experimental data instance
+         * @param rdata pointer to return data instance
+         */
         void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
         
+        /** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
+         * derivative
+         * @param nroots event index
+         * @param dJzdx vector with values of state derivative of Jz
+         * @param sx pointer to state sensitivities
+         * @param rdata pointer to return data instance
+         */
         void fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVectorArray *sx, ReturnData *rdata);
         
+        /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
+         * parameters
+         * @param nroots event index
+         * @param t current timepoint
+         * @param edata pointer to experimental data instance
+         * @param rdata pointer to return data instance
+         */
         void fdJzdp(const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
+        /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
+         * state variables
+         * @param dJzdx pointer to vector with values of state derivative of Jz
+         * @param nroots event index
+         * @param t current timepoint
+         * @param edata pointer to experimental data instance
+         * @param rdata pointer to return data instance
+         */
         void fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
         
+        /** initialization of model properties
+         * @param x pointer to state variables
+         * @param dx pointer to time derivative of states (DAE only)
+         */
         void initialize(AmiVector *x, AmiVector *dx);
         
+        /** initialization of initial states
+         * @param x pointer to state variables
+         */
         void initializeStates(AmiVector *x);
         
+        /**
+         * initHeaviside initialises the heaviside variables h at the intial time t0
+         * heaviside variables activate/deactivate on event occurences
+         * @param x pointer to state variables
+         * @param dx pointer to time derivative of states (DAE only)
+         */
         void initHeaviside(AmiVector *x, AmiVector *dx);
         
         /**
@@ -521,10 +757,25 @@ namespace amici {
          */
         void requireSensitivitiesForAllParameters();
 
+        /**
+         * @brief Recurring terms in xdot
+         * @param t timepoint
+         * @param x Vector with the states
+         */
         void fw(const realtype t, const N_Vector x);
 
+        /**
+         * @brief Recurring terms in xdot, parameter derivative
+         * @param t timepoint
+         * @param x Vector with the states
+         */
         void fdwdp(const realtype t, const N_Vector x);
         
+        /**
+         * @brief Recurring terms in xdot, state derivative
+         * @param t timepoint
+         * @param x Vector with the states
+         */
         void fdwdx(const realtype t, const N_Vector x);
         
         /** residual function
@@ -590,6 +841,11 @@ namespace amici {
          */
         friend bool operator ==(const Model &a, const Model &b);
         
+        /** get current timepoint from index
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         * @return current timepoint
+         */
         realtype gett(const int it, const ReturnData *rdata) const;
 
         /**
@@ -765,6 +1021,19 @@ namespace amici {
          */
         SteadyStateSensitivityMode getSteadyStateSensitivityMode () const {
             return steadyStateSensitivityMode;
+        }
+        
+        void setReinitializeFixedParameterInitialStates(bool flag) {
+            if (flag && !isFixedParameterStateReinitializationAllowed())
+                throw AmiException("State reinitialization cannot be enabled for this model"
+                                   "as this feature was disabled at compile time. Most likely,"
+                                   " this was because some initial states depending on "
+                                   "fixedParameters also depended on parameters");
+            reinitializeFixedParameterInitialStates = flag;
+        }
+        
+        bool getReinitializeFixedParameterInitialStates() const {
+            return reinitializeFixedParameterInitialStates;
         }
 
         /** number of states */
@@ -1312,24 +1581,77 @@ namespace amici {
         virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
                            const realtype *k, const realtype *h, const realtype *w) {}
         
+        /** create my slice at timepoint
+         * @param it timepoint index
+         * @param edata pointer to experimental data instance
+         */
         void getmy(const int it, const ExpData *edata);
-        
+
+        /** create mz slice at event
+         * @param nroots event occurence
+         * @param edata pointer to experimental data instance
+         */
         void getmz(const int nroots, const ExpData *edata);
         
+        /** create y slice at timepoint
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         * @return y y-slice from rdata instance
+         */
         const realtype *gety(const int it, const ReturnData *rdata) const;
         
+        /** create x slice at timepoint
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         * @return x x-slice from rdata instance
+         */
         const realtype *getx(const int it, const ReturnData *rdata) const;
         
+        /** create sx slice at timepoint
+         * @param it timepoint index
+         * @param rdata pointer to return data instance
+         * @return sx sx-slice from rdata instance
+         */
         const realtype *getsx(const int it, const ReturnData *rdata) const;
         
+        /** create z slice at event
+         * @param nroots event occurence
+         * @param rdata pointer to return data instance
+         * @return z slice
+         */
         const realtype *getz(const int nroots, const ReturnData *rdata) const;
         
+        /** create rz slice at event
+         * @param nroots event occurence
+         * @param rdata pointer to return data instance
+         * @return rz slice
+         */
         const realtype *getrz(const int nroots, const ReturnData *rdata) const;
         
+        /** create sz slice at event
+         * @param nroots event occurence
+         * @param ip sensitivity index
+         * @param rdata pointer to return data instance
+         * @return z slice
+         */
         const realtype *getsz(const int nroots, const int nplist, const ReturnData *rdata) const;
         
+        /** create srz slice at event
+         * @param nroots event occurence
+         * @param ip sensitivity index
+         * @param rdata pointer to return data instance
+         * @return rz slice
+         */
         const realtype *getsrz(const int nroots, const int nplist, const ReturnData *rdata) const;
-
+        
+        /** function indicating whether reinitialization of states depending on
+         fixed parameters is permissible
+         * @return flag inidication whether reinitialization of states depending on
+         fixed parameters is permissible
+         */
+        virtual bool isFixedParameterStateReinitializationAllowed() const {
+            return false;
+        }
 
 
         /** Sparse Jacobian (dimension: nnz)*/
@@ -1413,7 +1735,11 @@ namespace amici {
         /** flag indicating whether steadystate sensivities are to be computed
          via FSA when steadyStateSimulation is used */
         SteadyStateSensitivityMode steadyStateSensitivityMode = SteadyStateSensitivityMode::newtonOnly;
-
+        
+        /** flag indicating whether reinitialization of states depending on
+         fixed parameters is activated
+         */
+        bool reinitializeFixedParameterInitialStates = false;
     };
 
     bool operator ==(const Model &a, const Model &b);

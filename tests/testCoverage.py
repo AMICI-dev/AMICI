@@ -29,14 +29,7 @@ testRunner = unittest.TextTestRunner(verbosity=0)
 result = testRunner.run(suite)
 
 cov.stop()
-cov.xml_report(outfile='coverage_py_tmp.xml')
-libdir = os.path.dirname(os.path.dirname(amici.__file__))
-
-with open("coverage_py_tmp.xml", "rt") as fin:
-    with open("coverage_py.xml", "wt") as fout:
-        for line in fin:
-            fout.write(line.replace(libdir, 'python'))
-os.remove("coverage_py_tmp.xml")
+cov.xml_report(outfile='coverage_py.xml')
 
 # propagate failure
 sys.exit(not result.wasSuccessful())

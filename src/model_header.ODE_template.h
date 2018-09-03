@@ -758,6 +758,15 @@ public:
      */
     virtual std::vector<std::string> getObservableIds() const override { return std::vector<std::string> {TPL_OBSERVABLE_IDS_INITIALIZER_LIST}; }
     
+    /** function indicating whether reinitialization of states depending on
+     fixed parameters is permissible
+     * @return flag inidication whether reinitialization of states depending on
+     fixed parameters is permissible
+     */
+    virtual bool isFixedParameterStateReinitializationAllowed() const {
+        return {TPL_REINIT_FIXPAR_INITCOND};
+    }
+    
 };
 
 #endif /* _amici_TPL_MODELNAME_h */
