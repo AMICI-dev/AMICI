@@ -468,10 +468,20 @@ class SbmlImporter:
         # Ensure specified constant parameters exist in the model
         for parameter in constantParameters:
             if not self.sbml.getParameter(parameter):
-                raise KeyError('Cannot make %s a constant parameter: Parameter does not exist.' % parameter)
-            
-        fixedParameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() in constantParameters ]
-        parameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() not in constantParameters ]
+                raise KeyError('Cannot make %s a constant parameter: '
+                               'Parameter does not exist.' % parameter)
+
+        fixedParameters = [parameter for parameter
+                           in self.sbml.getListOfParameters()
+                           if parameter.getId() in constantParameters
+                           ]
+
+        rulevars = [rule.getVariable() for rule in self.sbml.getListOfRules()]
+
+        parameters = [ parameter for parameter
+                       in self.sbml.getListOfParameters()
+                       if parameter.getId() not in constantParameters
+                       and parameter.getId() not in rulevars]
 
         self.symbols['parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.symbols['parameter']['name'] = [par.getName() for par in parameters]
@@ -586,8 +596,12 @@ class SbmlImporter:
         specvars = self.symbols['species']['sym'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
         compartmentvars = self.compartmentSymbols.free_symbols
-        parametervars = self.symbols['parameter']['sym'].free_symbols
+        parametervars = sp.DenseMatrix(
+            [par.getId() for par in self.sbml.getListOfParameters()]
+        ).free_symbols
         stoichvars = self.stoichiometricMatrix.free_symbols
+
+        assignments = {}
 
         for rule in rules:
             if rule.getFormula() == '':
@@ -596,31 +610,48 @@ class SbmlImporter:
             formula = sp.sympify(rule.getFormula())
 
             if variable in stoichvars:
-                self.stoichiometricMatrix = self.stoichiometricMatrix.subs(variable, formula)
+                self.stoichiometricMatrix = \
+                    self.stoichiometricMatrix.subs(variable, formula)
 
             if variable in specvars:
-                raise SBMLException('Species assignment rules are currently not supported!')
+                raise SBMLException('Species assignment rules are currently'
+                                    ' not supported!')
 
             if variable in compartmentvars:
-                raise SBMLException('Compartment assignment rules are currently not supported!')
+                raise SBMLException('Compartment assignment rules are'
+                                    ' currently not supported!')
 
             if variable in parametervars:
                 try:
-                    self.parameterValues[self.parameterIndex[str(variable)]] = float(formula)
+                    self.parameterValues[self.parameterIndex[str(variable)]] \
+                        = float(formula)
                 except:
-                    raise SBMLException('Non-float parameter assignment rules are currently not supported!')
+                    self.sbml.removeParameter(str(variable))
+                    assignments[str(variable)] = formula
 
             if variable in fluxvars:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
 
             if variable in volumevars:
-                self.compartmentVolume = self.compartmentVolume.subs(variable, formula)
+                self.compartmentVolume = \
+                    self.compartmentVolume.subs(variable, formula)
 
             if variable in rulevars:
                 for nested_rule in rules:
                     nested_formula = sp.sympify(nested_rule.getFormula())
                     nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
+
+                for variable in assignments:
+                    assignments[variable].subs(variable, formula)
+
+        # do this at the very end to ensure we have flattened all recursive
+        # rules
+        for variable in assignments.keys():
+            self.replaceInAllExpressions(
+                sp.sympify(variable),
+                assignments[variable]
+            )
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume.
