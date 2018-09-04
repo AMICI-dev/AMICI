@@ -51,6 +51,7 @@ matrix:
 install:
     - export BASE_DIR=`pwd`
     - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy scipy
+    - pip3 install --user --upgrade jupyter # for jupyter notebooks
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
@@ -64,6 +65,7 @@ script:
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
     - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
+    - scripts/runNotebook.sh python/examples/example_*/
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-doxygen.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then ./scripts/run-SBMLTestsuite.sh; fi
