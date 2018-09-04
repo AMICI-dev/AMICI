@@ -1145,8 +1145,9 @@ class SbmlImporter:
 
         """
         lines = []
-        [lines.append('#define ' + str(symbol) + ' ' + str(self.symbols[name]['shortName']) + '[' + str(index) + ']')
-            for index, symbol in enumerate(self.symbols[name]['sym'])]
+        for index, symbol in enumerate(self.symbols[name]['sym']):
+            lines.append('#define ' + str(symbol) + ' ' + str(
+                self.symbols[name]['shortName']) + '[' + str(index) + ']')
 
         with open(os.path.join(self.modelPath,name + '.h'), 'w') as fileout:
             fileout.write('\n'.join(lines))
