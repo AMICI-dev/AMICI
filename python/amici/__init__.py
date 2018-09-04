@@ -54,7 +54,7 @@ amiciModulePath = os.path.dirname(__file__)
 from .sbml_import import SbmlImporter, assignmentRules2observables, \
     constantSpeciesToParameters
 from .numpy import rdataToNumPyArrays, edataToNumPyArrays
-from .pandas import constructEdataFromDataFrame, \
+from .pandas import getEdataFromDataFrame, \
     getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
     getSimulationStatesAsDataFrame, getResidualsAsDataFrame
 
