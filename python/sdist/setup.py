@@ -181,7 +181,7 @@ class my_build_ext(build_ext):
             # Module build directory where we want to copy the generated libs
             # to
 
-            target_dir = os.path.join(self.build_lib, 'amici','libs')
+            target_dir = os.path.join(self.build_lib, 'amici', 'libs')
             self.mkpath(target_dir)
 
             # Copy the generated libs

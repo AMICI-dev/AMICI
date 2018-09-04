@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 import math
+import copy
 from .numpy import edataToNumPyArrays
-import amici as am
+from amici import DoubleVector
+from amici.amici import ExpData
 
 def getDataObservablesAsDataFrame(model, edata_list):
     """ Write Observables from experimental data as DataFrame
@@ -318,11 +320,11 @@ def constructEdataFromDataFrame(df, model, condition):
     Raises:
 
     """
-    edata = am.ExpData(model.get())
+    edata = ExpData(model.get())
 
     # timepoints
     df = df.sort_values(by='time', ascending=True)
-    edata.setTimepoints(am.DoubleVector(df['time'].values))
+    edata.setTimepoints(DoubleVector(df['time'].values))
 
     overwrite_preeq = {}
     overwrite_presim = {}
@@ -335,20 +337,20 @@ def constructEdataFromDataFrame(df, model, condition):
             overwrite_presim[par] = condition[par + '_presim']
 
     # fixedParameters
-    edata.fixedParameters = am.DoubleVector(
+    edata.fixedParameters = DoubleVector(
         condition[_get_names_or_ids(model, 'FixedParameter')].values
     )
 
     if any([overwrite_preeq[key] != condition[key] for key in
             overwrite_preeq.keys()]):
-        edata.fixedParametersPreequilibration = am.DoubleVector(
+        edata.fixedParametersPreequilibration = DoubleVector(
             _get_specialized_fixed_parameters(model, condition,
                                               overwrite_preeq)
         )
 
     if any([overwrite_presim[key] != condition[key] for key in
             overwrite_presim.keys()]):
-        edata.fixedParametersPresimulation = am.DoubleVector(
+        edata.fixedParametersPresimulation = DoubleVector(
             _get_specialized_fixed_parameters(model, condition,
                                               overwrite_presim)
         )
@@ -359,11 +361,11 @@ def constructEdataFromDataFrame(df, model, condition):
     # data
     for obs_index, obs in enumerate(_get_names_or_ids(model, 'Observable')):
         if obs in df.keys():
-            edata.setObservedData(am.DoubleVector(df[obs].values),
+            edata.setObservedData(DoubleVector(df[obs].values),
                                   obs_index)
         if obs + '_std' in df.keys():
             edata.setObservedDataStdDev(
-                am.DoubleVector(df[obs + '_std'].values),
+                DoubleVector(df[obs + '_std'].values),
                 obs_index
             )
 
