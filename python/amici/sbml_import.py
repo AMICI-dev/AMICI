@@ -14,7 +14,7 @@ import subprocess
 import sys
 from string import Template
 
-from . import amici_path, amiciSwigPath, amiciSrcPath, amiciModulePath
+from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 
 class SBMLException(Exception):
     pass
