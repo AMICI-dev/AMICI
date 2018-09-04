@@ -51,7 +51,6 @@ matrix:
 install:
     - export BASE_DIR=`pwd`
     - pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy # pinning pip because of https://github.com/pypa/pip/issues/5240
-    - pip3 install --user --upgrade jupyter # for jupyter notebooks
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh

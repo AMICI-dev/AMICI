@@ -1,6 +1,9 @@
 #!/bin/bash
 # Run jupyter notebooks as given on command line, show output only on error. 
 # If a directory is provided, run all contained notebooks non-recursively.
+set -e
+SCRIPT_PATH=$(dirname $BASH_SOURCE)
+AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 runNotebook () {
     tempfile=$(tempfile)
@@ -15,6 +18,9 @@ if [ $# -eq 0 ]; then
     echo "Usage: $0 [notebook.ipynb] [dirContainingNotebooks/]"
     exit 1
 fi
+
+source ${AMICI_PATH}/build/venv/bin/activate
+pip3 show ipython || pip3 install --user --upgrade jupyter
 
 for arg in "$@"; do
     if [ -d $arg ]; then
