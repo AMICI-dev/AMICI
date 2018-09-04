@@ -7,9 +7,7 @@ exported format is cobertura xml
 
 import coverage
 import unittest
-import os
 import sys
-import amici
 
 import testModels
 import testSBML
