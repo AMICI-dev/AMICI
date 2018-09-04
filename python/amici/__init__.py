@@ -51,7 +51,8 @@ amiciSwigPath = os.path.join(amici_path, 'swig')
 amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
 
-from .sbml_import import SbmlImporter
+from .sbml_import import SbmlImporter, assignmentRules2observables, \
+    constantSpeciesToParameters
 from .numpy import rdataToNumPyArrays, edataToNumPyArrays
 from .pandas import constructEdataFromDataFrame, \
     getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
