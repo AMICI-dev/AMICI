@@ -21,8 +21,17 @@ std::unique_ptr<amici::Model> getModel() {
 
 using namespace amici;
 
-void testSolverGetterSetters(CVodeSolver solver, SensitivityMethod sensi_meth, SensitivityOrder sensi, InternalSensitivityMethod ism, InterpolationType interp,
-                                  NonlinearSolverIteration iter, LinearMultistepMethod lmm, int steps, int badsteps, double tol, double badtol);
+void testSolverGetterSetters(CVodeSolver solver,
+                             SensitivityMethod sensi_meth,
+                             SensitivityOrder sensi,
+                             InternalSensitivityMethod ism,
+                             InterpolationType interp,
+                             NonlinearSolverIteration iter,
+                             LinearMultistepMethod lmm,
+                             int steps,
+                             int badsteps,
+                             double tol,
+                             double badtol);
 
 TEST_GROUP(amici)
 {
@@ -37,14 +46,19 @@ TEST_GROUP(amici)
 
 TEST_GROUP(model)
 {
-    Model_Test model = Model_Test(3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
-                     std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
-                     std::vector<realtype>(0,0.0),std::vector<int>(0,1));
-    std::vector<double> p {1};
+    int nx = 1, ny = 2, nz = 3, nmaxevent = 4;
+    std::vector<realtype> p {1.0};
+    std::vector<realtype> k {0.5,0.4,0.7};
+    std::vector<int> plist {1};
+    std::vector<realtype> idlist {0};
+    std::vector<int> z2event {0,0,0};
+    Model_Test model = Model_Test(nx, nx, ny, ny, nz, nz, nmaxevent,
+                                  0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
+                                  p, k, plist, idlist, z2event);
+    
     double unscaled[1];
     
     void setup() {
-        model.setParameters(p);
     }
 
     void teardown() {
@@ -77,6 +91,47 @@ TEST(model, testSetTimepoints) {
     CHECK_THROWS(AmiException,model.setTimepoints(std::vector<realtype>{0.0,1.0,0.5}))
 }
 
+TEST(model, testNameIdGetterSetter){
+    model.setParameterById("p0",3.0);
+    DOUBLES_EQUAL(model.getParameterById("p0"), 3.0, 1e-16);
+    CHECK_THROWS(AmiException,model.getParameterById("p1"));
+    DOUBLES_EQUAL(model.setParametersByIdRegex("p[\\d]+",5.0), p.size(), 1e-16);
+    for (const auto &ip: model.getParameters())
+       DOUBLES_EQUAL(ip, 5.0, 1e-16)
+    CHECK_THROWS(AmiException,model.setParametersByIdRegex("k[\\d]+", 5.0));
+    
+    model.setParameterByName("p0",3.0);
+    DOUBLES_EQUAL(model.getParameterByName("p0"), 3.0, 1e-16);
+    CHECK_THROWS(AmiException,model.getParameterByName("p1"));
+    DOUBLES_EQUAL(model.setParametersByNameRegex("p[\\d]+",5.0), p.size(), 1e-16);
+    for (const auto &ip: model.getParameters())
+        DOUBLES_EQUAL(ip, 5.0, 1e-16)
+    CHECK_THROWS(AmiException,model.setParametersByNameRegex("k[\\d]+", 5.0));
+    
+    model.setFixedParameterById("k0",3.0);
+    DOUBLES_EQUAL(model.getFixedParameterById("k0"), 3.0, 1e-16);
+    CHECK_THROWS(AmiException,model.getFixedParameterById("k4"));
+    DOUBLES_EQUAL(model.setFixedParametersByIdRegex("k[\\d]+",5.0), k.size(), 1e-16);
+    for (const auto &ik: model.getFixedParameters())
+        DOUBLES_EQUAL(ik, 5.0, 1e-16)
+    CHECK_THROWS(AmiException,model.setFixedParametersByIdRegex("p[\\d]+", 5.0));
+    
+    model.setFixedParameterByName("k0",3.0);
+    DOUBLES_EQUAL(model.getFixedParameterByName("k0"),3.0, 1e-16);
+    CHECK_THROWS(AmiException,model.getFixedParameterByName("k4"));
+    DOUBLES_EQUAL(model.setFixedParametersByNameRegex("k[\\d]+",5.0), k.size(), 1e-16);
+    for (const auto &ik: model.getFixedParameters())
+        DOUBLES_EQUAL(ik, 5.0, 1e-16)
+    CHECK_THROWS(AmiException,model.setFixedParametersByNameRegex("p[\\d]+", 5.0));
+}
+
+TEST(model, reinitializeFixedParameterInitialStates){
+    CHECK_THROWS(AmiException, model.setReinitializeFixedParameterInitialStates(true));
+    model.setReinitializeFixedParameterInitialStates(false);
+    CHECK_TRUE(!model.getReinitializeFixedParameterInitialStates());
+    AmiVector x(nx);
+    AmiVectorArray sx(model.np(),nx);
+}
 
 TEST_GROUP(symbolicFunctions)
 {
