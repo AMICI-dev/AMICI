@@ -6,7 +6,7 @@ SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 runNotebook () {
-    tempfile=$(tempfile)
+    tempfile=$(mktemp)
     jupyter nbconvert --debug --stdout --execute --to markdown $@ &> $tempfile
     ret=$?
     if [[ $ret != 0 ]]; then cat $tempfile; fi
