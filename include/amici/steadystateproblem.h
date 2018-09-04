@@ -35,7 +35,7 @@ class SteadystateProblem {
                                   NewtonSolver *newtonSolver, int newton_try);
 
     void getNewtonOutput(ReturnData *rdata, const Model *model,
-                         int newton_status, double run_time, int it);
+                         NewtonStatus newton_status, double run_time, int it);
 
     void getSteadystateSimulation(ReturnData *rdata, Solver *solver,
                                   Model *model, int it);

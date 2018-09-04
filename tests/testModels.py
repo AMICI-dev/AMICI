@@ -152,10 +152,6 @@ def checkDerivatives(model, solver, edata):
         checkResults(rdata, 'FIM', np.dot(rdata['sres'].transpose(),rdata['sres']), 1e-8, 1e-4)
         checkResults(rdata, 'sllh', -np.dot(rdata['res'].transpose(),rdata['sres']), 1e-8, 1e-4)
 
-
-
-
-
     '''
     print()
     for ip in range(model.np()):

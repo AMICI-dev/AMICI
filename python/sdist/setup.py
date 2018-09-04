@@ -306,7 +306,7 @@ def main():
         long_description_content_type="text/markdown",
         url='https://github.com/ICB-DCM/AMICI',
         author='Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor',
-        author_email='fabian.froehlich@helmholtz-muenchen.de',
+        author_email='fabian_froehlich@hms.harvard.edu',
         license='BSD',
         libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
@@ -315,7 +315,7 @@ def main():
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
-        install_requires=['symengine', 'python-libsbml', 'h5py', 'pkgconfig'],
+        install_requires=['symengine', 'python-libsbml', 'h5py', 'pkgconfig', 'pandas'],
         python_requires='>=3',
         package_data={
             'amici': ['amici/include/amici/*',
