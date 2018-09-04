@@ -20,7 +20,7 @@ if [ $# -eq 0 ]; then
 fi
 
 source ${AMICI_PATH}/build/venv/bin/activate
-pip3 show ipython || pip3 install --user --upgrade jupyter
+pip3 show ipython || (pip3 install --user --upgrade jupyter && ipython kernel install --user --name=amici)
 
 for arg in "$@"; do
     if [ -d $arg ]; then
