@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run jupyter notebooks as given on command line, show output only on error. 
 # If a directory is provided, run all contained notebooks non-recursively.
-set -e
+set -x
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
@@ -31,4 +31,3 @@ for arg in "$@"; do
         runNotebook $arg
     fi
 done
-exit 0
