@@ -357,7 +357,7 @@ double getDoubleScalarAttribute(H5::H5File const& file,
                                              attributeName.c_str(), &data);
 
 #ifdef AMI_HDF5_H_DEBUG
-    printf("%s: %e\n", attributeName, data);
+    printf("%s: %e\n", attributeName.c_str(), data);
 #endif
 
     if(status < 0)

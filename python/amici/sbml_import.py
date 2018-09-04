@@ -1,5 +1,4 @@
-""" @package amici.sbml_import The python sbml import module for python 
-
+""" @package amici.sbml_import The python sbml import module for python
 """
 #!/usr/bin/env python3
 
@@ -52,7 +51,7 @@ class SbmlImporter:
         compartmentVolume: array of compartment volumes
         n_reactions: number of reactions
         stoichiometricMatrix: stoichiometrix matrix of the model
-        fluxVector: vector of reaction kinetic laws 
+        fluxVector: vector of reaction kinetic laws
         observables: array of observable definitions
         n_observables: number of observables
         fixedParameterValues: array of fixed parameter values
@@ -367,9 +366,9 @@ class SbmlImporter:
         self.modelPath = os.path.abspath(output_dir)
         self.modelSwigPath = os.path.join(self.modelPath, 'swig')
 
-        for dir in [self.modelPath, self.modelSwigPath]:
-            if not os.path.exists(dir):
-                os.makedirs(dir)
+        for directory in [self.modelPath, self.modelSwigPath]:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
 
 
     def processSBML(self, constantParameters=None):
@@ -1404,12 +1403,9 @@ class SbmlImporter:
         Raises:
 
         """
-        sources = [self.modelName + '_' + function + '.cpp ' if self.functions[function]['body'] is not None else ''
-                    for function in self.functions.keys() ]
-        try:
-            sources.remove('')
-        except:
-            pass
+        sources = [self.modelName + '_' + function + '.cpp '
+                   for function in self.functions.keys()
+                   if self.functions[function]['body'] is not None]
         templateData = {'MODELNAME': self.modelName,
                         'SOURCES': '\n'.join(sources)}
         applyTemplate(os.path.join(amiciSrcPath, 'CMakeLists.template.txt'),

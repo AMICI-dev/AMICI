@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import sys
-import h5py
 import numpy as np
-from example import AmiciExample, dict2attrs
+from example import AmiciExample
+
 
 class ExampleRobertson(AmiciExample):
-  
+
     def __init__(self):
         AmiciExample.__init__( self )
 
@@ -44,7 +44,6 @@ def writeSensiForward(filename):
     ex.writeToFile(filename, '/model_robertson/sensiforward/')
 
 
-
 def main():
     if len(sys.argv) < 2:
         print("Error: Must provide output file as first and only argument.")
@@ -53,7 +52,7 @@ def main():
 
     writeNoSensi(filename)
     writeSensiForward(filename)
-    
+
+
 if __name__ == "__main__":
     main()
-    
