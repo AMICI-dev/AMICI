@@ -6,13 +6,10 @@
 #include <typeinfo>
 #include <utility>
 #include <algorithm>
+#include <regex>
 
 namespace amici {
 
-/** Sensitivity of measurements y, total derivative sy = dydx * sx + dydp
- * @param it timepoint index
- * @param rdata pointer to return data instance
- */
 void Model::fsy(const int it, ReturnData *rdata) {
     if (!ny)
         return;
@@ -29,12 +26,6 @@ void Model::fsy(const int it, ReturnData *rdata) {
                 &rdata->sy[it*nplist()*ny], ny);
 }
 
-/** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
- * total derivative
- * @param nroots number of events for event index
- * @param ie event index
- * @param rdata pointer to return data instance
- */
 void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
     
     for (int iz = 0; iz < nz; ++iz)
@@ -43,12 +34,6 @@ void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
                 rdata->sz.at((nroots[ie]*nplist()+ip)*nz + iz) = 0.0;
 }
 
-/** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
- * derivative
- * @param it timepoint index
- * @param dJydx vector with values of state derivative of Jy
- * @param rdata pointer to return data instance
- */
 void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata) {
 
     // Compute dJydx*sx for current 'it'
@@ -78,12 +63,6 @@ void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *r
     }
 }
 
-/** Compute sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
- * parameters for the given timepoint. Add result to respective fields in rdata.
- * @param it timepoint index
- * @param edata pointer to experimental data instance
- * @param rdata pointer to return data instance
- */
 void Model::fdJydp(const int it, const ExpData *edata,
                    ReturnData *rdata) {
 
@@ -132,13 +111,6 @@ void Model::fdJydp(const int it, const ExpData *edata,
     }
 }
 
-/** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
- * state variables
- * @param dJydx pointer to vector with values of state derivative of Jy
- * @param it timepoint index
- * @param edata pointer to experimental data instance
- * @param rdata pointer to return data instance
- */
 void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata) {
 
     // dJydy         nJ x ny x nytrue
@@ -158,13 +130,6 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
     }
 }
 
-/** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
- * derivative
- * @param nroots event index
- * @param dJzdx vector with values of state derivative of Jz
- * @param sx pointer to state sensitivities
- * @param rdata pointer to return data instance
- */
 void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVectorArray *sx, ReturnData *rdata) {
     // sJz           nJ x nplist()
     // dJzdp         nJ x nplist()
@@ -199,13 +164,6 @@ void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVector
     }
 }
 
-/** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
- * parameters
- * @param nroots event index
- * @param t current timepoint
- * @param edata pointer to experimental data instance
- * @param rdata pointer to return data instance
- */
 void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
                    const ReturnData *rdata) {
     // dJzdz         nJ x nz x nztrue
@@ -242,14 +200,6 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
     }
 }
 
-/** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
- * state variables
- * @param dJzdx pointer to vector with values of state derivative of Jz
- * @param nroots event index
- * @param t current timepoint
- * @param edata pointer to experimental data instance
- * @param rdata pointer to return data instance
- */
 void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata) {
     // dJzdz         nJ x nz x nztrue
     // dzdx          nz x nx
@@ -273,10 +223,6 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
     }
 }
 
-/** initialization of model properties
- * @param x pointer to state variables
- * @param dx pointer to time derivative of states (DAE only)
- */
 void Model::initialize(AmiVector *x, AmiVector *dx) {
 
     initializeStates(x);
@@ -288,9 +234,6 @@ void Model::initialize(AmiVector *x, AmiVector *dx) {
     
 }
 
-/** initialization of initial states
- * @param x pointer to state variables
- */
 void Model::initializeStates(AmiVector *x) {
 
     if (x0data.empty()) {
@@ -302,12 +245,6 @@ void Model::initializeStates(AmiVector *x) {
     }
 }
 
-/**
- * initHeaviside initialises the heaviside variables h at the intial time t0
- * heaviside variables activate/deactivate on event occurences
- * @param x pointer to state variables
- * @param dx pointer to time derivative of states (DAE only)
- */
 void Model::initHeaviside(AmiVector *x, AmiVector *dx) {
     std::vector<realtype> rootvals(ne,0.0);
     froot(tstart, x, dx, rootvals.data());
@@ -373,12 +310,145 @@ std::vector<realtype> const& Model::getParameters() const {
     return originalParameters;
 }
 
+/**
+ * @brief local helper function to get parameters
+ * @param ids vector of name/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param id name/id to look for in the vector
+ * @param variable_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ * @return value of the selected parameter
+ */
+realtype getValueById(std::vector<std::string> const& ids, std::vector<realtype> const& values,
+                      std::string const& id, const char* variable_name, const char* id_name) {
+    auto it = std::find(ids.begin(), ids.end(), id);
+    if(it != ids.end())
+        return values.at(it - ids.begin());
+    
+    throw AmiException("Could not find %s with specified %s", variable_name, id_name);
+}
+
+/**
+ * @brief local helper function to set parameters
+ * @param ids vector of names/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param value for the selected parameter
+ * @param id name/id to look for in the vector
+ * @param variable_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ */
+void setValueById(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
+                      std::string const& id, const char* variable_name, const char* id_name) {
+    auto it = std::find(ids.begin(), ids.end(), id);
+    if(it != ids.end())
+        values.at(it - ids.begin()) = value;
+    else
+        throw AmiException("Could not find %s with specified %s", variable_name, id_name);
+}
+
+/**
+ * @brief local helper function to set parameters via regex
+ * @param ids vector of names/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param value for the selected parameter
+ * @param regex string according to which names/ids are to be matched
+ * @param variable_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ * @return number of matched names/ids
+ */
+int setValueByIdRegex(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
+                  std::string const& regex, const char* variable_name, const char* id_name) {
+    std::regex pattern (regex);
+    int n_found = 0;
+    for(const auto &id: ids) {
+        if(std::regex_match(id, pattern)) {
+            values.at(&id - &ids[0]) = value;
+            ++n_found;
+        }
+    }
+    
+    if(n_found == 0)
+        throw AmiException("Could not find %s with specified %s", variable_name, id_name);
+    
+    return n_found;
+}
+    
+realtype Model::getParameterById(std::string const& par_id) const {
+    if(!hasParameterIds())
+        throw AmiException("Could not access parameters by id as they are not set");
+    return getValueById(getParameterIds(), originalParameters, par_id, "parameters", "id");
+}
+    
+realtype Model::getParameterByName(std::string const& par_name) const {
+    if(!hasParameterNames())
+        throw AmiException("Could not access parameters by name as they are not set");
+    return getValueById(getParameterNames(),
+                        originalParameters,
+                        par_name,
+                        "parameters",
+                        "name");
+}
+
 void Model::setParameters(const std::vector<realtype> &p) {
     if(p.size() != (unsigned) this->originalParameters.size())
         throw AmiException("Dimension mismatch. Size of parameters does not match number of model parameters.");
     this->originalParameters = p;
     this->unscaledParameters.resize(originalParameters.size());
     unscaleParameters(this->unscaledParameters.data());
+}
+    
+void Model::setParameterById(std::string const& par_id, realtype value) {
+    if(!hasParameterIds())
+        throw AmiException("Could not access parameters by id as they are not set");
+    
+    setValueById(getParameterIds(),
+                 originalParameters,
+                 value,
+                 par_id,
+                 "parameter",
+                 "id");
+    unscaleParameters(this->unscaledParameters.data());
+}
+    
+int Model::setParametersByIdRegex(std::string const& par_id_regex, realtype value) {
+    if(!hasParameterIds())
+        throw AmiException("Could not access parameters by id as they are not set");
+    int n_found = setValueByIdRegex(getParameterIds(),
+                                    originalParameters,
+                                    value,
+                                    par_id_regex,
+                                    "parameter",
+                                    "id");
+    unscaleParameters(this->unscaledParameters.data());
+    return n_found;
+}
+
+void Model::setParameterByName(std::string const& par_name, realtype value) {
+    if(!hasParameterNames())
+        throw AmiException("Could not access parameters by name as they are not set");
+    
+    setValueById(getParameterNames(),
+                 originalParameters,
+                 value,
+                 par_name,
+                 "parameter",
+                 "name");
+    unscaleParameters(this->unscaledParameters.data());
+}
+
+int Model::setParametersByNameRegex(std::string const& par_name_regex, realtype value) {
+    if(!hasParameterNames())
+        throw AmiException("Could not access parameters by name as they are not set");
+    
+    int n_found = setValueByIdRegex(getParameterNames(),
+                                    originalParameters,
+                                    value,
+                                    par_name_regex,
+                                    "parameter",
+                                    "name");
+    
+    unscaleParameters(this->unscaledParameters.data());
+    return n_found;
 }
 
 const std::vector<realtype> &Model::getUnscaledParameters() const {
@@ -388,11 +458,81 @@ const std::vector<realtype> &Model::getUnscaledParameters() const {
 const std::vector<realtype> &Model::getFixedParameters() const {
     return fixedParameters;
 }
+    
+realtype Model::getFixedParameterById(std::string const& par_id) const {
+    if(!hasFixedParameterIds())
+        throw AmiException("Could not access fixed parameters by id as they are not set");
+    
+    return getValueById(getFixedParameterIds(),
+                        fixedParameters,
+                        par_id,
+                        "fixedParameters",
+                        "id");
+}
+
+realtype Model::getFixedParameterByName(std::string const& par_name) const {
+    if(!hasFixedParameterNames())
+        throw AmiException("Could not access fixed parameters by name as they are not set");
+    
+    return getValueById(getFixedParameterNames(),
+                        fixedParameters,
+                        par_name,
+                        "fixedParameters",
+                        "name");
+}
 
 void Model::setFixedParameters(const std::vector<realtype> &k) {
     if(k.size() != (unsigned) this->fixedParameters.size())
         throw AmiException("Dimension mismatch. Size of fixedParameters does not match number of fixed model parameters.");
     this->fixedParameters = k;
+}
+
+void Model::setFixedParameterById(std::string const& par_id, realtype value) {
+    if(!hasFixedParameterIds())
+        throw AmiException("Could not access fixed parameters by id as they are not set");
+    
+    setValueById(getFixedParameterIds(),
+                 fixedParameters,
+                 value,
+                 par_id,
+                 "fixedParameters",
+                 "id");
+}
+    
+int Model::setFixedParametersByIdRegex(std::string const& par_id_regex, realtype value) {
+    if(!hasFixedParameterIds())
+        throw AmiException("Could not access fixed parameters by id as they are not set");
+    
+    return  setValueByIdRegex(getFixedParameterIds(),
+                              fixedParameters,
+                              value,
+                              par_id_regex,
+                              "fixedParameters",
+                              "id");
+}
+
+void Model::setFixedParameterByName(std::string const& par_name, realtype value) {
+    if(!hasFixedParameterNames())
+        throw AmiException("Could not access fixed parameters by name as they are not set");
+    
+    setValueById(getFixedParameterNames(),
+                 fixedParameters,
+                 value,
+                 par_name,
+                 "fixedParameters",
+                 "name");
+}
+    
+int Model::setFixedParametersByNameRegex(std::string const& par_name_regex, realtype value) {
+    if(!hasFixedParameterNames())
+        throw AmiException("Could not access fixed parameters by name as they are not set");
+    
+    return  setValueByIdRegex(getFixedParameterIds(),
+                              fixedParameters,
+                              value,
+                              par_name_regex,
+                              "fixedParameters",
+                              "name");
 }
 
 std::vector<realtype> const& Model::getTimepoints() const {
@@ -621,8 +761,17 @@ void Model::fx0(AmiVector *x) {
 }
 
 void Model::fx0_fixedParameters(AmiVector *x) {
-    fx0_fixedParameters(x->data(),tstart, unscaledParameters.data(),fixedParameters.data());
+    if(getReinitializeFixedParameterInitialStates())
+        fx0_fixedParameters(x->data(),tstart, unscaledParameters.data(),fixedParameters.data());
 }
+    
+void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
+    if(getReinitializeFixedParameterInitialStates()) {
+        for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
+            fsx0_fixedParameters(sx->data(ip),tstart,x->data(), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+    }
+}
+
 
 void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
 
@@ -634,12 +783,6 @@ void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
 
 void Model::fsdx0() {}
 
-/** Sensitivity of event timepoint, total derivative
-     * @param t current timepoint
-     * @param ie event index
-     * @param x pointer to state variables
-     * @param sx pointer to state sensitivity variables
-     */
 void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx) {
     std::fill(stau.begin(),stau.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
@@ -647,10 +790,6 @@ void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiV
     }
 }
 
-/** Observables / measurements
-  * @param it timepoint index
-  * @param rdata pointer to return data instance
-  */
 void Model::fy(int it, ReturnData *rdata) {
     if (!ny)
         return;
@@ -658,10 +797,6 @@ void Model::fy(int it, ReturnData *rdata) {
     fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
-/** partial derivative of observables y w.r.t. model parameters p
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     */
 void Model::fdydp(const int it, ReturnData *rdata) {
     if (!ny)
         return;
@@ -680,10 +815,6 @@ void Model::fdydp(const int it, ReturnData *rdata) {
     }
 }
 
-/** partial derivative of observables y w.r.t. state variables x
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     */
 void Model::fdydx(const int it, ReturnData *rdata) {
     if (!ny)
         return;
@@ -692,62 +823,26 @@ void Model::fdydx(const int it, ReturnData *rdata) {
     fdydx(dydx.data(),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
-/** Event-resolved output
-     * @param nroots number of events for event index
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     * @param rdata pointer to return data instance
-     */
 void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
     fz(&rdata->z.at(nroots*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
-/** Sensitivity of z, total derivative
-     * @param nroots number of events for event index
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     * @param sx current state sensitivities
-     * @param rdata pointer to return data instance
-     */
 void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
     for(int ip = 0; (unsigned)ip < plist_.size();  ip++ ){
         fsz(&rdata->sz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip));
     }
 }
 
-/** Event root function of events (equal to froot but does not include
-     * non-output events)
-     * @param nroots number of events for event index
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     * @param rdata pointer to return data instance
-     */
 void Model::frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
     frz(&rdata->rz.at(nroots*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
-/** Sensitivity of rz, total derivative
-     * @param nroots number of events for event index
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     * @param sx current state sensitivities
-     * @param rdata pointer to return data instance
-     */
 void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
     for(int ip = 0; (unsigned)ip < plist_.size();  ip++ ){
         fsrz(&rdata->srz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip));
     }
 }
 
-/** partial derivative of event-resolved output z w.r.t. to model parameters p
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     */
 void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
     std::fill(dzdp.begin(),dzdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
@@ -755,21 +850,11 @@ void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
     }
 }
 
-/** partial derivative of event-resolved output z w.r.t. to model states x
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     */
 void Model::fdzdx(const realtype t, const int ie, const AmiVector *x) {
     std::fill(dzdx.begin(),dzdx.end(),0.0);
     fdzdx(dzdx.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
-/** Sensitivity of event-resolved root output w.r.t. to model parameters p
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     */
 void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
     std::fill(drzdp.begin(),drzdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
@@ -777,37 +862,18 @@ void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
     }
 }
 
-/** Sensitivity of event-resolved measurements rz w.r.t. to model states x
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     */
+
 void Model::fdrzdx(const realtype t, const int ie, const AmiVector *x) {
     std::fill(drzdx.begin(),drzdx.end(),0.0);
     fdrzdx(drzdx.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
-/** State update functions for events
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     * @param xdot current residual function values
-     * @param xdot_old value of residual function before event
-     */
 void Model::fdeltax(const int ie, const realtype t, const AmiVector *x,
                     const AmiVector *xdot, const AmiVector *xdot_old) {
     std::fill(deltax.begin(),deltax.end(),0.0);
     fdeltax(deltax.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),ie,xdot->data(),xdot_old->data());
 }
 
-/** Sensitivity update functions for events, total derivative
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     * @param sx current state sensitivity
-     * @param xdot current residual function values
-     * @param xdot_old value of residual function before event
-     */
 void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
                      const AmiVector *xdot, const AmiVector *xdot_old) {
     fw(t,x->getNVector());
@@ -817,28 +883,12 @@ void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const A
                  plist_.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
 }
 
-/** Adjoint state update functions for events
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     * @param xB current adjoint state
-     * @param xdot current residual function values
-     * @param xdot_old value of residual function before event
-     */
 void Model::fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                      const AmiVector *xdot, const AmiVector *xdot_old) {
     std::fill(deltaxB.begin(),deltaxB.end(),0.0);
     fdeltaxB(deltaxB.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),ie,xdot->data(),xdot_old->data(),xB->data());
 }
 
-/** Quadrature state update functions for events
-     * @param ie event index
-     * @param t current timepoint
-     * @param x current state
-     * @param xB current adjoint state
-     * @param xdot current residual function values
-     * @param xdot_old value of residual function before event
-     */
 void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                      const AmiVector *xdot, const AmiVector *xdot_old) {
     std::fill(deltaqB.begin(),deltaqB.end(),0.0);
@@ -847,11 +897,6 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
                  plist_.at(ip),ie,xdot->data(),xdot_old->data(),xB->data());
 }
 
-/** Standard deviation of measurements
-     * @param it timepoint index
-     * @param edata pointer to experimental data instance
-     * @param rdata pointer to return data instance
-     */
 void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
     if (!ny)
         return;
@@ -871,11 +916,6 @@ void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
     }
 }
 
-/** partial derivative of standard deviation of measurements w.r.t. model
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to ExpData data instance holding sigma values
-     */
 void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
     if (!ny)
         return;
@@ -905,13 +945,6 @@ void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
     std::copy(dsigmaydp.begin(), dsigmaydp.end(), &rdata->ssigmay[it * nplist() * ny]);
 }
 
-/** Standard deviation of events
-     * @param t current timepoint
-     * @param ie event index
-     * @param nroots array with event numbers
-     * @param edata pointer to experimental data instance
-     * @param rdata pointer to return data instance
-     */
 void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnData *rdata,
                     const ExpData *edata) {
     std::fill(sigmaz.begin(),sigmaz.end(),0.0);
@@ -930,13 +963,6 @@ void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnDat
     }
 }
 
-/** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
- * @param t current timepoint
- * @param ie event index
- * @param nroots array with event numbers
- * @param rdata pointer to return data instance
- * @param edata pointer to experimental data instance
- */
 void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, ReturnData *rdata, const ExpData *edata) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++) {
@@ -962,11 +988,6 @@ void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, Return
     std::copy(dsigmazdp.begin(), dsigmazdp.end(), &rdata->ssigmaz[nroots[ie] * nplist() * nz]);
 }
 
-/** negative log-likelihood of measurements y
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fJy(const int it, ReturnData *rdata, const ExpData *edata) {
     std::vector<realtype> nllh(nJ,0.0);
     getmy(it,edata);
@@ -979,11 +1000,6 @@ void Model::fJy(const int it, ReturnData *rdata, const ExpData *edata) {
     }
 }
 
-/** negative log-likelihood of event-resolved measurements z
-     * @param nroots event index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fJz(const int nroots, ReturnData *rdata, const ExpData *edata) {
     std::vector<realtype> nllh(nJ,0.0);
     getmz(nroots,edata);
@@ -996,12 +1012,6 @@ void Model::fJz(const int nroots, ReturnData *rdata, const ExpData *edata) {
     }
 }
 
-/** regularization of negative log-likelihood with roots of event-resolved
-     * measurements rz
-     * @param nroots event index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData *edata) {
     std::vector<realtype> nllh(nJ,0.0);
     getrz(nroots,rdata);
@@ -1014,11 +1024,6 @@ void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData *edata) {
     }
 }
 
-/** partial derivative of time-resolved measurement negative log-likelihood Jy
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fdJydy(const int it, const ReturnData *rdata,
                    const ExpData *edata) {
     // load measurements to my
@@ -1039,12 +1044,6 @@ void Model::fdJydy(const int it, const ReturnData *rdata,
     }
 }
 
-/** Sensitivity of time-resolved measurement negative log-likelihood Jy
-     * w.r.t. standard deviation sigma
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fdJydsigma(const int it, const ReturnData *rdata,
                        const ExpData *edata) {
     // load measurements to my
@@ -1065,11 +1064,6 @@ void Model::fdJydsigma(const int it, const ReturnData *rdata,
     }
 }
 
-/** partial derivative of event measurement negative log-likelihood Jz
-     * @param nroots event index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fdJzdz(const int nroots, const ReturnData *rdata,
                    const ExpData *edata) {
     getmz(nroots,edata);
@@ -1081,12 +1075,6 @@ void Model::fdJzdz(const int nroots, const ReturnData *rdata,
     }
 }
 
-/** Sensitivity of event measurement negative log-likelihood Jz
-     * w.r.t. standard deviation sigmaz
-     * @param nroots event index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fdJzdsigma(const int nroots, const ReturnData *rdata,
                        const ExpData *edata) {
     getmz(nroots,edata);
@@ -1098,11 +1086,6 @@ void Model::fdJzdsigma(const int nroots, const ReturnData *rdata,
     }
 }
 
-/** partial derivative of event measurement negative log-likelihood Jz
-     * @param nroots event index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
                     const ExpData *edata) {
     getmz(nroots,edata);
@@ -1114,12 +1097,6 @@ void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
     }
 }
 
-/** Sensitivity of event measurement negative log-likelihood Jz
-     * w.r.t. standard deviation sigmaz
-     * @param nroots event index
-     * @param rdata pointer to return data instance
-     * @param edata pointer to experimental data instance
-     */
 void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
                         const ExpData *edata) {
     std::fill(dJrzdsigma.begin(),dJrzdsigma.end(),0.0);
@@ -1130,32 +1107,17 @@ void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
     }
 }
 
-/**
- * @brief Recurring terms in xdot
- * @param t timepoint
- * @param x Vector with the states
- */
 void Model::fw(const realtype t, const N_Vector x) {
     std::fill(w.begin(),w.end(),0.0);
     fw(w.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
 
-/**
- * @brief Recurring terms in xdot, parameter derivative
- * @param t timepoint
- * @param x Vector with the states
- */
 void Model::fdwdp(const realtype t, const N_Vector x) {
     fw(t,x);
     std::fill(dwdp.begin(),dwdp.end(),0.0);
     fdwdp(dwdp.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
-/**
- * @brief Recurring terms in xdot, state derivative
- * @param t timepoint
- * @param x Vector with the states
- */
 void Model::fdwdx(const realtype t, const N_Vector x) {
     fw(t,x);
     std::fill(dwdx.begin(),dwdx.end(),0.0);
@@ -1231,10 +1193,7 @@ void Model::updateHeavisideB(const int *rootsfound) {
     }
 }
 
-/** create my slice at timepoint
-     * @param it timepoint index
-     * @param edata pointer to experimental data instance
-     */
+
 void Model::getmy(const int it, const ExpData *edata){
     if(edata) {
         std::copy_n(edata->getObservedDataPtr(it), nytrue, my.begin());
@@ -1243,47 +1202,22 @@ void Model::getmy(const int it, const ExpData *edata){
     }
 }
 
-/** create x slice at timepoint
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     * @return x x-slice from rdata instance
-     */
 const realtype *Model::getx(const int it, const ReturnData *rdata) const {
     return &rdata->x.at(it*nx);
 }
 
-/** create sx slice at timepoint
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     * @return sx sx-slice from rdata instance
-     */
 const realtype *Model::getsx(const int it, const ReturnData *rdata) const {
     return &rdata->sx.at(it*nx*nplist());
 }
 
-/** create y slice at timepoint
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     * @return y y-slice from rdata instance
-     */
 const realtype *Model::gety(const int it, const ReturnData *rdata) const {
     return &rdata->y.at(it*ny);
 }
 
-
-/** get current timepoint from index
-     * @param it timepoint index
-     * @param rdata pointer to return data instance
-     * @return current timepoint
-     */
 realtype Model::gett(const int it, const ReturnData *rdata) const {
     return rdata->ts.at(it);
 }
 
-/** create mz slice at event
-     * @param nroots event occurence
-     * @param edata pointer to experimental data instance
-     */
 void Model::getmz(const int nroots, const ExpData *edata) {
     if(edata){
         std::copy_n(edata->getObservedEventsPtr(nroots), nztrue, mz.begin());
@@ -1292,40 +1226,18 @@ void Model::getmz(const int nroots, const ExpData *edata) {
     }
 }
 
-/** create z slice at event
-     * @param nroots event occurence
-     * @param rdata pointer to return data instance
-     * @return z slice
-     */
 const realtype *Model::getz(const int nroots, const ReturnData *rdata) const {
     return(&rdata->z.at(nroots*nz));
 }
 
-/** create rz slice at event
-     * @param nroots event occurence
-     * @param rdata pointer to return data instance
-     * @return rz slice
-     */
 const realtype *Model::getrz(const int nroots, const ReturnData *rdata) const {
     return(&rdata->rz.at(nroots*nz));
 }
 
-/** create sz slice at event
-     * @param nroots event occurence
-     * @param ip sensitivity index
-     * @param rdata pointer to return data instance
-     * @return z slice
-     */
 const realtype *Model::getsz(const int nroots, const int ip, const ReturnData *rdata) const {
     return(&rdata->sz.at((nroots*nplist()+ip)*nz));
 }
 
-/** create srz slice at event
-     * @param nroots event occurence
-     * @param ip sensitivity index
-     * @param rdata pointer to return data instance
-     * @return rz slice
-     */
 const realtype *Model::getsrz(const int nroots, const int ip, const ReturnData *rdata) const {
     return(&rdata->srz.at((nroots*nplist()+ip)*nz));
 }
@@ -1346,15 +1258,6 @@ int Model::checkFinite(const int N, const realtype *array, const char *fun) cons
 
 void Model::unscaleParameters(double *bufferUnscaled) const
 {
-    /**
-         * unscaleParameters removes parameter scaling according to the parameter
-         * scaling in pscale
-         *
-         * @param[out] bufferUnscaled unscaled parameters are written to the array
-         * @type double
-         *
-         * @return status flag indicating success of execution @type int
-         */
     for (int ip = 0; ip < np(); ++ip) {
         switch (pscale[ip]) {
         case ParameterScaling::log10:
@@ -1410,7 +1313,5 @@ bool operator ==(const Model &a, const Model &b)
             && (a.pscale == b.pscale)
             && (a.tstart == b.tstart);
 }
-
-
 
 } // namespace amici

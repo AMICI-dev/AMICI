@@ -35,7 +35,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
 
                 with self.subTest(modelName=modelName, caseName=case):
                     print('running subTest modelName = ' + modelName + ', caseName = ' + case)
-                    modelSwigFolder = os.path.join(os.path.dirname(__file__), '..', 'build', 'tests', 
+                    modelSwigFolder = os.path.join(os.path.dirname(__file__), '..', 'build', 'tests',
                                                    'cpputest', 'external_' + modelName + '-prefix', 
                                                    'src', 'external_' + modelName + '-build', 'swig')
                     sys.path.insert(0, modelSwigFolder)
@@ -152,10 +152,6 @@ def checkDerivatives(model, solver, edata):
         checkResults(rdata, 'FIM', np.dot(rdata['sres'].transpose(),rdata['sres']), 1e-8, 1e-4)
         checkResults(rdata, 'sllh', -np.dot(rdata['res'].transpose(),rdata['sres']), 1e-8, 1e-4)
 
-
-
-
-
     '''
     print()
     for ip in range(model.np()):
@@ -170,18 +166,19 @@ def checkDerivatives(model, solver, edata):
         print('sx: p[%d]: |error|_2: %f' % (ip, err_norm))
     
     '''
-    
+
+
 def verifySimulationResults(rdata, expectedResults, atol=1e-8, rtol=1e-4):
-    '''
+    """
     compares all fields of the simulation results in rdata against the expectedResults using the provided
     tolerances
     
     Arguments:
         rdata: simulation results as returned by amici.runAmiciSimulation
-        expectedResults: stored test results 
+        expectedResults: stored test results
         atol: absolute tolerance
         rtol: relative tolerance
-    '''
+    """
 
     if expectedResults.attrs['status'][0] != 0:
         assert rdata['status'] == expectedResults.attrs['status'][0]

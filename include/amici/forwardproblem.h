@@ -150,6 +150,10 @@ class ForwardProblem {
      * @brief Perform preequilibration
      */
     void handlePreequilibration();
+    
+    void updateAndReinitStatesAndSensitivities();
+    
+    void handlePresimulation(int *ncheck);
 
     void handleEvent(realtype *tlastroot,const bool seflag);
 

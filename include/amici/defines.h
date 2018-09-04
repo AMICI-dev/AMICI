@@ -141,6 +141,14 @@ enum class SteadyStateSensitivityMode {
     newtonOnly,
     simulationFSA
 };
+
+/** State in which the steady state computionat finished */
+enum class NewtonStatus {
+    failed=-1,
+    newt=1,
+    newt_sim=2,
+    newt_sim_newt=3,
+};
     
 /**
  * @brief msgIdAndTxtFp

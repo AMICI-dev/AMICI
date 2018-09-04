@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 import sys
-import h5py
 import numpy as np
 import pandas as pd
 import os
 
-from example import AmiciExample, dict2attrs
+from example import AmiciExample
 
 class ExampleJakStatAdjoint(AmiciExample):
-  
+
     def __init__(self):
         AmiciExample.__init__( self )
         
@@ -27,7 +26,7 @@ class ExampleJakStatAdjoint(AmiciExample):
                                                0, -0.5])
         self.modelOptions['kappa'] = [1.4, 0.45]
         self.modelOptions['pscale'] = 2
-        #self.modelOptions['qpositivex'] = [0] * self.numX 
+        #self.modelOptions['qpositivex'] = [0] * self.numX
     
         self.solverOptions['atol'] = 1e-16
         self.solverOptions['maxsteps'] = 1e4
