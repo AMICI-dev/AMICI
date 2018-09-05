@@ -20,7 +20,6 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...);
 extern msgIdAndTxtFp errMsgIdAndTxt;
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
-
 std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model);
 
 } // namespace amici

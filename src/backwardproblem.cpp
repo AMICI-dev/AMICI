@@ -56,11 +56,10 @@ void BackwardProblem::workBackwardProblem() {
     int it = rdata->nt - 2;
     --iroot;
 
-    double tnext;
     while (it >= 0 || iroot >= 0) {
 
         /* check if next timepoint is a discontinuity or a data-point */
-        tnext = getTnext(discs, iroot, it);
+        double tnext = getTnext(discs, iroot, it);
 
         if (tnext < t) {
             solver->solveB(tnext, AMICI_NORMAL);

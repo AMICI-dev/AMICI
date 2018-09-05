@@ -17,7 +17,10 @@ def dict2hdf5(object, dictionary):
                 dtype = 'f8'
             else:
                 dtype = '<i4'
-            object.require_dataset(name=key, data=a, shape=a.shape, dtype=dtype)
+            object.require_dataset(name=key,
+                                   data=a,
+                                   shape=a.shape,
+                                   dtype=dtype)
         else:
             object.attrs[key] = value
 
@@ -26,7 +29,11 @@ def dict2attrs(object, dictionary):
         object.attrs[key] = value
 
 def isArray(var):
-    return isinstance(var, (list, tuple, np.ndarray, pd.core.frame.DataFrame, pd.core.series.Series))        
+    return isinstance(var, (list,
+                            tuple,
+                            np.ndarray,
+                            pd.core.frame.DataFrame,
+                            pd.core.series.Series))
 
 class AmiciExample:
   
@@ -61,9 +68,9 @@ class AmiciExample:
             # sx0
             # x0
         }
-        #self.modelOptions['qpositivex'] = [0] * self.numX 
-        #self.modelOptions['sx0'] = [1.0] * np 
-        #self.modelOptions['x0'] = [1.0] * np 
+        #self.modelOptions['qpositivex'] = [0] * self.numX
+        #self.modelOptions['sx0'] = [1.0] * np
+        #self.modelOptions['x0'] = [1.0] * np
         self.data = {}
 
     def writeToFile(self, filename, root = "/"):

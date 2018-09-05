@@ -191,6 +191,8 @@ python/test.txt
 
 tests/test/*
 tests/test_model_steadystate_scaled/*
+tests/test_model_presimulation/*
+
 
 
 coverage_py.xml
@@ -198,6 +200,8 @@ coverage_py.xml
 .idea/*
 
 python/examples/example_steadystate/model_steadystate_scaled/*
+python/examples/example_presimulation/model_presimulation/*
+python/examples/example_presimulation/model_presimulation_re/*
 
 python/sdist/amici.egg-info/*
 
@@ -206,4 +210,6 @@ python/sdist/amici/amici.py
 python/sdist/amici/amici_wrap.cxx
 python/sdist/amici/amici_without_hdf5.py
 python/sdist/amici/amici_wrap_without_hdf5.cxx
+
 testSuite.txt
+

@@ -7,9 +7,7 @@ exported format is cobertura xml
 
 import coverage
 import unittest
-import os
 import sys
-import amici
 
 import testModels
 import testSBML
@@ -23,8 +21,8 @@ cov.start()
 
 # build the testSuite from testModels and testSBML
 suite = unittest.TestSuite()
-suite.addTest(testModels.TestAmiciPregeneratedModel())
 suite.addTest(testSBML.TestAmiciSBMLModel())
+suite.addTest(testModels.TestAmiciPregeneratedModel())
 testRunner = unittest.TextTestRunner(verbosity=0)
 result = testRunner.run(suite)
 

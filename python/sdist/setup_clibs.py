@@ -124,12 +124,14 @@ def getAmiciBaseSources(withHDF5=True):
     return amiciBaseSources
 
 
-def getLibSundials(extra_compiler_flags=[]):
+def getLibSundials(extra_compiler_flags=None):
     """Get sundials library build info for setuptools
 
     Arguments:
         extra_compiler_flags: Extra compiler flags
     """
+    if extra_compiler_flags is None:
+        extra_compiler_flags = []
 
     libsundials = ('sundials', {
         'sources': getSundialsSources(),
@@ -146,12 +148,14 @@ def getLibSundials(extra_compiler_flags=[]):
     return libsundials
 
 
-def getLibSuiteSparse(extra_compiler_flags=[]):
+def getLibSuiteSparse(extra_compiler_flags=None):
     """Get SuiteSparse library build info for setuptools
 
     Arguments:
         extra_compiler_flags: Extra compiler flags
     """
+    if extra_compiler_flags is None:
+        extra_compiler_flags = []
 
     libsuitesparse = ('suitesparse', {
         'sources': getSuiteSparseSources(),
@@ -168,7 +172,7 @@ def getLibSuiteSparse(extra_compiler_flags=[]):
     return libsuitesparse
 
 
-def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None, blaspkgcfg=None):
+def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
     """Get AMICI core library build info for setuptools
 
     Arguments:
@@ -176,6 +180,9 @@ def getLibAmici(extra_compiler_flags=[], h5pkgcfg=None, blaspkgcfg=None):
         h5pkgcfg:  hdf5 package info
         blaspkgcfg: blas package info
     """
+
+    if extra_compiler_flags is None:
+        extra_compiler_flags = []
 
     libamici = ('amici', {
         'sources': getAmiciBaseSources(
