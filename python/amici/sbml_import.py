@@ -164,7 +164,7 @@ class SbmlImporter:
                 'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)',
                 'variable': 'x0',},
             'sx0': {
-                'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
+                'signature': '(realtype *sx0, const realtype t,const realtype *x, const realtype *p,'
                              ' const realtype *k, const int ip)',
                 'sensitivity': True},
             'xBdot': {
@@ -430,25 +430,34 @@ class SbmlImporter:
                                               for index, conc
                                               in enumerate(concentrations)])
 
-        initial_assignments = self.sbml.getListOfInitialAssignments()
-        for initial_assignment in initial_assignments:
-            index = [spec.getId() for spec in self.sbml.getListOfSpecies()]\
-                .index(
-                    initial_assignment.getId()
+        species_ids = [spec.getId() for spec in self.sbml.getListOfSpecies()]
+        for initial_assignment in self.sbml.getListOfInitialAssignments():
+            if initial_assignment.getId() in species_ids:
+                index = species_ids\
+                    .index(
+                        initial_assignment.getId()
+                    )
+                self.speciesInitial[index] = sp.sympify(
+                    sbml.formulaToL3String(initial_assignment.getMath())
                 )
-            self.speciesInitial[index] = sp.sympify(
-                sbml.formulaToL3String(initial_assignment.getMath())
+
+        # flatten initSpecies
+        while any([species in self.speciesInitial.free_symbols
+                   for species in self.symbols['species']['sym']]):
+            self.speciesInitial = self.speciesInitial.subs(
+                self.symbols['species']['sym'],
+                self.speciesInitial
             )
-
-
 
         if self.sbml.isSetConversionFactor():
             conversion_factor = self.sbml.getConversionFactor()
         else:
             conversion_factor = 1.0
-        self.speciesConversionFactor = sp.DenseMatrix([sp.sympify(specie.getConversionFactor()) if
-                                                       specie.isSetConversionFactor() else conversion_factor
-                                                       for specie in species])
+        self.speciesConversionFactor = sp.DenseMatrix(
+            [sp.sympify(specie.getConversionFactor())
+            if specie.isSetConversionFactor() else conversion_factor
+            for specie in species]
+        )
 
 
     def processParameters(self, constantParameters=None):
@@ -471,6 +480,13 @@ class SbmlImporter:
                 raise KeyError('Cannot make %s a constant parameter: '
                                'Parameter does not exist.' % parameter)
 
+        parameter_ids = [par.getId() for par
+                         in self.sbml.getListOfParameters()]
+        for initial_assignment in self.sbml.getListOfInitialAssignments():
+            if initial_assignment.getId() in parameter_ids:
+                raise SBMLException('Initial assignments for parameters are'
+                                    ' currently not supported')
+
         fixedParameters = [parameter for parameter
                            in self.sbml.getListOfParameters()
                            if parameter.getId() in constantParameters
@@ -482,6 +498,8 @@ class SbmlImporter:
                        in self.sbml.getListOfParameters()
                        if parameter.getId() not in constantParameters
                        and parameter.getId() not in rulevars]
+
+
 
         self.symbols['parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.symbols['parameter']['name'] = [par.getName() for par in parameters]
@@ -513,6 +531,17 @@ class SbmlImporter:
         self.compartmentVolume = sp.DenseMatrix([sp.sympify(comp.getVolume()) if comp.isSetVolume()
                                                  else sp.sympify(1.0) for comp in compartments])
 
+        compartment_ids = [comp.getId() for comp in compartments]
+        for initial_assignment in self.sbml.getListOfInitialAssignments():
+            if initial_assignment.getId() in compartment_ids:
+                index = compartment_ids\
+                    .index(
+                        initial_assignment.getId()
+                    )
+                self.compartmentVolume[index] = sp.sympify(
+                    sbml.formulaToL3String(initial_assignment.getMath())
+                )
+
         self.replaceInAllExpressions(self.compartmentSymbols,self.compartmentVolume)
 
 
@@ -534,25 +563,49 @@ class SbmlImporter:
         self.fluxVector = sp.zeros(self.n_reactions, 1)
         self.symbols['flux']['sym'] = sp.zeros(self.n_reactions, 1)
 
+
+        assignment_ids = [ass.getId()
+                          for ass in self.sbml.getListOfInitialAssignments()]
+        rulevars = [rule.getVariable()
+                                for rule in self.sbml.getListOfRules()
+                                if rule.getFormula() != '']
         for reactionIndex, reaction in enumerate(reactions):
 
             for elementList, sign in [(reaction.getListOfReactants(), -1.0),
                                        (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
                 for index, element in enumerate(elementList):
-                    # we need the index here as we might have multiple elements for the same species
+                    # we need the index here as we might have multiple elements
+                    # for the same species
                     elements[index] = {'species': element.getSpecies()}
                     if element.isSetId():
-                        if element.getId() in [rule.getVariable()
-                                               for rule in self.sbml.getListOfRules() if rule.getFormula() != '']:
-                            elements[index]['stoichiometry'] = sp.sympify(element.getId())
+                        if element.getId() in assignment_ids:
+                            assignment = self.sbml.getInitialAssignment(
+                                element.getId()
+                            )
+                            elements[index]['stoichiometry'] = \
+                                sp.sympify(assignment.getFormula())
+                            # this is an initial assignment so we need to use
+                            # initial conditions
+                            elements[index]['stoichiometry'] = \
+                                elements[index]['stoichiometry'].subs(
+                                    self.symbols['species']['sym'],
+                                    self.speciesInitial
+                                )
+                        elif element.getId() in rulevars:
+                            elements[index]['stoichiometry'] = \
+                                sp.sympify(element.getId())
                         else:
-                            # dont put the symbol if it wont get replaced by a rule
-                            elements[index]['stoichiometry'] = sp.sympify(element.getStoichiometry())
+                            # dont put the symbol if it wont get replaced by a
+                            # rule
+                            elements[index]['stoichiometry'] = \
+                                sp.sympify(element.getStoichiometry())
                     elif element.isSetStoichiometry():
-                        elements[index]['stoichiometry'] = sp.sympify(element.getStoichiometry())
+                        elements[index]['stoichiometry'] = \
+                            sp.sympify(element.getStoichiometry())
                     else:
-                        elements[index]['stoichiometry'] = sp.sympify(1.0)
+                        elements[index]['stoichiometry'] = \
+                            sp.sympify(1.0)
 
                 for index in elements.keys():
                     if not (elements[index]['species'] in self.constantSpecies
@@ -639,7 +692,8 @@ class SbmlImporter:
             if variable in rulevars:
                 for nested_rule in rules:
                     nested_formula = sp.sympify(nested_rule.getFormula())
-                    nested_formula.subs(variable, formula)
+                    nested_formula = \
+                        nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
 
                 for variable in assignments:
@@ -665,10 +719,15 @@ class SbmlImporter:
         """
         for index, bool in enumerate(self.speciesHasOnlySubstanceUnits):
             if bool:
-                self.fluxVector = self.fluxVector.subs(self.symbols['species']['sym'][index],
-                                                self.symbols['species']['sym'][index] * self.speciesCompartment[index]
-                                                            .subs(self.compartmentSymbols,
-                                                                  self.compartmentVolume))
+                self.fluxVector = \
+                    self.fluxVector.subs(
+                        self.symbols['species']['sym'][index],
+                        self.symbols['species']['sym'][index]
+                        * self.speciesCompartment[index].subs(
+                            self.compartmentSymbols,
+                            self.compartmentVolume
+                        )
+                    )
 
 
     def processTime(self):

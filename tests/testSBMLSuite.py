@@ -109,8 +109,11 @@ def getTestStr(testId):
     return testStr
 
 def main():
-    for testId in range(1,1781):
-        with open("test.txt", "w") as logfile:
+    outfile = "testSuite.txt"
+    if os.path.isfile(outfile):
+        os.remove(outfile)
+    for testId in range(1, 1781):
+        with open(outfile, "a") as logfile:
             runTest(getTestStr(testId), logfile)
 
 if __name__ == '__main__':
