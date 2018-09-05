@@ -8,7 +8,7 @@ if [ ! -d "tests/sbml-test-suite" ]; then
 	mv -f ./sbml-test-suite ./tests/sbml-test-suite
 fi
 
-python3 ./tests/testSBMLSuite.py
+source build/venv/bin/activate
+python ./tests/testSBMLSuite.py
 
-cat ./test.txt
-rm ./test.txt
+cat ./testSuite.txt
