@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
-import h5py
 import numpy as np
-
-from example import AmiciExample, dict2attrs
+from example import AmiciExample
 
 class ExampleDirac(AmiciExample):
   

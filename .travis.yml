@@ -25,7 +25,7 @@ matrix:
       after_success: 
         - ./scripts/run-codecov.sh
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
-        - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -X fix -F python
+        - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
         
     - os: osx
       osx_image: xcode9.3
@@ -63,7 +63,9 @@ script:
     - cd $BASE_DIR
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
-    - cd $BASE_DIR/build && make python-tests && cd $BASE_DIR
+    - cd $BASE_DIR/build
+    - make python-tests
+    - cd $BASE_DIR
     - scripts/runNotebook.sh python/examples/example_*/
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-doxygen.sh; fi
@@ -72,8 +74,6 @@ script:
 after_failure:
     - ls -alR
 
-notifications:
-  webhooks: 
-    urls:
-      - https://icb-mmost.helmholtz-muenchen.de/hooks/ux65x1zqbpr8xy7nr9sexidhgy
-    on_success: change
+# cache dependencies
+cache: 
+  - pip

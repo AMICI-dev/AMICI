@@ -12,6 +12,17 @@
 extern std::unique_ptr<amici::Model> getModel();
 
 namespace amici {
+    
+std::vector<std::string> getVariableNames(const char* name, int length)
+{
+    std::vector<std::string> names;
+    names.resize(length);
+    for (auto& it: names) {
+        auto index = &it - &names[0];
+        it += name + std::to_string(index);
+    }
+    return names;
+}
 
 void simulateVerifyWrite(const std::string& path)
 {

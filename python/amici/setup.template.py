@@ -9,7 +9,6 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 def getModelSources():
     """Get list of source files for the amici base library"""
     import glob
-    import re
     modelSources = glob.glob('*.cpp')
     try:
         modelSources.remove('main.cpp')
@@ -20,7 +19,7 @@ def getModelSources():
 
 def getAmiciLibs():
     """Get list of libraries for the amici base library"""
-    return ['amici', 
+    return ['amici',
             'sundials', 'suitesparse'
             #'sundials_nvecserial', 'sundials_cvodes', 'sundials_idas',
             #'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
@@ -39,7 +38,7 @@ if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] =
 
 libraries = [*getAmiciLibs(),
              'cblas',# TODO generic BLAS
-             'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'] 
+             'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']
 sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
 
     
@@ -48,7 +47,7 @@ sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
 # C++ to fix warnings.
 cfg_vars = sysconfig.get_config_vars()
 for key, value in cfg_vars.items():
-    if type(value) == str:
+    if isinstance(value, str):
         cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
 
 

@@ -33,7 +33,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     if (!solverMemory)
         throw AmiException("Failed to allocated solver memory!");
 
-    /* Initialize AMIS solver*/
+    /* Initialize CVodes/IDAs solver*/
     init(x, dx, model->t0());
 
     applyTolerances();
