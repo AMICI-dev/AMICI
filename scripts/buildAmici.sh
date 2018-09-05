@@ -21,5 +21,5 @@ make python-sdist
 set -x
 python3 -m venv ${AMICI_PATH}/build/venv --clear
 source ${AMICI_PATH}/build/venv/bin/activate
-pip3 install --upgrade pip setuptools pkgconfig wheel numpy
+pip3 install --upgrade pip setuptools pkgconfig wheel numpy matplotlib
 pip3 install --verbose $(ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1)
