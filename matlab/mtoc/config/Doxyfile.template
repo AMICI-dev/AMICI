@@ -698,6 +698,7 @@ EXCLUDE_PATTERNS       = "_SourceDir_/models/*" \
                          "_SourceDir_/matlab/SBMLImporter/*" \
                          "_SourceDir_/python/test/*" \
                          "_SourceDir_/python/sdist/*" \
+                         "_SourceDir_/python/examples/example_*/model_*" \
                          "_SourceDir_/build/*" \ 
                          "_SourceDir_/build_xcode/*" \
                          "_SourceDir_/swig/*"

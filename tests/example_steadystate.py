@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 import sys
-import h5py
 import numpy as np
-
 from example import AmiciExample, dict2attrs
 
 class ExampleSteadystate(AmiciExample):
-  
+
     def __init__(self):
         AmiciExample.__init__( self )
 
@@ -19,7 +17,8 @@ class ExampleSteadystate(AmiciExample):
         self.modelOptions['ts'] = np.linspace(0, 100, 50)
         self.modelOptions['pscale'] = 2
         self.modelOptions['qpositivex'] = [0] * self.numX 
-            
+
+
 def writeNoSensi(filename):
     ex = ExampleSteadystate()
 
@@ -46,6 +45,7 @@ def writeSensiForwardPlist(filename):
 
     ex.writeToFile(filename, '/model_steadystate/sensiforwardplist/')
 
+
 def writeSensiForwardDense(filename):
     ex = ExampleSteadystate()
     
@@ -64,6 +64,7 @@ def writeNosensiSPBCG(filename):
     ex.solverOptions['linsol'] = 7
 
     ex.writeToFile(filename, '/model_steadystate/nosensiSPBCG/')
+
 
 def writeSensiForwardErrorInt(filename):
     ex = ExampleSteadystate()
@@ -124,6 +125,7 @@ def writeSensiFwdNewtonPreeq(filename):
     ex.solverOptions['newton_maxsteps'] = 20
 
     ex.writeToFile(filename, '/model_steadystate/sensifwdnewtonpreeq/')
+
 
 def writeSensiAdjNewtonPreeq(filename):
     ex = ExampleSteadystate()
@@ -269,6 +271,7 @@ def writeSensiAdjSimPreeq(filename):
 
     ex.writeToFile(filename, '/model_steadystate/sensiadjsimpreeq/')
 
+
 def writeSensiAdjSimPreeqFSA(filename):
     ex = ExampleSteadystate()
 
@@ -304,6 +307,7 @@ def writeSensiAdjSimPreeqFSA(filename):
     ex.solverOptions['newton_maxsteps'] = 0
 
     ex.writeToFile(filename, '/model_steadystate/sensiadjsimpreeqFSA/')
+
 
 def writeSensiFwdByhandPreeq(filename):
     ex = ExampleSteadystate()
@@ -388,7 +392,7 @@ def main():
     writeSensiAdjSimPreeqFSA(filename)
     writeSensiFwdByhandPreeq(filename)
     writeSensiAdjByhandPreeq(filename)
-    
+
+
 if __name__ == "__main__":
     main()
-    

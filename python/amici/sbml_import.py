@@ -1,5 +1,4 @@
-""" @package amici.sbml_import The python sbml import module for python 
-
+""" @package amici.sbml_import The python sbml import module for python
 """
 #!/usr/bin/env python3
 
@@ -15,7 +14,7 @@ import subprocess
 import sys
 from string import Template
 
-from . import amici_path, amiciSwigPath, amiciSrcPath, amiciModulePath
+from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 
 class SBMLException(Exception):
     pass
@@ -24,6 +23,9 @@ class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in the Systems Biology Markup Language (SBML).
     
     Attributes:
+        allow_reinit_fixpar_initcond:  flag indicating whether reinitialization
+            of initial states depending on fixedParmeters is allowed for this
+            model
         check_validity: flag indicating whether the validity of the SBML document should be checked
         codeprinter: codeprinter that allows export of symbolic variables as C++ code
         functions: dict carrying function specific definitions
@@ -49,7 +51,7 @@ class SbmlImporter:
         compartmentVolume: array of compartment volumes
         n_reactions: number of reactions
         stoichiometricMatrix: stoichiometrix matrix of the model
-        fluxVector: vector of reaction kinetic laws 
+        fluxVector: vector of reaction kinetic laws
         observables: array of observable definitions
         n_observables: number of observables
         fixedParameterValues: array of fixed parameter values
@@ -72,6 +74,8 @@ class SbmlImporter:
 
         """
 
+        self.allow_reinit_fixpar_initcond = False
+
         self.check_validity = check_validity
 
         self.loadSBMLFile(SBMLFile)
@@ -82,31 +86,39 @@ class SbmlImporter:
         self.functions = {
             'J': {
                 'signature': '(realtype *J, const realtype t, const realtype *x, const double *p,'
-                             ' const double *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
+                             ' const double *k, const realtype *h, '
+                             'const realtype *w, const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'JB': {
                 'signature': '(realtype *JB, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
-                             ' const realtype *dwdx)'},
+                             ' const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'JDiag': {
                 'signature': '(realtype *JDiag, const realtype t, const realtype *x, const realtype *p,'
-                             ' const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)'},
+                             ' const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'JSparse': {
                 'signature': '(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx)',
-                'symbol': 'sparseList'},
+                'symbol': 'sparseList',
+                'assume_pow_positivity': True,},
             'JSparseB': {
                 'signature': '(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
                              ' const realtype *dwdx)',
-                'symbol': 'sparseList'},
+                'symbol': 'sparseList',
+                'assume_pow_positivity': True,},
             'Jv': {
                 'signature': '(realtype *Jv, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *v, const realtype *w,'
-                             ' const realtype *dwdx)'},
+                             ' const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'JvB': {
                 'signature': '(realtype *JvB, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *vB,'
-                             ' const realtype *w, const realtype *dwdx)'},
+                             ' const realtype *w, const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'Jy': {
                 'signature': '(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y,'
                              ' const double *sigmay, const double *my)',
@@ -123,16 +135,19 @@ class SbmlImporter:
             'dwdp': {
                 'signature': '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *w)',
-                'symbol': 'sparseList'},
+                'symbol': 'sparseList',
+                'assume_pow_positivity': True,},
             'dwdx': {
                 'signature': '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *w)',
-                'symbol': 'sparseList'},
+                'symbol': 'sparseList',
+                'assume_pow_positivity': True,},
             'dxdotdp': {
                 'signature': '(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const int ip, const realtype *w,'
                              ' const realtype *dwdp)',
-                'sensitivity': True},
+                'sensitivity': True,
+                'assume_pow_positivity': True,},
             'dydx': {
                 'signature': '(double *dydx, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h)'},
@@ -148,32 +163,42 @@ class SbmlImporter:
                 'signature': '(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
                              ' const realtype *dwdp)',
-                'sensitivity': True},
+                'sensitivity': True,
+                'assume_pow_positivity': True,},
             'sigmay': {'signature': '(double *sigmay, const realtype t, const realtype *p, const realtype *k)',
                         'variable': 'sigmay'},
             'sxdot': {
                 'signature': '(realtype *sxdot, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const int ip, const realtype *sx,'
-                             ' const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp)'},
+                             ' const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp)',
+                'assume_pow_positivity': True,},
             'w': {
                 'signature': '(realtype *w, const realtype t, const realtype *x, const realtype *p,'
-                             ' const realtype *k, const realtype *h)'},
+                             ' const realtype *k, const realtype *h)',
+                'assume_pow_positivity': True,},
             'x0': {
                 'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)'},
             'x0_fixedParameters': {
                 'signature': '(realtype *x0, const realtype t, const realtype *p, const realtype *k)',
                 'variable': 'x0',},
             'sx0': {
+                'signature': '(realtype *sx0, const realtype t,const realtype *x, const realtype *p,'
+                             ' const realtype *k, const int ip)',
+                'sensitivity': True},
+            'sx0_fixedParameters': {
                 'signature': '(realtype *sx0, const realtype t,const realtype *x0, const realtype *p,'
                              ' const realtype *k, const int ip)',
+                'variable': 'sx0',
                 'sensitivity': True},
             'xBdot': {
                 'signature': '(realtype *xBdot, const realtype t, const realtype *x, const realtype *p,'
                              ' const realtype *k, const realtype *h, const realtype *xB, const realtype *w,'
-                             ' const realtype *dwdx)'},
+                             ' const realtype *dwdx)',
+                'assume_pow_positivity': True,},
             'xdot': {
                 'signature': '(realtype *xdot, const realtype t, const realtype *x, const realtype *p,'
-                             ' const realtype *k, const realtype *h, const realtype *w)'},
+                             ' const realtype *k, const realtype *h, const realtype *w)',
+                'assume_pow_positivity': True,},
             'y': {
                 'signature': '(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k,'
                              ' const realtype *h)'}
@@ -262,9 +287,15 @@ class SbmlImporter:
             raise SBMLException('SBML Document failed to load (see error messages above)')
 
 
-    def sbml2amici(self, modelName, output_dir=None, observables=None,
-                   constantParameters=None, sigmas=None,
-                   verbose=False, assume_pow_positivity=False):
+    def sbml2amici(self,
+                   modelName,
+                   output_dir=None,
+                   observables=None,
+                   constantParameters=None,
+                   sigmas=None,
+                   verbose=False,
+                   assume_pow_positivity=False,
+                   ):
         """Generate AMICI C++ files for the model provided to the constructor.
         
         Arguments:
@@ -277,6 +308,7 @@ class SbmlImporter:
             verbose: more verbose output if True
             assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
                                    state variables that may become negative due to numerical errors
+
         Returns:
 
         Raises:
@@ -318,7 +350,9 @@ class SbmlImporter:
         """Set output paths for the model and create if necessary
 
         Arguments:
-            output_dir: relative or absolute path where the generated model code is to be placed. will be created if does not exists. defaults to `pwd`/amici-$modelname.
+            output_dir: relative or absolute path where the generated model
+            code is to be placed. will be created if does not exists.
+            defaults to `pwd`/amici-$modelname.
 
         Returns:
 
@@ -332,16 +366,17 @@ class SbmlImporter:
         self.modelPath = os.path.abspath(output_dir)
         self.modelSwigPath = os.path.join(self.modelPath, 'swig')
 
-        for dir in [self.modelPath, self.modelSwigPath]:
-            if not os.path.exists(dir):
-                os.makedirs(dir)
+        for directory in [self.modelPath, self.modelSwigPath]:
+            if not os.path.exists(directory):
+                os.makedirs(directory)
 
 
     def processSBML(self, constantParameters=None):
         """Read parameters, species, reactions, and so on from SBML model
 
         Arguments:
-            constantParameters: list of SBML Ids identifying constant parameters
+            constantParameters: list of SBML Ids identifying
+            constant parameters
 
         Returns:
 
@@ -375,24 +410,31 @@ class SbmlImporter:
 
         """
         if len(self.sbml.getListOfSpecies()) == 0:
-            raise SBMLException('Models without species are currently not supported!')
+            raise SBMLException('Models without species '
+                                'are currently not supported!')
 
-        if len(self.sbml.all_elements_from_plugins) > 0:
+        if hasattr(self.sbml, 'all_elements_from_plugins') \
+                and len(self.sbml.all_elements_from_plugins) > 0:
             raise SBMLException('SBML extensions are currently not supported!')
 
         if len(self.sbml.getListOfEvents()) > 0:
             raise SBMLException('Events are currently not supported!')
 
-        if any([not(rule.isAssignment()) for rule in self.sbml.getListOfRules()]):
-            raise SBMLException('Algebraic and rate rules are currently not supported!')
+        if any([not(rule.isAssignment())
+                for rule in self.sbml.getListOfRules()]):
+            raise SBMLException('Algebraic and rate '
+                                'rules are currently not supported!')
 
-        if any([reaction.getFast() for reaction in self.sbml.getListOfReactions()]):
+        if any([reaction.getFast()
+                for reaction in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
 
         if any([any([not element.getStoichiometryMath() is None
-                for element in list(reaction.getListOfReactants()) + list(reaction.getListOfProducts())])
+                for element in list(reaction.getListOfReactants())
+                + list(reaction.getListOfProducts())])
                 for reaction in self.sbml.getListOfReactions()]):
-            raise SBMLException('Non-unity stoichiometry is currently not supported!')
+            raise SBMLException('Non-unity stoichiometry is'
+                                ' currently not supported!')
 
 
     def processSpecies(self):
@@ -408,13 +450,25 @@ class SbmlImporter:
         species = self.sbml.getListOfSpecies()
         self.n_species = len(species)
         self.speciesIndex = {species_element.getId(): species_index
-                             for species_index, species_element in enumerate(species)}
-        self.symbols['species']['sym'] = sp.DenseMatrix([symbols(spec.getId()) for spec in species])
+                             for species_index, species_element
+                             in enumerate(species)}
+        self.symbols['species']['sym'] = sp.DenseMatrix(
+            [symbols(spec.getId()) for spec in species]
+        )
         self.symbols['species']['name'] = [spec.getName() for spec in species]
-        self.speciesCompartment = sp.DenseMatrix([symbols(spec.getCompartment()) for spec in species])
-        self.constantSpecies = [species_element.getId() for species_element in species if species_element.getConstant()]
-        self.boundaryConditionSpecies = [species_element.getId() for species_element in species if species_element.getBoundaryCondition()]
-        self.speciesHasOnlySubstanceUnits = [specie.getHasOnlySubstanceUnits() for specie in species]
+        self.speciesCompartment = sp.DenseMatrix(
+            [symbols(spec.getCompartment()) for spec in species]
+        )
+        self.constantSpecies = [species_element.getId()
+                                for species_element in species
+                                if species_element.getConstant()]
+        self.boundaryConditionSpecies = [
+            species_element.getId()
+            for species_element in species
+            if species_element.getBoundaryCondition()
+        ]
+        self.speciesHasOnlySubstanceUnits = [specie.getHasOnlySubstanceUnits()
+                                             for specie in species]
 
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
@@ -430,25 +484,36 @@ class SbmlImporter:
                                               for index, conc
                                               in enumerate(concentrations)])
 
-        initial_assignments = self.sbml.getListOfInitialAssignments()
-        for initial_assignment in initial_assignments:
-            index = [spec.getId() for spec in self.sbml.getListOfSpecies()]\
-                .index(
-                    initial_assignment.getId()
+        species_ids = [spec.getId() for spec in self.sbml.getListOfSpecies()]
+        for initial_assignment in self.sbml.getListOfInitialAssignments():
+            if initial_assignment.getId() in species_ids:
+                index = species_ids\
+                    .index(
+                        initial_assignment.getId()
+                    )
+                self.speciesInitial[index] = sp.sympify(
+                    sbml.formulaToL3String(initial_assignment.getMath())
                 )
-            self.speciesInitial[index] = sp.sympify(
-                sbml.formulaToL3String(initial_assignment.getMath())
+
+        # flatten initSpecies
+        while any([species in self.speciesInitial.free_symbols
+                   for species in self.symbols['species']['sym']]):
+            self.speciesInitial = self.speciesInitial.subs(
+                self.symbols['species']['sym'],
+                self.speciesInitial
             )
-
-
 
         if self.sbml.isSetConversionFactor():
             conversion_factor = self.sbml.getConversionFactor()
         else:
             conversion_factor = 1.0
-        self.speciesConversionFactor = sp.DenseMatrix([sp.sympify(specie.getConversionFactor()) if
-                                                       specie.isSetConversionFactor() else conversion_factor
-                                                       for specie in species])
+
+        self.speciesConversionFactor = sp.DenseMatrix([
+             sp.sympify(specie.getConversionFactor())
+             if specie.isSetConversionFactor()
+             else conversion_factor
+             for specie in species
+        ])
 
 
     def processParameters(self, constantParameters=None):
@@ -468,10 +533,29 @@ class SbmlImporter:
         # Ensure specified constant parameters exist in the model
         for parameter in constantParameters:
             if not self.sbml.getParameter(parameter):
-                raise KeyError('Cannot make %s a constant parameter: Parameter does not exist.' % parameter)
-            
-        fixedParameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() in constantParameters ]
-        parameters = [ parameter for parameter in self.sbml.getListOfParameters() if parameter.getId() not in constantParameters ]
+                raise KeyError('Cannot make %s a constant parameter: '
+                               'Parameter does not exist.' % parameter)
+
+        parameter_ids = [par.getId() for par
+                         in self.sbml.getListOfParameters()]
+        for initial_assignment in self.sbml.getListOfInitialAssignments():
+            if initial_assignment.getId() in parameter_ids:
+                raise SBMLException('Initial assignments for parameters are'
+                                    ' currently not supported')
+
+        fixedParameters = [parameter for parameter
+                           in self.sbml.getListOfParameters()
+                           if parameter.getId() in constantParameters
+                           ]
+
+        rulevars = [rule.getVariable() for rule in self.sbml.getListOfRules()]
+
+        parameters = [ parameter for parameter
+                       in self.sbml.getListOfParameters()
+                       if parameter.getId() not in constantParameters
+                       and parameter.getId() not in rulevars]
+
+
 
         self.symbols['parameter']['sym'] = sp.DenseMatrix([symbols(par.getId()) for par in parameters])
         self.symbols['parameter']['name'] = [par.getName() for par in parameters]
@@ -503,6 +587,17 @@ class SbmlImporter:
         self.compartmentVolume = sp.DenseMatrix([sp.sympify(comp.getVolume()) if comp.isSetVolume()
                                                  else sp.sympify(1.0) for comp in compartments])
 
+        compartment_ids = [comp.getId() for comp in compartments]
+        for initial_assignment in self.sbml.getListOfInitialAssignments():
+            if initial_assignment.getId() in compartment_ids:
+                index = compartment_ids\
+                    .index(
+                        initial_assignment.getId()
+                    )
+                self.compartmentVolume[index] = sp.sympify(
+                    sbml.formulaToL3String(initial_assignment.getMath())
+                )
+
         self.replaceInAllExpressions(self.compartmentSymbols,self.compartmentVolume)
 
 
@@ -524,25 +619,49 @@ class SbmlImporter:
         self.fluxVector = sp.zeros(self.n_reactions, 1)
         self.symbols['flux']['sym'] = sp.zeros(self.n_reactions, 1)
 
+
+        assignment_ids = [ass.getId()
+                          for ass in self.sbml.getListOfInitialAssignments()]
+        rulevars = [rule.getVariable()
+                                for rule in self.sbml.getListOfRules()
+                                if rule.getFormula() != '']
         for reactionIndex, reaction in enumerate(reactions):
 
             for elementList, sign in [(reaction.getListOfReactants(), -1.0),
                                        (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
                 for index, element in enumerate(elementList):
-                    # we need the index here as we might have multiple elements for the same species
+                    # we need the index here as we might have multiple elements
+                    # for the same species
                     elements[index] = {'species': element.getSpecies()}
                     if element.isSetId():
-                        if element.getId() in [rule.getVariable()
-                                               for rule in self.sbml.getListOfRules() if rule.getFormula() != '']:
-                            elements[index]['stoichiometry'] = sp.sympify(element.getId())
+                        if element.getId() in assignment_ids:
+                            assignment = self.sbml.getInitialAssignment(
+                                element.getId()
+                            )
+                            elements[index]['stoichiometry'] = \
+                                sp.sympify(assignment.getFormula())
+                            # this is an initial assignment so we need to use
+                            # initial conditions
+                            elements[index]['stoichiometry'] = \
+                                elements[index]['stoichiometry'].subs(
+                                    self.symbols['species']['sym'],
+                                    self.speciesInitial
+                                )
+                        elif element.getId() in rulevars:
+                            elements[index]['stoichiometry'] = \
+                                sp.sympify(element.getId())
                         else:
-                            # dont put the symbol if it wont get replaced by a rule
-                            elements[index]['stoichiometry'] = sp.sympify(element.getStoichiometry())
+                            # dont put the symbol if it wont get replaced by a
+                            # rule
+                            elements[index]['stoichiometry'] = \
+                                sp.sympify(element.getStoichiometry())
                     elif element.isSetStoichiometry():
-                        elements[index]['stoichiometry'] = sp.sympify(element.getStoichiometry())
+                        elements[index]['stoichiometry'] = \
+                            sp.sympify(element.getStoichiometry())
                     else:
-                        elements[index]['stoichiometry'] = sp.sympify(1.0)
+                        elements[index]['stoichiometry'] = \
+                            sp.sympify(1.0)
 
                 for index in elements.keys():
                     if not (elements[index]['species'] in self.constantSpecies
@@ -586,8 +705,12 @@ class SbmlImporter:
         specvars = self.symbols['species']['sym'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
         compartmentvars = self.compartmentSymbols.free_symbols
-        parametervars = self.symbols['parameter']['sym'].free_symbols
+        parametervars = sp.DenseMatrix(
+            [par.getId() for par in self.sbml.getListOfParameters()]
+        ).free_symbols
         stoichvars = self.stoichiometricMatrix.free_symbols
+
+        assignments = {}
 
         for rule in rules:
             if rule.getFormula() == '':
@@ -596,31 +719,49 @@ class SbmlImporter:
             formula = sp.sympify(rule.getFormula())
 
             if variable in stoichvars:
-                self.stoichiometricMatrix = self.stoichiometricMatrix.subs(variable, formula)
+                self.stoichiometricMatrix = \
+                    self.stoichiometricMatrix.subs(variable, formula)
 
             if variable in specvars:
-                raise SBMLException('Species assignment rules are currently not supported!')
+                raise SBMLException('Species assignment rules are currently'
+                                    ' not supported!')
 
             if variable in compartmentvars:
-                raise SBMLException('Compartment assignment rules are currently not supported!')
+                raise SBMLException('Compartment assignment rules are'
+                                    ' currently not supported!')
 
             if variable in parametervars:
                 try:
-                    self.parameterValues[self.parameterIndex[str(variable)]] = float(formula)
+                    self.parameterValues[self.parameterIndex[str(variable)]] \
+                        = float(formula)
                 except:
-                    raise SBMLException('Non-float parameter assignment rules are currently not supported!')
+                    self.sbml.removeParameter(str(variable))
+                    assignments[str(variable)] = formula
 
             if variable in fluxvars:
                 self.fluxVector = self.fluxVector.subs(variable, formula)
 
             if variable in volumevars:
-                self.compartmentVolume = self.compartmentVolume.subs(variable, formula)
+                self.compartmentVolume = \
+                    self.compartmentVolume.subs(variable, formula)
 
             if variable in rulevars:
                 for nested_rule in rules:
                     nested_formula = sp.sympify(nested_rule.getFormula())
-                    nested_formula.subs(variable, formula)
+                    nested_formula = \
+                        nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
+
+                for variable in assignments:
+                    assignments[variable].subs(variable, formula)
+
+        # do this at the very end to ensure we have flattened all recursive
+        # rules
+        for variable in assignments.keys():
+            self.replaceInAllExpressions(
+                sp.sympify(variable),
+                assignments[variable]
+            )
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume.
@@ -634,10 +775,15 @@ class SbmlImporter:
         """
         for index, bool in enumerate(self.speciesHasOnlySubstanceUnits):
             if bool:
-                self.fluxVector = self.fluxVector.subs(self.symbols['species']['sym'][index],
-                                                self.symbols['species']['sym'][index] * self.speciesCompartment[index]
-                                                            .subs(self.compartmentSymbols,
-                                                                  self.compartmentVolume))
+                self.fluxVector = \
+                    self.fluxVector.subs(
+                        self.symbols['species']['sym'][index],
+                        self.symbols['species']['sym'][index]
+                        * self.speciesCompartment[index].subs(
+                            self.compartmentSymbols,
+                            self.compartmentVolume
+                        )
+                    )
 
 
     def processTime(self):
@@ -903,29 +1049,56 @@ class SbmlImporter:
         Raises:
 
         """
-        self.functions['dydp']['sym'] = self.functions['y']['sym']\
-                                                .jacobian(self.symbols['parameter']['sym'])
-        self.functions['dsigmaydp']['sym'] = self.functions['sigmay']['sym']\
-                                                .jacobian(self.symbols['parameter']['sym'])
-        self.functions['dydx']['sym'] = self.functions['y']['sym']\
-                                                .jacobian(self.symbols['species']['sym']).transpose()
+        self.functions['dydp']['sym'] = \
+            self.functions['y']['sym'].jacobian(
+                self.symbols['parameter']['sym']
+            )
 
-        self.functions['dwdp']['sym'] = self.fluxVector.jacobian(self.symbols['parameter']['sym'])
+        self.functions['dsigmaydp']['sym'] = \
+            self.functions['sigmay']['sym'].jacobian(
+                self.symbols['parameter']['sym']
+            )
+
+        self.functions['dydx']['sym'] = \
+            self.functions['y']['sym'].jacobian(
+                self.symbols['species']['sym']
+            ).transpose()
+
+        self.functions['dwdp']['sym'] = \
+            self.fluxVector.jacobian(
+                self.symbols['parameter']['sym']
+            )
 
         self.functions['dwdp']['sparseSym'],\
         self.symbols['dwdp']['sym'],\
-        self.functions['dwdp']['sparseList'] = self.getSparseSymbols('dwdp')[0:3]
+        self.functions['dwdp']['sparseList'] = \
+            self.getSparseSymbols('dwdp')[0:3]
 
-        self.functions['dxdotdp']['sym'] = self.functions['xdot']['sym']\
-                                                      .jacobian(self.symbols['parameter']['sym'])\
-                                                  + self.stoichiometricMatrix\
-                                                    * self.functions['dwdp']['sparseSym']
+        self.functions['dxdotdp']['sym'] = \
+            self.functions['xdot']['sym'].jacobian(
+                self.symbols['parameter']['sym']
+            ) + self.stoichiometricMatrix * self.functions['dwdp']['sparseSym']
         self.symbols['dxdotdp']['sym'] = getSymbols('dxdotdp',self.n_species)
-        self.functions['sx0']['sym'] = self.speciesInitial.jacobian(self.symbols['parameter']['sym'])
+        self.functions['sx0']['sym'] = \
+            self.speciesInitial.jacobian(
+                self.symbols['parameter']['sym']
+            )
+
+        self.functions['sx0_fixedParameters']['sym'] = \
+            self.functions['x0_fixedParameters']['sym'].jacobian(
+                self.symbols['parameter']['sym']
+            )
+
+        if any([math != 0 and math != 0.0 for math in
+                self.functions['sx0_fixedParameters']['sym']]):
+            self.allow_reinit_fixpar_initcond = False
+        else:
+            self.allow_reinit_fixpar_initcond = True
 
 
     def computeModelEquationsForwardSensitivites(self):
-        """Perform symbolic computations required for forward sensitivity analysis.
+        """Perform symbolic computations required for forward sensitivity
+        analysis.
 
         Arguments:
 
@@ -1062,8 +1235,9 @@ class SbmlImporter:
 
         """
         lines = []
-        [lines.append('#define ' + str(symbol) + ' ' + str(self.symbols[name]['shortName']) + '[' + str(index) + ']')
-            for index, symbol in enumerate(self.symbols[name]['sym'])]
+        for index, symbol in enumerate(self.symbols[name]['sym']):
+            lines.append('#define ' + str(symbol) + ' ' + str(
+                self.symbols[name]['shortName']) + '[' + str(index) + ']')
 
         with open(os.path.join(self.modelPath,name + '.h'), 'w') as fileout:
             fileout.write('\n'.join(lines))
@@ -1108,12 +1282,20 @@ class SbmlImporter:
 
         lines.append('')
 
-        lines.append('void ' + function + '_' + self.modelName + signature + '{')
+        lines.append('void ' + function + '_' +
+                     self.modelName + signature + '{')
 
         # function body
         body = self.getFunctionBody(function)
-        if assume_pow_positivity:
-            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line) for line in body]
+        if assume_pow_positivity \
+                and 'assume_pow_positivity' in self.functions[function].keys()\
+                and self.functions[function]['assume_pow_positivity']:
+            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line) for line
+                    in body]
+            # execute this twice to catch cases where the ending ( would be the
+            # starting (^|\W) for the following match
+            body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line) for line
+                    in body]
         self.functions[function]['body'] = body
         lines += body
         lines.append('}')
@@ -1145,8 +1327,20 @@ class SbmlImporter:
             symbol = self.functions[function]['sym']
         lines = []
 
-
-        if('sensitivity' in self.functions[function].keys()):
+        if function == 'sx0_fixedParameters':
+            # here we specifically want to overwrite some of the values with 0
+            lines.append(' ' * 4 + 'switch(ip) {')
+            for ipar in range(0, self.n_parameters):
+                lines.append(' ' * 8 + 'case ' + str(ipar) + ':')
+                for index, formula in enumerate(
+                        self.functions['x0_fixedParameters']['sym']
+                ):
+                    if formula != 0 and formula != 0.0:
+                        lines.append(' ' * 12
+                                     + 'sx0[' + str(index) + '] = 0.0;')
+                lines.append(' ' * 12 + 'break;')
+            lines.append('}')
+        elif('sensitivity' in self.functions[function].keys()):
             lines.append(' '*4 + 'switch(ip) {')
             for ipar in range(0,self.n_parameters):
                 lines.append(' ' * 8 + 'case ' + str(ipar) + ':')
@@ -1220,27 +1414,47 @@ class SbmlImporter:
                         'NEVENT': '0',
                         'NOBJECTIVE': '1',
                         'NW': str(len(self.symbols['flux']['sym'])),
-                        'NDWDDX': str(len(self.functions['dwdx']['sparseList'])),
-                        'NDWDP': str(len(self.functions['dwdp']['sparseList'])),
-                        'NNZ': str(len(self.functions['JSparse']['sparseList'])),
+                        'NDWDDX':
+                            str(len(self.functions['dwdx']['sparseList'])),
+                        'NDWDP':
+                            str(len(self.functions['dwdp']['sparseList'])),
+                        'NNZ':
+                            str(len(self.functions['JSparse']['sparseList'])),
                         'UBW': str(self.n_species),
                         'LBW': str(self.n_species),
                         'NP': str(self.n_parameters),
                         'NK': str(self.n_fixed_parameters),
                         'O2MODE': 'amici::SecondOrderMode::none',
                         'PARAMETERS': str(self.parameterValues)[1:-1],
-                        'FIXED_PARAMETERS': str(self.fixedParameterValues)[1:-1],
-                        'PARAMETER_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('parameter'),
-                        'STATE_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('species'),
-                        'FIXED_PARAMETER_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('fixed_parameter'),
-                        'OBSERVABLE_NAMES_INITIALIZER_LIST': self.getSymbolNameInitializerList('observable'),
-                        'PARAMETER_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('parameter'),
-                        'STATE_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('species'),
-                        'FIXED_PARAMETER_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('fixed_parameter'),
-                        'OBSERVABLE_IDS_INITIALIZER_LIST': self.getSymbolIDInitializerList('observable'),
+                        'FIXED_PARAMETERS':
+                            str(self.fixedParameterValues)[1:-1],
+                        'PARAMETER_NAMES_INITIALIZER_LIST':
+                            self.getSymbolNameInitializerList('parameter'),
+                        'STATE_NAMES_INITIALIZER_LIST':
+                            self.getSymbolNameInitializerList('species'),
+                        'FIXED_PARAMETER_NAMES_INITIALIZER_LIST':
+                            self.getSymbolNameInitializerList(
+                                'fixed_parameter'
+                            ),
+                        'OBSERVABLE_NAMES_INITIALIZER_LIST':
+                            self.getSymbolNameInitializerList('observable'),
+                        'PARAMETER_IDS_INITIALIZER_LIST':
+                            self.getSymbolIDInitializerList('parameter'),
+                        'STATE_IDS_INITIALIZER_LIST':
+                            self.getSymbolIDInitializerList('species'),
+                        'FIXED_PARAMETER_IDS_INITIALIZER_LIST':
+                            self.getSymbolIDInitializerList('fixed_parameter'),
+                        'OBSERVABLE_IDS_INITIALIZER_LIST':
+                            self.getSymbolIDInitializerList('observable'),
+                        'REINIT_FIXPAR_INITCOND':
+                            'true' if self.allow_reinit_fixpar_initcond else
+                            'false',
                         }
-        applyTemplate(os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
-                      os.path.join(self.modelPath, str(self.modelName) + '.h'), templateData)
+        applyTemplate(os.path.join(amiciSrcPath,
+                                   'model_header.ODE_template.h'),
+                      os.path.join(self.modelPath,
+                                   str(self.modelName) + '.h'),
+                                   templateData)
 
     def getSymbolNameInitializerList(self, name):
         """Get SBML name initializer list for vector of names for the given model entity
@@ -1280,12 +1494,9 @@ class SbmlImporter:
         Raises:
 
         """
-        sources = [self.modelName + '_' + function + '.cpp ' if self.functions[function]['body'] is not None else ''
-                    for function in self.functions.keys() ]
-        try:
-            sources.remove('')
-        except:
-            pass
+        sources = [self.modelName + '_' + function + '.cpp '
+                   for function in self.functions.keys()
+                   if self.functions[function]['body'] is not None]
         templateData = {'MODELNAME': self.modelName,
                         'SOURCES': '\n'.join(sources)}
         applyTemplate(os.path.join(amiciSrcPath, 'CMakeLists.template.txt'),
@@ -1486,28 +1697,37 @@ class TemplateAmici(Template):
     delimiter = 'TPL_'
 
 
-def assignmentRules2observables(sbml_model, filter_function=lambda *_: True):
+def assignmentRules2observables(sbml_model,
+                                filter_function=lambda *_: True):
     """Turn assignment rules into observables.
 
     Arguments:
         sbml_model: an sbml Model instance
-        filter_function: callback function taking assignment variable as input and returning True/False to indicate if the respective rule should be turned into an observable
+        filter_function: callback function taking assignment variable as input
+        and returning True/False to indicate if the respective rule should be
+        turned into an observable
 
     Returns:
-        A dictionary(observableId:{'name':observableNamem,'formula':formulaString})
+        A dictionary(observableId:{'name':observableNamem,
+                                   'formula':formulaString})
 
     Raises:
 
     """
     observables = {}
     for p in sbml_model.getListOfParameters():
-        parameterId = p.getId()
-        if filter_function(parameterId):
-            observables[parameterId] = {'name': p.getName(), 'formula': sbml_model.getAssignmentRuleByVariable(parameterId).getFormula()}
+        parameter_id = p.getId()
+        if filter_function(p):
+            observables[parameter_id] = {
+                'name': p.getName(),
+                'formula': sbml_model.getAssignmentRuleByVariable(
+                    parameter_id
+                ).getFormula()
+            }
 
-    for parameterId in observables:
-        sbml_model.removeRuleByVariable(parameterId)
-        sbml_model.removeParameter(parameterId)
+    for parameter_id in observables:
+        sbml_model.removeRuleByVariable(parameter_id)
+        sbml_model.removeParameter(parameter_id)
 
     return observables
 
@@ -1530,7 +1750,7 @@ def constantSpeciesToParameters(sbml_model):
         if species.getHasOnlySubstanceUnits():
             print("Ignoring %s which has only substance units. Conversion not yet implemented." % species.getId())
             continue
-        if np.isnan(species.getInitialConcentration()):
+        if math.isnan(species.getInitialConcentration()):
             print("Ignoring %s which has no initial concentration. Amount conversion not yet implemented." % species.getId())
             continue
         transformable.append(species.getId())
