@@ -50,7 +50,7 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
-    - pip3 install --user --upgrade pip setuptools wheel pkgconfig doxypypy scipy
+    - pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy # pinning pip because of https://github.com/pypa/pip/issues/5240
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
@@ -66,6 +66,7 @@ script:
     - cd $BASE_DIR/build
     - make python-tests
     - cd $BASE_DIR
+    - scripts/runNotebook.sh python/examples/example_*/
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-doxygen.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then ./scripts/run-SBMLTestsuite.sh; fi
