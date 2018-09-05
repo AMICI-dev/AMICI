@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
 import sys
-import h5py
 import numpy as np
 
-from example import AmiciExample, dict2attrs
+from example import AmiciExample
 
 class ExampleNestedEvents(AmiciExample):
   
@@ -19,7 +18,7 @@ class ExampleNestedEvents(AmiciExample):
         self.modelOptions['theta'] = np.log10([0.1, 1000, 2, 8e-1, 1.6])
         self.modelOptions['ts'] = np.linspace(0, 20, 100)
         self.modelOptions['pscale'] = 2
-        self.modelOptions['qpositivex'] = [0] * self.numX 
+        #self.modelOptions['qpositivex'] = [0] * self.numX
     
         self.solverOptions['atol'] = 1e-12
         self.solverOptions['maxsteps'] = 1e4

@@ -317,6 +317,14 @@ class ExpData {
     /** condition-specific parameters for pre-equilibration of size Model::nk() or empty.
      * Overrides Solver::newton_preeq */
     std::vector<realtype> fixedParametersPreequilibration;
+    /** condition-specific parameters for pre-simulation of size Model::nk() or empty. */
+    std::vector<realtype> fixedParametersPresimulation;
+    /**
+     * @brief duration of pre-simulation
+     * if this is > 0, presimualation will be performed from (model->t0 - t_presim) to model->t0
+     * using the fixedParameters in fixedParametersPresimulation
+     */
+    realtype t_presim = 0;
 
 protected:
     
