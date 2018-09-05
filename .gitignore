@@ -211,3 +211,5 @@ python/sdist/amici/amici_wrap.cxx
 python/sdist/amici/amici_without_hdf5.py
 python/sdist/amici/amici_wrap_without_hdf5.cxx
 
+testSuite.txt
+
