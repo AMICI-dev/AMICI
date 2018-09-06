@@ -35,11 +35,13 @@ def getAmiciLibs():
 cxx_flags = ['-std=c++11']
 linker_flags = []
 
-h5pkgcfg = getHdf5Config()
-blaspkgcfg = getBlasConfig()
-
 addCoverageFlagsIfRequired(cxx_flags, linker_flags)
 addDebugFlagsIfRequired(cxx_flags, linker_flags)
+
+h5pkgcfg = getHdf5Config()
+
+blaspkgcfg = getBlasConfig()
+linker_flags.extend(getattr(blaspkgcfg, 'extra_link_args', []))
 
 libraries = [*getAmiciLibs(),
              *blaspkgcfg['libraries'],
@@ -69,6 +71,7 @@ model_module = Extension('TPL_MODELNAME._TPL_MODELNAME',
                          libraries = libraries,
                          library_dirs=[
                              *h5pkgcfg['library_dirs'],
+                             *blaspkgcfg['library_dirs'],
                              os.path.join(amici_path, 'libs')],
                          swig_opts=['-c++', '-modern', '-outdir', 'TPL_MODELNAME',
                                     '-I%s' % os.path.join(amici_path, 'swig'),

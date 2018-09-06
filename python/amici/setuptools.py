@@ -2,6 +2,7 @@
 
 import os
 import platform
+import shlex
 
 try:
     import pkgconfig # optional
@@ -10,7 +11,8 @@ except ModuleNotFoundError:
 
 
 def getBlasConfig():
-    """Find cblas
+    """
+    Find CBLAS-compatible BLAS
 
     Arguments:
 
@@ -20,21 +22,22 @@ def getBlasConfig():
 
     """
 
-    # Find cblas
     blaspkgcfg = {'include_dirs': [],
                   'library_dirs': [],
                   'libraries': [],
-                  'define_macros': []
+                  'define_macros': [],
+                  'extra_compile_args' : [],
+                  'extra_link_args' : []
                   }
-    
+
     if platform.system() == 'Linux':
         blaspkgcfg['libraries'] = ['cblas']
     
-    if 'BLAS_INCDIR' in os.environ:
-        blaspkgcfg['include_dirs'].extend(os.environ['BLAS_INCDIR'].split(' '))
+    if 'BLAS_CFLAGS' in os.environ:
+        blaspkgcfg['extra_compile_args'].extend(shlex.split(os.environ['BLAS_CFLAGS']))
     
-    if 'BLAS_LIB' in os.environ:
-        blaspkgcfg['libraries'].extend(os.environ['BLAS_LIB'].split(' '))
+    if 'BLAS_LIBS' in os.environ:
+        blaspkgcfg['extra_link_args'].extend(shlex.split(os.environ['BLAS_LIBS']))
 
     return blaspkgcfg
 

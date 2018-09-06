@@ -16,7 +16,6 @@ help(modelName)
 ```
 
 Attributes:
-    dirname: absolute path to parent directory of this file
     amici_path: absolute root path of the amici repository
     amiciSwigPath: absolute path of the amici swig directory
     amiciSrcPath: absolute path of the amici source directory
