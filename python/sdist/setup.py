@@ -27,9 +27,9 @@ import numpy as np # for include directory
 import setup_clibs  # Must run from within containing directory
 import shutil
 
-from amici.setuptools import (getBlasConfig, 
-                              getHdf5Config, 
-                              addCoverageFlagsIfRequired, 
+from amici.setuptools import (getBlasConfig,
+                              getHdf5Config,
+                              addCoverageFlagsIfRequired,
                               addDebugFlagsIfRequired)
 
 # Extra compiler flags

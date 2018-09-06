@@ -1,17 +1,15 @@
+"""AMICI model package setup"""
+
 from setuptools import find_packages
 from distutils.core import setup, Extension
 from distutils import sysconfig
 import os
 from amici import amici_path
 
-from amici.setuptools import (getBlasConfig, 
-                              getHdf5Config, 
-                              addCoverageFlagsIfRequired, 
+from amici.setuptools import (getBlasConfig,
+                              getHdf5Config,
+                              addCoverageFlagsIfRequired,
                               addDebugFlagsIfRequired)
-
-"""
-AMICI model package setup
-"""
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 

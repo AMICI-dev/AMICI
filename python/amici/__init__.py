@@ -22,7 +22,7 @@ Attributes:
     amiciSrcPath: absolute path of the amici source directory
     amiciModulePath: absolute root path of the amici module
     hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
-    has_clibs: boolean indicating if this is the full package with swig 
+    has_clibs: boolean indicating if this is the full package with swig
                interface or the raw package without
 """
 

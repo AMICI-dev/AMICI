@@ -11,7 +11,7 @@ except ModuleNotFoundError:
 
 def getBlasConfig():
     """Find cblas
-    
+
     Arguments:
 
     Returns:
@@ -49,7 +49,6 @@ def getHdf5Config():
     Raises:
 
     """
-    hdf5found = False
     if pkgconfig:
         h5pkgcfg = pkgconfig.parse('hdf5')
         # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true although
@@ -65,13 +64,13 @@ def getHdf5Config():
                 }
     
     # try for hdf5 in standard locations
-    hdf5_include_dir_hints = ['/usr/include/hdf5/serial', 
-                              '/usr/local/include', 
+    hdf5_include_dir_hints = ['/usr/include/hdf5/serial',
+                              '/usr/local/include',
                               '/usr/include', # travis ubuntu xenial
                               '/usr/local/Cellar/hdf5/1.10.2_1/include'] # travis macOS
     hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/', # travis ubuntu xenial
-                              '/usr/lib/x86_64-linux-gnu/hdf5/serial', 
-                              '/usr/local/lib', 
+                              '/usr/lib/x86_64-linux-gnu/hdf5/serial',
+                              '/usr/local/lib',
                               '/usr/local/Cellar/hdf5/1.10.2_1/lib'] # travis macOS
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
