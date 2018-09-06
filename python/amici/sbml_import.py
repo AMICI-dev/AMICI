@@ -1611,7 +1611,9 @@ class SbmlImporter:
 
         """
         try:
-            return self.codeprinter.doprint(math)
+            ret = self.codeprinter.doprint(math)
+            ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
+            return ret
         except:
             raise SBMLException('Encountered unsupported function in expression "' + str(math) + '"!')
 
