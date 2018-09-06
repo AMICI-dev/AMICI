@@ -22,22 +22,27 @@ Attributes:
     amiciSrcPath: absolute path of the amici source directory
     amiciModulePath: absolute root path of the amici module
     hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
+    has_clibs: boolean indicating if this is the full package with swig 
+               interface or the raw package without
 """
 
 import os
 
-# If this file is inside the amici package, import swig interface,
-# otherwise we are inside the git repository, then don't
-dirname = os.path.dirname(__file__)
 hdf5_enabled = False
-if os.path.isfile(os.path.join(dirname, 'amici.py')):
+has_clibs = False
+
+try:
+    from . import amici
+    from .amici import *
+    hdf5_enabled = True
+    has_clibs = True
+except (ImportError, ModuleNotFoundError, AttributeError):
     try:
-        from . import amici
-        from .amici import *
-        hdf5_enabled = True
-    except AttributeError:
         from . import amici_without_hdf5 as amici
         from .amici_without_hdf5 import *
+        has_clibs = True
+    except (ImportError, ModuleNotFoundError, AttributeError):
+        pass
 
 # determine package installation path, or, if used directly from git
 # repository, get repository root
@@ -51,12 +56,14 @@ amiciSwigPath = os.path.join(amici_path, 'swig')
 amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
 
-from .sbml_import import SbmlImporter, assignmentRules2observables, \
-    constantSpeciesToParameters
-from .numpy import rdataToNumPyArrays, edataToNumPyArrays
-from .pandas import getEdataFromDataFrame, \
-    getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
-    getSimulationStatesAsDataFrame, getResidualsAsDataFrame
+if has_clibs:
+    # these module require the swig interface
+    from .sbml_import import SbmlImporter, assignmentRules2observables, \
+        constantSpeciesToParameters
+    from .numpy import rdataToNumPyArrays, edataToNumPyArrays
+    from .pandas import getEdataFromDataFrame, \
+        getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
+        getSimulationStatesAsDataFrame, getResidualsAsDataFrame
 
 
 def runAmiciSimulation(model, solver, edata=None):

@@ -4,6 +4,15 @@ from distutils import sysconfig
 import os
 from amici import amici_path
 
+from amici.setuptools import (getBlasConfig, 
+                              getHdf5Config, 
+                              addCoverageFlagsIfRequired, 
+                              addDebugFlagsIfRequired)
+
+"""
+AMICI model package setup
+"""
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 def getModelSources():
@@ -25,22 +34,20 @@ def getAmiciLibs():
             #'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
             ]
 
-# Find HDF5
-import pkgconfig
-h5pkgcfg = pkgconfig.parse("hdf5")
-
 cxx_flags = ['-std=c++11']
-#linker_flags = ['${BLAS_LIBRARIES}']
 linker_flags = []
-if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
-    cxx_flags.extend(['-g', '-O0',  '--coverage'])
-    linker_flags.append('--coverage')
+
+h5pkgcfg = getHdf5Config()
+blaspkgcfg = getBlasConfig()
+
+addCoverageFlagsIfRequired(cxx_flags, linker_flags)
+addDebugFlagsIfRequired(cxx_flags, linker_flags)
 
 libraries = [*getAmiciLibs(),
-             'cblas',# TODO generic BLAS
+             *blaspkgcfg['libraries'],
              'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']
-sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
 
+sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
     
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
@@ -52,13 +59,14 @@ for key, value in cfg_vars.items():
 
 
 # Build shared object
-model_module = Extension('TPL_MODELNAME/_TPL_MODELNAME',
+model_module = Extension('TPL_MODELNAME._TPL_MODELNAME',
                          sources=sources,
                          include_dirs=[os.getcwd(),
                                        os.path.join(amici_path, 'include'), 
                                        os.path.join(amici_path, 'ThirdParty/sundials/include'),
                                        os.path.join(amici_path, 'ThirdParty/SuiteSparse/include'),
-                                       *h5pkgcfg['include_dirs']
+                                       *h5pkgcfg['include_dirs'],
+                                       *blaspkgcfg['include_dirs']
                                        ],
                          libraries = libraries,
                          library_dirs=[
