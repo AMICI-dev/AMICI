@@ -32,7 +32,7 @@ def getBlasConfig():
 
     if platform.system() == 'Linux':
         blaspkgcfg['libraries'] = ['cblas']
-    
+
     if 'BLAS_CFLAGS' in os.environ:
         blaspkgcfg['extra_compile_args'].extend(shlex.split(os.environ['BLAS_CFLAGS']))
     
