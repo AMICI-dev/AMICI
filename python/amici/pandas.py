@@ -4,7 +4,7 @@ import math
 import copy
 from .numpy import edataToNumPyArrays
 from amici import DoubleVector
-from amici.amici import ExpData
+from amici import ExpData
 
 def getDataObservablesAsDataFrame(model, edata_list):
     """ Write Observables from experimental data as DataFrame
