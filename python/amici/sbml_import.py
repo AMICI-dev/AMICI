@@ -1820,4 +1820,3 @@ def replaceLogAB(x):
                                                                basis = x[logStart+4 : posComma],
                                                                a = x[posComma+1 : i])
     return replaceLogAB(replacement)
-    
