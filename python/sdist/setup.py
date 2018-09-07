@@ -39,6 +39,7 @@ define_macros = []
 
 blaspkgcfg = getBlasConfig()
 amici_module_linker_flags.extend(['-l%s' % l for l in blaspkgcfg['libraries']])
+amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
 
 h5pkgcfg = getHdf5Config()
 
