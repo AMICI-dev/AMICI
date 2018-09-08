@@ -4,7 +4,7 @@ from setuptools import find_packages
 from distutils.core import setup, Extension
 from distutils import sysconfig
 import os
-from amici import amici_path
+from amici import amici_path, hdf5_enabled
 
 from amici.setuptools import (getBlasConfig,
                               getHdf5Config,
@@ -41,11 +41,11 @@ addDebugFlagsIfRequired(cxx_flags, linker_flags)
 h5pkgcfg = getHdf5Config()
 
 blaspkgcfg = getBlasConfig()
-linker_flags.extend(getattr(blaspkgcfg, 'extra_link_args', []))
+linker_flags.extend(blaspkgcfg.get('extra_link_args', []))
 
-libraries = [*getAmiciLibs(),
-             *blaspkgcfg['libraries'],
-             'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']
+libraries = [*getAmiciLibs(), *blaspkgcfg['libraries']]
+if hdf5_enabled:
+    libraries.extend(['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'])
 
 sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
     

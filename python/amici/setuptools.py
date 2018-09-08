@@ -35,7 +35,7 @@ def getBlasConfig():
 
     if 'BLAS_CFLAGS' in os.environ:
         blaspkgcfg['extra_compile_args'].extend(shlex.split(os.environ['BLAS_CFLAGS']))
-    
+
     if 'BLAS_LIBS' in os.environ:
         blaspkgcfg['extra_link_args'].extend(shlex.split(os.environ['BLAS_LIBS']))
 
