@@ -627,6 +627,12 @@ class SbmlImporter:
         rulevars = [rule.getVariable()
                                 for rule in self.sbml.getListOfRules()
                                 if rule.getFormula() != '']
+
+        reaction_ids = [
+            reaction.getId() for reaction in reactions
+            if reaction.isSetId()
+        ]
+
         for reactionIndex, reaction in enumerate(reactions):
 
             for elementList, sign in [(reaction.getListOfReactants(), -1.0),
@@ -685,7 +691,7 @@ class SbmlImporter:
                         symMath = symMath.subs(sp.sympify(element.getId()),sp.sympify(element.getStoichiometry()))
             self.fluxVector[reactionIndex] = symMath
             self.symbols['flux']['sym'][reactionIndex] = sp.sympify('w' + str(reactionIndex))
-            if any([str(symbol) in [reaction.getId() for reaction in reactions if reaction.isSetId()]
+            if any([str(symbol) in reaction_ids
                          for symbol in self.fluxVector[reactionIndex].free_symbols]):
                 raise SBMLException('Kinetic laws involving reaction ids are currently not supported!')
 
@@ -1822,4 +1828,3 @@ def replaceLogAB(x):
                                                                basis = x[logStart+4 : posComma],
                                                                a = x[posComma+1 : i])
     return replaceLogAB(replacement)
-    
