@@ -91,7 +91,8 @@ setup(
     #license = 'BSD',
     ext_modules=[model_module],
     packages=find_packages(),
-    install_requires=[],
+    # TODO: should specify amici version with which the model was generated
+    install_requires=['amici'],
     python_requires='>=3',
     package_data={
     },

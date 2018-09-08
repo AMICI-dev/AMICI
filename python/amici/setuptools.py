@@ -44,7 +44,7 @@ def getBlasConfig():
 
 def getHdf5Config():
     """Find HDF5 include dir and libs
-    
+
     Arguments:
 
     Returns:
@@ -59,13 +59,13 @@ def getHdf5Config():
         h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg and h5pkgcfg['include_dirs']
         if h5pkgcfg['found']:
             return h5pkgcfg
-        
+
     h5pkgcfg = {'include_dirs': [],
                 'library_dirs': [],
                 'libraries': [],
                 'define_macros': []
                 }
-    
+
     # try for hdf5 in standard locations
     hdf5_include_dir_hints = ['/usr/include/hdf5/serial',
                               '/usr/local/include',
@@ -83,7 +83,7 @@ def getHdf5Config():
             print('hdf5.h found in %s' % hdf5_include_dir_hint)
             h5pkgcfg['include_dirs'] = [hdf5_include_dir_hint]
             break
-    
+
     for hdf5_library_dir_hint in hdf5_library_dir_hints:
         hdf5_library_dir_found = os.path.isfile(
             os.path.join(hdf5_library_dir_hint, 'libhdf5.a'))
@@ -92,13 +92,13 @@ def getHdf5Config():
             h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
             break
     h5pkgcfg['found'] = hdf5_include_dir_found and hdf5_library_dir_found
-    
+
     return h5pkgcfg
 
 
 def addCoverageFlagsIfRequired(cxx_flags, linker_flags):
     """Add compiler and linker flags if gcov coverage requested
-    
+
     Arguments:
     cxx_flags: list
     linker_flags: list
@@ -116,7 +116,7 @@ def addCoverageFlagsIfRequired(cxx_flags, linker_flags):
 
 def addDebugFlagsIfRequired(cxx_flags, linker_flags):
     """Add compiler and linker debug flags if requested
-    
+
     Arguments:
     cxx_flags: list
     linker_flags: list
