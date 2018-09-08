@@ -207,4 +207,7 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
     if blaspkgcfg and 'include_dirs' in blaspkgcfg:
         libamici[1]['include_dirs'].extend(blaspkgcfg['include_dirs'])
 
+    if blaspkgcfg and 'extra_compile_args' in blaspkgcfg:
+        libamici[1]['cflags'].extend(blaspkgcfg['extra_compile_args'])
+
     return libamici

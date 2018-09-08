@@ -1,8 +1,15 @@
+"""AMICI model package setup"""
+
 from setuptools import find_packages
 from distutils.core import setup, Extension
 from distutils import sysconfig
 import os
-from amici import amici_path
+from amici import amici_path, hdf5_enabled
+
+from amici.setuptools import (getBlasConfig,
+                              getHdf5Config,
+                              addCoverageFlagsIfRequired,
+                              addDebugFlagsIfRequired)
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,22 +32,22 @@ def getAmiciLibs():
             #'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
             ]
 
-# Find HDF5
-import pkgconfig
-h5pkgcfg = pkgconfig.parse("hdf5")
-
 cxx_flags = ['-std=c++11']
-#linker_flags = ['${BLAS_LIBRARIES}']
 linker_flags = []
-if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
-    cxx_flags.extend(['-g', '-O0',  '--coverage'])
-    linker_flags.append('--coverage')
 
-libraries = [*getAmiciLibs(),
-             'cblas',# TODO generic BLAS
-             'hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']
+addCoverageFlagsIfRequired(cxx_flags, linker_flags)
+addDebugFlagsIfRequired(cxx_flags, linker_flags)
+
+h5pkgcfg = getHdf5Config()
+
+blaspkgcfg = getBlasConfig()
+linker_flags.extend(blaspkgcfg.get('extra_link_args', []))
+
+libraries = [*getAmiciLibs(), *blaspkgcfg['libraries']]
+if hdf5_enabled:
+    libraries.extend(['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'])
+
 sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
-
     
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
@@ -52,17 +59,19 @@ for key, value in cfg_vars.items():
 
 
 # Build shared object
-model_module = Extension('TPL_MODELNAME/_TPL_MODELNAME',
+model_module = Extension('TPL_MODELNAME._TPL_MODELNAME',
                          sources=sources,
                          include_dirs=[os.getcwd(),
                                        os.path.join(amici_path, 'include'), 
                                        os.path.join(amici_path, 'ThirdParty/sundials/include'),
                                        os.path.join(amici_path, 'ThirdParty/SuiteSparse/include'),
-                                       *h5pkgcfg['include_dirs']
+                                       *h5pkgcfg['include_dirs'],
+                                       *blaspkgcfg['include_dirs']
                                        ],
                          libraries = libraries,
                          library_dirs=[
                              *h5pkgcfg['library_dirs'],
+                             *blaspkgcfg['library_dirs'],
                              os.path.join(amici_path, 'libs')],
                          swig_opts=['-c++', '-modern', '-outdir', 'TPL_MODELNAME',
                                     '-I%s' % os.path.join(amici_path, 'swig'),
@@ -82,7 +91,8 @@ setup(
     #license = 'BSD',
     ext_modules=[model_module],
     packages=find_packages(),
-    install_requires=[],
+    # TODO: should specify amici version with which the model was generated
+    install_requires=['amici'],
     python_requires='>=3',
     package_data={
     },

@@ -295,6 +295,7 @@ class SbmlImporter:
                    sigmas=None,
                    verbose=False,
                    assume_pow_positivity=False,
+                   compiler=None
                    ):
         """Generate AMICI C++ files for the model provided to the constructor.
         
@@ -308,6 +309,7 @@ class SbmlImporter:
             verbose: more verbose output if True
             assume_pow_positivity: if set to true, a special pow function is used to avoid problems with
                                    state variables that may become negative due to numerical errors
+            compiler: distutils/setuptools compiler selection to build the python extension
 
         Returns:
 
@@ -329,7 +331,7 @@ class SbmlImporter:
         self.computeModelEquations(observables, sigmas)
         self.prepareModelFolder()
         self.generateCCode(assume_pow_positivity)
-        self.compileCCode(verbose)
+        self.compileCCode(compiler=compiler, verbose=verbose)
 
 
     def setName(self, modelName):
@@ -1190,11 +1192,12 @@ class SbmlImporter:
                     os.path.join(self.modelPath, 'main.cpp'))
 
 
-    def compileCCode(self, verbose=False):
+    def compileCCode(self, verbose=False, compiler=None):
         """Compile the generated model code
 
         Arguments:
             verbose: Make model compilation verbose
+            compiler: distutils/setuptools compiler selection to build the python extension
         Returns:
 
         Raises:
@@ -1212,6 +1215,9 @@ class SbmlImporter:
             script_args.append('--quiet')
 
         script_args.extend(['build_ext', '--build-lib=%s' % moduleDir])
+
+        if compiler is not None:
+            script_args.extend(['--compiler=%s' % compiler])
 
         # distutils.core.run_setup looks nicer, but does not let us check the
         # result easily
@@ -1617,7 +1623,9 @@ class SbmlImporter:
 
         """
         try:
-            return self.codeprinter.doprint(math)
+            ret = self.codeprinter.doprint(math)
+            ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
+            return ret
         except:
             raise SBMLException('Encountered unsupported function in expression "' + str(math) + '"!')
 

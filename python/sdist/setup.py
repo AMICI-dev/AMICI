@@ -21,71 +21,29 @@ import os
 import sys
 import glob
 import sysconfig
-import pkgconfig
 import subprocess
 from shutil import copyfile
 import numpy as np # for include directory
 import setup_clibs  # Must run from within containing directory
 import shutil
 
+from amici.setuptools import (getBlasConfig,
+                              getHdf5Config,
+                              addCoverageFlagsIfRequired,
+                              addDebugFlagsIfRequired)
+
 # Extra compiler flags
 cxx_flags = []
 amici_module_linker_flags = []
 define_macros = []
 
-# Find cblas
-blaspkgcfg = {'include_dirs': [],
-              'library_dirs': [],
-              'libraries': [],
-              'define_macros': []
-              }
-if 'BLAS_INCDIR' in os.environ:
-    blaspkgcfg['include_dirs'].extend(os.environ['BLAS_INCDIR'].split(' '))
+blaspkgcfg = getBlasConfig()
+amici_module_linker_flags.extend(['-l%s' % l for l in blaspkgcfg['libraries']])
+amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
 
-if 'BLAS_LIB' in os.environ:
-    amici_module_linker_flags.extend(os.environ['BLAS_LIB'].split(' '))
-else:
-    amici_module_linker_flags.append('-lcblas')
+h5pkgcfg = getHdf5Config()
 
-# Find HDF5 include dir and libs
-h5pkgcfg = pkgconfig.parse('hdf5')
-# NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true although
-# no libraries or include dirs are available
-hdf5found = 'include_dirs' in h5pkgcfg and h5pkgcfg['include_dirs']
-if not hdf5found:
-    h5pkgcfg = {'include_dirs': [],
-                'library_dirs': [],
-                'libraries': [],
-                'define_macros': []
-                }
-    # try for hdf5 in standard locations
-    hdf5_include_dir_hints = ['/usr/include/hdf5/serial', 
-                              '/usr/local/include', 
-                              '/usr/include', # travis ubuntu xenial
-                              '/usr/local/Cellar/hdf5/1.10.2_1/include'] # travis macOS
-    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/', # travis ubuntu xenial
-                              '/usr/lib/x86_64-linux-gnu/hdf5/serial', 
-                              '/usr/local/lib', 
-                              '/usr/local/Cellar/hdf5/1.10.2_1/lib'] # travis macOS
-
-    for hdf5_include_dir_hint in hdf5_include_dir_hints:
-        hdf5_include_dir_found = os.path.isfile(
-            os.path.join(hdf5_include_dir_hint, 'hdf5.h'))
-        if hdf5_include_dir_found:
-            print('hdf5.h found in %s' % hdf5_include_dir_hint)
-            h5pkgcfg['include_dirs'] = [hdf5_include_dir_hint]
-            break
-    
-    for hdf5_library_dir_hint in hdf5_library_dir_hints:
-        hdf5_library_dir_found = os.path.isfile(
-            os.path.join(hdf5_library_dir_hint, 'libhdf5.a'))
-        if hdf5_library_dir_found:
-            print('libhdf5.a found in %s' % hdf5_library_dir_hint)
-            h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
-            break
-    hdf5found = hdf5_include_dir_found and hdf5_library_dir_found
-
-if hdf5found:
+if h5pkgcfg['found']:
     # Manually add linker flags. The libraries passed to Extension will
     # end up in front of the clibs in the linker line and not after, where
     # they are required.
@@ -101,16 +59,8 @@ else:
         'amici/amici_wrap_without_hdf5.cxx',  # swig interface
     ]
 
-# Enable coverage?
-if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
-    print("ENABLE_GCOV_COVERAGE was set to TRUE. Building AMICI with coverage symbols.")
-    cxx_flags.extend(['-g', '-O0',  '--coverage'])
-    amici_module_linker_flags.extend(['--coverage','-g'])
-
-if 'ENABLE_AMICI_DEBUGGING' in os.environ and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
-    print("ENABLE_AMICI_DEBUGGING was set to TRUE. Building AMICI with debug symbols.")
-    cxx_flags.extend(['-g', '-O0'])
-    amici_module_linker_flags.extend(['-g'])
+addCoverageFlagsIfRequired(cxx_flags, amici_module_linker_flags)
+addDebugFlagsIfRequired(cxx_flags, amici_module_linker_flags)
 
 libamici = setup_clibs.getLibAmici(
     h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg, extra_compiler_flags=cxx_flags)
@@ -119,7 +69,7 @@ libsuitesparse = setup_clibs.getLibSuiteSparse(extra_compiler_flags=cxx_flags)
 
 # Build shared object
 amici_module = Extension(
-    name='amici/_amici',
+    name='amici._amici',
     sources=extension_sources,
     include_dirs=['amici/include',
                   *libsundials[1]['include_dirs'],
@@ -315,7 +265,7 @@ def main():
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
-        install_requires=['symengine', 'python-libsbml', 'h5py', 'pkgconfig', 'pandas'],
+        install_requires=['symengine', 'python-libsbml', 'h5py', 'pandas'],
         python_requires='>=3',
         package_data={
             'amici': ['amici/include/amici/*',
