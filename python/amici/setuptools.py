@@ -22,6 +22,12 @@ def getBlasConfig():
 
     """
 
+    if pkgconfig:
+        blaspkgcfg = pkgconfig.parse('cblas')
+        blaspkgcfg['found'] = 'include_dirs' in blaspkgcfg and blaspkgcfg['include_dirs']
+        if blaspkgcfg['found']:
+            return blaspkgcfg
+
     blaspkgcfg = {'include_dirs': [],
                   'library_dirs': [],
                   'libraries': [],
