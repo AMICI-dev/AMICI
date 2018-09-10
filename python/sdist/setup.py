@@ -97,6 +97,7 @@ class my_develop(develop):
     def run(self):
 
         self.run_command('build')
+        compileSwig()
         develop.run(self)
 
 class my_install_lib(install_lib):
@@ -182,37 +183,8 @@ class my_sdist(sdist):
 
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without
-            swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
-            swig_cmd = self.findSwig()
-            sp = subprocess.run([swig_cmd,
-                                 '-c++',
-                                 '-python',
-                                 '-Iamici/swig', '-Iamici/include',
-                                 '-DAMICI_SWIG_WITHOUT_HDF5',
-                                 '-outdir', swig_outdir,
-                                 '-o', 'amici/amici_wrap_without_hdf5.cxx',
-                                 'amici/swig/amici.i'])
-            assert(sp.returncode == 0)
-            shutil.move(os.path.join(swig_outdir, 'amici.py'),
-                        os.path.join(swig_outdir, 'amici_without_hdf5.py'))
-            sp = subprocess.run([swig_cmd,
-                                 '-c++',
-                                 '-python',
-                                 '-Iamici/swig', '-Iamici/include',
-                                 '-outdir', swig_outdir,
-                                 '-o', 'amici/amici_wrap.cxx',
-                                 'amici/swig/amici.i'])
-            assert(sp.returncode == 0)
+            compileSwig()
 
-    def findSwig(self):
-        """Get name of SWIG executable
-
-        We need version 3.0.
-        Probably we should try some default paths and names, but this should do the trick for now. 
-        Debian/Ubuntu systems have swig3.0 ('swig' is older versions), OSX has swig 3.0 as 'swig'."""
-        if sys.platform != 'linux':
-            return 'swig'
-        return 'swig3.0'
 
     def saveGitVersion(self):
         """Create file with extended version string
@@ -304,6 +276,40 @@ def main():
         ],
     )
 
+def compileSwig():
+    """Compile the swig python interface to amici
+    """
+    swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
+    swig_cmd = findSwig()
+    sp = subprocess.run([swig_cmd,
+                         '-c++',
+                         '-python',
+                         '-Iamici/swig', '-Iamici/include',
+                         '-DAMICI_SWIG_WITHOUT_HDF5',
+                         '-outdir', swig_outdir,
+                         '-o', 'amici/amici_wrap_without_hdf5.cxx',
+                         'amici/swig/amici.i'])
+    assert (sp.returncode == 0)
+    shutil.move(os.path.join(swig_outdir, 'amici.py'),
+                os.path.join(swig_outdir, 'amici_without_hdf5.py'))
+    sp = subprocess.run([swig_cmd,
+                         '-c++',
+                         '-python',
+                         '-Iamici/swig', '-Iamici/include',
+                         '-outdir', swig_outdir,
+                         '-o', 'amici/amici_wrap.cxx',
+                         'amici/swig/amici.i'])
+    assert (sp.returncode == 0)
+
+def findSwig():
+    """Get name of SWIG executable
+
+    We need version 3.0.
+    Probably we should try some default paths and names, but this should do the trick for now.
+    Debian/Ubuntu systems have swig3.0 ('swig' is older versions), OSX has swig 3.0 as 'swig'."""
+    if sys.platform != 'linux':
+        return 'swig'
+    return 'swig3.0'
 
 if __name__ == '__main__':
     main()
