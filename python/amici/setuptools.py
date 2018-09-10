@@ -23,8 +23,11 @@ def getBlasConfig():
     """
 
     if pkgconfig:
-        blaspkgcfg = pkgconfig.parse('cblas')
-        blaspkgcfg['found'] = 'library_dirs' in blaspkgcfg and blaspkgcfg['library_dirs']
+        blaspkgcfg = pkgconfig.parse('clbas')
+        # NOTE: Cannot use pkgconfig.exists('cblas'), since this is true
+        # although no libraries or include dirs are available
+        blaspkgcfg['found'] = 'include_dirs' in blaspkgcfg \
+                              and blaspkgcfg['include_dirs']
         if blaspkgcfg['found']:
             blaspkgcfg['extra_compile_args'] = pkgconfig.cflags('cblas')
             blaspkgcfg['extra_link_args'] = pkgconfig.libs('cblas')
@@ -42,10 +45,14 @@ def getBlasConfig():
         blaspkgcfg['libraries'] = ['cblas']
 
     if 'BLAS_CFLAGS' in os.environ:
-        blaspkgcfg['extra_compile_args'].extend(shlex.split(os.environ['BLAS_CFLAGS']))
+        blaspkgcfg['extra_compile_args'].extend(
+            shlex.split(os.environ['BLAS_CFLAGS'])
+        )
 
     if 'BLAS_LIBS' in os.environ:
-        blaspkgcfg['extra_link_args'].extend(shlex.split(os.environ['BLAS_LIBS']))
+        blaspkgcfg['extra_link_args'].extend(
+            shlex.split(os.environ['BLAS_LIBS'])
+        )
 
     return blaspkgcfg
 
@@ -62,9 +69,10 @@ def getHdf5Config():
     """
     if pkgconfig:
         h5pkgcfg = pkgconfig.parse('hdf5')
-        # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true although
-        # no libraries or include dirs are available
-        h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg and h5pkgcfg['include_dirs']
+        # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true
+        # althoughno libraries or include dirs are available
+        h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg \
+                            and h5pkgcfg['include_dirs']
         if h5pkgcfg['found']:
             return h5pkgcfg
 
@@ -75,14 +83,18 @@ def getHdf5Config():
                 }
 
     # try for hdf5 in standard locations
-    hdf5_include_dir_hints = ['/usr/include/hdf5/serial',
-                              '/usr/local/include',
-                              '/usr/include', # travis ubuntu xenial
-                              '/usr/local/Cellar/hdf5/1.10.2_1/include'] # travis macOS
-    hdf5_library_dir_hints = ['/usr/lib/x86_64-linux-gnu/', # travis ubuntu xenial
-                              '/usr/lib/x86_64-linux-gnu/hdf5/serial',
-                              '/usr/local/lib',
-                              '/usr/local/Cellar/hdf5/1.10.2_1/lib'] # travis macOS
+    hdf5_include_dir_hints = [
+        '/usr/include/hdf5/serial',
+        '/usr/local/include',
+        '/usr/include',  # travis ubuntu xenial
+        '/usr/local/Cellar/hdf5/1.10.2_1/include'  # travis macOS
+    ]
+    hdf5_library_dir_hints = [
+        '/usr/lib/x86_64-linux-gnu/',  # travis ubuntu xenial
+        '/usr/lib/x86_64-linux-gnu/hdf5/serial',
+        '/usr/local/lib',
+        '/usr/local/Cellar/hdf5/1.10.2_1/lib'  # travis macOS
+    ]
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
@@ -116,8 +128,10 @@ def addCoverageFlagsIfRequired(cxx_flags, linker_flags):
     Raises:
 
     """
-    if 'ENABLE_GCOV_COVERAGE' in os.environ and os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
-        print("ENABLE_GCOV_COVERAGE was set to TRUE. Building AMICI with coverage symbols.")
+    if 'ENABLE_GCOV_COVERAGE' in os.environ and \
+            os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
+        print("ENABLE_GCOV_COVERAGE was set to TRUE."
+              " Building AMICI with coverage symbols.")
         cxx_flags.extend(['-g', '-O0',  '--coverage'])
         linker_flags.extend(['--coverage','-g'])
 
@@ -134,9 +148,9 @@ def addDebugFlagsIfRequired(cxx_flags, linker_flags):
     Raises:
 
     """
-    if 'ENABLE_AMICI_DEBUGGING' in os.environ and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
-        print("ENABLE_AMICI_DEBUGGING was set to TRUE. Building AMICI with debug symbols.")
+    if 'ENABLE_AMICI_DEBUGGING' in os.environ and \
+            os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
+        print("ENABLE_AMICI_DEBUGGING was set to TRUE."
+              " Building AMICI with debug symbols.")
         cxx_flags.extend(['-g', '-O0'])
         linker_flags.extend(['-g'])
-
-    
