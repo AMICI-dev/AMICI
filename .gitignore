@@ -213,3 +213,5 @@ python/sdist/amici/amici_wrap_without_hdf5.cxx
 
 testSuite.txt
 
+python/sdist/build/*
+*.so

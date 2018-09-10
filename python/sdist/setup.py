@@ -16,6 +16,7 @@ from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.sdist import sdist
 from setuptools.command.install_lib import install_lib
+from setuptools.command.develop import develop
 
 import os
 import sys
@@ -90,6 +91,13 @@ amici_module = Extension(
     extra_link_args=amici_module_linker_flags
 )
 
+
+class my_develop(develop):
+    """Custom develop to build clibs"""
+    def run(self):
+
+        self.run_command('build')
+        develop.run(self)
 
 class my_install_lib(install_lib):
     """Custom install to allow preserving of debug symbols"""
@@ -248,7 +256,8 @@ def main():
         cmdclass={
             'sdist': my_sdist,
             'build_ext': my_build_ext,
-            'install_lib': my_install_lib
+            'install_lib': my_install_lib,
+            'develop': my_develop,
         },
         version=getPackageVersion(),
         description='Advanced multi-language Interface to CVODES and IDAS (%s)',
