@@ -75,6 +75,7 @@ amici_module = Extension(
                   *libsundials[1]['include_dirs'],
                   *libsuitesparse[1]['include_dirs'],
                   *h5pkgcfg['include_dirs'],
+                  *blaspkgcfg['include_dirs'],
                   np.get_include()
                   ],
     # Cannot use here, see above
@@ -84,6 +85,7 @@ amici_module = Extension(
     define_macros=define_macros,
     library_dirs=[
         *h5pkgcfg['library_dirs'],
+        *blaspkgcfg['library_dirs'],
         'amici/libs/',  # clib target directory
     ],
     extra_compile_args=['-std=c++11', *cxx_flags],

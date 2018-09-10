@@ -23,12 +23,8 @@ def getBlasConfig():
     """
 
     if pkgconfig:
-        blaspkgcfg = pkgconfig.parse('cblas')
-        # NOTE: Cannot use pkgconfig.exists('cblas'), since this is true
-        # although no libraries or include dirs are available
-        blaspkgcfg['found'] = 'include_dirs' in blaspkgcfg \
-                              and blaspkgcfg['include_dirs']
-        if blaspkgcfg['found']:
+        if pkgconfig.exists('cblas'):
+            blaspkgcfg = pkgconfig.parse('cblas')
             blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
             blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
             return blaspkgcfg
@@ -37,8 +33,8 @@ def getBlasConfig():
                   'library_dirs': [],
                   'libraries': [],
                   'define_macros': [],
-                  'extra_compile_args' : [],
-                  'extra_link_args' : []
+                  'extra_compile_args': [],
+                  'extra_link_args': []
                   }
 
     if platform.system() == 'Linux':
