@@ -96,8 +96,9 @@ class my_develop(develop):
     """Custom develop to build clibs"""
     def run(self):
 
+        generateSwigInterfaceFiles()
         self.run_command('build')
-        compileSwig()
+
         develop.run(self)
 
 class my_install_lib(install_lib):
@@ -183,7 +184,7 @@ class my_sdist(sdist):
 
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without
-            compileSwig()
+            generateSwigInterfaceFiles()
 
 
     def saveGitVersion(self):
@@ -276,7 +277,8 @@ def main():
         ],
     )
 
-def compileSwig():
+
+def generateSwigInterfaceFiles():
     """Compile the swig python interface to amici
     """
     swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
@@ -301,6 +303,7 @@ def compileSwig():
                          'amici/swig/amici.i'])
     assert (sp.returncode == 0)
 
+
 def findSwig():
     """Get name of SWIG executable
 
@@ -310,6 +313,7 @@ def findSwig():
     if sys.platform != 'linux':
         return 'swig'
     return 'swig3.0'
+
 
 if __name__ == '__main__':
     main()
