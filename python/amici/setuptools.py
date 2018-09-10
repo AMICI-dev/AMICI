@@ -29,8 +29,8 @@ def getBlasConfig():
         blaspkgcfg['found'] = 'include_dirs' in blaspkgcfg \
                               and blaspkgcfg['include_dirs']
         if blaspkgcfg['found']:
-            blaspkgcfg['extra_compile_args'] = pkgconfig.cflags('cblas')
-            blaspkgcfg['extra_link_args'] = pkgconfig.libs('cblas')
+            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
+            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
             return blaspkgcfg
 
     blaspkgcfg = {'include_dirs': [],
