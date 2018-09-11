@@ -61,8 +61,21 @@ else:
         'amici/amici_wrap_without_hdf5.cxx',  # swig interface
     ]
 
-addCoverageFlagsIfRequired(cxx_flags, amici_module_linker_flags)
-addDebugFlagsIfRequired(cxx_flags, amici_module_linker_flags)
+force_debug = False
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'develop':
+        force_debug = True
+
+addCoverageFlagsIfRequired(
+    cxx_flags,
+    amici_module_linker_flags,
+)
+
+addDebugFlagsIfRequired(
+    cxx_flags,
+    amici_module_linker_flags,
+    force=force_debug,
+)
 
 libamici = setup_clibs.getLibAmici(
     h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg, extra_compiler_flags=cxx_flags)
