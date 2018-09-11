@@ -25,13 +25,6 @@ def getBlasConfig():
 
     """
 
-    if pkgconfig:
-        if pkgconfig.exists('cblas'):
-            blaspkgcfg = pkgconfig.parse('cblas')
-            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
-            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
-            return blaspkgcfg
-
     blaspkgcfg = {'include_dirs': [],
                   'library_dirs': [],
                   'libraries': [],
@@ -40,8 +33,13 @@ def getBlasConfig():
                   'extra_link_args': []
                   }
 
-    if platform.system() == 'Linux':
-        blaspkgcfg['libraries'] = ['cblas']
+    if pkgconfig:
+        if pkgconfig.exists('cblas'):
+            blaspkgcfg = pkgconfig.parse('cblas')
+            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
+            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
+
+    if platform.system() in ['Linux', 'Darwin']:
         blaspkgcfg['extra_link_args'] = ['-lcblas']
 
     if 'BLAS_CFLAGS' in os.environ:

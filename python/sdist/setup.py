@@ -33,7 +33,6 @@ from amici.setuptools import (
     addCoverageFlagsIfRequired,
     addDebugFlagsIfRequired,
     generateSwigInterfaceFiles,
-    findSwig
 )
 
 # Extra compiler flags
