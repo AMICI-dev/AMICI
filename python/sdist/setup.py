@@ -26,12 +26,15 @@ import subprocess
 from shutil import copyfile
 import numpy as np # for include directory
 import setup_clibs  # Must run from within containing directory
-import shutil
 
-from amici.setuptools import (getBlasConfig,
-                              getHdf5Config,
-                              addCoverageFlagsIfRequired,
-                              addDebugFlagsIfRequired)
+from amici.setuptools import (
+    getBlasConfig,
+    getHdf5Config,
+    addCoverageFlagsIfRequired,
+    addDebugFlagsIfRequired,
+    generateSwigInterfaceFiles,
+    findSwig
+)
 
 # Extra compiler flags
 cxx_flags = []
@@ -98,9 +101,10 @@ class my_develop(develop):
     def run(self):
 
         generateSwigInterfaceFiles()
-        self.run_command('build')
 
+        self.run_command('build')
         develop.run(self)
+
 
 class my_install_lib(install_lib):
     """Custom install to allow preserving of debug symbols"""
@@ -133,6 +137,8 @@ class my_build_ext(build_ext):
         """
 
         if not self.dry_run:  # --dry-run
+            libraries = []
+            build_clib = ''
             if self.distribution.has_c_libraries():
                 # get the previously built static libraries
                 build_clib = self.get_finalized_command('build_clib')
@@ -141,14 +147,19 @@ class my_build_ext(build_ext):
 
             # Module build directory where we want to copy the generated libs
             # to
+            if self.inplace == 0:
+                build_dir = self.build_lib
+            else:
+                build_dir = os.getcwd()
 
-            target_dir = os.path.join(self.build_lib, 'amici', 'libs')
+            target_dir = os.path.join(build_dir, 'amici', 'libs')
             self.mkpath(target_dir)
 
             # Copy the generated libs
             for lib in libraries:
-                libfilenames = glob.glob('%s%s*%s.*' %
-                                         (build_clib.build_clib, os.sep, lib))
+                libfilenames = glob.glob(
+                    '%s%s*%s.*' % (build_clib.build_clib, os.sep, lib)
+                )
                 assert len(
                     libfilenames) == 1, "Found unexpected number of files: " % libfilenames
 
@@ -277,44 +288,6 @@ def main():
             'Topic :: Scientific/Engineering :: Bio-Informatics',
         ],
     )
-
-
-def generateSwigInterfaceFiles():
-    """Compile the swig python interface to amici
-    """
-    swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
-    swig_cmd = findSwig()
-    sp = subprocess.run([swig_cmd,
-                         '-c++',
-                         '-python',
-                         '-Iamici/swig', '-Iamici/include',
-                         '-DAMICI_SWIG_WITHOUT_HDF5',
-                         '-outdir', swig_outdir,
-                         '-o', 'amici/amici_wrap_without_hdf5.cxx',
-                         'amici/swig/amici.i'])
-    assert (sp.returncode == 0)
-    shutil.move(os.path.join(swig_outdir, 'amici.py'),
-                os.path.join(swig_outdir, 'amici_without_hdf5.py'))
-    sp = subprocess.run([swig_cmd,
-                         '-c++',
-                         '-python',
-                         '-Iamici/swig', '-Iamici/include',
-                         '-outdir', swig_outdir,
-                         '-o', 'amici/amici_wrap.cxx',
-                         'amici/swig/amici.i'])
-    assert (sp.returncode == 0)
-
-
-def findSwig():
-    """Get name of SWIG executable
-
-    We need version 3.0.
-    Probably we should try some default paths and names, but this should do the trick for now.
-    Debian/Ubuntu systems have swig3.0 ('swig' is older versions), OSX has swig 3.0 as 'swig'."""
-    if sys.platform != 'linux':
-        return 'swig'
-    return 'swig3.0'
-
 
 if __name__ == '__main__':
     main()
