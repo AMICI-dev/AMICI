@@ -134,7 +134,7 @@ def addCoverageFlagsIfRequired(cxx_flags, linker_flags):
         linker_flags.extend(['--coverage','-g'])
 
 
-def addDebugFlagsIfRequired(cxx_flags, linker_flags, force=False):
+def addDebugFlagsIfRequired(cxx_flags, linker_flags):
     """Add compiler and linker debug flags if requested
 
     Arguments:
@@ -147,9 +147,8 @@ def addDebugFlagsIfRequired(cxx_flags, linker_flags, force=False):
     Raises:
 
     """
-    if ('ENABLE_AMICI_DEBUGGING' in os.environ
-            and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE') \
-            or force:
+    if 'ENABLE_AMICI_DEBUGGING' in os.environ
+            and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
         print("ENABLE_AMICI_DEBUGGING was set to TRUE."
               " Building AMICI with debug symbols.")
         cxx_flags.extend(['-g', '-O0'])
