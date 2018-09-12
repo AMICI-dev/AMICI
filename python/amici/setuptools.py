@@ -147,7 +147,7 @@ def addDebugFlagsIfRequired(cxx_flags, linker_flags):
     Raises:
 
     """
-    if 'ENABLE_AMICI_DEBUGGING' in os.environ
+    if 'ENABLE_AMICI_DEBUGGING' in os.environ \
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
         print("ENABLE_AMICI_DEBUGGING was set to TRUE."
               " Building AMICI with debug symbols.")

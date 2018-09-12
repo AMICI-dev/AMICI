@@ -61,11 +61,6 @@ else:
         'amici/amici_wrap_without_hdf5.cxx',  # swig interface
     ]
 
-force_debug = False
-if len(sys.argv) > 1:
-    if sys.argv[1] == 'develop':
-        force_debug = True
-
 addCoverageFlagsIfRequired(
     cxx_flags,
     amici_module_linker_flags,
@@ -74,7 +69,6 @@ addCoverageFlagsIfRequired(
 addDebugFlagsIfRequired(
     cxx_flags,
     amici_module_linker_flags,
-    force=force_debug,
 )
 
 libamici = setup_clibs.getLibAmici(
