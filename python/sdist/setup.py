@@ -16,6 +16,7 @@ from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 from setuptools.command.sdist import sdist
 from setuptools.command.install_lib import install_lib
+from setuptools.command.develop import develop
 
 import os
 import sys
@@ -25,12 +26,14 @@ import subprocess
 from shutil import copyfile
 import numpy as np # for include directory
 import setup_clibs  # Must run from within containing directory
-import shutil
 
-from amici.setuptools import (getBlasConfig,
-                              getHdf5Config,
-                              addCoverageFlagsIfRequired,
-                              addDebugFlagsIfRequired)
+from amici.setuptools import (
+    getBlasConfig,
+    getHdf5Config,
+    addCoverageFlagsIfRequired,
+    addDebugFlagsIfRequired,
+    generateSwigInterfaceFiles,
+)
 
 # Extra compiler flags
 cxx_flags = []
@@ -38,7 +41,6 @@ amici_module_linker_flags = []
 define_macros = []
 
 blaspkgcfg = getBlasConfig()
-amici_module_linker_flags.extend(['-l%s' % l for l in blaspkgcfg['libraries']])
 amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
 
 h5pkgcfg = getHdf5Config()
@@ -59,8 +61,15 @@ else:
         'amici/amici_wrap_without_hdf5.cxx',  # swig interface
     ]
 
-addCoverageFlagsIfRequired(cxx_flags, amici_module_linker_flags)
-addDebugFlagsIfRequired(cxx_flags, amici_module_linker_flags)
+addCoverageFlagsIfRequired(
+    cxx_flags,
+    amici_module_linker_flags,
+)
+
+addDebugFlagsIfRequired(
+    cxx_flags,
+    amici_module_linker_flags,
+)
 
 libamici = setup_clibs.getLibAmici(
     h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg, extra_compiler_flags=cxx_flags)
@@ -75,6 +84,7 @@ amici_module = Extension(
                   *libsundials[1]['include_dirs'],
                   *libsuitesparse[1]['include_dirs'],
                   *h5pkgcfg['include_dirs'],
+                  *blaspkgcfg['include_dirs'],
                   np.get_include()
                   ],
     # Cannot use here, see above
@@ -84,11 +94,22 @@ amici_module = Extension(
     define_macros=define_macros,
     library_dirs=[
         *h5pkgcfg['library_dirs'],
-        'amici/libs/',  # clib target directory
+        *blaspkgcfg['library_dirs'],
+        'amici/libs',  # clib target directory
     ],
     extra_compile_args=['-std=c++11', *cxx_flags],
     extra_link_args=amici_module_linker_flags
 )
+
+
+class my_develop(develop):
+    """Custom develop to build clibs"""
+    def run(self):
+
+        generateSwigInterfaceFiles()
+
+        self.run_command('build')
+        develop.run(self)
 
 
 class my_install_lib(install_lib):
@@ -122,6 +143,8 @@ class my_build_ext(build_ext):
         """
 
         if not self.dry_run:  # --dry-run
+            libraries = []
+            build_clib = ''
             if self.distribution.has_c_libraries():
                 # get the previously built static libraries
                 build_clib = self.get_finalized_command('build_clib')
@@ -130,14 +153,19 @@ class my_build_ext(build_ext):
 
             # Module build directory where we want to copy the generated libs
             # to
+            if self.inplace == 0:
+                build_dir = self.build_lib
+            else:
+                build_dir = os.getcwd()
 
-            target_dir = os.path.join(self.build_lib, 'amici', 'libs')
+            target_dir = os.path.join(build_dir, 'amici', 'libs')
             self.mkpath(target_dir)
 
             # Copy the generated libs
             for lib in libraries:
-                libfilenames = glob.glob('%s%s*%s.*' %
-                                         (build_clib.build_clib, os.sep, lib))
+                libfilenames = glob.glob(
+                    '%s%s*%s.*' % (build_clib.build_clib, os.sep, lib)
+                )
                 assert len(
                     libfilenames) == 1, "Found unexpected number of files: " % libfilenames
 
@@ -174,37 +202,8 @@ class my_sdist(sdist):
 
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without
-            swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
-            swig_cmd = self.findSwig()
-            sp = subprocess.run([swig_cmd,
-                                 '-c++',
-                                 '-python',
-                                 '-Iamici/swig', '-Iamici/include',
-                                 '-DAMICI_SWIG_WITHOUT_HDF5',
-                                 '-outdir', swig_outdir,
-                                 '-o', 'amici/amici_wrap_without_hdf5.cxx',
-                                 'amici/swig/amici.i'])
-            assert(sp.returncode == 0)
-            shutil.move(os.path.join(swig_outdir, 'amici.py'),
-                        os.path.join(swig_outdir, 'amici_without_hdf5.py'))
-            sp = subprocess.run([swig_cmd,
-                                 '-c++',
-                                 '-python',
-                                 '-Iamici/swig', '-Iamici/include',
-                                 '-outdir', swig_outdir,
-                                 '-o', 'amici/amici_wrap.cxx',
-                                 'amici/swig/amici.i'])
-            assert(sp.returncode == 0)
+            generateSwigInterfaceFiles()
 
-    def findSwig(self):
-        """Get name of SWIG executable
-
-        We need version 3.0.
-        Probably we should try some default paths and names, but this should do the trick for now. 
-        Debian/Ubuntu systems have swig3.0 ('swig' is older versions), OSX has swig 3.0 as 'swig'."""
-        if sys.platform != 'linux':
-            return 'swig'
-        return 'swig3.0'
 
     def saveGitVersion(self):
         """Create file with extended version string
@@ -248,7 +247,8 @@ def main():
         cmdclass={
             'sdist': my_sdist,
             'build_ext': my_build_ext,
-            'install_lib': my_install_lib
+            'install_lib': my_install_lib,
+            'develop': my_develop,
         },
         version=getPackageVersion(),
         description='Advanced multi-language Interface to CVODES and IDAS (%s)',
@@ -294,7 +294,6 @@ def main():
             'Topic :: Scientific/Engineering :: Bio-Informatics',
         ],
     )
-
 
 if __name__ == '__main__':
     main()
