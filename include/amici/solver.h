@@ -356,6 +356,30 @@ class Solver {
      * @param atol absolute tolerance (non-negative number)
      */
     void setAbsoluteToleranceQuadratures(double atol);
+    
+    /**
+     * @brief returns the relative tolerance for the steady state problem
+     * @return relative tolerance
+     */
+    double getRelativeToleranceSteadyState() const;
+    
+    /**
+     * @brief sets the relative tolerance for the steady state problem
+     * @param rtol relative tolerance (non-negative number)
+     */
+    void setRelativeToleranceSteadyState(double rtol);
+    
+    /**
+     * @brief returns the absolute tolerance for the steady state problem
+     * @return absolute tolerance
+     */
+    double getAbsoluteToleranceSteadyState() const;
+    
+    /**
+     * @brief sets the absolute tolerance for the steady state problem
+     * @param atol absolute tolerance (non-negative number)
+     */
+    void setAbsoluteToleranceSteadyState(double atol);
 
     /**
      * @brief returns the maximum number of solver steps for the forward problem
@@ -1092,6 +1116,12 @@ private:
 
     /** relative tolerances for backward quadratures */
     double quad_rtol = 1e-8;
+    
+    /** absolute tolerances for steadystate computation */
+    double ss_atol = NAN;
+    
+    /** relative tolerances for steadystate computation */
+    double ss_rtol = NAN;
 
     /** maximum number of allowed integration steps for backward problem */
     int maxstepsB = 0;

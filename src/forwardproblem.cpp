@@ -129,7 +129,9 @@ void ForwardProblem::workForwardProblem() {
                 }
 
                 if (std::isinf(nextTimepoint)) {
-                    SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
+                    SteadystateProblem sstate = SteadystateProblem(&t, &x, &sx,
+                                                                   solver->getAbsoluteToleranceSteadyState(),
+                                                                   solver->getRelativeToleranceSteadyState());
                     sstate.workSteadyStateProblem(rdata, solver, model, it);
                 } else {
                     int status;
@@ -183,7 +185,10 @@ void ForwardProblem::handlePreequilibration()
     }
 
     // pre-equilibrate
-    SteadystateProblem sstate = SteadystateProblem(&t,&x,&sx);
+    SteadystateProblem sstate = SteadystateProblem(&t, &x, &sx,
+                                                   solver->getAbsoluteToleranceSteadyState(),
+                                                   solver->getRelativeToleranceSteadyState());
+    
     sstate.workSteadyStateProblem(rdata, solver, model, -1);
 
     if(overrideFixedParameters) { // Restore

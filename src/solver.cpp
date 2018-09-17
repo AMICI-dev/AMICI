@@ -577,6 +577,28 @@ void Solver::setAbsoluteToleranceQuadratures(double atol) {
         if(solverMemoryB.at(iMem))
             applyTolerancesASA(iMem);
 }
+    
+double Solver::getRelativeToleranceSteadyState() const {
+    return isNaN(ss_rtol) ? rtol : ss_rtol;
+}
+
+void Solver::setRelativeToleranceSteadyState(double rtol) {
+    if(rtol < 0)
+        throw AmiException("rtol must be a non-negative number");
+    
+    this->ss_rtol = rtol;
+}
+
+double Solver::getAbsoluteToleranceSteadyState() const {
+    return isNaN(ss_atol) ? atol : ss_atol;
+}
+
+void Solver::setAbsoluteToleranceSteadyState(double atol) {
+    if (atol < 0)
+        throw AmiException("atol must be a non-negative number");
+    
+    this->ss_atol = atol;
+}
 
 int Solver::getMaxSteps() const {
     return maxsteps;

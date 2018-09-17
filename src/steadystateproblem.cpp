@@ -79,33 +79,28 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         newtonSolver->computeNewtonSensis(sx);
     
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
-    getNewtonOutput(rdata, model, newton_status, run_time, it);
+    writeNewtonOutput(rdata, model, newton_status, run_time, it);
 }
 
-/* ----------------------------------------------------------------------------------
- */
-/* ----------------------------------------------------------------------------------
- */
-/* ----------------------------------------------------------------------------------
- */
+realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,const AmiVector &xdot) {
+    N_VAbs(x.getNVector(), ewt.getNVector());
+    N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
+    N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
+    N_VInv(ewt.getNVector(), ewt.getNVector());
+    return UNIT_ROUNDOFF * N_VWrmsNorm(xdot.getNVector(), ewt.getNVector());
+}
+
+/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
 
 void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
                                            Model *model,
                                            NewtonSolver *newtonSolver,
                                            int newton_try) {
-    /**
-     * Runs the Newton solver iterations and checks for convergence to steady
-     * state
-     *
-     * @param rdata pointer to the return data object
-     * @param model pointer to the AMICI model object
-     * @param newtonSolver pointer to the NewtonSolver object @type
-     * NewtonSolver
-     * @param newton_try integer start number of Newton solver (1 or 2)
-     */
     int i_newtonstep = 0;
     int ix = 0;
-    double res_tmp;
+    realtype wrms_tmp;
     double gamma = 1.0;
     bool compNewStep = TRUE;
 
@@ -114,19 +109,16 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
 
     /* Check, how fxdot is used exactly within AMICI... */
     model->fxdot(*t, x, &dx, &xdot);
-    double res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
 
     /* Check for relative error, but make sure not to divide by 0!
         Ensure positivity of the state */
     x_newton = *x;
-    N_VAbs(x_newton.getNVector(), x_newton.getNVector());
-    N_VDiv(xdot.getNVector(), x_newton.getNVector(), rel_x_newton.getNVector());
-    double res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
     x_old = *x;
     xdot_old = xdot;
     
     //rdata->newton_numsteps[newton_try - 1] = 0.0;
-    bool converged = (res_abs < newtonSolver->atol || res_rel < newtonSolver->rtol);
+    realtype wrms = getWrmsNorm(x_newton, xdot);
+    bool converged = wrms < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->maxsteps) {
 
         /* If Newton steps are necessary, compute the inital search direction */
@@ -148,19 +140,17 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
         
         /* Compute new xdot and residuals */
         model->fxdot(*t, x, &dx, &xdot);
-        N_VDiv(xdot.getNVector(), x->getNVector(), rel_x_newton.getNVector());
-        res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
-        res_tmp = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
+        wrms_tmp = getWrmsNorm(x_newton, xdot);
         
-        if (res_tmp < res_abs) {
+        if (wrms_tmp < wrms) {
             /* If new residuals are smaller than old ones, update state */
-            res_abs = res_tmp;
+            wrms = wrms_tmp;
             x_old = *x;
             xdot_old = xdot;
             /* New linear solve due to new state */
             compNewStep = TRUE;
             /* Check residuals vs tolerances */
-            converged = (res_abs < newtonSolver->atol) || (res_rel < newtonSolver->rtol);
+            converged = wrms < RCONST(1.0);
             
             if (converged) {
                 /* Ensure positivity of the found state */
@@ -190,30 +180,21 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
         throw NewtonFailure(AMICI_CONV_FAILURE,"applyNewtonsMethod");
 }
 
-/* ----------------------------------------------------------------------------------
- */
-/* ----------------------------------------------------------------------------------
- */
-/* ----------------------------------------------------------------------------------
- */
+/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
 
-void SteadystateProblem::getNewtonOutput(ReturnData *rdata,const Model *model,
+void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,const Model *model,
                                          NewtonStatus newton_status,
-                                         double run_time, int it) {
-    /**
-     * Stores output of workSteadyStateProblem in return data
-     *
-     * @param newton_status integer flag indicating when a steady state was
-     * found
-     * @param run_time double coputation time of the solver in milliseconds
-     * @param rdata pointer to the return data instance
-     * @param model pointer to the model instance
-     * @param it current timepoint index, <0 indicates preequilibration
-     */
+                                         double run_time, int it)
+{
 
     /* Get time for Newton solve */
     rdata->newton_time = run_time;
     rdata->newton_status = static_cast<int>(newton_status) ;
+    if (newton_status == NewtonStatus::newt_sim) {
+        rdata->t_steadystate = *t;
+    }
     
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
@@ -223,23 +204,13 @@ void SteadystateProblem::getNewtonOutput(ReturnData *rdata,const Model *model,
     }
 }
 
-/* ----------------------------------------------------------------------------------
- */
-/* ----------------------------------------------------------------------------------
- */
-/* ----------------------------------------------------------------------------------
- */
+/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
 
 void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *solver,
-                                                  Model *model, int it) {
-    /**
-     * Forward simulation is launched, if Newton solver fails in first try
-     *
-     * @param solver pointer to the AMICI solver object
-     * @param model pointer to the AMICI model object
-     * @param rdata pointer to the return data object
-     * @param it current timepoint index, <0 indicates preequilibration
-     */
+                                                  Model *model, int it)
+{
  
     std::unique_ptr<CVodeSolver> newtonSimSolver;
 
@@ -254,11 +225,11 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
     }
     
     /* Loop over steps and check for convergence */
-    double res_abs = INFINITY;
-    double res_rel = INFINITY;
+    realtype wrms = getWrmsNorm(*x, xdot);
+    bool converged = wrms < RCONST(1.0);
     
-    int it_newton = 0;
-    while(res_abs > solver->getAbsoluteTolerance() && res_rel > solver->getRelativeTolerance()) {
+    int steps_newton = 0;
+    while(!converged) {
         /* One step of ODE integration
          reason for tout specification:
          max with 1 ensures correct direction (any positive value would do)
@@ -270,25 +241,13 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         else
             solver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
 
-        model->fxdot(*t, x, &dx, &xdot);
-        res_abs = sqrt(N_VDotProd(xdot.getNVector(), xdot.getNVector()));
-        
-        /* Ensure positivity and compute relative residual */
-        x_newton = *x;
-        N_VAbs(x_newton.getNVector(), x_newton.getNVector());
-        for (int ix = 0; ix < model->nx; ix++)
-            if (x_newton[ix] < solver->getAbsoluteTolerance())
-                x_newton[ix] = solver->getAbsoluteTolerance();
-        
-        N_VDiv(xdot.getNVector(), x_newton.getNVector(), rel_x_newton.getNVector());
-        res_rel = sqrt(N_VDotProd(rel_x_newton.getNVector(), rel_x_newton.getNVector()));
-        
         /* Check for convergence */
-        if (res_abs < solver->getAbsoluteTolerance() || res_rel < solver->getRelativeTolerance())
-            break;
+        model->fxdot(*t, x, &dx, &xdot);
+        wrms = getWrmsNorm(*x, xdot);
+        converged = wrms < RCONST(1.0);
         /* increase counter, check for maxsteps */
-        it_newton++;
-        if (it_newton >= solver->getMaxSteps())
+        steps_newton++;
+        if (steps_newton >= solver->getMaxSteps() && !converged)
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,"getSteadystateSimulation");
     }
     if (it<1 && newtonSimSolver->getSensitivityOrder()>SensitivityOrder::none)
@@ -300,14 +259,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
 std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
         Solver *solver, Model *model, realtype tstart)
 {
-    /**
-     * initialize CVodeSolver instance for preequilibration simulation
-     *
-     * @param solver pointer to the AMICI solver object
-     * @param model pointer to the AMICI model object
-     * @param tstart time point for starting Newton simulation
-     * @return solver instance
-     */
+
     
     /* Create new CVode object */
     
