@@ -95,7 +95,7 @@ amici_module = Extension(
     library_dirs=[
         *h5pkgcfg['library_dirs'],
         *blaspkgcfg['library_dirs'],
-        'amici/libs/',  # clib target directory
+        'amici/libs',  # clib target directory
     ],
     extra_compile_args=['-std=c++11', *cxx_flags],
     extra_link_args=amici_module_linker_flags
