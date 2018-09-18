@@ -155,6 +155,10 @@ class ReturnData {
     
     /** time at which steadystate was reached in the simulation based approach */
     realtype t_steadystate = NAN;
+    
+    /** weighted root-mean-square of the rhs when steadystate
+     was reached*/
+    realtype wrms_steadystate = NAN;
 
     /** preequilibration steady state found be Newton solver (dimension: nx) */
     std::vector<realtype> x0;

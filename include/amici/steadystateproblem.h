@@ -139,6 +139,9 @@ class SteadystateProblem {
     /** relative tolerance for getWrmsNorm */
     realtype rtol;
     
+    /** weighted root-mean-square error */
+    realtype wrms = NAN;
+    
 };
 
 } // namespace amici

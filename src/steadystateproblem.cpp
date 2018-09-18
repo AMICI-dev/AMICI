@@ -87,7 +87,7 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,const AmiVector &xdo
     N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
     N_VInv(ewt.getNVector(), ewt.getNVector());
-    return UNIT_ROUNDOFF * N_VWrmsNorm(xdot.getNVector(), ewt.getNVector());
+    return N_VWrmsNorm(xdot.getNVector(), ewt.getNVector());
 }
 
 /* ------------------------------------------------------------------ */
@@ -117,7 +117,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     xdot_old = xdot;
     
     //rdata->newton_numsteps[newton_try - 1] = 0.0;
-    realtype wrms = getWrmsNorm(x_newton, xdot);
+    wrms = getWrmsNorm(x_newton, xdot);
     bool converged = wrms < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->maxsteps) {
 
@@ -191,7 +191,8 @@ void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,const Model *model,
 
     /* Get time for Newton solve */
     rdata->newton_time = run_time;
-    rdata->newton_status = static_cast<int>(newton_status) ;
+    rdata->newton_status = static_cast<int>(newton_status);
+    rdata->wrms_steadystate = wrms;
     if (newton_status == NewtonStatus::newt_sim) {
         rdata->t_steadystate = *t;
     }
@@ -225,7 +226,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
     }
     
     /* Loop over steps and check for convergence */
-    realtype wrms = getWrmsNorm(*x, xdot);
+    wrms = getWrmsNorm(*x, xdot);
     bool converged = wrms < RCONST(1.0);
     
     int steps_newton = 0;
