@@ -145,7 +145,7 @@ class ReturnData {
     int newton_status = 0;
 
     /** computation time of the Newton solver [s] */
-    double newton_time = 0.0;
+    double newton_cpu_time = 0.0;
 
     /** number of Newton steps for steady state problem (length = 2) */
     std::vector<int> newton_numsteps;

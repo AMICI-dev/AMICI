@@ -63,7 +63,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.newton_numsteps == s.newton_numsteps);
     CHECK_TRUE(r.newton_numlinsteps == s.newton_numlinsteps);
 
-    DOUBLES_EQUAL(r.newton_time, s.newton_time, 1e-16);
+    DOUBLES_EQUAL(r.newton_cpu_time, s.newton_cpu_time, 1e-16);
     checkEqualArray(r.x0, s.x0, 1e-16, 1e-16, "x0");
     checkEqualArray(r.sx0, s.sx0, 1e-16, 1e-16, "sx0");
 

@@ -143,9 +143,11 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.order;
 
     ar &r.newton_status;
-    ar &r.newton_time;
+    ar &r.newton_cpu_time;
     ar &r.newton_numsteps;
     ar &r.newton_numlinsteps;
+    ar &r.newton_wrms;
+    ar &r.t_steadystate;
     ar &r.x0;
     ar &r.sx0;
     ar &r.llh;

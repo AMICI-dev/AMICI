@@ -189,8 +189,8 @@ void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,const Model *model,
                                          double run_time, int it)
 {
 
-    /* Get time for Newton solve */
-    rdata->newton_time = run_time;
+    /* Get cpu time for Newton solve in seconds */
+    rdata->newton_cpu_time = run_time / 1000;
     rdata->newton_status = static_cast<int>(newton_status);
     rdata->wrms_steadystate = wrms;
     if (newton_status == NewtonStatus::newt_sim) {
