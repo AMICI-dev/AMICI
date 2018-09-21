@@ -121,7 +121,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
      *
      * @return Diagnosis mxArray
      */
-    const int numFields = 15;
+    const int numFields = 17;
     const char *field_names_sol[numFields] = {"xdot",
                                               "J",
                                               "numsteps",
@@ -136,7 +136,10 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                                               "newton_status",
                                               "newton_numsteps",
                                               "newton_numlinsteps",
-                                              "newton_time"};
+                                              "newton_time",
+                                              "newton_t_steadystate",
+                                              "newton_wrms"
+    };
     
     checkFieldNames(field_names_sol,numFields);
     
@@ -158,6 +161,8 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         writeMatlabField1(matlabDiagnosisStruct, "newton_numsteps", rdata->newton_numsteps, 2);
         writeMatlabField2(matlabDiagnosisStruct, "newton_numlinsteps", rdata->newton_numlinsteps, rdata->newton_maxsteps, 2, perm1);
         writeMatlabField0(matlabDiagnosisStruct, "newton_time", rdata->newton_time);
+        writeMatlabField0(matlabDiagnosisStruct, "newton_t_steadystate", rdata->t_steadystate);
+        writeMatlabField0(matlabDiagnosisStruct, "newton_wrms", rdata->wrms_steadystate);
     }
     if (rdata->sensi >= SensitivityOrder::first) {
         if (rdata->sensi_meth == SensitivityMethod::adjoint) {

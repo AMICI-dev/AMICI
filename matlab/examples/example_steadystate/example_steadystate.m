@@ -190,7 +190,7 @@ function example_steadystate
     
     % Test recapturing in the case of Newton solver failing
     options.newton_maxsteps = 4;
-    options.maxsteps = 200;
+    options.maxsteps = 300;
     sol_newton_fail = simulate_model_steadystate(inf,log10(p),k,[],options);
     
     %%

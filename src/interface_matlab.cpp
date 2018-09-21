@@ -320,6 +320,14 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
             solver.setRelativeToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "quad_rtol")));
         }
 
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ss_atol")) {
+            solver.setAbsoluteToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ss_atol")));
+        }
+        
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ss_rtol")) {
+            solver.setRelativeToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ss_rtol")));
+        }
+        
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "maxsteps")) {
             solver.setMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "maxsteps"))));
         }
