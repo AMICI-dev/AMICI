@@ -159,6 +159,10 @@ class ReturnData {
     /** weighted root-mean-square of the rhs when steadystate
      was reached*/
     realtype wrms_steadystate = NAN;
+    
+    /** weighted root-mean-square of the rhs when steadystate
+     was reached*/
+    realtype wrms_sensi_steadystate = NAN;
 
     /** preequilibration steady state found be Newton solver (dimension: nx) */
     std::vector<realtype> x0;

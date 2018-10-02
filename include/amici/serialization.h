@@ -146,7 +146,8 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.newton_cpu_time;
     ar &r.newton_numsteps;
     ar &r.newton_numlinsteps;
-    ar &r.newton_wrms;
+    ar &r.wrms_steadystate;
+    ar &r.wrms_sensi_steadystate;
     ar &r.t_steadystate;
     ar &r.x0;
     ar &r.sx0;
