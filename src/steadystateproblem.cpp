@@ -82,7 +82,11 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     writeNewtonOutput(rdata, model, newton_status, run_time, it);
 }
 
-realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,const AmiVector &xdot) {
+realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
+                                         const AmiVector &xdot,
+                                         realtype atol,
+                                         realtype rtol
+                                         ) {
     N_VAbs(x.getNVector(), ewt.getNVector());
     N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
@@ -107,7 +111,6 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     /* initialize output of linear solver for Newton step */
     delta.reset();
 
-    /* Check, how fxdot is used exactly within AMICI... */
     model->fxdot(*t, x, &dx, &xdot);
 
     /* Check for relative error, but make sure not to divide by 0!
@@ -117,7 +120,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     xdot_old = xdot;
     
     //rdata->newton_numsteps[newton_try - 1] = 0.0;
-    wrms = getWrmsNorm(x_newton, xdot);
+    wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol);
     bool converged = wrms < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->maxsteps) {
 
@@ -140,7 +143,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
         
         /* Compute new xdot and residuals */
         model->fxdot(*t, x, &dx, &xdot);
-        wrms_tmp = getWrmsNorm(x_newton, xdot);
+        wrms_tmp = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol);
         
         if (wrms_tmp < wrms) {
             /* If new residuals are smaller than old ones, update state */
@@ -226,7 +229,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
     }
     
     /* Loop over steps and check for convergence */
-    wrms = getWrmsNorm(*x, xdot);
+    wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
     bool converged = wrms < RCONST(1.0);
     
     int steps_newton = 0;
@@ -244,7 +247,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
 
         /* Check for convergence */
         model->fxdot(*t, x, &dx, &xdot);
-        wrms = getWrmsNorm(*x, xdot);
+        wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
         converged = wrms < RCONST(1.0);
         /* increase counter, check for maxsteps */
         steps_newton++;

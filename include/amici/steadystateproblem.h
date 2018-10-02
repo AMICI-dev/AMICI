@@ -34,9 +34,15 @@ class SteadystateProblem {
      *
      * @param x current state
      * @param xdot current rhs
+     * @param atol absolute tolerance
+     * @param rtol relative tolerance
      * @return root mean square norm
      */
-    realtype getWrmsNorm(AmiVector const &x, AmiVector const &xdot);
+    realtype getWrmsNorm(AmiVector const &x,
+                         AmiVector const &xdot,
+                         realtype atol,
+                         realtype rtol
+                         );
 
     /**
      * Runs the Newton solver iterations and checks for convergence to steady
@@ -91,7 +97,7 @@ class SteadystateProblem {
      * @param atol absolute tolerances
      * @param rtol relative tolerances
      */
-    SteadystateProblem(realtype *t, AmiVector *x, AmiVectorArray *sx, realtype atol, realtype rtol) :
+    SteadystateProblem(realtype *t, AmiVector *x, AmiVectorArray *sx) :
     delta(x->getLength()),
     ewt(x->getLength()),
     rel_x_newton(x->getLength()),
@@ -105,8 +111,6 @@ class SteadystateProblem {
         this->t = t;
         this->x = x;
         this->sx = sx;
-        this->atol = atol;
-        this->rtol = rtol;
     }
 
   private:
@@ -133,11 +137,6 @@ class SteadystateProblem {
     AmiVectorArray *sx;
     /** state differential sensitivities */
     AmiVectorArray sdx;
-    
-    /** absoulte tolerance for getWrmsNorm  */
-    realtype atol;
-    /** relative tolerance for getWrmsNorm */
-    realtype rtol;
     
     /** weighted root-mean-square error */
     realtype wrms = NAN;
