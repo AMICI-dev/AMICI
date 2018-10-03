@@ -186,7 +186,7 @@ char *serializeToChar(T const& data, int *size) {
     try {
         oar << data;
     } catch(boost::archive::archive_exception const& e) {
-        raise AmiException("Serialization to char failed: %s", e.what())
+        throw AmiException("Serialization to char failed: %s", e.what());
     }
     s.flush();
 
@@ -219,7 +219,7 @@ T deserializeFromChar(const char *buffer, int size) {
     try {
         iar >> data;
     } catch(boost::archive::archive_exception const& e) {
-        raise AmiException("Deserialization from char failed: %s", e.what())
+        throw AmiException("Deserialization from char failed: %s", e.what());
     }
 
     return data;
@@ -244,7 +244,7 @@ std::string serializeToString(T const& data) {
     try {
         oar << data;
     } catch(boost::archive::archive_exception const& e) {
-        raise AmiException("Serialization to string failed: %s", e.what())
+        throw AmiException("Serialization to string failed: %s", e.what());
     }
     s.flush();
 
@@ -268,7 +268,7 @@ std::vector<char> serializeToStdVec(T const& data) {
     try{
         oar << data;
     } catch(boost::archive::archive_exception const& e) {
-        raise AmiException("Serialization to StdVec failed: %s", e.what())
+        throw AmiException("Serialization to StdVec failed: %s", e.what());
     }
     s.flush();
 
@@ -295,7 +295,7 @@ T deserializeFromString(std::string const& serialized) {
     try{
         iar >> deserialized;
     } catch(boost::archive::archive_exception const& e) {
-        raise AmiException("Deserialization from StdVec failed: %s", e.what())
+        throw AmiException("Deserialization from StdVec failed: %s", e.what());
     }
 
     return deserialized;
