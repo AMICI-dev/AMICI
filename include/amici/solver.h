@@ -63,7 +63,6 @@ class Solver {
         iter = other.iter;
         stldet = other.stldet;
         ordering = other.ordering;
-        ism = other.ism;
     }
 
     virtual ~Solver() = default;
@@ -456,13 +455,13 @@ class Solver {
      * @brief returns stability limit detection mode
      * @return stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
      */
-    int getStabilityLimitFlag() const;
+    booleantype getStabilityLimitFlag() const;
 
     /**
      * @brief set stability limit detection mode
      * @param stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
      */
-    void setStabilityLimitFlag(int stldet);
+    void setStabilityLimitFlag(booleantype stldet);
 
     /**
      * @brief getLinearSolver

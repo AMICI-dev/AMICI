@@ -47,6 +47,10 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.ss_atol;
     ar &u.ss_rtol;
     ar &u.maxsteps;
+    ar &u.maxstepsB;
+    ar &u.newton_preeq;
+    ar &u.newton_maxsteps;
+    ar &u.newton_maxlinsteps;
     ar &u.ism;
     ar &u.sensi_meth;
     ar &u.linsol;
