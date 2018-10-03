@@ -51,8 +51,18 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         newton_status = NewtonStatus::newt;
     } catch(NewtonFailure& ex) {
         try {
-            /* Newton solver did not find a steady state, so try integration */
-            getSteadystateSimulation(rdata, solver, model, it);
+            /* Newton solver did not work, so try a simulation */
+            if (it<1) {
+                std::unique_ptr<CVodeSolver> newtonSimSolver;
+                /* Preequilibration: Create a new CVode object for simulation */
+                *t = model->t0();
+                newtonSimSolver = createSteadystateSimSolver(solver, model, *t);
+                getSteadystateSimulation(rdata, newtonSimSolver.get(), model, it);
+            } else {
+                /* Carry on simulating from last point */
+                *t = model->t(it-1);
+                getSteadystateSimulation(rdata, solver, model, it);
+            }
             newton_status = NewtonStatus::newt_sim;
         } catch(AmiException& ex) {
             /* may be integration failure from AmiSolve, so NewtonFailure
@@ -92,6 +102,26 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
     N_VInv(ewt.getNVector(), ewt.getNVector());
     return N_VWrmsNorm(xdot.getNVector(), ewt.getNVector());
+}
+    
+bool SteadystateProblem::checkConvergence(
+                                         const Solver *solver,
+                                         Model *model
+                                         ) {
+    model->fxdot(*t, x, &dx, &xdot);
+    wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
+    bool converged = wrms < RCONST(1.0);
+    if (solver->getSensitivityOrder()>SensitivityOrder::none) {
+        for (int ip = 0; ip <= model->nplist(); ++ip) {
+            if (converged) {
+                solver->getSens(t, sx);
+                //model->fsxdot(*t, x, &dx, ip, &(*sx)[ip], &dx, &xdot);
+                wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
+                converged = wrms < RCONST(1.0);
+            }
+        }
+    }
+    return converged;
 }
 
 /* ------------------------------------------------------------------ */
@@ -215,22 +245,8 @@ void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,const Model *model,
 void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *solver,
                                                   Model *model, int it)
 {
- 
-    std::unique_ptr<CVodeSolver> newtonSimSolver;
-
-    /* Newton solver did not work, so try a simulation */
-    if (it<1) {
-        /* Preequilibration: Create a new CVode object for simulation */
-        *t = model->t0();
-        newtonSimSolver = createSteadystateSimSolver(solver, model, *t);
-    } else {
-        /* Carry on simulating from last point */
-        *t = model->t(it-1);
-    }
-    
     /* Loop over steps and check for convergence */
-    wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
-    bool converged = wrms < RCONST(1.0);
+    bool converged = checkConvergence(solver, model);
     
     int steps_newton = 0;
     while(!converged) {
@@ -240,30 +256,16 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
          multiplication with 10 ensures nonzero difference and should ensure stable computation
          value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
          */
-        if (it<1)
-            newtonSimSolver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
-        else
-            solver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
+        solver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
 
         /* Check for convergence */
-        model->fxdot(*t, x, &dx, &xdot);
-        wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
-        converged = wrms < RCONST(1.0);
-        for (int ip = 0; ip <= model->nplist(); ++ip) {
-            if (converged) {
-                model->fsxdot(*t, x, &dx, ip, &(*sx)[ip], &dx, &xdot);
-                wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
-                converged = wrms < RCONST(1.0);
-            }
-        }
+        converged = checkConvergence(solver, model);
         /* increase counter, check for maxsteps */
         steps_newton++;
         if (steps_newton >= solver->getMaxSteps() && !converged)
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK,"getSteadystateSimulation");
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK, "getSteadystateSimulation");
     }
-    if (it<1 && newtonSimSolver->getSensitivityOrder()>SensitivityOrder::none)
-        newtonSimSolver->getSens(t, sx);
-    else if (it>=0 && solver->getSensitivityOrder()>SensitivityOrder::none)
+    if (solver->getSensitivityOrder()>SensitivityOrder::none)
         solver->getSens(t, sx);
 }
 
@@ -280,6 +282,8 @@ std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
     newton_solver->setNonlinearSolverIteration(solver->getNonlinearSolverIteration());
     newton_solver->setAbsoluteTolerance(solver->getAbsoluteTolerance());
     newton_solver->setRelativeTolerance(solver->getRelativeTolerance());
+    newton_solver->setAbsoluteToleranceSteadyState(solver->getAbsoluteToleranceSteadyState());
+    newton_solver->setRelativeToleranceSteadyState(solver->getRelativeToleranceSteadyState());
     newton_solver->setMaxSteps(solver->getMaxSteps());
     newton_solver->setStabilityLimitFlag(solver->getStabilityLimitFlag());
     switch(solver->getLinearSolver()) {

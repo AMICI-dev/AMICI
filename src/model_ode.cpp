@@ -17,7 +17,7 @@ namespace amici {
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
      **/
-    void Model_ODE::fJ( realtype t, N_Vector x, N_Vector xdot, DlsMat J) {
+    void Model_ODE::fJ(realtype t, N_Vector x, N_Vector xdot, DlsMat J) {
         fdwdx(t,x);
         SetToZero(J);
         fJ(J->data,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),

@@ -43,6 +43,16 @@ class SteadystateProblem {
                          realtype atol,
                          realtype rtol
                          );
+    
+    /**
+     * Checks convergence for state and respective sensitivities
+     *
+     * @param solver Solver instance
+     * @param model instance
+     * @return boolean indicating convergence
+     */
+    bool checkConvergence(const Solver *solver,
+                          Model *model);
 
     /**
      * Runs the Newton solver iterations and checks for convergence to steady
