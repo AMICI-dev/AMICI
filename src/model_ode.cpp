@@ -220,6 +220,11 @@ namespace amici {
                           N_VGetArrayPointer(xB),w.data(),dwdp.data());
     }
     
+    void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
+                           AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) {
+        fsxdot(t,x->getNVector(), ip, sx->getNVector(), sxdot->getNVector());
+    }
+    
     /** implementation of fsxdot at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation
      * @param t timepoint

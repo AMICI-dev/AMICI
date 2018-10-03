@@ -96,6 +96,8 @@ namespace amici {
             fdxdotdp(t,x->getNVector(),dx->getNVector());
         };
         
+        void fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
+                    AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) override;
         void fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx, N_Vector sdx, N_Vector sxdot);
         
         void fM(realtype t, const N_Vector x);
