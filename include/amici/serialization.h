@@ -175,7 +175,7 @@ char *serializeToChar(T const& data, int *size) {
      *
      * @param data input object
      * @param size maximum char length
-
+     *
      * @return The object serialized as char
      */
     std::string serialized;
@@ -183,7 +183,11 @@ char *serializeToChar(T const& data, int *size) {
     ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
     ::boost::archive::binary_oarchive oar(s);
-    oar << data;
+    try {
+        oar << data;
+    } catch(boost::archive::archive_exception e) {
+        raise AmiException("Serialization to char failed: %s", e.what())
+    }
     s.flush();
 
     char *charBuffer = new char[serialized.size()];
@@ -212,7 +216,11 @@ T deserializeFromChar(const char *buffer, int size) {
         device);
     ::boost::archive::binary_iarchive iar(s);
     T data;
-    iar >> data;
+    try {
+        iar >> data;
+    } catch(boost::archive::archive_exception e) {
+        raise AmiException("Deserialization from char failed: %s", e.what())
+    }
 
     return data;
 }
@@ -224,7 +232,7 @@ std::string serializeToString(T const& data) {
      * @brief Serialize object to string
      *
      * @param data input object
-
+     *
      * @return The object serialized as string
      */
     std::string serialized;
@@ -233,7 +241,11 @@ std::string serializeToString(T const& data) {
         ::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
     ::boost::archive::binary_oarchive oar(s);
-    oar << data;
+    try {
+        oar << data;
+    } catch(boost::archive::archive_exception e) {
+        raise AmiException("Serialization to string failed: %s", e.what())
+    }
     s.flush();
 
     return serialized;
@@ -245,7 +257,7 @@ std::vector<char> serializeToStdVec(T const& data) {
      * @brief Serialize object to std::vector<char>
      *
      * @param data input object
-
+     *
      * @return The object serialized as std::vector<char>
      */
     std::string serialized;
@@ -253,7 +265,11 @@ std::vector<char> serializeToStdVec(T const& data) {
     ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
         s(inserter);
     ::boost::archive::binary_oarchive oar(s);
-    oar << data;
+    try{
+        oar << data;
+    } catch(boost::archive::archive_exception e) {
+        raise AmiException("Serialization to StdVec failed: %s", e.what())
+    }
     s.flush();
 
     std::vector<char> buf(serialized.begin(), serialized.end());
@@ -276,7 +292,11 @@ T deserializeFromString(std::string const& serialized) {
         device);
     ::boost::archive::binary_iarchive iar(s);
     T deserialized;
-    iar >> deserialized;
+    try{
+        iar >> deserialized;
+    } catch(boost::archive::archive_exception e) {
+        raise AmiException("Deserialization from StdVec failed: %s", e.what())
+    }
 
     return deserialized;
 }
