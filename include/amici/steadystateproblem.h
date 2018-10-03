@@ -36,7 +36,7 @@ class SteadystateProblem {
      * @param xdot current rhs
      * @param atol absolute tolerance
      * @param rtol relative tolerance
-     * @return root mean square norm
+     * @return root-mean-square norm
      */
     realtype getWrmsNorm(AmiVector const &x,
                          AmiVector const &xdot,
@@ -104,8 +104,6 @@ class SteadystateProblem {
      * @param t pointer to time variable
      * @param x pointer to state variables
      * @param sx pointer to state sensitivity variables
-     * @param atol absolute tolerances
-     * @param rtol relative tolerances
      */
     SteadystateProblem(realtype *t, AmiVector *x, AmiVectorArray *sx) :
     delta(x->getLength()),
