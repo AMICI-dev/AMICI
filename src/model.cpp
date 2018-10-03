@@ -372,7 +372,7 @@ int setValueByIdRegex(std::vector<std::string> const& ids, std::vector<realtype>
             throw AmiException("Could not find %s with specified %s", variable_name, id_name);
         
         return n_found;
-    } catch (std::regex_error e) {
+    } catch (std::regex_error const& e) {
         throw AmiException("Specified regex pattern could not be compiled: %s", e.what());
     }
 }

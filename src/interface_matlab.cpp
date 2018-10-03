@@ -542,7 +542,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
         try {
             edata = std::move(amici::expDataFromMatlabCall(prhs, *model));
-        } catch (amici::AmiException& ex) {
+        } catch (amici::AmiException const& ex) {
             amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
     } else if (solver->getSensitivityOrder() >= amici::SensitivityOrder::first &&

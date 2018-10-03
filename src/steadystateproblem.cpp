@@ -49,7 +49,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     try {
         applyNewtonsMethod(rdata, model, newtonSolver.get(), 1);
         newton_status = NewtonStatus::newt;
-    } catch(NewtonFailure& ex) {
+    } catch(NewtonFailure const& ex) {
         try {
             /* Newton solver did not work, so try a simulation */
             if (it<1) {
@@ -64,13 +64,13 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                 getSteadystateSimulation(rdata, solver, model, it);
             }
             newton_status = NewtonStatus::newt_sim;
-        } catch(AmiException& ex) {
+        } catch(AmiException const& ex) {
             /* may be integration failure from AmiSolve, so NewtonFailure
                won't do for all cases */
             try {
                 applyNewtonsMethod(rdata, model, newtonSolver.get(), 2);
                 newton_status = NewtonStatus::newt_sim_newt;
-            } catch(NewtonFailure& ex) {
+            } catch(NewtonFailure const& ex) {
                 throw amici::IntegrationFailure(ex.error_code,*t);
             }
         }

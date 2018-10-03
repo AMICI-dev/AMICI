@@ -82,7 +82,7 @@ void ForwardProblem::workForwardProblem() {
 
     try {
         solver->setup(&x, &dx, &sx, &sdx, model);
-    } catch (std::exception& ex) {
+    } catch (std::exception const& ex) {
         throw AmiException("AMICI setup failed:\n(%s)",ex.what());
     } catch (...) {
         throw AmiException("AMICI setup failed due to an unknown error");
