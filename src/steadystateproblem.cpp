@@ -249,6 +249,13 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         model->fxdot(*t, x, &dx, &xdot);
         wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
         converged = wrms < RCONST(1.0);
+        for (int ip = 0; ip <= model->nplist(); ++ip) {
+            if (converged) {
+                model->fsxdot(*t, x, &dx, ip, &(*sx)[ip], &dx, &xdot);
+                wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
+                converged = wrms < RCONST(1.0);
+            }
+        }
         /* increase counter, check for maxsteps */
         steps_newton++;
         if (steps_newton >= solver->getMaxSteps() && !converged)
