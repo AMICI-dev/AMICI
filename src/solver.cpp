@@ -396,12 +396,11 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.maxsteps == b.maxsteps)
             && (a.quad_atol == b.quad_atol)
             && (a.quad_rtol == b.quad_rtol)
-            && ((a.ss_atol == b.ss_atol) ||
-                (std::isnan(a.ss_atol) && std::isnan(b.ss_atol)))
-            && ((a.ss_rtol == b.ss_rtol) ||
-                (std::isnan(a.ss_rtol) && std::isnan(b.ss_rtol)))
+            && (a.getAbsoluteToleranceSteadyState() == b.getAbsoluteToleranceSteadyState())
+            && (a.getRelativeToleranceSteadyState() == b.getRelativeToleranceSteadyState())
             && (a.maxstepsB == b.maxstepsB)
-            && (a.sensi == b.sensi);
+            && (a.sensi == b.sensi)
+            && (a.sensi_meth == b.sensi_meth);
 }
     
 void Solver::applyTolerances() {
