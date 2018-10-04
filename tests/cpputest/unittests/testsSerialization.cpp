@@ -9,7 +9,6 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-
 void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s) {
     CHECK_EQUAL(r.np, s.np);
     CHECK_EQUAL(r.nk, s.nk);
@@ -79,9 +78,29 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
 
 // clang-format off
 TEST_GROUP(dataSerialization){
-
+    amici::CVodeSolver solver;
     void setup() {
-
+        // set non-default values for all members
+        solver.setAbsoluteTolerance(4);
+        solver.setRelativeTolerance(4);
+        solver.setAbsoluteToleranceQuadratures(4);
+        solver.setRelativeToleranceQuadratures(4);
+        solver.setAbsoluteToleranceSteadyState(4);
+        solver.setRelativeToleranceSteadyState(4);
+        solver.setSensitivityMethod(amici::SensitivityMethod::adjoint);
+        solver.setSensitivityOrder(amici::SensitivityOrder::second);
+        solver.setMaxSteps(1e6);
+        solver.setMaxStepsBackwardProblem(1e6);
+        solver.setNewtonMaxSteps(1e6);
+        solver.setNewtonMaxLinearSteps(1e6);
+        solver.setNewtonPreequilibration(true);
+        solver.setStateOrdering(amici::StateOrdering::COLAMD);
+        solver.setInterpolationType(amici::InterpolationType::polynomial);
+        solver.setStabilityLimitFlag(0);
+        solver.setLinearSolver(amici::LinearSolver::dense);
+        solver.setLinearMultistepMethod(amici::LinearMultistepMethod::adams);
+        solver.setNonlinearSolverIteration(amici::NonlinearSolverIteration::newton);
+        solver.setInternalSensitivityMethod(amici::InternalSensitivityMethod::staggered);
     }
 
     void teardown() {
@@ -145,38 +164,7 @@ TEST(dataSerialization, testString) {
     checkReturnDataEqual(r, amici::deserializeFromString<amici::ReturnData>(serialized));
 }
 
-/*
-TEST_GROUP(solverSerialization){
-    amici::CVodeSolver solver;
-    void setup() {
-        // set non-default values for all members
-        solver.setAbsoluteTolerance(4);
-        solver.setRelativeTolerance(4);
-        solver.setAbsoluteToleranceQuadratures(4);
-        solver.setRelativeToleranceQuadratures(4);
-        solver.setAbsoluteToleranceSteadyState(4);
-        solver.setRelativeToleranceSteadyState(4);
-        solver.setSensitivityMethod(amici::SensitivityMethod::adjoint);
-        solver.setSensitivityOrder(amici::SensitivityOrder::second);
-        solver.setMaxSteps(1e6);
-        solver.setMaxStepsBackwardProblem(1e6);
-        solver.setNewtonMaxSteps(1e6);
-        solver.setNewtonMaxLinearSteps(1e6);
-        solver.setNewtonPreequilibration(true);
-        solver.setStateOrdering(amici::StateOrdering::COLAMD);
-        solver.setInterpolationType(amici::InterpolationType::polynomial);
-        solver.setStabilityLimitFlag(0);
-        solver.setLinearSolver(amici::LinearSolver::dense);
-        solver.setLinearMultistepMethod(amici::LinearMultistepMethod::adams);
-        solver.setNonlinearSolverIteration(amici::NonlinearSolverIteration::newton);
-        solver.setInternalSensitivityMethod(amici::InternalSensitivityMethod::staggered);
-    }
-    
-    void teardown() {
-    }
-};
-
-TEST(solverSerialization, testChar) {
+TEST(dataSerialization, testChar) {
     int length;
     char *buf = amici::serializeToChar(solver, &length);
 
@@ -186,14 +174,14 @@ TEST(solverSerialization, testChar) {
     CHECK_TRUE(solver == v);
 }
 
-TEST(solverSerialization, testStdVec) {
+TEST(dataSerialization, testStdVec) {
 
     auto buf = amici::serializeToStdVec(solver);
     amici::CVodeSolver v = amici::deserializeFromChar<amici::CVodeSolver>(buf.data(), buf.size());
 
     CHECK_TRUE(solver == v);
 }
-*/
+
 
 
 
