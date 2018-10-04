@@ -73,7 +73,9 @@ script:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then ./scripts/run-SBMLTestsuite.sh; fi
 
 after_failure:
+    - echo -en 'travis_fold:start:failure\\r'
     - ls -alR
+    - echo -en 'travis_fold:end:failure\\r'
 
 # cache dependencies
 cache: 
