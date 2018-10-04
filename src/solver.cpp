@@ -398,6 +398,8 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.quad_rtol == b.quad_rtol)
             && (a.getAbsoluteToleranceSteadyState() == b.getAbsoluteToleranceSteadyState())
             && (a.getRelativeToleranceSteadyState() == b.getRelativeToleranceSteadyState())
+            && (a.getAbsoluteToleranceSteadyStateSensi() == b.getAbsoluteToleranceSteadyStateSensi())
+            && (a.getRelativeToleranceSteadyStateSensi() == b.getRelativeToleranceSteadyStateSensi())
             && (a.maxstepsB == b.maxstepsB)
             && (a.sensi == b.sensi)
             && (a.sensi_meth == b.sensi_meth);
@@ -418,8 +420,8 @@ void Solver::applyTolerancesFSA() {
         return;
     
     if(nplist()) {
-        std::vector<realtype> atols(nplist(),atol);
-        setSensSStolerances(rtol, atols.data());
+        std::vector<realtype> atols(nplist(), getAbsoluteToleranceSensi());
+        setSensSStolerances(getRelativeToleranceSensi(), atols.data());
         setSensErrCon(true);
     }
 }
@@ -541,6 +543,36 @@ void Solver::setAbsoluteTolerance(double atol) {
     
     if(getMallocDone()) {
         applyTolerances();
+        applySensitivityTolerances();
+    }
+}
+    
+double Solver::getRelativeToleranceSensi() const {
+    return isNaN(rtol_sensi) ? rtol : rtol_sensi;
+}
+
+void Solver::setRelativeToleranceSensi(double rtol) {
+    if(rtol < 0)
+        throw AmiException("rtol must be a non-negative number");
+    
+    rtol_sensi = rtol;
+    
+    if(getMallocDone()) {
+        applySensitivityTolerances();
+    }
+}
+
+double Solver::getAbsoluteToleranceSensi() const {
+    return isNaN(atol_sensi) ? atol : atol_sensi;
+}
+
+void Solver::setAbsoluteToleranceSensi(double atol) {
+    if(atol < 0)
+        throw AmiException("atol must be a non-negative number");
+    
+    atol_sensi = atol;
+    
+    if(getMallocDone()) {
         applySensitivityTolerances();
     }
 }

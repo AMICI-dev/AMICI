@@ -335,6 +335,30 @@ class Solver {
      * @param atol absolute tolerance (non-negative number)
      */
     void setAbsoluteTolerance(double atol);
+    
+    /**
+     * @brief returns the relative tolerances for the forward sensitivity problem
+     * @return relative tolerances
+     */
+    double getRelativeToleranceSensi() const;
+    
+    /**
+     * @brief sets the relative tolerances for the forward sensitivity problem
+     * @param rtol relative tolerance (non-negative number)
+     */
+    void setRelativeToleranceSensi(double rtol);
+    
+    /**
+     * @brief returns the absolute tolerances for the forward sensitivity problem
+     * @return absolute tolerances
+     */
+    double getAbsoluteToleranceSensi() const;
+    
+    /**
+     * @brief sets the absolute tolerances for the forward sensitivity problem
+     * @param atol absolute tolerance (non-negative number)
+     */
+    void setAbsoluteToleranceSensi(double atol);
 
     /**
      * @brief returns the relative tolerance for the quadrature problem
@@ -1137,6 +1161,12 @@ private:
 
     /** relative tolerances for integration */
     double rtol = 1e-8;
+    
+    /** absolute tolerances for forward sensitivity integration */
+    double atol_sensi = NAN;
+    
+    /** relative tolerances for forward sensitivity integration */
+    double rtol_sensi = NAN;
 
     /** absolute tolerances for backward quadratures */
     double quad_atol = 1e-12;
