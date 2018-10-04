@@ -97,7 +97,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.nmaxevent;
     ar &u.pscale;
     ar &u.tstart;
-
+    ar &u.qpositivex;
 }
 
 
