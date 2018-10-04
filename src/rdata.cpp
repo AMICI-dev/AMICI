@@ -36,8 +36,6 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
      * @param model pointer to model specification object
      * bool
      */
-
-    
           
     xdot.resize(nx, getNaN());
 

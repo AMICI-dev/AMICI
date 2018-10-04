@@ -119,6 +119,18 @@ namespace amici {
          */
         virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) = 0;
         
+        /** Sensitivity Residual function
+         * @param t time
+         * @param x state
+         * @param dx time derivative of state (DAE only)
+         * @param ip parameter index
+         * @param sx sensitivity state
+         * @param sdx time derivative of sensitivity state (DAE only)
+         * @param sxdot array to which values of the sensitivity residual function will be written
+         */
+        virtual void fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
+                            AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) = 0;
+        
         /** Dense Jacobian function
          * @param t time
          * @param cj scaling factor (inverse of timestep, DAE only)

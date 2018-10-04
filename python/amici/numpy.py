@@ -40,6 +40,7 @@ def rdataToNumPyArrays(rdata):
     fieldNames = ['t', 'x', 'x0', 'sx', 'sx0', 'y', 'sigmay', 'sy', 'ssigmay',
                   'z', 'rz', 'sigmaz', 'sz', 'srz', 'ssigmaz', 'sllh', 's2llh',
                   'J', 'xdot', 'status', 'llh', 'chi2', 'res', 'sres', 'FIM',
+                  'wrms_steadystate', 't_steadystate',
                   'newton_numlinsteps', 'newton_numsteps',
                   'numsteps', 'numrhsevals', 'numerrtestfails',
                   'numnonlinsolvconvfails',

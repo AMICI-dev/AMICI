@@ -91,19 +91,19 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
         bwd->workBackwardProblem();
     
         rdata->status = AMICI_SUCCESS;
-    } catch (amici::IntegrationFailure& ex) {
+    } catch (amici::IntegrationFailure const& ex) {
         rdata->invalidate(ex.time);
         rdata->status = ex.error_code;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI forward simulation failed at t = %f:\n%s\n",ex.time,ex.what());
-    } catch (amici::IntegrationFailureB& ex) {
+    } catch (amici::IntegrationFailureB const& ex) {
         rdata->invalidateLLH();
         rdata->status = ex.error_code;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI backward simulation failed at t = %f:\n%s\n",ex.time,ex.what());
-    } catch (amici::AmiException& ex) {
+    } catch (amici::AmiException const& ex) {
         rdata->invalidate(model.t0());
         rdata->status = AMICI_ERROR;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
-    } catch (std::exception& ex) {
+    } catch (std::exception const& ex) {
         rdata->invalidate(model.t0());
         rdata->status = AMICI_ERROR;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s",ex.what());

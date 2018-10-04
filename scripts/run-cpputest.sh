@@ -8,4 +8,6 @@ lcov --base-directory ${AMICI_PATH} --directory ${AMICI_PATH}/build/CMakeFiles/a
 cd ${AMICI_PATH}/build
 
 ctest -V
+ret=$?
+if [[ $ret != 0 ]]; then exit $ret; fi
 mv ${AMICI_PATH}/tests/cpputest/writeResults.h5 ${AMICI_PATH}/tests/cpputest/writeResults.h5.bak

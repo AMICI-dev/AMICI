@@ -105,6 +105,8 @@ namespace amici {
             fdxdotdp(t,x->getNVector());
         }
         
+        void fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
+                    AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) override;
         void fsxdot(realtype t, N_Vector x, int ip, N_Vector sx, N_Vector sxdot);
         
         virtual std::unique_ptr<Solver> getSolver() override;

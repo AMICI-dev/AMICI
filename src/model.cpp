@@ -358,19 +358,23 @@ void setValueById(std::vector<std::string> const& ids, std::vector<realtype> &va
  */
 int setValueByIdRegex(std::vector<std::string> const& ids, std::vector<realtype> &values, realtype value,
                   std::string const& regex, const char* variable_name, const char* id_name) {
-    std::regex pattern (regex);
-    int n_found = 0;
-    for(const auto &id: ids) {
-        if(std::regex_match(id, pattern)) {
-            values.at(&id - &ids[0]) = value;
-            ++n_found;
+    try {
+        std::regex pattern (regex);
+        int n_found = 0;
+        for(const auto &id: ids) {
+            if(std::regex_match(id, pattern)) {
+                values.at(&id - &ids[0]) = value;
+                ++n_found;
+            }
         }
+        
+        if(n_found == 0)
+            throw AmiException("Could not find %s with specified %s", variable_name, id_name);
+        
+        return n_found;
+    } catch (std::regex_error const& e) {
+        throw AmiException("Specified regex pattern could not be compiled: %s", e.what());
     }
-    
-    if(n_found == 0)
-        throw AmiException("Could not find %s with specified %s", variable_name, id_name);
-    
-    return n_found;
 }
     
 realtype Model::getParameterById(std::string const& par_id) const {

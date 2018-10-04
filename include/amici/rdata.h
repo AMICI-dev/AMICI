@@ -145,13 +145,24 @@ class ReturnData {
     int newton_status = 0;
 
     /** computation time of the Newton solver [s] */
-    double newton_time = 0.0;
+    double newton_cpu_time = 0.0;
 
     /** number of Newton steps for steady state problem (length = 2) */
     std::vector<int> newton_numsteps;
 
     /** number of linear steps by Newton step for steady state problem (length = newton_maxsteps * 2) */
     std::vector<int> newton_numlinsteps;
+    
+    /** time at which steadystate was reached in the simulation based approach */
+    realtype t_steadystate = NAN;
+    
+    /** weighted root-mean-square of the rhs when steadystate
+     was reached*/
+    realtype wrms_steadystate = NAN;
+    
+    /** weighted root-mean-square of the rhs when steadystate
+     was reached*/
+    realtype wrms_sensi_steadystate = NAN;
 
     /** preequilibration steady state found be Newton solver (dimension: nx) */
     std::vector<realtype> x0;
@@ -175,7 +186,6 @@ class ReturnData {
     /** status code */
     int status = 0;
 
-  public:
     /** total number of model parameters */
     const int np;
     /** number of fixed parameters */

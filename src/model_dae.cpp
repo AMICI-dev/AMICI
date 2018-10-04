@@ -83,7 +83,7 @@ namespace amici {
                      N_VGetArrayPointer(dx));
     }
     
-     void Model_DAE::fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot){
+    void Model_DAE::fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot){
         fxdot(t,x->getNVector(),dx->getNVector(),xdot->getNVector());
     }
     
@@ -233,6 +233,13 @@ namespace amici {
             fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                           N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                           w.data(),dwdp.data());
+    }
+    
+    void Model_DAE::fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
+                           AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) {
+        fsxdot(t,x->getNVector(),dx->getNVector(), ip,
+               sx->getNVector(),sdx->getNVector(),
+               sxdot->getNVector());
     }
     
     /** Right hand side of differential equation for state sensitivities sx

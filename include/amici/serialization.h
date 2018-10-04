@@ -42,7 +42,15 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.sensi;
     ar &u.atol;
     ar &u.rtol;
+    ar &u.quad_atol;
+    ar &u.quad_rtol;
+    ar &u.ss_atol;
+    ar &u.ss_rtol;
     ar &u.maxsteps;
+    ar &u.maxstepsB;
+    ar &u.newton_preeq;
+    ar &u.newton_maxsteps;
+    ar &u.newton_maxlinsteps;
     ar &u.ism;
     ar &u.sensi_meth;
     ar &u.linsol;
@@ -139,9 +147,12 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.order;
 
     ar &r.newton_status;
-    ar &r.newton_time;
+    ar &r.newton_cpu_time;
     ar &r.newton_numsteps;
     ar &r.newton_numlinsteps;
+    ar &r.wrms_steadystate;
+    ar &r.wrms_sensi_steadystate;
+    ar &r.t_steadystate;
     ar &r.x0;
     ar &r.sx0;
     ar &r.llh;
@@ -164,24 +175,28 @@ char *serializeToChar(T const& data, int *size) {
      *
      * @param data input object
      * @param size maximum char length
-
+     *
      * @return The object serialized as char
      */
-    std::string serialized;
-    ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-    ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
-        s(inserter);
-    ::boost::archive::binary_oarchive oar(s);
-    oar << data;
-    s.flush();
+    try {
+        std::string serialized;
+        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
+        ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
+            s(inserter);
+        ::boost::archive::binary_oarchive oar(s);
+        oar << data;
+        s.flush();
 
-    char *charBuffer = new char[serialized.size()];
-    memcpy(charBuffer, serialized.data(), serialized.size());
+        char *charBuffer = new char[serialized.size()];
+        memcpy(charBuffer, serialized.data(), serialized.size());
 
-    if (size)
-        *size = serialized.size();
+        if (size)
+            *size = serialized.size();
 
-    return charBuffer;
+        return charBuffer;
+    } catch(boost::archive::archive_exception const& e) {
+        throw AmiException("Serialization to char failed: %s", e.what());
+    }
 }
 
 
@@ -196,14 +211,18 @@ T deserializeFromChar(const char *buffer, int size) {
      *
      * @return The deserialized object
      */
-    ::boost::iostreams::basic_array_source<char> device(buffer, size);
-    ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
-        device);
-    ::boost::archive::binary_iarchive iar(s);
-    T data;
-    iar >> data;
+    try {
+        ::boost::iostreams::basic_array_source<char> device(buffer, size);
+        ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
+            device);
+        ::boost::archive::binary_iarchive iar(s);
+        T data;
+        iar >> data;
 
-    return data;
+        return data;
+    } catch(::boost::archive::archive_exception const& e) {
+        throw AmiException("Deserialization from char failed: %s", e.what());
+    }
 }
 
 
@@ -213,19 +232,24 @@ std::string serializeToString(T const& data) {
      * @brief Serialize object to string
      *
      * @param data input object
-
+     *
      * @return The object serialized as string
      */
-    std::string serialized;
-    ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-    ::boost::iostreams::stream<
-        ::boost::iostreams::back_insert_device<std::string>>
-        s(inserter);
-    ::boost::archive::binary_oarchive oar(s);
-    oar << data;
-    s.flush();
+    try {
+        std::string serialized;
+        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
+        ::boost::iostreams::stream<
+            ::boost::iostreams::back_insert_device<std::string>>
+            s(inserter);
+        ::boost::archive::binary_oarchive oar(s);
+    
+        oar << data;
+        s.flush();
 
-    return serialized;
+        return serialized;
+    } catch(::boost::archive::archive_exception const& e) {
+        throw AmiException("Serialization to string failed: %s", e.what());
+    }
 }
 
 template <typename T>
@@ -234,20 +258,25 @@ std::vector<char> serializeToStdVec(T const& data) {
      * @brief Serialize object to std::vector<char>
      *
      * @param data input object
-
+     *
      * @return The object serialized as std::vector<char>
      */
-    std::string serialized;
-    ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
-    ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
-        s(inserter);
-    ::boost::archive::binary_oarchive oar(s);
-    oar << data;
-    s.flush();
+    try{
+        std::string serialized;
+        ::boost::iostreams::back_insert_device<std::string> inserter(serialized);
+        ::boost::iostreams::stream<::boost::iostreams::back_insert_device<std::string>>
+            s(inserter);
+        ::boost::archive::binary_oarchive oar(s);
 
-    std::vector<char> buf(serialized.begin(), serialized.end());
-
-    return buf;
+        oar << data;
+        s.flush();
+        
+        std::vector<char> buf(serialized.begin(), serialized.end());
+        
+        return buf;
+    } catch(::boost::archive::archive_exception const& e) {
+        throw AmiException("Serialization to StdVec failed: %s", e.what());
+    }
 }
 
 template <typename T>
@@ -259,15 +288,20 @@ T deserializeFromString(std::string const& serialized) {
      *
      * @return The deserialized object
      */
-    ::boost::iostreams::basic_array_source<char> device(serialized.data(),
-                                                      serialized.size());
-    ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
-        device);
-    ::boost::archive::binary_iarchive iar(s);
-    T deserialized;
-    iar >> deserialized;
+    try{
+        ::boost::iostreams::basic_array_source<char> device(serialized.data(),
+                                                          serialized.size());
+        ::boost::iostreams::stream<::boost::iostreams::basic_array_source<char>> s(
+            device);
+        ::boost::archive::binary_iarchive iar(s);
+        T deserialized;
+    
+        iar >> deserialized;
 
-    return deserialized;
+        return deserialized;
+    } catch(::boost::archive::archive_exception const& e) {
+        throw AmiException("Deserialization from StdVec failed: %s", e.what());
+    }
 }
 
 

@@ -331,7 +331,7 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
         createAndWriteInt2DDataset(file, hdf5Location + "/newton_numlinsteps", rdata.newton_numlinsteps.data(),
                                     rdata.newton_maxsteps, 2);
 
-    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "newton_time", &rdata.newton_time, 1);
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "newton_cpu_time", &rdata.newton_cpu_time, 1);
 
     if (!rdata.J.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J.data(),

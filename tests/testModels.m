@@ -65,7 +65,7 @@ function testModels()
         for ifield = transpose(fieldnames(sol))
             if(strcmp(ifield{1},'diagnosis'))
                 for jfield = transpose(fieldnames(sol.diagnosis))
-                    if(~ismember(jfield{1},{'newton_time'}))
+                    if(~ismember(jfield{1},{'newton_cpu_time'}))
                         checkAgreement(sol.diagnosis,results.diagnosis,jfield{1},0,1);
                     end
                 end

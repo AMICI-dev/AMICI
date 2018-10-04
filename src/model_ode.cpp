@@ -17,7 +17,7 @@ namespace amici {
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
      **/
-    void Model_ODE::fJ( realtype t, N_Vector x, N_Vector xdot, DlsMat J) {
+    void Model_ODE::fJ(realtype t, N_Vector x, N_Vector xdot, DlsMat J) {
         fdwdx(t,x);
         SetToZero(J);
         fJ(J->data,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
@@ -218,6 +218,11 @@ namespace amici {
         for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
             fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
                           N_VGetArrayPointer(xB),w.data(),dwdp.data());
+    }
+    
+    void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
+                           AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) {
+        fsxdot(t,x->getNVector(), ip, sx->getNVector(), sxdot->getNVector());
     }
     
     /** implementation of fsxdot at the N_Vector level, this function provides an interface

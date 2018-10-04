@@ -574,6 +574,14 @@ void testSolverGetterSetters(CVodeSolver solver, SensitivityMethod sensi_meth, S
     CHECK_THROWS(AmiException,solver.setAbsoluteToleranceQuadratures(badtol));
     solver.setAbsoluteToleranceQuadratures(tol);
     CHECK_EQUAL(solver.getAbsoluteToleranceQuadratures(), tol);
+    
+    CHECK_THROWS(AmiException,solver.setRelativeToleranceSteadyState(badtol));
+    solver.setRelativeToleranceSteadyState(tol);
+    CHECK_EQUAL(solver.getRelativeToleranceSteadyState(), tol);
+    
+    CHECK_THROWS(AmiException,solver.setAbsoluteToleranceSteadyState(badtol));
+    solver.setAbsoluteToleranceSteadyState(tol);
+    CHECK_EQUAL(solver.getAbsoluteToleranceSteadyState(), tol);
 }
 
 
