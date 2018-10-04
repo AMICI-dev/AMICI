@@ -76,7 +76,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     checkEqualArray(r.s2llh, s.s2llh, 1e-5, 1e-5, "s2llh");
 }
 
-
+/*
 // clang-format off
 TEST_GROUP(dataSerialization){
 
@@ -148,7 +148,7 @@ TEST(dataSerialization, testString) {
 TEST_GROUP(solverSerialization){
     amici::CVodeSolver solver;
     void setup() {
-        /* set non-default values for all members */
+        // set non-default values for all members
         solver.setAbsoluteTolerance(4);
         solver.setRelativeTolerance(4);
         solver.setAbsoluteToleranceQuadratures(4);
@@ -192,7 +192,7 @@ TEST(solverSerialization, testStdVec) {
 
     CHECK_TRUE(solver == v);
 }
-
+*/
 
 
 
