@@ -34,7 +34,7 @@ def getBlasConfig():
                   }
 
     if platform.system() in ['Linux', 'Darwin']:
-        blaspkgcfg['extra_link_args'] = ['-lcblas']
+        blaspkgcfg['libraries'] = ['cblas']
 
     if pkgconfig:
         if pkgconfig.exists('cblas'):
