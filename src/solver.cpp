@@ -17,7 +17,7 @@ namespace amici {
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 /**
- * @brief setupAMIs initialises the ami memory object
+ * @brief Initialises the ami memory object and applies specified options
  * @param x state vector
  * @param dx state derivative vector (DAE only)
  * @param sx state sensitivity vector
@@ -396,6 +396,8 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.maxsteps == b.maxsteps)
             && (a.quad_atol == b.quad_atol)
             && (a.quad_rtol == b.quad_rtol)
+            && (a.ss_atol == b.ss_atol)
+            && (a.ss_rtol == b.ss_rtol)
             && (a.maxstepsB == b.maxstepsB)
             && (a.sensi == b.sensi);
 }
@@ -709,5 +711,6 @@ void Solver::setInternalSensitivityMethod(InternalSensitivityMethod ism) {
         throw AmiException("Solver object was already set up, the sensitivity method can no longer be changed!");
     this->ism = ism;
 }
+
 
 } // namespace amici

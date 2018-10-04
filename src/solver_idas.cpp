@@ -657,7 +657,7 @@ bool IDASolver::getAdjMallocDone() const {
                      void *user_data) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fxdot(t,x,dx,xdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"fxdot");
     }
     
     /** Right hand side of differential equation for adjoint state xB
@@ -674,7 +674,7 @@ bool IDASolver::getAdjMallocDone() const {
                       N_Vector dxB, N_Vector xBdot, void *user_data) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fxBdot(t, x, dx, xB, dxB, xBdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"xBdot");
     }
     
     /** Right hand side of integral equation for quadrature states qB
@@ -691,7 +691,7 @@ bool IDASolver::getAdjMallocDone() const {
                       void *user_data) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fqBdot(t, x, dx, xB, dxB, qBdot);
-        return model->checkFinite(model->nJ*model->nplist(),N_VGetArrayPointer(qBdot),"adjoint quadrature function");
+        return model->checkFinite(model->nJ*model->nplist(),N_VGetArrayPointer(qBdot),"qBdot");
     }
     
     /** Right hand side of differential equation for state sensitivities sx
@@ -715,7 +715,7 @@ bool IDASolver::getAdjMallocDone() const {
         auto model = static_cast<Model_DAE*>(user_data);
         for(int ip = 0; ip < model->nplist(); ip++){
             model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);
-            if(model->checkFinite(model->nx,N_VGetArrayPointer(sxdot[ip]),"sensitivity rhs") != AMICI_SUCCESS)
+            if(model->checkFinite(model->nx,N_VGetArrayPointer(sxdot[ip]),"sxdot") != AMICI_SUCCESS)
                 return AMICI_RECOVERABLE_ERROR;
         }
         return AMICI_SUCCESS;
