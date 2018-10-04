@@ -50,6 +50,10 @@ class Solver {
         rtol = other.rtol;
         quad_atol = other.quad_atol;
         quad_rtol = other.quad_rtol;
+        ss_atol = other.ss_atol;
+        ss_rtol = other.ss_rtol;
+        ss_atol_sensi = other.ss_atol_sensi;
+        ss_rtol_sensi = other.ss_rtol_sensi;
         maxsteps = other.maxsteps;
         maxstepsB = other.maxstepsB;
         newton_maxsteps = other.newton_maxsteps;
@@ -379,6 +383,30 @@ class Solver {
      * @param atol absolute tolerance (non-negative number)
      */
     void setAbsoluteToleranceSteadyState(double atol);
+    
+    /**
+     * @brief returns the relative tolerance for the sensitivities of the steady state problem
+     * @return relative tolerance
+     */
+    double getRelativeToleranceSteadyStateSensi() const;
+    
+    /**
+     * @brief sets the relative tolerance for the sensitivities of the steady state problem
+     * @param rtol relative tolerance (non-negative number)
+     */
+    void setRelativeToleranceSteadyStateSensi(double rtol);
+    
+    /**
+     * @brief returns the absolute tolerance for the sensitivities of the steady state problem
+     * @return absolute tolerance
+     */
+    double getAbsoluteToleranceSteadyStateSensi() const;
+    
+    /**
+     * @brief sets the absolute tolerance for the sensitivities of the steady state problem
+     * @param atol absolute tolerance (non-negative number)
+     */
+    void setAbsoluteToleranceSteadyStateSensi(double atol);
 
     /**
      * @brief returns the maximum number of solver steps for the forward problem
@@ -1121,6 +1149,12 @@ private:
     
     /** relative tolerances for steadystate computation */
     double ss_rtol = NAN;
+    
+    /** absolute tolerances for steadystate computation */
+    double ss_atol_sensi = NAN;
+    
+    /** relative tolerances for steadystate computation */
+    double ss_rtol_sensi = NAN;
 
     /** maximum number of allowed integration steps for backward problem */
     int maxstepsB = 0;

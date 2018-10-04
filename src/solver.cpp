@@ -602,6 +602,28 @@ void Solver::setAbsoluteToleranceSteadyState(double atol) {
     
     this->ss_atol = atol;
 }
+    
+double Solver::getRelativeToleranceSteadyStateSensi() const {
+    return isNaN(ss_rtol_sensi) ? rtol : ss_rtol_sensi;
+}
+
+void Solver::setRelativeToleranceSteadyStateSensi(double rtol) {
+    if(rtol < 0)
+        throw AmiException("rtol must be a non-negative number");
+    
+    this->ss_rtol_sensi = rtol;
+}
+
+double Solver::getAbsoluteToleranceSteadyStateSensi() const {
+    return isNaN(ss_atol_sensi) ? atol : ss_atol_sensi;
+}
+
+void Solver::setAbsoluteToleranceSteadyStateSensi(double atol) {
+    if (atol < 0)
+        throw AmiException("atol must be a non-negative number");
+    
+    this->ss_atol_sensi = atol;
+}
 
 int Solver::getMaxSteps() const {
     return maxsteps;
