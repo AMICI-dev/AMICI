@@ -127,7 +127,7 @@ TEST(dataSerialization, testFile) {
     {
         std::ofstream ofs("sstore.dat");
         boost::archive::text_oarchive oar(ofs);
-        oar & static_cast<amici::Solver&>(solver);
+        //oar & static_cast<amici::Solver&>(solver);
         oar & static_cast<amici::Model&>(m);
     }
     {
@@ -135,9 +135,9 @@ TEST(dataSerialization, testFile) {
         boost::archive::text_iarchive iar(ifs);
         amici::CVodeSolver v;
         amici::Model_Test n;
-        iar &static_cast<amici::Solver&>(v);
+        //iar &static_cast<amici::Solver&>(v);
         iar &static_cast<amici::Model&>(n);
-        CHECK_TRUE(solver == v);
+        //CHECK_TRUE(solver == v);
         CHECK_TRUE(m == n);
 
     }
