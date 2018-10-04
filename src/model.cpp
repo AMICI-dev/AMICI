@@ -548,6 +548,16 @@ void Model::setTimepoints(const std::vector<realtype> &ts) {
         throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
     this->ts = std::move(ts);
 }
+    
+std::vector<bool> Model::getQPositiveX() const {
+    return qpositivex;
+}
+
+void Model::setQPositiveX(std::vector<bool> const& qpositivex) {
+    if (qpositivex.size() != static_cast<unsigned long>(nx))
+        throw AmiException("Dimension of specified qpositivex (%d) does not agree with number of state variables (%d)",qpositivex.size(),nx);
+    this->qpositivex = qpositivex;
+}
 
 double Model::t(int idx) const {
     return ts.at(idx);
@@ -674,6 +684,8 @@ Model::Model(const int nx,
       originalParameters(p),
       fixedParameters(std::move(k)),
       plist_(plist),
+      qpositivex(nx, false),
+      x_pos(nx),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
 {
     J = SparseNewMat(nx, nx, nnz, CSC_MAT);
@@ -691,7 +703,6 @@ Model::Model(const Model &other)
       o2mode(other.o2mode),
       z2event(other.z2event),
       idlist(other.idlist),
-
       sigmay(other.sigmay),
       dsigmaydp(other.dsigmaydp),
       sigmaz(other.sigmaz),
@@ -730,6 +741,8 @@ Model::Model(const Model &other)
       x0data(other.x0data),
       sx0data(other.sx0data),
       ts(other.ts),
+      qpositivex(other.qpositivex),
+      x_pos(other.x_pos),
       nmaxevent(other.nmaxevent),
       pscale(other.pscale),
       tstart(other.tstart)
@@ -1315,7 +1328,14 @@ bool operator ==(const Model &a, const Model &b)
             && (a.ts == b.ts)
             && (a.nmaxevent == b.nmaxevent)
             && (a.pscale == b.pscale)
+            && (a.qpositivex == b.qpositivex)
             && (a.tstart == b.tstart);
+}
+
+void Model::computeX_pos(N_Vector x) {
+    for (int ix = 0; ix < x_pos.getLength(); ++ix) {
+        x_pos.at(ix) = qpositivex.at(ix) && NV_Ith_S(x, ix) < 0 ? 0 : NV_Ith_S(x, ix);
+    }
 }
 
 } // namespace amici

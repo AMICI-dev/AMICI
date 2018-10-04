@@ -18,9 +18,10 @@ namespace amici {
      * @param J Matrix to which the Jacobian will be written
      **/
     void Model_ODE::fJ(realtype t, N_Vector x, N_Vector xdot, DlsMat J) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         SetToZero(J);
-        fJ(J->data,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJ(J->data,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
            w.data(),dwdx.data());
     }
     
@@ -37,9 +38,10 @@ namespace amici {
      * @param J Matrix to which the Jacobian will be written
      */
     void Model_ODE::fJSparse(realtype t, N_Vector x, SlsMat J) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         SparseSetMatToZero(J);
-        fJSparse(J,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJSparse(J,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                  w.data(),dwdx.data());
     }
     
@@ -58,9 +60,10 @@ namespace amici {
      * written
      **/
     void Model_ODE::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         N_VConst(0.0,Jv);
-        fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJv(N_VGetArrayPointer(Jv),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
             N_VGetArrayPointer(v),w.data(),dwdx.data());
     }
     
@@ -76,8 +79,9 @@ namespace amici {
      * @param root array with root function values
      */
     void Model_ODE::froot(realtype t, N_Vector x, realtype *root) {
+        computeX_pos(x);
         memset(root,0.0,sizeof(realtype)*ne);
-        froot(root,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data());
+        froot(root,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data());
     }
     
     void Model_ODE::fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) {
@@ -92,9 +96,10 @@ namespace amici {
      * @param xdot Vector with the right hand side
      */
     void Model_ODE::fxdot(realtype t, N_Vector x, N_Vector xdot) {
-        fw(t,x);
+        computeX_pos(x);
+        fw(t,x_pos.getNVector());
         N_VConst(0.0,xdot);
-        fxdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fxdot(N_VGetArrayPointer(xdot),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                      w.data());
     }
     
@@ -119,10 +124,11 @@ namespace amici {
      * @return status flag indicating successful execution
      */
     void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
+        computeX_pos(x);
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
-        fdwdp(t,x);
+        fdwdp(t,x_pos.getNVector());
         for(int ip = 0; ip < nplist(); ip++)
-            fdxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+            fdxdotdp(&dxdotdp.at(nx*ip),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                      plist_[ip],w.data(),dwdp.data());
     }
     
@@ -140,9 +146,10 @@ namespace amici {
      **/
     void Model_ODE::fJB( realtype t, N_Vector x, N_Vector xB,
                          N_Vector xBdot, DlsMat JB) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         SetToZero(JB);
-        fJB(JB->data,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJB(JB->data,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                    N_VGetArrayPointer(xB),w.data(),dwdx.data());
     }
     
@@ -155,9 +162,10 @@ namespace amici {
      * @param JB Matrix to which the Jacobian will be written
      */
     void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         SparseSetMatToZero(JB);
-        fJSparseB(JB,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJSparseB(JB,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                          N_VGetArrayPointer(xB),w.data(),dwdx.data());
     }
     
@@ -168,9 +176,10 @@ namespace amici {
      * @param x Vector with the states
      **/
     void Model_ODE::fJDiag(realtype t, N_Vector JDiag, N_Vector x) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         N_VConst(0.0,JDiag);
-        fJDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJDiag(N_VGetArrayPointer(JDiag),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                       w.data(),dwdx.data());
     }
     
@@ -184,9 +193,10 @@ namespace amici {
      *written
      **/
     void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         N_VConst(0.0,JvB);
-        fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJvB(N_VGetArrayPointer(JvB),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                     N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),w.data(),dwdx.data());
     }
     
@@ -198,9 +208,10 @@ namespace amici {
      * @param xBdot Vector with the adjoint right hand side
      */
     void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         N_VConst(0.0,xBdot);
-        fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fxBdot(N_VGetArrayPointer(xBdot),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                       N_VGetArrayPointer(xB),w.data(),dwdx.data());
     }
     
@@ -212,11 +223,12 @@ namespace amici {
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
     void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
-        fdwdp(t,x);
+        computeX_pos(x);
+        fdwdp(t,x_pos.getNVector());
         N_VConst(0.0,qBdot);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
         for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-            fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+            fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                           N_VGetArrayPointer(xB),w.data(),dwdp.data());
     }
     
@@ -235,12 +247,13 @@ namespace amici {
      */
     void Model_ODE::fsxdot(realtype t, N_Vector x, int ip,
                             N_Vector sx, N_Vector sxdot) {
+        computeX_pos(x);
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
-            fdxdotdp(t, x);
-            fJSparse(t, x, J);
+            fdxdotdp(t, x_pos.getNVector());
+            fJSparse(t, x_pos.getNVector(), J);
         }
         N_VConst(0.0,sxdot);
-        fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fsxdot(N_VGetArrayPointer(sxdot),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                       plist_[ip],N_VGetArrayPointer(sx),
                       w.data(),dwdx.data(),J->data,&dxdotdp.at(ip*nx));
     }

@@ -49,7 +49,7 @@ public:
       * @param other right hand side
       * @return left hand side
       */
-    AmiVector& operator=(AmiVector& other) {
+    AmiVector& operator=(AmiVector const& other) {
         vec = other.vec;
         if(nvec)
             N_VDestroy_Serial(nvec);

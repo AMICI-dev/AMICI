@@ -19,9 +19,10 @@ namespace amici {
      **/
     void Model_DAE::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
                       N_Vector xdot, DlsMat J) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         SetToZero(J);
-        fJ(J->data,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJ(J->data,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                   cj,N_VGetArrayPointer(dx),w.data(),dwdx.data());
     }
 
@@ -38,9 +39,10 @@ namespace amici {
      * @param J Matrix to which the Jacobian will be written
      */
     void Model_DAE::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, SlsMat J) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         SparseSetMatToZero(J);
-        fJSparse(J,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJSparse(J,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                         cj,N_VGetArrayPointer(dx),w.data(),dwdx.data());
     }
     
@@ -61,9 +63,10 @@ namespace amici {
      **/
     void Model_DAE::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv,
                        realtype cj) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         N_VConst(0.0,Jv);
-        fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJv(N_VGetArrayPointer(Jv),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                    cj,N_VGetArrayPointer(dx),N_VGetArrayPointer(v),w.data(),dwdx.data());
     }
     
@@ -79,7 +82,8 @@ namespace amici {
      */
     void Model_DAE::froot(realtype t, N_Vector x, N_Vector dx, realtype *root) {
         memset(root,0.0,sizeof(realtype)*ne);
-        froot(root,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        computeX_pos(x);
+        froot(root,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                      N_VGetArrayPointer(dx));
     }
     
@@ -94,9 +98,10 @@ namespace amici {
      * @param xdot Vector with the right hand side
      */
     void Model_DAE::fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot) {
+        computeX_pos(x);
         fw(t,x);
         N_VConst(0.0,xdot);
-        fxdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fxdot(N_VGetArrayPointer(xdot),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                      N_VGetArrayPointer(dx),w.data());
     }
     
@@ -110,9 +115,10 @@ namespace amici {
      **/
     void Model_DAE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                           AmiVector *dx) {
-        fdwdx(t,x->getNVector());
+        computeX_pos(x->getNVector());
+        fdwdx(t,x_pos.getNVector());
         memset(JDiag->data(),0.0,sizeof(realtype)*nx);
-        fJDiag(JDiag->data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJDiag(JDiag->data(),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                0.0,dx->data(),w.data(),dwdx.data());
         if(!checkFinite(nx,JDiag->data(),"Jacobian"))
             throw AmiException("Evaluation of fJDiag failed!");
@@ -125,11 +131,12 @@ namespace amici {
      * @return status flag indicating successful execution
      */
      void Model_DAE::fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx) {
-        std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
-        fdwdp(t,x);
-        for(int ip = 0; ip < nplist(); ip++)
-            fdxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
-                     plist_[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data());
+         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
+         computeX_pos(x);
+         fdwdp(t,x_pos.getNVector());
+         for(int ip = 0; ip < nplist(); ip++)
+             fdxdotdp(&dxdotdp.at(nx*ip),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
+                      plist_[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data());
     }
     
     /**
@@ -138,8 +145,9 @@ namespace amici {
      * @param x Vector with the states
      */
      void Model_DAE::fM(realtype t, const N_Vector x) {
-        std::fill(M.begin(),M.end(),0.0);
-        fM(M.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data());
+         std::fill(M.begin(),M.end(),0.0);
+         computeX_pos(x);
+         fM(M.data(),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data());
     }
     
     std::unique_ptr<Solver> Model_DAE::getSolver() {
@@ -156,9 +164,10 @@ namespace amici {
      * @param JB Matrix to which the Jacobian will be written
      **/
     void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, DlsMat JB) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         SetToZero(JB);
-        fJB(JB->data,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJB(JB->data,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                    cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                    w.data(),dwdx.data());
     }
@@ -173,9 +182,10 @@ namespace amici {
      * @param JB Matrix to which the Jacobian will be written
      */
     void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, SlsMat JB) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         SparseSetMatToZero(JB);
-        fJSparseB(JB,t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJSparseB(JB,t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                          cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                          w.data(),dwdx.data());
     }
@@ -193,9 +203,10 @@ namespace amici {
      **/
     void Model_DAE::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
                         N_Vector vB, N_Vector JvB, realtype cj) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         N_VConst(0.0,JvB);
-        fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fJvB(N_VGetArrayPointer(JvB),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                     cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                     N_VGetArrayPointer(vB),w.data(),dwdx.data());
     }
@@ -210,9 +221,10 @@ namespace amici {
      */
     void Model_DAE::fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                           N_Vector dxB, N_Vector xBdot) {
-        fdwdx(t,x);
+        computeX_pos(x);
+        fdwdx(t,x_pos.getNVector());
         N_VConst(0.0,xBdot);
-        fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fxBdot(N_VGetArrayPointer(xBdot),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                       N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                       w.data(),dwdx.data());
     }
@@ -226,11 +238,12 @@ namespace amici {
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
     void Model_DAE::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot) {
-        fdwdp(t,x);
+        computeX_pos(x);
+        fdwdp(t,x_pos.getNVector());
         N_VConst(0.0,qBdot);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
         for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-            fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+            fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                           N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
                           w.data(),dwdp.data());
     }
@@ -253,13 +266,14 @@ namespace amici {
      */
     void Model_DAE::fsxdot(realtype t, N_Vector x, N_Vector dx, int ip,
                           N_Vector sx, N_Vector sdx, N_Vector sxdot) {
+        computeX_pos(x);
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
-            fM(t,x);
-            fdxdotdp(t,x,dx);
-            fJSparse(t,0.0,x,dx,J);// also calls dwdx & dx
+            fM(t,x_pos.getNVector());
+            fdxdotdp(t,x_pos.getNVector(),dx);
+            fJSparse(t,0.0,x_pos.getNVector(),dx,J);// also calls dwdx & dx
         }
         N_VConst(0.0,sxdot);
-        fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),
+        fsxdot(N_VGetArrayPointer(sxdot),t,x_pos.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                plist_[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx),N_VGetArrayPointer(sdx),
                w.data(),dwdx.data(),J->data,M.data(),&dxdotdp.at(ip*nx));
     }
