@@ -724,7 +724,8 @@ class SbmlImporter:
             if rule.getFormula() == '':
                 continue
             variable = sp.sympify(rule.getVariable())
-            formula = sp.sympify(rule.getFormula())
+            # avoid incorrect parsing of pow(x, -1) in symengine
+            formula = sp.sympify(sbml.formulaToL3String(rule.getMath()))
 
             if variable in stoichvars:
                 self.stoichiometricMatrix = \
