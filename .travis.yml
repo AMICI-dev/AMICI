@@ -55,12 +55,12 @@ install:
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
+    - ./scripts/buildAmici.sh
 
 script:  
 #    - cd $BASE_DIR/python/sdist
 #    - python3 setup.py sdist --dist-dir=$BASE_DIR/build/python/
 #    - python3 -m pip install $BASE_DIR/build/python/amici-*.tar.gz --verbose
-    - ./scripts/buildAmici.sh
     - cd $BASE_DIR
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
