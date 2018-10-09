@@ -37,9 +37,9 @@ wrap_unique_ptr(ReturnDataPtr, amici::ReturnData)
 wrap_unique_ptr(ModelPtr, amici::Model)
 wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
-%naturalvar amici::ExpData::fixedParameters
-%naturalvar amici::ExpData::fixedParametersPreequilibration
-%naturalvar amici::ExpData::fixedParametersPresimulation
+%naturalvar amici::ExpData::fixedParameters;
+%naturalvar amici::ExpData::fixedParametersPreequilibration;
+%naturalvar amici::ExpData::fixedParametersPresimulation;
 
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
