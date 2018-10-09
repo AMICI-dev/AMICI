@@ -90,7 +90,7 @@ def checkDerivatives(model, solver, edata):
         old_parameters = model.getParameters()
         
         solver.setSensitivityOrder(amici.SensitivityOrder_none)
-        model.setParameters(amici.DoubleVector(p))
+        model.setParameters(p)
         rdata = amici.runAmiciSimulation(model, solver, edata)
         
         solver.setSensitivityOrder(old_sensitivity_order)
@@ -106,14 +106,14 @@ def checkDerivatives(model, solver, edata):
         
         p = x0
         if len(plist):
-            model.setParameterList(amici.IntVector(plist))
+            model.setParameterList(plist)
             p = x0full[:]
             p[plist] = x0
         else:
             model.requireSensitivitiesForAllParameters()
         verbose and print('g: p=%s' % p)
         
-        model.setParameters(amici.DoubleVector(p))
+        model.setParameters(p)
         rdata = amici.runAmiciSimulation(model, solver, edata)
         
         model.setParameters(old_parameters)
