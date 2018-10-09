@@ -39,7 +39,7 @@ def runTest(testId, logfile):
         mod = importlib.import_module(wrapper.modelName)
 
         model = mod.getModel()
-        model.setTimepoints(mod.amici.DoubleVector(ts))
+        model.setTimepoints(ts)
         solver = model.getSolver()
         solver.setMaxSteps(int(1e6))
         solver.setRelativeTolerance(rtol / 1000.0)

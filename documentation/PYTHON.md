@@ -61,9 +61,9 @@ to obtain a model instance call the `getModel()` method. This model instance wil
 
     model = modelModule.getModel()
 
-then pass the simulation timepoints as `amici.DoubleVector` to `amici.Model.setTimepoints`
+then pass the simulation timepoints to `amici.Model.setTimepoints`
 
-    model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 60))) 
+    model.setTimepoints(np.linspace(0, 60, 60)) 
     
 for simulation we need to generate a solver instance 
 

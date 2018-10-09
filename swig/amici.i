@@ -11,6 +11,13 @@
 import_array();
 %}
 
+%include <stl.i>
+
+// Expose vectors
+%template(DoubleVector) std::vector<double>;
+%template(IntVector) std::vector<int>;
+%template(StringVector) std::vector<std::string>;
+
 %{
 static_assert (sizeof(double) == sizeof (npy_double), "Numpy double size mismatch");
 static_assert (sizeof(int) == sizeof (npy_int), "Numpy integer size mismatch");
@@ -22,7 +29,7 @@ using namespace amici;
 
 typedef double realtype;
 
-%include <stl.i>
+
 
 %include std_unique_ptr.i
 wrap_unique_ptr(SolverPtr, amici::Solver)
@@ -32,7 +39,6 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
-
 
 %include edata.i
 %include rdata.i
@@ -57,8 +63,6 @@ using namespace amici;
 // Process symbols in header
 %include "amici/amici.h"
 
-// Expose vectors
-%template(DoubleVector) std::vector<realtype>;
-%template(IntVector) std::vector<int>;
-%template(ParameterScalingVector) std::vector<amici::ParameterScaling>;
-%template(StringVector) std::vector<std::string>;
+%template(ScalingVector) std::vector<amici::ParameterScaling>;
+
+
