@@ -1,19 +1,5 @@
 %module amici
 
-%include <exception.i>
-
-%except(python) {
-    try {
-        $action
-    } catch(std::exception const& ex) {
-        PyErr_SetString(PyExc_RuntimeError, const_cast<char*>(ex.what()));
-        return nullptr;
-    } catch(...) {
-        PyErr_SetString(PyExc_RuntimeError, "Unknown exception occured");
-        return nullptr;
-    }
-}
-
 %{
 #define SWIG_FILE_WITH_INIT
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
