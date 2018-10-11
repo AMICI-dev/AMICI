@@ -106,7 +106,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     } catch (std::exception const& ex) {
         model.setFixedParameters(originalFixedParameters);
         model.setTimepoints(originalTimepoints);
-        throw ex;
+        throw;
     } catch (...) {
         model.setFixedParameters(originalFixedParameters);
         model.setTimepoints(originalTimepoints);
