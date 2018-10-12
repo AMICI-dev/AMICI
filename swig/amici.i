@@ -1,5 +1,16 @@
 %module amici
 
+%include <exception.i>
+%exception {
+    try {
+        $action
+    } catch(std::exception const& ex) {
+        SWIG_exception_fail(SWIG_RuntimeError, ex.what());
+    } catch(...) {
+        SWIG_exception_fail(SWIG_RuntimeError, "Unknown exception occured");
+    }
+}
+
 %{
 #define SWIG_FILE_WITH_INIT
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION

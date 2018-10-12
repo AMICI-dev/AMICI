@@ -66,6 +66,19 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'],atol=1e-6,rtol=1e-2)
                     else:
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
+
+                    try:
+                        self.model.getParameterByName(
+                            'thisParameterDoesNotExist'
+                        )
+                    except Exception as e:
+                        print(e)
+
+                    self.assertRaises(
+                        RuntimeError,
+                        self.model.getParameterByName,
+                        'thisParameterDoesNotExist'
+                    )
                         
 
 def checkDerivatives(model, solver, edata):
