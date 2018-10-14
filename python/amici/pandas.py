@@ -3,7 +3,6 @@ import numpy as np
 import math
 import copy
 from .numpy import edataToNumPyArrays
-from amici import DoubleVector
 from amici import ExpData
 
 def getDataObservablesAsDataFrame(model, edata_list):
@@ -171,18 +170,18 @@ def _fill_conditions_dict(datadict, model, edata) -> dict:
     datadict['t_presim'] = edata.t_presim
 
     for i_par, par in enumerate(_get_names_or_ids(model, 'FixedParameter')):
-        if edata.fixedParameters.size():
+        if len(edata.fixedParameters):
             datadict[par] = edata.fixedParameters[i_par]
         else:
             datadict[par] = model.getFixedParameters()[i_par]
 
-        if edata.fixedParametersPreequilibration.size():
+        if len(edata.fixedParametersPreequilibration):
             datadict[par + '_preeq'] = \
                 edata.fixedParametersPreequilibration[i_par]
         else:
             datadict[par + '_preeq'] = math.nan
 
-        if edata.fixedParametersPresimulation.size():
+        if len(edata.fixedParametersPresimulation):
             datadict[par + '_presim'] = \
                 edata.fixedParametersPresimulation[i_par]
         else:
@@ -276,10 +275,14 @@ def _get_names_or_ids(model, variable):
         raise ValueError('variable must be in ' + str(variable_options))
     namegetter = getattr(model, 'get' + variable + 'Names')
     idgetter = getattr(model, 'get' + variable + 'Ids')
-    if set(namegetter()) == len(namegetter()):
+    if len(set(namegetter())) == len(namegetter()) \
+            and model.hasObservableNames():
         return list(namegetter())
-    else:
+    elif model.hasObservableIds():
         return list(idgetter())
+    else:
+        raise RuntimeError('Model Observable Names are not unique and '
+                           'Observable IDs are not set. ')
 
 
 def _get_specialized_fixed_parameters(model, condition, overwrite) -> list:
@@ -324,7 +327,7 @@ def constructEdataFromDataFrame(df, model, condition):
 
     # timepoints
     df = df.sort_values(by='time', ascending=True)
-    edata.setTimepoints(DoubleVector(df['time'].values))
+    edata.setTimepoints(df['time'].values)
 
     overwrite_preeq = {}
     overwrite_presim = {}
@@ -337,22 +340,18 @@ def constructEdataFromDataFrame(df, model, condition):
             overwrite_presim[par] = condition[par + '_presim']
 
     # fixedParameters
-    edata.fixedParameters = DoubleVector(
+    edata.fixedParameters = \
         condition[_get_names_or_ids(model, 'FixedParameter')].values
-    )
 
     if any([overwrite_preeq[key] != condition[key] for key in
             overwrite_preeq.keys()]):
-        edata.fixedParametersPreequilibration = DoubleVector(
-            _get_specialized_fixed_parameters(model, condition,
-                                              overwrite_preeq)
-        )
+        edata.fixedParametersPreequilibration = \
+            _get_specialized_fixed_parameters(model, condition,overwrite_preeq)
 
     if any([overwrite_presim[key] != condition[key] for key in
             overwrite_presim.keys()]):
-        edata.fixedParametersPresimulation = DoubleVector(
-            _get_specialized_fixed_parameters(model, condition,
-                                              overwrite_presim)
+        edata.fixedParametersPresimulation = _get_specialized_fixed_parameters(
+            model, condition,overwrite_presim
         )
 
     if 't_presim' in condition.keys():
@@ -361,11 +360,11 @@ def constructEdataFromDataFrame(df, model, condition):
     # data
     for obs_index, obs in enumerate(_get_names_or_ids(model, 'Observable')):
         if obs in df.keys():
-            edata.setObservedData(DoubleVector(df[obs].values),
+            edata.setObservedData(df[obs].values,
                                   obs_index)
         if obs + '_std' in df.keys():
             edata.setObservedDataStdDev(
-                DoubleVector(df[obs + '_std'].values),
+                df[obs + '_std'].values,
                 obs_index
             )
 
