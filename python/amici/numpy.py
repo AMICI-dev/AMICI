@@ -1,4 +1,5 @@
 from amici import stdVec2ndarray
+import numpy as np
 
 def fieldAsNumpy(fieldDimensions, field, data):
     """ Convert data object field to numpy array with dimensions according to specified field dimensions
@@ -19,7 +20,7 @@ def fieldAsNumpy(fieldDimensions, field, data):
         if len(attr) == 0:
             return None
         else:
-            return stdVec2ndarray(attr, *fieldDimensions[field]).copy()
+            return np.array(attr).reshape(fieldDimensions[field])
     else:
         return float(attr)
 
@@ -168,9 +169,9 @@ def getExpDataFieldAsNumPyArray(edata, field):
         'observedEventsStdDev': [edata.nmaxevent, edata.nztrue],
 
         # fixed parameters
-        'fixedParameters': [edata.fixedParameters.size()],
+        'fixedParameters': [len(edata.fixedParameters)],
         'fixedParametersPreequilibration': [
-            edata.fixedParametersPreequilibration.size()],
+            len(edata.fixedParametersPreequilibration)],
     }
 
     return fieldAsNumpy(fieldDimensions, field, edata)

@@ -16,7 +16,8 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
     def setUp(self):
         self.resetdir = os.getcwd()
-        os.chdir(os.path.dirname(__file__))
+        if os.path.dirname(__file__) != '':
+            os.chdir(os.path.dirname(__file__))
 
     def tearDown(self):
         os.chdir(self.resetdir)
@@ -48,14 +49,15 @@ class TestAmiciSBMLModel(unittest.TestCase):
         import test_model_presimulation as modelModule
         model = modelModule.getModel()
         solver = model.getSolver()
-        model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 61)))
+        model.setTimepoints(np.linspace(0, 60, 61))
         model.setReinitializeFixedParameterInitialStates(True)
 
         rdata = amici.runAmiciSimulation(model, solver)
         edata = amici.ExpData(rdata, 0.1, 0.0)
-        edata.fixedParameters = amici.DoubleVector([10, 2])
-        edata.fixedParametersPresimulation = amici.DoubleVector([10, 2])
         edata.fixedParametersPreequilibration = amici.DoubleVector([3, 0])
+        edata.fixedParameters = [10, 2]
+        edata.fixedParametersPresimulation = [10, 2]
+        edata.fixedParametersPreequilibration = [3, 0]
         self.assertIsInstance(
             amici.runAmiciSimulation(model, solver, edata),
             dict)
@@ -89,7 +91,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
         import test_model_steadystate_scaled as modelModule
 
         model = modelModule.getModel()
-        model.setTimepoints(amici.DoubleVector(np.linspace(0, 60, 60))) 
+        model.setTimepoints(np.linspace(0, 60, 60))
         solver = model.getSolver()
         rdata = amici.runAmiciSimulation(model, solver)
         edata = [amici.ExpData(rdata, 0.01, 0)]
@@ -115,7 +117,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
                 ['observedDataStdDev'],
             ).all()
         )
-        if edata[0].fixedParameters.size():
+        if len(edata[0].fixedParameters):
             self.assertListEqual(
                 list(edata[0].fixedParameters),
                 list(edata_reconstructed[0].fixedParameters),
