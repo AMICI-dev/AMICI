@@ -104,13 +104,13 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
         rdata->status = AMICI_ERROR;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
     } catch (std::exception const& ex) {
-        rdata->invalidate(model.t0());
-        rdata->status = AMICI_ERROR;
-        amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s",ex.what());
+        model.setFixedParameters(originalFixedParameters);
+        model.setTimepoints(originalTimepoints);
+        throw;
     } catch (...) {
-        rdata->invalidate(model.t0());
-        rdata->status = AMICI_ERROR;
-        amici::warnMsgIdAndTxt("AMICI:mex", "Unknown internal error occured");
+        model.setFixedParameters(originalFixedParameters);
+        model.setTimepoints(originalTimepoints);
+        throw std::runtime_error("Unknown internal error occured!");
     }
     model.setFixedParameters(originalFixedParameters);
     model.setTimepoints(originalTimepoints);
