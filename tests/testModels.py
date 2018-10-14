@@ -67,18 +67,14 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     else:
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
 
-                    try:
-                        self.model.getParameterByName(
-                            'thisParameterDoesNotExist'
-                        )
-                    except Exception as e:
-                        print(e)
-
                     self.assertRaises(
                         RuntimeError,
                         self.model.getParameterByName,
                         'thisParameterDoesNotExist'
                     )
+
+
+
                         
 
 def checkDerivatives(model, solver, edata):
@@ -91,8 +87,10 @@ def checkDerivatives(model, solver, edata):
     """
     from scipy.optimize import check_grad
 
-    def func(x0, symbol='llh', x0full=None, plist=[], verbose=False):
+    def func(x0, symbol='llh', x0full=None, plist=None, verbose=False):
         """Function of which the gradient is to be checked"""
+        if plist is None:
+            plist = []
         p = x0
         if len(plist):
             p = x0full[:]
@@ -103,7 +101,7 @@ def checkDerivatives(model, solver, edata):
         old_parameters = model.getParameters()
         
         solver.setSensitivityOrder(amici.SensitivityOrder_none)
-        model.setParameters(amici.DoubleVector(p))
+        model.setParameters(p)
         rdata = amici.runAmiciSimulation(model, solver, edata)
         
         solver.setSensitivityOrder(old_sensitivity_order)
@@ -112,21 +110,23 @@ def checkDerivatives(model, solver, edata):
         res = np.sum(rdata[symbol])
         return res
     
-    def grad(x0, symbol='llh', x0full=None, plist=[], verbose=False):
+    def grad(x0, symbol='llh', x0full=None, plist=None, verbose=False):
         """Gradient which is to be checked"""
+        if plist is None:
+            plist = []
         old_parameters = model.getParameters()
         old_plist = model.getParameterList()
         
         p = x0
         if len(plist):
-            model.setParameterList(amici.IntVector(plist))
+            model.setParameterList(plist)
             p = x0full[:]
             p[plist] = x0
         else:
             model.requireSensitivitiesForAllParameters()
         verbose and print('g: p=%s' % p)
         
-        model.setParameters(amici.DoubleVector(p))
+        model.setParameters(p)
         rdata = amici.runAmiciSimulation(model, solver, edata)
         
         model.setParameters(old_parameters)
@@ -259,9 +259,8 @@ def checkResults(rdata, field, expected, atol, rtol):
         assert np.all(np.logical_or(rdev <= rtol, adev <= atol))
 
 
-
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestAmiciPregeneratedModel())
     unittest.main()
-    
+
