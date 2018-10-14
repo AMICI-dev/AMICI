@@ -16,7 +16,8 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
     def setUp(self):
         self.resetdir = os.getcwd()
-        os.chdir(os.path.dirname(__file__))
+        if os.path.dirname(__file__) != '':
+            os.chdir(os.path.dirname(__file__))
 
     def tearDown(self):
         os.chdir(self.resetdir)
@@ -116,7 +117,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
                 ['observedDataStdDev'],
             ).all()
         )
-        if edata[0].fixedParameters.size():
+        if len(edata[0].fixedParameters):
             self.assertListEqual(
                 list(edata[0].fixedParameters),
                 list(edata_reconstructed[0].fixedParameters),

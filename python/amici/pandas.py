@@ -170,18 +170,18 @@ def _fill_conditions_dict(datadict, model, edata) -> dict:
     datadict['t_presim'] = edata.t_presim
 
     for i_par, par in enumerate(_get_names_or_ids(model, 'FixedParameter')):
-        if edata.fixedParameters.size():
+        if len(edata.fixedParameters):
             datadict[par] = edata.fixedParameters[i_par]
         else:
             datadict[par] = model.getFixedParameters()[i_par]
 
-        if edata.fixedParametersPreequilibration.size():
+        if len(edata.fixedParametersPreequilibration):
             datadict[par + '_preeq'] = \
                 edata.fixedParametersPreequilibration[i_par]
         else:
             datadict[par + '_preeq'] = math.nan
 
-        if edata.fixedParametersPresimulation.size():
+        if len(edata.fixedParametersPresimulation):
             datadict[par + '_presim'] = \
                 edata.fixedParametersPresimulation[i_par]
         else:
@@ -275,10 +275,14 @@ def _get_names_or_ids(model, variable):
         raise ValueError('variable must be in ' + str(variable_options))
     namegetter = getattr(model, 'get' + variable + 'Names')
     idgetter = getattr(model, 'get' + variable + 'Ids')
-    if set(namegetter()) == len(namegetter()):
+    if len(set(namegetter())) == len(namegetter()) \
+            and model.hasObservableNames():
         return list(namegetter())
-    else:
+    elif model.hasObservableIds():
         return list(idgetter())
+    else:
+        raise RuntimeError('Model Observable Names are not unique and '
+                           'Observable IDs are not set. ')
 
 
 def _get_specialized_fixed_parameters(model, condition, overwrite) -> list:
