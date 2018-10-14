@@ -549,14 +549,21 @@ void Model::setTimepoints(const std::vector<realtype> &ts) {
     this->ts = std::move(ts);
 }
     
-std::vector<bool> Model::getQPositiveX() const {
-    return qpositivex;
+std::vector<bool> const& Model::getStateIsNonNegative() const {
+    return stateIsNonNegative;
 }
 
-void Model::setQPositiveX(std::vector<bool> const& qpositivex) {
-    if (qpositivex.size() != static_cast<unsigned long>(nx))
-        throw AmiException("Dimension of specified qpositivex (%d) does not agree with number of state variables (%d)",qpositivex.size(),nx);
-    this->qpositivex = qpositivex;
+void Model::setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative) {
+    if (stateIsNonNegative.size() != static_cast<unsigned long>(nx))
+        throw AmiException("Dimension of input stateIsNonNegative (%d) does not agree with number of state variables (%d)",stateIsNonNegative.size(),nx);
+    this->stateIsNonNegative = stateIsNonNegative;
+    anyStateNonNegative=false;
+    for (auto const& flag: stateIsNonNegative) {
+        if (flag) {
+            anyStateNonNegative=true;
+            break;
+        }
+    }
 }
 
 double Model::t(int idx) const {
@@ -684,8 +691,8 @@ Model::Model(const int nx,
       originalParameters(p),
       fixedParameters(std::move(k)),
       plist_(plist),
-      qpositivex(nx, false),
-      x_pos(nx),
+      stateIsNonNegative(nx, false),
+      x_pos_tmp(nx),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
 {
     J = SparseNewMat(nx, nx, nnz, CSC_MAT);
@@ -741,8 +748,8 @@ Model::Model(const Model &other)
       x0data(other.x0data),
       sx0data(other.sx0data),
       ts(other.ts),
-      qpositivex(other.qpositivex),
-      x_pos(other.x_pos),
+      stateIsNonNegative(other.stateIsNonNegative),
+      x_pos_tmp(other.x_pos_tmp),
       nmaxevent(other.nmaxevent),
       pscale(other.pscale),
       tstart(other.tstart)
@@ -1328,13 +1335,18 @@ bool operator ==(const Model &a, const Model &b)
             && (a.ts == b.ts)
             && (a.nmaxevent == b.nmaxevent)
             && (a.pscale == b.pscale)
-            && (a.qpositivex == b.qpositivex)
+            && (a.stateIsNonNegative == b.stateIsNonNegative)
             && (a.tstart == b.tstart);
 }
 
-void Model::computeX_pos(N_Vector x) {
-    for (int ix = 0; ix < x_pos.getLength(); ++ix) {
-        x_pos.at(ix) = qpositivex.at(ix) && NV_Ith_S(x, ix) < 0 ? 0 : NV_Ith_S(x, ix);
+N_Vector Model::computeX_pos(N_Vector x) {
+    if (anyStateNonNegative){
+        for (int ix = 0; ix < x_pos_tmp.getLength(); ++ix) {
+            x_pos_tmp.at(ix) = (stateIsNonNegative.at(ix) && NV_Ith_S(x, ix) < 0) ? 0 : NV_Ith_S(x, ix);
+        }
+        return x_pos_tmp.getNVector();
+    } else {
+        return x;
     }
 }
 

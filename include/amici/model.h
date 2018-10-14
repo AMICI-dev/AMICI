@@ -43,7 +43,7 @@ namespace amici {
         Model()
         : nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
         ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
-        o2mode(SecondOrderMode::none), x_pos(0) {}
+        o2mode(SecondOrderMode::none), x_pos_tmp(0) {}
         
         /** constructor with model dimensions
          * @param nx number of state variables
@@ -696,13 +696,13 @@ namespace amici {
          * @brief gets flags indicating whether states should be treated as non-negative
          * @return vector of flags
          */
-        std::vector<bool> getQPositiveX() const;
+        std::vector<bool> const& getStateIsNonNegative() const;
         
         /**
          * @brief sets flags indicating whether states should be treated as non-negative
-         * @param qpositivex vector of flags
+         * @param stateIsNonNegative vector of flags
          */
-        void setQPositiveX(std::vector<bool> const& qpositivex);
+        void setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative);
         
         /**
          * @brief Get timepoint for given index
@@ -1759,10 +1759,12 @@ namespace amici {
         std::vector<realtype> ts;
         
         /** vector of flags indicating whether state variables are to be assumed to be positive */
-        std::vector<bool> qpositivex;
+        std::vector<bool> stateIsNonNegative;
         
-        /** temporary storage of positified state variables according to qpositive x */
-        AmiVector x_pos;
+        bool anyStateNonNegative;
+        
+        /** temporary storage of positified state variables according to stateIsNonNegative */
+        AmiVector x_pos_tmp;
 
         /** maximal number of events to track */
         int nmaxevent = 10;
@@ -1783,12 +1785,12 @@ namespace amici {
         bool reinitializeFixedParameterInitialStates = false;
         
         /**
-         * @brief writes non_negative version of x into x_pos if according to
-         * specification in qpositive x
+         * @brief writes non_negative version of x into x_pos_tmp if according to
+         * specification in stateIsNonNegative
          *
          * @param x state vector possibly containing negative values
          */
-        void computeX_pos(N_Vector x);
+        N_Vector computeX_pos(N_Vector x);
     };
 
     bool operator ==(const Model &a, const Model &b);
