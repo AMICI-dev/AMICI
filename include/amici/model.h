@@ -1758,9 +1758,10 @@ namespace amici {
         /** timepoints (size nt) */
         std::vector<realtype> ts;
         
-        /** vector of flags indicating whether state variables are to be assumed to be positive */
+        /** vector of bools indicating whether state variables are to be assumed to be positive */
         std::vector<bool> stateIsNonNegative;
         
+        /** boolean indicating whether any entry in stateIsNonNegative is `true` */
         bool anyStateNonNegative = false;
         
         /** temporary storage of positified state variables according to stateIsNonNegative */
@@ -1785,10 +1786,13 @@ namespace amici {
         bool reinitializeFixedParameterInitialStates = false;
         
         /**
-         * @brief writes non_negative version of x into x_pos_tmp if according to
-         * specification in stateIsNonNegative
+         * @brief computes nonnegative state vector according to stateIsNonNegative
+         * if anyStateNonNegative is set to false, i.e., all entries in
+         * stateIsNonNegative are false, this function directly returns x, otherwise all entries
+         * of x are copied in to x_pos_tmp and negative values are replaced by 0 where applicable
          *
          * @param x state vector possibly containing negative values
+         * @return state vector with negative values replaced by 0 according to stateIsNonNegative
          */
         N_Vector computeX_pos(N_Vector x);
     };
