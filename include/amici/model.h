@@ -1761,7 +1761,7 @@ namespace amici {
         /** vector of flags indicating whether state variables are to be assumed to be positive */
         std::vector<bool> stateIsNonNegative;
         
-        bool anyStateNonNegative;
+        bool anyStateNonNegative = false;
         
         /** temporary storage of positified state variables according to stateIsNonNegative */
         AmiVector x_pos_tmp;
