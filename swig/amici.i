@@ -27,6 +27,7 @@ import_array();
 // Expose vectors
 %template(DoubleVector) std::vector<double>;
 %template(IntVector) std::vector<int>;
+%template(BoolVector) std::vector<bool>;
 %template(StringVector) std::vector<std::string>;
 
 %{
@@ -78,6 +79,5 @@ using namespace amici;
 // Process symbols in header
 %include "amici/amici.h"
 
+// Expose vectors
 %template(ScalingVector) std::vector<amici::ParameterScaling>;
-
-

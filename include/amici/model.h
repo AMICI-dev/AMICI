@@ -43,7 +43,7 @@ namespace amici {
         Model()
         : nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
         ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
-        o2mode(SecondOrderMode::none) {}
+        o2mode(SecondOrderMode::none), x_pos_tmp(0) {}
         
         /** constructor with model dimensions
          * @param nx number of state variables
@@ -691,6 +691,19 @@ namespace amici {
          */
         void setTimepoints(std::vector<realtype> const& ts);
 
+        
+        /**
+         * @brief gets flags indicating whether states should be treated as non-negative
+         * @return vector of flags
+         */
+        std::vector<bool> const& getStateIsNonNegative() const;
+        
+        /**
+         * @brief sets flags indicating whether states should be treated as non-negative
+         * @param stateIsNonNegative vector of flags
+         */
+        void setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative);
+        
         /**
          * @brief Get timepoint for given index
          * @param idx timepoint index
@@ -1737,13 +1750,22 @@ namespace amici {
         std::vector<int> plist_;
 
         /** state initialisation (size nx) */
-        std::vector<double>x0data;
+        std::vector<double> x0data;
 
         /** sensitivity initialisation (size nx * nplist, ordering = ?) */
-        std::vector<realtype>sx0data;
+        std::vector<realtype> sx0data;
 
         /** timepoints (size nt) */
-        std::vector<realtype>ts;
+        std::vector<realtype> ts;
+        
+        /** vector of bools indicating whether state variables are to be assumed to be positive */
+        std::vector<bool> stateIsNonNegative;
+        
+        /** boolean indicating whether any entry in stateIsNonNegative is `true` */
+        bool anyStateNonNegative = false;
+        
+        /** temporary storage of positified state variables according to stateIsNonNegative */
+        AmiVector x_pos_tmp;
 
         /** maximal number of events to track */
         int nmaxevent = 10;
@@ -1762,6 +1784,17 @@ namespace amici {
          fixed parameters is activated
          */
         bool reinitializeFixedParameterInitialStates = false;
+        
+        /**
+         * @brief computes nonnegative state vector according to stateIsNonNegative
+         * if anyStateNonNegative is set to false, i.e., all entries in
+         * stateIsNonNegative are false, this function directly returns x, otherwise all entries
+         * of x are copied in to x_pos_tmp and negative values are replaced by 0 where applicable
+         *
+         * @param x state vector possibly containing negative values
+         * @return state vector with negative values replaced by 0 according to stateIsNonNegative
+         */
+        N_Vector computeX_pos(N_Vector x);
     };
 
     bool operator ==(const Model &a, const Model &b);

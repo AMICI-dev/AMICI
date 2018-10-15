@@ -684,7 +684,7 @@ bool CVodeSolver::getAdjMallocDone() const {
     int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fxdot(t, x, xdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"residual function");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"fxdot");
     }
 
     /** Right hand side of differential equation for adjoint state xB
@@ -699,7 +699,7 @@ bool CVodeSolver::getAdjMallocDone() const {
                       N_Vector xBdot, void *user_data) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fxBdot(t, x, xB, xBdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"adjoint residual function");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"fxBdot");
     }
 
     /** Right hand side of integral equation for quadrature states qB
@@ -714,7 +714,7 @@ bool CVodeSolver::getAdjMallocDone() const {
                       void *user_data) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fqBdot(t, x, xB, qBdot);
-        return model->checkFinite(model->nplist()*model->nJ,N_VGetArrayPointer(qBdot),"adjoint quadrature function");
+        return model->checkFinite(model->nplist()*model->nJ,N_VGetArrayPointer(qBdot),"qBdot");
     }
 
     /** Right hand side of differential equation for state sensitivities sx
@@ -736,7 +736,7 @@ bool CVodeSolver::getAdjMallocDone() const {
                       N_Vector tmp1, N_Vector tmp2) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fsxdot(t, x, ip, sx, sxdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(sxdot),"sensitivity rhs");
+        return model->checkFinite(model->nx,N_VGetArrayPointer(sxdot),"sxdot");
     }
     
     bool operator ==(const CVodeSolver &a, const CVodeSolver &b)

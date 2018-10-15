@@ -17,7 +17,7 @@ namespace amici {
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 /**
- * @brief setupAMIs initialises the ami memory object
+ * @brief Initialises the ami memory object and applies specified options
  * @param x state vector
  * @param dx state derivative vector (DAE only)
  * @param sx state sensitivity vector
@@ -396,8 +396,13 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.maxsteps == b.maxsteps)
             && (a.quad_atol == b.quad_atol)
             && (a.quad_rtol == b.quad_rtol)
+            && (a.getAbsoluteToleranceSteadyState() == b.getAbsoluteToleranceSteadyState())
+            && (a.getRelativeToleranceSteadyState() == b.getRelativeToleranceSteadyState())
+            && (a.getAbsoluteToleranceSteadyStateSensi() == b.getAbsoluteToleranceSteadyStateSensi())
+            && (a.getRelativeToleranceSteadyStateSensi() == b.getRelativeToleranceSteadyStateSensi())
             && (a.maxstepsB == b.maxstepsB)
-            && (a.sensi == b.sensi);
+            && (a.sensi == b.sensi)
+            && (a.sensi_meth == b.sensi_meth);
 }
     
 void Solver::applyTolerances() {
@@ -415,8 +420,8 @@ void Solver::applyTolerancesFSA() {
         return;
     
     if(nplist()) {
-        std::vector<realtype> atols(nplist(),atol);
-        setSensSStolerances(rtol, atols.data());
+        std::vector<realtype> atols(nplist(), getAbsoluteToleranceSensi());
+        setSensSStolerances(getRelativeToleranceSensi(), atols.data());
         setSensErrCon(true);
     }
 }
@@ -541,6 +546,36 @@ void Solver::setAbsoluteTolerance(double atol) {
         applySensitivityTolerances();
     }
 }
+    
+double Solver::getRelativeToleranceSensi() const {
+    return isNaN(rtol_sensi) ? rtol : rtol_sensi;
+}
+
+void Solver::setRelativeToleranceSensi(double rtol) {
+    if(rtol < 0)
+        throw AmiException("rtol must be a non-negative number");
+    
+    rtol_sensi = rtol;
+    
+    if(getMallocDone()) {
+        applySensitivityTolerances();
+    }
+}
+
+double Solver::getAbsoluteToleranceSensi() const {
+    return isNaN(atol_sensi) ? atol : atol_sensi;
+}
+
+void Solver::setAbsoluteToleranceSensi(double atol) {
+    if(atol < 0)
+        throw AmiException("atol must be a non-negative number");
+    
+    atol_sensi = atol;
+    
+    if(getMallocDone()) {
+        applySensitivityTolerances();
+    }
+}
 
 double Solver::getRelativeToleranceQuadratures() const {
     return quad_rtol;
@@ -598,6 +633,28 @@ void Solver::setAbsoluteToleranceSteadyState(double atol) {
         throw AmiException("atol must be a non-negative number");
     
     this->ss_atol = atol;
+}
+    
+double Solver::getRelativeToleranceSteadyStateSensi() const {
+    return isNaN(ss_rtol_sensi) ? rtol : ss_rtol_sensi;
+}
+
+void Solver::setRelativeToleranceSteadyStateSensi(double rtol) {
+    if(rtol < 0)
+        throw AmiException("rtol must be a non-negative number");
+    
+    this->ss_rtol_sensi = rtol;
+}
+
+double Solver::getAbsoluteToleranceSteadyStateSensi() const {
+    return isNaN(ss_atol_sensi) ? atol : ss_atol_sensi;
+}
+
+void Solver::setAbsoluteToleranceSteadyStateSensi(double atol) {
+    if (atol < 0)
+        throw AmiException("atol must be a non-negative number");
+    
+    this->ss_atol_sensi = atol;
 }
 
 int Solver::getMaxSteps() const {
@@ -709,5 +766,6 @@ void Solver::setInternalSensitivityMethod(InternalSensitivityMethod ism) {
         throw AmiException("Solver object was already set up, the sensitivity method can no longer be changed!");
     this->ism = ism;
 }
+
 
 } // namespace amici
