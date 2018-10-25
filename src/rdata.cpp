@@ -174,10 +174,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
 
     // chain-rule factor: multiplier for am_p
     std::vector<realtype> coefficient(nplist, 1.0);
-
     std::vector<realtype> pcoefficient(nplist, 1.0);
-    std::vector<realtype> unscaledParameters(np);
-    model->unscaleParameters(unscaledParameters.data());
+
+    std::vector<realtype> unscaledParameters = model->getParameters();
+    unscaleParameters(unscaledParameters, model->getParameterScale(), unscaledParameters);
+
     std::vector<realtype> augcoefficient(np, 1.0);
     
     if (sensi == SensitivityOrder::second && o2mode == SecondOrderMode::full) {

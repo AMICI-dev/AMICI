@@ -767,16 +767,6 @@ namespace amici {
         int plist(int pos) const;
 
         /**
-          * @brief Remove parameter scaling according to the parameter scaling in pscale
-          *
-          * @param[out] bufferUnscaled unscaled parameters are written to the array
-          * @type double
-          *
-          * @return status flag indicating success of execution @type int
-          */
-        void unscaleParameters(double *bufferUnscaled) const;
-
-        /**
          * @brief Require computation of sensitivities for all parameters p [0..np[
          * in natural order.
          */

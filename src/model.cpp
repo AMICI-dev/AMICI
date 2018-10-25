@@ -1,5 +1,6 @@
 #include "amici/model.h"
 #include "amici/amici.h"
+#include "amici/misc.h"
 
 #include <cstring>
 #include <cmath>
@@ -297,13 +298,13 @@ const std::vector<ParameterScaling> &Model::getParameterScale() const {
 void Model::setParameterScale(ParameterScaling pscale) {
     this->pscale.assign(this->pscale.size(), pscale);
     unscaledParameters.resize(originalParameters.size());
-    unscaleParameters(unscaledParameters.data());
+    unscaleParameters(originalParameters, this->pscale, unscaledParameters);
 }
 
 void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
     this->pscale = pscale;
     unscaledParameters.resize(originalParameters.size());
-    unscaleParameters(unscaledParameters.data());
+    unscaleParameters(originalParameters, this->pscale, unscaledParameters);
 }
 
 std::vector<realtype> const& Model::getParameters() const {
@@ -398,7 +399,7 @@ void Model::setParameters(const std::vector<realtype> &p) {
         throw AmiException("Dimension mismatch. Size of parameters does not match number of model parameters.");
     this->originalParameters = p;
     this->unscaledParameters.resize(originalParameters.size());
-    unscaleParameters(this->unscaledParameters.data());
+    unscaleParameters(originalParameters, pscale, unscaledParameters);
 }
     
 void Model::setParameterById(std::string const& par_id, realtype value) {
@@ -411,7 +412,7 @@ void Model::setParameterById(std::string const& par_id, realtype value) {
                  par_id,
                  "parameter",
                  "id");
-    unscaleParameters(this->unscaledParameters.data());
+    unscaleParameters(originalParameters, pscale, unscaledParameters);
 }
     
 int Model::setParametersByIdRegex(std::string const& par_id_regex, realtype value) {
@@ -423,7 +424,7 @@ int Model::setParametersByIdRegex(std::string const& par_id_regex, realtype valu
                                     par_id_regex,
                                     "parameter",
                                     "id");
-    unscaleParameters(this->unscaledParameters.data());
+    unscaleParameters(originalParameters, pscale, unscaledParameters);
     return n_found;
 }
 
@@ -437,7 +438,7 @@ void Model::setParameterByName(std::string const& par_name, realtype value) {
                  par_name,
                  "parameter",
                  "name");
-    unscaleParameters(this->unscaledParameters.data());
+    unscaleParameters(originalParameters, pscale, unscaledParameters);
 }
 
 int Model::setParametersByNameRegex(std::string const& par_name_regex, realtype value) {
@@ -451,7 +452,7 @@ int Model::setParametersByNameRegex(std::string const& par_name_regex, realtype 
                                     "parameter",
                                     "name");
     
-    unscaleParameters(this->unscaledParameters.data());
+    unscaleParameters(originalParameters, pscale, unscaledParameters);
     return n_found;
 }
 
@@ -1278,23 +1279,6 @@ int Model::checkFinite(const int N, const realtype *array, const char *fun) cons
     }
 
     return result;
-}
-
-void Model::unscaleParameters(double *bufferUnscaled) const
-{
-    for (int ip = 0; ip < np(); ++ip) {
-        switch (pscale[ip]) {
-        case ParameterScaling::log10:
-            bufferUnscaled[ip] = pow(10, originalParameters[ip]);
-            break;
-        case ParameterScaling::ln:
-            bufferUnscaled[ip] = exp(originalParameters[ip]);
-            break;
-        case ParameterScaling::none:
-            bufferUnscaled[ip] = originalParameters[ip];
-            break;
-        }
-    }
 }
 
 void Model::requireSensitivitiesForAllParameters() {
