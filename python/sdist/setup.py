@@ -27,6 +27,8 @@ from shutil import copyfile
 import numpy as np # for include directory
 import setup_clibs  # Must run from within containing directory
 
+from amici import __version__
+
 from amici.setuptools import (
     getBlasConfig,
     getHdf5Config,
@@ -214,11 +216,11 @@ class my_sdist(sdist):
         Returns:
 
         """
-        f = open("amici/version.txt", "w")
-        sp = subprocess.run(['git', 'describe',
-                             '--abbrev=4', '--dirty=-dirty',
-                             '--always', '--tags'],
-                            stdout=f)
+        with open("amici/git_version.txt", "w") as f:
+            sp = subprocess.run(['git', 'describe',
+                                 '--abbrev=4', '--dirty=-dirty',
+                                 '--always', '--tags'],
+                                 stdout=f)
         assert(sp.returncode == 0)
 
 
@@ -226,11 +228,6 @@ class my_sdist(sdist):
 # (https://pypi.org/project/amici/)
 with open("README.md", "r") as fh:
     long_description = fh.read()
-
-
-def getPackageVersion():
-    return '0.7.11'
-
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
@@ -250,7 +247,7 @@ def main():
             'install_lib': my_install_lib,
             'develop': my_develop,
         },
-        version=getPackageVersion(),
+        version=__version__,
         description='Advanced multi-language Interface to CVODES and IDAS (%s)',
         long_description=long_description,
         long_description_content_type="text/markdown",
