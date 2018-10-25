@@ -29,6 +29,35 @@ class ReturnData {
   public:
     ReturnData();
 
+    /**
+     * @brief ReturnData
+     * @param ts see amici::Model::ts
+     * @param np see amici::Model::np
+     * @param nk see amici::Model::nk
+     * @param nx see amici::Model::nx
+     * @param nxtrue see amici::Model::nxtrue
+     * @param ny see amici::Model::ny
+     * @param nytrue see amici::Model::nytrue
+     * @param nz see amici::Model::nz
+     * @param nztrue see amici::Model::nztrue
+     * @param ne see amici::Model::ne
+     * @param nJ see amici::Model::nJ
+     * @param nplist see amici::Model::nplist
+     * @param nmaxevent see amici::Model::nmaxevent
+     * @param nt see amici::Model::nt
+     * @param newton_maxsteps see amici::Solver::newton_maxsteps
+     * @param pscale see amici::Model::pscale
+     * @param o2mode see amici::Model::o2mode
+     * @param sensi see amici::Solver::sensi
+     * @param sensi_meth see amici::Solver::sensi_meth
+     */
+    ReturnData(
+            std::vector<realtype> ts,
+            int np, int nk, int nx, int nxtrue, int ny, int nytrue,
+            int nz, int nztrue, int ne, int nJ, int nplist, int nmaxevent,
+            int nt, int newton_maxsteps, std::vector<ParameterScaling> pscale,
+            SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth);
+
     ReturnData(Solver const& solver, const Model *model);
 
     ~ReturnData() = default;
