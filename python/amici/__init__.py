@@ -56,7 +56,7 @@ amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
 
 # Get version number from file
-with open(os.path.join(amici_path, 'version.txt')) as f: 
+with open(os.path.join(amici_path, 'version.txt')) as f:
     __version__ = f.read().strip()
 
 if has_clibs:
