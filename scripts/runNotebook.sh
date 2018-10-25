@@ -24,7 +24,7 @@ if [ $# -eq 0 ]; then
 fi
 
 source ${AMICI_PATH}/build/venv/bin/activate
-pip3 show ipython || (pip3 install --upgrade jupyter && python3 -m ipykernel install --name amici --display-name "Python (amici)")
+pip3 show ipython || (pip3 install --upgrade jupyter && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
 
 for arg in "$@"; do
     if [ -d $arg ]; then
