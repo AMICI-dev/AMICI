@@ -9,16 +9,16 @@
 
 namespace amici {
 
-int checkFinite(const int N,const realtype *array, const char* fun);
+int checkFinite(const int N, const realtype *array, const char* fun);
 
 
 /**
   * @brief Remove parameter scaling according to the parameter scaling in pscale
   *
-  * @param[in] bufferScaled scaled parameters
-  * @param[in] pscale parameter scaling
-  * @param[in] n number of elements in bufferScaled, pscale and bufferUnscaled
-  * @param[out] bufferUnscaled unscaled parameters are written to the array
+  * @param bufferScaled scaled parameters
+  * @param pscale parameter scaling
+  * @param n number of elements in bufferScaled, pscale and bufferUnscaled
+  * @param bufferUnscaled unscaled parameters are written to the array
   *
   * @return status flag indicating success of execution @type int
   */
@@ -32,9 +32,9 @@ void unscaleParameters(const double *bufferScaled,
   *
   * All vectors must be of same length
   *
-  * @param[in] bufferScaled scaled parameters
-  * @param[in] pscale parameter scaling
-  * @param[out] bufferUnscaled unscaled parameters are written to the array
+  * @param bufferScaled scaled parameters
+  * @param pscale parameter scaling
+  * @param bufferUnscaled unscaled parameters are written to the array
   *
   * @return status flag indicating success of execution @type int
   */
