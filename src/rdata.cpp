@@ -20,15 +20,13 @@ ReturnData::ReturnData()
       sensi(SensitivityOrder::none), sensi_meth(SensitivityMethod::none) {}
 
 ReturnData::ReturnData(Solver const& solver, const Model *model)
-    : ts(model->getTimepoints()),
-      np(model->np()), nk(model->nk()), nx(model->nx), nxtrue(model->nxtrue),
-      ny(model->ny), nytrue(model->nytrue), nz(model->nz),
-      nztrue(model->nztrue), ne(model->ne), nJ(model->nJ),
-      nplist(model->nplist()), nmaxevent(model->nMaxEvent()), nt(model->nt()),
-      newton_maxsteps(solver.getNewtonMaxSteps()), pscale(model->getParameterScale()),
-      o2mode(model->o2mode), sensi(solver.getSensitivityOrder()),
-      sensi_meth(static_cast<SensitivityMethod>(solver.getSensitivityMethod()))
-    {
+    : ReturnData(model->getTimepoints(), model->np(), model->nk(),
+                 model->nx, model->nxtrue, model->ny, model->nytrue,
+                 model->nz, model->nztrue, model->ne, model->nJ,
+                 model->nplist(), model->nMaxEvent(), model->nt(),
+                 solver.getNewtonMaxSteps(), model->getParameterScale(),
+                 model->o2mode, solver.getSensitivityOrder(),
+                 static_cast<SensitivityMethod>(solver.getSensitivityMethod())) {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
@@ -36,7 +34,23 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
      * @param model pointer to model specification object
      * bool
      */
-          
+}
+
+
+ReturnData::ReturnData(
+        std::vector<realtype> ts,
+        int np, int nk, int nx, int nxtrue, int ny, int nytrue,
+        int nz, int nztrue, int ne, int nJ, int nplist, int nmaxevent,
+        int nt, int newton_maxsteps, std::vector<ParameterScaling> pscale,
+        SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth)
+    : ts(std::move(ts)), np(np), nk(nk), nx(nx), nxtrue(nxtrue),
+      ny(ny), nytrue(nytrue), nz(nz),
+      nztrue(nztrue), ne(ne), nJ(nJ),
+      nplist(nplist), nmaxevent(nmaxevent), nt(nt),
+      newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
+      o2mode(o2mode), sensi(sensi),
+      sensi_meth(sensi_meth)
+    {
     xdot.resize(nx, getNaN());
 
     J.resize(nx * nx, getNaN());
@@ -47,8 +61,8 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
 
     rz.resize(nmaxevent * nz, 0.0);
     x.resize(nt * nx, 0.0);
-    y.resize(nt * model->ny, 0.0);
-    sigmay.resize(nt * model->ny, 0.0);
+    y.resize(nt * ny, 0.0);
+    sigmay.resize(nt * ny, 0.0);
 
     newton_numsteps.resize(2, 0);
     newton_numlinsteps.resize(newton_maxsteps*2, 0);
@@ -70,7 +84,7 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
 
     x0.resize(nx, getNaN());
     
-    res.resize(nt * model->nytrue, 0.0);
+    res.resize(nt * nytrue, 0.0);
 
     llh = getNaN();
     chi2 = getNaN();
@@ -86,13 +100,13 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
             srz.resize(nmaxevent * nz * nplist, 0.0);
             
             FIM.resize(nplist * nplist, 0.0);
-            sres.resize(nt * model->nytrue * nplist, 0.0);
+            sres.resize(nt * nytrue * nplist, 0.0);
         }
         
-        ssigmay.resize(nt * model->ny * nplist, 0.0);
+        ssigmay.resize(nt * ny * nplist, 0.0);
         ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
         if (sensi >= SensitivityOrder::second) {
-            s2llh.resize(nplist * (model->nJ - 1), getNaN());
+            s2llh.resize(nplist * (nJ - 1), getNaN());
             if (sensi_meth == SensitivityMethod::forward)
                 s2rz.resize(nmaxevent * nztrue * nplist * nplist, 0.0);
         }
@@ -160,10 +174,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
 
     // chain-rule factor: multiplier for am_p
     std::vector<realtype> coefficient(nplist, 1.0);
-
     std::vector<realtype> pcoefficient(nplist, 1.0);
-    std::vector<realtype> unscaledParameters(np);
-    model->unscaleParameters(unscaledParameters.data());
+
+    std::vector<realtype> unscaledParameters = model->getParameters();
+    unscaleParameters(unscaledParameters, model->getParameterScale(), unscaledParameters);
+
     std::vector<realtype> augcoefficient(np, 1.0);
     
     if (sensi == SensitivityOrder::second && o2mode == SecondOrderMode::full) {

@@ -56,7 +56,7 @@ TEST_GROUP(model)
                                   0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                                   p, k, plist, idlist, z2event);
     
-    double unscaled[1];
+    std::vector<double> unscaled {NAN};
     
     void setup() {
     }
@@ -68,21 +68,21 @@ TEST_GROUP(model)
 
 TEST(model, testScalingLin) {
     model.setParameterScale(ParameterScaling::none);
-    model.unscaleParameters(unscaled);
+    unscaleParameters(model.getParameters(), model.getParameterScale(), unscaled);
 
     CHECK_EQUAL(p[0], unscaled[0]);
 }
 
 TEST(model, testScalingLog) {
     model.setParameterScale(ParameterScaling::ln);
-    model.unscaleParameters(unscaled);
+    unscaleParameters(model.getParameters(), model.getParameterScale(), unscaled);
 
     DOUBLES_EQUAL(exp(p[0]), unscaled[0], 1e-16);
 }
 
 TEST(model, testScalingLog10) {
     model.setParameterScale(ParameterScaling::log10);
-    model.unscaleParameters(unscaled);
+    unscaleParameters(model.getParameters(), model.getParameterScale(), unscaled);
 
     DOUBLES_EQUAL(pow(10, p[0]), unscaled[0], 1e-16);
 }

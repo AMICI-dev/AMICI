@@ -28,4 +28,32 @@ int checkFinite(const int N,const realtype *array, const char* fun){
     return(AMICI_SUCCESS);
 }
 
+
+double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
+{
+    switch (scaling) {
+    case ParameterScaling::log10:
+        return pow(10, scaledParameter);
+    case ParameterScaling::ln:
+        return exp(scaledParameter);
+    case ParameterScaling::none:
+        return scaledParameter;
+    }
+}
+
+void unscaleParameters(const double *bufferScaled, const ParameterScaling *pscale, int n, double *bufferUnscaled)
+{
+    for (int ip = 0; ip < n; ++ip) {
+        bufferUnscaled[ip] = getUnscaledParameter(bufferScaled[ip], pscale[ip]);
+    }
+
+}
+
+void unscaleParameters(const std::vector<double> &bufferScaled, const std::vector<ParameterScaling> &pscale, std::vector<double> &bufferUnscaled)
+{
+    if(bufferScaled.size() != pscale.size() || pscale.size() != bufferUnscaled.size())
+        throw AmiException("Vector size mismatch in unscaleParameters.");
+    unscaleParameters(bufferScaled.data(), pscale.data(), bufferScaled.size(), bufferUnscaled.data());
+}
+
 } // namespace amici

@@ -6,3 +6,4 @@ include amici/*
 include amici/src/*template*
 include amici/swig/CMakeLists_model.txt
 include setup_clibs.py
+include version.txt

@@ -9,7 +9,9 @@ import shutil
 
 try:
     import pkgconfig # optional
-except ModuleNotFoundError:
+    # pkgconfig python module might be installed without pkg-config binary being available
+    pkgconfig.exists('somePackageName')
+except (ModuleNotFoundError, EnvironmentError):
     pkgconfig = None
 
 
