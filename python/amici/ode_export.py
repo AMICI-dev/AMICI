@@ -529,7 +529,7 @@ class ODEModel:
     _parameters: list
         list of Parameter instances
 
-    _loglikelihood: list
+    _loglikelihoods: list
         list of LogLikelihood instances
 
     _expressions: list
