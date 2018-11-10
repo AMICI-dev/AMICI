@@ -1,4 +1,4 @@
-""" @package amici.ode_export The python ode export module for python
+""" @package amici.ode_export The C++ ODE export module for python
 """
 #!/usr/bin/env python3
 
@@ -292,7 +292,7 @@ class ModelQuantity:
     ----------
 
     identifier: sympy.Symbol
-            unique identifier of the quantity
+        unique identifier of the quantity
 
     name: str
         individual name of the quantity (does not need to be unique)
@@ -327,7 +327,7 @@ class ModelQuantity:
         """
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
-                            f'{type(identifer)}')
+                            f'{type(identifier)}')
         self.identifier = identifier
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
@@ -536,7 +536,7 @@ class ODEModel:
     """
     An ODEModel defines an Ordinay Differential Equation as set of
     ModelQuantities. This class provides general purpose interfaces to
-    comput arbitrary symbolic derivatives that are necessary for model
+    compute arbitrary symbolic derivatives that are necessary for model
     simulation or sensitivity computation
 
     Attributes:
@@ -553,7 +553,7 @@ class ODEModel:
     _parameters: list
         list of Parameter instances
 
-    _loglikelihood: list
+    _loglikelihoods: list
         list of LogLikelihood instances
 
     _expressions: list
@@ -871,7 +871,7 @@ class ODEModel:
 
     def sparsesym(self, name):
         """
-        Returns (and constructs if necessary) the parsified identifiers for a
+        Returns (and constructs if necessary) the sparsified identifiers for a
         sparsified symbolic variable.
 
         Arguments:
@@ -1092,7 +1092,7 @@ class ODEModel:
     def generateSparseSymbol(self, name):
         """
         Generates the sparse symbolic identifiers, symbolic identifiers,
-        sparse eqations, column pointers and row values for a symbolic variable
+        sparse equations, column pointers and row values for a symbolic variable
 
         Arguments:
         ----------
@@ -1202,7 +1202,7 @@ class ODEModel:
 
     def symNames(self):
         """
-        Returns a list of names of generates symbolic variables
+        Returns a list of names of generated symbolic variables
 
         Arguments:
         ----------
@@ -1534,7 +1534,7 @@ class ODEExporter:
 
     def compileModel(self):
         """
-        Generates the native C++ code and compiles it into a simulateble module
+        Generates the native C++ code and compiles it into a simulatable module
 
         Arguments:
         ----------
@@ -1714,7 +1714,7 @@ class ODEExporter:
             '#include "amici/symbolic_functions.h"',
             '#include "amici/defines.h" //realtype definition',
             'using amici::realtype;',
-            '#include <cmath> ',
+            '#include <cmath>',
             ''
         ]
 
