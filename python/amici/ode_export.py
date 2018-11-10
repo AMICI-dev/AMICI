@@ -1518,7 +1518,7 @@ class ODEExporter:
 
     def compileModel(self):
         """
-        Generates the native C++ code and compiles it into a simulateble module
+        Generates the native C++ code and compiles it into a simulatable module
 
         Arguments:
         ----------
