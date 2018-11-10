@@ -566,31 +566,33 @@ class ODEModel:
         compile time
 
     _eqs: dict
-        carries symbolic formulas
+        carries symbolic formulas of the symbolic variables of the model
 
     _sparseeq: dict
         carries linear list of all symbolic formulas for sparsified
-        matrices
+        variables
 
     _vals: dict
-        carries numeric values of symbolic identifiers
+        carries numeric values of symbolic identifiers of the symbolic
+        variables of the model
 
     _names: dict
-        carries names of symbolic identifiers
+        carries names of symbolic identifiers of the symbolic variables of the
+        model
 
     _syms: dict
-        carries symbolic identifiers for symbolic formulas
+        carries symbolic identifiers of the symbolic variables of the model
 
     _sparsesyms: dict
         carries linear list of all symbolic identifiers for sparsified
-        identifiers
+        variables
 
     _colptrs: dict
-        carries column pointers for sparsified identifiers
+        carries column pointers for sparsified variables
         see SlsMat definition in CVODES for more details about ColPtrs
 
     _rowvals: dict
-        carries row values for sparsified identifiers
+        carries row values for sparsified variables
         see SlsMat definition in CVODES for more details about RowVals
 
     _equation_prototype: dict
@@ -753,7 +755,7 @@ class ODEModel:
             for proto in protos:
                 self.add_component(symbol_to_type[symbol](**proto))
 
-        self.generateBasicVariables()
+        self._generateBasicVariables()
 
     def add_component(self, component):
         """
@@ -867,7 +869,7 @@ class ODEModel:
 
         """
         if name not in self._syms:
-            self.generateSymbol(name)
+            self._generateSymbol(name)
         return self._syms[name]
 
     def sparsesym(self, name):
@@ -891,7 +893,7 @@ class ODEModel:
         if name not in sparse_functions:
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparsesyms:
-            self.generateSparseSymbol(name)
+            self._generateSparseSymbol(name)
         return self._sparsesyms[name]
 
     def eq(self, name):
@@ -913,7 +915,7 @@ class ODEModel:
 
         """
         if name not in self._eqs:
-            self.computeEquation(name)
+            self._computeEquation(name)
         return self._eqs[name]
 
     def sparseeq(self, name):
@@ -937,7 +939,7 @@ class ODEModel:
         if name not in sparse_functions:
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
-            self.generateSparseSymbol(name)
+            self._generateSparseSymbol(name)
         return self._sparseeqs[name]
 
     def colptr(self, name):
@@ -961,7 +963,7 @@ class ODEModel:
         if name not in sparse_functions:
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
-            self.generateSparseSymbol(name)
+            self._generateSparseSymbol(name)
         return self._colptrs[name]
 
     def rowval(self, name):
@@ -985,7 +987,7 @@ class ODEModel:
         if name not in sparse_functions:
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
-            self.generateSparseSymbol(name)
+            self._generateSparseSymbol(name)
         return self._rowvals[name]
 
     def val(self, name):
@@ -1007,7 +1009,7 @@ class ODEModel:
 
         """
         if name not in self._vals:
-            self.generateValue(name)
+            self._generateValue(name)
         return self._vals[name]
 
     def name(self, name):
@@ -1028,10 +1030,10 @@ class ODEModel:
 
         """
         if name not in self._names:
-            self.generateName(name)
+            self._generateName(name)
         return self._names[name]
 
-    def generateSymbol(self, name):
+    def _generateSymbol(self, name):
         """
         Generates the symbolic identifiers for a symbolic variable
 
@@ -1059,7 +1061,7 @@ class ODEModel:
                 )
             return
         elif name in sparse_functions:
-            self.generateSparseSymbol(name)
+            self._generateSparseSymbol(name)
             return
         elif name in self._symboldim_funs:
             length = self._symboldim_funs[name]()
@@ -1072,7 +1074,7 @@ class ODEModel:
             sp.Symbol(f'{name}{i}') for i in range(length)
         ])
 
-    def generateBasicVariables(self):
+    def _generateBasicVariables(self):
         """
         Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
@@ -1088,9 +1090,9 @@ class ODEModel:
 
         """
         for var in self._variable_prototype:
-            self.generateSymbol(var)
+            self._generateSymbol(var)
 
-    def generateSparseSymbol(self, name):
+    def _generateSparseSymbol(self, name):
         """
         Generates the sparse symbolic identifiers, symbolic identifiers,
         sparse equations, column pointers and row values for a symbolic variable
@@ -1134,7 +1136,7 @@ class ODEModel:
         self._sparsesyms[name] = symbolList
         self._syms[name] = sparseMatrix
 
-    def computeEquation(self, name):
+    def _computeEquation(self, name):
         """
         computes the symbolic formula for a symbolic variable
 
@@ -1153,17 +1155,17 @@ class ODEModel:
         match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
 
         if name in self._equation_prototype:
-            self.equationFromComponent(name, self._equation_prototype[name])
+            self._equationFromComponent(name, self._equation_prototype[name])
 
         elif name in self._total_derivative_prototypes:
             args = self._total_derivative_prototypes[name]
             args['name'] = name
-            self.totalDerivative(**args)
+            self._totalDerivative(**args)
 
         elif name in self._multiplication_prototypes:
             args = self._multiplication_prototypes[name]
             args['name'] = name
-            self.multiplication(**args)
+            self._multiplication(**args)
 
         elif name == 'xdot':
             self._eqs['xdot'] = sp.DenseMatrix(
@@ -1171,7 +1173,7 @@ class ODEModel:
             )
 
         elif name in ['sx0', 'sx0_fixedParameters']:
-            self.derivative(name[1:], 'p', name=name)
+            self._derivative(name[1:], 'p', name=name)
 
         elif name == 'JB':
             self._eqs[name] = self.eq('J').transpose()
@@ -1194,7 +1196,7 @@ class ODEModel:
             self._eqs[name] = self.eq(name.replace('Sparse', ''))
 
         elif match_deriv:
-            self.derivative(match_deriv.group(1), match_deriv.group(2))
+            self._derivative(match_deriv.group(1), match_deriv.group(2))
 
         else:
             raise Exception(f'Unknown equation {name}')
@@ -1219,7 +1221,7 @@ class ODEModel:
         """
         return list(self._syms.keys())
 
-    def derivative(self, eq, var, name=None):
+    def _derivative(self, eq, var, name=None):
         """
         Creates a new symbolic variable according to a derivative
 
@@ -1250,15 +1252,15 @@ class ODEModel:
         if var_in_function_signature(eq, 'w') and \
                 not self._lock_total_derivative:
             self._lock_total_derivative = True
-            self.totalDerivative(name, eq, 'w', var)
+            self._totalDerivative(name, eq, 'w', var)
             self._lock_total_derivative = False
             return
 
         # partial derivative
         self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
 
-    def totalDerivative(self, name, eq, chainvar, var,
-                        dydx_name=None, dxdz_name=None):
+    def _totalDerivative(self, name, eq, chainvar, var,
+                         dydx_name=None, dxdz_name=None):
         """
         Creates a new symbolic variable according to a total derivative
         using the chain rule
@@ -1322,8 +1324,8 @@ class ODEModel:
         self._eqs[name] = \
             vars['dydx']['sym'] * vars['dxdz']['sym'] + vars['dydz']['sym']
 
-    def multiplication(self, name, x, y,
-                       transpose_x=False, sign=1):
+    def _multiplication(self, name, x, y,
+                        transpose_x=False, sign=1):
         """
         Creates a new symbolic variable according to a multiplication
 
@@ -1370,7 +1372,7 @@ class ODEModel:
 
         self._eqs[name] = sign * xx * vars[y]
 
-    def equationFromComponent(self, name, component):
+    def _equationFromComponent(self, name, component):
         """
         Generates the formulas of a symbolic variable from the attributes
 
@@ -1394,7 +1396,7 @@ class ODEModel:
             [comp.value for comp in getattr(self, component)]
         )
 
-    def generateValue(self, name):
+    def _generateValue(self, name):
         """
         Generates the numeric values of a symbolic variable from value
         prototypes
@@ -1418,7 +1420,7 @@ class ODEModel:
 
         self._vals[name] = [comp.value for comp in getattr(self, component)]
 
-    def generateName(self, name):
+    def _generateName(self, name):
         """
         Generates the names of a symbolic variable from variable prototypes or
         equation prototypes
@@ -1530,13 +1532,14 @@ class ODEExporter:
 
         self.model = ode_model
 
-        self.functions = functions
+        # To only generate a subset of functions, apply subselection here
+        self.functions = copy.deepcopy(functions)
 
         self.allow_reinit_fixpar_initcond = False
 
-    def compileModel(self):
+    def generateModelCode(self):
         """
-        Generates the native C++ code and compiles it into a simulatable module
+        Generates the native C++ code for the loaded model
 
         Arguments:
         ----------
@@ -1548,11 +1551,26 @@ class ODEExporter:
         ----------
 
         """
-        self.prepareModelFolder()
-        self.generateCCode()
-        self.compileCCode(compiler=self.compiler, verbose=self.verbose)
+        self._prepareModelFolder()
+        self._generateCCode()
 
-    def prepareModelFolder(self):
+    def compileModel(self):
+        """
+        Compiles the generated code it into a simulatable module
+
+        Arguments:
+        ----------
+
+        Returns:
+        ----------
+
+        Raises:
+        ----------
+
+        """
+        self._compileCCode(compiler=self.compiler, verbose=self.verbose)
+
+    def _prepareModelFolder(self):
         """
         Remove all files from the model folder.
 
@@ -1571,7 +1589,7 @@ class ODEExporter:
             if os.path.isfile(file_path):
                 os.remove(file_path)
 
-    def generateCCode(self):
+    def _generateCCode(self):
         """
         Create C++ code files for the model based on ODEExporter.ODEModel.
 
@@ -1586,23 +1604,23 @@ class ODEExporter:
 
         """
         for function in self.functions.keys():
-            self.writeFunctionFile(function)
+            self._writeFunctionFile(function)
 
         for name in self.model.symNames():
-            self.writeIndexFiles(name)
+            self._writeIndexFiles(name)
 
-        self.writeWrapfunctionsCPP()
-        self.writeWrapfunctionsHeader()
-        self.writeModelHeader()
-        self.writeCMakeFile()
-        self.writeSwigFiles()
-        self.writeModuleSetup()
+        self._writeWrapfunctionsCPP()
+        self._writeWrapfunctionsHeader()
+        self._writeModelHeader()
+        self._writeCMakeFile()
+        self._writeSwigFiles()
+        self._writeModuleSetup()
 
         shutil.copy(os.path.join(amiciSrcPath, 'main.template.cpp'),
                     os.path.join(self.modelPath, 'main.cpp'))
 
 
-    def compileCCode(self, verbose=False, compiler=None):
+    def _compileCCode(self, verbose=False, compiler=None):
         """
         Compile the generated model code
 
@@ -1652,7 +1670,7 @@ class ODEExporter:
         if verbose:
             print(result.stdout.decode('utf-8'))
 
-    def writeIndexFiles(self, name):
+    def _writeIndexFiles(self, name):
         """
         Write index file for a symbolic array.
 
@@ -1686,7 +1704,7 @@ class ODEExporter:
         with open(os.path.join(self.modelPath,f'{name}.h'), 'w') as fileout:
             fileout.write('\n'.join(lines))
 
-    def writeFunctionFile(self, function):
+    def _writeFunctionFile(self, function):
         """
         Generate equations and write the C++ code for the function `function`.
 
@@ -1741,7 +1759,7 @@ class ODEExporter:
         lines.append(f'void {function}_{self.modelName}{signature}{{')
 
         # function body
-        body = self.getFunctionBody(function, symbol)
+        body = self._getFunctionBody(function, symbol)
         if self.assume_pow_positivity \
                 and 'assume_pow_positivity' in self.functions[function].keys()\
                 and self.functions[function]['assume_pow_positivity']:
@@ -1760,7 +1778,7 @@ class ODEExporter:
         ) as fileout:
             fileout.write('\n'.join(lines))
 
-    def getFunctionBody(self, function, symbol):
+    def _getFunctionBody(self, function, symbol):
         """
         Generate C++ code for body of function `function`.
 
@@ -1797,29 +1815,29 @@ class ODEExporter:
             lines.append(' '*4 + 'switch(ip) {')
             for ipar in range(self.model.np()):
                 lines.append(' ' * 8 + f'case {ipar}:')
-                lines += self.getSymLines(symbol[:, ipar], function, 12)
+                lines += self._getSymLines(symbol[:, ipar], function, 12)
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
         elif function in multiobs_functions:
             lines.append(' '*4 + 'switch(iy) {')
             for iobs in range(self.model.ny()):
                 lines.append(' ' * 8 + f'case {iobs}:')
-                lines += self.getSymLines(symbol[:, iobs], function, 12)
+                lines += self._getSymLines(symbol[:, iobs], function, 12)
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
         else:
             if function in ['JSparse', 'JSparseB']:
                 rowVals = self.model.rowval(function)
                 colPtrs = self.model.colptr(function)
-                lines += self.getSparseSymLines(
+                lines += self._getSparseSymLines(
                     symbol, rowVals, colPtrs, function, 4
                 )
             else:
-                lines += self.getSymLines(symbol, function, 4)
+                lines += self._getSymLines(symbol, function, 4)
 
         return [line for line in lines if line]
 
-    def writeWrapfunctionsCPP(self):
+    def _writeWrapfunctionsCPP(self):
         """
         Write model-specific 'wrapper' file (wrapfunctions.cpp).
 
@@ -1840,7 +1858,7 @@ class ODEExporter:
             templateData
         )
 
-    def writeWrapfunctionsHeader(self):
+    def _writeWrapfunctionsHeader(self):
         """
         Write model-specific header file (wrapfunctions.h).
 
@@ -1861,7 +1879,7 @@ class ODEExporter:
             templateData
         )
 
-    def writeModelHeader(self):
+    def _writeModelHeader(self):
         """
         Write model-specific header file (MODELNAME.h).
 
@@ -1903,21 +1921,21 @@ class ODEExporter:
             'PARAMETERS': str(self.model.val('p'))[1:-1],
             'FIXED_PARAMETERS': str(self.model.val('k'))[1:-1],
             'PARAMETER_NAMES_INITIALIZER_LIST':
-                self.getSymbolNameInitializerList('p'),
+                self._getSymbolNameInitializerList('p'),
             'STATE_NAMES_INITIALIZER_LIST':
-                self.getSymbolNameInitializerList('x'),
+                self._getSymbolNameInitializerList('x'),
             'FIXED_PARAMETER_NAMES_INITIALIZER_LIST':
-                self.getSymbolNameInitializerList('k'),
+                self._getSymbolNameInitializerList('k'),
             'OBSERVABLE_NAMES_INITIALIZER_LIST':
-                self.getSymbolNameInitializerList('y'),
+                self._getSymbolNameInitializerList('y'),
             'PARAMETER_IDS_INITIALIZER_LIST':
-                self.getSymbolIDInitializerList('p'),
+                self._getSymbolIDInitializerList('p'),
             'STATE_IDS_INITIALIZER_LIST':
-                self.getSymbolIDInitializerList('x'),
+                self._getSymbolIDInitializerList('x'),
             'FIXED_PARAMETER_IDS_INITIALIZER_LIST':
-                self.getSymbolIDInitializerList('k'),
+                self._getSymbolIDInitializerList('k'),
             'OBSERVABLE_IDS_INITIALIZER_LIST':
-                self.getSymbolIDInitializerList('y'),
+                self._getSymbolIDInitializerList('y'),
             'REINIT_FIXPAR_INITCOND':
                 'true' if self.allow_reinit_fixpar_initcond else
                 'false',
@@ -1928,7 +1946,7 @@ class ODEExporter:
             templateData
         )
 
-    def getSymbolNameInitializerList(self, name):
+    def _getSymbolNameInitializerList(self, name):
         """
         Get SBML name initializer list for vector of names for the given model
         entity
@@ -1950,7 +1968,7 @@ class ODEExporter:
             [f'"{symbol}",' for symbol in self.model.name(name)]
         )
 
-    def getSymbolIDInitializerList(self, name):
+    def _getSymbolIDInitializerList(self, name):
         """
         Get C++ initializer list for vector of names for the given model entity
 
@@ -1971,7 +1989,7 @@ class ODEExporter:
             [f'"{symbol}",' for symbol in self.model.sym(name)]
         )
 
-    def writeCMakeFile(self):
+    def _writeCMakeFile(self):
         """
         Write CMake CMakeLists.txt file for this model.
 
@@ -1996,7 +2014,7 @@ class ODEExporter:
             templateData
         )
 
-    def writeSwigFiles(self):
+    def _writeSwigFiles(self):
         """
         Write SWIG interface files for this model.
 
@@ -2021,7 +2039,7 @@ class ODEExporter:
         shutil.copy(os.path.join(amiciSwigPath, 'CMakeLists_model.txt'),
                     os.path.join(self.modelSwigPath, 'CMakeLists.txt'))
 
-    def writeModuleSetup(self):
+    def _writeModuleSetup(self):
         """
         Create a distutils setup.py file for compile the model module.
 
@@ -2051,7 +2069,7 @@ class ODEExporter:
             templateData
         )
 
-    def getSymLines(self, symbols, variable, indentLevel):
+    def _getSymLines(self, symbols, variable, indentLevel):
         """
         Generate C++ code for assigning symbolic terms in symbols to C++ array
         `variable`.
@@ -2078,7 +2096,7 @@ class ODEExporter:
         """
 
         lines = [' ' * indentLevel + f'{variable}[{index}] = '
-                 f'{self.printWithException(math)};'
+                                     f'{self._printWithException(math)};'
                  if not (math == 0 or math == 0.0)
                  else ''
                  for index, math in enumerate(symbols)]
@@ -2090,7 +2108,7 @@ class ODEExporter:
 
         return lines
 
-    def getSparseSymLines(
+    def _getSparseSymLines(
             self, symbolList, RowVals, ColPtrs, variable, indentLevel
     ):
         """
@@ -2125,25 +2143,25 @@ class ODEExporter:
 
         """
         lines = [
-            ' ' * indentLevel + f'{variable}->indexvals[{index}] = ' 
-            f'{self.printWithException(math)};'
+            ' ' * indentLevel + f'{variable}->indexvals[{index}] = '
+                                f'{self._printWithException(math)};'
             for index, math in enumerate(RowVals)
         ]
 
         lines.extend(
             [' ' * indentLevel + f'{variable}->indexptrs[{index}] = '
-            f'{self.printWithException(math)};'
-            for index, math in enumerate(ColPtrs)]
+                                 f'{self._printWithException(math)};'
+             for index, math in enumerate(ColPtrs)]
         )
         lines.extend(
             [' ' * indentLevel + f'{variable}->data[{index}] = '
-            f'{self.printWithException(math)};'
-            for index, math in enumerate(symbolList)]
+                                 f'{self._printWithException(math)};'
+             for index, math in enumerate(symbolList)]
         )
 
         return lines
 
-    def printWithException(self, math):
+    def _printWithException(self, math):
         """Generate C++ code for a symbolic expression
 
         Arguments:
