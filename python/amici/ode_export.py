@@ -17,7 +17,24 @@ from string import Template
 
 from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 
+'''
+prototype for generated C++ functions, keys are the names of functions 
 
+signature: str
+    defines the argument part of the function signature, input variables 
+    should have a const flag
+
+assume_pow_positivity: bool
+    identifies the functions on which assume_pow_positivity will have an 
+    effect when specified during model generation. generally these are 
+    functions that are used for solving the ODE, where negative values may 
+    negatively affect convergence of the integration algorithm
+
+sparse: bool
+    specifies whether the result of this function will be stored in sparse 
+    format. sparse format means that the function will only return an array of 
+    nonzero values and not a full matrix.
+'''
 functions = {
     'J': {
         'signature':
@@ -85,31 +102,21 @@ functions = {
     },
     'Jy': {
         'signature':
-            '(double *nllh, const int iy, const realtype *p,'
+            '(double *Jy, const int iy, const realtype *p,'
             ' const realtype *k, const double *y,'
             ' const double *sigmay, const double *my)',
-        'variable':
-            'nllh',
-        'multiobs':
-            True,
     },
     'dJydsigmay': {
         'signature':
-            '(double *dJydsigma, const int iy, const realtype *p,'
+            '(double *dJydsigmay, const int iy, const realtype *p,'
             ' const realtype *k, const double *y,'
             ' const double *sigmay, const double *my)',
-        'variable':
-            'dJydsigma',
-        'multiobs':
-            True,
     },
     'dJydy': {
         'signature':
             '(double *dJydy, const int iy, const realtype *p,'
             ' const realtype *k, const double *y,'
             ' const double *sigmay, const double *my)',
-        'multiobs':
-            True,
     },
     'dwdp': {
         'signature':
@@ -136,8 +143,6 @@ functions = {
             '(realtype *dxdotdp, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k, const realtype *h,'
             ' const int ip, const realtype *w, const realtype *dwdp)',
-        'sensitivity':
-            True,
         'assume_pow_positivity':
             True,
     },
@@ -152,15 +157,11 @@ functions = {
             '(double *dydp, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k, const realtype *h,'
             ' const int ip)',
-        'sensitivity':
-            True,
     },
     'dsigmaydp': {
         'signature':
             '(double *dsigmaydp, const realtype t, const realtype *p,'
             ' const realtype *k, const int ip)',
-        'sensitivity':
-            True,
     },
     'qBdot': {
         'signature':
@@ -168,8 +169,6 @@ functions = {
             ' const realtype *x, const realtype *p, const realtype *k,'
             ' const realtype *h, const realtype *xB,'
             ' const realtype *w, const realtype *dwdp)',
-        'sensitivity':
-            True,
         'assume_pow_positivity':
             True,
     },
@@ -203,25 +202,18 @@ functions = {
     },
     'x0_fixedParameters': {
         'signature':
-            '(realtype *x0, const realtype t, const realtype *p,'
+            '(realtype *x0_fixedParameters, const realtype t, const realtype *p,'
             ' const realtype *k)',
-        'variable': 'x0',
     },
     'sx0': {
         'signature':
             '(realtype *sx0, const realtype t,const realtype *x,'
             ' const realtype *p, const realtype *k, const int ip)',
-        'sensitivity':
-            True,
     },
     'sx0_fixedParameters': {
         'signature':
-            '(realtype *sx0, const realtype t,const realtype *x0,'
+            '(realtype *sx0_fixedParameters, const realtype t,const realtype *x0,'
             ' const realtype *p, const realtype *k, const int ip)',
-        'variable':
-            'sx0',
-        'sensitivity':
-            True,
     },
     'xBdot': {
         'signature':
@@ -251,14 +243,46 @@ functions = {
 sparse_functions = [
     function for function in functions
     if 'sparse' in functions[function]
-       and functions[function]['sparse']
+    and functions[function]['sparse']
 ]
 
 sensi_functions = [
     function for function in functions
-    if 'sensitivity' in functions[function]
-       and functions[function]['sensitivity']
+    if 'const int ip' in functions[function]['signature']
+    and function is not 'sxdot'
 ]
+
+multiobs_functions = [
+    function for function in functions
+    if 'const int iy' in functions[function]['signature']
+]
+
+def var_in_function_signature(name, varname):
+    """
+    Checks if the values for a symbolic variable is passed in the signature
+    of a function
+
+    Arguments:
+    ----------
+    name: str
+        name of the function
+
+    varname: str
+        name of the symbolic variable
+
+    Returns:
+    ----------
+
+    Raises:
+    ----------
+
+    """
+    varname = varname.replace('sparse', '')
+    return name in functions \
+           and re.search(
+                    f'const (realtype|double) \*{varname}[0]*[,)]+',
+                    functions[name]['signature']
+                )
 
 class ModelQuantity:
     """
@@ -535,7 +559,7 @@ class ODEModel:
     _expressions: list
         list of Expression instances
 
-    sdim_funs: dict
+    symboldim_funs: dict
         define functions that compute model dimensions, these are functions
         as the underlying symbolic expressions have not been populated at
         compile time
@@ -569,13 +593,16 @@ class ODEModel:
         see SlsMat definition in CVODES for more details about RowVals
 
     equation_prototype: dict
-        defines the attribute from which an equation should be generated
+        defines the attribute from which an equation should be generated via
+        list comprehension
 
     variable_prototype: dict
-        defines the attribute from which a variable should be generated
+        defines the attribute from which a variable should be generated via
+        list comprehension
 
     value_prototype: dict
-        defines the attribute from which a value should be generated
+        defines the attribute from which a value should be generated via
+        list comprehension
 
     total_derivative_prototypes: dict
         defines how a total derivative equation is computed for an equation,
@@ -586,6 +613,11 @@ class ODEModel:
         defines how a multiplication equation is computed for an equation,
         key defines the name and values should be arguments for
         ODEModel.multiplication
+
+    lock_total_derivative: bool
+        set this to true when computing a total derivative from a partial
+        derivative call to enforce a partial derivative in the next recursion.
+        prevents infinite recursion
 
     """
     def __init__(self):
@@ -609,8 +641,7 @@ class ODEModel:
         self._constants = []
         self._loglikelihoods = []
         self._expressions = []
-        self.imported_from = ''
-        self.sdim_funs = {
+        self.symboldim_funs = {
             'sx': self.nx,
             'v': self.nx,
             'vB': self.nx,
@@ -679,6 +710,8 @@ class ODEModel:
                 'sign': -1,
             },
         }
+
+        self.lock_total_derivative = False
 
     def import_from_sbml_importer(self, si, flux_as_expressions=True):
         """
@@ -1027,8 +1060,8 @@ class ODEModel:
         elif name in sparse_functions:
             self.generateSparseSymbol(name)
             return
-        elif name in self.sdim_funs:
-            length = self.sdim_funs[name]()
+        elif name in self.symboldim_funs:
+            length = self.symboldim_funs[name]()
         elif name in sensi_functions:
             length = self.eq(name).shape[0]
         else:
@@ -1118,10 +1151,7 @@ class ODEModel:
         """
         match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
 
-        if match_deriv:
-            self.partialDerivative(match_deriv.group(1), match_deriv.group(2))
-
-        elif name in self.equation_prototype:
+        if name in self.equation_prototype:
             self.equationFromComponent(name, self.equation_prototype[name])
 
         elif name in self.total_derivative_prototypes:
@@ -1140,7 +1170,7 @@ class ODEModel:
             )
 
         elif name in ['sx0', 'sx0_fixedParameters']:
-            self.partialDerivative(name[1:], 'p', name=name)
+            self.derivative(name[1:], 'p', name=name)
 
         elif name == 'JB':
             self._eqs[name] = self.eq('J').transpose()
@@ -1160,6 +1190,9 @@ class ODEModel:
 
         elif name in ['JSparse', 'JSparseB']:
             self._eqs[name] = self.eq(name.replace('Sparse', ''))
+
+        elif match_deriv:
+            self.derivative(match_deriv.group(1), match_deriv.group(2))
 
         else:
             raise Exception(f'Unknown equation {name}')
@@ -1184,9 +1217,9 @@ class ODEModel:
         """
         return list(self._syms.keys())
 
-    def partialDerivative(self, eq, var, name=None):
+    def derivative(self, eq, var, name=None):
         """
-        Creates a new symbolic variable according to a partial derivative
+        Creates a new symbolic variable according to a derivative
 
         Arguments:
         ----------
@@ -1210,6 +1243,16 @@ class ODEModel:
         """
         if not name:
             name = f'd{eq}d{var}'
+
+        # automatically detect chainrule
+        if var_in_function_signature(eq, 'w') and \
+                not self.lock_total_derivative:
+            self.lock_total_derivative = True
+            self.totalDerivative(name, eq, 'w', var)
+            self.lock_total_derivative = False
+            return
+
+        # partial derivative
         self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
 
     def totalDerivative(self, name, eq, chainvar, var,
@@ -1398,33 +1441,6 @@ class ODEModel:
             raise Exception(f'No names for {name}')
 
         self._names[name] = [comp.name for comp in getattr(self, component)]
-
-def var_in_function_signature(name, varname):
-    """
-    Checks if the values for a symbolic variable is passed in the signature
-    of a function
-
-    Arguments:
-    ----------
-    name: str
-        name of the function
-
-    varname: str
-        name of the symbolic variable
-
-    Returns:
-    ----------
-
-    Raises:
-    ----------
-
-    """
-    varname = varname.replace('sparse', '')
-    return name in functions \
-           and re.search(
-                    f'const (realtype|double) \*{varname}[0]*[,)]+',
-                    functions[name]['signature']
-                )
 
 
 class ODEExporter:
@@ -1761,12 +1777,6 @@ class ODEExporter:
         ----------
 
         """
-
-        if 'variable' in self.functions[function]:
-            variableName = self.functions[function]['variable']
-        else:
-            variableName = function
-
         lines = []
 
         if function == 'sx0_fixedParameters':
@@ -1778,21 +1788,21 @@ class ODEExporter:
                         self.model.eq('x0_fixedParameters')
                 ):
                     if formula != 0 and formula != 0.0:
-                        lines.append(' ' * 12 + f'sx0[{index}] = 0.0;')
+                        lines.append(' ' * 12 + f'{function}[{index}] = 0.0;')
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
-        elif 'sensitivity' in self.functions[function]:
+        elif function in sensi_functions:
             lines.append(' '*4 + 'switch(ip) {')
             for ipar in range(self.model.np()):
                 lines.append(' ' * 8 + f'case {ipar}:')
-                lines += self.getSymLines(symbol[:, ipar], variableName, 12)
+                lines += self.getSymLines(symbol[:, ipar], function, 12)
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
-        elif 'multiobs' in self.functions[function]:
+        elif function in multiobs_functions:
             lines.append(' '*4 + 'switch(iy) {')
             for iobs in range(self.model.ny()):
                 lines.append(' ' * 8 + f'case {iobs}:')
-                lines += self.getSymLines(symbol[:, iobs], variableName, 12)
+                lines += self.getSymLines(symbol[:, iobs], function, 12)
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
         else:
@@ -1800,10 +1810,10 @@ class ODEExporter:
                 rowVals = self.model.rowval(function)
                 colPtrs = self.model.colptr(function)
                 lines += self.getSparseSymLines(
-                    symbol, rowVals, colPtrs, variableName, 4
+                    symbol, rowVals, colPtrs, function, 4
                 )
             else:
-                lines += self.getSymLines(symbol, variableName, 4)
+                lines += self.getSymLines(symbol, function, 4)
 
         return [line for line in lines if line]
 
