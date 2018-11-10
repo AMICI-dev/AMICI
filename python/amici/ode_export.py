@@ -17,24 +17,22 @@ from string import Template
 
 from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 
-"""
-prototype for generated C++ functions, keys are the names of functions
-
-signature: str
-    defines the argument part of the function signature, input variables
-    should have a const flag
-
-assume_pow_positivity: bool
-    identifies the functions on which assume_pow_positivity will have an
-    effect when specified during model generation. generally these are
-    functions that are used for solving the ODE, where negative values may
-    negatively affect convergence of the integration algorithm
-
-sparse: bool
-    specifies whether the result of this function will be stored in sparse
-    format. sparse format means that the function will only return an array of
-    nonzero values and not a full matrix.
-"""
+# prototype for generated C++ functions, keys are the names of functions
+#
+# signature: str
+#     defines the argument part of the function signature, input variables
+#     should have a const flag
+#
+# assume_pow_positivity: bool
+#     identifies the functions on which assume_pow_positivity will have an
+#     effect when specified during model generation. generally these are
+#     functions that are used for solving the ODE, where negative values may
+#     negatively affect convergence of the integration algorithm
+#
+# sparse: bool
+#     specifies whether the result of this function will be stored in sparse
+#     format. sparse format means that the function will only return an array
+#     of nonzero values and not a full matrix.
 functions = {
     'J': {
         'signature':
@@ -1052,11 +1050,11 @@ class ODEModel:
         if name in self._variable_prototype:
             component = self._variable_prototype[name]
             self._syms[name] = sp.DenseMatrix(
-                [comp.identifier for comp in getattr(self, component)]
+                [comp._identifier for comp in getattr(self, component)]
             )
             if name == 'y':
                 self._syms['my'] = sp.DenseMatrix(
-                    [sp.Symbol(f'm{comp.identifier}')
+                    [sp.Symbol(f'm{comp._identifier}')
                     for comp in getattr(self, component)]
                 )
             return
@@ -1418,7 +1416,7 @@ class ODEModel:
         else:
             raise Exception(f'No values for {name}')
 
-        self._vals[name] = [comp.value for comp in getattr(self, component)]
+        self._vals[name] = [comp._value for comp in getattr(self, component)]
 
     def _generateName(self, name):
         """
@@ -1444,7 +1442,7 @@ class ODEModel:
         else:
             raise Exception(f'No names for {name}')
 
-        self._names[name] = [comp.name for comp in getattr(self, component)]
+        self._names[name] = [comp._name for comp in getattr(self, component)]
 
 
 class ODEExporter:
