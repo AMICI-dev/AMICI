@@ -1358,19 +1358,19 @@ class ODEModel:
         if sign not in [-1, 1]:
             raise TypeError(f'sign must be +1 or -1, was {sign}')
 
-        vars = dict()
+        variables = dict()
         for varname in [x, y]:
             if var_in_function_signature(name, varname):
-                vars[varname] = self.sym(varname)
+                variables[varname] = self.sym(varname)
             else:
-                vars[varname] = self.eq(varname)
+                variables[varname] = self.eq(varname)
 
         if transpose_x:
-            xx = vars[x].transpose()
+            xx = variables[x].transpose()
         else:
-            xx = vars[x]
+            xx = variables[x]
 
-        self._eqs[name] = sign * xx * vars[y]
+        self._eqs[name] = sign * xx * variables[y]
 
     def _equationFromComponent(self, name, component):
         """
