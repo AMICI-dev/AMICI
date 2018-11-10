@@ -569,7 +569,7 @@ class ODEModel:
 
     _sparseeq: dict
         carries linear list of all symbolic formulas for sparsified
-        formulas
+        matrices
 
     _vals: dict
         carries numeric values of symbolic identifiers
