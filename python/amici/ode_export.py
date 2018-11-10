@@ -17,24 +17,24 @@ from string import Template
 
 from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 
-'''
-prototype for generated C++ functions, keys are the names of functions 
+"""
+prototype for generated C++ functions, keys are the names of functions
 
 signature: str
-    defines the argument part of the function signature, input variables 
+    defines the argument part of the function signature, input variables
     should have a const flag
 
 assume_pow_positivity: bool
-    identifies the functions on which assume_pow_positivity will have an 
-    effect when specified during model generation. generally these are 
-    functions that are used for solving the ODE, where negative values may 
+    identifies the functions on which assume_pow_positivity will have an
+    effect when specified during model generation. generally these are
+    functions that are used for solving the ODE, where negative values may
     negatively affect convergence of the integration algorithm
 
 sparse: bool
-    specifies whether the result of this function will be stored in sparse 
-    format. sparse format means that the function will only return an array of 
+    specifies whether the result of this function will be stored in sparse
+    format. sparse format means that the function will only return an array of
     nonzero values and not a full matrix.
-'''
+"""
 functions = {
     'J': {
         'signature':
@@ -1301,28 +1301,28 @@ class ODEModel:
         """
         # compute total derivative according to chainrule
         # Dydz = dydx*dxdz + dydz
-        vars = dict()
-        vars['dydx'] = dict()
-        vars['dxdz'] = dict()
-        vars['dydz'] = dict()
+        variables = dict()
+        variables['dydx'] = dict()
+        variables['dxdz'] = dict()
+        variables['dydz'] = dict()
 
-        vars['dydx']['name'] = f'd{eq}d{chainvar}' \
+        variables['dydx']['name'] = f'd{eq}d{chainvar}' \
             if dydx_name is None else dydx_name
-        vars['dxdz']['name'] = f'd{chainvar}d{var}' \
+        variables['dxdz']['name'] = f'd{chainvar}d{var}' \
             if dxdz_name is None else dxdz_name
-        vars['dydz']['name'] = f'd{eq}d{var}'
+        variables['dydz']['name'] = f'd{eq}d{var}'
 
         # if the symbol appears in the function signature,
         # we can use the respective symbol instead of the equation
-        for var in vars:
-            varname = vars[var]["name"]
+        for var in variables:
+            varname = variables[var]["name"]
             if var_in_function_signature(name, varname):
-                vars[var]['sym'] = self.sym(varname)
+                variables[var]['sym'] = self.sym(varname)
             else:
-                vars[var]['sym'] = self.eq(varname)
+                variables[var]['sym'] = self.eq(varname)
 
         self._eqs[name] = \
-            vars['dydx']['sym'] * vars['dxdz']['sym'] + vars['dydz']['sym']
+            variables['dydx']['sym'] * variables['dxdz']['sym'] + variables['dydz']['sym']
 
     def _multiplication(self, name, x, y,
                         transpose_x=False, sign=1):

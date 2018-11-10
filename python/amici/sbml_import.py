@@ -1202,13 +1202,13 @@ def replaceLogAB(x):
     return replaceLogAB(replacement)
 
 
-def l2s(input):
+def l2s(inputs):
     """
     transforms an list into list of strings
 
     Arguments:
     ----------
-    input: list
+    inputs: list
         objects
 
     Returns:
@@ -1219,4 +1219,4 @@ def l2s(input):
     ----------
 
     """
-    return [str(inp) for inp in input]
+    return [str(inp) for inp in inputs]
