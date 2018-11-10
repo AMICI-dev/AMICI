@@ -512,7 +512,7 @@ class ODEModel:
     """
     An ODEModel defines an Ordinay Differential Equation as set of
     ModelQuantities. This class provides general purpose interfaces to
-    comput arbitrary symbolic derivatives that are necessary for model
+    compute arbitrary symbolic derivatives that are necessary for model
     simulation or sensitivity computation
 
     Attributes:
