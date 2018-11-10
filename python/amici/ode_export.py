@@ -1169,7 +1169,7 @@ class ODEModel:
 
     def symNames(self):
         """
-        Returns a list of names of generates symbolic variables
+        Returns a list of names of generated symbolic variables
 
         Arguments:
         ----------
