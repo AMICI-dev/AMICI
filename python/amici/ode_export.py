@@ -1059,7 +1059,7 @@ class ODEModel:
     def generateSparseSymbol(self, name):
         """
         Generates the sparse symbolic identifiers, symbolic identifiers,
-        sparse eqations, column pointers and row values for a symbolic variable
+        sparse equations, column pointers and row values for a symbolic variable
 
         Arguments:
         ----------
