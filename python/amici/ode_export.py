@@ -739,7 +739,7 @@ class ODEModel:
 
         self.symbols = copy.copy(si.symbols)
         if flux_as_expressions:
-            # setting them prevents native
+            # setting these equations prevents native equation generation
             self._eqs['dxdotdw'] = si.stoichiometricMatrix
             self._eqs['w'] = si.fluxVector
             self.symbols['species']['dt'] = \

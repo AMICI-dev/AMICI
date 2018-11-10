@@ -176,7 +176,7 @@ class SbmlImporter:
 
     def checkLibSBMLErrors(self):
         """
-        Generate AMICI C++ files for the model provided to the constructor.
+        Checks the error log in the current self.sbml_doc
 
         Arguments:
         ----------
@@ -186,8 +186,8 @@ class SbmlImporter:
 
         Raises:
         ----------
-        Checks the error log in the current self.sbml_doc and raises an
-        exception if errors with severity ERROR or FATAL have occured
+        raises SBMLException if errors with severity ERROR or FATAL have
+        occured
 
         """
         num_warning = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
