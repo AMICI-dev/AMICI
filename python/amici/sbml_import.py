@@ -287,6 +287,7 @@ class SbmlImporter:
         )
         exporter.setName(modelName)
         exporter.setPaths(output_dir)
+        exporter.generateModelCode()
         exporter.compileModel()
 
     def processSBML(self, constantParameters=None):
