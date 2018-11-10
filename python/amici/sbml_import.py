@@ -851,7 +851,7 @@ class SbmlImporter:
         # add user-provided observables or make all species observable
         if observables:
             # Replace logX(.) by log(., X) since symengine cannot parse the
-            # former also replace symengine-incompatible sbml log(basis, x)
+            # former. Also replace symengine-incompatible sbml log(basis, x)
             for observable in observables:
                 observables[observable]['formula'] = re.sub(
                     r'(^|\W)log(\d+)\(', r'\g<1>1/ln(\2)*ln(',
