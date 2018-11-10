@@ -303,7 +303,7 @@ class ModelQuantity:
         """
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
-                            f'{type(identifer)}')
+                            f'{type(identifier)}')
         self.identifier = identifier
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
