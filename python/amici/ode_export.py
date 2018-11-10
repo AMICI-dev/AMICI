@@ -1698,7 +1698,7 @@ class ODEExporter:
             '#include "amici/symbolic_functions.h"',
             '#include "amici/defines.h" //realtype definition',
             'using amici::realtype;',
-            '#include <cmath> ',
+            '#include <cmath>',
             ''
         ]
 
