@@ -1005,7 +1005,7 @@ class SbmlImporter:
 
         """
         constants = [
-            (sp.Symbol('avogadro'), sp.Symbol('6.02214179*1e23')),
+            (sp.Symbol('avogadro'), sp.Symbol('6.02214179e23')),
         ]
         for constant, value in constants:
             # do not replace if any symbol is shadowing default definition
