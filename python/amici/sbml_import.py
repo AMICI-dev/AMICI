@@ -287,7 +287,7 @@ class SbmlImporter:
         )
         exporter.setName(modelName)
         exporter.setPaths(output_dir)
-        exporter.compileODE()
+        exporter.compileModel()
 
     def processSBML(self, constantParameters=None):
         """Read parameters, species, reactions, and so on from SBML model
