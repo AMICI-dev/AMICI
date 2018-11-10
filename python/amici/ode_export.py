@@ -291,14 +291,14 @@ class ModelQuantity:
     Attributes:
     ----------
 
-    identifier: sympy.Symbol
+    _identifier: sympy.Symbol
         unique identifier of the quantity
 
-    name: str
+    _name: str
         individual name of the quantity (does not need to be unique)
 
-    value: sympy.Symbol or float
-        either formula, numeric value or initial value
+    _value: sympy.Symbol or float
+        either formula (of the initial value) or numeric value
 
     """
     def __init__(self, identifier, name, value):
@@ -328,20 +328,21 @@ class ModelQuantity:
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
                             f'{type(identifier)}')
-        self.identifier = identifier
+        self._identifier = identifier
+
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
-        self.name = name
+        self._name = name
+
         if isinstance(value, sp.RealNumber):
             value = float(value)
-
         if not isinstance(value, sp.Basic) and not isinstance(value, float):
             raise TypeError(f'value must be sympy.Symbol or float, was '
                             f'{type(value)}')
-        self.value = value
+        self._value = value
 
     def __repr__(self):
-        return str(self.identifier)
+        return str(self._identifier)
 
 
 class State(ModelQuantity):
@@ -351,16 +352,16 @@ class State(ModelQuantity):
 
     Attributes:
     ----------
-    identifier: sympy.Symbol
+    _identifier: sympy.Symbol
         unique identifier of the quantity
 
-    name: str
+    _name: str
         individual name of the quantity (does not need to be unique)
 
-    value: symengine.Basic
+    _value: symengine.Basic
         initial value
 
-    dt: symengine.Basic
+    _dt: symengine.Basic
         time derivative
 
     """
@@ -395,7 +396,7 @@ class State(ModelQuantity):
         if not isinstance(dt, sp.Basic):
             raise TypeError(f'dt must be sympy.Symbol, was '
                             f'{type(dt)}')
-        self.dt = dt
+        self._dt = dt
 
 
 class Observable(ModelQuantity):
@@ -405,13 +406,13 @@ class Observable(ModelQuantity):
 
     Attributes:
     ----------
-    identifier: sympy.Symbol
+    _identifier: sympy.Symbol
         unique identifier of the quantity
 
-    name: str
+    _name: str
         individual name of the quantity (does not need to be unique)
 
-    value: symengine.Basic
+    _value: symengine.Basic
         formula
 
     """
@@ -425,13 +426,13 @@ class SigmaY(ModelQuantity):
 
     Attributes:
     ----------
-    identifier: sympy.Symbol
+    _identifier: sympy.Symbol
         unique identifier of the quantity
 
-    name: str
+    _name: str
         individual name of the quantity (does not need to be unique)
 
-    value: symengine.Basic
+    _value: symengine.Basic
         formula
 
     """
@@ -447,13 +448,13 @@ class Expression(ModelQuantity):
 
     Attributes:
     ----------
-    identifier: sympy.Symbol
+    _identifier: sympy.Symbol
         unique identifier of the quantity
 
-    name: str
+    _name: str
         individual name of the quantity (does not need to be unique)
 
-    value: symengine.Basic
+    _value: symengine.Basic
         formula
 
     """
@@ -467,13 +468,13 @@ class Parameter(ModelQuantity):
 
     Attributes:
     ----------
-    identifier: sympy.Symbol
+    _identifier: sympy.Symbol
         unique identifier of the quantity
 
-    name: str
+    _name: str
         individual name of the quantity (does not need to be unique)
 
-    value: float
+    _value: float
         numeric value
 
     """
@@ -487,13 +488,13 @@ class Constant(ModelQuantity):
 
     Attributes:
     ----------
-    identifier: sympy.Symbol
+    _identifier: sympy.Symbol
         unique identifier of the quantity
 
-    name: str
+    _name: str
         individual name of the quantity (does not need to be unique)
 
-    value: float
+    _value: float
         numeric value
 
     """
@@ -509,13 +510,13 @@ class LogLikelihood(ModelQuantity):
 
     Attributes:
     ----------
-    identifier: sympy.Symbol
+    _identifier: sympy.Symbol
         unique identifier of the quantity
 
-    name: str
+    _name: str
         individual name of the quantity (does not need to be unique)
 
-    value: symengine.Basic
+    _value: symengine.Basic
         formula
 
     """
@@ -559,7 +560,7 @@ class ODEModel:
     _expressions: list
         list of Expression instances
 
-    symboldim_funs: dict
+    _symboldim_funs: dict
         define functions that compute model dimensions, these are functions
         as the underlying symbolic expressions have not been populated at
         compile time
@@ -592,29 +593,29 @@ class ODEModel:
         carries row values for sparsified identifiers
         see SlsMat definition in CVODES for more details about RowVals
 
-    equation_prototype: dict
+    _equation_prototype: dict
         defines the attribute from which an equation should be generated via
-        list comprehension
+        list comprehension (see generateEquation)
 
-    variable_prototype: dict
+    _variable_prototype: dict
         defines the attribute from which a variable should be generated via
-        list comprehension
+        list comprehension (see generateSymbol)
 
-    value_prototype: dict
+    _value_prototype: dict
         defines the attribute from which a value should be generated via
-        list comprehension
+        list comprehension (see generateValue)
 
-    total_derivative_prototypes: dict
+    _total_derivative_prototypes: dict
         defines how a total derivative equation is computed for an equation,
         key defines the name and values should be arguments for
         ODEModel.totalDerivative
 
-    multiplication_prototypes: dict
+    _multiplication_prototypes: dict
         defines how a multiplication equation is computed for an equation,
         key defines the name and values should be arguments for
         ODEModel.multiplication
 
-    lock_total_derivative: bool
+    _lock_total_derivative: bool
         set this to true when computing a total derivative from a partial
         derivative call to enforce a partial derivative in the next recursion.
         prevents infinite recursion
@@ -641,7 +642,7 @@ class ODEModel:
         self._constants = []
         self._loglikelihoods = []
         self._expressions = []
-        self.symboldim_funs = {
+        self._symboldim_funs = {
             'sx': self.nx,
             'v': self.nx,
             'vB': self.nx,
@@ -657,25 +658,25 @@ class ODEModel:
         self._colptrs = dict()
         self._rowvals = dict()
 
-        self.equation_prototype = {
+        self._equation_prototype = {
             'x0': '_states',
             'y': '_observables',
             'Jy': '_loglikelihoods',
             'w': '_expressions',
             'sigmay': '_sigmays',
         }
-        self.variable_prototype = {
+        self._variable_prototype = {
             'x': '_states',
             'y': '_observables',
             'p': '_parameters',
             'k': '_constants',
             'sigmay': '_sigmays'
         }
-        self.value_prototype = {
+        self._value_prototype = {
             'p': '_parameters',
             'k': '_constants',
         }
-        self.total_derivative_prototypes = {
+        self._total_derivative_prototypes = {
             'J': {
                 'eq': 'xdot',
                 'chainvar': 'w',
@@ -689,7 +690,7 @@ class ODEModel:
                 'dxdz_name': 'sx',
             },
         }
-        self.multiplication_prototypes = {
+        self._multiplication_prototypes = {
             'Jv': {
                 'x': 'J',
                 'y': 'v',
@@ -711,7 +712,7 @@ class ODEModel:
             },
         }
 
-        self.lock_total_derivative = False
+        self._lock_total_derivative = False
 
     def import_from_sbml_importer(self, si, flux_as_expressions=True):
         """
@@ -723,8 +724,7 @@ class ODEModel:
             imported SBML model
 
         flux_as_expressions: bool
-            defines whether fluxes should be used as Expressions,
-            alternatively, AssignmentRules are used as Expressions
+            defines whether fluxes should be used as Expressions
 
         Returns:
         ----------
@@ -737,6 +737,7 @@ class ODEModel:
 
         self.symbols = copy.copy(si.symbols)
         if flux_as_expressions:
+            # setting them prevents native
             self._eqs['dxdotdw'] = si.stoichiometricMatrix
             self._eqs['w'] = si.fluxVector
             self.symbols['species']['dt'] = \
@@ -1046,8 +1047,8 @@ class ODEModel:
         ----------
 
         """
-        if name in self.variable_prototype:
-            component = self.variable_prototype[name]
+        if name in self._variable_prototype:
+            component = self._variable_prototype[name]
             self._syms[name] = sp.DenseMatrix(
                 [comp.identifier for comp in getattr(self, component)]
             )
@@ -1060,8 +1061,8 @@ class ODEModel:
         elif name in sparse_functions:
             self.generateSparseSymbol(name)
             return
-        elif name in self.symboldim_funs:
-            length = self.symboldim_funs[name]()
+        elif name in self._symboldim_funs:
+            length = self._symboldim_funs[name]()
         elif name in sensi_functions:
             length = self.eq(name).shape[0]
         else:
@@ -1086,7 +1087,7 @@ class ODEModel:
         ----------
 
         """
-        for var in self.variable_prototype:
+        for var in self._variable_prototype:
             self.generateSymbol(var)
 
     def generateSparseSymbol(self, name):
@@ -1151,16 +1152,16 @@ class ODEModel:
         """
         match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
 
-        if name in self.equation_prototype:
-            self.equationFromComponent(name, self.equation_prototype[name])
+        if name in self._equation_prototype:
+            self.equationFromComponent(name, self._equation_prototype[name])
 
-        elif name in self.total_derivative_prototypes:
-            args = self.total_derivative_prototypes[name]
+        elif name in self._total_derivative_prototypes:
+            args = self._total_derivative_prototypes[name]
             args['name'] = name
             self.totalDerivative(**args)
 
-        elif name in self.multiplication_prototypes:
-            args = self.multiplication_prototypes[name]
+        elif name in self._multiplication_prototypes:
+            args = self._multiplication_prototypes[name]
             args['name'] = name
             self.multiplication(**args)
 
@@ -1182,8 +1183,9 @@ class ODEModel:
             k = self.sym('k')
             self._eqs[name] = sp.DenseMatrix([
                 eq
-                if any([sym in eq.free_symbols
-                        for sym in k])
+                # check if the equation contains constants
+                if any([sym in eq.free_symbols for sym in k])
+                # if not set to zero
                 else 0.0
                 for eq in self.eq('x0')
             ])
@@ -1246,10 +1248,10 @@ class ODEModel:
 
         # automatically detect chainrule
         if var_in_function_signature(eq, 'w') and \
-                not self.lock_total_derivative:
-            self.lock_total_derivative = True
+                not self._lock_total_derivative:
+            self._lock_total_derivative = True
             self.totalDerivative(name, eq, 'w', var)
-            self.lock_total_derivative = False
+            self._lock_total_derivative = False
             return
 
         # partial derivative
@@ -1409,8 +1411,8 @@ class ODEModel:
         ----------
 
         """
-        if name in self.value_prototype:
-            component = self.value_prototype[name]
+        if name in self._value_prototype:
+            component = self._value_prototype[name]
         else:
             raise Exception(f'No values for {name}')
 
@@ -1433,10 +1435,10 @@ class ODEModel:
         ----------
 
         """
-        if name in self.variable_prototype:
-            component = self.variable_prototype[name]
-        elif name in self.equation_prototype:
-            component = self.equation_prototype[name]
+        if name in self._variable_prototype:
+            component = self._variable_prototype[name]
+        elif name in self._equation_prototype:
+            component = self._equation_prototype[name]
         else:
             raise Exception(f'No names for {name}')
 
