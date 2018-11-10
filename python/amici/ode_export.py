@@ -838,7 +838,7 @@ class ODEModel:
 
     def sparsesym(self, name):
         """
-        Returns (and constructs if necessary) the parsified identifiers for a
+        Returns (and constructs if necessary) the sparsified identifiers for a
         sparsified symbolic variable.
 
         Arguments:
