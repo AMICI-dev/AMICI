@@ -268,7 +268,7 @@ class ModelQuantity:
     ----------
 
     identifier: sympy.Symbol
-            unique identifier of the quantity
+        unique identifier of the quantity
 
     name: str
         individual name of the quantity (does not need to be unique)
