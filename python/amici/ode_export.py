@@ -1,4 +1,4 @@
-""" @package amici.ode_export The python ode export module for python
+""" @package amici.ode_export The C++ ODE export module for python
 """
 #!/usr/bin/env python3
 
