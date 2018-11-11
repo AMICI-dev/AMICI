@@ -113,7 +113,7 @@ def runAmiciSimulations(model, solver, edata_list, num_threads=1):
         model: Model instance
         solver: Solver instance, must be generated from Model.getSolver()
         edata_list: list of ExpData instances
-        num_threads: number of threads to use 
+        num_threads: number of threads to use
                      (only used if compiled with openmp)
 
     Returns:
@@ -123,8 +123,8 @@ def runAmiciSimulations(model, solver, edata_list, num_threads=1):
 
     """
     edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
-    rdata_ptr_list = amici.runAmiciSimulations(solver.get(), 
-                                               edata_ptr_vector, 
-                                               model.get(), 
+    rdata_ptr_list = amici.runAmiciSimulations(solver.get(),
+                                               edata_ptr_vector,
+                                               model.get(),
                                                num_threads)
     return [numpy.rdataToNumPyArrays(r) for r in rdata_ptr_list]
