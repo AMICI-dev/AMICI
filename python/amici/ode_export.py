@@ -17,22 +17,21 @@ from string import Template
 
 from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 
-# prototype for generated C++ functions, keys are the names of functions
+## prototype for generated C++ functions, keys are the names of functions
 #
-# signature: str
-#     defines the argument part of the function signature, input variables
-#     should have a const flag
+# signature: defines the argument part of the function signature,
+# input variables
+# should have a const flag
 #
-# assume_pow_positivity: bool
-#     identifies the functions on which assume_pow_positivity will have an
-#     effect when specified during model generation. generally these are
-#     functions that are used for solving the ODE, where negative values may
-#     negatively affect convergence of the integration algorithm
+# assume_pow_positivity: identifies the functions on which
+# assume_pow_positivity will have an effect when specified during model
+# generation. generally these are functions that are used for solving the
+# ODE, where negative values may negatively affect convergence of the
+# integration algorithm
 #
-# sparse: bool
-#     specifies whether the result of this function will be stored in sparse
-#     format. sparse format means that the function will only return an array
-#     of nonzero values and not a full matrix.
+# sparse: specifies whether the result of this function will be stored in
+# sparse format. sparse format means that the function will only return an
+# array of nonzero values and not a full matrix.
 functions = {
     'J': {
         'signature':
@@ -238,41 +237,37 @@ functions = {
     }
 }
 
+## list of sparse functions
 sparse_functions = [
     function for function in functions
     if 'sparse' in functions[function]
     and functions[function]['sparse']
 ]
-
+## list of sensitivity functions
 sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
     and function is not 'sxdot'
 ]
-
+## list of multiobs functions
 multiobs_functions = [
     function for function in functions
     if 'const int iy' in functions[function]['signature']
 ]
 
 def var_in_function_signature(name, varname):
-    """
-    Checks if the values for a symbolic variable is passed in the signature
+    """Checks if the values for a symbolic variable is passed in the signature
     of a function
 
     Arguments:
-    ----------
-    name: str
-        name of the function
 
-    varname: str
-        name of the symbolic variable
+        name: name of the function @type str
+
+        varname: name of the symbolic variable @type str
 
     Returns:
-    ----------
 
     Raises:
-    ----------
 
     """
     varname = varname.replace('sparse', '')
@@ -283,43 +278,26 @@ def var_in_function_signature(name, varname):
                 )
 
 class ModelQuantity:
-    """
-    Base class for model components
+    """Base class for model components
 
     Attributes:
-    ----------
-
-    _identifier: sympy.Symbol
-        unique identifier of the quantity
-
-    _name: str
-        individual name of the quantity (does not need to be unique)
-
-    _value: sympy.Symbol or float
-        either formula (of the initial value) or numeric value
 
     """
-    def __init__(self, identifier, name, value):
-        """
-        Create a new ModelQuantity instance.
+    def __init__(self, identifier,  name, value):
+        """Create a new ModelQuantity instance.
 
         Arguments:
-        ----------
-        identifier: sympy.Symbol
-            unique identifier of the quantity
+            identifier: unique identifier of the quantity @type sympy.Symbol
 
-        name: str
-            individual name of the quantity (does not need to be unique)
+            name: individual name of the quantity (does not need to be unique)
+            @type str
 
-        value: symengine.Basic or float
-            either formula, numeric value or initial value
+            value: either formula, numeric value or initial value
 
         Returns:
-        ----------
         ModelQuantity instance
 
         Raises:
-        ----------
         TypeError:
             is thrown if input types do not match documented types
         """
@@ -340,53 +318,42 @@ class ModelQuantity:
         self._value = value
 
     def __repr__(self):
+        """Representation of the ModelQuantity object
+
+        Arguments:
+
+        Returns:
+        string representation of the ModelQuantity
+
+        Raises:
+
+        """
         return str(self._identifier)
 
 
 class State(ModelQuantity):
-    """
-    A State variable defines an entity that evolves with time according to the
+    """A State variable defines an entity that evolves with time according to the
     provided time derivative, abbreviated by `x`
 
-    Attributes:
-    ----------
-    _identifier: sympy.Symbol
-        unique identifier of the quantity
-
-    _name: str
-        individual name of the quantity (does not need to be unique)
-
-    _value: symengine.Basic
-        initial value
-
-    _dt: symengine.Basic
-        time derivative
-
     """
+
     def __init__(self, identifier, name, value, dt):
-        """
-        Create a new State instance. Extends ModelQuantity.__init__ by dt
+        """Create a new State instance. Extends ModelQuantity.__init__ by dt
 
         Arguments:
-        ----------
-        identifier: sympy.Symbol
-            unique identifier of the quantity
+            identifier: unique identifier of the state @type sympy.Symbol
 
-        name: str
-            individual name of the quantity (does not need to be unique)
+            name: individual name of the state (does not need to be unique)
+            @type str
 
-        value: symengine.Basic
-            initial value
+            value: initial value @type symengine.Basic
 
-        dt: sympy.Symbol
-            time derivative
+            dt: time derivative @type symengine.Basic
 
         Returns:
-        ----------
         ModelQuantity instance
 
         Raises:
-        ----------
         TypeError:
             is thrown if input types do not match documented types
         """
@@ -396,130 +363,170 @@ class State(ModelQuantity):
                             f'{type(dt)}')
         self._dt = dt
 
-
 class Observable(ModelQuantity):
-    """
-    An Observable links model simulations to experimental measurements,
+    """An Observable links model simulations to experimental measurements,
     abbreviated by `y`
 
-    Attributes:
-    ----------
-    _identifier: sympy.Symbol
-        unique identifier of the quantity
-
-    _name: str
-        individual name of the quantity (does not need to be unique)
-
-    _value: symengine.Basic
-        formula
-
     """
-    pass
+    def __init__(self, identifier, name, value):
+        """Create a new Observable instance.
+
+        Arguments:
+            identifier: unique identifier of the Observable @type sympy.Symbol
+
+            name: individual name of the Observable (does not need to be
+            unique) @type str
+
+            value: formula @type symengine.Basic
+
+        Returns:
+        ModelQuantity instance
+
+        Raises:
+        TypeError:
+            is thrown if input types do not match documented types
+        """
+        super(Observable, self).__init__(identifier, name, value)
 
 
 class SigmaY(ModelQuantity):
-    """
-    A Standard Deviation SigmaY rescales the distance between simulations and
+    """A Standard Deviation SigmaY rescales the distance between simulations and
     measurements when computing residuals, abbreviated by `sigmay`
 
-    Attributes:
-    ----------
-    _identifier: sympy.Symbol
-        unique identifier of the quantity
-
-    _name: str
-        individual name of the quantity (does not need to be unique)
-
-    _value: symengine.Basic
-        formula
-
     """
-    pass
+    def __init__(self, identifier, name, value):
+        """Create a new Standard Deviation instance.
 
+        Arguments:
+            identifier: unique identifier of the Standard Deviation
+            @type sympy.Symbol
+
+            name: individual name of the Standard Deviation (does not need to
+            be unique) @type str
+
+            value: formula @type symengine.Basic
+
+        Returns:
+        ModelQuantity instance
+
+        Raises:
+        TypeError:
+            is thrown if input types do not match documented types
+        """
+        super(SigmaY, self).__init__(identifier, name, value)
 
 class Expression(ModelQuantity):
-    """
-    An Expressions is a recurring elements in symbolic formulas. Specifying
+    """An Expressions is a recurring elements in symbolic formulas. Specifying
     this may yield more compact expression which may lead to substantially
     shorter model compilation times, but may also reduce model simulation time,
     abbreviated by `w`
 
-    Attributes:
-    ----------
-    _identifier: sympy.Symbol
-        unique identifier of the quantity
-
-    _name: str
-        individual name of the quantity (does not need to be unique)
-
-    _value: symengine.Basic
-        formula
-
     """
-    pass
+    def __init__(self, identifier, name, value):
+        """Create a new Expression instance.
+
+        Arguments:
+            identifier: unique identifier of the Expression @type sympy.Symbol
+
+            name: individual name of the Expression (does not need to be
+            unique) @type str
+
+            value: formula @type symengine.Basic
+
+        Returns:
+        ModelQuantity instance
+
+        Raises:
+        TypeError:
+            is thrown if input types do not match documented types
+        """
+        super(Expression, self).__init__(identifier, name, value)
 
 
 class Parameter(ModelQuantity):
-    """
-    A Parameter is a free variable in the model with respect to which
+    """A Parameter is a free variable in the model with respect to which
     sensitivites may be computed, abbreviated by `p`
 
-    Attributes:
-    ----------
-    _identifier: sympy.Symbol
-        unique identifier of the quantity
-
-    _name: str
-        individual name of the quantity (does not need to be unique)
-
-    _value: float
-        numeric value
-
     """
-    pass
+
+    def __init__(self, identifier, name, value):
+        """Create a new Expression instance.
+
+        Arguments:
+            identifier: unique identifier of the Parameter @type sympy.Symbol
+
+            name: individual name of the Parameter (does not need to be
+            unique) @type str
+
+            value: numeric value @type float
+
+        Returns:
+        ModelQuantity instance
+
+        Raises:
+        TypeError:
+            is thrown if input types do not match documented types
+        """
+        super(Parameter, self).__init__(identifier, name, value)
 
 
 class Constant(ModelQuantity):
-    """
-    A Constant is a fixed variable in the model with respect to which
+    """A Constant is a fixed variable in the model with respect to which
     sensitivites cannot be computed, abbreviated by `k`
 
-    Attributes:
-    ----------
-    _identifier: sympy.Symbol
-        unique identifier of the quantity
-
-    _name: str
-        individual name of the quantity (does not need to be unique)
-
-    _value: float
-        numeric value
-
     """
-    pass
+
+    def __init__(self, identifier, name, value):
+        """Create a new Expression instance.
+
+        Arguments:
+            identifier: unique identifier of the Constant @type sympy.Symbol
+
+            name: individual name of the Constant (does not need to be unique)
+             @type str
+
+            value: numeric value @type float
+
+        Returns:
+        ModelQuantity instance
+
+        Raises:
+        TypeError:
+            is thrown if input types do not match documented types
+        """
+        super(Constant, self).__init__(identifier, name, value)
 
 
 class LogLikelihood(ModelQuantity):
-    """
-    A LogLikelihood defines the distance between measurements and
+    """A LogLikelihood defines the distance between measurements and
     experiments for a particular observable. The final LogLikelihood value
     in the simulation will be the sum of all specified LogLikelihood
     instances evaluated at all timepoints, abbreviated by `Jy`
 
-    Attributes:
-    ----------
-    _identifier: sympy.Symbol
-        unique identifier of the quantity
-
-    _name: str
-        individual name of the quantity (does not need to be unique)
-
-    _value: symengine.Basic
-        formula
-
     """
-    pass
 
+    def __init__(self, identifier, name, value):
+        """Create a new Expression instance.
+
+        Arguments:
+            identifier: unique identifier of the LogLikelihood
+            @type sympy.Symbol
+
+            name: individual name of the LogLikelihood (does not need to be
+             unique) @type str
+
+            value: formula @type symengine.Basic
+
+        Returns:
+        ModelQuantity instance
+
+        Raises:
+        TypeError:
+            is thrown if input types do not match documented types
+        """
+        super(LogLikelihood, self).__init__(identifier, name, value)
+
+## indicates which type some attributes in ODEModel should have
 symbol_to_type = {
     'species': State,
     'parameter': Parameter,
@@ -532,107 +539,87 @@ symbol_to_type = {
 
 
 class ODEModel:
-    """
-    An ODEModel defines an Ordinay Differential Equation as set of
+    """An ODEModel defines an Ordinay Differential Equation as set of
     ModelQuantities. This class provides general purpose interfaces to
     compute arbitrary symbolic derivatives that are necessary for model
     simulation or sensitivity computation
 
     Attributes:
-    ----------
-    _states: list
-        list of State instances
+        _states: list of State instances  @type list
 
-    _observables: list
-        list of Observable instances
+        _observables: list of Observable instances  @type list
 
-    _sigmays: list
-        list of SigmaY instances
+        _sigmays: list of SigmaY instances  @type list
 
-    _parameters: list
-        list of Parameter instances
+        _parameters: list of Parameter instances  @type list
 
-    _loglikelihoods: list
-        list of LogLikelihood instances
+        _loglikelihoods: list of LogLikelihood instances  @type list
 
-    _expressions: list
-        list of Expression instances
+        _expressions: list of Expression instances  @type list
 
-    _symboldim_funs: dict
-        define functions that compute model dimensions, these are functions
-        as the underlying symbolic expressions have not been populated at
-        compile time
+        _symboldim_funs: define functions that compute model dimensions, these
+        are functions as the underlying symbolic expressions have not been
+        populated at compile time @type dict
 
-    _eqs: dict
-        carries symbolic formulas of the symbolic variables of the model
+        _eqs: carries symbolic formulas of the symbolic variables of the model
+        @type dict
 
-    _sparseeq: dict
-        carries linear list of all symbolic formulas for sparsified
-        variables
+        _sparseeqs: carries linear list of all symbolic formulas for sparsified
+        variables  @type dict
 
-    _vals: dict
-        carries numeric values of symbolic identifiers of the symbolic
-        variables of the model
+        _vals: carries numeric values of symbolic identifiers of the symbolic
+        variables of the model  @type dict
 
-    _names: dict
-        carries names of symbolic identifiers of the symbolic variables of the
-        model
+        _names: carries names of symbolic identifiers of the symbolic variables
+        of the model  @type dict
 
-    _syms: dict
-        carries symbolic identifiers of the symbolic variables of the model
+        _syms: carries symbolic identifiers of the symbolic variables of the
+        model  @type dict
 
-    _sparsesyms: dict
-        carries linear list of all symbolic identifiers for sparsified
-        variables
+        _sparsesyms: carries linear list of all symbolic identifiers for
+        sparsified variables  @type dict
 
-    _colptrs: dict
-        carries column pointers for sparsified variables
-        see SlsMat definition in CVODES for more details about ColPtrs
+        _colptrs: carries column pointers for sparsified variables. See
+        SlsMat definition in CVODES for more details about ColPtrs @type dict
 
-    _rowvals: dict
-        carries row values for sparsified variables
-        see SlsMat definition in CVODES for more details about RowVals
+        _rowvals: carries row values for sparsified variables. See SlsMat
+        definition in CVODES for more details about RowVals @type dict
 
-    _equation_prototype: dict
-        defines the attribute from which an equation should be generated via
-        list comprehension (see generateEquation)
+        _equation_prototype: defines the attribute from which an equation
+        should be generated via list comprehension (see
+        ODEModel.generateEquation()) @type dict
 
-    _variable_prototype: dict
-        defines the attribute from which a variable should be generated via
-        list comprehension (see generateSymbol)
+        _variable_prototype: defines the attribute from which a variable should
+        be generated via list comprehension (see ODEModel.generateSymbol())
+        @type dict
 
-    _value_prototype: dict
-        defines the attribute from which a value should be generated via
-        list comprehension (see generateValue)
+        _value_prototype: defines the attribute from which a value should be
+        generated via list comprehension (see ODEModel.generateValue())
+        @type dict
 
-    _total_derivative_prototypes: dict
-        defines how a total derivative equation is computed for an equation,
-        key defines the name and values should be arguments for
-        ODEModel.totalDerivative
+        _total_derivative_prototypes: defines how a total derivative equation
+        is computed for an equation, key defines the name and values should
+        be arguments for ODEModel.totalDerivative() @type dict
 
-    _multiplication_prototypes: dict
-        defines how a multiplication equation is computed for an equation,
-        key defines the name and values should be arguments for
-        ODEModel.multiplication
+        _multiplication_prototypes: defines how a multiplication equation is
+        computed for an equation, key defines the name and values should be
+        arguments for ODEModel.multiplication() @type dict
 
-    _lock_total_derivative: bool
-        set this to true when computing a total derivative from a partial
-        derivative call to enforce a partial derivative in the next recursion.
-        prevents infinite recursion
+        _lock_total_derivative: set this to true when computing a total
+        derivative from a partial derivative call to enforce a partial
+        derivative in the next recursion. prevents infinite recursion
 
     """
+
     def __init__(self):
-        """
-        Create a new ODEModel instance.
+        """Create a new ODEModel instance.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
+        New ODEModel instance
 
         Raises:
-        ----------
 
         """
         self._states = []
@@ -714,61 +701,46 @@ class ODEModel:
 
         self._lock_total_derivative = False
 
-    def import_from_sbml_importer(self, si, flux_as_expressions=True):
-        """
-        Imports a model specification from a amici.SBMLImporter instance.
+    def import_from_sbml_importer(self, si):
+        """Imports a model specification from a amici.SBMLImporter instance.
 
         Arguments:
-        ----------
-        si: amici.SBMLImporter
-            imported SBML model
+            si: imported SBML model @type amici.SbmlImporter
 
-        flux_as_expressions: bool
-            defines whether fluxes should be used as Expressions
 
         Returns:
-        ----------
 
 
         Raises:
-        ----------
 
         """
 
-        self.symbols = copy.copy(si.symbols)
-        if flux_as_expressions:
-            # setting these equations prevents native equation generation
-            self._eqs['dxdotdw'] = si.stoichiometricMatrix
-            self._eqs['w'] = si.fluxVector
-            self.symbols['species']['dt'] = \
-                si.stoichiometricMatrix * self.sym('w')
-        else:
-            self.symbols['species']['dt'] = \
-                si.stoichiometricMatrix * si.fluxVector
+        symbols = copy.copy(si.symbols)
 
-        for symbol in [s for s in self.symbols if s != 'my']:
+        # setting these equations prevents native equation generation
+        self._eqs['dxdotdw'] = si.stoichiometricMatrix
+        self._eqs['w'] = si.fluxVector
+        symbols['species']['dt'] = \
+            si.stoichiometricMatrix * self.sym('w')
+
+        for symbol in [s for s in symbols if s != 'my']:
             # transform dict of lists into a list of dicts
-            protos = [dict(zip(self.symbols[symbol], t))
-                      for t in zip(*self.symbols[symbol].values())]
+            protos = [dict(zip(symbols[symbol], t))
+                      for t in zip(*symbols[symbol].values())]
             for proto in protos:
                 self.add_component(symbol_to_type[symbol](**proto))
 
         self._generateBasicVariables()
 
     def add_component(self, component):
-        """
-        Adds a new ModelQuantity to the model.
+        """Adds a new ModelQuantity to the model.
 
         Arguments:
-        ----------
-        component: ModelQuantity
-            model quantity to be added
+            component: model quantity to be added @type ModelQuantity
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         for comp_type in [Observable, Expression, Parameter, Constant, State,
@@ -781,89 +753,68 @@ class ODEModel:
         Exception(f'Invalid component type {type(component)}')
 
     def nx(self):
-        """
-        Number of states.
+        """Number of states.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
         number of state variable symbols
 
         Raises:
-        ----------
 
         """
         return len(self.sym('x'))
 
     def ny(self):
-        """
-        Number of Observables.
+        """Number of Observables.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
         number of observable symbols
 
         Raises:
-        ----------
 
         """
         return len(self.sym('y'))
 
     def nk(self):
-        """
-        Number of Constants.
+        """Number of Constants.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
         number of constant symbols
 
         Raises:
-        ----------
 
         """
         return len(self.sym('k'))
 
     def np(self):
-        """
-        Number of Parameters.
+        """Number of Parameters.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
         number of parameter symbols
 
         Raises:
-        ----------
 
         """
         return len(self.sym('p'))
 
     def sym(self, name):
-        """
-        Returns (and constructs if necessary) the identifiers for a symbolic
+        """Returns (and constructs if necessary) the identifiers for a symbolic
         entity.
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
-        symengine.DenseMatrix containing the symbolic identifiers
+        containing the symbolic identifiers @type symengine.DenseMatrix
 
         Raises:
-        ----------
 
         """
         if name not in self._syms:
@@ -871,21 +822,16 @@ class ODEModel:
         return self._syms[name]
 
     def sparsesym(self, name):
-        """
-        Returns (and constructs if necessary) the sparsified identifiers for a
+        """Returns (and constructs if necessary) the sparsified identifiers for a
         sparsified symbolic variable.
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
         linearized symengine.DenseMatrix containing the symbolic identifiers
 
         Raises:
-        ----------
 
         """
         if name not in sparse_functions:
@@ -895,21 +841,16 @@ class ODEModel:
         return self._sparsesyms[name]
 
     def eq(self, name):
-        """
-        Returns (and constructs if necessary) the formulas for a symbolic
+        """Returns (and constructs if necessary) the formulas for a symbolic
         entity.
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
         symengine.DenseMatrix containing the symbolic identifiers
 
         Raises:
-        ----------
 
         """
         if name not in self._eqs:
@@ -917,21 +858,16 @@ class ODEModel:
         return self._eqs[name]
 
     def sparseeq(self, name):
-        """
-        Returns (and constructs if necessary) the sparsified formulas for a
+        """Returns (and constructs if necessary) the sparsified formulas for a
         sparsified symbolic variable.
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
         linearized symengine.DenseMatrix containing the symbolic formulas
 
         Raises:
-        ----------
 
         """
         if name not in sparse_functions:
@@ -941,21 +877,16 @@ class ODEModel:
         return self._sparseeqs[name]
 
     def colptr(self, name):
-        """
-        Returns (and constructs if necessary) the column pointers for
+        """Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
         symengine.DenseMatrix containing the column pointers
 
         Raises:
-        ----------
 
         """
         if name not in sparse_functions:
@@ -965,21 +896,16 @@ class ODEModel:
         return self._colptrs[name]
 
     def rowval(self, name):
-        """
-        Returns (and constructs if necessary) the row values for a sparsified
+        """Returns (and constructs if necessary) the row values for a sparsified
         symbolic variable.
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
         symengine.DenseMatrix containing the row values
 
         Raises:
-        ----------
 
         """
         if name not in sparse_functions:
@@ -989,21 +915,16 @@ class ODEModel:
         return self._rowvals[name]
 
     def val(self, name):
-        """
-        Returns (and constructs if necessary) the numeric values of a symbolic
+        """Returns (and constructs if necessary) the numeric values of a symbolic
         entity
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
         list containing the numeric values
 
         Raises:
-        ----------
 
         """
         if name not in self._vals:
@@ -1011,20 +932,15 @@ class ODEModel:
         return self._vals[name]
 
     def name(self, name):
-        """
-        Returns (and constructs if necessary) the names of a symbolic variable
+        """Returns (and constructs if necessary) the names of a symbolic variable
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
         list of names
 
         Raises:
-        ----------
 
         """
         if name not in self._names:
@@ -1032,19 +948,14 @@ class ODEModel:
         return self._names[name]
 
     def _generateSymbol(self, name):
-        """
-        Generates the symbolic identifiers for a symbolic variable
+        """Generates the symbolic identifiers for a symbolic variable
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if name in self._variable_prototype:
@@ -1073,38 +984,29 @@ class ODEModel:
         ])
 
     def _generateBasicVariables(self):
-        """
-        Generates the symbolic identifiers for all variables in
+        """Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         for var in self._variable_prototype:
             self._generateSymbol(var)
 
     def _generateSparseSymbol(self, name):
-        """
-        Generates the sparse symbolic identifiers, symbolic identifiers,
+        """Generates the sparse symbolic identifiers, symbolic identifiers,
         sparse equations, column pointers and row values for a symbolic variable
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         matrix = self.eq(name)
@@ -1135,19 +1037,14 @@ class ODEModel:
         self._syms[name] = sparseMatrix
 
     def _computeEquation(self, name):
-        """
-        computes the symbolic formula for a symbolic variable
+        """computes the symbolic formula for a symbolic variable
 
         Arguments:
-        ----------
-        name: str
-            name of the symbolic variable
+            name: name of the symbolic variable @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
@@ -1167,7 +1064,7 @@ class ODEModel:
 
         elif name == 'xdot':
             self._eqs['xdot'] = sp.DenseMatrix(
-                [comp.dt for comp in self._states]
+                [comp._dt for comp in self._states]
             )
 
         elif name in ['sx0', 'sx0_fixedParameters']:
@@ -1203,44 +1100,35 @@ class ODEModel:
             self._eqs[name] = self._eqs[name].transpose()
 
     def symNames(self):
-        """
-        Returns a list of names of generated symbolic variables
+        """Returns a list of names of generated symbolic variables
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
         list of names
 
         Raises:
-        ----------
 
         """
         return list(self._syms.keys())
 
     def _derivative(self, eq, var, name=None):
-        """
-        Creates a new symbolic variable according to a derivative
+        """Creates a new symbolic variable according to a derivative
 
         Arguments:
-        ----------
-        eq: str
-            name of the symbolic variable that defines the formula
+            eq: name of the symbolic variable that defines the formula
+            @type str
 
-        var: str
-            name of the symbolic variable that defines the identifiers whith
-            respect to which the derivatives are to be computed
+            var: name of the symbolic variable that defines the identifiers
+            with respect to which the derivatives are to be computed @type str
 
-        name: str
-            name of resulting symbolic variable, default is d{eq}d{var}
+            name: name of resulting symbolic variable, default is d{eq}d{var}
+            @type str
 
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if not name:
@@ -1259,42 +1147,32 @@ class ODEModel:
 
     def _totalDerivative(self, name, eq, chainvar, var,
                          dydx_name=None, dxdz_name=None):
-        """
-        Creates a new symbolic variable according to a total derivative
+        """Creates a new symbolic variable according to a total derivative
         using the chain rule
 
         Arguments:
-        ----------
-        name: str
-            name of resulting symbolic variable
+            name: name of resulting symbolic variable @type str
 
-        eq: str
-            name of the symbolic variable that defines the formula
+            eq: name of the symbolic variable that defines the formula @type str
 
-        chainvar: str
-            name of the symbolic variable that defines the identifiers whith
-            respect to which the chain rule is applied
+            chainvar: name of the symbolic variable that defines the
+            identifiers whith respect to which the chain rule is applied
+            @type str
 
-        var: str
-            name of the symbolic variable that defines the identifiers whith
-            respect to which the derivatives are to be computed
+            var: name of the symbolic variable that defines the identifiers
+            whith respect to which the derivatives are to be computed @type str
 
-        dydx_name: str
-            defines the name of the symbolic variable that defines the
-            derivative of the `eq` with respect to `chainvar`, default is
-            d{eq}d{chainvar}
+            dydxname: defines the name of the symbolic variable that
+            defines the derivative of the `eq` with respect to `chainvar`,
+            default is d{eq}d{chainvar} @type str
 
-        dxdz_name: str
-            defines the name of the symbolic variable that defines the
-            derivative of the `chainvar` with respect to `var`, default is
-            d{chainvar}d{var}
-
+            dxdzname: defines the name of the symbolic variable that
+            defines the derivative of the `chainvar` with respect to `var`,
+            default is d{chainvar}d{var} @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         # compute total derivative according to chainrule
@@ -1324,33 +1202,27 @@ class ODEModel:
 
     def _multiplication(self, name, x, y,
                         transpose_x=False, sign=1):
-        """
-        Creates a new symbolic variable according to a multiplication
+        """Creates a new symbolic variable according to a multiplication
 
         Arguments:
-        ----------
-        name: str
-            name of resulting symbolic variable, default is d{eq}d{var}
+            name: name of resulting symbolic variable, default is d{eq}d{var}
+             @type str
 
-        x: str
-            name of the symbolic variable that defines the first factor
+            x: name of the symbolic variable that defines the first factor
+            @type str
 
-        y: str
-            name of the symbolic variable that defines the second factor
+            y: name of the symbolic variable that defines the second factor
+            @type str
 
-        transpose_x: bool
-            indicates whether the first factor should be transposed before
-            multiplication
+            transpose_x: indicates whether the first factor should be
+            transposed before multiplication @type bool
 
-        sign: int
-            defines the sign of the product, should be +1 or -1
+            sign: defines the sign of the product, should be +1 or -1 @type int
 
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if sign not in [-1, 1]:
@@ -1371,44 +1243,32 @@ class ODEModel:
         self._eqs[name] = sign * xx * variables[y]
 
     def _equationFromComponent(self, name, component):
-        """
-        Generates the formulas of a symbolic variable from the attributes
+        """Generates the formulas of a symbolic variable from the attributes
 
         Arguments:
-        ----------
-        name: str
-            name of resulting symbolic variable
+            name: name of resulting symbolic variable @type str
 
-        component: str
-            name of the attribute
-
+            component: name of the attribute @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         self._eqs[name] = sp.DenseMatrix(
-            [comp.value for comp in getattr(self, component)]
+            [comp._value for comp in getattr(self, component)]
         )
 
     def _generateValue(self, name):
-        """
-        Generates the numeric values of a symbolic variable from value
+        """Generates the numeric values of a symbolic variable from value
         prototypes
 
         Arguments:
-        ----------
-        name: str
-            name of resulting symbolic variable
+            name: name of resulting symbolic variable @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if name in self._value_prototype:
@@ -1419,20 +1279,15 @@ class ODEModel:
         self._vals[name] = [comp._value for comp in getattr(self, component)]
 
     def _generateName(self, name):
-        """
-        Generates the names of a symbolic variable from variable prototypes or
+        """Generates the names of a symbolic variable from variable prototypes or
         equation prototypes
 
         Arguments:
-        ----------
-        name: str
-            name of resulting symbolic variable
+            name: name of resulting symbolic variable @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if name in self._variable_prototype:
@@ -1446,31 +1301,39 @@ class ODEModel:
 
 
 class ODEExporter:
-    """
-    The ODEExporter class generates AMICI C++ files for ODE model as
+    """The ODEExporter class generates AMICI C++ files for ODE model as
     defined in symbolic expressions.
 
     Attributes:
-    ----------
-    codeprinter: symengine.printing.CCodePrinter
-        codeprinter that allows export of symbolic variables as C++ code
 
-    functions: dict
-        carries C++ function signatures and other specifications
+        model: ODE definition @type ODEModel
 
-    modelName: str
-        name of the model that will be used for compilation
+        outdir: see sbml_import.setPaths() @type str
 
-    modelPath: str
-        path to the generated model specific files
+        verbose: more verbose output if True @type bool
 
-    modelSwigPath: str
-        path to the generated swig files
+        assume_pow_positivity: if set to true, a special pow function is
+        used to avoid problems with state variables that may become negative
+        due to numerical errors @type bool
 
-    allow_reinit_fixpar_initcond: bool
-        indicates whether reinitialization of initial states depending on
-        fixedParmeters is allowed for this model
+        compiler: distutils/setuptools compiler selection to build the
+        python extension @type str
 
+        codeprinter: allows export of symbolic variables as C++ code
+
+        functions: carries C++ function signatures and other specifications
+        @type dict
+
+        modelName: name of the model that will be used for compilation
+        @type str
+
+        modelPath: path to the generated model specific files @type str
+
+        modelSwigPath: path to the generated swig files @type str
+
+        allow_reinit_fixpar_initcond: indicates whether reinitialization of
+        initial states depending on fixedParmeters is allowed for this model
+        @type bool
     """
 
     def __init__(
@@ -1481,34 +1344,25 @@ class ODEExporter:
             assume_pow_positivity=False,
             compiler=None
     ):
-        """
-        Generate AMICI C++ files for the ODE provided to the constructor.
+        """Generate AMICI C++ files for the ODE provided to the constructor.
 
         Arguments:
-        ----------
-        ode_model: ODEModel
-            ODE definition
+            ode_model: ODE definition @type ODEModel
 
-        output_dir: str
-            see sbml_import.setPaths()
+            outdir: see sbml_import.setPaths() @type str
 
-        verbose: bool
-            more verbose output if True
+            verbose: more verbose output if True @type bool
 
-        assume_pow_positivity: bool
-            if set to true, a special pow function is used to avoid
-            problems with state variables that may become negative due
-            to numerical errors
+            assume_pow_positivity: if set to true, a special pow function is
+            used to avoid problems with state variables that may become
+            negative due to numerical errors @type bool
 
-        compiler: str
-            distutils/setuptools compiler selection to build the python
-            extension
+            compiler: distutils/setuptools compiler selection to build the
+            python extension @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
 
@@ -1536,50 +1390,38 @@ class ODEExporter:
         self.allow_reinit_fixpar_initcond = False
 
     def generateModelCode(self):
-        """
-        Generates the native C++ code for the loaded model
+        """Generates the native C++ code for the loaded model
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         self._prepareModelFolder()
         self._generateCCode()
 
     def compileModel(self):
-        """
-        Compiles the generated code it into a simulatable module
+        """Compiles the generated code it into a simulatable module
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         self._compileCCode(compiler=self.compiler, verbose=self.verbose)
 
     def _prepareModelFolder(self):
-        """
-        Remove all files from the model folder.
+        """Remove all files from the model folder.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         for file in os.listdir(self.modelPath):
@@ -1588,17 +1430,13 @@ class ODEExporter:
                 os.remove(file_path)
 
     def _generateCCode(self):
-        """
-        Create C++ code files for the model based on ODEExporter.ODEModel.
+        """Create C++ code files for the model based on ODEExporter.model
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         for function in self.functions.keys():
@@ -1619,23 +1457,17 @@ class ODEExporter:
 
 
     def _compileCCode(self, verbose=False, compiler=None):
-        """
-        Compile the generated model code
+        """Compile the generated model code
 
         Arguments:
-        ----------
-        verbose: bool
-            Make model compilation verbose
+            verbose: Make model compilation verbose @type bool
 
-        compiler: str
-            distutils/setuptools compiler selection to build the python
-            extension
+            compiler: distutils/setuptools compiler selection to build the
+            python extension @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
 
@@ -1669,19 +1501,15 @@ class ODEExporter:
             print(result.stdout.decode('utf-8'))
 
     def _writeIndexFiles(self, name):
-        """
-        Write index file for a symbolic array.
+        """Write index file for a symbolic array.
 
         Arguments:
-        ----------
-        name: str
-            key in self.symbols for which the respective file should be written
+            name: key in self.model._syms for which the respective file should
+            be written @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
 
         """
@@ -1703,19 +1531,15 @@ class ODEExporter:
             fileout.write('\n'.join(lines))
 
     def _writeFunctionFile(self, function):
-        """
-        Generate equations and write the C++ code for the function `function`.
+        """Generate equations and write the C++ code for the function `function`.
 
         Arguments:
-        ----------
-        function: str
-            name of the function to be written (see self.functions)
+            function: name of the function to be written (see self.functions)
+            @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
 
@@ -1777,22 +1601,18 @@ class ODEExporter:
             fileout.write('\n'.join(lines))
 
     def _getFunctionBody(self, function, symbol):
-        """
-        Generate C++ code for body of function `function`.
+        """Generate C++ code for body of function `function`.
 
         Arguments:
-        ----------
-        function: str
-            name of the function to be written (see self.functions)
+        function: name of the function to be written (see self.functions)
+        @type str
 
-        symbol: symengine.DenseMatrix
-            symbolic defintion of the function body
+        symbol: symbolic defintion of the function body @type str
+        symengine.DenseMatrix
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         lines = []
@@ -1836,17 +1656,13 @@ class ODEExporter:
         return [line for line in lines if line]
 
     def _writeWrapfunctionsCPP(self):
-        """
-        Write model-specific 'wrapper' file (wrapfunctions.cpp).
+        """Write model-specific 'wrapper' file (wrapfunctions.cpp).
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         templateData = {'MODELNAME': self.modelName}
@@ -1857,17 +1673,13 @@ class ODEExporter:
         )
 
     def _writeWrapfunctionsHeader(self):
-        """
-        Write model-specific header file (wrapfunctions.h).
+        """Write model-specific header file (wrapfunctions.h).
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         templateData = {'MODELNAME': str(self.modelName)}
@@ -1878,17 +1690,13 @@ class ODEExporter:
         )
 
     def _writeModelHeader(self):
-        """
-        Write model-specific header file (MODELNAME.h).
+        """Write model-specific header file (MODELNAME.h).
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if any([math != 0 and math != 0.0 for math in
@@ -1945,21 +1753,16 @@ class ODEExporter:
         )
 
     def _getSymbolNameInitializerList(self, name):
-        """
-        Get SBML name initializer list for vector of names for the given model
+        """Get SBML name initializer list for vector of names for the given model
         entity
 
         Arguments:
-        ----------
-        name: str
-            any key present in self.symbols
+            name: any key present in self.model._syms @type str
 
         Returns:
-        ----------
         Template initializer list of names
 
         Raises:
-        ----------
 
         """
         return '\n'.join(
@@ -1967,20 +1770,15 @@ class ODEExporter:
         )
 
     def _getSymbolIDInitializerList(self, name):
-        """
-        Get C++ initializer list for vector of names for the given model entity
+        """Get C++ initializer list for vector of names for the given model entity
 
         Arguments:
-        ----------
-        name: str
-            any key present in self.symbols
+            name: any key present in self.model._syms @type str
 
         Returns:
-        ----------
         Template initializer list of ids
 
         Raises:
-        ----------
 
         """
         return '\n'.join(
@@ -1988,17 +1786,13 @@ class ODEExporter:
         )
 
     def _writeCMakeFile(self):
-        """
-        Write CMake CMakeLists.txt file for this model.
+        """Write CMake CMakeLists.txt file for this model.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         sources = [self.modelName + '_' + function + '.cpp '
@@ -2013,17 +1807,13 @@ class ODEExporter:
         )
 
     def _writeSwigFiles(self):
-        """
-        Write SWIG interface files for this model.
+        """Write SWIG interface files for this model.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if not os.path.exists(self.modelSwigPath):
@@ -2038,17 +1828,13 @@ class ODEExporter:
                     os.path.join(self.modelSwigPath, 'CMakeLists.txt'))
 
     def _writeModuleSetup(self):
-        """
-        Create a distutils setup.py file for compile the model module.
+        """Create a distutils setup.py file for compile the model module.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
 
@@ -2068,28 +1854,20 @@ class ODEExporter:
         )
 
     def _getSymLines(self, symbols, variable, indentLevel):
-        """
-        Generate C++ code for assigning symbolic terms in symbols to C++ array
+        """Generate C++ code for assigning symbolic terms in symbols to C++ array
         `variable`.
 
         Arguments:
-        ----------
-        symbols: list
-            vectors of symbolic terms
+            symbols: vectors of symbolic terms @type list
 
-        variable: str
-            name of the C++ array to assign to
+            variable: name of the C++ array to assign to @type str
 
-        indentLevel: int
-            indentation level (number of leading blanks)
-
+            indentLevel: indentation level (number of leading blanks) @type int
 
         Returns:
-        ----------
             C++ code as list of lines
 
         Raises:
-        ----------
 
         """
 
@@ -2109,35 +1887,26 @@ class ODEExporter:
     def _getSparseSymLines(
             self, symbolList, RowVals, ColPtrs, variable, indentLevel
     ):
-        """
-        Generate C++ code for assigning sparse symbolic matrix to a C++ array
+        """Generate C++ code for assigning sparse symbolic matrix to a C++ array
         `variable`.
 
         Arguments:
-        ----------
-        symbolList: list
-            symbolic terms
+            symbolList: symbolic terms @type int
 
-        RowVals: list
-            row indices of each nonzero entry
-            (see CVODES SlsMat documentation for details)
+            RowVals: row indices of each nonzero entry (see CVODES SlsMat
+            documentation for details) @type list
 
-        ColPtrs: list
-            indices of the first column entries
-            (see CVODES SlsMat documentation for details)
+            ColPtrs: indices of the first column entries (see CVODES SlsMat
+            documentation for details) @type list
 
-        variable: str
-            name of the C++ array to assign to
+            variable: name of the C++ array to assign to @type str
 
-        indentLevel: int
-            indentation level (number of leading blanks)
+            indentLevel: indentation level (number of leading blanks) @type int
 
         Returns:
-        ----------
         C++ code as list of lines
 
         Raises:
-        ----------
 
         """
         lines = [
@@ -2163,16 +1932,12 @@ class ODEExporter:
         """Generate C++ code for a symbolic expression
 
         Arguments:
-        ----------
-        math:
-            symbolic expression
+            math: symbolic expression @type symengine.Basic
 
         Returns:
-        ----------
         C++ code for the specified expression
 
         Raises:
-        ----------
         Exception:
             The specified expression contained an unsupported function
 
@@ -2187,20 +1952,15 @@ class ODEExporter:
             )
 
     def setPaths(self, output_dir):
-        """
-        Set output paths for the model and create if necessary
+        """Set output paths for the model and create if necessary
 
         Arguments:
-        ----------
-        output_dir: str
-            relative or absolute path where the generated model code is to
-            be placed. will be created if does not exists.
+            output_dir: relative or absolute path where the generated model
+            code is to be placed. will be created if does not exists. @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         self.modelPath = os.path.abspath(output_dir)
@@ -2211,38 +1971,30 @@ class ODEExporter:
                 os.makedirs(directory)
 
     def setName(self, modelName):
-        """
-        Sets the model name
+        """Sets the model name
 
         Arguments:
-        ----------
-        modelName: str
-            name of the model (must only contain valid filename characters)
+            modelName: name of the model (must only contain valid filename
+            characters) @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         self.modelName = modelName
 
 def getSymbolicDiagonal(matrix):
-    """
-    Get symbolic matrix with diagonal of matrix `matrix`.
+    """Get symbolic matrix with diagonal of matrix `matrix`.
 
     Arguments:
-    ----------
-    matrix: symengine.DenseMatrix
-        Matrix from which to return the diagonal
+        matrix: Matrix from which to return the diagonal
+        @type symengine.DenseMatrix
 
     Returns:
-    ----------
     A Symbolic matrix with the diagonal of `matrix`.
 
     Raises:
-    ----------
     Exception: The provided matrix was not square
     """
     if not matrix.cols == matrix.rows:
@@ -2253,13 +2005,10 @@ def getSymbolicDiagonal(matrix):
     return sp.DenseMatrix(diagonal)
 
 class TemplateAmici(Template):
-    """
-    Template format used in AMICI (see string.template for more details).
+    """Template format used in AMICI (see string.template for more details).
 
     Attributes:
-    ----------
-    delimiter: str
-        delimiter that identifies template variables
+        delimiter: delimiter that identifies template variables @type str
 
     """
     delimiter = 'TPL_'
@@ -2269,22 +2018,16 @@ def applyTemplate(sourceFile,targetFile,templateData):
     """Load source file, apply template substitution as provided in templateData and save as targetFile.
 
     Arguments:
-    ----------
-    sourceFile: str
-        relative or absolute path to template file
+        sourceFile: relative or absolute path to template file @type str
 
-    targetFile: str
-        relative or absolute path to output file
+        targetFile: relative or absolute path to output file @type str
 
-    templateData: dict
-        template keywords to substitute (key is template variable without
-        TemplateAmici.delimiter)
+        templateData: template keywords to substitute (key is template
+        variable without TemplateAmici.delimiter) @type dict
 
     Returns:
-    ----------
 
     Raises:
-    ----------
 
     """
     with open(sourceFile) as filein:

@@ -3,12 +3,9 @@
 #!/usr/bin/env python3
 
 import symengine as sp
-from symengine import symbols
 import libsbml as sbml
-import os
 import re
 import math
-from string import Template
 
 from .ode_export import ODEExporter, ODEModel
 
@@ -16,7 +13,7 @@ from .ode_export import ODEExporter, ODEModel
 class SBMLException(Exception):
     pass
 
-
+## default dict for symbols
 default_symbols = {
     'species': {},
     'parameter': {},
@@ -29,92 +26,66 @@ default_symbols = {
 }
 
 class SbmlImporter:
-    """
-    The SbmlImporter class generates AMICI C++ files for a model provided in
+    """The SbmlImporter class generates AMICI C++ files for a model provided in
     the Systems Biology Markup Language (SBML).
     
     Attributes:
-    ----------
 
-    check_validity: bool
-        indicates whether the validity of the SBML document should be checked
+        check_validity: indicates whether the validity of the SBML document
+        should be checked @type bool
 
-    symbols: dict
-        dict carrying symbolic definitions
+        symbols: dict carrying symbolic definitions @type dict
 
-    SBMLreader: libsbml.SBMLReader
-        the libSBML sbml reader
-        [!not storing this will result in a segfault!]
+        SBMLreader: the libSBML sbml reader [!not storing this will result
+        in a segfault!]
 
-    sbml_doc: libsbml.SBMLDoc
-        document carrying the sbml defintion
-        [!not storing this will result in a segfault!]
+        sbml_doc: document carrying the sbml defintion [!not storing this
+        will result in a segfault!]
 
-    sbml: libsbml.SBMLModel
-        sbml definition
-        [!not storing this will result in a segfault!]
+        sbml: sbml definition [!not storing this will result in a segfault!]
 
-    speciesIndex: dict
-        maps species names to indices
+        speciesIndex: maps species names to indices @type dict
 
-    speciesCompartment: symengine.DenseMatrix
-        compartment for each species
+        speciesCompartment: compartment for each species @type
+        symengine.DenseMatrix
 
-    constantSpecies: list
-        ids of species that are marked as constant
+        constantSpecies: ids of species that are marked as constant @type list
 
-    boundaryConditionSpecies: list
-        ids of species that are marked as boundary condition
+        boundaryConditionSpecies: ids of species that are marked as boundary
+        condition @type list
 
-    speciesHasOnlySubstanceUnits: list
-        flags indicating whether a species has only substance units
+        speciesHasOnlySubstanceUnits: flags indicating whether a species has
+        only substance units @type list
 
-    speciesConversionFactor: symengine.DenseMatrix
-        conversion factors for every species
+        speciesConversionFactor: conversion factors for every species @type
+        symengine.DenseMatrix
 
-    parameterIndex: dict
-        maps parameter names to indices
+        compartmentSymbols: compartment ids @type symengine.DenseMatrix
 
-    compartmentSymbols: symengine.DenseMatrix
-        compartment ids
+        compartmentVolume: numeric/symbnolic compartment volumes @type
+        symengine.DenseMatrix
 
-    compartmentVolume: symengine.DenseMatrix
-        numeric/symbnolic compartment volumes
+        stoichiometricMatrix: stoichiometrix matrix of the model @type
+        symengine.DenseMatrix
 
-    stoichiometricMatrix: symengine.DenseMatrix
-        stoichiometrix matrix of the model
-
-    fluxVector: symengine.DenseMatrix
-        reaction kinetic laws
-
-    fixedParameterValues: list
-        array of fixed parameter values
-
-    fixedParameterIndex: dict
-        maps fixed parameter names to indices
+        fluxVector: reaction kinetic laws @type symengine.DenseMatrix
 
     """
 
     def __init__(self, SBMLFile, check_validity=True):
-        """
-        Create a new Model instance.
-        
+        """Create a new Model instance.
+
         Arguments:
-        ----------
 
-        SBMLFile: string
-            Path to SBML file where the model is specified
+        SBMLFile: Path to SBML file where the model is specified @type string
 
-        check_validity: bool
-            Flag indicating whether the validity of the SBML
-            document should be checked
+        check_validity: Flag indicating whether the validity of the SBML
+        document should be checked @type bool
 
         Returns:
-        ----------
         SbmlImporter instance with attached SBML document
 
         Raises:
-        ----------
 
         """
 
@@ -127,23 +98,27 @@ class SbmlImporter:
         self.reset_symbols()
 
     def reset_symbols(self):
+        """Reset the symbols attribute to default values
+
+        Arguments:
+
+        Returns:
+
+        Raises:
+
+        """
         self.symbols = default_symbols
 
     def loadSBMLFile(self, SBMLFile):
-        """
-        Parse the provided SBML file.
-        
+        """Parse the provided SBML file.
+
         Arguments:
-        ----------
-        SBMLFile: string
-            path to SBML file
+            SBMLFile: path to SBML file @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
-        
+
         """
 
         self.SBMLreader = sbml.SBMLReader()
@@ -175,17 +150,13 @@ class SbmlImporter:
         self.sbml = self.sbml_doc.getModel()
 
     def checkLibSBMLErrors(self):
-        """
-        Checks the error log in the current self.sbml_doc
+        """Checks the error log in the current self.sbml_doc
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
         raises SBMLException if errors with severity ERROR or FATAL have
         occured
 
@@ -218,50 +189,34 @@ class SbmlImporter:
                    compiler=None
                    ):
         """Generate AMICI C++ files for the model provided to the constructor.
-        
+
         Arguments:
-        ----------
-        modelName: string
-            name of the model/model directory
+            modelName: name of the model/model directory @type str
 
-        output_dir: string
-            see sbml_import.setPaths()
+            output_dir: see sbml_import.setPaths()  @type str
 
-        observables: dict
-            dictionary(
-                observableId:{
-                    'name':observableName (optional) ,
-                    'formula':formulaString)
-                }
-            )
-            to be added to the model
+            observables: dictionary( observableId:{'name':observableName
+            (optional), 'formula':formulaString)}) to be added to the model
+            @type dict
 
-        sigmas: dict
-            dictionary(
-                observableId: sigma value or (existing)
-                parameter name
-            )
+            sigmas: dictionary(observableId: sigma value or (existing)
+            parameter name) @type dict
 
-        constantParameters: dict
-            list of SBML Ids identifying constant parameters
+            constantParameters: list of SBML Ids identifying constant
+            parameters @type dict
 
-        verbose: bool
-            more verbose output if True
+            verbose: more verbose output if True @type bool
 
-        assume_pow_positivity: bool
-            if set to true, a special pow function is used to avoid problems
-             with state variables that may become negative due to numerical
-             errors
+            assume_pow_positivity: if set to true, a special pow function is
+            used to avoid problems with state variables that may become
+            negative due to numerical errors @type bool
 
-        compiler: string
-            distutils/setuptools compiler selection to build the python
-            extension
+            compiler: distutils/setuptools compiler selection to build the
+            python extension @type str
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if observables is None:
@@ -294,15 +249,12 @@ class SbmlImporter:
         """Read parameters, species, reactions, and so on from SBML model
 
         Arguments:
-        ----------
-        constantParameters: list
-            SBML Ids identifying constant parameters
+            constantParameters: SBML Ids identifying constant parameters
+            @type list
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
 
@@ -319,20 +271,15 @@ class SbmlImporter:
         self.processTime()
         self.cleanReservedSymbols()
         self.replaceSpecialConstants()
-        self.generateExpressions()
 
     def checkSupport(self):
-        """
-        Check whether all required SBML features are supported.
+        """Check whether all required SBML features are supported.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         if len(self.sbml.getListOfSpecies()) == 0:
@@ -363,17 +310,13 @@ class SbmlImporter:
                                 ' currently not supported!')
 
     def processSpecies(self):
-        """
-        Get species information from SBML model.
+        """Get species information from SBML model.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         species = self.sbml.getListOfSpecies()
@@ -384,12 +327,12 @@ class SbmlImporter:
         }
 
         self.symbols['species']['identifier'] = sp.DenseMatrix(
-            [symbols(spec.getId()) for spec in species]
+            [sp.Symbol(spec.getId()) for spec in species]
         )
         self.symbols['species']['name'] = [spec.getName() for spec in species]
 
         self.speciesCompartment = sp.DenseMatrix(
-            [symbols(spec.getCompartment()) for spec in species]
+            [sp.Symbol(spec.getCompartment()) for spec in species]
         )
 
         self.constantSpecies = [species_element.getId()
@@ -457,19 +400,15 @@ class SbmlImporter:
 
 
     def processParameters(self, constantParameters=None):
-        """
-        Get parameter information from SBML model.
+        """Get parameter information from SBML model.
 
         Arguments:
-        ----------
-        constantParameters: list
-            SBML Ids identifying constant parameters
+            constantParameters: SBML Ids identifying constant parameters
+            @type list
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
 
@@ -520,7 +459,7 @@ class SbmlImporter:
             settings = loop_settings[partype]
 
             self.symbols[partype]['identifier'] = sp.DenseMatrix(
-                [symbols(par.getId()) for par in settings['var']]
+                [sp.Symbol(par.getId()) for par in settings['var']]
             )
             self.symbols[partype]['name'] = [
                 par.getName() for par in settings['var']
@@ -539,23 +478,19 @@ class SbmlImporter:
             )
 
     def processCompartments(self):
-        """
-        Get compartment information, stoichiometric matrix and fluxes from
+        """Get compartment information, stoichiometric matrix and fluxes from
         SBML model.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         compartments = self.sbml.getListOfCompartments()
         self.compartmentSymbols = sp.DenseMatrix(
-            [symbols(comp.getId()) for comp in compartments]
+            [sp.Symbol(comp.getId()) for comp in compartments]
         )
         self.compartmentVolume = sp.DenseMatrix(
             [sp.sympify(comp.getVolume()) if comp.isSetVolume()
@@ -581,13 +516,10 @@ class SbmlImporter:
         """Get reactions from SBML model.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         reactions = self.sbml.getListOfReactions()
@@ -693,17 +625,13 @@ class SbmlImporter:
 
 
     def processRules(self):
-        """
-        Process Rules defined in the SBML model.
+        """Process Rules defined in the SBML model.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         rules = self.sbml.getListOfRules()
@@ -774,17 +702,13 @@ class SbmlImporter:
             )
 
     def processVolumeConversion(self):
-        """
-        Convert equations from amount to volume.
+        """Convert equations from amount to volume.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         for index, bool in enumerate(self.speciesHasOnlySubstanceUnits):
@@ -803,13 +727,10 @@ class SbmlImporter:
         """Convert time_symbol into cpp variable.
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         sbmlTimeSymbol = sp.Symbol('time')
@@ -818,26 +739,20 @@ class SbmlImporter:
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
 
     def processObservables(self, observables, sigmas):
-        """
-        Perform symbolic computations required for objective function
+        """Perform symbolic computations required for objective function
         evaluation.
 
         Arguments:
-        ----------
-        observables: dict
-            dictionary(observableId:{
-                'name':observableName (optional) ,
-                'formula':formulaString
-                })
-            to be added to the model
-        sigmas: dict
-            dictionary(observableId: sigma value or (existing) parameter name)
+            observables: dictionary( observableId:{'name':observableName
+            (optional), 'formula':formulaString)}) to be added to the model
+            @type dict
+
+            sigmas: dictionary(observableId: sigma value or (existing)
+            parameter name) @type dict
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
 
@@ -935,19 +850,14 @@ class SbmlImporter:
         """Replace 'old' by 'new' in all symbolic expressions.
 
         Arguments:
-        ----------
-        old: symengine.Symbol
-            symbolic variables to be replaced
+            old: symbolic variables to be replaced @type symengine.Symbol
 
-        new: symendine.Symbol
-            replacement symbolic variables
+            new: replacement symbolic variables @type symengine.Symbol
 
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         fields = [
@@ -971,13 +881,10 @@ class SbmlImporter:
         """Remove all reserved symbols from self.symbols
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         reservedSymbols = ['k','p','y','w']
@@ -991,18 +898,14 @@ class SbmlImporter:
                         self.symbols[symbol]['identifier'].subs(old_symbol,new_symbol)
 
     def replaceSpecialConstants(self):
-        """
-        Replace all special constants by their respective SBML
+        """Replace all special constants by their respective SBML
         csymbol definition
 
         Arguments:
-        ----------
 
         Returns:
-        ----------
 
         Raises:
-        ----------
 
         """
         constants = [
@@ -1021,32 +924,17 @@ class SbmlImporter:
                     f'Encountered currently unsupported element id {constant}!'
                 )
 
-    def generateExpressions(self):
-        self.symbols['expression']['value'] = self.fluxVector
-        self.symbols['expression']['name'] = [
-            f'w{idx}' for idx in range(len(self.fluxVector))
-        ]
-        self.symbols['expression']['identifier'] = sp.DenseMatrix(
-            [sp.Symbol(name) for name in self.symbols['expression']['name']]
-        )
-
-
 
 def getRuleVars(rules):
-    """
-    Extract free symbols in SBML rule formulas.
+    """Extract free symbols in SBML rule formulas.
 
     Arguments:
-    ----------
-    rules: list
-        sbml definitions of rules
+        rules: sbml definitions of rules @type list
 
     Returns:
-    ----------
     Tuple of free symbolic variables in the formulas all provided rules
 
     Raises:
-    ----------
 
     """
     return sp.DenseMatrix(
@@ -1060,24 +948,19 @@ def assignmentRules2observables(sbml_model,
     """Turn assignment rules into observables.
 
     Arguments:
-    ----------
-    sbml_model:
-        an sbml Model instance
+    sbml_model: an sbml Model instance
 
-    filter_function:
-        callback function taking assignment variable as input and returning
-        True/False to indicate if the respective rule should be turned into
-        an observable
+    filter_function: callback function taking assignment variable as input
+    and returning True/False to indicate if the respective rule should be
+    turned into an observable
 
     Returns:
-    ----------
     A dictionary(observableId:{
         'name': observableNamem,
         'formula': formulaString
     })
 
     Raises:
-    ----------
 
     """
     observables = {}
@@ -1099,20 +982,16 @@ def assignmentRules2observables(sbml_model,
 
 
 def constantSpeciesToParameters(sbml_model):
-    """
-    Convert constant species in the SBML model to constant parameters
-    
+    """Convert constant species in the SBML model to constant parameters
+
     Arguments:
-    ----------
-    sbml_model:
-        libsbml model instance
+
+    sbml_model: libsbml model instance
 
     Returns:
-    ----------
     species IDs that have been turned into constants
 
     Raises:
-    ----------
 
     """
     transformable = []
@@ -1137,35 +1016,30 @@ def constantSpeciesToParameters(sbml_model):
         par.setConstant(True)
         par.setValue(species.getInitialConcentration())
         par.setUnits(species.getUnits())
-    
+
     # Remove from reactants and products
     for reaction in sbml_model.getListOfReactions():
         for speciesId in transformable:
             reaction.removeReactant(speciesId)
             reaction.removeProduct(speciesId)
-    
+
     return transformable
 
 
 def replaceLogAB(x):
-    """
-    Replace log(a, b) in the given string by ln(b)/ln(a)
+    """Replace log(a, b) in the given string by ln(b)/ln(a)
 
     Works for nested parentheses and nested 'log's. This can be used to
     circumvent the incompatible argument order between symengine (log(x,
     basis)) and libsbml (log(basis, x)).
 
     Arguments:
-    ----------
-    x: string
-        string to replace
+        x: string to replace @type str
 
     Returns:
-    ----------
     string with replaced 'log's
 
     Raises:
-    ----------
 
     """
 
@@ -1203,20 +1077,15 @@ def replaceLogAB(x):
 
 
 def l2s(inputs):
-    """
-    transforms an list into list of strings
+    """transforms an list into list of strings
 
     Arguments:
-    ----------
-    inputs: list
-        objects
+        inputs: objects @type list
 
     Returns:
-    ----------
     list of str(object)
 
     Raises:
-    ----------
 
     """
     return [str(inp) for inp in inputs]
