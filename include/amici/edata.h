@@ -81,12 +81,6 @@ class ExpData {
      */
     ExpData(const ReturnData &rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z);
 
-    /**
-     * @brief Copy constructor
-     * @param other object to copy from
-     */
-    ExpData (const ExpData &other);
-    
 
     ~ExpData() = default;
     

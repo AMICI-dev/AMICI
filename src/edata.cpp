@@ -44,14 +44,6 @@ ExpData::ExpData(Model const& model)
 {
     fixedParameters = std::move(model.getFixedParameters());
 }
-
-ExpData::ExpData(const ExpData &other)
-    : ExpData(other.nytrue_, other.nztrue_, other.nmaxevent_,
-              other.ts, other.observedData, other.observedDataStdDev, other.observedEvents, other.observedEventsStdDev)
-{
-    fixedParameters = std::move(other.fixedParameters);
-    fixedParametersPreequilibration = std::move(other.fixedParametersPreequilibration);
-}
     
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
     : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z))
