@@ -18,18 +18,20 @@
 #include <vector>
 #include <stdexcept>
 %}
+
+// numpy
 %init %{
 import_array();
 %}
 
-%include <stl.i>
-
 // Expose vectors
+%include <stl.i>
 %template(DoubleVector) std::vector<double>;
 %template(IntVector) std::vector<int>;
 %template(BoolVector) std::vector<bool>;
 %template(StringVector) std::vector<std::string>;
 
+// Let numpy access std::vector
 %{
 static_assert (sizeof(double) == sizeof (npy_double), "Numpy double size mismatch");
 static_assert (sizeof(int) == sizeof (npy_int), "Numpy integer size mismatch");
@@ -40,8 +42,6 @@ using namespace amici;
 %include "stdvec2numpy.h"
 
 typedef double realtype;
-
-
 
 %include std_unique_ptr.i
 wrap_unique_ptr(SolverPtr, amici::Solver)
@@ -70,14 +70,28 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %include hdf5.i
 #endif
 
+// Return Python list of raw pointers instead of std::vector<std::unique_ptr> which is a huge pain
+%typemap(out) std::vector<std::unique_ptr<amici::ReturnData>> %{
+    $result = PyList_New($1.size());
+    for (int i = 0; i < (int) $1.size(); i++) {
+        PyObject *o = SWIG_NewPointerObj($1.at(i).release(), $descriptor(amici::ReturnData*), SWIG_POINTER_OWN);
+        PyList_SetItem($result, i, o);
+    }
+%}
+
 // Add necessary symbols to generated header
 %{
 #include "amici/amici.h"
 using namespace amici;
 %}
 
+// Prevent using ValueWrapper, but don't expose unique_ptr vector
+%ignore std::vector<std::unique_ptr<amici::ReturnData>>;
+%template(ReturnDataPtrVector) std::vector<std::unique_ptr<amici::ReturnData>>;
+
 // Process symbols in header
 %include "amici/amici.h"
 
 // Expose vectors
 %template(ScalingVector) std::vector<amici::ParameterScaling>;
+%template(ExpDataPtrVector) std::vector<amici::ExpData*>;
