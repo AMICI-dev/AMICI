@@ -39,6 +39,8 @@ double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
     case ParameterScaling::none:
         return scaledParameter;
     }
+
+    throw AmiException("Invalid value for ParameterScaling.");
 }
 
 void unscaleParameters(const double *bufferScaled, const ParameterScaling *pscale, int n, double *bufferUnscaled)
