@@ -47,7 +47,7 @@ def runTest(testId, logfile):
         rdata = amici.runAmiciSimulation(model, solver)
         amountSpecies = settings['amount'].replace(' ', '').replace('\n', '').split(',')
         simulated_x = rdata['x']
-        test_x = results[1:, [1+ wrapper.speciesIndex[variable]  for variable in settings['variables'].replace(' ', '').replace('\n', '').split(',') if variable in wrapper.speciesIndex.keys() ] ]
+        test_x = results[1:, [1+ wrapper.speciesIndex[variable] for variable in settings['variables'].replace(' ', '').replace('\n', '').split(',') if variable in wrapper.speciesIndex.keys() ] ]
 
         for species in amountSpecies:
             if not species == '':
