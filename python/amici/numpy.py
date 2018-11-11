@@ -161,12 +161,12 @@ def getExpDataFieldAsNumPyArray(edata, field):
     """
 
     fieldDimensions = {  # observables
-        'observedData': [edata.nt(), edata.nytrue],
-        'observedDataStdDev': [edata.nt(), edata.nytrue],
+        'observedData': [edata.nt(), edata.nytrue()],
+        'observedDataStdDev': [edata.nt(), edata.nytrue()],
 
         # event observables
-        'observedEvents': [edata.nmaxevent, edata.nztrue],
-        'observedEventsStdDev': [edata.nmaxevent, edata.nztrue],
+        'observedEvents': [edata.nmaxevent(), edata.nztrue()],
+        'observedEventsStdDev': [edata.nmaxevent(), edata.nztrue()],
 
         # fixed parameters
         'fixedParameters': [len(edata.fixedParameters)],

@@ -91,11 +91,32 @@ class ExpData {
     ~ExpData() = default;
     
     /**
+     * number of observables of the non-augmented model
+     *
+     * @return number of observables of the non-augmented model
+     */
+    int nytrue() const;
+
+    /**
+      * number of event observables of the non-augmented model
+      *
+      * @return number of event observables of the non-augmented model
+      */
+    int nztrue() const;
+
+    /**
+      * maximal number of events to track
+      *
+      * @return maximal number of events to track
+      */
+    int nmaxevent() const;
+
+    /**
      * number of timepoints
      *
      * @return number of timepoints
      */
-     const int nt() const;
+    int nt() const;
 
     /**
      * set function that copies data from input to ExpData::ts
@@ -304,14 +325,7 @@ class ExpData {
      * @return pointer to standard deviation of observed event data at ieth occurence
      */
     const realtype *getObservedEventsStdDevPtr(int ie) const;
-    
-    /** number of observables */
-    const int nytrue;
-    /** number of event observables */
-    const int nztrue;
-    /** maximal number of event occurences */
-    const int nmaxevent;
-    
+        
     /** condition-specific parameters of size Model::nk() or empty */
     std::vector<realtype> fixedParameters;
     /** condition-specific parameters for pre-equilibration of size Model::nk() or empty.
@@ -360,6 +374,15 @@ protected:
      */
     void checkSigmaPositivity(realtype sigma, const char *sigmaName) const;
     
+    /** number of observables */
+    int nytrue_;
+
+    /** number of event observables */
+    int nztrue_;
+
+    /** maximal number of event occurences */
+    int nmaxevent_;
+
     /** observation timepoints (dimension: nt) */
     std::vector<realtype> ts;
     
