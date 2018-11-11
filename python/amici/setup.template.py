@@ -57,6 +57,11 @@ for key, value in cfg_vars.items():
     if isinstance(value, str):
         cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
 
+# compiler and linker flags for libamici
+if 'AMICI_CXXFLAGS' in os.environ:
+    cxx_flags.extend(os.environ['AMICI_CXXFLAGS'].split(' '))
+if 'AMICI_LDFLAGS' in os.environ:
+    linker_flags.extend(os.environ['AMICI_LDFLAGS'].split(' '))
 
 # Build shared object
 model_module = Extension('TPL_MODELNAME._TPL_MODELNAME',
