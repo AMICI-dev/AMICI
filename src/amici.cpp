@@ -19,14 +19,6 @@
 #include <cstdarg>
 #include <memory>
 
-/** MS definition of PI and other constants */
-#define _USE_MATH_DEFINES
-#include <cmath>
-#ifndef M_PI
-/** define PI if we still have no definition */
-#define M_PI 3.14159265358979323846
-#endif
-
 // ensure definitions are in sync
 static_assert(AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS");
 static_assert(AMICI_DATA_RETURN == CV_TSTOP_RETURN,
