@@ -20,7 +20,30 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...);
 extern msgIdAndTxtFp errMsgIdAndTxt;
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
+/*!
+ * runAmiciSimulation is the core integration routine. It initializes the solver
+ * and runs the forward and backward problem.
+ *
+ * @param solver Solver instance
+ * @param edata pointer to experimental data object
+ * @param model model specification object
+ * @return rdata pointer to return data object
+ */
 std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model);
+
+/*!
+ * runAmiciSimulations does the same as runAmiciSimulation, but for multiple ExpData instances.
+ *
+ * @param solver Solver instance
+ * @param edata experimental data objects
+ * @param model model specification object
+ * @param num_threads number of threads for parallel execution
+ * @return vector of pointers to return data objects
+ */
+std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(Solver const& solver,
+                                                             const std::vector<ExpData *> &edatas,
+                                                             Model const& model,
+                                                             int num_threads);
 
 } // namespace amici
 

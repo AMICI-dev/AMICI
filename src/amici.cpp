@@ -39,15 +39,6 @@ msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
     
 
-/*!
- * runAmiciSimulation is the core integration routine. It initializes the solver
- * and runs the forward and backward problem.
- *
- * @param solver Solver instance
- * @param edata pointer to experimental data object
- * @param model model specification object
- * @return rdata pointer to return data object
- */
 std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model) {
     
     std::unique_ptr<ReturnData> rdata;
@@ -150,6 +141,23 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
     vprintf(format, argptr);
     va_end(argptr);
     printf("\n");
+}
+
+std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solver,
+                                                              const std::vector<ExpData*> &edatas,
+                                                              const Model &model, int num_threads)
+{
+    std::vector<std::unique_ptr<ReturnData> > results(edatas.size());
+
+    #pragma omp parallel for num_threads(num_threads)
+    for(int i = 0; i < (int)edatas.size(); ++i) {
+        auto mySolver = std::unique_ptr<Solver>(solver.clone());
+        auto myModel = std::unique_ptr<Model>(model.clone());
+
+        results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+    }
+
+    return results;
 }
 
 } // namespace amici
