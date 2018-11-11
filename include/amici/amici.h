@@ -35,7 +35,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
  * runAmiciSimulations does the same as runAmiciSimulation, but for multiple ExpData instances.
  *
  * @param solver Solver instance
- * @param edata experimental data objects
+ * @param edatas experimental data objects
  * @param model model specification object
  * @param num_threads number of threads for parallel execution
  * @return vector of pointers to return data objects
