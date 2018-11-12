@@ -347,11 +347,20 @@ def constructEdataFromDataFrame(df, model, condition):
             overwrite_preeq.keys()]):
         edata.fixedParametersPreequilibration = \
             _get_specialized_fixed_parameters(model, condition,overwrite_preeq)
+    elif len(overwrite_preeq.keys()):
+        edata.fixedParametersPreequilibration = copy.deepcopy(
+            edata.fixedParameters
+        )
+
 
     if any([overwrite_presim[key] != condition[key] for key in
             overwrite_presim.keys()]):
         edata.fixedParametersPresimulation = _get_specialized_fixed_parameters(
             model, condition,overwrite_presim
+        )
+    elif len(overwrite_presim.keys()):
+        edata.fixedParametersPresimulation = copy.deepcopy(
+            edata.fixedParameters
         )
 
     if 't_presim' in condition.keys():
