@@ -73,17 +73,14 @@ class TestAmiciPSBModel(unittest.TestCase):
         rdata_sbml = get_results(model_sbml)
 
         for field in rdata_pysb:
-            if field is not 'ptr' \
-                    and not field.startswith('num') \
-                    and not field.startswith('newton') \
-                    and not field.endswith('steadystate'):
+            if field is not 'ptr':
                 if rdata_pysb[field] is None:
                     self.assertIsNone(rdata_sbml)
                 else:
                     self.assertTrue(np.isclose(
                         rdata_sbml[field],
                         rdata_pysb[field],
-                        atol=1e-4, rtol=1e-4
+                        atol=1e-15, rtol=1e-15
                     ).all(), msg=f'disagreement in field {field}')
 
 

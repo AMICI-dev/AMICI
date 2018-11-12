@@ -727,6 +727,7 @@ class ODEModel:
         # setting these equations prevents native equation generation
         self._eqs['dxdotdw'] = si.stoichiometricMatrix
         self._eqs['w'] = si.fluxVector
+        self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
         symbols['species']['dt'] = \
             si.stoichiometricMatrix * self.sym('w')
 
