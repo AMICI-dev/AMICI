@@ -819,7 +819,7 @@ void Model::fy(int it, ReturnData *rdata) {
     if (!ny)
         return;
     
-    fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
+    fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
 void Model::fdydp(const int it, ReturnData *rdata) {
@@ -836,7 +836,9 @@ void Model::fdydp(const int it, ReturnData *rdata) {
               unscaledParameters.data(),
               fixedParameters.data(),
               h.data(),
-              plist_.at(ip));
+              plist_.at(ip),
+              w.data(),
+              dwdp.data());
     }
 }
 
@@ -845,7 +847,7 @@ void Model::fdydx(const int it, ReturnData *rdata) {
         return;
     
     std::fill(dydx.begin(),dydx.end(),0.0);
-    fdydx(dydx.data(),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
+    fdydx(dydx.data(),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),dwdx.data());
 }
 
 void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {

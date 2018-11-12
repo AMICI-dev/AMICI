@@ -193,8 +193,8 @@ python/test.txt
 tests/test/*
 tests/test_model_steadystate_scaled/*
 tests/test_model_presimulation/*
-
-
+tests/test_model_presimulation_pysb/*
+tests/test_model_presimulation_sbml/*
 
 coverage_py.xml
 
@@ -217,3 +217,4 @@ testSuite.txt
 python/sdist/build/*
 *.so
 python/sdist/amici/git_version.txt
+

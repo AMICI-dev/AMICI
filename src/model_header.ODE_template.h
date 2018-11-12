@@ -28,8 +28,8 @@ extern void dJydy_TPL_MODELNAME(double *dJydy, const int iy, const realtype *p, 
 extern void dwdp_TPL_MODELNAME(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dwdx_TPL_MODELNAME(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void dxdotdp_TPL_MODELNAME(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp);
-extern void dydx_TPL_MODELNAME(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
-extern void dydp_TPL_MODELNAME(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip);
+extern void dydx_TPL_MODELNAME(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void dydp_TPL_MODELNAME(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwp);
 extern void dsigmaydp_TPL_MODELNAME(double *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip);
 extern void qBdot_TPL_MODELNAME(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp);
 extern void sigmay_TPL_MODELNAME(double *sigmay, const realtype t, const realtype *p, const realtype *k);
@@ -40,7 +40,7 @@ extern void x0_fixedParameters_TPL_MODELNAME(realtype *x0, const realtype t, con
 extern void sx0_TPL_MODELNAME(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
 extern void xBdot_TPL_MODELNAME(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
-extern void y_TPL_MODELNAME(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+extern void y_TPL_MODELNAME(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 
 /**
  * @brief AMICI-generated model subclass.
@@ -454,8 +454,8 @@ public:
      * @param k constant vector
      * @param h heavyside vector
      **/
-    virtual void fdydx(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
-        dydx_TPL_MODELNAME(dydx, t, x, p, k, h);
+    virtual void fdydx(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
+        dydx_TPL_MODELNAME(dydx, t, x, p, k, h, w, dwdx);
     }
     
     /** model specific implementation of fdydp
@@ -467,8 +467,8 @@ public:
      * @param h heavyside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      **/
-    virtual void fdydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) override {
-        dydp_TPL_MODELNAME(dydp, t, x, p, k, h, ip);
+    virtual void fdydp(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) override {
+        dydp_TPL_MODELNAME(dydp, t, x, p, k, h, ip, w, dwdp);
     }
     
     /** model specific implementation of fdzdp
@@ -694,8 +694,8 @@ public:
      * @param k constant vector
      * @param h heavyside vector
      **/
-    virtual void fy(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
-        y_TPL_MODELNAME(y, t, x, p, k, h);
+    virtual void fy(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
+        y_TPL_MODELNAME(y, t, x, p, k, h, w);
     }
     
     /** model specific implementation of fz
