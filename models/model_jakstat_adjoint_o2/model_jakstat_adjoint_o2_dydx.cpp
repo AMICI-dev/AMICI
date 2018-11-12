@@ -6,7 +6,7 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
-void dydx_model_jakstat_adjoint_o2(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
+void dydx_model_jakstat_adjoint_o2(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) {
   dydx[0+1*54] = p[13]/p[4];
   dydx[0+2*54] = (p[13]*2.0)/p[4];
   dydx[1+0*54] = p[12]/p[4];
