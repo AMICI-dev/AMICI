@@ -1,73 +1,58 @@
-from pysb import *
-from pysb.export import sbml
-from pysb.util import alias_model_components
+from pysb.core import (
+    Rule, Parameter, Model, Monomer, Expression, Initial, Observable
+)
+
+import pysb.export
 import os
 
 import libsbml
 
-Model()
+model = Model()
 
-Monomer('PROT', ['kin','drug','phospho'], {'phospho': ['u', 'p']})
-Parameter('PROT_0', 10)
-alias_model_components()
-Initial(PROT(phospho='u', drug=None, kin=None),
-        Expression('initProt',PROT_0))
+prot = Monomer('PROT', ['kin','drug','phospho'], {'phospho': ['u', 'p']})
+prot_0 = Parameter('PROT_0', 10)
+Initial(prot(phospho='u', drug=None, kin=None),
+        Expression('initProt',prot_0))
 
-Monomer('DRUG', ['bound'])
-Parameter('DRUG_0', 9)
-alias_model_components()
-Initial(DRUG(bound=None),
-        Expression('initDrug', DRUG_0))
+drug = Monomer('DRUG', ['bound'])
+drug_0 = Parameter('DRUG_0', 9)
+Initial(drug(bound=None),
+        Expression('initDrug', drug_0))
 
-Parameter('kon_prot_drug', 0.1)
-Parameter('koff_prot_drug', 0.1)
-alias_model_components()
+kin = Monomer('KIN', ['bound'])
+kin_0 = Parameter('KIN_0', 1)
+Initial(kin(bound=None),
+        Expression('initKin', kin_0))
 
 Rule('PROT_DRUG_bind',
-     DRUG(bound=None) + PROT(phospho='u', drug=None, kin=None) |
-     DRUG(bound=1) % PROT(phospho='u', drug=1, kin=None),
-     kon_prot_drug,
-     koff_prot_drug
+     drug(bound=None) + prot(phospho='u', drug=None, kin=None) |
+     drug(bound=1) % prot(phospho='u', drug=1, kin=None),
+     Parameter('kon_prot_drug', 0.1),
+     Parameter('koff_prot_drug', 0.1)
      )
-
-Monomer('KIN', ['bound'])
-Parameter('KIN_0', 1)
-alias_model_components()
-Initial(KIN(bound=None),
-        Expression('initKin', KIN_0))
-
-Parameter('kon_prot_kin', 0.1)
-alias_model_components()
 
 Rule('PROT_KIN_bind',
-     KIN(bound=None) + PROT(phospho='u', drug=None, kin=None) >>
-     KIN(bound=1) % PROT(phospho='u', drug=None, kin=1),
-     kon_prot_kin,
+     kin(bound=None) + prot(phospho='u', drug=None, kin=None) >>
+     kin(bound=1) % prot(phospho='u', drug=None, kin=1),
+     Parameter('kon_prot_kin', 0.1),
      )
-
-Parameter('kphospho_prot_kin', 0.1)
-alias_model_components()
 
 Rule('PROT_KIN_phospho',
-     KIN(bound=1) % PROT(phospho='u', drug=None, kin=1) >>
-     KIN(bound=None) + PROT(phospho='p', drug=None, kin=None),
-     kphospho_prot_kin,
+     kin(bound=1) % prot(phospho='u', drug=None, kin=1) >>
+     kin(bound=None) + prot(phospho='p', drug=None, kin=None),
+     Parameter('kphospho_prot_kin', 0.1)
      )
-
-Parameter('kdephospho_prot', 0.1)
-alias_model_components()
 
 Rule('PROT_dephospho',
-     PROT(phospho='p', drug=None, kin=None) >>
-     PROT(phospho='u', drug=None, kin=None),
-     kdephospho_prot,
+     prot(phospho='p', drug=None, kin=None) >>
+     prot(phospho='u', drug=None, kin=None),
+     Parameter('kdephospho_prot', 0.1)
      )
 
-Observable('pPROT', PROT(phospho='p'))
-Observable('tPROT', PROT())
-alias_model_components()
+Observable('pPROT', prot(phospho='p'))
+Observable('tPROT', prot())
 
-sbml_output = sbml.SbmlExporter(model).export()
+sbml_output = pysb.export.export(model, format='sbml')
 
 outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                        'model_presimulation.xml')
@@ -107,7 +92,6 @@ sbml_model.getAssignmentRuleByVariable(
             totalId
         ).removeFromParentAndDelete()
 sbml_model.getParameter(totalId).removeFromParentAndDelete()
-
 
 
 libsbml.writeSBML(sbml_doc, outfile)

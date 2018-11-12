@@ -4,13 +4,20 @@
 
 
 import symengine as sp
-
+import sympy
 import re
 import shutil
 import subprocess
 import sys
 import os
 import copy
+
+
+try:
+    import pysb
+    import pysb.bng
+except ImportError:
+    pysb = None
 
 from symengine.printing import CCodePrinter
 from string import Template
@@ -147,13 +154,13 @@ functions = {
         'signature':
             '(double *dydx, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k,'
-            ' const realtype *h)',
+            ' const realtype *h, const realtype *w, const realtype *dwdx)',
     },
     'dydp': {
         'signature':
             '(double *dydp, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip)',
+            ' const int ip, const realtype *w, const realtype *dwdp)',
     },
     'dsigmaydp': {
         'signature':
@@ -233,7 +240,7 @@ functions = {
         'signature':
             '(double *y, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k,'
-            ' const realtype *h)',
+            ' const realtype *h, const realtype *w)',
     }
 }
 
@@ -732,6 +739,132 @@ class ODEModel:
 
         self._generateBasicVariables()
 
+    def import_from_pysb_importer(self, model, constants=None,
+                                  observables=None, sigmas=None):
+        """Imports a model specification from a pysb.Model instance.
+
+
+        Arguments:
+            model: pysb model @type pysb.Model
+
+            constants: list of Parameters that should be constants @type list
+
+            observables: list of Expressions that should be observables
+            @type list
+
+            sigmas: dict with observable Expression name as key and sigma
+            Expression name as expression @type list
+
+
+        Returns:
+
+
+        Raises:
+
+        """
+
+        if pysb is None:
+            raise ImportError(
+                "This function requires an installation of pysb."
+            )
+
+        if constants is None:
+            constants = []
+
+        if observables is None:
+            observables = []
+
+        if sigmas is None:
+            sigmas = {}
+
+        pysb.bng.generate_equations(model)
+
+        xdot = sp.DenseMatrix(sympy.Matrix(model.odes))
+
+        for ix, specie in enumerate(model.species):
+
+            init = sp.sympify('0.0')
+            for ic in model.odes.model.initial_conditions:
+                if str(ic[0]) == str(specie):
+                    # we don't want to allow expressions in initial conditions
+                    if ic[1] in model.expressions:
+                        init = sp.sympify(
+                            model.expressions[ic[1].name].expand_expr()
+                        )
+                    else:
+                        init = sp.Symbol(ic[1].name)
+
+            self.add_component(
+                State(
+                    sp.Symbol(f'__s{ix}'),
+                    f'{specie}',
+                    init,
+                    xdot[ix])
+            )
+
+        for ip, par in enumerate(model.parameters):
+            if par.name in constants:
+                comp = Constant
+            else:
+                comp = Parameter
+
+            self.add_component(
+                comp(sp.Symbol(f'{par.name}'), f'{par.name}', par.value)
+            )
+
+        for ie, exp in enumerate(model.expressions):
+            if exp.name in observables:
+                self.add_component(
+                    Observable(
+                        sp.Symbol(f'{exp.name}'),
+                        f'{exp.name}',
+                        sp.sympify(exp.expand_expr()))
+                )
+
+                if exp.name in sigmas:
+                    if sigmas[exp.name] not in model.expressions:
+                        raise Exception(f'value of sigma {exp.name} is not a '
+                                        f'valid expression.')
+                    value = sp.sympify(
+                        model.expressions[sigmas[exp.name]].expand_expr()
+                    )
+                else:
+                    value = sp.sympify(1.0)
+
+                self.add_component(
+                    SigmaY(
+                        sp.Symbol(f'{sigmas[exp.name]}'),
+                        f'{sigmas[exp.name]}',
+                        value
+                    )
+                )
+
+                self.add_component(
+                    LogLikelihood(
+                        sp.Symbol(f'llh_{exp.name}'),
+                        f'llh_{exp.name}',
+                        sp.sympify(
+                            f'0.5*log(2*pi*{sigmas[exp.name]}**2)'
+                            f' + 0.5*(({exp.name} - m{exp.name})'
+                            f' / {sigmas[exp.name]})**2'
+                        )
+                    )
+                )
+
+
+            elif exp.name in sigmas.values():
+                # do nothing
+                pass
+            else:
+                self.add_component(
+                    Expression(
+                        sp.Symbol(f'{exp.name}'),
+                        f'{exp.name}',
+                        sp.sympify(exp.expand_expr()))
+                )
+
+        self._generateBasicVariables()
+
     def add_component(self, component):
         """Adds a new ModelQuantity to the model.
 
@@ -1143,7 +1276,10 @@ class ODEModel:
             return
 
         # partial derivative
-        self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
+        if self.eq(eq).size:
+            self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
+        else:
+            self._eqs[name] = sp.DenseMatrix([])
 
     def _totalDerivative(self, name, eq, chainvar, var,
                          dydx_name=None, dxdz_name=None):
@@ -1197,8 +1333,15 @@ class ODEModel:
             else:
                 variables[var]['sym'] = self.eq(varname)
 
-        self._eqs[name] = \
-            variables['dydx']['sym'] * variables['dxdz']['sym'] + variables['dydz']['sym']
+        if variables['dydx']['sym'].size > 0 \
+                and variables['dxdz']['sym'].size > 0 \
+                and variables['dydz']['sym'].size > 0:
+            self._eqs[name] = \
+                variables['dydx']['sym'] * variables['dxdz']['sym'] \
+                + variables['dydz']['sym']
+        else:
+            self._eqs[name] = sp.DenseMatrix([])
+
 
     def _multiplication(self, name, x, y,
                         transpose_x=False, sign=1):
@@ -1616,6 +1759,9 @@ class ODEExporter:
 
         """
         lines = []
+
+        if symbol.size == 0:
+            return lines
 
         if function == 'sx0_fixedParameters':
             # here we specifically want to overwrite some of the values with 0
