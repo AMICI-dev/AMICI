@@ -67,7 +67,7 @@ if has_clibs:
     from .pandas import getEdataFromDataFrame, \
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
-    from .ode_export import ODEModel, ODEExporter
+    from .ode_export import ODEModel, ODEExporter, ODEModel_from_pysb_importer
 
 
 def runAmiciSimulation(model, solver, edata=None):
@@ -182,8 +182,7 @@ def pysb2amici(model,
     if sigmas is None:
         sigmas = {}
 
-    ode_model = ODEModel()
-    ode_model.import_from_pysb_importer(
+    ode_model = ODEModel_from_pysb_importer(
         model, constants=constantParameters, observables=observables,
         sigmas=sigmas,
     )

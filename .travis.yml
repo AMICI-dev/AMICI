@@ -55,6 +55,8 @@ install:
     - ./scripts/buildSuiteSparse.sh
     - ./scripts/buildSundials.sh
     - ./scripts/buildCpputest.sh
+    - ./scripts/buildBNGL.sh
+    - export BNGPATH=$(pwd)/ThirdParty/BioNetGen-2.3.2
     - ./scripts/buildAmici.sh
 
 script:  

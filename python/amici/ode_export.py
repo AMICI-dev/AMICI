@@ -2,7 +2,6 @@
 """
 #!/usr/bin/env python3
 
-
 import symengine as sp
 import sympy
 import re
@@ -664,6 +663,7 @@ class ODEModel:
             'y': '_observables',
             'p': '_parameters',
             'k': '_constants',
+            'w': '_expressions',
             'sigmay': '_sigmays'
         }
         self._value_prototype = {
@@ -727,6 +727,9 @@ class ODEModel:
         # setting these equations prevents native equation generation
         self._eqs['dxdotdw'] = si.stoichiometricMatrix
         self._eqs['w'] = si.fluxVector
+        self._syms['w'] = sp.DenseMatrix(
+            [sp.Symbol(f'flux_r{idx}') for idx in range(len(si.fluxVector))]
+        )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
         symbols['species']['dt'] = \
             si.stoichiometricMatrix * self.sym('w')
@@ -738,133 +741,7 @@ class ODEModel:
             for proto in protos:
                 self.add_component(symbol_to_type[symbol](**proto))
 
-        self._generateBasicVariables()
-
-    def import_from_pysb_importer(self, model, constants=None,
-                                  observables=None, sigmas=None):
-        """Imports a model specification from a pysb.Model instance.
-
-
-        Arguments:
-            model: pysb model @type pysb.Model
-
-            constants: list of Parameters that should be constants @type list
-
-            observables: list of Expressions that should be observables
-            @type list
-
-            sigmas: dict with observable Expression name as key and sigma
-            Expression name as expression @type list
-
-
-        Returns:
-
-
-        Raises:
-
-        """
-
-        if pysb is None:
-            raise ImportError(
-                "This function requires an installation of pysb."
-            )
-
-        if constants is None:
-            constants = []
-
-        if observables is None:
-            observables = []
-
-        if sigmas is None:
-            sigmas = {}
-
-        pysb.bng.generate_equations(model)
-
-        xdot = sp.DenseMatrix(sympy.Matrix(model.odes))
-
-        for ix, specie in enumerate(model.species):
-
-            init = sp.sympify('0.0')
-            for ic in model.odes.model.initial_conditions:
-                if str(ic[0]) == str(specie):
-                    # we don't want to allow expressions in initial conditions
-                    if ic[1] in model.expressions:
-                        init = sp.sympify(
-                            model.expressions[ic[1].name].expand_expr()
-                        )
-                    else:
-                        init = sp.Symbol(ic[1].name)
-
-            self.add_component(
-                State(
-                    sp.Symbol(f'__s{ix}'),
-                    f'{specie}',
-                    init,
-                    xdot[ix])
-            )
-
-        for ip, par in enumerate(model.parameters):
-            if par.name in constants:
-                comp = Constant
-            else:
-                comp = Parameter
-
-            self.add_component(
-                comp(sp.Symbol(f'{par.name}'), f'{par.name}', par.value)
-            )
-
-        for ie, exp in enumerate(model.expressions):
-            if exp.name in observables:
-                self.add_component(
-                    Observable(
-                        sp.Symbol(f'{exp.name}'),
-                        f'{exp.name}',
-                        sp.sympify(exp.expand_expr()))
-                )
-
-                if exp.name in sigmas:
-                    if sigmas[exp.name] not in model.expressions:
-                        raise Exception(f'value of sigma {exp.name} is not a '
-                                        f'valid expression.')
-                    value = sp.sympify(
-                        model.expressions[sigmas[exp.name]].expand_expr()
-                    )
-                else:
-                    value = sp.sympify(1.0)
-
-                self.add_component(
-                    SigmaY(
-                        sp.Symbol(f'{sigmas[exp.name]}'),
-                        f'{sigmas[exp.name]}',
-                        value
-                    )
-                )
-
-                self.add_component(
-                    LogLikelihood(
-                        sp.Symbol(f'llh_{exp.name}'),
-                        f'llh_{exp.name}',
-                        sp.sympify(
-                            f'0.5*log(2*pi*{sigmas[exp.name]}**2)'
-                            f' + 0.5*(({exp.name} - m{exp.name})'
-                            f' / {sigmas[exp.name]})**2'
-                        )
-                    )
-                )
-
-
-            elif exp.name in sigmas.values():
-                # do nothing
-                pass
-            else:
-                self.add_component(
-                    Expression(
-                        sp.Symbol(f'{exp.name}'),
-                        f'{exp.name}',
-                        sp.sympify(exp.expand_expr()))
-                )
-
-        self._generateBasicVariables()
+        self.generateBasicVariables()
 
     def add_component(self, component):
         """Adds a new ModelQuantity to the model.
@@ -1117,7 +994,7 @@ class ODEModel:
             sp.Symbol(f'{name}{i}') for i in range(length)
         ])
 
-    def _generateBasicVariables(self):
+    def generateBasicVariables(self):
         """Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
 
@@ -1129,7 +1006,8 @@ class ODEModel:
 
         """
         for var in self._variable_prototype:
-            self._generateSymbol(var)
+            if var not in self._syms:
+                self._generateSymbol(var)
 
     def _generateSparseSymbol(self, name):
         """Generates the sparse symbolic identifiers, symbolic identifiers,
@@ -2185,3 +2063,151 @@ def applyTemplate(sourceFile,targetFile,templateData):
     result = src.safe_substitute(templateData)
     with open(targetFile, 'w') as fileout:
         fileout.write(result)
+
+def ODEModel_from_pysb_importer(model, constants=None,
+                                observables=None, sigmas=None):
+    """Creates an ODEModel instance from a pysb.Model instance.
+
+
+    Arguments:
+        model: pysb model @type pysb.Model
+
+        constants: list of Parameters that should be constants @type list
+
+        observables: list of Expressions that should be observables
+        @type list
+
+        sigmas: dict with observable Expression name as key and sigma
+        Expression name as expression @type list
+
+
+    Returns:
+    New ODEModel instance according to pysbModel
+
+    Raises:
+
+    """
+
+    ODE = ODEModel()
+
+    if pysb is None:
+        raise ImportError(
+            "This function requires an installation of pysb."
+        )
+
+    if constants is None:
+        constants = []
+
+    if observables is None:
+        observables = []
+
+    if sigmas is None:
+        sigmas = {}
+
+    pysb.bng.generate_equations(model)
+
+    xdot = sp.DenseMatrix(sympy.Matrix(model.odes))
+
+    for ix, specie in enumerate(model.species):
+
+        init = sp.sympify('0.0')
+        for ic in model.odes.model.initial_conditions:
+            if str(ic[0]) == str(specie):
+                # we don't want to allow expressions in initial conditions
+                if ic[1] in model.expressions:
+                    init = sp.sympify(
+                        model.expressions[ic[1].name].expand_expr()
+                    )
+                else:
+                    init = sp.Symbol(ic[1].name)
+
+        ODE.add_component(
+            State(
+                sp.Symbol(f'__s{ix}'),
+                f'{specie}',
+                init,
+                xdot[ix])
+        )
+
+    for ip, par in enumerate(model.parameters):
+        if par.name in constants:
+            comp = Constant
+        else:
+            comp = Parameter
+
+        ODE.add_component(
+            comp(sp.Symbol(f'{par.name}'), f'{par.name}', par.value)
+        )
+
+    for ie, exp in enumerate(model.expressions):
+        if exp.name in observables:
+            # here we do not define a new Expression from the
+            # pysb.Expression but define an observable, so we do not need
+            # to expand observables as these can be defined as Expressions
+            ODE.add_component(
+                Observable(
+                    sp.Symbol(f'{exp.name}'),
+                    f'{exp.name}',
+                    sp.sympify(exp.expand_expr(expand_observables=False)))
+            )
+
+            if exp.name in sigmas:
+                if sigmas[exp.name] not in model.expressions:
+                    raise Exception(f'value of sigma {exp.name} is not a '
+                                    f'valid expression.')
+                sigma_name = model.expressions[sigmas[exp.name]].name
+                sigma_value = sp.sympify(
+                    model.expressions[sigmas[exp.name]].expand_expr()
+                )
+            else:
+                sigma_name = f'sigma_{exp.name}'
+                sigma_value = sp.sympify(1.0)
+
+            ODE.add_component(
+                SigmaY(
+                    sp.Symbol(sigma_name),
+                    f'{sigma_name}',
+                    sigma_value
+                )
+            )
+
+            ODE.add_component(
+                LogLikelihood(
+                    sp.Symbol(f'llh_{exp.name}'),
+                    f'llh_{exp.name}',
+                    sp.sympify(
+                        f'0.5*log(2*pi*{sigma_name}**2)'
+                        f' + 0.5*(({exp.name} - m{exp.name})'
+                        f' / {sigma_name})**2'
+                    )
+                )
+            )
+
+        elif exp.name in sigmas.values():
+            # do nothing
+            pass
+        else:
+            # here we do define a new Expression from the pysb.Expression
+            # so we do need to expand observables as these would otherwise
+            # lead to dependencies between different Expressions
+            ODE.add_component(
+                Expression(
+                    sp.Symbol(f'{exp.name}'),
+                    f'{exp.name}',
+                    sp.sympify(exp.expand_expr(expand_observables=True)))
+            )
+
+    # only add those pysb observables that occur in the added
+    # Observables as expressions
+    for obs in model.observables:
+        if sp.Symbol(obs.name) in ODE.eq('y').free_symbols:
+            ODE.add_component(
+                Expression(
+                    sp.Symbol(f'{obs.name}'),
+                    f'{obs.name}',
+                    sp.sympify(obs.expand_obs()))
+            )
+
+    ODE.generateBasicVariables()
+
+    return ODE

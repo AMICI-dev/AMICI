@@ -12,6 +12,7 @@ import sys
 import testModels
 import testSBML
 import testPandas
+import testPYSB
 
 # only consider amici module and ignore the swig generated amici.py
 cov = coverage.Coverage(source=['amici'],omit=['*/amici.py','*/amici_without_hdf5.py'])
@@ -25,6 +26,8 @@ suite = unittest.TestSuite()
 suite.addTest(testSBML.TestAmiciSBMLModel())
 suite.addTest(testModels.TestAmiciPregeneratedModel())
 suite.addTest(testPandas.TestAmiciPandasImportExport())
+suite.addTest(testPYSB.TestAmiciPYSBModel())
+
 testRunner = unittest.TextTestRunner(verbosity=0)
 result = testRunner.run(suite)
 

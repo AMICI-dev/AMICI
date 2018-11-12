@@ -7,7 +7,7 @@ import os
 import pysb
 import numpy as np
 
-class TestAmiciPSBModel(unittest.TestCase):
+class TestAmiciPYSBModel(unittest.TestCase):
     '''
     TestCase class for testing SBML import and simulation from AMICI python interface
     '''
@@ -40,13 +40,14 @@ class TestAmiciPSBModel(unittest.TestCase):
         amici.pysb2amici(model,
                          model.name,
                          verbose=False,
-                         observables=['pPROT'],
+                         observables=['pPROT_obs'],
                          constantParameters=constantParameters)
         sys.path.insert(0, model.name)
         import test_model_presimulation_pysb as modelModuleSBML
         model_pysb = modelModuleSBML.getModel()
 
-        rdata_pysb = get_results(model_pysb)
+        edata = get_data(model_pysb)
+        rdata_pysb = get_results(model_pysb, edata)
 
         # -------------- SBML -----------------
 
@@ -58,7 +59,7 @@ class TestAmiciPSBModel(unittest.TestCase):
 
         observables = amici.assignmentRules2observables(
             sbmlImporter.sbml,  # the libsbml model object
-            filter_function=lambda variable: variable.getName() == 'pPROT'
+            filter_function=lambda variable: variable.getName() == 'pPROT_obs'
         )
         outdir = 'test_model_presimulation_sbml'
         sbmlImporter.sbml2amici('test_model_presimulation_sbml',
@@ -70,41 +71,50 @@ class TestAmiciPSBModel(unittest.TestCase):
         import test_model_presimulation_sbml as modelModuleSBML
         model_sbml = modelModuleSBML.getModel()
 
-        rdata_sbml = get_results(model_sbml)
+        rdata_sbml = get_results(model_sbml, edata)
 
         for field in rdata_pysb:
             if field is not 'ptr':
                 if rdata_pysb[field] is None:
-                    self.assertIsNone(rdata_sbml)
+                    self.assertIsNone(
+                        rdata_sbml[field],
+                        msg=f'checked field was {field} in sbml results'
+                    )
+                elif rdata_sbml[field] is None:
+                    self.assertIsNone(
+                        rdata_pysb[field],
+                        msg=f'checked field was {field} in pysb results'
+                    )
                 else:
                     self.assertTrue(np.isclose(
                         rdata_sbml[field],
                         rdata_pysb[field],
-                        atol=1e-15, rtol=1e-15
+                        atol=1e-8, rtol=1e-8
                     ).all(), msg=f'disagreement in field {field}')
 
 
-
-
-
-
-
-def get_results(model):
+def get_data(model):
     solver = model.getSolver()
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setReinitializeFixedParameterInitialStates(True)
 
-    rdata_pre = amici.runAmiciSimulation(model, solver)
-    edata = amici.ExpData(rdata_pre, 0.1, 0.0)
+    rdata = amici.runAmiciSimulation(model, solver)
+    edata = amici.ExpData(rdata, 0.1, 0.0)
     edata.fixedParametersPreequilibration = [3, 0]
     edata.fixedParameters = [10, 2]
     edata.fixedParametersPresimulation = [10, 2]
     edata.fixedParametersPreequilibration = [3, 0]
+    return edata
+
+def get_results(model, edata):
+    solver = model.getSolver()
+    model.setTimepoints(np.linspace(0, 60, 61))
+    model.setReinitializeFixedParameterInitialStates(True)
     return amici.runAmiciSimulation(model, solver, edata)
 
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
-    suite.addTest(TestAmiciSBMLModel())
+    suite.addTest(TestAmiciPSBModel())
     unittest.main()
     

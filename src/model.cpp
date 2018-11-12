@@ -818,7 +818,7 @@ void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiV
 void Model::fy(int it, ReturnData *rdata) {
     if (!ny)
         return;
-    
+    fw(rdata->ts.at(it),getx(it,rdata));
     fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
@@ -827,7 +827,8 @@ void Model::fdydp(const int it, ReturnData *rdata) {
         return;
     
     std::fill(dydp.begin(),dydp.end(),0.0);
-
+    fw(rdata->ts.at(it),getx(it,rdata));
+    fdwdp(rdata->ts.at(it),getx(it,rdata));
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
         // get dydp slice (ny) for current time and parameter
         fdydp(&dydp.at(ip*ny),
@@ -847,6 +848,8 @@ void Model::fdydx(const int it, ReturnData *rdata) {
         return;
     
     std::fill(dydx.begin(),dydx.end(),0.0);
+    fw(rdata->ts.at(it),getx(it,rdata));
+    fdwdx(rdata->ts.at(it),getx(it,rdata));
     fdydx(dydx.data(),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),dwdx.data());
 }
 
@@ -1138,17 +1141,34 @@ void Model::fw(const realtype t, const N_Vector x) {
     std::fill(w.begin(),w.end(),0.0);
     fw(w.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data());
 }
+    
+void Model::fw(const realtype t, const realtype *x) {
+    std::fill(w.begin(),w.end(),0.0);
+    fw(w.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data());
+}
 
 void Model::fdwdp(const realtype t, const N_Vector x) {
     fw(t,x);
     std::fill(dwdp.begin(),dwdp.end(),0.0);
     fdwdp(dwdp.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
+    
+void Model::fdwdp(const realtype t, const realtype *x) {
+    fw(t,x);
+    std::fill(dwdp.begin(),dwdp.end(),0.0);
+    fdwdp(dwdp.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+}
 
 void Model::fdwdx(const realtype t, const N_Vector x) {
     fw(t,x);
     std::fill(dwdx.begin(),dwdx.end(),0.0);
     fdwdx(dwdx.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+}
+    
+void Model::fdwdx(const realtype t, const realtype *x) {
+    fw(t,x);
+    std::fill(dwdx.begin(),dwdx.end(),0.0);
+    fdwdx(dwdx.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
 void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {

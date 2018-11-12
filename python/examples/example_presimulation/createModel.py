@@ -49,8 +49,10 @@ Rule('PROT_dephospho',
      Parameter('kdephospho_prot', 0.1)
      )
 
-Observable('pPROT', prot(phospho='p'))
-Observable('tPROT', prot())
+pProt = Observable('pPROT', prot(phospho='p'))
+tProt = Observable('tPROT', prot())
+
+Expression('pPROT_obs', pProt/tProt)
 
 sbml_output = pysb.export.export(model, format='sbml')
 
@@ -58,40 +60,3 @@ outfile = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                        'model_presimulation.xml')
 with open(outfile, 'w') as f:
     f.write(sbml_output)
-
-
-#sbml postProcessing
-SBMLreader = libsbml.SBMLReader()
-sbml_doc = SBMLreader.readSBML(outfile)
-
-sbml_model = sbml_doc.getModel()
-
-for par in sbml_model.getListOfParameters():
-    if par.getName() == 'pPROT':
-        phosphoId = par.getId()
-
-        phosphoRule = \
-            sbml_model.getAssignmentRuleByVariable(
-                phosphoId
-            ).getFormula()
-
-        totalId = [par.getId() for par in sbml_model.getListOfParameters()
-                   if par.getName() == 'tPROT'][0]
-
-        totalRule = \
-            sbml_model.getAssignmentRuleByVariable(
-                totalId
-            ).getFormula()
-
-        new_phosphoRule = '(' + phosphoRule + ')/(' + totalRule + ')'
-        sbml_model.getAssignmentRuleByVariable(
-            phosphoId
-        ).setFormula(new_phosphoRule)
-
-sbml_model.getAssignmentRuleByVariable(
-            totalId
-        ).removeFromParentAndDelete()
-sbml_model.getParameter(totalId).removeFromParentAndDelete()
-
-
-libsbml.writeSBML(sbml_doc, outfile)

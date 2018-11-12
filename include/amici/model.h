@@ -778,6 +778,13 @@ namespace amici {
          * @param x Vector with the states
          */
         void fw(const realtype t, const N_Vector x);
+        
+        /**
+         * @brief Recurring terms in xdot
+         * @param t timepoint
+         * @param x array with the states
+         */
+        void fw(const realtype t, const realtype *x);
 
         /**
          * @brief Recurring terms in xdot, parameter derivative
@@ -787,11 +794,25 @@ namespace amici {
         void fdwdp(const realtype t, const N_Vector x);
         
         /**
+         * @brief Recurring terms in xdot, parameter derivative
+         * @param t timepoint
+         * @param x array with the states
+         */
+        void fdwdp(const realtype t, const realtype *x);
+        
+        /**
          * @brief Recurring terms in xdot, state derivative
          * @param t timepoint
          * @param x Vector with the states
          */
         void fdwdx(const realtype t, const N_Vector x);
+        
+        /**
+         * @brief Recurring terms in xdot, state derivative
+         * @param t timepoint
+         * @param x array with the states
+         */
+        void fdwdx(const realtype t, const realtype *x);
         
         /** residual function
          * @param it time index

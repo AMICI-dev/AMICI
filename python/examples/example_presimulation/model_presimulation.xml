@@ -16,6 +16,7 @@
       <parameter id="initProt" name="initProt" constant="false"/>
       <parameter id="initDrug" name="initDrug" constant="false"/>
       <parameter id="initKin" name="initKin" constant="false"/>
+      <parameter id="pPROT_obs" name="pPROT_obs" constant="false"/>
       <parameter id="PROT_0" name="PROT_0" value="10" constant="true"/>
       <parameter id="DRUG_0" name="DRUG_0" value="9" constant="true"/>
       <parameter id="KIN_0" name="KIN_0" value="1" constant="true"/>
@@ -25,6 +26,7 @@
       <parameter id="kphospho_prot_kin" name="kphospho_prot_kin" value="0.1" constant="true"/>
       <parameter id="kdephospho_prot" name="kdephospho_prot" value="0.1" constant="true"/>
       <parameter id="__obs0" name="pPROT" constant="false"/>
+      <parameter id="__obs1" name="tPROT" constant="false"/>
     </listOfParameters>
     <listOfInitialAssignments>
       <initialAssignment symbol="__s0">
@@ -59,7 +61,7 @@
           <ci> KIN_0 </ci>
         </math>
       </assignmentRule>
-      <assignmentRule variable="__obs0">
+      <assignmentRule variable="pPROT_obs">
         <math xmlns="http://www.w3.org/1998/Math/MathML">
           <apply>
             <divide/>
@@ -71,6 +73,22 @@
               <ci> __s4 </ci>
               <ci> __s5 </ci>
             </apply>
+          </apply>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="__obs0">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> __s5 </ci>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="__obs1">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <ci> __s0 </ci>
+            <ci> __s3 </ci>
+            <ci> __s4 </ci>
+            <ci> __s5 </ci>
           </apply>
         </math>
       </assignmentRule>
