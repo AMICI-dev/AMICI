@@ -24,9 +24,9 @@ class TestAmiciPSBModel(unittest.TestCase):
         os.chdir(self.resetdir)
 
     def runTest(self):
-        self.test_presimulation()
+        self.compare_to_sbml_import()
 
-    def test_presimulation(self):
+    def compare_to_sbml_import(self):
 
         constantParameters = ['DRUG_0', 'KIN_0']
 
@@ -72,6 +72,20 @@ class TestAmiciPSBModel(unittest.TestCase):
 
         rdata_sbml = get_results(model_sbml)
 
+        for field in rdata_pysb:
+            if field is not 'ptr' \
+                    and not field.startswith('num') \
+                    and not field.startswith('newton') \
+                    and not field.endswith('steadystate'):
+                if rdata_pysb[field] is None:
+                    self.assertIsNone(rdata_sbml)
+                else:
+                    self.assertTrue(np.isclose(
+                        rdata_sbml[field],
+                        rdata_pysb[field],
+                        atol=1e-4, rtol=1e-4
+                    ).all(), msg=f'disagreement in field {field}')
+
 
 
 
@@ -89,7 +103,7 @@ def get_results(model):
     edata.fixedParameters = [10, 2]
     edata.fixedParametersPresimulation = [10, 2]
     edata.fixedParametersPreequilibration = [3, 0]
-    return amici.runAmiciSimulation(model, solver, edata),
+    return amici.runAmiciSimulation(model, solver, edata)
 
 
 if __name__ == '__main__':

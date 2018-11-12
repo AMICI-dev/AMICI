@@ -1230,7 +1230,10 @@ class ODEModel:
             raise Exception(f'Unknown equation {name}')
 
         if name in ['Jy', 'dydx']:
-            self._eqs[name] = self._eqs[name].transpose()
+            # do not transpose if we compute the partial derivative as part of
+            # a total derivative
+            if not self._lock_total_derivative:
+                self._eqs[name] = self._eqs[name].transpose()
 
     def symNames(self):
         """Returns a list of names of generated symbolic variables
@@ -1337,8 +1340,8 @@ class ODEModel:
                 and variables['dxdz']['sym'].size > 0 \
                 and variables['dydz']['sym'].size > 0:
             self._eqs[name] = \
-                variables['dydx']['sym'] * variables['dxdz']['sym'] \
-                + variables['dydz']['sym']
+                variables['dydx']['sym'] * variables['dxdz']['sym'] + \
+                variables['dydz']['sym']
         else:
             self._eqs[name] = sp.DenseMatrix([])
 
