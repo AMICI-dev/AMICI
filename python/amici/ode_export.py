@@ -16,6 +16,7 @@ try:
     import pysb
     import pysb.bng
 except ImportError:
+    ## pysb module, if this is None, pysb is not available
     pysb = None
 
 from symengine.printing import CCodePrinter

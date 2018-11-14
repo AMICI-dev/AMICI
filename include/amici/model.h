@@ -1216,6 +1216,7 @@ namespace amici {
          * @param p parameter vector
          * @param k constant vector
          * @param h heavyside vector
+         * @param w repeating elements vector
          **/
         virtual void fy(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -1229,6 +1230,8 @@ namespace amici {
          * @param k constant vector
          * @param h heavyside vector
          * @param ip parameter index w.r.t. which the derivative is requested
+         * @param w repeating elements vector
+         * @param dwdp Recurring terms in xdot, parameter derivative
          **/
         virtual void fdydp(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
@@ -1241,6 +1244,8 @@ namespace amici {
          * @param p parameter vector
          * @param k constant vector
          * @param h heavyside vector
+         * @param w repeating elements vector
+         * @param dwdx Recurring terms in xdot, state derivative
          **/
         virtual void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
