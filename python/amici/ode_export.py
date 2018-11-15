@@ -11,13 +11,12 @@ import sys
 import os
 import copy
 
-
 try:
-    import pysb
     import pysb.bng
+    ## bool indicating whether pysb is available
+    pysb_available = True
 except ImportError:
-    ## pysb module, if this is None, pysb is not available
-    pysb = None
+    pysb_available = False
 
 from symengine.printing import CCodePrinter
 from string import Template
@@ -2091,7 +2090,7 @@ def ODEModel_from_pysb_importer(model, constants=None,
 
     ODE = ODEModel()
 
-    if pysb is None:
+    if not pysb_available:
         raise ImportError(
             "This function requires an installation of pysb."
         )
