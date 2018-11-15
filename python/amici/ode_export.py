@@ -2130,7 +2130,7 @@ def ODEModel_from_pysb_importer(model, constants=None,
                 xdot[ix])
         )
 
-    for ip, par in enumerate(model.parameters):
+    for par in model.parameters:
         if par.name in constants:
             comp = Constant
         else:
@@ -2140,7 +2140,7 @@ def ODEModel_from_pysb_importer(model, constants=None,
             comp(sp.Symbol(f'{par.name}'), f'{par.name}', par.value)
         )
 
-    for ie, exp in enumerate(model.expressions):
+    for exp in model.expressions:
         if exp.name in observables:
             # here we do not define a new Expression from the
             # pysb.Expression but define an observable, so we do not need
