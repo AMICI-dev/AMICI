@@ -9,6 +9,7 @@ import subprocess
 import sys
 import os
 import copy
+import numbers
 
 from symengine.printing import CCodePrinter
 from string import Template
@@ -308,7 +309,8 @@ class ModelQuantity:
             raise TypeError(f'name must be str, was {type(name)}')
         self._name = name
 
-        if isinstance(value, sp.RealNumber):
+        if isinstance(value, sp.RealNumber) or isinstance(value,
+                                                          numbers.Number):
             value = float(value)
         if not isinstance(value, sp.Basic) and not isinstance(value, float):
             raise TypeError(f'value must be sympy.Symbol or float, was '
@@ -1142,15 +1144,17 @@ class ODEModel:
             name = f'd{eq}d{var}'
 
         # automatically detect chainrule
-        if var_in_function_signature(eq, 'w') and \
-                not self._lock_total_derivative:
+        if var_in_function_signature(eq, 'w') \
+                and not self._lock_total_derivative \
+                and var is not 'w'\
+                and self.sym('w').size:
             self._lock_total_derivative = True
             self._totalDerivative(name, eq, 'w', var)
             self._lock_total_derivative = False
             return
 
         # partial derivative
-        if self.eq(eq).size:
+        if self.eq(eq).size and self.sym(var).size:
             self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
         else:
             self._eqs[name] = sp.DenseMatrix([])
@@ -1207,14 +1211,15 @@ class ODEModel:
             else:
                 variables[var]['sym'] = self.eq(varname)
 
-        if variables['dydx']['sym'].size > 0 \
-                and variables['dxdz']['sym'].size > 0 \
-                and variables['dydz']['sym'].size > 0:
-            self._eqs[name] = \
-                variables['dydx']['sym'] * variables['dxdz']['sym'] + \
-                variables['dydz']['sym']
-        else:
-            self._eqs[name] = sp.DenseMatrix([])
+        self._eqs[name] = sp.DenseMatrix([])
+
+        if variables['dydz']['sym'].size:
+            self._eqs[name] += variables['dydz']['sym']
+
+        if variables['dydx']['sym'].size and variables['dxdz']['sym'].size:
+            self._eqs[name] += \
+                variables['dydx']['sym'] * variables['dxdz']['sym']
+
 
 
     def _multiplication(self, name, x, y,
