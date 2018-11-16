@@ -906,7 +906,7 @@ void Model::fdeltax(const int ie, const realtype t, const AmiVector *x,
 
 void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
                      const AmiVector *xdot, const AmiVector *xdot_old) {
-    fw(t,x->getNVector());
+    fw(t,x->data());
     std::fill(deltasx.begin(),deltasx.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
         fdeltasx(&deltasx.at(nx*ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),
@@ -1136,33 +1136,16 @@ void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
         }
     }
 }
-
-void Model::fw(const realtype t, const N_Vector x) {
-    std::fill(w.begin(),w.end(),0.0);
-    fw(w.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data());
-}
     
 void Model::fw(const realtype t, const realtype *x) {
     std::fill(w.begin(),w.end(),0.0);
     fw(w.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data());
-}
-
-void Model::fdwdp(const realtype t, const N_Vector x) {
-    fw(t,x);
-    std::fill(dwdp.begin(),dwdp.end(),0.0);
-    fdwdp(dwdp.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
     
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdp.begin(),dwdp.end(),0.0);
     fdwdp(dwdp.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
-}
-
-void Model::fdwdx(const realtype t, const N_Vector x) {
-    fw(t,x);
-    std::fill(dwdx.begin(),dwdx.end(),0.0);
-    fdwdx(dwdx.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
     
 void Model::fdwdx(const realtype t, const realtype *x) {
