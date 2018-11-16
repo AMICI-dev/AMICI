@@ -13,6 +13,7 @@ from pysb.examples import tyson_oscillator, robertson, \
     expression_observables, earm_1_3, bax_pore_sequential, bax_pore, \
     bngwiki_egfr_simple
 
+
 class TestAmiciPYSBModel(unittest.TestCase):
     '''
     TestCase class for testing SBML import and simulation from AMICI python interface
@@ -32,7 +33,6 @@ class TestAmiciPYSBModel(unittest.TestCase):
     def runTest(self):
         self.compare_to_pysb_simulation()
         self.compare_to_sbml_import()
-
 
     def compare_to_sbml_import(self):
 
@@ -142,14 +142,6 @@ class TestAmiciPYSBModel(unittest.TestCase):
                 ).all())
 
 
-
-
-
-
-
-
-
-
 def get_data(model):
     solver = model.getSolver()
     model.setTimepoints(np.linspace(0, 60, 61))
@@ -162,6 +154,7 @@ def get_data(model):
     edata.fixedParametersPresimulation = [10, 2]
     edata.fixedParametersPreequilibration = [3, 0]
     return edata
+
 
 def get_results(model, edata):
     solver = model.getSolver()
