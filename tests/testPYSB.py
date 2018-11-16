@@ -5,7 +5,13 @@ import amici
 import unittest
 import os
 import pysb
+import importlib
 import numpy as np
+from pysb.simulator import ScipyOdeSimulator
+
+from pysb.examples import tyson_oscillator, robertson, \
+    expression_observables, earm_1_3, bax_pore_sequential, bax_pore, \
+    bngwiki_egfr_simple
 
 class TestAmiciPYSBModel(unittest.TestCase):
     '''
@@ -24,7 +30,9 @@ class TestAmiciPYSBModel(unittest.TestCase):
         os.chdir(self.resetdir)
 
     def runTest(self):
-        self.compare_to_sbml_import()
+        self.compare_to_pysb_simulation()
+        #self.compare_to_sbml_import()
+
 
     def compare_to_sbml_import(self):
 
@@ -43,8 +51,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
                          observables=['pPROT_obs'],
                          constant_parameters=constant_parameters)
         sys.path.insert(0, model.name)
-        import test_model_presimulation_pysb as modelModuleSBML
-        model_pysb = modelModuleSBML.getModel()
+        import test_model_presimulation_pysb as modelModulePYSB
+        model_pysb = modelModulePYSB.getModel()
 
         edata = get_data(model_pysb)
         rdata_pysb = get_results(model_pysb, edata)
@@ -92,6 +100,55 @@ class TestAmiciPYSBModel(unittest.TestCase):
                         atol=1e-8, rtol=1e-8
                     ).all(), msg=f'disagreement in field {field}')
 
+    def compare_to_pysb_simulation(self):
+        examples = [tyson_oscillator.model, robertson.model,
+                  expression_observables.model, earm_1_3.model,
+                  bax_pore_sequential.model, bax_pore.model,
+                  bngwiki_egfr_simple.model]
+        for example in examples:
+            example.name = example.name.replace('pysb.examples.','')
+            with self.subTest(example=example.name):
+                ## pysb part
+
+                tspan = np.linspace(0, 100, 101)
+                sim = ScipyOdeSimulator(
+                    example,
+                    tspan=tspan,
+                    integrator_options={'rtol': 1e-8, 'atol': 1e-8},
+                    compiler='python'
+                )
+                pysb_simres = sim.run()
+
+                ## amici part
+
+                amici.pysb2amici(example,
+                                 example.name,
+                                 verbose=False)
+                sys.path.insert(0, example.name)
+                amici_model_module = importlib.import_module(example.name)
+                model_pysb = amici_model_module.getModel()
+
+                model_pysb.setTimepoints(tspan)
+
+                solver = model_pysb.getSolver()
+                rdata = amici.runAmiciSimulation(model_pysb, solver)
+
+                # check agreement of species simulation
+
+                self.assertTrue(np.isclose(
+                    rdata['x'],
+                    pysb_simres.species,
+                    1e-4, 1e-4
+                ).all())
+
+
+
+
+
+
+
+
+
 
 def get_data(model):
     solver = model.getSolver()
@@ -117,4 +174,3 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestAmiciPSBModel())
     unittest.main()
-    
