@@ -28,7 +28,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
     def compare_to_sbml_import(self):
 
-        constantParameters = ['DRUG_0', 'KIN_0']
+        constant_parameters = ['DRUG_0', 'KIN_0']
 
         # -------------- PYSB -----------------
 
@@ -41,7 +41,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                          model.name,
                          verbose=False,
                          observables=['pPROT_obs'],
-                         constantParameters=constantParameters)
+                         constant_parameters=constant_parameters)
         sys.path.insert(0, model.name)
         import test_model_presimulation_pysb as modelModuleSBML
         model_pysb = modelModuleSBML.getModel()
@@ -66,7 +66,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                                 outdir,
                                 verbose=False,
                                 observables=observables,
-                                constantParameters=constantParameters)
+                                constantParameters=constant_parameters)
         sys.path.insert(0, outdir)
         import test_model_presimulation_sbml as modelModuleSBML
         model_sbml = modelModuleSBML.getModel()

@@ -1,13 +1,12 @@
 #!/bin/bash
 #
-# Build CppUTest
+# Build BNGL (required for pysb)
 #
 set -e
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
-# Cpputest
 mkdir -p ${AMICI_PATH}/ThirdParty
 cd ${AMICI_PATH}/ThirdParty
 

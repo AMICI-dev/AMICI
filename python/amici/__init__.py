@@ -67,7 +67,8 @@ if has_clibs:
     from .pandas import getEdataFromDataFrame, \
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
-    from .ode_export import ODEModel, ODEExporter, ODEModel_from_pysb_importer
+    from .ode_export import ODEModel, ODEExporter
+    from .pysb_import import pysb2amici, ODEModel_from_pysb_importer
 
 
 def runAmiciSimulation(model, solver, edata=None):
@@ -89,6 +90,7 @@ def runAmiciSimulation(model, solver, edata=None):
 
     rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
+
 
 def ExpData(rdata, sigma_y, sigma_z):
     """ Convenience wrapper for ExpData constructor
@@ -131,69 +133,3 @@ def runAmiciSimulations(model, solver, edata_list):
         rdata_list.append(rdata)
 
     return rdata_list
-
-
-def pysb2amici(model,
-               output_dir=None,
-               observables=None,
-               constantParameters=None,
-               sigmas=None,
-               verbose=False,
-               assume_pow_positivity=False,
-               compiler=None
-               ):
-    """Generate AMICI C++ files for the model provided to the constructor.
-
-    Arguments:
-        model: pysb model, model.name will determine the name of the
-        generated module @type pysb.Model
-
-        output_dir: see sbml_import.setPaths()  @type str
-
-        observables: list of pysb.Expressions names that should be
-        interpreted as observables @type list
-
-        sigmas: list of pysb.Expressions names that should be
-        interpreted as sigmas @type list
-
-        constantParameters: list of pysb.Parameter names that should be
-        interpreted as constantParameters
-
-        verbose: more verbose output if True @type bool
-
-        assume_pow_positivity: if set to true, a special pow function is
-        used to avoid problems with state variables that may become
-        negative due to numerical errors @type bool
-
-        compiler: distutils/setuptools compiler selection to build the
-        python extension @type str
-
-    Returns:
-
-    Raises:
-
-    """
-    if observables is None:
-        observables = []
-
-    if constantParameters is None:
-        constantParameters = []
-
-    if sigmas is None:
-        sigmas = {}
-
-    ode_model = ODEModel_from_pysb_importer(
-        model, constants=constantParameters, observables=observables,
-        sigmas=sigmas,
-    )
-    exporter = ODEExporter(
-        ode_model,
-        outdir=output_dir,
-        verbose=verbose,
-        assume_pow_positivity=assume_pow_positivity,
-        compiler=compiler,
-    )
-    exporter.setName(model.name)
-    exporter.setPaths(output_dir)
-    exporter.generateModelCode()
-    exporter.compileModel()
