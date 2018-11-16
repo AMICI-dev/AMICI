@@ -95,3 +95,20 @@ using namespace amici;
 // Expose vectors
 %template(ScalingVector) std::vector<amici::ParameterScaling>;
 %template(ExpDataPtrVector) std::vector<amici::ExpData*>;
+
+
+%{
+namespace amici {
+/** AMICI extension was compiled with OpenMP? */
+bool compiledWithOpenMP() {
+#if defined(_OPENMP)
+    return true;
+#else
+    return false;
+#endif
+}
+};
+%}
+namespace amici {
+bool compiledWithOpenMP();
+}
