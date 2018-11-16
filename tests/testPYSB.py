@@ -31,7 +31,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
     def runTest(self):
         self.compare_to_pysb_simulation()
-        #self.compare_to_sbml_import()
+        self.compare_to_sbml_import()
 
 
     def compare_to_sbml_import(self):
