@@ -1,4 +1,3 @@
-from amici import stdVec2ndarray
 import numpy as np
 
 def fieldAsNumpy(fieldDimensions, field, data):

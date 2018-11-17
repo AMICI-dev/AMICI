@@ -67,6 +67,8 @@ if has_clibs:
     from .pandas import getEdataFromDataFrame, \
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
+    from .ode_export import ODEModel, ODEExporter
+    from .pysb_import import pysb2amici, ODEModel_from_pysb_importer
 
 
 def runAmiciSimulation(model, solver, edata=None):
@@ -88,6 +90,7 @@ def runAmiciSimulation(model, solver, edata=None):
 
     rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
+
 
 def ExpData(rdata, sigma_y, sigma_z):
     """ Convenience wrapper for ExpData constructor

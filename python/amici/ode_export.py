@@ -2,15 +2,14 @@
 """
 #!/usr/bin/env python3
 
-
 import symengine as sp
-
 import re
 import shutil
 import subprocess
 import sys
 import os
 import copy
+import numbers
 
 from symengine.printing import CCodePrinter
 from string import Template
@@ -147,13 +146,13 @@ functions = {
         'signature':
             '(double *dydx, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k,'
-            ' const realtype *h)',
+            ' const realtype *h, const realtype *w, const realtype *dwdx)',
     },
     'dydp': {
         'signature':
             '(double *dydp, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip)',
+            ' const int ip, const realtype *w, const realtype *dwdp)',
     },
     'dsigmaydp': {
         'signature':
@@ -233,7 +232,7 @@ functions = {
         'signature':
             '(double *y, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k,'
-            ' const realtype *h)',
+            ' const realtype *h, const realtype *w)',
     }
 }
 
@@ -310,7 +309,8 @@ class ModelQuantity:
             raise TypeError(f'name must be str, was {type(name)}')
         self._name = name
 
-        if isinstance(value, sp.RealNumber):
+        if isinstance(value, sp.RealNumber) or isinstance(value,
+                                                          numbers.Number):
             value = float(value)
         if not isinstance(value, sp.Basic) and not isinstance(value, float):
             raise TypeError(f'value must be sympy.Symbol or float, was '
@@ -657,6 +657,7 @@ class ODEModel:
             'y': '_observables',
             'p': '_parameters',
             'k': '_constants',
+            'w': '_expressions',
             'sigmay': '_sigmays'
         }
         self._value_prototype = {
@@ -720,6 +721,10 @@ class ODEModel:
         # setting these equations prevents native equation generation
         self._eqs['dxdotdw'] = si.stoichiometricMatrix
         self._eqs['w'] = si.fluxVector
+        self._syms['w'] = sp.DenseMatrix(
+            [sp.Symbol(f'flux_r{idx}') for idx in range(len(si.fluxVector))]
+        )
+        self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
         symbols['species']['dt'] = \
             si.stoichiometricMatrix * self.sym('w')
 
@@ -730,7 +735,7 @@ class ODEModel:
             for proto in protos:
                 self.add_component(symbol_to_type[symbol](**proto))
 
-        self._generateBasicVariables()
+        self.generateBasicVariables()
 
     def add_component(self, component):
         """Adds a new ModelQuantity to the model.
@@ -983,7 +988,7 @@ class ODEModel:
             sp.Symbol(f'{name}{i}') for i in range(length)
         ])
 
-    def _generateBasicVariables(self):
+    def generateBasicVariables(self):
         """Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
 
@@ -995,7 +1000,8 @@ class ODEModel:
 
         """
         for var in self._variable_prototype:
-            self._generateSymbol(var)
+            if var not in self._syms:
+                self._generateSymbol(var)
 
     def _generateSparseSymbol(self, name):
         """Generates the sparse symbolic identifiers, symbolic identifiers,
@@ -1097,7 +1103,10 @@ class ODEModel:
             raise Exception(f'Unknown equation {name}')
 
         if name in ['Jy', 'dydx']:
-            self._eqs[name] = self._eqs[name].transpose()
+            # do not transpose if we compute the partial derivative as part of
+            # a total derivative
+            if not self._lock_total_derivative:
+                self._eqs[name] = self._eqs[name].transpose()
 
     def symNames(self):
         """Returns a list of names of generated symbolic variables
@@ -1135,15 +1144,20 @@ class ODEModel:
             name = f'd{eq}d{var}'
 
         # automatically detect chainrule
-        if var_in_function_signature(eq, 'w') and \
-                not self._lock_total_derivative:
+        if var_in_function_signature(eq, 'w') \
+                and not self._lock_total_derivative \
+                and var is not 'w'\
+                and self.sym('w').size:
             self._lock_total_derivative = True
             self._totalDerivative(name, eq, 'w', var)
             self._lock_total_derivative = False
             return
 
         # partial derivative
-        self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
+        if self.eq(eq).size and self.sym(var).size:
+            self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
+        else:
+            self._eqs[name] = sp.DenseMatrix([])
 
     def _totalDerivative(self, name, eq, chainvar, var,
                          dydx_name=None, dxdz_name=None):
@@ -1197,8 +1211,16 @@ class ODEModel:
             else:
                 variables[var]['sym'] = self.eq(varname)
 
-        self._eqs[name] = \
-            variables['dydx']['sym'] * variables['dxdz']['sym'] + variables['dydz']['sym']
+        self._eqs[name] = sp.DenseMatrix([])
+
+        if variables['dydz']['sym'].size:
+            self._eqs[name] += variables['dydz']['sym']
+
+        if variables['dydx']['sym'].size and variables['dxdz']['sym'].size:
+            self._eqs[name] += \
+                variables['dydx']['sym'] * variables['dxdz']['sym']
+
+
 
     def _multiplication(self, name, x, y,
                         transpose_x=False, sign=1):
@@ -1616,6 +1638,9 @@ class ODEExporter:
 
         """
         lines = []
+
+        if symbol.size == 0:
+            return lines
 
         if function == 'sx0_fixedParameters':
             # here we specifically want to overwrite some of the values with 0

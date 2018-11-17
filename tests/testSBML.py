@@ -12,7 +12,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
-                                       'cpputest','expectedResults.h5')
+                                       'cpputest', 'expectedResults.h5')
 
     def setUp(self):
         self.resetdir = os.getcwd()
@@ -37,7 +37,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
         observables = amici.assignmentRules2observables(
             sbmlImporter.sbml,  # the libsbml model object
-            filter_function=lambda variable: variable.getName() == 'pPROT'
+            filter_function=lambda variable: variable.getName() == 'pPROT_obs'
         )
         outdir = 'test_model_presimulation'
         sbmlImporter.sbml2amici('test_model_presimulation',

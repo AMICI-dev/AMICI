@@ -6,7 +6,7 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
-void dydp_model_jakstat_adjoint(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
+void dydp_model_jakstat_adjoint(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) {
 switch (ip) {
   case 4: {
   dydp[0] = -1.0/(p[4]*p[4])*p[13]*(x[1]+x[2]*2.0);
