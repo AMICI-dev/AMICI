@@ -67,6 +67,13 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     else:
                         verifySimulationResults(rdata, expectedResults[subTest][case]['results'])
 
+                    if edata and modelName != 'model_neuron_o2':
+                        # Test runAmiciSimulations: ensure running twice with same ExpData yields same results
+                        edatas = [edata.get(), edata.get()]
+                        rdatas = amici.runAmiciSimulations(self.model, self.solver, edatas, num_threads=2)
+                        verifySimulationResults(rdatas[0], expectedResults[subTest][case]['results'])
+                        verifySimulationResults(rdatas[1], expectedResults[subTest][case]['results'])
+
                     self.assertRaises(
                         RuntimeError,
                         self.model.getParameterByName,
