@@ -184,16 +184,16 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const 
     
     if (!edata.getObservedData().empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.getObservedData().data(),
-                                      edata.nt(), edata.nytrue);
+                                      edata.nt(), edata.nytrue());
     if (!edata.getObservedDataStdDev().empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Y", edata.getObservedDataStdDev().data(),
-                                      edata.nt(), edata.nytrue);
+                                      edata.nt(), edata.nytrue());
     if (!edata.getObservedEvents().empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Z", edata.getObservedEvents().data(),
-                                      edata.nmaxevent, edata.nztrue);
+                                      edata.nmaxevent(), edata.nztrue());
     if (!edata.getObservedEventsStdDev().empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Z", edata.getObservedEventsStdDev().data(),
-                                      edata.nmaxevent, edata.nztrue);
+                                      edata.nmaxevent(), edata.nztrue());
 }
 
 void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std::string &hdf5Location)

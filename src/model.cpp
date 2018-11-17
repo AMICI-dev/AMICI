@@ -1160,7 +1160,7 @@ void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
     
     auto observedData = edata->getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt_true = iy + it * edata->nytrue;
+        int iyt_true = iy + it * edata->nytrue();
         int iyt = iy + it * rdata->ny;
         if (!edata->isSetObservedData(it, iy))
             continue;
@@ -1184,7 +1184,7 @@ void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
         return;
     
     for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt_true = iy + it * edata->nytrue;
+        int iyt_true = iy + it * edata->nytrue();
         int iyt = iy + it * rdata->ny;
         if (!edata->isSetObservedData(it,iy))
             continue;

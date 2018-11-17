@@ -109,13 +109,15 @@ def ExpData(rdata, sigma_y, sigma_z):
     return amici.ExpData(rdata['ptr'].get(), sigma_y, sigma_z)
 
 
-def runAmiciSimulations(model, solver, edata_list):
+def runAmiciSimulations(model, solver, edata_list, num_threads=1):
     """ Convenience wrapper for loops of amici.runAmiciSimulation
 
     Arguments:
         model: Model instance
         solver: Solver instance, must be generated from Model.getSolver()
         edata_list: list of ExpData instances
+        num_threads: number of threads to use
+                     (only used if compiled with openmp)
 
     Returns:
         list of ReturnData objects with simulation results
@@ -123,13 +125,9 @@ def runAmiciSimulations(model, solver, edata_list):
     Raises:
 
     """
-    rdata_list = []
-    for edata in edata_list:
-        rdata = runAmiciSimulation(
-            model,
-            solver,
-            edata,
-        )
-        rdata_list.append(rdata)
-
-    return rdata_list
+    edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
+    rdata_ptr_list = amici.runAmiciSimulations(solver.get(),
+                                               edata_ptr_vector,
+                                               model.get(),
+                                               num_threads)
+    return [numpy.rdataToNumPyArrays(r) for r in rdata_ptr_list]
