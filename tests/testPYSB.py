@@ -4,7 +4,6 @@ import sys
 import amici
 import unittest
 import os
-import pysb
 import importlib
 import numpy as np
 from pysb.simulator import ScipyOdeSimulator
