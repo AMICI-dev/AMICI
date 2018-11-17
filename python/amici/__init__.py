@@ -92,13 +92,11 @@ def runAmiciSimulation(model, solver, edata=None):
     return rdataToNumPyArrays(rdata)
 
 
-def ExpData(rdata, sigma_y, sigma_z):
-    """ Convenience wrapper for ExpData constructor
+def ExpData(*args):
+    """ Convenience wrapper for ExpData constructors
 
     Arguments:
-        rdata: rdataToNumPyArrays output
-        sigma_y: standard deviation for ObservableData
-        sigma_z: standard deviation for EventData
+        args: arguments
 
     Returns:
         ExpData Instance
@@ -106,7 +104,12 @@ def ExpData(rdata, sigma_y, sigma_z):
     Raises:
 
     """
-    return amici.ExpData(rdata['ptr'].get(), sigma_y, sigma_z)
+    if isinstance(args[0], dict):
+        return amici.ExpData(args[0]['ptr'].get(), *args[1:])
+    elif isinstance(args[0], ExpDataPtr):
+        return amici.ExpData(args[0].get(), *args[:1])
+    else:
+        return amici.ExpData(*args)
 
 
 def runAmiciSimulations(model, solver, edata_list, num_threads=1):
