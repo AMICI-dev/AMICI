@@ -43,7 +43,7 @@ class TestAmiciPandasImportExport(unittest.TestCase):
         rdata = amici.runAmiciSimulation(self.model, self.solver)
         self.edata = [amici.ExpData(rdata, 0.01, 0)]
         # test copy constructor
-        ExpDataCopy = amici.ExpData(self.edata[0])
+        self.edata_copy = amici.ExpData(self.edata[0])
 
     def tearDown(self):
         os.chdir(self.resetdir)
