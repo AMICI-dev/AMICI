@@ -35,7 +35,7 @@ try:
     from .amici import *
     hdf5_enabled = True
     has_clibs = True
-except (ImportError, ModuleNotFoundError, AttributeError):
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     try:
         from . import amici_without_hdf5 as amici
         from .amici_without_hdf5 import *
