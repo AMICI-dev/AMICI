@@ -5,6 +5,7 @@ import amici
 import unittest
 import os
 import numpy as np
+from testModels import checkDerivatives
 
 class TestAmiciSBMLModel(unittest.TestCase):
     '''
@@ -49,18 +50,26 @@ class TestAmiciSBMLModel(unittest.TestCase):
         import test_model_presimulation as modelModule
         model = modelModule.getModel()
         solver = model.getSolver()
+        solver.setNewtonMaxSteps(0)
         model.setTimepoints(np.linspace(0, 60, 61))
+        model.setSteadyStateSensitivityMode(
+            amici.SteadyStateSensitivityMode_simulationFSA
+        )
+        solver.setSensitivityOrder(amici.SensitivityOrder_first)
         model.setReinitializeFixedParameterInitialStates(True)
 
         rdata = amici.runAmiciSimulation(model, solver)
         edata = amici.ExpData(rdata, 0.1, 0.0)
-        edata.fixedParametersPreequilibration = amici.DoubleVector([3, 0])
         edata.fixedParameters = [10, 2]
         edata.fixedParametersPresimulation = [10, 2]
         edata.fixedParametersPreequilibration = [3, 0]
         self.assertIsInstance(
             amici.runAmiciSimulation(model, solver, edata),
             dict)
+
+        solver.setRelativeTolerance(1e-12)
+        solver.setAbsoluteTolerance(1e-12)
+        checkDerivatives(model, solver, edata, epsilon=1e-6)
 
     def test_steadystate_scaled(self):
         '''
@@ -93,8 +102,9 @@ class TestAmiciSBMLModel(unittest.TestCase):
         model = modelModule.getModel()
         model.setTimepoints(np.linspace(0, 60, 60))
         solver = model.getSolver()
+        solver.setSensitivityOrder(amici.SensitivityOrder_first)
         rdata = amici.runAmiciSimulation(model, solver)
-        edata = [amici.ExpData(rdata, 0.01, 0)]
+        edata = [amici.ExpData(rdata, 1, 0)]
         rdata = amici.runAmiciSimulations(model, solver, edata)
 
         # check roundtripping of DataFrame conversion
@@ -148,6 +158,11 @@ class TestAmiciSBMLModel(unittest.TestCase):
             ).all()
         )
         amici.getResidualsAsDataFrame(model, edata, rdata)
+
+        solver.setRelativeTolerance(1e-12)
+        solver.setAbsoluteTolerance(1e-12)
+        checkDerivatives(model, solver, edata[0], atol=1e-3,
+                         rtol=1e-3, epsilon=1e-7)
 
 
 if __name__ == '__main__':

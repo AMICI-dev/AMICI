@@ -38,6 +38,7 @@ extern void w_TPL_MODELNAME(realtype *w, const realtype t, const realtype *x, co
 extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 extern void x0_fixedParameters_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 extern void sx0_TPL_MODELNAME(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
+extern void sx0_fixedParameters_TPL_MODELNAME(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
 extern void xBdot_TPL_MODELNAME(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void y_TPL_MODELNAME(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
@@ -592,6 +593,18 @@ public:
      **/
     virtual void fsx0(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) override {
         sx0_TPL_MODELNAME(sx0, t, x0, p, k, ip);
+    }
+    
+    /** model specific implementation of fsx0_fixedParameters
+     * @param sx0 initial state sensitivities
+     * @param t initial time
+     * @param x0 initial state
+     * @param p parameter vector
+     * @param k constant vector
+     * @param ip sensitivity index
+     **/
+    virtual void fsx0_fixedParameters(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) override {
+        sx0_fixedParameters_TPL_MODELNAME(sx0, t, x0, p, k, ip);
     }
     
     /** model specific implementation of fsxdot
