@@ -1155,7 +1155,11 @@ class ODEModel:
 
         # partial derivative
         if self.eq(eq).size and self.sym(var).size:
-            self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
+            if eq == 'Jy':
+                eq = self.eq(eq).transpose()
+            else:
+                eq = self.eq(eq)
+            self._eqs[name] = eq.jacobian(self.sym(var))
         else:
             self._eqs[name] = sp.DenseMatrix([])
 
