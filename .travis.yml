@@ -23,10 +23,12 @@ matrix:
             - pyenv shell 2.7 3.6
       compiler: gcc
       env: ENABLE_GCOV_COVERAGE=TRUE
-      after_success: 
+      after_script:
+        # this can fail the build, after_success cannot
         - ./scripts/run-codecov.sh
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
+
         
     - os: osx
       osx_image: xcode9.3
@@ -58,6 +60,8 @@ install:
     - ./scripts/buildBNGL.sh
     - export BNGPATH=$(pwd)/ThirdParty/BioNetGen-2.3.2
     - ./scripts/buildAmici.sh
+    - ./scripts/installAmiciArchive.sh
+    - ./scripts/installAmiciSource.sh
 
 script:  
 #    - cd $BASE_DIR/python/sdist

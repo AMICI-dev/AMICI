@@ -8,6 +8,7 @@ import importlib
 import os
 import re
 import numpy as np
+import copy
 
 class TestAmiciPregeneratedModel(unittest.TestCase):
     '''
@@ -55,11 +56,27 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                                                             "/" + subTest + "/" + case + "/data",
                                                             self.model.get())
                     rdata = amici.runAmiciSimulation(self.model, self.solver, edata)
+
+                    # todo: set higher tolerances in testcase options and
+                    # regenerate results
+                    if modelName == 'model_jakstat_adjoint_o2':
+                        self.solver.setRelativeTolerance(1e-10)
+                        self.solver.setAbsoluteTolerance(1e-10)
+
+                    if modelName in [
+                        'model_jakstat_adjoint', 'model_nested_events',
+                        'model_steadystate'
+                    ]:
+                        self.solver.setRelativeTolerance(1e-12)
+                        self.solver.setAbsoluteTolerance(1e-12)
                     
-                    if edata and self.solver.getSensitivityMethod() and self.solver.getSensitivityOrder():
-                        if not modelName.startswith('model_neuron'):
-                            if(self.solver.getSensitivityOrder() and len(self.model.getParameterList())):
-                                checkDerivatives(self.model, self.solver, edata)
+                    if edata \
+                            and self.solver.getSensitivityMethod() \
+                            and self.solver.getSensitivityOrder() \
+                            and len(self.model.getParameterList()) \
+                            and not modelName.startswith('model_neuron') \
+                            and not case.endswith('byhandpreeq'):
+                        checkDerivatives(self.model, self.solver, edata)
 
                     if modelName == 'model_neuron_o2':
                         self.solver.setRelativeTolerance(1e-12)
@@ -81,10 +98,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     )
 
 
-
-                        
-
-def checkDerivatives(model, solver, edata):
+def checkDerivatives(model, solver, edata, atol=1e-4, rtol=1e-4, epsilon=1e-5):
     """Finite differences check for likelihood gradient
     
     Arguments:
@@ -98,10 +112,10 @@ def checkDerivatives(model, solver, edata):
         """Function of which the gradient is to be checked"""
         if plist is None:
             plist = []
-        p = x0
+        p = copy.deepcopy(x0)
         if len(plist):
-            p = x0full[:]
-            p[plist] = x0
+            p = copy.deepcopy(x0full)
+            p[plist] = copy.deepcopy(x0)
         verbose and print('f: p=%s' % p)
         
         old_sensitivity_order = solver.getSensitivityOrder()
@@ -124,18 +138,19 @@ def checkDerivatives(model, solver, edata):
         old_parameters = model.getParameters()
         old_plist = model.getParameterList()
         
-        p = x0
+        p = copy.deepcopy(x0)
         if len(plist):
             model.setParameterList(plist)
-            p = x0full[:]
-            p[plist] = x0
+            p = copy.deepcopy(x0full)
+            p[plist] = copy.deepcopy(x0)
         else:
             model.requireSensitivitiesForAllParameters()
         verbose and print('g: p=%s' % p)
         
         model.setParameters(p)
+
         rdata = amici.runAmiciSimulation(model, solver, edata)
-        
+
         model.setParameters(old_parameters)
         model.setParameterList(old_plist)
 
@@ -148,13 +163,18 @@ def checkDerivatives(model, solver, edata):
         return res
     
     p = np.array(model.getParameters())
+
+    rdata = amici.runAmiciSimulation(model, solver, edata)
       
     for ip in range(model.np()):
         plist = [ip]
-        err_norm = check_grad(func, grad, p[plist], 'llh', p, [ip])
-        print('sllh: p[%d]: |error|_2: %f' % (ip, err_norm))
+        err_norm = check_grad(func, grad, copy.deepcopy(p[plist]), 'llh',
+                              copy.deepcopy(p), [ip], epsilon=epsilon)
+        print(f'sllh: p[{ip}]: |error|_2: {err_norm}')
+        assert err_norm <= rtol * abs(rdata["sllh"][ip]) \
+            or err_norm <= atol
 
-    rdata = amici.runAmiciSimulation(model, solver, edata)
+
 
     leastsquares_applicable = solver.getSensitivityMethod() == amici.SensitivityMethod_forward
 
@@ -166,26 +186,33 @@ def checkDerivatives(model, solver, edata):
     if leastsquares_applicable:
         for ip in range(model.np()):
             plist = [ip]
-            err_norm = check_grad(func, grad, p[plist], 'res', p, [ip])
+            err_norm = check_grad(func, grad, copy.deepcopy(p[plist]), 'res',
+                                  copy.deepcopy(p), [ip], epsilon=epsilon)
             print('sres: p[%d]: |error|_2: %f' % (ip, err_norm))
+            assert err_norm < atol \
+                or err_norm < rtol * abs(rdata['sres'][:,ip].sum())
 
         checkResults(rdata, 'FIM', np.dot(rdata['sres'].transpose(),rdata['sres']), 1e-8, 1e-4)
         checkResults(rdata, 'sllh', -np.dot(rdata['res'].transpose(),rdata['sres']), 1e-8, 1e-4)
 
-    '''
-    print()
-    for ip in range(model.np()):
-        plist = [ip]
-        err_norm = check_grad(func, grad, p[plist], 'y', p, [ip])
-        print('sy: p[%d]: |error|_2: %f' % (ip, err_norm))
-    
-    print()
-    for ip in range(model.np()):
-        plist = [ip]
-        err_norm = check_grad(func, grad, p[plist], 'x', p, [ip])
-        print('sx: p[%d]: |error|_2: %f' % (ip, err_norm))
-    
-    '''
+
+        print()
+        for ip in range(model.np()):
+            plist = [ip]
+            err_norm = check_grad(func, grad, copy.deepcopy(p[plist]), 'y',
+                                  copy.deepcopy(p), [ip], epsilon=epsilon)
+            print('sy: p[%d]: |error|_2: %f' % (ip, err_norm))
+            assert err_norm < atol \
+                or err_norm < rtol * abs(rdata['sy'][:,ip].sum())
+
+        print()
+        for ip in range(model.np()):
+            plist = [ip]
+            err_norm = check_grad(func, grad, copy.deepcopy(p[plist]), 'x',
+                                  copy.deepcopy(p), [ip], epsilon=epsilon)
+            print('sx: p[%d]: |error|_2: %f' % (ip, err_norm))
+            assert err_norm < atol \
+                or err_norm < rtol * abs(rdata['sx'][:,ip].sum())
 
 
 def verifySimulationResults(rdata, expectedResults, atol=1e-8, rtol=1e-4):
@@ -206,7 +233,7 @@ def verifySimulationResults(rdata, expectedResults, atol=1e-8, rtol=1e-4):
 
     for field in expectedResults.keys():
         if field == 'diagnosis':
-           for subfield in expectedResults[field].keys():
+           for subfield in ['J', 'xdot']:
                checkResults(rdata, subfield, expectedResults[field][subfield][()], 0, 2)
         else:
             if field == 's2llh':

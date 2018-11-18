@@ -9,7 +9,7 @@ import numpy as np
 from pysb.simulator import ScipyOdeSimulator
 
 from pysb.examples import tyson_oscillator, robertson, \
-    expression_observables, earm_1_3, bax_pore_sequential, bax_pore, \
+    expression_observables, bax_pore_sequential, bax_pore, \
     bngwiki_egfr_simple
 
 
@@ -34,7 +34,6 @@ class TestAmiciPYSBModel(unittest.TestCase):
         self.compare_to_sbml_import()
 
     def compare_to_sbml_import(self):
-
         constant_parameters = ['DRUG_0', 'KIN_0']
 
         # -------------- PYSB -----------------
@@ -101,7 +100,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
     def compare_to_pysb_simulation(self):
         examples = [tyson_oscillator.model, robertson.model,
-                  expression_observables.model, earm_1_3.model,
+                  expression_observables.model,
                   bax_pore_sequential.model, bax_pore.model,
                   bngwiki_egfr_simple.model]
         for example in examples:

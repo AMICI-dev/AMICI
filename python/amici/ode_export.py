@@ -1073,8 +1073,30 @@ class ODEModel:
                 [comp._dt for comp in self._states]
             )
 
-        elif name in ['sx0', 'sx0_fixedParameters']:
+        elif name == 'sx0':
             self._derivative(name[1:], 'p', name=name)
+
+        elif name == 'sx0_fixedParameters':
+            # deltax = -x+x0_fixedParameters if x0_fixedParameters>0 else 0
+            # deltasx = -sx+dx0_fixedParametersdx*sx+dx0_fixedParametersdp
+            # if x0_fixedParameters>0 else 0
+            # sx0_fixedParameters = sx+deltasx =
+            # dx0_fixedParametersdx*sx+dx0_fixedParametersdp
+            self._eqs[name] = \
+                self.eq('x0_fixedParameters').jacobian(self.sym('p'))
+
+            for ip in range(self._eqs[name].shape[1]):
+                self._eqs[name][:,ip] += \
+                    self.eq('x0_fixedParameters').jacobian(self.sym('x')) \
+                    * self.sym('sx0') \
+
+            for index, formula in enumerate(
+                    self.eq('x0_fixedParameters')
+            ):
+                if formula == 0 or formula == 0.0:
+                    self._eqs[name][index, :] = \
+                        sp.zeros(1, self._eqs[name].shape[1])
+
 
         elif name == 'JB':
             self._eqs[name] = self.eq('J').transpose()
@@ -1155,7 +1177,11 @@ class ODEModel:
 
         # partial derivative
         if self.eq(eq).size and self.sym(var).size:
-            self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
+            if eq == 'Jy':
+                eq = self.eq(eq).transpose()
+            else:
+                eq = self.eq(eq)
+            self._eqs[name] = eq.jacobian(self.sym(var))
         else:
             self._eqs[name] = sp.DenseMatrix([])
 
@@ -1643,7 +1669,8 @@ class ODEExporter:
             return lines
 
         if function == 'sx0_fixedParameters':
-            # here we specifically want to overwrite some of the values with 0
+            # here we only want to overwrite values where x0_fixedParameters
+            # was applied
             lines.append(' ' * 4 + 'switch(ip) {')
             for ipar in range(self.model.np()):
                 lines.append(' ' * 8 + f'case {ipar}:')
@@ -1651,7 +1678,8 @@ class ODEExporter:
                         self.model.eq('x0_fixedParameters')
                 ):
                     if formula != 0 and formula != 0.0:
-                        lines.append(' ' * 12 + f'{function}[{index}] = 0.0;')
+                        lines.append(' ' * 12 + f'{function}[{index}] = '
+                                                f'{symbol[index, ipar]};')
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
         elif function in sensi_functions:
@@ -1724,11 +1752,8 @@ class ODEExporter:
         Raises:
 
         """
-        if any([math != 0 and math != 0.0 for math in
-                self.model.eq('sx0_fixedParameters')]):
-            self.allow_reinit_fixpar_initcond = False
-        else:
-            self.allow_reinit_fixpar_initcond = True
+
+        self.allow_reinit_fixpar_initcond = True
 
         templateData = {
             'MODELNAME': str(self.modelName),

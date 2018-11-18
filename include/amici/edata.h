@@ -16,6 +16,9 @@ class ExpData {
   public:
     /** default constructor */
     ExpData();
+    
+    /** default copy constructor, needs to be declared to be generated in swig*/
+    ExpData(const ExpData &) = default;
 
     /**
      * constructor that only initializes dimensions
