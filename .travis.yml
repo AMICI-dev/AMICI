@@ -60,6 +60,8 @@ install:
     - ./scripts/buildBNGL.sh
     - export BNGPATH=$(pwd)/ThirdParty/BioNetGen-2.3.2
     - ./scripts/buildAmici.sh
+    - ./scripts/installAmiciArchive.sh
+    - ./scripts/installAmiciSource.sh
 
 script:  
 #    - cd $BASE_DIR/python/sdist
