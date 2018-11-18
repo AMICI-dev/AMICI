@@ -28,7 +28,7 @@ rm -f ${AMICI_PATH}/python/sdist/amici/amici_without_hdf5.py
 # test install from archive
 python3 -m venv ${AMICI_PATH}/build/venvArchive --clear
 source ${AMICI_PATH}/build/venvArchive/bin/activate
-pip3 install --upgrade pip numpy
+pip3 install --upgrade pip setuptools pkgconfig wheel numpy
 pip3 install $(ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1)
 deactivate
 
