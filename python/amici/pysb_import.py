@@ -329,7 +329,7 @@ def process_pysb_observables(model, ODE):
     # only add those pysb observables that occur in the added
     # Observables as expressions
     for obs in model.observables:
-        if sp.Symbol(obs.name) in ODE.eq('y').free_symbols:
+        if obs in ODE.eq('y').free_symbols:
             ODE.add_component(
                 Expression(
                     sp.Symbol(f'{obs.name}'),
