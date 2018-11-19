@@ -13,6 +13,7 @@ import numbers
 try:
     import pysb
 except ImportError:
+    ## pysb import dummy
     pysb = None
 
 
