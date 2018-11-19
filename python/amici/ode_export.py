@@ -10,6 +10,11 @@ import sys
 import os
 import copy
 import numbers
+try:
+    import pysb
+except ImportError:
+    pysb = None
+
 
 from string import Template
 import sympy.printing.ccode as ccode
@@ -970,9 +975,12 @@ class ODEModel:
                 for comp in getattr(self, component)
             ])
             if name == 'y':
+
                 self._syms['my'] = sp.Matrix(
-                    [sp.Symbol(f'm{comp._identifier}')
-                    for comp in getattr(self, component)]
+                    [sp.Symbol(f'm{comp._identifier.name}')
+                     if pysb and isinstance(comp._identifier, pysb.Expression)
+                     else sp.Symbol(f'm{comp._identifier}')
+                     for comp in getattr(self, component)]
                 )
             return
         elif name in sparse_functions:
@@ -1181,7 +1189,11 @@ class ODEModel:
             eq = self.eq(eq).transpose()
         else:
             eq = self.eq(eq)
-        self._eqs[name] = eq.jacobian(self.sym(var))
+
+        if min(eq.shape) and min(self.sym(var).shape):
+            self._eqs[name] = eq.jacobian(self.sym(var))
+        else:
+            self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
     def _totalDerivative(self, name, eq, chainvar, var,
                          dydx_name=None, dxdz_name=None):
@@ -1561,8 +1573,16 @@ class ODEExporter:
             raise Exception('Unknown symbolic array')
 
         for index, symbol in enumerate(symbols):
+            symbol_name = str(symbol)
+            if pysb is not None \
+                    and (
+                        isinstance(symbol, pysb.Expression)
+                        or isinstance(symbol, pysb.Observable)
+                        or isinstance(symbol, pysb.Parameter)
+                    ):
+                symbol_name = symbol.name
             lines.append(
-                f'#define {symbol} {name}[{index}]'
+                f'#define {symbol_name} {name}[{index}]'
             )
 
         with open(os.path.join(self.modelPath,f'{name}.h'), 'w') as fileout:
