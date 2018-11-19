@@ -24,8 +24,6 @@ matrix:
       compiler: gcc
       env: ENABLE_GCOV_COVERAGE=TRUE
       after_script:
-        # this can fail the build, after_success cannot
-        - ./scripts/run-codecov.sh
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
 
@@ -76,6 +74,7 @@ script:
     - scripts/runNotebook.sh python/examples/example_*/
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ./scripts/run-doxygen.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/run-codecov.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then ./scripts/run-SBMLTestsuite.sh; fi
 
 after_failure:

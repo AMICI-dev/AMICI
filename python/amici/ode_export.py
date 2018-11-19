@@ -2,7 +2,7 @@
 """
 #!/usr/bin/env python3
 
-import symengine as sp
+import sympy as sp
 import re
 import shutil
 import subprocess
@@ -10,9 +10,15 @@ import sys
 import os
 import copy
 import numbers
+try:
+    import pysb
+except ImportError:
+    ## pysb import dummy
+    pysb = None
 
-from symengine.printing import CCodePrinter
+
 from string import Template
+import sympy.printing.ccode as ccode
 
 from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 
@@ -721,7 +727,7 @@ class ODEModel:
         # setting these equations prevents native equation generation
         self._eqs['dxdotdw'] = si.stoichiometricMatrix
         self._eqs['w'] = si.fluxVector
-        self._syms['w'] = sp.DenseMatrix(
+        self._syms['w'] = sp.Matrix(
             [sp.Symbol(f'flux_r{idx}') for idx in range(len(si.fluxVector))]
         )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
@@ -965,13 +971,17 @@ class ODEModel:
         """
         if name in self._variable_prototype:
             component = self._variable_prototype[name]
-            self._syms[name] = sp.DenseMatrix(
-                [comp._identifier for comp in getattr(self, component)]
-            )
+            self._syms[name] = sp.Matrix([
+                comp._identifier
+                for comp in getattr(self, component)
+            ])
             if name == 'y':
-                self._syms['my'] = sp.DenseMatrix(
-                    [sp.Symbol(f'm{comp._identifier}')
-                    for comp in getattr(self, component)]
+
+                self._syms['my'] = sp.Matrix(
+                    [sp.Symbol(f'm{comp._identifier.name}')
+                     if pysb and isinstance(comp._identifier, pysb.Expression)
+                     else sp.Symbol(f'm{comp._identifier}')
+                     for comp in getattr(self, component)]
                 )
             return
         elif name in sparse_functions:
@@ -984,7 +994,7 @@ class ODEModel:
         else:
             length = len(self.eq(name))
 
-        self._syms[name] = sp.DenseMatrix([
+        self._syms[name] = sp.Matrix([
             sp.Symbol(f'{name}{i}') for i in range(length)
         ])
 
@@ -1034,7 +1044,7 @@ class ODEModel:
                     idx += 1
 
         symbolColPtrs.append(idx)
-        sparseList = sp.DenseMatrix(sparseList)
+        sparseList = sp.Matrix(sparseList)
 
         self._colptrs[name] = symbolColPtrs
         self._rowvals[name] = symbolRowVals
@@ -1069,7 +1079,7 @@ class ODEModel:
             self._multiplication(**args)
 
         elif name == 'xdot':
-            self._eqs['xdot'] = sp.DenseMatrix(
+            self._eqs['xdot'] = sp.Matrix(
                 [comp._dt for comp in self._states]
             )
 
@@ -1085,9 +1095,12 @@ class ODEModel:
             self._eqs[name] = \
                 self.eq('x0_fixedParameters').jacobian(self.sym('p'))
 
+            dx0_fixedParametersdx = \
+                self.eq('x0_fixedParameters').jacobian(self.sym('x'))
+
             for ip in range(self._eqs[name].shape[1]):
                 self._eqs[name][:,ip] += \
-                    self.eq('x0_fixedParameters').jacobian(self.sym('x')) \
+                    dx0_fixedParametersdx \
                     * self.sym('sx0') \
 
             for index, formula in enumerate(
@@ -1106,7 +1119,7 @@ class ODEModel:
 
         elif name == 'x0_fixedParameters':
             k = self.sym('k')
-            self._eqs[name] = sp.DenseMatrix([
+            self._eqs[name] = sp.Matrix([
                 eq
                 # check if the equation contains constants
                 if any([sym in eq.free_symbols for sym in k])
@@ -1169,21 +1182,22 @@ class ODEModel:
         if var_in_function_signature(eq, 'w') \
                 and not self._lock_total_derivative \
                 and var is not 'w'\
-                and self.sym('w').size:
+                and min(self.sym('w').shape):
             self._lock_total_derivative = True
             self._totalDerivative(name, eq, 'w', var)
             self._lock_total_derivative = False
             return
 
         # partial derivative
-        if self.eq(eq).size and self.sym(var).size:
-            if eq == 'Jy':
-                eq = self.eq(eq).transpose()
-            else:
-                eq = self.eq(eq)
+        if eq == 'Jy':
+            eq = self.eq(eq).transpose()
+        else:
+            eq = self.eq(eq)
+
+        if min(eq.shape) and min(self.sym(var).shape):
             self._eqs[name] = eq.jacobian(self.sym(var))
         else:
-            self._eqs[name] = sp.DenseMatrix([])
+            self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
     def _totalDerivative(self, name, eq, chainvar, var,
                          dydx_name=None, dxdz_name=None):
@@ -1237,14 +1251,10 @@ class ODEModel:
             else:
                 variables[var]['sym'] = self.eq(varname)
 
-        self._eqs[name] = sp.DenseMatrix([])
+        self._eqs[name] = \
+            variables['dydz']['sym'] \
+            + variables['dydx']['sym'] * variables['dxdz']['sym']
 
-        if variables['dydz']['sym'].size:
-            self._eqs[name] += variables['dydz']['sym']
-
-        if variables['dydx']['sym'].size and variables['dxdz']['sym'].size:
-            self._eqs[name] += \
-                variables['dydx']['sym'] * variables['dxdz']['sym']
 
 
 
@@ -1303,7 +1313,7 @@ class ODEModel:
         Raises:
 
         """
-        self._eqs[name] = sp.DenseMatrix(
+        self._eqs[name] = sp.Matrix(
             [comp._value for comp in getattr(self, component)]
         )
 
@@ -1367,8 +1377,6 @@ class ODEExporter:
         compiler: distutils/setuptools compiler selection to build the
         python extension @type str
 
-        codeprinter: allows export of symbolic variables as C++ code
-
         functions: carries C++ function signatures and other specifications
         @type dict
 
@@ -1418,8 +1426,6 @@ class ODEExporter:
         self.verbose = verbose
         self.assume_pow_positivity = assume_pow_positivity
         self.compiler = compiler
-
-        self.codeprinter = CCodePrinter()
 
         self.modelName = 'model'
         output_dir = os.path.join(os.getcwd(),
@@ -1571,8 +1577,16 @@ class ODEExporter:
             raise Exception('Unknown symbolic array')
 
         for index, symbol in enumerate(symbols):
+            symbol_name = str(symbol)
+            if pysb is not None \
+                    and (
+                        isinstance(symbol, pysb.Expression)
+                        or isinstance(symbol, pysb.Observable)
+                        or isinstance(symbol, pysb.Parameter)
+                    ):
+                symbol_name = symbol.name
             lines.append(
-                f'#define {symbol} {name}[{index}]'
+                f'#define {symbol_name} {name}[{index}]'
             )
 
         with open(os.path.join(self.modelPath,f'{name}.h'), 'w') as fileout:
@@ -1665,7 +1679,7 @@ class ODEExporter:
         """
         lines = []
 
-        if symbol.size == 0:
+        if min(symbol.shape) == 0:
             return lines
 
         if function == 'sx0_fixedParameters':
@@ -1993,7 +2007,7 @@ class ODEExporter:
 
         """
         try:
-            ret = self.codeprinter.doprint(math)
+            ret = ccode(math)
             ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
             return ret
         except:
@@ -2052,7 +2066,7 @@ def getSymbolicDiagonal(matrix):
 
     diagonal = [matrix[index,index] for index in range(matrix.cols)]
 
-    return sp.DenseMatrix(diagonal)
+    return sp.Matrix(diagonal)
 
 class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details).

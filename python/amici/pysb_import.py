@@ -3,8 +3,7 @@ from .ode_export import (
     Expression, LogLikelihood
 )
 
-import symengine as sp
-import sympy
+import sympy as sp
 
 try:
     import pysb.bng
@@ -148,7 +147,7 @@ def process_pysb_species(model, ODE):
     Raises:
 
     """
-    xdot = sp.DenseMatrix(sympy.Matrix(model.odes))
+    xdot = sp.Matrix(model.odes)
 
     for ix, specie in enumerate(model.species):
         init = sp.sympify('0.0')
@@ -196,7 +195,7 @@ def process_pysb_parameters(model, ODE, constants):
             comp = Parameter
 
         ODE.add_component(
-            comp(sp.Symbol(f'{par.name}'), f'{par.name}', par.value)
+            comp(par, f'{par.name}', par.value)
         )
 
 
@@ -229,9 +228,9 @@ def process_pysb_expressions(model, ODE, observables, sigmas):
             # to expand observables as these can be defined as Expressions
             ODE.add_component(
                 Observable(
-                    sp.Symbol(f'{exp.name}'),
+                    exp,
                     f'{exp.name}',
-                    sp.sympify(exp.expand_expr(expand_observables=False)))
+                    exp.expand_expr(expand_observables=False))
             )
 
             sigma_name, sigma_value = get_sigma_name_and_value(
@@ -268,9 +267,9 @@ def process_pysb_expressions(model, ODE, observables, sigmas):
             # lead to dependencies between different Expressions
             ODE.add_component(
                 Expression(
-                    sp.Symbol(f'{exp.name}'),
+                    exp,
                     f'{exp.name}',
-                    sp.sympify(exp.expand_expr(expand_observables=True)))
+                    exp.expand_expr(expand_observables=True))
             )
 
 
@@ -330,10 +329,11 @@ def process_pysb_observables(model, ODE):
     # only add those pysb observables that occur in the added
     # Observables as expressions
     for obs in model.observables:
-        if sp.Symbol(obs.name) in ODE.eq('y').free_symbols:
+        if obs in ODE.eq('y').free_symbols:
             ODE.add_component(
                 Expression(
-                    sp.Symbol(f'{obs.name}'),
+                    obs,
                     f'{obs.name}',
-                    sp.sympify(obs.expand_obs()))
+                    obs.expand_obs()
+                )
             )

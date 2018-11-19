@@ -268,7 +268,7 @@ def main():
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
-        install_requires=['symengine', 'python-libsbml', 'h5py', 'pandas'],
+        install_requires=['sympy', 'python-libsbml', 'h5py', 'pandas'],
         python_requires='>=3',
         package_data={
             'amici': ['amici/include/amici/*',
