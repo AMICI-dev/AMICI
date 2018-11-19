@@ -2,7 +2,7 @@
 """
 #!/usr/bin/env python3
 
-import symengine as sp
+import sympy as sp
 import libsbml as sbml
 import re
 import math
@@ -47,7 +47,7 @@ class SbmlImporter:
         speciesIndex: maps species names to indices @type dict
 
         speciesCompartment: compartment for each species @type
-        symengine.DenseMatrix
+        sympy.Matrix
 
         constantSpecies: ids of species that are marked as constant @type list
 
@@ -58,17 +58,17 @@ class SbmlImporter:
         only substance units @type list
 
         speciesConversionFactor: conversion factors for every species @type
-        symengine.DenseMatrix
+        sympy.Matrix
 
-        compartmentSymbols: compartment ids @type symengine.DenseMatrix
+        compartmentSymbols: compartment ids @type sympy.Matrix
 
         compartmentVolume: numeric/symbnolic compartment volumes @type
-        symengine.DenseMatrix
+        sympy.Matrix
 
         stoichiometricMatrix: stoichiometrix matrix of the model @type
-        symengine.DenseMatrix
+        sympy.Matrix
 
-        fluxVector: reaction kinetic laws @type symengine.DenseMatrix
+        fluxVector: reaction kinetic laws @type sympy.Matrix
 
     """
 
@@ -326,12 +326,12 @@ class SbmlImporter:
             for species_index, species_element in enumerate(species)
         }
 
-        self.symbols['species']['identifier'] = sp.DenseMatrix(
+        self.symbols['species']['identifier'] = sp.Matrix(
             [sp.Symbol(spec.getId()) for spec in species]
         )
         self.symbols['species']['name'] = [spec.getName() for spec in species]
 
-        self.speciesCompartment = sp.DenseMatrix(
+        self.speciesCompartment = sp.Matrix(
             [sp.Symbol(spec.getCompartment()) for spec in species]
         )
 
@@ -359,7 +359,7 @@ class SbmlImporter:
                     sp.sympify(amounts[index]) / self.speciesCompartment[index]
             return self.symbols['species']['identifier'][index]
 
-        speciesInitial = sp.DenseMatrix(
+        speciesInitial = sp.Matrix(
             [getSpeciesInitial(index, conc)
             for index, conc in enumerate(concentrations)]
         )
@@ -389,7 +389,7 @@ class SbmlImporter:
         else:
             conversion_factor = 1.0
 
-        self.speciesConversionFactor = sp.DenseMatrix([
+        self.speciesConversionFactor = sp.Matrix([
              sp.sympify(specie.getConversionFactor())
              if specie.isSetConversionFactor()
              else conversion_factor
@@ -458,7 +458,7 @@ class SbmlImporter:
         for partype in loop_settings:
             settings = loop_settings[partype]
 
-            self.symbols[partype]['identifier'] = sp.DenseMatrix(
+            self.symbols[partype]['identifier'] = sp.Matrix(
                 [sp.Symbol(par.getId()) for par in settings['var']]
             )
             self.symbols[partype]['name'] = [
@@ -489,10 +489,10 @@ class SbmlImporter:
 
         """
         compartments = self.sbml.getListOfCompartments()
-        self.compartmentSymbols = sp.DenseMatrix(
+        self.compartmentSymbols = sp.Matrix(
             [sp.Symbol(comp.getId()) for comp in compartments]
         )
-        self.compartmentVolume = sp.DenseMatrix(
+        self.compartmentVolume = sp.Matrix(
             [sp.sympify(comp.getVolume()) if comp.isSetVolume()
             else sp.sympify(1.0) for comp in compartments]
         )
@@ -526,7 +526,7 @@ class SbmlImporter:
         nr = len(reactions)
         nx = len(self.symbols['species']['name'])
         # stoichiometric matrix
-        self.stoichiometricMatrix = sp.zeros(nx, nr)
+        self.stoichiometricMatrix = sp.SparseMatrix(sp.zeros(nx, nr))
         self.fluxVector = sp.zeros(nr, 1)
 
         assignment_ids = [ass.getId()
@@ -641,9 +641,9 @@ class SbmlImporter:
         specvars = self.symbols['species']['identifier'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
         compartmentvars = self.compartmentSymbols.free_symbols
-        parametervars = sp.DenseMatrix(
-            [par.getId() for par in self.sbml.getListOfParameters()]
-        ).free_symbols
+        parametervars = sp.Matrix([
+            sp.Symbol(par.getId()) for par in self.sbml.getListOfParameters()
+        ])
         stoichvars = self.stoichiometricMatrix.free_symbols
 
         assignments = {}
@@ -782,30 +782,32 @@ class SbmlImporter:
                     )
                     observables[observable]['formula'] = repl
 
-            observableValues = sp.DenseMatrix(
-                [observables[observable]['formula'] for observable in
-                 observables]
-            )
+            observableValues = sp.Matrix([
+                sp.sympify(observables[observable]['formula'])
+                for observable in observables
+            ])
             observableNames = [
                 observables[observable]['name'] if 'name' in observables[
                     observable].keys()
                 else f'y{index}'
                 for index, observable in enumerate(observables)
             ]
-            observableSyms = sp.DenseMatrix(observables.keys())
+            observableSyms = sp.Matrix([
+                sp.Symbol(obs) for obs in observables.keys()
+            ])
         else:
             observableValues = speciesSyms
             observableNames = [
                 f'x{index}' for index in range(len(speciesSyms))
             ]
-            observableSyms = sp.DenseMatrix(
+            observableSyms = sp.Matrix(
                 [sp.Symbol(f'y{index}') for index in range(len(speciesSyms))]
             )
 
-        sigmaYSyms = sp.DenseMatrix(
+        sigmaYSyms = sp.Matrix(
             [sp.Symbol(f'sigma{symbol}') for symbol in observableSyms]
         )
-        sigmaYValues = sp.DenseMatrix(
+        sigmaYValues = sp.Matrix(
             [1.0] * len(observableSyms)
         )
 
@@ -814,10 +816,10 @@ class SbmlImporter:
             if obsName in sigmas:
                 sigmaYValues[iy] = sigmas[obsName]
 
-        measurementYSyms = sp.DenseMatrix(
+        measurementYSyms = sp.Matrix(
             [sp.Symbol(f'm{symbol}') for symbol in observableSyms]
         )
-        measurementYValues = sp.DenseMatrix(
+        measurementYValues = sp.Matrix(
             [0.0] * len(observableSyms)
         )
 
@@ -825,11 +827,11 @@ class SbmlImporter:
             strSymbol: f'0.5*log(2*pi*sigma{strSymbol}**2)' \
                        f'+ 0.5*(({strSymbol} - m{strSymbol})' \
                        f'/ sigma{strSymbol})**2'
-        llhYValues = sp.DenseMatrix(
+        llhYValues = sp.Matrix(
             [sp.sympify(llhYString(symbol))
              for symbol in observableSyms]
         )
-        llhYSyms = sp.DenseMatrix(
+        llhYSyms = sp.Matrix(
             [sp.Symbol(f'J{symbol}') for symbol in observableSyms]
         )
 
@@ -937,7 +939,7 @@ def getRuleVars(rules):
     Raises:
 
     """
-    return sp.DenseMatrix(
+    return sp.Matrix(
         [sp.sympify(rule.getFormula()) for rule in rules
          if rule.getFormula() != '']
     ).free_symbols

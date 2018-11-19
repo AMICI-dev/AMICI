@@ -3,8 +3,7 @@ from .ode_export import (
     Expression, LogLikelihood
 )
 
-import symengine as sp
-import sympy
+import sympy as sp
 
 try:
     import pysb.bng
@@ -148,7 +147,7 @@ def process_pysb_species(model, ODE):
     Raises:
 
     """
-    xdot = sp.DenseMatrix(sympy.Matrix(model.odes))
+    xdot = sp.Matrix(model.odes)
 
     for ix, specie in enumerate(model.species):
         init = sp.sympify('0.0')
