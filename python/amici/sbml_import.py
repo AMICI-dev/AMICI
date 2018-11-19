@@ -507,9 +507,10 @@ class SbmlImporter:
                     sbml.formulaToL3String(initial_assignment.getMath())
                 )
 
-        self.replaceInAllExpressions(
-            self.compartmentSymbols, self.compartmentVolume
-        )
+        for comp, vol in zip(self.compartmentSymbols,self.compartmentVolume):
+            self.replaceInAllExpressions(
+               comp, vol
+            )
 
 
     def processReactions(self):
@@ -711,16 +712,16 @@ class SbmlImporter:
         Raises:
 
         """
+        compartments = self.speciesCompartment
+        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
+            compartments = compartments.subs(comp, vol)
         for index, bool in enumerate(self.speciesHasOnlySubstanceUnits):
             if bool:
                 self.fluxVector = \
                     self.fluxVector.subs(
                         self.symbols['species']['identifier'][index],
                         self.symbols['species']['identifier'][index]
-                        * self.speciesCompartment[index].subs(
-                            self.compartmentSymbols,
-                            self.compartmentVolume
-                        )
+                        * compartments[index]
                     )
 
     def processTime(self):
