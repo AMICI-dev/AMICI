@@ -195,7 +195,7 @@ def process_pysb_parameters(model, ODE, constants):
             comp = Parameter
 
         ODE.add_component(
-            comp(sp.Symbol(f'{par.name}'), f'{par.name}', par.value)
+            comp(par, f'{par.name}', par.value)
         )
 
 
@@ -228,9 +228,9 @@ def process_pysb_expressions(model, ODE, observables, sigmas):
             # to expand observables as these can be defined as Expressions
             ODE.add_component(
                 Observable(
-                    sp.Symbol(f'{exp.name}'),
+                    exp,
                     f'{exp.name}',
-                    sp.sympify(exp.expand_expr(expand_observables=False)))
+                    exp.expand_expr(expand_observables=False))
             )
 
             sigma_name, sigma_value = get_sigma_name_and_value(
@@ -267,9 +267,9 @@ def process_pysb_expressions(model, ODE, observables, sigmas):
             # lead to dependencies between different Expressions
             ODE.add_component(
                 Expression(
-                    sp.Symbol(f'{exp.name}'),
+                    exp,
                     f'{exp.name}',
-                    sp.sympify(exp.expand_expr(expand_observables=True)))
+                    exp.expand_expr(expand_observables=True))
             )
 
 
@@ -332,7 +332,8 @@ def process_pysb_observables(model, ODE):
         if obs in ODE.eq('y').free_symbols:
             ODE.add_component(
                 Expression(
-                    sp.Symbol(f'{obs.name}'),
+                    obs,
                     f'{obs.name}',
-                    sp.sympify(obs.expand_obs()))
+                    obs.expand_obs()
+                )
             )

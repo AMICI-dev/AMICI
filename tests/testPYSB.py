@@ -30,8 +30,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
         os.chdir(self.resetdir)
 
     def runTest(self):
-        self.compare_to_pysb_simulation()
         self.compare_to_sbml_import()
+        self.compare_to_pysb_simulation()
 
     def compare_to_sbml_import(self):
         constant_parameters = ['DRUG_0', 'KIN_0']
