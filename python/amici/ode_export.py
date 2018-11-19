@@ -1094,9 +1094,12 @@ class ODEModel:
             self._eqs[name] = \
                 self.eq('x0_fixedParameters').jacobian(self.sym('p'))
 
+            dx0_fixedParametersdx = \
+                self.eq('x0_fixedParameters').jacobian(self.sym('x'))
+
             for ip in range(self._eqs[name].shape[1]):
                 self._eqs[name][:,ip] += \
-                    self.eq('x0_fixedParameters').jacobian(self.sym('x')) \
+                    dx0_fixedParametersdx \
                     * self.sym('sx0') \
 
             for index, formula in enumerate(
