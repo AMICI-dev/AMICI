@@ -27,6 +27,7 @@ import testModels
 import testSBML
 import testPandas
 import testPYSB
+import testCPP
 
 # build the testSuite from testModels and testSBML
 suite = unittest.TestSuite()
@@ -34,6 +35,7 @@ suite.addTest(testSBML.TestAmiciSBMLModel())
 suite.addTest(testModels.TestAmiciPregeneratedModel())
 suite.addTest(testPandas.TestAmiciPandasImportExport())
 suite.addTest(testPYSB.TestAmiciPYSBModel())
+suite.addTest(testCPP.TestAmiciCPP())
 
 testRunner = unittest.TextTestRunner(verbosity=0)
 result = testRunner.run(suite)
