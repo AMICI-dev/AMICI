@@ -30,10 +30,10 @@ class TestAmiciPYSBModel(unittest.TestCase):
         os.chdir(self.resetdir)
 
     def runTest(self):
-        self.compare_to_sbml_import()
-        self.compare_to_pysb_simulation()
+        self.test_compare_to_sbml_import()
+        self.test_compare_to_pysb_simulation()
 
-    def compare_to_sbml_import(self):
+    def test_compare_to_sbml_import(self):
         constant_parameters = ['DRUG_0', 'KIN_0']
 
         # -------------- PYSB -----------------
@@ -80,25 +80,25 @@ class TestAmiciPYSBModel(unittest.TestCase):
         rdata_sbml = get_results(model_sbml, edata)
 
         for field in rdata_pysb:
-            if field is not 'ptr':
-                if rdata_pysb[field] is None:
-                    self.assertIsNone(
-                        rdata_sbml[field],
-                        msg=f'checked field was {field} in sbml results'
-                    )
-                elif rdata_sbml[field] is None:
-                    self.assertIsNone(
-                        rdata_pysb[field],
-                        msg=f'checked field was {field} in pysb results'
-                    )
-                else:
-                    self.assertTrue(np.isclose(
-                        rdata_sbml[field],
-                        rdata_pysb[field],
-                        atol=1e-8, rtol=1e-8
-                    ).all(), msg=f'disagreement in field {field}')
+            if field not in ['ptr', 't_steadystate', 'numsteps',
+                                'numrhsevals', 'numerrtestfails', 'order']:
+                with self.subTest(field=field):
+                    if rdata_pysb[field] is None:
+                        self.assertIsNone(
+                            rdata_sbml[field],
+                        )
+                    elif rdata_sbml[field] is None:
+                        self.assertIsNone(
+                            rdata_pysb[field],
+                        )
+                    else:
+                        self.assertTrue(np.isclose(
+                            rdata_sbml[field],
+                            rdata_pysb[field],
+                            atol=1e-6, rtol=1e-6
+                        ).all())
 
-    def compare_to_pysb_simulation(self):
+    def test_compare_to_pysb_simulation(self):
         examples = [tyson_oscillator.model, robertson.model,
                   expression_observables.model,
                   bax_pore_sequential.model, bax_pore.model,
@@ -144,6 +144,9 @@ def get_data(model):
     solver = model.getSolver()
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setReinitializeFixedParameterInitialStates(True)
+    model.setSteadyStateSensitivityMode(
+        amici.SteadyStateSensitivityMode_simulationFSA
+    )
 
     rdata = amici.runAmiciSimulation(model, solver)
     edata = amici.ExpData(rdata, 0.1, 0.0)
@@ -156,8 +159,12 @@ def get_data(model):
 
 def get_results(model, edata):
     solver = model.getSolver()
+    solver.setSensitivityOrder(1)
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setReinitializeFixedParameterInitialStates(True)
+    model.setSteadyStateSensitivityMode(
+        amici.SteadyStateSensitivityMode_simulationFSA
+    )
     return amici.runAmiciSimulation(model, solver, edata)
 
 

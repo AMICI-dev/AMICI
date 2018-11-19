@@ -226,9 +226,10 @@ def process_pysb_expressions(model, ODE, observables, sigmas):
             # here we do not define a new Expression from the
             # pysb.Expression but define an observable, so we do not need
             # to expand observables as these can be defined as Expressions
+            y = exp
             ODE.add_component(
                 Observable(
-                    exp,
+                    y,
                     f'{exp.name}',
                     exp.expand_expr(expand_observables=False))
             )
@@ -237,24 +238,22 @@ def process_pysb_expressions(model, ODE, observables, sigmas):
                 model, exp.name, sigmas
             )
 
-
+            sy = sp.Symbol(sigma_name)
             ODE.add_component(
                 SigmaY(
-                    sp.Symbol(sigma_name),
+                    sy,
                     f'{sigma_name}',
                     sigma_value
                 )
             )
 
+            my = sp.Symbol(f'm{exp.name}')
+            pi = sp.sympify('pi')
             ODE.add_component(
                 LogLikelihood(
                     sp.Symbol(f'llh_{exp.name}'),
                     f'llh_{exp.name}',
-                    sp.sympify(
-                        f'0.5*log(2*pi*{sigma_name}**2)'
-                        f' + 0.5*(({exp.name} - m{exp.name})'
-                        f' / {sigma_name})**2'
-                    )
+                    0.5*sp.log(2*pi*sy**2) + 0.5*((y - my)/sy)**2
                 )
             )
 

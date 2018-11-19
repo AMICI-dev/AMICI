@@ -1509,7 +1509,6 @@ class ODEExporter:
         shutil.copy(os.path.join(amiciSrcPath, 'main.template.cpp'),
                     os.path.join(self.modelPath, 'main.cpp'))
 
-
     def _compileCCode(self, verbose=False, compiler=None):
         """Compile the generated model code
 
@@ -2048,6 +2047,7 @@ class ODEExporter:
         """
         self.modelName = modelName
 
+
 def getSymbolicDiagonal(matrix):
     """Get symbolic matrix with diagonal of matrix `matrix`.
 
@@ -2067,6 +2067,7 @@ def getSymbolicDiagonal(matrix):
     diagonal = [matrix[index,index] for index in range(matrix.cols)]
 
     return sp.Matrix(diagonal)
+
 
 class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details).
