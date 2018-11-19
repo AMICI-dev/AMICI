@@ -48,6 +48,8 @@ class Solver {
         sensi = other.sensi;
         atol = other.atol;
         rtol = other.rtol;
+        atol_sensi = other.atol_sensi;
+        rtol_sensi = other.rtol_sensi;
         quad_atol = other.quad_atol;
         quad_rtol = other.quad_rtol;
         ss_atol = other.ss_atol;
