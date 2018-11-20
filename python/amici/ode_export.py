@@ -184,7 +184,7 @@ functions = {
             '(realtype *sxdot, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k, const realtype *h,'
             ' const int ip, const realtype *sx, const realtype *w,'
-            ' const realtype *dwdx, const realtype *J,'
+            ' const realtype *dwdx, const realtype *JSparse,'
             ' const realtype *dxdotdp)',
         'assume_pow_positivity':
             True,
@@ -275,7 +275,6 @@ def var_in_function_signature(name, varname):
     Raises:
 
     """
-    varname = varname.replace('sparse', '')
     return name in functions \
            and re.search(
                     f'const (realtype|double) \*{varname}[0]*[,)]+',
@@ -331,20 +330,7 @@ class ModelQuantity:
             raise TypeError(f'value must be sympy.Symbol or float, was '
                             f'{type(value)}')
         if isinstance(value, sp.Basic):
-            # strip pysb type and transform into a flat sympy.Basic.
-            # this prevents issues where pysb expressions, observables or
-            # parameters are not recognized as an sp.Symbol with same
-            # symbolic name
-            if pysb and isinstance(value, pysb.Component):
-                # this is the case where value only consists of a
-                # pysb.Component, here str(value) would print the full
-                # value.__repr__
-                self._value = sp.Symbol(value.name)
-            else:
-                # if this expression contains any pysb.Components, we can
-                # safely apply str() to the full expression as str will do
-                # the right thing here
-                self._value = sp.sympify(str(value))
+            self._value = sanitize_basic_sympy(value)
         else:
             self._value = value
 
@@ -393,9 +379,8 @@ class State(ModelQuantity):
         if not isinstance(dt, sp.Basic):
             raise TypeError(f'dt must be sympy.Symbol, was '
                             f'{type(dt)}')
-        # we dont have to strip pysb type information as it was already
-        # stripped by bng
-        self._dt = dt
+
+        self._dt = sanitize_basic_sympy(dt)
 
 class Observable(ModelQuantity):
     """An Observable links model simulations to experimental measurements,
@@ -2098,7 +2083,8 @@ class TemplateAmici(Template):
 
 
 def applyTemplate(sourceFile,targetFile,templateData):
-    """Load source file, apply template substitution as provided in templateData and save as targetFile.
+    """Load source file, apply template substitution as provided in
+    templateData and save as targetFile.
 
     Arguments:
         sourceFile: relative or absolute path to template file @type str
@@ -2118,3 +2104,31 @@ def applyTemplate(sourceFile,targetFile,templateData):
     result = src.safe_substitute(templateData)
     with open(targetFile, 'w') as fileout:
         fileout.write(result)
+
+
+def sanitize_basic_sympy(basic):
+    """Strips pysb info from the sympy.Basic object
+
+        Arguments:
+            basic: symbolic expression @type sympy.Basic
+
+        Returns:
+            sanitized sympy.Basic
+
+        Raises:
+
+        """
+    # strip pysb type and transform into a flat sympy.Basic.
+    # this prevents issues where pysb expressions, observables or
+    # parameters are not recognized as an sp.Symbol with same
+    # symbolic name
+    if pysb and isinstance(basic, pysb.Component):
+        # this is the case where value only consists of a
+        # pysb.Component, here str(value) would print the full
+        # value.__repr__
+        return sp.Symbol(basic.name)
+    else:
+        # if this expression contains any pysb.Components, we can
+        # safely apply str() to the full expression as str will do
+        # the right thing here
+        return sp.sympify(str(basic))
