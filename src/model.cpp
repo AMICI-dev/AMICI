@@ -753,7 +753,9 @@ Model::Model(const Model &other)
       x_pos_tmp(other.x_pos_tmp),
       nmaxevent(other.nmaxevent),
       pscale(other.pscale),
-      tstart(other.tstart)
+      tstart(other.tstart),
+      steadyStateSensitivityMode(other.steadyStateSensitivityMode),
+      reinitializeFixedParameterInitialStates(other.reinitializeFixedParameterInitialStates)
 {
     J = SparseNewMat(nx, nx, nnz, CSC_MAT);
     SparseCopyMat(other.J, J);

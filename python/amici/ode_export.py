@@ -184,7 +184,7 @@ functions = {
             '(realtype *sxdot, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k, const realtype *h,'
             ' const int ip, const realtype *sx, const realtype *w,'
-            ' const realtype *dwdx, const realtype *J,'
+            ' const realtype *dwdx, const realtype *JSparse,'
             ' const realtype *dxdotdp)',
         'assume_pow_positivity':
             True,
@@ -275,7 +275,6 @@ def var_in_function_signature(name, varname):
     Raises:
 
     """
-    varname = varname.replace('sparse', '')
     return name in functions \
            and re.search(
                     f'const (realtype|double) \*{varname}[0]*[,)]+',
@@ -289,7 +288,9 @@ class ModelQuantity:
 
     """
     def __init__(self, identifier,  name, value):
-        """Create a new ModelQuantity instance.
+        """Create a new ModelQuantity instance. This function sanitizes
+        input from pysb to make sure we are operating on flat symby.Symbol and
+        sympy.Basic and not respective derived pysb classes
 
         Arguments:
             identifier: unique identifier of the quantity @type sympy.Symbol
@@ -309,19 +310,30 @@ class ModelQuantity:
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
                             f'{type(identifier)}')
-        self._identifier = identifier
+        if pysb and isinstance(identifier, pysb.Component):
+            # strip pysb type and transform into a flat sympy.Symbol.
+            # this prevents issues where pysb expressions, observables or
+            # parameters are not recognized as an sp.Symbol with same
+            # symbolic name
+            self._identifier = sp.Symbol(identifier.name)
+        else:
+            self._identifier = identifier
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
         self._name = name
 
-        if isinstance(value, sp.RealNumber) or isinstance(value,
-                                                          numbers.Number):
+        if isinstance(value, sp.RealNumber) \
+                or isinstance(value, numbers.Number):
             value = float(value)
         if not isinstance(value, sp.Basic) and not isinstance(value, float):
             raise TypeError(f'value must be sympy.Symbol or float, was '
                             f'{type(value)}')
-        self._value = value
+        if isinstance(value, sp.Basic):
+            self._value = sanitize_basic_sympy(value)
+        else:
+            self._value = value
+
 
     def __repr__(self):
         """Representation of the ModelQuantity object
@@ -367,7 +379,8 @@ class State(ModelQuantity):
         if not isinstance(dt, sp.Basic):
             raise TypeError(f'dt must be sympy.Symbol, was '
                             f'{type(dt)}')
-        self._dt = dt
+
+        self._dt = sanitize_basic_sympy(dt)
 
 class Observable(ModelQuantity):
     """An Observable links model simulations to experimental measurements,
@@ -978,9 +991,7 @@ class ODEModel:
             if name == 'y':
 
                 self._syms['my'] = sp.Matrix(
-                    [sp.Symbol(f'm{comp._identifier.name}')
-                     if pysb and isinstance(comp._identifier, pysb.Expression)
-                     else sp.Symbol(f'm{comp._identifier}')
+                    [sp.Symbol(f'm{comp._identifier}')
                      for comp in getattr(self, component)]
                 )
             return
@@ -1578,13 +1589,6 @@ class ODEExporter:
 
         for index, symbol in enumerate(symbols):
             symbol_name = str(symbol)
-            if pysb is not None \
-                    and (
-                        isinstance(symbol, pysb.Expression)
-                        or isinstance(symbol, pysb.Observable)
-                        or isinstance(symbol, pysb.Parameter)
-                    ):
-                symbol_name = symbol.name
             lines.append(
                 f'#define {symbol_name} {name}[{index}]'
             )
@@ -2079,7 +2083,8 @@ class TemplateAmici(Template):
 
 
 def applyTemplate(sourceFile,targetFile,templateData):
-    """Load source file, apply template substitution as provided in templateData and save as targetFile.
+    """Load source file, apply template substitution as provided in
+    templateData and save as targetFile.
 
     Arguments:
         sourceFile: relative or absolute path to template file @type str
@@ -2099,3 +2104,31 @@ def applyTemplate(sourceFile,targetFile,templateData):
     result = src.safe_substitute(templateData)
     with open(targetFile, 'w') as fileout:
         fileout.write(result)
+
+
+def sanitize_basic_sympy(basic):
+    """Strips pysb info from the sympy.Basic object
+
+        Arguments:
+            basic: symbolic expression @type sympy.Basic
+
+        Returns:
+            sanitized sympy.Basic
+
+        Raises:
+
+        """
+    # strip pysb type and transform into a flat sympy.Basic.
+    # this prevents issues where pysb expressions, observables or
+    # parameters are not recognized as an sp.Symbol with same
+    # symbolic name
+    if pysb and isinstance(basic, pysb.Component):
+        # this is the case where value only consists of a
+        # pysb.Component, here str(value) would print the full
+        # value.__repr__
+        return sp.Symbol(basic.name)
+    else:
+        # if this expression contains any pysb.Components, we can
+        # safely apply str() to the full expression as str will do
+        # the right thing here
+        return sp.sympify(str(basic))
