@@ -79,7 +79,7 @@ class TestAmiciCPP(unittest.TestCase):
                         # modify the value
                         try:
                             modval = get_mod_val(getattr(obj, attr))
-                        except Exception:
+                        except ValueError:
                             continue
 
                         try:
@@ -109,5 +109,5 @@ def get_mod_val(val):
     elif isinstance(val, numbers.Number):
         modval = val + 1
     else:
-        raise Exception('Cannot modify value')
+        raise ValueError('Cannot modify value')
     return modval
