@@ -155,9 +155,7 @@ def process_pysb_species(model, ODE):
             if str(ic[0]) == str(specie):
                 # we don't want to allow expressions in initial conditions
                 if ic[1] in model.expressions:
-                    init = sp.sympify(
-                        model.expressions[ic[1].name].expand_expr()
-                    )
+                    init = model.expressions[ic[1].name].expand_expr()
                 else:
                     init = sp.Symbol(ic[1].name)
 
@@ -299,9 +297,7 @@ def get_sigma_name_and_value(model, name, sigmas):
             raise Exception(f'value of sigma {name} is not a '
                             f'valid expression.')
         sigma_name = model.expressions[sigmas[name]].name
-        sigma_value = sp.sympify(
-            model.expressions[sigmas[name]].expand_expr()
-        )
+        sigma_value = model.expressions[sigmas[name]].expand_expr()
     else:
         sigma_name = f'sigma_{name}'
         sigma_value = sp.sympify(1.0)
@@ -328,7 +324,7 @@ def process_pysb_observables(model, ODE):
     # only add those pysb observables that occur in the added
     # Observables as expressions
     for obs in model.observables:
-        if obs in ODE.eq('y').free_symbols:
+        if sp.Symbol(obs.name) in ODE.eq('y').free_symbols:
             ODE.add_component(
                 Expression(
                     obs,

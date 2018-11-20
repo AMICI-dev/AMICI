@@ -289,7 +289,9 @@ class ModelQuantity:
 
     """
     def __init__(self, identifier,  name, value):
-        """Create a new ModelQuantity instance.
+        """Create a new ModelQuantity instance. This function sanitizes
+        input from pysb to make sure we are operating on flat symby.Symbol and
+        sympy.Basic and not respective derived pysb classes
 
         Arguments:
             identifier: unique identifier of the quantity @type sympy.Symbol
@@ -309,19 +311,43 @@ class ModelQuantity:
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
                             f'{type(identifier)}')
-        self._identifier = identifier
+        if pysb and isinstance(identifier, pysb.Component):
+            # strip pysb type and transform into a flat sympy.Symbol.
+            # this prevents issues where pysb expressions, observables or
+            # parameters are not recognized as an sp.Symbol with same
+            # symbolic name
+            self._identifier = sp.Symbol(identifier.name)
+        else:
+            self._identifier = identifier
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
         self._name = name
 
-        if isinstance(value, sp.RealNumber) or isinstance(value,
-                                                          numbers.Number):
+        if isinstance(value, sp.RealNumber) \
+                or isinstance(value, numbers.Number):
             value = float(value)
         if not isinstance(value, sp.Basic) and not isinstance(value, float):
             raise TypeError(f'value must be sympy.Symbol or float, was '
                             f'{type(value)}')
-        self._value = value
+        if isinstance(value, sp.Basic):
+            # strip pysb type and transform into a flat sympy.Basic.
+            # this prevents issues where pysb expressions, observables or
+            # parameters are not recognized as an sp.Symbol with same
+            # symbolic name
+            if pysb and isinstance(value, pysb.Component):
+                # this is the case where value only consists of a
+                # pysb.Component, here str(value) would print the full
+                # value.__repr__
+                self._value = sp.Symbol(value.name)
+            else:
+                # if this expression contains any pysb.Components, we can
+                # safely apply str() to the full expression as str will do
+                # the right thing here
+                self._value = sp.sympify(str(value))
+        else:
+            self._value = value
+
 
     def __repr__(self):
         """Representation of the ModelQuantity object
@@ -367,6 +393,8 @@ class State(ModelQuantity):
         if not isinstance(dt, sp.Basic):
             raise TypeError(f'dt must be sympy.Symbol, was '
                             f'{type(dt)}')
+        # we dont have to strip pysb type information as it was already
+        # stripped by bng
         self._dt = dt
 
 class Observable(ModelQuantity):
@@ -978,9 +1006,7 @@ class ODEModel:
             if name == 'y':
 
                 self._syms['my'] = sp.Matrix(
-                    [sp.Symbol(f'm{comp._identifier.name}')
-                     if pysb and isinstance(comp._identifier, pysb.Expression)
-                     else sp.Symbol(f'm{comp._identifier}')
+                    [sp.Symbol(f'm{comp._identifier}')
                      for comp in getattr(self, component)]
                 )
             return
@@ -1509,6 +1535,7 @@ class ODEExporter:
         shutil.copy(os.path.join(amiciSrcPath, 'main.template.cpp'),
                     os.path.join(self.modelPath, 'main.cpp'))
 
+
     def _compileCCode(self, verbose=False, compiler=None):
         """Compile the generated model code
 
@@ -1577,13 +1604,6 @@ class ODEExporter:
 
         for index, symbol in enumerate(symbols):
             symbol_name = str(symbol)
-            if pysb is not None \
-                    and (
-                        isinstance(symbol, pysb.Expression)
-                        or isinstance(symbol, pysb.Observable)
-                        or isinstance(symbol, pysb.Parameter)
-                    ):
-                symbol_name = symbol.name
             lines.append(
                 f'#define {symbol_name} {name}[{index}]'
             )
@@ -2047,7 +2067,6 @@ class ODEExporter:
         """
         self.modelName = modelName
 
-
 def getSymbolicDiagonal(matrix):
     """Get symbolic matrix with diagonal of matrix `matrix`.
 
@@ -2067,7 +2086,6 @@ def getSymbolicDiagonal(matrix):
     diagonal = [matrix[index,index] for index in range(matrix.cols)]
 
     return sp.Matrix(diagonal)
-
 
 class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details).
