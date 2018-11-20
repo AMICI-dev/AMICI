@@ -37,65 +37,40 @@ class TestAmiciCPP(unittest.TestCase):
         self.testCopyConstructors()
 
     def testCopyConstructors(self):
+        # TODO: expand this to serialization
         for obj in [self.model, self.solver]:
             for attr in dir(obj):
+                if attr.startswith('__') \
+                        or attr == 'this' \
+                        or is_callable_but_not_getter(obj, attr):
+                    continue
+
                 with self.subTest(obj=obj, attr=attr):
-                    if callable(getattr(obj, attr)):
-                        # only use setter and getter functions
-                        if attr.startswith('get') \
-                                and 'set' + attr[3:] in dir(obj):
+                    # objects will be initialized with default values so we
+                    # can check if the clone routine does the right thing by
+                    # modifying the value from default, cloning and checking
+                    # if the change was carried over to the clone
+                    val = get_val(obj, attr)
 
-                            if attr.endswith('ById') \
-                                    or attr.endswith('ByName'):
-                                # ignore parameter/fixedParameter getters
-                                # and setters
-                                continue
+                    try:
+                        modval = get_mod_val(val, attr)
+                    except ValueError:
+                        # happens for everything that is not bool or scalar
+                        continue
 
-                            # modify the value
-                            val = getattr(obj, attr)()
-                            if attr == 'getStabilityLimitFlag':
-                                modval = val - 1.0
-                            else:
-                                try:
-                                    modval = get_mod_val(val)
-                                except Exception:
-                                    continue
-                                getattr(obj, 'set' + attr[3:])(
-                                    modval
-                                )
+                    try:
+                        set_val(obj, attr, modval)
+                    except AttributeError:
+                        # some attributes cannot be set
+                        continue
 
-                            # clone
-                            obj_clone = obj.clone()
+                    obj_clone = obj.clone()
 
-                            # check if change is also present in clone
-                            self.assertEqual(
-                                getattr(obj, attr)(),
-                                getattr(obj_clone, attr)()
-                            )
-                        else:
-                            pass
-                    elif not attr.startswith('__') and attr != 'this':
+                    self.assertEqual(
+                        get_val(obj, attr),
+                        get_val(obj_clone, attr)
+                    )
 
-                        # modify the value
-                        try:
-                            modval = get_mod_val(getattr(obj, attr))
-                        except ValueError:
-                            continue
-
-                        try:
-                            setattr(obj, attr, modval)
-                        except AttributeError:
-                            # some attributes cant be set
-                            pass
-
-                        # clone
-                        obj_clone = obj.clone()
-
-                        # check if change is also present in clone
-                        self.assertEqual(
-                            getattr(obj, attr),
-                            getattr(obj_clone, attr)
-                        )
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
@@ -103,11 +78,41 @@ if __name__ == '__main__':
     unittest.main()
 
 
-def get_mod_val(val):
-    if isinstance(val, bool):
-        modval = not val
-    elif isinstance(val, numbers.Number):
-        modval = val + 1
+def is_callable_but_not_getter(obj, attr):
+    if not callable(getattr(obj, attr)):
+        return False
+
+    if attr.startswith('get'):
+        return \
+            'set' + attr[3:] not in dir(obj) \
+            or attr.endswith('ById') \
+            or attr.endswith('ByName')
     else:
-        raise ValueError('Cannot modify value')
-    return modval
+        return True
+
+
+def get_val(obj, attr):
+    if callable(getattr(obj, attr)):
+        return getattr(obj, attr)()
+    else:
+        return getattr(obj, attr)
+
+
+def get_mod_val(val, attr):
+    if attr == 'getStabilityLimitFlag':
+        return val - 1
+    elif isinstance(val, bool):
+        return not val
+    elif isinstance(val, numbers.Number):
+        return val + 1
+
+    raise ValueError('Cannot modify value')
+
+
+def set_val(obj, attr, val):
+    if callable(getattr(obj, attr)):
+        getattr(obj, 'set' + attr[3:])(
+            val
+        )
+    else:
+        setattr(obj, attr, val)
