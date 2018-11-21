@@ -114,7 +114,7 @@ def ExpData(*args):
         return amici.ExpData(args[0].get(), *args[:1])
     else:
         return amici.ExpData(*args)
-
+      
 
 def runAmiciSimulations(model, solver, edata_list, num_threads=1):
     """ Convenience wrapper for loops of amici.runAmiciSimulation
