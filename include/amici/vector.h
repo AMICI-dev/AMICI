@@ -33,7 +33,7 @@ public:
       */
     AmiVector(std::vector<realtype> rvec)
         : vec(std::move(rvec)),
-          nvec(N_VMake_Serial(static_cast<long int>(rvec.size()), rvec.data()))
+          nvec(N_VMake_Serial(static_cast<long int>(vec.size()), vec.data()))
     {
     }
 
