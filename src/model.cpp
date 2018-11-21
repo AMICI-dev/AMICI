@@ -753,7 +753,9 @@ Model::Model(const Model &other)
       x_pos_tmp(other.x_pos_tmp),
       nmaxevent(other.nmaxevent),
       pscale(other.pscale),
-      tstart(other.tstart)
+      tstart(other.tstart),
+      steadyStateSensitivityMode(other.steadyStateSensitivityMode),
+      reinitializeFixedParameterInitialStates(other.reinitializeFixedParameterInitialStates)
 {
     J = SparseNewMat(nx, nx, nnz, CSC_MAT);
     SparseCopyMat(other.J, J);
@@ -818,8 +820,8 @@ void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiV
 void Model::fy(int it, ReturnData *rdata) {
     if (!ny)
         return;
-    
-    fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
+    fw(rdata->ts.at(it),getx(it,rdata));
+    fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
 void Model::fdydp(const int it, ReturnData *rdata) {
@@ -827,7 +829,8 @@ void Model::fdydp(const int it, ReturnData *rdata) {
         return;
     
     std::fill(dydp.begin(),dydp.end(),0.0);
-
+    fw(rdata->ts.at(it),getx(it,rdata));
+    fdwdp(rdata->ts.at(it),getx(it,rdata));
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
         // get dydp slice (ny) for current time and parameter
         fdydp(&dydp.at(ip*ny),
@@ -836,7 +839,9 @@ void Model::fdydp(const int it, ReturnData *rdata) {
               unscaledParameters.data(),
               fixedParameters.data(),
               h.data(),
-              plist_.at(ip));
+              plist_.at(ip),
+              w.data(),
+              dwdp.data());
     }
 }
 
@@ -845,7 +850,9 @@ void Model::fdydx(const int it, ReturnData *rdata) {
         return;
     
     std::fill(dydx.begin(),dydx.end(),0.0);
-    fdydx(dydx.data(),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data());
+    fw(rdata->ts.at(it),getx(it,rdata));
+    fdwdx(rdata->ts.at(it),getx(it,rdata));
+    fdydx(dydx.data(),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),dwdx.data());
 }
 
 void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
@@ -901,7 +908,7 @@ void Model::fdeltax(const int ie, const realtype t, const AmiVector *x,
 
 void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
                      const AmiVector *xdot, const AmiVector *xdot_old) {
-    fw(t,x->getNVector());
+    fw(t,x->data());
     std::fill(deltasx.begin(),deltasx.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
         fdeltasx(&deltasx.at(nx*ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),
@@ -1131,22 +1138,22 @@ void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
         }
     }
 }
-
-void Model::fw(const realtype t, const N_Vector x) {
+    
+void Model::fw(const realtype t, const realtype *x) {
     std::fill(w.begin(),w.end(),0.0);
-    fw(w.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data());
+    fw(w.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data());
 }
-
-void Model::fdwdp(const realtype t, const N_Vector x) {
+    
+void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdp.begin(),dwdp.end(),0.0);
-    fdwdp(dwdp.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+    fdwdp(dwdp.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
-
-void Model::fdwdx(const realtype t, const N_Vector x) {
+    
+void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdx.begin(),dwdx.end(),0.0);
-    fdwdx(dwdx.data(),t,N_VGetArrayPointer(x), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+    fdwdx(dwdx.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
 void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {

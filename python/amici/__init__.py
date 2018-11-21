@@ -35,7 +35,7 @@ try:
     from .amici import *
     hdf5_enabled = True
     has_clibs = True
-except (ImportError, ModuleNotFoundError, AttributeError):
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     try:
         from . import amici_without_hdf5 as amici
         from .amici_without_hdf5 import *
@@ -67,6 +67,8 @@ if has_clibs:
     from .pandas import getEdataFromDataFrame, \
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
+    from .ode_export import ODEModel, ODEExporter
+    from .pysb_import import pysb2amici, ODEModel_from_pysb_importer
 
 
 def runAmiciSimulation(model, solver, edata=None):
@@ -89,13 +91,12 @@ def runAmiciSimulation(model, solver, edata=None):
     rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
 
-def ExpData(rdata, sigma_y, sigma_z):
-    """ Convenience wrapper for ExpData constructor
+
+def ExpData(*args):
+    """ Convenience wrapper for ExpData constructors
 
     Arguments:
-        rdata: rdataToNumPyArrays output
-        sigma_y: standard deviation for ObservableData
-        sigma_z: standard deviation for EventData
+        args: arguments
 
     Returns:
         ExpData Instance
@@ -103,8 +104,17 @@ def ExpData(rdata, sigma_y, sigma_z):
     Raises:
 
     """
-    return amici.ExpData(rdata['ptr'].get(), sigma_y, sigma_z)
-
+    if isinstance(args[0], dict):
+        # rdata dict created by rdataToNumPyArrays
+        return amici.ExpData(args[0]['ptr'].get(), *args[1:])
+    elif isinstance(args[0], ExpDataPtr):
+        # the *args[:1] should be empty, but by the time you read this,
+        # the constructor signature may have changed and you are glad this
+        # wrapper did not break.
+        return amici.ExpData(args[0].get(), *args[:1])
+    else:
+        return amici.ExpData(*args)
+      
 
 def runAmiciSimulations(model, solver, edata_list, num_threads=1):
     """ Convenience wrapper for loops of amici.runAmiciSimulation

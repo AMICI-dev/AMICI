@@ -1,38 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
   <model name="createModel">
-    <listOfFunctionDefinitions>
-      <functionDefinition id="initProt">
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <lambda>
-            <bvar>
-              <ci> PROT_0 </ci>
-            </bvar>
-            <ci> PROT_0 </ci>
-          </lambda>
-        </math>
-      </functionDefinition>
-      <functionDefinition id="initDrug">
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <lambda>
-            <bvar>
-              <ci> DRUG_0 </ci>
-            </bvar>
-            <ci> DRUG_0 </ci>
-          </lambda>
-        </math>
-      </functionDefinition>
-      <functionDefinition id="initKin">
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <lambda>
-            <bvar>
-              <ci> KIN_0 </ci>
-            </bvar>
-            <ci> KIN_0 </ci>
-          </lambda>
-        </math>
-      </functionDefinition>
-    </listOfFunctionDefinitions>
     <listOfCompartments>
       <compartment id="default" spatialDimensions="3" size="1" constant="true"/>
     </listOfCompartments>
@@ -45,44 +13,55 @@
       <species id="__s5" name="PROT(kin=None, drug=None, phospho=&apos;p&apos;)" compartment="default" initialAmount="0" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
+      <parameter id="initProt" name="initProt" constant="false"/>
+      <parameter id="initDrug" name="initDrug" constant="false"/>
+      <parameter id="initKin" name="initKin" constant="false"/>
+      <parameter id="pPROT_obs" name="pPROT_obs" constant="false"/>
       <parameter id="PROT_0" name="PROT_0" value="10" constant="true"/>
       <parameter id="DRUG_0" name="DRUG_0" value="9" constant="true"/>
+      <parameter id="KIN_0" name="KIN_0" value="1" constant="true"/>
       <parameter id="kon_prot_drug" name="kon_prot_drug" value="0.1" constant="true"/>
       <parameter id="koff_prot_drug" name="koff_prot_drug" value="0.1" constant="true"/>
-      <parameter id="KIN_0" name="KIN_0" value="1" constant="true"/>
       <parameter id="kon_prot_kin" name="kon_prot_kin" value="0.1" constant="true"/>
       <parameter id="kphospho_prot_kin" name="kphospho_prot_kin" value="0.1" constant="true"/>
       <parameter id="kdephospho_prot" name="kdephospho_prot" value="0.1" constant="true"/>
       <parameter id="__obs0" name="pPROT" constant="false"/>
+      <parameter id="__obs1" name="tPROT" constant="false"/>
     </listOfParameters>
     <listOfInitialAssignments>
       <initialAssignment symbol="__s0">
         <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <apply>
-            <ci> initProt </ci>
-            <ci> PROT_0 </ci>
-          </apply>
+          <ci> initProt </ci>
         </math>
       </initialAssignment>
       <initialAssignment symbol="__s1">
         <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <apply>
-            <ci> initDrug </ci>
-            <ci> DRUG_0 </ci>
-          </apply>
+          <ci> initDrug </ci>
         </math>
       </initialAssignment>
       <initialAssignment symbol="__s2">
         <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <apply>
-            <ci> initKin </ci>
-            <ci> KIN_0 </ci>
-          </apply>
+          <ci> initKin </ci>
         </math>
       </initialAssignment>
     </listOfInitialAssignments>
     <listOfRules>
-      <assignmentRule variable="__obs0">
+      <assignmentRule variable="initProt">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> PROT_0 </ci>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="initDrug">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> DRUG_0 </ci>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="initKin">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> KIN_0 </ci>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="pPROT_obs">
         <math xmlns="http://www.w3.org/1998/Math/MathML">
           <apply>
             <divide/>
@@ -97,9 +76,25 @@
           </apply>
         </math>
       </assignmentRule>
+      <assignmentRule variable="__obs0">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> __s5 </ci>
+        </math>
+      </assignmentRule>
+      <assignmentRule variable="__obs1">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <ci> __s0 </ci>
+            <ci> __s3 </ci>
+            <ci> __s4 </ci>
+            <ci> __s5 </ci>
+          </apply>
+        </math>
+      </assignmentRule>
     </listOfRules>
     <listOfReactions>
-      <reaction id="r0" name="r0" reversible="true">
+      <reaction id="r0" name="PROT_DRUG_bind" reversible="true">
         <listOfReactants>
           <speciesReference species="__s0" constant="true"/>
           <speciesReference species="__s1" constant="true"/>
@@ -126,7 +121,7 @@
           </math>
         </kineticLaw>
       </reaction>
-      <reaction id="r1" name="r1" reversible="false">
+      <reaction id="r1" name="PROT_KIN_bind" reversible="false">
         <listOfReactants>
           <speciesReference species="__s0" constant="true"/>
           <speciesReference species="__s2" constant="true"/>
@@ -145,7 +140,7 @@
           </math>
         </kineticLaw>
       </reaction>
-      <reaction id="r2" name="r2" reversible="false">
+      <reaction id="r2" name="PROT_KIN_phospho" reversible="false">
         <listOfReactants>
           <speciesReference species="__s4" constant="true"/>
         </listOfReactants>
@@ -163,7 +158,7 @@
           </math>
         </kineticLaw>
       </reaction>
-      <reaction id="r3" name="r3" reversible="false">
+      <reaction id="r3" name="PROT_dephospho" reversible="false">
         <listOfReactants>
           <speciesReference species="__s5" constant="true"/>
         </listOfReactants>

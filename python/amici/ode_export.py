@@ -2,18 +2,23 @@
 """
 #!/usr/bin/env python3
 
-
-import symengine as sp
-
+import sympy as sp
 import re
 import shutil
 import subprocess
 import sys
 import os
 import copy
+import numbers
+try:
+    import pysb
+except ImportError:
+    ## pysb import dummy
+    pysb = None
 
-from symengine.printing import CCodePrinter
+
 from string import Template
+import sympy.printing.ccode as ccode
 
 from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 
@@ -147,13 +152,13 @@ functions = {
         'signature':
             '(double *dydx, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k,'
-            ' const realtype *h)',
+            ' const realtype *h, const realtype *w, const realtype *dwdx)',
     },
     'dydp': {
         'signature':
             '(double *dydp, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip)',
+            ' const int ip, const realtype *w, const realtype *dwdp)',
     },
     'dsigmaydp': {
         'signature':
@@ -179,7 +184,7 @@ functions = {
             '(realtype *sxdot, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k, const realtype *h,'
             ' const int ip, const realtype *sx, const realtype *w,'
-            ' const realtype *dwdx, const realtype *J,'
+            ' const realtype *dwdx, const realtype *JSparse,'
             ' const realtype *dxdotdp)',
         'assume_pow_positivity':
             True,
@@ -233,7 +238,7 @@ functions = {
         'signature':
             '(double *y, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k,'
-            ' const realtype *h)',
+            ' const realtype *h, const realtype *w)',
     }
 }
 
@@ -270,7 +275,6 @@ def var_in_function_signature(name, varname):
     Raises:
 
     """
-    varname = varname.replace('sparse', '')
     return name in functions \
            and re.search(
                     f'const (realtype|double) \*{varname}[0]*[,)]+',
@@ -284,7 +288,9 @@ class ModelQuantity:
 
     """
     def __init__(self, identifier,  name, value):
-        """Create a new ModelQuantity instance.
+        """Create a new ModelQuantity instance. This function sanitizes
+        input from pysb to make sure we are operating on flat symby.Symbol and
+        sympy.Basic and not respective derived pysb classes
 
         Arguments:
             identifier: unique identifier of the quantity @type sympy.Symbol
@@ -304,18 +310,30 @@ class ModelQuantity:
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
                             f'{type(identifier)}')
-        self._identifier = identifier
+        if pysb and isinstance(identifier, pysb.Component):
+            # strip pysb type and transform into a flat sympy.Symbol.
+            # this prevents issues where pysb expressions, observables or
+            # parameters are not recognized as an sp.Symbol with same
+            # symbolic name
+            self._identifier = sp.Symbol(identifier.name)
+        else:
+            self._identifier = identifier
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
         self._name = name
 
-        if isinstance(value, sp.RealNumber):
+        if isinstance(value, sp.RealNumber) \
+                or isinstance(value, numbers.Number):
             value = float(value)
         if not isinstance(value, sp.Basic) and not isinstance(value, float):
             raise TypeError(f'value must be sympy.Symbol or float, was '
                             f'{type(value)}')
-        self._value = value
+        if isinstance(value, sp.Basic):
+            self._value = sanitize_basic_sympy(value)
+        else:
+            self._value = value
+
 
     def __repr__(self):
         """Representation of the ModelQuantity object
@@ -361,7 +379,8 @@ class State(ModelQuantity):
         if not isinstance(dt, sp.Basic):
             raise TypeError(f'dt must be sympy.Symbol, was '
                             f'{type(dt)}')
-        self._dt = dt
+
+        self._dt = sanitize_basic_sympy(dt)
 
 class Observable(ModelQuantity):
     """An Observable links model simulations to experimental measurements,
@@ -657,6 +676,7 @@ class ODEModel:
             'y': '_observables',
             'p': '_parameters',
             'k': '_constants',
+            'w': '_expressions',
             'sigmay': '_sigmays'
         }
         self._value_prototype = {
@@ -720,6 +740,10 @@ class ODEModel:
         # setting these equations prevents native equation generation
         self._eqs['dxdotdw'] = si.stoichiometricMatrix
         self._eqs['w'] = si.fluxVector
+        self._syms['w'] = sp.Matrix(
+            [sp.Symbol(f'flux_r{idx}') for idx in range(len(si.fluxVector))]
+        )
+        self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
         symbols['species']['dt'] = \
             si.stoichiometricMatrix * self.sym('w')
 
@@ -730,7 +754,7 @@ class ODEModel:
             for proto in protos:
                 self.add_component(symbol_to_type[symbol](**proto))
 
-        self._generateBasicVariables()
+        self.generateBasicVariables()
 
     def add_component(self, component):
         """Adds a new ModelQuantity to the model.
@@ -960,13 +984,15 @@ class ODEModel:
         """
         if name in self._variable_prototype:
             component = self._variable_prototype[name]
-            self._syms[name] = sp.DenseMatrix(
-                [comp._identifier for comp in getattr(self, component)]
-            )
+            self._syms[name] = sp.Matrix([
+                comp._identifier
+                for comp in getattr(self, component)
+            ])
             if name == 'y':
-                self._syms['my'] = sp.DenseMatrix(
+
+                self._syms['my'] = sp.Matrix(
                     [sp.Symbol(f'm{comp._identifier}')
-                    for comp in getattr(self, component)]
+                     for comp in getattr(self, component)]
                 )
             return
         elif name in sparse_functions:
@@ -979,11 +1005,11 @@ class ODEModel:
         else:
             length = len(self.eq(name))
 
-        self._syms[name] = sp.DenseMatrix([
+        self._syms[name] = sp.Matrix([
             sp.Symbol(f'{name}{i}') for i in range(length)
         ])
 
-    def _generateBasicVariables(self):
+    def generateBasicVariables(self):
         """Generates the symbolic identifiers for all variables in
         ODEModel.variable_prototype
 
@@ -995,7 +1021,8 @@ class ODEModel:
 
         """
         for var in self._variable_prototype:
-            self._generateSymbol(var)
+            if var not in self._syms:
+                self._generateSymbol(var)
 
     def _generateSparseSymbol(self, name):
         """Generates the sparse symbolic identifiers, symbolic identifiers,
@@ -1028,7 +1055,7 @@ class ODEModel:
                     idx += 1
 
         symbolColPtrs.append(idx)
-        sparseList = sp.DenseMatrix(sparseList)
+        sparseList = sp.Matrix(sparseList)
 
         self._colptrs[name] = symbolColPtrs
         self._rowvals[name] = symbolRowVals
@@ -1063,12 +1090,37 @@ class ODEModel:
             self._multiplication(**args)
 
         elif name == 'xdot':
-            self._eqs['xdot'] = sp.DenseMatrix(
+            self._eqs['xdot'] = sp.Matrix(
                 [comp._dt for comp in self._states]
             )
 
-        elif name in ['sx0', 'sx0_fixedParameters']:
+        elif name == 'sx0':
             self._derivative(name[1:], 'p', name=name)
+
+        elif name == 'sx0_fixedParameters':
+            # deltax = -x+x0_fixedParameters if x0_fixedParameters>0 else 0
+            # deltasx = -sx+dx0_fixedParametersdx*sx+dx0_fixedParametersdp
+            # if x0_fixedParameters>0 else 0
+            # sx0_fixedParameters = sx+deltasx =
+            # dx0_fixedParametersdx*sx+dx0_fixedParametersdp
+            self._eqs[name] = \
+                self.eq('x0_fixedParameters').jacobian(self.sym('p'))
+
+            dx0_fixedParametersdx = \
+                self.eq('x0_fixedParameters').jacobian(self.sym('x'))
+
+            for ip in range(self._eqs[name].shape[1]):
+                self._eqs[name][:,ip] += \
+                    dx0_fixedParametersdx \
+                    * self.sym('sx0') \
+
+            for index, formula in enumerate(
+                    self.eq('x0_fixedParameters')
+            ):
+                if formula == 0 or formula == 0.0:
+                    self._eqs[name][index, :] = \
+                        sp.zeros(1, self._eqs[name].shape[1])
+
 
         elif name == 'JB':
             self._eqs[name] = self.eq('J').transpose()
@@ -1078,7 +1130,7 @@ class ODEModel:
 
         elif name == 'x0_fixedParameters':
             k = self.sym('k')
-            self._eqs[name] = sp.DenseMatrix([
+            self._eqs[name] = sp.Matrix([
                 eq
                 # check if the equation contains constants
                 if any([sym in eq.free_symbols for sym in k])
@@ -1097,7 +1149,10 @@ class ODEModel:
             raise Exception(f'Unknown equation {name}')
 
         if name in ['Jy', 'dydx']:
-            self._eqs[name] = self._eqs[name].transpose()
+            # do not transpose if we compute the partial derivative as part of
+            # a total derivative
+            if not self._lock_total_derivative:
+                self._eqs[name] = self._eqs[name].transpose()
 
     def symNames(self):
         """Returns a list of names of generated symbolic variables
@@ -1135,15 +1190,25 @@ class ODEModel:
             name = f'd{eq}d{var}'
 
         # automatically detect chainrule
-        if var_in_function_signature(eq, 'w') and \
-                not self._lock_total_derivative:
+        if var_in_function_signature(eq, 'w') \
+                and not self._lock_total_derivative \
+                and var is not 'w'\
+                and min(self.sym('w').shape):
             self._lock_total_derivative = True
             self._totalDerivative(name, eq, 'w', var)
             self._lock_total_derivative = False
             return
 
         # partial derivative
-        self._eqs[name] = self.eq(eq).jacobian(self.sym(var))
+        if eq == 'Jy':
+            eq = self.eq(eq).transpose()
+        else:
+            eq = self.eq(eq)
+
+        if min(eq.shape) and min(self.sym(var).shape):
+            self._eqs[name] = eq.jacobian(self.sym(var))
+        else:
+            self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
     def _totalDerivative(self, name, eq, chainvar, var,
                          dydx_name=None, dxdz_name=None):
@@ -1198,7 +1263,11 @@ class ODEModel:
                 variables[var]['sym'] = self.eq(varname)
 
         self._eqs[name] = \
-            variables['dydx']['sym'] * variables['dxdz']['sym'] + variables['dydz']['sym']
+            variables['dydz']['sym'] \
+            + variables['dydx']['sym'] * variables['dxdz']['sym']
+
+
+
 
     def _multiplication(self, name, x, y,
                         transpose_x=False, sign=1):
@@ -1255,7 +1324,7 @@ class ODEModel:
         Raises:
 
         """
-        self._eqs[name] = sp.DenseMatrix(
+        self._eqs[name] = sp.Matrix(
             [comp._value for comp in getattr(self, component)]
         )
 
@@ -1319,8 +1388,6 @@ class ODEExporter:
         compiler: distutils/setuptools compiler selection to build the
         python extension @type str
 
-        codeprinter: allows export of symbolic variables as C++ code
-
         functions: carries C++ function signatures and other specifications
         @type dict
 
@@ -1370,8 +1437,6 @@ class ODEExporter:
         self.verbose = verbose
         self.assume_pow_positivity = assume_pow_positivity
         self.compiler = compiler
-
-        self.codeprinter = CCodePrinter()
 
         self.modelName = 'model'
         output_dir = os.path.join(os.getcwd(),
@@ -1523,8 +1588,9 @@ class ODEExporter:
             raise Exception('Unknown symbolic array')
 
         for index, symbol in enumerate(symbols):
+            symbol_name = str(symbol)
             lines.append(
-                f'#define {symbol} {name}[{index}]'
+                f'#define {symbol_name} {name}[{index}]'
             )
 
         with open(os.path.join(self.modelPath,f'{name}.h'), 'w') as fileout:
@@ -1617,8 +1683,12 @@ class ODEExporter:
         """
         lines = []
 
+        if min(symbol.shape) == 0:
+            return lines
+
         if function == 'sx0_fixedParameters':
-            # here we specifically want to overwrite some of the values with 0
+            # here we only want to overwrite values where x0_fixedParameters
+            # was applied
             lines.append(' ' * 4 + 'switch(ip) {')
             for ipar in range(self.model.np()):
                 lines.append(' ' * 8 + f'case {ipar}:')
@@ -1626,7 +1696,8 @@ class ODEExporter:
                         self.model.eq('x0_fixedParameters')
                 ):
                     if formula != 0 and formula != 0.0:
-                        lines.append(' ' * 12 + f'{function}[{index}] = 0.0;')
+                        lines.append(' ' * 12 + f'{function}[{index}] = '
+                                                f'{symbol[index, ipar]};')
                 lines.append(' ' * 12 + 'break;')
             lines.append('}')
         elif function in sensi_functions:
@@ -1699,11 +1770,8 @@ class ODEExporter:
         Raises:
 
         """
-        if any([math != 0 and math != 0.0 for math in
-                self.model.eq('sx0_fixedParameters')]):
-            self.allow_reinit_fixpar_initcond = False
-        else:
-            self.allow_reinit_fixpar_initcond = True
+
+        self.allow_reinit_fixpar_initcond = True
 
         templateData = {
             'MODELNAME': str(self.modelName),
@@ -1943,7 +2011,7 @@ class ODEExporter:
 
         """
         try:
-            ret = self.codeprinter.doprint(math)
+            ret = ccode(math)
             ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
             return ret
         except:
@@ -2002,7 +2070,7 @@ def getSymbolicDiagonal(matrix):
 
     diagonal = [matrix[index,index] for index in range(matrix.cols)]
 
-    return sp.DenseMatrix(diagonal)
+    return sp.Matrix(diagonal)
 
 class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details).
@@ -2015,7 +2083,8 @@ class TemplateAmici(Template):
 
 
 def applyTemplate(sourceFile,targetFile,templateData):
-    """Load source file, apply template substitution as provided in templateData and save as targetFile.
+    """Load source file, apply template substitution as provided in
+    templateData and save as targetFile.
 
     Arguments:
         sourceFile: relative or absolute path to template file @type str
@@ -2035,3 +2104,31 @@ def applyTemplate(sourceFile,targetFile,templateData):
     result = src.safe_substitute(templateData)
     with open(targetFile, 'w') as fileout:
         fileout.write(result)
+
+
+def sanitize_basic_sympy(basic):
+    """Strips pysb info from the sympy.Basic object
+
+        Arguments:
+            basic: symbolic expression @type sympy.Basic
+
+        Returns:
+            sanitized sympy.Basic
+
+        Raises:
+
+        """
+    # strip pysb type and transform into a flat sympy.Basic.
+    # this prevents issues where pysb expressions, observables or
+    # parameters are not recognized as an sp.Symbol with same
+    # symbolic name
+    if pysb and isinstance(basic, pysb.Component):
+        # this is the case where value only consists of a
+        # pysb.Component, here str(value) would print the full
+        # value.__repr__
+        return sp.Symbol(basic.name)
+    else:
+        # if this expression contains any pysb.Components, we can
+        # safely apply str() to the full expression as str will do
+        # the right thing here
+        return sp.sympify(str(basic))

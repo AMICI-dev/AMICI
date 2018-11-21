@@ -10,4 +10,5 @@ SCRIPT_PATH=$(cd $SCRIPT_PATH && pwd)
 ${SCRIPT_PATH}/buildSuiteSparse.sh
 ${SCRIPT_PATH}/buildSundials.sh
 ${SCRIPT_PATH}/buildCpputest.sh
+${SCRIPT_PATH}/buildBNGL.sh
 ${SCRIPT_PATH}/buildAmici.sh
