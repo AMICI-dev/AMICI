@@ -2,10 +2,6 @@ find_package(PythonInterp 3.6 REQUIRED)
 
 # Configure setup.py and copy to output directory
 set(AMICI_VERSION "@AMICI_VERSION@") # to be replaced later
-#set(SETUP_PY_IN ${CMAKE_CURRENT_SOURCE_DIR}/setup.py.in)
-#set(SETUP_PY_OUT ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
-#configure_file(${SETUP_PY_IN} ${SETUP_PY_OUT})
-
 configure_file(${PROJECT_SOURCE_DIR}/python/amici/setup.template.py ${CMAKE_CURRENT_BINARY_DIR}/setup.template.py)
 
 # Copy further amici-python-module files to binary_dir

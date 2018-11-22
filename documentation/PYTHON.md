@@ -46,6 +46,19 @@ to compile the sbml as python module, the user has to call the method `amici.sbm
                             constantParameters=constantParameters,
                             sigmas=sigma)
 
+Note: To build AMICI with OpenMP support, which allows to parallelize model simulations of multiple
+experimental conditions, set the environment variables `AMICI_CXXFLAGS` and `AMICI_LDFLAGS` to the
+correct OpenMP flags of your compiler and linker, respectively. This has to be done for both AMICI
+package installation *and* model compilation. When using `gcc` on Linux, use:
+
+    # on your shell:
+    AMICI_CXXFLAGS=-fopenmp AMICI_LDFLAGS=-fopenmp pip3 install amici
+
+    # in python, before model compilation:
+    import os
+    os.environ['AMICI_CXXFLAGS'] = '-fopenmp'
+    os.environ['AMICI_LDFLAGS'] = '-fopenmp'
+
 ## Model Simulation 
 
 currently the model folder has to be manually added to the python path
