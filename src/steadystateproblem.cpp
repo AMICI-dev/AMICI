@@ -170,7 +170,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
         }
         
         /* Try a full, undamped Newton step */
-        N_VLinearSum(1.0, x_old.getNVector(), gamma, delta.getNVector(), x->getNVector());
+        N_VLinearSum(1.0, x_old.getNVector(), -gamma, delta.getNVector(), x->getNVector());
         
         /* Compute new xdot and residuals */
         model->fxdot(*t, x, &dx, &xdot);

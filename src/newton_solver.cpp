@@ -385,8 +385,8 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     
     // Ensure positivity of entries in ns_Jdiag
     ns_p.set(1.0);
-    N_VAbs(ns_Jdiag.getNVector(), ns_tmp.getNVector());
-    N_VCompare(1e-15, ns_tmp.getNVector(), ns_tmp.getNVector());
+    N_VAbs(ns_Jdiag.getNVector(), ns_Jdiag.getNVector());
+    N_VCompare(1e-15, ns_Jdiag.getNVector(), ns_tmp.getNVector());
     N_VLinearSum(-1.0, ns_tmp.getNVector(), 1.0, ns_p.getNVector(), ns_tmp.getNVector());
     N_VLinearSum(1.0, ns_Jdiag.getNVector(), 1.0, ns_tmp.getNVector(), ns_Jdiag.getNVector());
     
