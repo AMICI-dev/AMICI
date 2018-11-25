@@ -9,6 +9,8 @@ Online documentation is available as [github-pages](http://icb-dcm.github.io/AMI
 
 ## Publications
 
+[![DOI](https://zenodo.org/badge/43677177.svg)](https://zenodo.org/badge/latestdoi/43677177)
+
 [Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017). Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks. Plos Computational Biology, 13(1), e1005331. doi: 10.1371/journal.pcbi.1005331](https://doi.org/10.1371/journal.pcbi.1005331)
 
 [Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017). Parameter estimation for dynamical systems with discrete events and logical operations. Bioinformatics, 33(7), 1049-1056. doi: 10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
