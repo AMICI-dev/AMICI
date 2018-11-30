@@ -68,23 +68,20 @@ TEST_GROUP(model)
 
 TEST(model, testScalingLin) {
     model.setParameterScale(ParameterScaling::none);
-    unscaleParameters(model.getParameters(), model.getParameterScale(), unscaled);
 
-    CHECK_EQUAL(p[0], unscaled[0]);
+    CHECK_EQUAL(p[0], model.getParameters()[0]);
 }
 
 TEST(model, testScalingLog) {
     model.setParameterScale(ParameterScaling::ln);
-    unscaleParameters(model.getParameters(), model.getParameterScale(), unscaled);
 
-    DOUBLES_EQUAL(exp(p[0]), unscaled[0], 1e-16);
+    DOUBLES_EQUAL(std::log(p[0]), model.getParameters()[0], 1e-16);
 }
 
 TEST(model, testScalingLog10) {
     model.setParameterScale(ParameterScaling::log10);
-    unscaleParameters(model.getParameters(), model.getParameterScale(), unscaled);
 
-    DOUBLES_EQUAL(pow(10, p[0]), unscaled[0], 1e-16);
+    DOUBLES_EQUAL(std::log10(p[0]), model.getParameters()[0], 1e-16);
 }
 
 TEST(model, testSetTimepoints) {
