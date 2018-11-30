@@ -186,7 +186,8 @@ class SbmlImporter:
                    sigmas=None,
                    verbose=False,
                    assume_pow_positivity=False,
-                   compiler=None
+                   compiler=None,
+                   allow_reinit_fixpar_initcond = True
                    ):
         """Generate AMICI C++ files for the model provided to the constructor.
 
@@ -214,6 +215,8 @@ class SbmlImporter:
             compiler: distutils/setuptools compiler selection to build the
             python extension @type str
 
+            allow_reinit_fixpar_initcond: see ode_export.ODEExporter
+
         Returns:
 
         Raises:
@@ -239,6 +242,7 @@ class SbmlImporter:
             verbose=verbose,
             assume_pow_positivity=assume_pow_positivity,
             compiler=compiler,
+            allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond
         )
         exporter.setName(modelName)
         exporter.setPaths(output_dir)
