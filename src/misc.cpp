@@ -58,4 +58,29 @@ void unscaleParameters(const std::vector<double> &bufferScaled, const std::vecto
     unscaleParameters(bufferScaled.data(), pscale.data(), bufferScaled.size(), bufferUnscaled.data());
 }
 
+double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
+{
+    switch (scaling) {
+    case ParameterScaling::log10:
+        return log10(unscaledParameter);
+    case ParameterScaling::ln:
+        return log(unscaledParameter);
+    case ParameterScaling::none:
+        return unscaledParameter;
+    }
+
+    throw AmiException("Invalid value for ParameterScaling.");
+}
+
+
+void scaleParameters(const std::vector<double> &bufferUnscaled, const std::vector<ParameterScaling> &pscale, std::vector<double> &bufferScaled)
+{
+    if(bufferScaled.size() != pscale.size() || pscale.size() != bufferUnscaled.size())
+        throw AmiException("Vector size mismatch in scaleParameters.");
+    for (int ip = 0; ip < (int) bufferUnscaled.size(); ++ip) {
+        bufferScaled[ip] = getScaledParameter(bufferUnscaled[ip], pscale[ip]);
+    }
+
+}
+
 } // namespace amici

@@ -28,7 +28,7 @@ default_symbols = {
 class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in
     the Systems Biology Markup Language (SBML).
-    
+
     Attributes:
 
         check_validity: indicates whether the validity of the SBML document
@@ -762,6 +762,11 @@ class SbmlImporter:
 
         if sigmas is None:
             sigmas = {}
+        elif len(set(sigmas.keys()) - set(observables.keys())):
+            # Ensure no non-existing observableIds have been specified (no problem here, but usually an upstream bug)
+            raise ValueError(f'Sigma provided for an unknown observableId: {set(sigmas.keys()) - set(observables.keys())}')
+
+
 
         speciesSyms = self.symbols['species']['identifier']
 
@@ -959,7 +964,7 @@ def assignmentRules2observables(sbml_model,
 
     Returns:
     A dictionary(observableId:{
-        'name': observableNamem,
+        'name': observableName,
         'formula': formulaString
     })
 

@@ -297,14 +297,12 @@ const std::vector<ParameterScaling> &Model::getParameterScale() const {
 
 void Model::setParameterScale(ParameterScaling pscale) {
     this->pscale.assign(this->pscale.size(), pscale);
-    unscaledParameters.resize(originalParameters.size());
-    unscaleParameters(originalParameters, this->pscale, unscaledParameters);
+    scaleParameters(unscaledParameters, this->pscale, originalParameters);
 }
 
 void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
     this->pscale = pscale;
-    unscaledParameters.resize(originalParameters.size());
-    unscaleParameters(originalParameters, this->pscale, unscaledParameters);
+    scaleParameters(unscaledParameters, this->pscale, originalParameters);
 }
 
 std::vector<realtype> const& Model::getParameters() const {
