@@ -278,7 +278,7 @@ std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
     auto simsolver_ptr = std::unique_ptr<Solver>(solver->clone());
     if (!dynamic_cast<CVodeSolver*>(simsolver_ptr.get()))
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "steadystate simulation is only available for ODE problems");
-    auto newton_solver = std::unique_ptr<CVodeSolver>(dynamic_cast<CVodeSolver*>(simsolver_ptr.get()));
+    auto newton_solver = std::unique_ptr<CVodeSolver>(dynamic_cast<CVodeSolver*>(simsolver_ptr.release()));
     
     
     switch(solver->getLinearSolver()) {
