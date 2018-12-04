@@ -1109,10 +1109,11 @@ class ODEModel:
             dx0_fixedParametersdx = \
                 self.eq('x0_fixedParameters').jacobian(self.sym('x'))
 
-            for ip in range(self._eqs[name].shape[1]):
-                self._eqs[name][:,ip] += \
-                    dx0_fixedParametersdx \
-                    * self.sym('sx0') \
+            if not dx0_fixedParametersdx.is_zero:
+                for ip in range(self._eqs[name].shape[1]):
+                    self._eqs[name][:,ip] += \
+                        dx0_fixedParametersdx \
+                        * self.sym('sx0') \
 
             for index, formula in enumerate(
                     self.eq('x0_fixedParameters')
@@ -1409,7 +1410,8 @@ class ODEExporter:
             outdir=None,
             verbose=False,
             assume_pow_positivity=False,
-            compiler=None
+            compiler=None,
+            allow_reinit_fixpar_initcond=True
     ):
         """Generate AMICI C++ files for the ODE provided to the constructor.
 
@@ -1427,6 +1429,7 @@ class ODEExporter:
             compiler: distutils/setuptools compiler selection to build the
             python extension @type str
 
+            allow_reinit_fixpar_initcond: see ODEExporter
         Returns:
 
         Raises:
@@ -1452,7 +1455,7 @@ class ODEExporter:
         # To only generate a subset of functions, apply subselection here
         self.functions = copy.deepcopy(functions)
 
-        self.allow_reinit_fixpar_initcond = False
+        self.allow_reinit_fixpar_initcond = allow_reinit_fixpar_initcond
 
     def generateModelCode(self):
         """Generates the native C++ code for the loaded model
@@ -1686,6 +1689,9 @@ class ODEExporter:
         if min(symbol.shape) == 0:
             return lines
 
+        if not self.allow_reinit_fixpar_initcond and function in ['sx0_fixedParameters', 'x0_fixedParameters']:
+            return lines
+
         if function == 'sx0_fixedParameters':
             # here we only want to overwrite values where x0_fixedParameters
             # was applied
@@ -1770,8 +1776,6 @@ class ODEExporter:
         Raises:
 
         """
-
-        self.allow_reinit_fixpar_initcond = True
 
         templateData = {
             'MODELNAME': str(self.modelName),
