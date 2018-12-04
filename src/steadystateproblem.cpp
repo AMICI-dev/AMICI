@@ -53,10 +53,9 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         try {
             /* Newton solver did not work, so try a simulation */
             if (it<1) {
-                std::unique_ptr<CVodeSolver> newtonSimSolver;
                 /* Preequilibration: Create a new CVode object for simulation */
                 *t = model->t0();
-                newtonSimSolver = createSteadystateSimSolver(solver, model, *t);
+                auto newtonSimSolver = createSteadystateSimSolver(solver, model, *t);
                 getSteadystateSimulation(rdata, newtonSimSolver.get(), model, it);
             } else {
                 /* Carry on simulating from last point */
@@ -264,8 +263,9 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         /* increase counter, check for maxsteps */
         steps_newton++;
         if (steps_newton >= solver->getMaxSteps() && !converged)
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK, "getSteadystateSimulation");
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK, "exceeded maximum number of steps");
     }
+    rdata->newton_numsteps[0] = steps_newton;
     if (solver->getSensitivityOrder()>SensitivityOrder::none)
         solver->getSens(t, sx);
 }
@@ -273,12 +273,26 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
 std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
         Solver *solver, Model *model, realtype tstart)
 {
-
+    /* Create new CVode solver object */
+    auto simsolver_ptr = dynamic_cast<CVodeSolver*>(solver->clone());
+    if (!simsolver_ptr)
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "steadystate simulation is only available for ODE problems");
+    auto newton_solver = std::unique_ptr<CVodeSolver>(simsolver_ptr);
     
-    /* Create new CVode object */
-    auto newton_solver = std::unique_ptr<CVodeSolver>(dynamic_cast<CVodeSolver*>(solver->clone()));
     
-    // attach SteadystateProblem x and sx to the copy
+    switch(solver->getLinearSolver()) {
+        case LinearSolver::dense:
+        case LinearSolver::KLU:
+            break;
+        default:
+            throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "invalid solver for steadystate simulation");
+    }
+    if (solver->getSensitivityMethod() != SensitivityMethod::none
+        && model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA)
+        newton_solver->setSensitivityMethod(SensitivityMethod::forward); //need forward to compute sx0
+    else
+        newton_solver->setSensitivityMethod(SensitivityMethod::none);
+    
     // use x and sx as dummies for dx and sdx (they wont get touched in a CVodeSolver)
     newton_solver->setup(x,x,sx,sx,model);
     
