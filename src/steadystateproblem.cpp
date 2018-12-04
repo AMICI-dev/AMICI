@@ -276,32 +276,9 @@ std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
 
     
     /* Create new CVode object */
+    auto newton_solver = std::unique_ptr<CVodeSolver>(dynamic_cast<CVodeSolver*>(solver->clone()));
     
-    auto newton_solver = std::unique_ptr<CVodeSolver>(new CVodeSolver());
-    
-    newton_solver->setLinearMultistepMethod(solver->getLinearMultistepMethod());
-    newton_solver->setNonlinearSolverIteration(solver->getNonlinearSolverIteration());
-    newton_solver->setAbsoluteTolerance(solver->getAbsoluteTolerance());
-    newton_solver->setRelativeTolerance(solver->getRelativeTolerance());
-    newton_solver->setAbsoluteToleranceSteadyState(solver->getAbsoluteToleranceSteadyState());
-    newton_solver->setRelativeToleranceSteadyState(solver->getRelativeToleranceSteadyState());
-    newton_solver->setMaxSteps(solver->getMaxSteps());
-    newton_solver->setStabilityLimitFlag(solver->getStabilityLimitFlag());
-    switch(solver->getLinearSolver()) {
-        case LinearSolver::dense:
-        case LinearSolver::KLU:
-            newton_solver->setLinearSolver(solver->getLinearSolver());
-            break;
-        default:
-            throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "createSteadystateSimSolver");
-    }
-    newton_solver->setSensitivityOrder(solver->getSensitivityOrder());
-    if (solver->getSensitivityMethod() != SensitivityMethod::none
-        && model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA)
-        newton_solver->setSensitivityMethod(SensitivityMethod::forward); //need forward to compute sx0
-    else
-        newton_solver->setSensitivityMethod(SensitivityMethod::none);
-    
+    // attach SteadystateProblem x and sx to the copy
     // use x and sx as dummies for dx and sdx (they wont get touched in a CVodeSolver)
     newton_solver->setup(x,x,sx,sx,model);
     
