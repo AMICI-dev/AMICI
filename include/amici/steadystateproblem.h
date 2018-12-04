@@ -98,7 +98,7 @@ class SteadystateProblem {
      * @param tstart time point for starting Newton simulation
      * @return solver instance
      */
-    std::unique_ptr<CVodeSolver> createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart);
+    std::unique_ptr<Solver> createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart);
 
     /** default constructor
      * @param t pointer to time variable

@@ -53,10 +53,9 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         try {
             /* Newton solver did not work, so try a simulation */
             if (it<1) {
-                std::unique_ptr<CVodeSolver> newtonSimSolver;
                 /* Preequilibration: Create a new CVode object for simulation */
                 *t = model->t0();
-                newtonSimSolver = createSteadystateSimSolver(solver, model, *t);
+                auto newtonSimSolver = createSteadystateSimSolver(solver, model, *t);
                 getSteadystateSimulation(rdata, newtonSimSolver.get(), model, it);
             } else {
                 /* Carry on simulating from last point */
@@ -264,38 +263,27 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         /* increase counter, check for maxsteps */
         steps_newton++;
         if (steps_newton >= solver->getMaxSteps() && !converged)
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK, "getSteadystateSimulation");
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK, "exceeded maximum number of steps");
     }
+    rdata->newton_numsteps[0] = steps_newton;
     if (solver->getSensitivityOrder()>SensitivityOrder::none)
         solver->getSens(t, sx);
 }
 
-std::unique_ptr<CVodeSolver> SteadystateProblem::createSteadystateSimSolver(
+std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
         Solver *solver, Model *model, realtype tstart)
 {
-
+    /* Create new CVode solver object */
     
-    /* Create new CVode object */
+    auto newton_solver = std::unique_ptr<Solver>(solver->clone());
     
-    auto newton_solver = std::unique_ptr<CVodeSolver>(new CVodeSolver());
-    
-    newton_solver->setLinearMultistepMethod(solver->getLinearMultistepMethod());
-    newton_solver->setNonlinearSolverIteration(solver->getNonlinearSolverIteration());
-    newton_solver->setAbsoluteTolerance(solver->getAbsoluteTolerance());
-    newton_solver->setRelativeTolerance(solver->getRelativeTolerance());
-    newton_solver->setAbsoluteToleranceSteadyState(solver->getAbsoluteToleranceSteadyState());
-    newton_solver->setRelativeToleranceSteadyState(solver->getRelativeToleranceSteadyState());
-    newton_solver->setMaxSteps(solver->getMaxSteps());
-    newton_solver->setStabilityLimitFlag(solver->getStabilityLimitFlag());
     switch(solver->getLinearSolver()) {
         case LinearSolver::dense:
         case LinearSolver::KLU:
-            newton_solver->setLinearSolver(solver->getLinearSolver());
             break;
         default:
-            throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "createSteadystateSimSolver");
+            throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "invalid solver for steadystate simulation");
     }
-    newton_solver->setSensitivityOrder(solver->getSensitivityOrder());
     if (solver->getSensitivityMethod() != SensitivityMethod::none
         && model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA)
         newton_solver->setSensitivityMethod(SensitivityMethod::forward); //need forward to compute sx0
