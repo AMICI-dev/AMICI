@@ -17,6 +17,7 @@ Online documentation is available as [github-pages](http://icb-dcm.github.io/AMI
 
 ## Current build status
 
+[![PyPI version](https://badge.fury.io/py/amici.svg)](https://badge.fury.io/py/amici)
 [![Build Status](https://travis-ci.org/ICB-DCM/AMICI.svg?branch=master)](https://travis-ci.org/ICB-DCM/AMICI)
 [![CodeCov](https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg)](https://codecov.io/gh/ICB-DCM/AMICI)
 [![Codacy](https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6)](https://www.codacy.com/app/FFroehlich/AMICI?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ICB-DCM/AMICI&amp;utm_campaign=Badge_Grade)
