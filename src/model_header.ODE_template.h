@@ -53,8 +53,10 @@ public:
      */
     Model_TPL_MODELNAME()
     : amici::Model_ODE(
-                       TPL_NX, // nx
-                       TPL_NXTRUE, // nxtrue
+                       TPL_NX_RDATA, // nx_rdata
+                       TPL_NXTRUE_RDATA, // nxtrue_rdata
+                       TPL_NX_SOLVER, // nx_solver
+                       TPL_NXTRUE_SOLVER, // nxtrue_solver
                        TPL_NY, // ny
                        TPL_NYTRUE, // nytrue
                        TPL_NZ, // nz
@@ -62,7 +64,7 @@ public:
                        TPL_NEVENT, // nevent
                        TPL_NOBJECTIVE, // nobjective
                        TPL_NW, // nw
-                       TPL_NDWDDX, // ndwddx
+                       TPL_NDWDX, // ndwdx
                        TPL_NDWDP, // ndwdp
                        TPL_NNZ, // nnz
                        TPL_UBW, // ubw
@@ -71,7 +73,7 @@ public:
                        std::vector<realtype>{TPL_PARAMETERS}, // dynamic parameters
                        std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
                        std::vector<int>{}, // plist
-                       std::vector<realtype>(TPL_NX,0.0), // idlist
+                       std::vector<realtype>(TPL_NX_SOLVER,0.0), // idlist
                        std::vector<int>{} // z2event
     )
     {}

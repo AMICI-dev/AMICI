@@ -264,9 +264,9 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
             if(hdf5::locationExists(file, resultPath + "/sx")) {
                 expected = hdf5::getDoubleDataset3D(file, resultPath + "/sx", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
-                    checkEqualArray(&expected[ip * model->nt() * model->nxtrue],
-                            &rdata->sx[ip * model->nt() * model->nx],
-                            model->nt() * model->nxtrue, atol, rtol, "sx");
+                    checkEqualArray(&expected[ip * model->nt() * model->nxtrue_rdata],
+                            &rdata->sx[ip * model->nt() * model->nx_rdata],
+                            model->nt() * model->nxtrue_rdata, atol, rtol, "sx");
             } else {
                 CHECK_TRUE(rdata->sx.empty());
             }

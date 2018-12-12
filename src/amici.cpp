@@ -61,7 +61,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     
     try{
         rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model));
-        if (model.nx <= 0) {
+        if (model.nx_solver <= 0) {
             model.setFixedParameters(originalFixedParameters);
             model.setTimepoints(originalTimepoints);
             return rdata;

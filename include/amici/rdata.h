@@ -34,8 +34,9 @@ class ReturnData {
      * @param ts see amici::Model::ts
      * @param np see amici::Model::np
      * @param nk see amici::Model::nk
-     * @param nx see amici::Model::nx
-     * @param nxtrue see amici::Model::nxtrue
+     * @param nx see amici::Model::nx_rdata
+     * @param nx_solver see amici::Model::nx_solver
+     * @param nxtrue see amici::Model::nxtrue_rdata
      * @param ny see amici::Model::ny
      * @param nytrue see amici::Model::nytrue
      * @param nz see amici::Model::nz
@@ -53,7 +54,7 @@ class ReturnData {
      */
     ReturnData(
             std::vector<realtype> ts,
-            int np, int nk, int nx, int nxtrue, int ny, int nytrue,
+            int np, int nk, int nx, int nx_solver, int nxtrue, int ny, int nytrue,
             int nz, int nztrue, int ne, int nJ, int nplist, int nmaxevent,
             int nt, int newton_maxsteps, std::vector<ParameterScaling> pscale,
             SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth);
@@ -221,6 +222,8 @@ class ReturnData {
     const int nk;
     /** number of states */
     const int nx;
+    /** number of observables with conservation laws applied*/
+    const int nx_solver;
     /** number of states in the unaugmented system */
     const int nxtrue;
     /** number of observables */

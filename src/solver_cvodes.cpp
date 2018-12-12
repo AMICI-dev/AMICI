@@ -620,7 +620,7 @@ bool CVodeSolver::getAdjMallocDone() const {
                       void *user_data) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fJDiag(t, JDiag, x);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(JDiag),"Jacobian");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(JDiag),"Jacobian");
     }
 
     /** Matrix vector product of J with a vector v (for iterative solvers)
@@ -638,7 +638,7 @@ bool CVodeSolver::getAdjMallocDone() const {
                    void *user_data, N_Vector tmp) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fJv(v,Jv,t,x);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(Jv),"Jacobian");
     }
 
     /** Matrix vector product of JB with a vector v (for iterative solvers)
@@ -657,7 +657,7 @@ bool CVodeSolver::getAdjMallocDone() const {
                     void *user_data, N_Vector tmpB) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fJvB(vB, JvB, t, x, xB);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(JvB),"Jacobian");
     }
 
     /** Event trigger function for events
@@ -684,7 +684,7 @@ bool CVodeSolver::getAdjMallocDone() const {
     int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fxdot(t, x, xdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"fxdot");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(xdot),"fxdot");
     }
 
     /** Right hand side of differential equation for adjoint state xB
@@ -699,7 +699,7 @@ bool CVodeSolver::getAdjMallocDone() const {
                       N_Vector xBdot, void *user_data) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fxBdot(t, x, xB, xBdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"fxBdot");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(xBdot),"fxBdot");
     }
 
     /** Right hand side of integral equation for quadrature states qB
@@ -736,7 +736,7 @@ bool CVodeSolver::getAdjMallocDone() const {
                       N_Vector tmp1, N_Vector tmp2) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fsxdot(t, x, ip, sx, sxdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(sxdot),"sxdot");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(sxdot),"sxdot");
     }
     
     bool operator ==(const CVodeSolver &a, const CVodeSolver &b)

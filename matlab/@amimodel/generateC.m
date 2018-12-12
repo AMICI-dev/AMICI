@@ -150,6 +150,8 @@ fprintf(fid,['class Model_' this.modelname ' : public amici::' baseclass ' {\n']
 fprintf(fid,'public:\n');
 fprintf(fid,['    Model_' this.modelname '() : amici::' baseclass '(' num2str(this.nx) ',\n']);
 fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
+fprintf(fid,['                    ' num2str(this.nx) ',\n']);
+fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
 fprintf(fid,['                    ' num2str(this.ny) ',\n']);
 fprintf(fid,['                    ' num2str(this.nytrue) ',\n']);
 fprintf(fid,['                    ' num2str(this.nz) ',\n']);

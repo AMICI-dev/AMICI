@@ -187,7 +187,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             
             if (converged) {
                 /* Ensure positivity of the found state */
-                for (ix = 0; ix < model->nx; ix++) {
+                for (ix = 0; ix < model->nx_solver; ix++) {
                     if ((*x)[ix] < 0.0) {
                         (*x)[ix] = 0.0;
                         converged = FALSE;

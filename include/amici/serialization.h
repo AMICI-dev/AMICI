@@ -46,6 +46,8 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.quad_rtol;
     ar &u.ss_atol;
     ar &u.ss_rtol;
+    ar &u.ss_atol_sensi;
+    ar &u.ss_rtol_sensi;
     ar &u.maxsteps;
     ar &u.maxstepsB;
     ar &u.newton_preeq;
@@ -69,8 +71,10 @@ void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version) {
 
 template <class Archive>
 void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
-    ar &const_cast<int &>(u.nx);
-    ar &const_cast<int &>(u.nxtrue);
+    ar &const_cast<int &>(u.nx_rdata);
+    ar &const_cast<int &>(u.nxtrue_rdata);
+    ar &const_cast<int &>(u.nx_solver);
+    ar &const_cast<int &>(u.nxtrue_solver);
     ar &const_cast<int &>(u.ny);
     ar &const_cast<int &>(u.nytrue);
     ar &const_cast<int &>(u.nz);
@@ -107,6 +111,7 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &const_cast<int &>(r.np);
     ar &const_cast<int &>(r.nk);
     ar &const_cast<int &>(r.nx);
+    ar &const_cast<int &>(r.nx_solver);
     ar &const_cast<int &>(r.nxtrue);
     ar &const_cast<int &>(r.ny);
     ar &const_cast<int &>(r.nytrue);

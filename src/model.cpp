@@ -11,19 +11,21 @@
 
 namespace amici {
 
-void Model::fsy(const int it, ReturnData *rdata) {
+void Model::fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata) {
     if (!ny)
         return;
     
     // copy dydp for current time to sy
     std::copy(dydp.begin(), dydp.end(), &rdata->sy[it * nplist() * ny]);
+    
+    sx->flatten_to_vector(sxTmp);
 
     // compute sy = 1.0*dydx*sx + 1.0*sy
-    // dydx A[ny,nx] * sx B[nx,nplist] = sy C[ny,nplist]
-    //        M  K          K  N              M  N
-    //        lda           ldb               ldc
-    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, ny, nplist(), nx,
-                1.0, dydx.data(), ny, getsx(it,rdata), nx, 1.0,
+    // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
+    //        M  K                 K  N                     M  N
+    //        lda                  ldb                      ldc
+    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, ny, nplist(), nx_solver,
+                1.0, dydx.data(), ny, sxTmp.data(), nx_solver, 1.0,
                 &rdata->sy[it*nplist()*ny], ny);
 }
 
@@ -35,22 +37,23 @@ void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
                 rdata->sz.at((nroots[ie]*nplist()+ip)*nz + iz) = 0.0;
 }
 
-void Model::fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata) {
+void Model::fsJy(const int it, const std::vector<realtype>& dJydx, const AmiVectorArray *sx, ReturnData *rdata) {
 
     // Compute dJydx*sx for current 'it'
-    // dJydx        rdata->nt x nJ x nx
-    // sx           rdata->nt x nx x nplist()
+    // dJydx        rdata->nt x nJ        x nx_solver
+    // sx           rdata->nt x nx_solver x nplist()
     std::vector<realtype> multResult(nJ * nplist(), 0);
+    sx->flatten_to_vector(sxTmp);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
-                nplist(), nx, 1.0, &dJydx.at(it*nJ*nx), nJ, getsx(it,rdata), nx, 0.0,
+                nplist(), nx_solver, 1.0, &dJydx.at(it*nJ*nx_solver), nJ, sxTmp.data(), nx_solver, 0.0,
                 multResult.data(), nJ);
 
-    // multResult    nJ x nplist()
-    // dJydp         nJ x nplist()
-    // dJydxTmp      nJ x nx
-    // sxTmp         nx x nplist()
+    // multResult    nJ        x nplist()
+    // dJydp         nJ        x nplist()
+    // dJydxTmp      nJ        x nx_solver
+    // sxTmp         nx_solver x nplist()
 
     // sJy += multResult + dJydp
     for (int iJ = 0; iJ < nJ; ++iJ) {
@@ -114,43 +117,39 @@ void Model::fdJydp(const int it, const ExpData *edata,
 
 void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata) {
 
-    // dJydy         nJ x ny x nytrue
-    // dydx          ny x nx
-    // dJydx         nJ x nx x nt
+    // dJydy         nJ x ny        x nytrue
+    // dydx          ny x nx_solver
+    // dJydx         nJ x nx_solver x nt
     getmy(it,edata);
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (isNaN(my.at(iyt)))
             continue;
-    // dJydy A[nyt,nJ,ny] * dydx B[ny,nx] = dJydx C[it,nJ,nx]
-    //         slice                                slice
-    //             M  K            K  N                M  N
-    //             lda             ldb                 ldc
+    // dJydy A[nyt,nJ,ny] * dydx B[ny,nx_solver] = dJydx C[it,nJ,nx_solver]
+    //         slice                                       slice
+    //             M  K            K  N                       M  N
+    //             lda             ldb                        ldc
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
-                    nJ, nx, ny, 1.0, &dJydy.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
-                    &dJydx->at(it*nx*nJ), nJ);
+                    nJ, nx_solver, ny, 1.0, &dJydy.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
+                    &dJydx->at(it*nx_solver*nJ), nJ);
     }
 }
 
 void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVectorArray *sx, ReturnData *rdata) {
     // sJz           nJ x nplist()
     // dJzdp         nJ x nplist()
-    // dJzdx         nmaxevent x nJ x nx
-    // sx            rdata->nt x nx x nplist()
+    // dJzdx         nmaxevent x nJ        x nx_solver
+    // sx            rdata->nt x nx_solver x nplist()
 
     // Compute dJzdx*sx for current 'ie'
-    // dJzdx        rdata->nt x nJ x nx
-    // sx           rdata->nt x nx x nplist()
+    // dJzdx        rdata->nt x nJ        x nx_solver
+    // sx           rdata->nt x nx_solver x nplist()
 
     std::vector<realtype> multResult(nJ * nplist(), 0);
-    std::vector<realtype> sxTmp(rdata->nplist * nx, 0);
-    for (int ip = 0; ip < rdata->nplist; ++ip) {
-        for (int ix = 0; ix < nx; ++ix)
-            sxTmp.at(ix + ip * nx) = sx->at(ix,ip);
-    }
+    sx->flatten_to_vector(sxTmp)
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
-                nplist(), nx, 1.0, &dJzdx.at(nroots*nx*nJ), nJ, sxTmp.data(), nx, 1.0,
+                nplist(), nx_solver, 1.0, &dJzdx.at(nroots*nx_solver*nJ), nJ, sxTmp.data(), nx_solver, 1.0,
                 multResult.data(), nJ);
 
     // sJy += multResult + dJydp
@@ -202,9 +201,9 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
 }
 
 void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata) {
-    // dJzdz         nJ x nz x nztrue
-    // dzdx          nz x nx
-    // dJzdx         nJ x nx x nmaxevent
+    // dJzdz         nJ x nz        x nztrue
+    // dzdx          nz x nx_solver
+    // dJzdx         nJ x nx_solver x nmaxevent
     getmz(nroots,edata);
     for (int izt = 0; izt < nztrue; ++izt) {
         if (isNaN(mz.at(izt)))
@@ -213,13 +212,13 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
         if (t < rdata->ts.at(rdata->ts.size() - 1)) {
             // z
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nx, nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ,
-                        dzdx.data(), nz, 1.0, &dJzdx->at(nroots*nx*nJ), nJ);
+                        BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0, &dJzdz.at(izt*nz*nJ), nJ,
+                        dzdx.data(), nz, 1.0, &dJzdx->at(nroots*nx_solver*nJ), nJ);
         } else {
             // rz
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nx, nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ,
-                        drzdx.data(), nz, 1.0, &dJzdx->at(nroots*nx*nJ), nJ);
+                        BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ,
+                        drzdx.data(), nz, 1.0, &dJzdx->at(nroots*nx_solver*nJ), nJ);
         }
     }
 }
@@ -240,7 +239,7 @@ void Model::initializeStates(AmiVector *x) {
     if (x0data.empty()) {
         fx0(x);
     } else {
-        for (int ix = 0; ix < nx; ix++) {
+        for (int ix = 0; ix < nx_solver; ix++) {
             (*x)[ix] = (realtype) x0data.at(ix);
         }
     }
@@ -553,8 +552,10 @@ std::vector<bool> const& Model::getStateIsNonNegative() const {
 }
 
 void Model::setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative) {
-    if (stateIsNonNegative.size() != static_cast<unsigned long>(nx))
-        throw AmiException("Dimension of input stateIsNonNegative (%d) does not agree with number of state variables (%d)",stateIsNonNegative.size(),nx);
+    if(nx_solver != nx_rdata)
+        throw AmiException("Nonnegative states are not supported whith conservation laws enabled");
+    if (stateIsNonNegative.size() != static_cast<unsigned long>(nx_solver))
+        throw AmiException("Dimension of input stateIsNonNegative (%d) does not agree with number of state variables (%d)",stateIsNonNegative.size(),nx_solver);
     this->stateIsNonNegative = stateIsNonNegative;
     anyStateNonNegative=false;
     for (auto const& flag: stateIsNonNegative) {
@@ -587,7 +588,9 @@ std::vector<realtype> const& Model::getInitialStates() const {
 }
 
 void Model::setInitialStates(const std::vector<realtype> &x0) {
-    if(x0.size() != (unsigned) nx && x0.size() != 0)
+    if(nx_solver != nx_rdata)
+        throw AmiException("Custom initial conditions are not supported whith conservation laws enabled");
+    if(x0.size() != (unsigned) nx_rdata && x0.size() != 0)
         throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
     if (x0.size() == 0)
         this->x0data.clear();
@@ -600,7 +603,9 @@ const std::vector<realtype> &Model::getInitialStateSensitivities() const {
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
-    if(sx0.size() != (unsigned) nx * nplist() && sx0.size() != 0)
+    if(nx_solver != nx_rdata)
+        throw AmiException("Custom initial sensitivity conditions are not supported whith conservation laws enabled");
+    if(sx0.size() != (unsigned) nx_rdata * nplist() && sx0.size() != 0)
         throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
     if (sx0.size() == 0)
         this->sx0data.clear();
@@ -623,6 +628,8 @@ int Model::plist(int pos) const{
 
 Model::Model(const int nx,
              const int nxtrue,
+             const int nx_solver,
+             const int nxtrue_solver,
              const int ny,
              const int nytrue,
              const int nz,
@@ -641,7 +648,8 @@ Model::Model(const int nx,
              const std::vector<int>& plist,
              std::vector<realtype> idlist,
              std::vector<int> z2event)
-    : nx(nx), nxtrue(nxtrue),
+    : nx_rdata(nx), nxtrue_rdata(nxtrue),
+      nx_solver(nx_solver), nxtrue_solver(nxtrue_solver),
       ny(ny), nytrue(nytrue),
       nz(nz), nztrue(nztrue),
       ne(ne),
@@ -661,11 +669,11 @@ Model::Model(const int nx,
       dsigmazdp(nz*plist.size(), 0.0),
       dJydp(nJ*plist.size(), 0.0),
       dJzdp(nJ*plist.size(), 0.0),
-      deltax(nx, 0.0),
-      deltasx(nx*plist.size(), 0.0),
-      deltaxB(nx, 0.0),
+      deltax(nx_solver, 0.0),
+      deltasx(nx_solver*plist.size(), 0.0),
+      deltaxB(nx_solver, 0.0),
       deltaqB(nJ*plist.size(), 0.0),
-      dxdotdp(nx*plist.size(), 0.0),
+      dxdotdp(nx_solver*plist.size(), 0.0),
       my(nytrue, 0.0),
       mz(nztrue, 0.0),
       dJydy(nJ*nytrue*ny, 0.0),
@@ -674,32 +682,33 @@ Model::Model(const int nx,
       dJzdsigma(nJ*nztrue*nz, 0.0),
       dJrzdz(nJ*nztrue*nz, 0.0),
       dJrzdsigma(nJ*nztrue*nz, 0.0),
-      dzdx(nz*nx, 0.0),
+      dzdx(nz*nx_solver, 0.0),
       dzdp(nz*plist.size(), 0.0),
-      drzdx(nz*nx, 0.0),
+      drzdx(nz*nx_solver, 0.0),
       drzdp(nz*plist.size(), 0.0),
       dydp(ny*plist.size(), 0.0),
-      dydx(ny*nx,0.0),
+      dydx(ny*nx_solver,0.0),
       w(nw, 0.0),
       dwdx(ndwdx, 0.0),
       dwdp(ndwdp, 0.0),
-      M(nx*nx, 0.0),
+      M(nx_solver*nx_solver, 0.0),
       stau(plist.size(), 0.0),
       h(ne,0.0),
       unscaledParameters(p),
       originalParameters(p),
       fixedParameters(std::move(k)),
       plist_(plist),
-      stateIsNonNegative(nx, false),
-      x_pos_tmp(nx),
+      stateIsNonNegative(nx_solver, false),
+      x_pos_tmp(nx_solver),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
 {
-    J = SparseNewMat(nx, nx, nnz, CSC_MAT);
+    J = SparseNewMat(nx_solver, nx_solver, nnz, CSC_MAT);
     requireSensitivitiesForAllParameters();
 }
 
 Model::Model(const Model &other)
-    : nx(other.nx), nxtrue(other.nxtrue),
+    : nx_rdata(other.nx_rdata), nxtrue_rdata(other.nxtrue_rdata),
+      nx_solver(other.nx_solver), nxtrue_solver(other.nxtrue_solver),
       ny(other.ny), nytrue(other.nytrue),
       nz(other.nz), nztrue(other.nztrue),
       ne(other.ne), nw(other.nw),
@@ -755,7 +764,7 @@ Model::Model(const Model &other)
       steadyStateSensitivityMode(other.steadyStateSensitivityMode),
       reinitializeFixedParameterInitialStates(other.reinitializeFixedParameterInitialStates)
 {
-    J = SparseNewMat(nx, nx, nnz, CSC_MAT);
+    J = SparseNewMat(nx_solver, nx_solver, nnz, CSC_MAT);
     SparseCopyMat(other.J, J);
 }
 
@@ -770,15 +779,19 @@ void Model::initializeVectors()
     dsigmazdp.resize(nz * nplist(), 0.0);
     dJydp.resize(nJ * nplist(), 0.0);
     dJzdp.resize(nJ * nplist(), 0.0);
-    deltasx.resize(nx * nplist(), 0.0);
+    deltasx.resize(nx_solver * nplist(), 0.0);
     deltaqB.resize(nJ * nplist(), 0.0);
-    dxdotdp.resize(nx * nplist(), 0.0);
+    dxdotdp.resize(nx_solver * nplist(), 0.0);
     dzdp.resize(nz * nplist(), 0.0);
     drzdp.resize(nz * nplist(), 0.0);
     dydp.resize(ny * nplist(), 0.0);
     stau.resize(nplist(), 0.0);
+    sxTmp.resize(nplist() * nx_solver, 0.0);
 }
 
+void Model::fx_conservation_law(AmiVector *x_full, const AmiVector *x) {
+    fx_conservation_law(x_full->data(), x->data());
+}
 
 void Model::fx0(AmiVector *x) {
     x->reset();
@@ -797,8 +810,12 @@ void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
     }
 }
 
-
 void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
+    
+void Model::fsx_conservation_law(AmiVector *sx_full, const AmiVector *sx) {
+    for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
+        fsx_conservation_law(sx_full->data(ip), sx->data(ip));
+}
 
 void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
     sx->reset();
@@ -909,7 +926,7 @@ void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const A
     fw(t,x->data());
     std::fill(deltasx.begin(),deltasx.end(),0.0);
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fdeltasx(&deltasx.at(nx*ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),
+        fdeltasx(&deltasx.at(nx_solver*ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),
                  plist_.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
 }
 
@@ -1233,11 +1250,11 @@ void Model::getmy(const int it, const ExpData *edata){
 }
 
 const realtype *Model::getx(const int it, const ReturnData *rdata) const {
-    return &rdata->x.at(it*nx);
+    return &rdata->x.at(it*nx_rdata);
 }
 
 const realtype *Model::getsx(const int it, const ReturnData *rdata) const {
-    return &rdata->sx.at(it*nx*nplist());
+    return &rdata->sx.at(it*nx_rdata*nplist());
 }
 
 const realtype *Model::gety(const int it, const ReturnData *rdata) const {
@@ -1297,8 +1314,10 @@ bool operator ==(const Model &a, const Model &b)
     if (typeid(a) != typeid(b))
         return false;
 
-    return (a.nx == b.nx)
-            && (a.nxtrue == b.nxtrue)
+    return (a.nx_rdata == b.nx_rdata)
+            && (a.nxtrue_rdata == b.nxtrue_rdata)
+            && (a.nx_solver == b.nx_solver)
+            && (a.nxtrue_solver == b.nxtrue_solver)
             && (a.ny == b.ny)
             && (a.nytrue == b.nytrue)
             && (a.nz == b.nz)

@@ -41,13 +41,16 @@ namespace amici {
     public:
         /** default constructor */
         Model()
-        : nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
+        : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0), nytrue(0), nz(0), nztrue(0),
         ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
         o2mode(SecondOrderMode::none), x_pos_tmp(0) {}
         
         /** constructor with model dimensions
-         * @param nx number of state variables
-         * @param nxtrue number of state variables of the non-augmented model
+         * @param nx_rdata number of state variables
+         * @param nxtrue_rdata number of state variables of the non-augmented model
+         * @param nx_solver number of state variables with conservation laws applied
+         * @param nxtrue_solver number of state variables of the non-augmented model
+         with conservation laws applied
          * @param ny number of observables
          * @param nytrue number of observables of the non-augmented model
          * @param nz number of event observables
@@ -69,7 +72,7 @@ namespace amici {
          * @param idlist indexes indicating algebraic components (DAE only)
          * @param z2event mapping of event outputs to events
          */
-        Model(const int nx, const int nxtrue,
+        Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver, const int nxtrue_solver,
               const int ny, const int nytrue, const int nz, const int nztrue,
               const int ne, const int nJ, const int nw, const int ndwdx,
               const int ndwdp, const int nnz, const int ubw, const int lbw,
@@ -890,7 +893,7 @@ namespace amici {
          * @brief Reports whether the model has state names set.
          * @return boolean indicating whether state names were set
          */
-        virtual bool hasStateNames() const { return nx && !getStateNames().empty(); }
+        virtual bool hasStateNames() const { return nx_rdata && !getStateNames().empty(); }
 
         /**
          * @brief Get names of the model states
@@ -984,7 +987,7 @@ namespace amici {
          * @brief Reports whether the model has state ids set.
          * @return
          */
-        virtual bool hasStateIds() const { return nx && !getStateIds().empty(); }
+        virtual bool hasStateIds() const { return nx_rdata && !getStateIds().empty(); }
         
         /**
          * @brief Get ids of the model states
@@ -1062,9 +1065,13 @@ namespace amici {
         }
 
         /** number of states */
-        const int nx;
+        const int nx_rdata;
         /** number of states in the unaugmented system */
-        const int nxtrue;
+        const int nxtrue_rdata;
+        /** number of states with conservation laws applied */
+        const int nx_solver;
+        /** number of states in the unaugmented system with conservation laws applied */
+        const int nxtrue_solver;
         /** number of observables */
         const int ny;
         /** number of observables in the unaugmented system */
@@ -1110,16 +1117,16 @@ namespace amici {
         /** parameter derivative of event likelihood for current timepoint (dimension: nplist x nJ, row-major) */
         std::vector<realtype> dJzdp;
 
-        /** change in x at current timepoint (dimension: nx) */
+        /** change in x at current timepoint (dimension: nx_solver) */
         std::vector<realtype> deltax;
-        /** change in sx at current timepoint (dimension: nplist x nx, row-major) */
+        /** change in sx at current timepoint (dimension: nplist x nx_solver, row-major) */
         std::vector<realtype> deltasx;
-        /** change in xB at current timepoint (dimension: nJ x nxtrue, row-major) */
+        /** change in xB at current timepoint (dimension: nJ x nxtrue_cl, row-major) */
         std::vector<realtype> deltaxB;
         /** change in qB at current timepoint (dimension: nJ x nplist, row-major) */
         std::vector<realtype> deltaqB;
 
-        /** tempory storage of dxdotdp data across functions (dimension: nplist x nx, row-major) */
+        /** tempory storage of dxdotdp data across functions (dimension: nplist x nx_solver, row-major) */
         std::vector<realtype> dxdotdp;
 
 
@@ -1704,18 +1711,18 @@ namespace amici {
         std::vector<realtype> dJrzdz;
         /** event sigma derivative of event likelihood at final timepoint (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJrzdsigma;
-        /** state derivative of event output (dimension: nz * nx, ordering = ?) */
+        /** state derivative of event output (dimension: nz * nx_solver, ordering = ?) */
         std::vector<realtype> dzdx;
         /** parameter derivative of event output (dimension: nz * nplist, ordering = ?) */
         std::vector<realtype> dzdp;
-        /** state derivative of event timepoint (dimension: nz * nx, ordering = ?) */
+        /** state derivative of event timepoint (dimension: nz * nx_solver, ordering = ?) */
         std::vector<realtype> drzdx;
         /** parameter derivative of event timepoint (dimension: nz * nplist, ordering = ?) */
         std::vector<realtype> drzdp;
         /** parameter derivative of observable (dimension: nplist * ny, row-major) */
         std::vector<realtype> dydp;
 
-        /** state derivative of observable (dimension: ny * nx, ordering = ?) */
+        /** state derivative of observable (dimension: ny * nx_solver, ordering = ?) */
         std::vector<realtype> dydx;
         /** tempory storage of w data across functions (dimension: nw) */
         std::vector<realtype> w;
@@ -1723,10 +1730,13 @@ namespace amici {
         std::vector<realtype> dwdx;
         /** tempory storage of sparse dwdp data across functions (dimension: ndwdp) */
         std::vector<realtype> dwdp;
-        /** tempory storage of M data across functions (dimension: nx) */
+        /** tempory storage of mass matrix data across functions (dimension: nx_solver) */
         std::vector<realtype> M;
         /** tempory storage of stau data across functions (dimension: nplist) */
         std::vector<realtype> stau;
+        
+        /** tempory storage of w data across functions (dimension: nw) */
+        std::vector<realtype> sxTmp;
         
         /** flag indicating whether a certain heaviside function should be active or
          not (dimension: ne) */
@@ -1744,10 +1754,10 @@ namespace amici {
         /** indexes of parameters wrt to which sensitivities are computed (dimension nplist) */
         std::vector<int> plist_;
 
-        /** state initialisation (size nx) */
+        /** state initialisation (size nx_solver) */
         std::vector<double> x0data;
 
-        /** sensitivity initialisation (size nx * nplist, ordering = ?) */
+        /** sensitivity initialisation (size nx_solver * nplist, ordering = ?) */
         std::vector<realtype> sx0data;
 
         /** timepoints (size nt) */

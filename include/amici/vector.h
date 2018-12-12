@@ -128,6 +128,14 @@ public:
     realtype& at(int pos) {
         return vec.at(static_cast<decltype(vec)::size_type>(pos));
     }
+    
+    /** accessor to data elements of the vector
+     * @param pos index of element
+     * @return element
+     */
+    const realtype& at(int pos) const {
+        return vec.at(static_cast<decltype(vec)::size_type>(pos));
+    }
 
     ~AmiVector(){
         N_VDestroy_Serial(nvec);
@@ -194,12 +202,21 @@ public:
     }
 
     /** accessor to elements of AmiVector elements
+     * @param ipos inner index in AmiVector
+     * @param jpos outer index in AmiVectorArray
+     * @return element
+     */
+    realtype& at(int ipos, int jpos) {
+        return vec_array.at(static_cast<decltype(vec_array)::size_type>(jpos)).at(ipos);
+    }
+    
+    /** accessor to elements of AmiVector elements
       * @param ipos inner index in AmiVector
       * @param jpos outer index in AmiVectorArray
       * @return element
       */
-    realtype& at(int ipos, int jpos) {
-        return vec_array.at(static_cast<decltype(vec_array)::size_type>(jpos))[ipos];
+    const realtype& at(int ipos, int jpos) const {
+        return vec_array.at(static_cast<decltype(vec_array)::size_type>(jpos)).at(ipos);
     }
 
     /** accessor to NVectorArray
@@ -244,6 +261,21 @@ public:
     void reset() {
         for(auto &v: vec_array)
             v.reset();
+    }
+    
+    void flatten_to_vector(std::vector<realtype>& vec) const {
+        int n_outer = vec_array.size();
+        if(n_outer == 0)
+            return; //nothing to do ...
+        int n_inner = vec_array.at(0).getLength();
+        
+        if(vec.size() != n_inner * n_outer)
+            throw AmiException("Dimension of AmiVectorArray (%ix%i) does not match target vector dimension (%i)", n_inner, n_outer, vec.size());
+           
+        for (int outer = 0; outer < n_outer; ++outer) {
+            for (int inner = 0; inner < n_inner; ++inner)
+                vec.at(inner + outer * n_inner) = this->at(inner,outer);
+        }
     }
 
     ~AmiVectorArray(){

@@ -14,6 +14,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_EQUAL(r.nk, s.nk);
     CHECK_EQUAL(r.nx, s.nx);
     CHECK_EQUAL(r.nxtrue, s.nxtrue);
+    CHECK_EQUAL(r.nx_solver, s.nx_solver);
     CHECK_EQUAL(r.ny, s.ny);
     CHECK_EQUAL(r.nytrue, s.nytrue);
     CHECK_EQUAL(r.nz, s.nz);
@@ -116,7 +117,7 @@ TEST(dataSerialization, testFile) {
     int nx = 3;
     int nz = 4;
     amici::CVodeSolver solver;
-    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15,
+    amici::Model_Test m = amici::Model_Test(nx, nx, nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15,
                                             amici::SecondOrderMode::none,
                                             std::vector<realtype>(np,0.0),
                                             std::vector<realtype>(nk,0.0),
@@ -149,7 +150,7 @@ TEST(dataSerialization, testString) {
     int nx = 3;
     int nz = 4;
     amici::CVodeSolver solver;
-    amici::Model_Test m = amici::Model_Test(nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15,
+    amici::Model_Test m = amici::Model_Test(nx, nx, nx, nx, 4, 4, nz, nz, 8, 9, 10, 11, 12, 13, 14, 15,
                                             amici::SecondOrderMode::none,
                                             std::vector<realtype>(np,0.0),
                                             std::vector<realtype>(nk,0.0),

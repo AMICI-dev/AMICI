@@ -17,8 +17,8 @@ namespace amici {
   */
 BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
     llhS0(static_cast<decltype(llhS0)::size_type>(fwd->model->nJ * fwd->model->nplist()), 0.0),
-    xB(fwd->model->nx),
-    dxB(fwd->model->nx),
+    xB(fwd->model->nx_solver),
+    dxB(fwd->model->nx_solver),
     xQB(fwd->model->nJ*fwd->model->nplist()),
     x_disc(fwd->getStatesAtDiscontinuities()),
     xdot_disc(fwd->getRHSAtDiscontinuities()),
@@ -46,7 +46,7 @@ void BackwardProblem::workBackwardProblem() {
      * workForwardProblem should be called before this is function is called
      */
 
-    if (model->nx <= 0 || solver->getSensitivityOrder() < SensitivityOrder::first ||
+    if (model->nx_solver <= 0 || solver->getSensitivityOrder() < SensitivityOrder::first ||
         solver->getSensitivityMethod() != SensitivityMethod::adjoint || model->nplist() == 0) {
         return;
     }
@@ -90,7 +90,7 @@ void BackwardProblem::workBackwardProblem() {
 
     /* we still need to integrate from first datapoint to tstart */
     if (t > model->t0()) {
-        if (model->nx > 0) {
+        if (model->nx_solver > 0) {
             /* solve for backward problems */
             solver->solveB(model->t0(), AMICI_NORMAL);
             solver->getQuadB(which, &(t), &xQB);
@@ -103,17 +103,17 @@ void BackwardProblem::workBackwardProblem() {
         if (iJ == 0) {
             for (int ip = 0; ip < model->nplist(); ++ip) {
                 llhS0[ip] = 0.0;
-                for (int ix = 0; ix < model->nxtrue; ++ix) {
+                for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
                     llhS0[ip] += xB[ix] * sx.at(ix,ip);
                 }
             }
         } else {
             for (int ip = 0; ip < model->nplist(); ++ip) {
                 llhS0[ip + iJ * model->nplist()] = 0.0;
-                for (int ix = 0; ix < model->nxtrue; ++ix) {
+                for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
                     llhS0[ip + iJ * model->nplist()] +=
-                        xB[ix + iJ * model->nxtrue] * sx.at(ix,ip)+
-                        xB[ix] * sx.at(ix + iJ * model->nxtrue,ip);
+                        xB[ix + iJ * model->nxtrue_solver] * sx.at(ix,ip)+
+                        xB[ix] * sx.at(ix + iJ * model->nxtrue_solver,ip);
                 }
             }
         }
@@ -154,13 +154,13 @@ void BackwardProblem::handleEventB(int iroot) {
         model->fdeltaqB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
         model->fdeltaxB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
 
-        for (int ix = 0; ix < model->nxtrue; ++ix) {
+        for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
             for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                xB[ix + iJ * model->nxtrue] +=
-                        model->deltaxB[ix + iJ * model->nxtrue];
+                xB[ix + iJ * model->nxtrue_solver] +=
+                        model->deltaxB[ix + iJ * model->nxtrue_solver];
                 if (model->nz > 0) {
-                    xB[ix + iJ * model->nxtrue] +=
-                            dJzdx[iJ + ( ix + nroots[ie] * model->nx ) * model->nJ];
+                    xB[ix + iJ * model->nxtrue_solver] +=
+                            dJzdx[iJ + ( ix + nroots[ie] * model->nx_solver ) * model->nJ];
                 }
             }
         }
@@ -185,11 +185,11 @@ void BackwardProblem::handleEventB(int iroot) {
  * @param[in] it index of data point @type int
  */
 void BackwardProblem::handleDataPointB(int it) {
-    for (int ix = 0; ix < model->nxtrue; ix++) {
+    for (int ix = 0; ix < model->nxtrue_solver; ix++) {
         for (int iJ = 0; iJ < model->nJ; iJ++)
-            // we only need the 1:nxtrue slice here!
-            xB[ix + iJ * model->nxtrue] +=
-                dJydx[iJ + ( ix + it * model->nx ) * model->nJ];
+            // we only need the 1:nxtrue_cl slice here!
+            xB[ix + iJ * model->nxtrue_solver] +=
+                dJydx[iJ + ( ix + it * model->nx_solver ) * model->nJ];
     }
     solver->getDiagnosisB(it, rdata, this->which);
 }

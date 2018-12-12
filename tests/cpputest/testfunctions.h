@@ -118,7 +118,7 @@ public:
     
     virtual std::vector<std::string> getStateNames() const override
     {
-        return getVariableNames("x", nx);
+        return getVariableNames("x", nx_rdata);
     }
     
     virtual std::vector<std::string> getFixedParameterNames() const override
@@ -138,7 +138,7 @@ public:
     
     virtual std::vector<std::string> getStateIds() const override
     {
-        return getVariableNames("x", nx);
+        return getVariableNames("x", nx_rdata);
     }
     
     virtual std::vector<std::string> getFixedParameterIds() const override

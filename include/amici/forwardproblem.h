@@ -219,22 +219,26 @@ class ForwardProblem {
     /** temporary storage of Jacobian, kept here to avoid reallocation (dimension: nx x nx, col-major) */
     DlsMat Jtmp;
     
-    /** state vector (dimension: nx) */
+    /** state vector (dimension: nx_cl) */
     AmiVector x;
-    /** old state vector (dimension: nx) */
+    /** state vector, including states eliminated from conservation laws (dimension: nx) */
+    AmiVector x_full;
+    /** old state vector (dimension: nx_cl) */
     AmiVector x_old;
-    /** differential state vector (dimension: nx) */
+    /** differential state vector (dimension: nx_cl) */
     AmiVector dx;
-    /** old differential state vector (dimension: nx) */
+    /** old differential state vector (dimension: nx_cl) */
     AmiVector dx_old;
-    /** time derivative state vector (dimension: nx) */
+    /** time derivative state vector (dimension: nx_cl) */
     AmiVector xdot;
-    /** old time derivative state vector (dimension: nx) */
+    /** old time derivative state vector (dimension: nx_cl) */
     AmiVector xdot_old;
 
-    /** sensitivity state vector array (dimension: nx x nplist, row-major) */
+    /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sx;
-    /** differential sensitivity state vector array (dimension: nx x nplist, row-major) */
+    /** full sensitivity state vector array, including states eliminated from conservation laws (dimension: nx x nplist, row-major) */
+    AmiVectorArray sx_full;
+    /** differential sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sdx;
 
     /** storage for last found root */
