@@ -37,6 +37,10 @@ from amici.setuptools import (
     generateSwigInterfaceFiles,
 )
 
+# Python version check. We need >= 3.6 due to e.g. f-strings
+if sys.version_info < (3, 6):
+    sys.exit('PEtab requires at least Python version 3.6')
+
 # Extra compiler flags
 cxx_flags = []
 amici_module_linker_flags = []
@@ -269,7 +273,7 @@ def main():
         packages=find_packages(),
         package_dir={'amici': 'amici'},
         install_requires=['sympy', 'python-libsbml', 'h5py', 'pandas', 'setuptools>=40.6.3'],
-        python_requires='>=3',
+        python_requires='>=3.6',
         package_data={
             'amici': ['amici/include/amici/*',
                       'src/*template*',
