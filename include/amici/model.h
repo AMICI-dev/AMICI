@@ -187,6 +187,19 @@ namespace amici {
         virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                              AmiVector *v, AmiVector *nJv, realtype cj) = 0;
         
+        /** Expands conservation law for states
+         * @param x_full pointer to state variables with conservation laws expanded (stored in rdata)
+         * @param x pointer to state variables with conservation laws applied (solver returns this)
+         */
+        void fx_conservation_law(AmiVector *x_full, const AmiVector *x);
+        
+        /** Expands conservation law for state sensitivities
+         * @param sx_full pointer to state variable sensitivities with conservation laws expanded (stored in rdata)
+         * @param sx pointer to state variable sensitivities with conservation laws applied (solver returns this)
+         */
+        void fsx_conservation_law(AmiVectorArray *sx_full, const AmiVectorArray *sx);
+        
+        
         /** Initial states
          * @param x pointer to state variables
          */
@@ -461,9 +474,10 @@ namespace amici {
                 
         /** Sensitivity of measurements y, total derivative sy = dydx * sx + dydp
          * @param it timepoint index
+         * @param sx pointer to state sensitivities
          * @param rdata pointer to return data instance
          */
-        void fsy(const int it, ReturnData *rdata);
+        void fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata);
         
         /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
          * total derivative
@@ -476,10 +490,11 @@ namespace amici {
         /** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
          * derivative
          * @param it timepoint index
+         * @param sx pointer to state sensitivities
          * @param dJydx vector with values of state derivative of Jy
          * @param rdata pointer to return data instance
          */
-        void fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata);
+        void fsJy(const int it, const std::vector<realtype>& dJydx, const AmiVectorArray *sx, ReturnData *rdata);
         
         /** Compute sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
          * parameters for the given timepoint. Add result to respective fields in rdata.
@@ -506,7 +521,7 @@ namespace amici {
          * @param sx pointer to state sensitivities
          * @param rdata pointer to return data instance
          */
-        void fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVectorArray *sx, ReturnData *rdata);
+        void fsJz(const int nroots, const std::vector<realtype>& dJzdx, const AmiVectorArray *sx, ReturnData *rdata);
         
         /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
          * parameters
@@ -1136,7 +1151,27 @@ namespace amici {
          * @brief Set the nplist-dependent vectors to their proper sizes
          */
         void initializeVectors();
-
+        
+        /** model specific implementation of fx_conservation_law
+         * @param x_full state variables with conservation laws expanded
+         * @param x state variables with conservation laws applied
+         * @param p parameter vector
+         * @param k constant vector
+         **/
+        virtual void fx_conservation_law(realtype *x_full, const realtype *x, const realtype *p, const realtype *k) {
+            std::copy_n(x, this->nx_solver, x_full);
+        }
+        
+        /** model specific implementation of fsx_conservation_law
+         * @param sx_full state sensitivity variables with conservation laws expanded
+         * @param sx state sensitivity variables with conservation laws applied
+         * @param p parameter vector
+         * @param k constant vector
+         * @param ip sensitivity index
+         **/
+        virtual void fsx_conservation_law(realtype *sx_full, const realtype *sx, const realtype *p, const realtype *k, const int ip) {
+            std::copy_n(sx, this->nx_solver, sx_full);
+        }
         
         /** model specific implementation of fx0
          * @param x0 initial state

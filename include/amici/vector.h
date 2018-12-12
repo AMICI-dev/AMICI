@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <nvector/nvector_serial.h>
+#include <amici/exception.h>
 
 namespace amici {
 

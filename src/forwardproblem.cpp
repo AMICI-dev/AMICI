@@ -98,11 +98,11 @@ void ForwardProblem::workForwardProblem() {
     if (solver->getNewtonPreequilibration() || (edata && !edata->fixedParametersPreequilibration.empty())) {
         handlePreequilibration();
     } else {
-        model->fx_conservation_law(x_full, x)
+        model->fx_conservation_law(&x_full, &x);
         rdata->x0 = x_full.getVector();
         if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
             solver->getSensitivityOrder() >= SensitivityOrder::first) {
-            model->fsx_conservation_law(sx_full, sx);
+            model->fsx_conservation_law(&sx_full, &sx);
             for (int ix = 0; ix < model->nx_rdata; ix++) {
                 for (int ip = 0; ip < model->nplist(); ip++)
                     rdata->sx0[ip*model->nx_rdata + ix] = sx_full.at(ix,ip);
@@ -206,7 +206,7 @@ void ForwardProblem::updateAndReinitStatesAndSensitivities()
     if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
         model->fsx0_fixedParameters(&sx, &x);
         
-        model->fsx_conservation_law(sx_full, sx);
+        model->fsx_conservation_law(&sx_full, &sx);
         for (int ip = 0; ip < model->nplist(); ip++)
             for (int ix = 0; ix < model->nx_rdata; ix++)
                 rdata->sx0[ip * model->nx_rdata + ix] = sx_full.at(ix, ip);
@@ -542,7 +542,7 @@ void ForwardProblem::handleDataPoint(int it) {
      *
      * @param it index of data point
      */
-    model->fx_conservation_law(x_full, x);
+    model->fx_conservation_law(&x_full, &x);
     std::copy_n(x_full.data(), model->nx_rdata, &rdata->x.at(it*model->nx_rdata));
     
     if (model->t(it) > model->t0()) {
@@ -605,7 +605,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
         solver->getSens(&(t), &sx);
     }
     
-    model->fsx_conservation_law(sx_full, sx);
+    model->fsx_conservation_law(&sx_full, &sx);
     for (int ix = 0; ix < model->nx_rdata; ix++) {
         for (int ip = 0; ip < model->nplist(); ip++) {
             rdata->sx[(it * model->nplist() + ip) * rdata->nx + ix] =
@@ -615,9 +615,9 @@ void ForwardProblem::getDataSensisFSA(int it) {
     
     model->fdsigmaydp(it, rdata, edata);
 
-    model->fsy(it, sx, rdata);
+    model->fsy(it, &sx, rdata);
     if (edata) {
-        model->fsJy(it, dJydx, sx, rdata);
+        model->fsJy(it, dJydx, &sx, rdata);
         model->fsres(it, rdata, edata);
         model->fFIM(it, rdata);
     }

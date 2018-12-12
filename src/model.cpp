@@ -30,7 +30,6 @@ void Model::fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata) {
 }
 
 void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
-    
     for (int iz = 0; iz < nz; ++iz)
         if (z2event[iz] - 1 == ie)
             for (int ip = 0; ip < nplist(); ++ip)
@@ -134,7 +133,7 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
     }
 }
 
-void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVectorArray *sx, ReturnData *rdata) {
+void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, const AmiVectorArray *sx, ReturnData *rdata) {
     // sJz           nJ x nplist()
     // dJzdp         nJ x nplist()
     // dJzdx         nmaxevent x nJ        x nx_solver
@@ -145,7 +144,7 @@ void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVector
     // sx           rdata->nt x nx_solver x nplist()
 
     std::vector<realtype> multResult(nJ * nplist(), 0);
-    sx->flatten_to_vector(sxTmp)
+    sx->flatten_to_vector(sxTmp);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
@@ -790,7 +789,7 @@ void Model::initializeVectors()
 }
 
 void Model::fx_conservation_law(AmiVector *x_full, const AmiVector *x) {
-    fx_conservation_law(x_full->data(), x->data());
+    fx_conservation_law(x_full->data(), x->data(), unscaledParameters.data(),fixedParameters.data());
 }
 
 void Model::fx0(AmiVector *x) {
@@ -812,9 +811,9 @@ void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
 
 void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
     
-void Model::fsx_conservation_law(AmiVector *sx_full, const AmiVector *sx) {
+void Model::fsx_conservation_law(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
     for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
-        fsx_conservation_law(sx_full->data(ip), sx->data(ip));
+        fsx_conservation_law(sx_full->data(ip), sx->data(ip), unscaledParameters.data(),fixedParameters.data(), ip);
 }
 
 void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
