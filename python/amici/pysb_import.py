@@ -1,6 +1,6 @@
 from .ode_export import (
     ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
-    Expression, LogLikelihood
+    Expression, LogLikelihood, sanitize_basic_sympy
 )
 
 import sympy as sp
@@ -9,6 +9,7 @@ try:
     import pysb.bng
     ## bool indicating whether pysb is available
     pysb_available = True
+    from pysb.pattern import SpeciesPatternMatcher
 except ImportError:
     pysb_available = False
 
@@ -80,7 +81,8 @@ def pysb2amici(model,
 
 
 def ODEModel_from_pysb_importer(model, constants=None,
-                                observables=None, sigmas=None):
+                                observables=None, sigmas=None,
+                                compute_conservation_laws=True):
     """Creates an ODEModel instance from a pysb.Model instance.
 
 
@@ -94,6 +96,11 @@ def ODEModel_from_pysb_importer(model, constants=None,
 
         sigmas: dict with observable Expression name as key and sigma
         Expression name as expression @type list
+
+        compute_conservation_laws: if set to true, conservation laws are
+        automatically computed and applied such that the state-jacobian of
+        the ODE right-hand-side has full rank. This option should be set to
+        True when using the newton algorithm to compute steadystates @type bool
 
 
     Returns:
@@ -125,6 +132,8 @@ def ODEModel_from_pysb_importer(model, constants=None,
     process_pysb_parameters(model, ODE, constants)
     process_pysb_expressions(model, ODE, observables, sigmas)
     process_pysb_observables(model, ODE)
+    if compute_conservation_laws:
+        process_pysb_conservation_laws(model, ODE)
 
     ODE.generateBasicVariables()
 
@@ -332,3 +341,75 @@ def process_pysb_observables(model, ODE):
                     obs.expand_obs()
                 )
             )
+
+
+def process_pysb_conservation_laws(model, ODE):
+    """Removes species according to conservation laws to ensure that the
+    jacobian has full rank
+
+
+    Arguments:
+        model: pysb model @type pysb.Model
+
+        ODE: ODEModel instance @type ODEModel
+
+
+    Returns:
+
+    Raises:
+
+    """
+
+    monomers_without_conservation_law = set()
+    for rule in model.rules:
+        monomers_without_conservation_law |= get_unconserved_monomers(rule)
+
+    conservation_laws = []
+    for monomer in model.monomers:
+        if monomer.name not in monomers_without_conservation_law:
+            total_abundance = sanitize_basic_sympy(sum([
+                ic[1] * extract_monomers(ic[0]).count(monomer.name)
+                for ic in model.initial_conditions
+            ]))
+            target_index = next(
+                ix
+                for ix, specie in enumerate(model.species)
+                if len(extract_monomers(specie)) == 1
+                and extract_monomers(specie)[0] == monomer.name
+            )
+            target_expression = total_abundance - sanitize_basic_sympy(sum([
+                sp.Symbol(f'__s{ix}')
+                * extract_monomers(specie).count(monomer.name)
+                for ix, specie in enumerate(model.species)
+                if ix != target_index
+            ]))
+            target_state = sp.Symbol(f'__s{target_index}')
+            ODE.add_conservation_law(target_state, target_expression)
+
+
+
+def extract_monomers(complex_patterns):
+    if not isinstance(complex_patterns, list):
+        complex_patterns = [complex_patterns]
+    return [
+        mp.monomer.name
+        for cp in complex_patterns
+        if cp is not None
+        for mp in cp.monomer_patterns
+    ]
+
+def get_unconserved_monomers(rule):
+    reactant_monomers = extract_monomers(
+        rule.reactant_pattern.complex_patterns
+    )
+
+    product_monomers = extract_monomers(
+        rule.product_pattern.complex_patterns
+    )
+
+    unconserved_monomers = set()
+    for monomer in set(reactant_monomers + product_monomers):
+        if reactant_monomers.count(monomer) != product_monomers.count(monomer):
+            unconserved_monomers |= {monomer}
+
+    return unconserved_monomers

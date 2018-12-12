@@ -353,7 +353,13 @@ class State(ModelQuantity):
     """A State variable defines an entity that evolves with time according to the
     provided time derivative, abbreviated by `x`
 
+    Attributes:
+        conservation_law: algebraic formula that allows computation of this
+        species according to a conservation law
+
     """
+
+    conservation_law = None
 
     def __init__(self, identifier, name, value, dt):
         """Create a new State instance. Extends ModelQuantity.__init__ by dt
@@ -377,10 +383,18 @@ class State(ModelQuantity):
         """
         super(State, self).__init__(identifier, name, value)
         if not isinstance(dt, sp.Basic):
-            raise TypeError(f'dt must be sympy.Symbol, was '
+            raise TypeError(f'dt must have type sympy.Basic, was '
                             f'{type(dt)}')
 
         self._dt = sanitize_basic_sympy(dt)
+        self.conservation_law = None
+
+    def set_conservation_law(self, law):
+        if not isinstance(law, sp.Basic):
+            raise TypeError(f'conservation law must have type sympy.Basic, '
+                            f'was {type(law)}')
+
+        self.conservation_law = law
 
 class Observable(ModelQuantity):
     """An Observable links model simulations to experimental measurements,
@@ -775,6 +789,33 @@ class ODEModel:
                 )
                 return
         Exception(f'Invalid component type {type(component)}')
+
+    def add_conservation_law(self, state, law):
+        """Adds a new conservation law to the model.
+
+        Arguments:
+            state: symbolic identifier of the state that should be replaced by
+            the conservation law
+            law: algebraic formula that should replace the state
+
+        Returns:
+
+        Raises:
+            Exception if the specified state does not correspond to a valid
+            state in the model
+
+        """
+        try:
+            ix = [
+                state.identifier
+                for state in self._states
+            ].index(state)
+        except ValueError:
+            raise Exception(f'Speciefied state {state} was not found in the '
+                            f'model states.')
+
+
+        self._states[ix].set_conservation_law(law)
 
     def nx(self):
         """Number of states.
