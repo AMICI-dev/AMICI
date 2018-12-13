@@ -1820,8 +1820,10 @@ class ODEExporter:
 
         templateData = {
             'MODELNAME': str(self.modelName),
-            'NX': str(self.model.nx()),
-            'NXTRUE': str(self.model.nx()),
+            'NX_RDATA': str(self.model.nx()),
+            'NXTRUE_RDATA': str(self.model.nx()),
+            'NX_SOLVER': str(self.model.nx()),
+            'NXTRUE_SOLVER': str(self.model.nx()),
             'NY': str(self.model.ny()),
             'NYTRUE': str(self.model.ny()),
             'NZ': '0',

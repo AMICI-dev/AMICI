@@ -52,7 +52,7 @@ TEST_GROUP(model)
     std::vector<int> plist {1};
     std::vector<realtype> idlist {0};
     std::vector<int> z2event {0,0,0};
-    Model_Test model = Model_Test(nx, nx, ny, ny, nz, nz, nmaxevent,
+    Model_Test model = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz, nmaxevent,
                                   0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                                   p, k, plist, idlist, z2event);
     
@@ -246,7 +246,8 @@ TEST_GROUP(edata)
     std::unique_ptr<amici::Model> model = getModel();
     
 
-    Model_Test model_dim = Model_Test(nx, nx, ny, ny, nz, nz, nmaxevent, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
+    Model_Test model_dim = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz,
+    nmaxevent, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                            std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                            std::vector<realtype>(0,0.0),std::vector<int>(0,1));
     void setup() {
@@ -468,7 +469,8 @@ TEST_GROUP(solver)
     InterpolationType interp;
     
     
-    Model_Test model_dim = Model_Test(nx, nx, ny, ny, nz, nz, ne, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
+    Model_Test model_dim = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz, ne, 0, 0,
+     0, 0, 0, 0, 0, SecondOrderMode::none,
                                       std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                                       std::vector<realtype>(0,0.0),std::vector<int>(0,1));
     
