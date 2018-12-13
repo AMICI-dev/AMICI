@@ -39,7 +39,7 @@ from amici.setuptools import (
 
 # Python version check. We need >= 3.6 due to e.g. f-strings
 if sys.version_info < (3, 6):
-    sys.exit('PEtab requires at least Python version 3.6')
+    sys.exit('amici requires at least Python version 3.6')
 
 # Extra compiler flags
 cxx_flags = []
