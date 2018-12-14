@@ -39,7 +39,7 @@ class SbmlImporter:
         SBMLreader: the libSBML sbml reader [!not storing this will result
         in a segfault!]
 
-        sbml_doc: document carrying the sbml defintion [!not storing this
+        sbml_doc: document carrying the sbml definition [!not storing this
         will result in a segfault!]
 
         sbml: sbml definition [!not storing this will result in a segfault!]
@@ -62,10 +62,10 @@ class SbmlImporter:
 
         compartmentSymbols: compartment ids @type sympy.Matrix
 
-        compartmentVolume: numeric/symbnolic compartment volumes @type
+        compartmentVolume: numeric/symbolic compartment volumes @type
         sympy.Matrix
 
-        stoichiometricMatrix: stoichiometrix matrix of the model @type
+        stoichiometricMatrix: stoichiometric matrix of the model @type
         sympy.Matrix
 
         fluxVector: reaction kinetic laws @type sympy.Matrix

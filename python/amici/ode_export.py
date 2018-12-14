@@ -1621,6 +1621,10 @@ class ODEExporter:
         if 'sparse' in self.functions[function] and \
                 self.functions[function]['sparse']:
             symbol = self.model.sparseeq(function)
+        elif not self.allow_reinit_fixpar_initcond \
+                and function == 'sx0_fixedParameters':
+            # Not required. Will create empty function body.
+            symbol = sp.Matrix()
         else:
             symbol = self.model.eq(function)
 
