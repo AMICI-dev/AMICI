@@ -1264,10 +1264,14 @@ class ODEModel:
                 variables[var]['sym'] = self.eq(varname)
 
         self._eqs[name] = \
-            variables['dydz']['sym'] \
-            + variables['dydx']['sym'] * variables['dxdz']['sym']
+            variables['dydz']['sym']
 
-
+        # Save time for for large models if one multiplicand is zero,
+        # which is not checked for by sympy
+        if not variables['dydx']['sym'].is_zero \
+                and not variables['dxdz']['sym'].is_zero:
+            self._eqs[name] += variables['dydx']['sym'] * \
+                               variables['dxdz']['sym']
 
 
     def _multiplication(self, name, x, y,

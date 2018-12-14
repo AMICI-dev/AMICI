@@ -4,7 +4,7 @@ sudo: required
 branches:
   only:
     - master
-    - staging
+    - develop
 
 matrix:
   fast_finish: true

@@ -7,17 +7,18 @@ We are happy about contributions to AMICI in any form (new functionality, docume
 When making code changes:
 
 * Check if you agree to release your contribution under the conditions provided in `LICENSE`
-* Start a new branch from `master`
+* Start a new branch from `develop`
 * Implement your changes
-* Submit a pull request
+* Submit a pull request to the `develop` branch
 * Make sure your code is documented appropriately
   * Run `mtoc/makeDocumentation.m` to check completeness of your documentation
 * Make sure your code is compatible with C++11, `gcc` and `clang`
 * when adding new functionality, please also provide test cases (see `tests/cpputest/`)
 * Write meaningful commit messages
-* Run all tests to ensure nothing got broken
+* Run all tests to ensure nothing was broken
   * Run `tests/cpputest/wrapTestModels.m` followed by CI tests `scripts/buildAll.sh && scripts/run-cpputest.sh`
   * Run `tests/testModels.m`
+  * Run `make python-tests` in `build`
 * When all tests are passing and you think your code is ready to merge, request a code review
 
 ## Adding/Updating tests

@@ -1,19 +1,20 @@
+% Run AMICI Matlab tests using pre-generated models and test setup
+
 function testModels()
-    
     % disable specific warnings for these tests, some tests are supposed
     % to produce warnings
     warningreset = warning;
     warning('off','AMICI:mex:simulation')
     warning('off','AMICI:mex:CVODES:CVode:TOO_MUCH_WORK')
-    
+
     ignoredTests = {'/model_jakstat_adjoint/sensiadjointemptysensind', ...
                     '/model_jakstat_adjoint/sensiforwardemptysensind'};
-    
+
     cd(fileparts(mfilename('fullpath')))
     addpath(genpath('cpputest'));
     wrapTestModels()
     cd(fileparts(mfilename('fullpath')))
-    
+
     hdf5file = fullfile(fileparts(mfilename('fullpath')),'cpputest','expectedResults.h5');
 
     info = h5info(hdf5file);
@@ -29,17 +30,17 @@ function testModels()
             if(ismember(info.Groups(imodel).Groups(itest).Name, ignoredTests))
                 continue
             end
-            
+
             [results,options,data,t,theta,kappa] = readDataFromHDF5(info.Groups(imodel).Groups(itest),hdf5file);
             sol = getResults(info.Groups(imodel).Name(2:end),options,data,t,theta,kappa);
             compareResults(sol,results);
         end
     end
-    
+
     warning(warningreset);
-    
+
     %% begin nested functions
-    
+
     function sol = getResults(modelname,options,data,t,theta,kappa)
         theta = options.theta;
         options = rmfield(options,'theta');
@@ -55,13 +56,13 @@ function testModels()
         end
         sol = feval(['simulate_' modelname],t,theta,kappa,ami_data,ami_options);
     end
-    
+
     function compareResults(sol,results)
         if(results.status<0)
             assert(sol.status<0)
             return
         end
-        
+
         for ifield = transpose(fieldnames(sol))
             if(strcmp(ifield{1},'diagnosis'))
                 for jfield = transpose(fieldnames(sol.diagnosis))
@@ -86,7 +87,7 @@ function testModels()
             end
         end
     end
-    
+
     function checkAgreement(sol,results,fieldname,atol,rtol)
         if(~isfield(results,fieldname))
             assert(isempty(sol.(fieldname)))
@@ -113,7 +114,7 @@ function testModels()
             assert(all(abs(expected - actual) <= atol) || all(abs((expected - actual) ./ (rtol + abs(expected))) <= rtol));
         end
     end
-    
+
     function [results,options,data,t,theta,kappa] = readDataFromHDF5(groups,hdf5file);
         data = [];
         t = [];
@@ -139,9 +140,9 @@ function testModels()
             end
         end
     end
-    
-    
-    
+
+
+
     function matlab = cpp2matlab(cpp)
         dims = size(cpp);
         if(sum(dims>1)>1 || length(dims)>2)
@@ -158,7 +159,7 @@ function testModels()
         end
         matlab = double(matlab);
     end
-    
+
     function s = hdf2struct(group,hdf5path,hdf5file)
         s = struct;
         if(~isempty(group.Attributes))

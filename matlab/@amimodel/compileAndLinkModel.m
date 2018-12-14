@@ -331,7 +331,7 @@ end
 
 function versionstring = getCompilerVersionString()
     [~,systemreturn] = system([mex.getCompilerConfigurations('c++').Details.CompilerExecutable ' --version']);
-    newlinePos = strfind(systemreturn,newline);
+    newlinePos = strfind(systemreturn, '\n');
     str = systemreturn(1:(newlinePos(1)-1));
     str = regexprep(str,'[\(\)]','');
     str = regexprep(str,'[\s\.\-]','_');
