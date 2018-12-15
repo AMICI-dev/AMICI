@@ -172,9 +172,9 @@ endif()
 
 # build interfaces for other languages
 option(ENABLE_SWIG "Build AMICI swig library?" ON)
-#if(ENABLE_SWIG)
-#    add_subdirectory(swig)
-#endif()
+if(ENABLE_SWIG)
+    add_subdirectory(swig)
+endif()
 
 option(ENABLE_PYTHON "Create Python module?" ON)
 if(ENABLE_PYTHON)
