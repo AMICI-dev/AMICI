@@ -1109,7 +1109,7 @@ class ODEModel:
             dx0_fixedParametersdx = \
                 self.eq('x0_fixedParameters').jacobian(self.sym('x'))
 
-            if not dx0_fixedParametersdx.is_zero:
+            if dx0_fixedParametersdx.is_zero is not True:
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:,ip] += \
                         dx0_fixedParametersdx \
@@ -1206,8 +1206,11 @@ class ODEModel:
         else:
             eq = self.eq(eq)
 
-        if min(eq.shape) and min(self.sym(var).shape):
-            self._eqs[name] = eq.jacobian(self.sym(var))
+        sym_var = self.sym(var)
+
+        if min(eq.shape) and min(sym_var.shape) \
+                and eq.is_zero is not True and sym_var.is_zero is not True:
+            self._eqs[name] = eq.jacobian(sym_var)
         else:
             self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
@@ -1268,8 +1271,8 @@ class ODEModel:
 
         # Save time for for large models if one multiplicand is zero,
         # which is not checked for by sympy
-        if not variables['dydx']['sym'].is_zero \
-                and not variables['dxdz']['sym'].is_zero:
+        if variables['dydx']['sym'].is_zero is not True \
+                and variables['dxdz']['sym'].is_zero is not True:
             self._eqs[name] += variables['dydx']['sym'] * \
                                variables['dxdz']['sym']
 
