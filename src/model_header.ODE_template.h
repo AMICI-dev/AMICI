@@ -42,6 +42,9 @@ extern void sx0_fixedParameters_TPL_MODELNAME(realtype *sx0, const realtype t,co
 extern void xBdot_TPL_MODELNAME(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void y_TPL_MODELNAME(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+TPL_X_RDATA_DEF
+TPL_SX_RDATA_DEF
+
 
 /**
  * @brief AMICI-generated model subclass.
@@ -724,6 +727,9 @@ public:
      **/
     virtual void fz(double *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
     }
+    
+TPL_X_RDATA_IMPL
+TPL_SX_RDATA_IMPL
     
     /**
      * @brief Get names of the model parameters

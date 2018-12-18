@@ -130,10 +130,10 @@ def ODEModel_from_pysb_importer(model, constants=None,
 
     process_pysb_species(model, ODE)
     process_pysb_parameters(model, ODE, constants)
-    process_pysb_expressions(model, ODE, observables, sigmas)
-    process_pysb_observables(model, ODE)
     if compute_conservation_laws:
         process_pysb_conservation_laws(model, ODE)
+    process_pysb_expressions(model, ODE, observables, sigmas)
+    process_pysb_observables(model, ODE)
 
     ODE.generateBasicVariables()
 
@@ -364,28 +364,102 @@ def process_pysb_conservation_laws(model, ODE):
     for rule in model.rules:
         monomers_without_conservation_law |= get_unconserved_monomers(rule)
 
+    if hasattr(model, 'initial_conditions_fixed'):
+        for monomer in model.monomers:
+            # check if monomer has an initial condition that is fixed (means
+            #  that corresponding state is constant and all conservation
+            # laws are broken)
+            if any([
+                model.initial_conditions_fixed[ix] # true or false
+                for ix, cp in enumerate(model.initial_conditions)
+                if monomer.name in extract_monomers(cp)
+            ]):
+                monomers_without_conservation_law |= {monomer.name}
+
+    for monomer in model.monomers:
+        monomer_species = [
+            specie
+            for specie in model.species
+            if monomer.name in extract_monomers(specie)
+        ]
+        # we cannot reduce species according to conservation laws if there
+        # only is (less than) a single species in the first place
+        if len(monomer_species) <= 1:
+            monomers_without_conservation_law |= {monomer.name}
+
     conservation_laws = []
     for monomer in model.monomers:
         if monomer.name not in monomers_without_conservation_law:
-            total_abundance = sanitize_basic_sympy(sum([
-                ic[1] * extract_monomers(ic[0]).count(monomer.name)
-                for ic in model.initial_conditions
-            ]))
-            target_index = next(
+            target_index = next((
                 ix
                 for ix, specie in enumerate(model.species)
-                if len(extract_monomers(specie)) == 1
-                and extract_monomers(specie)[0] == monomer.name
+                if extract_monomers(specie)[0] == monomer.name
+                and not ODE.state_has_conservation_law(ix)),
+                None
             )
-            target_expression = total_abundance - sanitize_basic_sympy(sum([
+            if target_index is None:
+                raise Exception(f'Cannot compute suitable conservation laws '
+                                f'for this model as all initial conditions '
+                                f'involving {monomer.name} depend on fixed '
+                                f'parameters.')
+                # this is in theory fixable but would require us to keep
+                # track of total abundances and update them on every call to
+                # fx0_fixedParamters. We will have to implement this as soon
+                #  as we start supporting events in combination with
+                # conservation laws (is this reasonable at all). Currently I
+                #  expect that this Exception is thrown exceptionally rarely.
+            target_expression = sanitize_basic_sympy(sum([
                 sp.Symbol(f'__s{ix}')
                 * extract_monomers(specie).count(monomer.name)
                 for ix, specie in enumerate(model.species)
                 if ix != target_index
             ]))
             target_state = sp.Symbol(f'__s{target_index}')
-            ODE.add_conservation_law(target_state, target_expression)
+            conservation_laws.append({
+                'state': target_state,
+                'law': target_expression,
+            })
 
+    # flatten conservation laws
+    unflattened_conservation_laws = \
+        get_unflattened_conservation_laws(conservation_laws)
+    # TODO: are circular dependencies possible? if yes, how do we
+    # automatically check/prevent them?
+    while len(unflattened_conservation_laws):
+        for cl in conservation_laws:
+            cl['law'] = cl['law'].subs(unflattened_conservation_laws)
+        unflattened_conservation_laws = \
+            get_unflattened_conservation_laws(conservation_laws)
+
+    for cl in conservation_laws:
+        ODE.add_conservation_law(cl['state'], cl['law'])
+
+
+def get_unflattened_conservation_laws(conservation_laws):
+    free_symbols_cl = conservation_law_variables(conservation_laws)
+    return [
+        (cl['state'], cl['law']) for cl in conservation_laws
+        if cl['state'] in free_symbols_cl
+    ]
+
+
+def conservation_law_variables(conservation_laws):
+    variables = set()
+    for cl in conservation_laws:
+        variables |= cl['law'].free_symbols
+    return variables
+
+
+def has_fixed_parameter_ic(specie, model, ODE):
+    ic_strs = [str(ic[0]) for ic in model.initial_conditions]
+    if str(specie) not in ic_strs:
+        # no initial condition at all
+        return False
+    else:
+        return ODE.state_has_fixed_parameter_initial_condition(
+            ic_strs.index(str(specie))
+        )
+    #model.initial_conditions
 
 
 def extract_monomers(complex_patterns):

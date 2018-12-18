@@ -18,14 +18,14 @@ void Model::fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata) {
     // copy dydp for current time to sy
     std::copy(dydp.begin(), dydp.end(), &rdata->sy[it * nplist() * ny]);
     
-    sx->flatten_to_vector(sxTmp);
+    sx->flatten_to_vector(this->sx);
 
     // compute sy = 1.0*dydx*sx + 1.0*sy
     // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
     //        M  K                 K  N                     M  N
     //        lda                  ldb                      ldc
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, ny, nplist(), nx_solver,
-                1.0, dydx.data(), ny, sxTmp.data(), nx_solver, 1.0,
+                1.0, dydx.data(), ny, this->sx.data(), nx_solver, 1.0,
                 &rdata->sy[it*nplist()*ny], ny);
 }
 
@@ -42,17 +42,17 @@ void Model::fsJy(const int it, const std::vector<realtype>& dJydx, const AmiVect
     // dJydx        rdata->nt x nJ        x nx_solver
     // sx           rdata->nt x nx_solver x nplist()
     std::vector<realtype> multResult(nJ * nplist(), 0);
-    sx->flatten_to_vector(sxTmp);
+    sx->flatten_to_vector(this->sx);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
-                nplist(), nx_solver, 1.0, &dJydx.at(it*nJ*nx_solver), nJ, sxTmp.data(), nx_solver, 0.0,
+                nplist(), nx_solver, 1.0, &dJydx.at(it*nJ*nx_solver), nJ, this->sx.data(), nx_solver, 0.0,
                 multResult.data(), nJ);
 
     // multResult    nJ        x nplist()
     // dJydp         nJ        x nplist()
     // dJydxTmp      nJ        x nx_solver
-    // sxTmp         nx_solver x nplist()
+    // sx            nx_solver x nplist()
 
     // sJy += multResult + dJydp
     for (int iJ = 0; iJ < nJ; ++iJ) {
@@ -66,8 +66,7 @@ void Model::fsJy(const int it, const std::vector<realtype>& dJydx, const AmiVect
     }
 }
 
-void Model::fdJydp(const int it, const ExpData *edata,
-                   ReturnData *rdata) {
+void Model::fdJydp(const int it, ReturnData *rdata, const ExpData *edata) {
 
     // dJydy         nJ x nytrue x ny
     // dydp          nplist * ny
@@ -114,7 +113,7 @@ void Model::fdJydp(const int it, const ExpData *edata,
     }
 }
 
-void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata) {
+void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ReturnData *rdata, const ExpData *edata) {
 
     // dJydy         nJ x ny        x nytrue
     // dydx          ny x nx_solver
@@ -144,11 +143,11 @@ void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, const Ami
     // sx           rdata->nt x nx_solver x nplist()
 
     std::vector<realtype> multResult(nJ * nplist(), 0);
-    sx->flatten_to_vector(sxTmp);
+    sx->flatten_to_vector(this->sx);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
-                nplist(), nx_solver, 1.0, &dJzdx.at(nroots*nx_solver*nJ), nJ, sxTmp.data(), nx_solver, 1.0,
+                nplist(), nx_solver, 1.0, &dJzdx.at(nroots*nx_solver*nJ), nJ, this->sx.data(), nx_solver, 1.0,
                 multResult.data(), nJ);
 
     // sJy += multResult + dJydp
@@ -625,8 +624,8 @@ int Model::plist(int pos) const{
 }
 
 
-Model::Model(const int nx,
-             const int nxtrue,
+Model::Model(const int nx_rdata,
+             const int nxtrue_rdata,
              const int nx_solver,
              const int nxtrue_solver,
              const int ny,
@@ -647,7 +646,7 @@ Model::Model(const int nx,
              const std::vector<int>& plist,
              std::vector<realtype> idlist,
              std::vector<int> z2event)
-    : nx_rdata(nx), nxtrue_rdata(nxtrue),
+    : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata),
       nx_solver(nx_solver), nxtrue_solver(nxtrue_solver),
       ny(ny), nytrue(nytrue),
       nz(nz), nztrue(nztrue),
@@ -692,10 +691,15 @@ Model::Model(const int nx,
       dwdp(ndwdp, 0.0),
       M(nx_solver*nx_solver, 0.0),
       stau(plist.size(), 0.0),
+      sx(nx_solver*plist.size(), 0.0),
+      x_rdata(nx_rdata, 0.0),
+      sx_rdata(nx_rdata, 0.0),
       h(ne,0.0),
       unscaledParameters(p),
       originalParameters(p),
       fixedParameters(std::move(k)),
+      total_cl(nx_rdata-nx_solver),
+      stotal_cl((nx_rdata-nx_solver)*nplist()),
       plist_(plist),
       stateIsNonNegative(nx_solver, false),
       x_pos_tmp(nx_solver),
@@ -747,10 +751,15 @@ Model::Model(const Model &other)
       dwdp(other.dwdp),
       M(other.M),
       stau(other.stau),
+      sx(other.sx),
+      x_rdata(other.x_rdata),
+      sx_rdata(other.sx_rdata),
       h(other.h),
       unscaledParameters(other.unscaledParameters),
       originalParameters(other.originalParameters),
       fixedParameters(other.fixedParameters),
+      total_cl(other.total_cl),
+      stotal_cl(other.stotal_cl),
       plist_(other.plist_),
       x0data(other.x0data),
       sx0data(other.sx0data),
@@ -785,41 +794,66 @@ void Model::initializeVectors()
     drzdp.resize(nz * nplist(), 0.0);
     dydp.resize(ny * nplist(), 0.0);
     stau.resize(nplist(), 0.0);
-    sxTmp.resize(nplist() * nx_solver, 0.0);
+    sx.resize(nx_solver * nplist(), 0.0);
+    stotal_cl.resize((nx_rdata-nx_solver) * nplist(), 0.0);
 }
 
-void Model::fx_conservation_law(AmiVector *x_full, const AmiVector *x) {
-    fx_conservation_law(x_full->data(), x->data(), unscaledParameters.data(),fixedParameters.data());
+void Model::fx_rdata(AmiVector *x_rdata, const AmiVector *x) {
+    fx_rdata(x_rdata->data(), x->data(), unscaledParameters.data(), fixedParameters.data());
 }
 
 void Model::fx0(AmiVector *x) {
     x->reset();
-    fx0(x->data(),tstart, unscaledParameters.data(),fixedParameters.data());
+    /* this function computes initial total abundances for conservation laws */
+    std::fill(x_rdata.begin(), x_rdata.end(), 0.0);
+    fx_rdata(x_rdata.data(), x->data(), unscaledParameters.data(),fixedParameters.data());
+    fx0(x_rdata.data(),tstart, unscaledParameters.data(),fixedParameters.data());
+    fx_solver(x->data(), x_rdata.data());
+    ftotal_cl(total_cl.data(), x_rdata.data());
 }
 
 void Model::fx0_fixedParameters(AmiVector *x) {
-    if(getReinitializeFixedParameterInitialStates())
-        fx0_fixedParameters(x->data(),tstart, unscaledParameters.data(),fixedParameters.data());
+    if(!getReinitializeFixedParameterInitialStates())
+        return;
+    /* we transform to the unreduced states x_rdata and then apply x0_fixedparameters to (i) enable
+     updates to states that were removed from conservation laws and (ii) be able to correctly compute
+     total abundances after updating the state variables */
+    fx_rdata(x_rdata.data(), x->data(), unscaledParameters.data(), fixedParameters.data());
+    fx0_fixedParameters(x->data(), tstart, unscaledParameters.data(), fixedParameters.data());
+    fx_solver(x->data(), x_rdata.data());
+    /* update total abundances */
+    ftotal_cl(total_cl.data(), x_rdata.data());
 }
     
 void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
-    if(getReinitializeFixedParameterInitialStates()) {
-        for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
-            fsx0_fixedParameters(sx->data(ip),tstart,x->data(), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+    if(!getReinitializeFixedParameterInitialStates())
+        return;
+
+    for(int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+        std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
+        fsx_rdata(sx_rdata.data(), sx->data(ip), unscaledParameters.data(), fixedParameters.data(), plist_.at(ip));
+        fsx0_fixedParameters(sx_rdata.data() ,tstart,x->data(), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+        fsx_solver(sx->data(ip), sx_rdata.data());
+        fstotal_cl(&stotal_cl.at(ip*(nx_rdata*nx_solver)), x_rdata.data());
     }
 }
 
 void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
     
-void Model::fsx_conservation_law(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
-    for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
-        fsx_conservation_law(sx_full->data(ip), sx->data(ip), unscaledParameters.data(),fixedParameters.data(), ip);
+void Model::fsx_rdata(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
+    for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+        fsx_rdata(sx_full->data(ip), sx->data(ip), unscaledParameters.data(),fixedParameters.data(), ip);
 }
 
 void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
     sx->reset();
-    for(int ip = 0; (unsigned)ip<plist_.size(); ip++)
-        fsx0(sx->data(ip),tstart,x->data(), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
+    for(int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+        std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
+        fsx_rdata(sx_rdata.data(), sx->data(ip), unscaledParameters.data(), fixedParameters.data(), plist_.at(ip));
+        fsx0(sx_rdata.data(), tstart, x->data(), unscaledParameters.data(), fixedParameters.data(), plist_.at(ip));
+        fsx_solver(sx->data(ip), sx_rdata.data());
+        fstotal_cl(&stotal_cl.at(ip*(nx_rdata*nx_solver)), x_rdata.data());
+    }
 }
 
 void Model::fsdx0() {}
@@ -831,25 +865,25 @@ void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiV
     }
 }
 
-void Model::fy(int it, ReturnData *rdata) {
+void Model::fy(const realtype t, const int it, const AmiVector *x, ReturnData *rdata) {
     if (!ny)
         return;
-    fw(rdata->ts.at(it),getx(it,rdata));
-    fy(&rdata->y.at(it*ny),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+    fw(t,x->data());
+    fy(&rdata->y.at(it*ny),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 }
 
-void Model::fdydp(const int it, ReturnData *rdata) {
+void Model::fdydp(const realtype t, const AmiVector *x) {
     if (!ny)
         return;
     
     std::fill(dydp.begin(),dydp.end(),0.0);
-    fw(rdata->ts.at(it),getx(it,rdata));
-    fdwdp(rdata->ts.at(it),getx(it,rdata));
+    fw(t,x->data());
+    fdwdp(t,x->data());
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
         // get dydp slice (ny) for current time and parameter
         fdydp(&dydp.at(ip*ny),
-              rdata->ts.at(it),
-              getx(it,rdata),
+              t,
+              x->data(),
               unscaledParameters.data(),
               fixedParameters.data(),
               h.data(),
@@ -859,14 +893,14 @@ void Model::fdydp(const int it, ReturnData *rdata) {
     }
 }
 
-void Model::fdydx(const int it, ReturnData *rdata) {
+void Model::fdydx(const realtype t, const AmiVector *x) {
     if (!ny)
         return;
     
     std::fill(dydx.begin(),dydx.end(),0.0);
-    fw(rdata->ts.at(it),getx(it,rdata));
-    fdwdx(rdata->ts.at(it),getx(it,rdata));
-    fdydx(dydx.data(),rdata->ts.at(it),getx(it,rdata), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),dwdx.data());
+    fw(t,x->data());
+    fdwdx(t,x->data());
+    fdydx(dydx.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),dwdx.data());
 }
 
 void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
@@ -1246,14 +1280,6 @@ void Model::getmy(const int it, const ExpData *edata){
     } else {
         std::fill(my.begin(), my.end(), getNaN());
     }
-}
-
-const realtype *Model::getx(const int it, const ReturnData *rdata) const {
-    return &rdata->x.at(it*nx_rdata);
-}
-
-const realtype *Model::getsx(const int it, const ReturnData *rdata) const {
-    return &rdata->sx.at(it*nx_rdata*nplist());
 }
 
 const realtype *Model::gety(const int it, const ReturnData *rdata) const {

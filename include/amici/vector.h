@@ -270,7 +270,7 @@ public:
             return; //nothing to do ...
         int n_inner = vec_array.at(0).getLength();
         
-        if(vec.size() != n_inner * n_outer)
+        if(static_cast<int>(vec.size()) != n_inner * n_outer)
             throw AmiException("Dimension of AmiVectorArray (%ix%i) does not match target vector dimension (%i)", n_inner, n_outer, vec.size());
            
         for (int outer = 0; outer < n_outer; ++outer) {

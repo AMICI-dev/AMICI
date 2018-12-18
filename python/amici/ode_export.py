@@ -204,8 +204,8 @@ functions = {
     },
     'x0_fixedParameters': {
         'signature':
-            '(realtype *x0_fixedParameters, const realtype t, const realtype *p,'
-            ' const realtype *k)',
+            '(realtype *x0_fixedParameters, const realtype t,'
+            ' const realtype *p, const realtype *k)',
     },
     'sx0': {
         'signature':
@@ -214,8 +214,9 @@ functions = {
     },
     'sx0_fixedParameters': {
         'signature':
-            '(realtype *sx0_fixedParameters, const realtype t,const realtype *x0,'
-            ' const realtype *p, const realtype *k, const int ip)',
+            '(realtype *sx0_fixedParameters, const realtype t,'
+            ' const realtype *x0, const realtype *p, const realtype *k,'
+            ' const int ip)',
     },
     'xBdot': {
         'signature':
@@ -239,7 +240,35 @@ functions = {
             '(double *y, const realtype t, const realtype *x,'
             ' const realtype *p, const realtype *k,'
             ' const realtype *h, const realtype *w)',
-    }
+    },
+    'x_rdata': {
+        'signature':
+            '(realtype *x_rdata, const realtype *tcl, const realtype *x,'
+            ' const realtype *p, const realtype *k)',
+    },
+    'sx_rdata': {
+        'signature':
+            '(realtype *sx_rdata, const realtype *tcl, const realtype *sx,'
+            ' const realtype *p, const realtype *k, const int ip)',
+    },
+    'total_cl': {
+        'signature':
+            '(realtype total_cl, const realtype *x_rdata, const realtype *p,'
+            ' const realtype *k)',
+    },
+    'stotal_cl': {
+        'signature':
+            '(realtype stotal_cl, const realtype *sx_rdata,'
+            ' const realtype  *p, const realtype *k, const int ip)',
+    },
+    'x_solver': {
+        'signature':
+            '(realtype *x_solver, const realtype *x_rdata)',
+    },
+    'sx_solver': {
+        'signature':
+            '(realtype *sx_solver, const realtype *sx_rdata)',
+    },
 }
 
 ## list of sparse functions
@@ -334,7 +363,6 @@ class ModelQuantity:
         else:
             self._value = value
 
-
     def __repr__(self):
         """Representation of the ModelQuantity object
 
@@ -347,6 +375,45 @@ class ModelQuantity:
 
         """
         return str(self._identifier)
+
+    def get_id(self):
+        """ModelQuantity identifier
+
+        Arguments:
+
+        Returns:
+        identifier of the ModelQuantity
+
+        Raises:
+
+        """
+        return self._identifier
+
+    def get_name(self):
+        """ModelQuantity name
+
+        Arguments:
+
+        Returns:
+        name of the ModelQuantity
+
+        Raises:
+
+        """
+        return self._name
+
+    def get_val(self):
+        """ModelQuantity value
+
+        Arguments:
+
+        Returns:
+        value of the ModelQuantity
+
+        Raises:
+
+        """
+        return self._value
 
 
 class State(ModelQuantity):
@@ -395,6 +462,34 @@ class State(ModelQuantity):
                             f'was {type(law)}')
 
         self.conservation_law = law
+
+
+class ConservationLaw(ModelQuantity):
+    """ A conservation law defines the absolute the total amount of a
+    (weighted) sum of states
+
+    """
+    def __init__(self, identifier, name, value):
+        """Create a new ConservationLaw instance.
+
+        Arguments:
+            identifier: unique identifier of the ConservationLaw @type
+            sympy.Symbol
+
+            name: individual name of the ConservationLaw (does not need to be
+            unique) @type str
+
+            value: formula (sum of states) @type symengine.Basic
+
+        Returns:
+        ModelQuantity instance
+
+        Raises:
+        TypeError:
+            is thrown if input types do not match documented types
+        """
+        super(ConservationLaw, self).__init__(identifier, name, value)
+
 
 class Observable(ModelQuantity):
     """An Observable links model simulations to experimental measurements,
@@ -447,6 +542,7 @@ class SigmaY(ModelQuantity):
             is thrown if input types do not match documented types
         """
         super(SigmaY, self).__init__(identifier, name, value)
+
 
 class Expression(ModelQuantity):
     """An Expressions is a recurring elements in symbolic formulas. Specifying
@@ -559,6 +655,7 @@ class LogLikelihood(ModelQuantity):
         """
         super(LogLikelihood, self).__init__(identifier, name, value)
 
+
 ## indicates which type some attributes in ODEModel should have
 symbol_to_type = {
     'species': State,
@@ -589,6 +686,8 @@ class ODEModel:
         _loglikelihoods: list of LogLikelihood instances  @type list
 
         _expressions: list of Expression instances  @type list
+
+        _conservationlaws: list of ConservationLaw instances @type list
 
         _symboldim_funs: define functions that compute model dimensions, these
         are functions as the underlying symbolic expressions have not been
@@ -662,11 +761,12 @@ class ODEModel:
         self._constants = []
         self._loglikelihoods = []
         self._expressions = []
+        self._conservationlaws = []
         self._symboldim_funs = {
-            'sx': self.nx,
-            'v': self.nx,
-            'vB': self.nx,
-            'xB': self.nx,
+            'sx': self.nx_solver,
+            'v': self.nx_solver,
+            'vB': self.nx_solver,
+            'xB': self.nx_solver,
             'sigmay': self.ny,
         }
         self._eqs = dict()
@@ -679,6 +779,7 @@ class ODEModel:
         self._rowvals = dict()
 
         self._equation_prototype = {
+            'total_cl': '_conservationlaws',
             'x0': '_states',
             'y': '_observables',
             'Jy': '_loglikelihoods',
@@ -686,7 +787,8 @@ class ODEModel:
             'sigmay': '_sigmays',
         }
         self._variable_prototype = {
-            'x': '_states',
+            'tcl': '_conservationlaws',
+            'x_rdata': '_states',
             'y': '_observables',
             'p': '_parameters',
             'k': '_constants',
@@ -709,6 +811,18 @@ class ODEModel:
                 'var': 'p',
                 'dydx_name': 'JSparse',
                 'dxdz_name': 'sx',
+            },
+            'sx_rdata': {
+                'eq': 'x_rdata',
+                'chainvar': 'x',
+                'var': 'p',
+                'dxdz_name': 'sx',
+            },
+            'stotal_cl': {
+                'eq': 'total_cl',
+                'chainvar': 'x_rdata',
+                'var': 'p',
+                'dxdz_name': 'sx_rdata',
             },
         }
         self._multiplication_prototypes = {
@@ -778,11 +892,11 @@ class ODEModel:
 
         Returns:
 
-        Raises:
+        Raises:self._states[ix].get_id()
 
         """
         for comp_type in [Observable, Expression, Parameter, Constant, State,
-                          LogLikelihood, SigmaY]:
+                          LogLikelihood, SigmaY, ConservationLaw]:
             if isinstance(component, comp_type):
                 getattr(self, f'_{type(component).__name__.lower()}s').append(
                     component
@@ -807,18 +921,52 @@ class ODEModel:
         """
         try:
             ix = [
-                state.identifier
-                for state in self._states
+                s.get_id()
+                for s in self._states
             ].index(state)
         except ValueError:
             raise Exception(f'Speciefied state {state} was not found in the '
                             f'model states.')
 
+        total_abundace = sp.Symbol(f'tcl_{self._states[ix].get_id()}')
 
-        self._states[ix].set_conservation_law(law)
+        # adding this as expression simplifies symbolic expressions and
+        # avoids potentially costly .subs calls.
+        self.add_component(
+            Expression(
+                self._states[ix].get_id(),
+                f'cl_{self._states[ix].get_id()}',
+                law
+            )
+        )
 
-    def nx(self):
+        self.add_component(
+            ConservationLaw(
+                total_abundace,
+                f'total_{self._states[ix].get_id()}',
+                self._states[ix].get_id() + law
+            )
+        )
+
+        self._states[ix].set_conservation_law(
+            total_abundace - law
+        )
+
+    def nx_rdata(self):
         """Number of states.
+
+        Arguments:
+
+        Returns:
+        number of state variable symbols
+
+        Raises:
+
+        """
+        return len(self.sym('x_rdata'))
+
+    def nx_solver(self):
+        """Number of states after applying conservation laws.
 
         Arguments:
 
@@ -1026,15 +1174,21 @@ class ODEModel:
         if name in self._variable_prototype:
             component = self._variable_prototype[name]
             self._syms[name] = sp.Matrix([
-                comp._identifier
+                comp.get_id()
                 for comp in getattr(self, component)
             ])
             if name == 'y':
-
-                self._syms['my'] = sp.Matrix(
-                    [sp.Symbol(f'm{comp._identifier}')
-                     for comp in getattr(self, component)]
-                )
+                self._syms['my'] = sp.Matrix([
+                    sp.Symbol(f'm{comp.get_id()}')
+                    for comp in getattr(self, component)
+                ])
+            return
+        elif name == 'x':
+            self._syms[name] = sp.Matrix([
+                state.get_id()
+                for state in self._states
+                if state.conservation_law is None
+            ])
             return
         elif name in sparse_functions:
             self._generateSparseSymbol(name)
@@ -1115,7 +1269,7 @@ class ODEModel:
         Raises:
 
         """
-        match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
+        match_deriv = re.match(r'd([\w_]+)d([a-z_]+)', name)
 
         if name in self._equation_prototype:
             self._equationFromComponent(name, self._equation_prototype[name])
@@ -1131,9 +1285,39 @@ class ODEModel:
             self._multiplication(**args)
 
         elif name == 'xdot':
-            self._eqs['xdot'] = sp.Matrix(
-                [comp._dt for comp in self._states]
-            )
+            self._eqs[name] = sp.Matrix([
+                s._dt for s in self._states
+                if s.conservation_law is None
+            ])
+
+        elif name == 'x_rdata':
+            self._eqs[name] = sp.Matrix([
+                state.get_id()
+                if state.conservation_law is None
+                else state.conservation_law
+                for state in self._states
+            ])
+
+        elif name == 'x_solver':
+            self._eqs[name] = sp.Matrix([
+                state.get_id()
+                for state in self._states
+                if state.conservation_law is None
+            ])
+
+        elif name == 'sx_solver':
+            self._eqs[name] = sp.Matrix([
+                self.sym('sx_rdata')[ix]
+                for ix, state in enumerate(self._states)
+                if state.conservation_law is None
+            ])
+
+        elif name == 'total_cl':
+            self._eqs[name] = sp.Matrix([
+                state.conservation_law
+                for state in self._states
+                if state.conservation_law is not None
+            ])
 
         elif name == 'sx0':
             self._derivative(name[1:], 'p', name=name)
@@ -1163,7 +1347,6 @@ class ODEModel:
                     self._eqs[name][index, :] = \
                         sp.zeros(1, self._eqs[name].shape[1])
 
-
         elif name == 'JB':
             self._eqs[name] = self.eq('J').transpose()
 
@@ -1183,6 +1366,10 @@ class ODEModel:
 
         elif name in ['JSparse', 'JSparseB']:
             self._eqs[name] = self.eq(name.replace('Sparse', ''))
+
+        elif name == 'dtotal_cldx_rdata':
+            # not correctly parsed in regex
+            self._derivative('total_cl', 'x_rdata')
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
@@ -1304,9 +1491,17 @@ class ODEModel:
             else:
                 variables[var]['sym'] = self.eq(varname)
 
-        self._eqs[name] = \
-            variables['dydz']['sym'] \
-            + variables['dydx']['sym'] * variables['dxdz']['sym']
+        if variables['dxdz']['sym'].shape[1] == 1 and \
+            variables['dydz']['sym'].shape[1] != \
+            variables['dxdz']['sym'].shape[1]:
+            self._eqs[name] = copy.deepcopy(variables['dydz']['sym'])
+            for iz in range(variables['dydz']['sym'].shape[1]):
+                self._eqs[name][:, iz] += variables['dydx']['sym'] * \
+                                          variables['dxdz']['sym']
+        else:
+            self._eqs[name] = \
+                variables['dydz']['sym'] \
+                + variables['dydx']['sym'] * variables['dxdz']['sym']
 
 
 
@@ -1369,6 +1564,18 @@ class ODEModel:
         self._eqs[name] = sp.Matrix(
             [comp._value for comp in getattr(self, component)]
         )
+        # flatten conservation laws in expressions
+        if name == 'w':
+            self._eqs[name] = self._eqs[name].subs(
+                self.get_conservation_laws()
+            )
+
+    def get_conservation_laws(self):
+        return [
+            (state.get_id(), state.conservation_law)
+            for state in self._states
+            if state.conservation_law is not None
+        ]
 
     def _generateValue(self, name):
         """Generates the numeric values of a symbolic variable from value
@@ -1405,10 +1612,25 @@ class ODEModel:
             component = self._variable_prototype[name]
         elif name in self._equation_prototype:
             component = self._equation_prototype[name]
+        elif name == 'x':
+            self._names[name]= [
+                s._name for s in self._states if s.conservation_law is None
+            ]
+            return
         else:
             raise Exception(f'No names for {name}')
 
         self._names[name] = [comp._name for comp in getattr(self, component)]
+
+    def state_has_fixed_parameter_initial_condition(self, ix):
+        ic = self._states[ix].get_val()
+        return any([
+            fp in [c.get_id() for c in self._constants]
+            for fp in ic.free_symbols
+        ])
+
+    def state_has_conservation_law(self, ix):
+        return self._states[ix].conservation_law is not None
 
 
 class ODEExporter:
@@ -1818,12 +2040,12 @@ class ODEExporter:
 
         """
 
-        templateData = {
+        tplData = {
             'MODELNAME': str(self.modelName),
-            'NX_RDATA': str(self.model.nx()),
-            'NXTRUE_RDATA': str(self.model.nx()),
-            'NX_SOLVER': str(self.model.nx()),
-            'NXTRUE_SOLVER': str(self.model.nx()),
+            'NX_RDATA': str(self.model.nx_rdata()),
+            'NXTRUE_RDATA': str(self.model.nx_rdata()),
+            'NX_SOLVER': str(self.model.nx_solver()),
+            'NXTRUE_SOLVER': str(self.model.nx_solver()),
             'NY': str(self.model.ny()),
             'NYTRUE': str(self.model.ny()),
             'NZ': '0',
@@ -1831,11 +2053,11 @@ class ODEExporter:
             'NEVENT': '0',
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
-            'NDWDDX': str(len(self.model.sparsesym('dwdx'))),
+            'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDWDP': str(len(self.model.sparsesym('dwdp'))),
             'NNZ': str(len(self.model.sparsesym('JSparse'))),
-            'UBW': str(self.model.nx()),
-            'LBW': str(self.model.nx()),
+            'UBW': str(self.model.nx_solver()),
+            'LBW': str(self.model.nx_solver()),
             'NP': str(self.model.np()),
             'NK': str(self.model.nk()),
             'O2MODE': 'amici::SecondOrderMode::none',
@@ -1861,10 +2083,23 @@ class ODEExporter:
                 'true' if self.allow_reinit_fixpar_initcond else
                 'false',
         }
+
+        if self.model.nx_solver() != self.model.nx_rdata():
+            for fun in ['x_rdata', 'sx_rdata']:
+                tplData[f'{fun.upper()}_DEF'] = \
+                    get_function_defition(fun, self.modelName)
+                tplData[f'{fun.upper()}_IMPL'] = \
+                    get_function_implementation(fun, self.modelName)
+        else:
+            tplData['X_RDATA_DEF'] = ''
+            tplData['SX_RDATA_DEF'] = ''
+            tplData['X_RDATA_IMPL'] = ''
+            tplData['SX_RDATA_IMPL'] = ''
+
         applyTemplate(
-            os.path.join(amiciSrcPath,'model_header.ODE_template.h'),
-            os.path.join(self.modelPath,f'{self.modelName}.h'),
-            templateData
+            os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
+            os.path.join(self.modelPath, f'{self.modelName}.h'),
+            tplData
         )
 
     def _getSymbolNameInitializerList(self, name):
@@ -2179,3 +2414,40 @@ def sanitize_basic_sympy(basic):
         # safely apply str() to the full expression as str will do
         # the right thing here
         return sp.sympify(str(basic))
+
+
+def get_function_defition(fun, name):
+    return \
+        f'extern void {fun}_{name}{functions[fun]["signature"]};'
+
+
+def get_function_implementation(fun, name):
+    return \
+        '{ind4}virtual void f{fun}{signature} override {{\n' \
+        '{ind8}{fun}_{name}{eval_signature};\n' \
+        '{ind4}}}\n'.format(
+            ind4=' '*4,
+            ind8=' '*8,
+            fun=fun,
+            name=name,
+            signature=functions[fun]["signature"],
+            eval_signature=remove_typedefs(functions[fun]["signature"])
+        )
+
+
+def remove_typedefs(signature):
+    typedefs = [
+        'const realtype *',
+        'const double *',
+        'double *',
+        'realtype *',
+        'const int ',
+        'int',
+        'SlsMat ',
+    ]
+
+    for typedef in typedefs:
+        signature = signature.replace(typedef, ' ')
+
+    return signature
+

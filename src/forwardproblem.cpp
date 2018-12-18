@@ -60,15 +60,17 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       rootsfound(model->ne, 0),
       Jtmp(NewDenseMat(model->nx_solver,model->nx_solver)),
       x(model->nx_solver),
-      x_full(model->nx_rdata),
+      x_rdata(model->nx_rdata),
       x_old(model->nx_solver),
       dx(model->nx_solver),
       dx_old(model->nx_solver),
       xdot(model->nx_solver),
       xdot_old(model->nx_solver),
+      total_cl(model->nx_rdata-model->nx_solver),
       sx(model->nx_solver,model->nplist()),
-      sx_full(model->nx_rdata,model->nplist()),
-      sdx(model->nx_solver,model->nplist())
+      sx_rdata(model->nx_rdata,model->nplist()),
+      sdx(model->nx_solver,model->nplist()),
+      stotal_cl(model->nx_rdata-model->nx_solver,model->nplist())
 {
 }
 
@@ -89,7 +91,13 @@ void ForwardProblem::workForwardProblem() {
     } catch (...) {
         throw AmiException("AMICI setup failed due to an unknown error");
     }
-
+    model->fx_rdata(&x_rdata, &x);
+    model->ftotal_cl(&total_cl,&x_rdata);
+    if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
+        model->fsx_rdata(&sx_rdata, &sx);
+        model->fstotal_cl(&stotal_cl, &sx_rdata);
+    }
+    
     if(edata){
         rdata->initializeObjectiveFunction();
     }
@@ -98,14 +106,14 @@ void ForwardProblem::workForwardProblem() {
     if (solver->getNewtonPreequilibration() || (edata && !edata->fixedParametersPreequilibration.empty())) {
         handlePreequilibration();
     } else {
-        model->fx_conservation_law(&x_full, &x);
-        rdata->x0 = x_full.getVector();
+        model->fx_rdata(&x_rdata, &x);
+        rdata->x0 = std::move(x_rdata.getVector());
         if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
             solver->getSensitivityOrder() >= SensitivityOrder::first) {
-            model->fsx_conservation_law(&sx_full, &sx);
-            for (int ix = 0; ix < model->nx_rdata; ix++) {
+            model->fsx_rdata(&sx_rdata, &sx);
+            for (int ix = 0; ix < rdata->nx; ix++) {
                 for (int ip = 0; ip < model->nplist(); ip++)
-                    rdata->sx0[ip*model->nx_rdata + ix] = sx_full.at(ix,ip);
+                    rdata->sx0[ip*rdata->nx + ix] = sx_rdata.at(ix,ip);
             }
         }
     }
@@ -200,16 +208,18 @@ void ForwardProblem::handlePreequilibration()
     
 void ForwardProblem::updateAndReinitStatesAndSensitivities()
 {
-    model->fx0_fixedParameters(&x);
+    model->fx_rdata(&x_rdata, &x);
+    model->fx0_fixedParameters(&x_rdata);
+    model->ftotal_cl(&total_cl, &x);
     solver->reInit(t, &x, &dx);
-    rdata->x0 = std::move(x.getVector());
+    rdata->x0 = std::move(x_rdata.getVector());
     if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
-        model->fsx0_fixedParameters(&sx, &x);
-        
-        model->fsx_conservation_law(&sx_full, &sx);
+        model->fsx_rdata(&sx_rdata, &sx);
+        model->fsx0_fixedParameters(&sx_rdata, &x_rdata);
+        model->fstotal_cl(&total_cl, &x, &sx);
         for (int ip = 0; ip < model->nplist(); ip++)
-            for (int ix = 0; ix < model->nx_rdata; ix++)
-                rdata->sx0[ip * model->nx_rdata + ix] = sx_full.at(ix, ip);
+            for (int ix = 0; ix < rdata->nx; ix++)
+                rdata->sx0[ip * rdata->nx + ix] = sx_rdata.at(ix, ip);
         
         if(solver->getSensitivityMethod() == SensitivityMethod::forward)
             solver->sensReInit(&sx, &sdx);
@@ -542,8 +552,8 @@ void ForwardProblem::handleDataPoint(int it) {
      *
      * @param it index of data point
      */
-    model->fx_conservation_law(&x_full, &x);
-    std::copy_n(x_full.data(), model->nx_rdata, &rdata->x.at(it*model->nx_rdata));
+    model->fx_rdata(&x_rdata, &x);
+    std::copy_n(x_rdata.data(), rdata->nx, &rdata->x.at(it*rdata->nx));
     
     if (model->t(it) > model->t0()) {
         solver->getDiagnosis(it, rdata);
@@ -559,7 +569,7 @@ void ForwardProblem::getDataOutput(int it) {
      * @param it index of current timepoint
      */
 
-    model->fy(it, rdata);
+    model->fy(rdata->ts[it], it, &x, rdata);
     model->fsigmay(it, rdata, edata);
     model->fJy(it, rdata, edata);
     model->fres(it, rdata, edata);
@@ -580,8 +590,8 @@ void ForwardProblem::prepDataSensis(int it) {
      * @param it index of current timepoint
      */
 
-    model->fdydx(it, rdata);
-    model->fdydp(it, rdata);
+    model->fdydx(rdata->ts[it], &x);
+    model->fdydp(rdata->ts[it], &x);
 
     if (!edata)
         return;
@@ -589,8 +599,8 @@ void ForwardProblem::prepDataSensis(int it) {
     model->fdsigmaydp(it, rdata, edata);
     model->fdJydy(it, rdata, edata);
     model->fdJydsigma(it, rdata, edata);
-    model->fdJydx(&dJydx, it, edata, rdata);
-    model->fdJydp(it, edata, rdata);
+    model->fdJydx(&dJydx, it, rdata, edata);
+    model->fdJydp(it, rdata, edata);
 }
 
 void ForwardProblem::getDataSensisFSA(int it) {
@@ -605,11 +615,11 @@ void ForwardProblem::getDataSensisFSA(int it) {
         solver->getSens(&(t), &sx);
     }
     
-    model->fsx_conservation_law(&sx_full, &sx);
-    for (int ix = 0; ix < model->nx_rdata; ix++) {
+    model->fsx_rdata(&sx_rdata, &sx);
+    for (int ix = 0; ix < rdata->nx; ix++) {
         for (int ip = 0; ip < model->nplist(); ip++) {
             rdata->sx[(it * model->nplist() + ip) * rdata->nx + ix] =
-                    sx_full.at(ix,ip);
+                    sx_rdata.at(ix,ip);
         }
     }
     

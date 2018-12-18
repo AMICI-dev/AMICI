@@ -29,10 +29,6 @@ class TestAmiciPYSBModel(unittest.TestCase):
     def tearDown(self):
         os.chdir(self.resetdir)
 
-    def runTest(self):
-        self.test_compare_to_sbml_import()
-        self.test_compare_to_pysb_simulation()
-
     def test_compare_to_sbml_import(self):
         constant_parameters = ['DRUG_0', 'KIN_0']
 
@@ -98,7 +94,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                             atol=1e-6, rtol=1e-6
                         ).all())
 
-    def test_compare_to_pysb_simulation(self):
+    def compare_to_pysb_simulation(self):
         examples = [tyson_oscillator.model, robertson.model,
                   expression_observables.model,
                   bax_pore_sequential.model, bax_pore.model,

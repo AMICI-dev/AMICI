@@ -219,27 +219,33 @@ class ForwardProblem {
     /** temporary storage of Jacobian, kept here to avoid reallocation (dimension: nx x nx, col-major) */
     DlsMat Jtmp;
     
-    /** state vector (dimension: nx_cl) */
+    /** state vector (dimension: nx_solver) */
     AmiVector x;
     /** state vector, including states eliminated from conservation laws (dimension: nx) */
-    AmiVector x_full;
-    /** old state vector (dimension: nx_cl) */
+    AmiVector x_rdata;
+    /** old state vector (dimension: nx_solver) */
     AmiVector x_old;
-    /** differential state vector (dimension: nx_cl) */
+    /** differential state vector (dimension: nx_solver) */
     AmiVector dx;
-    /** old differential state vector (dimension: nx_cl) */
+    /** old differential state vector (dimension: nx_solver) */
     AmiVector dx_old;
-    /** time derivative state vector (dimension: nx_cl) */
+    /** time derivative state vector (dimension: nx_solver) */
     AmiVector xdot;
-    /** old time derivative state vector (dimension: nx_cl) */
+    /** old time derivative state vector (dimension: nx_solver) */
     AmiVector xdot_old;
+    /** total abundances for conservation laws **/
+    AmiVector total_cl;
+    
+    
 
     /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sx;
     /** full sensitivity state vector array, including states eliminated from conservation laws (dimension: nx x nplist, row-major) */
-    AmiVectorArray sx_full;
+    AmiVectorArray sx_rdata;
     /** differential sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sdx;
+    /** sensitivities of total abundances for conservation laws **/
+    AmiVectorArray stotal_cl;
 
     /** storage for last found root */
     realtype tlastroot = 0.0;

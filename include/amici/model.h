@@ -191,14 +191,13 @@ namespace amici {
          * @param x_full pointer to state variables with conservation laws expanded (stored in rdata)
          * @param x pointer to state variables with conservation laws applied (solver returns this)
          */
-        void fx_conservation_law(AmiVector *x_full, const AmiVector *x);
+        void fx_rdata(AmiVector *x_rdata, const AmiVector *x_solver);
         
         /** Expands conservation law for state sensitivities
          * @param sx_full pointer to state variable sensitivities with conservation laws expanded (stored in rdata)
          * @param sx pointer to state variable sensitivities with conservation laws applied (solver returns this)
          */
-        void fsx_conservation_law(AmiVectorArray *sx_full, const AmiVectorArray *sx);
-        
+        void fsx_rdata(AmiVectorArray *sx_rdata, const AmiVectorArray *sx_solver);
         
         /** Initial states
          * @param x pointer to state variables
@@ -245,22 +244,24 @@ namespace amici {
         void fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx);
        
         /** Observables / measurements
+         * @param t current timepoint
          * @param it timepoint index
+         * @param x current state
          * @param rdata pointer to return data instance
          */
-        void fy(int it, ReturnData *rdata);
+        void fy(const realtype t, const int it, const AmiVector *x, ReturnData *rdata);
         
         /** partial derivative of observables y w.r.t. model parameters p
-         * @param it timepoint index
-         * @param rdata pointer to return data instance
+         * @param t current timepoint
+         * @param x current state
          */
-        void fdydp(const int it, ReturnData *rdata);
+        void fdydp(const realtype t, const AmiVector *x);
         
         /** partial derivative of observables y w.r.t. state variables x
-         * @param it timepoint index
-         * @param rdata pointer to return data instance
+         * @param t current timepoint
+         * @param x current state
          */
-        void fdydx(const int it, ReturnData *rdata);
+        void fdydx(const realtype t, const AmiVector *x);
         
         /** Event-resolved output
          * @param nroots number of events for event index
@@ -502,8 +503,7 @@ namespace amici {
          * @param edata pointer to experimental data instance
          * @param rdata pointer to return data instance
          */
-        void fdJydp(const int it, const ExpData *edata,
-                   ReturnData *rdata);
+        void fdJydp(const int it, ReturnData *rdata, const ExpData *edata);
         
         /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
          * state variables
@@ -512,7 +512,7 @@ namespace amici {
          * @param edata pointer to experimental data instance
          * @param rdata pointer to return data instance
          */
-        void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
+        void fdJydx(std::vector<realtype> *dJydx, const int it, const ReturnData *rdata, const ExpData *edata);
         
         /** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
          * derivative
@@ -1152,25 +1152,67 @@ namespace amici {
          */
         void initializeVectors();
         
-        /** model specific implementation of fx_conservation_law
-         * @param x_full state variables with conservation laws expanded
-         * @param x state variables with conservation laws applied
+        /** model specific implementation of fx_rdata
+         * @param x_rdata state variables with conservation laws expanded
+         * @param x_solver state variables with conservation laws applied
          * @param p parameter vector
          * @param k constant vector
          **/
-        virtual void fx_conservation_law(realtype *x_full, const realtype *x, const realtype *p, const realtype *k) {
-            std::copy_n(x, this->nx_solver, x_full);
+        virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver, const realtype *p, const realtype *k) {
+            if (this->nx_solver != this->nx_rdata)
+                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fx_rdata");
+            std::copy_n(x_solver, this->nx_solver, x_rdata);
         }
         
-        /** model specific implementation of fsx_conservation_law
-         * @param sx_full state sensitivity variables with conservation laws expanded
-         * @param sx state sensitivity variables with conservation laws applied
+        /** model specific implementation of fsx_solver
+         * @param sx_rdata state sensitivity variables with conservation laws expanded
+         * @param sx_solver state sensitivity variables with conservation laws applied
          * @param p parameter vector
          * @param k constant vector
          * @param ip sensitivity index
          **/
-        virtual void fsx_conservation_law(realtype *sx_full, const realtype *sx, const realtype *p, const realtype *k, const int ip) {
-            std::copy_n(sx, this->nx_solver, sx_full);
+        virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver, const realtype *p, const realtype *k, const int ip) {
+            if (this->nx_solver != this->nx_rdata)
+                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fsx_rdata");
+            std::copy_n(sx_solver, this->nx_solver, sx_rdata);
+        }
+        
+        /** model specific implementation of fx_solver
+         * @param x_solver state variables with conservation laws applied
+         * @param x_rdata state variables with conservation laws expanded
+         **/
+        virtual void fx_solver(realtype *x_rdata, const realtype *x_solver) {
+            if (this->nx_solver != this->nx_rdata)
+                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fx_solver");
+            std::copy_n(x_rdata, this->nx_rdata, x_solver);
+        }
+        
+        /** model specific implementation of fsx_solver
+         * @param sx_full state sensitivity variables with conservation laws expanded
+         * @param sx state sensitivity variables with conservation laws applied
+         **/
+        virtual void fsx_solver(realtype *sx_rdata, const realtype *sx_solver) {
+            if (this->nx_solver != this->nx_rdata)
+                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fsx_rdata");
+            std::copy_n(sx_rdata, this->nx_rdata, sx_solver);
+        }
+        
+        /** model specific implementation of ftotal_cl
+         * @param x_solver state variables with conservation laws applied
+         * @param x_rdata state variables with conservation laws expanded
+         **/
+        virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata) {
+            if (this->nx_solver != this->nx_rdata)
+                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fx_solver");
+        }
+        
+        /** model specific implementation of fsx_solver
+         * @param sx_full state sensitivity variables with conservation laws expanded
+         * @param sx state sensitivity variables with conservation laws applied
+         **/
+        virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata) {
+            if (this->nx_solver != this->nx_rdata)
+                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fsx_rdata");
         }
         
         /** model specific implementation of fx0
@@ -1672,20 +1714,6 @@ namespace amici {
          */
         const realtype *gety(const int it, const ReturnData *rdata) const;
         
-        /** create x slice at timepoint
-         * @param it timepoint index
-         * @param rdata pointer to return data instance
-         * @return x x-slice from rdata instance
-         */
-        const realtype *getx(const int it, const ReturnData *rdata) const;
-        
-        /** create sx slice at timepoint
-         * @param it timepoint index
-         * @param rdata pointer to return data instance
-         * @return sx sx-slice from rdata instance
-         */
-        const realtype *getsx(const int it, const ReturnData *rdata) const;
-        
         /** create z slice at event
          * @param nroots event occurence
          * @param rdata pointer to return data instance
@@ -1746,18 +1774,18 @@ namespace amici {
         std::vector<realtype> dJrzdz;
         /** event sigma derivative of event likelihood at final timepoint (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJrzdsigma;
-        /** state derivative of event output (dimension: nz * nx_solver, ordering = ?) */
+        /** state derivative of event output (dimension: nz x nx_solver, ordering = ?) */
         std::vector<realtype> dzdx;
-        /** parameter derivative of event output (dimension: nz * nplist, ordering = ?) */
+        /** parameter derivative of event output (dimension: nz x nplist, ordering = ?) */
         std::vector<realtype> dzdp;
-        /** state derivative of event timepoint (dimension: nz * nx_solver, ordering = ?) */
+        /** state derivative of event timepoint (dimension: nz x nx_solver, ordering = ?) */
         std::vector<realtype> drzdx;
-        /** parameter derivative of event timepoint (dimension: nz * nplist, ordering = ?) */
+        /** parameter derivative of event timepoint (dimension: nz x nplist, ordering = ?) */
         std::vector<realtype> drzdp;
-        /** parameter derivative of observable (dimension: nplist * ny, row-major) */
+        /** parameter derivative of observable (dimension: nplist x ny, row-major) */
         std::vector<realtype> dydp;
 
-        /** state derivative of observable (dimension: ny * nx_solver, ordering = ?) */
+        /** state derivative of observable (dimension: ny x nx_solver, ordering = ?) */
         std::vector<realtype> dydx;
         /** tempory storage of w data across functions (dimension: nw) */
         std::vector<realtype> w;
@@ -1770,8 +1798,13 @@ namespace amici {
         /** tempory storage of stau data across functions (dimension: nplist) */
         std::vector<realtype> stau;
         
-        /** tempory storage of w data across functions (dimension: nw) */
-        std::vector<realtype> sxTmp;
+        /** tempory storage of sx data for flattening (dimension: nx_solver x nplist, ordering = ?) */
+        std::vector<realtype> sx;
+        
+        /** tempory storage x_rdata (dimension: nx_rdata) */
+        std::vector<realtype> x_rdata;
+        /** tempory storage sx_rdata slice (dimension: nx_rdata) */
+        std::vector<realtype> sx_rdata;
         
         /** flag indicating whether a certain heaviside function should be active or
          not (dimension: ne) */
@@ -1781,10 +1814,16 @@ namespace amici {
         std::vector<realtype> unscaledParameters;
 
         /** orignal user-provided, possibly scaled parameter array (size np) */
-        std::vector<realtype>originalParameters;
+        std::vector<realtype> originalParameters;
 
         /** constants (dimension: nk) */
         std::vector<realtype> fixedParameters;
+        
+        /** total abundances for conservation laws (dimension: nx_rdata-nx_solver)*/
+        std::vector<realtype> total_cl;
+        
+        /** sensitivities of total abundances for conservation laws (dimension: nx_rdata-nx_solver x nplist)*/
+        std::vector<realtype> stotal_cl;
 
         /** indexes of parameters wrt to which sensitivities are computed (dimension nplist) */
         std::vector<int> plist_;
