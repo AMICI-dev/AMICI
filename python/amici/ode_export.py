@@ -1267,7 +1267,7 @@ class ODEModel:
                 variables[var]['sym'] = self.eq(varname)
 
         self._eqs[name] = \
-            variables['dydz']['sym']
+            copy.deepcopy(variables['dydz']['sym'])
 
         # Save time for for large models if one multiplicand is zero,
         # which is not checked for by sympy
