@@ -1334,7 +1334,7 @@ class ODEModel:
             dx0_fixedParametersdx = \
                 self.eq('x0_fixedParameters').jacobian(self.sym('x'))
 
-            if not dx0_fixedParametersdx.is_zero:
+            if dx0_fixedParametersdx.is_zero is not True:
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:,ip] += \
                         dx0_fixedParametersdx \
@@ -1434,8 +1434,11 @@ class ODEModel:
         else:
             eq = self.eq(eq)
 
-        if min(eq.shape) and min(self.sym(var).shape):
-            self._eqs[name] = eq.jacobian(self.sym(var))
+        sym_var = self.sym(var)
+
+        if min(eq.shape) and min(sym_var.shape) \
+                and eq.is_zero is not True and sym_var.is_zero is not True:
+            self._eqs[name] = eq.jacobian(sym_var)
         else:
             self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
@@ -1491,19 +1494,26 @@ class ODEModel:
             else:
                 variables[var]['sym'] = self.eq(varname)
 
+        self._eqs[name] = \
+            self._eqs[name] = copy.deepcopy(variables['dydz']['sym'])
+
+
         if variables['dxdz']['sym'].shape[1] == 1 and \
             variables['dydz']['sym'].shape[1] != \
             variables['dxdz']['sym'].shape[1]:
-            self._eqs[name] = copy.deepcopy(variables['dydz']['sym'])
             for iz in range(variables['dydz']['sym'].shape[1]):
                 self._eqs[name][:, iz] += variables['dydx']['sym'] * \
                                           variables['dxdz']['sym']
         else:
-            self._eqs[name] = \
-                variables['dydz']['sym'] \
-                + variables['dydx']['sym'] * variables['dxdz']['sym']
+            self._eqs[name] += \
+                variables['dydx']['sym'] * variables['dxdz']['sym']
 
-
+        # Save time for for large models if one multiplicand is zero,
+        # which is not checked for by sympy
+        if variables['dydx']['sym'].is_zero is not True \
+                and variables['dxdz']['sym'].is_zero is not True:
+            self._eqs[name] += variables['dydx']['sym'] * \
+                               variables['dxdz']['sym']
 
 
     def _multiplication(self, name, x, y,
@@ -1880,6 +1890,10 @@ class ODEExporter:
         if 'sparse' in self.functions[function] and \
                 self.functions[function]['sparse']:
             symbol = self.model.sparseeq(function)
+        elif not self.allow_reinit_fixpar_initcond \
+                and function == 'sx0_fixedParameters':
+            # Not required. Will create empty function body.
+            symbol = sp.Matrix()
         else:
             symbol = self.model.eq(function)
 
