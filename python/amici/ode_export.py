@@ -438,6 +438,20 @@ class State(ModelQuantity):
         self.conservation_law = None
 
     def set_conservation_law(self, law):
+        """Sets the conservation law of a state. If the a conservation law
+        is set, the respective state will be replaced by an algebraic
+        formula according to the respective conservation law.
+
+        Arguments:
+            law: linear sum of states that if added to this state remain
+            constant over time
+
+        Returns:
+
+        Raises:
+        TypeError:
+            is thrown if law type does not match documented type
+        """
         if not isinstance(law, sp.Basic):
             raise TypeError(f'conservation law must have type sympy.Basic, '
                             f'was {type(law)}')
@@ -445,12 +459,32 @@ class State(ModelQuantity):
         self.conservation_law = law
 
     def set_dt(self, dt):
+        """Sets the time derivative
+
+        Arguments:
+            dt: time derivative @type symengine.Basic
+
+        Returns:
+
+        Raises:
+        TypeError:
+            is thrown if dt type does not match documented type
+        """
         if not isinstance(dt, sp.Basic):
             raise TypeError(f'time derivative must have type sympy.Basic, '
                             f'was {type(dt)}')
         self._dt = dt
 
     def get_dt(self):
+        """Sets the time derivative
+
+        Arguments:
+
+        Returns:
+        time derivative @type symengine.Basic
+
+        Raises:
+        """
         return self._dt
 
 
@@ -463,8 +497,8 @@ class ConservationLaw(ModelQuantity):
         """Create a new ConservationLaw instance.
 
         Arguments:
-            identifier: unique identifier of the ConservationLaw @type
-            sympy.Symbol
+            identifier: unique identifier of the ConservationLaw
+            @type sympy.Symbol
 
             name: individual name of the ConservationLaw (does not need to be
             unique) @type str
@@ -876,7 +910,8 @@ class ODEModel:
 
         Returns:
 
-        Raises:self._states[ix].get_id()
+        Raises:
+            Exception: invalid component type
 
         """
         for comp_type in [Observable, Expression, Parameter, Constant, State,
@@ -895,7 +930,7 @@ class ODEModel:
             state: symbolic identifier of the state that should be replaced by
             the conservation law
             law: symbolic formula that together with the state defines the
-            conservation law, i.e., d(state + law)/dt = 0
+            conservation law, i.e., d/dt (state + law) = 0
 
         Returns:
 
@@ -936,22 +971,6 @@ class ODEModel:
         self._states[ix].set_conservation_law(
             total_abundace - law
         )
-
-        # for state in self._states:
-        #     state.set_dt(
-        #         state.get_dt().subs(
-        #             state_id,
-        #             total_abundace - law
-        #         )
-        #     )
-        #
-        # for expression in self._expressions:
-        #     expression.set_value(
-        #         expression.get_value().subs(
-        #             state_id,
-        #             total_abundace - law
-        #         )
-        #     )
 
     def nx_rdata(self):
         """Number of states.
@@ -1530,7 +1549,7 @@ class ODEModel:
             dydx = self.sym_or_eq(name, dydx_name)
             dxdz = self.sym_or_eq(name, dxdz_name)
             # Save time for for large models if one multiplicand is zero,
-       		# which is not checked for by sympy
+            # which is not checked for by sympy
             if dydx.is_zero is not True and dxdz.is_zero is not True:
                 if dxdz.shape[1] == 1 and \
                         self._eqs[name].shape[1] != dxdz.shape[1]:
@@ -1539,13 +1558,26 @@ class ODEModel:
                 else:
                     self._eqs[name] += dydx * dxdz
 
-
     def sym_or_eq(self, name, varname):
+        """Returns symbols or equations depending on whether a given
+        variable appears in the function signature or not.
+
+        Arguments:
+            name: name of function for which the signature should be checked
+            varname: name of the variable which should be contained in the
+            function signature
+
+        Returns:
+        the variable symbols if the variable is part of the signature and
+        the variable equations otherwise.
+
+        Raises:
+
+        """
         if var_in_function_signature(name, varname):
             return self.sym(varname)
         else:
             return self.eq(varname)
-
 
     def _multiplication(self, name, x, y,
                         transpose_x=False, sign=1):
@@ -1612,6 +1644,16 @@ class ODEModel:
             )
 
     def get_conservation_laws(self):
+        """ Returns a list of states with conservation law set
+
+        Arguments:
+
+        Returns:
+        list of state identifiers
+
+        Raises:
+
+        """
         return [
             (state.get_id(), state.conservation_law)
             for state in self._states
@@ -1664,6 +1706,19 @@ class ODEModel:
         self._names[name] = [comp._name for comp in getattr(self, component)]
 
     def state_has_fixed_parameter_initial_condition(self, ix):
+        """Checks whether the state at specified index has a fixed parameter
+        initial condition
+
+        Arguments:
+            ix: state index
+
+        Returns:
+            boolean indicating if any of the initial condition free
+            variables is contained in the model constants
+
+        Raises:
+
+        """
         ic = self._states[ix].get_val()
         if not isinstance(ic, sp.Basic):
             return False
@@ -1673,6 +1728,18 @@ class ODEModel:
         ])
 
     def state_has_conservation_law(self, ix):
+        """Checks whether the state at specified index has a conservation
+        law set
+
+        Arguments:
+            ix: state index
+
+        Returns:
+            boolean indicating if conservation_law is not None
+
+        Raises:
+
+        """
         return self._states[ix].conservation_law is not None
 
 
@@ -2436,15 +2503,15 @@ def applyTemplate(sourceFile,targetFile,templateData):
 def sanitize_basic_sympy(basic):
     """Strips pysb info from the sympy.Basic object
 
-        Arguments:
-            basic: symbolic expression @type sympy.Basic
+    Arguments:
+        basic: symbolic expression @type sympy.Basic
 
-        Returns:
-            sanitized sympy.Basic
+    Returns:
+    sanitized sympy.Basic
 
-        Raises:
+    Raises:
 
-        """
+    """
     # strip pysb type and transform into a flat sympy.Basic.
     # this prevents issues where pysb expressions, observables or
     # parameters are not recognized as an sp.Symbol with same
@@ -2462,11 +2529,35 @@ def sanitize_basic_sympy(basic):
 
 
 def get_function_defition(fun, name):
+    """Constructs the function definition for a given function
+
+    Arguments:
+        fun: function name @type str
+        name: model name @type str
+
+    Returns:
+    c++ function definition string
+
+    Raises:
+
+    """
     return \
         f'extern void {fun}_{name}{functions[fun]["signature"]};'
 
 
 def get_function_implementation(fun, name):
+    """Constructs the function implementation for a given function
+
+    Arguments:
+        fun: function name @type str
+        name: model name @type str
+
+    Returns:
+    c++ function implementation string
+
+    Raises:
+
+    """
     return \
         '{ind4}virtual void f{fun}{signature} override {{\n' \
         '{ind8}{fun}_{name}{eval_signature};\n' \
@@ -2481,6 +2572,18 @@ def get_function_implementation(fun, name):
 
 
 def remove_typedefs(signature):
+    """Strips typedef info from a function signature
+
+    Arguments:
+        signature: function signature @type str
+
+    Returns:
+    string that can be used to construct function calls with the same
+    variable names and ordering as in the function signature
+
+    Raises:
+
+    """
     typedefs = [
         'const realtype *',
         'const double *',
