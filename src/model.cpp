@@ -6,7 +6,6 @@
 #include <cmath>
 #include <typeinfo>
 #include <utility>
-#include <algorithm>
 #include <regex>
 
 namespace amici {
