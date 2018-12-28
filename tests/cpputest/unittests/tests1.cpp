@@ -84,6 +84,16 @@ TEST(model, testScalingLog10) {
     DOUBLES_EQUAL(std::log10(p[0]), model.getParameters()[0], 1e-16);
 }
 
+TEST(model, testParameterScalingLengthMismatch) {
+    // too short
+    auto pscale = std::vector<ParameterScaling>(p.size() - 1, ParameterScaling::log10);
+    CHECK_THROWS(AmiException, model.setParameterScale(pscale));
+
+    // too long
+    pscale = std::vector<ParameterScaling>(p.size() + 1, ParameterScaling::log10);
+    CHECK_THROWS(AmiException, model.setParameterScale(pscale));
+}
+
 TEST(model, testSetTimepoints) {
     CHECK_THROWS(AmiException,model.setTimepoints(std::vector<realtype>{0.0,1.0,0.5}))
 }

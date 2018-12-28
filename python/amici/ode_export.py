@@ -1362,7 +1362,7 @@ class ODEModel:
             dx0_fixedParametersdx = \
                 self.eq('x0_fixedParameters').jacobian(self.sym('x'))
 
-            if not dx0_fixedParametersdx.is_zero:
+            if dx0_fixedParametersdx.is_zero is not True:
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:,ip] += \
                         dx0_fixedParametersdx \
@@ -1475,8 +1475,11 @@ class ODEModel:
         else:
             eq = self.eq(eq)
 
-        if min(eq.shape) and min(self.sym(var).shape):
-            self._eqs[name] = eq.jacobian(self.sym(var))
+        sym_var = self.sym(var)
+
+        if min(eq.shape) and min(sym_var.shape) \
+                and eq.is_zero is not True and sym_var.is_zero is not True:
+            self._eqs[name] = eq.jacobian(sym_var)
         else:
             self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
@@ -1513,7 +1516,6 @@ class ODEModel:
         # compute total derivative according to chainrule
         # Dydz = dydx*dxdz + dydz
 
-
         # initialize with partial derivative dydz without chain rule
         self._eqs[name] = copy.deepcopy(
             self.sym_or_eq(name, f'd{eq}d{var}')
@@ -1527,8 +1529,9 @@ class ODEModel:
 
             dydx = self.sym_or_eq(name, dydx_name)
             dxdz = self.sym_or_eq(name, dxdz_name)
-
-            if not dydx.is_zero and not dxdz.is_zero:
+            # Save time for for large models if one multiplicand is zero,
+       		# which is not checked for by sympy
+            if dydx.is_zero is not True and dxdz.is_zero is not True:
                 if dxdz.shape[1] == 1 and \
                         self._eqs[name].shape[1] != dxdz.shape[1]:
                     for iz in range(self._eqs[name].shape[1]):
@@ -1920,6 +1923,10 @@ class ODEExporter:
         if 'sparse' in self.functions[function] and \
                 self.functions[function]['sparse']:
             symbol = self.model.sparseeq(function)
+        elif not self.allow_reinit_fixpar_initcond \
+                and function == 'sx0_fixedParameters':
+            # Not required. Will create empty function body.
+            symbol = sp.Matrix()
         else:
             symbol = self.model.eq(function)
 

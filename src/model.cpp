@@ -298,6 +298,8 @@ void Model::setParameterScale(ParameterScaling pscale) {
 }
 
 void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
+    if(pscale.size() != this->originalParameters.size())
+        throw AmiException("Dimension mismatch. Size of parameter scaling does not match number of model parameters.");
     this->pscale = pscale;
     scaleParameters(unscaledParameters, this->pscale, originalParameters);
 }
