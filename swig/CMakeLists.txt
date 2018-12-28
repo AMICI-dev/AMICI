@@ -21,13 +21,3 @@ set(AMICI_INTERFACE_LIST
 
 # Add target to show files in IDE
 add_custom_target(swigInterface SOURCES ${AMICI_INTERFACE_LIST})
-
-## Add subdirectories for each language if desired
-if(ENABLE_PYTHON)
-    if(NOT(${CMAKE_VERSION} VERSION_LESS 3.8))
-        add_subdirectory(python)
-    else()
-        message(WARNING "Unable to build SWIG interface, upgrade CMake to >=3.8.")
-    endif()
-endif()
-
