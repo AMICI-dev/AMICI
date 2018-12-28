@@ -399,15 +399,9 @@ def process_pysb_conservation_laws(model, ODE):
             )
             if target_index is None:
                 raise Exception(f'Cannot compute suitable conservation laws '
-                                f'for this model as all initial conditions '
-                                f'involving {monomer.name} depend on fixed '
-                                f'parameters.')
-                # this is in theory fixable but would require us to keep
-                # track of total abundances and update them on every call to
-                # fx0_fixedParamters. We will have to implement this as soon
-                #  as we start supporting events in combination with
-                # conservation laws (is this reasonable at all). Currently I
-                #  expect that this Exception is thrown exceptionally rarely.
+                                f'for this model as there are cyclic '
+                                f'dependencies between states involved in '
+                                f'conservation laws')
             target_expression = sanitize_basic_sympy(sum([
                 sp.Symbol(f'__s{ix}')
                 * extract_monomers(specie).count(monomer.name)

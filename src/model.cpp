@@ -14,10 +14,10 @@ namespace amici {
 void Model::fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata) {
     if (!ny)
         return;
-    
+
     // copy dydp for current time to sy
     std::copy(dydp.begin(), dydp.end(), &rdata->sy[it * nplist() * ny]);
-    
+
     sx->flatten_to_vector(this->sx);
 
     // compute sy = 1.0*dydx*sx + 1.0*sy
@@ -186,7 +186,7 @@ void Model::fdJzdp(const int nroots, realtype t, const ExpData *edata,
                         BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
                         &dJrzdsigma.at(izt*nz*nJ), nJ, dsigmazdp.data(), nz, 1.0,
                         dJzdp.data(), nJ);
-            
+
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
                         nJ, nplist(), nz, 1.0, &dJrzdz.at(izt*nz*nJ), nJ, dzdp.data(), nz,
                         1.0, dJzdp.data(), nJ);
@@ -206,7 +206,7 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
     for (int izt = 0; izt < nztrue; ++izt) {
         if (isNaN(mz.at(izt)))
             continue;
-        
+
         if (t < rdata->ts.at(rdata->ts.size() - 1)) {
             // z
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
@@ -224,12 +224,12 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
 void Model::initialize(AmiVector *x, AmiVector *dx) {
 
     initializeStates(x);
-    
+
     fdx0(x, dx);
-    
+
     if(ne)
         initHeaviside(x,dx);
-    
+
 }
 
 void Model::initializeStates(AmiVector *x) {
@@ -320,7 +320,7 @@ realtype getValueById(std::vector<std::string> const& ids, std::vector<realtype>
     auto it = std::find(ids.begin(), ids.end(), id);
     if(it != ids.end())
         return values.at(it - ids.begin());
-    
+
     throw AmiException("Could not find %s with specified %s", variable_name, id_name);
 }
 
@@ -363,22 +363,22 @@ int setValueByIdRegex(std::vector<std::string> const& ids, std::vector<realtype>
                 ++n_found;
             }
         }
-        
+
         if(n_found == 0)
             throw AmiException("Could not find %s with specified %s", variable_name, id_name);
-        
+
         return n_found;
     } catch (std::regex_error const& e) {
         throw AmiException("Specified regex pattern could not be compiled: %s", e.what());
     }
 }
-    
+
 realtype Model::getParameterById(std::string const& par_id) const {
     if(!hasParameterIds())
         throw AmiException("Could not access parameters by id as they are not set");
     return getValueById(getParameterIds(), originalParameters, par_id, "parameters", "id");
 }
-    
+
 realtype Model::getParameterByName(std::string const& par_name) const {
     if(!hasParameterNames())
         throw AmiException("Could not access parameters by name as they are not set");
@@ -396,11 +396,11 @@ void Model::setParameters(const std::vector<realtype> &p) {
     this->unscaledParameters.resize(originalParameters.size());
     unscaleParameters(originalParameters, pscale, unscaledParameters);
 }
-    
+
 void Model::setParameterById(std::string const& par_id, realtype value) {
     if(!hasParameterIds())
         throw AmiException("Could not access parameters by id as they are not set");
-    
+
     setValueById(getParameterIds(),
                  originalParameters,
                  value,
@@ -409,7 +409,7 @@ void Model::setParameterById(std::string const& par_id, realtype value) {
                  "id");
     unscaleParameters(originalParameters, pscale, unscaledParameters);
 }
-    
+
 int Model::setParametersByIdRegex(std::string const& par_id_regex, realtype value) {
     if(!hasParameterIds())
         throw AmiException("Could not access parameters by id as they are not set");
@@ -426,7 +426,7 @@ int Model::setParametersByIdRegex(std::string const& par_id_regex, realtype valu
 void Model::setParameterByName(std::string const& par_name, realtype value) {
     if(!hasParameterNames())
         throw AmiException("Could not access parameters by name as they are not set");
-    
+
     setValueById(getParameterNames(),
                  originalParameters,
                  value,
@@ -439,14 +439,14 @@ void Model::setParameterByName(std::string const& par_name, realtype value) {
 int Model::setParametersByNameRegex(std::string const& par_name_regex, realtype value) {
     if(!hasParameterNames())
         throw AmiException("Could not access parameters by name as they are not set");
-    
+
     int n_found = setValueByIdRegex(getParameterNames(),
                                     originalParameters,
                                     value,
                                     par_name_regex,
                                     "parameter",
                                     "name");
-    
+
     unscaleParameters(originalParameters, pscale, unscaledParameters);
     return n_found;
 }
@@ -458,11 +458,11 @@ const std::vector<realtype> &Model::getUnscaledParameters() const {
 const std::vector<realtype> &Model::getFixedParameters() const {
     return fixedParameters;
 }
-    
+
 realtype Model::getFixedParameterById(std::string const& par_id) const {
     if(!hasFixedParameterIds())
         throw AmiException("Could not access fixed parameters by id as they are not set");
-    
+
     return getValueById(getFixedParameterIds(),
                         fixedParameters,
                         par_id,
@@ -473,7 +473,7 @@ realtype Model::getFixedParameterById(std::string const& par_id) const {
 realtype Model::getFixedParameterByName(std::string const& par_name) const {
     if(!hasFixedParameterNames())
         throw AmiException("Could not access fixed parameters by name as they are not set");
-    
+
     return getValueById(getFixedParameterNames(),
                         fixedParameters,
                         par_name,
@@ -490,7 +490,7 @@ void Model::setFixedParameters(const std::vector<realtype> &k) {
 void Model::setFixedParameterById(std::string const& par_id, realtype value) {
     if(!hasFixedParameterIds())
         throw AmiException("Could not access fixed parameters by id as they are not set");
-    
+
     setValueById(getFixedParameterIds(),
                  fixedParameters,
                  value,
@@ -498,11 +498,11 @@ void Model::setFixedParameterById(std::string const& par_id, realtype value) {
                  "fixedParameters",
                  "id");
 }
-    
+
 int Model::setFixedParametersByIdRegex(std::string const& par_id_regex, realtype value) {
     if(!hasFixedParameterIds())
         throw AmiException("Could not access fixed parameters by id as they are not set");
-    
+
     return  setValueByIdRegex(getFixedParameterIds(),
                               fixedParameters,
                               value,
@@ -514,7 +514,7 @@ int Model::setFixedParametersByIdRegex(std::string const& par_id_regex, realtype
 void Model::setFixedParameterByName(std::string const& par_name, realtype value) {
     if(!hasFixedParameterNames())
         throw AmiException("Could not access fixed parameters by name as they are not set");
-    
+
     setValueById(getFixedParameterNames(),
                  fixedParameters,
                  value,
@@ -522,11 +522,11 @@ void Model::setFixedParameterByName(std::string const& par_name, realtype value)
                  "fixedParameters",
                  "name");
 }
-    
+
 int Model::setFixedParametersByNameRegex(std::string const& par_name_regex, realtype value) {
     if(!hasFixedParameterNames())
         throw AmiException("Could not access fixed parameters by name as they are not set");
-    
+
     return  setValueByIdRegex(getFixedParameterIds(),
                               fixedParameters,
                               value,
@@ -544,7 +544,7 @@ void Model::setTimepoints(const std::vector<realtype> &ts) {
         throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
     this->ts = std::move(ts);
 }
-    
+
 std::vector<bool> const& Model::getStateIsNonNegative() const {
     return stateIsNonNegative;
 }
@@ -588,6 +588,7 @@ std::vector<realtype> const& Model::getInitialStates() const {
 void Model::setInitialStates(const std::vector<realtype> &x0) {
     if(nx_solver != nx_rdata)
         throw AmiException("Custom initial conditions are not supported whith conservation laws enabled");
+    // TODO: remove this exception and compute total_cl according to provided x_rdata
     if(x0.size() != (unsigned) nx_rdata && x0.size() != 0)
         throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
     if (x0.size() == 0)
@@ -603,6 +604,7 @@ const std::vector<realtype> &Model::getInitialStateSensitivities() const {
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
     if(nx_solver != nx_rdata)
         throw AmiException("Custom initial sensitivity conditions are not supported whith conservation laws enabled");
+    // TODO: remove this exception and compute stotal_cl according to provided sx_rdata
     if(sx0.size() != (unsigned) nx_rdata * nplist() && sx0.size() != 0)
         throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
     if (sx0.size() == 0)
@@ -699,7 +701,7 @@ Model::Model(const int nx_rdata,
       originalParameters(p),
       fixedParameters(std::move(k)),
       total_cl(nx_rdata-nx_solver),
-      stotal_cl((nx_rdata-nx_solver)*nplist()),
+      stotal_cl((nx_rdata-nx_solver) * plist.size()),
       plist_(plist),
       stateIsNonNegative(nx_solver, false),
       x_pos_tmp(nx_solver),
@@ -795,64 +797,76 @@ void Model::initializeVectors()
     dydp.resize(ny * nplist(), 0.0);
     stau.resize(nplist(), 0.0);
     sx.resize(nx_solver * nplist(), 0.0);
-    stotal_cl.resize((nx_rdata-nx_solver) * nplist(), 0.0);
+    stotal_cl.resize(ncl() * nplist(), 0.0);
 }
 
 void Model::fx_rdata(AmiVector *x_rdata, const AmiVector *x) {
-    fx_rdata(x_rdata->data(), x->data(), unscaledParameters.data(), fixedParameters.data());
+    fx_rdata(x_rdata->data(), x->data(), total_cl.data());
 }
 
 void Model::fx0(AmiVector *x) {
     x->reset();
     /* this function computes initial total abundances for conservation laws */
-    std::fill(x_rdata.begin(), x_rdata.end(), 0.0);
-    fx_rdata(x_rdata.data(), x->data(), unscaledParameters.data(),fixedParameters.data());
-    fx0(x_rdata.data(),tstart, unscaledParameters.data(),fixedParameters.data());
+    fx_rdata(x_rdata.data(), x->data(), total_cl.data());
+    fx0(x_rdata.data(), tstart, unscaledParameters.data(),
+        fixedParameters.data());
     fx_solver(x->data(), x_rdata.data());
     ftotal_cl(total_cl.data(), x_rdata.data());
 }
 
 void Model::fx0_fixedParameters(AmiVector *x) {
-    if(!getReinitializeFixedParameterInitialStates())
+    if (!getReinitializeFixedParameterInitialStates())
         return;
-    /* we transform to the unreduced states x_rdata and then apply x0_fixedparameters to (i) enable
-     updates to states that were removed from conservation laws and (ii) be able to correctly compute
-     total abundances after updating the state variables */
-    fx_rdata(x_rdata.data(), x->data(), unscaledParameters.data(), fixedParameters.data());
-    fx0_fixedParameters(x->data(), tstart, unscaledParameters.data(), fixedParameters.data());
+    /* we transform to the unreduced states x_rdata and then apply
+     x0_fixedparameters to (i) enable updates to states that were removed from
+     conservation laws and (ii) be able to correctly compute total abundances
+     after updating the state variables */
+    fx_rdata(x_rdata.data(), x->data(), total_cl.data());
+    fx0_fixedParameters(x_rdata.data(), tstart, unscaledParameters.data(),
+                        fixedParameters.data());
     fx_solver(x->data(), x_rdata.data());
     /* update total abundances */
     ftotal_cl(total_cl.data(), x_rdata.data());
 }
-    
-void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
-    if(!getReinitializeFixedParameterInitialStates())
-        return;
-
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++) {
-        std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
-        fsx_rdata(sx_rdata.data(), sx->data(ip), unscaledParameters.data(), fixedParameters.data(), plist_.at(ip));
-        fsx0_fixedParameters(sx_rdata.data() ,tstart,x->data(), unscaledParameters.data(),fixedParameters.data(),plist_.at(ip));
-        fsx_solver(sx->data(ip), sx_rdata.data());
-        fstotal_cl(&stotal_cl.at(ip*(nx_rdata*nx_solver)), x_rdata.data());
-    }
-}
 
 void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
-    
+
 void Model::fsx_rdata(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-        fsx_rdata(sx_full->data(ip), sx->data(ip), unscaledParameters.data(),fixedParameters.data(), ip);
+    realtype *stcl = nullptr;
+    for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+        if (ncl() > 0)
+            stcl = &stotal_cl.at(ip * ncl());
+        fsx_rdata(sx_full->data(ip), sx->data(ip), stcl, ip);
+    }
 }
 
 void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
     sx->reset();
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++) {
-        std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
-        fsx_rdata(sx_rdata.data(), sx->data(ip), unscaledParameters.data(), fixedParameters.data(), plist_.at(ip));
-        fsx0(sx_rdata.data(), tstart, x->data(), unscaledParameters.data(), fixedParameters.data(), plist_.at(ip));
+    realtype *stcl = nullptr;
+    for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+        if (ncl() > 0)
+            stcl = &stotal_cl.at(ip * ncl());
+        fsx_rdata(sx_rdata.data(), sx->data(ip), stcl, plist_.at(ip));
+        fsx0(sx_rdata.data(), tstart, x->data(), unscaledParameters.data(),
+             fixedParameters.data(), plist_.at(ip));
         fsx_solver(sx->data(ip), sx_rdata.data());
-        fstotal_cl(&stotal_cl.at(ip*(nx_rdata*nx_solver)), x_rdata.data());
+        fstotal_cl(stcl, sx_rdata.data(), plist_.at(ip));
+    }
+}
+
+void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
+    if (!getReinitializeFixedParameterInitialStates())
+        return;
+    realtype *stcl = nullptr;
+    for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+        if (ncl() > 0)
+            stcl = &stotal_cl.at(ip * ncl());
+        fsx_rdata(sx_rdata.data(), sx->data(ip), stcl, plist_.at(ip));
+        fsx0_fixedParameters(sx_rdata.data(), tstart, x->data(),
+                             unscaledParameters.data(), fixedParameters.data(),
+                             plist_.at(ip));
+        fsx_solver(sx->data(ip), sx_rdata.data());
+        fstotal_cl(stcl, sx_rdata.data(), plist_.at(ip));
     }
 }
 
@@ -875,7 +889,7 @@ void Model::fy(const realtype t, const int it, const AmiVector *x, ReturnData *r
 void Model::fdydp(const realtype t, const AmiVector *x) {
     if (!ny)
         return;
-    
+
     std::fill(dydp.begin(),dydp.end(),0.0);
     fw(t,x->data());
     fdwdp(t,x->data());
@@ -896,7 +910,7 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
 void Model::fdydx(const realtype t, const AmiVector *x) {
     if (!ny)
         return;
-    
+
     std::fill(dydx.begin(),dydx.end(),0.0);
     fw(t,x->data());
     fdwdx(t,x->data());
@@ -980,7 +994,7 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
 void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
     if (!ny)
         return;
-    
+
     std::fill(sigmay.begin(),sigmay.end(),0.0);
     fsigmay(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
     for (int iytrue = 0; iytrue < nytrue; iytrue++) {
@@ -999,7 +1013,7 @@ void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
 void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
     if (!ny)
         return;
-    
+
     std::fill(dsigmaydp.begin(), dsigmaydp.end(), 0.0);
 
     for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
@@ -1029,7 +1043,7 @@ void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnDat
                     const ExpData *edata) {
     std::fill(sigmaz.begin(),sigmaz.end(),0.0);
     fsigmaz(sigmaz.data(),t, unscaledParameters.data(),fixedParameters.data());
-    
+
     auto sigmaz_edata = edata->getObservedEventsStdDevPtr(nroots[ie]);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (z2event.at(iztrue) - 1 == ie) {
@@ -1053,7 +1067,7 @@ void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, Return
                    fixedParameters.data(),
                    plist_.at(ip));
     }
-    
+
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmazdp to zero
     if(edata) {
         for (int iz = 0; iz < nztrue; iz++) {
@@ -1063,7 +1077,7 @@ void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, Return
             }
         }
     }
-    
+
     // copy dsigmazdp slice for current event
     std::copy(dsigmazdp.begin(), dsigmazdp.end(), &rdata->ssigmaz[nroots[ie] * nplist() * nz]);
 }
@@ -1186,28 +1200,28 @@ void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
         }
     }
 }
-    
+
 void Model::fw(const realtype t, const realtype *x) {
     std::fill(w.begin(),w.end(),0.0);
-    fw(w.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data());
+    fw(w.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), total_cl.data());
 }
-    
+
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdp.begin(),dwdp.end(),0.0);
-    fdwdp(dwdp.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+    fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), w.data(), total_cl.data(), stotal_cl.data());
 }
-    
+
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdx.begin(),dwdx.end(),0.0);
-    fdwdx(dwdx.data(),t,x, unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+    fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), w.data(), total_cl.data());
 }
 
 void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
     if (!edata || rdata->res.empty())
         return;
-    
+
     auto observedData = edata->getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * edata->nytrue();
@@ -1218,21 +1232,21 @@ void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
     }
 
 }
-    
+
 void Model::fchi2(const int it, ReturnData *rdata) {
     if (rdata->res.empty())
         return;
-    
+
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * rdata->nytrue;
         rdata->chi2 += pow(rdata->res.at(iyt_true), 2);
     }
 }
-    
+
 void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
     if (!edata || rdata->sres.empty())
         return;
-    
+
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * edata->nytrue();
         int iyt = iy + it * rdata->ny;
@@ -1244,7 +1258,7 @@ void Model::fsres(const int it, ReturnData *rdata, const ExpData *edata) {
         }
     }
 }
-    
+
 void Model::fFIM(const int it, ReturnData *rdata) {
     if (rdata->sres.empty())
         return;
@@ -1260,7 +1274,7 @@ void Model::fFIM(const int it, ReturnData *rdata) {
         }
     }
 }
-    
+
 void Model::updateHeaviside(const std::vector<int>& rootsfound) {
     for (int ie = 0; ie < ne; ie++) {
         h.at(ie) += rootsfound.at(ie);

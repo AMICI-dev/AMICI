@@ -15,11 +15,12 @@ from pysb.examples import tyson_oscillator, robertson, \
 
 class TestAmiciPYSBModel(unittest.TestCase):
     '''
-    TestCase class for testing SBML import and simulation from AMICI python interface
+    TestCase class for testing SBML import and simulation from AMICI python
+    interface
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
-                                       'cpputest','expectedResults.h5')
+                                       'cpputest', 'expectedResults.h5')
 
     def setUp(self):
         self.resetdir = os.getcwd()
@@ -77,7 +78,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
         for field in rdata_pysb:
             if field not in ['ptr', 't_steadystate', 'numsteps',
-                                'numrhsevals', 'numerrtestfails', 'order']:
+                             'newton_numsteps', 'numrhsevals',
+                             'numerrtestfails', 'order', 'J', 'xdot']:
                 with self.subTest(field=field):
                     if rdata_pysb[field] is None:
                         self.assertIsNone(
@@ -96,13 +98,13 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
     def compare_to_pysb_simulation(self):
         examples = [tyson_oscillator.model, robertson.model,
-                  expression_observables.model,
-                  bax_pore_sequential.model, bax_pore.model,
-                  bngwiki_egfr_simple.model]
+                    expression_observables.model,
+                    bax_pore_sequential.model, bax_pore.model,
+                    bngwiki_egfr_simple.model]
         for example in examples:
-            example.name = example.name.replace('pysb.examples.','')
+            example.name = example.name.replace('pysb.examples.', '')
             with self.subTest(example=example.name):
-                ## pysb part
+                # pysb part
 
                 tspan = np.linspace(0, 100, 101)
                 sim = ScipyOdeSimulator(
@@ -113,7 +115,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                 )
                 pysb_simres = sim.run()
 
-                ## amici part
+                # amici part
 
                 amici.pysb2amici(example,
                                  example.name,

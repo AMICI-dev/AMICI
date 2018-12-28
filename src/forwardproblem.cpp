@@ -92,10 +92,8 @@ void ForwardProblem::workForwardProblem() {
         throw AmiException("AMICI setup failed due to an unknown error");
     }
     model->fx_rdata(&x_rdata, &x);
-    model->ftotal_cl(&total_cl,&x_rdata);
     if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
         model->fsx_rdata(&sx_rdata, &sx);
-        model->fstotal_cl(&stotal_cl, &sx_rdata);
     }
     
     if(edata){
@@ -208,15 +206,11 @@ void ForwardProblem::handlePreequilibration()
     
 void ForwardProblem::updateAndReinitStatesAndSensitivities()
 {
-    model->fx_rdata(&x_rdata, &x);
-    model->fx0_fixedParameters(&x_rdata);
-    model->ftotal_cl(&total_cl, &x);
+    model->fx0_fixedParameters(&x);
     solver->reInit(t, &x, &dx);
     rdata->x0 = std::move(x_rdata.getVector());
     if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
-        model->fsx_rdata(&sx_rdata, &sx);
-        model->fsx0_fixedParameters(&sx_rdata, &x_rdata);
-        model->fstotal_cl(&total_cl, &x, &sx);
+        model->fsx0_fixedParameters(&sx, &x);
         for (int ip = 0; ip < model->nplist(); ip++)
             for (int ix = 0; ix < rdata->nx; ix++)
                 rdata->sx0[ip * rdata->nx + ix] = sx_rdata.at(ix, ip);

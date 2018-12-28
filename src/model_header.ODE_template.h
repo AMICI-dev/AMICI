@@ -25,8 +25,8 @@ extern void JvB_TPL_MODELNAME(realtype *JvB, const realtype t, const realtype *x
 extern void Jy_TPL_MODELNAME(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dJydsigmay_TPL_MODELNAME(double *dJydsigmay, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
 extern void dJydy_TPL_MODELNAME(double *dJydy, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
-extern void dwdp_TPL_MODELNAME(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
-extern void dwdx_TPL_MODELNAME(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
+TPL_DWDP_DEF
+TPL_DWDX_DEF
 extern void dxdotdp_TPL_MODELNAME(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp);
 extern void dydx_TPL_MODELNAME(double *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void dydp_TPL_MODELNAME(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwp);
@@ -34,7 +34,7 @@ extern void dsigmaydp_TPL_MODELNAME(double *dsigmaydp, const realtype t, const r
 extern void qBdot_TPL_MODELNAME(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp);
 extern void sigmay_TPL_MODELNAME(double *sigmay, const realtype t, const realtype *p, const realtype *k);
 extern void sxdot_TPL_MODELNAME(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp);
-extern void w_TPL_MODELNAME(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+TPL_W_DEF
 extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 extern void x0_fixedParameters_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p, const realtype *k);
 extern void sx0_TPL_MODELNAME(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip);
@@ -43,7 +43,8 @@ extern void xBdot_TPL_MODELNAME(realtype *xBdot, const realtype t, const realtyp
 extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 extern void y_TPL_MODELNAME(double *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w);
 TPL_X_RDATA_DEF
-TPL_SX_RDATA_DEF
+TPL_X_SOLVER_DEF
+TPL_TOTAL_CL_DEF
 
 
 /**
@@ -411,31 +412,8 @@ public:
     virtual void fdsigmazdp(double *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) override {
     }
     
-    /** model specific implementation of dwdp
-     * @param dwdp Recurring terms in xdot, parameter derivative
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param w vector with helper variables
-     */
-    virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
-        dwdp_TPL_MODELNAME(dwdp, t, x, p, k, h, w);
-    }
-    
-    /** model specific implementation of dwdx
-     * @param dwdx Recurring terms in xdot, state derivative
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param w vector with helper variables
-     */
-    virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) override {
-        dwdx_TPL_MODELNAME(dwdx, t, x, p, k, h, w);
-    }
+TPL_DWDP_IMPL
+TPL_DWDX_IMPL
     
     /** model specific implementation of fdxdotdp
      * @param dxdotdp partial derivative xdot wrt p
@@ -644,17 +622,7 @@ public:
     virtual void fsz(double *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) override {
     }
     
-    /** model specific implementation of fw
-     * @param w Recurring terms in xdot
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     */
-    virtual void fw(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
-        w_TPL_MODELNAME(w, t, x, p, k, h);
-    }
+TPL_W_IMPL
     
     /** model specific implementation of fx0
      * @param x0 initial state
@@ -729,7 +697,8 @@ public:
     }
     
 TPL_X_RDATA_IMPL
-TPL_SX_RDATA_IMPL
+TPL_X_SOLVER_IMPL
+TPL_TOTAL_CL_IMPL
     
     /**
      * @brief Get names of the model parameters

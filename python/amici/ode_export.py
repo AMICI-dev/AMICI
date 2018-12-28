@@ -40,34 +40,33 @@ from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 functions = {
     'J': {
         'signature':
-            '(realtype *J, const realtype t, const realtype *x,'
-            ' const double *p, const double *k, const realtype *h,'
-            ' const realtype *w, const realtype *dwdx)',
+            '(realtype *J, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'JB': {
         'signature':
-            '(realtype *JB, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *xB, const realtype *w,'
-            ' const realtype *dwdx)',
+            '(realtype *JB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *w, const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'JDiag': {
         'signature':
-            '(realtype *JDiag, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w, const realtype *dwdx)',
+            '(realtype *JDiag, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'JSparse': {
         'signature':
-            '(SlsMat JSparse, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w, const realtype *dwdx)',
+            '(SlsMat JSparse, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -75,10 +74,9 @@ functions = {
     },
     'JSparseB': {
         'signature':
-            '(SlsMat JSparseB, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *xB, const realtype *w,'
-            ' const realtype *dwdx)',
+            '(SlsMat JSparseB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -86,45 +84,44 @@ functions = {
     },
     'Jv': {
         'signature':
-            '(realtype *Jv, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *v, const realtype *w,'
-            ' const realtype *dwdx)',
+            '(realtype *Jv, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *v, const realtype *w, const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'JvB': {
         'signature':
-            '(realtype *JvB, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *xB, const realtype *vB,'
-            ' const realtype *w, const realtype *dwdx)',
+            '(realtype *JvB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *vB, const realtype *w, '
+            'const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'Jy': {
         'signature':
-            '(double *Jy, const int iy, const realtype *p,'
-            ' const realtype *k, const double *y,'
-            ' const double *sigmay, const double *my)',
+            '(realtype *Jy, const int iy, const realtype *p, '
+            'const realtype *k, const realtype *y, const realtype *sigmay, '
+            'const realtype *my)',
     },
     'dJydsigmay': {
         'signature':
-            '(double *dJydsigmay, const int iy, const realtype *p,'
-            ' const realtype *k, const double *y,'
-            ' const double *sigmay, const double *my)',
+            '(realtype *dJydsigmay, const int iy, const realtype *p, '
+            'const realtype *k, const realtype *y, const realtype *sigmay, '
+            'const realtype *my)',
     },
     'dJydy': {
         'signature':
-            '(double *dJydy, const int iy, const realtype *p,'
-            ' const realtype *k, const double *y,'
-            ' const double *sigmay, const double *my)',
+            '(realtype *dJydy, const int iy, const realtype *p, '
+            'const realtype *k, const realtype *y, '
+            'const realtype *sigmay, const realtype *my)',
     },
     'dwdp': {
         'signature':
-            '(realtype *dwdp, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w)',
+            '(realtype *dwdp, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *tcl, const realtype *dtcldp)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -132,9 +129,9 @@ functions = {
     },
     'dwdx': {
         'signature':
-            '(realtype *dwdx, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w)',
+            '(realtype *dwdx, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *tcl)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -142,132 +139,116 @@ functions = {
     },
     'dxdotdp': {
         'signature':
-            '(realtype *dxdotdp, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip, const realtype *w, const realtype *dwdp)',
+            '(realtype *dxdotdp, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ip, const realtype *w, const realtype *dwdp)',
         'assume_pow_positivity':
             True,
     },
     'dydx': {
         'signature':
-            '(double *dydx, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k,'
-            ' const realtype *h, const realtype *w, const realtype *dwdx)',
+            '(realtype *dydx, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
     },
     'dydp': {
         'signature':
-            '(double *dydp, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip, const realtype *w, const realtype *dwdp)',
+            '(realtype *dydp, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ip, const realtype *w, const realtype *dwdp)',
     },
     'dsigmaydp': {
         'signature':
-            '(double *dsigmaydp, const realtype t, const realtype *p,'
-            ' const realtype *k, const int ip)',
+            '(realtype *dsigmaydp, const realtype t, const realtype *p, '
+            'const realtype *k, const int ip)',
     },
     'qBdot': {
         'signature':
-            '(realtype *qBdot, const int ip, const realtype t,'
-            ' const realtype *x, const realtype *p, const realtype *k,'
-            ' const realtype *h, const realtype *xB,'
-            ' const realtype *w, const realtype *dwdp)',
+            '(realtype *qBdot, const int ip, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *xB, '
+            'const realtype *w, const realtype *dwdp)',
         'assume_pow_positivity':
             True,
     },
     'sigmay': {
         'signature':
-            '(double *sigmay, const realtype t, const realtype *p,'
-            ' const realtype *k)',
+            '(realtype *sigmay, const realtype t, const realtype *p, '
+            'const realtype *k)',
     },
     'sxdot': {
         'signature':
-            '(realtype *sxdot, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip, const realtype *sx, const realtype *w,'
-            ' const realtype *dwdx, const realtype *JSparse,'
-            ' const realtype *dxdotdp)',
+            '(realtype *sxdot, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ip, const realtype *sx, const realtype *w, '
+            'const realtype *dwdx, const realtype *JSparse, '
+            'const realtype *dxdotdp)',
         'assume_pow_positivity':
             True,
     },
     'w': {
         'signature':
-            '(realtype *w, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k,'
-            ' const realtype *h)',
+            '(realtype *w, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *tcl)',
         'assume_pow_positivity':
             True,
     },
     'x0': {
         'signature':
-            '(realtype *x0, const realtype t, const realtype *p,'
-            ' const realtype *k)',
+            '(realtype *x0, const realtype t, const realtype *p, '
+            'const realtype *k)',
     },
     'x0_fixedParameters': {
         'signature':
-            '(realtype *x0_fixedParameters, const realtype t,'
-            ' const realtype *p, const realtype *k)',
+            '(realtype *x0_fixedParameters, const realtype t, '
+            'const realtype *p, const realtype *k)',
     },
     'sx0': {
         'signature':
-            '(realtype *sx0, const realtype t,const realtype *x,'
-            ' const realtype *p, const realtype *k, const int ip)',
+            '(realtype *sx0, const realtype t,const realtype *x, '
+            'const realtype *p, const realtype *k, const int ip)',
     },
     'sx0_fixedParameters': {
         'signature':
-            '(realtype *sx0_fixedParameters, const realtype t,'
-            ' const realtype *x0, const realtype *p, const realtype *k,'
-            ' const int ip)',
+            '(realtype *sx0_fixedParameters, const realtype t, '
+            'const realtype *x0, const realtype *p, const realtype *k, '
+            'const int ip)',
     },
     'xBdot': {
         'signature':
-            '(realtype *xBdot, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *xB, const realtype *w,'
-            ' const realtype *dwdx)',
+            '(realtype *xBdot, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *w, '
+            'const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'xdot': {
         'signature':
-            '(realtype *xdot, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w)',
+            '(realtype *xdot, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w)',
         'assume_pow_positivity':
             True,
     },
     'y': {
         'signature':
-            '(double *y, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k,'
-            ' const realtype *h, const realtype *w)',
+            '(realtype *y, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *w)',
     },
     'x_rdata': {
         'signature':
-            '(realtype *x_rdata, const realtype *tcl, const realtype *x,'
-            ' const realtype *p, const realtype *k)',
-    },
-    'sx_rdata': {
-        'signature':
-            '(realtype *sx_rdata, const realtype *tcl, const realtype *sx,'
-            ' const realtype *p, const realtype *k, const int ip)',
+            '(realtype *x_rdata, const realtype *x, const realtype *tcl)',
     },
     'total_cl': {
         'signature':
-            '(realtype total_cl, const realtype *x_rdata, const realtype *p,'
-            ' const realtype *k)',
-    },
-    'stotal_cl': {
-        'signature':
-            '(realtype stotal_cl, const realtype *sx_rdata,'
-            ' const realtype  *p, const realtype *k, const int ip)',
+            '(realtype *total_cl, const realtype *x_rdata)',
     },
     'x_solver': {
         'signature':
             '(realtype *x_solver, const realtype *x_rdata)',
-    },
-    'sx_solver': {
-        'signature':
-            '(realtype *sx_solver, const realtype *sx_rdata)',
     },
 }
 
@@ -417,8 +398,8 @@ class ModelQuantity:
 
 
 class State(ModelQuantity):
-    """A State variable defines an entity that evolves with time according to the
-    provided time derivative, abbreviated by `x`
+    """A State variable defines an entity that evolves with time according to
+    the provided time derivative, abbreviated by `x`
 
     Attributes:
         conservation_law: algebraic formula that allows computation of this
@@ -462,6 +443,15 @@ class State(ModelQuantity):
                             f'was {type(law)}')
 
         self.conservation_law = law
+
+    def set_dt(self, dt):
+        if not isinstance(dt, sp.Basic):
+            raise TypeError(f'time derivative must have type sympy.Basic, '
+                            f'was {type(dt)}')
+        self._dt = dt
+
+    def get_dt(self):
+        return self._dt
 
 
 class ConservationLaw(ModelQuantity):
@@ -518,8 +508,8 @@ class Observable(ModelQuantity):
 
 
 class SigmaY(ModelQuantity):
-    """A Standard Deviation SigmaY rescales the distance between simulations and
-    measurements when computing residuals, abbreviated by `sigmay`
+    """A Standard Deviation SigmaY rescales the distance between simulations
+    and measurements when computing residuals, abbreviated by `sigmay`
 
     """
     def __init__(self, identifier, name, value):
@@ -802,27 +792,21 @@ class ODEModel:
         self._total_derivative_prototypes = {
             'J': {
                 'eq': 'xdot',
-                'chainvar': 'w',
+                'chainvars': ['w'],
                 'var': 'x',
             },
             'sxdot': {
                 'eq': 'xdot',
-                'chainvar': 'x',
+                'chainvars': ['x'],
                 'var': 'p',
                 'dydx_name': 'JSparse',
                 'dxdz_name': 'sx',
             },
             'sx_rdata': {
                 'eq': 'x_rdata',
-                'chainvar': 'x',
+                'chainvars': ['x'],
                 'var': 'p',
                 'dxdz_name': 'sx',
-            },
-            'stotal_cl': {
-                'eq': 'total_cl',
-                'chainvar': 'x_rdata',
-                'var': 'p',
-                'dxdz_name': 'sx_rdata',
             },
         }
         self._multiplication_prototypes = {
@@ -910,7 +894,8 @@ class ODEModel:
         Arguments:
             state: symbolic identifier of the state that should be replaced by
             the conservation law
-            law: algebraic formula that should replace the state
+            law: symbolic formula that together with the state defines the
+            conservation law, i.e., d(state + law)/dt = 0
 
         Returns:
 
@@ -930,27 +915,43 @@ class ODEModel:
 
         total_abundace = sp.Symbol(f'tcl_{self._states[ix].get_id()}')
 
-        # adding this as expression simplifies symbolic expressions and
-        # avoids potentially costly .subs calls.
+        state_id = self._states[ix].get_id()
+
         self.add_component(
             Expression(
-                self._states[ix].get_id(),
-                f'cl_{self._states[ix].get_id()}',
-                law
+                state_id,
+                f'cl_{state_id}',
+                total_abundace - law
             )
         )
 
         self.add_component(
             ConservationLaw(
                 total_abundace,
-                f'total_{self._states[ix].get_id()}',
-                self._states[ix].get_id() + law
+                f'total_{state_id}',
+                state_id + law
             )
         )
 
         self._states[ix].set_conservation_law(
             total_abundace - law
         )
+
+        # for state in self._states:
+        #     state.set_dt(
+        #         state.get_dt().subs(
+        #             state_id,
+        #             total_abundace - law
+        #         )
+        #     )
+        #
+        # for expression in self._expressions:
+        #     expression.set_value(
+        #         expression.get_value().subs(
+        #             state_id,
+        #             total_abundace - law
+        #         )
+        #     )
 
     def nx_rdata(self):
         """Number of states.
@@ -977,6 +978,19 @@ class ODEModel:
 
         """
         return len(self.sym('x'))
+
+    def ncl(self):
+        """Number of conservation laws.
+
+        Arguments:
+
+        Returns:
+        number of state variable symbols
+
+        Raises:
+
+        """
+        return self.nx_rdata()-self.nx_solver()
 
     def ny(self):
         """Number of Observables.
@@ -1035,8 +1049,8 @@ class ODEModel:
         return self._syms[name]
 
     def sparsesym(self, name):
-        """Returns (and constructs if necessary) the sparsified identifiers for a
-        sparsified symbolic variable.
+        """Returns (and constructs if necessary) the sparsified identifiers for
+        a sparsified symbolic variable.
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -1066,8 +1080,9 @@ class ODEModel:
         Raises:
 
         """
+
         if name not in self._eqs:
-            self._computeEquation(name)
+            self._compute_equation(name)
         return self._eqs[name]
 
     def sparseeq(self, name):
@@ -1109,8 +1124,8 @@ class ODEModel:
         return self._colptrs[name]
 
     def rowval(self, name):
-        """Returns (and constructs if necessary) the row values for a sparsified
-        symbolic variable.
+        """Returns (and constructs if necessary) the row values for a
+        sparsified symbolic variable.
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -1128,8 +1143,8 @@ class ODEModel:
         return self._rowvals[name]
 
     def val(self, name):
-        """Returns (and constructs if necessary) the numeric values of a symbolic
-        entity
+        """Returns (and constructs if necessary) the numeric values of a
+        symbolic entity
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -1145,7 +1160,8 @@ class ODEModel:
         return self._vals[name]
 
     def name(self, name):
-        """Returns (and constructs if necessary) the names of a symbolic variable
+        """Returns (and constructs if necessary) the names of a symbolic
+        variable
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -1190,6 +1206,15 @@ class ODEModel:
                 if state.conservation_law is None
             ])
             return
+        elif name == 'dtcldp':
+            self._syms[name] = sp.Matrix([
+                [
+                    sp.Symbol(f's{tcl.get_id()}{ip}')
+                    for ip in range(len(self.sym('p')))
+                ]
+                for tcl in self._conservationlaws
+            ])
+            return
         elif name in sparse_functions:
             self._generateSparseSymbol(name)
             return
@@ -1221,7 +1246,8 @@ class ODEModel:
 
     def _generateSparseSymbol(self, name):
         """Generates the sparse symbolic identifiers, symbolic identifiers,
-        sparse equations, column pointers and row values for a symbolic variable
+        sparse equations, column pointers and row values for a symbolic
+        variable
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -1258,7 +1284,7 @@ class ODEModel:
         self._sparsesyms[name] = symbolList
         self._syms[name] = sparseMatrix
 
-    def _computeEquation(self, name):
+    def _compute_equation(self, name):
         """computes the symbolic formula for a symbolic variable
 
         Arguments:
@@ -1277,7 +1303,9 @@ class ODEModel:
         elif name in self._total_derivative_prototypes:
             args = self._total_derivative_prototypes[name]
             args['name'] = name
-            self._totalDerivative(**args)
+            self._lock_total_derivative = True
+            self._total_derivative(**args)
+            self._lock_total_derivative = False
 
         elif name in self._multiplication_prototypes:
             args = self._multiplication_prototypes[name]
@@ -1371,6 +1399,14 @@ class ODEModel:
             # not correctly parsed in regex
             self._derivative('total_cl', 'x_rdata')
 
+        elif name == 'dtcldx':
+            # this is always zero
+            self._eqs[name] = sp.zeros(self.ncl(), self.nx_solver())
+
+        elif name == 'dtcldp':
+            # force symbols
+            self._eqs[name] = self.sym(name)
+
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
 
@@ -1419,12 +1455,17 @@ class ODEModel:
             name = f'd{eq}d{var}'
 
         # automatically detect chainrule
-        if var_in_function_signature(eq, 'w') \
-                and not self._lock_total_derivative \
-                and var is not 'w'\
-                and min(self.sym('w').shape):
+        chainvars = []
+        for cv in ['w', 'tcl']:
+            if var_in_function_signature(eq, cv) \
+                    and not self._lock_total_derivative \
+                    and var is not cv \
+                    and min(self.sym(cv).shape):
+                chainvars.append(cv)
+
+        if len(chainvars):
             self._lock_total_derivative = True
-            self._totalDerivative(name, eq, 'w', var)
+            self._total_derivative(name, eq, chainvars, var)
             self._lock_total_derivative = False
             return
 
@@ -1439,8 +1480,8 @@ class ODEModel:
         else:
             self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
-    def _totalDerivative(self, name, eq, chainvar, var,
-                         dydx_name=None, dxdz_name=None):
+    def _total_derivative(self, name, eq, chainvars, var,
+                          dydx_name=None, dxdz_name=None):
         """Creates a new symbolic variable according to a total derivative
         using the chain rule
 
@@ -1449,9 +1490,9 @@ class ODEModel:
 
             eq: name of the symbolic variable that defines the formula @type str
 
-            chainvar: name of the symbolic variable that defines the
-            identifiers whith respect to which the chain rule is applied
-            @type str
+            chainvars: names of the symbolic variable that define the
+            identifiers with respect to which the chain rules are applied
+            @type list
 
             var: name of the symbolic variable that defines the identifiers
             whith respect to which the derivatives are to be computed @type str
@@ -1471,39 +1512,36 @@ class ODEModel:
         """
         # compute total derivative according to chainrule
         # Dydz = dydx*dxdz + dydz
-        variables = dict()
-        variables['dydx'] = dict()
-        variables['dxdz'] = dict()
-        variables['dydz'] = dict()
 
-        variables['dydx']['name'] = f'd{eq}d{chainvar}' \
-            if dydx_name is None else dydx_name
-        variables['dxdz']['name'] = f'd{chainvar}d{var}' \
-            if dxdz_name is None else dxdz_name
-        variables['dydz']['name'] = f'd{eq}d{var}'
 
-        # if the symbol appears in the function signature,
-        # we can use the respective symbol instead of the equation
-        for var in variables:
-            varname = variables[var]["name"]
-            if var_in_function_signature(name, varname):
-                variables[var]['sym'] = self.sym(varname)
-            else:
-                variables[var]['sym'] = self.eq(varname)
+        # initialize with partial derivative dydz without chain rule
+        self._eqs[name] = copy.deepcopy(
+            self.sym_or_eq(name, f'd{eq}d{var}')
+        )
 
-        if variables['dxdz']['sym'].shape[1] == 1 and \
-            variables['dydz']['sym'].shape[1] != \
-            variables['dxdz']['sym'].shape[1]:
-            self._eqs[name] = copy.deepcopy(variables['dydz']['sym'])
-            for iz in range(variables['dydz']['sym'].shape[1]):
-                self._eqs[name][:, iz] += variables['dydx']['sym'] * \
-                                          variables['dxdz']['sym']
+        for chainvar in chainvars:
+            if dydx_name is None:
+                dydx_name = f'd{eq}d{chainvar}'
+            if dxdz_name is None:
+                dxdz_name =  f'd{chainvar}d{var}'
+
+            dydx = self.sym_or_eq(name, dydx_name)
+            dxdz = self.sym_or_eq(name, dxdz_name)
+
+            if not dydx.is_zero and not dxdz.is_zero:
+                if dxdz.shape[1] == 1 and \
+                        self._eqs[name].shape[1] != dxdz.shape[1]:
+                    for iz in range(self._eqs[name].shape[1]):
+                        self._eqs[name][:, iz] += dydx * dxdz
+                else:
+                    self._eqs[name] += dydx * dxdz
+
+
+    def sym_or_eq(self, name, varname):
+        if var_in_function_signature(name, varname):
+            return self.sym(varname)
         else:
-            self._eqs[name] = \
-                variables['dydz']['sym'] \
-                + variables['dydx']['sym'] * variables['dxdz']['sym']
-
-
+            return self.eq(varname)
 
 
     def _multiplication(self, name, x, y,
@@ -1624,6 +1662,8 @@ class ODEModel:
 
     def state_has_fixed_parameter_initial_condition(self, ix):
         ic = self._states[ix].get_val()
+        if not isinstance(ic, sp.Basic):
+            return False
         return any([
             fp in [c.get_id() for c in self._constants]
             for fp in ic.free_symbols
@@ -1849,7 +1889,7 @@ class ODEExporter:
             if name in sparse_functions:
                 symbols = self.model.sparsesym(name)
             else:
-                symbols = self.model.sym(name)
+                symbols = self.model.sym(name).T
         else:
             raise Exception('Unknown symbolic array')
 
@@ -2053,8 +2093,8 @@ class ODEExporter:
             'NEVENT': '0',
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
-            'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDWDP': str(len(self.model.sparsesym('dwdp'))),
+            'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NNZ': str(len(self.model.sparsesym('JSparse'))),
             'UBW': str(self.model.nx_solver()),
             'LBW': str(self.model.nx_solver()),
@@ -2084,17 +2124,15 @@ class ODEExporter:
                 'false',
         }
 
-        if self.model.nx_solver() != self.model.nx_rdata():
-            for fun in ['x_rdata', 'sx_rdata']:
-                tplData[f'{fun.upper()}_DEF'] = \
-                    get_function_defition(fun, self.modelName)
-                tplData[f'{fun.upper()}_IMPL'] = \
-                    get_function_implementation(fun, self.modelName)
-        else:
+        for fun in ['w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl']:
+            tplData[f'{fun.upper()}_DEF'] = \
+                get_function_defition(fun, self.modelName)
+            tplData[f'{fun.upper()}_IMPL'] = \
+                get_function_implementation(fun, self.modelName)
+
+        if self.model.nx_solver() == self.model.nx_rdata():
             tplData['X_RDATA_DEF'] = ''
-            tplData['SX_RDATA_DEF'] = ''
             tplData['X_RDATA_IMPL'] = ''
-            tplData['SX_RDATA_IMPL'] = ''
 
         applyTemplate(
             os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
@@ -2439,6 +2477,7 @@ def remove_typedefs(signature):
     typedefs = [
         'const realtype *',
         'const double *',
+        'const realtype ',
         'double *',
         'realtype *',
         'const int ',

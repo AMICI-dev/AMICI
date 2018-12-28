@@ -578,6 +578,12 @@ namespace amici {
          * @return length of constant vector
          */
         int nk() const;
+        
+        /**
+         * @brief number of conservation laws
+         * @return difference between nx_rdata and nx_solver
+         */
+        int ncl() const {return nx_rdata-nx_solver;};
 
         /**
          * @brief fixed parameters
@@ -1157,11 +1163,12 @@ namespace amici {
          * @param x_solver state variables with conservation laws applied
          * @param p parameter vector
          * @param k constant vector
+         * @param tcl total abundances for conservation laws
          **/
-        virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver, const realtype *p, const realtype *k) {
-            if (this->nx_solver != this->nx_rdata)
+        virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver, const realtype *tcl) {
+            if (nx_solver != nx_rdata)
                 throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fx_rdata");
-            std::copy_n(x_solver, this->nx_solver, x_rdata);
+            std::copy_n(x_solver, nx_solver, x_rdata);
         }
         
         /** model specific implementation of fsx_solver
@@ -1169,32 +1176,31 @@ namespace amici {
          * @param sx_solver state sensitivity variables with conservation laws applied
          * @param p parameter vector
          * @param k constant vector
+         * @param stcl sensitivities of total abundances for conservation laws
          * @param ip sensitivity index
          **/
-        virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver, const realtype *p, const realtype *k, const int ip) {
-            if (this->nx_solver != this->nx_rdata)
-                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fsx_rdata");
-            std::copy_n(sx_solver, this->nx_solver, sx_rdata);
+        virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver, const realtype *stcl, const int ip) {
+            fx_rdata(sx_rdata, sx_solver, stcl);
         }
         
         /** model specific implementation of fx_solver
          * @param x_solver state variables with conservation laws applied
          * @param x_rdata state variables with conservation laws expanded
          **/
-        virtual void fx_solver(realtype *x_rdata, const realtype *x_solver) {
-            if (this->nx_solver != this->nx_rdata)
+        virtual void fx_solver(realtype *x_solver, const realtype *x_rdata) {
+            if (nx_solver != nx_rdata)
                 throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fx_solver");
-            std::copy_n(x_rdata, this->nx_rdata, x_solver);
+            std::copy_n(x_rdata, nx_rdata, x_solver);
         }
         
         /** model specific implementation of fsx_solver
          * @param sx_full state sensitivity variables with conservation laws expanded
          * @param sx state sensitivity variables with conservation laws applied
          **/
-        virtual void fsx_solver(realtype *sx_rdata, const realtype *sx_solver) {
-            if (this->nx_solver != this->nx_rdata)
-                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fsx_rdata");
-            std::copy_n(sx_rdata, this->nx_rdata, sx_solver);
+        virtual void fsx_solver(realtype *sx_solver, const realtype *sx_rdata) {
+            /* for the moment we do not need an implementation of fsx_solver as we can simply reuse fx_solver and replace states
+             by their sensitivities */
+            fx_solver(sx_solver, sx_rdata);
         }
         
         /** model specific implementation of ftotal_cl
@@ -1202,17 +1208,19 @@ namespace amici {
          * @param x_rdata state variables with conservation laws expanded
          **/
         virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata) {
-            if (this->nx_solver != this->nx_rdata)
-                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fx_solver");
+            if (nx_solver != nx_rdata)
+                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own ftotal_cl");
         }
         
         /** model specific implementation of fsx_solver
          * @param sx_full state sensitivity variables with conservation laws expanded
          * @param sx state sensitivity variables with conservation laws applied
+         * @param ip sensitivity index
          **/
-        virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata) {
-            if (this->nx_solver != this->nx_rdata)
-                throw AmiException("A model that has differing nx_solver and nx_rdata needs to implement its own fsx_rdata");
+        virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata, const int ip) {
+            /* for the moment we do not need an implementation of fstotal_cl as we can simply reuse ftotal_cl and replace states
+             by their sensitivities */
+            ftotal_cl(stotal_cl, sx_rdata);
         }
         
         /** model specific implementation of fx0
@@ -1663,37 +1671,42 @@ namespace amici {
         /** model specific implementation of fw
          * @param w Recurring terms in xdot
          * @param t timepoint
-         * @param x Vector with the states
+         * @param x vector with the states
          * @param p parameter vector
          * @param k constants vector
          * @param h heavyside vector
+         * @param tcl total abundances for conservations laws
          */
         virtual void fw(realtype *w, const realtype t, const realtype *x, const realtype *p,
-                        const realtype *k, const realtype *h) {}
+                        const realtype *k, const realtype *h, const realtype *tcl) {}
         
         /** model specific implementation of dwdp
          * @param dwdp Recurring terms in xdot, parameter derivative
          * @param t timepoint
-         * @param x Vector with the states
+         * @param x vector with the states
          * @param p parameter vector
          * @param k constants vector
          * @param h heavyside vector
          * @param w vector with helper variables
+         * @param tcl total abundances for conservations laws
+         * @param stcl sensitivities of total abundances for conservations laws
          */
         virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
-                           const realtype *k, const realtype *h, const realtype *w) {}
+                           const realtype *k, const realtype *h, const realtype *w, const realtype *tcl,
+                           const realtype *stcl) {}
         
         /** model specific implementation of dwdx
          * @param dwdx Recurring terms in xdot, state derivative
          * @param t timepoint
-         * @param x Vector with the states
+         * @param x vector with the states
          * @param p parameter vector
          * @param k constants vector
          * @param h heavyside vector
          * @param w vector with helper variables
+         * @param tcl total abundances for conservations laws
          */
         virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
-                           const realtype *k, const realtype *h, const realtype *w) {}
+                           const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) {}
         
         /** create my slice at timepoint
          * @param it timepoint index
