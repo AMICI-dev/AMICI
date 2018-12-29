@@ -208,9 +208,11 @@ void ForwardProblem::updateAndReinitStatesAndSensitivities()
 {
     model->fx0_fixedParameters(&x);
     solver->reInit(t, &x, &dx);
+    model->fx_rdata(&x_rdata, &x)
     rdata->x0 = std::move(x_rdata.getVector());
     if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
         model->fsx0_fixedParameters(&sx, &x);
+        model->fsx_rdata(&sx_rdata, &sx)
         for (int ip = 0; ip < model->nplist(); ip++)
             for (int ix = 0; ix < rdata->nx; ix++)
                 rdata->sx0[ip * rdata->nx + ix] = sx_rdata.at(ix, ip);
