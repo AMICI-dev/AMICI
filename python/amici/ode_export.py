@@ -2525,7 +2525,15 @@ def sanitize_basic_sympy(basic):
         # if this expression contains any pysb.Components, we can
         # safely apply str() to the full expression as str will do
         # the right thing here
-        return sp.sympify(str(basic))
+
+        # ensure that pysb symbols are correctly interpreted as symbols and
+        # not as functions etc
+        locals = {
+            fs.name: sp.Symbol(fs.name)
+            for fs in list(basic.expr_free_symbols)
+            if isinstance(fs, pysb.core.Component)
+        }
+        return sp.sympify(str(basic), locals=locals)
 
 
 def get_function_defition(fun, name):
