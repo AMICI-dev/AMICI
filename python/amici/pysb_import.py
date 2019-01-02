@@ -21,7 +21,8 @@ def pysb2amici(model,
                sigmas=None,
                verbose=False,
                assume_pow_positivity=False,
-               compiler=None
+               compiler=None,
+               compute_conservation_laws=True,
                ):
     """Generate AMICI C++ files for the model provided to the constructor.
 
@@ -49,6 +50,11 @@ def pysb2amici(model,
         compiler: distutils/setuptools compiler selection to build the
         python extension @type str
 
+        compute_conservation_laws: if set to true, conservation laws are
+        automatically computed and applied such that the state-jacobian of
+        the ODE right-hand-side has full rank. This option should be set to
+        True when using the newton algorithm to compute steadystates @type bool
+
     Returns:
 
     Raises:
@@ -65,7 +71,7 @@ def pysb2amici(model,
 
     ode_model = ODEModel_from_pysb_importer(
         model, constants=constant_parameters, observables=observables,
-        sigmas=sigmas,
+        sigmas=sigmas, compute_conservation_laws=compute_conservation_laws,
     )
     exporter = ODEExporter(
         ode_model,
@@ -97,10 +103,7 @@ def ODEModel_from_pysb_importer(model, constants=None,
         sigmas: dict with observable Expression name as key and sigma
         Expression name as expression @type list
 
-        compute_conservation_laws: if set to true, conservation laws are
-        automatically computed and applied such that the state-jacobian of
-        the ODE right-hand-side has full rank. This option should be set to
-        True when using the newton algorithm to compute steadystates @type bool
+        compute_conservation_laws: see pysb2amici
 
 
     Returns:
@@ -349,7 +352,7 @@ def process_pysb_conservation_laws(model, ODE):
 
 
     Arguments:
-        model: pysb model @type pysb.Model
+        model: pysb model @type pysb.core.Model
 
         ODE: ODEModel instance @type ODEModel
 
@@ -362,7 +365,8 @@ def process_pysb_conservation_laws(model, ODE):
 
     monomers_without_conservation_law = set()
     for rule in model.rules:
-        monomers_without_conservation_law |= get_unconserved_monomers(rule)
+        monomers_without_conservation_law |= get_unconserved_monomers(rule,
+                                                                      model)
 
     if hasattr(model, 'initial_conditions_fixed'):
         for monomer in model.monomers:
@@ -430,6 +434,21 @@ def process_pysb_conservation_laws(model, ODE):
 
 
 def get_unflattened_conservation_laws(conservation_laws):
+    """Removes species according to conservation laws to ensure that the
+    jacobian has full rank
+
+
+    Arguments:
+        model: pysb model @type pysb.core.Model
+
+        ODE: ODEModel instance @type ODEModel
+
+
+    Returns:
+
+    Raises:
+
+    """
     free_symbols_cl = conservation_law_variables(conservation_laws)
     return [
         (cl['state'], cl['law']) for cl in conservation_laws
@@ -438,6 +457,18 @@ def get_unflattened_conservation_laws(conservation_laws):
 
 
 def conservation_law_variables(conservation_laws):
+    """Construct the set of all free variables from a list of conservation laws
+
+
+    Arguments:
+        conservation_laws: list of conservation laws (sympy.Basic)  @type list
+
+    Returns:
+    Set union of all free_symbols
+
+    Raises:
+
+    """
     variables = set()
     for cl in conservation_laws:
         variables |= cl['law'].free_symbols
@@ -445,6 +476,23 @@ def conservation_law_variables(conservation_laws):
 
 
 def has_fixed_parameter_ic(specie, model, ODE):
+    """Wrapper to interface ODE.state_has_fixed_parameter_initial_condition
+    from a pysb specie/model arguments
+
+    Arguments:
+        specie: pysb species @type pysb.core.ComplexPattern
+        model: pysb model @type pysb.core.Model
+        ODE: ODE model @type amici.ODE
+
+    Returns:
+    False if the species does not have an initial condition at all.
+    Otherwise the return value of
+    ODE.state_has_fixed_parameter_initial_condition
+
+    Raises:
+
+    """
+    # ComplexPatterns are not hashable, so we have to compare by string
     ic_strs = [str(ic[0]) for ic in model.initial_conditions]
     if str(specie) not in ic_strs:
         # no initial condition at all
@@ -453,10 +501,21 @@ def has_fixed_parameter_ic(specie, model, ODE):
         return ODE.state_has_fixed_parameter_initial_condition(
             ic_strs.index(str(specie))
         )
-    #model.initial_conditions
 
 
 def extract_monomers(complex_patterns):
+    """Constructs a list of monomer names contained in complex patterns.
+    Multiplicity of names corresponds to the stoichiometry in the complex.
+
+    Arguments:
+        specie: (list of) complex pattern(s) @type pysb.core.ComplexPattern
+
+    Returns:
+    list of monomer names
+
+    Raises:
+
+    """
     if not isinstance(complex_patterns, list):
         complex_patterns = [complex_patterns]
     return [
@@ -466,18 +525,72 @@ def extract_monomers(complex_patterns):
         for mp in cp.monomer_patterns
     ]
 
-def get_unconserved_monomers(rule):
+
+def get_unconserved_monomers(rule, model):
+    """Constructs the set of monomer names for which the rule changes the
+    stoichiometry of the monomer in the specified model.
+
+    Arguments:
+        rule: rule @type pysb.core.Rule
+        model: model @type pysb.core.Model
+
+    Returns:
+    set of monomer names for which the stoichiometry is not conserved
+
+    Raises:
+
+    """
+    unconserved_monomers = set()
+
+    if not rule.delete_molecules \
+            and len(rule.product_pattern.complex_patterns) == 0:
+        # if delete_molecules is not True but we have a degradation rule,
+        # we have to actually go through the reactions that are created by
+        # the rule
+        for reaction in [r for r in model.reactions if rule.name in r['rule']]:
+            unconserved_monomers |= get_changed_stoichiometries(
+                [model.species[ix] for ix in reaction['reactants']],
+                [model.species[ix] for ix in reaction['products']]
+            )
+    else:
+        # otherwise we can simply extract all information for the rule
+        # itself, which is computationally much more efficient
+        unconserved_monomers |= get_changed_stoichiometries(
+            rule.reactant_pattern.complex_patterns,
+            rule.product_pattern.complex_patterns
+        )
+
+    return unconserved_monomers
+
+
+def get_changed_stoichiometries(reactants, products):
+    """Constructs the set of monomer names which have different
+    stoichiometries in reactants and products.
+
+    Arguments:
+        reactants: (list of) complex pattern(s) @type pysb.core.ComplexPattern
+        products: (list of) complex pattern(s) @type pysb.core.ComplexPattern
+
+    Returns:
+    set of monomer name for which the stoichiometry changed
+
+    Raises:
+
+    """
+
+    changed_stoichiometries = set()
+
     reactant_monomers = extract_monomers(
-        rule.reactant_pattern.complex_patterns
+        reactants
     )
 
     product_monomers = extract_monomers(
-        rule.product_pattern.complex_patterns
+        products
     )
 
-    unconserved_monomers = set()
     for monomer in set(reactant_monomers + product_monomers):
         if reactant_monomers.count(monomer) != product_monomers.count(monomer):
-            unconserved_monomers |= {monomer}
+            changed_stoichiometries |= {monomer}
 
-    return unconserved_monomers
+    return changed_stoichiometries
+

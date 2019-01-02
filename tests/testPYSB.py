@@ -101,10 +101,11 @@ class TestAmiciPYSBModel(unittest.TestCase):
                         ).all())
 
     def test_compare_to_pysb_simulation(self):
-        examples = [tyson_oscillator.model, robertson.model,
+        examples = [bngwiki_egfr_simple.model, tyson_oscillator.model,
+                    robertson.model,
                     expression_observables.model,
                     bax_pore_sequential.model, bax_pore.model,
-                    bngwiki_egfr_simple.model]
+                    ]
         for example in examples:
             example.name = example.name.replace('pysb.examples.', '')
             with self.subTest(example=example.name):
@@ -123,7 +124,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
                 amici.pysb2amici(example,
                                  example.name,
-                                 verbose=False)
+                                 verbose=False,
+                                 compute_conservation_laws=True)
                 sys.path.insert(0, example.name)
                 amici_model_module = importlib.import_module(example.name)
                 model_pysb = amici_model_module.getModel()
