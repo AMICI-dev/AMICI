@@ -1004,7 +1004,7 @@ class ODEModel:
         Arguments:
 
         Returns:
-        number of state variable symbols
+        number of conservation laws
 
         Raises:
 
