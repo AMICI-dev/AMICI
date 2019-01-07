@@ -554,7 +554,7 @@ void Model::setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative) {
     if(nx_solver != nx_rdata)
         throw AmiException("Nonnegative states are not supported whith conservation laws enabled");
     if (stateIsNonNegative.size() != static_cast<unsigned long>(nx_solver))
-        throw AmiException("Dimension of input stateIsNonNegative (%d) does not agree with number of state variables (%d)",stateIsNonNegative.size(),nx_solver);
+        throw AmiException("Dimension of input stateIsNonNegative (%u) does not agree with number of state variables (%d)",stateIsNonNegative.size(),nx_solver);
     this->stateIsNonNegative = stateIsNonNegative;
     anyStateNonNegative=false;
     for (auto const& flag: stateIsNonNegative) {
