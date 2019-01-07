@@ -72,7 +72,7 @@ grep -v "warning: Unexpected html tag <img> found within <a href=...> context" $
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
 # suppress doxygen warnings about multiple param sections
-grep -v "has muliple @param documentation sections" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+grep -v "iple @param documentation sections" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
 # check if warnings log was created
