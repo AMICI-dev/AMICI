@@ -40,8 +40,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
         # -------------- PYSB -----------------
 
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
-                                        'python', 'examples',
-                                        'example_presimulation'))
+                                        'tests', 'pysb_test_models'))
         from createModel import model
         model.name = 'test_model_presimulation_pysb'
         amici.pysb2amici(model,
@@ -106,8 +105,24 @@ class TestAmiciPYSBModel(unittest.TestCase):
                     expression_observables.model,
                     bax_pore_sequential.model, bax_pore.model,
                     ]
+
+        test_model_dir = os.path.join(os.path.dirname(__file__), '..',
+                                        'tests', 'pysb_test_models')
+
+        sys.path.insert(0, test_model_dir)
+
+        custom_models = [
+            'bngwiki_egfr_simple_deletemolecules',
+        ]
+
+        for custom_model in  custom_models:
+            model_module = importlib.import_module(custom_model)
+            examples.append(model_module.model)
+
         for example in examples:
             example.name = example.name.replace('pysb.examples.', '')
+            # avoid naming clash for custom pysb models
+            example.name += '_amici'
             with self.subTest(example=example.name):
                 # pysb part
 
@@ -122,12 +137,15 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
                 # amici part
 
+                outdir = example.name
                 amici.pysb2amici(example,
-                                 example.name,
+                                 outdir,
                                  verbose=False,
                                  compute_conservation_laws=True)
-                sys.path.insert(0, example.name)
+                sys.path.insert(0, outdir)
+
                 amici_model_module = importlib.import_module(example.name)
+
                 model_pysb = amici_model_module.getModel()
 
                 model_pysb.setTimepoints(tspan)
