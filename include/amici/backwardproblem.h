@@ -79,9 +79,9 @@ class BackwardProblem {
         
     void handleEventB(int iroot);
     
-    void handleDataPointB(int it);
+    void handleDataPointB(const int it);
     
-    void updateHeavisideB(int iroot);
+    void updateHeavisideB(const int iroot);
     
     realtype getTnext(std::vector<realtype> const& troot, const int iroot, const int it);
     

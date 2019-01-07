@@ -137,12 +137,12 @@ void BackwardProblem::workBackwardProblem() {
 /* ------------------------------------------------------------------------ */
 /* ------------------------------------------------------------------------ */
 
-void BackwardProblem::handleEventB(int iroot) {
+void BackwardProblem::handleEventB(const int iroot) {
     /**
      * handleEventB executes everything necessary for the handling of events
      * for the backward problem
      *
-     * @param[out] iroot index of event @type int
+     * @param iroot index of event @type int
      */
 
     for (int ie = 0; ie < model->ne; ie++) {
@@ -182,12 +182,12 @@ void BackwardProblem::handleEventB(int iroot) {
  * handleDataPoint executes everything necessary for the handling of data
  * points for the backward problems
  *
- * @param[in] it index of data point @type int
+ * @param it index of data point @type int
  */
-void BackwardProblem::handleDataPointB(int it) {
+void BackwardProblem::handleDataPointB(const int it) {
     for (int ix = 0; ix < model->nxtrue_solver; ix++) {
         for (int iJ = 0; iJ < model->nJ; iJ++)
-            // we only need the 1:nxtrue_cl slice here!
+            // we only need the 1:nxtrue_solver (not the nx_true) slice here!
             xB[ix + iJ * model->nxtrue_solver] +=
                 dJydx[iJ + ( ix + it * model->nx_solver ) * model->nJ];
     }
@@ -200,13 +200,13 @@ void BackwardProblem::handleDataPointB(int it) {
  * these expressions
  * do not necessarily make sense
  *
- * @param[in] troot timepoint of next event @type realtype
- * @param[in] iroot index of next event @type int
- * @param[in] it index of next data point @type int
- * @param[in] model pointer to model specification object @type Model
+ * @param troot timepoint of next event @type realtype
+ * @param iroot index of next event @type int
+ * @param it index of next data point @type int
+ * @param model pointer to model specification object @type Model
  * @return tnext next timepoint @type realtype
  */
-realtype BackwardProblem::getTnext(const std::vector<realtype> &troot, const int iroot,
+realtype BackwardProblem::getTnext(std::vector<realtype> const& troot, const int iroot,
                                    const int it) {
     if (it < 0
             || (iroot >= 0 && model->ne > 0 && troot.at(iroot) > rdata->ts[it])) {
