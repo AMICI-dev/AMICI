@@ -945,7 +945,7 @@ class ODEModel:
                 for s in self._states
             ].index(state)
         except ValueError:
-            raise Exception(f'Speciefied state {state} was not found in the '
+            raise Exception(f'Specified state {state} was not found in the '
                             f'model states.')
 
         total_abundace = sp.Symbol(f'tcl_{self._states[ix].get_id()}')
