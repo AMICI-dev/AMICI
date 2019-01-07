@@ -1,6 +1,6 @@
+#!/usr/bin/env python3
 """ @package amici.sbml_import The python sbml import module for python
 """
-#!/usr/bin/env python3
 
 import sympy as sp
 import libsbml as sbml
@@ -31,15 +31,15 @@ class SbmlImporter:
 
     Attributes:
 
-        check_validity: indicates whether the validity of the SBML document
-        should be checked @type bool
+        show_sbml_warnings: indicates whether libSBML warnings should be
+        displayed @type bool
 
         symbols: dict carrying symbolic definitions @type dict
 
         SBMLreader: the libSBML sbml reader [!not storing this will result
         in a segfault!]
 
-        sbml_doc: document carrying the sbml defintion [!not storing this
+        sbml_doc: document carrying the sbml definition [!not storing this
         will result in a segfault!]
 
         sbml: sbml definition [!not storing this will result in a segfault!]
@@ -62,25 +62,25 @@ class SbmlImporter:
 
         compartmentSymbols: compartment ids @type sympy.Matrix
 
-        compartmentVolume: numeric/symbnolic compartment volumes @type
+        compartmentVolume: numeric/symbolic compartment volumes @type
         sympy.Matrix
 
-        stoichiometricMatrix: stoichiometrix matrix of the model @type
+        stoichiometricMatrix: stoichiometric matrix of the model @type
         sympy.Matrix
 
         fluxVector: reaction kinetic laws @type sympy.Matrix
 
     """
 
-    def __init__(self, SBMLFile, check_validity=True):
+    def __init__(self, SBMLFile, show_sbml_warnings=False):
         """Create a new Model instance.
 
         Arguments:
 
         SBMLFile: Path to SBML file where the model is specified @type string
 
-        check_validity: Flag indicating whether the validity of the SBML
-        document should be checked @type bool
+        show_sbml_warnings: indicates whether libSBML warnings should be
+        displayed @type bool
 
         Returns:
         SbmlImporter instance with attached SBML document
@@ -89,7 +89,7 @@ class SbmlImporter:
 
         """
 
-        self.check_validity = check_validity
+        self.show_sbml_warnings = show_sbml_warnings
 
         self.loadSBMLFile(SBMLFile)
 
@@ -123,10 +123,11 @@ class SbmlImporter:
 
         self.SBMLreader = sbml.SBMLReader()
         self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
-        self.checkLibSBMLErrors()
-        # If any of the above calls produces an error, this will be added to
-        # the SBMLError log in the sbml document. Thus, it is sufficient to
-        # check the error log just once after all conversion/validation calls.
+
+        # Ensure we got a valid SBML model, otherwise further processing
+        # might lead to undefined results
+        self.sbml_doc.validateSBML()
+        checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
 
         # apply several model simplifications that make our life substantially
         # easier
@@ -139,44 +140,12 @@ class SbmlImporter:
             getDefaultProperties()
         self.sbml_doc.convert(convertConfig)
 
-        if self.check_validity:
-            self.sbml_doc.validateSBML()
-
         # If any of the above calls produces an error, this will be added to
         # the SBMLError log in the sbml document. Thus, it is sufficient to
         # check the error log just once after all conversion/validation calls.
-        self.checkLibSBMLErrors()
+        checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
 
         self.sbml = self.sbml_doc.getModel()
-
-    def checkLibSBMLErrors(self):
-        """Checks the error log in the current self.sbml_doc
-
-        Arguments:
-
-        Returns:
-
-        Raises:
-        raises SBMLException if errors with severity ERROR or FATAL have
-        occured
-
-        """
-        num_warning = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
-        num_error = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_ERROR)
-        num_fatal = self.sbml_doc.getNumErrors(sbml.LIBSBML_SEV_FATAL)
-        if num_warning + num_error + num_fatal:
-            for iError in range(0, self.sbml_doc.getNumErrors()):
-                error = self.sbml_doc.getError(iError)
-                # we ignore any info messages for now
-                if error.getSeverity() >= sbml.LIBSBML_SEV_WARNING:
-                    category = error.getCategoryAsString()
-                    severity = error.getSeverityAsString()
-                    error_message = error.getMessage()
-                    print(f'libSBML {severity} ({category}): {error_message}')
-        if num_error + num_fatal:
-            raise SBMLException(
-                'SBML Document failed to load (see error messages above)'
-            )
 
     def sbml2amici(self,
                    modelName,
@@ -766,11 +735,13 @@ class SbmlImporter:
 
         if sigmas is None:
             sigmas = {}
-        elif len(set(sigmas.keys()) - set(observables.keys())):
-            # Ensure no non-existing observableIds have been specified (no problem here, but usually an upstream bug)
-            raise ValueError(f'Sigma provided for an unknown observableId: {set(sigmas.keys()) - set(observables.keys())}')
-
-
+        else:
+            # Ensure no non-existing observableIds have been specified
+            # (no problem here, but usually an upstream bug)
+            unknown_observables = set(sigmas.keys()) - set(observables.keys())
+            if unknown_observables:
+                raise ValueError('Sigma provided for an unknown observableId: '
+                                 + str(unknown_observables))
 
         speciesSyms = self.symbols['species']['identifier']
 
@@ -1101,3 +1072,38 @@ def l2s(inputs):
 
     """
     return [str(inp) for inp in inputs]
+
+
+def checkLibSBMLErrors(sbml_doc, show_warnings=False):
+    """Checks the error log in the current self.sbml_doc
+
+    Arguments:
+        sbml_doc: SBML document @type libsbml.SBMLDocument
+        show_warnings: display SBML warnings @type bool
+
+    Returns:
+
+    Raises:
+        raises SBMLException if errors with severity ERROR or FATAL have
+        occurred
+    """
+    num_warning = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
+    num_error = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_ERROR)
+    num_fatal = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_FATAL)
+
+    if num_warning + num_error + num_fatal:
+        for iError in range(0, sbml_doc.getNumErrors()):
+            error = sbml_doc.getError(iError)
+            # we ignore any info messages for now
+            if error.getSeverity() >= sbml.LIBSBML_SEV_ERROR \
+                    or (show_warnings and
+                        error.getSeverity() >= sbml.LIBSBML_SEV_WARNING):
+                category = error.getCategoryAsString()
+                severity = error.getSeverityAsString()
+                error_message = error.getMessage()
+                print(f'libSBML {severity} ({category}): {error_message}')
+
+    if num_error + num_fatal:
+        raise SBMLException(
+            'SBML Document failed to load (see error messages above)'
+        )

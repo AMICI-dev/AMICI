@@ -1,3 +1,5 @@
+% Run SBML tests from sbml-semantic-test-cases
+
 function runSBMLTests
 exedir = fileparts(mfilename('fullpath'));
 cd(exedir);
@@ -9,7 +11,7 @@ for iTest = 21:1529
     if(~exist(fullfile(pwd,'SBMLresults',[testid '-results.csv'])))
         try
             runSBMLTest(iTest,fid);
-        catch error   
+        catch error
             fprintf(fid,['Test ' testid ' failed: ' error.message '\n']);;
         end
     end
