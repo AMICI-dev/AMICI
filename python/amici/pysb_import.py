@@ -395,7 +395,24 @@ def process_pysb_conservation_laws(model, ODE):
     for monomer in model.monomers:
         if monomer.name not in monomers_without_conservation_law:
 
-            com
+            compartments = [
+                str(mp.compartment) # string based comparison as
+                # compartments are not hashable
+                for cp in model.species
+                for mp in cp.monomer_patterns
+                if mp.monomer.name == monomer.name
+            ]
+
+            if len(set(compartments)) > 1:
+                raise Exception('Conservation laws involving species in '
+                                'multiple compartments are currently not '
+                                'supported! Please run pysb2amici with '
+                                'compute_conservation_laws=False')
+                # TODO: implement this, multiply species by the volume of
+                # their respective compartment and allow total_cl to depend
+                # on parameters + constants and update the respective symbolic
+                # derivative accordingly
+
 
             target_index = next((
                 ix

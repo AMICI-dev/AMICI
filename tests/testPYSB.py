@@ -37,7 +37,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
         # -------------- PYSB -----------------
 
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
-                                        'tests', 'pysb_test_models'))
+                                        'python', 'examples',
+                                        'example_presimulation'))
         from createModel import model
         model.name = 'test_model_presimulation_pysb'
         amici.pysb2amici(model,
@@ -108,10 +109,6 @@ class TestAmiciPYSBModel(unittest.TestCase):
             'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
         ]
 
-        pysb_models = [
-            'move_connected', 'fricker_2010_apoptosis',
-        ]
-
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
                                         'tests', 'pysb_test_models'))
 
@@ -119,7 +116,10 @@ class TestAmiciPYSBModel(unittest.TestCase):
             'bngwiki_egfr_simple_deletemolecules',
         ]
 
-        for example in pysb_models:
+        atol = 1e-8
+        rtol = 1e-8
+
+        for example in pysb_models + custom_models:
             pysb.core.SelfExporter.cleanup()
             module = importlib.import_module(example)
             pysb_model = module.model
@@ -133,7 +133,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                 sim = ScipyOdeSimulator(
                     pysb_model,
                     tspan=tspan,
-                    integrator_options={'rtol': 1e-8, 'atol': 1e-8},
+                    integrator_options={'rtol': rtol, 'atol': atol},
                     compiler='python'
                 )
                 pysb_simres = sim.run()
@@ -141,10 +141,24 @@ class TestAmiciPYSBModel(unittest.TestCase):
                 # amici part
 
                 outdir = pysb_model.name
-                amici.pysb2amici(pysb_model,
-                                 outdir,
-                                 verbose=False,
-                                 compute_conservation_laws=True)
+
+                if pysb_model.name in ['move_connected_amici']:
+                    self.assertRaises(
+                        Exception,
+                        amici.pysb2amici,
+                        *[pysb_model, outdir],
+                        **{'verbose': False, 'compute_conservation_laws': True}
+                    )
+                    compute_conservation_laws = False
+                else:
+                    compute_conservation_laws = True
+
+                amici.pysb2amici(
+                    pysb_model,
+                    outdir,
+                    verbose=False,
+                    compute_conservation_laws=compute_conservation_laws
+                )
                 sys.path.insert(0, outdir)
 
                 amici_model_module = importlib.import_module(pysb_model.name)
@@ -154,6 +168,9 @@ class TestAmiciPYSBModel(unittest.TestCase):
                 model_pysb.setTimepoints(tspan)
 
                 solver = model_pysb.getSolver()
+                solver.setMaxSteps(int(1e5))
+                solver.setAbsoluteTolerance(atol)
+                solver.setRelativeTolerance(rtol)
                 rdata = amici.runAmiciSimulation(model_pysb, solver)
 
                 # check agreement of species simulation
