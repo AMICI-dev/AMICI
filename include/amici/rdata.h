@@ -222,7 +222,7 @@ class ReturnData {
     const int nk;
     /** number of states */
     const int nx;
-    /** number of observables with conservation laws applied*/
+    /** number of states with conservation laws applied */
     const int nx_solver;
     /** number of states in the unaugmented system */
     const int nxtrue;

@@ -276,7 +276,7 @@ public:
 
         if (static_cast<int>(vec.size()) != n_inner * n_outer) {
             throw AmiException("Dimension of AmiVectorArray (%ix%i) does not "
-                               "match target vector dimension (%i)",
+                               "match target vector dimension (%u)",
                                n_inner, n_outer, vec.size());
         }
 
