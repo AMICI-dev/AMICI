@@ -394,6 +394,9 @@ def process_pysb_conservation_laws(model, ODE):
     conservation_laws = []
     for monomer in model.monomers:
         if monomer.name not in monomers_without_conservation_law:
+
+            com
+
             target_index = next((
                 ix
                 for ix, specie in enumerate(model.species)

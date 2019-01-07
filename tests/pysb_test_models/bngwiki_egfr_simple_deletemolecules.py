@@ -8,7 +8,6 @@ from pysb import *
 
 Model()
 
-
 Parameter('NA', 6.02e23)     # Avogadro's number (molecules/mol)
 Parameter('f', 1)            # Fraction of the cell to simulate
 Expression('Vo', f*1.0e-10)  # Extracellular volume=1/cell_density (L)

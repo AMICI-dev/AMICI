@@ -8,10 +8,7 @@ import importlib
 import numpy as np
 from pysb.simulator import ScipyOdeSimulator
 
-from pysb.examples import tyson_oscillator, robertson, \
-    expression_observables, bax_pore_sequential, bax_pore, \
-    bngwiki_egfr_simple
-
+import pysb.examples
 
 class TestAmiciPYSBModel(unittest.TestCase):
     '''
@@ -100,35 +97,41 @@ class TestAmiciPYSBModel(unittest.TestCase):
                         ).all())
 
     def test_compare_to_pysb_simulation(self):
-        examples = [bngwiki_egfr_simple.model, tyson_oscillator.model,
-                    robertson.model,
-                    expression_observables.model,
-                    bax_pore_sequential.model, bax_pore.model,
-                    ]
 
-        test_model_dir = os.path.join(os.path.dirname(__file__), '..',
-                                        'tests', 'pysb_test_models')
+        sys.path.insert(0, os.path.dirname(pysb.examples.__file__))
 
-        sys.path.insert(0, test_model_dir)
+        pysb_models = [
+            'tyson_oscillator', 'robertson', 'expression_observables',
+            'bax_pore_sequential', 'bax_pore', 'bngwiki_egfr_simple',
+            'bngwiki_enzymatic_cycle_mm', 'bngwiki_simple', 'earm_1_0',
+            'earm_1_3', 'move_connected', 'michment', 'kinase_cascade',
+            'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
+        ]
+
+        pysb_models = [
+            'move_connected', 'fricker_2010_apoptosis',
+        ]
+
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
+                                        'tests', 'pysb_test_models'))
 
         custom_models = [
             'bngwiki_egfr_simple_deletemolecules',
         ]
 
-        for custom_model in  custom_models:
-            model_module = importlib.import_module(custom_model)
-            examples.append(model_module.model)
-
-        for example in examples:
-            example.name = example.name.replace('pysb.examples.', '')
+        for example in pysb_models:
+            pysb.core.SelfExporter.cleanup()
+            module = importlib.import_module(example)
+            pysb_model = module.model
+            pysb_model.name = pysb_model.name.replace('pysb.examples.', '')
             # avoid naming clash for custom pysb models
-            example.name += '_amici'
-            with self.subTest(example=example.name):
+            pysb_model.name += '_amici'
+            with self.subTest(example=pysb_model.name):
                 # pysb part
 
                 tspan = np.linspace(0, 100, 101)
                 sim = ScipyOdeSimulator(
-                    example,
+                    pysb_model,
                     tspan=tspan,
                     integrator_options={'rtol': 1e-8, 'atol': 1e-8},
                     compiler='python'
@@ -137,14 +140,14 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
                 # amici part
 
-                outdir = example.name
-                amici.pysb2amici(example,
+                outdir = pysb_model.name
+                amici.pysb2amici(pysb_model,
                                  outdir,
                                  verbose=False,
                                  compute_conservation_laws=True)
                 sys.path.insert(0, outdir)
 
-                amici_model_module = importlib.import_module(example.name)
+                amici_model_module = importlib.import_module(pysb_model.name)
 
                 model_pysb = amici_model_module.getModel()
 
