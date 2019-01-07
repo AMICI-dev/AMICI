@@ -2200,7 +2200,7 @@ class ODEExporter:
 
         for fun in ['w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl']:
             tplData[f'{fun.upper()}_DEF'] = \
-                get_function_defition(fun, self.modelName)
+                get_function_definition(fun, self.modelName)
             tplData[f'{fun.upper()}_IMPL'] = \
                 get_function_implementation(fun, self.modelName)
 
@@ -2536,7 +2536,7 @@ def sanitize_basic_sympy(basic):
         return sp.sympify(str(basic), locals=locals)
 
 
-def get_function_defition(fun, name):
+def get_function_definition(fun, name):
     """Constructs the function definition for a given function
 
     Arguments:
