@@ -2592,6 +2592,11 @@ def remove_typedefs(signature):
     Raises:
 
     """
+    # remove * pefix for pointers (pointer must always be removed before
+    # values otherwise we will inadvertently dereference values,
+    # same applies for const specifications)
+    #
+    # always add whitespace after type definition for cosmetic reasons
     typedefs = [
         'const realtype *',
         'const double *',
@@ -2599,7 +2604,7 @@ def remove_typedefs(signature):
         'double *',
         'realtype *',
         'const int ',
-        'int',
+        'int ',
         'SlsMat ',
     ]
 
