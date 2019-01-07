@@ -948,7 +948,7 @@ class ODEModel:
             raise Exception(f'Speciefied state {state} was not found in the '
                             f'model states.')
 
-        total_abundace = sp.Symbol(f'tcl_{self._states[ix].get_id()}')
+        total_abundance = sp.Symbol(f'tcl_{self._states[ix].get_id()}')
 
         state_id = self._states[ix].get_id()
 
@@ -956,20 +956,20 @@ class ODEModel:
             Expression(
                 state_id,
                 f'cl_{state_id}',
-                total_abundace - law
+                total_abundance - law
             )
         )
 
         self.add_component(
             ConservationLaw(
-                total_abundace,
+                total_abundance,
                 f'total_{state_id}',
                 state_id + law
             )
         )
 
         self._states[ix].set_conservation_law(
-            total_abundace - law
+            total_abundance - law
         )
 
     def nx_rdata(self):
