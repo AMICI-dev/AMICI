@@ -4,6 +4,7 @@ import sys
 import amici
 import unittest
 import os
+import platform
 import importlib
 import numpy as np
 from pysb.simulator import ScipyOdeSimulator
@@ -35,6 +36,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
         constant_parameters = ['DRUG_0', 'KIN_0']
 
         # -------------- PYSB -----------------
+        pysb.SelfExporter.cleanup()  # reset pysb
+        pysb.SelfExporter.do_export = True
 
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
                                         'python', 'examples',
@@ -120,13 +123,24 @@ class TestAmiciPYSBModel(unittest.TestCase):
         rtol = 1e-8
 
         for example in pysb_models + custom_models:
-            pysb.core.SelfExporter.cleanup()
-            module = importlib.import_module(example)
-            pysb_model = module.model
-            pysb_model.name = pysb_model.name.replace('pysb.examples.', '')
-            # avoid naming clash for custom pysb models
-            pysb_model.name += '_amici'
-            with self.subTest(example=pysb_model.name):
+            with self.subTest(example=example):
+
+                if example == 'earm_1_3' \
+                        and platform.sys.version_info[0] == 3 \
+                        and platform.sys.version_info[1] < 7:
+                    continue
+
+                # load example
+
+                pysb.SelfExporter.cleanup()  # reset pysb
+                pysb.SelfExporter.do_export = True
+
+                module = importlib.import_module(example)
+                pysb_model = module.model
+                pysb_model.name = pysb_model.name.replace('pysb.examples.', '')
+                # avoid naming clash for custom pysb models
+                pysb_model.name += '_amici'
+
                 # pysb part
 
                 tspan = np.linspace(0, 100, 101)

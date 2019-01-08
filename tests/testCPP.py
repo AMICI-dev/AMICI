@@ -5,6 +5,7 @@ import amici
 import unittest
 import os
 import numbers
+import pysb
 
 class TestAmiciCPP(unittest.TestCase):
     '''
@@ -15,6 +16,9 @@ class TestAmiciCPP(unittest.TestCase):
                                        'cpputest', 'expectedResults.h5')
 
     def setUp(self):
+        pysb.SelfExporter.cleanup()  # reset pysb
+        pysb.SelfExporter.do_export = True
+
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
                                         'python', 'examples',
                                         'example_presimulation'))
