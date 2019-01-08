@@ -6,6 +6,7 @@ import unittest
 import os
 import platform
 import importlib
+import copy
 import numpy as np
 from pysb.simulator import ScipyOdeSimulator
 
@@ -21,12 +22,15 @@ class TestAmiciPYSBModel(unittest.TestCase):
                                        'cpputest', 'expectedResults.h5')
 
     def setUp(self):
+        self.default_path = copy.copy(sys.path)
         self.resetdir = os.getcwd()
+
         if os.path.dirname(__file__) != '':
             os.chdir(os.path.dirname(__file__))
 
     def tearDown(self):
         os.chdir(self.resetdir)
+        sys.path = self.default_path
 
     def runTest(self):
         self.test_compare_to_sbml_import()
@@ -42,7 +46,12 @@ class TestAmiciPYSBModel(unittest.TestCase):
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
                                         'python', 'examples',
                                         'example_presimulation'))
-        from createModel import model
+        if 'createModelPresimulation' in sys.modules:
+            importlib.reload(sys.modules['createModelPresimulation'])
+            model_module = sys.modules['createModelPresimulation']
+        else:
+            model_module = importlib.import_module('createModelPresimulation')
+        model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
         amici.pysb2amici(model,
                          model.name,

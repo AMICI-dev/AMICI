@@ -22,6 +22,6 @@ rm -rf ${AMICI_PATH}/python/sdist/build/
 # test install from setup.py
 python3 -m venv ${AMICI_PATH}/build/venv --clear
 source ${AMICI_PATH}/build/venv/bin/activate
-pip3 install --upgrade pip setuptools pkgconfig wheel numpy scipy matplotlib pysb
+pip3 install --upgrade pip setuptools pkgconfig wheel numpy scipy matplotlib pysb coverage
 pip3 install --verbose -e ${AMICI_PATH}/python/sdist
 deactivate
