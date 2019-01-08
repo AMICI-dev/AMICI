@@ -587,15 +587,17 @@ std::vector<realtype> const& Model::getInitialStates() const {
 }
 
 void Model::setInitialStates(const std::vector<realtype> &x0) {
-    if(nx_solver != nx_rdata)
-        throw AmiException("Custom initial conditions are not supported whith conservation laws enabled");
-    // TODO: remove this exception and compute total_cl according to provided x_rdata
     if(x0.size() != (unsigned) nx_rdata && x0.size() != 0)
         throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
+    
+    std::vector<realtype> x0_solver(nx_solver, 0.0);
+    ftotal_cl(this->total_cl, x0.data());
+    fx_solver(x0_solver.data(), x0.data());
+    
     if (x0.size() == 0)
         this->x0data.clear();
     else
-        this->x0data = x0;
+        this->x0data = x0_solver.data();
 }
 
 const std::vector<realtype> &Model::getInitialStateSensitivities() const {
@@ -603,15 +605,43 @@ const std::vector<realtype> &Model::getInitialStateSensitivities() const {
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
-    if(nx_solver != nx_rdata)
-        throw AmiException("Custom initial sensitivity conditions are not supported whith conservation laws enabled");
-    // TODO: remove this exception and compute stotal_cl according to provided sx_rdata
     if(sx0.size() != (unsigned) nx_rdata * nplist() && sx0.size() != 0)
         throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
+    
+    realtype *stcl = nullptr;
+    realtype chainrulefactor = 1.0;
+    std::vector<realtype> slice_sx0_rdata(nx_rdata, 0.0);
+    std::vector<realtype> sx0_solver(nx_solver * nplist(), 0.0);
+    for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+        if (ncl() > 0)
+            stcl = &stotal_cl.at(ip * ncl());
+        
+        // revert chainrule
+        switch (pscale.at(ip)) {
+            case ParameterScaling::log10:
+                chainrulefactor = unscaledParameters.at(ip) * log(10);
+                break;
+            case ParameterScaling::ln:
+                chainrulefactor = unscaledParameters.at(ip);
+                break;
+            case ParameterScaling::none:
+                chainrulefactor = 1.0;
+                break;
+        }
+        
+        for(int ix=0; ix < nx_rdata; ++ix)
+            slice_sx0_rdata.at(ix) = &sx0.at(ip*nx_rdata + ix)/chainrulefactor;
+        
+        // update stotal_cl
+        fstotal_cl(stcl, slice_sx0_rdata.data(), plist_.at(ip));
+        
+        // convert to solver dimentsions
+        fsx_solver(&sx0_solver.at(ip*nx_solver), slice_sx0_rdata.data());
+    
     if (sx0.size() == 0)
         this->sx0data.clear();
     else
-        this->sx0data = sx0;
+        this->sx0data = sx0_solver;
 }
 
 double Model::t0() const{

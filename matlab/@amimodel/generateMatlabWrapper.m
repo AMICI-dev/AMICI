@@ -342,8 +342,6 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,'    if(size(options_ami.sx0,1)~=nxfull)\n');
     fprintf(fid,'        error(''Number of rows in sx0 field does not agree with number of states!'');\n');
     fprintf(fid,'    end\n');
-    fprintf(fid,'    chainRuleFactor = getChainRuleFactors(options_ami.pscale, theta, options_ami.sens_ind);\n');
-    fprintf(fid,'    init.sx0 = bsxfun(@times,options_ami.sx0,1./permute(chainRuleFactor(:),[2,1]));\n');
     fprintf(fid,'end\n');
     
     
