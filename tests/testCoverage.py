@@ -29,7 +29,7 @@ import testPandas
 import testPYSB
 import testCPP
 import testMisc
-import TestPreequilibration
+import testPreequilibration
 
 # build the testSuite from testModels and testSBML
 suite = unittest.TestSuite()
@@ -39,7 +39,7 @@ suite.addTest(testPandas.TestAmiciPandasImportExport())
 suite.addTest(testPYSB.TestAmiciPYSBModel())
 suite.addTest(testCPP.TestAmiciCPP())
 suite.addTest(testMisc.TestAmiciMisc())
-suite.addTest(TestPreequilibration.TestAmiciPreequilibration())
+suite.addTest(testPreequilibration.TestAmiciPreequilibration())
 
 testRunner = unittest.TextTestRunner(verbosity=0)
 result = testRunner.run(suite)
