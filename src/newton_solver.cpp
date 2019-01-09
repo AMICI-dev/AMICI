@@ -135,8 +135,8 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
     model->fdxdotdp(*t, x, &dx);
     for (int ip = 0; ip < model->nplist(); ip++) {
         
-        for (int ix = 0; ix < model->nx; ix++) {
-            sx->at(ix,ip) = -model->dxdotdp[model->nx * ip + ix];
+        for (int ix = 0; ix < model->nx_solver; ix++) {
+            sx->at(ix,ip) = -model->dxdotdp[model->nx_solver * ip + ix];
         }
         solveLinearSystem(&((*sx)[ip]));
     }
@@ -161,8 +161,8 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, Re
      * @param model pointer to the AMICI model object
      * @param rdata pointer to the return data object
      */
-     pivots = NewLintArray(model->nx);
-     Jtmp = NewDenseMat(model->nx,model->nx);
+     pivots = NewLintArray(model->nx_solver);
+     Jtmp = NewDenseMat(model->nx_solver,model->nx_solver);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -235,7 +235,7 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, 
     /* Check if KLU was initialized successfully */
     if (klu_status != 1)
         throw NewtonFailure(common.status, "klu_defaults");
-    Jtmp = SparseNewMat(model->nx, model->nx, model->nnz, CSC_MAT);
+    Jtmp = SparseNewMat(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -257,7 +257,7 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
     /* Get factorization of sparse Jacobian */
     if(symbolic) /* if symbolic was already created free first to avoid memory leak */
         klu_free_symbolic(&symbolic, &common);
-    symbolic = klu_analyze(model->nx, Jtmp->indexptrs,
+    symbolic = klu_analyze(model->nx_solver, Jtmp->indexptrs,
                            Jtmp->indexvals, &common);
     if (!symbolic) {
         throw NewtonFailure(common.status,"klu_analyze");
@@ -284,7 +284,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
      */
 
     /* Pass pointer to the linear solver */
-    klu_status = klu_solve(symbolic, numeric, model->nx, 1, rhs->data(), &common);
+    klu_status = klu_solve(symbolic, numeric, model->nx_solver, 1, rhs->data(), &common);
     if (klu_status != 1)
         throw NewtonFailure(common.status, "klu_solve");
 }
@@ -310,9 +310,9 @@ NewtonSolverSparse::~NewtonSolverSparse() {
 
 /* Derived class for iterative linear solver */
 NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
-    : NewtonSolver(t, x, model, rdata), ns_p(model->nx), ns_h(model->nx),
-    ns_t(model->nx), ns_s(model->nx), ns_r(model->nx), ns_rt(model->nx), ns_v(model->nx),
-    ns_Jv(model->nx), ns_tmp(model->nx), ns_Jdiag(model->nx)
+    : NewtonSolver(t, x, model, rdata), ns_p(model->nx_solver), ns_h(model->nx_solver),
+    ns_t(model->nx_solver), ns_s(model->nx_solver), ns_r(model->nx_solver), ns_rt(model->nx_solver), ns_v(model->nx_solver),
+    ns_Jv(model->nx_solver), ns_tmp(model->nx_solver), ns_Jdiag(model->nx_solver)
     {
     /**
      * default constructor, initializes all members with the provided objects

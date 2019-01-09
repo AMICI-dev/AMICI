@@ -26,7 +26,10 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
  */
 void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArray *sdx, Model *model) {
     
-    model->initialize(x, dx);
+    
+    bool computeSensitivities = sensi >= SensitivityOrder::first
+                              && model->nx_solver > 0;
+    model->initialize(x, dx, sx, sdx, computeSensitivities);
 
     /* Create solver memory object */
     allocateSolver();
@@ -51,23 +54,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     
     initializeLinearSolver(model);
 
-    if (sensi >= SensitivityOrder::first && model->nx > 0) {
-        /* initialise sensitivities, this can either be user provided or
-         * come from the model definition */
-        auto sx0 = model->getInitialStateSensitivities();
-        if (sx0.empty()) {
-            model->fsx0(sx, x);
-        } else {
-            for (int ip = 0; ip < model->nplist(); ip++) {
-                for (int ix = 0; ix < model->nx; ix++) {
-                    sx->at(ix,ip) =
-                            (realtype)sx0.at(ix + model->nx * ip);
-                }
-            }
-        }
-
-        model->fsdx0();
-
+    if (computeSensitivities) {
         auto plist = model->getParameterList();
 
         if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {
@@ -105,10 +92,10 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     std::vector<realtype> dJydx = bwd->getdJydx();
     AmiVector *xB = bwd->getxBptr();
     xB->reset();
-    for (int ix = 0; ix < model->nxtrue; ++ix)
+    for (int ix = 0; ix < model->nxtrue_solver; ++ix)
         for (int iJ = 0; iJ < model->nJ; ++iJ)
-            xB->at(ix + iJ * model->nxtrue) +=
-                dJydx.at(iJ + ( ix + (model->nt() - 1)  * model->nx ) * model->nJ);
+            xB->at(ix + iJ * model->nxtrue_solver) +=
+                dJydx.at(iJ + ( ix + (model->nt() - 1)  * model->nx_solver ) * model->nJ);
     bwd->getdxBptr()->reset();
     bwd->getxQBptr()->reset();
 
@@ -232,18 +219,18 @@ void Solver::initializeLinearSolver(const Model *model) {
             /* DIRECT SOLVERS */
             
         case LinearSolver::dense:
-            dense(model->nx);
+            dense(model->nx_solver);
             setDenseJacFn();
             break;
             
         case LinearSolver::band:
-            band(model->nx, model->ubw, model->lbw);
+            band(model->nx_solver, model->ubw, model->lbw);
             setBandJacFn();
             break;
             
         case LinearSolver::LAPACKDense:
             throw AmiException("Solver currently not supported!");
-            /* status = CVLapackDense(ami_mem, nx);
+            /* status = CVLapackDense(ami_mem, nx_solver);
              if (status != AMICI_SUCCESS) return;
              
              status = SetDenseJacFn(ami_mem);
@@ -252,7 +239,7 @@ void Solver::initializeLinearSolver(const Model *model) {
             
         case LinearSolver::LAPACKBand:
             throw AmiException("Solver currently not supported!");
-            /* status = CVLapackBand(ami_mem, nx);
+            /* status = CVLapackBand(ami_mem, nx_solver);
              if (status != AMICI_SUCCESS) return;
              
              status = SetBandJacFn(ami_mem);
@@ -284,7 +271,7 @@ void Solver::initializeLinearSolver(const Model *model) {
             /* SPARSE SOLVERS */
             
         case LinearSolver::KLU:
-            klu(model->nx, model->nnz, CSC_MAT);
+            klu(model->nx_solver, model->nnz, CSC_MAT);
             setSparseJacFn();
             kluSetOrdering((int) getStateOrdering());
             break;
@@ -307,19 +294,19 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
             /* DIRECT SOLVERS */
             
         case LinearSolver::dense:
-            denseB(which, model->nx);
+            denseB(which, model->nx_solver);
             setDenseJacFnB(which);
             break;
             
         case LinearSolver::band:
-            bandB(which, model->nx, model->ubw, model->lbw);
+            bandB(which, model->nx_solver, model->ubw, model->lbw);
             setBandJacFnB(which);
             break;
             
         case LinearSolver::LAPACKDense:
             
             /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackDenseB(ami_mem, bwd->getwhich(), nx);
+             status = CVLapackDenseB(ami_mem, bwd->getwhich(), nx_solver);
              if (status != AMICI_SUCCESS) return;
              
              status = SetDenseJacFnB(ami_mem, bwd->getwhich());
@@ -331,7 +318,7 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
         case LinearSolver::LAPACKBand:
             
             /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackBandB(ami_mem, bwd->getwhich(), nx, ubw, lbw);
+             status = CVLapackBandB(ami_mem, bwd->getwhich(), nx_solver, ubw, lbw);
              if (status != AMICI_SUCCESS) return;
              
              status = SetBandJacFnB(ami_mem, bwd->getwhich());
@@ -365,7 +352,7 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
             /* SPARSE SOLVERS */
             
         case LinearSolver::KLU:
-            kluB(which, model->nx, model->nnz, CSC_MAT);
+            kluB(which, model->nx_solver, model->nnz, CSC_MAT);
             setSparseJacFnB(which);
             kluSetOrderingB(which, (int) getStateOrdering());
             break;

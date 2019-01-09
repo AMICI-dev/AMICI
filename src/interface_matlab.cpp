@@ -461,7 +461,7 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
             if (mxGetN(x0) != 1) {
                 throw AmiException("Number of rows in x0 field must be equal to 1!");
             }
-            if (mxGetM(x0) != model.nx) {
+            if (mxGetM(x0) != model.nx_rdata) {
                 throw AmiException("Number of columns in x0 field "
                                    "does not agree with number of "
                                    "model states!");
@@ -478,7 +478,7 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
             if (mxGetN(x0) != 1) {
                 throw AmiException("Number of rows in x0 field must be equal to 1!");
             }
-            if (mxGetM(x0) != model.nx) {
+            if (mxGetM(x0) != model.nx_rdata) {
                 throw AmiException("Number of columns in x0 field "
                                    "does not agree with number of "
                                    "model states!");
@@ -496,7 +496,7 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
                                    "does not agree with number of "
                                    "model parameters!");
             }
-            if (mxGetM(sx0) != model.nx) {
+            if (mxGetM(sx0) != model.nx_rdata) {
                 throw AmiException("Number of columns in sx0 "
                                    "field does not agree with "
                                    "number of model states!");

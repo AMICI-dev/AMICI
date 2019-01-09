@@ -27,8 +27,11 @@ namespace amici {
         Model_DAE() : Model() {}
         
         /** constructor with model dimensions
-         * @param nx number of state variables
-         * @param nxtrue number of state variables of the non-augmented model
+         * @param nx_rdata number of state variables
+         * @param nxtrue_rdata number of state variables of the non-augmented model
+         * @param nx_solver number of state variables with conservation laws applied
+         * @param nxtrue_solver number of state variables of the non-augmented model
+         with conservation laws applied
          * @param ny number of observables
          * @param nytrue number of observables of the non-augmented model
          * @param nz number of event observables
@@ -50,14 +53,14 @@ namespace amici {
          * @param idlist indexes indicating algebraic components (DAE only)
          * @param z2event mapping of event outputs to events
          */
-        Model_DAE(const int nx, const int nxtrue,
+        Model_DAE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver, const int nxtrue_solver,
                   const int ny, const int nytrue, const int nz, const int nztrue,
                   const int ne, const int nJ, const int nw, const int ndwdx,
                   const int ndwdp, const int nnz, const int ubw, const int lbw,
                   const SecondOrderMode o2mode, const std::vector<realtype> p,
                   const std::vector<realtype> k, const std::vector<int> plist,
                   const std::vector<realtype> idlist, const std::vector<int> z2event)
-        : Model(nx,nxtrue,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
+        : Model(nx_rdata,nxtrue_rdata,nx_solver,nxtrue_solver,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
         
         virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                         AmiVector *xdot, DlsMat J) override;

@@ -40,34 +40,33 @@ from . import amiciSwigPath, amiciSrcPath, amiciModulePath
 functions = {
     'J': {
         'signature':
-            '(realtype *J, const realtype t, const realtype *x,'
-            ' const double *p, const double *k, const realtype *h,'
-            ' const realtype *w, const realtype *dwdx)',
+            '(realtype *J, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'JB': {
         'signature':
-            '(realtype *JB, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *xB, const realtype *w,'
-            ' const realtype *dwdx)',
+            '(realtype *JB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *w, const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'JDiag': {
         'signature':
-            '(realtype *JDiag, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w, const realtype *dwdx)',
+            '(realtype *JDiag, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'JSparse': {
         'signature':
-            '(SlsMat JSparse, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w, const realtype *dwdx)',
+            '(SlsMat JSparse, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -75,10 +74,9 @@ functions = {
     },
     'JSparseB': {
         'signature':
-            '(SlsMat JSparseB, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *xB, const realtype *w,'
-            ' const realtype *dwdx)',
+            '(SlsMat JSparseB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -86,45 +84,44 @@ functions = {
     },
     'Jv': {
         'signature':
-            '(realtype *Jv, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *v, const realtype *w,'
-            ' const realtype *dwdx)',
+            '(realtype *Jv, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *v, const realtype *w, const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'JvB': {
         'signature':
-            '(realtype *JvB, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *xB, const realtype *vB,'
-            ' const realtype *w, const realtype *dwdx)',
+            '(realtype *JvB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *vB, const realtype *w, '
+            'const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'Jy': {
         'signature':
-            '(double *Jy, const int iy, const realtype *p,'
-            ' const realtype *k, const double *y,'
-            ' const double *sigmay, const double *my)',
+            '(realtype *Jy, const int iy, const realtype *p, '
+            'const realtype *k, const realtype *y, const realtype *sigmay, '
+            'const realtype *my)',
     },
     'dJydsigmay': {
         'signature':
-            '(double *dJydsigmay, const int iy, const realtype *p,'
-            ' const realtype *k, const double *y,'
-            ' const double *sigmay, const double *my)',
+            '(realtype *dJydsigmay, const int iy, const realtype *p, '
+            'const realtype *k, const realtype *y, const realtype *sigmay, '
+            'const realtype *my)',
     },
     'dJydy': {
         'signature':
-            '(double *dJydy, const int iy, const realtype *p,'
-            ' const realtype *k, const double *y,'
-            ' const double *sigmay, const double *my)',
+            '(realtype *dJydy, const int iy, const realtype *p, '
+            'const realtype *k, const realtype *y, '
+            'const realtype *sigmay, const realtype *my)',
     },
     'dwdp': {
         'signature':
-            '(realtype *dwdp, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w)',
+            '(realtype *dwdp, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *tcl, const realtype *dtcldp)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -132,9 +129,9 @@ functions = {
     },
     'dwdx': {
         'signature':
-            '(realtype *dwdx, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w)',
+            '(realtype *dwdx, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *tcl)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -142,104 +139,117 @@ functions = {
     },
     'dxdotdp': {
         'signature':
-            '(realtype *dxdotdp, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip, const realtype *w, const realtype *dwdp)',
+            '(realtype *dxdotdp, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ip, const realtype *w, const realtype *dwdp)',
         'assume_pow_positivity':
             True,
     },
     'dydx': {
         'signature':
-            '(double *dydx, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k,'
-            ' const realtype *h, const realtype *w, const realtype *dwdx)',
+            '(realtype *dydx, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
     },
     'dydp': {
         'signature':
-            '(double *dydp, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip, const realtype *w, const realtype *dwdp)',
+            '(realtype *dydp, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ip, const realtype *w, const realtype *dwdp)',
     },
     'dsigmaydp': {
         'signature':
-            '(double *dsigmaydp, const realtype t, const realtype *p,'
-            ' const realtype *k, const int ip)',
+            '(realtype *dsigmaydp, const realtype t, const realtype *p, '
+            'const realtype *k, const int ip)',
     },
     'qBdot': {
         'signature':
-            '(realtype *qBdot, const int ip, const realtype t,'
-            ' const realtype *x, const realtype *p, const realtype *k,'
-            ' const realtype *h, const realtype *xB,'
-            ' const realtype *w, const realtype *dwdp)',
+            '(realtype *qBdot, const int ip, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *xB, '
+            'const realtype *w, const realtype *dwdp)',
         'assume_pow_positivity':
             True,
     },
     'sigmay': {
         'signature':
-            '(double *sigmay, const realtype t, const realtype *p,'
-            ' const realtype *k)',
+            '(realtype *sigmay, const realtype t, const realtype *p, '
+            'const realtype *k)',
     },
     'sxdot': {
         'signature':
-            '(realtype *sxdot, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const int ip, const realtype *sx, const realtype *w,'
-            ' const realtype *dwdx, const realtype *JSparse,'
-            ' const realtype *dxdotdp)',
+            '(realtype *sxdot, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ip, const realtype *sx, const realtype *w, '
+            'const realtype *dwdx, const realtype *JSparse, '
+            'const realtype *dxdotdp)',
         'assume_pow_positivity':
             True,
     },
     'w': {
         'signature':
-            '(realtype *w, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k,'
-            ' const realtype *h)',
+            '(realtype *w, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *tcl)',
         'assume_pow_positivity':
             True,
     },
     'x0': {
         'signature':
-            '(realtype *x0, const realtype t, const realtype *p,'
-            ' const realtype *k)',
+            '(realtype *x0, const realtype t, const realtype *p, '
+            'const realtype *k)',
     },
     'x0_fixedParameters': {
         'signature':
-            '(realtype *x0_fixedParameters, const realtype t, const realtype *p,'
-            ' const realtype *k)',
+            '(realtype *x0_fixedParameters, const realtype t, '
+            'const realtype *p, const realtype *k)',
     },
     'sx0': {
         'signature':
-            '(realtype *sx0, const realtype t,const realtype *x,'
-            ' const realtype *p, const realtype *k, const int ip)',
+            '(realtype *sx0, const realtype t,const realtype *x, '
+            'const realtype *p, const realtype *k, const int ip)',
     },
     'sx0_fixedParameters': {
         'signature':
-            '(realtype *sx0_fixedParameters, const realtype t,const realtype *x0,'
-            ' const realtype *p, const realtype *k, const int ip)',
+            '(realtype *sx0_fixedParameters, const realtype t, '
+            'const realtype *x0, const realtype *p, const realtype *k, '
+            'const int ip)',
     },
     'xBdot': {
         'signature':
-            '(realtype *xBdot, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *xB, const realtype *w,'
-            ' const realtype *dwdx)',
+            '(realtype *xBdot, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *w, '
+            'const realtype *dwdx)',
         'assume_pow_positivity':
             True,
     },
     'xdot': {
         'signature':
-            '(realtype *xdot, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k, const realtype *h,'
-            ' const realtype *w)',
+            '(realtype *xdot, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w)',
         'assume_pow_positivity':
             True,
     },
     'y': {
         'signature':
-            '(double *y, const realtype t, const realtype *x,'
-            ' const realtype *p, const realtype *k,'
-            ' const realtype *h, const realtype *w)',
-    }
+            '(realtype *y, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *w)',
+    },
+    'x_rdata': {
+        'signature':
+            '(realtype *x_rdata, const realtype *x, const realtype *tcl)',
+    },
+    'total_cl': {
+        'signature':
+            '(realtype *total_cl, const realtype *x_rdata)',
+    },
+    'x_solver': {
+        'signature':
+            '(realtype *x_solver, const realtype *x_rdata)',
+    },
 }
 
 ## list of sparse functions
@@ -334,7 +344,6 @@ class ModelQuantity:
         else:
             self._value = value
 
-
     def __repr__(self):
         """Representation of the ModelQuantity object
 
@@ -348,12 +357,57 @@ class ModelQuantity:
         """
         return str(self._identifier)
 
+    def get_id(self):
+        """ModelQuantity identifier
+
+        Arguments:
+
+        Returns:
+        identifier of the ModelQuantity
+
+        Raises:
+
+        """
+        return self._identifier
+
+    def get_name(self):
+        """ModelQuantity name
+
+        Arguments:
+
+        Returns:
+        name of the ModelQuantity
+
+        Raises:
+
+        """
+        return self._name
+
+    def get_val(self):
+        """ModelQuantity value
+
+        Arguments:
+
+        Returns:
+        value of the ModelQuantity
+
+        Raises:
+
+        """
+        return self._value
+
 
 class State(ModelQuantity):
-    """A State variable defines an entity that evolves with time according to the
-    provided time derivative, abbreviated by `x`
+    """A State variable defines an entity that evolves with time according to
+    the provided time derivative, abbreviated by `x`
+
+    Attributes:
+        conservation_law: algebraic formula that allows computation of this
+        species according to a conservation law
 
     """
+
+    conservation_law = None
 
     def __init__(self, identifier, name, value, dt):
         """Create a new State instance. Extends ModelQuantity.__init__ by dt
@@ -377,10 +431,89 @@ class State(ModelQuantity):
         """
         super(State, self).__init__(identifier, name, value)
         if not isinstance(dt, sp.Basic):
-            raise TypeError(f'dt must be sympy.Symbol, was '
+            raise TypeError(f'dt must have type sympy.Basic, was '
                             f'{type(dt)}')
 
         self._dt = sanitize_basic_sympy(dt)
+        self.conservation_law = None
+
+    def set_conservation_law(self, law):
+        """Sets the conservation law of a state. If the a conservation law
+        is set, the respective state will be replaced by an algebraic
+        formula according to the respective conservation law.
+
+        Arguments:
+            law: linear sum of states that if added to this state remain
+            constant over time
+
+        Returns:
+
+        Raises:
+        TypeError:
+            is thrown if law type does not match documented type
+        """
+        if not isinstance(law, sp.Basic):
+            raise TypeError(f'conservation law must have type sympy.Basic, '
+                            f'was {type(law)}')
+
+        self.conservation_law = law
+
+    def set_dt(self, dt):
+        """Sets the time derivative
+
+        Arguments:
+            dt: time derivative @type symengine.Basic
+
+        Returns:
+
+        Raises:
+        TypeError:
+            is thrown if dt type does not match documented type
+        """
+        if not isinstance(dt, sp.Basic):
+            raise TypeError(f'time derivative must have type sympy.Basic, '
+                            f'was {type(dt)}')
+        self._dt = dt
+
+    def get_dt(self):
+        """Sets the time derivative
+
+        Arguments:
+
+        Returns:
+        time derivative @type symengine.Basic
+
+        Raises:
+        """
+        return self._dt
+
+
+class ConservationLaw(ModelQuantity):
+    """ A conservation law defines the absolute the total amount of a
+    (weighted) sum of states
+
+    """
+    def __init__(self, identifier, name, value):
+        """Create a new ConservationLaw instance.
+
+        Arguments:
+            identifier: unique identifier of the ConservationLaw
+            @type sympy.Symbol
+
+            name: individual name of the ConservationLaw (does not need to be
+            unique) @type str
+
+            value: formula (sum of states) @type symengine.Basic
+
+        Returns:
+        ModelQuantity instance
+
+        Raises:
+        TypeError:
+            is thrown if input types do not match documented types
+        """
+        super(ConservationLaw, self).__init__(identifier, name, value)
+
 
 class Observable(ModelQuantity):
     """An Observable links model simulations to experimental measurements,
@@ -409,8 +542,8 @@ class Observable(ModelQuantity):
 
 
 class SigmaY(ModelQuantity):
-    """A Standard Deviation SigmaY rescales the distance between simulations and
-    measurements when computing residuals, abbreviated by `sigmay`
+    """A Standard Deviation SigmaY rescales the distance between simulations
+    and measurements when computing residuals, abbreviated by `sigmay`
 
     """
     def __init__(self, identifier, name, value):
@@ -433,6 +566,7 @@ class SigmaY(ModelQuantity):
             is thrown if input types do not match documented types
         """
         super(SigmaY, self).__init__(identifier, name, value)
+
 
 class Expression(ModelQuantity):
     """An Expressions is a recurring elements in symbolic formulas. Specifying
@@ -545,6 +679,7 @@ class LogLikelihood(ModelQuantity):
         """
         super(LogLikelihood, self).__init__(identifier, name, value)
 
+
 ## indicates which type some attributes in ODEModel should have
 symbol_to_type = {
     'species': State,
@@ -575,6 +710,8 @@ class ODEModel:
         _loglikelihoods: list of LogLikelihood instances  @type list
 
         _expressions: list of Expression instances  @type list
+
+        _conservationlaws: list of ConservationLaw instances @type list
 
         _symboldim_funs: define functions that compute model dimensions, these
         are functions as the underlying symbolic expressions have not been
@@ -648,11 +785,12 @@ class ODEModel:
         self._constants = []
         self._loglikelihoods = []
         self._expressions = []
+        self._conservationlaws = []
         self._symboldim_funs = {
-            'sx': self.nx,
-            'v': self.nx,
-            'vB': self.nx,
-            'xB': self.nx,
+            'sx': self.nx_solver,
+            'v': self.nx_solver,
+            'vB': self.nx_solver,
+            'xB': self.nx_solver,
             'sigmay': self.ny,
         }
         self._eqs = dict()
@@ -665,6 +803,7 @@ class ODEModel:
         self._rowvals = dict()
 
         self._equation_prototype = {
+            'total_cl': '_conservationlaws',
             'x0': '_states',
             'y': '_observables',
             'Jy': '_loglikelihoods',
@@ -672,7 +811,8 @@ class ODEModel:
             'sigmay': '_sigmays',
         }
         self._variable_prototype = {
-            'x': '_states',
+            'tcl': '_conservationlaws',
+            'x_rdata': '_states',
             'y': '_observables',
             'p': '_parameters',
             'k': '_constants',
@@ -686,14 +826,20 @@ class ODEModel:
         self._total_derivative_prototypes = {
             'J': {
                 'eq': 'xdot',
-                'chainvar': 'w',
+                'chainvars': ['w'],
                 'var': 'x',
             },
             'sxdot': {
                 'eq': 'xdot',
-                'chainvar': 'x',
+                'chainvars': ['x'],
                 'var': 'p',
                 'dydx_name': 'JSparse',
+                'dxdz_name': 'sx',
+            },
+            'sx_rdata': {
+                'eq': 'x_rdata',
+                'chainvars': ['x'],
+                'var': 'p',
                 'dxdz_name': 'sx',
             },
         }
@@ -765,10 +911,11 @@ class ODEModel:
         Returns:
 
         Raises:
+            Exception: invalid component type
 
         """
         for comp_type in [Observable, Expression, Parameter, Constant, State,
-                          LogLikelihood, SigmaY]:
+                          LogLikelihood, SigmaY, ConservationLaw]:
             if isinstance(component, comp_type):
                 getattr(self, f'_{type(component).__name__.lower()}s').append(
                     component
@@ -776,7 +923,56 @@ class ODEModel:
                 return
         Exception(f'Invalid component type {type(component)}')
 
-    def nx(self):
+    def add_conservation_law(self, state, law):
+        """Adds a new conservation law to the model.
+
+        Arguments:
+            state: symbolic identifier of the state that should be replaced by
+            the conservation law
+            law: symbolic formula that together with the state defines the
+            conservation law, i.e., d/dt (state + law) = 0
+
+        Returns:
+
+        Raises:
+            Exception if the specified state does not correspond to a valid
+            state in the model
+
+        """
+        try:
+            ix = [
+                s.get_id()
+                for s in self._states
+            ].index(state)
+        except ValueError:
+            raise Exception(f'Specified state {state} was not found in the '
+                            f'model states.')
+
+        total_abundance = sp.Symbol(f'tcl_{self._states[ix].get_id()}')
+
+        state_id = self._states[ix].get_id()
+
+        self.add_component(
+            Expression(
+                state_id,
+                f'cl_{state_id}',
+                total_abundance - law
+            )
+        )
+
+        self.add_component(
+            ConservationLaw(
+                total_abundance,
+                f'total_{state_id}',
+                state_id + law
+            )
+        )
+
+        self._states[ix].set_conservation_law(
+            total_abundance - law
+        )
+
+    def nx_rdata(self):
         """Number of states.
 
         Arguments:
@@ -787,7 +983,33 @@ class ODEModel:
         Raises:
 
         """
+        return len(self.sym('x_rdata'))
+
+    def nx_solver(self):
+        """Number of states after applying conservation laws.
+
+        Arguments:
+
+        Returns:
+        number of state variable symbols
+
+        Raises:
+
+        """
         return len(self.sym('x'))
+
+    def ncl(self):
+        """Number of conservation laws.
+
+        Arguments:
+
+        Returns:
+        number of conservation laws
+
+        Raises:
+
+        """
+        return self.nx_rdata()-self.nx_solver()
 
     def ny(self):
         """Number of Observables.
@@ -846,8 +1068,8 @@ class ODEModel:
         return self._syms[name]
 
     def sparsesym(self, name):
-        """Returns (and constructs if necessary) the sparsified identifiers for a
-        sparsified symbolic variable.
+        """Returns (and constructs if necessary) the sparsified identifiers for
+        a sparsified symbolic variable.
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -877,8 +1099,9 @@ class ODEModel:
         Raises:
 
         """
+
         if name not in self._eqs:
-            self._computeEquation(name)
+            self._compute_equation(name)
         return self._eqs[name]
 
     def sparseeq(self, name):
@@ -920,8 +1143,8 @@ class ODEModel:
         return self._colptrs[name]
 
     def rowval(self, name):
-        """Returns (and constructs if necessary) the row values for a sparsified
-        symbolic variable.
+        """Returns (and constructs if necessary) the row values for a
+        sparsified symbolic variable.
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -939,8 +1162,8 @@ class ODEModel:
         return self._rowvals[name]
 
     def val(self, name):
-        """Returns (and constructs if necessary) the numeric values of a symbolic
-        entity
+        """Returns (and constructs if necessary) the numeric values of a
+        symbolic entity
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -956,7 +1179,8 @@ class ODEModel:
         return self._vals[name]
 
     def name(self, name):
-        """Returns (and constructs if necessary) the names of a symbolic variable
+        """Returns (and constructs if necessary) the names of a symbolic
+        variable
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -985,15 +1209,30 @@ class ODEModel:
         if name in self._variable_prototype:
             component = self._variable_prototype[name]
             self._syms[name] = sp.Matrix([
-                comp._identifier
+                comp.get_id()
                 for comp in getattr(self, component)
             ])
             if name == 'y':
-
-                self._syms['my'] = sp.Matrix(
-                    [sp.Symbol(f'm{comp._identifier}')
-                     for comp in getattr(self, component)]
-                )
+                self._syms['my'] = sp.Matrix([
+                    sp.Symbol(f'm{comp.get_id()}')
+                    for comp in getattr(self, component)
+                ])
+            return
+        elif name == 'x':
+            self._syms[name] = sp.Matrix([
+                state.get_id()
+                for state in self._states
+                if state.conservation_law is None
+            ])
+            return
+        elif name == 'dtcldp':
+            self._syms[name] = sp.Matrix([
+                [
+                    sp.Symbol(f's{tcl.get_id()}{ip}')
+                    for ip in range(len(self.sym('p')))
+                ]
+                for tcl in self._conservationlaws
+            ])
             return
         elif name in sparse_functions:
             self._generateSparseSymbol(name)
@@ -1026,7 +1265,8 @@ class ODEModel:
 
     def _generateSparseSymbol(self, name):
         """Generates the sparse symbolic identifiers, symbolic identifiers,
-        sparse equations, column pointers and row values for a symbolic variable
+        sparse equations, column pointers and row values for a symbolic
+        variable
 
         Arguments:
             name: name of the symbolic variable @type str
@@ -1063,7 +1303,7 @@ class ODEModel:
         self._sparsesyms[name] = symbolList
         self._syms[name] = sparseMatrix
 
-    def _computeEquation(self, name):
+    def _compute_equation(self, name):
         """computes the symbolic formula for a symbolic variable
 
         Arguments:
@@ -1074,7 +1314,7 @@ class ODEModel:
         Raises:
 
         """
-        match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
+        match_deriv = re.match(r'd([\w_]+)d([a-z_]+)', name)
 
         if name in self._equation_prototype:
             self._equationFromComponent(name, self._equation_prototype[name])
@@ -1082,7 +1322,9 @@ class ODEModel:
         elif name in self._total_derivative_prototypes:
             args = self._total_derivative_prototypes[name]
             args['name'] = name
-            self._totalDerivative(**args)
+            self._lock_total_derivative = True
+            self._total_derivative(**args)
+            self._lock_total_derivative = False
 
         elif name in self._multiplication_prototypes:
             args = self._multiplication_prototypes[name]
@@ -1090,9 +1332,39 @@ class ODEModel:
             self._multiplication(**args)
 
         elif name == 'xdot':
-            self._eqs['xdot'] = sp.Matrix(
-                [comp._dt for comp in self._states]
-            )
+            self._eqs[name] = sp.Matrix([
+                s._dt for s in self._states
+                if s.conservation_law is None
+            ])
+
+        elif name == 'x_rdata':
+            self._eqs[name] = sp.Matrix([
+                state.get_id()
+                if state.conservation_law is None
+                else state.conservation_law
+                for state in self._states
+            ])
+
+        elif name == 'x_solver':
+            self._eqs[name] = sp.Matrix([
+                state.get_id()
+                for state in self._states
+                if state.conservation_law is None
+            ])
+
+        elif name == 'sx_solver':
+            self._eqs[name] = sp.Matrix([
+                self.sym('sx_rdata')[ix]
+                for ix, state in enumerate(self._states)
+                if state.conservation_law is None
+            ])
+
+        elif name == 'total_cl':
+            self._eqs[name] = sp.Matrix([
+                state.conservation_law
+                for state in self._states
+                if state.conservation_law is not None
+            ])
 
         elif name == 'sx0':
             self._derivative(name[1:], 'p', name=name)
@@ -1122,7 +1394,6 @@ class ODEModel:
                     self._eqs[name][index, :] = \
                         sp.zeros(1, self._eqs[name].shape[1])
 
-
         elif name == 'JB':
             self._eqs[name] = self.eq('J').transpose()
 
@@ -1142,6 +1413,18 @@ class ODEModel:
 
         elif name in ['JSparse', 'JSparseB']:
             self._eqs[name] = self.eq(name.replace('Sparse', ''))
+
+        elif name == 'dtotal_cldx_rdata':
+            # not correctly parsed in regex
+            self._derivative('total_cl', 'x_rdata')
+
+        elif name == 'dtcldx':
+            # this is always zero
+            self._eqs[name] = sp.zeros(self.ncl(), self.nx_solver())
+
+        elif name == 'dtcldp':
+            # force symbols
+            self._eqs[name] = self.sym(name)
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
@@ -1191,12 +1474,17 @@ class ODEModel:
             name = f'd{eq}d{var}'
 
         # automatically detect chainrule
-        if var_in_function_signature(eq, 'w') \
-                and not self._lock_total_derivative \
-                and var is not 'w'\
-                and min(self.sym('w').shape):
+        chainvars = []
+        for cv in ['w', 'tcl']:
+            if var_in_function_signature(eq, cv) \
+                    and not self._lock_total_derivative \
+                    and var is not cv \
+                    and min(self.sym(cv).shape):
+                chainvars.append(cv)
+
+        if len(chainvars):
             self._lock_total_derivative = True
-            self._totalDerivative(name, eq, 'w', var)
+            self._total_derivative(name, eq, chainvars, var)
             self._lock_total_derivative = False
             return
 
@@ -1214,8 +1502,8 @@ class ODEModel:
         else:
             self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
-    def _totalDerivative(self, name, eq, chainvar, var,
-                         dydx_name=None, dxdz_name=None):
+    def _total_derivative(self, name, eq, chainvars, var,
+                          dydx_name=None, dxdz_name=None):
         """Creates a new symbolic variable according to a total derivative
         using the chain rule
 
@@ -1224,9 +1512,9 @@ class ODEModel:
 
             eq: name of the symbolic variable that defines the formula @type str
 
-            chainvar: name of the symbolic variable that defines the
-            identifiers whith respect to which the chain rule is applied
-            @type str
+            chainvars: names of the symbolic variable that define the
+            identifiers with respect to which the chain rules are applied
+            @type list
 
             var: name of the symbolic variable that defines the identifiers
             whith respect to which the derivatives are to be computed @type str
@@ -1246,36 +1534,50 @@ class ODEModel:
         """
         # compute total derivative according to chainrule
         # Dydz = dydx*dxdz + dydz
-        variables = dict()
-        variables['dydx'] = dict()
-        variables['dxdz'] = dict()
-        variables['dydz'] = dict()
 
-        variables['dydx']['name'] = f'd{eq}d{chainvar}' \
-            if dydx_name is None else dydx_name
-        variables['dxdz']['name'] = f'd{chainvar}d{var}' \
-            if dxdz_name is None else dxdz_name
-        variables['dydz']['name'] = f'd{eq}d{var}'
+        # initialize with partial derivative dydz without chain rule
+        self._eqs[name] = copy.deepcopy(
+            self.sym_or_eq(name, f'd{eq}d{var}')
+        )
 
-        # if the symbol appears in the function signature,
-        # we can use the respective symbol instead of the equation
-        for var in variables:
-            varname = variables[var]["name"]
-            if var_in_function_signature(name, varname):
-                variables[var]['sym'] = self.sym(varname)
-            else:
-                variables[var]['sym'] = self.eq(varname)
+        for chainvar in chainvars:
+            if dydx_name is None:
+                dydx_name = f'd{eq}d{chainvar}'
+            if dxdz_name is None:
+                dxdz_name =  f'd{chainvar}d{var}'
 
-        self._eqs[name] = \
-            copy.deepcopy(variables['dydz']['sym'])
+            dydx = self.sym_or_eq(name, dydx_name)
+            dxdz = self.sym_or_eq(name, dxdz_name)
+            # Save time for for large models if one multiplicand is zero,
+            # which is not checked for by sympy
+            if dydx.is_zero is not True and dxdz.is_zero is not True:
+                if dxdz.shape[1] == 1 and \
+                        self._eqs[name].shape[1] != dxdz.shape[1]:
+                    for iz in range(self._eqs[name].shape[1]):
+                        self._eqs[name][:, iz] += dydx * dxdz
+                else:
+                    self._eqs[name] += dydx * dxdz
 
-        # Save time for for large models if one multiplicand is zero,
-        # which is not checked for by sympy
-        if variables['dydx']['sym'].is_zero is not True \
-                and variables['dxdz']['sym'].is_zero is not True:
-            self._eqs[name] += variables['dydx']['sym'] * \
-                               variables['dxdz']['sym']
+    def sym_or_eq(self, name, varname):
+        """Returns symbols or equations depending on whether a given
+        variable appears in the function signature or not.
 
+        Arguments:
+            name: name of function for which the signature should be checked
+            varname: name of the variable which should be contained in the
+            function signature
+
+        Returns:
+        the variable symbols if the variable is part of the signature and
+        the variable equations otherwise.
+
+        Raises:
+
+        """
+        if var_in_function_signature(name, varname):
+            return self.sym(varname)
+        else:
+            return self.eq(varname)
 
     def _multiplication(self, name, x, y,
                         transpose_x=False, sign=1):
@@ -1335,6 +1637,28 @@ class ODEModel:
         self._eqs[name] = sp.Matrix(
             [comp._value for comp in getattr(self, component)]
         )
+        # flatten conservation laws in expressions
+        if name == 'w':
+            self._eqs[name] = self._eqs[name].subs(
+                self.get_conservation_laws()
+            )
+
+    def get_conservation_laws(self):
+        """ Returns a list of states with conservation law set
+
+        Arguments:
+
+        Returns:
+        list of state identifiers
+
+        Raises:
+
+        """
+        return [
+            (state.get_id(), state.conservation_law)
+            for state in self._states
+            if state.conservation_law is not None
+        ]
 
     def _generateValue(self, name):
         """Generates the numeric values of a symbolic variable from value
@@ -1371,10 +1695,52 @@ class ODEModel:
             component = self._variable_prototype[name]
         elif name in self._equation_prototype:
             component = self._equation_prototype[name]
+        elif name == 'x':
+            self._names[name]= [
+                s._name for s in self._states if s.conservation_law is None
+            ]
+            return
         else:
             raise Exception(f'No names for {name}')
 
         self._names[name] = [comp._name for comp in getattr(self, component)]
+
+    def state_has_fixed_parameter_initial_condition(self, ix):
+        """Checks whether the state at specified index has a fixed parameter
+        initial condition
+
+        Arguments:
+            ix: state index
+
+        Returns:
+            boolean indicating if any of the initial condition free
+            variables is contained in the model constants
+
+        Raises:
+
+        """
+        ic = self._states[ix].get_val()
+        if not isinstance(ic, sp.Basic):
+            return False
+        return any([
+            fp in [c.get_id() for c in self._constants]
+            for fp in ic.free_symbols
+        ])
+
+    def state_has_conservation_law(self, ix):
+        """Checks whether the state at specified index has a conservation
+        law set
+
+        Arguments:
+            ix: state index
+
+        Returns:
+            boolean indicating if conservation_law is not None
+
+        Raises:
+
+        """
+        return self._states[ix].conservation_law is not None
 
 
 class ODEExporter:
@@ -1593,7 +1959,7 @@ class ODEExporter:
             if name in sparse_functions:
                 symbols = self.model.sparsesym(name)
             else:
-                symbols = self.model.sym(name)
+                symbols = self.model.sym(name).T
         else:
             raise Exception('Unknown symbolic array')
 
@@ -1788,10 +2154,12 @@ class ODEExporter:
 
         """
 
-        templateData = {
+        tplData = {
             'MODELNAME': str(self.modelName),
-            'NX': str(self.model.nx()),
-            'NXTRUE': str(self.model.nx()),
+            'NX_RDATA': str(self.model.nx_rdata()),
+            'NXTRUE_RDATA': str(self.model.nx_rdata()),
+            'NX_SOLVER': str(self.model.nx_solver()),
+            'NXTRUE_SOLVER': str(self.model.nx_solver()),
             'NY': str(self.model.ny()),
             'NYTRUE': str(self.model.ny()),
             'NZ': '0',
@@ -1799,11 +2167,11 @@ class ODEExporter:
             'NEVENT': '0',
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
-            'NDWDDX': str(len(self.model.sparsesym('dwdx'))),
             'NDWDP': str(len(self.model.sparsesym('dwdp'))),
+            'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NNZ': str(len(self.model.sparsesym('JSparse'))),
-            'UBW': str(self.model.nx()),
-            'LBW': str(self.model.nx()),
+            'UBW': str(self.model.nx_solver()),
+            'LBW': str(self.model.nx_solver()),
             'NP': str(self.model.np()),
             'NK': str(self.model.nk()),
             'O2MODE': 'amici::SecondOrderMode::none',
@@ -1829,10 +2197,21 @@ class ODEExporter:
                 'true' if self.allow_reinit_fixpar_initcond else
                 'false',
         }
+
+        for fun in ['w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl']:
+            tplData[f'{fun.upper()}_DEF'] = \
+                get_function_definition(fun, self.modelName)
+            tplData[f'{fun.upper()}_IMPL'] = \
+                get_function_implementation(fun, self.modelName)
+
+        if self.model.nx_solver() == self.model.nx_rdata():
+            tplData['X_RDATA_DEF'] = ''
+            tplData['X_RDATA_IMPL'] = ''
+
         applyTemplate(
-            os.path.join(amiciSrcPath,'model_header.ODE_template.h'),
-            os.path.join(self.modelPath,f'{self.modelName}.h'),
-            templateData
+            os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
+            os.path.join(self.modelPath, f'{self.modelName}.h'),
+            tplData
         )
 
     def _getSymbolNameInitializerList(self, name):
@@ -2124,15 +2503,15 @@ def applyTemplate(sourceFile,targetFile,templateData):
 def sanitize_basic_sympy(basic):
     """Strips pysb info from the sympy.Basic object
 
-        Arguments:
-            basic: symbolic expression @type sympy.Basic
+    Arguments:
+        basic: symbolic expression @type sympy.Basic
 
-        Returns:
-            sanitized sympy.Basic
+    Returns:
+    sanitized sympy.Basic
 
-        Raises:
+    Raises:
 
-        """
+    """
     # strip pysb type and transform into a flat sympy.Basic.
     # this prevents issues where pysb expressions, observables or
     # parameters are not recognized as an sp.Symbol with same
@@ -2146,4 +2525,91 @@ def sanitize_basic_sympy(basic):
         # if this expression contains any pysb.Components, we can
         # safely apply str() to the full expression as str will do
         # the right thing here
-        return sp.sympify(str(basic))
+
+        # ensure that pysb symbols are correctly interpreted as symbols and
+        # not as functions etc
+        locals = {
+            fs.name: sp.Symbol(fs.name)
+            for fs in list(basic.expr_free_symbols)
+            if isinstance(fs, pysb.core.Component)
+        }
+        return sp.sympify(str(basic), locals=locals)
+
+
+def get_function_definition(fun, name):
+    """Constructs the function definition for a given function
+
+    Arguments:
+        fun: function name @type str
+        name: model name @type str
+
+    Returns:
+    c++ function definition string
+
+    Raises:
+
+    """
+    return \
+        f'extern void {fun}_{name}{functions[fun]["signature"]};'
+
+
+def get_function_implementation(fun, name):
+    """Constructs the function implementation for a given function
+
+    Arguments:
+        fun: function name @type str
+        name: model name @type str
+
+    Returns:
+    c++ function implementation string
+
+    Raises:
+
+    """
+    return \
+        '{ind4}virtual void f{fun}{signature} override {{\n' \
+        '{ind8}{fun}_{name}{eval_signature};\n' \
+        '{ind4}}}\n'.format(
+            ind4=' '*4,
+            ind8=' '*8,
+            fun=fun,
+            name=name,
+            signature=functions[fun]["signature"],
+            eval_signature=remove_typedefs(functions[fun]["signature"])
+        )
+
+
+def remove_typedefs(signature):
+    """Strips typedef info from a function signature
+
+    Arguments:
+        signature: function signature @type str
+
+    Returns:
+    string that can be used to construct function calls with the same
+    variable names and ordering as in the function signature
+
+    Raises:
+
+    """
+    # remove * pefix for pointers (pointer must always be removed before
+    # values otherwise we will inadvertently dereference values,
+    # same applies for const specifications)
+    #
+    # always add whitespace after type definition for cosmetic reasons
+    typedefs = [
+        'const realtype *',
+        'const double *',
+        'const realtype ',
+        'double *',
+        'realtype *',
+        'const int ',
+        'int ',
+        'SlsMat ',
+    ]
+
+    for typedef in typedefs:
+        signature = signature.replace(typedef, ' ')
+
+    return signature
+

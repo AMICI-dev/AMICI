@@ -86,7 +86,7 @@ void printReturnData(amici::ReturnData *rdata, amici::Model *model) {
     // Print of some the simulation results
 
     printf("\n\nStates (xdata):\n");
-    for (int i = 0; i < model->nx; ++i) {
+    for (int i = 0; i < model->nx_rdata; ++i) {
         for (int j = 0; j < model->nt(); ++j)
             printf("%e\t", rdata->x[j + model->nt() * i]);
         printf("\n");
@@ -100,13 +100,13 @@ void printReturnData(amici::ReturnData *rdata, amici::Model *model) {
     }
 
     printf("\n\ndx/dt (xdotdata):\n");
-    for (int i = 0; i < model->nx; ++i)
+    for (int i = 0; i < model->nx_solver; ++i)
         printf("%e\t", rdata->xdot[i]);
 
     //    printf("\nJacobian (jdata)\n");
-    //    for(int i = 0; i < nx; ++i) {
-    //        for(int j = 0; j < nx; ++j)
-    //            printf("%e\t", rdata->J[i + nx * j]);
+    //    for(int i = 0; i < nx_solver; ++i) {
+    //        for(int j = 0; j < nx_solver; ++j)
+    //            printf("%e\t", rdata->J[i + nx_solver * j]);
     //        printf("\n");
     //    }
 

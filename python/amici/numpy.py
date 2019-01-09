@@ -125,8 +125,8 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
                        'FIM': [rdata.nplist, rdata.nplist],
 
                        # diagnosis
-                       'J': [rdata.nx, rdata.nx],
-                       'xdot': [rdata.nx],
+                       'J': [rdata.nx_solver, rdata.nx_solver],
+                       'xdot': [rdata.nx_solver],
                        'newton_numlinsteps': [rdata.newton_maxsteps, 2],
                        'newton_numsteps': [1, 2],
                        'numsteps': [rdata.nt],

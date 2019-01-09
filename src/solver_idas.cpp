@@ -157,7 +157,7 @@ void IDASolver::setStabLimDetB(int which, int stldet) {
 
 void IDASolver::setId(Model *model) {
 
-    N_Vector id = N_VMake_Serial(model->nx,const_cast<realtype*>(model->idlist.data()));
+    N_Vector id = N_VMake_Serial(model->nx_solver,const_cast<realtype*>(model->idlist.data()));
     
     int status = IDASetId(solverMemory.get(), id);
     if(status != IDA_SUCCESS)
@@ -603,7 +603,7 @@ bool IDASolver::getAdjMallocDone() const {
                    realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fJv(t, x, dx, v, Jv, cj);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(Jv),"Jacobian");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(Jv),"Jacobian");
     }
     
     /** Matrix vector product of JB with a vector v (for iterative solvers)
@@ -627,7 +627,7 @@ bool IDASolver::getAdjMallocDone() const {
                     N_Vector tmpB1, N_Vector tmpB2) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(JvB),"Jacobian");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(JvB),"Jacobian");
     }
     
     /** Event trigger function for events
@@ -657,7 +657,7 @@ bool IDASolver::getAdjMallocDone() const {
                      void *user_data) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fxdot(t,x,dx,xdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(xdot),"fxdot");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(xdot),"fxdot");
     }
     
     /** Right hand side of differential equation for adjoint state xB
@@ -674,7 +674,7 @@ bool IDASolver::getAdjMallocDone() const {
                       N_Vector dxB, N_Vector xBdot, void *user_data) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fxBdot(t, x, dx, xB, dxB, xBdot);
-        return model->checkFinite(model->nx,N_VGetArrayPointer(xBdot),"xBdot");
+        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(xBdot),"xBdot");
     }
     
     /** Right hand side of integral equation for quadrature states qB
@@ -715,7 +715,7 @@ bool IDASolver::getAdjMallocDone() const {
         auto model = static_cast<Model_DAE*>(user_data);
         for(int ip = 0; ip < model->nplist(); ip++){
             model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);
-            if(model->checkFinite(model->nx,N_VGetArrayPointer(sxdot[ip]),"sxdot") != AMICI_SUCCESS)
+            if(model->checkFinite(model->nx_solver,N_VGetArrayPointer(sxdot[ip]),"sxdot") != AMICI_SUCCESS)
                 return AMICI_RECOVERABLE_ERROR;
         }
         return AMICI_SUCCESS;

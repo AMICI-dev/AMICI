@@ -3,11 +3,22 @@
 """Miscellaneous AMICI Python interface tests"""
 
 import amici
+import sys
+import copy
+import os
 import unittest
 
 
 class TestAmiciMisc(unittest.TestCase):
     """TestCase class various AMICI Python interface functions"""
+
+    def setUp(self):
+        self.default_path = copy.copy(sys.path)
+        self.resetdir = os.getcwd()
+
+    def tearDown(self):
+        os.chdir(self.resetdir)
+        sys.path = self.default_path
 
     def runTest(self):
         self.test_parameterScalingFromIntVector()

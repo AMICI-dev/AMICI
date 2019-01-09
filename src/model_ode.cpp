@@ -114,7 +114,7 @@ namespace amici {
     void Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                           AmiVector *dx) {
         fJDiag(t, JDiag->getNVector(), x->getNVector());
-        if(checkFinite(nx,JDiag->data(),"Jacobian") != AMICI_SUCCESS)
+        if(checkFinite(nx_solver,JDiag->data(),"Jacobian") != AMICI_SUCCESS)
             throw AmiException("Evaluation of fJDiag failed!");
     }
     
@@ -128,7 +128,7 @@ namespace amici {
         std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,N_VGetArrayPointer(x_pos));
         for(int ip = 0; ip < nplist(); ip++)
-            fdxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
+            fdxdotdp(&dxdotdp.at(nx_solver*ip),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                      plist_[ip],w.data(),dwdp.data());
     }
     
@@ -255,6 +255,6 @@ namespace amici {
         N_VConst(0.0,sxdot);
         fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                       plist_[ip],N_VGetArrayPointer(sx),
-                      w.data(),dwdx.data(),J->data,&dxdotdp.at(ip*nx));
+                      w.data(),dwdx.data(),J->data,&dxdotdp.at(ip*nx_solver));
     }
 }

@@ -12,6 +12,7 @@
 #include <numeric>
 #include <vector>
 #include <memory>
+#include <algorithm>
 
 namespace amici {
 
@@ -31,7 +32,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version);
 
 
 namespace amici {
-    
+
     /**
      * @brief The Model class represents an AMICI ODE model.
      * The model can compute various model related quantities based
@@ -41,13 +42,16 @@ namespace amici {
     public:
         /** default constructor */
         Model()
-        : nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0),
+        : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0), nytrue(0), nz(0), nztrue(0),
         ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
         o2mode(SecondOrderMode::none), x_pos_tmp(0) {}
-        
+
         /** constructor with model dimensions
-         * @param nx number of state variables
-         * @param nxtrue number of state variables of the non-augmented model
+         * @param nx_rdata number of state variables
+         * @param nxtrue_rdata number of state variables of the non-augmented model
+         * @param nx_solver number of state variables with conservation laws applied
+         * @param nxtrue_solver number of state variables of the non-augmented model
+         with conservation laws applied
          * @param ny number of observables
          * @param nytrue number of observables of the non-augmented model
          * @param nz number of event observables
@@ -69,14 +73,14 @@ namespace amici {
          * @param idlist indexes indicating algebraic components (DAE only)
          * @param z2event mapping of event outputs to events
          */
-        Model(const int nx, const int nxtrue,
+        Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver, const int nxtrue_solver,
               const int ny, const int nytrue, const int nz, const int nztrue,
               const int ne, const int nJ, const int nw, const int ndwdx,
               const int ndwdp, const int nnz, const int ubw, const int lbw,
               amici::SecondOrderMode o2mode, const std::vector<amici::realtype> &p,
               std::vector<amici::realtype> k, const std::vector<int> &plist,
               std::vector<amici::realtype> idlist, std::vector<int> z2event);
-        
+
         /** Copy constructor
          * @param other object to copy from
          * @return
@@ -102,7 +106,7 @@ namespace amici {
          * @return The Solver instance
          */
         virtual std::unique_ptr<Solver> getSolver() = 0;
-        
+
         /** Root function
          * @param t time
          * @param x state
@@ -110,7 +114,7 @@ namespace amici {
          * @param root array to which values of the root function will be written
          */
         virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) = 0;
-        
+
         /** Residual function
          * @param t time
          * @param x state
@@ -118,7 +122,7 @@ namespace amici {
          * @param xdot array to which values of the residual function will be written
          */
         virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) = 0;
-        
+
         /** Sensitivity Residual function
          * @param t time
          * @param x state
@@ -130,7 +134,7 @@ namespace amici {
          */
         virtual void fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
                             AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) = 0;
-        
+
         /** Dense Jacobian function
          * @param t time
          * @param cj scaling factor (inverse of timestep, DAE only)
@@ -141,7 +145,7 @@ namespace amici {
          */
         virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                               AmiVector *xdot, DlsMat J) = 0;
-        
+
         /** Sparse Jacobian function
          * @param t time
          * @param cj scaling factor (inverse of timestep, DAE only)
@@ -152,7 +156,7 @@ namespace amici {
          */
         virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                             AmiVector *xdot, SlsMat J) = 0;
-        
+
         /** Diagonal Jacobian function
          * @param t time
          * @param Jdiag array to which the diagonal of the Jacobian will be written
@@ -163,7 +167,7 @@ namespace amici {
          */
         virtual void fJDiag(realtype t, AmiVector *Jdiag, realtype cj, AmiVector *x,
                                 AmiVector *dx) = 0;
-        
+
         /** parameter derivative of residual function
          * @param t time
          * @param x state
@@ -171,7 +175,7 @@ namespace amici {
          * @return flag indicating successful evaluation
          */
         virtual void fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) = 0;
-        
+
         /** Jacobian multiply function
          * @param t time
          * @param x state
@@ -183,17 +187,34 @@ namespace amici {
          */
         virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                              AmiVector *v, AmiVector *nJv, realtype cj) = 0;
-        
+
+        /** Expands conservation law for states
+         * @param x_rdata pointer to state variables with conservation laws
+         * expanded (stored in rdata)
+         * @param x_solver pointer to state variables with conservation laws
+         * applied (solver returns this)
+         */
+        void fx_rdata(AmiVector *x_rdata, const AmiVector *x_solver);
+
+        /** Expands conservation law for state sensitivities
+         * @param sx_rdata pointer to state variable sensitivities with
+         * conservation laws expanded (stored in rdata)
+         * @param sx_solver pointer to state variable sensitivities with
+         * conservation laws applied (solver returns this)
+         */
+        void fsx_rdata(AmiVectorArray *sx_rdata,
+                       const AmiVectorArray *sx_solver);
+
         /** Initial states
          * @param x pointer to state variables
          */
         void fx0(AmiVector *x);
-        
+
         /** Sets only those initial states that are specified via fixedParmeters
          * @param x pointer to state variables
          */
         void fx0_fixedParameters(AmiVector *x);
-        
+
         /** Initial value for time derivative of states (only necessary for DAEs)
          * @param x0 Vector with the initial states
          * @param dx0 Vector to which the initial derivative states will be
@@ -207,19 +228,19 @@ namespace amici {
           **/
 
         void fsx0(AmiVectorArray *sx, const AmiVector *x);
-        
+
         /** Sets only those initial states sensitivities that are affected from fx0 fixedParmeters
          * @param sx pointer to state sensitivity variables
          * @param x pointer to state variables
          **/
-        
+
         void fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x);
-        
+
         /** Sensitivity of derivative initial states sensitivities sdx0 (only
          *  necessary for DAEs)
          **/
         virtual void fsdx0();
-        
+
         /** Sensitivity of event timepoint, total derivative
          * @param t current timepoint
          * @param ie event index
@@ -227,25 +248,27 @@ namespace amici {
          * @param sx pointer to state sensitivity variables
          */
         void fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx);
-       
+
         /** Observables / measurements
+         * @param t current timepoint
          * @param it timepoint index
+         * @param x current state
          * @param rdata pointer to return data instance
          */
-        void fy(int it, ReturnData *rdata);
-        
+        void fy(const realtype t, const int it, const AmiVector *x, ReturnData *rdata);
+
         /** partial derivative of observables y w.r.t. model parameters p
-         * @param it timepoint index
-         * @param rdata pointer to return data instance
+         * @param t current timepoint
+         * @param x current state
          */
-        void fdydp(const int it, ReturnData *rdata);
-        
+        void fdydp(const realtype t, const AmiVector *x);
+
         /** partial derivative of observables y w.r.t. state variables x
-         * @param it timepoint index
-         * @param rdata pointer to return data instance
+         * @param t current timepoint
+         * @param x current state
          */
-        void fdydx(const int it, ReturnData *rdata);
-        
+        void fdydx(const realtype t, const AmiVector *x);
+
         /** Event-resolved output
          * @param nroots number of events for event index
          * @param ie event index
@@ -254,7 +277,7 @@ namespace amici {
          * @param rdata pointer to return data instance
          */
         void fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
-        
+
         /** Sensitivity of z, total derivative
          * @param nroots number of events for event index
          * @param ie event index
@@ -264,7 +287,7 @@ namespace amici {
          * @param rdata pointer to return data instance
          */
         void fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
-        
+
         /** Event root function of events (equal to froot but does not include
          * non-output events)
          * @param nroots number of events for event index
@@ -274,7 +297,7 @@ namespace amici {
          * @param rdata pointer to return data instance
          */
         void frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata);
-        
+
         /** Sensitivity of rz, total derivative
          * @param nroots number of events for event index
          * @param ie event index
@@ -284,35 +307,35 @@ namespace amici {
          * @param rdata pointer to return data instance
          */
         void fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
-        
+
         /** partial derivative of event-resolved output z w.r.t. to model parameters p
          * @param ie event index
          * @param t current timepoint
          * @param x current state
          */
         void fdzdp(const realtype t, const int ie, const AmiVector *x);
-        
+
         /** partial derivative of event-resolved output z w.r.t. to model states x
          * @param ie event index
          * @param t current timepoint
          * @param x current state
          */
         void fdzdx(const realtype t, const int ie, const AmiVector *x);
-        
+
         /** Sensitivity of event-resolved root output w.r.t. to model parameters p
          * @param ie event index
          * @param t current timepoint
          * @param x current state
          */
         void fdrzdp(const realtype t, const int ie, const AmiVector *x);
-        
+
         /** Sensitivity of event-resolved measurements rz w.r.t. to model states x
          * @param ie event index
          * @param t current timepoint
          * @param x current state
          */
         void fdrzdx(const realtype t, const int ie, const AmiVector *x);
-        
+
         /** State update functions for events
          * @param ie event index
          * @param t current timepoint
@@ -322,7 +345,7 @@ namespace amici {
          */
         void fdeltax(const int ie, const realtype t, const AmiVector *x,
                              const AmiVector *xdot, const AmiVector *xdot_old);
-        
+
         /** Sensitivity update functions for events, total derivative
          * @param ie event index
          * @param t current timepoint
@@ -333,7 +356,7 @@ namespace amici {
          */
         void fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
                               const AmiVector *xdot, const AmiVector *xdot_old);
-        
+
         /** Adjoint state update functions for events
          * @param ie event index
          * @param t current timepoint
@@ -344,7 +367,7 @@ namespace amici {
          */
         void fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                               const AmiVector *xdot, const AmiVector *xdot_old);
-        
+
         /** Quadrature state update functions for events
          * @param ie event index
          * @param t current timepoint
@@ -355,21 +378,21 @@ namespace amici {
          */
         void fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                               const AmiVector *xdot, const AmiVector *xdot_old);
-        
+
         /** Standard deviation of measurements
          * @param it timepoint index
          * @param edata pointer to experimental data instance
          * @param rdata pointer to return data instance
          */
         void fsigmay(const int it, ReturnData *rdata, const ExpData *edata);
-        
+
         /** partial derivative of standard deviation of measurements w.r.t. model
          * @param it timepoint index
          * @param rdata pointer to return data instance
          * @param edata pointer to ExpData data instance holding sigma values
          */
         void fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata);
-        
+
         /** Standard deviation of events
          * @param t current timepoint
          * @param ie event index
@@ -379,7 +402,7 @@ namespace amici {
          */
         void fsigmaz(const realtype t, const int ie, const int *nroots, ReturnData *rdata,
                      const ExpData *edata);
-        
+
         /** Sensitivity of standard deviation of events measurements w.r.t. model parameters p
          * @param t current timepoint
          * @param ie event index
@@ -388,21 +411,21 @@ namespace amici {
          * @param edata pointer to experimental data instance
          */
         void fdsigmazdp(const realtype t, const int ie, const int *nroots, ReturnData *rdata, const ExpData *edata);
-        
+
         /** negative log-likelihood of measurements y
          * @param it timepoint index
          * @param rdata pointer to return data instance
          * @param edata pointer to experimental data instance
          */
         void fJy(const int it, ReturnData *rdata, const ExpData *edata);
-        
+
         /** negative log-likelihood of event-resolved measurements z
          * @param nroots event index
          * @param rdata pointer to return data instance
          * @param edata pointer to experimental data instance
          */
         void fJz(const int nroots, ReturnData *rdata, const ExpData *edata);
-        
+
         /** regularization of negative log-likelihood with roots of event-resolved
          * measurements rz
          * @param nroots event index
@@ -417,7 +440,7 @@ namespace amici {
          * @param edata pointer to experimental data instance
          */
         void fdJydy(const int it, const ReturnData *rdata, const ExpData *edata);
-        
+
         /** Sensitivity of time-resolved measurement negative log-likelihood Jy
          * w.r.t. standard deviation sigma
          * @param it timepoint index
@@ -425,14 +448,14 @@ namespace amici {
          * @param edata pointer to experimental data instance
          */
         void fdJydsigma(const int it, const ReturnData *rdata, const ExpData *edata);
-        
+
         /** partial derivative of event measurement negative log-likelihood Jz
          * @param nroots event index
          * @param rdata pointer to return data instance
          * @param edata pointer to experimental data instance
          */
         void fdJzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
-        
+
         /** Sensitivity of event measurement negative log-likelihood Jz
          * w.r.t. standard deviation sigmaz
          * @param nroots event index
@@ -440,14 +463,14 @@ namespace amici {
          * @param edata pointer to experimental data instance
          */
         void fdJzdsigma(const int nroots, const ReturnData *rdata, const ExpData *edata);
-        
+
         /** partial derivative of event measurement negative log-likelihood Jz
          * @param nroots event index
          * @param rdata pointer to return data instance
          * @param edata pointer to experimental data instance
          */
         void fdJrzdz(const int nroots, const ReturnData *rdata, const ExpData *edata);
-        
+
         /** Sensitivity of event measurement negative log-likelihood Jz
          * w.r.t. standard deviation sigmaz
          * @param nroots event index
@@ -455,13 +478,14 @@ namespace amici {
          * @param edata pointer to experimental data instance
          */
         void fdJrzdsigma(const int nroots,const ReturnData *rdata, const ExpData *edata);
-                
+
         /** Sensitivity of measurements y, total derivative sy = dydx * sx + dydp
          * @param it timepoint index
+         * @param sx pointer to state sensitivities
          * @param rdata pointer to return data instance
          */
-        void fsy(const int it, ReturnData *rdata);
-        
+        void fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata);
+
         /** Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
          * total derivative
          * @param nroots number of events for event index
@@ -469,24 +493,24 @@ namespace amici {
          * @param rdata pointer to return data instance
          */
         void fsz_tf(const int *nroots, const int ie, ReturnData *rdata);
-        
+
         /** Sensitivity of time-resolved measurement negative log-likelihood Jy, total
          * derivative
          * @param it timepoint index
+         * @param sx pointer to state sensitivities
          * @param dJydx vector with values of state derivative of Jy
          * @param rdata pointer to return data instance
          */
-        void fsJy(const int it, const std::vector<realtype>& dJydx, ReturnData *rdata);
-        
+        void fsJy(const int it, const std::vector<realtype>& dJydx, const AmiVectorArray *sx, ReturnData *rdata);
+
         /** Compute sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
          * parameters for the given timepoint. Add result to respective fields in rdata.
          * @param it timepoint index
          * @param edata pointer to experimental data instance
          * @param rdata pointer to return data instance
          */
-        void fdJydp(const int it, const ExpData *edata,
-                   ReturnData *rdata);
-        
+        void fdJydp(const int it, ReturnData *rdata, const ExpData *edata);
+
         /** Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t.
          * state variables
          * @param dJydx pointer to vector with values of state derivative of Jy
@@ -494,8 +518,8 @@ namespace amici {
          * @param edata pointer to experimental data instance
          * @param rdata pointer to return data instance
          */
-        void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata, const ReturnData *rdata);
-        
+        void fdJydx(std::vector<realtype> *dJydx, const int it, const ReturnData *rdata, const ExpData *edata);
+
         /** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
          * derivative
          * @param nroots event index
@@ -503,8 +527,8 @@ namespace amici {
          * @param sx pointer to state sensitivities
          * @param rdata pointer to return data instance
          */
-        void fsJz(const int nroots, const std::vector<realtype>& dJzdx, AmiVectorArray *sx, ReturnData *rdata);
-        
+        void fsJz(const int nroots, const std::vector<realtype>& dJzdx, const AmiVectorArray *sx, ReturnData *rdata);
+
         /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
          * parameters
          * @param nroots event index
@@ -513,7 +537,7 @@ namespace amici {
          * @param rdata pointer to return data instance
          */
         void fdJzdp(const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
-        
+
         /** Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t.
          * state variables
          * @param dJzdx pointer to vector with values of state derivative of Jz
@@ -523,18 +547,31 @@ namespace amici {
          * @param rdata pointer to return data instance
          */
         void fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, const ExpData *edata, const ReturnData *rdata);
-        
+
         /** initialization of model properties
          * @param x pointer to state variables
          * @param dx pointer to time derivative of states (DAE only)
+         * @param sx pointer to state variable sensititivies
+         * @param sdx pointer to time derivative of state sensitivities
+         * (DAE only)
+         * @param computeSensitivities flag indicating whether sensitivities
+         * are to be computed
          */
-        void initialize(AmiVector *x, AmiVector *dx);
-        
+        void initialize(AmiVector *x, AmiVector *dx,
+                        AmiVectorArray *sx, AmiVectorArray *sdx,
+                        bool computeSensitivities);
+
         /** initialization of initial states
          * @param x pointer to state variables
          */
         void initializeStates(AmiVector *x);
         
+        /** initialization of initial state sensitivities
+         * @param sx pointer to state variable sensititivies
+         * @param x pointer to state variables
+         */
+        void initializeStateSensitivities(AmiVectorArray *sx, AmiVector *x);
+
         /**
          * initHeaviside initialises the heaviside variables h at the intial time t0
          * heaviside variables activate/deactivate on event occurences
@@ -542,7 +579,7 @@ namespace amici {
          * @param dx pointer to time derivative of states (DAE only)
          */
         void initHeaviside(AmiVector *x, AmiVector *dx);
-        
+
         /**
          * @brief number of paramaeters wrt to which sensitivities are computed
          * @return length of sensitivity index vector
@@ -560,6 +597,12 @@ namespace amici {
          * @return length of constant vector
          */
         int nk() const;
+
+        /**
+         * @brief number of conservation laws
+         * @return difference between nx_rdata and nx_solver
+         */
+        int ncl() const {return nx_rdata-nx_solver;};
 
         /**
          * @brief fixed parameters
@@ -592,13 +635,15 @@ namespace amici {
         std::vector<ParameterScaling> const& getParameterScale() const;
 
         /**
-         * @brief Set ParameterScale for each parameter
+         * @brief Set ParameterScale for each parameter, resets initial state
+         * sensitivities
          * @param pscale scalar parameter scale for all parameters
          */
         void setParameterScale(ParameterScaling pscale);
 
         /**
-         * @brief Set ParameterScale for each parameter
+         * @brief Set ParameterScale for each parameter, resets initial state
+         * sensitivities
          * @param pscale vector of parameter scales
          */
         void setParameterScale(const std::vector<ParameterScaling>& pscale);
@@ -639,7 +684,7 @@ namespace amici {
          * @return parameter value
          */
         realtype getFixedParameterById(std::string const& par_id) const;
-        
+
         /**
          * @brief Get value of fixed parameter with the specified name,
          if multiple parameters have the same name,
@@ -648,14 +693,14 @@ namespace amici {
          * @return parameter value
          */
         realtype getFixedParameterByName(std::string const& par_name) const;
-        
+
         /**
          * @brief Set value of first fixed parameter with the specified id
          * @param par_id fixed parameter id
          * @param value fixed parameter value
          */
         void setFixedParameterById(std::string const& par_id, realtype value);
-        
+
         /**
          * @brief Set values of all fixed parameters with the id matching the specified regex
          * @param par_id_regex fixed parameter name regex
@@ -663,14 +708,14 @@ namespace amici {
          * @return number of fixed parameter ids that matched the regex
          */
         int setFixedParametersByIdRegex(std::string const& par_id_regex, realtype value);
-        
+
         /**
          * @brief Set value of first fixed parameter with the specified name,
          * @param par_name fixed parameter id
          * @param value fixed parameter value
          */
         void setFixedParameterByName(std::string const& par_name, realtype value);
-        
+
         /**
          * @brief Set value of all fixed parameters with name matching the specified regex,
          * @param par_name_regex fixed parameter name regex
@@ -678,7 +723,7 @@ namespace amici {
          * @return number of fixed parameter names that matched the regex
          */
         int setFixedParametersByNameRegex(std::string const& par_name_regex, realtype value);
-        
+
         /**
          * @brief Get the timepoint vector
          * @return timepoint vector
@@ -691,19 +736,19 @@ namespace amici {
          */
         void setTimepoints(std::vector<realtype> const& ts);
 
-        
+
         /**
          * @brief gets flags indicating whether states should be treated as non-negative
          * @return vector of flags
          */
         std::vector<bool> const& getStateIsNonNegative() const;
-        
+
         /**
          * @brief sets flags indicating whether states should be treated as non-negative
          * @param stateIsNonNegative vector of flags
          */
         void setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative);
-        
+
         /**
          * @brief Get timepoint for given index
          * @param idx timepoint index
@@ -718,7 +763,8 @@ namespace amici {
         std::vector<int> const& getParameterList() const;
 
         /**
-         * @brief Set the list of parameters for which sensitivities are computed
+         * @brief Set the list of parameters for which sensitivities are
+         * computed, resets initial state sensitivities
          * @param plist list of parameter indices
          */
         void setParameterList(std::vector<int> const& plist);
@@ -743,9 +789,18 @@ namespace amici {
 
         /**
          * @brief Set the initial state sensitivities
-         * @param sx0 vector of initial state sensitivities
+         * @param sx0 vector of initial state sensitivities with chainrule
+         * applied. This could be a slice of ReturnData::sx or ReturnData::sx0
          */
         void setInitialStateSensitivities(std::vector<realtype> const& sx0);
+        
+        /**
+         * @brief Set the initial state sensitivities
+         * @param sx0 vector of initial state sensitivities without chainrule
+         * applied. This could be the readin from a model.sx0data saved to hdf5.
+         */
+        void setUnscaledInitialStateSensitivities(
+             std::vector<realtype> const& sx0);
 
         /**
          * @brief get simulation start time
@@ -767,59 +822,59 @@ namespace amici {
         int plist(int pos) const;
 
         /**
-         * @brief Require computation of sensitivities for all parameters p [0..np[
-         * in natural order.
+         * @brief Require computation of sensitivities for all parameters p
+         * [0..np[ in natural order, resets initial state sensitivities
          */
         void requireSensitivitiesForAllParameters();
-        
+
         /**
          * @brief Recurring terms in xdot
          * @param t timepoint
          * @param x array with the states
          */
         void fw(const realtype t, const realtype *x);
-        
+
         /**
          * @brief Recurring terms in xdot, parameter derivative
          * @param t timepoint
          * @param x array with the states
          */
         void fdwdp(const realtype t, const realtype *x);
-        
+
         /**
          * @brief Recurring terms in xdot, state derivative
          * @param t timepoint
          * @param x array with the states
          */
         void fdwdx(const realtype t, const realtype *x);
-        
+
         /** residual function
          * @param it time index
          * @param rdata ReturnData instance to which result will be written
          * @param edata ExpData instance containing observable data
          */
         void fres(const int it, ReturnData *rdata, const ExpData *edata);
-        
+
         /** chi-squared function
          * @param it time index
          * @param rdata ReturnData instance to which result will be written
          */
         void fchi2(const int it, ReturnData *rdata);
-        
+
         /** residual sensitivity function
          * @param it time index
          * @param rdata ReturnData instance to which result will be written
          * @param edata ExpData instance containing observable data
          */
         void fsres(const int it, ReturnData *rdata, const ExpData *edata);
-        
+
         /** fisher information matrix function
          * @param it time index
          * @param rdata ReturnData instance to which result will be written
          */
         void fFIM(const int it, ReturnData *rdata);
 
-        
+
         /**
          * updateHeaviside updates the heaviside variables h on event occurences
          *
@@ -828,7 +883,7 @@ namespace amici {
          was found)
          */
         void updateHeaviside(const std::vector<int>& rootsfound);
-        
+
         /**
          * updateHeavisideB updates the heaviside variables h on event occurences
          in the backward problem
@@ -838,7 +893,7 @@ namespace amici {
          was found)
          */
         void updateHeavisideB(const int *rootsfound);
-        
+
         /**
          * @brief Serialize Model (see boost::serialization::serialize)
          * @param ar Archive to serialize to
@@ -855,7 +910,7 @@ namespace amici {
          * @return equality
          */
         friend bool operator ==(const Model &a, const Model &b);
-        
+
         /** get current timepoint from index
          * @param it timepoint index
          * @param rdata pointer to return data instance
@@ -890,7 +945,7 @@ namespace amici {
          * @brief Reports whether the model has state names set.
          * @return boolean indicating whether state names were set
          */
-        virtual bool hasStateNames() const { return nx && !getStateNames().empty(); }
+        virtual bool hasStateNames() const { return nx_rdata && !getStateNames().empty(); }
 
         /**
          * @brief Get names of the model states
@@ -921,13 +976,13 @@ namespace amici {
          * @return the names
          */
         virtual std::vector<std::string> getObservableNames() const { return std::vector<std::string>(); }
-        
+
         /**
          * @brief Reports whether the model has parameter ids set.
          * @return boolean indicating whether parameter ids were set
          */
         virtual bool hasParameterIds() const { return np() && !getParameterIds().empty(); }
-        
+
         /**
          * @brief Get ids of the model parameters
          * @return the ids
@@ -935,28 +990,28 @@ namespace amici {
         virtual std::vector<std::string> getParameterIds() const {
             return std::vector<std::string>();
         }
-        
+
         /**
          * @brief Get value of first model parameter with the specified id
          * @param par_id parameter id
          * @return parameter value
          */
         realtype getParameterById(std::string const& par_id) const;
-        
+
         /**
          * @brief Get value of first model parameter with the specified name,
          * @param par_name parameter name
          * @return parameter value
          */
         realtype getParameterByName(std::string const& par_name) const;
-        
+
         /**
          * @brief Set value of first model parameter with the specified id
          * @param par_id parameter id
          * @param value parameter value
          */
         void setParameterById(std::string const& par_id, realtype value);
-        
+
         /**
          * @brief Set all values of model parameters with ids matching the specified regex
          * @param par_id_regex parameter id regex
@@ -964,14 +1019,14 @@ namespace amici {
          * @return number of parameter ids that matched the regex
          */
         int setParametersByIdRegex(std::string const& par_id_regex, realtype value);
-        
+
         /**
          * @brief Set value of first model parameter with the specified name
          * @param par_name parameter name
          * @param value parameter value
          */
         void setParameterByName(std::string const& par_name, realtype value);
-        
+
         /**
          * @brief Set all values of all model parameters with names matching the specified regex
          * @param par_name_regex parameter name regex
@@ -979,13 +1034,13 @@ namespace amici {
          * @return number of fixed parameter names that matched the regex
          */
         int setParametersByNameRegex(std::string const& par_name_regex, realtype value);
-        
+
         /**
          * @brief Reports whether the model has state ids set.
          * @return
          */
-        virtual bool hasStateIds() const { return nx && !getStateIds().empty(); }
-        
+        virtual bool hasStateIds() const { return nx_rdata && !getStateIds().empty(); }
+
         /**
          * @brief Get ids of the model states
          * @return the ids
@@ -993,13 +1048,13 @@ namespace amici {
         virtual std::vector<std::string> getStateIds() const {
             return std::vector<std::string>();
         }
-        
+
         /**
          * @brief Reports whether the model has fixed parameter ids set.
          * @return boolean indicating whether fixed parameter ids were set
          */
         virtual bool hasFixedParameterIds() const { return nk() && !getFixedParameterIds().empty(); }
-        
+
         /**
          * @brief Get ids of the fixed model parameters
          * @return the ids
@@ -1007,13 +1062,13 @@ namespace amici {
         virtual std::vector<std::string> getFixedParameterIds() const {
             return std::vector<std::string>();
         }
-        
+
         /**
          * @brief Reports whether the model has observable ids set.
          * @return boolean indicating whether observale ids were set
          */
         virtual bool hasObservableIds() const { return ny && !getObservableIds().empty(); }
-        
+
         /**
          * @brief Get ids of the observables
          * @return the ids
@@ -1021,7 +1076,7 @@ namespace amici {
         virtual std::vector<std::string> getObservableIds() const {
             return std::vector<std::string>();
         }
-        
+
         /**
          * @brief sets the mode how sensitivities are computed in the steadystate simulation
          * @param mode steadyStateSensitivityMode
@@ -1029,7 +1084,7 @@ namespace amici {
         void setSteadyStateSensitivityMode (const SteadyStateSensitivityMode mode) {
             steadyStateSensitivityMode = mode;
         }
-        
+
         /**
          * @brief gets the mode how sensitivities are computed in the steadystate simulation
          * @return flag value
@@ -1037,7 +1092,7 @@ namespace amici {
         SteadyStateSensitivityMode getSteadyStateSensitivityMode () const {
             return steadyStateSensitivityMode;
         }
-        
+
         /**
          * @brief set whether initial states depending on fixedParmeters are to be reinitialized
          * after preequilibration and presimulation
@@ -1051,7 +1106,7 @@ namespace amici {
                                    "fixedParameters also depended on parameters");
             reinitializeFixedParameterInitialStates = flag;
         }
-        
+
         /**
          * @brief get whether initial states depending on fixedParmeters are to be reinitialized
          * after preequilibration and presimulation
@@ -1062,9 +1117,13 @@ namespace amici {
         }
 
         /** number of states */
-        const int nx;
+        const int nx_rdata;
         /** number of states in the unaugmented system */
-        const int nxtrue;
+        const int nxtrue_rdata;
+        /** number of states with conservation laws applied */
+        const int nx_solver;
+        /** number of states in the unaugmented system with conservation laws applied */
+        const int nxtrue_solver;
         /** number of observables */
         const int ny;
         /** number of observables in the unaugmented system */
@@ -1110,16 +1169,16 @@ namespace amici {
         /** parameter derivative of event likelihood for current timepoint (dimension: nplist x nJ, row-major) */
         std::vector<realtype> dJzdp;
 
-        /** change in x at current timepoint (dimension: nx) */
+        /** change in x at current timepoint (dimension: nx_solver) */
         std::vector<realtype> deltax;
-        /** change in sx at current timepoint (dimension: nplist x nx, row-major) */
+        /** change in sx at current timepoint (dimension: nplist x nx_solver, row-major) */
         std::vector<realtype> deltasx;
-        /** change in xB at current timepoint (dimension: nJ x nxtrue, row-major) */
+        /** change in xB at current timepoint (dimension: nJ x nxtrue_cl, row-major) */
         std::vector<realtype> deltaxB;
         /** change in qB at current timepoint (dimension: nJ x nplist, row-major) */
         std::vector<realtype> deltaqB;
 
-        /** tempory storage of dxdotdp data across functions (dimension: nplist x nx, row-major) */
+        /** tempory storage of dxdotdp data across functions (dimension: nplist x nx_solver, row-major) */
         std::vector<realtype> dxdotdp;
 
 
@@ -1130,7 +1189,83 @@ namespace amici {
          */
         void initializeVectors();
 
-        
+        /** model specific implementation of fx_rdata
+         * @param x_rdata state variables with conservation laws expanded
+         * @param x_solver state variables with conservation laws applied
+         * @param tcl total abundances for conservation laws
+         **/
+        virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver,
+                              const realtype *tcl) {
+            if (nx_solver != nx_rdata)
+                throw AmiException(
+                    "A model that has differing nx_solver and nx_rdata needs "
+                    "to implement its own fx_rdata");
+            std::copy_n(x_solver, nx_solver, x_rdata);
+        }
+
+        /** model specific implementation of fsx_solver
+         * @param sx_rdata state sensitivity variables with conservation laws
+         *expanded
+         * @param sx_solver state sensitivity variables with conservation laws
+         *applied
+         * @param stcl sensitivities of total abundances for conservation laws
+         * @param ip sensitivity index
+         **/
+        virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
+                               const realtype *stcl, const int ip) {
+            fx_rdata(sx_rdata, sx_solver, stcl);
+        }
+
+        /** model specific implementation of fx_solver
+         * @param x_solver state variables with conservation laws applied
+         * @param x_rdata state variables with conservation laws expanded
+         **/
+        virtual void fx_solver(realtype *x_solver, const realtype *x_rdata) {
+            if (nx_solver != nx_rdata)
+                throw AmiException(
+                    "A model that has differing nx_solver and nx_rdata needs "
+                    "to implement its own fx_solver");
+            std::copy_n(x_rdata, nx_rdata, x_solver);
+        }
+
+        /** model specific implementation of fsx_solver
+         * @param sx_rdata state sensitivity variables with conservation laws
+         *expanded
+         * @param sx_solver state sensitivity variables with conservation laws applied
+         **/
+        virtual void fsx_solver(realtype *sx_solver, const realtype *sx_rdata) {
+            /* for the moment we do not need an implementation of fsx_solver as
+             we can simply reuse fx_solver and replace states by their
+             sensitivities */
+            fx_solver(sx_solver, sx_rdata);
+        }
+
+        /** model specific implementation of ftotal_cl
+         * @param total_cl total abundances of conservation laws
+         * @param x_rdata state variables with conservation laws expanded
+         **/
+        virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata) {
+            if (nx_solver != nx_rdata)
+                throw AmiException(
+                    "A model that has differing nx_solver and nx_rdata needs "
+                    "to implement its own ftotal_cl");
+        }
+
+        /** model specific implementation of fstotal_cl
+         * @param stotal_cl sensitivites for the total abundances of
+         *conservation laws
+         * @param sx_rdata state sensitivity variables with conservation laws
+         *expanded
+         * @param ip sensitivity index
+         **/
+        virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
+                                const int ip) {
+            /* for the moment we do not need an implementation of fstotal_cl as
+             we can simply reuse ftotal_cl and replace states by their
+             sensitivities */
+            ftotal_cl(stotal_cl, sx_rdata);
+        }
+
         /** model specific implementation of fx0
          * @param x0 initial state
          * @param t initial time
@@ -1140,7 +1275,7 @@ namespace amici {
         virtual void fx0(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fx0_fixedParameters
          * @param x0 initial state
          * @param t initial time
@@ -1149,7 +1284,7 @@ namespace amici {
          **/
         virtual void fx0_fixedParameters(realtype *x0, const realtype t, const realtype *p, const realtype *k) {
         }
-        
+
         /** model specific implementation of fsx0_fixedParameters
          * @param sx0 initial state sensitivities
          * @param t initial time
@@ -1160,7 +1295,7 @@ namespace amici {
          **/
         virtual void fsx0_fixedParameters(realtype *sx0, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip) {
         }
-        
+
         /** model specific implementation of fsx0
          * @param sx0 initial state sensitivities
          * @param t initial time
@@ -1172,7 +1307,7 @@ namespace amici {
         virtual void fsx0(realtype *sx0, const realtype t, const realtype *x0, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fstau
          * @param stau total derivative of event timepoint
          * @param t current time
@@ -1187,7 +1322,7 @@ namespace amici {
         virtual void fstau(realtype *stau, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip, const int ie) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fy
          * @param y model output at current timepoint
          * @param t current time
@@ -1200,7 +1335,7 @@ namespace amici {
         virtual void fy(realtype *y, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdydp
          * @param dydp partial derivative of observables y w.r.t. model parameters p
          * @param t current time
@@ -1215,7 +1350,7 @@ namespace amici {
         virtual void fdydp(realtype *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdydx
          * @param dydx partial derivative of observables y w.r.t. model states x
          * @param t current time
@@ -1229,7 +1364,7 @@ namespace amici {
         virtual void fdydx(realtype *dydx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fz
          * @param z value of event output
          * @param ie event index
@@ -1242,7 +1377,7 @@ namespace amici {
         virtual void fz(realtype *z, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fsz
          * @param sz Sensitivity of rz, total derivative
          * @param ie event index
@@ -1257,7 +1392,7 @@ namespace amici {
         virtual void fsz(realtype *sz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of frz
          * @param rz value of root function at current timepoint (non-output events not included)
          * @param ie event index
@@ -1270,7 +1405,7 @@ namespace amici {
         virtual void frz(realtype *rz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fsrz
          * @param srz Sensitivity of rz, total derivative
          * @param ie event index
@@ -1285,7 +1420,7 @@ namespace amici {
         virtual void fsrz(realtype *srz, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *sx, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdzdp
          * @param dzdp partial derivative of event-resolved output z w.r.t. model parameters p
          * @param ie event index
@@ -1299,7 +1434,7 @@ namespace amici {
         virtual void fdzdp(realtype *dzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdzdx
          * @param dzdx partial derivative of event-resolved output z w.r.t. model states x
          * @param ie event index
@@ -1312,7 +1447,7 @@ namespace amici {
         virtual void fdzdx(realtype *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdrzdp
          * @param drzdp partial derivative of root output rz w.r.t. model parameters p
          * @param ie event index
@@ -1326,7 +1461,7 @@ namespace amici {
         virtual void fdrzdp(realtype *drzdp, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdrzdx
          * @param drzdx partial derivative of root output rz w.r.t. model states x
          * @param ie event index
@@ -1339,7 +1474,7 @@ namespace amici {
         virtual void fdrzdx(realtype *drzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdeltax
          * @param deltax state update
          * @param t current time
@@ -1355,7 +1490,7 @@ namespace amici {
                              const int ie, const realtype *xdot, const realtype *xdot_old) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdeltasx
          * @param deltasx sensitivity update
          * @param t current time
@@ -1376,7 +1511,7 @@ namespace amici {
                               const realtype *stau) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdeltaxB
          * @param deltaxB adjoint state update
          * @param t current time
@@ -1393,7 +1528,7 @@ namespace amici {
                               const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdeltaqB
          * @param deltaqB sensitivity update
          * @param t current time
@@ -1411,7 +1546,7 @@ namespace amici {
                               const int ip, const int ie, const realtype *xdot, const realtype *xdot_old, const realtype *xB) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fsigmay
          * @param sigmay standard deviation of measurements
          * @param t current time
@@ -1421,7 +1556,7 @@ namespace amici {
         virtual void fsigmay(realtype *sigmay, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fsigmay
          * @param dsigmaydp partial derivative of standard deviation of measurements
          * @param t current time
@@ -1432,7 +1567,7 @@ namespace amici {
         virtual void fdsigmaydp(realtype *dsigmaydp, const realtype t, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fsigmaz
          * @param sigmaz standard deviation of event measurements
          * @param t current time
@@ -1442,7 +1577,7 @@ namespace amici {
         virtual void fsigmaz(realtype *sigmaz, const realtype t, const realtype *p, const realtype *k) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fsigmaz
          * @param dsigmazdp partial derivative of standard deviation of event measurements
          * @param t current time
@@ -1453,7 +1588,7 @@ namespace amici {
         virtual void fdsigmazdp(realtype *dsigmazdp, const realtype t, const realtype *p, const realtype *k, const int ip) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fJy
          * @param nllh negative log-likelihood for measurements y
          * @param iy output index
@@ -1478,7 +1613,7 @@ namespace amici {
         virtual void fJz(realtype *nllh, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz, const realtype *mz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fJrz
          * @param nllh regularization for event measurements z
          * @param iz event output index
@@ -1490,7 +1625,7 @@ namespace amici {
         virtual void fJrz(realtype *nllh, const int iz, const realtype *p, const realtype *k, const realtype *z, const realtype *sigmaz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdJydy
          * @param dJydy partial derivative of time-resolved measurement negative log-likelihood Jy
          * @param iy output index
@@ -1504,7 +1639,7 @@ namespace amici {
                             const realtype *y, const realtype *sigmay, const realtype *my) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdJydsigma
          * @param dJydsigma Sensitivity of time-resolved measurement
          * negative log-likelihood Jy w.r.t. standard deviation sigmay
@@ -1519,7 +1654,7 @@ namespace amici {
                                 const realtype *y, const realtype *sigmay, const realtype *my) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdJzdz
          * @param dJzdz partial derivative of event measurement negative log-likelihood Jz
          * @param iz event output index
@@ -1533,7 +1668,7 @@ namespace amici {
                             const realtype *z, const realtype *sigmaz, const realtype *mz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdJzdsigma
          * @param dJzdsigma Sensitivity of event measurement
          * negative log-likelihood Jz w.r.t. standard deviation sigmaz
@@ -1548,7 +1683,7 @@ namespace amici {
                                 const realtype *z, const realtype *sigmaz, const realtype *mz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdJrzdz
          * @param dJrzdz partial derivative of event penalization Jrz
          * @param iz event output index
@@ -1561,7 +1696,7 @@ namespace amici {
                              const realtype *rz, const realtype *sigmaz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fdJrzdsigma
          * @param dJrzdsigma Sensitivity of event penalization Jrz w.r.t.
          * standard deviation sigmaz
@@ -1575,42 +1710,47 @@ namespace amici {
                                  const realtype *rz, const realtype *sigmaz) {
             throw AmiException("Requested functionality is not supported as (%s) is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation of fw
          * @param w Recurring terms in xdot
          * @param t timepoint
-         * @param x Vector with the states
+         * @param x vector with the states
          * @param p parameter vector
          * @param k constants vector
          * @param h heavyside vector
+         * @param tcl total abundances for conservations laws
          */
         virtual void fw(realtype *w, const realtype t, const realtype *x, const realtype *p,
-                        const realtype *k, const realtype *h) {}
-        
+                        const realtype *k, const realtype *h, const realtype *tcl) {}
+
         /** model specific implementation of dwdp
          * @param dwdp Recurring terms in xdot, parameter derivative
          * @param t timepoint
-         * @param x Vector with the states
+         * @param x vector with the states
          * @param p parameter vector
          * @param k constants vector
          * @param h heavyside vector
          * @param w vector with helper variables
+         * @param tcl total abundances for conservations laws
+         * @param stcl sensitivities of total abundances for conservations laws
          */
         virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x, const realtype *p,
-                           const realtype *k, const realtype *h, const realtype *w) {}
-        
+                           const realtype *k, const realtype *h, const realtype *w, const realtype *tcl,
+                           const realtype *stcl) {}
+
         /** model specific implementation of dwdx
          * @param dwdx Recurring terms in xdot, state derivative
          * @param t timepoint
-         * @param x Vector with the states
+         * @param x vector with the states
          * @param p parameter vector
          * @param k constants vector
          * @param h heavyside vector
          * @param w vector with helper variables
+         * @param tcl total abundances for conservations laws
          */
         virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x, const realtype *p,
-                           const realtype *k, const realtype *h, const realtype *w) {}
-        
+                           const realtype *k, const realtype *h, const realtype *w, const realtype *tcl) {}
+
         /** create my slice at timepoint
          * @param it timepoint index
          * @param edata pointer to experimental data instance
@@ -1622,42 +1762,28 @@ namespace amici {
          * @param edata pointer to experimental data instance
          */
         void getmz(const int nroots, const ExpData *edata);
-        
+
         /** create y slice at timepoint
          * @param it timepoint index
          * @param rdata pointer to return data instance
          * @return y y-slice from rdata instance
          */
         const realtype *gety(const int it, const ReturnData *rdata) const;
-        
-        /** create x slice at timepoint
-         * @param it timepoint index
-         * @param rdata pointer to return data instance
-         * @return x x-slice from rdata instance
-         */
-        const realtype *getx(const int it, const ReturnData *rdata) const;
-        
-        /** create sx slice at timepoint
-         * @param it timepoint index
-         * @param rdata pointer to return data instance
-         * @return sx sx-slice from rdata instance
-         */
-        const realtype *getsx(const int it, const ReturnData *rdata) const;
-        
+
         /** create z slice at event
          * @param nroots event occurence
          * @param rdata pointer to return data instance
          * @return z slice
          */
         const realtype *getz(const int nroots, const ReturnData *rdata) const;
-        
+
         /** create rz slice at event
          * @param nroots event occurence
          * @param rdata pointer to return data instance
          * @return rz slice
          */
         const realtype *getrz(const int nroots, const ReturnData *rdata) const;
-        
+
         /** create sz slice at event
          * @param nroots event occurence
          * @param ip sensitivity index
@@ -1665,7 +1791,7 @@ namespace amici {
          * @return z slice
          */
         const realtype *getsz(const int nroots, const int ip, const ReturnData *rdata) const;
-        
+
         /** create srz slice at event
          * @param nroots event occurence
          * @param ip sensitivity index
@@ -1673,7 +1799,7 @@ namespace amici {
          * @return rz slice
          */
         const realtype *getsrz(const int nroots, const int ip, const ReturnData *rdata) const;
-        
+
         /** function indicating whether reinitialization of states depending on
          fixed parameters is permissible
          * @return flag inidication whether reinitialization of states depending on
@@ -1686,7 +1812,7 @@ namespace amici {
 
         /** Sparse Jacobian (dimension: nnz)*/
         SlsMat J = nullptr;
-        
+
         /** current observable (dimension: nytrue) */
         std::vector<realtype> my;
         /** current event measurement (dimension: nztrue) */
@@ -1704,18 +1830,18 @@ namespace amici {
         std::vector<realtype> dJrzdz;
         /** event sigma derivative of event likelihood at final timepoint (dimension nJ x nztrue x nz, ordering = ?) */
         std::vector<realtype> dJrzdsigma;
-        /** state derivative of event output (dimension: nz * nx, ordering = ?) */
+        /** state derivative of event output (dimension: nz x nx_solver, ordering = ?) */
         std::vector<realtype> dzdx;
-        /** parameter derivative of event output (dimension: nz * nplist, ordering = ?) */
+        /** parameter derivative of event output (dimension: nz x nplist, ordering = ?) */
         std::vector<realtype> dzdp;
-        /** state derivative of event timepoint (dimension: nz * nx, ordering = ?) */
+        /** state derivative of event timepoint (dimension: nz x nx_solver, ordering = ?) */
         std::vector<realtype> drzdx;
-        /** parameter derivative of event timepoint (dimension: nz * nplist, ordering = ?) */
+        /** parameter derivative of event timepoint (dimension: nz x nplist, ordering = ?) */
         std::vector<realtype> drzdp;
-        /** parameter derivative of observable (dimension: nplist * ny, row-major) */
+        /** parameter derivative of observable (dimension: nplist x ny, row-major) */
         std::vector<realtype> dydp;
 
-        /** state derivative of observable (dimension: ny * nx, ordering = ?) */
+        /** state derivative of observable (dimension: ny x nx_solver, ordering = ?) */
         std::vector<realtype> dydx;
         /** tempory storage of w data across functions (dimension: nw) */
         std::vector<realtype> w;
@@ -1723,11 +1849,20 @@ namespace amici {
         std::vector<realtype> dwdx;
         /** tempory storage of sparse dwdp data across functions (dimension: ndwdp) */
         std::vector<realtype> dwdp;
-        /** tempory storage of M data across functions (dimension: nx) */
+        /** tempory storage of mass matrix data across functions (dimension: nx_solver) */
         std::vector<realtype> M;
         /** tempory storage of stau data across functions (dimension: nplist) */
         std::vector<realtype> stau;
-        
+
+        /** tempory storage of sx data for flattening
+         (dimension: nx_solver x nplist, ordering = row-major) */
+        std::vector<realtype> sx;
+
+        /** tempory storage x_rdata (dimension: nx_rdata) */
+        std::vector<realtype> x_rdata;
+        /** tempory storage sx_rdata slice (dimension: nx_rdata) */
+        std::vector<realtype> sx_rdata;
+
         /** flag indicating whether a certain heaviside function should be active or
          not (dimension: ne) */
         std::vector<realtype> h;
@@ -1736,29 +1871,37 @@ namespace amici {
         std::vector<realtype> unscaledParameters;
 
         /** orignal user-provided, possibly scaled parameter array (size np) */
-        std::vector<realtype>originalParameters;
+        std::vector<realtype> originalParameters;
 
         /** constants (dimension: nk) */
         std::vector<realtype> fixedParameters;
 
+        /** total abundances for conservation laws
+         (dimension: nx_rdata-nx_solver) */
+        std::vector<realtype> total_cl;
+
+        /** sensitivities of total abundances for conservation laws
+         (dimension: (nx_rdata-nx_solver) * np, ordering = row-major)*/
+        std::vector<realtype> stotal_cl;
+
         /** indexes of parameters wrt to which sensitivities are computed (dimension nplist) */
         std::vector<int> plist_;
 
-        /** state initialisation (size nx) */
+        /** state initialisation (size nx_solver) */
         std::vector<double> x0data;
 
-        /** sensitivity initialisation (size nx * nplist, ordering = ?) */
+        /** sensitivity initialisation (size nx_rdata * nplist, ordering = row-major) */
         std::vector<realtype> sx0data;
 
         /** timepoints (size nt) */
         std::vector<realtype> ts;
-        
+
         /** vector of bools indicating whether state variables are to be assumed to be positive */
         std::vector<bool> stateIsNonNegative;
-        
+
         /** boolean indicating whether any entry in stateIsNonNegative is `true` */
         bool anyStateNonNegative = false;
-        
+
         /** temporary storage of positified state variables according to stateIsNonNegative */
         AmiVector x_pos_tmp;
 
@@ -1770,16 +1913,16 @@ namespace amici {
 
         /** starting time */
         double tstart = 0.0;
-        
+
         /** flag indicating whether steadystate sensivities are to be computed
          via FSA when steadyStateSimulation is used */
         SteadyStateSensitivityMode steadyStateSensitivityMode = SteadyStateSensitivityMode::newtonOnly;
-        
+
         /** flag indicating whether reinitialization of states depending on
          fixed parameters is activated
          */
         bool reinitializeFixedParameterInitialStates = false;
-        
+
         /**
          * @brief computes nonnegative state vector according to stateIsNonNegative
          * if anyStateNonNegative is set to false, i.e., all entries in
@@ -1793,7 +1936,7 @@ namespace amici {
     };
 
     bool operator ==(const Model &a, const Model &b);
-    
+
 } // namespace amici
 
 #endif // AMICI_MODEL_H

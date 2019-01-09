@@ -20,6 +20,14 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__), 'cpputest','expectedResults.h5')
 
+    def setUp(self):
+        self.default_path = copy.copy(sys.path)
+        self.resetdir = os.getcwd()
+
+    def tearDown(self):
+        os.chdir(self.resetdir)
+        sys.path = self.default_path
+
     def runTest(self):
         '''
         test runner routine that loads data expectedResults.h5 hdf file and runs individual models/settings

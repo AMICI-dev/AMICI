@@ -65,18 +65,22 @@ public:
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      */
-    Model_Test(const int nx, const int nxtrue,
+    Model_Test(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
+               const int nxtrue_solver,
                const int ny, const int nytrue, const int nz, const int nztrue,
                const int ne, const int nJ, const int nw, const int ndwdx,
                const int ndwdp, const int nnz, const int ubw, const int lbw,
                const SecondOrderMode o2mode, const std::vector<realtype> p,
                const std::vector<realtype> k, const std::vector<int> plist,
                const std::vector<realtype> idlist, const std::vector<int> z2event)
-        : Model(nx,nxtrue,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event) {}
+        : Model(nx_rdata,nxtrue_rdata,nx_solver,nxtrue_solver,ny,nytrue,nz,
+        nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,
+        z2event) {}
 
     /** default constructor */
     Model_Test()
-    : Model(0,0,0,0,0,0,0,0,0,0,0,0,0,0,SecondOrderMode::none,std::vector<realtype>(),std::vector<realtype>(),std::vector<int>(),std::vector<realtype>(),std::vector<int>()) {}
+    : Model(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,SecondOrderMode::none,
+    std::vector<realtype>(),std::vector<realtype>(),std::vector<int>(),std::vector<realtype>(),std::vector<int>()) {}
 
     virtual Model* clone() const override { return new Model_Test(*this); }
 
@@ -118,7 +122,7 @@ public:
     
     virtual std::vector<std::string> getStateNames() const override
     {
-        return getVariableNames("x", nx);
+        return getVariableNames("x", nx_rdata);
     }
     
     virtual std::vector<std::string> getFixedParameterNames() const override
@@ -138,7 +142,7 @@ public:
     
     virtual std::vector<std::string> getStateIds() const override
     {
-        return getVariableNames("x", nx);
+        return getVariableNames("x", nx_rdata);
     }
     
     virtual std::vector<std::string> getFixedParameterIds() const override

@@ -14,15 +14,15 @@ ReturnData::ReturnData()
     /**
      * @brief default constructor
      */
-    : np(0), nk(0), nx(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0), ne(0),
+    : np(0), nk(0), nx(0), nx_solver(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0), ne(0),
       nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0),
     pscale(std::vector<ParameterScaling>(0, ParameterScaling::none)), o2mode(SecondOrderMode::none),
       sensi(SensitivityOrder::none), sensi_meth(SensitivityMethod::none) {}
 
 ReturnData::ReturnData(Solver const& solver, const Model *model)
     : ReturnData(model->getTimepoints(), model->np(), model->nk(),
-                 model->nx, model->nxtrue, model->ny, model->nytrue,
-                 model->nz, model->nztrue, model->ne, model->nJ,
+                 model->nx_rdata, model->nx_solver, model->nxtrue_rdata,
+                 model->ny, model->nytrue, model->nz, model->nztrue, model->ne, model->nJ,
                  model->nplist(), model->nMaxEvent(), model->nt(),
                  solver.getNewtonMaxSteps(), model->getParameterScale(),
                  model->o2mode, solver.getSensitivityOrder(),
@@ -39,11 +39,11 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
 
 ReturnData::ReturnData(
         std::vector<realtype> ts,
-        int np, int nk, int nx, int nxtrue, int ny, int nytrue,
+        int np, int nk, int nx, int nx_solver, int nxtrue, int ny, int nytrue,
         int nz, int nztrue, int ne, int nJ, int nplist, int nmaxevent,
         int nt, int newton_maxsteps, std::vector<ParameterScaling> pscale,
         SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth)
-    : ts(std::move(ts)), np(np), nk(nk), nx(nx), nxtrue(nxtrue),
+    : ts(std::move(ts)), np(np), nk(nk), nx(nx), nx_solver(nx_solver), nxtrue(nxtrue),
       ny(ny), nytrue(nytrue), nz(nz),
       nztrue(nztrue), ne(ne), nJ(nJ),
       nplist(nplist), nmaxevent(nmaxevent), nt(nt),
@@ -51,9 +51,9 @@ ReturnData::ReturnData(
       o2mode(o2mode), sensi(sensi),
       sensi_meth(sensi_meth)
     {
-    xdot.resize(nx, getNaN());
+    xdot.resize(nx_solver, getNaN());
 
-    J.resize(nx * nx, getNaN());
+    J.resize(nx_solver * nx_solver, getNaN());
 
     // initialize with 0.0, so we only need to write non-zero values
     z.resize(nmaxevent * nz, 0.0);
