@@ -66,11 +66,9 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       dx_old(model->nx_solver),
       xdot(model->nx_solver),
       xdot_old(model->nx_solver),
-      total_cl(model->nx_rdata-model->nx_solver),
       sx(model->nx_solver,model->nplist()),
       sx_rdata(model->nx_rdata,model->nplist()),
-      sdx(model->nx_solver,model->nplist()),
-      stotal_cl(model->nx_rdata-model->nx_solver,model->nplist())
+      sdx(model->nx_solver,model->nplist())
 {
 }
 

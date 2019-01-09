@@ -233,8 +233,6 @@ class ForwardProblem {
     AmiVector xdot;
     /** old time derivative state vector (dimension: nx_solver) */
     AmiVector xdot_old;
-    /** total abundances for conservation laws **/
-    AmiVector total_cl;
     
     
 
@@ -244,8 +242,6 @@ class ForwardProblem {
     AmiVectorArray sx_rdata;
     /** differential sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sdx;
-    /** sensitivities of total abundances for conservation laws **/
-    AmiVectorArray stotal_cl;
 
     /** storage for last found root */
     realtype tlastroot = 0.0;
