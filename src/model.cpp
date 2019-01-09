@@ -220,24 +220,50 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
     }
 }
 
-void Model::initialize(AmiVector *x, AmiVector *dx) {
-
+void Model::initialize(AmiVector *x, AmiVector *dx,
+                       AmiVectorArray *sx, AmiVectorArray *sdx,
+                       bool computeSensitivities) {
     initializeStates(x);
+    if(computeSensitivities)
+        initializeStateSensitivities(sx, x);
 
     fdx0(x, dx);
+    if(computeSensitivities)
+        fsdx0();
 
     if(ne)
         initHeaviside(x,dx);
 
 }
 
-void Model::initializeStates(AmiVector *x) {
 
+void Model::initializeStates(AmiVector *x) {
     if (x0data.empty()) {
         fx0(x);
     } else {
+        std::vector<realtype> x0_solver(nx_solver, 0.0);
+        ftotal_cl(total_cl.data(), x0data.data());
+        fx_solver(x0_solver.data(), x0data.data());
         for (int ix = 0; ix < nx_solver; ix++) {
-            (*x)[ix] = (realtype) x0data.at(ix);
+            (*x)[ix] = (realtype) x0_solver.at(ix);
+        }
+    }
+}
+
+void Model::initializeStateSensitivities(AmiVectorArray *sx, AmiVector *x) {
+    if (sx0data.empty()) {
+        fsx0(sx, x);
+    } else {
+        realtype *stcl = nullptr;
+        std::vector<realtype> sx0_solver_slice(nx_solver, 0.0);
+        for (int ip = 0; ip < nplist(); ip++) {
+            if (ncl() > 0)
+                stcl = &stotal_cl.at(plist(ip) * ncl());
+            fstotal_cl(stcl, &sx0data.at(ip*nx_rdata), plist(ip));
+            fsx_solver(sx0_solver_slice.data(), &sx0data.at(ip*nx_rdata));
+            for (int ix = 0; ix < nx_solver; ix++) {
+                sx->at(ix,ip) = (realtype) sx0_solver_slice.at(ix);
+            }
         }
     }
 }
@@ -294,6 +320,7 @@ const std::vector<ParameterScaling> &Model::getParameterScale() const {
 void Model::setParameterScale(ParameterScaling pscale) {
     this->pscale.assign(this->pscale.size(), pscale);
     scaleParameters(unscaledParameters, this->pscale, originalParameters);
+    sx0data.clear();
 }
 
 void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
@@ -301,6 +328,7 @@ void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
         throw AmiException("Dimension mismatch. Size of parameter scaling does not match number of model parameters.");
     this->pscale = pscale;
     scaleParameters(unscaledParameters, this->pscale, originalParameters);
+    sx0data.clear();
 }
 
 std::vector<realtype> const& Model::getParameters() const {
@@ -391,7 +419,7 @@ realtype Model::getParameterByName(std::string const& par_name) const {
 }
 
 void Model::setParameters(const std::vector<realtype> &p) {
-    if(p.size() != (unsigned) this->originalParameters.size())
+    if(p.size() != (unsigned) np())
         throw AmiException("Dimension mismatch. Size of parameters does not match number of model parameters.");
     this->originalParameters = p;
     this->unscaledParameters.resize(originalParameters.size());
@@ -483,7 +511,7 @@ realtype Model::getFixedParameterByName(std::string const& par_name) const {
 }
 
 void Model::setFixedParameters(const std::vector<realtype> &k) {
-    if(k.size() != (unsigned) this->fixedParameters.size())
+    if(k.size() != (unsigned) nk())
         throw AmiException("Dimension mismatch. Size of fixedParameters does not match number of fixed model parameters.");
     this->fixedParameters = k;
 }
@@ -587,17 +615,16 @@ std::vector<realtype> const& Model::getInitialStates() const {
 }
 
 void Model::setInitialStates(const std::vector<realtype> &x0) {
-    if(x0.size() != (unsigned) nx_rdata && x0.size() != 0)
-        throw AmiException("Dimension mismatch. Size of x0 does not match number of model states.");
-    
-    std::vector<realtype> x0_solver(nx_solver, 0.0);
-    ftotal_cl(this->total_cl, x0.data());
-    fx_solver(x0_solver.data(), x0.data());
-    
-    if (x0.size() == 0)
-        this->x0data.clear();
-    else
-        this->x0data = x0_solver.data();
+    if (x0.size() != (unsigned)nx_rdata && x0.size() != 0)
+        throw AmiException("Dimension mismatch. Size of x0 does not match "
+                           "number of model states.");
+
+    if (x0.size() == 0) {
+        x0data.clear();
+        return;
+    }
+
+    x0data = x0;
 }
 
 const std::vector<realtype> &Model::getInitialStateSensitivities() const {
@@ -605,43 +632,45 @@ const std::vector<realtype> &Model::getInitialStateSensitivities() const {
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
-    if(sx0.size() != (unsigned) nx_rdata * nplist() && sx0.size() != 0)
-        throw AmiException("Dimension mismatch. Size of sx0 does not match number of model states * number of parameter selected for sensitivities.");
-    
-    realtype *stcl = nullptr;
     realtype chainrulefactor = 1.0;
-    std::vector<realtype> slice_sx0_rdata(nx_rdata, 0.0);
-    std::vector<realtype> sx0_solver(nx_solver * nplist(), 0.0);
-    for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
-        if (ncl() > 0)
-            stcl = &stotal_cl.at(ip * ncl());
-        
+    std::vector<realtype> sx0_rdata(nx_rdata * nplist(), 0.0);
+    for (int ip = 0; ip < nplist(); ip++) {
+
         // revert chainrule
-        switch (pscale.at(ip)) {
+        switch (pscale.at(plist(ip))) {
             case ParameterScaling::log10:
-                chainrulefactor = unscaledParameters.at(ip) * log(10);
+                chainrulefactor = unscaledParameters.at(plist(ip))
+                * log(10);
                 break;
             case ParameterScaling::ln:
-                chainrulefactor = unscaledParameters.at(ip);
+                chainrulefactor = unscaledParameters.at(plist(ip));
                 break;
             case ParameterScaling::none:
                 chainrulefactor = 1.0;
                 break;
         }
-        
-        for(int ix=0; ix < nx_rdata; ++ix)
-            slice_sx0_rdata.at(ix) = &sx0.at(ip*nx_rdata + ix)/chainrulefactor;
-        
-        // update stotal_cl
-        fstotal_cl(stcl, slice_sx0_rdata.data(), plist_.at(ip));
-        
-        // convert to solver dimentsions
-        fsx_solver(&sx0_solver.at(ip*nx_solver), slice_sx0_rdata.data());
-    
-    if (sx0.size() == 0)
-        this->sx0data.clear();
-    else
-        this->sx0data = sx0_solver;
+
+        for(int ix=0; ix < nx_rdata; ++ix) {
+            sx0_rdata.at(ip*nx_rdata + ix) =
+            sx0.at(ip*nx_rdata + ix) / chainrulefactor;
+        }
+    }
+    setUnscaledInitialStateSensitivities(sx0_rdata);
+}
+
+void Model::setUnscaledInitialStateSensitivities(
+    const std::vector<realtype> &sx0) {
+    if (sx0.size() != (unsigned)nx_rdata * nplist() && sx0.size() != 0)
+        throw AmiException("Dimension mismatch. Size of sx0 does not match "
+                           "number of model states * number of parameter "
+                           "selected for sensitivities.");
+
+    if (sx0.size() == 0) {
+        sx0data.clear();
+        return;
+    }
+
+    sx0data = sx0;
 }
 
 double Model::t0() const{
@@ -732,7 +761,7 @@ Model::Model(const int nx_rdata,
       originalParameters(p),
       fixedParameters(std::move(k)),
       total_cl(nx_rdata-nx_solver),
-      stotal_cl((nx_rdata-nx_solver) * plist.size()),
+      stotal_cl((nx_rdata-nx_solver) * np()),
       plist_(plist),
       stateIsNonNegative(nx_solver, false),
       x_pos_tmp(nx_solver),
@@ -828,7 +857,7 @@ void Model::initializeVectors()
     dydp.resize(ny * nplist(), 0.0);
     stau.resize(nplist(), 0.0);
     sx.resize(nx_solver * nplist(), 0.0);
-    stotal_cl.resize(ncl() * nplist(), 0.0);
+    sx0data.clear();
 }
 
 void Model::fx_rdata(AmiVector *x_rdata, const AmiVector *x) {
@@ -836,9 +865,9 @@ void Model::fx_rdata(AmiVector *x_rdata, const AmiVector *x) {
 }
 
 void Model::fx0(AmiVector *x) {
-    x->reset();
-    /* this function computes initial total abundances for conservation laws */
-    fx_rdata(x_rdata.data(), x->data(), total_cl.data());
+    std::fill(x_rdata.begin(), x_rdata.end(), 0.0);
+    std::fill(total_cl.begin(), total_cl.end(), 0.0);
+    /* this function  also computes initial total abundances */
     fx0(x_rdata.data(), tstart, unscaledParameters.data(),
         fixedParameters.data());
     fx_solver(x->data(), x_rdata.data());
@@ -864,40 +893,42 @@ void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
 
 void Model::fsx_rdata(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
     realtype *stcl = nullptr;
-    for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+    for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
-            stcl = &stotal_cl.at(ip * ncl());
+            stcl = &stotal_cl.at(plist(ip) * ncl());
         fsx_rdata(sx_full->data(ip), sx->data(ip), stcl, ip);
     }
 }
 
 void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
-    sx->reset();
+    std::fill(stotal_cl.begin(), stotal_cl.end(), 0.0);
+    /* this function  also computes initial total abundance sensitivities */
     realtype *stcl = nullptr;
-    for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+    for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
-            stcl = &stotal_cl.at(ip * ncl());
-        fsx_rdata(sx_rdata.data(), sx->data(ip), stcl, plist_.at(ip));
+            stcl = &stotal_cl.at(plist(ip) * ncl());
+        std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
         fsx0(sx_rdata.data(), tstart, x->data(), unscaledParameters.data(),
-             fixedParameters.data(), plist_.at(ip));
+             fixedParameters.data(), plist(ip));
         fsx_solver(sx->data(ip), sx_rdata.data());
-        fstotal_cl(stcl, sx_rdata.data(), plist_.at(ip));
+        fstotal_cl(stcl, sx_rdata.data(), plist(ip));
     }
 }
 
 void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
+    std::fill(stotal_cl.begin(), stotal_cl.end(), 0.0);
     realtype *stcl = nullptr;
-    for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+    for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
-            stcl = &stotal_cl.at(ip * ncl());
-        fsx_rdata(sx_rdata.data(), sx->data(ip), stcl, plist_.at(ip));
+            stcl = &stotal_cl.at(plist(ip) * ncl());
+        fsx_rdata(sx_rdata.data(), sx->data(ip), stcl, plist(ip));
         fsx0_fixedParameters(sx_rdata.data(), tstart, x->data(),
                              unscaledParameters.data(), fixedParameters.data(),
-                             plist_.at(ip));
+                             plist(ip));
         fsx_solver(sx->data(ip), sx_rdata.data());
-        fstotal_cl(stcl, sx_rdata.data(), plist_.at(ip));
+        fstotal_cl(stcl, sx_rdata.data(), plist(ip));
     }
 }
 
@@ -905,8 +936,8 @@ void Model::fsdx0() {}
 
 void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx) {
     std::fill(stau.begin(),stau.end(),0.0);
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
-        fstau(&stau.at(ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip),ie);
+    for(int ip = 0; ip < nplist(); ip++){
+        fstau(&stau.at(ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist(ip),ie);
     }
 }
 
@@ -924,7 +955,7 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
     std::fill(dydp.begin(),dydp.end(),0.0);
     fw(t,x->data());
     fdwdp(t,x->data());
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
+    for(int ip = 0; ip < nplist(); ip++){
         // get dydp slice (ny) for current time and parameter
         fdydp(&dydp.at(ip*ny),
               t,
@@ -932,7 +963,7 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
               unscaledParameters.data(),
               fixedParameters.data(),
               h.data(),
-              plist_.at(ip),
+              plist(ip),
               w.data(),
               dwdp.data());
     }
@@ -953,8 +984,8 @@ void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector
 }
 
 void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
-    for(int ip = 0; (unsigned)ip < plist_.size();  ip++ ){
-        fsz(&rdata->sz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip));
+    for(int ip = 0; ip < nplist();  ip++ ){
+        fsz(&rdata->sz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist(ip));
     }
 }
 
@@ -963,15 +994,15 @@ void Model::frz(const int nroots, const int ie, const realtype t, const AmiVecto
 }
 
 void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
-    for(int ip = 0; (unsigned)ip < plist_.size();  ip++ ){
-        fsrz(&rdata->srz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist_.at(ip));
+    for(int ip = 0; ip < nplist();  ip++ ){
+        fsrz(&rdata->srz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist(ip));
     }
 }
 
 void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
     std::fill(dzdp.begin(),dzdp.end(),0.0);
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
-        fdzdp(dzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist_.at(ip));
+    for(int ip = 0; ip < nplist(); ip++){
+        fdzdp(dzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist(ip));
     }
 }
 
@@ -982,8 +1013,8 @@ void Model::fdzdx(const realtype t, const int ie, const AmiVector *x) {
 
 void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
     std::fill(drzdp.begin(),drzdp.end(),0.0);
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++){
-        fdrzdp(drzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist_.at(ip));
+    for(int ip = 0; ip < nplist(); ip++){
+        fdrzdp(drzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist(ip));
     }
 }
 
@@ -1003,9 +1034,9 @@ void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const A
                      const AmiVector *xdot, const AmiVector *xdot_old) {
     fw(t,x->data());
     std::fill(deltasx.begin(),deltasx.end(),0.0);
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+    for(int ip = 0; ip < nplist(); ip++)
         fdeltasx(&deltasx.at(nx_solver*ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),
-                 plist_.at(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
+                 plist(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
 }
 
 void Model::fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
@@ -1017,9 +1048,9 @@ void Model::fdeltaxB(const int ie, const realtype t, const AmiVector *x, const A
 void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                      const AmiVector *xdot, const AmiVector *xdot_old) {
     std::fill(deltaqB.begin(),deltaqB.end(),0.0);
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+    for(int ip = 0; ip < nplist(); ip++)
         fdeltaqB(deltaqB.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
-                 plist_.at(ip),ie,xdot->data(),xdot_old->data(),xB->data());
+                 plist(ip),ie,xdot->data(),xdot_old->data(),xB->data());
 }
 
 void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
@@ -1047,13 +1078,13 @@ void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
 
     std::fill(dsigmaydp.begin(), dsigmaydp.end(), 0.0);
 
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+    for(int ip = 0; ip < nplist(); ip++)
         // get dsigmaydp slice (ny) for current timepoint and parameter
         fdsigmaydp(&dsigmaydp.at(ip*ny),
                     rdata->ts.at(it),
                     unscaledParameters.data(),
                     fixedParameters.data(),
-                    plist_.at(ip));
+                    plist(ip));
 
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmaydp to zero
     if(edata){
@@ -1090,20 +1121,20 @@ void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnDat
 
 void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, ReturnData *rdata, const ExpData *edata) {
     std::fill(dsigmazdp.begin(),dsigmazdp.end(),0.0);
-    for(int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+    for(int ip = 0; ip < nplist(); ip++) {
         // get dsigmazdp slice (nz) for current event and parameter
         fdsigmazdp(&dsigmazdp.at(ip*nz),
                    t,
                    unscaledParameters.data(),
                    fixedParameters.data(),
-                   plist_.at(ip));
+                   plist(ip));
     }
 
     // sigmas in edata override model-sigma -> for those sigmas, set dsigmazdp to zero
     if(edata) {
         for (int iz = 0; iz < nztrue; iz++) {
             if (z2event.at(iz) - 1 == ie && !edata->isSetObservedEventsStdDev(nroots[ie],iz)) {
-                for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
+                for(int ip = 0; ip < nplist(); ip++)
                     dsigmazdp.at(iz + nz * ip) = 0;
             }
         }

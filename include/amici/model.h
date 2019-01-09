@@ -551,13 +551,26 @@ namespace amici {
         /** initialization of model properties
          * @param x pointer to state variables
          * @param dx pointer to time derivative of states (DAE only)
+         * @param sx pointer to state variable sensititivies
+         * @param sdx pointer to time derivative of state sensitivities
+         * (DAE only)
+         * @param computeSensitivities flag indicating whether sensitivities
+         * are to be computed
          */
-        void initialize(AmiVector *x, AmiVector *dx);
+        void initialize(AmiVector *x, AmiVector *dx,
+                        AmiVectorArray *sx, AmiVectorArray *sdx,
+                        bool computeSensitivities);
 
         /** initialization of initial states
          * @param x pointer to state variables
          */
         void initializeStates(AmiVector *x);
+        
+        /** initialization of initial state sensitivities
+         * @param sx pointer to state variable sensititivies
+         * @param x pointer to state variables
+         */
+        void initializeStateSensitivities(AmiVectorArray *sx, AmiVector *x);
 
         /**
          * initHeaviside initialises the heaviside variables h at the intial time t0
@@ -622,13 +635,15 @@ namespace amici {
         std::vector<ParameterScaling> const& getParameterScale() const;
 
         /**
-         * @brief Set ParameterScale for each parameter
+         * @brief Set ParameterScale for each parameter, resets initial state
+         * sensitivities
          * @param pscale scalar parameter scale for all parameters
          */
         void setParameterScale(ParameterScaling pscale);
 
         /**
-         * @brief Set ParameterScale for each parameter
+         * @brief Set ParameterScale for each parameter, resets initial state
+         * sensitivities
          * @param pscale vector of parameter scales
          */
         void setParameterScale(const std::vector<ParameterScaling>& pscale);
@@ -748,7 +763,8 @@ namespace amici {
         std::vector<int> const& getParameterList() const;
 
         /**
-         * @brief Set the list of parameters for which sensitivities are computed
+         * @brief Set the list of parameters for which sensitivities are
+         * computed, resets initial state sensitivities
          * @param plist list of parameter indices
          */
         void setParameterList(std::vector<int> const& plist);
@@ -773,9 +789,18 @@ namespace amici {
 
         /**
          * @brief Set the initial state sensitivities
-         * @param sx0 vector of initial state sensitivities
+         * @param sx0 vector of initial state sensitivities with chainrule
+         * applied. This could be a slice of ReturnData::sx or ReturnData::sx0
          */
         void setInitialStateSensitivities(std::vector<realtype> const& sx0);
+        
+        /**
+         * @brief Set the initial state sensitivities
+         * @param sx0 vector of initial state sensitivities without chainrule
+         * applied. This could be the readin from a model.sx0data saved to hdf5.
+         */
+        void setUnscaledInitialStateSensitivities(
+             std::vector<realtype> const& sx0);
 
         /**
          * @brief get simulation start time
@@ -797,8 +822,8 @@ namespace amici {
         int plist(int pos) const;
 
         /**
-         * @brief Require computation of sensitivities for all parameters p [0..np[
-         * in natural order.
+         * @brief Require computation of sensitivities for all parameters p
+         * [0..np[ in natural order, resets initial state sensitivities
          */
         void requireSensitivitiesForAllParameters();
 
@@ -1829,7 +1854,8 @@ namespace amici {
         /** tempory storage of stau data across functions (dimension: nplist) */
         std::vector<realtype> stau;
 
-        /** tempory storage of sx data for flattening (dimension: nx_solver x nplist, ordering = ?) */
+        /** tempory storage of sx data for flattening
+         (dimension: nx_solver x nplist, ordering = row-major) */
         std::vector<realtype> sx;
 
         /** tempory storage x_rdata (dimension: nx_rdata) */
@@ -1850,10 +1876,12 @@ namespace amici {
         /** constants (dimension: nk) */
         std::vector<realtype> fixedParameters;
 
-        /** total abundances for conservation laws (dimension: nx_rdata-nx_solver)*/
+        /** total abundances for conservation laws
+         (dimension: nx_rdata-nx_solver) */
         std::vector<realtype> total_cl;
 
-        /** sensitivities of total abundances for conservation laws (dimension: nx_rdata-nx_solver x nplist)*/
+        /** sensitivities of total abundances for conservation laws
+         (dimension: (nx_rdata-nx_solver) * np, ordering = row-major)*/
         std::vector<realtype> stotal_cl;
 
         /** indexes of parameters wrt to which sensitivities are computed (dimension nplist) */
@@ -1862,7 +1890,7 @@ namespace amici {
         /** state initialisation (size nx_solver) */
         std::vector<double> x0data;
 
-        /** sensitivity initialisation (size nx_solver * nplist, ordering = ?) */
+        /** sensitivity initialisation (size nx_rdata * nplist, ordering = row-major) */
         std::vector<realtype> sx0data;
 
         /** timepoints (size nt) */

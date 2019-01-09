@@ -591,7 +591,7 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
             if (length0 != (unsigned) model.nplist() && length1 != (unsigned) model.nx_rdata)
                 throw(AmiException("Dimension mismatch when reading sx0. Expected %dx%d, got %llu, %llu.",
                                    model.nx_rdata, model.nplist(), length0, length1));
-            model.setInitialStateSensitivities(sx0);
+            model.setUnscaledInitialStateSensitivities(sx0);
         }
     }
 

@@ -26,7 +26,10 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
  */
 void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArray *sdx, Model *model) {
     
-    model->initialize(x, dx);
+    
+    bool computeSensitivities = sensi >= SensitivityOrder::first
+                              && model->nx_solver > 0;
+    model->initialize(x, dx, sx, sdx, computeSensitivities);
 
     /* Create solver memory object */
     allocateSolver();
@@ -51,23 +54,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     
     initializeLinearSolver(model);
 
-    if (sensi >= SensitivityOrder::first && model->nx_solver > 0) {
-        /* initialise sensitivities, this can either be user provided or
-         * come from the model definition */
-        auto sx0 = model->getInitialStateSensitivities();
-        if (sx0.empty()) {
-            model->fsx0(sx, x);
-        } else {
-            for (int ip = 0; ip < model->nplist(); ip++) {
-                for (int ix = 0; ix < model->nx_solver; ix++) {
-                    sx->at(ix,ip) =
-                            (realtype) sx0.at(ix + model->nx_solver * ip);
-                }
-            }
-        }
-
-        model->fsdx0();
-
+    if (computeSensitivities) {
         auto plist = model->getParameterList();
 
         if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {
