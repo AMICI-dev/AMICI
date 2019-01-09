@@ -10,11 +10,11 @@ import importlib
 import copy
 import itertools
 from testPYSB import get_data
-from testModels import checkDerivatives
+
 
 class TestAmiciPreequilibration(unittest.TestCase):
     '''
-    TestCase class for testing SBML import and simulation from AMICI python interface
+    TestCase class for testing preequilibration
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
@@ -35,6 +35,7 @@ class TestAmiciPreequilibration(unittest.TestCase):
             model_module = sys.modules['createModelPresimulation']
         else:
             model_module = importlib.import_module('createModelPresimulation')
+
         model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
         amici.pysb2amici(model,

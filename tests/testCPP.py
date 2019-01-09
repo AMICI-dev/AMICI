@@ -11,7 +11,7 @@ import copy
 
 class TestAmiciCPP(unittest.TestCase):
     '''
-    TestCase class for testing SBML import and simulation from AMICI python interface
+    TestCase class for testing cpp API through swig
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
