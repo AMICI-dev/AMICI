@@ -876,7 +876,6 @@ void Model::fx_rdata(AmiVector *x_rdata, const AmiVector *x) {
 
 void Model::fx0(AmiVector *x) {
     std::fill(x_rdata.begin(), x_rdata.end(), 0.0);
-    std::fill(total_cl.begin(), total_cl.end(), 0.0);
     /* this function  also computes initial total abundances */
     fx0(x_rdata.data(), tstart, unscaledParameters.data(),
         fixedParameters.data());
@@ -911,7 +910,6 @@ void Model::fsx_rdata(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
 }
 
 void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
-    std::fill(stotal_cl.begin(), stotal_cl.end(), 0.0);
     /* this function  also computes initial total abundance sensitivities */
     realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
@@ -928,7 +926,6 @@ void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
 void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
-    std::fill(stotal_cl.begin(), stotal_cl.end(), 0.0);
     realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
