@@ -632,6 +632,16 @@ const std::vector<realtype> &Model::getInitialStateSensitivities() const {
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
+    if (sx0.size() != (unsigned)nx_rdata * nplist() && sx0.size() != 0)
+        throw AmiException("Dimension mismatch. Size of sx0 does not match "
+                           "number of model states * number of parameter "
+                           "selected for sensitivities.");
+    
+    if (sx0.size() == 0) {
+        sx0data.clear();
+        return;
+    }
+    
     realtype chainrulefactor = 1.0;
     std::vector<realtype> sx0_rdata(nx_rdata * nplist(), 0.0);
     for (int ip = 0; ip < nplist(); ip++) {
