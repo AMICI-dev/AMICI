@@ -43,19 +43,33 @@ class Solver {
      * @brief Solver copy constructor
      * @param other
      */
-    Solver(const Solver &other)
-        : Solver(), sensi(other.sensi), atol(other.atol), rtol(other.rtol),
-          atol_sensi(other.atol_sensi), rtol_sensi(other.rtol_sensi),
-          quad_atol(other.quad_atol), quad_rtol(other.quad_rtol),
-          ss_atol(other.ss_atol),
-          ss_rtol(other.ss_rtol) ss_atol_sensi(other.ss_atol_sensi),
-          ss_rtol_sensi(other.ss_rtol_sensi), maxsteps(other.maxsteps),
-          maxstepsB(other.maxstepsB), newton_maxsteps(other.newton_maxsteps),
-          newton_maxlinsteps(other.newton_maxlinsteps),
-          newton_preeq(other.newton_preeq), ism(other.ism),
-          sensi_meth(other.sensi_meth), linsol(other.linsol),
-          interpType(other.interpType), lmm(other.lmm), iter(other.iter),
-          stldet(other.stldet), ordering(other.ordering) {};
+    Solver(const Solver &other) : Solver()
+    {
+        sensi = other.sensi;
+        atol = other.atol;
+        rtol = other.rtol;
+        atol_sensi = other.atol_sensi;
+        rtol_sensi = other.rtol_sensi;
+        quad_atol = other.quad_atol;
+        quad_rtol = other.quad_rtol;
+        ss_atol = other.ss_atol;
+        ss_rtol = other.ss_rtol;
+        ss_atol_sensi = other.ss_atol_sensi;
+        ss_rtol_sensi = other.ss_rtol_sensi;
+        maxsteps = other.maxsteps;
+        maxstepsB = other.maxstepsB;
+        newton_maxsteps = other.newton_maxsteps;
+        newton_maxlinsteps = other.newton_maxlinsteps;
+        newton_preeq = other.newton_preeq;
+        ism = other.ism;
+        sensi_meth = other.sensi_meth;
+        linsol = other.linsol;
+        interpType = other.interpType;
+        lmm = other.lmm;
+        iter = other.iter;
+        stldet = other.stldet;
+        ordering = other.ordering;
+    }
 
     virtual ~Solver() = default;
 
