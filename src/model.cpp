@@ -592,7 +592,7 @@ void Model::setStateIsNonNegative(std::vector<bool> const& nonNegative) {
     }
     stateIsNonNegative=nonNegative;
     anyStateNonNegative=std::any_of(stateIsNonNegative.begin(),
-                                    stateIsNonNegative.end()
+                                    stateIsNonNegative.end(),
                                     [](bool x) { return x; });
 }
 
@@ -605,8 +605,9 @@ const std::vector<int> &Model::getParameterList() const {
 }
 
 void Model::setParameterList(const std::vector<int> &plist) {
+    int np = this->np(); // cannot capture 'this' in lambda expression
     if(std::any_of(plist.begin(), plist.end(),
-                   [](int idx){return idx < 0 || idx >= np();})) {
+                   [&np](int idx){return idx < 0 || idx >= np;})) {
         throw AmiException("Indices in plist must be in [0..np]");
     }
     this->plist_ = plist;

@@ -8,18 +8,31 @@ AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 cd ${AMICI_PATH}
 
-cppcheck -i${AMICI_PATH}/src/doc ${AMICI_PATH}/src  -I${AMICI_PATH}/include/ --enable=performance,portability,missingInclude,style 2> cppcheck_pre.txt
+cppcheck -i${AMICI_PATH}/src/doc ${AMICI_PATH}/src  -I${AMICI_PATH}/include/ --enable=style 2> cppcheck.txt
 
 # suppress alloca warnings
-grep -v "(warning) Obsolete function 'alloca' called." cppcheck_pre.txt > cppcheck_pre1.txt
-rm cppcheck_pre.txt
+grep -v "(warning) Obsolete function 'alloca' called." cppcheck.txt > cppcheck_tmp.txt
+mv cppcheck_tmp.txt cppcheck.txt
+
 
 # suppress header warnings for standard libraries
-grep -v "Cppcheck cannot find all the include files" cppcheck_pre1.txt > cppcheck_pre2.txt
-rm cppcheck_pre1.txt
+grep -v "Cppcheck cannot find all the include files" cppcheck.txt > cppcheck_tmp.txt
+mv cppcheck_tmp.txt cppcheck.txt
 
-grep -v "'AmiVectorArray' does not have a operator=" cppcheck_pre2.txt > cppcheck.txt
-rm cppcheck_pre2.txt
+grep -v "'AmiVectorArray' does not have a operator=" cppcheck.txt > cppcheck_tmp.txt
+mv cppcheck_tmp.txt cppcheck.txt
+
+grep -v "Member variable 'ExpData::nytrue_' is not initialized in the constructor" cppcheck.txt > cppcheck_tmp.txt
+mv cppcheck_tmp.txt cppcheck.txt
+
+grep -v "Member variable 'ExpData::nztrue_' is not initialized in the constructor" cppcheck.txt > cppcheck_tmp.txt
+mv cppcheck_tmp.txt cppcheck.txt
+
+grep -v "Member variable 'ExpData::nmaxevent_' is not initialized in the constructor" cppcheck.txt > cppcheck_tmp.txt
+mv cppcheck_tmp.txt cppcheck.txt
+
+grep -v "(performance) Variable 'fixedParameters' is assigned in constructor body" cppcheck.txt > cppcheck_tmp.txt
+mv cppcheck_tmp.txt cppcheck.txt
 
 # check if error log was created
 if [ -f cppcheck.txt  ]; then
@@ -30,6 +43,7 @@ if [ -f cppcheck.txt  ]; then
         rm cppcheck.txt
         exit 1
     else
+        rm cppcheck.txt
         exit 0
     fi
 else

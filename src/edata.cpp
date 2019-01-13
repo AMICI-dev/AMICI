@@ -41,12 +41,13 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
 
 ExpData::ExpData(Model const& model)
     : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(),
-              model.getTimepoints()),
-    fixedParameters(std::move(model.getFixedParameters())) {}
+              model.getTimepoints())
+{
+    fixedParameters = std::move(model.getFixedParameters());
+}
     
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
-    : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z)),
-    nytrue_(rdata.nytrue), nztrue_(rdata.nztrue), nmaxevent_(rdata.nmaxevent) {}
+    : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z)) {}
     
 ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
                  std::vector<realtype> sigma_z)

@@ -42,7 +42,7 @@ class NewtonSolver {
      * (1 or 2)
      * @param nnewt integer number of current Newton step
      */
-    virtual void prepareLinearSystem(int ntry, int nnewt) = 0 override;
+    virtual void prepareLinearSystem(int ntry, int nnewt) = 0;
 
     /**
      * Solves the linear system for the Newton step
@@ -50,7 +50,7 @@ class NewtonSolver {
      * @param rhs containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      */
-    virtual void solveLinearSystem(AmiVector *rhs) = 0 override;
+    virtual void solveLinearSystem(AmiVector *rhs) = 0;
 
     virtual ~NewtonSolver() = default;
 
@@ -139,8 +139,8 @@ class NewtonSolverIterative : public NewtonSolver {
     NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
     virtual ~NewtonSolverIterative() = default;
 
-    void solveLinearSystem(AmiVector *rhs);
-    void prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(AmiVector *rhs) override;
+    void prepareLinearSystem(int ntry, int nnewt) override;
     void linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta);
 
   private:
