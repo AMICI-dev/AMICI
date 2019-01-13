@@ -927,7 +927,14 @@ namespace amici {
          * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
          */
         int checkFinite(const int N,const realtype *array, const char* fun) const;
-
+        
+        /**
+         * @brief Returns the amici version that was used to compile the model
+         * @return ver amici version string
+         */
+        virtual std::string getAmiciVersion() const {
+            throw AmiException("version not set during compilation");
+        }
 
         /**
          * @brief Reports whether the model has parameter names set.

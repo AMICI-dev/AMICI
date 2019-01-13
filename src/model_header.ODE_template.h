@@ -757,6 +757,13 @@ TPL_TOTAL_CL_IMPL
         return TPL_REINIT_FIXPAR_INITCOND;
     }
     
+    /** returns the amici version that was used to compile the model
+     * @return ver amici version string
+     */
+    virtual std::string getAmiciVersion() const override {
+        return "TPL_AMICI_VERSION_STRING";
+    }
+    
 };
 
 #endif /* _amici_TPL_MODELNAME_h */

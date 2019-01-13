@@ -20,7 +20,7 @@ except ImportError:
 from string import Template
 import sympy.printing.ccode as ccode
 
-from . import amiciSwigPath, amiciSrcPath, amiciModulePath
+from . import amiciSwigPath, amiciSrcPath, amiciModulePath, __version__
 
 ## prototype for generated C++ functions, keys are the names of functions
 #
@@ -2196,6 +2196,7 @@ class ODEExporter:
             'REINIT_FIXPAR_INITCOND':
                 'true' if self.allow_reinit_fixpar_initcond else
                 'false',
+            'AMICI_VERSION_STRING':  __version__,
         }
 
         for fun in ['w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl']:
