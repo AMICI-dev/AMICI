@@ -19,18 +19,18 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype> ts)
+                 std::vector<realtype>  const& ts)
     : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent)
 {
     setTimepoints(ts);
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype> ts,
-                 std::vector<realtype> observedData,
-                 std::vector<realtype> observedDataStdDev,
-                 std::vector<realtype> observedEvents,
-                 std::vector<realtype> observedEventsStdDev)
+                 std::vector<realtype> const& ts,
+                 std::vector<realtype> const& observedData,
+                 std::vector<realtype> const& observedDataStdDev,
+                 std::vector<realtype> const& observedEvents,
+                 std::vector<realtype> const& observedEventsStdDev)
     : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts))
 {
     setObservedData(observedData);
@@ -40,17 +40,16 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
 }
 
 ExpData::ExpData(Model const& model)
-    : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(), model.getTimepoints())
-{
-    fixedParameters = std::move(model.getFixedParameters());
-}
+    : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(),
+              model.getTimepoints()),
+    fixedParameters(std::move(model.getFixedParameters())) {}
     
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
-    : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z))
-{
-}
+    : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z)),
+    nytrue_(rdata.nytrue), nztrue_(rdata.nztrue), nmaxevent_(rdata.nmaxevent) {}
     
-ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z)
+ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
+                 std::vector<realtype> sigma_z)
     : ExpData(rdata.nytrue, rdata.nztrue, rdata.nmaxevent, rdata.ts)
 {
     if (sigma_y.size() != (unsigned) nytrue_ && sigma_y.size() != (unsigned) nytrue_*nt())

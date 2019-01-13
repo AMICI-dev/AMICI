@@ -197,7 +197,7 @@ void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
 
 template<typename T>
 void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
-                       const std::vector<T> fieldData, int dim0) {
+                       std::vector<T> const& fieldData, int dim0) {
     /**
      * @brief initialise vector and attach to the field
      * @param matlabStruct pointer of the field to which the vector will be
@@ -219,7 +219,7 @@ void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
 
 template<typename T>
 void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
-                      const std::vector<T> fieldData, int dim0, int dim1,
+                      std::vector<T> const& fieldData, int dim0, int dim1,
                       std::vector<int> perm) {
     /**
      * @brief initialise matrix, attach to the field and write data
@@ -252,7 +252,7 @@ void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
 
 template<typename T>
 void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
-                      const std::vector<T> fieldData, int dim0, int dim1,
+                      std::vector<T> const& fieldData, int dim0, int dim1,
                       int dim2, std::vector<int> perm) {
     /**
      * @brief initialise 3D tensor, attach to the field and write data
@@ -288,7 +288,7 @@ void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
 
 template<typename T>
 void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
-                      const std::vector<T> fieldData, int dim0, int dim1,
+                      std::vector<T> const& fieldData, int dim0, int dim1,
                       int dim2, int dim3, std::vector<int> perm) {
     /**
      * @brief initialise 4D tensor, attach to the field and write data
@@ -359,7 +359,8 @@ void checkFieldNames(const char **fieldNames,const int fieldCount) {
 }
 
 template<typename T>
-std::vector<T> reorder(const std::vector<T> input, const std::vector<int> order) {
+std::vector<T> reorder(std::vector<T> const& input,
+                       std::vector<int> const& order) {
     /**
      * @brief template function that reorders elements in a std::vector
      *

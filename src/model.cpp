@@ -323,10 +323,10 @@ void Model::setParameterScale(ParameterScaling pscale) {
     sx0data.clear();
 }
 
-void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
+void Model::setParameterScale(std::vector<ParameterScaling> const& pscaleVec) {
     if(pscale.size() != this->originalParameters.size())
         throw AmiException("Dimension mismatch. Size of parameter scaling does not match number of model parameters.");
-    this->pscale = pscale;
+    this->pscale = pscaleVec;
     scaleParameters(unscaledParameters, this->pscale, originalParameters);
     sx0data.clear();
 }
@@ -570,7 +570,9 @@ std::vector<realtype> const& Model::getTimepoints() const {
 
 void Model::setTimepoints(const std::vector<realtype> &ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
-        throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
+        throw AmiException("Encountered non-monotonic timepoints, please order"
+                           " timepoints such that they are monotonically"
+                           " increasing!");
     this->ts = std::move(ts);
 }
 
@@ -578,19 +580,20 @@ std::vector<bool> const& Model::getStateIsNonNegative() const {
     return stateIsNonNegative;
 }
 
-void Model::setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative) {
-    if(nx_solver != nx_rdata)
-        throw AmiException("Nonnegative states are not supported whith conservation laws enabled");
-    if (stateIsNonNegative.size() != static_cast<unsigned long>(nx_solver))
-        throw AmiException("Dimension of input stateIsNonNegative (%u) does not agree with number of state variables (%d)",stateIsNonNegative.size(),nx_solver);
-    this->stateIsNonNegative = stateIsNonNegative;
-    anyStateNonNegative=false;
-    for (auto const& flag: stateIsNonNegative) {
-        if (flag) {
-            anyStateNonNegative=true;
-            break;
-        }
+void Model::setStateIsNonNegative(std::vector<bool> const& nonNegative) {
+    if(nx_solver != nx_rdata) {
+        throw AmiException("Nonnegative states are not supported whith"
+                           " conservation laws enabled");
     }
+    if (stateIsNonNegative.size() != static_cast<unsigned long>(nx_rdata)) {
+        throw AmiException("Dimension of input stateIsNonNegative (%u) does "
+                           "not agree with number of state variables (%d)",
+                           stateIsNonNegative.size(), nx_rdata);
+    }
+    stateIsNonNegative=nonNegative;
+    anyStateNonNegative=std::any_of(stateIsNonNegative.begin(),
+                                    stateIsNonNegative.end()
+                                    [](bool x) { return x; });
 }
 
 double Model::t(int idx) const {
@@ -602,9 +605,10 @@ const std::vector<int> &Model::getParameterList() const {
 }
 
 void Model::setParameterList(const std::vector<int> &plist) {
-    for(auto const& idx: plist)
-        if(idx < 0 || idx >= np())
-            throw AmiException("Indices in plist must be in [0..np]");
+    if(std::any_of(plist.begin(), plist.end(),
+                   [](int idx){return idx < 0 || idx >= np();})) {
+        throw AmiException("Indices in plist must be in [0..np]");
+    }
     this->plist_ = plist;
 
     initializeVectors();

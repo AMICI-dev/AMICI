@@ -644,9 +644,9 @@ namespace amici {
         /**
          * @brief Set ParameterScale for each parameter, resets initial state
          * sensitivities
-         * @param pscale vector of parameter scales
+         * @param pscaleVec vector of parameter scales
          */
-        void setParameterScale(const std::vector<ParameterScaling>& pscale);
+        void setParameterScale(const std::vector<ParameterScaling>& pscaleVec);
 
         /**
          * @brief Get the parameter vector

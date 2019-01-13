@@ -367,8 +367,7 @@ bool operator ==(const Solver &a, const Solver &b)
     if (typeid(a) != typeid(b))
             return false;
 
-    return (a.sensi_meth == b.sensi_meth)
-            && (a.interpType == b.interpType)
+    return (a.interpType == b.interpType)
             && (a.lmm == b.lmm)
             && (a.iter == b.iter)
             && (a.stldet == b.stldet)
@@ -381,13 +380,17 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.atol == b.atol)
             && (a.rtol == b.rtol)
             && (a.maxsteps == b.maxsteps)
+            && (a.maxstepsB == b.maxstepsB)
             && (a.quad_atol == b.quad_atol)
             && (a.quad_rtol == b.quad_rtol)
-            && (a.getAbsoluteToleranceSteadyState() == b.getAbsoluteToleranceSteadyState())
-            && (a.getRelativeToleranceSteadyState() == b.getRelativeToleranceSteadyState())
-            && (a.getAbsoluteToleranceSteadyStateSensi() == b.getAbsoluteToleranceSteadyStateSensi())
-            && (a.getRelativeToleranceSteadyStateSensi() == b.getRelativeToleranceSteadyStateSensi())
-            && (a.maxstepsB == b.maxstepsB)
+            && (a.getAbsoluteToleranceSteadyState() ==
+                b.getAbsoluteToleranceSteadyState())
+            && (a.getRelativeToleranceSteadyState() ==
+                b.getRelativeToleranceSteadyState())
+            && (a.getAbsoluteToleranceSteadyStateSensi() ==
+                b.getAbsoluteToleranceSteadyStateSensi())
+            && (a.getRelativeToleranceSteadyStateSensi() ==
+                b.getRelativeToleranceSteadyStateSensi())
             && (a.sensi == b.sensi)
             && (a.sensi_meth == b.sensi_meth);
 }
