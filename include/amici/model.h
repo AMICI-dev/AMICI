@@ -929,11 +929,19 @@ namespace amici {
         int checkFinite(const int N,const realtype *array, const char* fun) const;
         
         /**
-         * @brief Returns the amici version that was used to compile the model
+         * @brief Returns the amici version that was used to generate the model
          * @return ver amici version string
          */
-        virtual std::string getAmiciVersion() const {
+        virtual const std::string getAmiciVersion() const {
             throw AmiException("Version not set during code generation");
+        }
+        
+        /**
+         * @brief Returns the amici commit that was used to generate the model
+         * @return ver amici commit string
+         */
+        virtual const std::string getAmiciCommit() const {
+            throw AmiException("Commit not set during code generation");
         }
 
         /**

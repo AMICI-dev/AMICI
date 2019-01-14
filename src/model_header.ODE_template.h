@@ -757,11 +757,18 @@ TPL_TOTAL_CL_IMPL
         return TPL_REINIT_FIXPAR_INITCOND;
     }
     
-    /** returns the amici version that was used to compile the model
+    /** returns the amici version that was used to generate the model
      * @return ver amici version string
      */
-    virtual std::string getAmiciVersion() const override {
+    virtual const std::string getAmiciVersion() const override {
         return "TPL_AMICI_VERSION_STRING";
+    }
+    
+    /** returns the amici version that was used to generate the model
+     * @return commit amici git commit hash
+     */
+    virtual const std::string getAmiciCommit() const override {
+        return "TPL_AMICI_COMMIT_STRING";
     }
     
 };

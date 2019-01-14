@@ -54,6 +54,7 @@ class TestAmiciCPP(unittest.TestCase):
 
     def test_version_number(self):
         self.assertEqual(self.model.getAmiciVersion(), amici.__version__)
+        self.assertEqual(self.model.getAmiciCommit(), amici.__commit__)
 
     def test_copy_constructors(self):
         # TODO: expand this to serialization
