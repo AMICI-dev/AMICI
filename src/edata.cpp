@@ -19,19 +19,23 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype>  const& ts)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent)
-{
-    setTimepoints(ts);
-}
+                 std::vector<realtype>  const& ts_)
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_) {}
+    
+ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
+                 std::vector<realtype>  const& ts_,
+                 std::vector<realtype>  const& fixedParameters_
+                 )
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_),
+    fixedParameters(fixedParameters_){}
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype> const& ts,
+                 std::vector<realtype> const& ts_,
                  std::vector<realtype> const& observedData,
                  std::vector<realtype> const& observedDataStdDev,
                  std::vector<realtype> const& observedEvents,
                  std::vector<realtype> const& observedEventsStdDev)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts))
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
 {
     setObservedData(observedData);
     setObservedDataStdDev(observedDataStdDev);
@@ -41,10 +45,7 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
 
 ExpData::ExpData(Model const& model)
     : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(),
-              model.getTimepoints())
-{
-    fixedParameters = std::move(model.getFixedParameters());
-}
+              model.getTimepoints(), model.getFixedParameters()) {}
     
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
     : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z)) {}
@@ -86,11 +87,9 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
         }
 }
     
-void ExpData::setTimepoints(const std::vector<realtype> &ts) {
+    void ExpData::setTimepoints(const std::vector<realtype> &ts) : ts(ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
         throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
-
-    this->ts = std::move(ts);
     observedData.resize(nt()*nytrue_, getNaN());
     observedDataStdDev.resize(nt()*nytrue_, getNaN());
 }
@@ -111,7 +110,7 @@ void ExpData::setObservedData(const std::vector<realtype> &observedData) {
     checkDataDimension(observedData, "observedData");
         
     if (observedData.size() == (unsigned) nt()*nytrue_)
-        this->observedData = std::move(observedData);
+        this->observedData = observedData;
     else if (observedData.empty())
         this->observedData.clear();
 }
@@ -144,7 +143,7 @@ void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStd
     checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
     
     if (observedDataStdDev.size() == (unsigned) nt()*nytrue_)
-        this->observedDataStdDev = std::move(observedDataStdDev);
+        this->observedDataStdDev = observedDataStdDev;
     else if (observedDataStdDev.empty())
         this->observedDataStdDev.clear();
 }
@@ -188,7 +187,7 @@ void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents) {
     checkEventsDimension(observedEvents, "observedEvents");
     
     if (observedEvents.size() == (unsigned) nmaxevent_*nztrue_)
-        this->observedEvents = std::move(observedEvents);
+        this->observedEvents = observedEvents;
     else if (observedEvents.empty())
         this->observedEvents.clear();
 }
@@ -222,7 +221,7 @@ void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEvent
     checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
         
     if (observedEventsStdDev.size() == (unsigned) nmaxevent_*nztrue_)
-        this->observedEventsStdDev = std::move(observedEventsStdDev);
+        this->observedEventsStdDev = observedEventsStdDev;
     else if (observedEventsStdDev.empty())
         this->observedEventsStdDev.clear();
 }

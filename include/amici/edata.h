@@ -38,6 +38,19 @@ class ExpData {
      */
     ExpData(int nytrue, int nztrue, int nmaxevent,
             std::vector<realtype>  const& ts);
+    
+    /**
+     * constructor that initializes timepoints and fixed parameters from vectors
+     *
+     * @param nytrue               (dimension: scalar)
+     * @param nztrue               (dimension: scalar)
+     * @param nmaxevent            (dimension: scalar)
+     * @param ts                   (dimension: nt)
+     * @param fixedParameters      (dimension: nk)
+     */
+    ExpData(int nytrue, int nztrue, int nmaxevent,
+            std::vector<realtype>  const& ts,
+            std::vector<realtype>  const& fixedParameters);
 
 
     /**

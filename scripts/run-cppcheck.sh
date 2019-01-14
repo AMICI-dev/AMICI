@@ -31,9 +31,6 @@ mv cppcheck_tmp.txt cppcheck.txt
 grep -v "Member variable 'ExpData::nmaxevent_' is not initialized in the constructor" cppcheck.txt > cppcheck_tmp.txt
 mv cppcheck_tmp.txt cppcheck.txt
 
-grep -v "(performance) Variable 'fixedParameters' is assigned in constructor body" cppcheck.txt > cppcheck_tmp.txt
-mv cppcheck_tmp.txt cppcheck.txt
-
 # check if error log was created
 if [ -f cppcheck.txt  ]; then
     # check if error log is empty
