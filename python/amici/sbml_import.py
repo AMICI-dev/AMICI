@@ -1124,7 +1124,10 @@ def _check_unsupported_functions(sym):
             raises SBMLException if an unsupported function is encountered
     """
 
-    unsupported_functions = [sp.factorial, sp.ceiling]
+    unsupported_functions = [
+        sp.functions.factorial, sp.functions.ceiling,
+        sp.functions.elementary.piecewise,
+    ]
 
     for arg in sym._args:
         unsupp_fun = next(
