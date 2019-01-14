@@ -933,7 +933,7 @@ namespace amici {
          * @return ver amici version string
          */
         virtual std::string getAmiciVersion() const {
-            throw AmiException("version not set during compilation");
+            throw AmiException("Version not set during code generation");
         }
 
         /**
