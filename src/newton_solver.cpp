@@ -9,6 +9,8 @@
 #include "amici/rdata.h"
 #include "amici/edata.h"
 
+#include "sundials/sundials_math.h"
+
 #include <cstring>
 #include <ctime>
 #include <cmath>
@@ -255,20 +257,45 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
     model->fJSparse(*t, 0.0, x, &dx, &xdot, Jtmp);
 
     /* Get factorization of sparse Jacobian */
-    if(symbolic) /* if symbolic was already created free first to avoid memory leak */
-        klu_free_symbolic(&symbolic, &common);
-    symbolic = klu_analyze(model->nx_solver, Jtmp->indexptrs,
-                           Jtmp->indexvals, &common);
+    if(!symbolic) /* we only need to perform symbolic factorization once */
+        symbolic = klu_analyze(model->nx_solver, Jtmp->indexptrs,
+                               Jtmp->indexvals, &common);
+    
     if (!symbolic) {
-        throw NewtonFailure(common.status,"klu_analyze");
+        throw NewtonFailure(common.status, "klu_analyze");
     }
 
-    if(numeric) /* if numeric was already created free first to avoid memory leak */
-        klu_free_numeric(&numeric, &common);
-    numeric = klu_factor(Jtmp->indexptrs, Jtmp->indexvals,
-                         Jtmp->data, symbolic, &common);
-    if (!numeric) {
-        throw NewtonFailure(common.status,"klu_factor");
+    if(numeric) { /* if numeric we only need to refactor, which can be done
+                   very effectively using klu_refactor, see cvode_klu.c for
+                   reference for this code*/
+        if(!klu_refactor(Jtmp->indexptrs, Jtmp->indexvals,
+                         Jtmp->data, symbolic, numeric, &common))
+            throw NewtonFailure(common.status, "klu_refactor");
+        /* check cheap estimate of rcond to see if we need to recompute
+         factorization
+         */
+        if(!klu_rcond(symbolic, numeric, &common))
+           throw NewtonFailure(common.status, "klu_rcond");
+        
+        if( common.rcond < SUNRpowerR(UNIT_ROUNDOFF, 2/3) ){
+            /* compute more accurate estimate */
+            if(!klu_condest(Jtmp->indexptrs, Jtmp->data, symbolic, numeric,
+                            &common))
+                throw NewtonFailure(common.status, "klu_condest");
+            if(common.condest > 1/SUNRpowerR(UNIT_ROUNDOFF, 2/3)) {
+                /* if accurate condition estimate exceeds thresholds delete
+                 factorization and factor de novo */
+                klu_free_numeric(&numeric, &common);
+            }
+        }
+    }
+    
+    if(!numeric) /* factor de novo if we factor for the first time or deleted
+                  previous factorization due to too high condition numbers */
+        numeric = klu_factor(Jtmp->indexptrs, Jtmp->indexvals,
+                             Jtmp->data, symbolic, &common);
+        if (!numeric)
+            throw NewtonFailure(common.status, "klu_factor");
     }
 }
 
