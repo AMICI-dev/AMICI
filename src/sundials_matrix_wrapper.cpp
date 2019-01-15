@@ -40,8 +40,10 @@ SlsMatWrapper::SlsMatWrapper(const SlsMatWrapper &other)
 }
 
 SlsMatWrapper::SlsMatWrapper(SlsMatWrapper &&other) noexcept
-    : matrix(std::exchange(other.matrix, nullptr))
-{}
+{
+    std::swap(matrix, other.matrix);
+
+}
 
 SlsMatWrapper &SlsMatWrapper::operator=(const SlsMatWrapper &other)
 {
@@ -97,8 +99,9 @@ DlsMatWrapper::DlsMatWrapper(const DlsMatWrapper &other)
 }
 
 DlsMatWrapper::DlsMatWrapper(DlsMatWrapper &&other) noexcept
-    : matrix(std::exchange(other.matrix, nullptr))
-{}
+{
+    std::swap(matrix, other.matrix);
+}
 
 DlsMatWrapper &DlsMatWrapper::operator=(const DlsMatWrapper &other)
 {
