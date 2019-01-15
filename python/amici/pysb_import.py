@@ -7,6 +7,7 @@ import sympy as sp
 import numpy as np
 import itertools
 
+
 try:
     import pysb.bng
     ## bool indicating whether pysb is available
@@ -71,7 +72,7 @@ def pysb2amici(model,
     if sigmas is None:
         sigmas = {}
 
-    ode_model = ODEModel_from_pysb_importer(
+    ode_model = _ODEModel_from_pysb_importer(
         model, constants=constant_parameters, observables=observables,
         sigmas=sigmas, compute_conservation_laws=compute_conservation_laws,
     )
@@ -88,9 +89,9 @@ def pysb2amici(model,
     exporter.compileModel()
 
 
-def ODEModel_from_pysb_importer(model, constants=None,
-                                observables=None, sigmas=None,
-                                compute_conservation_laws=True):
+def _ODEModel_from_pysb_importer(model, constants=None,
+                                 observables=None, sigmas=None,
+                                 compute_conservation_laws=True):
     """Creates an ODEModel instance from a pysb.Model instance.
 
 
@@ -133,19 +134,19 @@ def ODEModel_from_pysb_importer(model, constants=None,
 
     pysb.bng.generate_equations(model)
 
-    process_pysb_species(model, ODE)
-    process_pysb_parameters(model, ODE, constants)
+    _process_pysb_species(model, ODE)
+    _process_pysb_parameters(model, ODE, constants)
     if compute_conservation_laws:
-        process_pysb_conservation_laws(model, ODE)
-    process_pysb_expressions(model, ODE, observables, sigmas)
-    process_pysb_observables(model, ODE)
+        _process_pysb_conservation_laws(model, ODE)
+    _process_pysb_expressions(model, ODE, observables, sigmas)
+    _process_pysb_observables(model, ODE)
 
     ODE.generateBasicVariables()
 
     return ODE
 
 
-def process_pysb_species(model, ODE):
+def _process_pysb_species(model, ODE):
     """Converts pysb Species into States and adds them to the ODEModel
     instance
 
@@ -182,7 +183,7 @@ def process_pysb_species(model, ODE):
         )
 
 
-def process_pysb_parameters(model, ODE, constants):
+def _process_pysb_parameters(model, ODE, constants):
     """Converts pysb parameters into Parameters or Constants and adds them to
     the ODEModel instance
 
@@ -211,7 +212,7 @@ def process_pysb_parameters(model, ODE, constants):
         )
 
 
-def process_pysb_expressions(model, ODE, observables, sigmas):
+def _process_pysb_expressions(model, ODE, observables, sigmas):
     """Converts pysb expressions into Observables (with corresponding
     standard deviation SigmaY and LogLikelihood) or Expressions and adds them
     to the ODEModel instance
@@ -246,7 +247,7 @@ def process_pysb_expressions(model, ODE, observables, sigmas):
                     exp.expand_expr(expand_observables=False))
             )
 
-            sigma_name, sigma_value = get_sigma_name_and_value(
+            sigma_name, sigma_value = _get_sigma_name_and_value(
                 model, exp.name, sigmas
             )
 
@@ -284,7 +285,7 @@ def process_pysb_expressions(model, ODE, observables, sigmas):
             )
 
 
-def get_sigma_name_and_value(model, name, sigmas):
+def _get_sigma_name_and_value(model, name, sigmas):
     """Tries to extract standard deviation symbolic identifier and formula
     for a given observable name from the pysb model and if no specification is
     available sets default values
@@ -319,7 +320,7 @@ def get_sigma_name_and_value(model, name, sigmas):
     return sigma_name, sigma_value
 
 
-def process_pysb_observables(model, ODE):
+def _process_pysb_observables(model, ODE):
     """Converts pysb observables into Expressions and adds them to the ODEModel
     instance
 
@@ -348,7 +349,7 @@ def process_pysb_observables(model, ODE):
             )
 
 
-def process_pysb_conservation_laws(model, ODE):
+def _process_pysb_conservation_laws(model, ODE):
     """Removes species according to conservation laws to ensure that the
     jacobian has full rank
 
@@ -367,8 +368,39 @@ def process_pysb_conservation_laws(model, ODE):
 
     monomers_without_conservation_law = set()
     for rule in model.rules:
-        monomers_without_conservation_law |= get_unconserved_monomers(rule,
-                                                                      model)
+        monomers_without_conservation_law |= \
+            _get_unconserved_monomers(rule, model)
+
+    monomers_without_conservation_law |= \
+        _compute_monomers_with_fixed_initial_conditions(model)
+
+    cl_prototypes = _generate_cl_prototypes(
+        monomers_without_conservation_law, model, ODE
+    )
+    conservation_laws = _construct_conservation_from_prototypes(
+        cl_prototypes, model
+    )
+
+    _flatten_conservation_laws(conservation_laws)
+
+    for cl in conservation_laws:
+        ODE.add_conservation_law(cl['state'], cl['law'])
+
+
+def _compute_monomers_with_fixed_initial_conditions(model):
+    """Computes the set of monomers in a model with species that have fixed
+    initial conditions
+
+    Arguments:
+        model: pysb model @type pysb.core.Model
+
+    Returns:
+        list of monomer names
+
+    Raises:
+
+    """
+    monomers_with_fixed_initial_conditions = set()
 
     if hasattr(model, 'initial_conditions_fixed'):
         for monomer in model.monomers:
@@ -380,11 +412,56 @@ def process_pysb_conservation_laws(model, ODE):
                 for ix, cp in enumerate(model.initial_conditions)
                 if monomer.name in extract_monomers(cp)
             ]):
-                monomers_without_conservation_law |= {monomer.name}
+                monomers_with_fixed_initial_conditions |= {monomer.name}
 
+    return monomers_with_fixed_initial_conditions
+
+
+def _generate_cl_prototypes(excluded_monomers, model, ODE):
+    """Constructs a dict that contains preprocessed information for the
+    construction of conservation laws
+
+    Arguments:
+        model: pysb model @type pysb.core.Model
+
+        ODE: ODEModel instance @type ODEModel
+
+    Returns:
+        dict('monomer.name':{'possible_indices': ..., 'target_indices': ...}
+
+    Raises:
+
+    """
     cl_prototypes = dict()
+
+    _compute_possible_indices(cl_prototypes, model, excluded_monomers)
+    _compute_target_index(cl_prototypes, ODE)
+
+    return cl_prototypes
+
+
+def _compute_possible_indices(cl_prototypes, model, excluded_monomers):
+    """Computes viable choices for target_index, ie species that could be
+    removed and replaced by an algebraic expression according to the
+    conservation law
+
+    Arguments:
+        cl_prototypes: dict in which possible indices will be written @type
+        dict
+
+        model: pysb model @type pysb.core.Model
+
+        excluded_monomers: monomers for which no conservation laws will be
+        computed @type list
+
+
+    Returns:
+
+    Raises:
+
+    """
     for monomer in model.monomers:
-        if monomer.name not in monomers_without_conservation_law:
+        if monomer.name not in excluded_monomers:
 
             compartments = [
                 str(mp.compartment) # string based comparison as
@@ -410,55 +487,155 @@ def process_pysb_conservation_laws(model, ODE):
                 for ix, specie in enumerate(model.species)
                 if extract_monomers(specie)[0] == monomer.name
             ]
+            cl_prototypes[monomer.name]['species_count'] = len(
+                cl_prototypes[monomer.name]['possible_indices']
+            )
 
+
+def _compute_target_index(cl_prototypes, ODE):
+    """Computes the target index for every monomer
+
+
+    Arguments:
+        cl_prototypes: dict that contains possible indices for every monomer
+        @type dict
+
+        ODE: ODEModel instance @type ODEModel
+
+    Returns:
+
+    Raises:
+
+    """
     possible_indices = list(set(list(itertools.chain(*[
-        cl_prototypes[name]['possible_indices']
-        for name in cl_prototypes
+        cl_prototypes[monomer]['possible_indices']
+        for monomer in cl_prototypes
     ]))))
 
     appearance_counts = ODE.get_appearance_counts(possible_indices)
 
+    for monomer in cl_prototypes:
+        prototype = cl_prototypes[monomer]
+        # extract monomer specific appearance counts
+        prototype['appearance_counts'] = \
+            [
+                appearance_counts[possible_indices.index(idx)]
+                for idx in prototype['possible_indices']
+            ]
+        # select target index as possible index with minimal appearance count
+        idx = np.argmin(prototype['appearance_counts'])
 
-    conservation_laws = []
-    for monomer_name in cl_prototypes:
+        # remove entries from possible indices and appearance counts so we
+        # do not consider them again in later iterations
+        prototype['target_index'] = prototype['possible_indices'].pop(idx)
+        prototype['appearance_count'] = prototype['appearance_counts'].pop(idx)
 
-
-
-        target_index = np.argmin(np.asarray(appearance_counts))
-
-        target_expression = sanitize_basic_sympy(sum([
-            sp.Symbol(f'__s{ix}')
-            * extract_monomers(specie).count(monomer_name)
-            for ix, specie in enumerate(model.species)
-            if ix != target_index
-            and ix in cl_prototypes[monomer_name]['possible_indices']
-        ]))
-        target_state = sp.Symbol(f'__s{target_index}')
-        conservation_laws.append({
-            'state': target_state,
-            'law': target_expression,
-        })
-
-    # flatten conservation laws
-    unflattened_conservation_laws = \
-        get_unflattened_conservation_laws(conservation_laws)
-    while len(unflattened_conservation_laws):
-        for cl in conservation_laws:
-            cl['law'] = cl['law'].subs(unflattened_conservation_laws)
-        unflattened_conservation_laws = \
-            get_unflattened_conservation_laws(conservation_laws)
-
-    for cl in conservation_laws:
-        ODE.add_conservation_law(cl['state'], cl['law'])
+        prototype['fillin'] = \
+            prototype['appearance_count'] * prototype['species_count']
 
 
-def get_unflattened_conservation_laws(conservation_laws):
-    """Removes species according to conservation laws to ensure that the
-    jacobian has full rank
+    # we might end up with the same index for multiple monomers, so loop until
+    # we have a set of unique target indices
+    while len(cl_prototypes) > len(set(get_target_indices(cl_prototypes))):
+        _greedy_target_index_update(cl_prototypes)
 
+
+def _greedy_target_index_update(cl_prototypes):
+
+    target_indices = get_target_indices(cl_prototypes)
+
+    for monomer in cl_prototypes:
+        prototype = cl_prototypes[monomer]
+        if target_indices.count(prototype['target_index']) > 1:
+            # compute how much fillin the next best target_index would yield
+
+            # we exclude already existing target indices to avoid that
+            # updating the target index removes uniqueness from already unique
+            # target indices, this may slightly reduce chances of finding a
+            # solution but prevents infinite loops
+            for taken_index in list(set(target_indices)):
+                local_idx = prototype['possible_indices'].index(
+                    taken_index, None
+                )
+                if local_idx:
+                    del prototype['possible_indices'][local_idx]
+                    del prototype['appearance_counts'][local_idx]
+
+            if len(prototype['possible_indices']) == 0:
+                # we have exhausted all possible target indices, nothing left
+                # we can do
+                raise Exception('Could not compute a valid set of '
+                                'conservation laws for this model')
+
+            idx = np.argmin(prototype['appearance_counts'])
+
+            prototype['local_index'] = idx
+            prototype['alternate_target_index'] = \
+                prototype['possible_indices'][idx]
+            prototype['alternate_appearance_count'] = \
+                prototype['appearance_counts'][idx]
+
+            prototype['alternate_fillin'] = \
+                prototype['alternate_appearance_count'] \
+                * prototype['species_count']
+            prototype['diff_fillin'] = \
+                prototype['alternate_fillin'] - prototype['fillin']
+        else:
+            prototype['diff_fillin'] = 0
+
+    # this puts prototypes with high diff_fillin last
+    cl_prototypes = sorted(
+        cl_prototypes.items(), key=lambda kv: kv[1]['diff_fillin']
+    )
+
+    for monomer in cl_prototypes:
+        prototype = cl_prototypes[monomer]
+        # we check that we
+        # A) have an alternative index computed, i.e. that
+        # that monomer originally had a non-unique target_index
+        # B) that the target_index still is not unique. due to the sorting,
+        # this will always be the monomer with the highest diff_fillin (note
+        #  that the target indice counts are recomputed on the fly
+
+        if prototype['diff_fillin'] > 0 \
+                and get_target_indices(cl_prototypes).count(
+                    prototype['target_index']
+                ) > 1:
+
+            prototype['fillin'] = prototype['alternate_fillin']
+            prototype['target_index'] = prototype['alternate_target_index']
+            prototype['appearance_count'] = \
+                prototype['alternate_appearance_count']
+
+            del prototype['possible_indices'][prototype['local_index']]
+            del prototype['appearance_counts'][prototype['local_index']]
+
+
+def get_target_indices(cl_prototypes):
+    """Computes the list target indices for the current
+    conservation law prototype
 
     Arguments:
-        model: pysb model @type pysb.core.Model
+        cl_prototypes: dict that contains target indices for every monomer
+        @type dict
+
+    Returns:
+
+    Raises:
+
+    """
+    return [
+        cl_prototypes[monomer]['target_index'] for monomer in cl_prototypes
+    ]
+
+
+
+def _construct_conservation_from_prototypes(cl_prototypes, model):
+    """Computes the algebraic expression for the total amount of a given
+    monomer
+
+    Arguments:
+        cl_prototype: pysb model @type pysb.core.Model
 
         ODE: ODEModel instance @type ODEModel
 
@@ -468,14 +645,60 @@ def get_unflattened_conservation_laws(conservation_laws):
     Raises:
 
     """
-    free_symbols_cl = conservation_law_variables(conservation_laws)
+    conservation_laws = []
+    for monomer_name in cl_prototypes:
+        target_index = cl_prototypes[monomer_name]['target_index']
+
+        target_expression = sanitize_basic_sympy(
+            sum([
+                sp.Symbol(f'__s{ix}')
+                * extract_monomers(specie).count(monomer_name)
+                for ix, specie in enumerate(model.species)
+                if ix != target_index
+            ])
+            /
+            extract_monomers(model.species[target_index]).count(monomer_name)
+        ) # normalize by the stoichiometry of the target species
+        target_state = sp.Symbol(f'__s{target_index}')
+        conservation_laws.append({
+            'state': target_state,
+            'law': target_expression,
+        })
+
+    return conservation_laws
+
+
+def _flatten_conservation_laws(conservation_laws):
+    unflattened_conservation_laws = \
+        _get_unflattened_conservation_laws(conservation_laws)
+    while len(unflattened_conservation_laws):
+        for cl in conservation_laws:
+            cl['law'] = cl['law'].subs(unflattened_conservation_laws)
+        unflattened_conservation_laws = \
+            _get_unflattened_conservation_laws(conservation_laws)
+
+
+def _get_unflattened_conservation_laws(conservation_laws):
+    """ returns a list of (state, law) tuples for conservation laws that still
+    appear in other conservation laws
+
+    Arguments:
+        conservation_laws: dict({'state':state, 'law':law}) @type dict
+
+    Returns:
+        list((law,tuple))
+
+    Raises:
+
+    """
+    free_symbols_cl = _conservation_law_variables(conservation_laws)
     return [
         (cl['state'], cl['law']) for cl in conservation_laws
         if cl['state'] in free_symbols_cl
     ]
 
 
-def conservation_law_variables(conservation_laws):
+def _conservation_law_variables(conservation_laws):
     """Construct the set of all free variables from a list of conservation laws
 
 
@@ -545,7 +768,7 @@ def extract_monomers(complex_patterns):
     ]
 
 
-def get_unconserved_monomers(rule, model):
+def _get_unconserved_monomers(rule, model):
     """Constructs the set of monomer names for which the rule changes the
     stoichiometry of the monomer in the specified model.
 
@@ -567,14 +790,14 @@ def get_unconserved_monomers(rule, model):
         # we have to actually go through the reactions that are created by
         # the rule
         for reaction in [r for r in model.reactions if rule.name in r['rule']]:
-            unconserved_monomers |= get_changed_stoichiometries(
+            unconserved_monomers |= _get_changed_stoichiometries(
                 [model.species[ix] for ix in reaction['reactants']],
                 [model.species[ix] for ix in reaction['products']]
             )
     else:
         # otherwise we can simply extract all information for the rule
         # itself, which is computationally much more efficient
-        unconserved_monomers |= get_changed_stoichiometries(
+        unconserved_monomers |= _get_changed_stoichiometries(
             rule.reactant_pattern.complex_patterns,
             rule.product_pattern.complex_patterns
         )
@@ -582,7 +805,7 @@ def get_unconserved_monomers(rule, model):
     return unconserved_monomers
 
 
-def get_changed_stoichiometries(reactants, products):
+def _get_changed_stoichiometries(reactants, products):
     """Constructs the set of monomer names which have different
     stoichiometries in reactants and products.
 
