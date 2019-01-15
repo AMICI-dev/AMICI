@@ -270,6 +270,7 @@ multiobs_functions = [
     if 'const int iy' in functions[function]['signature']
 ]
 
+
 def var_in_function_signature(name, varname):
     """Checks if the values for a symbolic variable is passed in the signature
     of a function
@@ -290,6 +291,7 @@ def var_in_function_signature(name, varname):
                     f'const (realtype|double) \*{varname}[0]*[,)]+',
                     functions[name]['signature']
                 )
+
 
 class ModelQuantity:
     """Base class for model components
@@ -1262,6 +1264,35 @@ class ODEModel:
         for var in self._variable_prototype:
             if var not in self._syms:
                 self._generateSymbol(var)
+
+    def get_appearance_counts(self, idxs):
+        """Counts how often a state appears in the the time derivative of
+        another state and expressions for a subset of states
+
+        Arguments:
+            idxs: list of state indices for which counts are to be computed
+
+        Returns:
+            list of counts for the states ordered according to the provided
+            indices
+
+        Raises:
+
+        """
+        return [
+            len([
+                state
+                for state in self._states
+                if self._states[idx].get_id() in state.get_dt().free_symbols
+            ])
+            +
+            len([
+                expr
+                for expr in self._expressions
+                if self._states[idx].get_id() in expr.get_val().free_symbols
+            ])
+            for idx in idxs
+        ]
 
     def _generateSparseSymbol(self, name):
         """Generates the sparse symbolic identifiers, symbolic identifiers,

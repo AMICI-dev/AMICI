@@ -4,6 +4,8 @@ from .ode_export import (
 )
 
 import sympy as sp
+import numpy as np
+import itertools
 
 try:
     import pysb.bng
@@ -380,7 +382,7 @@ def process_pysb_conservation_laws(model, ODE):
             ]):
                 monomers_without_conservation_law |= {monomer.name}
 
-    conservation_laws = []
+    cl_prototypes = dict()
     for monomer in model.monomers:
         if monomer.name not in monomers_without_conservation_law:
 
@@ -402,36 +404,44 @@ def process_pysb_conservation_laws(model, ODE):
                 # on parameters + constants and update the respective symbolic
                 # derivative accordingly
 
-
-            target_index = next((
+            cl_prototypes[monomer.name] = dict()
+            cl_prototypes[monomer.name]['possible_indices'] = [
                 ix
                 for ix, specie in enumerate(model.species)
                 if extract_monomers(specie)[0] == monomer.name
-                and not ODE.state_has_conservation_law(ix)),
-                None
-            )
-            if target_index is None:
-                raise Exception(f'Cannot compute suitable conservation laws '
-                                f'for this model as there are cyclic '
-                                f'dependencies between states involved in '
-                                f'conservation laws')
-            target_expression = sanitize_basic_sympy(sum([
-                sp.Symbol(f'__s{ix}')
-                * extract_monomers(specie).count(monomer.name)
-                for ix, specie in enumerate(model.species)
-                if ix != target_index
-            ]))
-            target_state = sp.Symbol(f'__s{target_index}')
-            conservation_laws.append({
-                'state': target_state,
-                'law': target_expression,
-            })
+            ]
+
+    possible_indices = list(set(list(itertools.chain(*[
+        cl_prototypes[name]['possible_indices']
+        for name in cl_prototypes
+    ]))))
+
+    appearance_counts = ODE.get_appearance_counts(possible_indices)
+
+
+    conservation_laws = []
+    for monomer_name in cl_prototypes:
+
+
+
+        target_index = np.argmin(np.asarray(appearance_counts))
+
+        target_expression = sanitize_basic_sympy(sum([
+            sp.Symbol(f'__s{ix}')
+            * extract_monomers(specie).count(monomer_name)
+            for ix, specie in enumerate(model.species)
+            if ix != target_index
+            and ix in cl_prototypes[monomer_name]['possible_indices']
+        ]))
+        target_state = sp.Symbol(f'__s{target_index}')
+        conservation_laws.append({
+            'state': target_state,
+            'law': target_expression,
+        })
 
     # flatten conservation laws
     unflattened_conservation_laws = \
         get_unflattened_conservation_laws(conservation_laws)
-    # TODO: are circular dependencies possible? if yes, how do we
-    # automatically check/prevent them?
     while len(unflattened_conservation_laws):
         for cl in conservation_laws:
             cl['law'] = cl['law'].subs(unflattened_conservation_laws)
