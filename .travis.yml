@@ -26,7 +26,15 @@ matrix:
       after_script:
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
-
+      before_deploy:
+        - cd $BASE_DIR
+      deploy:
+        skip_cleanup: true
+        provider: script
+        script: scripts/deployPyPi.sh
+        on:
+          branch: master
+          tags: true
         
     - os: osx
       osx_image: xcode9.3
@@ -61,10 +69,7 @@ install:
     - ./scripts/installAmiciArchive.sh
     - ./scripts/installAmiciSource.sh
 
-script:  
-#    - cd $BASE_DIR/python/sdist
-#    - python3 setup.py sdist --dist-dir=$BASE_DIR/build/python/
-#    - python3 -m pip install $BASE_DIR/build/python/amici-*.tar.gz --verbose
+script:
     - cd $BASE_DIR
     - ./scripts/run-cpputest.sh
     - ./scripts/run-cppcheck.sh
