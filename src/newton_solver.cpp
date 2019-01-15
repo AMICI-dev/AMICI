@@ -9,6 +9,8 @@
 #include "amici/rdata.h"
 #include "amici/edata.h"
 
+#include "sundials/sundials_math.h"
+
 #include <cstring>
 #include <ctime>
 #include <cmath>
@@ -134,7 +136,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
 
     model->fdxdotdp(*t, x, &dx);
     for (int ip = 0; ip < model->nplist(); ip++) {
-        
+
         for (int ix = 0; ix < model->nx_solver; ix++) {
             sx->at(ix,ip) = -model->dxdotdp[model->nx_solver * ip + ix];
         }
@@ -238,8 +240,7 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, 
     Jtmp = SparseNewMat(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT);
 }
 
-/* ----------------------------------------------------------------------------------
- */
+/* -------------------------------------------------------------------------- */
 
 void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
     /**
@@ -255,22 +256,46 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
     model->fJSparse(*t, 0.0, x, &dx, &xdot, Jtmp);
 
     /* Get factorization of sparse Jacobian */
-    if(symbolic) /* if symbolic was already created free first to avoid memory leak */
-        klu_free_symbolic(&symbolic, &common);
-    symbolic = klu_analyze(model->nx_solver, Jtmp->indexptrs,
-                           Jtmp->indexvals, &common);
+    if (!symbolic) /* we only need to perform symbolic factorization once */
+        symbolic = klu_analyze(model->nx_solver, Jtmp->indexptrs,
+                               Jtmp->indexvals, &common);
+
     if (!symbolic) {
-        throw NewtonFailure(common.status,"klu_analyze");
+        throw NewtonFailure(common.status, "klu_analyze");
     }
 
-    if(numeric) /* if numeric was already created free first to avoid memory leak */
-        klu_free_numeric(&numeric, &common);
-    numeric = klu_factor(Jtmp->indexptrs, Jtmp->indexvals,
-                         Jtmp->data, symbolic, &common);
-    if (!numeric) {
-        throw NewtonFailure(common.status,"klu_factor");
+    if (numeric) { /* if numeric we only need to refactor, which can be done
+                    very effectively using klu_refactor, see cvode_klu.c for
+                    reference for this code*/
+        if (!klu_refactor(Jtmp->indexptrs, Jtmp->indexvals, Jtmp->data,
+                          symbolic, numeric, &common))
+            throw NewtonFailure(common.status, "klu_refactor");
+        /* check cheap estimate of rcond to see if we need to recompute
+         factorization
+         */
+        if (!klu_rcond(symbolic, numeric, &common))
+            throw NewtonFailure(common.status, "klu_rcond");
+
+        if (common.rcond < SUNRpowerR(UNIT_ROUNDOFF, 2 / 3)) {
+            /* compute more accurate estimate */
+            if (!klu_condest(Jtmp->indexptrs, Jtmp->data, symbolic, numeric,
+                             &common))
+                throw NewtonFailure(common.status, "klu_condest");
+            if (common.condest > 1 / SUNRpowerR(UNIT_ROUNDOFF, 2 / 3)) {
+                /* if accurate condition estimate exceeds thresholds delete
+                 factorization and factor de novo */
+                klu_free_numeric(&numeric, &common);
+            }
+        }
     }
-}
+
+    if (!numeric) /* factor de novo if we factor for the first time or deleted
+                   previous factorization due to too high condition numbers */
+        numeric = klu_factor(Jtmp->indexptrs, Jtmp->indexvals, Jtmp->data,
+                             symbolic, &common);
+    if (!numeric)
+        throw NewtonFailure(common.status, "klu_factor");
+} // namespace amici
 
 /* ----------------------------------------------------------------------------------
  */
@@ -358,8 +383,8 @@ void NewtonSolverIterative::solveLinearSystem(AmiVector *rhs) {
 
     linsolveSPBCG(newton_try, i_newton, rhs);
 }
-    
-    
+
+
 void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delta) {
     /**
      * Iterative linear solver created from SPILS BiCG-Stab.
@@ -371,25 +396,25 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
      * @param nnewt integer number of current Newton step
      * @param ns_delta Newton step
      */
-    
+
     double rho;
     double alpha;
     double omega;
     double res;
-    
+
     xdot = *ns_delta;
     xdot.minus();
-    
+
     // Get the diagonal of the Jacobian for preconditioning
     model->fJDiag(*t, &ns_Jdiag, 0.0, x, &dx);
-    
+
     // Ensure positivity of entries in ns_Jdiag
     ns_p.set(1.0);
     N_VAbs(ns_Jdiag.getNVector(), ns_Jdiag.getNVector());
     N_VCompare(1e-15, ns_Jdiag.getNVector(), ns_tmp.getNVector());
     N_VLinearSum(-1.0, ns_tmp.getNVector(), 1.0, ns_p.getNVector(), ns_tmp.getNVector());
     N_VLinearSum(1.0, ns_Jdiag.getNVector(), 1.0, ns_tmp.getNVector(), ns_Jdiag.getNVector());
-    
+
     // Initialize for linear solve
     ns_p.reset();
     ns_v.reset();
@@ -398,70 +423,70 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     rho = 1.0;
     omega = 1.0;
     alpha = 1.0;
-    
+
     // can be set to 0 at the moment
     model->fJv(*t, x, &dx, &xdot, ns_delta, &ns_Jv, 0.0);
-    
+
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv.getNVector(), 1.0, xdot.getNVector(), ns_r.getNVector());
     N_VDiv(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
     res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
     ns_rt = ns_r;
-    
+
     for (int i_linstep = 0; i_linstep < maxlinsteps;
          i_linstep++) {
         // Compute factors
         double rho1 = rho;
         rho = N_VDotProd(ns_rt.getNVector(), ns_r.getNVector());
         double beta = rho * alpha / (rho1 * omega);
-        
+
         // ns_p = ns_r + beta * (ns_p - omega * ns_v);
         N_VLinearSum(1.0, ns_p.getNVector(), -omega, ns_v.getNVector(), ns_p.getNVector());
         N_VLinearSum(1.0, ns_r.getNVector(), beta, ns_p.getNVector(), ns_p.getNVector());
-        
+
         // ns_v = J * ns_p
         model->fJv(*t, x, &dx, &xdot, &ns_p, &ns_v, 0.0);
         N_VDiv(ns_v.getNVector(), ns_Jdiag.getNVector(), ns_v.getNVector());
-        
+
         // Compute factor
         alpha = rho / N_VDotProd(ns_rt.getNVector(), ns_v.getNVector());
-        
+
         // ns_h = ns_delta + alpha * ns_p;
         N_VLinearSum(1.0, ns_delta->getNVector(), alpha, ns_p.getNVector(), ns_h.getNVector());
         // ns_s = ns_r - alpha * ns_v;
         N_VLinearSum(1.0, ns_r.getNVector(), -alpha, ns_v.getNVector(), ns_s.getNVector());
-        
+
         // ns_t = J * ns_s
         model->fJv(*t, x, &dx, &xdot, &ns_s, &ns_t, 0.0);
         N_VDiv(ns_t.getNVector(), ns_Jdiag.getNVector(), ns_t.getNVector());
-        
+
         // Compute factor
         omega = N_VDotProd(ns_t.getNVector(), ns_s.getNVector()) / N_VDotProd(ns_t.getNVector(), ns_t.getNVector());
-        
+
         // ns_delta = ns_h + omega * ns_s;
         N_VLinearSum(1.0, ns_h.getNVector(), omega, ns_s.getNVector(), ns_delta->getNVector());
         // ns_r = ns_s - omega * ns_t;
         N_VLinearSum(1.0, ns_s.getNVector(), -omega, ns_t.getNVector(), ns_r.getNVector());
-        
+
         // Compute the (unscaled) residual
         N_VProd(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
         res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
-        
+
         // Test convergence
         if (res < atol) {
             // Write number of steps needed
             rdata->newton_numlinsteps[(ntry - 1) * maxsteps +
                                       nnewt] = i_linstep + 1;
-            
+
             // Return success
             return;
         }
-        
+
         // Scale back
         N_VDiv(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
     }
     throw NewtonFailure(AMICI_CONV_FAILURE, "linsolveSPBCG");
 }
-    
+
 
 } // namespace amici
