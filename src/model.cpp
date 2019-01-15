@@ -1070,18 +1070,24 @@ void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
         return;
 
     std::fill(sigmay.begin(),sigmay.end(),0.0);
+
     fsigmay(sigmay.data(),rdata->ts.at(it), unscaledParameters.data(),fixedParameters.data());
-    for (int iytrue = 0; iytrue < nytrue; iytrue++) {
-        /* extract the value for the standard deviation, if the data value
-             is NaN, use the parameter value. Store this value in the return struct */
-        if(edata){
+
+    if(edata){
+        auto sigmay_edata = edata->getObservedDataStdDevPtr(it);
+        /* extract the value for the standard deviation from ExpData,
+         * if the data value is NaN, use the parameter value */
+        for (int iytrue = 0; iytrue < nytrue; iytrue++) {
             if (edata->isSetObservedDataStdDev(it, iytrue)) {
-                auto sigmay_edata = edata->getObservedDataStdDevPtr(it);
                 sigmay.at(iytrue) = sigmay_edata[iytrue];
             }
         }
-        rdata->sigmay[it * rdata->ny + iytrue] = sigmay.at(iytrue);
     }
+
+    for(int i = 0; i < nytrue; ++i)
+        checkSigmaPositivity(sigmay[i], "sigmay");
+
+    std::copy_n(sigmay.data(), nytrue, &rdata->sigmay[it * rdata->ny]);
 }
 
 void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {

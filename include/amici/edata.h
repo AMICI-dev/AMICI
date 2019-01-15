@@ -379,26 +379,10 @@ protected:
     /**
      * checker for dimensions of input observedEvents or observedEventsStdDev
      *
-     * @param input vector input to be checked
+     * @param input vector input to be checkedjupyter_contrib_nbextensions
      * @param fieldname name of the input
      */
     void checkEventsDimension(std::vector<realtype> input, const char *fieldname) const;
-
-    /**
-     * checks input vector of sigmas for not strictly positive values
-     *
-     * @param sigmaVector vector input to be checked
-     * @param vectorName name of the input
-     */
-    void checkSigmaPositivity(std::vector<realtype> sigmaVector, const char *vectorName) const;
-
-    /**
-     * checks input scalar sigma for not strictly positive value
-     *
-     * @param sigma input to be checked
-     * @param sigmaName name of the input
-     */
-    void checkSigmaPositivity(realtype sigma, const char *sigmaName) const;
 
     /** number of observables */
     int nytrue_;
@@ -423,6 +407,23 @@ protected:
      * (dimension: nmaxevents x nztrue, row-major)*/
     std::vector<realtype> observedEventsStdDev;
 };
+
+
+/**
+ * checks input vector of sigmas for not strictly positive values
+ *
+ * @param sigmaVector vector input to be checked
+ * @param vectorName name of the input
+ */
+void checkSigmaPositivity(std::vector<realtype> const& sigmaVector, const char *vectorName);
+
+/**
+ * checks input scalar sigma for not strictly positive value
+ *
+ * @param sigma input to be checked
+ * @param sigmaName name of the input
+ */
+void checkSigmaPositivity(const realtype sigma, const char *sigmaName);
 
 } // namespace amici
 
