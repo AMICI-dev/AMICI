@@ -641,12 +641,12 @@ void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
         throw AmiException("Dimension mismatch. Size of sx0 does not match "
                            "number of model states * number of parameter "
                            "selected for sensitivities.");
-    
+
     if (sx0.size() == 0) {
         sx0data.clear();
         return;
     }
-    
+
     realtype chainrulefactor = 1.0;
     std::vector<realtype> sx0_rdata(nx_rdata * nplist(), 0.0);
     for (int ip = 0; ip < nplist(); ip++) {
@@ -1113,20 +1113,21 @@ void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
     std::copy(dsigmaydp.begin(), dsigmaydp.end(), &rdata->ssigmay[it * nplist() * ny]);
 }
 
-void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnData *rdata,
-                    const ExpData *edata) {
-    std::fill(sigmaz.begin(),sigmaz.end(),0.0);
-    fsigmaz(sigmaz.data(),t, unscaledParameters.data(),fixedParameters.data());
-
-    auto sigmaz_edata = edata->getObservedEventsStdDevPtr(nroots[ie]);
+void Model::fsigmaz(const realtype t, const int ie, const int *nroots,
+                    ReturnData *rdata, const ExpData *edata) {
+    std::fill(sigmaz.begin(), sigmaz.end(), 0.0);
+    fsigmaz(sigmaz.data(), t, unscaledParameters.data(),
+            fixedParameters.data());
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (z2event.at(iztrue) - 1 == ie) {
-            if(edata) {
-                if (edata->isSetObservedEventsStdDev(nroots[ie],iztrue)) {
+            if (edata) {
+                if (edata->isSetObservedEventsStdDev(nroots[ie], iztrue)) {
+                    auto sigmaz_edata =
+                        edata->getObservedEventsStdDevPtr(nroots[ie]);
                     sigmaz.at(iztrue) = sigmaz_edata[iztrue];
                 }
             }
-            rdata->sigmaz[nroots[ie]*rdata->nz + iztrue] = sigmaz.at(iztrue);
+            rdata->sigmaz[nroots[ie] * rdata->nz + iztrue] = sigmaz.at(iztrue);
         }
     }
 }
