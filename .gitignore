@@ -213,6 +213,8 @@ tests/hello_pysb_amici/*
 tests/fricker_2010_apoptosis_amici/*
 tests/explicit_amici/*
 
+*/sbml-semantic-test-cases/*
+/python/test/amici-SBMLTest*/
 coverage_py.xml
 
 .idea/*
@@ -234,5 +236,3 @@ testSuite.txt
 python/sdist/build/*
 *.so
 python/sdist/amici/git_version.txt
-
-

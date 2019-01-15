@@ -3,13 +3,12 @@
 
 #include "amici/vector.h"
 #include "amici/defines.h"
+#include "amici/sundials_matrix_wrapper.h"
 
 #include <memory>
 
 #include <klu.h>
-#include <nvector/nvector_serial.h> // DlsMat
-#include <sundials/sundials_dense.h>
-#include <sundials/sundials_sparse.h> // SlsMat
+
 
 namespace amici {
 
@@ -97,8 +96,9 @@ class NewtonSolverDense : public NewtonSolver {
   private:
     /** temporary storage of pivot array */
     long int *pivots = nullptr;
+
     /** temporary storage of Jacobian */
-    DlsMat Jtmp = nullptr;
+    DlsMatWrapper Jtmp;
 };
 
 /**
@@ -125,7 +125,7 @@ class NewtonSolverSparse : public NewtonSolver {
     /** klu status flag  */
     int klu_status = 0;
     /** temporary storage of Jacobian */
-    SlsMat Jtmp = nullptr;
+    SlsMatWrapper Jtmp;
 };
 
 /**
