@@ -26,8 +26,7 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype>  const& ts_,
                  std::vector<realtype>  const& fixedParameters_
                  )
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_),
-    fixedParameters(fixedParameters_){}
+    : fixedParameters(fixedParameters_), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_) {}
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> const& ts_,
@@ -87,11 +86,12 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
         }
 }
     
-    void ExpData::setTimepoints(const std::vector<realtype> &ts) : ts(ts) {
+void ExpData::setTimepoints(const std::vector<realtype> &ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
         throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
     observedData.resize(nt()*nytrue_, getNaN());
     observedDataStdDev.resize(nt()*nytrue_, getNaN());
+    this->ts = ts;
 }
     
 std::vector<realtype> const& ExpData::getTimepoints() const {
