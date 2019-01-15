@@ -276,12 +276,12 @@ void ExpData::checkEventsDimension(std::vector<realtype> input, const char *fiel
         throw AmiException("Input %s did not match dimensions nt (%i) x nytrue (%i), was %i", fieldname, nmaxevent_, nztrue_, input.size());
 }
 
-void ExpData::checkSigmaPositivity(std::vector<realtype> sigmaVector, const char *vectorName) const {
+void checkSigmaPositivity(std::vector<realtype> const& sigmaVector, const char *vectorName) {
     for (auto&& sigma : sigmaVector)
         checkSigmaPositivity(sigma, vectorName);
 }
 
-void ExpData::checkSigmaPositivity(realtype sigma, const char *sigmaName) const {
+void checkSigmaPositivity(const realtype sigma, const char *sigmaName) {
     if (sigma <= 0.0)
         throw AmiException("Encountered sigma <= 0 in %s! value: %f", sigmaName, sigma);
 }
