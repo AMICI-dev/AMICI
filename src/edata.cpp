@@ -16,17 +16,24 @@ ExpData::ExpData() : nytrue_(0), nztrue_(0), nmaxevent_(0) {}
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
     : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent)
 {
+    applyDimensions();
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype>  const& ts_)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_) {}
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
+{
+    applyDimensions();
+}
     
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype>  const& ts_,
                  std::vector<realtype>  const& fixedParameters_
                  )
-    : fixedParameters(fixedParameters_), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_) {}
+    : fixedParameters(fixedParameters_), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
+{
+    applyDimensions();
+}
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> const& ts_,
@@ -36,6 +43,7 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> const& observedEventsStdDev)
     : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
 {
+    applyDimensions();
     setObservedData(observedData);
     setObservedDataStdDev(observedDataStdDev);
     setObservedEvents(observedEvents);
@@ -89,9 +97,8 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
 void ExpData::setTimepoints(const std::vector<realtype> &ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
         throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
-    observedData.resize(nt()*nytrue_, getNaN());
-    observedDataStdDev.resize(nt()*nytrue_, getNaN());
     this->ts = ts;
+    applyDataDimension();
 }
     
 std::vector<realtype> const& ExpData::getTimepoints() const {
@@ -264,6 +271,21 @@ const realtype *ExpData::getObservedEventsStdDevPtr(int ie) const {
    
     return nullptr;
 }
+  
+void ExpData::applyDimensions() {
+    applyDataDimension();
+    applyEventDimension();
+}
+
+void ExpData::applyDataDimension() {
+    observedData.resize(nt()*nytrue_, getNaN());
+    observedDataStdDev.resize(nt()*nytrue_, getNaN());
+}
+    
+void ExpData::applyEventDimension() {
+    observedEvents.resize(nt()*nytrue_, getNaN());
+    observedEventsStdDev.resize(nt()*nytrue_, getNaN());
+}
     
 void ExpData::checkDataDimension(std::vector<realtype> input, const char *fieldname) const {
     if (input.size() != (unsigned) nt()*nytrue_ && !input.empty())
@@ -285,20 +307,19 @@ void ExpData::checkSigmaPositivity(realtype sigma, const char *sigmaName) const 
         throw AmiException("Encountered sigma <= 0 in %s! value: %f", sigmaName, sigma);
 }
 
-
-int amici::ExpData::nytrue() const
+int ExpData::nytrue() const
 {
     return nytrue_;
 }
 
-int amici::ExpData::nztrue() const
+int ExpData::nztrue() const
 {
     return nztrue_;
 }
 
-int amici::ExpData::nmaxevent() const
+int ExpData::nmaxevent() const
 {
     return nmaxevent_;
 }
-
+    
 } // namespace amici

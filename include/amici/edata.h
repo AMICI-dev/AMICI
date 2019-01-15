@@ -351,6 +351,22 @@ class ExpData {
     realtype t_presim = 0;
 
 protected:
+    
+    /**
+     * resizes observedData, observedDataStdDev, observedEvents and
+     * observedEventsStdDev
+     */
+    void applyDimensions();
+    
+    /**
+     * resizes observedData and observedDataStdDev
+     */
+    void applyDataDimension();
+    
+    /**
+     * resizes observedEvents and observedEventsStdDev
+     */
+    void applyEventDimension();
 
     /**
      * checker for dimensions of input observedData or observedDataStdDev
