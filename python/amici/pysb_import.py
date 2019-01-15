@@ -541,6 +541,20 @@ def _compute_target_index(cl_prototypes, ODE):
 
 
 def _greedy_target_index_update(cl_prototypes):
+    """Computes unique target indices for conservation laws from prossible
+    indices  such that expected fill in in symbolic derivatives is minimized
+
+
+    Arguments:
+        cl_prototypes: dict that contains possible indices and non-unique
+        target indices for every monomer @type dict
+
+    Returns:
+
+    Raises:
+        Exception if no suitable solution could be found
+
+    """
 
     target_indices = get_target_indices(cl_prototypes)
 
