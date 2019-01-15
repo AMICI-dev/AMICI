@@ -380,17 +380,6 @@ def process_pysb_conservation_laws(model, ODE):
             ]):
                 monomers_without_conservation_law |= {monomer.name}
 
-    for monomer in model.monomers:
-        monomer_species = [
-            specie
-            for specie in model.species
-            if monomer.name in extract_monomers(specie)
-        ]
-        # we cannot reduce species according to conservation laws if there
-        # only is (less than) a single species in the first place
-        if len(monomer_species) <= 1:
-            monomers_without_conservation_law |= {monomer.name}
-
     conservation_laws = []
     for monomer in model.monomers:
         if monomer.name not in monomers_without_conservation_law:
