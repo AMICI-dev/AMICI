@@ -229,7 +229,7 @@ void ForwardProblem::handlePresimulation(int *ncheck)
     
     if(overrideFixedParameters) {
         if(edata->fixedParametersPresimulation.size() != (unsigned) model->nk())
-        throw AmiException("Number of fixed parameters (%d) in model does not match presimulation parameters in ExpData (%zd).",
+            throw AmiException("Number of fixed parameters (%d) in model does not match presimulation parameters in ExpData (%zd).",
                            model->nk(), edata->fixedParametersPresimulation.size());
         originalFixedParameters = model->getFixedParameters();
         model->setFixedParameters(edata->fixedParametersPresimulation);
@@ -237,7 +237,7 @@ void ForwardProblem::handlePresimulation(int *ncheck)
     t = model->t0() - edata->t_presim;
     updateAndReinitStatesAndSensitivities();
     
-    
+
     if (solver->getSensitivityMethod() == SensitivityMethod::adjoint &&
         solver->getSensitivityOrder() >= SensitivityOrder::first) {
         solver->solveF(RCONST(model->t0()), &x, &dx,
