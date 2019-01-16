@@ -40,7 +40,6 @@ matrix:
       osx_image: xcode9.3
       compiler: clang
       before_install:
-        - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - travis_wait brew install hdf5 cppcheck swig doxygen ragel graphviz homebrew/cask/mactex
         - brew upgrade python
