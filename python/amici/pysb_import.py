@@ -72,7 +72,7 @@ def pysb2amici(model,
     if sigmas is None:
         sigmas = {}
 
-    ode_model = _ODEModel_from_pysb_importer(
+    ode_model = ODEModel_from_pysb_importer(
         model, constants=constant_parameters, observables=observables,
         sigmas=sigmas, compute_conservation_laws=compute_conservation_laws,
     )
@@ -89,9 +89,9 @@ def pysb2amici(model,
     exporter.compileModel()
 
 
-def _ODEModel_from_pysb_importer(model, constants=None,
-                                 observables=None, sigmas=None,
-                                 compute_conservation_laws=True):
+def ODEModel_from_pysb_importer(model, constants=None,
+                                observables=None, sigmas=None,
+                                compute_conservation_laws=True):
     """Creates an ODEModel instance from a pysb.Model instance.
 
 
@@ -485,7 +485,7 @@ def _compute_possible_indices(cl_prototypes, model, excluded_monomers):
             cl_prototypes[monomer.name]['possible_indices'] = [
                 ix
                 for ix, specie in enumerate(model.species)
-                if extract_monomers(specie)[0] == monomer.name
+                if monomer.name in extract_monomers(specie)
             ]
             cl_prototypes[monomer.name]['species_count'] = len(
                 cl_prototypes[monomer.name]['possible_indices']
@@ -532,7 +532,6 @@ def _compute_target_index(cl_prototypes, ODE):
 
         prototype['fillin'] = \
             prototype['appearance_count'] * prototype['species_count']
-
 
     # we might end up with the same index for multiple monomers, so loop until
     # we have a set of unique target indices
@@ -672,7 +671,7 @@ def _construct_conservation_from_prototypes(cl_prototypes, model):
             ])
             /
             extract_monomers(model.species[target_index]).count(monomer_name)
-        ) # normalize by the stoichiometry of the target species
+        )  # normalize by the stoichiometry of the target species
         target_state = sp.Symbol(f'__s{target_index}')
         conservation_laws.append({
             'state': target_state,
