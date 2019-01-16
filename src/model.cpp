@@ -1,7 +1,11 @@
 #include "amici/model.h"
 #include "amici/amici.h"
 #include "amici/misc.h"
+#include "amici/exception.h"
+#include "amici/symbolic_functions.h"
 
+#include <numeric>
+#include <algorithm>
 #include <cstring>
 #include <cmath>
 #include <typeinfo>
@@ -26,6 +30,9 @@ void Model::fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata) {
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, ny, nplist(), nx_solver,
                 1.0, dydx.data(), ny, this->sx.data(), nx_solver, 1.0,
                 &rdata->sy[it*nplist()*ny], ny);
+
+    if(alwaysCheckFinite)
+        checkFinite(nplist()*ny, &rdata->sy[it*nplist()*ny], "sy");
 }
 
 void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
@@ -112,7 +119,7 @@ void Model::fdJydp(const int it, ReturnData *rdata, const ExpData *edata) {
     }
 }
 
-void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ReturnData *rdata, const ExpData *edata) {
+void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata) {
 
     // dJydy         nJ x ny        x nytrue
     // dydx          ny x nx_solver
@@ -297,6 +304,8 @@ int Model::nk() const {
     return fixedParameters.size();
 }
 
+int Model::ncl() const {return nx_rdata-nx_solver;}
+
 const double *Model::k() const{
     return fixedParameters.data();
 }
@@ -323,10 +332,10 @@ void Model::setParameterScale(ParameterScaling pscale) {
     sx0data.clear();
 }
 
-void Model::setParameterScale(std::vector<ParameterScaling> const& pscale) {
+void Model::setParameterScale(std::vector<ParameterScaling> const& pscaleVec) {
     if(pscale.size() != this->originalParameters.size())
         throw AmiException("Dimension mismatch. Size of parameter scaling does not match number of model parameters.");
-    this->pscale = pscale;
+    this->pscale = pscaleVec;
     scaleParameters(unscaledParameters, this->pscale, originalParameters);
     sx0data.clear();
 }
@@ -480,6 +489,86 @@ int Model::setParametersByNameRegex(std::string const& par_name_regex, realtype 
     return n_found;
 }
 
+bool Model::hasStateIds() const { return nx_rdata && !getStateIds().empty(); }
+
+std::vector<std::string> Model::getStateIds() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasFixedParameterIds() const { return nk() && !getFixedParameterIds().empty(); }
+
+std::vector<std::string> Model::getFixedParameterIds() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasObservableIds() const { return ny && !getObservableIds().empty(); }
+
+std::vector<std::string> Model::getObservableIds() const {
+    return std::vector<std::string>();
+}
+
+void Model::setSteadyStateSensitivityMode(const SteadyStateSensitivityMode mode) {
+    steadyStateSensitivityMode = mode;
+}
+
+SteadyStateSensitivityMode Model::getSteadyStateSensitivityMode() const {
+    return steadyStateSensitivityMode;
+}
+
+void Model::setReinitializeFixedParameterInitialStates(bool flag) {
+    if (flag && !isFixedParameterStateReinitializationAllowed())
+        throw AmiException("State reinitialization cannot be enabled for this model"
+                           "as this feature was disabled at compile time. Most likely,"
+                           " this was because some initial states depending on "
+                           "fixedParameters also depended on parameters");
+    reinitializeFixedParameterInitialStates = flag;
+}
+
+bool Model::getReinitializeFixedParameterInitialStates() const {
+    return reinitializeFixedParameterInitialStates;
+}
+
+void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver, const realtype *tcl) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+                "A model that has differing nx_solver and nx_rdata needs "
+                "to implement its own fx_rdata");
+    std::copy_n(x_solver, nx_solver, x_rdata);
+}
+
+void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver, const realtype *stcl, const int ip) {
+    fx_rdata(sx_rdata, sx_solver, stcl);
+}
+
+void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+                "A model that has differing nx_solver and nx_rdata needs "
+                "to implement its own fx_solver");
+    std::copy_n(x_rdata, nx_rdata, x_solver);
+}
+
+void Model::fsx_solver(realtype *sx_solver, const realtype *sx_rdata) {
+    /* for the moment we do not need an implementation of fsx_solver as
+     * we can simply reuse fx_solver and replace states by their
+     * sensitivities */
+    fx_solver(sx_solver, sx_rdata);
+}
+
+void Model::ftotal_cl(realtype *total_cl, const realtype *x_rdata) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+                "A model that has differing nx_solver and nx_rdata needs "
+                "to implement its own ftotal_cl");
+}
+
+void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata, const int ip) {
+    /* for the moment we do not need an implementation of fstotal_cl as
+     * we can simply reuse ftotal_cl and replace states by their
+     * sensitivities */
+    ftotal_cl(stotal_cl, sx_rdata);
+}
+
 const std::vector<realtype> &Model::getUnscaledParameters() const {
     return unscaledParameters;
 }
@@ -570,7 +659,9 @@ std::vector<realtype> const& Model::getTimepoints() const {
 
 void Model::setTimepoints(const std::vector<realtype> &ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
-        throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
+        throw AmiException("Encountered non-monotonic timepoints, please order"
+                           " timepoints such that they are monotonically"
+                           " increasing!");
     this->ts = std::move(ts);
 }
 
@@ -578,19 +669,25 @@ std::vector<bool> const& Model::getStateIsNonNegative() const {
     return stateIsNonNegative;
 }
 
-void Model::setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative) {
-    if(nx_solver != nx_rdata)
-        throw AmiException("Nonnegative states are not supported whith conservation laws enabled");
-    if (stateIsNonNegative.size() != static_cast<unsigned long>(nx_solver))
-        throw AmiException("Dimension of input stateIsNonNegative (%u) does not agree with number of state variables (%d)",stateIsNonNegative.size(),nx_solver);
-    this->stateIsNonNegative = stateIsNonNegative;
-    anyStateNonNegative=false;
-    for (auto const& flag: stateIsNonNegative) {
-        if (flag) {
-            anyStateNonNegative=true;
-            break;
-        }
+void Model::setStateIsNonNegative(std::vector<bool> const& nonNegative) {
+    if(nx_solver != nx_rdata) {
+        throw AmiException("Nonnegative states are not supported whith"
+                           " conservation laws enabled");
     }
+    if (stateIsNonNegative.size() != static_cast<unsigned long>(nx_rdata)) {
+        throw AmiException("Dimension of input stateIsNonNegative (%u) does "
+                           "not agree with number of state variables (%d)",
+                           stateIsNonNegative.size(), nx_rdata);
+    }
+    stateIsNonNegative=nonNegative;
+    anyStateNonNegative=std::any_of(stateIsNonNegative.begin(),
+                                    stateIsNonNegative.end(),
+                                    [](bool x) { return x; });
+}
+
+void Model::setAllStatesNonNegative()
+{
+    setStateIsNonNegative(std::vector<bool>(nx_solver, true));
 }
 
 double Model::t(int idx) const {
@@ -602,9 +699,11 @@ const std::vector<int> &Model::getParameterList() const {
 }
 
 void Model::setParameterList(const std::vector<int> &plist) {
-    for(auto const& idx: plist)
-        if(idx < 0 || idx >= np())
-            throw AmiException("Indices in plist must be in [0..np]");
+    int np = this->np(); // cannot capture 'this' in lambda expression
+    if(std::any_of(plist.begin(), plist.end(),
+                   [&np](int idx){return idx < 0 || idx >= np;})) {
+        throw AmiException("Indices in plist must be in [0..np]");
+    }
     this->plist_ = plist;
 
     initializeVectors();
@@ -636,12 +735,12 @@ void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
         throw AmiException("Dimension mismatch. Size of sx0 does not match "
                            "number of model states * number of parameter "
                            "selected for sensitivities.");
-    
+
     if (sx0.size() == 0) {
         sx0data.clear();
         return;
     }
-    
+
     realtype chainrulefactor = 1.0;
     std::vector<realtype> sx0_rdata(nx_rdata * nplist(), 0.0);
     for (int ip = 0; ip < nplist(); ip++) {
@@ -695,6 +794,33 @@ int Model::plist(int pos) const{
     return plist_.at(pos);
 }
 
+bool Model::hasParameterNames() const { return np() && !getParameterNames().empty(); }
+
+std::vector<std::string> Model::getParameterNames() const { return std::vector<std::string>(); }
+
+bool Model::hasStateNames() const { return nx_rdata && !getStateNames().empty(); }
+
+std::vector<std::string> Model::getStateNames() const { return std::vector<std::string>(); }
+
+bool Model::hasFixedParameterNames() const { return nk() && !getFixedParameterNames().empty(); }
+
+std::vector<std::string> Model::getFixedParameterNames() const { return std::vector<std::string>(); }
+
+bool Model::hasObservableNames() const { return ny && !getObservableNames().empty(); }
+
+std::vector<std::string> Model::getObservableNames() const { return std::vector<std::string>(); }
+
+bool Model::hasParameterIds() const { return np() && !getParameterIds().empty(); }
+
+std::vector<std::string> Model::getParameterIds() const {
+    return std::vector<std::string>();
+}
+
+
+Model::Model()
+    : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0), nytrue(0), nz(0), nztrue(0),
+      ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
+      o2mode(SecondOrderMode::none), x_pos_tmp(0) {}
 
 Model::Model(const int nx_rdata,
              const int nxtrue_rdata,
@@ -800,6 +926,8 @@ void Model::initializeVectors()
 
 void Model::fx_rdata(AmiVector *x_rdata, const AmiVector *x) {
     fx_rdata(x_rdata->data(), x->data(), total_cl.data());
+    if(alwaysCheckFinite)
+        checkFinite(x_rdata->getLength(), x_rdata->data(), "x_rdata");
 }
 
 void Model::fx0(AmiVector *x) {
@@ -809,6 +937,11 @@ void Model::fx0(AmiVector *x) {
         fixedParameters.data());
     fx_solver(x->data(), x_rdata.data());
     ftotal_cl(total_cl.data(), x_rdata.data());
+
+    if(alwaysCheckFinite) {
+        checkFinite(x_rdata.size(), x_rdata.data(), "x0 x_rdata");
+        checkFinite(x->getLength(), x->data(), "x0 x");
+    }
 }
 
 void Model::fx0_fixedParameters(AmiVector *x) {
@@ -826,7 +959,7 @@ void Model::fx0_fixedParameters(AmiVector *x) {
     ftotal_cl(total_cl.data(), x_rdata.data());
 }
 
-void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
+
 
 void Model::fsx_rdata(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
     realtype *stcl = nullptr;
@@ -881,6 +1014,10 @@ void Model::fy(const realtype t, const int it, const AmiVector *x, ReturnData *r
         return;
     fw(t,x->data());
     fy(&rdata->y.at(it*ny),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(ny, &rdata->y.at(it*ny), "y");
+    }
 }
 
 void Model::fdydp(const realtype t, const AmiVector *x) {
@@ -902,6 +1039,10 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
               w.data(),
               dwdp.data());
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dydp, "dydp");
+    }
 }
 
 void Model::fdydx(const realtype t, const AmiVector *x) {
@@ -912,6 +1053,10 @@ void Model::fdydx(const realtype t, const AmiVector *x) {
     fw(t,x->data());
     fdwdx(t,x->data());
     fdydx(dydx.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),dwdx.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dydx, "dydx");
+    }
 }
 
 void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
@@ -939,11 +1084,19 @@ void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
     for(int ip = 0; ip < nplist(); ip++){
         fdzdp(dzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist(ip));
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dzdp, "dzdp");
+    }
 }
 
 void Model::fdzdx(const realtype t, const int ie, const AmiVector *x) {
     std::fill(dzdx.begin(),dzdx.end(),0.0);
     fdzdx(dzdx.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dzdx, "dzdx");
+    }
 }
 
 void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
@@ -951,18 +1104,30 @@ void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
     for(int ip = 0; ip < nplist(); ip++){
         fdrzdp(drzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist(ip));
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(drzdp, "drzdp");
+    }
 }
 
 
 void Model::fdrzdx(const realtype t, const int ie, const AmiVector *x) {
     std::fill(drzdx.begin(),drzdx.end(),0.0);
     fdrzdx(drzdx.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(drzdx, "drzdx");
+    }
 }
 
 void Model::fdeltax(const int ie, const realtype t, const AmiVector *x,
                     const AmiVector *xdot, const AmiVector *xdot_old) {
     std::fill(deltax.begin(),deltax.end(),0.0);
     fdeltax(deltax.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),ie,xdot->data(),xdot_old->data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(deltax, "deltax");
+    }
 }
 
 void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
@@ -972,12 +1137,20 @@ void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const A
     for(int ip = 0; ip < nplist(); ip++)
         fdeltasx(&deltasx.at(nx_solver*ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),
                  plist(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(deltasx, "deltasx");
+    }
 }
 
 void Model::fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                      const AmiVector *xdot, const AmiVector *xdot_old) {
     std::fill(deltaxB.begin(),deltaxB.end(),0.0);
     fdeltaxB(deltaxB.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),ie,xdot->data(),xdot_old->data(),xB->data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(deltaxB, "deltaxB");
+    }
 }
 
 void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
@@ -986,6 +1159,10 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
     for(int ip = 0; ip < nplist(); ip++)
         fdeltaqB(deltaqB.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                  plist(ip),ie,xdot->data(),xdot_old->data(),xB->data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(deltaqB, "deltaqB");
+    }
 }
 
 void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
@@ -1040,23 +1217,32 @@ void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
 
     // copy dsigmaydp slice for current timepoint
     std::copy(dsigmaydp.begin(), dsigmaydp.end(), &rdata->ssigmay[it * nplist() * ny]);
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dsigmaydp, "dsigmaydp");
+    }
 }
 
-void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnData *rdata,
-                    const ExpData *edata) {
-    std::fill(sigmaz.begin(),sigmaz.end(),0.0);
-    fsigmaz(sigmaz.data(),t, unscaledParameters.data(),fixedParameters.data());
-
-    auto sigmaz_edata = edata->getObservedEventsStdDevPtr(nroots[ie]);
+void Model::fsigmaz(const realtype t, const int ie, const int *nroots,
+                    ReturnData *rdata, const ExpData *edata) {
+    std::fill(sigmaz.begin(), sigmaz.end(), 0.0);
+    fsigmaz(sigmaz.data(), t, unscaledParameters.data(),
+            fixedParameters.data());
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (z2event.at(iztrue) - 1 == ie) {
-            if(edata) {
-                if (edata->isSetObservedEventsStdDev(nroots[ie],iztrue)) {
+            if (edata) {
+                if (edata->isSetObservedEventsStdDev(nroots[ie], iztrue)) {
+                    auto sigmaz_edata =
+                        edata->getObservedEventsStdDevPtr(nroots[ie]);
                     sigmaz.at(iztrue) = sigmaz_edata[iztrue];
                 }
             }
-            rdata->sigmaz[nroots[ie]*rdata->nz + iztrue] = sigmaz.at(iztrue);
+            rdata->sigmaz[nroots[ie] * rdata->nz + iztrue] = sigmaz.at(iztrue);
         }
+    }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(sigmaz, "sigmaz");
     }
 }
 
@@ -1083,6 +1269,10 @@ void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, Return
 
     // copy dsigmazdp slice for current event
     std::copy(dsigmazdp.begin(), dsigmazdp.end(), &rdata->ssigmaz[nroots[ie] * nplist() * nz]);
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dsigmazdp, "dsigmazdp");
+    }
 }
 
 void Model::fJy(const int it, ReturnData *rdata, const ExpData *edata) {
@@ -1139,6 +1329,10 @@ void Model::fdJydy(const int it, const ReturnData *rdata,
                    my.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJydy, "dJydy");
+    }
 }
 
 void Model::fdJydsigma(const int it, const ReturnData *rdata,
@@ -1159,6 +1353,10 @@ void Model::fdJydsigma(const int it, const ReturnData *rdata,
                        my.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJydsigma, "dJydsigma");
+    }
 }
 
 void Model::fdJzdz(const int nroots, const ReturnData *rdata,
@@ -1169,6 +1367,10 @@ void Model::fdJzdz(const int nroots, const ReturnData *rdata,
         if(!isNaN(mz.at(iztrue))){
             fdJzdz(&dJzdz.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getz(nroots,rdata),sigmaz.data(),mz.data());
         }
+    }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJzdz, "dJzdz");
     }
 }
 
@@ -1181,6 +1383,10 @@ void Model::fdJzdsigma(const int nroots, const ReturnData *rdata,
             fdJzdsigma(&dJzdsigma.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getz(nroots,rdata),sigmaz.data(),mz.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJzdsigma, "dJzdsigma");
+    }
 }
 
 void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
@@ -1192,6 +1398,10 @@ void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
             fdJrzdz(&dJrzdz.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getrz(nroots,rdata),sigmaz.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJrzdz, "dJrzdz");
+    }
 }
 
 void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
@@ -1202,23 +1412,39 @@ void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
             fdJrzdsigma(&dJrzdsigma.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getrz(nroots,rdata),sigmaz.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJrzdsigma, "dJrzdsigma");
+    }
 }
 
 void Model::fw(const realtype t, const realtype *x) {
     std::fill(w.begin(),w.end(),0.0);
     fw(w.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), total_cl.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(w, "w");
+    }
 }
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdp.begin(),dwdp.end(),0.0);
     fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), w.data(), total_cl.data(), stotal_cl.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dwdp, "dwdp");
+    }
 }
 
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdx.begin(),dwdx.end(),0.0);
     fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), w.data(), total_cl.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dwdx, "dwdx");
+    }
 }
 
 void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
@@ -1233,7 +1459,6 @@ void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
             continue;
         rdata->res.at(iyt_true) = (rdata->y.at(iyt) - observedData[iy])/rdata->sigmay.at(iyt);
     }
-
 }
 
 void Model::fchi2(const int it, ReturnData *rdata) {
@@ -1329,6 +1554,16 @@ const realtype *Model::getsz(const int nroots, const int ip, const ReturnData *r
 
 const realtype *Model::getsrz(const int nroots, const int ip, const ReturnData *rdata) const {
     return(&rdata->srz.at((nroots*nplist()+ip)*nz));
+}
+
+void Model::setAlwaysCheckFinite(bool alwaysCheck)
+{
+    alwaysCheckFinite = alwaysCheck;
+}
+
+bool Model::getAlwaysCheckFinite() const
+{
+    return alwaysCheckFinite;
 }
 
 int Model::checkFinite(const int N, const realtype *array, const char *fun) const

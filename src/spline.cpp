@@ -197,7 +197,7 @@ double seval(int n, double u, double x[], double y[], double b[], double c[],
 
 { /* begin function seval() */
 
-    int i, j;
+    int i;
     double w;
 
     if (u <= x[0]) {
@@ -207,7 +207,7 @@ double seval(int n, double u, double x[], double y[], double b[], double c[],
             i = n - 1;
         } else {
             i = 0;
-            j = n;
+            int j = n;
             do {
                 int k = (i + j) / 2; /* split the domain to search */
                 if (u < x[k])

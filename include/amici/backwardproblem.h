@@ -24,50 +24,50 @@ class BackwardProblem {
   public:
     void workBackwardProblem();
 
-    BackwardProblem(const ForwardProblem *fwd);
-    
+    explicit BackwardProblem(const ForwardProblem *fwd);
+
     /** accessor for t
      * @return t
      */
     realtype gett() const {
         return t;
     }
-    
+
     /** accessor for which
      * @return which
      */
     int getwhich() const {
         return which;
     }
-    
+
     /** accessor for pointer to which
      * @return which
      */
     int *getwhichptr() {
         return &which;
     }
-    
+
     /** accessor for pointer to xB
      * @return &xB
      */
     AmiVector *getxBptr() {
         return &xB;
     }
-    
+
     /** accessor for pointer to xQB
      * @return &xQB
      */
     AmiVector *getxQBptr() {
         return &xQB;
     }
-    
+
     /** accessor for pointer to dxB
      * @return &dxB
      */
     AmiVector *getdxBptr() {
         return &dxB;
     }
-    
+
     /** accessor for dJydx
      * @return dJydx
      */
@@ -76,15 +76,15 @@ class BackwardProblem {
     }
 
   private:
-        
+
     void handleEventB(int iroot);
-    
+
     void handleDataPointB(const int it);
-    
+
     void updateHeavisideB(const int iroot);
-    
+
     realtype getTnext(std::vector<realtype> const& troot, const int iroot, const int it);
-    
+
     Model *model;
     ReturnData *rdata;
     Solver *solver;
@@ -120,7 +120,7 @@ class BackwardProblem {
     int iroot = 0;
     /** array of index which root has been found */
     const std::vector<int> rootidx;
-    
+
     /** state derivative of data likelihood */
     const std::vector<realtype> dJydx;
     /** state derivative of event likelihood */

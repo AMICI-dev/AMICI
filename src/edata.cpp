@@ -1,6 +1,6 @@
 #include "amici/edata.h"
 #include "amici/rdata.h"
-
+#include "amici/symbolic_functions.h" // getNaN
 #include "amici/defines.h"
 #include "amici/model.h"
 
@@ -16,23 +16,34 @@ ExpData::ExpData() : nytrue_(0), nztrue_(0), nmaxevent_(0) {}
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
     : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent)
 {
+    applyDimensions();
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype> ts)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent)
+                 std::vector<realtype>  const& ts_)
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
 {
-    setTimepoints(ts);
+    applyDimensions();
+}
+    
+ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
+                 std::vector<realtype>  const& ts_,
+                 std::vector<realtype>  const& fixedParameters_
+                 )
+    : fixedParameters(fixedParameters_), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
+{
+    applyDimensions();
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype> ts,
-                 std::vector<realtype> observedData,
-                 std::vector<realtype> observedDataStdDev,
-                 std::vector<realtype> observedEvents,
-                 std::vector<realtype> observedEventsStdDev)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts))
+                 std::vector<realtype> const& ts_,
+                 std::vector<realtype> const& observedData,
+                 std::vector<realtype> const& observedDataStdDev,
+                 std::vector<realtype> const& observedEvents,
+                 std::vector<realtype> const& observedEventsStdDev)
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
 {
+    applyDimensions();
     setObservedData(observedData);
     setObservedDataStdDev(observedDataStdDev);
     setObservedEvents(observedEvents);
@@ -40,17 +51,14 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
 }
 
 ExpData::ExpData(Model const& model)
-    : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(), model.getTimepoints())
-{
-    fixedParameters = std::move(model.getFixedParameters());
-}
+    : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(),
+              model.getTimepoints(), model.getFixedParameters()) {}
     
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
-    : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z))
-{
-}
+    : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z)) {}
     
-ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::vector<realtype> sigma_z)
+ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
+                 std::vector<realtype> sigma_z)
     : ExpData(rdata.nytrue, rdata.nztrue, rdata.nmaxevent, rdata.ts)
 {
     if (sigma_y.size() != (unsigned) nytrue_ && sigma_y.size() != (unsigned) nytrue_*nt())
@@ -89,10 +97,8 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y, std::ve
 void ExpData::setTimepoints(const std::vector<realtype> &ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
         throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
-
-    this->ts = std::move(ts);
-    observedData.resize(nt()*nytrue_, getNaN());
-    observedDataStdDev.resize(nt()*nytrue_, getNaN());
+    this->ts = ts;
+    applyDataDimension();
 }
     
 std::vector<realtype> const& ExpData::getTimepoints() const {
@@ -111,7 +117,7 @@ void ExpData::setObservedData(const std::vector<realtype> &observedData) {
     checkDataDimension(observedData, "observedData");
         
     if (observedData.size() == (unsigned) nt()*nytrue_)
-        this->observedData = std::move(observedData);
+        this->observedData = observedData;
     else if (observedData.empty())
         this->observedData.clear();
 }
@@ -144,7 +150,7 @@ void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStd
     checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
     
     if (observedDataStdDev.size() == (unsigned) nt()*nytrue_)
-        this->observedDataStdDev = std::move(observedDataStdDev);
+        this->observedDataStdDev = observedDataStdDev;
     else if (observedDataStdDev.empty())
         this->observedDataStdDev.clear();
 }
@@ -188,7 +194,7 @@ void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents) {
     checkEventsDimension(observedEvents, "observedEvents");
     
     if (observedEvents.size() == (unsigned) nmaxevent_*nztrue_)
-        this->observedEvents = std::move(observedEvents);
+        this->observedEvents = observedEvents;
     else if (observedEvents.empty())
         this->observedEvents.clear();
 }
@@ -222,7 +228,7 @@ void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEvent
     checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
         
     if (observedEventsStdDev.size() == (unsigned) nmaxevent_*nztrue_)
-        this->observedEventsStdDev = std::move(observedEventsStdDev);
+        this->observedEventsStdDev = observedEventsStdDev;
     else if (observedEventsStdDev.empty())
         this->observedEventsStdDev.clear();
 }
@@ -265,6 +271,21 @@ const realtype *ExpData::getObservedEventsStdDevPtr(int ie) const {
    
     return nullptr;
 }
+  
+void ExpData::applyDimensions() {
+    applyDataDimension();
+    applyEventDimension();
+}
+
+void ExpData::applyDataDimension() {
+    observedData.resize(nt()*nytrue_, getNaN());
+    observedDataStdDev.resize(nt()*nytrue_, getNaN());
+}
+    
+void ExpData::applyEventDimension() {
+    observedEvents.resize(nmaxevent_*nztrue_, getNaN());
+    observedEventsStdDev.resize(nmaxevent_*nztrue_, getNaN());
+}
     
 void ExpData::checkDataDimension(std::vector<realtype> input, const char *fieldname) const {
     if (input.size() != (unsigned) nt()*nytrue_ && !input.empty())
@@ -286,20 +307,19 @@ void checkSigmaPositivity(const realtype sigma, const char *sigmaName) {
         throw AmiException("Encountered sigma <= 0 in %s! value: %f", sigmaName, sigma);
 }
 
-
-int amici::ExpData::nytrue() const
+int ExpData::nytrue() const
 {
     return nytrue_;
 }
 
-int amici::ExpData::nztrue() const
+int ExpData::nztrue() const
 {
     return nztrue_;
 }
 
-int amici::ExpData::nmaxevent() const
+int ExpData::nmaxevent() const
 {
     return nmaxevent_;
 }
-
+    
 } // namespace amici
