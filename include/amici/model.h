@@ -509,7 +509,6 @@ namespace amici {
          * @param dJydx pointer to vector with values of state derivative of Jy
          * @param it timepoint index
          * @param edata pointer to experimental data instance
-         * @param rdata pointer to return data instance
          */
         void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata);
 
