@@ -49,7 +49,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     try {
         applyNewtonsMethod(rdata, model, newtonSolver.get(), 1);
         newton_status = NewtonStatus::newt;
-    } catch(NewtonFailure const& ex) {
+    } catch(NewtonFailure const& ex1) {
         try {
             /* Newton solver did not work, so try a simulation */
             if (it<1) {
@@ -63,14 +63,14 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                 getSteadystateSimulation(rdata, solver, model, it);
             }
             newton_status = NewtonStatus::newt_sim;
-        } catch(AmiException const& ex) {
+        } catch(AmiException const& ex2) {
             /* may be integration failure from AmiSolve, so NewtonFailure
                won't do for all cases */
             try {
                 applyNewtonsMethod(rdata, model, newtonSolver.get(), 2);
                 newton_status = NewtonStatus::newt_sim_newt;
-            } catch(NewtonFailure const& ex) {
-                throw amici::IntegrationFailure(ex.error_code,*t);
+            } catch(NewtonFailure const& ex3) {
+                throw amici::IntegrationFailure(ex3.error_code,*t);
             }
         }
     } catch(...) {
@@ -134,7 +134,6 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
                                            int newton_try) {
     int i_newtonstep = 0;
     int ix = 0;
-    realtype wrms_tmp;
     double gamma = 1.0;
     bool compNewStep = TRUE;
 
@@ -173,7 +172,8 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
         
         /* Compute new xdot and residuals */
         model->fxdot(*t, x, &dx, &xdot);
-        wrms_tmp = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol);
+        realtype wrms_tmp = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
+                                        newtonSolver->rtol);
         
         if (wrms_tmp < wrms) {
             /* If new residuals are smaller than old ones, update state */

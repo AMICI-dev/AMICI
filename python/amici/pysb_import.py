@@ -376,7 +376,7 @@ def process_pysb_conservation_laws(model, ODE):
             if any([
                 model.initial_conditions_fixed[ix] # true or false
                 for ix, cp in enumerate(model.initial_conditions)
-                if monomer.name in extract_monomers(cp)
+                if monomer.name in extract_monomers(cp[0])
             ]):
                 monomers_without_conservation_law |= {monomer.name}
 

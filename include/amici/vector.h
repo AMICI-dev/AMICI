@@ -21,7 +21,7 @@ public:
       * @return new AmiVector instance
       */
 
-    AmiVector(const long int length)
+    explicit AmiVector(const long int length)
         : vec(static_cast<decltype(vec)::size_type>(length), 0.0),
           nvec(N_VMake_Serial(length,vec.data()))
     {
@@ -32,7 +32,7 @@ public:
       * @param rvec vector from which the data will be copied
       * @return new AmiVector instance
       */
-    AmiVector(std::vector<realtype> rvec)
+    explicit AmiVector(std::vector<realtype> rvec)
         : vec(std::move(rvec)),
           nvec(N_VMake_Serial(static_cast<long int>(vec.size()), vec.data()))
     {
@@ -41,8 +41,7 @@ public:
     /** copy constructor
       * @param vold vector from which the data will be copied
       */
-    AmiVector(const AmiVector& vold) {
-        vec = vold.vec;
+    AmiVector(const AmiVector& vold): vec(vold.vec) {
         nvec = N_VMake_Serial(static_cast<long int>(vold.vec.size()), vec.data());
     }
 

@@ -39,7 +39,7 @@ namespace amici {
             va_end(ap);
             storeBacktrace(12);
         }
-        
+
         AmiException(const AmiException& old) {
             /** copy constructor
              * @param old object to copy from
@@ -47,71 +47,77 @@ namespace amici {
             snprintf(msg, sizeof(msg), "%s", old.msg);
             snprintf(trace, sizeof(trace), "%s", old.trace);
         }
-        
+
         /** override of default error message function
          * @return msg error message
          */
         const char* what() const throw() {
             return msg;
         }
-        
+
         /** returns the stored backtrace
          * @return trace backtrace
          */
         const char *getBacktrace() const {
             return trace;
         }
-        
+
         /** stores the current backtrace
          * @param nMaxFrames number of frams to go back in stacktrace
          */
         void storeBacktrace(const int nMaxFrames) {
             std::ostringstream trace_buf;
-            
+
             #ifdef PLATFORM_WINDOWS
-            
+
             trace_buf << "stacktrace not available on windows platforms\n";
-            
+
             #else
-            
+
             void *callstack[nMaxFrames];
             char buf[1024];
             int nFrames = backtrace(callstack, nMaxFrames);
             char **symbols = backtrace_symbols(callstack, nFrames);
-            
-            for (int i = 2; i < nFrames; i++) { // start at 2 to omit AmiException and storeBacktrace call
+
+            for (int i = 2; i < nFrames;
+                 i++) { // start at 2 to omit AmiException and storeBacktrace
+                        // call
                 Dl_info info;
                 if (dladdr(callstack[i], &info) && info.dli_sname) {
                     char *demangled = NULL;
                     int status = -1;
                     if (info.dli_sname[0] == '_')
-                        demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0, &status);
-                    snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n",
-                             i-2, int(2 + sizeof(void*) * 2), callstack[i],
-                             status == 0 ? demangled :
-                             info.dli_sname == 0 ? symbols[i] : info.dli_sname,
-                             (char *)callstack[i] - (char *)info.dli_saddr);
+                        demangled = abi::__cxa_demangle(info.dli_sname, NULL, 0,
+                                                        &status);
+                    snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n", i - 2,
+                             int(2 + sizeof(void *) * 2), callstack[i],
+                             status == 0 ? demangled
+                                         : info.dli_sname == 0 ? symbols[i]
+                                                               : info.dli_sname,
+                             static_cast<ssize_t>((char *)callstack[i] -
+                                                  (char *)info.dli_saddr));
                     free(demangled);
                 } else {
-                    snprintf(buf, sizeof(buf), "%-3d %*p %s\n",
-                             i-2, int(2 + sizeof(void*) * 2), callstack[i], symbols[i]);
+                    snprintf(buf, sizeof(buf), "%-3d %*p %s\n", i - 2,
+                             int(2 + sizeof(void *) * 2), callstack[i],
+                             symbols[i]);
                 }
                 trace_buf << buf;
             }
             free(symbols);
             if (nFrames == nMaxFrames)
                 trace_buf << "[truncated]\n";
-            
+
             #endif
-            
+
             snprintf(trace, sizeof(trace), "%s", trace_buf.str().c_str());
         }
-        
+
     private:
         char msg[500];
         char trace[500];
     };
-    
+
     /** @brief cvode exception handler class
      */
     class CvodeException : public AmiException  {
@@ -123,7 +129,7 @@ namespace amici {
         CvodeException(const int error_code, const char *function) :
         AmiException("Cvode routine %s failed with error code %i",function,error_code){}
     };
-    
+
     /** @brief ida exception handler class
      */
     class IDAException : public AmiException  {
@@ -135,7 +141,7 @@ namespace amici {
         IDAException(const int error_code, const char *function) :
         AmiException("IDA routine %s failed with error code %i",function,error_code){}
     };
-    
+
     /** @brief integration failure exception for the forward problem
      * this exception should be thrown when an integration failure occured
      * for this exception we can assume that we can recover from the exception
@@ -152,12 +158,10 @@ namespace amici {
          * @param t time of integration failure
          */
         IntegrationFailure(int code, realtype t) :
-        AmiException("AMICI failed to integrate the forward problem") {
-            error_code = code;
-            time = t;
-        }
+        AmiException("AMICI failed to integrate the forward problem"),
+        error_code(code), time(t) {}
     };
-    
+
     /** @brief integration failure exception for the backward problem
      * this exception should be thrown when an integration failure occured
      * for this exception we can assume that we can recover from the exception
@@ -174,12 +178,10 @@ namespace amici {
          * @param t time of integration failure
          */
         IntegrationFailureB(int code, realtype t) :
-        AmiException("AMICI failed to integrate the backward problem") {
-            error_code = code;
-            time = t;
-        }
+        AmiException("AMICI failed to integrate the backward problem"),
+        error_code(code), time(t) {}
     };
-    
+
     /** @brief setup failure exception
      * this exception should be thrown when the solver setup failed
      * for this exception we can assume that we cannot recover from the exception
@@ -190,9 +192,9 @@ namespace amici {
         /** constructor, simply calls AmiException constructor
          * @param msg
          */
-        SetupFailure(const char *msg) : AmiException(msg) {}
+        explicit SetupFailure(const char *msg) : AmiException(msg) {}
     };
-    
+
     /** @brief newton failure exception
      * this exception should be thrown when the steady state computation
      * failed to converge for this exception we can assume that we can
@@ -211,8 +213,8 @@ namespace amici {
             error_code = code;
         }
     };
-    
-    
+
+
 }
 
 #endif /* amici_exception_h */
