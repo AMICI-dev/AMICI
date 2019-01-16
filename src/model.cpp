@@ -26,6 +26,9 @@ void Model::fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata) {
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, ny, nplist(), nx_solver,
                 1.0, dydx.data(), ny, this->sx.data(), nx_solver, 1.0,
                 &rdata->sy[it*nplist()*ny], ny);
+
+    if(alwaysCheckFinite)
+        checkFinite(nplist()*ny, &rdata->sy[it*nplist()*ny], "sy");
 }
 
 void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
@@ -112,7 +115,7 @@ void Model::fdJydp(const int it, ReturnData *rdata, const ExpData *edata) {
     }
 }
 
-void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ReturnData *rdata, const ExpData *edata) {
+void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata) {
 
     // dJydy         nJ x ny        x nytrue
     // dydx          ny x nx_solver
@@ -805,6 +808,8 @@ void Model::initializeVectors()
 
 void Model::fx_rdata(AmiVector *x_rdata, const AmiVector *x) {
     fx_rdata(x_rdata->data(), x->data(), total_cl.data());
+    if(alwaysCheckFinite)
+        checkFinite(x_rdata->getLength(), x_rdata->data(), "x_rdata");
 }
 
 void Model::fx0(AmiVector *x) {
@@ -814,6 +819,11 @@ void Model::fx0(AmiVector *x) {
         fixedParameters.data());
     fx_solver(x->data(), x_rdata.data());
     ftotal_cl(total_cl.data(), x_rdata.data());
+
+    if(alwaysCheckFinite) {
+        checkFinite(x_rdata.size(), x_rdata.data(), "x0 x_rdata");
+        checkFinite(x->getLength(), x->data(), "x0 x");
+    }
 }
 
 void Model::fx0_fixedParameters(AmiVector *x) {
@@ -886,6 +896,10 @@ void Model::fy(const realtype t, const int it, const AmiVector *x, ReturnData *r
         return;
     fw(t,x->data());
     fy(&rdata->y.at(it*ny),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(ny, &rdata->y.at(it*ny), "y");
+    }
 }
 
 void Model::fdydp(const realtype t, const AmiVector *x) {
@@ -907,6 +921,10 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
               w.data(),
               dwdp.data());
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dydp, "dydp");
+    }
 }
 
 void Model::fdydx(const realtype t, const AmiVector *x) {
@@ -917,6 +935,10 @@ void Model::fdydx(const realtype t, const AmiVector *x) {
     fw(t,x->data());
     fdwdx(t,x->data());
     fdydx(dydx.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),dwdx.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dydx, "dydx");
+    }
 }
 
 void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
@@ -944,11 +966,19 @@ void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
     for(int ip = 0; ip < nplist(); ip++){
         fdzdp(dzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist(ip));
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dzdp, "dzdp");
+    }
 }
 
 void Model::fdzdx(const realtype t, const int ie, const AmiVector *x) {
     std::fill(dzdx.begin(),dzdx.end(),0.0);
     fdzdx(dzdx.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dzdx, "dzdx");
+    }
 }
 
 void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
@@ -956,18 +986,30 @@ void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
     for(int ip = 0; ip < nplist(); ip++){
         fdrzdp(drzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist(ip));
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(drzdp, "drzdp");
+    }
 }
 
 
 void Model::fdrzdx(const realtype t, const int ie, const AmiVector *x) {
     std::fill(drzdx.begin(),drzdx.end(),0.0);
     fdrzdx(drzdx.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(drzdx, "drzdx");
+    }
 }
 
 void Model::fdeltax(const int ie, const realtype t, const AmiVector *x,
                     const AmiVector *xdot, const AmiVector *xdot_old) {
     std::fill(deltax.begin(),deltax.end(),0.0);
     fdeltax(deltax.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),ie,xdot->data(),xdot_old->data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(deltax, "deltax");
+    }
 }
 
 void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
@@ -977,12 +1019,20 @@ void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const A
     for(int ip = 0; ip < nplist(); ip++)
         fdeltasx(&deltasx.at(nx_solver*ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),
                  plist(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(deltasx, "deltasx");
+    }
 }
 
 void Model::fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
                      const AmiVector *xdot, const AmiVector *xdot_old) {
     std::fill(deltaxB.begin(),deltaxB.end(),0.0);
     fdeltaxB(deltaxB.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),ie,xdot->data(),xdot_old->data(),xB->data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(deltaxB, "deltaxB");
+    }
 }
 
 void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
@@ -991,6 +1041,10 @@ void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const A
     for(int ip = 0; ip < nplist(); ip++)
         fdeltaqB(deltaqB.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
                  plist(ip),ie,xdot->data(),xdot_old->data(),xB->data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(deltaqB, "deltaqB");
+    }
 }
 
 void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
@@ -1045,6 +1099,10 @@ void Model::fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata) {
 
     // copy dsigmaydp slice for current timepoint
     std::copy(dsigmaydp.begin(), dsigmaydp.end(), &rdata->ssigmay[it * nplist() * ny]);
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dsigmaydp, "dsigmaydp");
+    }
 }
 
 void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnData *rdata,
@@ -1062,6 +1120,10 @@ void Model::fsigmaz(const realtype t, const int ie, const int *nroots, ReturnDat
             }
             rdata->sigmaz[nroots[ie]*rdata->nz + iztrue] = sigmaz.at(iztrue);
         }
+    }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(sigmaz, "sigmaz");
     }
 }
 
@@ -1088,6 +1150,10 @@ void Model::fdsigmazdp(const realtype t, const int ie, const int *nroots, Return
 
     // copy dsigmazdp slice for current event
     std::copy(dsigmazdp.begin(), dsigmazdp.end(), &rdata->ssigmaz[nroots[ie] * nplist() * nz]);
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dsigmazdp, "dsigmazdp");
+    }
 }
 
 void Model::fJy(const int it, ReturnData *rdata, const ExpData *edata) {
@@ -1144,6 +1210,10 @@ void Model::fdJydy(const int it, const ReturnData *rdata,
                    my.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJydy, "dJydy");
+    }
 }
 
 void Model::fdJydsigma(const int it, const ReturnData *rdata,
@@ -1164,6 +1234,10 @@ void Model::fdJydsigma(const int it, const ReturnData *rdata,
                        my.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJydsigma, "dJydsigma");
+    }
 }
 
 void Model::fdJzdz(const int nroots, const ReturnData *rdata,
@@ -1174,6 +1248,10 @@ void Model::fdJzdz(const int nroots, const ReturnData *rdata,
         if(!isNaN(mz.at(iztrue))){
             fdJzdz(&dJzdz.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getz(nroots,rdata),sigmaz.data(),mz.data());
         }
+    }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJzdz, "dJzdz");
     }
 }
 
@@ -1186,6 +1264,10 @@ void Model::fdJzdsigma(const int nroots, const ReturnData *rdata,
             fdJzdsigma(&dJzdsigma.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getz(nroots,rdata),sigmaz.data(),mz.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJzdsigma, "dJzdsigma");
+    }
 }
 
 void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
@@ -1197,6 +1279,10 @@ void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
             fdJrzdz(&dJrzdz.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getrz(nroots,rdata),sigmaz.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJrzdz, "dJrzdz");
+    }
 }
 
 void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
@@ -1207,23 +1293,39 @@ void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
             fdJrzdsigma(&dJrzdsigma.at(iztrue*nz*nJ),iztrue, unscaledParameters.data(),fixedParameters.data(),getrz(nroots,rdata),sigmaz.data());
         }
     }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJrzdsigma, "dJrzdsigma");
+    }
 }
 
 void Model::fw(const realtype t, const realtype *x) {
     std::fill(w.begin(),w.end(),0.0);
     fw(w.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), total_cl.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(w, "w");
+    }
 }
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdp.begin(),dwdp.end(),0.0);
     fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), w.data(), total_cl.data(), stotal_cl.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dwdp, "dwdp");
+    }
 }
 
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t,x);
     std::fill(dwdx.begin(),dwdx.end(),0.0);
     fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), w.data(), total_cl.data());
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dwdx, "dwdx");
+    }
 }
 
 void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
@@ -1238,7 +1340,6 @@ void Model::fres(const int it, ReturnData *rdata, const ExpData *edata) {
             continue;
         rdata->res.at(iyt_true) = (rdata->y.at(iyt) - observedData[iy])/rdata->sigmay.at(iyt);
     }
-
 }
 
 void Model::fchi2(const int it, ReturnData *rdata) {
@@ -1334,6 +1435,16 @@ const realtype *Model::getsz(const int nroots, const int ip, const ReturnData *r
 
 const realtype *Model::getsrz(const int nroots, const int ip, const ReturnData *rdata) const {
     return(&rdata->srz.at((nroots*nplist()+ip)*nz));
+}
+
+void Model::setAlwaysCheckFinite(bool alwaysCheck)
+{
+    alwaysCheckFinite = alwaysCheck;
+}
+
+bool Model::getAlwaysCheckFinite() const
+{
+    return alwaysCheckFinite;
 }
 
 int Model::checkFinite(const int N, const realtype *array, const char *fun) const

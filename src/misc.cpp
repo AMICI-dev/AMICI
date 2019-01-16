@@ -7,13 +7,6 @@
 
 namespace amici {
 
-/** Checks the values in an array for NaNs and Infs
- *
- * @param N number of elements in array
- * @param array array
- * @param fun name of calling function
- * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
- */
 int checkFinite(const int N,const realtype *array, const char* fun){
     for(int idx = 0; idx < N; idx++) {
         if(isNaN(array[idx])) {
@@ -81,6 +74,11 @@ void scaleParameters(const std::vector<double> &bufferUnscaled, const std::vecto
         bufferScaled[ip] = getScaledParameter(bufferUnscaled[ip], pscale[ip]);
     }
 
+}
+
+int checkFinite(const std::vector<realtype> &array, const char *fun)
+{
+    return checkFinite(array.size(), array.data(), fun);
 }
 
 } // namespace amici
