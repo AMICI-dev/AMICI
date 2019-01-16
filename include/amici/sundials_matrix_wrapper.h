@@ -85,7 +85,7 @@ public:
      * @param M Number of rows
      * @param N Number of columns
      */
-    DlsMatWrapper(long M, long N);
+    DlsMatWrapper(long int M, long int N);
 
     /**
      * @brief DlsMatWrapper
