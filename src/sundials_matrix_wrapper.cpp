@@ -69,7 +69,7 @@ SlsMat SlsMatWrapper::slsmat() const {
 
 
 DlsMatWrapper::DlsMatWrapper(long int M, long int N)
-    : matrix = NewDenseMat(M, N)
+    : matrix(NewDenseMat(M, N))
 {
     if((M*N > 0) && !matrix)
         throw std::bad_alloc();
