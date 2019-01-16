@@ -996,6 +996,7 @@ def constantSpeciesToParameters(sbml_model):
         species = sbml_model.removeSpecies(speciesId)
         par = sbml_model.createParameter()
         par.setId(species.getId())
+        par.setName(species.getName())
         par.setConstant(True)
         par.setValue(species.getInitialConcentration())
         par.setUnits(species.getUnits())
