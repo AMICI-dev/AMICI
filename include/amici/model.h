@@ -636,9 +636,9 @@ namespace amici {
         /**
          * @brief Set ParameterScale for each parameter, resets initial state
          * sensitivities
-         * @param pscale vector of parameter scales
+         * @param pscaleVec vector of parameter scales
          */
-        void setParameterScale(const std::vector<ParameterScaling>& pscale);
+        void setParameterScale(const std::vector<ParameterScaling>& pscaleVec);
 
         /**
          * @brief Get the parameter vector
@@ -925,7 +925,22 @@ namespace amici {
          * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
          */
         int checkFinite(const int N,const realtype *array, const char* fun) const;
-
+        
+        /**
+         * @brief Returns the amici version that was used to generate the model
+         * @return ver amici version string
+         */
+        virtual const std::string getAmiciVersion() const {
+            throw AmiException("Version not set during code generation");
+        }
+        
+        /**
+         * @brief Returns the amici commit that was used to generate the model
+         * @return ver amici commit string
+         */
+        virtual const std::string getAmiciCommit() const {
+            throw AmiException("Commit not set during code generation");
+        }
 
         /**
          * @brief Reports whether the model has parameter names set.

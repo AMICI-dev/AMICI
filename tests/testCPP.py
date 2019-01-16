@@ -49,9 +49,14 @@ class TestAmiciCPP(unittest.TestCase):
         sys.path = self.default_path
 
     def runTest(self):
-        self.testCopyConstructors()
+        self.test_copy_constructors()
+        self.test_version_number()
 
-    def testCopyConstructors(self):
+    def test_version_number(self):
+        self.assertEqual(self.model.getAmiciVersion(), amici.__version__)
+        self.assertEqual(self.model.getAmiciCommit(), amici.__commit__)
+
+    def test_copy_constructors(self):
         # TODO: expand this to serialization
         for obj in [self.model, self.solver]:
             for attr in dir(obj):
