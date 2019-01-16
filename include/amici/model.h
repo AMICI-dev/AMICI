@@ -743,6 +743,12 @@ namespace amici {
         void setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative);
 
         /**
+         * @brief sets flags indicating that all states should be treated as non-negative
+         */
+        void setAllStatesNonNegative();
+
+
+        /**
          * @brief Get timepoint for given index
          * @param idx timepoint index
          * @return timepoint

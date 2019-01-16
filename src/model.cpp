@@ -593,6 +593,11 @@ void Model::setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative) {
     }
 }
 
+void Model::setAllStatesNonNegative()
+{
+    setStateIsNonNegative(std::vector<bool>(nx_solver, true));
+}
+
 double Model::t(int idx) const {
     return ts.at(idx);
 }
