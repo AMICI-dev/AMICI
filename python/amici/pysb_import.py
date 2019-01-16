@@ -491,17 +491,6 @@ def _compute_possible_indices(cl_prototypes, model, excluded_monomers):
                 prototype['possible_indices']
             )
 
-            prototype['co_monomers'] = [
-                len(set([
-                    mono
-                    for mono in extract_monomers(specie)
-                    if mono not in excluded_monomers
-                       and mono != monomer.name
-                ]))
-                for ix, specie in enumerate(model.species)
-                if monomer.name in extract_monomers(specie)
-            ]
-
             cl_prototypes[monomer.name] = prototype
 
 
@@ -525,6 +514,13 @@ def _compute_target_index(cl_prototypes, ODE):
         for monomer in cl_prototypes
     ]))))
 
+    # Note: currently this function is supposed to also count appearances in
+    # expressions. However, expressions are currently still empty as they
+    # are also populated from conservation laws. In case there are many
+    # state heavy expressions in the model (should not be the case for mass
+    # action kinetics). This may lead to suboptimal results and could improved.
+    # As this would require substantial code shuffling, this will only be
+    # fixed if this becomes an actual problem
     appearance_counts = ODE.get_appearance_counts(possible_indices)
 
     for monomer in cl_prototypes:
@@ -543,6 +539,12 @@ def _compute_target_index(cl_prototypes, ODE):
         prototype['target_index'] = prototype['possible_indices'].pop(idx)
         prototype['appearance_count'] = prototype['appearance_counts'].pop(idx)
 
+        # this is only an approximation as the effective species count
+        # of other conservation laws may also be affected by the chosen
+        # target index. As long as the number of unique monomers in
+        # multimers has a low upper bound and the species count does not
+        # vary too much across conservation laws, this approximation
+        # should be fine
         prototype['fillin'] = \
             prototype['appearance_count'] * prototype['species_count']
 
@@ -608,6 +610,7 @@ def _greedy_target_index_update(cl_prototypes):
             prototype['alternate_fillin'] = \
                 prototype['alternate_appearance_count'] \
                 * prototype['species_count']
+
             prototype['diff_fillin'] = \
                 prototype['alternate_fillin'] - prototype['fillin']
         else:
