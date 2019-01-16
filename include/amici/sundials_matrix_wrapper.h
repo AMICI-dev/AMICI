@@ -26,7 +26,7 @@ public:
      * @brief SlsMatWrapper
      * @param mat
      */
-    SlsMatWrapper(SlsMat mat);
+    explicit SlsMatWrapper(SlsMat mat);
 
     ~SlsMatWrapper();
 
@@ -91,7 +91,7 @@ public:
      * @brief DlsMatWrapper
      * @param mat
      */
-    DlsMatWrapper(DlsMat mat);
+    explicit DlsMatWrapper(DlsMat mat);
 
     ~DlsMatWrapper();
 

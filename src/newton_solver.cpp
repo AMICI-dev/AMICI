@@ -35,8 +35,9 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model, ReturnData *
 /* ----------------------------------------------------------------------------------
  */
 
-std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x, LinearSolver linsolType, Model *model,
-                                      ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol) {
+std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
+        realtype *t, AmiVector *x, LinearSolver linsolType, Model *model,
+        ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol) {
     /**
      * Tries to determine the steady state of the ODE system by a Newton
      * solver, uses forward intergration, if the Newton solver fails,
@@ -152,7 +153,9 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
 
 /* Derived class for dense linear solver */
 NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
-    : NewtonSolver(t, x, model, rdata) {
+    : NewtonSolver(t, x, model, rdata),
+      Jtmp(model->nx_solver,model->nx_solver)
+{
     /**
      * default constructor, initializes all members with the provided objects
      * and
@@ -164,7 +167,6 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, Re
      * @param rdata pointer to the return data object
      */
      pivots = NewLintArray(model->nx_solver);
-     Jtmp = NewDenseMat(model->nx_solver,model->nx_solver);
 }
 
 /* ----------------------------------------------------------------------------------
@@ -210,16 +212,15 @@ NewtonSolverDense::~NewtonSolverDense() {
         DestroyArray(pivots);
 }
 
-/* ----------------------------------------------------------------------------------
- */
-/* - Sparse linear solver
- * ----------------------------------------------------------- */
-/* ----------------------------------------------------------------------------------
- */
+/* ------------------------------------------------------------------------------- */
+/* - Sparse linear solver -------------------------------------------------------- */
+/* ------------------------------------------------------------------------------- */
 
 /* Derived class for sparse linear solver */
 NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
-    : NewtonSolver(t, x, model, rdata) {
+    : NewtonSolver(t, x, model, rdata),
+      Jtmp(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT)
+{
     /**
      * default constructor, initializes all members with the provided objects,
      * initializes temporary storage objects and the klu solver
@@ -235,7 +236,6 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, 
     /* Check if KLU was initialized successfully */
     if (klu_status != 1)
         throw NewtonFailure(common.status, "klu_defaults");
-    Jtmp = SparseNewMat(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -295,8 +295,7 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
         throw NewtonFailure(common.status, "klu_factor");
 } // namespace amici
 
-/* ----------------------------------------------------------------------------------
- */
+/* ------------------------------------------------------------------------------- */
 
 void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
     /**
@@ -312,8 +311,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
         throw NewtonFailure(common.status, "klu_solve");
 }
 
-/* ----------------------------------------------------------------------------------
- */
+/* ------------------------------------------------------------------------------- */
 
 NewtonSolverSparse::~NewtonSolverSparse() {
     if(symbolic)

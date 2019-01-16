@@ -744,6 +744,7 @@ Model::Model(const int nx_rdata,
       deltaxB(nx_solver, 0.0),
       deltaqB(nJ*plist.size(), 0.0),
       dxdotdp(nx_solver*plist.size(), 0.0),
+      J(nx_solver, nx_solver, nnz, CSC_MAT),
       my(nytrue, 0.0),
       mz(nztrue, 0.0),
       dJydy(nJ*nytrue*ny, 0.0),
@@ -777,7 +778,6 @@ Model::Model(const int nx_rdata,
       x_pos_tmp(nx_solver),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
 {
-    J = SparseNewMat(nx_solver, nx_solver, nnz, CSC_MAT);
     requireSensitivitiesForAllParameters();
 }
 
