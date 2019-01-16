@@ -127,6 +127,7 @@ add_custom_target(
     src/wrapfunctions.ODE_template.h
     src/wrapfunctions.template.cpp
     swig/CMakeLists_model.txt
+    swig/modelname.template.i
     )
 
 

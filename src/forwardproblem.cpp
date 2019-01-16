@@ -593,7 +593,7 @@ void ForwardProblem::prepDataSensis(int it) {
     model->fdsigmaydp(it, rdata, edata);
     model->fdJydy(it, rdata, edata);
     model->fdJydsigma(it, rdata, edata);
-    model->fdJydx(&dJydx, it, rdata, edata);
+    model->fdJydx(&dJydx, it, edata);
     model->fdJydp(it, rdata, edata);
 }
 

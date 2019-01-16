@@ -9,6 +9,21 @@
 
 namespace amici {
 
+/** Checks the values in an array for NaNs and Infs
+ *
+ * @param array array
+ * @param fun name of calling function
+ * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
+ */
+int checkFinite(std::vector <realtype> const& array, const char* fun);
+
+/** Checks the values in an array for NaNs and Infs
+ *
+ * @param N number of elements in array
+ * @param array array
+ * @param fun name of calling function
+ * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
+ */
 int checkFinite(const int N, const realtype *array, const char* fun);
 
 

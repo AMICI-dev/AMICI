@@ -509,9 +509,8 @@ namespace amici {
          * @param dJydx pointer to vector with values of state derivative of Jy
          * @param it timepoint index
          * @param edata pointer to experimental data instance
-         * @param rdata pointer to return data instance
          */
-        void fdJydx(std::vector<realtype> *dJydx, const int it, const ReturnData *rdata, const ExpData *edata);
+        void fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata);
 
         /** Sensitivity of event-resolved measurement negative log-likelihood Jz, total
          * derivative
@@ -741,6 +740,12 @@ namespace amici {
          * @param stateIsNonNegative vector of flags
          */
         void setStateIsNonNegative(std::vector<bool> const& stateIsNonNegative);
+
+        /**
+         * @brief sets flags indicating that all states should be treated as non-negative
+         */
+        void setAllStatesNonNegative();
+
 
         /**
          * @brief Get timepoint for given index
@@ -1817,6 +1822,19 @@ namespace amici {
             return false;
         }
 
+        /**
+         * @brief Set if the result of every call to Model::f* should be checked
+         * for finiteness
+         * @param alwaysCheck
+         */
+        void setAlwaysCheckFinite(bool alwaysCheck);
+
+        /**
+         * @brief Get setting of whether the result of every call to Model::f* should be checked
+         * for finiteness
+         * @return that
+         */
+        bool getAlwaysCheckFinite() const;
 
         /** Sparse Jacobian (dimension: nnz)*/
         SlsMatWrapper J;
@@ -1941,6 +1959,10 @@ namespace amici {
          * @return state vector with negative values replaced by 0 according to stateIsNonNegative
          */
         N_Vector computeX_pos(N_Vector x);
+
+        /** Indicates whether the result of every call to Model::f* should be checked
+         * for finiteness */
+        bool alwaysCheckFinite = false;
     };
 
     bool operator ==(const Model &a, const Model &b);
