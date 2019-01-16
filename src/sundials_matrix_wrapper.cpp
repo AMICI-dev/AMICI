@@ -10,7 +10,7 @@ namespace amici {
 SlsMatWrapper::SlsMatWrapper(int M, int N, int NNZ, int sparsetype)
 {
     matrix = SparseNewMat(M, N, NNZ, sparsetype);
-    if(!matrix)
+    if(NNZ && !matrix)
         throw std::bad_alloc();
 }
 
@@ -71,7 +71,7 @@ SlsMat SlsMatWrapper::slsmat() const {
 DlsMatWrapper::DlsMatWrapper(long int M, long int N)
 {
     matrix = NewDenseMat(M, N);
-    if(!matrix)
+    if((M*N > 0) && !matrix)
         throw std::bad_alloc();
 }
 
