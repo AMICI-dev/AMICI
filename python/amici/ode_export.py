@@ -2531,7 +2531,7 @@ def sanitize_basic_sympy(basic):
         locals = {
             fs.name: sp.Symbol(fs.name)
             for fs in list(basic.expr_free_symbols)
-            if isinstance(fs, pysb.core.Component)
+            if pysb and isinstance(fs, pysb.core.Component)
         }
         return sp.sympify(str(basic), locals=locals)
 
