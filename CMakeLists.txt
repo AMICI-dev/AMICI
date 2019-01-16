@@ -88,6 +88,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/forwardproblem.cpp
     ${CMAKE_SOURCE_DIR}/src/steadystateproblem.cpp
     ${CMAKE_SOURCE_DIR}/src/backwardproblem.cpp
+    ${CMAKE_SOURCE_DIR}/src/sundials_matrix_wrapper.cpp
     )
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})

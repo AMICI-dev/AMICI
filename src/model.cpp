@@ -749,6 +749,7 @@ Model::Model(const int nx_rdata,
       deltaxB(nx_solver, 0.0),
       deltaqB(nJ*plist.size(), 0.0),
       dxdotdp(nx_solver*plist.size(), 0.0),
+      J(nx_solver, nx_solver, nnz, CSC_MAT),
       my(nytrue, 0.0),
       mz(nztrue, 0.0),
       dJydy(nJ*nytrue*ny, 0.0),
@@ -782,80 +783,7 @@ Model::Model(const int nx_rdata,
       x_pos_tmp(nx_solver),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
 {
-    J = SparseNewMat(nx_solver, nx_solver, nnz, CSC_MAT);
     requireSensitivitiesForAllParameters();
-}
-
-Model::Model(const Model &other)
-    : nx_rdata(other.nx_rdata), nxtrue_rdata(other.nxtrue_rdata),
-      nx_solver(other.nx_solver), nxtrue_solver(other.nxtrue_solver),
-      ny(other.ny), nytrue(other.nytrue),
-      nz(other.nz), nztrue(other.nztrue),
-      ne(other.ne), nw(other.nw),
-      ndwdx(other.ndwdx), ndwdp(other.ndwdp),
-      nnz(other.nnz), nJ(other.nJ),
-      ubw(other.ubw), lbw(other.lbw),
-      o2mode(other.o2mode),
-      z2event(other.z2event),
-      idlist(other.idlist),
-      sigmay(other.sigmay),
-      dsigmaydp(other.dsigmaydp),
-      sigmaz(other.sigmaz),
-      dsigmazdp(other.dsigmazdp),
-      dJydp(other.dJydp),
-      dJzdp(other.dJzdp),
-      deltax(other.deltax),
-      deltasx(other.deltasx),
-      deltaxB(other.deltaxB),
-      deltaqB(other.deltaqB),
-      dxdotdp(other.dxdotdp),
-      my(other.my),
-      mz(other.mz),
-      dJydy(other.dJydy),
-      dJydsigma(other.dJydsigma),
-      dJzdz(other.dJzdz),
-      dJzdsigma(other.dJzdsigma),
-      dJrzdz(other.dJrzdz),
-      dJrzdsigma(other.dJrzdsigma),
-      dzdx(other.dzdx),
-      dzdp(other.dzdp),
-      drzdx(other.drzdx),
-      drzdp(other.drzdp),
-      dydp(other.dydp),
-      dydx(other.dydx),
-      w(other.w),
-      dwdx(other.dwdx),
-      dwdp(other.dwdp),
-      M(other.M),
-      stau(other.stau),
-      sx(other.sx),
-      x_rdata(other.x_rdata),
-      sx_rdata(other.sx_rdata),
-      h(other.h),
-      unscaledParameters(other.unscaledParameters),
-      originalParameters(other.originalParameters),
-      fixedParameters(other.fixedParameters),
-      total_cl(other.total_cl),
-      stotal_cl(other.stotal_cl),
-      plist_(other.plist_),
-      x0data(other.x0data),
-      sx0data(other.sx0data),
-      ts(other.ts),
-      stateIsNonNegative(other.stateIsNonNegative),
-      x_pos_tmp(other.x_pos_tmp),
-      nmaxevent(other.nmaxevent),
-      pscale(other.pscale),
-      tstart(other.tstart),
-      steadyStateSensitivityMode(other.steadyStateSensitivityMode),
-      reinitializeFixedParameterInitialStates(other.reinitializeFixedParameterInitialStates)
-{
-    J = SparseNewMat(nx_solver, nx_solver, nnz, CSC_MAT);
-    SparseCopyMat(other.J, J);
-}
-
-Model::~Model() {
-    if(J)
-        SparseDestroyMat(J);
 }
 
 void Model::initializeVectors()

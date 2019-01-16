@@ -5,9 +5,7 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 #include "amici/symbolic_functions.h"
-
-#include <sundials/sundials_direct.h> // DlsMat
-#include <sundials/sundials_sparse.h> // SlsMat
+#include "amici/sundials_matrix_wrapper.h"
 
 #include <numeric>
 #include <vector>
@@ -81,14 +79,9 @@ namespace amici {
               std::vector<amici::realtype> k, const std::vector<int> &plist,
               std::vector<amici::realtype> idlist, std::vector<int> z2event);
 
-        /** Copy constructor
-         * @param other object to copy from
-         * @return
-         */
-        Model(Model const& other);
 
         /** destructor */
-        virtual ~Model();
+        virtual ~Model() = default;
 
         /** Copy assignment is disabled until const members are removed
          * @param other object to copy from
@@ -1826,7 +1819,7 @@ namespace amici {
 
 
         /** Sparse Jacobian (dimension: nnz)*/
-        SlsMat J = nullptr;
+        SlsMatWrapper J;
 
         /** current observable (dimension: nytrue) */
         std::vector<realtype> my;
