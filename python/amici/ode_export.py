@@ -2061,6 +2061,7 @@ class ODEExporter:
         Raises:
 
         """
+
         lines = []
 
         if min(symbol.shape) == 0:
@@ -2072,31 +2073,28 @@ class ODEExporter:
         if function == 'sx0_fixedParameters':
             # here we only want to overwrite values where x0_fixedParameters
             # was applied
-            lines.append(' ' * 4 + 'switch(ip) {')
+            cases = dict()
             for ipar in range(self.model.np()):
-                lines.append(' ' * 8 + f'case {ipar}:')
+                expressions = []
                 for index, formula in enumerate(
                         self.model.eq('x0_fixedParameters')
                 ):
                     if formula != 0 and formula != 0.0:
-                        lines.append(' ' * 12 + f'{function}[{index}] = '
+                        expressions.append(f'{function}[{index}] = '
                                                 f'{symbol[index, ipar]};')
-                lines.append(' ' * 12 + 'break;')
-            lines.append('}')
+                cases[ipar] = expressions
+            lines.extend(getSwitchStatement('ip', cases, 1))
+
         elif function in sensi_functions:
-            lines.append(' '*4 + 'switch(ip) {')
-            for ipar in range(self.model.np()):
-                lines.append(' ' * 8 + f'case {ipar}:')
-                lines += self._getSymLines(symbol[:, ipar], function, 12)
-                lines.append(' ' * 12 + 'break;')
-            lines.append('}')
+            cases = {ipar : self._getSymLines(symbol[:, ipar], function, 0)
+                     for ipar in range(self.model.np())}
+            lines.extend(getSwitchStatement('ip', cases, 1))
+
         elif function in multiobs_functions:
-            lines.append(' '*4 + 'switch(iy) {')
-            for iobs in range(self.model.ny()):
-                lines.append(' ' * 8 + f'case {iobs}:')
-                lines += self._getSymLines(symbol[:, iobs], function, 12)
-                lines.append(' ' * 12 + 'break;')
-            lines.append('}')
+            cases = {iobs : self._getSymLines(symbol[:, iobs], function, 0)
+                     for iobs in range(self.model.ny())}
+            lines.extend(getSwitchStatement('iy', cases, 1))
+
         else:
             if function in ['JSparse', 'JSparseB']:
                 rowVals = self.model.rowval(function)
@@ -2333,18 +2331,10 @@ class ODEExporter:
 
         """
 
-        lines = [' ' * indentLevel + f'{variable}[{index}] = '
-                                     f'{self._printWithException(math)};'
-                 if not (math == 0 or math == 0.0)
-                 else ''
-                 for index, math in enumerate(symbols)]
-
-        try:
-            lines.remove('')
-        except:
-            pass
-
-        return lines
+        return [' ' * indentLevel + f'{variable}[{index}] = '
+                                    f'{self._printWithException(math)};'
+                for index, math in enumerate(symbols)
+                if not (math == 0 or math == 0.0)]
 
     def _getSparseSymLines(
             self, symbolList, RowVals, ColPtrs, variable, indentLevel
@@ -2613,3 +2603,45 @@ def remove_typedefs(signature):
 
     return signature
 
+
+def getSwitchStatement(condition, cases,
+                  indentation_level=0,
+                  indentation_step=' ' * 4):
+    """Generate code for switch statement
+
+    Arguments:
+        condition: Condition for switch @type str
+
+        cases: Cases as dict with expressions as keys and statement as
+        list of strings @type dict
+
+        indentation_level: indentation level
+
+        indentation_step: indentation whitespace per level
+
+    Returns:
+    Code for switch expression as list of strings
+
+    Raises:
+
+    """
+    lines = list()
+
+    if not cases:
+        return lines
+
+    for expression, statements in cases.items():
+        if statements:
+            lines.append((indentation_level + 1) * indentation_step
+                         + f'case {expression}:')
+            for statement in statements:
+                lines.append((indentation_level + 2) * indentation_step
+                             + statement)
+            lines.append((indentation_level + 2) * indentation_step + 'break;')
+
+    if lines:
+        lines.insert(0, indentation_level * indentation_step
+                     + f'switch({condition}) {{')
+        lines.append(indentation_level * indentation_step + '}')
+
+    return lines
