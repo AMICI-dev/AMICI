@@ -61,19 +61,19 @@ with open(os.path.join(amici_path, 'version.txt')) as f:
     __version__ = f.read().strip()
 
 # get commit hash from file
-
-commit_file_locations = [
-    os.path.join(amici_path, '..', '..', '..', '.git', 'FETCH_HEAD'),
-    os.path.join(amici_path, '..', '..', '..', '.git', 'ORIG_HEAD'),
-]
-
-commitfile = next(
-    (file for file in commit_file_locations if os.path.isfile(file)),
+_commitfile = next(
+    (
+        file for file in [
+            os.path.join(amici_path, '..', '..', '..', '.git', 'FETCH_HEAD'),
+            os.path.join(amici_path, '..', '..', '..', '.git', 'ORIG_HEAD'),
+        ]
+        if os.path.isfile(file)
+    ),
     None
 )
 
-if commitfile:
-    with open(commitfile) as f:
+if _commitfile:
+    with open(_commitfile) as f:
         __commit__ = str(re.search(r'^([\w]*)', f.read().strip()).group())
 else:
     __commit__ = 'unknown'
