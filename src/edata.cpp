@@ -1,6 +1,6 @@
 #include "amici/edata.h"
 #include "amici/rdata.h"
-
+#include "amici/symbolic_functions.h" // getNaN
 #include "amici/defines.h"
 #include "amici/model.h"
 
