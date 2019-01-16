@@ -1,7 +1,11 @@
 #include "amici/model.h"
 #include "amici/amici.h"
 #include "amici/misc.h"
+#include "amici/exception.h"
+#include "amici/symbolic_functions.h"
 
+#include <numeric>
+#include <algorithm>
 #include <cstring>
 #include <cmath>
 #include <typeinfo>
@@ -300,6 +304,8 @@ int Model::nk() const {
     return fixedParameters.size();
 }
 
+int Model::ncl() const {return nx_rdata-nx_solver;}
+
 const double *Model::k() const{
     return fixedParameters.data();
 }
@@ -481,6 +487,86 @@ int Model::setParametersByNameRegex(std::string const& par_name_regex, realtype 
 
     unscaleParameters(originalParameters, pscale, unscaledParameters);
     return n_found;
+}
+
+bool Model::hasStateIds() const { return nx_rdata && !getStateIds().empty(); }
+
+std::vector<std::string> Model::getStateIds() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasFixedParameterIds() const { return nk() && !getFixedParameterIds().empty(); }
+
+std::vector<std::string> Model::getFixedParameterIds() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasObservableIds() const { return ny && !getObservableIds().empty(); }
+
+std::vector<std::string> Model::getObservableIds() const {
+    return std::vector<std::string>();
+}
+
+void Model::setSteadyStateSensitivityMode(const SteadyStateSensitivityMode mode) {
+    steadyStateSensitivityMode = mode;
+}
+
+SteadyStateSensitivityMode Model::getSteadyStateSensitivityMode() const {
+    return steadyStateSensitivityMode;
+}
+
+void Model::setReinitializeFixedParameterInitialStates(bool flag) {
+    if (flag && !isFixedParameterStateReinitializationAllowed())
+        throw AmiException("State reinitialization cannot be enabled for this model"
+                           "as this feature was disabled at compile time. Most likely,"
+                           " this was because some initial states depending on "
+                           "fixedParameters also depended on parameters");
+    reinitializeFixedParameterInitialStates = flag;
+}
+
+bool Model::getReinitializeFixedParameterInitialStates() const {
+    return reinitializeFixedParameterInitialStates;
+}
+
+void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver, const realtype *tcl) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+                "A model that has differing nx_solver and nx_rdata needs "
+                "to implement its own fx_rdata");
+    std::copy_n(x_solver, nx_solver, x_rdata);
+}
+
+void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver, const realtype *stcl, const int ip) {
+    fx_rdata(sx_rdata, sx_solver, stcl);
+}
+
+void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+                "A model that has differing nx_solver and nx_rdata needs "
+                "to implement its own fx_solver");
+    std::copy_n(x_rdata, nx_rdata, x_solver);
+}
+
+void Model::fsx_solver(realtype *sx_solver, const realtype *sx_rdata) {
+    /* for the moment we do not need an implementation of fsx_solver as
+     * we can simply reuse fx_solver and replace states by their
+     * sensitivities */
+    fx_solver(sx_solver, sx_rdata);
+}
+
+void Model::ftotal_cl(realtype *total_cl, const realtype *x_rdata) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+                "A model that has differing nx_solver and nx_rdata needs "
+                "to implement its own ftotal_cl");
+}
+
+void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata, const int ip) {
+    /* for the moment we do not need an implementation of fstotal_cl as
+     * we can simply reuse ftotal_cl and replace states by their
+     * sensitivities */
+    ftotal_cl(stotal_cl, sx_rdata);
 }
 
 const std::vector<realtype> &Model::getUnscaledParameters() const {
@@ -708,6 +794,33 @@ int Model::plist(int pos) const{
     return plist_.at(pos);
 }
 
+bool Model::hasParameterNames() const { return np() && !getParameterNames().empty(); }
+
+std::vector<std::string> Model::getParameterNames() const { return std::vector<std::string>(); }
+
+bool Model::hasStateNames() const { return nx_rdata && !getStateNames().empty(); }
+
+std::vector<std::string> Model::getStateNames() const { return std::vector<std::string>(); }
+
+bool Model::hasFixedParameterNames() const { return nk() && !getFixedParameterNames().empty(); }
+
+std::vector<std::string> Model::getFixedParameterNames() const { return std::vector<std::string>(); }
+
+bool Model::hasObservableNames() const { return ny && !getObservableNames().empty(); }
+
+std::vector<std::string> Model::getObservableNames() const { return std::vector<std::string>(); }
+
+bool Model::hasParameterIds() const { return np() && !getParameterIds().empty(); }
+
+std::vector<std::string> Model::getParameterIds() const {
+    return std::vector<std::string>();
+}
+
+
+Model::Model()
+    : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0), nytrue(0), nz(0), nztrue(0),
+      ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
+      o2mode(SecondOrderMode::none), x_pos_tmp(0) {}
 
 Model::Model(const int nx_rdata,
              const int nxtrue_rdata,
@@ -846,7 +959,7 @@ void Model::fx0_fixedParameters(AmiVector *x) {
     ftotal_cl(total_cl.data(), x_rdata.data());
 }
 
-void Model::fdx0(AmiVector *x0, AmiVector *dx0) {}
+
 
 void Model::fsx_rdata(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
     realtype *stcl = nullptr;
