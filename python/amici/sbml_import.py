@@ -1126,7 +1126,7 @@ def _check_unsupported_functions(sym):
 
     unsupported_functions = [
         sp.functions.factorial, sp.functions.ceiling,
-        sp.functions.elementary.piecewise,
+        sp.functions.Piecewise,
     ]
 
     for arg in sym._args:

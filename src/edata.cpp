@@ -283,8 +283,8 @@ void ExpData::applyDataDimension() {
 }
     
 void ExpData::applyEventDimension() {
-    observedEvents.resize(nt()*nytrue_, getNaN());
-    observedEventsStdDev.resize(nt()*nytrue_, getNaN());
+    observedEvents.resize(nmaxevent_*nztrue_, getNaN());
+    observedEventsStdDev.resize(nmaxevent_*nztrue_, getNaN());
 }
     
 void ExpData::checkDataDimension(std::vector<realtype> input, const char *fieldname) const {
