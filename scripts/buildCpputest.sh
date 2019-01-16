@@ -23,6 +23,6 @@ fi
 cd cpputest-master
 mkdir -p build
 cd build
-cmake -DTESTS=OFF -DBUILD_TESTING=OFF -DC++11=ON .. -quiet
+cmake -DTESTS=OFF -DBUILD_TESTING=OFF -DC++11=ON ..
 make -j4
 
