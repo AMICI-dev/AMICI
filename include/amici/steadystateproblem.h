@@ -62,10 +62,11 @@ class SteadystateProblem {
      * @param model pointer to the AMICI model object
      * @param newtonSolver pointer to the NewtonSolver object @type
      * NewtonSolver
-     * @param newton_try integer start number of Newton solver (1 or 2)
+     * @param steadystate_try integer start number of Newton solver (1 to 3)
      */
     void applyNewtonsMethod(ReturnData *rdata, Model *model,
-                                  NewtonSolver *newtonSolver, int newton_try);
+                            NewtonSolver *newtonSolver,
+                            int steadystate_try);
     /**
      * Stores output of workSteadyStateProblem in return data
      *
