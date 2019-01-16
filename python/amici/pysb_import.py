@@ -384,7 +384,7 @@ def _process_pysb_conservation_laws(model, ODE):
     _flatten_conservation_laws(conservation_laws)
 
     for cl in conservation_laws:
-        ODE.add_conservation_law(cl['state'], cl['law'])
+        ODE.add_conservation_law(**cl)
 
 
 def _compute_monomers_with_fixed_initial_conditions(model):
@@ -410,7 +410,7 @@ def _compute_monomers_with_fixed_initial_conditions(model):
             if any([
                 model.initial_conditions_fixed[ix] # true or false
                 for ix, cp in enumerate(model.initial_conditions)
-                if monomer.name in extract_monomers(cp)
+                if monomer.name in extract_monomers(cp[0])
             ]):
                 monomers_with_fixed_initial_conditions |= {monomer.name}
 
@@ -481,15 +481,28 @@ def _compute_possible_indices(cl_prototypes, model, excluded_monomers):
                 # on parameters + constants and update the respective symbolic
                 # derivative accordingly
 
-            cl_prototypes[monomer.name] = dict()
-            cl_prototypes[monomer.name]['possible_indices'] = [
+            prototype = dict()
+            prototype['possible_indices'] = [
                 ix
                 for ix, specie in enumerate(model.species)
                 if monomer.name in extract_monomers(specie)
             ]
-            cl_prototypes[monomer.name]['species_count'] = len(
-                cl_prototypes[monomer.name]['possible_indices']
+            prototype['species_count'] = len(
+                prototype['possible_indices']
             )
+
+            prototype['co_monomers'] = [
+                len(set([
+                    mono
+                    for mono in extract_monomers(specie)
+                    if mono not in excluded_monomers
+                       and mono != monomer.name
+                ]))
+                for ix, specie in enumerate(model.species)
+                if monomer.name in extract_monomers(specie)
+            ]
+
+            cl_prototypes[monomer.name] = prototype
 
 
 def _compute_target_index(cl_prototypes, ODE):
@@ -566,10 +579,14 @@ def _greedy_target_index_update(cl_prototypes):
             # updating the target index removes uniqueness from already unique
             # target indices, this may slightly reduce chances of finding a
             # solution but prevents infinite loops
-            for taken_index in list(set(target_indices)):
-                local_idx = prototype['possible_indices'].index(
-                    taken_index, None
-                )
+            for target_index in list(set(target_indices)):
+                try:
+                    local_idx = prototype['possible_indices'].index(
+                        target_index
+                    )
+                except ValueError:
+                    local_idx = None
+
                 if local_idx:
                     del prototype['possible_indices'][local_idx]
                     del prototype['appearance_counts'][local_idx]
@@ -600,6 +617,10 @@ def _greedy_target_index_update(cl_prototypes):
     cl_prototypes = sorted(
         cl_prototypes.items(), key=lambda kv: kv[1]['diff_fillin']
     )
+    cl_prototypes = {
+        proto[0]: proto[1]
+        for proto in cl_prototypes
+    }
 
     for monomer in cl_prototypes:
         prototype = cl_prototypes[monomer]
@@ -608,7 +629,7 @@ def _greedy_target_index_update(cl_prototypes):
         # that monomer originally had a non-unique target_index
         # B) that the target_index still is not unique. due to the sorting,
         # this will always be the monomer with the highest diff_fillin (note
-        #  that the target indice counts are recomputed on the fly
+        # that the target indice counts are recomputed on the fly
 
         if prototype['diff_fillin'] > 0 \
                 and get_target_indices(cl_prototypes).count(
@@ -662,36 +683,55 @@ def _construct_conservation_from_prototypes(cl_prototypes, model):
     for monomer_name in cl_prototypes:
         target_index = cl_prototypes[monomer_name]['target_index']
 
+        # T = sum_i(a_i * x_i)
+        # x_j = (T - sum_i≠j(a_i * x_i))/a_j
+        # law: sum_i≠j(a_i * x_i))/a_j
+        # state: x_j
         target_expression = sanitize_basic_sympy(
-            sum([
+            sum(
                 sp.Symbol(f'__s{ix}')
                 * extract_monomers(specie).count(monomer_name)
                 for ix, specie in enumerate(model.species)
                 if ix != target_index
-            ])
+            )
             /
             extract_monomers(model.species[target_index]).count(monomer_name)
         )  # normalize by the stoichiometry of the target species
         target_state = sp.Symbol(f'__s{target_index}')
+        # = x_j
+
+        total_abundance = sp.Symbol(f'tcl__s{target_index}')
+        # = T/a_j
+
+        state_expr = total_abundance - target_expression
+        # x_j = T/a_j - sum_i≠j(a_i * x_i)/a_j
+
+        abundance_expr = target_expression + target_state
+        # T/a_j = sum_i≠j(a_i * x_i)/a_j + x_j
+
         conservation_laws.append({
             'state': target_state,
-            'law': target_expression,
+            'total_abundance': total_abundance,
+            'state_expr': state_expr,
+            'abundance_expr': abundance_expr,
         })
 
     return conservation_laws
 
 
 def _flatten_conservation_laws(conservation_laws):
-    unflattened_conservation_laws = \
-        _get_unflattened_conservation_laws(conservation_laws)
-    while len(unflattened_conservation_laws):
+    conservation_law_subs = \
+        _get_conservation_law_subs(conservation_laws)
+
+    # we actually need to ma
+    while len(conservation_law_subs):
         for cl in conservation_laws:
-            cl['law'] = cl['law'].subs(unflattened_conservation_laws)
-        unflattened_conservation_laws = \
-            _get_unflattened_conservation_laws(conservation_laws)
+            cl['state_expr'] = cl['state_expr'].subs(conservation_law_subs)
+            conservation_law_subs = \
+                _get_conservation_law_subs(conservation_laws)
 
 
-def _get_unflattened_conservation_laws(conservation_laws):
+def _get_conservation_law_subs(conservation_laws):
     """ returns a list of (state, law) tuples for conservation laws that still
     appear in other conservation laws
 
@@ -706,7 +746,7 @@ def _get_unflattened_conservation_laws(conservation_laws):
     """
     free_symbols_cl = _conservation_law_variables(conservation_laws)
     return [
-        (cl['state'], cl['law']) for cl in conservation_laws
+        (cl['state'], cl['state_expr']) for cl in conservation_laws
         if cl['state'] in free_symbols_cl
     ]
 
@@ -726,7 +766,7 @@ def _conservation_law_variables(conservation_laws):
     """
     variables = set()
     for cl in conservation_laws:
-        variables |= cl['law'].free_symbols
+        variables |= cl['state_expr'].free_symbols
     return variables
 
 

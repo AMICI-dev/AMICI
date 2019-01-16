@@ -925,14 +925,17 @@ class ODEModel:
                 return
         Exception(f'Invalid component type {type(component)}')
 
-    def add_conservation_law(self, state, law):
+    def add_conservation_law(self, state, total_abundance, state_expr,
+                             abundance_expr):
         """Adds a new conservation law to the model.
 
         Arguments:
             state: symbolic identifier of the state that should be replaced by
             the conservation law
-            law: symbolic formula that together with the state defines the
-            conservation law, i.e., d/dt (state + law) = 0
+            total_abundance: symbolic identifier of the total abundance
+            state_expr: symbolic algebraic formula that replaces the the state
+            abundance_expr: symbolic algebraic formula that computes the total
+            abundance
 
         Returns:
 
@@ -950,29 +953,21 @@ class ODEModel:
             raise Exception(f'Specified state {state} was not found in the '
                             f'model states.')
 
-        total_abundance = sp.Symbol(f'tcl_{self._states[ix].get_id()}')
-
         state_id = self._states[ix].get_id()
 
         self.add_component(
-            Expression(
-                state_id,
-                f'cl_{state_id}',
-                total_abundance - law
-            )
+            Expression(state_id, f'cl_{state_id}', state_expr)
         )
 
         self.add_component(
             ConservationLaw(
                 total_abundance,
                 f'total_{state_id}',
-                state_id + law
+                abundance_expr
             )
         )
 
-        self._states[ix].set_conservation_law(
-            total_abundance - law
-        )
+        self._states[ix].set_conservation_law(state_expr)
 
     def nx_rdata(self):
         """Number of states.
@@ -1388,13 +1383,6 @@ class ODEModel:
                 self.sym('sx_rdata')[ix]
                 for ix, state in enumerate(self._states)
                 if state.conservation_law is None
-            ])
-
-        elif name == 'total_cl':
-            self._eqs[name] = sp.Matrix([
-                state.conservation_law
-                for state in self._states
-                if state.conservation_law is not None
             ])
 
         elif name == 'sx0':
