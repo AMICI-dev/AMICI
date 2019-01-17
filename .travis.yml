@@ -75,27 +75,27 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
-    - if [[ "$CI_MODE" == "test"]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
-    - if [[ "$CI_MODE" == "test"]]; then ./scripts/buildSuiteSparse.sh; fi
-    - if [[ "$CI_MODE" == "test"]]; then ./scripts/buildSundials.sh; fi
-    - if [[ "$CI_MODE" == "test"]]; then ./scripts/buildCpputest.sh; fi
-    - if [[ "$CI_MODE" == "test"]]; then ./scripts/buildBNGL.sh; fi
-    - if [[ "$CI_MODE" == "test"]]; then export BNGPATH=$(pwd)/ThirdParty/BioNetGen-2.3.2; fi
-    - if [[ "$CI_MODE" == "test"]]; then ./scripts/buildAmici.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildBNGL.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then export BNGPATH=$(pwd)/ThirdParty/BioNetGen-2.3.2; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildAmici.sh; fi
     - if [[ "$CI_MODE" == "test"]]; then ./scripts/installAmiciArchive.sh; fi
-    - if [[ "$CI_MODE" == "test"]]; then ./scripts/installAmiciSource.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-    - if [[ "$CI_MODE" == "test"]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
-    - if [[ "$CI_MODE" == "test"]]; then $FOLD python-tests "cd $BASE_DIR/build && make python-tests"; fi
-    - if [[ "$CI_MODE" == "test"]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
+    - if [[ "$CI_MODE" == "test" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests "cd $BASE_DIR/build && make python-tests"; fi
+    - if [[ "$CI_MODE" == "test" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
     - if [[ "$CI_MODE" == "deploy" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test"]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test"]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test"]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then $FOLD sbmltestsuite ./scripts/run-SBMLTestsuite.sh; fi
 
 after_failure:
