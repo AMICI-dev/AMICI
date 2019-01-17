@@ -70,7 +70,12 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                 applyNewtonsMethod(rdata, model, newtonSolver.get(), 3);
                 newton_status = NewtonStatus::newt_sim_newt;
             } catch(NewtonFailure const& ex3) {
-                throw amici::IntegrationFailure(ex3.error_code,*t);
+                if(ex3.error_code==AMICI_TOO_MUCH_WORK)
+                    throw AmiException("Steady state computation failed to "
+                                       "converge within the allowed maximum "
+                                       "number of iterations");
+                else
+                    throw;
             }
         }
     } catch(...) {
@@ -214,7 +219,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     /* Set return values */
     rdata->newton_numsteps.at(steadystate_try-1) = i_newtonstep;
     if (!converged)
-        throw NewtonFailure(AMICI_CONV_FAILURE,"applyNewtonsMethod");
+        throw NewtonFailure(AMICI_TOO_MUCH_WORK, "applyNewtonsMethod");
 }
 
 /* ------------------------------------------------------------------ */
