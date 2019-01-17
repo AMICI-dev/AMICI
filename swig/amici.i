@@ -56,9 +56,9 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 // Include before any other header which uses enums defined there
 %include "amici/defines.h"
 
+%include abstract_model.i
 %include edata.i
 %include rdata.i
-
 %include solver.i
 %include solver_idas.i
 %include solver_cvodes.i
