@@ -1278,17 +1278,15 @@ class ODEModel:
 
         """
         return [
-            len([
-                state
+            sum(
+                self._states[idx].get_id() in state.get_dt().free_symbols
                 for state in self._states
-                if self._states[idx].get_id() in state.get_dt().free_symbols
-            ])
+            )
             +
-            len([
-                expr
+            sum(
+                self._states[idx].get_id() in expr.get_val().free_symbols
                 for expr in self._expressions
-                if self._states[idx].get_id() in expr.get_val().free_symbols
-            ])
+            )
             for idx in idxs
         ]
 
