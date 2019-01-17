@@ -82,7 +82,7 @@ install:
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildBNGL.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then export BNGPATH=$(pwd)/ThirdParty/BioNetGen-2.3.2; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildAmici.sh; fi
-    - if [[ "$CI_MODE" == "test"]]; then ./scripts/installAmiciArchive.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
 
 script:
