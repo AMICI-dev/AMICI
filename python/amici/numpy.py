@@ -128,7 +128,7 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
                        'J': [rdata.nx_solver, rdata.nx_solver],
                        'xdot': [rdata.nx_solver],
                        'newton_numlinsteps': [rdata.newton_maxsteps, 2],
-                       'newton_numsteps': [1, 2],
+                       'newton_numsteps': [1, 3],
                        'numsteps': [rdata.nt],
                        'numrhsevals': [rdata.nt],
                        'numerrtestfails': [rdata.nt],
