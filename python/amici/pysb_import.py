@@ -422,8 +422,9 @@ def _generate_cl_prototypes(excluded_monomers, model, ODE):
     construction of conservation laws
 
     Arguments:
+        excluded_monomers: list of monomer names for which no prototypes
+        should be computed @type list
         model: pysb model @type pysb.core.Model
-
         ODE: ODEModel instance @type ODEModel
 
     Returns:
@@ -448,9 +449,7 @@ def _compute_possible_indices(cl_prototypes, model, excluded_monomers):
     Arguments:
         cl_prototypes: dict in which possible indices will be written @type
         dict
-
         model: pysb model @type pysb.core.Model
-
         excluded_monomers: monomers for which no conservation laws will be
         computed @type list
 
@@ -501,7 +500,6 @@ def _compute_target_index(cl_prototypes, ODE):
     Arguments:
         cl_prototypes: dict that contains possible indices for every monomer
         @type dict
-
         ODE: ODEModel instance @type ODEModel
 
     Returns:
@@ -666,15 +664,13 @@ def get_target_indices(cl_prototypes):
     ]
 
 
-
 def _construct_conservation_from_prototypes(cl_prototypes, model):
     """Computes the algebraic expression for the total amount of a given
     monomer
 
     Arguments:
-        cl_prototype: pysb model @type pysb.core.Model
-
-        ODE: ODEModel instance @type ODEModel
+        cl_prototype: output of _generate_cl_prototypes @type dict
+        model: pysb model @type pysb.core.Model
 
 
     Returns:
@@ -723,6 +719,19 @@ def _construct_conservation_from_prototypes(cl_prototypes, model):
 
 
 def _flatten_conservation_laws(conservation_laws):
+    """ Flatten the conservation laws such that the state_expr not longer
+    depend on any states that are replaced by conservation laws
+
+    Arguments:
+        conservation_laws: output of _construct_conservation_from_prototypes
+        @type dict
+
+    Returns:
+    updated conservation laws
+
+    Raises:
+
+    """
     conservation_law_subs = \
         _get_conservation_law_subs(conservation_laws)
 
@@ -735,14 +744,14 @@ def _flatten_conservation_laws(conservation_laws):
 
 
 def _get_conservation_law_subs(conservation_laws):
-    """ returns a list of (state, law) tuples for conservation laws that still
+    """ Returns a list of (state, law) tuples for conservation laws that still
     appear in other conservation laws
 
     Arguments:
-        conservation_laws: dict({'state':state, 'law':law}) @type dict
+        conservation_laws: output of _flatten_conservation_laws @type dict
 
     Returns:
-        list((law,tuple))
+    list of tuples containing substitution rules to be used with sympy subs
 
     Raises:
 
@@ -759,7 +768,7 @@ def _conservation_law_variables(conservation_laws):
 
 
     Arguments:
-        conservation_laws: list of conservation laws (sympy.Basic)  @type list
+        conservation_laws: list of conservation laws (sympy.Basic) @type list
 
     Returns:
     Set union of all free_symbols

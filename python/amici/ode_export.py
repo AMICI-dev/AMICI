@@ -937,8 +937,8 @@ class ODEModel:
             the conservation law
             total_abundance: symbolic identifier of the total abundance
             state_expr: symbolic algebraic formula that replaces the the state
-            abundance_expr: symbolic algebraic formula that computes the total
-            abundance
+            abundance_expr: symbolic algebraic formula that computes the
+            total abundance
 
         Returns:
 
