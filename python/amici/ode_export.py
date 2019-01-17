@@ -1264,7 +1264,7 @@ class ODEModel:
                 self._generateSymbol(var)
 
     def get_appearance_counts(self, idxs):
-        """Counts how often a state appears in the the time derivative of
+        """Counts how often a state appears in the time derivative of
         another state and expressions for a subset of states
 
         Arguments:
