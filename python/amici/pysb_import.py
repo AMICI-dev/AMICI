@@ -395,7 +395,7 @@ def _compute_monomers_with_fixed_initial_conditions(model):
         model: pysb model @type pysb.core.Model
 
     Returns:
-        list of monomer names
+        set of monomer names
 
     Raises:
 
