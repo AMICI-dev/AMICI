@@ -20,6 +20,9 @@ class Solver;
  */
 class AbstractModel {
   public:
+
+    virtual ~AbstractModel() = default;
+
     /**
      * Retrieves the solver object
      * @return The Solver instance
