@@ -7,8 +7,9 @@
 # fold-block-id should not contain special characters, blanks newlines, ...
 
 set -e
+travis_time_finish
 travis_fold start "$1"
-#    travis_time_start
+    travis_time_start
         bash -c "${@:2:$#}"
-#    travis_time_finish
+    travis_time_finish
 travis_fold end "$1"
