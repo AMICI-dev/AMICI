@@ -273,6 +273,7 @@ multiobs_functions = [
     if 'const int iy' in functions[function]['signature']
 ]
 
+
 def var_in_function_signature(name, varname):
     """Checks if the values for a symbolic variable is passed in the signature
     of a function
@@ -293,6 +294,7 @@ def var_in_function_signature(name, varname):
                     f'const (realtype|double) \*{varname}[0]*[,)]+',
                     functions[name]['signature']
                 )
+
 
 class ModelQuantity:
     """Base class for model components
@@ -926,14 +928,17 @@ class ODEModel:
                 return
         Exception(f'Invalid component type {type(component)}')
 
-    def add_conservation_law(self, state, law):
+    def add_conservation_law(self, state, total_abundance, state_expr,
+                             abundance_expr):
         """Adds a new conservation law to the model.
 
         Arguments:
             state: symbolic identifier of the state that should be replaced by
             the conservation law
-            law: symbolic formula that together with the state defines the
-            conservation law, i.e., d/dt (state + law) = 0
+            total_abundance: symbolic identifier of the total abundance
+            state_expr: symbolic algebraic formula that replaces the the state
+            abundance_expr: symbolic algebraic formula that computes the
+            total abundance
 
         Returns:
 
@@ -951,29 +956,21 @@ class ODEModel:
             raise Exception(f'Specified state {state} was not found in the '
                             f'model states.')
 
-        total_abundance = sp.Symbol(f'tcl_{self._states[ix].get_id()}')
-
         state_id = self._states[ix].get_id()
 
         self.add_component(
-            Expression(
-                state_id,
-                f'cl_{state_id}',
-                total_abundance - law
-            )
+            Expression(state_id, f'cl_{state_id}', state_expr)
         )
 
         self.add_component(
             ConservationLaw(
                 total_abundance,
                 f'total_{state_id}',
-                state_id + law
+                abundance_expr
             )
         )
 
-        self._states[ix].set_conservation_law(
-            total_abundance - law
-        )
+        self._states[ix].set_conservation_law(state_expr)
 
     def nx_rdata(self):
         """Number of states.
@@ -1266,6 +1263,33 @@ class ODEModel:
             if var not in self._syms:
                 self._generateSymbol(var)
 
+    def get_appearance_counts(self, idxs):
+        """Counts how often a state appears in the time derivative of
+        another state and expressions for a subset of states
+
+        Arguments:
+            idxs: list of state indices for which counts are to be computed
+
+        Returns:
+            list of counts for the states ordered according to the provided
+            indices
+
+        Raises:
+
+        """
+        return [
+            sum(
+                self._states[idx].get_id() in state.get_dt().free_symbols
+                for state in self._states
+            )
+            +
+            sum(
+                self._states[idx].get_id() in expr.get_val().free_symbols
+                for expr in self._expressions
+            )
+            for idx in idxs
+        ]
+
     def _generateSparseSymbol(self, name):
         """Generates the sparse symbolic identifiers, symbolic identifiers,
         sparse equations, column pointers and row values for a symbolic
@@ -1360,13 +1384,6 @@ class ODEModel:
                 self.sym('sx_rdata')[ix]
                 for ix, state in enumerate(self._states)
                 if state.conservation_law is None
-            ])
-
-        elif name == 'total_cl':
-            self._eqs[name] = sp.Matrix([
-                state.conservation_law
-                for state in self._states
-                if state.conservation_law is not None
             ])
 
         elif name == 'sx0':

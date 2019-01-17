@@ -236,3 +236,4 @@ testSuite.txt
 python/sdist/build/*
 *.so
 python/sdist/amici/git_version.txt
+AMICI_guide.pdf
