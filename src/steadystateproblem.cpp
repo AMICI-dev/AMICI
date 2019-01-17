@@ -74,7 +74,6 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                     throw AmiException("Steady state computation failed to "
                                        "converge within the allowed maximum "
                                        "number of iterations");
-                else
                     throw;
             }
         }
