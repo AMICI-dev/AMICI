@@ -727,7 +727,6 @@ def _flatten_conservation_laws(conservation_laws):
         @type dict
 
     Returns:
-    updated conservation laws
 
     Raises:
 
