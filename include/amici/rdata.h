@@ -34,8 +34,9 @@ class ReturnData {
      * @param ts see amici::Model::ts
      * @param np see amici::Model::np
      * @param nk see amici::Model::nk
-     * @param nx see amici::Model::nx
-     * @param nxtrue see amici::Model::nxtrue
+     * @param nx see amici::Model::nx_rdata
+     * @param nx_solver see amici::Model::nx_solver
+     * @param nxtrue see amici::Model::nxtrue_rdata
      * @param ny see amici::Model::ny
      * @param nytrue see amici::Model::nytrue
      * @param nz see amici::Model::nz
@@ -53,7 +54,7 @@ class ReturnData {
      */
     ReturnData(
             std::vector<realtype> ts,
-            int np, int nk, int nx, int nxtrue, int ny, int nytrue,
+            int np, int nk, int nx, int nx_solver, int nxtrue, int ny, int nytrue,
             int nz, int nztrue, int ne, int nJ, int nplist, int nmaxevent,
             int nt, int newton_maxsteps, std::vector<ParameterScaling> pscale,
             SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth);
@@ -176,10 +177,12 @@ class ReturnData {
     /** computation time of the Newton solver [s] */
     double newton_cpu_time = 0.0;
 
-    /** number of Newton steps for steady state problem (length = 2) */
+    /** number of Newton steps for steady state problem
+     [newton, simulation, newton] (length = 3) */
     std::vector<int> newton_numsteps;
 
-    /** number of linear steps by Newton step for steady state problem (length = newton_maxsteps * 2) */
+    /** number of linear steps by Newton step for steady state problem. this
+     will only be filled for iterative solvers (length = newton_maxsteps * 2) */
     std::vector<int> newton_numlinsteps;
     
     /** time at which steadystate was reached in the simulation based approach */
@@ -221,6 +224,8 @@ class ReturnData {
     const int nk;
     /** number of states */
     const int nx;
+    /** number of states with conservation laws applied */
+    const int nx_solver;
     /** number of states in the unaugmented system */
     const int nxtrue;
     /** number of observables */

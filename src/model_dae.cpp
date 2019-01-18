@@ -117,10 +117,10 @@ namespace amici {
                           AmiVector *dx) {
         auto x_pos = computeX_pos(x->getNVector());
         fdwdx(t,N_VGetArrayPointer(x_pos));
-        memset(JDiag->data(),0.0,sizeof(realtype)*nx);
+        memset(JDiag->data(),0.0,sizeof(realtype)*nx_solver);
         fJDiag(JDiag->data(),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                0.0,dx->data(),w.data(),dwdx.data());
-        if(!checkFinite(nx,JDiag->data(),"Jacobian"))
+        if(!checkFinite(nx_solver,JDiag->data(),"Jacobian"))
             throw AmiException("Evaluation of fJDiag failed!");
     }
     
@@ -135,7 +135,7 @@ namespace amici {
          auto x_pos = computeX_pos(x);
          fdwdp(t,N_VGetArrayPointer(x_pos));
          for(int ip = 0; ip < nplist(); ip++)
-             fdxdotdp(&dxdotdp.at(nx*ip),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
+             fdxdotdp(&dxdotdp.at(nx_solver*ip),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                       plist_[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data());
     }
     
@@ -269,11 +269,11 @@ namespace amici {
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
             fM(t,x_pos);
             fdxdotdp(t,x_pos,dx);
-            fJSparse(t,0.0,x_pos,dx,J);// also calls dwdx & dx
+            fJSparse(t,0.0,x_pos,dx,J.slsmat());// also calls dwdx & dx
         }
         N_VConst(0.0,sxdot);
         fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                plist_[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx),N_VGetArrayPointer(sdx),
-               w.data(),dwdx.data(),J->data,M.data(),&dxdotdp.at(ip*nx));
+               w.data(),dwdx.data(),J.data(),M.data(),&dxdotdp.at(ip*nx_solver));
     }
 }

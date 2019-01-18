@@ -10,5 +10,5 @@ fi
 
 source build/venv/bin/activate
 python ./tests/testSBMLSuite.py
-
-cat ./testSuite.txt
+ret=$?
+if [[ $ret != 0 ]]; then exit $ret; fi

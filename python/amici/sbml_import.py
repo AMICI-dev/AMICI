@@ -346,6 +346,7 @@ class SbmlImporter:
                 speciesInitial[index] = sp.sympify(
                     sbml.formulaToL3String(initial_assignment.getMath())
                 )
+                _check_unsupported_functions(speciesInitial[index])
 
         # flatten initSpecies
         while any([species in speciesInitial.free_symbols
@@ -577,6 +578,7 @@ class SbmlImporter:
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
+            _check_unsupported_functions(symMath)
             for r in reactions:
                 elements = list(r.getListOfReactants()) \
                            + list(r.getListOfProducts())
@@ -596,7 +598,6 @@ class SbmlImporter:
                     'Kinetic laws involving reaction ids are currently'
                     ' not supported!'
                 )
-
 
     def processRules(self):
         """Process Rules defined in the SBML model.
@@ -628,6 +629,7 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable())
             # avoid incorrect parsing of pow(x, -1) in symengine
             formula = sp.sympify(sbml.formulaToL3String(rule.getMath()))
+            _check_unsupported_functions(formula)
 
             if variable in stoichvars:
                 self.stoichiometricMatrix = \
@@ -996,6 +998,7 @@ def constantSpeciesToParameters(sbml_model):
         species = sbml_model.removeSpecies(speciesId)
         par = sbml_model.createParameter()
         par.setId(species.getId())
+        par.setName(species.getName())
         par.setConstant(True)
         par.setValue(species.getInitialConcentration())
         par.setUnits(species.getUnits())
@@ -1107,3 +1110,37 @@ def checkLibSBMLErrors(sbml_doc, show_warnings=False):
         raise SBMLException(
             'SBML Document failed to load (see error messages above)'
         )
+
+
+def _check_unsupported_functions(sym):
+    """Recursively checks the symbolic expression for unsupported symbolic
+    functions
+
+        Arguments:
+            sym: symbolic expressions @type sympy.Basic
+
+        Returns:
+
+        Raises:
+            raises SBMLException if an unsupported function is encountered
+    """
+
+    unsupported_functions = [
+        sp.functions.factorial, sp.functions.ceiling,
+        sp.functions.Piecewise,
+    ]
+
+    for arg in sym._args:
+        unsupp_fun = next(
+            (
+                fun
+                for fun in unsupported_functions
+                if isinstance(arg, fun)
+            ),
+            None
+        )
+        if unsupp_fun:
+            raise SBMLException(f'Encountered unsupported function type '
+                                f'"{unsupp_fun}" in subexpression "{sym}"')
+
+        _check_unsupported_functions(arg)

@@ -325,7 +325,7 @@ class Solver {
      * @param rtol relative tolerance (non-negative number)
      */
     void setRelativeTolerance(double rtol);
-    
+
     /**
      * @brief returns the absolute tolerances for the forward & backward problem
      * @return absolute tolerances
@@ -337,25 +337,25 @@ class Solver {
      * @param atol absolute tolerance (non-negative number)
      */
     void setAbsoluteTolerance(double atol);
-    
+
     /**
      * @brief returns the relative tolerances for the forward sensitivity problem
      * @return relative tolerances
      */
     double getRelativeToleranceSensi() const;
-    
+
     /**
      * @brief sets the relative tolerances for the forward sensitivity problem
      * @param rtol relative tolerance (non-negative number)
      */
     void setRelativeToleranceSensi(double rtol);
-    
+
     /**
      * @brief returns the absolute tolerances for the forward sensitivity problem
      * @return absolute tolerances
      */
     double getAbsoluteToleranceSensi() const;
-    
+
     /**
      * @brief sets the absolute tolerances for the forward sensitivity problem
      * @param atol absolute tolerance (non-negative number)
@@ -385,49 +385,49 @@ class Solver {
      * @param atol absolute tolerance (non-negative number)
      */
     void setAbsoluteToleranceQuadratures(double atol);
-    
+
     /**
      * @brief returns the relative tolerance for the steady state problem
      * @return relative tolerance
      */
     double getRelativeToleranceSteadyState() const;
-    
+
     /**
      * @brief sets the relative tolerance for the steady state problem
      * @param rtol relative tolerance (non-negative number)
      */
     void setRelativeToleranceSteadyState(double rtol);
-    
+
     /**
      * @brief returns the absolute tolerance for the steady state problem
      * @return absolute tolerance
      */
     double getAbsoluteToleranceSteadyState() const;
-    
+
     /**
      * @brief sets the absolute tolerance for the steady state problem
      * @param atol absolute tolerance (non-negative number)
      */
     void setAbsoluteToleranceSteadyState(double atol);
-    
+
     /**
      * @brief returns the relative tolerance for the sensitivities of the steady state problem
      * @return relative tolerance
      */
     double getRelativeToleranceSteadyStateSensi() const;
-    
+
     /**
      * @brief sets the relative tolerance for the sensitivities of the steady state problem
      * @param rtol relative tolerance (non-negative number)
      */
     void setRelativeToleranceSteadyStateSensi(double rtol);
-    
+
     /**
      * @brief returns the absolute tolerance for the sensitivities of the steady state problem
      * @return absolute tolerance
      */
     double getAbsoluteToleranceSteadyStateSensi() const;
-    
+
     /**
      * @brief sets the absolute tolerance for the sensitivities of the steady state problem
      * @param atol absolute tolerance (non-negative number)
@@ -797,7 +797,7 @@ class Solver {
      *
      */
     virtual void adjInit() = 0;
-    
+
     /**
      * specifies solver method and initializes solver memory for the
      * backward problem
@@ -1030,7 +1030,7 @@ class Solver {
 
     void initializeLinearSolver(const Model *model);
     void initializeLinearSolverB(const Model *model, const int which);
-    
+
     /**
      * Accessor function to the number of sensitivity parameters in the model stored in the user data
      *
@@ -1049,7 +1049,7 @@ class Solver {
      * @return user data model
      */
     virtual const Model *getModel() const = 0;
-    
+
     /**
      * checks whether memory for the forward problem has been allocated
      *
@@ -1064,7 +1064,7 @@ class Solver {
     virtual bool getAdjMallocDone() const = 0;
 
 protected:
-    
+
     /**
      * getAdjBmem retrieves the solver memory instance for the backward problem
      *
@@ -1073,68 +1073,68 @@ protected:
      * @return ami_memB pointer to the backward solver memory instance
      */
     virtual void *getAdjBmem(void *ami_mem, int which) = 0;
-        
+
     /**
      * updates solver tolerances according to the currently specified member variables
      */
     void applyTolerances();
-        
+
     /**
      * updates FSA solver tolerances according to the currently specified member variables
      */
     void applyTolerancesFSA();
-        
+
     /**
      * updates ASA solver tolerances according to the currently specified member variables
      *
      * @param which identifier of the backwards problem
      */
     void applyTolerancesASA(int which);
-    
+
     /**
      * updates ASA quadrature solver tolerances according to the currently specified member variables
      *
      * @param which identifier of the backwards problem
      */
     void applyQuadTolerancesASA(int which);
-    
+
     /**
      * updates all senstivivity solver tolerances according to the currently specified member variables
      */
     void applySensitivityTolerances();
-    
+
     /** pointer to solver memory block */
     std::unique_ptr<void, std::function<void(void *)>> solverMemory;
-    
+
     /** pointer to solver memory block */
     std::vector<std::unique_ptr<void, std::function<void(void *)>>> solverMemoryB;
-    
+
     /** flag indicating whether the solver was called */
     bool solverWasCalled = false;
-    
+
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */
     InternalSensitivityMethod ism = InternalSensitivityMethod::simultaneous;
-    
+
     /** specifies the linear multistep method.
      */
     LinearMultistepMethod lmm = LinearMultistepMethod::BDF;
-    
+
     /**
      * specifies the type of nonlinear solver iteration
      */
     NonlinearSolverIteration iter = NonlinearSolverIteration::newton;
-    
+
     /** interpolation type for the forward problem solution which
      * is then used for the backwards problem.
      */
     InterpolationType interpType = InterpolationType::hermite;
-    
+
     /** maximum number of allowed integration steps */
     int maxsteps = 10000;
 
 private:
-        
+
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth = SensitivityMethod::forward;
 
@@ -1163,10 +1163,10 @@ private:
 
     /** relative tolerances for integration */
     double rtol = 1e-8;
-    
+
     /** absolute tolerances for forward sensitivity integration */
     double atol_sensi = NAN;
-    
+
     /** relative tolerances for forward sensitivity integration */
     double rtol_sensi = NAN;
 
@@ -1175,16 +1175,16 @@ private:
 
     /** relative tolerances for backward quadratures */
     double quad_rtol = 1e-8;
-    
+
     /** absolute tolerances for steadystate computation */
     double ss_atol = NAN;
-    
+
     /** relative tolerances for steadystate computation */
     double ss_rtol = NAN;
-    
+
     /** absolute tolerances for steadystate computation */
     double ss_atol_sensi = NAN;
-    
+
     /** relative tolerances for steadystate computation */
     double ss_rtol_sensi = NAN;
 

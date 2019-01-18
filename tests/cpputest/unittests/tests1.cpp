@@ -52,7 +52,7 @@ TEST_GROUP(model)
     std::vector<int> plist {1};
     std::vector<realtype> idlist {0};
     std::vector<int> z2event {0,0,0};
-    Model_Test model = Model_Test(nx, nx, ny, ny, nz, nz, nmaxevent,
+    Model_Test model = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz, nmaxevent,
                                   0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                                   p, k, plist, idlist, z2event);
     
@@ -256,7 +256,8 @@ TEST_GROUP(edata)
     std::unique_ptr<amici::Model> model = getModel();
     
 
-    Model_Test model_dim = Model_Test(nx, nx, ny, ny, nz, nz, nmaxevent, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
+    Model_Test model_dim = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz,
+    nmaxevent, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                            std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                            std::vector<realtype>(0,0.0),std::vector<int>(0,1));
     void setup() {
@@ -478,7 +479,8 @@ TEST_GROUP(solver)
     InterpolationType interp;
     
     
-    Model_Test model_dim = Model_Test(nx, nx, ny, ny, nz, nz, ne, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
+    Model_Test model_dim = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz, ne, 0, 0,
+     0, 0, 0, 0, 0, SecondOrderMode::none,
                                       std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                                       std::vector<realtype>(0,0.0),std::vector<int>(0,1));
     
@@ -591,4 +593,44 @@ void testSolverGetterSetters(CVodeSolver solver, SensitivityMethod sensi_meth, S
     CHECK_EQUAL(solver.getAbsoluteToleranceSteadyState(), tol);
 }
 
+TEST_GROUP(amivector)
+{
+    std::vector<double> vec1{1, 2, 4, 3};
+    std::vector<double> vec2{4, 1, 2, 3};
+    std::vector<double> vec3{4, 4, 2, 1};
+    
+    void setup() {
+    }
+    
+    void teardown() {
+    }
+};
+
+TEST(amivector, vector)
+{
+    AmiVector av(vec1);
+    N_Vector nvec = av.getNVector();
+    for(int i=0; i < av.getLength(); ++i)
+        CHECK_EQUAL(av.at(i), NV_Ith_S(nvec, i))
+}
+
+TEST(amivector, vectorArray)
+{
+    AmiVectorArray ava(4, 3);
+    AmiVector av1(vec1), av2(vec2), av3(vec3);
+    std::vector<AmiVector> avs{av1, av2, av3};
+    for(int i=0; i < ava.getLength(); ++i)
+        ava[i] = avs.at(i);
+
+    std::vector<double> badLengthVector(13, 0.0);
+    std::vector<double> flattened(12, 0.0);
+    
+    CHECK_THROWS(AmiException, ava.flatten_to_vector(badLengthVector));
+    ava.flatten_to_vector(flattened);
+    for(int i=0; i < ava.getLength(); ++i){
+        const AmiVector av = ava[i];
+        for(int j=0; j < av.getLength(); ++j)
+            CHECK_EQUAL(flattened.at(i * av.getLength() + j), av.at(j));
+    }
+}
 

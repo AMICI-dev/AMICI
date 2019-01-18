@@ -150,6 +150,8 @@ fprintf(fid,['class Model_' this.modelname ' : public amici::' baseclass ' {\n']
 fprintf(fid,'public:\n');
 fprintf(fid,['    Model_' this.modelname '() : amici::' baseclass '(' num2str(this.nx) ',\n']);
 fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
+fprintf(fid,['                    ' num2str(this.nx) ',\n']);
+fprintf(fid,['                    ' num2str(this.nxtrue) ',\n']);
 fprintf(fid,['                    ' num2str(this.ny) ',\n']);
 fprintf(fid,['                    ' num2str(this.nytrue) ',\n']);
 fprintf(fid,['                    ' num2str(this.nz) ',\n']);
@@ -179,7 +181,7 @@ initstr = num2str(transpose(this.z2event), '%d, ');
 fprintf(fid,['                    std::vector<int>{' initstr(1:end-1) '})\n']);
 fprintf(fid,['                    {};\n\n']);
 fprintf(fid,['    virtual amici::Model* clone() const override { return new Model_' this.modelname '(*this); };\n\n']);
-fprintf(fid,['    const  char* getAmiciVersion() const { return "' getCommitHash(fileparts(fileparts(mfilename('fullpath')))) '"; };\n\n']);
+fprintf(fid,['    const  std::string getAmiciCommit() const override { return "' getCommitHash(fileparts(fileparts(mfilename('fullpath')))) '"; };\n\n']);
 
 for ifun = this.funs
     cppFunctionName = strrep(ifun{1}, 'sigma_', 'sigma');

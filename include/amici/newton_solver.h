@@ -3,13 +3,12 @@
 
 #include "amici/vector.h"
 #include "amici/defines.h"
+#include "amici/sundials_matrix_wrapper.h"
 
 #include <memory>
 
 #include <klu.h>
-#include <nvector/nvector_serial.h> // DlsMat
-#include <sundials/sundials_dense.h>
-#include <sundials/sundials_sparse.h> // SlsMat
+
 
 namespace amici {
 
@@ -48,7 +47,7 @@ class NewtonSolver {
      * Solves the linear system for the Newton step
      *
      * @param rhs containing the RHS of the linear system, will be
-     * overwritten by solution to the linear system 
+     * overwritten by solution to the linear system
      */
     virtual void solveLinearSystem(AmiVector *rhs) = 0;
 
@@ -97,8 +96,9 @@ class NewtonSolverDense : public NewtonSolver {
   private:
     /** temporary storage of pivot array */
     long int *pivots = nullptr;
+
     /** temporary storage of Jacobian */
-    DlsMat Jtmp = nullptr;
+    DlsMatWrapper Jtmp;
 };
 
 /**
@@ -125,7 +125,7 @@ class NewtonSolverSparse : public NewtonSolver {
     /** klu status flag  */
     int klu_status = 0;
     /** temporary storage of Jacobian */
-    SlsMat Jtmp = nullptr;
+    SlsMatWrapper Jtmp;
 };
 
 /**
@@ -139,8 +139,8 @@ class NewtonSolverIterative : public NewtonSolver {
     NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
     virtual ~NewtonSolverIterative() = default;
 
-    void solveLinearSystem(AmiVector *rhs);
-    void prepareLinearSystem(int ntry, int nnewt);
+    void solveLinearSystem(AmiVector *rhs) override;
+    void prepareLinearSystem(int ntry, int nnewt) override;
     void linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta);
 
   private:

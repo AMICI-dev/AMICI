@@ -5,20 +5,34 @@ import amici
 import unittest
 import os
 import numbers
+import pysb
+import importlib
+import copy
 
 class TestAmiciCPP(unittest.TestCase):
     '''
-    TestCase class for testing SBML import and simulation from AMICI python interface
+    TestCase class for testing cpp API through swig
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
                                        'cpputest', 'expectedResults.h5')
 
     def setUp(self):
+        self.resetdir = os.getcwd()
+        self.default_path = copy.copy(sys.path)
+
+        pysb.SelfExporter.cleanup()  # reset pysb
+        pysb.SelfExporter.do_export = True
+
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
                                         'python', 'examples',
                                         'example_presimulation'))
-        from createModel import model
+        if 'createModelPresimulation' in sys.modules:
+            importlib.reload(sys.modules['createModelPresimulation'])
+            model_module = sys.modules['createModelPresimulation']
+        else:
+            model_module = importlib.import_module('createModelPresimulation')
+        model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
         amici.pysb2amici(model,
                          model.name,
@@ -31,12 +45,18 @@ class TestAmiciCPP(unittest.TestCase):
         self.solver = self.model.getSolver()
 
     def tearDown(self):
-        pass
+        os.chdir(self.resetdir)
+        sys.path = self.default_path
 
     def runTest(self):
-        self.testCopyConstructors()
+        self.test_copy_constructors()
+        self.test_version_number()
 
-    def testCopyConstructors(self):
+    def test_version_number(self):
+        self.assertEqual(self.model.getAmiciVersion(), amici.__version__)
+        self.assertEqual(self.model.getAmiciCommit(), amici.__commit__)
+
+    def test_copy_constructors(self):
         # TODO: expand this to serialization
         for obj in [self.model, self.solver]:
             for attr in dir(obj):

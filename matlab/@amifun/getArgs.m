@@ -116,11 +116,11 @@ function this = getArgs(this,model)
         case 'dJrzdsigma'
             this.argstr = '(double *dJrzdsigma, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz)';
         case 'w'
-            this.argstr = '(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h)';
+            this.argstr = '(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl)';
         case 'dwdp'
-            this.argstr = '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)';
+            this.argstr = '(realtype *dwdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl, const realtype *stcl)';
         case 'dwdx'
-            this.argstr = '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w)';
+            this.argstr = '(realtype *dwdx, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *tcl)';
         case 'M'
             this.argstr = '(realtype *M, const realtype t, const realtype *x, const realtype *p, const realtype *k)';
         otherwise

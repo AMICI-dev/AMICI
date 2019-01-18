@@ -4,6 +4,7 @@ import sys
 import amici
 import unittest
 import os
+import copy
 import numpy as np
 from testModels import checkDerivatives
 
@@ -16,12 +17,15 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                        'cpputest', 'expectedResults.h5')
 
     def setUp(self):
+        self.default_path = copy.copy(sys.path)
         self.resetdir = os.getcwd()
+
         if os.path.dirname(__file__) != '':
             os.chdir(os.path.dirname(__file__))
 
     def tearDown(self):
         os.chdir(self.resetdir)
+        sys.path = self.default_path
 
     def runTest(self):
         self.test_presimulation()

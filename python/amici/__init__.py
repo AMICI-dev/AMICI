@@ -26,6 +26,7 @@ Attributes:
 """
 
 import os
+import re
 
 hdf5_enabled = False
 has_clibs = False
@@ -58,6 +59,25 @@ amiciModulePath = os.path.dirname(__file__)
 # Get version number from file
 with open(os.path.join(amici_path, 'version.txt')) as f:
     __version__ = f.read().strip()
+
+# get commit hash from file
+_commitfile = next(
+    (
+        file for file in [
+            os.path.join(amici_path, '..', '..', '..', '.git', 'FETCH_HEAD'),
+            os.path.join(amici_path, '..', '..', '..', '.git', 'ORIG_HEAD'),
+        ]
+        if os.path.isfile(file)
+    ),
+    None
+)
+
+if _commitfile:
+    with open(_commitfile) as f:
+        __commit__ = str(re.search(r'^([\w]*)', f.read().strip()).group())
+else:
+    __commit__ = 'unknown'
+
 
 if has_clibs:
     # these module require the swig interface

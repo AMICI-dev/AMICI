@@ -11,24 +11,27 @@
 
 namespace amici {
     extern msgIdAndTxtFp warnMsgIdAndTxt;
-    
+
     class ExpData;
     class IDASolver;
-    
+
     /**
      * @brief The Model class represents an AMICI DAE model.
      * The model does not contain any data, but represents the state
      * of the model at a specific time t. The states must not always be
-     * in sync, but may be updated asynchroneously. 
+     * in sync, but may be updated asynchroneously.
      */
     class Model_DAE : public Model {
     public:
         /** default constructor */
         Model_DAE() : Model() {}
-        
+
         /** constructor with model dimensions
-         * @param nx number of state variables
-         * @param nxtrue number of state variables of the non-augmented model
+         * @param nx_rdata number of state variables
+         * @param nxtrue_rdata number of state variables of the non-augmented model
+         * @param nx_solver number of state variables with conservation laws applied
+         * @param nxtrue_solver number of state variables of the non-augmented model
+         with conservation laws applied
          * @param ny number of observables
          * @param nytrue number of observables of the non-augmented model
          * @param nz number of event observables
@@ -50,63 +53,67 @@ namespace amici {
          * @param idlist indexes indicating algebraic components (DAE only)
          * @param z2event mapping of event outputs to events
          */
-        Model_DAE(const int nx, const int nxtrue,
-                  const int ny, const int nytrue, const int nz, const int nztrue,
+        Model_DAE(const int nx_rdata, const int nxtrue_rdata,
+                  const int nx_solver, const int nxtrue_solver, const int ny,
+                  const int nytrue, const int nz, const int nztrue,
                   const int ne, const int nJ, const int nw, const int ndwdx,
                   const int ndwdp, const int nnz, const int ubw, const int lbw,
-                  const SecondOrderMode o2mode, const std::vector<realtype> p,
-                  const std::vector<realtype> k, const std::vector<int> plist,
-                  const std::vector<realtype> idlist, const std::vector<int> z2event)
-        : Model(nx,nxtrue,ny,nytrue,nz,nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,z2event){}
-        
+                  const SecondOrderMode o2mode, std::vector<realtype> const &p,
+                  std::vector<realtype> const &k, std::vector<int> const &plist,
+                  std::vector<realtype> const &idlist,
+                  std::vector<int> const &z2event)
+            : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny,
+                    nytrue, nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, nnz, ubw, lbw,
+                    o2mode, p, k, plist, idlist, z2event) {}
+
         virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                         AmiVector *xdot, DlsMat J) override;
         void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J);
-        
+
         void fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, DlsMat JB);
 
         virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                               AmiVector *xdot, SlsMat J) override;
         void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, SlsMat J);
-        
+
         void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, SlsMat JB);
 
         virtual void fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
                             AmiVector *dx) override;
-        
+
         virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                          AmiVector *v, AmiVector *nJv, realtype cj) override;
         void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv, realtype cj);
-        
+
         void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
                   N_Vector vB, N_Vector JvB, realtype cj);
-        
+
         virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override;
         void froot(realtype t, N_Vector x, N_Vector dx, realtype *root);
-        
+
         virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) override;
         void fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot);
-        
+
         void fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot);
-        
+
         void fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot);
-        
+
         void fdxdotdp(const realtype t, const N_Vector x, const N_Vector dx);
         virtual void fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) override {
             fdxdotdp(t,x->getNVector(),dx->getNVector());
         };
-        
+
         void fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
                     AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) override;
         void fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx, N_Vector sdx, N_Vector sxdot);
-        
-        void fM(realtype t, const N_Vector x);
-        
 
-        
+        void fM(realtype t, const N_Vector x);
+
+
+
         virtual std::unique_ptr<Solver> getSolver() override;
     protected:
-        
+
         /** model specific implementation for fJ
          * @param J Matrix to which the Jacobian will be written
          * @param t timepoint
@@ -121,7 +128,7 @@ namespace amici {
          **/
         virtual void fJ(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                         const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
-        
+
         /** model specific implementation for fJB
          * @param JB Matrix to which the Jacobian will be written
          * @param t timepoint
@@ -141,7 +148,7 @@ namespace amici {
                          const realtype *w, const realtype *dwdx){
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation for fJSparse
          * @param JSparse Matrix to which the Jacobian will be written
          * @param t timepoint
@@ -156,7 +163,7 @@ namespace amici {
          **/
         virtual void fJSparse(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                               const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
-        
+
         /** model specific implementation for fJSparseB
          * @param JSparseB Matrix to which the Jacobian will be written
          * @param t timepoint
@@ -176,7 +183,7 @@ namespace amici {
                                const realtype *w, const realtype *dwdx){
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation for fJDiag
          * @param JDiag array to which the Jacobian diagonal will be written
          * @param t timepoint
@@ -193,7 +200,7 @@ namespace amici {
                             const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx){
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation for fJv
          * @param Jv Matrix vector product of J with a vector v
          * @param t timepoint
@@ -212,7 +219,7 @@ namespace amici {
                          const realtype *w, const realtype *dwdx){
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
-        
+
         /** model specific implementation for fJvB
          * @param JvB Matrix vector product of JB with a vector v
          * @param t timepoint
@@ -233,7 +240,7 @@ namespace amici {
                           const realtype *vB, const realtype *w, const realtype *dwdx){
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
         }
-        
+
         /** model specific implementation for froot
          * @param root values of the trigger function
          * @param t timepoint
@@ -247,7 +254,7 @@ namespace amici {
                            const realtype *dx){
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
         }
-        
+
         /** model specific implementation for fxdot
          * @param xdot residual function
          * @param t timepoint
@@ -260,7 +267,7 @@ namespace amici {
          **/
         virtual void fxdot(realtype *xdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                            const realtype *dx, const realtype *w) = 0;
-        
+
         /** model specific implementation for fxBdot
          * @param xBdot adjoint residual function
          * @param t timepoint
@@ -279,7 +286,7 @@ namespace amici {
                             const realtype *w, const realtype *dwdx) {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
         }
-        
+
         /** model specific implementation for fqBdot
          * @param qBdot adjoint quadrature equation
          * @param ip sensitivity index
@@ -299,7 +306,7 @@ namespace amici {
                             const realtype *w, const realtype *dwdp) {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
         }
-        
+
         /** model specific implementation of fdxdotdp
          * @param dxdotdp partial derivative xdot wrt p
          * @param t timepoint
@@ -316,7 +323,7 @@ namespace amici {
                               const int ip, const realtype *dx, const realtype *w, const realtype *dwdp) {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         };
-        
+
         /** model specific implementation of fsxdot
          * @param sxdot sensitivity rhs
          * @param t timepoint
@@ -340,7 +347,7 @@ namespace amici {
                             const realtype *dxdotdp) {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         };
-        
+
         /** model specific implementation of fM
          * @param M mass matrix
          * @param t timepoint
@@ -350,7 +357,7 @@ namespace amici {
          */
         virtual void fM(realtype *M, const realtype t, const realtype *x, const realtype *p,
                         const realtype *k) {};
-        
+
     };
 } // namespace amici
 

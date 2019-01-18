@@ -4,6 +4,7 @@ import sys
 import amici
 import unittest
 import os
+import copy
 import numpy as np
 import itertools
 
@@ -13,7 +14,9 @@ class TestAmiciPandasImportExport(unittest.TestCase):
     '''
 
     def setUp(self):
+        self.default_path = copy.copy(sys.path)
         self.resetdir = os.getcwd()
+
         if os.path.dirname(__file__) != '':
             os.chdir(os.path.dirname(__file__))
 
@@ -47,6 +50,7 @@ class TestAmiciPandasImportExport(unittest.TestCase):
 
     def tearDown(self):
         os.chdir(self.resetdir)
+        sys.path = self.default_path
 
     def runTest(self):
         self.tests_presimulation()

@@ -4,44 +4,54 @@ import sys
 import amici
 import unittest
 import os
+import platform
 import importlib
+import copy
 import numpy as np
 from pysb.simulator import ScipyOdeSimulator
 
-from pysb.examples import tyson_oscillator, robertson, \
-    expression_observables, bax_pore_sequential, bax_pore, \
-    bngwiki_egfr_simple
-
+import pysb.examples
 
 class TestAmiciPYSBModel(unittest.TestCase):
     '''
-    TestCase class for testing SBML import and simulation from AMICI python interface
+    TestCase class for testing SBML import and simulation from AMICI python
+    interface
     '''
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
-                                       'cpputest','expectedResults.h5')
+                                       'cpputest', 'expectedResults.h5')
 
     def setUp(self):
+        self.default_path = copy.copy(sys.path)
         self.resetdir = os.getcwd()
+
         if os.path.dirname(__file__) != '':
             os.chdir(os.path.dirname(__file__))
 
     def tearDown(self):
         os.chdir(self.resetdir)
+        sys.path = self.default_path
 
     def runTest(self):
         self.test_compare_to_sbml_import()
-        #self.test_compare_to_pysb_simulation()
+        self.test_compare_to_pysb_simulation()
 
     def test_compare_to_sbml_import(self):
         constant_parameters = ['DRUG_0', 'KIN_0']
 
         # -------------- PYSB -----------------
+        pysb.SelfExporter.cleanup()  # reset pysb
+        pysb.SelfExporter.do_export = True
 
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
                                         'python', 'examples',
                                         'example_presimulation'))
-        from createModel import model
+        if 'createModelPresimulation' in sys.modules:
+            importlib.reload(sys.modules['createModelPresimulation'])
+            model_module = sys.modules['createModelPresimulation']
+        else:
+            model_module = importlib.import_module('createModelPresimulation')
+        model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
         amici.pysb2amici(model,
                          model.name,
@@ -81,7 +91,9 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
         for field in rdata_pysb:
             if field not in ['ptr', 't_steadystate', 'numsteps',
-                                'numrhsevals', 'numerrtestfails', 'order']:
+                             'newton_numsteps', 'numrhsevals',
+                             'numerrtestfails', 'order', 'J', 'xdot',
+                             'wrms_steadystate', ]:
                 with self.subTest(field=field):
                     if rdata_pysb[field] is None:
                         self.assertIsNone(
@@ -98,37 +110,91 @@ class TestAmiciPYSBModel(unittest.TestCase):
                             atol=1e-6, rtol=1e-6
                         ).all())
 
-    def compare_to_pysb_simulation(self):
-        examples = [tyson_oscillator.model, robertson.model,
-                  expression_observables.model,
-                  bax_pore_sequential.model, bax_pore.model,
-                  bngwiki_egfr_simple.model]
-        for example in examples:
-            example.name = example.name.replace('pysb.examples.','')
-            with self.subTest(example=example.name):
-                ## pysb part
+    def test_compare_to_pysb_simulation(self):
+
+        sys.path.insert(0, os.path.dirname(pysb.examples.__file__))
+
+        pysb_models = [
+            'tyson_oscillator', 'robertson', 'expression_observables',
+            'bax_pore_sequential', 'bax_pore', 'bngwiki_egfr_simple',
+            'bngwiki_enzymatic_cycle_mm', 'bngwiki_simple', 'earm_1_0',
+            'earm_1_3', 'move_connected', 'michment', 'kinase_cascade',
+            'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
+        ]
+
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
+                                        'tests', 'pysb_test_models'))
+
+        custom_models = [
+            'bngwiki_egfr_simple_deletemolecules',
+        ]
+
+        atol = 1e-8
+        rtol = 1e-8
+
+        for example in pysb_models + custom_models:
+            with self.subTest(example=example):
+
+                if example == 'earm_1_3' \
+                        and platform.sys.version_info[0] == 3 \
+                        and platform.sys.version_info[1] < 7:
+                    continue
+
+                # load example
+
+                pysb.SelfExporter.cleanup()  # reset pysb
+                pysb.SelfExporter.do_export = True
+
+                module = importlib.import_module(example)
+                pysb_model = module.model
+                pysb_model.name = pysb_model.name.replace('pysb.examples.', '')
+                # avoid naming clash for custom pysb models
+                pysb_model.name += '_amici'
+
+                # pysb part
 
                 tspan = np.linspace(0, 100, 101)
                 sim = ScipyOdeSimulator(
-                    example,
+                    pysb_model,
                     tspan=tspan,
-                    integrator_options={'rtol': 1e-8, 'atol': 1e-8},
+                    integrator_options={'rtol': rtol, 'atol': atol},
                     compiler='python'
                 )
                 pysb_simres = sim.run()
 
-                ## amici part
+                # amici part
 
-                amici.pysb2amici(example,
-                                 example.name,
-                                 verbose=False)
-                sys.path.insert(0, example.name)
-                amici_model_module = importlib.import_module(example.name)
+                outdir = pysb_model.name
+
+                if pysb_model.name in ['move_connected_amici']:
+                    self.assertRaises(
+                        Exception,
+                        amici.pysb2amici,
+                        *[pysb_model, outdir],
+                        **{'verbose': False, 'compute_conservation_laws': True}
+                    )
+                    compute_conservation_laws = False
+                else:
+                    compute_conservation_laws = True
+
+                amici.pysb2amici(
+                    pysb_model,
+                    outdir,
+                    verbose=False,
+                    compute_conservation_laws=compute_conservation_laws
+                )
+                sys.path.insert(0, outdir)
+
+                amici_model_module = importlib.import_module(pysb_model.name)
+
                 model_pysb = amici_model_module.getModel()
 
                 model_pysb.setTimepoints(tspan)
 
                 solver = model_pysb.getSolver()
+                solver.setMaxSteps(int(1e5))
+                solver.setAbsoluteTolerance(atol)
+                solver.setRelativeTolerance(rtol)
                 rdata = amici.runAmiciSimulation(model_pysb, solver)
 
                 # check agreement of species simulation
