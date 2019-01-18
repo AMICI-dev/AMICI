@@ -2,7 +2,7 @@
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
-lcov --base-directory ${AMICI_PATH} --directory ${AMICI_PATH}/build/CMakeFiles/amici.dir/src --zerocounters -q
+if [[ "$ENABLE_GCOV_COVERAGE" == TRUE ]]; then lcov --base-directory ${AMICI_PATH} --directory ${AMICI_PATH}/build/CMakeFiles/amici.dir/src --zerocounters -q; fi
 
 # run tests
 cd ${AMICI_PATH}/build

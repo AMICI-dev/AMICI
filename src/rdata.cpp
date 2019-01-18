@@ -64,7 +64,7 @@ ReturnData::ReturnData(
     y.resize(nt * ny, 0.0);
     sigmay.resize(nt * ny, 0.0);
 
-    newton_numsteps.resize(2, 0);
+    newton_numsteps.resize(3, 0);
     newton_numlinsteps.resize(newton_maxsteps*2, 0);
 
     if(nt>0) {

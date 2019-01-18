@@ -38,55 +38,61 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     /* First, try to do Newton steps */
     starttime = clock();
 
-    auto newtonSolver = NewtonSolver::getSolver(t, x, solver->getLinearSolver(),
-                                                model, rdata,
-                                                solver->getNewtonMaxLinearSteps(),
-                                                solver->getNewtonMaxSteps(),
-                                                solver->getAbsoluteTolerance(),
-                                                solver->getRelativeTolerance());
+    auto newtonSolver = NewtonSolver::getSolver(
+        t, x, solver->getLinearSolver(), model, rdata,
+        solver->getNewtonMaxLinearSteps(), solver->getNewtonMaxSteps(),
+        solver->getAbsoluteTolerance(), solver->getRelativeTolerance());
 
     auto newton_status = NewtonStatus::failed;
     try {
-        applyNewtonsMethod(rdata, model, newtonSolver.get(), 1);
+        applyNewtonsMethod(rdata, model, newtonSolver.get(),
+                           NewtonStatus::newt);
         newton_status = NewtonStatus::newt;
-    } catch(NewtonFailure const& ex1) {
+    } catch (NewtonFailure const &ex1) {
         try {
             /* Newton solver did not work, so try a simulation */
-            if (it<1) {
+            if (it < 1) {
                 /* Preequilibration: Create a new CVode object for simulation */
                 *t = model->t0();
-                auto newtonSimSolver = createSteadystateSimSolver(solver, model, *t);
-                getSteadystateSimulation(rdata, newtonSimSolver.get(), model, it);
+                auto newtonSimSolver =
+                    createSteadystateSimSolver(solver, model, *t);
+                getSteadystateSimulation(rdata, newtonSimSolver.get(), model,
+                                         it);
             } else {
                 /* Carry on simulating from last point */
-                *t = model->t(it-1);
+                *t = model->t(it - 1);
                 getSteadystateSimulation(rdata, solver, model, it);
             }
             newton_status = NewtonStatus::newt_sim;
-        } catch(AmiException const& ex2) {
+        } catch (AmiException const &ex2) {
             /* may be integration failure from AmiSolve, so NewtonFailure
                won't do for all cases */
             try {
-                applyNewtonsMethod(rdata, model, newtonSolver.get(), 2);
+                applyNewtonsMethod(rdata, model, newtonSolver.get(),
+                                   NewtonStatus::newt_sim_newt);
                 newton_status = NewtonStatus::newt_sim_newt;
-            } catch(NewtonFailure const& ex3) {
-                throw amici::IntegrationFailure(ex3.error_code,*t);
+            } catch (NewtonFailure const &ex3) {
+                if (ex3.error_code == AMICI_TOO_MUCH_WORK)
+                    throw AmiException("Steady state computation failed to "
+                                       "converge within the allowed maximum "
+                                       "number of iterations");
+                throw;
             }
         }
-    } catch(...) {
+    } catch (...) {
         throw AmiException("Internal error in steady state problem");
     }
     run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Compute steady state sensitvities */
-    
+
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
         (newton_status == NewtonStatus::newt ||
          newton_status == NewtonStatus::newt_sim_newt ||
          model->getSteadyStateSensitivityMode() != SteadyStateSensitivityMode::simulationFSA))
         // for newton_status == 2 the sensis were computed via FSA
         newtonSolver->computeNewtonSensis(sx);
-    
+
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     writeNewtonOutput(rdata, model, newton_status, run_time, it);
 }
@@ -102,7 +108,7 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
     N_VInv(ewt.getNVector(), ewt.getNVector());
     return N_VWrmsNorm(xdot.getNVector(), ewt.getNVector());
 }
-    
+
 bool SteadystateProblem::checkConvergence(
                                          const Solver *solver,
                                          Model *model
@@ -128,10 +134,9 @@ bool SteadystateProblem::checkConvergence(
 /* ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------ */
 
-void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
-                                           Model *model,
-                                           NewtonSolver *newtonSolver,
-                                           int newton_try) {
+void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
+                                            NewtonSolver *newtonSolver,
+                                            NewtonStatus steadystate_try) {
     int i_newtonstep = 0;
     int ix = 0;
     double gamma = 1.0;
@@ -147,7 +152,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
     x_newton = *x;
     x_old = *x;
     xdot_old = xdot;
-    
+
     //rdata->newton_numsteps[newton_try - 1] = 0.0;
     wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol);
     bool converged = wrms < RCONST(1.0);
@@ -155,26 +160,33 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
 
         /* If Newton steps are necessary, compute the inital search direction */
         if (compNewStep) {
-            try{
+            try {
                 delta = xdot;
-                newtonSolver->getStep(newton_try, i_newtonstep, &delta);
-            } catch(NewtonFailure const& ex) {
-                rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
+                newtonSolver->getStep(steadystate_try == NewtonStatus::newt ? 1
+                                                                            : 2,
+                                      i_newtonstep, &delta);
+            } catch (NewtonFailure const &ex) {
+                rdata->newton_numsteps.at(steadystate_try == NewtonStatus::newt
+                                              ? 0
+                                              : 2) = static_cast<int>(getNaN());
                 throw;
-            } catch(std::exception const& ex) {
-                rdata->newton_numsteps[newton_try - 1] = static_cast<int>(getNaN());
-                throw NewtonFailure(AMICI_ERROR,"Newton method failed to compute new step!");
+            } catch (std::exception const &ex) {
+                rdata->newton_numsteps.at(steadystate_try == NewtonStatus::newt
+                                              ? 0
+                                              : 2) = static_cast<int>(getNaN());
+                throw NewtonFailure(
+                    AMICI_ERROR, "Newton method failed to compute new step!");
             }
         }
-        
+
         /* Try a full, undamped Newton step */
         N_VLinearSum(1.0, x_old.getNVector(), -gamma, delta.getNVector(), x->getNVector());
-        
+
         /* Compute new xdot and residuals */
         model->fxdot(*t, x, &dx, &xdot);
         realtype wrms_tmp = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
                                         newtonSolver->rtol);
-        
+
         if (wrms_tmp < wrms) {
             /* If new residuals are smaller than old ones, update state */
             wrms = wrms_tmp;
@@ -184,7 +196,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
             compNewStep = TRUE;
             /* Check residuals vs tolerances */
             converged = wrms < RCONST(1.0);
-            
+
             if (converged) {
                 /* Ensure positivity of the found state */
                 for (ix = 0; ix < model->nx_solver; ix++) {
@@ -206,11 +218,12 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata,
         /* increase step counter */
         i_newtonstep++;
     }
-    
+
     /* Set return values */
-    rdata->newton_numsteps[newton_try-1] = i_newtonstep;
+    rdata->newton_numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
+        i_newtonstep;
     if (!converged)
-        throw NewtonFailure(AMICI_CONV_FAILURE,"applyNewtonsMethod");
+        throw NewtonFailure(AMICI_TOO_MUCH_WORK, "applyNewtonsMethod");
 }
 
 /* ------------------------------------------------------------------ */
@@ -229,7 +242,7 @@ void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,const Model *model,
     if (newton_status == NewtonStatus::newt_sim) {
         rdata->t_steadystate = *t;
     }
-    
+
     /* Steady state was found: set t to t0 if preeq, otherwise to inf */
     if (it == AMICI_PREEQUILIBRATE) {
         *t = model->t0();
@@ -247,7 +260,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
 {
     /* Loop over steps and check for convergence */
     bool converged = checkConvergence(solver, model);
-    
+
     int steps_newton = 0;
     while(!converged) {
         /* One step of ODE integration
@@ -265,7 +278,8 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         if (steps_newton >= solver->getMaxSteps() && !converged)
             throw NewtonFailure(AMICI_TOO_MUCH_WORK, "exceeded maximum number of steps");
     }
-    rdata->newton_numsteps[0] = steps_newton;
+    rdata->newton_numsteps.at(static_cast<int>(NewtonStatus::newt_sim)) =
+        steps_newton;
     if (solver->getSensitivityOrder()>SensitivityOrder::none)
         solver->getSens(t, sx);
 }
@@ -274,9 +288,9 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
         Solver *solver, Model *model, realtype tstart)
 {
     /* Create new CVode solver object */
-    
+
     auto newton_solver = std::unique_ptr<Solver>(solver->clone());
-    
+
     switch(solver->getLinearSolver()) {
         case LinearSolver::dense:
         case LinearSolver::KLU:
@@ -289,10 +303,10 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
         newton_solver->setSensitivityMethod(SensitivityMethod::forward); //need forward to compute sx0
     else
         newton_solver->setSensitivityMethod(SensitivityMethod::none);
-    
+
     // use x and sx as dummies for dx and sdx (they wont get touched in a CVodeSolver)
     newton_solver->setup(x,x,sx,sx,model);
-    
+
     return newton_solver;
 }
 

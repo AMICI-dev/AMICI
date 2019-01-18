@@ -177,10 +177,12 @@ class ReturnData {
     /** computation time of the Newton solver [s] */
     double newton_cpu_time = 0.0;
 
-    /** number of Newton steps for steady state problem (length = 2) */
+    /** number of Newton steps for steady state problem
+     [newton, simulation, newton] (length = 3) */
     std::vector<int> newton_numsteps;
 
-    /** number of linear steps by Newton step for steady state problem (length = newton_maxsteps * 2) */
+    /** number of linear steps by Newton step for steady state problem. this
+     will only be filled for iterative solvers (length = newton_maxsteps * 2) */
     std::vector<int> newton_numlinsteps;
     
     /** time at which steadystate was reached in the simulation based approach */

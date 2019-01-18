@@ -10,7 +10,7 @@ AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 runNotebook () {
     set +e
     tempfile=$(mktemp)
-    jupyter nbconvert --debug --stdout --execute --to markdown $@ &> $tempfile
+    jupyter nbconvert --debug --stdout --execute --ExecutePreprocessor.timeout=300 --to markdown $@ &> $tempfile
     ret=$?
     if [[ $ret != 0 ]]; then cat $tempfile; fi
     rm $tempfile

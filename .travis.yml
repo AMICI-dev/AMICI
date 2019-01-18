@@ -22,7 +22,9 @@ matrix:
             - mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH
             - pyenv shell 2.7 3.6
       compiler: gcc
-      env: ENABLE_GCOV_COVERAGE=TRUE
+      env: 
+        - ENABLE_GCOV_COVERAGE=TRUE
+        - CI_MODE=test
       after_script:
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
@@ -39,11 +41,24 @@ matrix:
     - os: osx
       osx_image: xcode9.3
       compiler: clang
+      env:
+        - CI_MODE=test
       before_install:
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
-        - travis_wait brew install hdf5 swig doxygen ragel graphviz homebrew/cask/mactex # cppcheck
+        - travis_wait brew install hdf5 swig # cppcheck
         - brew upgrade python
+        - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
+      after_success:
+        - cd $BASE_DIR # cd to base dir for correct relative path in deploy
+
+    - os: osx
+      osx_image: xcode9.3
+      compiler: clang
+      env:
+        - CI_MODE=deploy
+      before_install:
+        - travis_wait brew install doxygen ragel graphviz homebrew/cask/mactex # cppcheck
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
       after_success:
@@ -60,27 +75,27 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
-    - pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy # pinning pip because of https://github.com/pypa/pip/issues/5240
-    - ./scripts/buildSuiteSparse.sh
-    - ./scripts/buildSundials.sh
-    - ./scripts/buildCpputest.sh
-    - ./scripts/buildBNGL.sh
-    - export BNGPATH=$(pwd)/ThirdParty/BioNetGen-2.3.2
-    - ./scripts/buildAmici.sh
-    - ./scripts/installAmiciArchive.sh
-    - ./scripts/installAmiciSource.sh
+    - if [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildBNGL.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then export BNGPATH=$(pwd)/ThirdParty/BioNetGen-2.3.2; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildAmici.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-    - $FOLD cpputest ./scripts/run-cpputest.sh
-    - $FOLD python-tests "cd $BASE_DIR/build && make python-tests"
-    - $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
+    - if [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests "cd $BASE_DIR/build && make python-tests"; fi
+    - if [[ "$CI_MODE" == "test" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
+    - if [[ "$CI_MODE" == "deploy" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then $FOLD sbmltestsuite ./scripts/run-SBMLTestsuite.sh; fi
 
 after_failure:
