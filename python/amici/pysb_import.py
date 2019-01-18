@@ -12,7 +12,6 @@ try:
     import pysb.bng
     ## bool indicating whether pysb is available
     pysb_available = True
-    from pysb.pattern import SpeciesPatternMatcher
 except ImportError:
     pysb_available = False
 
