@@ -2540,12 +2540,12 @@ def sanitize_basic_sympy(basic):
 
         # ensure that pysb symbols are correctly interpreted as symbols and
         # not as functions etc
-        locals = {
+        local_vars = {
             fs.name: sp.Symbol(fs.name)
             for fs in list(basic.expr_free_symbols)
             if pysb and isinstance(fs, pysb.core.Component)
         }
-        return sp.sympify(str(basic), locals=locals)
+        return sp.sympify(str(basic), locals=local_vars)
 
 
 def get_function_definition(fun, name):
