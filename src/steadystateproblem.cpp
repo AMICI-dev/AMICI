@@ -278,7 +278,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         if (steps_newton >= solver->getMaxSteps() && !converged)
             throw NewtonFailure(AMICI_TOO_MUCH_WORK, "exceeded maximum number of steps");
     }
-    rdata->newton_numsteps.at(static_cast<int>(NewtonStatus::newt_sim)) =
+    rdata->newton_numsteps.at(static_cast<int>(NewtonStatus::newt_sim) - 1) =
         steps_newton;
     if (solver->getSensitivityOrder()>SensitivityOrder::none)
         solver->getSens(t, sx);
