@@ -206,7 +206,7 @@ class ReturnData {
     /** initial sensitivities (dimension: nplist x nx, row-major) */
     std::vector<realtype> sx0;
     
-    /** preequilibration sensitivities found be Newton solver (dimension: nplist x nx, row-major) */
+    /** preequilibration sensitivities found by Newton solver (dimension: nplist x nx, row-major) */
     std::vector<realtype> sx_ss;
 
     /** loglikelihood value */
