@@ -200,7 +200,7 @@ class ReturnData {
     /** initial state (dimension: nx) */
     std::vector<realtype> x0;
     
-    /** preequilibration steady state found be Newton solver (dimension: nx) */
+    /** preequilibration steady state found by Newton solver (dimension: nx) */
     std::vector<realtype> x_ss;
 
     /** initial sensitivities (dimension: nplist x nx, row-major) */
