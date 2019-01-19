@@ -379,6 +379,7 @@ def _process_pysb_conservation_laws(model, ODE):
     conservation_laws = _construct_conservation_from_prototypes(
         cl_prototypes, model
     )
+    _add_conservation_for_constant_species(ODE, conservation_laws)
 
     _flatten_conservation_laws(conservation_laws)
 
@@ -434,13 +435,13 @@ def _generate_cl_prototypes(excluded_monomers, model, ODE):
     """
     cl_prototypes = dict()
 
-    _compute_possible_indices(cl_prototypes, model, excluded_monomers)
+    _compute_possible_indices(cl_prototypes, model, ODE, excluded_monomers)
     _compute_target_index(cl_prototypes, ODE)
 
     return cl_prototypes
 
 
-def _compute_possible_indices(cl_prototypes, model, excluded_monomers):
+def _compute_possible_indices(cl_prototypes, model, ODE, excluded_monomers):
     """Computes viable choices for target_index, ie species that could be
     removed and replaced by an algebraic expression according to the
     conservation law
@@ -449,8 +450,10 @@ def _compute_possible_indices(cl_prototypes, model, excluded_monomers):
         cl_prototypes: dict in which possible indices will be written @type
         dict
         model: pysb model @type pysb.core.Model
+        ODE: ODEModel instance @type ODEModel
         excluded_monomers: monomers for which no conservation laws will be
         computed @type list
+
 
 
     Returns:
@@ -484,7 +487,9 @@ def _compute_possible_indices(cl_prototypes, model, excluded_monomers):
                 ix
                 for ix, specie in enumerate(model.species)
                 if monomer.name in extract_monomers(specie)
+                and not ODE.state_is_constant(ix)
             ]
+
             prototype['species_count'] = len(
                 prototype['possible_indices']
             )
@@ -529,6 +534,10 @@ def _compute_target_index(cl_prototypes, ODE):
                 for idx in prototype['possible_indices']
             ]
         # select target index as possible index with minimal appearance count
+        if len(prototype['appearance_counts']) == 0:
+            raise Exception(f'Failed to compute conservation law for monomer '
+                            f'{monomer.name}')
+
         idx = np.argmin(prototype['appearance_counts'])
 
         # remove entries from possible indices and appearance counts so we
@@ -716,6 +725,34 @@ def _construct_conservation_from_prototypes(cl_prototypes, model):
 
     return conservation_laws
 
+def _add_conservation_for_constant_species(ODE, conservation_laws):
+    """Computes the algebraic expression for the total amount of a given
+    monomer
+
+    Arguments:
+        cl_prototype: output of _generate_cl_prototypes @type dict
+        model: pysb model @type pysb.core.Model
+
+
+    Returns:
+
+    Raises:
+
+    """
+
+    for ix, specie in enumerate(model.species):
+        if ODE.state_is_constant(ix):
+            target_state = sp.Symbol(f'__s{target_index}')
+            total_abundance = sp.Symbol(f'tcl__s{target_index}')
+
+            conservation_laws.append({
+                'state': target_state,
+                'total_abundance': total_abundance,
+                'state_expr': total_abundance,
+                'abundance_expr': target_state,
+            })
+
+
 
 def _flatten_conservation_laws(conservation_laws):
     """ Flatten the conservation laws such that the state_expr not longer
@@ -898,4 +935,3 @@ def _get_changed_stoichiometries(reactants, products):
             changed_stoichiometries |= {monomer}
 
     return changed_stoichiometries
-

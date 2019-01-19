@@ -1762,6 +1762,21 @@ class ODEModel:
         """
         return self._states[ix].conservation_law is not None
 
+    def state_is_constant(self, ix):
+        """Checks whether the temporal derivative of the state is zero
+
+        Arguments:
+            ix: state index
+
+        Returns:
+            boolean indicating if constant over time
+
+        Raises:
+
+        """
+        return self._states[ix].get_dt() == 0.0
+
+
 
 class ODEExporter:
     """The ODEExporter class generates AMICI C++ files for ODE model as
