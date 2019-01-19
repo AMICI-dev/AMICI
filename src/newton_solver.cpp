@@ -279,7 +279,7 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
             if (!klu_condest(Jtmp.slsmat()->indexptrs, Jtmp.data(), symbolic, numeric,
                              &common))
                 throw NewtonFailure(common.status, "klu_condest");
-            if (common.condest > 1 / SUNRpowerR(UNIT_ROUNDOFF, 2.0 / 3.0)) {
+            if (common.condest > (1.0 / SUNRpowerR(UNIT_ROUNDOFF, 2.0 / 3.0))) {
                 /* if accurate condition estimate exceeds thresholds delete
                  factorization and factor de novo */
                 klu_free_numeric(&numeric, &common);
