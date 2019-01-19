@@ -740,7 +740,7 @@ def _add_conservation_for_constant_species(ODE, conservation_laws):
 
     """
 
-    for ix, specie in enumerate(model.species):
+    for ix in range(ODE.nx_rdata()):
         if ODE.state_is_constant(ix):
             target_state = sp.Symbol(f'__s{target_index}')
             total_abundance = sp.Symbol(f'tcl__s{target_index}')
@@ -935,3 +935,4 @@ def _get_changed_stoichiometries(reactants, products):
             changed_stoichiometries |= {monomer}
 
     return changed_stoichiometries
+
