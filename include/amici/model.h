@@ -1113,6 +1113,20 @@ class Model : public AbstractModel {
      */
     bool getReinitializeFixedParameterInitialStates() const;
 
+    /**
+     * @brief Set if the result of every call to Model::f* should be checked
+     * for finiteness
+     * @param alwaysCheck
+     */
+    void setAlwaysCheckFinite(bool alwaysCheck);
+
+    /**
+     * @brief Get setting of whether the result of every call to Model::f*
+     * should be checked for finiteness
+     * @return that
+     */
+    bool getAlwaysCheckFinite() const;
+
     /** number of states */
     const int nx_rdata;
     /** number of states in the unaugmented system */
@@ -1297,20 +1311,6 @@ class Model : public AbstractModel {
      */
     const realtype *getsrz(const int nroots, const int ip,
                            const ReturnData *rdata) const;
-
-    /**
-     * @brief Set if the result of every call to Model::f* should be checked
-     * for finiteness
-     * @param alwaysCheck
-     */
-    void setAlwaysCheckFinite(bool alwaysCheck);
-
-    /**
-     * @brief Get setting of whether the result of every call to Model::f*
-     * should be checked for finiteness
-     * @return that
-     */
-    bool getAlwaysCheckFinite() const;
 
     /**
      * @brief Computes nonnegative state vector according to stateIsNonNegative
