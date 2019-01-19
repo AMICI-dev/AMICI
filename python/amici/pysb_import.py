@@ -725,6 +725,7 @@ def _construct_conservation_from_prototypes(cl_prototypes, model):
 
     return conservation_laws
 
+
 def _add_conservation_for_constant_species(ODE, conservation_laws):
     """Computes the algebraic expression for the total amount of a given
     monomer
@@ -742,8 +743,8 @@ def _add_conservation_for_constant_species(ODE, conservation_laws):
 
     for ix in range(ODE.nx_rdata()):
         if ODE.state_is_constant(ix):
-            target_state = sp.Symbol(f'__s{target_index}')
-            total_abundance = sp.Symbol(f'tcl__s{target_index}')
+            target_state = sp.Symbol(f'__s{ix}')
+            total_abundance = sp.Symbol(f'tcl__s{ix}')
 
             conservation_laws.append({
                 'state': target_state,
@@ -751,7 +752,6 @@ def _add_conservation_for_constant_species(ODE, conservation_laws):
                 'state_expr': total_abundance,
                 'abundance_expr': target_state,
             })
-
 
 
 def _flatten_conservation_laws(conservation_laws):
