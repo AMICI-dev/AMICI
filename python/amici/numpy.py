@@ -37,14 +37,14 @@ def rdataToNumPyArrays(rdata):
 
     """
     npReturnData = {'ptr': rdata}
-    fieldNames = ['t', 'x', 'x0', 'sx', 'sx0', 'y', 'sigmay', 'sy', 'ssigmay',
-                  'z', 'rz', 'sigmaz', 'sz', 'srz', 'ssigmaz', 'sllh', 's2llh',
-                  'J', 'xdot', 'status', 'llh', 'chi2', 'res', 'sres', 'FIM',
-                  'wrms_steadystate', 't_steadystate',
-                  'newton_numlinsteps', 'newton_numsteps',
+    fieldNames = ['t', 'x', 'x0', 'x_ss', 'sx', 'sx0', 'sx_ss', 'y', 'sigmay',
+                  'sy', 'ssigmay', 'z', 'rz', 'sigmaz', 'sz', 'srz',
+                  'ssigmaz', 'sllh', 's2llh', 'J', 'xdot', 'status', 'llh',
+                  'chi2', 'res', 'sres', 'FIM', 'wrms_steadystate',
+                  't_steadystate', 'newton_numlinsteps', 'newton_numsteps',
                   'numsteps', 'numrhsevals', 'numerrtestfails',
-                  'numnonlinsolvconvfails',
-                  'order', 'numstepsB', 'numrhsevalsB', 'numerrtestfailsB',
+                  'numnonlinsolvconvfails', 'order', 'numstepsB',
+                  'numrhsevalsB', 'numerrtestfailsB',
                   'numnonlinsolvconvfailsB']
 
     for field in fieldNames:
@@ -99,8 +99,10 @@ def getReturnDataFieldAsNumPyArray(rdata, field):
     fieldDimensions = {'ts': [rdata.nt],
                        'x': [rdata.nt, rdata.nx],
                        'x0': [rdata.nx],
+                       'x_ss': [rdata.nx],
                        'sx': [rdata.nt, rdata.nplist, rdata.nx],
                        'sx0': [rdata.nplist, rdata.nx],
+                       'sx_ss': [rdata.nplist, rdata.nx],
 
                        # observables
                        'y': [rdata.nt, rdata.ny],
