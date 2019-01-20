@@ -466,8 +466,44 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver, const st
         solver.setRelativeTolerance(getDoubleScalarAttribute(file, datasetPath, "rtol"));
     }
 
+    if(attributeExists(file, datasetPath, "atol_sensi")) {
+        solver.setAbsoluteToleranceSensi(getDoubleScalarAttribute(file, datasetPath, "atol_sensi"));
+    }
+
+    if(attributeExists(file, datasetPath, "rtol_sensi")) {
+        solver.setRelativeToleranceSensi(getDoubleScalarAttribute(file, datasetPath, "rtol_sensi"));
+    }
+
+    if(attributeExists(file, datasetPath, "quad_atol")) {
+        solver.setAbsoluteToleranceQuadratures(getDoubleScalarAttribute(file, datasetPath, "quad_atol"));
+    }
+
+    if(attributeExists(file, datasetPath, "quad_rtol")) {
+        solver.setRelativeToleranceQuadratures(getDoubleScalarAttribute(file, datasetPath, "quad_rtol"));
+    }
+
+    if(attributeExists(file, datasetPath, "ss_atol")) {
+        solver.setAbsoluteToleranceSteadyState(getDoubleScalarAttribute(file, datasetPath, "ss_atol"));
+    }
+
+    if(attributeExists(file, datasetPath, "ss_rtol")) {
+        solver.setRelativeToleranceSteadyState(getDoubleScalarAttribute(file, datasetPath, "ss_rtol"));
+    }
+
+    if(attributeExists(file, datasetPath, "ss_atol_sensi")) {
+        solver.setAbsoluteToleranceSteadyStateSensi(getDoubleScalarAttribute(file, datasetPath, "ss_atol_sensi"));
+    }
+
+    if(attributeExists(file, datasetPath, "ss_rtol_sensi")) {
+        solver.setRelativeToleranceSteadyStateSensi(getDoubleScalarAttribute(file, datasetPath, "ss_rtol_sensi"));
+    }
+
     if(attributeExists(file, datasetPath, "maxsteps")) {
         solver.setMaxSteps(getIntScalarAttribute(file, datasetPath, "maxsteps"));
+    }
+
+    if(attributeExists(file, datasetPath, "maxstepsB")) {
+        solver.setMaxStepsBackwardProblem(getIntScalarAttribute(file, datasetPath, "maxstepsB"));
     }
 
     if(attributeExists(file, datasetPath, "lmm")) {
