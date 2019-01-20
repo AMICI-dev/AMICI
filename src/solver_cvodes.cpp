@@ -228,7 +228,7 @@ void CVodeSolver::adjInit() {
 
 void CVodeSolver::allocateSolverB(int *which) {
     int status = CVodeCreateB(solverMemory.get(), static_cast<int>(lmm), which);
-    
+
     if (*which + 1 > static_cast<int>(solverMemoryB.size()))
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
@@ -457,7 +457,7 @@ void CVodeSolver::turnOffRootFinding() {
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeRootInit");
 }
-    
+
 int CVodeSolver::nplist() const {
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
@@ -471,7 +471,7 @@ int CVodeSolver::nx() const {
     auto cv_mem = (CVodeMem) solverMemory.get();
     return NV_LENGTH_S(cv_mem->cv_zn[0]);
 }
-    
+
 const Model *CVodeSolver::getModel() const {
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
@@ -485,147 +485,148 @@ bool CVodeSolver::getMallocDone() const {
     auto cv_mem = (CVodeMem) solverMemory.get();
     return cv_mem->cv_MallocDone;
 }
-    
+
 bool CVodeSolver::getAdjMallocDone() const {
     if (!solverMemory)
         return false;
     auto cv_mem = (CVodeMem) solverMemory.get();
     return cv_mem->cv_adjMallocDone;
 }
-    
-    /** Jacobian of xdot with respect to states x
-     * @param N number of state variables
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param xdot Vector with the right hand side
-     * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_ODE
-     * @param tmp1 temporary storage vector
-     * @param tmp2 temporary storage vector
-     * @param tmp3 temporary storage vector
-     * @return status flag indicating successful execution
-     **/
-    int CVodeSolver::fJ(realtype t, N_Vector x, N_Vector xdot,
-           SUNMatrix J, void *user_data, N_Vector tmp1,
-           N_Vector tmp2, N_Vector tmp3) {
-        auto model = static_cast<Model_ODE*>(user_data);
-        model->fJ(t, x, xdot, J);
-        return model->checkFinite(SM_ROWS_D(J), SM_DATA_D(J), "Jacobian");
-    }
 
-    /** Jacobian of xBdot with respect to adjoint state xB
-     * @param NeqBdot number of adjoint state variables
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param xB Vector with the adjoint states
-     * @param xBdot Vector with the adjoint right hand side
-     * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_ODE
-     * @param tmp1B temporary storage vector
-     * @param tmp2B temporary storage vector
-     * @param tmp3B temporary storage vector
-     * @return status flag indicating successful execution
-     **/
-    int CVodeSolver::fJB(realtype t, N_Vector x, N_Vector xB,
-                         N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
+/** Jacobian of xdot with respect to states x
+ * @param N number of state variables
+ * @param t timepoint
+ * @param x Vector with the states
+ * @param xdot Vector with the right hand side
+ * @param J Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_ODE
+ * @param tmp1 temporary storage vector
+ * @param tmp2 temporary storage vector
+ * @param tmp3 temporary storage vector
+ * @return status flag indicating successful execution
+ **/
+int CVodeSolver::fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+                    void *user_data, N_Vector tmp1, N_Vector tmp2,
+                    N_Vector tmp3) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fJ(t, x, xdot, J);
+    return model->checkFinite(SM_ROWS_D(J), SM_DATA_D(J), "Jacobian");
+}
+
+/** Jacobian of xBdot with respect to adjoint state xB
+ * @param NeqBdot number of adjoint state variables
+ * @param t timepoint
+ * @param x Vector with the states
+ * @param xB Vector with the adjoint states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_ODE
+ * @param tmp1B temporary storage vector
+ * @param tmp2B temporary storage vector
+ * @param tmp3B temporary storage vector
+ * @return status flag indicating successful execution
+ **/
+int CVodeSolver::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                     SUNMatrix JB, void *user_data, N_Vector tmp1B,
+                     N_Vector tmp2B, N_Vector tmp3B) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fJB(t, x, xB, xBdot, JB);
+    return model->checkFinite(SM_ROWS_D(JB), SM_DATA_D(JB), "Jacobian");
+}
+
+/** J in sparse form (for sparse solvers from the SuiteSparse Package)
+ * @param t timepoint
+ * @param x Vector with the states
+ * @param xdot Vector with the right hand side
+ * @param J Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_ODE
+ * @param tmp1 temporary storage vector
+ * @param tmp2 temporary storage vector
+ * @param tmp3 temporary storage vector
+ * @return status flag indicating successful execution
+ */
+int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+                          void *user_data, N_Vector tmp1, N_Vector tmp2,
+                          N_Vector tmp3) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fJSparse(t, x, J);
+    return model->checkFinite(SM_NNZ_S(J), SM_DATA_S(J), "Jacobian");
+}
+
+/** JB in sparse form (for sparse solvers from the SuiteSparse Package)
+ * @param t timepoint
+ * @param x Vector with the states
+ * @param xB Vector with the adjoint states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_ODE
+ * @param tmp1B temporary storage vector
+ * @param tmp2B temporary storage vector
+ * @param tmp3B temporary storage vector
+ * @return status flag indicating successful execution
+ */
+int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                           SUNMatrix JB, void *user_data, N_Vector tmp1B,
+                           N_Vector tmp2B, N_Vector tmp3B) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fJSparseB(t, x, xB, xBdot, JB);
+    return model->checkFinite(SM_NNZ_S(JB), SM_DATA_S(JB), "Jacobian");
+}
+
+/** J in banded form (for banded solvers)
+ * @param N number of states
+ * @param mupper upper matrix bandwidth
+ * @param mlower lower matrix bandwidth
+ * @param t timepoint
+ * @param x Vector with the states
+ * @param xdot Vector with the right hand side
+ * @param J Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_ODE
+ * @param tmp1 temporary storage vector
+ * @param tmp2 temporary storage vector
+ * @param tmp3 temporary storage vector
+ * @return status flag indicating successful execution
+ */
+int CVodeSolver::fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+                        void *user_data, N_Vector tmp1, N_Vector tmp2,
+                        N_Vector tmp3) {
+    return fJ(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
+}
+
+/** JB in banded form (for banded solvers)
+ * @param NeqBdot number of states
+ * @param mupper upper matrix bandwidth
+ * @param mlower lower matrix bandwidth
+ * @param t timepoint
+ * @param x Vector with the states
+ * @param xB Vector with the adjoint states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_ODE
+ * @param tmp1B temporary storage vector
+ * @param tmp2B temporary storage vector
+ * @param tmp3B temporary storage vector
+ * @return status flag indicating successful execution
+ */
+int CVodeSolver::fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                         SUNMatrix JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
-        auto model = static_cast<Model_ODE*>(user_data);
-        model->fJB(t, x, xB, xBdot, JB);
-        return model->checkFinite(SM_ROWS_D(JB), SM_DATA_D(JB), "Jacobian");
-    }
+    return fJB(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
+}
 
-    /** J in sparse form (for sparse solvers from the SuiteSparse Package)
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param xdot Vector with the right hand side
-     * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_ODE
-     * @param tmp1 temporary storage vector
-     * @param tmp2 temporary storage vector
-     * @param tmp3 temporary storage vector
-     * @return status flag indicating successful execution
-     */
-    int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector xdot,
-                              SUNMatrix J, void *user_data, N_Vector tmp1,
-                              N_Vector tmp2, N_Vector tmp3) {
-        auto model = static_cast<Model_ODE*>(user_data);
-        model->fJSparse(t, x, J);
-        return model->checkFinite(SM_NNZ_S(J), SM_DATA_S(J), "Jacobian");
-    }
-
-    /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param xB Vector with the adjoint states
-     * @param xBdot Vector with the adjoint right hand side
-     * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_ODE
-     * @param tmp1B temporary storage vector
-     * @param tmp2B temporary storage vector
-     * @param tmp3B temporary storage vector
-     * @return status flag indicating successful execution
-     */
-    int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB,
-                               N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                               N_Vector tmp2B, N_Vector tmp3B) {
-        auto model = static_cast<Model_ODE*>(user_data);
-        model->fJSparseB(t, x, xB, xBdot, JB);
-        return model->checkFinite(SM_NNZ_S(JB), SM_DATA_S(JB),"Jacobian");
-    }
-
-    /** J in banded form (for banded solvers)
-     * @param N number of states
-     * @param mupper upper matrix bandwidth
-     * @param mlower lower matrix bandwidth
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param xdot Vector with the right hand side
-     * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_ODE
-     * @param tmp1 temporary storage vector
-     * @param tmp2 temporary storage vector
-     * @param tmp3 temporary storage vector
-     * @return status flag indicating successful execution
-     */
-    int CVodeSolver::fJBand(realtype t, N_Vector x, N_Vector xdot,
-                            SUNMatrix J, void *user_data, N_Vector tmp1,
-                            N_Vector tmp2, N_Vector tmp3) {
-        return fJ(t,x,xdot,J,user_data,tmp1,tmp2,tmp3);
-    }
-
-    /** JB in banded form (for banded solvers)
-     * @param NeqBdot number of states
-     * @param mupper upper matrix bandwidth
-     * @param mlower lower matrix bandwidth
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param xB Vector with the adjoint states
-     * @param xBdot Vector with the adjoint right hand side
-     * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_ODE
-     * @param tmp1B temporary storage vector
-     * @param tmp2B temporary storage vector
-     * @param tmp3B temporary storage vector
-     * @return status flag indicating successful execution
-     */
-    int CVodeSolver::fJBandB(realtype t, N_Vector x, N_Vector xB,
-                             N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                             N_Vector tmp2B, N_Vector tmp3B) {
-        return fJB(t,x,xB,xBdot,JB,user_data,tmp1B,tmp2B,tmp3B);
-    }
-
-    /** diagonalized Jacobian (for preconditioning)
-     * @param t timepoint
-     * @param JDiag Vector to which the Jacobian diagonal will be written
-     * @param x Vector with the states
-     * @param user_data object with user input @type Model_ODE
-     **/
-    int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
-                      void *user_data) {
-        auto model = static_cast<Model_ODE*>(user_data);
-        model->fJDiag(t, JDiag, x);
-        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(JDiag),"Jacobian");
-    }
+/** diagonalized Jacobian (for preconditioning)
+ * @param t timepoint
+ * @param JDiag Vector to which the Jacobian diagonal will be written
+ * @param x Vector with the states
+ * @param user_data object with user input @type Model_ODE
+ **/
+int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
+                        void *user_data) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fJDiag(t, JDiag, x);
+    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(JDiag),
+                              "Jacobian");
+}
 
     /** Matrix vector product of J with a vector v (for iterative solvers)
      * @param t timepoint
@@ -742,7 +743,7 @@ bool CVodeSolver::getAdjMallocDone() const {
         model->fsxdot(t, x, ip, sx, sxdot);
         return model->checkFinite(model->nx_solver,N_VGetArrayPointer(sxdot),"sxdot");
     }
-    
+
     bool operator ==(const CVodeSolver &a, const CVodeSolver &b)
     {
         return static_cast<Solver const&>(a) == static_cast<Solver const&>(b);

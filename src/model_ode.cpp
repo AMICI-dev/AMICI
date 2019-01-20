@@ -4,7 +4,7 @@
 namespace amici {
     
     void Model_ODE::fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                          AmiVector *xdot, DlsMat J) {
+                          AmiVector *xdot, SUNMatrix J) {
         fJ(t, x->getNVector(), xdot->getNVector(), J);
         
     }
@@ -17,16 +17,16 @@ namespace amici {
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
      **/
-    void Model_ODE::fJ(realtype t, N_Vector x, N_Vector xdot, DlsMat J) {
+    void Model_ODE::fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J) {
         auto x_pos = computeX_pos(x);
         fdwdx(t,N_VGetArrayPointer(x_pos));
-        SetToZero(J);
-        fJ(J->data,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
+        SUNMatZero(J);
+fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
            w.data(),dwdx.data());
     }
     
     void Model_ODE::fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                        AmiVector *xdot, SlsMat J){
+                        AmiVector *xdot, SUNMatrix J){
         fJSparse(t,x->getNVector(),J);
     }
     
@@ -37,11 +37,11 @@ namespace amici {
      * @param x Vector with the states
      * @param J Matrix to which the Jacobian will be written
      */
-    void Model_ODE::fJSparse(realtype t, N_Vector x, SlsMat J) {
+    void Model_ODE::fJSparse(realtype t, N_Vector x, SUNMatrix J) {
         auto x_pos = computeX_pos(x);
         fdwdx(t,N_VGetArrayPointer(x_pos));
-        SparseSetMatToZero(J);
-        fJSparse(J,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
+        SUNMatZero(J);
+        fJSparse(SM_DATA_S(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                  w.data(),dwdx.data());
     }
     

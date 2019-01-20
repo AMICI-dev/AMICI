@@ -89,8 +89,7 @@ class CVodeSolver : public Solver {
                         SUNMatrix J, void *user_data, N_Vector tmp1,
                         N_Vector tmp2, N_Vector tmp3);
     
-    static int fJ(realtype t, N_Vector x, N_Vector xdot,
-                  SUNMatrix J, void *user_data, N_Vector tmp1,
+    static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J, void *user_data, N_Vector tmp1,
                   N_Vector tmp2, N_Vector tmp3);
     
 protected:
