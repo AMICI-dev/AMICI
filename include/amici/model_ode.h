@@ -4,8 +4,6 @@
 #include "amici/model.h"
 
 #include <nvector/nvector_serial.h>
-#include <sundials/sundials_direct.h>
-#include <sundials/sundials_sparse.h>
 
 #include <sunmatrix/sunmatrix_band.h>
 #include <sunmatrix/sunmatrix_sparse.h>

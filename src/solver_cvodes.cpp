@@ -15,10 +15,6 @@
 #include <cvodes/cvodes_spgmr.h>
 #include <cvodes/cvodes_sptfqmr.h>
 
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-#include <sunmatrix/sunmatrix_dense.h>
-
 #include <amd.h>
 #include <btf.h>
 #include <colamd.h>

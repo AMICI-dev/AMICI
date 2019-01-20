@@ -4,8 +4,10 @@
 #include "amici/model.h"
 
 #include <nvector/nvector_serial.h>
-#include <sundials/sundials_direct.h>
-#include <sundials/sundials_sparse.h>
+
+#include <sunmatrix/sunmatrix_band.h>
+#include <sunmatrix/sunmatrix_sparse.h>
+#include <sunmatrix/sunmatrix_dense.h>
 
 #include <vector>
 
@@ -67,26 +69,33 @@ namespace amici {
                     o2mode, p, k, plist, idlist, z2event) {}
 
         virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                        AmiVector *xdot, DlsMat J) override;
-        void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J);
+                        AmiVector *xdot, SUNMatrix J) override;
+        void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot,
+                SUNMatrix J);
 
-        void fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, DlsMat JB);
+        void fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB,
+                 N_Vector dxB, SUNMatrix JB);
 
-        virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                              AmiVector *xdot, SlsMat J) override;
-        void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, SlsMat J);
+        virtual void fJSparse(realtype t, realtype cj, AmiVector *x,
+                              AmiVector *dx, AmiVector *xdot,
+                              SUNMatrix J) override;
+        void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                      SUNMatrix J);
 
-        void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, SlsMat JB);
+        void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                       N_Vector xB, N_Vector dxB, SUNMatrix JB);
 
-        virtual void fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
-                            AmiVector *dx) override;
+        virtual void fJDiag(realtype t, AmiVector *JDiag, realtype cj,
+                            AmiVector *x, AmiVector *dx) override;
 
-        virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
-                         AmiVector *v, AmiVector *nJv, realtype cj) override;
-        void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv, realtype cj);
+        virtual void fJv(realtype t, AmiVector *x, AmiVector *dx,
+                         AmiVector *xdot, AmiVector *v, AmiVector *nJv,
+                         realtype cj) override;
+        void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv,
+                 realtype cj);
 
-        void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
-                  N_Vector vB, N_Vector JvB, realtype cj);
+        void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
+                  N_Vector dxB, N_Vector vB, N_Vector JvB, realtype cj);
 
         virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override;
         void froot(realtype t, N_Vector x, N_Vector dx, realtype *root);
