@@ -24,11 +24,39 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
  * @param sdx state derivative sensitivity vector (DAE only)
  * @param model pointer to the model object
  */
+Solver::Solver(const Solver &other) : Solver()
+{
+    sensi = other.sensi;
+    atol = other.atol;
+    rtol = other.rtol;
+    atol_sensi = other.atol_sensi;
+    rtol_sensi = other.rtol_sensi;
+    quad_atol = other.quad_atol;
+    quad_rtol = other.quad_rtol;
+    ss_atol = other.ss_atol;
+    ss_rtol = other.ss_rtol;
+    ss_atol_sensi = other.ss_atol_sensi;
+    ss_rtol_sensi = other.ss_rtol_sensi;
+    maxsteps = other.maxsteps;
+    maxstepsB = other.maxstepsB;
+    newton_maxsteps = other.newton_maxsteps;
+    newton_maxlinsteps = other.newton_maxlinsteps;
+    newton_preeq = other.newton_preeq;
+    ism = other.ism;
+    sensi_meth = other.sensi_meth;
+    linsol = other.linsol;
+    interpType = other.interpType;
+    lmm = other.lmm;
+    iter = other.iter;
+    stldet = other.stldet;
+    ordering = other.ordering;
+}
+
 void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArray *sdx, Model *model) {
     
     
     bool computeSensitivities = sensi >= SensitivityOrder::first
-                              && model->nx_solver > 0;
+            && model->nx_solver > 0;
     model->initialize(x, dx, sx, sdx, computeSensitivities);
 
     /* Create solver memory object */
