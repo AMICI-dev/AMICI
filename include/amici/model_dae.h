@@ -170,8 +170,11 @@ namespace amici {
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
          **/
-        virtual void fJSparse(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
-                              const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
+        virtual void fJSparse(SUNMatrix JSparse, const realtype t,
+                              const realtype *x, const double *p,
+                              const double *k, const realtype *h,
+                              const realtype cj, const realtype *dx,
+                              const realtype *w, const realtype *dwdx) = 0;
 
         /** model specific implementation for fJSparseB
          * @param JSparseB Matrix to which the Jacobian will be written
@@ -187,10 +190,15 @@ namespace amici {
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
          **/
-        virtual void fJSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
-                               const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
-                               const realtype *w, const realtype *dwdx){
-            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
+        virtual void fJSparseB(SUNMatrix JSparseB, const realtype t,
+                               const realtype *x, const double *p,
+                               const double *k, const realtype *h,
+                               const realtype cj, const realtype *xB,
+                               const realtype *dx, const realtype *dxB,
+                               const realtype *w, const realtype *dwdx) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
         }
 
         /** model specific implementation for fJDiag

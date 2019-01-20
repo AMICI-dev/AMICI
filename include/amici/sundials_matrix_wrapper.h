@@ -1,60 +1,68 @@
 #ifndef AMICI_SUNDIALS_MATRIX_WRAPPER_H
 #define AMICI_SUNDIALS_MATRIX_WRAPPER_H
 
-#include <sundials/sundials_direct.h> // DlsMat
-#include <sundials/sundials_sparse.h> // SlsMat
+#include <sundials/sundials_matrix.h> // SUNMatrix
+#include <sunmatrix/sunmatrix_sparse.h> // SUNMatrix_Sparse
+#include <sunmatrix/sunmatrix_dense.h> // SUNMatrix_Dense
 
 namespace amici {
 
 /**
- * @brief A RAII wrapper for Sundials SlsMat sparse matrices.
+ * @brief A RAII wrapper for SUNMatrix structs.
  */
-class SlsMatWrapper {
+class SUNMatrixWrapper {
 public:
-    SlsMatWrapper() = default;
+    SUNMatrixWrapper() = default;
 
     /**
-     * @brief See SparseNewMat in sundials_sparse.h
+     * @brief See SUNSparseMatrix in sunmatrix_sparse.h
      * @param M Number of rows
      * @param N Number of columns
      * @param NNZ Number of nonzeros
      * @param sparsetype Sparse type
      */
-    SlsMatWrapper(int M, int N, int NNZ, int sparsetype);
+    SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype);
+    
+    /**
+     * @brief See SUNDenseMatrix in sunmatrix_dense.h
+     * @param M Number of rows
+     * @param N Number of columns
+     */
+    SUNMatrixWrapper(int M, int N);
 
     /**
      * @brief SlsMatWrapper
      * @param mat
      */
-    explicit SlsMatWrapper(SlsMat mat);
+    explicit SUNMatrixWrapper(SUNMatrix mat);
 
-    ~SlsMatWrapper();
+    ~SUNMatrixWrapper();
 
     /**
      * @brief Copy constructor
      * @param other
      */
-    SlsMatWrapper(const SlsMatWrapper& other);
+    SUNMatrixWrapper(const SUNMatrixWrapper& other);
 
     /**
      * @brief Move constructor
      * @param other
      */
-    SlsMatWrapper(SlsMatWrapper&& other) noexcept;
+    SUNMatrixWrapper(SUNMatrixWrapper&& other) noexcept;
 
     /**
      * @brief Copy assignment
      * @param other
      * @return
      */
-    SlsMatWrapper& operator=(const SlsMatWrapper& other);
+    SUNMatrixWrapper& operator=(const SUNMatrixWrapper& other);
 
     /**
      * @brief Move assignment
      * @param other
      * @return
      */
-    SlsMatWrapper& operator=(SlsMatWrapper&& other) noexcept;
+    SUNMatrixWrapper& operator=(SUNMatrixWrapper&& other) noexcept;
 
     /**
      * @brief Access raw data
@@ -63,80 +71,15 @@ public:
     realtype *data();
 
     /**
-     * @brief Get the wrapped SlsMat
+     * @brief Get the wrapped SUNMatrix
      * @return SlsMat
      */
-    SlsMat slsmat() const;
+    ::SUNMatrix SUNMatrix() const;
 
 private:
-    SlsMat matrix = nullptr;
-};
-
-
-/**
- * @brief A RAII wrapper for Sundials DlsMat dense matrices.
- */
-class DlsMatWrapper {
-public:
-    DlsMatWrapper() = default;
-
-    /**
-     * @brief See NewDenseMat in sundials_direct.h
-     * @param M Number of rows
-     * @param N Number of columns
-     */
-    DlsMatWrapper(long int M, long int N);
-
-    /**
-     * @brief DlsMatWrapper
-     * @param mat
-     */
-    explicit DlsMatWrapper(DlsMat mat);
-
-    ~DlsMatWrapper();
-
-    /**
-     * @brief Copy constructor
-     * @param other
-     */
-    DlsMatWrapper(const DlsMatWrapper& other);
-
-    /**
-     * @brief Move constructor
-     * @param other
-     */
-    DlsMatWrapper(DlsMatWrapper&& other) noexcept;
-
-    /**
-     * @brief Copy assignment
-     * @param other
-     * @return
-     */
-    DlsMatWrapper& operator=(const DlsMatWrapper& other);
-
-    /**
-     * @brief Move assignment
-     * @param other
-     * @return
-     */
-    DlsMatWrapper& operator=(DlsMatWrapper&& other) noexcept;
-
-    /**
-     * @brief Access raw data
-     * @return raw data pointer
-     */
-    realtype *data();
-
-    /**
-     * @brief Get the wrapped DlsMat
-     * @return DlsMat
-     */
-    DlsMat dlsmat() const;
-
-private:
-    DlsMat matrix = nullptr;
+    ::SUNMatrix matrix = nullptr;
 };
 
 } // namespace amici
-
 #endif // AMICI_SUNDIALS_MATRIX_WRAPPER_H
+

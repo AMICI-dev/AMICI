@@ -22,7 +22,7 @@ namespace amici {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
-        fJ(SM_DATA_D(J->data), t, N_VGetArrayPointer(x_pos),
+        fJ(SM_DATA_D(J), t, N_VGetArrayPointer(x_pos),
            unscaledParameters.data(), fixedParameters.data(), h.data(), cj,
            N_VGetArrayPointer(dx), w.data(), dwdx.data());
     }
@@ -40,7 +40,7 @@ namespace amici {
      * @param J Matrix to which the Jacobian will be written
      */
     void Model_DAE::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                             SUNMAtrix J) {
+                             SUNMatrix J) {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
@@ -187,7 +187,7 @@ namespace amici {
      * @param JB Matrix to which the Jacobian will be written
      */
     void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                              N_Vector xB, N_Vector dxB, SlsMat JB) {
+                              N_Vector xB, N_Vector dxB, SUNMatrix JB) {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(JB);
@@ -276,7 +276,7 @@ namespace amici {
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
             fM(t,x_pos);
             fdxdotdp(t,x_pos,dx);
-            fJSparse(t,0.0,x_pos,dx,J.slsmat());// also calls dwdx & dx
+            fJSparse(t, 0.0, x_pos, dx, J.SUNMatrix());// also calls dwdx & dx
         }
         N_VConst(0.0,sxdot);
         fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
