@@ -85,12 +85,12 @@ class CVodeSolver : public Solver {
     
     static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
     
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3);
+    static int fJSparse(realtype t, N_Vector x, N_Vector xdot,
+                        SUNMatrix J, void *user_data, N_Vector tmp1,
+                        N_Vector tmp2, N_Vector tmp3);
     
-    static int fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
-                  DlsMat J, void *user_data, N_Vector tmp1,
+    static int fJ(realtype t, N_Vector x, N_Vector xdot,
+                  SUNMatrix J, void *user_data, N_Vector tmp1,
                   N_Vector tmp2, N_Vector tmp3);
     
 protected:
@@ -194,7 +194,7 @@ protected:
     void rootInit(int ne) override;
 
     void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) override;
-
+    
     void setDenseJacFn() override;
 
     void setSparseJacFn() override;
@@ -211,21 +211,20 @@ protected:
 
     void setJacTimesVecFnB(int which) override;
     
-    static int fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
-                   N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
+    static int fJB(realtype t, N_Vector x, N_Vector xB,
+                   N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B);
     
-    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                         SlsMat JB, void *user_data, N_Vector tmp1B,
+    static int fJSparseB(realtype t, N_Vector x, N_Vector xB,
+                         N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B);
     
-    static int fJBand(long int N, long int mupper, long int mlower, realtype t,
-                      N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    static int fJBand(realtype t, N_Vector x, N_Vector xdot,
+                      SUNMatrix J, void *user_data, N_Vector tmp1,
+                      N_Vector tmp2, N_Vector tmp3);
     
-    static int fJBandB(long int NeqBdot, long int mupper, long int mlower,
-                       realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                       DlsMat JB, void *user_data, N_Vector tmp1B,
+    static int fJBandB(realtype t, N_Vector x, N_Vector xB,
+                       N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
                        N_Vector tmp2B, N_Vector tmp3B);
     
     static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data);

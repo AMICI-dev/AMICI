@@ -15,6 +15,10 @@
 #include <cvodes/cvodes_spgmr.h>
 #include <cvodes/cvodes_sptfqmr.h>
 
+#include <sunmatrix/sunmatrix_band.h>
+#include <sunmatrix/sunmatrix_sparse.h>
+#include <sunmatrix/sunmatrix_dense.h>
+
 #include <amd.h>
 #include <btf.h>
 #include <colamd.h>
@@ -59,51 +63,51 @@ void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist)
 }
 
 void CVodeSolver::setDenseJacFn() {
-    int status = CVDlsSetDenseJacFn(solverMemory.get(), fJ);
+    int status = CVodeSetJacFn(solverMemory.get(), fJ);
     if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVDlsSetDenseJacFn");
+        throw CvodeException(status,"CVodeSetJacFn");
 }
 
 void CVodeSolver::setSparseJacFn() {
-    int status = CVSlsSetSparseJacFn(solverMemory.get(), fJSparse);
+    int status = CVodeSetJacFn(solverMemory.get(), fJSparse);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVSlsSetSparseJacFn");
+        throw CvodeException(status,"CVodeSetJacFn");
 }
 
 void CVodeSolver::setBandJacFn() {
-    int status = CVDlsSetBandJacFn(solverMemory.get(), fJBand);
+    int status = CVodeSetJacFn(solverMemory.get(), fJBand);
     if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVDlsSetBandJacFn");
+        throw CvodeException(status,"CVodeSetJacFn");
 }
 
 void CVodeSolver::setJacTimesVecFn() {
-    int status = CVSpilsSetJacTimesVecFn(solverMemory.get(), fJv);
+    int status = CVodeSetJacTimes(solverMemory.get(), nullptr, fJv);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVSpilsSetJacTimesVecFn");
+         throw CvodeException(status,"CVodeSetJacTimes");
 }
 
 void CVodeSolver::setDenseJacFnB(int which) {
-    int status = CVDlsSetDenseJacFnB(solverMemory.get(), which, fJB);
+    int status = CVodeSetJacFnB(solverMemory.get(), which, fJB);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVDlsSetDenseJacFnB");
+         throw CvodeException(status,"CVodeSetJacFnB");
 }
 
 void CVodeSolver::setSparseJacFnB(int which) {
-    int status = CVSlsSetSparseJacFnB(solverMemory.get(), which, fJSparseB);
+    int status = CVodeSetJacFnB(solverMemory.get(), which, fJSparseB);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVSlsSetSparseJacFnB");
+         throw CvodeException(status,"CVodeSetJacFnB");
 }
 
 void CVodeSolver::setBandJacFnB(int which) {
-    int status = CVDlsSetBandJacFnB(solverMemory.get(), which, fJBandB);
+    int status = CVodeSetJacFnB(solverMemory.get(), which, fJBandB);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVDlsSetBandJacFnB");
+         throw CvodeException(status,"CVodeSetJacFnB");
 }
 
 void CVodeSolver::setJacTimesVecFnB(int which) {
-    int status = CVSpilsSetJacTimesVecFnB(solverMemory.get(), which, fJvB);
+    int status = CVodeSetJacTimesB(solverMemory.get(), which, nullptr, fJvB);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVSpilsSetJacTimesVecFnB");
+         throw CvodeException(status,"CVodeSetJacTimesB");
 }
 
 Solver *CVodeSolver::clone() const {
@@ -112,7 +116,7 @@ Solver *CVodeSolver::clone() const {
 
 void CVodeSolver::allocateSolver() {
     solverMemory = std::unique_ptr<void, std::function<void(void *)>>
-    (CVodeCreate(static_cast<int>(lmm), static_cast<int>(iter)),
+    (CVodeCreate(static_cast<int>(lmm)),
                    [](void *ptr) { CVodeFree(&ptr); });
 }
 
@@ -223,7 +227,8 @@ void CVodeSolver::adjInit() {
 }
 
 void CVodeSolver::allocateSolverB(int *which) {
-    int status = CVodeCreateB(solverMemory.get(), static_cast<int>(lmm), static_cast<int>(iter), which);
+    int status = CVodeCreateB(solverMemory.get(), static_cast<int>(lmm), which);
+    
     if (*which + 1 > static_cast<int>(solverMemoryB.size()))
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
@@ -500,12 +505,12 @@ bool CVodeSolver::getAdjMallocDone() const {
      * @param tmp3 temporary storage vector
      * @return status flag indicating successful execution
      **/
-    int CVodeSolver::fJ(long int N, realtype t, N_Vector x, N_Vector xdot,
-           DlsMat J, void *user_data, N_Vector tmp1,
+    int CVodeSolver::fJ(realtype t, N_Vector x, N_Vector xdot,
+           SUNMatrix J, void *user_data, N_Vector tmp1,
            N_Vector tmp2, N_Vector tmp3) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fJ(t, x, xdot, J);
-        return model->checkFinite(N,J->data,"Jacobian");
+        return model->checkFinite(SM_ROWS_D(J), SM_DATA_D(J), "Jacobian");
     }
 
     /** Jacobian of xBdot with respect to adjoint state xB
@@ -521,12 +526,12 @@ bool CVodeSolver::getAdjMallocDone() const {
      * @param tmp3B temporary storage vector
      * @return status flag indicating successful execution
      **/
-    int CVodeSolver::fJB(long int NeqBdot, realtype t, N_Vector x, N_Vector xB,
-                   N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
-                   N_Vector tmp2B, N_Vector tmp3B) {
+    int CVodeSolver::fJB(realtype t, N_Vector x, N_Vector xB,
+                         N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
+                         N_Vector tmp2B, N_Vector tmp3B) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fJB(t, x, xB, xBdot, JB);
-        return model->checkFinite(NeqBdot,JB->data,"Jacobian");
+        return model->checkFinite(SM_ROWS_D(JB), SM_DATA_D(JB), "Jacobian");
     }
 
     /** J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -540,12 +545,12 @@ bool CVodeSolver::getAdjMallocDone() const {
      * @param tmp3 temporary storage vector
      * @return status flag indicating successful execution
      */
-    int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3) {
+    int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector xdot,
+                              SUNMatrix J, void *user_data, N_Vector tmp1,
+                              N_Vector tmp2, N_Vector tmp3) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fJSparse(t, x, J);
-        return model->checkFinite(J->NNZ,J->data,"Jacobian");
+        return model->checkFinite(SM_NNZ_S(J), SM_DATA_S(J), "Jacobian");
     }
 
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -560,12 +565,12 @@ bool CVodeSolver::getAdjMallocDone() const {
      * @param tmp3B temporary storage vector
      * @return status flag indicating successful execution
      */
-    int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                         SlsMat JB, void *user_data, N_Vector tmp1B,
-                         N_Vector tmp2B, N_Vector tmp3B) {
+    int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB,
+                               N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
+                               N_Vector tmp2B, N_Vector tmp3B) {
         auto model = static_cast<Model_ODE*>(user_data);
         model->fJSparseB(t, x, xB, xBdot, JB);
-        return model->checkFinite(JB->NNZ,JB->data,"Jacobian");
+        return model->checkFinite(SM_NNZ_S(JB), SM_DATA_S(JB),"Jacobian");
     }
 
     /** J in banded form (for banded solvers)
@@ -582,10 +587,10 @@ bool CVodeSolver::getAdjMallocDone() const {
      * @param tmp3 temporary storage vector
      * @return status flag indicating successful execution
      */
-    int CVodeSolver::fJBand(long int N, long int mupper, long int mlower, realtype t,
-                      N_Vector x, N_Vector xdot, DlsMat J, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-        return fJ(N,t,x,xdot,J,user_data,tmp1,tmp2,tmp3);
+    int CVodeSolver::fJBand(realtype t, N_Vector x, N_Vector xdot,
+                            SUNMatrix J, void *user_data, N_Vector tmp1,
+                            N_Vector tmp2, N_Vector tmp3) {
+        return fJ(t,x,xdot,J,user_data,tmp1,tmp2,tmp3);
     }
 
     /** JB in banded form (for banded solvers)
@@ -603,11 +608,10 @@ bool CVodeSolver::getAdjMallocDone() const {
      * @param tmp3B temporary storage vector
      * @return status flag indicating successful execution
      */
-    int CVodeSolver::fJBandB(long int NeqBdot, long int mupper, long int mlower,
-                       realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                       DlsMat JB, void *user_data, N_Vector tmp1B,
-                       N_Vector tmp2B, N_Vector tmp3B) {
-        return fJB(NeqBdot,t,x,xB,xBdot,JB,user_data,tmp1B,tmp2B,tmp3B);
+    int CVodeSolver::fJBandB(realtype t, N_Vector x, N_Vector xB,
+                             N_Vector xBdot, SUNMatrix JB, void *user_data, N_Vector tmp1B,
+                             N_Vector tmp2B, N_Vector tmp3B) {
+        return fJB(t,x,xB,xBdot,JB,user_data,tmp1B,tmp2B,tmp3B);
     }
 
     /** diagonalized Jacobian (for preconditioning)

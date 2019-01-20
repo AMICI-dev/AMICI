@@ -11,6 +11,8 @@
 
 #include <sundials/sundials_spgmr.h>
 #include <sunlinsol/sunlinsol_spgmr.h>
+#include <sunlinsol/sunlinsol_spbcgs.h>
+#include <sunlinsol/sunlinsol_sptfqmr.h>
 
 namespace amici {
 
@@ -259,12 +261,12 @@ void Solver::initializeLinearSolver(const Model *model) {
             break;
             
         case LinearSolver::SPBCG:
-            spbcg(PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+            spbcg(PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
             setJacTimesVecFn();
             break;
             
         case LinearSolver::SPTFQMR:
-            sptfqmr(PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+            sptfqmr(PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
             setJacTimesVecFn();
             break;
             
@@ -340,12 +342,12 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
             break;
             
         case LinearSolver::SPBCG:
-            spbcgB(which, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+            spbcgB(which, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
             setJacTimesVecFnB(which);
             break;
             
         case LinearSolver::SPTFQMR:
-            sptfqmrB(which, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+            sptfqmrB(which, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
             setJacTimesVecFnB(which);
             break;
             
