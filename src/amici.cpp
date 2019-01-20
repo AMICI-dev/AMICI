@@ -145,11 +145,19 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
 
 std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solver,
                                                               const std::vector<ExpData*> &edatas,
-                                                              const Model &model, int num_threads)
+                                                              const Model &model,
+#if defined(_OPENMP)
+                                                              int num_threads
+#else
+                                                              int /* num_threads */
+#endif
+)
 {
     std::vector<std::unique_ptr<ReturnData> > results(edatas.size());
 
+#if defined(_OPENMP)
     #pragma omp parallel for num_threads(num_threads)
+#endif
     for(int i = 0; i < (int)edatas.size(); ++i) {
         auto mySolver = std::unique_ptr<Solver>(solver.clone());
         auto myModel = std::unique_ptr<Model>(model.clone());
