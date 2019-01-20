@@ -494,7 +494,8 @@ def _compute_possible_indices(cl_prototypes, model, ODE, excluded_monomers):
                 prototype['possible_indices']
             )
 
-            cl_prototypes[monomer.name] = prototype
+            if prototype['possible_indices']:
+                cl_prototypes[monomer.name] = prototype
 
 
 def _compute_target_index(cl_prototypes, ODE):
