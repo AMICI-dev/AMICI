@@ -53,7 +53,22 @@ class Solver {
      */
     virtual Solver* clone() const = 0;
 
+    /**
+     * @brief Initialises the ami memory object and applies specified options
+     * @param x state vector
+     * @param dx state derivative vector (DAE only)
+     * @param sx state sensitivity vector
+     * @param sdx state derivative sensitivity vector (DAE only)
+     * @param model pointer to the model object
+     */
+
     void setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArray *sdx, Model *model);
+
+    /**
+     * setupAMIB initialises the AMI memory object for the backwards problem
+     * @param bwd pointer to backward problem
+     * @param model pointer to the model object
+     */
 
     void setupAMIB(BackwardProblem *bwd, Model *model);
 
@@ -627,6 +642,18 @@ class Solver {
      */
     virtual void setJacTimesVecFnB(int which) = 0;
 
+    /**
+     * ErrHandlerFn extracts diagnosis information from solver memory block and
+     * writes them into the return data object for the backward problem
+     *
+     * @param error_code error identifier
+     * @param module name of the module in which the error occured
+     * @param function name of the function in which the error occured @type
+     * char
+     * @param msg error message
+     * @param eh_data unused input
+     */
+
     static void wrapErrHandlerFn(int error_code, const char *module,
                                  const char *function, char *msg,
                                  void *eh_data);
@@ -1001,6 +1028,14 @@ class Solver {
     virtual void getLastOrder(void *ami_mem, int *order) const = 0;
 
     void initializeLinearSolver(const Model *model);
+
+    /**
+     * Sets the linear solver for the backward problem
+     *
+     * @param model pointer to the model object
+     * @param which index of the backward problem
+     */
+
     void initializeLinearSolverB(const Model *model, const int which);
 
     /**
