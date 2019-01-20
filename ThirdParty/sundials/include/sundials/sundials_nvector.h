@@ -1,8 +1,4 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 4803 $
- * $Date: 2016-07-08 14:01:04 -0700 (Fri, 08 Jul 2016) $
- * ----------------------------------------------------------------- 
+/* ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
@@ -42,8 +38,7 @@
  *  - a constructor for an empty N_Vector (i.e., a new N_Vector with
  *    a NULL data pointer).
  *  - a routine to print the content of an N_Vector
- * -----------------------------------------------------------------
- */
+ * -----------------------------------------------------------------*/
 
 #ifndef _NVECTOR_H
 #define _NVECTOR_H
@@ -68,6 +63,9 @@ typedef enum {
   SUNDIALS_NVEC_PTHREADS, 
   SUNDIALS_NVEC_PARHYP, 
   SUNDIALS_NVEC_PETSC,
+  SUNDIALS_NVEC_CUDA,
+  SUNDIALS_NVEC_RAJA,
+  SUNDIALS_NVEC_OPENMPDEV,
   SUNDIALS_NVEC_CUSTOM
 } N_Vector_ID;
   
@@ -92,9 +90,11 @@ struct _generic_N_Vector_Ops {
   N_Vector    (*nvclone)(N_Vector);
   N_Vector    (*nvcloneempty)(N_Vector);
   void        (*nvdestroy)(N_Vector);
-  void        (*nvspace)(N_Vector, long int *, long int *);
+  void        (*nvspace)(N_Vector, sunindextype *, sunindextype *);
   realtype*   (*nvgetarraypointer)(N_Vector);
   void        (*nvsetarraypointer)(realtype *, N_Vector);
+
+  /* standard vector operations */
   void        (*nvlinearsum)(realtype, N_Vector, realtype, N_Vector, N_Vector); 
   void        (*nvconst)(realtype, N_Vector);
   void        (*nvprod)(N_Vector, N_Vector, N_Vector);
@@ -114,6 +114,20 @@ struct _generic_N_Vector_Ops {
   booleantype (*nvinvtest)(N_Vector, N_Vector);
   booleantype (*nvconstrmask)(N_Vector, N_Vector, N_Vector);
   realtype    (*nvminquotient)(N_Vector, N_Vector);
+
+  /* fused vector operations */
+  int (*nvlinearcombination)(int, realtype*, N_Vector*, N_Vector);
+  int (*nvscaleaddmulti)(int, realtype*, N_Vector, N_Vector*, N_Vector*);
+  int (*nvdotprodmulti)(int, N_Vector, N_Vector*, realtype*);
+
+  /* vector array operations */
+  int (*nvlinearsumvectorarray)(int, realtype, N_Vector*, realtype, N_Vector*, N_Vector*);
+  int (*nvscalevectorarray)(int, realtype*, N_Vector*, N_Vector*);
+  int (*nvconstvectorarray)(int, realtype, N_Vector*);
+  int (*nvwrmsnormvectorarray)(int, N_Vector*, N_Vector*, realtype*);
+  int (*nvwrmsnormmaskvectorarray)(int, N_Vector*, N_Vector*, N_Vector, realtype*);
+  int (*nvscaleaddmultivectorarray)(int, int, realtype*, N_Vector*, N_Vector**, N_Vector**);
+  int (*nvlinearcombinationvectorarray)(int, int, realtype*, N_Vector**, N_Vector*);
 };
 
 /*
@@ -155,7 +169,7 @@ struct _generic_N_Vector {
  *
  * N_VSpace
  *   Returns space requirements for one N_Vector (type 'realtype' in
- *   lrw and type 'long int' in liw).
+ *   lrw and type 'sunindextype' in liw).
  *
  * N_VGetArrayPointer
  *   Returns a pointer to the data component of the given N_Vector.
@@ -240,8 +254,8 @@ struct _generic_N_Vector {
  * N_VInvTest
  *   Performs the operation z[i] = 1/x[i] with a test for 
  *   x[i] == 0.0 before inverting x[i].
- *   This routine returns TRUE if all components of x are non-zero 
- *   (successful inversion) and returns FALSE otherwise.
+ *   This routine returns SUNTRUE if all components of x are non-zero 
+ *   (successful inversion) and returns SUNFALSE otherwise.
  *
  * N_VConstrMask
  *   Performs the operation : 
@@ -252,8 +266,8 @@ struct _generic_N_Vector {
  *      If c[i] = +1.0, then x[i] must be >= 0.0.
  *      If c[i] = -1.0, then x[i] must be <= 0.0.
  *      If c[i] = -2.0, then x[i] must be <  0.0.
- *   This routine returns a boolean FALSE if any element failed
- *   the constraint test, TRUE if all passed. It also sets a
+ *   This routine returns a boolean SUNFALSE if any element failed
+ *   the constraint test, SUNTRUE if all passed. It also sets a
  *   mask vector m, with elements equal to 1.0 where the
  *   corresponding constraint test failed, and equal to 0.0
  *   where the constraint test passed.
@@ -346,9 +360,11 @@ SUNDIALS_EXPORT N_Vector_ID N_VGetVectorID(N_Vector w);
 SUNDIALS_EXPORT N_Vector N_VClone(N_Vector w);
 SUNDIALS_EXPORT N_Vector N_VCloneEmpty(N_Vector w);
 SUNDIALS_EXPORT void N_VDestroy(N_Vector v);
-SUNDIALS_EXPORT void N_VSpace(N_Vector v, long int *lrw, long int *liw);
+SUNDIALS_EXPORT void N_VSpace(N_Vector v, sunindextype *lrw, sunindextype *liw);
 SUNDIALS_EXPORT realtype *N_VGetArrayPointer(N_Vector v);
 SUNDIALS_EXPORT void N_VSetArrayPointer(realtype *v_data, N_Vector v);
+
+/* standard vector operations */
 SUNDIALS_EXPORT void N_VLinearSum(realtype a, N_Vector x, realtype b, N_Vector y, N_Vector z);
 SUNDIALS_EXPORT void N_VConst(realtype c, N_Vector z);
 SUNDIALS_EXPORT void N_VProd(N_Vector x, N_Vector y, N_Vector z);
@@ -368,6 +384,38 @@ SUNDIALS_EXPORT void N_VCompare(realtype c, N_Vector x, N_Vector z);
 SUNDIALS_EXPORT booleantype N_VInvTest(N_Vector x, N_Vector z);
 SUNDIALS_EXPORT booleantype N_VConstrMask(N_Vector c, N_Vector x, N_Vector m);
 SUNDIALS_EXPORT realtype N_VMinQuotient(N_Vector num, N_Vector denom);
+
+/* fused vector operations */
+SUNDIALS_EXPORT int N_VLinearCombination(int nvec, realtype* c, N_Vector* X, N_Vector z);
+
+SUNDIALS_EXPORT int N_VScaleAddMulti(int nvec, realtype* a, N_Vector x, N_Vector* Y,
+                                     N_Vector* Z);
+
+SUNDIALS_EXPORT int N_VDotProdMulti(int nvec, N_Vector x, N_Vector* Y, realtype* dotprods);
+
+/* vector array operations */
+SUNDIALS_EXPORT int N_VLinearSumVectorArray(int nvec,
+                                            realtype a, N_Vector* X,
+                                            realtype b, N_Vector* Y,
+                                            N_Vector* Z);
+
+SUNDIALS_EXPORT int N_VScaleVectorArray(int nvec, realtype* c, N_Vector* X, N_Vector* Z);
+
+SUNDIALS_EXPORT int N_VConstVectorArray(int nvec, realtype c, N_Vector* Z);
+
+SUNDIALS_EXPORT int N_VWrmsNormVectorArray(int nvec, N_Vector* X, N_Vector* W,
+                                           realtype* nrm);
+
+SUNDIALS_EXPORT int N_VWrmsNormMaskVectorArray(int nvec, N_Vector* X, N_Vector* W,
+                                               N_Vector id, realtype* nrm);
+
+SUNDIALS_EXPORT int N_VScaleAddMultiVectorArray(int nvec, int nsum,
+                                                realtype* a, N_Vector* X,
+                                                N_Vector** Y, N_Vector** Z);
+
+SUNDIALS_EXPORT int N_VLinearCombinationVectorArray(int nvec, int nsum, realtype* c,
+                                                    N_Vector** X, N_Vector* Z);
+
 
 /*
  * -----------------------------------------------------------------

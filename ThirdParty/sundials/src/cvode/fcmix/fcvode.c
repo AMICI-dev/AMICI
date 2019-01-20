@@ -1,26 +1,27 @@
 /*
- * -----------------------------------------------------------------
- * $Revision: 4474 $
- * $Date: 2015-04-03 10:14:53 -0700 (Fri, 03 Apr 2015) $
  * ----------------------------------------------------------------- 
- * Programmer(s): Alan C. Hindmarsh, Radu Serban and
- *                Aaron Collier @ LLNL
+ * Programmer(s): Daniel R. Reynolds @ SMU
+ *     Alan C. Hindmarsh, Radu Serban and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
+ * LLNS/SMU Copyright Start
+ * Copyright (c) 2017, Southern Methodist University and 
+ * Lawrence Livermore National Security
+ *
  * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * of Energy by Southern Methodist University and Lawrence Livermore 
+ * National Laboratory under Contract DE-AC52-07NA27344.
+ * Produced at Southern Methodist University and the Lawrence 
+ * Livermore National Laboratory.
+ *
  * All rights reserved.
  * For details, see the LICENSE file.
- * LLNS Copyright End
+ * LLNS/SMU Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the Fortran interface to
  * the CVODE package.  See fcvode.h for usage.
  * NOTE: some routines are necessarily stored elsewhere to avoid
- * linking problems.  Therefore, see also fcvpreco.c, fcvpsol.c,
- * and fcvjtimes.c for all the options available.
+ * linking problems.  Therefore, see the othe C files in this folder
+ * for all the options available.
  * -----------------------------------------------------------------
  */
 
@@ -30,15 +31,10 @@
 
 #include "fcvode.h"                    /* actual function names, prototypes, global vars.*/ 
 #include "cvode_impl.h"                /* definition of CVodeMem type                    */
+#include <sundials/sundials_matrix.h>
+#include <cvode/cvode_ls.h>
+#include <cvode/cvode_diag.h>
 
-#include <cvode/cvode_band.h>          /* prototypes for CVBAND interface routines       */
-#include <cvode/cvode_dense.h>         /* prototypes for CVDENSE interface routines      */
-#include <cvode/cvode_diag.h>          /* prototypes for CVDIAG interface routines       */
-#include <cvode/cvode_klu.h>           /* prototypes for CVKLU interface routines        */
-#include <cvode/cvode_superlumt.h>     /* prototypes for CVSUPERLUMT interface routines  */
-#include <cvode/cvode_spgmr.h>         /* prototypes for CVSPGMR interface routines      */
-#include <cvode/cvode_spbcgs.h>        /* prototypes for CVSPBCG interface routines      */
-#include <cvode/cvode_sptfqmr.h>       /* prototypes for CVSPTFQMR interface routines    */
 
 /***************************************************************************/
 
@@ -74,14 +70,14 @@ extern "C" {
 
 /**************************************************************************/
 
-void FCV_MALLOC(realtype *t0, realtype *y0, 
-                int *meth, int *itmeth, int *iatol, 
+void FCV_MALLOC(realtype *t0, realtype *y0,
+                int *meth, int *iatol,
                 realtype *rtol, realtype *atol,
                 long int *iout, realtype *rout,
                 long int *ipar, realtype *rpar,
                 int *ier)
 {
-  int lmm, iter;
+  int lmm;
   N_Vector Vatol;
   FCVUserData CV_userdata;
 
@@ -91,23 +87,27 @@ void FCV_MALLOC(realtype *t0, realtype *y0,
   if(F2C_CVODE_vec->ops->nvgetarraypointer == NULL ||
      F2C_CVODE_vec->ops->nvsetarraypointer == NULL) {
     *ier = -1;
-    printf("A required vector operation is not implemented.\n\n");
+    fprintf(stderr, "A required vector operation is not implemented.\n\n");
     return;
   }
 
   /* Initialize all pointers to NULL */
   CV_cvodemem = NULL;
   Vatol = NULL;
+  FCVNullNonlinSol();
 
+  /* initialize global constants to disable each option */
+  CV_nrtfn = 0;
+  CV_ls = -1;
+  
   /* Create CVODE object */
   lmm = (*meth == 1) ? CV_ADAMS : CV_BDF;
-  iter = (*itmeth == 1) ? CV_FUNCTIONAL : CV_NEWTON;
-  CV_cvodemem = CVodeCreate(lmm, iter);
+  CV_cvodemem = CVodeCreate(lmm);
   if (CV_cvodemem == NULL) {
     *ier = -1;
     return;
   }
-
+  
   /* Set and attach user data */
   CV_userdata = NULL;
   CV_userdata = (FCVUserData) malloc(sizeof *CV_userdata);
@@ -239,7 +239,7 @@ void FCV_SETIIN(char key_name[], long int *ival, int *ier)
   if (!strncmp(key_name,"MAX_ORD",7))
     *ier = CVodeSetMaxOrd(CV_cvodemem, (int) *ival);
   else if (!strncmp(key_name,"MAX_NSTEPS",10))
-    *ier = CVodeSetMaxNumSteps(CV_cvodemem, (int) *ival);
+    *ier = CVodeSetMaxNumSteps(CV_cvodemem, (long int) *ival);
   else if (!strncmp(key_name,"MAX_ERRFAIL",11))
     *ier = CVodeSetMaxErrTestFails(CV_cvodemem, (int) *ival);
   else if (!strncmp(key_name,"MAX_NITERS",10))
@@ -249,10 +249,10 @@ void FCV_SETIIN(char key_name[], long int *ival, int *ier)
   else if (!strncmp(key_name,"HNIL_WARNS",10))
     *ier = CVodeSetMaxHnilWarns(CV_cvodemem, (int) *ival);
   else if (!strncmp(key_name,"STAB_LIM",8))
-    *ier = CVodeSetStabLimDet(CV_cvodemem, (int) *ival);
+    *ier = CVodeSetStabLimDet(CV_cvodemem, (booleantype) *ival);
   else {
     *ier = -99;
-    printf("FCVSETIIN: Unrecognized key.\n\n");
+    fprintf(stderr, "FCVSETIIN: Unrecognized key.\n\n");
   }
 
 }
@@ -273,171 +273,82 @@ void FCV_SETRIN(char key_name[], realtype *rval, int *ier)
     *ier = CVodeSetNonlinConvCoef(CV_cvodemem, *rval);
   else {
     *ier = -99;
-    printf("FCVSETRIN: Unrecognized key.\n\n");
+    fprintf(stderr, "FCVSETRIN: Unrecognized key.\n\n");
   }
 
 }
 
 /***************************************************************************/
 
-void FCV_DENSE(long int *neq, int *ier)
+void FCV_SETVIN(char key_name[], realtype *vval, int *ier)
 {
-  /* neq  is the problem size */
+  N_Vector Vec;
 
-  *ier = CVDense(CV_cvodemem, *neq);
+  *ier = 0;
 
-  CV_ls = CV_LS_DENSE;
+  if (!strncmp(key_name,"CONSTR_VEC",10)) {
+    Vec = NULL;
+    Vec = N_VCloneEmpty(F2C_CVODE_vec);
+    if (Vec == NULL) {
+      *ier = -1;
+      return;
+    }
+    N_VSetArrayPointer(vval, Vec);
+    CVodeSetConstraints(CV_cvodemem, Vec);
+    N_VDestroy(Vec);
+  }
+  else {
+    *ier = -99;
+    fprintf(stderr, "FCVSETVIN: Unrecognized key. \n\n");
+  }
+
 }
 
 /***************************************************************************/
 
-void FCV_BAND(long int *neq, long int *mupper, long int *mlower, int *ier)
-{
-  /* 
-     neq        is the problem size
-     mupper     is the upper bandwidth
-     mlower     is the lower bandwidth 
-  */
-
-  *ier = CVBand(CV_cvodemem, *neq, *mupper, *mlower);
-
-  CV_ls = CV_LS_BAND;
+void FCV_LSINIT(int *ier) {
+  if ( (CV_cvodemem == NULL) || (F2C_CVODE_linsol == NULL) ) {
+    *ier = -1;
+    return;
+  }
+  *ier = CVodeSetLinearSolver(CV_cvodemem, F2C_CVODE_linsol, 
+                              F2C_CVODE_matrix);
+  CV_ls = CV_LS_STD;
+  return;
 }
+
+/***************************************************************************/
+
+/* ---DEPRECATED--- */
+void FCV_DLSINIT(int *ier)
+{ FCV_LSINIT(ier); }
+
+/***************************************************************************/
+
+/* ---DEPRECATED--- */
+void FCV_SPILSINIT(int *ier)
+{ FCV_LSINIT(ier); }
+
+/*=============================================================*/
+
+/* ---DEPRECATED--- */
+void FCV_SPILSSETEPSLIN(realtype *eplifac, int *ier)
+{ FCV_LSSETEPSLIN(eplifac, ier); }
+
+void FCV_LSSETEPSLIN(realtype *eplifac, int *ier)
+{ *ier = CVodeSetEpsLin(CV_cvodemem, *eplifac); }
 
 /***************************************************************************/
 
 void FCV_DIAG(int *ier)
 {
+  if (CV_cvodemem == NULL) {
+    *ier = -1;
+    return;
+  }
   *ier = CVDiag(CV_cvodemem);
-
   CV_ls = CV_LS_DIAG;
-}
-
-/***************************************************************************/
-
-void FCV_SPGMR(int *pretype, int *gstype, int *maxl, realtype *delt, int *ier)
-{
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov dimension
-     gstype     the Gram-Schmidt process type
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpgmr(CV_cvodemem, *pretype, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetGSType(CV_cvodemem, *gstype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPGMR;
-}
-
-/***************************************************************************/
-
-void FCV_SPBCG(int *pretype, int *maxl, realtype *delt, int *ier)
-{
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov dimension
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpbcg(CV_cvodemem, *pretype, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPBCG;
-}
-
-/***************************************************************************/
-
-void FCV_SPTFQMR(int *pretype, int *maxl, realtype *delt, int *ier)
-{
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov dimension
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSptfqmr(CV_cvodemem, *pretype, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPTFQMR;
-}
-
-/***************************************************************************/
-
-void FCV_SPGMRREINIT(int *pretype, int *gstype, realtype *delt, int *ier)
-{
-  /* 
-     pretype    the preconditioner type
-     gstype     the Gram-Schmidt process type
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpilsSetPrecType(CV_cvodemem, *pretype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetGSType(CV_cvodemem, *gstype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPGMR;
-}
-
-/***************************************************************************/
-
-void FCV_SPBCGREINIT(int *pretype, int *maxl, realtype *delt, int *ier)
-{
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov subspace dimension
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpilsSetPrecType(CV_cvodemem, *pretype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetMaxl(CV_cvodemem, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPBCG;
-}
-
-/***************************************************************************/
-
-void FCV_SPTFQMRREINIT(int *pretype, int *maxl, realtype *delt, int *ier)
-{
-  /* 
-     pretype    the preconditioner type
-     maxl       the maximum Krylov subspace dimension
-     delt       the linear convergence tolerance factor 
-  */
-
-  *ier = CVSpilsSetPrecType(CV_cvodemem, *pretype);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetMaxl(CV_cvodemem, *maxl);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  *ier = CVSpilsSetEpsLin(CV_cvodemem, *delt);
-  if (*ier != CVSPILS_SUCCESS) return;
-
-  CV_ls = CV_LS_SPTFQMR;
+  return;
 }
 
 /***************************************************************************/
@@ -489,36 +400,22 @@ void FCV_CVODE(realtype *tout, realtype *t, realtype *y, int *itask, int *ier)
     CVodeGetNumGEvals(CV_cvodemem, &CV_iout[11]);         /* NGE     */
   
   switch(CV_ls) {
-  case CV_LS_DENSE:
-  case CV_LS_BAND:
-  case CV_LS_LAPACKDENSE:
-  case CV_LS_LAPACKBAND:
-    CVDlsGetWorkSpace(CV_cvodemem, &CV_iout[12], &CV_iout[13]);   /* LENRWLS,LENIWLS */
-    CVDlsGetLastFlag(CV_cvodemem, &CV_iout[14]);                  /* LSTF */
-    CVDlsGetNumRhsEvals(CV_cvodemem, &CV_iout[15]);               /* NFELS */
-    CVDlsGetNumJacEvals(CV_cvodemem, &CV_iout[16]);               /* NJE */
+  case CV_LS_STD:
+    CVodeGetLinWorkSpace(CV_cvodemem, &CV_iout[12], &CV_iout[13]);   /* LENRWLS,LENIWLS */
+    CVodeGetLastLinFlag(CV_cvodemem, &CV_iout[14]);                  /* LSTF */
+    CVodeGetNumLinRhsEvals(CV_cvodemem, &CV_iout[15]);               /* NFELS */
+    CVodeGetNumJacEvals(CV_cvodemem, &CV_iout[16]);                  /* NJE */
+    CVodeGetNumJTSetupEvals(CV_cvodemem, &CV_iout[17]);              /* NJTS */
+    CVodeGetNumJtimesEvals(CV_cvodemem, &CV_iout[18]);               /* NJTV */
+    CVodeGetNumPrecEvals(CV_cvodemem, &CV_iout[19]);                 /* NPE */
+    CVodeGetNumPrecSolves(CV_cvodemem, &CV_iout[20]);                /* NPS */
+    CVodeGetNumLinIters(CV_cvodemem, &CV_iout[21]);                  /* NLI */
+    CVodeGetNumLinConvFails(CV_cvodemem, &CV_iout[22]);              /* NCFL */
     break;
   case CV_LS_DIAG:
     CVDiagGetWorkSpace(CV_cvodemem, &CV_iout[12], &CV_iout[13]);  /* LENRWLS,LENIWLS */
     CVDiagGetLastFlag(CV_cvodemem, &CV_iout[14]);                 /* LSTF */
     CVDiagGetNumRhsEvals(CV_cvodemem, &CV_iout[15]);              /* NFELS */
-    break;
-  case CV_LS_KLU:
-  case CV_LS_SUPERLUMT:
-    CVSlsGetLastFlag(CV_cvodemem, &CV_iout[14]);                  /* LSTF  */
-    CVSlsGetNumJacEvals(CV_cvodemem, &CV_iout[16]);               /* NJE   */
-    break;
-  case CV_LS_SPGMR:
-  case CV_LS_SPBCG:
-  case CV_LS_SPTFQMR:
-    CVSpilsGetWorkSpace(CV_cvodemem, &CV_iout[12], &CV_iout[13]); /* LENRWLS,LENIWLS */
-    CVSpilsGetLastFlag(CV_cvodemem, &CV_iout[14]);                /* LSTF */
-    CVSpilsGetNumRhsEvals(CV_cvodemem, &CV_iout[15]);             /* NFELS */
-    CVSpilsGetNumJtimesEvals(CV_cvodemem, &CV_iout[16]);          /* NJTV */
-    CVSpilsGetNumPrecEvals(CV_cvodemem, &CV_iout[17]);            /* NPE */
-    CVSpilsGetNumPrecSolves(CV_cvodemem, &CV_iout[18]);           /* NPS */
-    CVSpilsGetNumLinIters(CV_cvodemem, &CV_iout[19]);             /* NLI */
-    CVSpilsGetNumConvFails(CV_cvodemem, &CV_iout[20]);            /* NCFL */
   }
 }
 
@@ -584,12 +481,24 @@ void FCV_FREE ()
 
   cv_mem = (CVodeMem) CV_cvodemem;
 
+  if (cv_mem->cv_lfree)
+    cv_mem->cv_lfree(cv_mem);
+  cv_mem->cv_lmem = NULL;
+  
   free(cv_mem->cv_user_data); cv_mem->cv_user_data = NULL;
 
   CVodeFree(&CV_cvodemem);
 
   N_VSetArrayPointer(NULL, F2C_CVODE_vec);
   N_VDestroy(F2C_CVODE_vec);
+  if (F2C_CVODE_matrix)
+    SUNMatDestroy(F2C_CVODE_matrix);
+  if (F2C_CVODE_linsol)
+    SUNLinSolFree(F2C_CVODE_linsol);
+  /* already freed by CVodeFree */
+  if (F2C_CVODE_nonlinsol)
+    F2C_CVODE_nonlinsol = NULL;
+  return;
 }
 
 /***************************************************************************/
@@ -615,4 +524,20 @@ int FCVf(realtype t, N_Vector y, N_Vector ydot, void *user_data)
   FCV_FUN(&t, ydata, dydata, CV_userdata->ipar, CV_userdata->rpar, &ier);
 
   return(ier);
+}
+
+/* Fortran interface to C routine CVodeSetNonlinearSolver; see 
+   fcvode.h for further details */
+void FCV_NLSINIT(int *ier) {
+  if ( (CV_cvodemem == NULL) || (F2C_CVODE_nonlinsol == NULL) ) {
+    *ier = -1;
+    return;
+  }
+  if (((CVodeMem) CV_cvodemem)->cv_lsolve == NULL) {
+    FCVNullMatrix();
+    FCVNullLinsol();
+  }
+
+  *ier = CVodeSetNonlinearSolver(CV_cvodemem, F2C_CVODE_nonlinsol);
+  return;
 }

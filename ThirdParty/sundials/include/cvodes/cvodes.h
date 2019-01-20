@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision$
+ * $Date$
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -95,6 +95,8 @@
 
 #include <stdio.h>
 #include <sundials/sundials_nvector.h>
+#include <sundials/sundials_nonlinearsolver.h>
+#include <cvodes/cvodes_ls.h>
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
@@ -126,14 +128,6 @@ extern "C" {
  *        for stiff problems, and the CV_ADAMS method is recommended
  *        for nonstiff problems.
  *
- * iter:  At each internal time step, a nonlinear equation must
- *        be solved. The user can specify either CV_FUNCTIONAL
- *        iteration, which does not require linear algebra, or a
- *        CV_NEWTON iteration, which requires the solution of linear
- *        systems. In the CV_NEWTON case, the user also specifies a
- *        CVODE linear solver. CV_NEWTON is recommended in case of
- *        stiff problems.
- *
  * ism:   This parameter specifies the sensitivity corrector type
  *        to be used. In the CV_SIMULTANEOUS case, the nonlinear
  *        systems for states and all sensitivities are solved
@@ -162,10 +156,6 @@ extern "C" {
 /* lmm */
 #define CV_ADAMS          1
 #define CV_BDF            2
-
-/* iter */
-#define CV_FUNCTIONAL     1
-#define CV_NEWTON         2
 
 /* itask */
 #define CV_NORMAL         1
@@ -209,6 +199,9 @@ extern "C" {
 #define CV_REPTD_RHSFUNC_ERR    -10
 #define CV_UNREC_RHSFUNC_ERR    -11
 #define CV_RTFUNC_FAIL          -12
+#define CV_NLS_INIT_FAIL        -13
+#define CV_NLS_SETUP_FAIL       -14
+#define CV_CONSTR_FAIL          -15
 
 #define CV_MEM_FAIL             -20
 #define CV_MEM_NULL             -21
@@ -218,6 +211,7 @@ extern "C" {
 #define CV_BAD_T                -25
 #define CV_BAD_DKY              -26
 #define CV_TOO_CLOSE            -27
+#define CV_VECTOROP_ERR         -28
 
 #define CV_NO_QUAD              -30
 #define CV_QRHSFUNC_FAIL        -31
@@ -532,10 +526,6 @@ typedef int (*CVQuadRhsFnBS)(realtype t, N_Vector y, N_Vector *yS,
  *      The legal values are CV_ADAMS and CV_BDF (see previous
  *      description).
  *
- * iter  is the type of iteration used to solve the nonlinear
- *       system that arises during each internal time step.
- *       The legal values are CV_FUNCTIONAL and CV_NEWTON.
- *
  * If successful, CVodeCreate returns a pointer to initialized
  * problem memory. This pointer should be passed to CVodeInit.
  * If an initialization error occurs, CVodeCreate prints an error
@@ -543,7 +533,7 @@ typedef int (*CVQuadRhsFnBS)(realtype t, N_Vector y, N_Vector *yS,
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT void *CVodeCreate(int lmm, int iter);
+SUNDIALS_EXPORT void *CVodeCreate(int lmm);
 
 /*
  * -----------------------------------------------------------------
@@ -902,6 +892,20 @@ SUNDIALS_EXPORT void CVodeSensFree(void *cvode_mem);
 SUNDIALS_EXPORT void CVodeQuadSensFree(void *cvode_mem);
 
 /*
+ * -----------------------------------------------------------------
+ * Function : CVodeSetNonlinearSolver
+ * -----------------------------------------------------------------
+ * CVodeNonlinearSolver attaches a nonlinear solver object to the
+ * CVODE memory.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT int CVodeSetNonlinearSolver(void *cvode_mem, SUNNonlinearSolver NLS);
+SUNDIALS_EXPORT int CVodeSetNonlinearSolverSensSim(void *cvode_mem, SUNNonlinearSolver NLS);
+SUNDIALS_EXPORT int CVodeSetNonlinearSolverSensStg(void *cvode_mem, SUNNonlinearSolver NLS);
+SUNDIALS_EXPORT int CVodeSetNonlinearSolverSensStg1(void *cvode_mem, SUNNonlinearSolver NLS);
+
+/*
  * =================================================================
  *
  * OPTIONAL INPUT FUNCTIONS FOR FORWARD PROBLEMS
@@ -956,12 +960,12 @@ SUNDIALS_EXPORT void CVodeQuadSensFree(void *cvode_mem);
  *                         | [10]
  *                         |
  * CVodeSetStabLimDet      | flag to turn on/off stability limit
- *                         | detection (TRUE = on, FALSE = off).
+ *                         | detection (SUNTRUE = on, SUNFALSE = off).
  *                         | When BDF is used and order is 3 or
  *                         | greater, CVsldet is called to detect
  *                         | stability limit.  If limit is detected,
  *                         | the order is reduced.
- *                         | [FALSE]
+ *                         | [SUNFALSE]
  *                         |
  * CVodeSetInitStep        | initial step size.
  *                         | [estimated by CVODES]
@@ -994,11 +998,22 @@ SUNDIALS_EXPORT void CVodeQuadSensFree(void *cvode_mem);
  *                         | test.
  *                         | [0.1]
  *                         |
- * -----------------------------------------------------------------
- *                         |
- * CVodeSetIterType        | Changes the current nonlinear iteration
- *                         | type.
- *                         | [set by CVodecreate]
+ * CVodeSetConstraints     | an N_vector defining inequality
+ *                         | constraints for each component of the
+ *                         | solution vector y. If a given element
+ *                         | of this vector has values +2 or -2,
+ *                         | then the corresponding component of y
+ *                         | will be constrained to be > 0.0 or
+ *                         | < 0.0, respectively, while if it is +1
+ *                         | or -1, the y component is constrained
+ *                         | to be >= 0.0 or <= 0.0, respectively.
+ *                         | If a component of constraints is 0.0,
+ *                         | then no constraint is imposed on the
+ *                         | corresponding component of y.
+ *                         | The presence of a non-NULL constraints
+ *                         | vector that is not 0.0 (ZERO) in all
+ *                         | components will cause constraint
+ *                         | checking to be performed.
  *                         |
  * -----------------------------------------------------------------
  *                            |
@@ -1032,8 +1047,7 @@ SUNDIALS_EXPORT int CVodeSetMaxErrTestFails(void *cvode_mem, int maxnef);
 SUNDIALS_EXPORT int CVodeSetMaxNonlinIters(void *cvode_mem, int maxcor);
 SUNDIALS_EXPORT int CVodeSetMaxConvFails(void *cvode_mem, int maxncf);
 SUNDIALS_EXPORT int CVodeSetNonlinConvCoef(void *cvode_mem, realtype nlscoef);
-
-SUNDIALS_EXPORT int CVodeSetIterType(void *cvode_mem, int iter);
+SUNDIALS_EXPORT int CVodeSetConstraints(void *cvode_mem, N_Vector constraints);
 
 SUNDIALS_EXPORT int CVodeSetRootDirection(void *cvode_mem, int *rootdir);
 SUNDIALS_EXPORT int CVodeSetNoInactiveRootWarn(void *cvode_mem);
@@ -1053,7 +1067,7 @@ SUNDIALS_EXPORT int CVodeSetNoInactiveRootWarn(void *cvode_mem);
  *                      | the error control?
  *                      | If yes, tolerances for quadrature are
  *                      | required (see CVodeQuad**tolerances) 
- *                      | [errconQ = FALSE]
+ *                      | [errconQ = SUNFALSE]
  *                      |
  * -----------------------------------------------------------------
  * If successful, these functions return CV_SUCCESS. If an argument
@@ -1096,7 +1110,7 @@ SUNDIALS_EXPORT int CVodeSetQuadErrCon(void *cvode_mem, booleantype errconQ);
  *                            |
  * CVodeSetSensErrCon         | are sensitivity variables considered in
  *                            | the error control?
- *                            | [FALSE]
+ *                            | [SUNFALSE]
  *                            |
  * CVodeSetSensMaxNonlinIters | Maximum number of nonlinear solver
  *                            | iterations at one solution.
@@ -1126,7 +1140,7 @@ SUNDIALS_EXPORT int CVodeSetSensParams(void *cvode_mem, realtype *p, realtype *p
  *                        | considered in the error control?
  *                        | If yes, tolerances for quadrature
  *                        | sensitivity variables are required.
- *                        | [errconQS = FALSE]
+ *                        | [errconQS = SUNFALSE]
  *                        |
  * -----------------------------------------------------------------
  * If successful, these functions return CV_SUCCESS. If an argument
@@ -1227,6 +1241,9 @@ SUNDIALS_EXPORT int CVodeSensToggleOff(void *cvode_mem);
  *
  * CV_TOO_MUCH_ACC: The solver could not satisfy the accuracy
  *                 demanded by the user for some internal step.
+ *
+ * CV_CONSTR_FAIL: The inequality constraints were violated,
+ *                 and the solver was unable to recover.
  *
  * CV_ERR_FAILURE: Error test failures occurred too many times
  *                 (= MXNEF = 7) during one internal time step or
@@ -1743,7 +1760,7 @@ SUNDIALS_EXPORT void CVodeAdjFree(void *cvode_mem);
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT int CVodeCreateB(void *cvode_mem, int lmmB, int iterB, int *which);
+SUNDIALS_EXPORT int CVodeCreateB(void *cvode_mem, int lmmB, int *which);
 
 SUNDIALS_EXPORT int CVodeInitB(void *cvode_mem, int which,
                                CVRhsFnB fB,
@@ -1838,7 +1855,6 @@ SUNDIALS_EXPORT int CVodeSetAdjNoSensi(void *cvode_mem);
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT int CVodeSetIterTypeB(void *cvode_mem, int which, int iterB);
 SUNDIALS_EXPORT int CVodeSetUserDataB(void *cvode_mem, int which, void *user_dataB);
 SUNDIALS_EXPORT int CVodeSetMaxOrdB(void *cvode_mem, int which, int maxordB);
 SUNDIALS_EXPORT int CVodeSetMaxNumStepsB(void *cvode_mem, int which, long int mxstepsB);
@@ -1846,8 +1862,11 @@ SUNDIALS_EXPORT int CVodeSetStabLimDetB(void *cvode_mem, int which, booleantype 
 SUNDIALS_EXPORT int CVodeSetInitStepB(void *cvode_mem, int which, realtype hinB);
 SUNDIALS_EXPORT int CVodeSetMinStepB(void *cvode_mem, int which, realtype hminB);
 SUNDIALS_EXPORT int CVodeSetMaxStepB(void *cvode_mem, int which, realtype hmaxB);
-      
+SUNDIALS_EXPORT int CVodeSetConstraintsB(void *cvode_mem, int which, N_Vector constraintsB);      
 SUNDIALS_EXPORT int CVodeSetQuadErrConB(void *cvode_mem, int which, booleantype errconQB);
+
+SUNDIALS_EXPORT int CVodeSetNonlinearSolverB(void *cvode_mem, int which,
+                                             SUNNonlinearSolver NLS);
 
 /*
  * =================================================================

@@ -1,10 +1,7 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 4906 $
- * $Date: 2016-09-14 16:05:17 -0700 (Wed, 14 Sep 2016) $
- * -----------------------------------------------------------------
+/* -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
+ *                David J. Gardner @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
  * Copyright (c) 2014, Lawrence Livermore National Security
@@ -22,49 +19,34 @@
  * Note: Some routines are necessarily stored elsewhere to avoid
  * linking problems. See also, therefore, fkinpreco.c, fkinjtimes.c,
  * and fkinbbd.c.
- * -----------------------------------------------------------------
- */
+ * -----------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "fkinsol.h"               /* prototypes of interfaces and global vars.   */
-#include "kinsol_impl.h"           /* definition of KINMem type                   */
+#include "fkinsol.h"     /* prototypes of interfaces and global vars. */
+#include "kinsol_impl.h" /* definition of KINMem type                 */
 
-#include <kinsol/kinsol_band.h>    /* prototypes of KINBAND interface routines    */
-#include <kinsol/kinsol_dense.h>   /* prototypes of KINDENSE interface routines   */
-#include <kinsol/kinsol_klu.h>     /* prototypes of KINKLU interface routines     */
-#include <kinsol/kinsol_superlumt.h> /* prototypes of KINSUPERLU interface routines */
-#include <kinsol/kinsol_sptfqmr.h> /* prototypes of KINSPTFQMR interface routines */
-#include <kinsol/kinsol_spbcgs.h>  /* prototypes of KINSPBCG interface routines   */
-#include <kinsol/kinsol_spgmr.h>   /* prototypes of KINSPGMR interface routines   */
-#include <kinsol/kinsol_spfgmr.h>  /* prototypes of KINSPFGMR interface routines  */
+#include <kinsol/kinsol_ls.h> /* KINLS interface routine prototypes   */
 
-/*
- * ----------------------------------------------------------------
- * definitions of global variables shared amongst various routines
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  definitions of global variables shared amongst various routines
+  ------------------------------------------------------------------*/
 
 void *KIN_kinmem;
 long int *KIN_iout;
 realtype *KIN_rout;
-int KIN_ls;
 
-/*
- * ----------------------------------------------------------------
- * private constants
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  private constants
+  ------------------------------------------------------------------*/
 
 #define ZERO RCONST(0.0)
 
-/*
- * ----------------------------------------------------------------
- * prototype of user-supplied fortran routine
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  prototype of user-supplied fortran routine
+  ------------------------------------------------------------------*/
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
@@ -76,11 +58,9 @@ extern void FK_FUN(realtype*, realtype*, int*);
 }
 #endif
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_CREATE
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_CREATE
+  ------------------------------------------------------------------*/
 
 void FKIN_CREATE(int *ier)
 {
@@ -90,7 +70,7 @@ void FKIN_CREATE(int *ier)
   if ((F2C_KINSOL_vec->ops->nvgetarraypointer == NULL) ||
       (F2C_KINSOL_vec->ops->nvsetarraypointer == NULL)) {
     *ier = -1;
-    printf("FKINCREATE: A required vector operation is not implemented.\n\n");
+    fprintf(stderr, "FKINCREATE: A required vector operation is not implemented.\n\n");
     return;
   }
 
@@ -105,11 +85,9 @@ void FKIN_CREATE(int *ier)
   }
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_INIT
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_INIT
+  ------------------------------------------------------------------*/
 
 void FKIN_INIT(long int *iout, realtype *rout, int *ier)
 {
@@ -131,11 +109,9 @@ void FKIN_INIT(long int *iout, realtype *rout, int *ier)
   return;
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_MALLOC
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_MALLOC
+  ------------------------------------------------------------------*/
 
 void FKIN_MALLOC(long int *iout, realtype *rout, int *ier)
 {
@@ -144,7 +120,7 @@ void FKIN_MALLOC(long int *iout, realtype *rout, int *ier)
   if ((F2C_KINSOL_vec->ops->nvgetarraypointer == NULL) ||
       (F2C_KINSOL_vec->ops->nvsetarraypointer == NULL)) {
     *ier = -1;
-    printf("A required vector operation is not implemented.\n\n");
+    fprintf(stderr, "A required vector operation is not implemented.\n\n");
     return;
   }
 
@@ -175,44 +151,40 @@ void FKIN_MALLOC(long int *iout, realtype *rout, int *ier)
   return;
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SETIIN
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_SETIIN
+  ------------------------------------------------------------------*/
 
 void FKIN_SETIIN(char key_name[], long int *ival, int *ier)
 {
   if (!strncmp(key_name,"PRNT_LEVEL",10))
     *ier = KINSetPrintLevel(KIN_kinmem, (int) *ival);
   else if (!strncmp(key_name,"MAX_NITERS",10))
-    *ier = KINSetNumMaxIters(KIN_kinmem, (int) *ival);
+    *ier = KINSetNumMaxIters(KIN_kinmem, (long int) *ival);
   else if (!strncmp(key_name,"ETA_FORM",8))
     *ier = KINSetEtaForm(KIN_kinmem, (int) *ival);
   else if (!strncmp(key_name,"MAA",3))
-    *ier = KINSetMAA(KIN_kinmem, (int) *ival);
+    *ier = KINSetMAA(KIN_kinmem, (long int) *ival);
   else if (!strncmp(key_name,"MAX_SETUPS",10))
-    *ier = KINSetMaxSetupCalls(KIN_kinmem, (int) *ival);
+    *ier = KINSetMaxSetupCalls(KIN_kinmem, (long int) *ival);
   else if (!strncmp(key_name,"MAX_SP_SETUPS",13))
-    *ier = KINSetMaxSubSetupCalls(KIN_kinmem, (int) *ival);
+    *ier = KINSetMaxSubSetupCalls(KIN_kinmem, (long int) *ival);
   else if (!strncmp(key_name,"NO_INIT_SETUP",13))
-    *ier = KINSetNoInitSetup(KIN_kinmem, (int) *ival);
+    *ier = KINSetNoInitSetup(KIN_kinmem, (booleantype) *ival);
   else if (!strncmp(key_name,"NO_MIN_EPS",10))
-    *ier = KINSetNoMinEps(KIN_kinmem, (int) *ival);
+    *ier = KINSetNoMinEps(KIN_kinmem, (booleantype) *ival);
   else if (!strncmp(key_name,"NO_RES_MON",10))
-    *ier = KINSetNoResMon(KIN_kinmem, (int) *ival);
+    *ier = KINSetNoResMon(KIN_kinmem, (booleantype) *ival);
   else {
     *ier = -99;
-    printf("FKINSETIIN: Unrecognized key.\n\n");
+    fprintf(stderr, "FKINSETIIN: Unrecognized key.\n\n");
   }
 
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SETRIN
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_SETRIN
+  ------------------------------------------------------------------*/
 
 void FKIN_SETRIN(char key_name[], realtype *rval, int *ier)
 {
@@ -235,16 +207,14 @@ void FKIN_SETRIN(char key_name[], realtype *rval, int *ier)
     *ier = KINSetResMonParams(KIN_kinmem, rval[0], rval[1]);
   else {
     *ier = -99;
-    printf("FKINSETRIN: Unrecognized key.\n\n");
+    fprintf(stderr, "FKINSETRIN: Unrecognized key.\n\n");
   }
 
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SETVIN
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_SETVIN
+  ------------------------------------------------------------------*/
 
 void FKIN_SETVIN(char key_name[], realtype *vval, int *ier)
 {
@@ -263,90 +233,43 @@ void FKIN_SETVIN(char key_name[], realtype *vval, int *ier)
     N_VDestroy(Vec);
   } else {
     *ier = -99;
-    printf("FKINSETVIN: Unrecognized key.\n\n");
+    fprintf(stderr, "FKINSETVIN: Unrecognized key.\n\n");
   }
 
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_DENSE
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_LSINIT
+  ------------------------------------------------------------------*/
 
-void FKIN_DENSE(long int *neq, int *ier)
-{
-  *ier = KINDense(KIN_kinmem, *neq);
-  KIN_ls = KIN_LS_DENSE;
+/* Fortran interface to C routine KINSetLinearSolver */
+void FKIN_LSINIT(int *ier) {
+  if ( (KIN_kinmem == NULL) || (F2C_KINSOL_linsol == NULL) ) {
+    *ier = -1;
+    return;
+  }
+  *ier = KINSetLinearSolver(KIN_kinmem, F2C_KINSOL_linsol,
+                            F2C_KINSOL_matrix);
+  return;
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_BAND
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_DLSINIT -- DEPRECATED
+  ------------------------------------------------------------------*/
 
-void FKIN_BAND(long int *neq, long int *mupper, long int *mlower, int *ier)
-{
-  *ier = KINBand(KIN_kinmem, *neq, *mupper, *mlower);
-  KIN_ls = KIN_LS_BAND;
-}
+void FKIN_DLSINIT(int *ier)
+{ FKIN_LSINIT(ier); }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SPTFQMR
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_SPILSINIT -- DEPRECATED
+  ------------------------------------------------------------------*/
 
-void FKIN_SPTFQMR(int *maxl, int *ier)
-{
-  *ier = KINSptfqmr(KIN_kinmem, *maxl);
-  KIN_ls = KIN_LS_SPTFQMR;
-}
+void FKIN_SPILSINIT(int *ier)
+{ FKIN_LSINIT(ier); }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SPBCG
- * ----------------------------------------------------------------
- */
-
-void FKIN_SPBCG(int *maxl, int *ier)
-{
-  *ier = KINSpbcg(KIN_kinmem, *maxl);
-  KIN_ls = KIN_LS_SPBCG;
-}
-
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SPGMR
- * ----------------------------------------------------------------
- */
-
-void FKIN_SPGMR(int *maxl, int *maxlrst, int *ier)
-{
-  *ier = KINSpgmr(KIN_kinmem, *maxl);
-  KINSpilsSetMaxRestarts(KIN_kinmem, *maxlrst);
-  KIN_ls = KIN_LS_SPGMR;
-}
-
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SPFGMR
- * ----------------------------------------------------------------
- */
-
-void FKIN_SPFGMR(int *maxl, int *maxlrst, int *ier)
-{
-  *ier = KINSpfgmr(KIN_kinmem, *maxl);
-  KINSpilsSetMaxRestarts(KIN_kinmem, *maxlrst);
-  KIN_ls = KIN_LS_SPFGMR;
-}
-
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SOL
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_SOL
+  ------------------------------------------------------------------*/
 
 void FKIN_SOL(realtype *uu, int *globalstrategy, 
               realtype *uscale , realtype *fscale, int *ier)
@@ -377,6 +300,13 @@ void FKIN_SOL(realtype *uu, int *globalstrategy,
   }
   N_VSetArrayPointer(fscale, fscalevec);
 
+  /* If using the fixed-point solver, initialize F2C_KINSOL_linsol 
+     and F2C_KINSOL_matrix to NULL */
+  if (*globalstrategy == KIN_FP) {
+    FKINNullMatrix();
+    FKINNullLinsol();
+  }
+  
   /* Call main solver function */
   *ier = KINSol(KIN_kinmem, uuvec, *globalstrategy, uscalevec, fscalevec);
 
@@ -398,72 +328,64 @@ void FKIN_SOL(realtype *uu, int *globalstrategy,
   KINGetFuncNorm(KIN_kinmem, &KIN_rout[0]);                  /* FNORM */
   KINGetStepLength(KIN_kinmem, &KIN_rout[1]);                /* SSTEP */
 
-  switch(KIN_ls) {
-
-  case KIN_LS_DENSE:
-  case KIN_LS_BAND:
-  case KIN_LS_LAPACKDENSE:
-  case KIN_LS_LAPACKBAND:
-    KINDlsGetWorkSpace(KIN_kinmem, &KIN_iout[6], &KIN_iout[7]); /* LRW & LIW */
-    KINDlsGetLastFlag(KIN_kinmem, &KIN_iout[8]);                /* LSTF */
-    KINDlsGetNumFuncEvals(KIN_kinmem, &KIN_iout[9]);            /* NFE */
-    KINDlsGetNumJacEvals(KIN_kinmem, &KIN_iout[10]);            /* NJE */    
-  case KIN_LS_KLU:
-  case KIN_LS_SUPERLUMT:
-    KINSlsGetLastFlag(KIN_kinmem, &KIN_iout[8]);                /* LSTF  */
-    KINSlsGetNumJacEvals(KIN_kinmem, &KIN_iout[10]);            /* NJE   */
-    break;
-  case KIN_LS_SPTFQMR:
-  case KIN_LS_SPBCG:
-  case KIN_LS_SPFGMR:
-  case KIN_LS_SPGMR:
-    KINSpilsGetWorkSpace(KIN_kinmem, &KIN_iout[6], &KIN_iout[7]); /* LRW & LIW */
-    KINSpilsGetLastFlag(KIN_kinmem, &KIN_iout[8]);                /* LSTF */
-    KINSpilsGetNumFuncEvals(KIN_kinmem, &KIN_iout[9]);            /* NFE */
-    KINSpilsGetNumJtimesEvals(KIN_kinmem, &KIN_iout[10]);         /* NJE */
-    KINSpilsGetNumPrecEvals(KIN_kinmem, &KIN_iout[11]);           /* NPE */
-    KINSpilsGetNumPrecSolves(KIN_kinmem, &KIN_iout[12]);          /* NPS */
-    KINSpilsGetNumLinIters(KIN_kinmem, &KIN_iout[13]);            /* NLI */
-    KINSpilsGetNumConvFails(KIN_kinmem, &KIN_iout[14]);           /* NCFL */
-    break;
-
-  }
+  KINGetLinWorkSpace(KIN_kinmem, &KIN_iout[6], &KIN_iout[7]); /* LRW & LIW */
+  KINGetLastLinFlag(KIN_kinmem, &KIN_iout[8]);                /* LSTF */
+  KINGetNumLinFuncEvals(KIN_kinmem, &KIN_iout[9]);            /* NFE */
+  KINGetNumJacEvals(KIN_kinmem, &KIN_iout[10]);               /* NJE */    
+  KINGetNumJtimesEvals(KIN_kinmem, &KIN_iout[11]);            /* NJT */
+  KINGetNumPrecEvals(KIN_kinmem, &KIN_iout[12]);              /* NPE */
+  KINGetNumPrecSolves(KIN_kinmem, &KIN_iout[13]);             /* NPS */
+  KINGetNumLinIters(KIN_kinmem, &KIN_iout[14]);               /* NLI */
+  KINGetNumLinConvFails(KIN_kinmem, &KIN_iout[15]);           /* NCFL */
 
   return;
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_FREE
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_FREE
+  ------------------------------------------------------------------*/
 
 void FKIN_FREE(void)
 {
+  KINMem kin_mem;
 
-  /* call KINFree: KIN_kinmem is the pointer to the KINSOL memory block */
+  kin_mem = (KINMem) KIN_kinmem;
 
+  /* free LS interface */
+  if (kin_mem->kin_lfree)
+    kin_mem->kin_lfree(kin_mem);
+  kin_mem->kin_lmem = NULL;
+
+  /* free user_data structure */
+  if (kin_mem->kin_user_data)
+    free(kin_mem->kin_user_data);
+  kin_mem->kin_user_data = NULL;
+
+  /* free main solver memory structure */
   KINFree(&KIN_kinmem);
 
-  N_VSetArrayPointer(NULL , F2C_KINSOL_vec);
+  /* free interface vectors / matrices / linear solvers */
+  N_VSetArrayPointer(NULL, F2C_KINSOL_vec);
   N_VDestroy(F2C_KINSOL_vec);
+  if (F2C_KINSOL_matrix)
+    SUNMatDestroy(F2C_KINSOL_matrix);
+  if (F2C_KINSOL_linsol)
+    SUNLinSolFree(F2C_KINSOL_linsol);
 
   return;
 }
 
 
-/*
- * ----------------------------------------------------------------
- * Function : FKINfunc
- * ----------------------------------------------------------------
- * The C function FKINfunc acts as an interface between KINSOL and
- * the Fortran user-supplied subroutine FKFUN. Addresses of the
- * data uu and fdata are passed to FKFUN, using the routine
- * N_VGetArrayPointer from the NVECTOR module. The data in the
- * returned N_Vector fval is set using N_VSetArrayPointer. Auxiliary
- * data is assumed to be communicated by 'Common'.
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKINfunc
+  ------------------------------------------------------------------
+  The C function FKINfunc acts as an interface between KINSOL and
+  the Fortran user-supplied subroutine FKFUN. Addresses of the
+  data uu and fdata are passed to FKFUN, using the routine
+  N_VGetArrayPointer from the NVECTOR module. The data in the
+  returned N_Vector fval is set using N_VSetArrayPointer. Auxiliary
+  data is assumed to be communicated by 'Common'.
+  ------------------------------------------------------------------*/
 
 int FKINfunc(N_Vector uu, N_Vector fval, void *user_data)
 {

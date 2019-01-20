@@ -1,10 +1,7 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 4075 $
- * $Date: 2014-04-24 10:46:58 -0700 (Thu, 24 Apr 2014) $
- * -----------------------------------------------------------------
+/* -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh and
  *                Radu Serban @ LLNL
+ *                David J. Gardner @ LLNL
  * -----------------------------------------------------------------
  * LLNS Copyright Start
  * Copyright (c) 2014, Lawrence Livermore National Security
@@ -18,8 +15,7 @@
  * -----------------------------------------------------------------
  * Routines used to interface between KINSOL and a Fortran
  * user-supplied routine FKJTIMES (Jacobian J times vector v).
- * -----------------------------------------------------------------
- */
+ * -----------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,47 +23,46 @@
 #include "fkinsol.h"
 #include "kinsol_impl.h"
 
-#include <kinsol/kinsol_spils.h>
+#include <kinsol/kinsol_ls.h>
 
-/*
- * ----------------------------------------------------------------
- * prototype of the user-supplied fortran routine
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  prototype of the user-supplied fortran routine
+  ------------------------------------------------------------------*/
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
 
-extern void FK_JTIMES(realtype*, realtype*, int*, realtype*, int*);
+extern void FK_JTIMES(realtype* vdata, realtype* Jvdata, int* new_uu,
+                      realtype* uudata, int* ier);
 
 #ifdef __cplusplus
 }
 #endif
 
-/*
- * ----------------------------------------------------------------
- * Function : FKIN_SPILSSETJAC
- * ----------------------------------------------------------------
- */
-
-void FKIN_SPILSSETJAC(int *flag, int *ier)
+/*------------------------------------------------------------------
+  Function : FKIN_LSSETJAC
+  ------------------------------------------------------------------*/
+void FKIN_LSSETJAC(int *flag, int *ier)
 {
-  if ((*flag) == 0) KINSpilsSetJacTimesVecFn(KIN_kinmem, NULL);
-  else              KINSpilsSetJacTimesVecFn(KIN_kinmem, FKINJtimes);
+  if ((*flag) == 0) KINSetJacTimesVecFn(KIN_kinmem, NULL);
+  else              KINSetJacTimesVecFn(KIN_kinmem, FKINJtimes);
 
   return;
 }
 
-/*
- * ----------------------------------------------------------------
- * Function : FKINJtimes
- * ----------------------------------------------------------------
- * C function FKINJtimes is used to interface between
- * KINSp* / KINSp*JTimes and FK_JTIMES (user-supplied Fortran
- * routine).
- * ----------------------------------------------------------------
- */
+/*------------------------------------------------------------------
+  Function : FKIN_SPILSSETJAC -- DEPRECATED
+  ------------------------------------------------------------------*/
+void FKIN_SPILSSETJAC(int *flag, int *ier)
+{ FKIN_LSSETJAC(flag, ier); }
 
+/*------------------------------------------------------------------
+  Function : FKINJtimes
+  ------------------------------------------------------------------
+  C function FKINJtimes is used to interface between
+  KINSp* / KINSp*JTimes and FK_JTIMES (user-supplied Fortran
+  routine).
+  ------------------------------------------------------------------*/
 int FKINJtimes(N_Vector v, N_Vector Jv,
                N_Vector uu, booleantype *new_uu, 
                void *user_data)

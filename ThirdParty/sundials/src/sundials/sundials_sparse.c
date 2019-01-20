@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4761 $
- * $Date: 2016-05-18 20:00:35 -0700 (Wed, 18 May 2016) $
+ * $Revision$
+ * $Date$
  * -----------------------------------------------------------------
  * Programmers: Carol Woodward, Slaven Peles @ LLNL
  *              Daniel R. Reynolds @ SMU
@@ -309,8 +309,8 @@ int SparseCopyMat(const SlsMat A, SlsMat B)
   /* ensure that B is allocated with at least as 
      much memory as we have nonzeros in A */
   if (B->NNZ < A_nz) {
-    B->indexvals = realloc(B->indexvals, A_nz*sizeof(int));
-    B->data = realloc(B->data, A_nz*sizeof(realtype));
+    B->indexvals = (int *) realloc(B->indexvals, A_nz*sizeof(int));
+    B->data = (realtype *) realloc(B->data, A_nz*sizeof(realtype));
     B->NNZ = A_nz;
   }
 
@@ -702,8 +702,8 @@ int SparseReallocMat(SlsMat A)
   int nzmax; 
 
   nzmax = A->indexptrs[A->NP];
-  A->indexvals = realloc(A->indexvals, nzmax*sizeof(int));
-  A->data = realloc(A->data, nzmax*sizeof(realtype));
+  A->indexvals = (int *) realloc(A->indexvals, nzmax*sizeof(int));
+  A->data = (realtype *) realloc(A->data, nzmax*sizeof(realtype));
   A->NNZ = nzmax;
   
   return 0;

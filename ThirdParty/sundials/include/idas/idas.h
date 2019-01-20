@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4845 $
- * $Date: 2016-08-03 15:45:09 -0700 (Wed, 03 Aug 2016) $
+ * $Revision$
+ * $Date$
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
@@ -35,6 +35,8 @@
 
 #include <stdio.h>
 #include <sundials/sundials_nvector.h>
+#include <sundials/sundials_nonlinearsolver.h>
+#include <idas/idas_ls.h>
 
 #ifdef __cplusplus     /* wrapper to enable C++ usage */
 extern "C" {
@@ -105,6 +107,8 @@ extern "C" {
 #define IDA_FIRST_RES_FAIL  -12
 #define IDA_LINESEARCH_FAIL -13
 #define IDA_NO_RECOVERY     -14
+#define IDA_NLS_INIT_FAIL   -15
+#define IDA_NLS_SETUP_FAIL  -16
 
 #define IDA_MEM_NULL        -20
 #define IDA_MEM_FAIL        -21
@@ -114,6 +118,7 @@ extern "C" {
 #define IDA_BAD_K           -25
 #define IDA_BAD_T           -26
 #define IDA_BAD_DKY         -27
+#define IDA_VECTOROP_ERR    -28
 
 #define IDA_NO_QUAD         -30
 #define IDA_QRHS_FAIL       -31
@@ -130,7 +135,7 @@ extern "C" {
 #define IDA_FIRST_QSRHS_ERR -52
 #define IDA_REP_QSRHS_ERR   -53
 
-#define IDA_UNRECONGISED_ERROR -99
+#define IDA_UNRECOGNIZED_ERROR -99
 
 /*
  * -----------------------------------------
@@ -473,9 +478,9 @@ SUNDIALS_EXPORT void *IDACreate(void);
  * IDASetSuppressAlg    | flag to indicate whether or not to      
  *                      | suppress algebraic variables in the     
  *                      | local error tests:                      
- *                      | FALSE = do not suppress;                 
- *                      | TRUE = do suppress;                     
- *                      | [FALSE]                                 
+ *                      | SUNFALSE = do not suppress;                 
+ *                      | SUNTRUE = do suppress;                     
+ *                      | [SUNFALSE]                                 
  *                      | NOTE: if suppressed algebraic variables 
  *                      | is selected, the nvector 'id' must be   
  *                      | supplied for identification of those    
@@ -698,18 +703,21 @@ SUNDIALS_EXPORT int IDAWFtolerances(void *ida_mem, IDAEwtFn efun);
  *                        |                                        
  * IDASetLineSearchOffIC  | a boolean flag to turn off the        
  *                        | linesearch algorithm.                 
- *                        | [FALSE]                               
+ *                        | [SUNFALSE]                               
  *                        |                                        
  * IDASetStepToleranceIC  | positive lower bound on the norm of   
  *                        | a Newton step.                        
  *                        | [(unit roundoff)^(2/3)                
- *                                                                
+ *                        |                                        
+ * IDASetMaxBacksIC       | maximum number of linesearch backtrack
+ *                        | operations per Newton iteration.
+ *                        | [100]
+ *
  * ---------------------------------------------------------------- 
  * Return flag:
  *   IDA_SUCCESS   if successful
  *   IDA_MEM_NULL  if the IDAS memory is NULL
  *   IDA_ILL_INPUT if an argument has an illegal value
- *
  * ----------------------------------------------------------------
  */
 
@@ -719,6 +727,7 @@ SUNDIALS_EXPORT int IDASetMaxNumJacsIC(void *ida_mem, int maxnj);
 SUNDIALS_EXPORT int IDASetMaxNumItersIC(void *ida_mem, int maxnit);
 SUNDIALS_EXPORT int IDASetLineSearchOffIC(void *ida_mem, booleantype lsoff);
 SUNDIALS_EXPORT int IDASetStepToleranceIC(void *ida_mem, realtype steptol);
+SUNDIALS_EXPORT int IDASetMaxBacksIC(void *ida_mem, int maxbacks);
 
 /*
  * -----------------------------------------------------------------
@@ -765,7 +774,7 @@ SUNDIALS_EXPORT int IDARootInit(void *ida_mem, int nrtfn, IDARootFn g);
  *                      | the error control?
  *                      | If yes, set tolerances for quadrature
  *                      | integration. 
- *                      | [errconQ = FALSE]
+ *                      | [errconQ = SUNFALSE]
  *                      |
  * -----------------------------------------------------------------
  * If successful, the function return IDA_SUCCESS. If an argument
@@ -863,7 +872,7 @@ SUNDIALS_EXPORT int IDAQuadSVtolerances(void *ida_mem, realtype reltolQ, N_Vecto
  *                          |                                         
  * IDASetSensErrCon         | are sensitivity variables considered in 
  *                          | the error control?                      
- *                          | [TRUE]                                  
+ *                          | [SUNTRUE]                                  
  *                          |                                         
  * IDASetSensMaxNonlinIters | Maximum number of nonlinear solver  
  *                          | iterations for sensitivity systems  
@@ -1708,6 +1717,19 @@ SUNDIALS_EXPORT void IDASensFree(void *ida_mem);
 
 SUNDIALS_EXPORT void IDAQuadSensFree(void* ida_mem);
 
+/*
+ * ----------------------------------------------------------------
+ * Function : IDASetNonlinearSolver*
+ * ----------------------------------------------------------------
+ * Set the nonlinear solver in IDAS
+ * ----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT int IDASetNonlinearSolver(void *ida_mem, SUNNonlinearSolver NLS);
+SUNDIALS_EXPORT int IDASetNonlinearSolverSensSim(void *ida_mem, SUNNonlinearSolver NLS);
+SUNDIALS_EXPORT int IDASetNonlinearSolverSensStg(void *ida_mem, SUNNonlinearSolver NLS);
+
+
 /* 
  * =================================================================
  *
@@ -1956,6 +1978,9 @@ SUNDIALS_EXPORT int IDASetConstraintsB(void *ida_mem, int which,
                                        N_Vector constraintsB);
 
 SUNDIALS_EXPORT int IDASetQuadErrConB(void *ida_mem, int which, int errconQB);
+
+SUNDIALS_EXPORT int IDASetNonlinearSolverB(void *ida_mem, int which,
+                                           SUNNonlinearSolver NLS);
 
 /*
  * =================================================================

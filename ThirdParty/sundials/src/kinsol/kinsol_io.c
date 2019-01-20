@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4368 $
- * $Date: 2015-02-12 12:25:15 -0800 (Thu, 12 Feb 2015) $
+ * $Revision$
+ * $Date$
  * -----------------------------------------------------------------
  * Programmer(s): Allan Taylor, Alan Hindmarsh, Radu Serban, and
  *                Aaron Collier @ LLNL
@@ -214,7 +214,7 @@ int KINSetMAA(void *kinmem, long int maa)
 
   kin_mem = (KINMem) kinmem;
   kin_mem->kin_m_aa = maa;
-  kin_mem->kin_aamem_aa = (maa == 0) ? FALSE : TRUE;
+  kin_mem->kin_aamem_aa = (maa == 0) ? SUNFALSE : SUNTRUE;
 
   return(KIN_SUCCESS);
 }
@@ -768,7 +768,7 @@ int KINSetConstraints(void *kinmem, N_Vector constraints)
       lrw -= lrw1;
       liw -= liw1;
     }
-    kin_mem->kin_constraintsSet = FALSE;
+    kin_mem->kin_constraintsSet = SUNFALSE;
     return(KIN_SUCCESS);
   }
 
@@ -784,7 +784,7 @@ int KINSetConstraints(void *kinmem, N_Vector constraints)
     kin_mem->kin_constraints = N_VClone(constraints);
     lrw += lrw1;
     liw += liw1;
-    kin_mem->kin_constraintsSet = TRUE;
+    kin_mem->kin_constraintsSet = SUNTRUE;
   }
 
   /* Load the constraint vector */
