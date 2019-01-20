@@ -10,7 +10,7 @@
 #include <cstring>
 
 #include <sundials/sundials_spgmr.h>
-#include <cvodes/cvodes_spils.h>
+#include <sunlinsol/sunlinsol_spgmr.h>
 
 namespace amici {
 
@@ -254,17 +254,17 @@ void Solver::initializeLinearSolver(const Model *model) {
             /* ITERATIVE SOLVERS */
             
         case LinearSolver::SPGMR:
-            spgmr(PREC_NONE, CVSPILS_MAXL);
+            spgmr(PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
             setJacTimesVecFn();
             break;
             
         case LinearSolver::SPBCG:
-            spbcg(PREC_NONE, CVSPILS_MAXL);
+            spbcg(PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
             setJacTimesVecFn();
             break;
             
         case LinearSolver::SPTFQMR:
-            sptfqmr(PREC_NONE, CVSPILS_MAXL);
+            sptfqmr(PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
             setJacTimesVecFn();
             break;
             
@@ -335,17 +335,17 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
             /* ITERATIVE SOLVERS */
             
         case LinearSolver::SPGMR:
-            spgmrB(which, PREC_NONE, CVSPILS_MAXL);
+            spgmrB(which, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
             setJacTimesVecFnB(which);
             break;
             
         case LinearSolver::SPBCG:
-            spbcgB(which, PREC_NONE, CVSPILS_MAXL);
+            spbcgB(which, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
             setJacTimesVecFnB(which);
             break;
             
         case LinearSolver::SPTFQMR:
-            sptfqmrB(which, PREC_NONE, CVSPILS_MAXL);
+            sptfqmrB(which, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
             setJacTimesVecFnB(which);
             break;
             
