@@ -2,16 +2,16 @@
 #include "amici/model_ode.h"
 
 namespace amici {
-    
+
     void Model_ODE::fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                           AmiVector *xdot, SUNMatrix J) {
         fJ(t, x->getNVector(), xdot->getNVector(), J);
-        
+
     }
-    
-    /** implementation of fJ at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation aswell as the AmiVector
-     * level implementation
+
+    /** implementation of fJ at the N_Vector level, this function provides an
+     *interface to the model specific routines for the solver implementation
+     *aswell as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
@@ -19,37 +19,38 @@ namespace amici {
      **/
     void Model_ODE::fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J) {
         auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
+        fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
-fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-           w.data(),dwdx.data());
+        fJ(SM_DATA_D(J), t, N_VGetArrayPointer(x_pos),
+           unscaledParameters.data(), fixedParameters.data(), h.data(),
+           w.data(), dwdx.data());
     }
-    
-    void Model_ODE::fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                        AmiVector *xdot, SUNMatrix J){
-        fJSparse(t,x->getNVector(),J);
+
+    void Model_ODE::fJSparse(realtype t, realtype cj, AmiVector *x,
+                             AmiVector *dx, AmiVector *xdot, SUNMatrix J) {
+        fJSparse(t, x->getNVector(), J);
     }
-    
-    /** implementation of fJSparse at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation aswell as the AmiVector
-     * level implementation
+
+    /** implementation of fJSparse at the N_Vector level, this function provides
+     * an interface to the model specific routines for the solver implementation
+     * aswell as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param J Matrix to which the Jacobian will be written
      */
     void Model_ODE::fJSparse(realtype t, N_Vector x, SUNMatrix J) {
         auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
+        fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
-        fJSparse(SM_DATA_S(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                 w.data(),dwdx.data());
+        fJSparse(J, t, N_VGetArrayPointer(x_pos), unscaledParameters.data(),
+                 fixedParameters.data(), h.data(), w.data(), dwdx.data());
     }
-    
+
     void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
                         AmiVector *v, AmiVector *Jv, realtype cj){
         fJv(v->getNVector(),Jv->getNVector(),t,x->getNVector());
     }
-    
+
     /** implementation of fJv at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation aswell as the AmiVector
      * level implementation
@@ -66,11 +67,11 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
         fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
             N_VGetArrayPointer(v),w.data(),dwdx.data());
     }
-    
+
     void Model_ODE::froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root){
         froot(t,x->getNVector(),root);
     }
-    
+
     /** implementation of froot at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation aswell as the AmiVector
      * level implementation
@@ -83,11 +84,11 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
         memset(root,0.0,sizeof(realtype)*ne);
         froot(root,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data());
     }
-    
+
     void Model_ODE::fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) {
         fxdot(t,x->getNVector(),xdot->getNVector());
     }
-    
+
     /** implementation of fxdot at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation aswell as the AmiVector
      * level implementation
@@ -102,7 +103,7 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
         fxdot(N_VGetArrayPointer(xdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                      w.data());
     }
-    
+
     /** diagonalized Jacobian (for preconditioning)
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
@@ -117,7 +118,7 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
         if(checkFinite(nx_solver,JDiag->data(),"Jacobian") != AMICI_SUCCESS)
             throw AmiException("Evaluation of fJDiag failed!");
     }
-    
+
     /** Sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states
@@ -131,44 +132,48 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
             fdxdotdp(&dxdotdp.at(nx_solver*ip),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                      plist_[ip],w.data(),dwdp.data());
     }
-    
+
     std::unique_ptr<Solver> Model_ODE::getSolver() {
         return std::unique_ptr<Solver>(new amici::CVodeSolver());
     }
-    
-    /** implementation of fJB at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation
+
+    /** implementation of fJB at the N_Vector level, this function provides an
+     *interface to the model specific routines for the solver implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
      **/
-    void Model_ODE::fJB( realtype t, N_Vector x, N_Vector xB,
-                         N_Vector xBdot, DlsMat JB) {
+    void Model_ODE::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                        SUNMatrix JB) {
         auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
-        SetToZero(JB);
-        fJB(JB->data,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                   N_VGetArrayPointer(xB),w.data(),dwdx.data());
+        fdwdx(t, N_VGetArrayPointer(x_pos));
+        SUNMatZero(JB);
+        fJB(SM_DATA_D(JB), t, N_VGetArrayPointer(x_pos),
+            unscaledParameters.data(), fixedParameters.data(), h.data(),
+            N_VGetArrayPointer(xB), w.data(), dwdx.data());
     }
-    
-    /** implementation of fJSparseB at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation
+
+    /** implementation of fJSparseB at the N_Vector level, this function
+     * provides an interface to the model specific routines for the solver
+     * implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
      */
-    void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SlsMat JB) {
+    void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB,
+                              N_Vector xBdot, SUNMatrix JB) {
         auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
-        SparseSetMatToZero(JB);
-        fJSparseB(JB,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                         N_VGetArrayPointer(xB),w.data(),dwdx.data());
+        fdwdx(t, N_VGetArrayPointer(x_pos));
+        SUNMatZero(JB);
+        fJSparseB(JB, t, N_VGetArrayPointer(x_pos), unscaledParameters.data(),
+                  fixedParameters.data(), h.data(), N_VGetArrayPointer(xB),
+                  w.data(), dwdx.data());
     }
-    
+
     /** implementation of fJDiag at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation
      * @param t timepoint
@@ -182,7 +187,7 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
         fJDiag(N_VGetArrayPointer(JDiag),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                       w.data(),dwdx.data());
     }
-    
+
     /** implementation of fJvB at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation
      * @param t timepoint
@@ -199,7 +204,7 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
         fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                     N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),w.data(),dwdx.data());
     }
-    
+
     /** implementation of fxBdot at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation
      * @param t timepoint
@@ -214,7 +219,7 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
         fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                       N_VGetArrayPointer(xB),w.data(),dwdx.data());
     }
-    
+
     /** implementation of fqBdot at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation
      * @param t timepoint
@@ -231,12 +236,12 @@ fJ(SM_DATA_D(J),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParam
             fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                           N_VGetArrayPointer(xB),w.data(),dwdp.data());
     }
-    
+
     void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
                            AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) {
         fsxdot(t,x->getNVector(), ip, sx->getNVector(), sxdot->getNVector());
     }
-    
+
     /** implementation of fsxdot at the N_Vector level, this function provides an interface
      * to the model specific routines for the solver implementation
      * @param t timepoint

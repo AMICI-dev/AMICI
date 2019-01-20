@@ -3,9 +3,7 @@
 
 #include "amici/solver.h"
 
-#include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_sparse.h>
-#include <sunmatrix/sunmatrix_dense.h>
+#include <sundials/sundials_matrix.h>
 
 namespace amici {
 

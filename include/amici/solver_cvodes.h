@@ -5,6 +5,8 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 
+#include <sundials/sundials_matrix.h>
+
 namespace amici {
 
 class ExpData;
