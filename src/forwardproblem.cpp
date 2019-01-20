@@ -245,7 +245,6 @@ void ForwardProblem::handlePresimulation(int *ncheck)
     t = model->t0() - edata->t_presim;
     updateAndReinitStatesAndSensitivities();
 
-
     if (solver->getSensitivityMethod() == SensitivityMethod::adjoint &&
         solver->getSensitivityOrder() >= SensitivityOrder::first) {
         solver->solveF(RCONST(model->t0()), &x, &dx,
