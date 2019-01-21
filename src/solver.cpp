@@ -24,8 +24,8 @@ Solver::Solver(const Solver &other) : Solver()
     rtol = other.rtol;
     atol_fsa = other.atol_fsa;
     rtol_fsa = other.rtol_fsa;
-    atol_asa = other.atol_asa;
-    rtol_asa = other.rtol_asa;
+    atolB = other.atolB;
+    rtolB = other.rtolB;
     quad_atol = other.quad_atol;
     quad_rtol = other.quad_rtol;
     ss_atol = other.ss_atol;
@@ -392,8 +392,8 @@ bool operator ==(const Solver &a, const Solver &b)
                 b.getRelativeToleranceSteadyStateSensi())
             && (a.rtol_fsa == b.rtol_fsa || (isNaN(a.rtol_fsa) && isNaN(b.rtol_fsa)))
             && (a.atol_fsa == b.atol_fsa || (isNaN(a.atol_fsa) && isNaN(b.atol_fsa)))
-            && (a.rtol_asa == b.rtol_asa || (isNaN(a.rtol_asa) && isNaN(b.rtol_asa)))
-            && (a.atol_asa == b.atol_asa || (isNaN(a.atol_asa) && isNaN(b.atol_asa)))
+            && (a.rtolB == b.rtolB || (isNaN(a.rtolB) && isNaN(b.rtolB)))
+            && (a.atolB == b.atolB || (isNaN(a.atolB) && isNaN(b.atolB)))
             && (a.sensi == b.sensi)
             && (a.sensi_meth == b.sensi_meth);
 }
@@ -427,7 +427,7 @@ void Solver::applyTolerancesASA(int which) {
         return;
     
     /* specify integration tolerances for backward problem */
-    setSStolerancesB(which, RCONST(getRelativeToleranceASA()), RCONST(getAbsoluteToleranceASA()));
+    setSStolerancesB(which, RCONST(getRelativeToleranceB()), RCONST(getAbsoluteToleranceB()));
 }
     
 void Solver::applyQuadTolerancesASA(int which) {
@@ -570,34 +570,34 @@ void Solver::setAbsoluteToleranceFSA(double atol) {
     }
 }
 
-double Solver::getRelativeToleranceASA() const
+double Solver::getRelativeToleranceB() const
 {
-    return isNaN(rtol_asa) ? rtol : rtol_asa;
+    return isNaN(rtolB) ? rtol : rtolB;
 }
 
-void Solver::setRelativeToleranceASA(double rtol)
+void Solver::setRelativeToleranceB(double rtol)
 {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
 
-    rtol_asa = rtol;
+    rtolB = rtol;
 
     if(getMallocDone()) {
         applySensitivityTolerances();
     }
 }
 
-double Solver::getAbsoluteToleranceASA() const
+double Solver::getAbsoluteToleranceB() const
 {
-    return isNaN(atol_asa) ? atol : atol_asa;
+    return isNaN(atolB) ? atol : atolB;
 }
 
-void Solver::setAbsoluteToleranceASA(double atol)
+void Solver::setAbsoluteToleranceB(double atol)
 {
     if(atol < 0)
         throw AmiException("atol must be a non-negative number");
 
-    atol_asa = atol;
+    atolB = atol;
 
     if(getMallocDone()) {
         applySensitivityTolerances();

@@ -375,25 +375,27 @@ class Solver {
      * @brief Returns the relative tolerances for the adjoint sensitivity problem
      * @return relative tolerances
      */
-    double getRelativeToleranceASA() const;
+    double getRelativeToleranceB() const;
 
     /**
      * @brief Sets the relative tolerances for the adjoint sensitivity problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceASA(double rtol);
+    void setRelativeToleranceB(double rtol);
 
     /**
-     * @brief Returns the absolute tolerances for the adjoint sensitivity problem
+     * @brief Returns the absolute tolerances for the backward problem for
+     * adjoint sensitivity analysis
      * @return absolute tolerances
      */
-    double getAbsoluteToleranceASA() const;
+    double getAbsoluteToleranceB() const;
 
     /**
-     * @brief Sets the absolute tolerances for the adjoint sensitivity problem
+     * @brief Sets the absolute tolerances for the backward problem for
+     * adjoint sensitivity analysis
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceASA(double atol);
+    void setAbsoluteToleranceB(double atol);
 
     /**
      * @brief Returns the relative tolerance for the quadrature problem
@@ -1223,10 +1225,10 @@ private:
     double rtol_fsa = NAN;
 
     /** absolute tolerances for adjoint sensitivity integration */
-    double atol_asa = NAN;
+    double atolB = NAN;
 
     /** relative tolerances for adjoint sensitivity integration */
-    double rtol_asa = NAN;
+    double rtolB = NAN;
 
     /** absolute tolerances for backward quadratures */
     double quad_atol = 1e-12;
