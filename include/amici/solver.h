@@ -31,9 +31,14 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version);
 
 namespace amici {
 
-/** Solver class.
- * provides a generic interface to CVode and IDA solvers, individual realizations
- * are realized in the CVodeSolver and the IDASolver class.
+/**
+ * The Solver class provides a generic interface to CVode and IDA solvers,
+ * individual realizations are realized in the CVodeSolver and the IDASolver
+ * class.
+ *
+ * NOTE: Any changes in data members here must be propagated to copy ctor,
+ * equality operator, serialization functions in serialization.h, and
+ * amici::hdf5::readSolverSettingsFromHDF5 in hdf5.cpp.
  */
 class Solver {
   public:
@@ -65,7 +70,7 @@ class Solver {
     void setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArray *sdx, Model *model);
 
     /**
-     * setupAMIB initialises the AMI memory object for the backwards problem
+     * @brief Initialises the AMI memory object for the backwards problem
      * @param bwd pointer to backward problem
      * @param model pointer to the model object
      */
@@ -73,7 +78,7 @@ class Solver {
     void setupAMIB(BackwardProblem *bwd, Model *model);
 
     /**
-     * getSens extracts diagnosis information from solver memory block and
+     * @brief Extracts diagnosis information from solver memory block and
      * writes them into the return data instance
      *
      * @param tret time at which the sensitivities should be computed
@@ -82,7 +87,7 @@ class Solver {
     virtual void getSens(realtype *tret, AmiVectorArray *yySout) const = 0;
 
     /**
-     * getDiagnosis extracts diagnosis information from solver memory block and
+     * @brief Extracts diagnosis information from solver memory block and
      * writes them into the return data object
      *
      * @param it time-point index
@@ -91,7 +96,7 @@ class Solver {
     void getDiagnosis(const int it, ReturnData *rdata) const;
 
     /**
-     * getDiagnosisB extracts diagnosis information from solver memory block and
+     * @brief Extracts diagnosis information from solver memory block and
      * writes them into the return data object for the backward problem
      *
      * @param it time-point index
@@ -109,7 +114,7 @@ class Solver {
     virtual void getRootInfo(int *rootsfound) const = 0;
 
     /**
-     * ReInit reinitializes the states in the solver after an event occurence
+     * @brief Reinitializes the states in the solver after an event occurence
      *
      * @param t0 new timepoint
      * @param yy0 new state variables
@@ -118,7 +123,7 @@ class Solver {
     virtual void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) = 0;
 
     /**
-     * SensReInit reinitializes the state sensitivites in the solver after an
+     * @brief Reinitializes the state sensitivites in the solver after an
      * event occurence
      *
      * @param yS0 new state sensitivity
@@ -137,8 +142,8 @@ class Solver {
     virtual void calcIC(realtype tout1, AmiVector *x, AmiVector *dx) = 0;
 
     /**
-      * CalcIBC calculates consistent initial conditions for the backwards
-     * problem, assumes initial states to be correct (DAE only)
+      * @brief Calculates consistent initial conditions for the backwards
+      * problem, assumes initial states to be correct (DAE only)
       *
       * @param which identifier of the backwards problem
       * @param tout1 next timepoint to be computed (sets timescale)
@@ -150,10 +155,9 @@ class Solver {
                            AmiVector *dxB) = 0;
 
     /**
-      * Solve solves the forward problem until a predefined timepoint
+      * @brief Solves the forward problem until a predefined timepoint
       *
       * @param tout timepoint until which simulation should be performed
-     *
       * @param yret states
       * @param ypret derivative states (DAE only)
       * @param tret pointer to the time variable
@@ -164,11 +168,10 @@ class Solver {
                          realtype *tret, int itask) = 0;
 
     /**
-      * SolveF solves the forward problem until a predefined timepoint
-     * (adjoint only)
+      * @brief Solves the forward problem until a predefined timepoint
+      * (adjoint only)
       *
       * @param tout timepoint until which simulation should be performed
-     *
       * @param yret states
       * @param ypret derivative states (DAE only)
       * @param tret pointer to the time variable
@@ -181,25 +184,23 @@ class Solver {
                           realtype *tret, int itask, int *ncheckPtr) = 0;
 
     /**
-      * SolveB solves the backward problem until a predefined timepoint
-     * (adjoint only)
+      * @brief solves the backward problem until a predefined timepoint
+      * (adjoint only)
       *
       * @param tBout timepoint until which simulation should be performed
-     *
       * @param itaskB task identifier, can be CV_NORMAL or CV_ONE_STEP
       */
     virtual void solveB(realtype tBout, int itaskB) = 0;
 
     /**
-      * SetStopTime sets a timepoint at which the simulation will be stopped
+      * @brief Sets a timepoint at which the simulation will be stopped
       *
       * @param tstop timepoint until which simulation should be performed
-     *
       */
     virtual void setStopTime(realtype tstop) = 0;
 
     /**
-      * ReInitB reinitializes the adjoint states after an event occurence
+      * @brief Reinitializes the adjoint states after an event occurence
       *
       * @param which identifier of the backwards problem
       * @param tB0 new timepoint
@@ -210,7 +211,7 @@ class Solver {
                            AmiVector *ypB0) = 0;
 
     /**
-      * getB returns the current adjoint states
+      * @brief Returns the current adjoint states
       *
       * @param which identifier of the backwards problem
       * @param tret time at which the adjoint states should be computed
@@ -221,7 +222,7 @@ class Solver {
                         AmiVector *yp) const = 0;
 
     /**
-      * getQuadB returns the current adjoint states
+      * @brief Returns the current adjoint states
       *
       * @param which identifier of the backwards problem
       * @param tret time at which the adjoint states should be computed
@@ -238,29 +239,32 @@ class Solver {
     virtual void quadReInitB(int which, AmiVector *yQB0) = 0;
 
     /**
-      * turnOffRootFinding disables rootfinding
+      * @brief Disables rootfinding
       */
     virtual void turnOffRootFinding() = 0;
 
-    /** sensitivity method
+    /**
+     * @brief Returns current sensitivity method
      * @return method enum
      */
     SensitivityMethod getSensitivityMethod() const;
 
     /**
-     * @brief setSensitivityMethod
+     * @brief Set sensitivity method
      * @param sensi_meth
      */
     void setSensitivityMethod(SensitivityMethod sensi_meth);
 
     /**
-     * @brief getNewtonMaxSteps
+     * @brief Get maximum number of allowed Newton steps for steady state
+     * computation
      * @return
      */
     int getNewtonMaxSteps() const;
 
     /**
-     * @brief setNewtonMaxSteps
+     * @brief Set maximum number of allowed Newton steps for steady state
+     * computation
      * @param newton_maxsteps
      */
     void setNewtonMaxSteps(int newton_maxsteps);
@@ -326,31 +330,55 @@ class Solver {
     void setAbsoluteTolerance(double atol);
 
     /**
-     * @brief returns the relative tolerances for the forward sensitivity problem
+     * @brief Returns the relative tolerances for the forward sensitivity problem
      * @return relative tolerances
      */
-    double getRelativeToleranceSensi() const;
+    double getRelativeToleranceFSA() const;
 
     /**
-     * @brief sets the relative tolerances for the forward sensitivity problem
+     * @brief Sets the relative tolerances for the forward sensitivity problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceSensi(double rtol);
+    void setRelativeToleranceFSA(double rtol);
 
     /**
-     * @brief returns the absolute tolerances for the forward sensitivity problem
+     * @brief Returns the absolute tolerances for the forward sensitivity problem
      * @return absolute tolerances
      */
-    double getAbsoluteToleranceSensi() const;
+    double getAbsoluteToleranceFSA() const;
 
     /**
-     * @brief sets the absolute tolerances for the forward sensitivity problem
+     * @brief Sets the absolute tolerances for the forward sensitivity problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceSensi(double atol);
+    void setAbsoluteToleranceFSA(double atol);
 
     /**
-     * @brief returns the relative tolerance for the quadrature problem
+     * @brief Returns the relative tolerances for the adjoint sensitivity problem
+     * @return relative tolerances
+     */
+    double getRelativeToleranceASA() const;
+
+    /**
+     * @brief Sets the relative tolerances for the adjoint sensitivity problem
+     * @param rtol relative tolerance (non-negative number)
+     */
+    void setRelativeToleranceASA(double rtol);
+
+    /**
+     * @brief Returns the absolute tolerances for the adjoint sensitivity problem
+     * @return absolute tolerances
+     */
+    double getAbsoluteToleranceASA() const;
+
+    /**
+     * @brief Sets the absolute tolerances for the adjoint sensitivity problem
+     * @param atol absolute tolerance (non-negative number)
+     */
+    void setAbsoluteToleranceASA(double atol);
+
+    /**
+     * @brief Returns the relative tolerance for the quadrature problem
      * @return relative tolerance
      */
     double getRelativeToleranceQuadratures() const;
@@ -1171,10 +1199,16 @@ private:
     double rtol = 1e-8;
 
     /** absolute tolerances for forward sensitivity integration */
-    double atol_sensi = NAN;
+    double atol_fsa = NAN;
 
     /** relative tolerances for forward sensitivity integration */
-    double rtol_sensi = NAN;
+    double rtol_fsa = NAN;
+
+    /** absolute tolerances for adjoint sensitivity integration */
+    double atol_asa = NAN;
+
+    /** relative tolerances for adjoint sensitivity integration */
+    double rtol_asa = NAN;
 
     /** absolute tolerances for backward quadratures */
     double quad_atol = 1e-12;
