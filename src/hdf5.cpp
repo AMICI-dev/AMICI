@@ -466,12 +466,21 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver, const st
         solver.setRelativeTolerance(getDoubleScalarAttribute(file, datasetPath, "rtol"));
     }
 
-    if(attributeExists(file, datasetPath, "atol_sensi")) {
-        solver.setAbsoluteToleranceSensi(getDoubleScalarAttribute(file, datasetPath, "atol_sensi"));
+    if(attributeExists(file, datasetPath, "atol_fsa")) {
+        solver.setAbsoluteToleranceFSA(getDoubleScalarAttribute(file, datasetPath, "atol_fsa"));
     }
 
-    if(attributeExists(file, datasetPath, "rtol_sensi")) {
-        solver.setRelativeToleranceSensi(getDoubleScalarAttribute(file, datasetPath, "rtol_sensi"));
+    if(attributeExists(file, datasetPath, "rtol_fsa")) {
+        solver.setRelativeToleranceFSA(getDoubleScalarAttribute(file, datasetPath, "rtol_fsa"));
+    }
+
+
+    if(attributeExists(file, datasetPath, "atolB")) {
+        solver.setAbsoluteToleranceB(getDoubleScalarAttribute(file, datasetPath, "atolB"));
+    }
+
+    if(attributeExists(file, datasetPath, "rtolB")) {
+        solver.setRelativeToleranceB(getDoubleScalarAttribute(file, datasetPath, "rtolB"));
     }
 
     if(attributeExists(file, datasetPath, "quad_atol")) {
