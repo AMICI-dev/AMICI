@@ -26,7 +26,7 @@ static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
 static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
-    
+
 static_assert((int)NonlinearSolverIteration::functional == CV_FUNCTIONAL, "");
 static_assert((int)NonlinearSolverIteration::newton == CV_NEWTON, "");
 
@@ -93,11 +93,11 @@ void ForwardProblem::workForwardProblem() {
     if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
         model->fsx_rdata(&sx_rdata, &sx);
     }
-    
+
     if(edata){
         rdata->initializeObjectiveFunction();
     }
-    
+
     /* if preequilibration is necessary, start Newton solver */
     if (solver->getNewtonPreequilibration() || (edata && !edata->fixedParametersPreequilibration.empty())) {
         handlePreequilibration();
@@ -113,9 +113,9 @@ void ForwardProblem::workForwardProblem() {
             }
         }
     }
-    
+
     int ncheck = 0; /* the number of (internal) checkpoints stored so far */
-    
+
     /* perform presimulation if necessary */
     if (edata && edata->t_presim > 0)
         handlePresimulation(&ncheck);
@@ -192,41 +192,49 @@ void ForwardProblem::handlePreequilibration()
 
     // pre-equilibrate
     SteadystateProblem sstate = SteadystateProblem(&t, &x, &sx);
-    
+
     sstate.workSteadyStateProblem(rdata, solver, model, -1);
 
     if(overrideFixedParameters) { // Restore
         model->setFixedParameters(originalFixedParameters);
     }
-    
+
     updateAndReinitStatesAndSensitivities();
 }
-    
-void ForwardProblem::updateAndReinitStatesAndSensitivities()
-{
+
+void ForwardProblem::updateAndReinitStatesAndSensitivities() {
+
+    rdata->x_ss = std::move(x_rdata.getVector());
+
     model->fx0_fixedParameters(&x);
     solver->reInit(t, &x, &dx);
     model->fx_rdata(&x_rdata, &x);
+
     rdata->x0 = std::move(x_rdata.getVector());
-    if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
+    if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
+        for (int ip = 0; ip < model->nplist(); ip++)
+            std::copy_n(sx_rdata.data(ip), rdata->nx,
+                        &rdata->sx_ss.at(ip * rdata->nx));
+
         model->fsx0_fixedParameters(&sx, &x);
         model->fsx_rdata(&sx_rdata, &sx);
+
         for (int ip = 0; ip < model->nplist(); ip++)
-            for (int ix = 0; ix < rdata->nx; ix++)
-                rdata->sx0[ip * rdata->nx + ix] = sx_rdata.at(ix, ip);
-        
-        if(solver->getSensitivityMethod() == SensitivityMethod::forward)
+            std::copy_n(sx_rdata.data(ip), rdata->nx,
+                        &rdata->sx0.at(ip * rdata->nx));
+
+        if (solver->getSensitivityMethod() == SensitivityMethod::forward)
             solver->sensReInit(&sx, &sdx);
     }
 }
-    
+
 void ForwardProblem::handlePresimulation(int *ncheck)
 {
     // Are there dedicated condition preequilibration parameters provided?
     bool overrideFixedParameters = edata && !edata->fixedParametersPresimulation.empty();
-    
+
     std::vector<realtype> originalFixedParameters; // to restore after pre-equilibration
-    
+
     if(overrideFixedParameters) {
         if(edata->fixedParametersPresimulation.size() != (unsigned) model->nk())
             throw AmiException("Number of fixed parameters (%d) in model does not match presimulation parameters in ExpData (%zd).",
@@ -236,7 +244,6 @@ void ForwardProblem::handlePresimulation(int *ncheck)
     }
     t = model->t0() - edata->t_presim;
     updateAndReinitStatesAndSensitivities();
-    
 
     if (solver->getSensitivityMethod() == SensitivityMethod::adjoint &&
         solver->getSensitivityOrder() >= SensitivityOrder::first) {
@@ -246,7 +253,7 @@ void ForwardProblem::handlePresimulation(int *ncheck)
         solver->solve(RCONST(model->t0()), &x, &dx,
                       &(t), AMICI_NORMAL);
     }
-    
+
     if(overrideFixedParameters) {
         model->setFixedParameters(originalFixedParameters);
     }
@@ -267,7 +274,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 
     /* store heaviside information at event occurence */
     model->froot(t, &x, &dx, rootvals.data());
-    
+
     if (!seflag) {
         solver->getRootInfo(rootsfound.data());
     }
@@ -294,7 +301,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         }
         *tlastroot = t;
     }
-    
+
     if(model->nz>0)
         getEventOutput();
 
@@ -399,7 +406,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     /**
      * evaluates the Jacobian and differential equation right hand side, stores it
-     * in rdata 
+     * in rdata
      */
 
     model->fxdot(t, &x, &dx, &xdot);
@@ -482,7 +489,7 @@ void ForwardProblem::prepEventSensis(int ie) {
 
     if(!edata)
         return;
-    
+
     for (int iz = 0; iz < model->nztrue; iz++) {
         if(model->z2event[iz] - 1 != ie)
             continue;
@@ -548,11 +555,11 @@ void ForwardProblem::handleDataPoint(int it) {
      */
     model->fx_rdata(&x_rdata, &x);
     std::copy_n(x_rdata.data(), rdata->nx, &rdata->x.at(it*rdata->nx));
-    
+
     if (model->t(it) > model->t0()) {
         solver->getDiagnosis(it, rdata);
     }
-    
+
     getDataOutput(it);
 }
 
@@ -568,7 +575,7 @@ void ForwardProblem::getDataOutput(int it) {
     model->fJy(it, rdata, edata);
     model->fres(it, rdata, edata);
     model->fchi2(it, rdata);
-    
+
     if (solver->getSensitivityOrder() >= SensitivityOrder::first && model->nplist() > 0) {
         prepDataSensis(it);
         if (solver->getSensitivityMethod() == SensitivityMethod::forward)
@@ -608,7 +615,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
     if (!std::isinf(model->t(it)) && model->t(it) > model->t0()) {
         solver->getSens(&(t), &sx);
     }
-    
+
     model->fsx_rdata(&sx_rdata, &sx);
     for (int ix = 0; ix < rdata->nx; ix++) {
         for (int ip = 0; ip < model->nplist(); ip++) {
@@ -616,7 +623,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
                     sx_rdata.at(ix,ip);
         }
     }
-    
+
     model->fdsigmaydp(it, rdata, edata);
 
     model->fsy(it, &sx, rdata);

@@ -79,8 +79,6 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                 throw;
             }
         }
-    } catch (...) {
-        throw AmiException("Internal error in steady state problem");
     }
     run_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
@@ -168,14 +166,14 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
             } catch (NewtonFailure const &ex) {
                 rdata->newton_numsteps.at(steadystate_try == NewtonStatus::newt
                                               ? 0
-                                              : 2) = static_cast<int>(getNaN());
+                                              : 2) = i_newtonstep;
                 throw;
             } catch (std::exception const &ex) {
                 rdata->newton_numsteps.at(steadystate_try == NewtonStatus::newt
                                               ? 0
-                                              : 2) = static_cast<int>(getNaN());
-                throw NewtonFailure(
-                    AMICI_ERROR, "Newton method failed to compute new step!");
+                                              : 2) = i_newtonstep;
+                throw AmiException("Newton solver failed to compute new step: "
+                                   "%s", ex.what());
             }
         }
 
@@ -278,7 +276,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         if (steps_newton >= solver->getMaxSteps() && !converged)
             throw NewtonFailure(AMICI_TOO_MUCH_WORK, "exceeded maximum number of steps");
     }
-    rdata->newton_numsteps.at(static_cast<int>(NewtonStatus::newt_sim)) =
+    rdata->newton_numsteps.at(static_cast<int>(NewtonStatus::newt_sim) - 1) =
         steps_newton;
     if (solver->getSensitivityOrder()>SensitivityOrder::none)
         solver->getSens(t, sx);

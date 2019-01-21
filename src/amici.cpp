@@ -81,7 +81,11 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     } catch (amici::IntegrationFailureB const& ex) {
         rdata->invalidateLLH();
         rdata->status = ex.error_code;
-        amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI backward simulation failed at t = %f:\n%s\n",ex.time,ex.what());
+        amici::warnMsgIdAndTxt(
+                    "AMICI:mex:simulation",
+                    "AMICI backward simulation failed when trying to solve until t = %f"
+                    " (see message above):\n%s\n",
+                    ex.time, ex.what());
     } catch (amici::AmiException const& ex) {
         rdata->invalidate(model.t0());
         rdata->status = AMICI_ERROR;
@@ -145,11 +149,19 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
 
 std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solver,
                                                               const std::vector<ExpData*> &edatas,
-                                                              const Model &model, int num_threads)
+                                                              const Model &model,
+#if defined(_OPENMP)
+                                                              int num_threads
+#else
+                                                              int /* num_threads */
+#endif
+)
 {
     std::vector<std::unique_ptr<ReturnData> > results(edatas.size());
 
+#if defined(_OPENMP)
     #pragma omp parallel for num_threads(num_threads)
+#endif
     for(int i = 0; i < (int)edatas.size(); ++i) {
         auto mySolver = std::unique_ptr<Solver>(solver.clone());
         auto myModel = std::unique_ptr<Model>(model.clone());
