@@ -3,6 +3,7 @@
 
 #include "amici/defines.h"
 #include "amici/vector.h"
+#include "amici/sundials_matrix_wrapper.h"
 
 #include <sundials/sundials_direct.h>
 #include <vector>
@@ -25,9 +26,7 @@ class ForwardProblem {
     ForwardProblem(ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver);
 
-    ~ForwardProblem() {
-        DestroyMat(Jtmp);
-    }
+    ~ForwardProblem() = default;
     
     void workForwardProblem();
         
@@ -217,7 +216,7 @@ class ForwardProblem {
     std::vector<int> rootsfound;
 
     /** temporary storage of Jacobian, kept here to avoid reallocation (dimension: nx x nx, col-major) */
-    DlsMat Jtmp;
+    SUNMatrixWrapper Jtmp;
     
     /** state vector (dimension: nx_solver) */
     AmiVector x;

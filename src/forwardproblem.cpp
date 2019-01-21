@@ -27,9 +27,6 @@ static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 
-static_assert((int)NonlinearSolverIteration::functional == CV_FUNCTIONAL, "");
-static_assert((int)NonlinearSolverIteration::newton == CV_NEWTON, "");
-
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 /**
@@ -58,7 +55,7 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       dJzdx(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
       t(model->t0()),
       rootsfound(model->ne, 0),
-      Jtmp(NewDenseMat(model->nx_solver,model->nx_solver)),
+      Jtmp(SUNMatrixWrapper(model->nx_solver,model->nx_solver)),
       x(model->nx_solver),
       x_rdata(model->nx_rdata),
       x_old(model->nx_solver),
@@ -405,18 +402,19 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 
 void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     /**
-     * evaluates the Jacobian and differential equation right hand side, stores it
-     * in rdata
+     * evaluates the Jacobian and differential equation right hand side, stores
+     * it in rdata
      */
 
     model->fxdot(t, &x, &dx, &xdot);
     rdata->xdot = xdot.getVector();
 
-    model->fJ(t, 0.0, &x, &dx, &xdot, Jtmp);
+    model->fJ(t, 0.0, &x, &dx, &xdot, Jtmp.SUNMatrix());
     // CVODES uses colmajor, so we need to transform to rowmajor
     for (int ix = 0; ix < model->nx_solver; ix++) {
         for (int jx = 0; jx < model->nx_solver; jx++) {
-            rdata->J[ix*model->nx_solver + jx] = Jtmp->data[ix + model->nx_solver*jx];
+            rdata->J[ix * model->nx_solver + jx] =
+                Jtmp.data()[ix + model->nx_solver * jx];
         }
     }
 }
