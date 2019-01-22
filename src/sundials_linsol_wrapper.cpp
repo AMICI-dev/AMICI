@@ -24,7 +24,7 @@ SUNLinSolWrapper::SUNLinSolWrapper(SUNLinSolWrapper &&other) noexcept
 
 SUNLinSolWrapper &SUNLinSolWrapper::operator=(SUNLinSolWrapper &&other) noexcept
 {
-    return *this = SUNLinSolWrapper(linsol);
+    return *this = SUNLinSolWrapper(other.linsol);
 }
 
 SUNLinearSolver SUNLinSolWrapper::get() const
@@ -36,6 +36,43 @@ SUNLinearSolver_Type SUNLinSolWrapper::getType() const
 {
     return SUNLinSolGetType(linsol);
 }
+
+int SUNLinSolWrapper::initialize()
+{
+    return SUNLinSolInitialize(linsol);
+}
+
+int SUNLinSolWrapper::setup(SUNMatrix A)
+{
+    return SUNLinSolSetup(linsol, A);
+}
+
+int SUNLinSolWrapper::setup(SUNMatrixWrapper A)
+{
+    return SUNLinSolSetup(linsol, A.get());
+}
+
+int SUNLinSolWrapper::Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol)
+{
+    // TODO: tol as member?
+    return SUNLinSolSolve(linsol, A, x, b, tol);
+}
+
+long SUNLinSolWrapper::getLastFlag()
+{
+    return SUNLinSolLastFlag(linsol);
+}
+
+int SUNLinSolWrapper::space(long *lenrwLS, long *leniwLS)
+{
+    return SUNLinSolSpace(linsol, lenrwLS, leniwLS);
+}
+
+int SUNLinSolPCG::setATimes(void *A_data, ATimesFn ATimes)
+{
+    return SUNLinSolSetATimes_PCG(linsol, A_data, ATimes);
+}
+
 
 
 } // namespace amici

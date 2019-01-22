@@ -1,7 +1,9 @@
 #ifndef AMICI_SUNDIALS_LINSOL_WRAPPER_H
 #define AMICI_SUNDIALS_LINSOL_WRAPPER_H
 
-#include <amici/exception.h>
+#include "amici/exception.h"
+#include "amici/sundials_matrix_wrapper.h"
+
 #include <sundials/sundials_linearsolver.h> // SUNLinearSolver
 #include <sunlinsol/sunlinsol_band.h>
 #include <sunlinsol/sunlinsol_dense.h>
@@ -19,6 +21,8 @@ namespace amici {
  *
  * More members to be added as required.
  * Start accessing through SUNLinSolWrapper::linsol().
+ *
+ * TODO: check return values
  */
 class SUNLinSolWrapper {
 public:
@@ -67,6 +71,50 @@ public:
      * @return
      */
     SUNLinearSolver_Type getType() const;
+
+    /**
+     * @brief initialize
+     * @return
+     */
+    int initialize();
+
+    /**
+     * @brief setup
+     * @param A
+     * @return
+     */
+    int setup(SUNMatrix A);
+
+    /**
+     * @brief setup
+     * @param A
+     * @return
+     */
+    int setup(SUNMatrixWrapper A);
+
+    /**
+     * @brief Solve
+     * @param A
+     * @param x
+     * @param b
+     * @param tol
+     * @return
+     */
+    int Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol);
+
+    /**
+     * @brief getLastFlag
+     * @return
+     */
+    long int getLastFlag();
+
+    /**
+     * @brief space_Dense
+     * @param lenrwLS
+     * @param leniwLS
+     * @return
+     */
+    int space(long int *lenrwLS, long int *leniwLS);
 
 protected:
     /** the wrapper solver */
@@ -132,6 +180,32 @@ class SUNLinSolPCG: public SUNLinSolWrapper {
         if(!linsol)
             throw AmiException("Failed to create solver.");
     }
+
+    int setATimes(void* A_data, ATimesFn ATimes)
+    {
+        return SUNLinSolSetATimes_PCG(linsol, A_data, ATimes);
+    }
+
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
+        return SUNLinSolSetPreconditioner_PCG(linsol, P_data, Pset, Psol);
+    }
+
+    int setScalingVectors(N_Vector s, N_Vector nul) {
+        return SUNLinSolSetScalingVectors_PCG(linsol, s, nul);
+    }
+
+    int getNumIters() {
+        return SUNLinSolNumIters_PCG(linsol);
+    }
+
+    realtype getResNorm() {
+        return SUNLinSolResNorm_PCG(linsol);
+    }
+
+    N_Vector getResid() {
+        return SUNLinSolResid_PCG(linsol);
+    }
+
 };
 
 
@@ -142,6 +216,32 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
         if(!linsol)
             throw AmiException("Failed to create solver.");
     }
+
+    int setATimes(void* A_data, ATimesFn ATimes)
+    {
+        return SUNLinSolSetATimes_SPBCGS(linsol, A_data, ATimes);
+    }
+
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
+        return SUNLinSolSetPreconditioner_SPBCGS(linsol, P_data, Pset, Psol);
+    }
+
+    int setScalingVectors(N_Vector s, N_Vector nul) {
+        return SUNLinSolSetScalingVectors_SPBCGS(linsol, s, nul);
+    }
+
+    int getNumIters() {
+        return SUNLinSolNumIters_SPBCGS(linsol);
+    }
+
+    realtype getResNorm() {
+        return SUNLinSolResNorm_SPBCGS(linsol);
+    }
+
+    N_Vector getResid() {
+        return SUNLinSolResid_SPBCGS(linsol);
+    }
+
 };
 
 
@@ -158,6 +258,32 @@ class SUNLinSolSPFGMR: public SUNLinSolWrapper {
         if(!linsol)
             throw AmiException("Failed to create solver.");
     }
+
+    int setATimes(void* A_data, ATimesFn ATimes)
+    {
+        return SUNLinSolSetATimes_SPFGMR(linsol, A_data, ATimes);
+    }
+
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
+        return SUNLinSolSetPreconditioner_SPFGMR(linsol, P_data, Pset, Psol);
+    }
+
+    int setScalingVectors(N_Vector s, N_Vector nul) {
+        return SUNLinSolSetScalingVectors_SPFGMR(linsol, s, nul);
+    }
+
+    int getNumIters() {
+        return SUNLinSolNumIters_SPFGMR(linsol);
+    }
+
+    realtype getResNorm() {
+        return SUNLinSolResNorm_SPFGMR(linsol);
+    }
+
+    N_Vector getResid() {
+        return SUNLinSolResid_SPFGMR(linsol);
+    }
+
 };
 
 
@@ -173,6 +299,31 @@ class SUNLinSolSPGMR: public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+    }
+
+    int setATimes(void* A_data, ATimesFn ATimes)
+    {
+        return SUNLinSolSetATimes_SPGMR(linsol, A_data, ATimes);
+    }
+
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
+        return SUNLinSolSetPreconditioner_SPGMR(linsol, P_data, Pset, Psol);
+    }
+
+    int setScalingVectors(N_Vector s, N_Vector nul) {
+        return SUNLinSolSetScalingVectors_SPGMR(linsol, s, nul);
+    }
+
+    int getNumIters() {
+        return SUNLinSolNumIters_SPGMR(linsol);
+    }
+
+    realtype getResNorm() {
+        return SUNLinSolResNorm_SPGMR(linsol);
+    }
+
+    N_Vector getResid() {
+        return SUNLinSolResid_SPGMR(linsol);
     }
 };
 
@@ -190,6 +341,32 @@ class SUNLinSolSPTFQMR: public SUNLinSolWrapper {
         if(!linsol)
             throw AmiException("Failed to create solver.");
     }
+
+    int setATimes(void* A_data, ATimesFn ATimes)
+    {
+        return SUNLinSolSetATimes_SPTFQMR(linsol, A_data, ATimes);
+    }
+
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
+        return SUNLinSolSetPreconditioner_SPTFQMR(linsol, P_data, Pset, Psol);
+    }
+
+    int setScalingVectors(N_Vector s, N_Vector nul) {
+        return SUNLinSolSetScalingVectors_SPTFQMR(linsol, s, nul);
+    }
+
+    int getNumIters() {
+        return SUNLinSolNumIters_SPTFQMR(linsol);
+    }
+
+    realtype getResNorm() {
+        return SUNLinSolResNorm_SPTFQMR(linsol);
+    }
+
+    N_Vector getResid() {
+        return SUNLinSolResid_SPTFQMR(linsol);
+    }
+
 };
 
 } // namespace amici
