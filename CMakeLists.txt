@@ -100,6 +100,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/steadystateproblem.cpp
     ${CMAKE_SOURCE_DIR}/src/backwardproblem.cpp
     ${CMAKE_SOURCE_DIR}/src/sundials_matrix_wrapper.cpp
+    ${CMAKE_SOURCE_DIR}/src/sundials_linsol_wrapper.cpp
     ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
     )
 

@@ -184,7 +184,7 @@ function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, object
         'solver', 'solver_cvodes', 'solver_idas', ...
         'model', 'model_ode', 'model_dae', 'returndata_matlab', ...
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver',
-        'abstract_model', 'sundials_matrix_wrapper'
+        'abstract_model', 'sundials_matrix_wrapper', 'sundials_linsol_wrapper'
     };
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy

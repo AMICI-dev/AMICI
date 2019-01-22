@@ -4,17 +4,10 @@
 #include "amici/exception.h"
 
 #include <cvodes/cvodes.h>
+// TODO: do we really need _impl headers?
 #include <cvodes/cvodes_impl.h>
 /*#include <cvodes/cvodes_lapack.h>*/
-#include <cvodes/cvodes_band.h>
-#include <cvodes/cvodes_bbdpre.h>
-#include <cvodes/cvodes_dense.h>
-#include <cvodes/cvodes_diag.h>
-#include <cvodes/cvodes_klu.h>
-#include <cvodes/cvodes_spbcgs.h>
-#include <cvodes/cvodes_spgmr.h>
-#include <cvodes/cvodes_sptfqmr.h>
-
+#include "amici/sundials_linsol_wrapper.h"
 #include <amd.h>
 #include <btf.h>
 #include <colamd.h>

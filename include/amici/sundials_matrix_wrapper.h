@@ -74,10 +74,10 @@ public:
      * @brief Get the wrapped SUNMatrix
      * @return SlsMat
      */
-    ::SUNMatrix SUNMatrix() const;
+    SUNMatrix get() const;
 
 private:
-    ::SUNMatrix matrix = nullptr;
+    SUNMatrix matrix = nullptr;
 };
 
 } // namespace amici
