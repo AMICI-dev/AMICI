@@ -471,16 +471,31 @@ public:
         return SUNNonlinSolSetMaxIters(solver, maxiters);
     }
 
-    int getNumIters(long int *niters) {
-        return SUNNonlinSolGetNumIters(solver, niters);
+    long int getNumIters() {
+        long int niters = -1;
+        auto res = SUNNonlinSolGetNumIters(solver, &niters);
+        if(res != SUN_NLS_SUCCESS) {
+            throw AmiException("SUNNonlinSolGetNumIters failed with code %d", res);
+        }
+        return niters;
     }
 
-    int getCurIter(int *iter) {
-        return SUNNonlinSolGetCurIter(solver, iter);
+    int getCurIter() {
+        int iter = -1;
+        auto res = SUNNonlinSolGetCurIter(solver, &iter);
+        if(res != SUN_NLS_SUCCESS) {
+            throw AmiException("SUNNonlinSolGetCurIter failed with code %d", res);
+        }
+        return iter;
     }
 
-    int getNumConvFails(long int *nconvfails) {
-        return SUNNonlinSolGetNumConvFails(solver, nconvfails);
+    long int getNumConvFails() {
+        long int nconvfails = -1;
+        auto res = SUNNonlinSolGetNumConvFails(solver, &nconvfails);
+        if(res != SUN_NLS_SUCCESS) {
+            throw AmiException("SUNNonlinSolGetNumConvFails failed with code %d", res);
+        }
+        return nconvfails;
     }
 
 protected:

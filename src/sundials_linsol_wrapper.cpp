@@ -34,17 +34,23 @@ SUNLinearSolver_Type SUNLinSolWrapper::getType() const
 
 int SUNLinSolWrapper::initialize()
 {
-    return SUNLinSolInitialize(linsol);
+    auto res = SUNLinSolInitialize(linsol);
+    if(res != SUNLS_SUCCESS)
+        throw AmiException("Solver initialization failed with code %d", res);
+    return res;
 }
 
 int SUNLinSolWrapper::setup(SUNMatrix A)
 {
-    return SUNLinSolSetup(linsol, A);
+    auto res = SUNLinSolSetup(linsol, A);
+    if(res != SUNLS_SUCCESS)
+        throw AmiException("Solver setup failed with code %d", res);
+    return res;
 }
 
 int SUNLinSolWrapper::setup(SUNMatrixWrapper A)
 {
-    return SUNLinSolSetup(linsol, A.get());
+    return setup(A.get());
 }
 
 int SUNLinSolWrapper::Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol)
@@ -100,20 +106,21 @@ SUNNonlinearSolver_Type SUNNonLinSolWrapper::getType() const
 
 int SUNNonLinSolWrapper::setup(N_Vector y, void *mem)
 {
-    return SUNNonlinSolSetup(solver, y, mem);
+    auto res = SUNNonlinSolSetup(solver, y, mem);
+    if(res != SUN_NLS_SUCCESS)
+        throw AmiException("Nonlinear solver setup failed with code %d", res);
+    return res;
 }
 
 int SUNNonLinSolWrapper::Solve(N_Vector y0, N_Vector y, N_Vector w, realtype tol, int callLSetup, void *mem)
 {
-    return SUNNonlinSolSolve(solver, y0, y, w, to, callLSetup, mem);
+    return SUNNonlinSolSolve(solver, y0, y, w, tol, callLSetup, mem);
 }
 
 int SUNNonLinSolWrapper::initialize()
 {
     return SUNNonlinSolInitialize(solver);
 }
-
-
 
 
 
