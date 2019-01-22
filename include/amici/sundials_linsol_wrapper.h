@@ -3,6 +3,7 @@
 
 #include "amici/exception.h"
 #include "amici/sundials_matrix_wrapper.h"
+#include "amici/vector.h"
 
 #include <sundials/sundials_linearsolver.h> // SUNLinearSolver
 #include <sunlinsol/sunlinsol_band.h>
@@ -31,6 +32,8 @@ namespace amici {
  */
 class SUNLinSolWrapper {
 public:
+    // TODO: can remove?
+    SUNLinSolWrapper() = default;
     /**
      * @brief SUNLinSolWrapper from existing SUNLinearSolver
      * @param linsol_
@@ -129,6 +132,7 @@ protected:
 
 
 class SUNLinSolBand: public SUNLinSolWrapper {
+public:
     /**
      * @brief SUNLinSolBand
      * @param y
@@ -145,22 +149,39 @@ class SUNLinSolBand: public SUNLinSolWrapper {
 
 
 class SUNLinSolDense: public SUNLinSolWrapper {
+public:
+    SUNLinSolDense(int nx)
+        : y(nx),
+          A(SUNMatrixWrapper(nx, nx))
+    {
+        linsol = SUNLinSol_Dense(y.getNVector(), A.get());
+        if(!linsol)
+            throw AmiException("Failed to create solver.");
+        initialize();
+    }
+
     /**
      * @brief SUNLinSolDense
      * @param y
      * @param A
      */
+    /*
     SUNLinSolDense(N_Vector y, SUNMatrix A)
-        : SUNLinSolWrapper (SUNLinSol_Dense(y, A))
+        : SUNLinSolWrapper(SUNLinSol_Dense(y, A)), y(y), A(A)
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
         initialize();
     }
+    */
+private:
+    AmiVector y;
+    SUNMatrixWrapper A;
 };
 
 
 class SUNLinSolKLU : public SUNLinSolWrapper {
+public:
     /**
      * @brief SUNLinSolKLU
      * @param y
@@ -177,6 +198,7 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
 
 
 class SUNLinSolPCG: public SUNLinSolWrapper {
+public:
     /**
      * @brief SUNLinSolPCG
      * @param y
@@ -220,6 +242,7 @@ class SUNLinSolPCG: public SUNLinSolWrapper {
 
 
 class SUNLinSolSPBCGS : public SUNLinSolWrapper {
+public:
     SUNLinSolSPBCGS(N_Vector y, int pretype, int maxl)
         : SUNLinSolWrapper(SUNLinSol_SPBCGS(y, pretype, maxl))
     {
@@ -257,6 +280,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
 
 
 class SUNLinSolSPFGMR: public SUNLinSolWrapper {
+public:
     /**
      * @brief SUNLinSolSPFGMR
      * @param y
@@ -300,6 +324,7 @@ class SUNLinSolSPFGMR: public SUNLinSolWrapper {
 
 
 class SUNLinSolSPGMR: public SUNLinSolWrapper {
+public:
     /**
      * @brief SUNLinSolSPGMR
      * @param y
@@ -342,6 +367,7 @@ class SUNLinSolSPGMR: public SUNLinSolWrapper {
 
 
 class SUNLinSolSPTFQMR: public SUNLinSolWrapper {
+public:
     /**
      * @brief SUNLinSolSPTFQMR
      * @param y
@@ -513,6 +539,7 @@ protected:
 
 
 class SUNNonLinSolNewton: public SUNNonLinSolWrapper {
+public:
     SUNNonLinSolNewton(N_Vector y)
         :SUNNonLinSolWrapper(SUNNonlinSol_Newton(y))
     {
@@ -532,7 +559,7 @@ class SUNNonLinSolNewton: public SUNNonLinSolWrapper {
 
 
 class SUNNonLinSolFixedPoint: public SUNNonLinSolWrapper {
-
+public:
     SUNNonLinSolFixedPoint(N_Vector y, int m)
         :SUNNonLinSolWrapper(SUNNonlinSol_FixedPoint(y, m))
     {
