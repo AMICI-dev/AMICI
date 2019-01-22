@@ -14,6 +14,11 @@
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
 
+#include <sundials/sundials_nonlinearsolver.h>
+#include<sunnonlinsol/sunnonlinsol_fixedpoint.h>
+#include<sunnonlinsol/sunnonlinsol_newton.h>
+
+
 namespace amici {
 
 /**
@@ -51,7 +56,7 @@ public:
      * @param other
      * @return
      */
-    SUNLinSolWrapper& operator=(const SUNLinSolWrapper& other);
+    SUNLinSolWrapper& operator=(const SUNLinSolWrapper& other) = delete;
 
     /**
      * @brief Move assignment
@@ -62,7 +67,7 @@ public:
 
     /**
      * @brief Get the wrapped SUNLinSol
-     * @return SlsMat
+     * @return SUNLinearSolver
      */
     SUNLinearSolver get() const;
 
@@ -377,6 +382,159 @@ class SUNLinSolSPTFQMR: public SUNLinSolWrapper {
     }
 
 };
+
+
+
+/**
+ * @brief A RAII wrapper for SUNNonLinearSolver structs.
+ *
+ * TODO: check return values
+ */
+class SUNNonLinSolWrapper {
+public:
+    /**
+     * @brief SUNNonLinSolWrapper from existing SUNNonlinearSolver
+     * @param linsol_
+     */
+    explicit SUNNonLinSolWrapper(SUNNonlinearSolver sol_);
+
+    virtual ~SUNNonLinSolWrapper();
+
+    /**
+     * @brief Copy constructor
+     * @param other
+     */
+    SUNNonLinSolWrapper(const SUNNonLinSolWrapper& other) = delete;
+
+    /**
+     * @brief Move constructor
+     * @param other
+     */
+    SUNNonLinSolWrapper(SUNNonLinSolWrapper&& other) noexcept;
+
+    /**
+     * @brief Copy assignment
+     * @param other
+     * @return
+     */
+    SUNNonLinSolWrapper& operator=(const SUNNonLinSolWrapper& other) = delete;
+
+    /**
+     * @brief Move assignment
+     * @param other
+     * @return
+     */
+    SUNNonLinSolWrapper& operator=(SUNNonLinSolWrapper&& other) noexcept;
+
+    /**
+     * @brief Get the wrapped SUNNonlinearSolver
+     * @return SUNNonlinearSolver
+     */
+    SUNNonlinearSolver get() const;
+
+    /**
+     * @brief getType
+     * @return
+     */
+    SUNNonlinearSolver_Type getType() const;
+
+    /**
+     * @brief setup
+     * @param y
+     * @param mem
+     * @return
+     */
+    int setup(N_Vector y, void* mem);
+
+
+    int Solve(N_Vector y0, N_Vector y,
+              N_Vector w, realtype tol,
+              booleantype callLSetup, void *mem);
+
+    int setSysFn(SUNNonlinSolSysFn SysFn) {
+        return SUNNonlinSolSetSysFn(solver, SysFn);
+    }
+
+    int setLSetupFn(SUNNonlinSolLSetupFn SetupFn) {
+        return SUNNonlinSolSetLSetupFn(solver, SetupFn);
+    }
+
+    int setLSolveFn(SUNNonlinSolLSolveFn SolveFn) {
+        return SUNNonlinSolSetLSolveFn(solver, SolveFn);
+    }
+
+    int setConvTestFn(SUNNonlinSolConvTestFn CTestFn) {
+        return SUNNonlinSolSetConvTestFn(solver, CTestFn);
+    }
+
+    int setMaxIters(int maxiters) {
+        return SUNNonlinSolSetMaxIters(solver, maxiters);
+    }
+
+    int getNumIters(long int *niters) {
+        return SUNNonlinSolGetNumIters(solver, niters);
+    }
+
+    int getCurIter(int *iter) {
+        return SUNNonlinSolGetCurIter(solver, iter);
+    }
+
+    int getNumConvFails(long int *nconvfails) {
+        return SUNNonlinSolGetNumConvFails(solver, nconvfails);
+    }
+
+protected:
+
+    /**
+     * @brief initialize
+     * @return
+     */
+    int initialize();
+
+    /** the wrapper solver */
+    SUNNonlinearSolver solver = nullptr;
+};
+
+
+
+class SUNNonLinSolNewton: public SUNNonLinSolWrapper {
+    SUNNonLinSolNewton(N_Vector y)
+        :SUNNonLinSolWrapper(SUNNonlinSol_Newton(y))
+    {
+        initialize();
+    }
+
+    SUNNonLinSolNewton(int count, N_Vector y)
+        :SUNNonLinSolWrapper(SUNNonlinSol_NewtonSens(count, y))
+    {
+        initialize();
+    }
+
+    int getSysFn(SUNNonlinSolSysFn *SysFn) {
+        return SUNNonlinSolGetSysFn_Newton(solver, SysFn);
+    }
+};
+
+
+class SUNNonLinSolFixedPoint: public SUNNonLinSolWrapper {
+
+    SUNNonLinSolFixedPoint(N_Vector y, int m)
+        :SUNNonLinSolWrapper(SUNNonlinSol_FixedPoint(y, m))
+    {
+        initialize();
+    }
+
+    SUNNonLinSolFixedPoint(int count, N_Vector y, int m)
+        :SUNNonLinSolWrapper(SUNNonlinSol_FixedPointSens(count, y, m))
+    {
+        initialize();
+    }
+
+    int getSysFn(SUNNonlinSolSysFn *SysFn) {
+        return SUNNonlinSolGetSysFn_FixedPoint(solver, SysFn);
+    }
+};
+
 
 } // namespace amici
 #endif // AMICI_SUNDIALS_LINSOL_WRAPPER_H

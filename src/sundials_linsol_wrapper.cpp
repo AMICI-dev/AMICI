@@ -7,8 +7,8 @@
 namespace amici {
 
 SUNLinSolWrapper::SUNLinSolWrapper(SUNLinearSolver linsol_)
+    : linsol(linsol_)
 {
-    linsol = linsol_;
 }
 
 SUNLinSolWrapper::~SUNLinSolWrapper()
@@ -20,11 +20,6 @@ SUNLinSolWrapper::~SUNLinSolWrapper()
 SUNLinSolWrapper::SUNLinSolWrapper(SUNLinSolWrapper &&other) noexcept
 {
     std::swap(linsol, other.linsol);
-}
-
-SUNLinSolWrapper &SUNLinSolWrapper::operator=(SUNLinSolWrapper &&other) noexcept
-{
-    return *this = SUNLinSolWrapper(other.linsol);
 }
 
 SUNLinearSolver SUNLinSolWrapper::get() const
@@ -66,6 +61,56 @@ long SUNLinSolWrapper::getLastFlag()
 int SUNLinSolWrapper::space(long *lenrwLS, long *leniwLS)
 {
     return SUNLinSolSpace(linsol, lenrwLS, leniwLS);
+}
+
+SUNNonLinSolWrapper::SUNNonLinSolWrapper(SUNNonlinearSolver sol_)
+    :solver(sol_)
+{
+}
+
+SUNNonLinSolWrapper::~SUNNonLinSolWrapper()
+{
+    if(solver)
+        SUNNonlinSolFree(solver);
+}
+
+
+SUNNonLinSolWrapper::SUNNonLinSolWrapper(SUNNonLinSolWrapper &&other) noexcept
+{
+    std::swap(solver, other.solver);
+}
+
+
+SUNNonLinSolWrapper &SUNNonLinSolWrapper::operator=(SUNNonLinSolWrapper &&other) noexcept
+{
+    std::swap(solver, other.solver);
+    return *this;
+
+}
+
+SUNNonlinearSolver SUNNonLinSolWrapper::get() const
+{
+    return solver;
+}
+
+SUNNonlinearSolver_Type SUNNonLinSolWrapper::getType() const
+{
+    return SUNNonlinSolGetType(solver);
+}
+
+int SUNNonLinSolWrapper::setup(N_Vector y, void *mem)
+{
+    return SUNNonlinSolSetup(solver, y, mem);
+}
+
+int SUNNonLinSolWrapper::Solve(N_Vector y0, N_Vector y, N_Vector w, realtype tol, int callLSetup, void *mem)
+{
+    return SUNNonlinSolSolve(solver, y0, y, w, to, callLSetup, mem);
+}
+
+int SUNNonLinSolWrapper::initialize()
+{
+    return SUNNonlinSolInitialize(solver);
 }
 
 
