@@ -73,12 +73,6 @@ public:
     SUNLinearSolver_Type getType() const;
 
     /**
-     * @brief initialize
-     * @return
-     */
-    int initialize();
-
-    /**
      * @brief setup
      * @param A
      * @return
@@ -117,6 +111,13 @@ public:
     int space(long int *lenrwLS, long int *leniwLS);
 
 protected:
+
+    /**
+     * @brief initialize
+     * @return
+     */
+    int initialize();
+
     /** the wrapper solver */
     SUNLinearSolver linsol = nullptr;
 };
@@ -133,6 +134,7 @@ class SUNLinSolBand: public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+        initialize();
     }
 };
 
@@ -148,6 +150,7 @@ class SUNLinSolDense: public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+        initialize();
     }
 };
 
@@ -163,6 +166,7 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+        initialize();
     }
 };
 
@@ -179,6 +183,7 @@ class SUNLinSolPCG: public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+        initialize();
     }
 
     int setATimes(void* A_data, ATimesFn ATimes)
@@ -215,6 +220,7 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+        initialize();
     }
 
     int setATimes(void* A_data, ATimesFn ATimes)
@@ -257,6 +263,7 @@ class SUNLinSolSPFGMR: public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+        initialize();
     }
 
     int setATimes(void* A_data, ATimesFn ATimes)
@@ -299,6 +306,7 @@ class SUNLinSolSPGMR: public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+        initialize();
     }
 
     int setATimes(void* A_data, ATimesFn ATimes)
@@ -340,6 +348,7 @@ class SUNLinSolSPTFQMR: public SUNLinSolWrapper {
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
+        initialize();
     }
 
     int setATimes(void* A_data, ATimesFn ATimes)

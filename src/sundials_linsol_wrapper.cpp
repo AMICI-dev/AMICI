@@ -68,10 +68,7 @@ int SUNLinSolWrapper::space(long *lenrwLS, long *leniwLS)
     return SUNLinSolSpace(linsol, lenrwLS, leniwLS);
 }
 
-int SUNLinSolPCG::setATimes(void *A_data, ATimesFn ATimes)
-{
-    return SUNLinSolSetATimes_PCG(linsol, A_data, ATimes);
-}
+
 
 
 
