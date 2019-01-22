@@ -157,7 +157,7 @@ namespace amici {
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
          **/
-        virtual void fJSparse(SUNMatrix JSparse, const realtype t,
+        virtual void fJSparse(SUNMatrixContent_Sparse JSparse, const realtype t,
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const realtype *w, const realtype *dwdx) = 0;
@@ -173,11 +173,11 @@ namespace amici {
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
          **/
-        virtual void fJSparseB(SUNMatrix JSparseB, const realtype t,
-                               const realtype *x, const realtype *p,
-                               const realtype *k, const realtype *h,
-                               const realtype *xB, const realtype *w,
-                               const realtype *dwdx) {
+        virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB,
+                               const realtype t, const realtype *x,
+                               const realtype *p, const realtype *k,
+                               const realtype *h, const realtype *xB,
+                               const realtype *w, const realtype *dwdx) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__);

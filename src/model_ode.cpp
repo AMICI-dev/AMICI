@@ -42,7 +42,8 @@ namespace amici {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
-        fJSparse(J, t, N_VGetArrayPointer(x_pos), unscaledParameters.data(),
+        fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
+                 N_VGetArrayPointer(x_pos), unscaledParameters.data(),
                  fixedParameters.data(), h.data(), w.data(), dwdx.data());
     }
 
@@ -169,7 +170,8 @@ namespace amici {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(JB);
-        fJSparseB(JB, t, N_VGetArrayPointer(x_pos), unscaledParameters.data(),
+        fJSparseB(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(JB)), t,
+                  N_VGetArrayPointer(x_pos), unscaledParameters.data(),
                   fixedParameters.data(), h.data(), N_VGetArrayPointer(xB),
                   w.data(), dwdx.data());
     }

@@ -1,13 +1,13 @@
 
 #include "amici/symbolic_functions.h"
 #include "amici/defines.h" //realtype definition
-#include <sundials/sundials_sparse.h> //SlsMat definition
+#include <sunmatrix/sunmatrix_sparse.h> //SUNMatrixContent_Sparse definition
 typedef amici::realtype realtype;
 #include <cmath> 
 
 using namespace amici;
 
-void JSparseB_model_steadystate(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) {
+void JSparseB_model_steadystate(SUNMatrixContent_Sparse JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) {
   JSparseB->indexvals[0] = 0;
   JSparseB->indexvals[1] = 1;
   JSparseB->indexvals[2] = 2;
