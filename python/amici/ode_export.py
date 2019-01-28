@@ -1395,11 +1395,23 @@ class ODEModel:
             # if x0_fixedParameters>0 else 0
             # sx0_fixedParameters = sx+deltasx =
             # dx0_fixedParametersdx*sx+dx0_fixedParametersdp
-            self._eqs[name] = \
-                self.eq('x0_fixedParameters').jacobian(self.sym('p'))
+            if len(self.sym('p')):
+                self._eqs[name] = \
+                    self.eq('x0_fixedParameters').jacobian(self.sym('p'))
+            else:
+                self._eqs[name] = sp.zeros(
+                    len(self.eq('x0_fixedParameters')),
+                    len(self.sym('p'))
+                )
 
-            dx0_fixedParametersdx = \
-                self.eq('x0_fixedParameters').jacobian(self.sym('x'))
+            if len(self.sym('x')):
+                dx0_fixedParametersdx = \
+                    self.eq('x0_fixedParameters').jacobian(self.sym('x'))
+            else:
+                dx0_fixedParametersdx = sp.zeros(
+                    len(self.eq('x0_fixedParameters')),
+                    len(self.sym('x'))
+                )
 
             if dx0_fixedParametersdx.is_zero is not True:
                 for ip in range(self._eqs[name].shape[1]):
@@ -1407,9 +1419,7 @@ class ODEModel:
                         dx0_fixedParametersdx \
                         * self.sym('sx0') \
 
-            for index, formula in enumerate(
-                    self.eq('x0_fixedParameters')
-            ):
+            for index, formula in enumerate(self.eq('x0_fixedParameters')):
                 if formula == 0 or formula == 0.0:
                     self._eqs[name][index, :] = \
                         sp.zeros(1, self._eqs[name].shape[1])
