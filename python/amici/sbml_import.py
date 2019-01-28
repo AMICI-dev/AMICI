@@ -351,7 +351,13 @@ class SbmlImporter:
         # flatten initSpecies
         while any([species in speciesInitial.free_symbols
                    for species in self.symbols['species']['identifier']]):
-            if self.symbols['species']['identifier'] == speciesInitial:
+            identical_assignment = next((
+                symbol == init
+                for symbol, init in zip(
+                    self.symbols['species']['identifier'], speciesInitial
+                )
+            ), None)
+            if identical_assignment is not None:
                 raise SBMLException('Species without initial assignment are '
                                     'currently not supported (this is error '
                                     'is likely to be due to the existence of '
