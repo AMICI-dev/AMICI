@@ -1145,7 +1145,7 @@ def _check_unsupported_functions(sym):
         sp.functions.Piecewise, spBoolean
     ]
 
-    for fun in sym._args:
+    for fun in list(sym._args) + [sym]:
         unsupp_fun_type = next(
             (
                 fun_type
