@@ -374,7 +374,7 @@ class SbmlImporter:
         self.symbols['species']['value'] = speciesInitial
 
         if self.sbml.isSetConversionFactor():
-            conversion_factor = self.sbml.getConversionFactor()
+            conversion_factor = sp.Symbol(self.sbml.getConversionFactor())
         else:
             conversion_factor = 1.0
 
