@@ -1571,7 +1571,6 @@ int Model::checkFinite(const int N, const realtype *array, const char *fun) cons
     auto result = amici::checkFinite(N, array, fun);
 
     if(result != AMICI_SUCCESS) {
-        amici::checkFinite(ts.size(), ts.data(), "ts");
         amici::checkFinite(fixedParameters.size(), fixedParameters.data(), "k");
         amici::checkFinite(unscaledParameters.size(), unscaledParameters.data(), "p");
         amici::checkFinite(w.size(), w.data(), "w");

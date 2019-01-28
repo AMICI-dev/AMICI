@@ -7,20 +7,25 @@
 
 namespace amici {
 
-int checkFinite(const int N,const realtype *array, const char* fun){
-    for(int idx = 0; idx < N; idx++) {
-        if(isNaN(array[idx])) {
-            warnMsgIdAndTxt("AMICI:mex:NaN","AMICI encountered a NaN value at index %i of %i in %s! Trying to recover ... ",idx,N,fun);
-            return(AMICI_RECOVERABLE_ERROR);
+int checkFinite(const int N, const realtype *array, const char *fun) {
+    for (int idx = 0; idx < N; idx++) {
+        if (isNaN(array[idx])) {
+            warnMsgIdAndTxt(
+                "AMICI:NaN",
+                "AMICI encountered a NaN value at index %i of %i in %s!", idx,
+                N, fun);
+            return AMICI_RECOVERABLE_ERROR;
         }
-        if(isInf(array[idx])) {
-            warnMsgIdAndTxt("AMICI:mex:Inf","AMICI encountered an Inf value at index %i of %i in %s! Trying to recover ... ",idx,N,fun);
-            return(AMICI_RECOVERABLE_ERROR);
+        if (isInf(array[idx])) {
+            warnMsgIdAndTxt(
+                "AMICI:Inf",
+                "AMICI encountered an Inf value at index %i of %i in %s!", idx,
+                N, fun);
+            return AMICI_RECOVERABLE_ERROR;
         }
     }
-    return(AMICI_SUCCESS);
+    return (AMICI_SUCCESS);
 }
-
 
 double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
 {
