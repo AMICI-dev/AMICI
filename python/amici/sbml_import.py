@@ -351,6 +351,12 @@ class SbmlImporter:
         # flatten initSpecies
         while any([species in speciesInitial.free_symbols
                    for species in self.symbols['species']['identifier']]):
+            if self.symbols['species']['identifier'] == speciesInitial:
+                raise SBMLException('Species without initial assignment are '
+                                    'currently not supported (this is error '
+                                    'is likely to be due to the existence of '
+                                    'a species assignment rule, which is '
+                                    'also not supported')
             speciesInitial = speciesInitial.subs(
                 self.symbols['species']['identifier'],
                 speciesInitial
