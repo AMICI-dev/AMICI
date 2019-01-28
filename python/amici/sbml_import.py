@@ -357,10 +357,12 @@ class SbmlImporter:
                                     'is likely to be due to the existence of '
                                     'a species assignment rule, which is '
                                     'also not supported')
-            speciesInitial = speciesInitial.subs(
-                self.symbols['species']['identifier'],
-                speciesInitial
-            )
+            speciesInitial = speciesInitial.subs([
+                (symbol, init)
+                for symbol, init in zip(
+                    self.symbols['species']['identifier'], speciesInitial
+                )
+            ])
 
         self.symbols['species']['value'] = speciesInitial
 
