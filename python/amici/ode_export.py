@@ -895,8 +895,13 @@ class ODEModel:
             [sp.Symbol(f'flux_r{idx}') for idx in range(len(si.fluxVector))]
         )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
-        symbols['species']['dt'] = \
-            si.stoichiometricMatrix * self.sym('w')
+        if len(si.stoichiometricMatrix):
+            symbols['species']['dt'] = \
+                si.stoichiometricMatrix * self.sym('w')
+        else:
+            symbols['species']['dt'] = sp.zeros(
+                *symbols['species']['identifier'].shape
+            )
 
         for symbol in [s for s in symbols if s != 'my']:
             # transform dict of lists into a list of dicts
@@ -1649,7 +1654,11 @@ class ODEModel:
         else:
             xx = variables[x]
 
-        self._eqs[name] = sign * xx * variables[y]
+        if xx.is_zero is not True and variables[y].is_zero is not True \
+                and len(xx) and len(variables[y]):
+            self._eqs[name] = sign * xx * variables[y]
+        else:
+            self._eqs[name] = sp.zeros(len(xx), len(variables[y]))
 
     def _equationFromComponent(self, name, component):
         """Generates the formulas of a symbolic variable from the attributes
