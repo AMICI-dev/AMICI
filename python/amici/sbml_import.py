@@ -6,6 +6,7 @@ import sympy as sp
 import libsbml as sbml
 import re
 import math
+from sympy.logic.boolalg import Boolean as spBoolean
 
 from .ode_export import ODEExporter, ODEModel
 
@@ -533,7 +534,7 @@ class SbmlImporter:
             assignment = self.sbml.getInitialAssignment(
                 element_id
             )
-            sym = sp.sympify(assignment.getFormula())
+            sym = sp.sympify(sbml.formulaToL3String(assignment.getMath()))
             # this is an initial assignment so we need to use
             # initial conditions
             sym = sym.subs(
@@ -1141,20 +1142,21 @@ def _check_unsupported_functions(sym):
 
     unsupported_functions = [
         sp.functions.factorial, sp.functions.ceiling,
-        sp.functions.Piecewise,
+        sp.functions.Piecewise, spBoolean
     ]
 
-    for arg in sym._args:
-        unsupp_fun = next(
+    for fun in sym._args:
+        unsupp_fun_type = next(
             (
-                fun
-                for fun in unsupported_functions
-                if isinstance(arg, fun)
+                fun_type
+                for fun_type in unsupported_functions
+                if isinstance(fun, fun_type)
             ),
             None
         )
-        if unsupp_fun:
+        if unsupp_fun_type:
             raise SBMLException(f'Encountered unsupported function type '
-                                f'"{unsupp_fun}" in subexpression "{sym}"')
-
-        _check_unsupported_functions(arg)
+                                f'"{unsupp_fun_type}" in subexpression '
+                                f'"{sym}"')
+        if fun is not sym:
+            _check_unsupported_functions(fun)
