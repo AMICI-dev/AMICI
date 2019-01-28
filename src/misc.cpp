@@ -24,7 +24,7 @@ int checkFinite(const int N, const realtype *array, const char *fun) {
             return AMICI_RECOVERABLE_ERROR;
         }
     }
-    return (AMICI_SUCCESS);
+    return AMICI_SUCCESS;
 }
 
 double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
