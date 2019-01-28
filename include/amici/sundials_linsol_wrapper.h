@@ -5,7 +5,6 @@
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
-#include <sundials/sundials_linearsolver.h> // SUNLinearSolver
 #include <sunlinsol/sunlinsol_band.h>
 #include <sunlinsol/sunlinsol_dense.h>
 #include <sunlinsol/sunlinsol_klu.h>
@@ -15,7 +14,6 @@
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
 
-#include <sundials/sundials_nonlinearsolver.h>
 #include<sunnonlinsol/sunnonlinsol_fixedpoint.h>
 #include<sunnonlinsol/sunnonlinsol_newton.h>
 
@@ -32,8 +30,14 @@ namespace amici {
  */
 class SUNLinSolWrapper {
 public:
-    // TODO: can remove?
     SUNLinSolWrapper() = default;
+
+    SUNLinSolWrapper(int nx)
+        : y(nx)
+    {
+
+    }
+
     /**
      * @brief SUNLinSolWrapper from existing SUNLinearSolver
      * @param linsol_
@@ -118,6 +122,8 @@ public:
      */
     int space(long int *lenrwLS, long int *leniwLS);
 
+    SUNMatrix getMatrix() const;
+
 protected:
 
     /**
@@ -126,8 +132,15 @@ protected:
      */
     int initialize();
 
-    /** the wrapper solver */
+    /** the wrapped solver */
     SUNLinearSolver linsol = nullptr;
+
+    /** matrix for the solver to operate on */
+    SUNMatrixWrapper A;
+
+    /** vector for the solver to operate on */
+    AmiVector y {0};
+
 };
 
 
@@ -139,11 +152,18 @@ public:
      * @param A
      */
     SUNLinSolBand(N_Vector y, SUNMatrix A)
-        : SUNLinSolWrapper (SUNLinSol_Band(y, A))
+        : SUNLinSolWrapper(SUNLinSol_Band(y, A))
     {
         if(!linsol)
             throw AmiException("Failed to create solver.");
         initialize();
+    }
+
+    SUNLinSolBand(int nx, int ubw, int lbw)
+        : SUNLinSolWrapper (nx)
+    {
+        A = SUNMatrixWrapper(nx, ubw, lbw);
+        linsol = SUNLinSol_Band(y.getNVector(), A.get());
     }
 };
 
@@ -151,32 +171,15 @@ public:
 class SUNLinSolDense: public SUNLinSolWrapper {
 public:
     SUNLinSolDense(int nx)
-        : y(nx),
-          A(SUNMatrixWrapper(nx, nx))
+        : SUNLinSolWrapper(nx)
     {
+        A = SUNMatrixWrapper(nx, nx);
         linsol = SUNLinSol_Dense(y.getNVector(), A.get());
         if(!linsol)
             throw AmiException("Failed to create solver.");
         initialize();
     }
 
-    /**
-     * @brief SUNLinSolDense
-     * @param y
-     * @param A
-     */
-    /*
-    SUNLinSolDense(N_Vector y, SUNMatrix A)
-        : SUNLinSolWrapper(SUNLinSol_Dense(y, A)), y(y), A(A)
-    {
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
-    */
-private:
-    AmiVector y;
-    SUNMatrixWrapper A;
 };
 
 
@@ -193,6 +196,33 @@ public:
         if(!linsol)
             throw AmiException("Failed to create solver.");
         initialize();
+    }
+
+    SUNLinSolKLU(int nx, int nnz, int sparsetype, StateOrdering ordering)
+        : SUNLinSolWrapper (nx)
+    {
+        A = SUNMatrixWrapper(nx, nx, nnz, sparsetype);
+        linsol = SUNLinSol_KLU(y.getNVector(), A.get());
+
+        if(!linsol)
+            throw AmiException("Failed to create solver.");
+        initialize();
+
+        setOrdering(ordering);
+    }
+
+    void reInit(int nnz, int reinit_type) {
+        int status = SUNLinSol_KLUReInit(linsol, A.get(), nnz, reinit_type);
+        if(status != SUNLS_SUCCESS)
+            throw AmiException("SUNLinSol_KLUReInit failed with %d", status);
+    }
+
+
+    void setOrdering(StateOrdering ordering) {
+        auto status = SUNLinSol_KLUSetOrdering(linsol, static_cast<int>(ordering));
+        if(status != SUNLS_SUCCESS)
+            throw AmiException("SUNLinSol_KLUSetOrdering failed with %d", status);
+
     }
 };
 
@@ -250,6 +280,17 @@ public:
             throw AmiException("Failed to create solver.");
         initialize();
     }
+
+
+    SUNLinSolSPBCGS(int nx, int pretype, int maxl)
+    {
+        y = AmiVector(nx);
+        linsol = SUNLinSol_SPBCGS(y.getNVector(), pretype, maxl);
+        if(!linsol)
+            throw AmiException("Failed to create solver.");
+        initialize();
+    }
+
 
     int setATimes(void* A_data, ATimesFn ATimes)
     {
@@ -339,6 +380,16 @@ public:
         initialize();
     }
 
+    SUNLinSolSPGMR(int nx, int pretype, int maxl)
+    {
+        y = AmiVector(nx);
+        linsol = SUNLinSol_SPGMR(y.getNVector(), pretype, maxl);
+        if(!linsol)
+            throw AmiException("Failed to create solver.");
+        initialize();
+    }
+
+
     int setATimes(void* A_data, ATimesFn ATimes)
     {
         return SUNLinSolSetATimes_SPGMR(linsol, A_data, ATimes);
@@ -377,6 +428,16 @@ public:
     SUNLinSolSPTFQMR(N_Vector y, int pretype, int maxl)
         : SUNLinSolWrapper(SUNLinSol_SPTFQMR(y, pretype, maxl))
     {
+        if(!linsol)
+            throw AmiException("Failed to create solver.");
+        initialize();
+    }
+
+
+    SUNLinSolSPTFQMR(int nx, int pretype, int maxl)
+    {
+        y = AmiVector(nx);
+        linsol = SUNLinSol_SPTFQMR(y.getNVector(), pretype, maxl);
         if(!linsol)
             throw AmiException("Failed to create solver.");
         initialize();

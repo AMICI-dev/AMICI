@@ -4,15 +4,11 @@
 #include "amici/backwardproblem.h"
 #include "amici/model.h"
 #include "amici/rdata.h"
+#include "amici/misc.h"
 
 #include <cmath>
 #include <cstdio>
 #include <cstring>
-
-#include <sundials/sundials_spgmr.h>
-#include <sunlinsol/sunlinsol_spgmr.h>
-#include <sunlinsol/sunlinsol_spbcgs.h>
-#include <sunlinsol/sunlinsol_sptfqmr.h>
 
 namespace amici {
 
@@ -213,153 +209,125 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
     }
 }
 
-/**
- * initializeLinearSolver sets the linear solver for the forward problem
- *
- * @param model pointer to the model object
- */
 void Solver::initializeLinearSolver(const Model *model) {
-    /* Attach linear solver module */
-
     switch (linsol) {
 
-            /* DIRECT SOLVERS */
-            
-        case LinearSolver::dense:
-            dense(model->nx_solver);
-            setDenseJacFn();
-            break;
-            
-        case LinearSolver::band:
-            band(model->nx_solver, model->ubw, model->lbw);
-            setBandJacFn();
-            break;
-            
-        case LinearSolver::LAPACKDense:
-            throw AmiException("Solver currently not supported!");
-            /* status = CVLapackDense(ami_mem, nx_solver);
-             if (status != AMICI_SUCCESS) return;
-             
-             status = SetDenseJacFn(ami_mem);
-             if (status != AMICI_SUCCESS) return;
-             */
-            
-        case LinearSolver::LAPACKBand:
-            throw AmiException("Solver currently not supported!");
-            /* status = CVLapackBand(ami_mem, nx_solver);
-             if (status != AMICI_SUCCESS) return;
-             
-             status = SetBandJacFn(ami_mem);
-             if (status != AMICI_SUCCESS) return;
-             */
-            
-        case LinearSolver::diag:
-            diag();
-            break;
-            
-            
-            /* ITERATIVE SOLVERS */
-            
-        case LinearSolver::SPGMR:
-            spgmr(PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
-            setJacTimesVecFn();
-            break;
-            
-        case LinearSolver::SPBCG:
-            spbcg(PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
-            setJacTimesVecFn();
-            break;
-            
-        case LinearSolver::SPTFQMR:
-            sptfqmr(PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
-            setJacTimesVecFn();
-            break;
-            
-            /* SPARSE SOLVERS */
-            
-        case LinearSolver::KLU:
-            klu(model->nx_solver, model->nnz, CSC_MAT);
-            setSparseJacFn();
-            kluSetOrdering((int) getStateOrdering());
-            break;
-            
-        default:
-            throw AmiException("Invalid choice of solver!");
-            
+    /* DIRECT SOLVERS */
+
+    case LinearSolver::dense:
+        linearSolver = std::make_unique<SUNLinSolDense>(nx());
+        setLinearSolver();
+        setDenseJacFn();
+        break;
+
+    case LinearSolver::band:
+        linearSolver = std::make_unique<SUNLinSolBand>(model->nx_solver, model->ubw, model->lbw);
+        setLinearSolver();
+        setBandJacFn();
+        break;
+
+    case LinearSolver::LAPACKDense:
+        throw AmiException("Solver currently not supported!");
+
+    case LinearSolver::LAPACKBand:
+        throw AmiException("Solver currently not supported!");
+
+    case LinearSolver::diag:
+        diag();
+        setDenseJacFn();
+        break;
+
+        /* ITERATIVE SOLVERS */
+
+    case LinearSolver::SPGMR:
+        linearSolver = std::make_unique<SUNLinSolSPGMR>(nx(), PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        setLinearSolver();
+        setJacTimesVecFn();
+        break;
+
+    case LinearSolver::SPBCG:
+        linearSolver = std::make_unique<SUNLinSolSPBCGS>(nx(), PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        setLinearSolver();
+        setJacTimesVecFn();
+        break;
+
+    case LinearSolver::SPTFQMR:
+        linearSolver = std::make_unique<SUNLinSolSPTFQMR>(nx(), PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        setLinearSolver();
+        setJacTimesVecFn();
+        break;
+
+        /* SPARSE SOLVERS */
+
+    case LinearSolver::KLU:
+        linearSolver = std::make_unique<SUNLinSolKLU>(
+                    model->nx_solver, model->nnz, CSC_MAT, getStateOrdering());
+        setLinearSolver();
+        setSparseJacFn();
+        break;
+
+    default:
+        throw AmiException("Invalid choice of solver: %d", static_cast<int>(linsol));
+
     }
 }
 
 void Solver::initializeLinearSolverB(const Model *model, const int which) {
     switch (linsol) {
-            
-            /* DIRECT SOLVERS */
-            
-        case LinearSolver::dense:
-            denseB(which, model->nx_solver);
-            setDenseJacFnB(which);
-            break;
-            
-        case LinearSolver::band:
-            bandB(which, model->nx_solver, model->ubw, model->lbw);
-            setBandJacFnB(which);
-            break;
-            
-        case LinearSolver::LAPACKDense:
-            
-            /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackDenseB(ami_mem, bwd->getwhich(), nx_solver);
-             if (status != AMICI_SUCCESS) return;
-             
-             status = SetDenseJacFnB(ami_mem, bwd->getwhich());
-             if (status != AMICI_SUCCESS) return;
-             #else*/
-            throw AmiException("Solver currently not supported!");
-            /* #endif*/
-            
-        case LinearSolver::LAPACKBand:
-            
-            /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackBandB(ami_mem, bwd->getwhich(), nx_solver, ubw, lbw);
-             if (status != AMICI_SUCCESS) return;
-             
-             status = SetBandJacFnB(ami_mem, bwd->getwhich());
-             if (status != AMICI_SUCCESS) return;
-             #else*/
-            throw AmiException("Solver currently not supported!");
-            /* #endif*/
-            
-        case LinearSolver::diag:
-            diagB(which);
-            setDenseJacFnB(which);
-            break;
-            
-            /* ITERATIVE SOLVERS */
-            
-        case LinearSolver::SPGMR:
-            spgmrB(which, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
-            setJacTimesVecFnB(which);
-            break;
-            
-        case LinearSolver::SPBCG:
-            spbcgB(which, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
-            setJacTimesVecFnB(which);
-            break;
-            
-        case LinearSolver::SPTFQMR:
-            sptfqmrB(which, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
-            setJacTimesVecFnB(which);
-            break;
-            
-            /* SPARSE SOLVERS */
-            
-        case LinearSolver::KLU:
-            kluB(which, model->nx_solver, model->nnz, CSC_MAT);
-            setSparseJacFnB(which);
-            kluSetOrderingB(which, (int) getStateOrdering());
-            break;
-            
-        default:
-            throw AmiException("Invalid local Solver!");
+    /* DIRECT SOLVERS */
+    case LinearSolver::dense:
+        linearSolverB = std::make_unique<SUNLinSolDense>(nx());
+        setLinearSolverB(which);
+        setDenseJacFnB(which);
+        break;
+
+    case LinearSolver::band:
+        linearSolverB = std::make_unique<SUNLinSolBand>(model->nx_solver, model->ubw, model->lbw);
+        setLinearSolverB(which);
+        setBandJacFnB(which);
+        break;
+
+    case LinearSolver::LAPACKDense:
+        throw AmiException("Solver currently not supported!");
+
+    case LinearSolver::LAPACKBand:
+        throw AmiException("Solver currently not supported!");
+
+    case LinearSolver::diag:
+        diagB(which);
+        setDenseJacFnB(which);
+        break;
+
+        /* ITERATIVE SOLVERS */
+
+    case LinearSolver::SPGMR:
+        linearSolverB = std::make_unique<SUNLinSolSPGMR>(nx(), PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        setLinearSolverB(which);
+        setJacTimesVecFnB(which);
+        break;
+
+    case LinearSolver::SPBCG:
+        linearSolverB = std::make_unique<SUNLinSolSPBCGS>(nx(), PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        setLinearSolverB(which);
+        setJacTimesVecFnB(which);
+        break;
+
+    case LinearSolver::SPTFQMR:
+        linearSolverB = std::make_unique<SUNLinSolSPTFQMR>(nx(), PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        setLinearSolverB(which);
+        setJacTimesVecFnB(which);
+        break;
+
+        /* SPARSE SOLVERS */
+
+    case LinearSolver::KLU:
+        linearSolverB = std::make_unique<SUNLinSolKLU>(model->nx_solver, model->nnz, CSC_MAT, getStateOrdering());
+        setLinearSolverB(which);
+        setSparseJacFnB(which);
+        break;
+
+    default:
+        throw AmiException("Invalid choice of solver: %d", static_cast<int>(linsol));
     }
 }
 
@@ -750,10 +718,10 @@ StateOrdering Solver::getStateOrdering() const {
 void Solver::setStateOrdering(StateOrdering ordering) {
     this->ordering = ordering;
     if (solverMemory && linsol == LinearSolver::KLU) {
-        kluSetOrdering((int)ordering);
-        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-            if(solverMemoryB.at(iMem))
-                kluSetOrderingB(iMem, (int) ordering);
+        auto klu = dynamic_cast<SUNLinSolKLU*>(linearSolver.get());
+        klu->setOrdering(ordering);
+        klu = dynamic_cast<SUNLinSolKLU*>(linearSolverB.get());
+        klu->setOrdering(ordering);
     }
 }
 

@@ -1,9 +1,9 @@
 #ifndef AMICI_SUNDIALS_MATRIX_WRAPPER_H
 #define AMICI_SUNDIALS_MATRIX_WRAPPER_H
 
-#include <sundials/sundials_matrix.h> // SUNMatrix
 #include <sunmatrix/sunmatrix_sparse.h> // SUNMatrix_Sparse
 #include <sunmatrix/sunmatrix_dense.h> // SUNMatrix_Dense
+#include <sunmatrix/sunmatrix_band.h> // SUNMatrix_Dense
 
 namespace amici {
 
@@ -29,6 +29,18 @@ public:
      * @param N Number of columns
      */
     SUNMatrixWrapper(int M, int N);
+
+
+    /**
+     * @brief See SUNBandMatrix in sunmatrix_band.h
+     * @param M Number of rows
+     * @param N Number of columns
+     */
+    SUNMatrixWrapper(int M, int ubw, int lbw);
+
+
+
+
 
     /**
      * @brief SlsMatWrapper

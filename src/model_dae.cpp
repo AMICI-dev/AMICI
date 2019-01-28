@@ -278,7 +278,7 @@ namespace amici {
         if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
             fM(t,x_pos);
             fdxdotdp(t,x_pos,dx);
-            fJSparse(t, 0.0, x_pos, dx, J.SUNMatrix());// also calls dwdx & dx
+            fJSparse(t, 0.0, x_pos, dx, J.get());// also calls dwdx & dx
         }
         N_VConst(0.0,sxdot);
         fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),

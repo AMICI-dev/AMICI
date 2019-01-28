@@ -150,7 +150,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
 NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
     : NewtonSolver(t, x, model, rdata),
       Jtmp(model->nx_solver, model->nx_solver),
-      linsol(SUNLinSol_Dense(x->getNVector(), Jtmp.SUNMatrix()))
+      linsol(SUNLinSol_Dense(x->getNVector(), Jtmp.get()))
 {
     /**
      * default constructor, initializes all members with the provided objects
@@ -179,8 +179,8 @@ void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
      * @param nnewt integer number of current Newton step
      */
 
-    model->fJ(*t, 0.0, x, &dx, &xdot, Jtmp.SUNMatrix());
-    int status = SUNLinSolSetup_Dense(linsol, Jtmp.SUNMatrix());
+    model->fJ(*t, 0.0, x, &dx, &xdot, Jtmp.get());
+    int status = SUNLinSolSetup_Dense(linsol, Jtmp.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
@@ -195,7 +195,7 @@ void NewtonSolverDense::solveLinearSystem(AmiVector *rhs) {
      * overwritten by solution to the linear system
      */
 
-    int status = SUNLinSolSolve_Dense(linsol, Jtmp.SUNMatrix(),
+    int status = SUNLinSolSolve_Dense(linsol, Jtmp.get(),
                                       rhs->getNVector(), rhs->getNVector(),
                                       0.0);
     // last argument is tolerance and does not have any influence on result
@@ -219,7 +219,7 @@ NewtonSolverDense::~NewtonSolverDense() {
 NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, ReturnData *rdata)
     : NewtonSolver(t, x, model, rdata),
       Jtmp(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT),
-      linsol(SUNKLU(x->getNVector(), Jtmp.SUNMatrix()))
+      linsol(SUNKLU(x->getNVector(), Jtmp.get()))
 {
     /**
      * default constructor, initializes all members with the provided objects,
@@ -248,8 +248,8 @@ void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
      */
 
     /* Get sparse Jacobian */
-    model->fJSparse(*t, 0.0, x, &dx, &xdot, Jtmp.SUNMatrix());
-    int status = SUNLinSolSetup_KLU(linsol, Jtmp.SUNMatrix());
+    model->fJSparse(*t, 0.0, x, &dx, &xdot, Jtmp.get());
+    int status = SUNLinSolSetup_KLU(linsol, Jtmp.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
 } // namespace amici
@@ -265,7 +265,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
      */
 
     /* Pass pointer to the linear solver */
-    int status = SUNLinSolSolve_KLU(linsol, Jtmp.SUNMatrix(),
+    int status = SUNLinSolSolve_KLU(linsol, Jtmp.get(),
                                     rhs->getNVector(), rhs->getNVector(),
                                     0.0);
     // last argument is tolerance and does not have any influence on result

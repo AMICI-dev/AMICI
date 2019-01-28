@@ -409,7 +409,7 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     model->fxdot(t, &x, &dx, &xdot);
     rdata->xdot = xdot.getVector();
 
-    model->fJ(t, 0.0, &x, &dx, &xdot, Jtmp.SUNMatrix());
+    model->fJ(t, 0.0, &x, &dx, &xdot, Jtmp.get());
     // CVODES uses colmajor, so we need to transform to rowmajor
     for (int ix = 0; ix < model->nx_solver; ix++) {
         for (int jx = 0; jx < model->nx_solver; jx++) {

@@ -6,8 +6,9 @@
 #include <cvodes/cvodes.h>
 // TODO: do we really need _impl headers?
 #include <cvodes/cvodes_impl.h>
-/*#include <cvodes/cvodes_lapack.h>*/
 #include "amici/sundials_linsol_wrapper.h"
+
+#include <cvodes/cvodes_diag.h>
 #include <amd.h>
 #include <btf.h>
 #include <colamd.h>
@@ -136,7 +137,21 @@ void CVodeSolver::setQuadErrConB(int which, bool flag) {
 void CVodeSolver::getRootInfo(int *rootsfound) const {
     int status = CVodeGetRootInfo(solverMemory.get(), rootsfound);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeGetRootInfo");
+        throw CvodeException(status,"CVodeGetRootInfo");
+}
+
+void CVodeSolver::setLinearSolver()
+{
+    int status = CVodeSetLinearSolver(solverMemory.get(), linearSolver->get(), linearSolver->getMatrix());
+    if(status != CV_SUCCESS)
+        throw CvodeException(status,"setLinearSolver");
+}
+
+void CVodeSolver::setLinearSolverB(int which)
+{
+    int status = CVodeSetLinearSolverB(solverMemory.get(), which, linearSolverB->get(), linearSolverB->getMatrix());
+    if(status != CV_SUCCESS)
+        throw CvodeException(status,"setLinearSolverB");
 }
 
 void CVodeSolver::setErrHandlerFn() {
@@ -250,8 +265,15 @@ void CVodeSolver::quadSStolerancesB(int which, realtype reltolQB,
                                       realtype abstolQB) {
     int status = CVodeQuadSStolerancesB(solverMemory.get(), which, reltolQB, abstolQB);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeQuadSStolerancesB");
+        throw CvodeException(status,"CVodeQuadSStolerancesB");
 }
+
+void CVodeSolver::getQuadB(int which, realtype *tret, AmiVector *qB) const {
+   int status = CVodeGetQuadB(solverMemory.get(), which, tret, qB->getNVector());
+   if(status != CV_SUCCESS)
+        throw CvodeException(status,"CVodeGetQuadB");
+}
+
 
 int CVodeSolver::solve(realtype tout, AmiVector *yret, AmiVector *ypret,
                           realtype *tret, int itask) {
@@ -284,7 +306,22 @@ void CVodeSolver::solveB(realtype tBout, int itaskB) {
 void CVodeSolver::setMaxNumStepsB(int which, long mxstepsB) {
     int status = CVodeSetMaxNumStepsB(solverMemory.get(), which, mxstepsB);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeSetMaxNumStepsB");
+        throw CvodeException(status,"CVodeSetMaxNumStepsB");
+}
+
+void CVodeSolver::diag()
+{
+    int status = CVDiag(solverMemory.get());
+    if(status != CV_SUCCESS)
+        throw CvodeException(status,"CVDiag");
+}
+
+void CVodeSolver::diagB(int which)
+{
+    int status = CVDiagB(solverMemory.get(), which);
+    if(status != CV_SUCCESS)
+        throw CvodeException(status,"CVDiagB");
+
 }
 
 void CVodeSolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) const {
@@ -293,107 +330,6 @@ void CVodeSolver::getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) 
          throw CvodeException(status,"CVodeGetB");
 }
 
-void CVodeSolver::getQuadB(int which, realtype *tret, AmiVector *qB) const {
-    int status = CVodeGetQuadB(solverMemory.get(), which, tret, qB->getNVector());
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeGetQuadB");
-}
-
-void CVodeSolver::dense(int nx) {
-    int status = CVDense(solverMemory.get(), nx);
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVDense");
-}
-
-void CVodeSolver::denseB(int which, int nx) {
-    int status = CVDenseB(solverMemory.get(), which, nx);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVDenseB");
-}
-
-void CVodeSolver::band(int nx, int ubw, int lbw) {
-    int status = CVBand(solverMemory.get(), nx, ubw, lbw);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVBand");
-}
-
-void CVodeSolver::bandB(int which, int nx, int ubw, int lbw) {
-    int status = CVBandB(solverMemory.get(), which, nx, ubw, lbw);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVBandB");
-}
-
-void CVodeSolver::diag() {
-    int status = CVDiag(solverMemory.get());
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVDiag");
-}
-
-void CVodeSolver::diagB(int which) {
-    int status = CVDiagB(solverMemory.get(), which);
-        if(status != CV_SUCCESS)
-            throw CvodeException(status,"CVDiagB");
-}
-
-void CVodeSolver::spgmr(int prectype, int maxl) {
-    int status = CVSpgmr(solverMemory.get(), prectype, maxl);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVSpgmr");
-}
-
-void CVodeSolver::spgmrB(int which, int prectype, int maxl) {
-    int status = CVSpgmrB(solverMemory.get(), which, prectype, maxl);
-    if(status != CV_SUCCESS)
-        throw CvodeException(status,"CVSpgmrB");
-}
-
-void CVodeSolver::spbcg(int prectype, int maxl) {
-    int status = CVSpbcg(solverMemory.get(), prectype, maxl);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVSpbcg");
-}
-
-void CVodeSolver::spbcgB(int which, int prectype, int maxl) {
-    int status = CVSpbcgB(solverMemory.get(), which, prectype, maxl);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVSpbcgB");
-}
-
-void CVodeSolver::sptfqmr(int prectype, int maxl) {
-    int status = CVSptfqmr(solverMemory.get(), prectype, maxl);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"AMISptfqmr");
-}
-
-void CVodeSolver::sptfqmrB(int which, int prectype, int maxl) {
-    int status = CVSptfqmrB(solverMemory.get(), which, prectype, maxl);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVSptfqmrB");
-}
-
-void CVodeSolver::klu(int nx, int nnz, int sparsetype) {
-    int status = CVKLU(solverMemory.get(), nx, nnz, sparsetype);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVKLU");
-}
-
-void CVodeSolver::kluSetOrdering(int ordering) {
-    int status = CVKLUSetOrdering(solverMemory.get(), ordering);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVKLUSetOrdering");
-}
-
-void CVodeSolver::kluSetOrderingB(int which, int ordering) {
-    int status = CVKLUSetOrderingB(solverMemory.get(), which, ordering);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVKLUSetOrderingB");
-}
-
-void CVodeSolver::kluB(int which, int nx, int nnz, int sparsetype) {
-    int status = CVKLUB(solverMemory.get(), which, nx, nnz, sparsetype);
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVKLUB");
-}
 
 void CVodeSolver::getNumSteps(void *ami_mem, long *numsteps) const {
     int status = CVodeGetNumSteps(ami_mem, numsteps);

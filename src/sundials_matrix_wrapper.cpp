@@ -9,6 +9,9 @@ namespace amici {
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
     : matrix(SUNSparseMatrix(M, N, NNZ, sparsetype))
 {
+    if(sparsetype != CSC_MAT && sparsetype != CSR_MAT)
+        throw AmiException("Invalid sparsetype. Must be CSC_MAT or CSR_MAT");
+
     if(NNZ && !matrix)
         throw std::bad_alloc();
 }
@@ -16,7 +19,14 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int N)
 : matrix(SUNDenseMatrix(M, N))
 {
-    if(M*N && !matrix)
+    if((M*N > 0) && !matrix)
+        throw std::bad_alloc();
+}
+
+SUNMatrixWrapper::SUNMatrixWrapper(int M, int ubw, int lbw)
+    : matrix(SUNBandMatrix(M, ubw, lbw))
+{
+    if(M && !matrix)
         throw std::bad_alloc();
 }
 
@@ -74,10 +84,10 @@ realtype *SUNMatrixWrapper::data() {
             throw AmiException("Amici currently does not support custom matrix "
                                "types.");
     }
-    
+    return nullptr; // -Wreturn-type
 }
 
-::SUNMatrix SUNMatrixWrapper::SUNMatrix() const {
+::SUNMatrix SUNMatrixWrapper::get() const {
     return matrix;
 }
 } // namespace amici

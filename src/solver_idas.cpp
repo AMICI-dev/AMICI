@@ -8,14 +8,9 @@
 #include <idas/idas.h>
 #include <idas/idas_impl.h>
 /*#include <idas/idas_lapack.h>*/
-#include <idas/idas_band.h>
 #include <idas/idas_bbdpre.h>
-#include <idas/idas_dense.h>
 /*#include <idas/idas_diag.h>*/
-#include <idas/idas_klu.h>
-#include <idas/idas_spbcgs.h>
-#include <idas/idas_spgmr.h>
-#include <idas/idas_sptfqmr.h>
+#include<idas/idas_ls.h>
 
 #include <amd.h>
 #include <btf.h>
@@ -273,28 +268,7 @@ void IDASolver::getQuadB(int which, realtype *tret, AmiVector *qB) const {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetQuadB");
 }
-void IDASolver::dense(int nx) {
-    int status = IDADense(solverMemory.get(), nx);
-    if(status != IDA_SUCCESS)
-        throw IDAException(status,"IDADense");
-}
 
-void IDASolver::denseB(int which, int nx) {
-    int status = IDADenseB(solverMemory.get(), which, nx);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDADenseB");
-}
-
-void IDASolver::band(int nx, int ubw, int lbw) {
-    int status = IDABand(solverMemory.get(), nx, ubw, lbw);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDABand");
-}
-void IDASolver::bandB(int which, int nx, int ubw, int lbw) {
-    int status = IDABandB(solverMemory.get(), which, nx, ubw, lbw);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDABandB");
-}
 void IDASolver::diag() {
     throw AmiException("Diag Solver was not implemented for DAEs");
 }
@@ -303,56 +277,6 @@ void IDASolver::diagB(int which) {
     throw AmiException("Diag Solver was not implemented for DAEs");
 }
 
-void IDASolver::spgmr(int prectype, int maxl) {
-    int status = IDASpgmr(solverMemory.get(), maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASpgmr");
-}
-void IDASolver::spgmrB(int which, int prectype, int maxl) {
-    int status = IDASpgmrB(solverMemory.get(), which, maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASpgmrB");
-}
-void IDASolver::spbcg(int prectype, int maxl) {
-    int status = IDASpbcg(solverMemory.get(), maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASpbcg");
-}
-void IDASolver::spbcgB(int which, int prectype, int maxl) {
-    int status = IDASpbcgB(solverMemory.get(), which, maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASpbcgB");
-}
-void IDASolver::sptfqmr(int prectype, int maxl) {
-    int status = IDASptfqmr(solverMemory.get(), maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASptfqmr");
-}
-void IDASolver::sptfqmrB(int which, int prectype, int maxl) {
-    int status = IDASptfqmrB(solverMemory.get(), which, maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASptfqmrB");
-}
-void IDASolver::klu(int nx, int nnz, int sparsetype) {
-    int status = IDAKLU(solverMemory.get(), nx, nnz, sparsetype);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAKLU");
-}
-void IDASolver::kluSetOrdering(int ordering) {
-    int status = IDAKLUSetOrdering(solverMemory.get(), ordering);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAKLUSetOrdering");
-}
-void IDASolver::kluSetOrderingB(int which, int ordering) {
-    int status = IDAKLUSetOrderingB(solverMemory.get(), which, ordering);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAKLUSetOrderingB");
-}
-void IDASolver::kluB(int which, int nx, int nnz, int sparsetype) {
-    int status = IDAKLUB(solverMemory.get(), which, nx, nnz, sparsetype);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAKLUB");
-}
 void IDASolver::getNumSteps(void *ami_mem, long *numsteps) const {
     int status = IDAGetNumSteps(ami_mem, numsteps);
     if(status != IDA_SUCCESS)
@@ -512,6 +436,22 @@ int IDASolver::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJSparse(t, cj, x, dx, J);
     return model->checkFinite(SM_NNZ_S(J), SM_DATA_S(J), "Jacobian");
+}
+
+void IDASolver::setLinearSolver()
+{
+    int status = IDASetLinearSolver(solverMemory.get(), linearSolver->get(), linearSolver->getMatrix());
+    if(status != IDA_SUCCESS)
+        throw IDAException(status, "setLinearSolver");
+
+}
+
+void IDASolver::setLinearSolverB(int which)
+{
+    int status = IDASetLinearSolverB(solverMemoryB[which].get(), which, linearSolverB->get(), linearSolverB->getMatrix());
+    if(status != IDA_SUCCESS)
+        throw IDAException(status, "setLinearSolverB");
+
 }
 
 /** JB in sparse form (for sparse solvers from the SuiteSparse Package)

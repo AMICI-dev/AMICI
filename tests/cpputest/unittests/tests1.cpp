@@ -256,15 +256,15 @@ TEST_GROUP(edata)
     std::unique_ptr<amici::Model> model = getModel();
     
 
-    Model_Test model_dim = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz,
+    Model_Test testModel = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz,
     nmaxevent, 0, 0, 0, 0, 0, 0, 0, SecondOrderMode::none,
                            std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                            std::vector<realtype>(0,0.0),std::vector<int>(0,1));
     void setup() {
         model->setTimepoints(timepoints);
         model->setNMaxEvent(nmaxevent);
-        model_dim.setTimepoints(timepoints);
-        model_dim.setNMaxEvent(nmaxevent);
+        testModel.setTimepoints(timepoints);
+        testModel.setNMaxEvent(nmaxevent);
     }
     
     void teardown() {
@@ -301,18 +301,18 @@ TEST(edata, testConstructors4) {
     std::vector<realtype> z(nz*nmaxevent, 0.0);
     std::vector<realtype> z_std(nz*nmaxevent, 0.1);
     
-    auto edata = ExpData(model_dim.nytrue,
-                         model_dim.nztrue,
-                         model_dim.nMaxEvent(),
+    auto edata = ExpData(testModel.nytrue,
+                         testModel.nztrue,
+                         testModel.nMaxEvent(),
                          timepoints,
                          y,
                          y_std,
                          z,
                          z_std);
-    CHECK_TRUE(edata.nytrue() == model_dim.nytrue)
-    CHECK_TRUE(edata.nztrue() == model_dim.nztrue)
-    CHECK_TRUE(edata.nmaxevent() == model_dim.nMaxEvent())
-    CHECK_TRUE(edata.nt() == model_dim.nt())
+    CHECK_TRUE(edata.nytrue() == testModel.nytrue)
+    CHECK_TRUE(edata.nztrue() == testModel.nztrue)
+    CHECK_TRUE(edata.nmaxevent() == testModel.nMaxEvent())
+    CHECK_TRUE(edata.nt() == testModel.nt())
     checkEqualArray(timepoints,edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
     checkEqualArray(y,edata.getObservedData(), TEST_ATOL, TEST_RTOL, "observedData");
     checkEqualArray(y_std,edata.getObservedDataStdDev(), TEST_ATOL, TEST_RTOL, "observedDataStdDev");
@@ -332,13 +332,13 @@ TEST(edata, testConstructors4) {
 }
 
 TEST(edata, testConstructors5) {
-    model_dim.setTimepoints(timepoints);
-    auto edata = ExpData(model_dim);
-    CHECK_TRUE(edata.nytrue() == model_dim.nytrue)
-    CHECK_TRUE(edata.nztrue() == model_dim.nztrue)
-    CHECK_TRUE(edata.nmaxevent() == model_dim.nMaxEvent())
-    CHECK_TRUE(edata.nt() == model_dim.nt())
-    checkEqualArray(model_dim.getTimepoints(),edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
+    testModel.setTimepoints(timepoints);
+    auto edata = ExpData(testModel);
+    CHECK_TRUE(edata.nytrue() == testModel.nytrue)
+    CHECK_TRUE(edata.nztrue() == testModel.nztrue)
+    CHECK_TRUE(edata.nmaxevent() == testModel.nMaxEvent())
+    CHECK_TRUE(edata.nt() == testModel.nt())
+    checkEqualArray(testModel.getTimepoints(),edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
 }
     
 TEST(edata, testDimensionChecks) {
@@ -351,9 +351,9 @@ TEST(edata, testDimensionChecks) {
     std::vector<realtype> z_std(nz*nmaxevent, 0.1);
     
     CHECK_THROWS(AmiException,
-                 ExpData(model_dim.nytrue,
-                         model_dim.nztrue,
-                         model_dim.nMaxEvent(),
+                 ExpData(testModel.nytrue,
+                         testModel.nztrue,
+                         testModel.nMaxEvent(),
                          timepoints,
                          z,
                          z_std,
@@ -362,9 +362,9 @@ TEST(edata, testDimensionChecks) {
                  )
     
     CHECK_THROWS(AmiException,
-                 ExpData(model_dim.nytrue,
-                         model_dim.nztrue,
-                         model_dim.nMaxEvent(),
+                 ExpData(testModel.nytrue,
+                         testModel.nztrue,
+                         testModel.nMaxEvent(),
                          timepoints,
                          z,
                          bad_std,
@@ -372,7 +372,7 @@ TEST(edata, testDimensionChecks) {
                          z_std)
                  )
     
-    auto edata = ExpData(model_dim);
+    auto edata = ExpData(testModel);
     
     std::vector<realtype> bad_y(ny*timepoints.size()+1, 0.0);
     std::vector<realtype> bad_y_std(ny*timepoints.size()+1, 0.1);
@@ -398,7 +398,7 @@ TEST(edata, testDimensionChecks) {
 }
 
 TEST(edata, testSettersGetters) {
-    auto edata = ExpData(model_dim);
+    auto edata = ExpData(testModel);
     
     std::vector<realtype> y(ny*timepoints.size(), 0.0);
     std::vector<realtype> y_std(ny*timepoints.size(), 0.1);
@@ -479,8 +479,8 @@ TEST_GROUP(solver)
     InterpolationType interp;
     
     
-    Model_Test model_dim = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz, ne, 0, 0,
-     0, 0, 0, 0, 0, SecondOrderMode::none,
+    Model_Test testModel = Model_Test(nx, nx, nx, nx, ny, ny, nz, nz, ne, 0, 0,
+     0, 0, 1, 0, 0, SecondOrderMode::none,
                                       std::vector<realtype>(1,0.0),std::vector<realtype>(3,0),std::vector<int>(2,1),
                                       std::vector<realtype>(0,0.0),std::vector<int>(0,1));
     
@@ -513,14 +513,14 @@ TEST(solver, testSettersGettersWithSetup) {
     solver.setSensitivityMethod(sensi_meth);
     CHECK_EQUAL(static_cast<int>(solver.getSensitivityMethod()), static_cast<int>(sensi_meth));
     
-    auto rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model_dim));
+    auto rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&testModel));
     AmiVector x(nx), dx(nx);
     AmiVectorArray sx(nx,1), sdx(nx,1);
     
     
-    model_dim.setInitialStates(std::vector<realtype>{0});
+    testModel.setInitialStates(std::vector<realtype>{0});
     
-    solver.setup(&x,&dx,&sx,&sdx, &model_dim);
+    solver.setup(&x,&dx,&sx,&sdx, &testModel);
     
     testSolverGetterSetters(solver,sensi_meth,sensi,ism,interp,iter,lmm,steps,badsteps,tol,badtol);
 }

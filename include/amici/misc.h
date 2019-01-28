@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <vector>
-
+#include <memory>
 
 namespace amici {
 
@@ -86,4 +86,17 @@ void scaleParameters(const std::vector<double> &bufferUnscaled,
                      std::vector<double> &bufferScaled);
 
 } // namespace amici
+
+#ifndef __cpp_lib_make_unique
+// custom make_unique while we are still using c++11
+namespace std {
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args)
+{
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+}
+#endif
+
 #endif // AMICI_MISC_H
+

@@ -78,6 +78,11 @@ class IDASolver : public Solver {
                         N_Vector xdot, SUNMatrix J, void *user_data,
                         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
+    void setLinearSolver() override;
+
+    void setLinearSolverB(int which) override;
+
+
   protected:
 
     void allocateSolver() override;
@@ -117,37 +122,9 @@ class IDASolver : public Solver {
     void setSStolerancesB(int which, realtype relTolB,
                           realtype absTolB) override;
 
-    void dense(int nx) override;
-
-    void denseB(int which, int nx) override;
-
-    void band(int nx, int ubw, int lbw) override;
-
-    void bandB(int which, int nx, int ubw, int lbw) override;
-
     void diag() override;
 
     void diagB(int which) override;
-
-    void spgmr(int prectype, int maxl) override;
-
-    void spgmrB(int which, int prectype, int maxl) override;
-
-    void spbcg(int prectype, int maxl) override;
-
-    void spbcgB(int which, int prectype, int maxl) override;
-
-    void sptfqmr(int prectype, int maxl) override;
-
-    void sptfqmrB(int which, int prectype, int maxl) override;
-
-    void klu(int nx, int nnz, int sparsetype) override;
-
-    void kluSetOrdering(int ordering) override;
-
-    void kluSetOrderingB(int which, int ordering) override;
-
-    void kluB(int which, int nx, int nnz, int sparsetype) override;
 
     void getNumSteps(void *ami_mem, long int *numsteps) const override;
 

@@ -14,7 +14,6 @@
 #include <sundials/sundials_dense.h>
 #include <memory>
 #include <cvodes/cvodes.h>
-#include <cvodes/cvodes_klu.h>
 
 namespace amici {
 

@@ -6,9 +6,11 @@
 #include "amici/misc.h"
 #include "amici/exception.h"
 #include "amici/symbolic_functions.h"
+#include "amici/sundials_linsol_wrapper.h"
 
 #include <nvector/nvector_serial.h>   // DlsMat
 #include <sundials/sundials_sparse.h> // SlsMat
+
 #include <memory>
 #include <functional>
 
@@ -876,155 +878,6 @@ class Solver {
                                      realtype abstolQB) = 0;
 
     /**
-     * @brief Attaches a dense linear solver to the forward problem
-     *
-     * @param nx number of state variables
-     */
-    virtual void dense(int nx) = 0;
-
-    /**
-     * @brief attaches a dense linear solver to the backward problem
-     *
-     * @param which identifier of the backwards problem
-     * @param nx number of state variables
-     */
-    virtual void denseB(int which, int nx) = 0;
-
-    /**
-     * @brief attaches a banded linear solver to the forward problem
-     *
-     * @param nx number of state variables
-     * @param ubw upper matrix bandwidth
-     * @param lbw lower matrix bandwidth
-     */
-    virtual void band(int nx, int ubw, int lbw) = 0;
-
-    /**
-     * @brief attaches a banded linear solver to the backward problem
-     *
-     * @param which identifier of the backwards problem
-     * @param nx number of state variables
-     * @param ubw upper matrix bandwidth
-     * @param lbw lower matrix bandwidth
-     */
-    virtual void bandB(int which, int nx, int ubw, int lbw) = 0;
-
-    /**
-     * @brief attaches a diagonal linear solver to the forward problem
-     */
-    virtual void diag() = 0;
-
-    /**
-     * @brief attaches a diagonal linear solver to the backward problem
-     *
-     * @param which identifier of the backwards problem
-     */
-    virtual void diagB(int which) = 0;
-
-    /**
-     * @brief attaches a scaled predonditioned GMRES linear solver to the
-     * forward problem
-     *
-     * @param prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT
-     * or PREC_BOTH
-     * @param maxl maximum Kryloc subspace dimension
-     */
-    virtual void spgmr(int prectype, int maxl) = 0;
-
-    /**
-     * @brief attaches a scaled predonditioned GMRES linear solver to the
-     * backward problem
-     *
-     * @param which identifier of the backwards problem
-     * @param prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT
-     * or PREC_BOTH
-     * @param maxl maximum Kryloc subspace dimension
-     */
-    virtual void spgmrB(int which, int prectype, int maxl) = 0;
-
-    /**
-     * @brief attaches a scaled predonditioned Bi-CGStab linear solver to the
-     * forward problem
-     *
-     * @param prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT
-     * or PREC_BOTH
-     * @param maxl maximum Kryloc subspace dimension
-     */
-    virtual void spbcg(int prectype, int maxl) = 0;
-
-    /**
-     * @brief attaches a scaled predonditioned Bi-CGStab linear solver to the
-     * backward problem
-     *
-     * @param which identifier of the backwards problem
-     * @param prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT
-     * or PREC_BOTH
-     * @param maxl maximum Kryloc subspace dimension
-     */
-    virtual void spbcgB(int which, int prectype, int maxl) = 0;
-
-    /**
-     * @brief attaches a scaled predonditioned TFQMR linear solver to the
-     * forward problem
-     *
-     * @param prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT
-     * or PREC_BOTH
-     * @param maxl maximum Kryloc subspace dimension
-     */
-    virtual void sptfqmr(int prectype, int maxl) = 0;
-
-    /**
-     * @brief attaches a scaled predonditioned TFQMR linear solver to the
-     * backward problem
-     *
-     * @param which identifier of the backwards problem
-     * @param prectype preconditioner type PREC_NONE, PREC_LEFT, PREC_RIGHT
-     * or PREC_BOTH
-     * @param maxl maximum Kryloc subspace dimension
-     */
-    virtual void sptfqmrB(int which, int prectype, int maxl) = 0;
-
-    /**
-     * @brief attaches a sparse linear solver to the forward problem
-     *
-     * @param nx number of state variables
-     * @param nnz number of nonzero entries in the jacobian
-     * @param sparsetype sparse storage type, CSC_MAT for column matrix,
-     * CSR_MAT for row matrix
-     */
-    virtual void klu(int nx, int nnz, int sparsetype) = 0;
-
-    /**
-     * @brief sets the ordering for the sparse linear solver of the
-     * forward problem
-     *
-     * @param ordering ordering algorithm to reduce fill 0:AMD 1:COLAMD 2:
-     * natural ordering
-     */
-    virtual void kluSetOrdering(int ordering) = 0;
-
-    /**
-     * @brief sets the ordering for the sparse linear solver of the
-     * backward problem
-     *
-     * @param which identifier of the backwards problem
-     * @param ordering ordering algorithm to reduce fill 0:AMD 1:COLAMD 2:
-     * natural ordering
-     */
-    virtual void kluSetOrderingB(int which, int ordering) = 0;
-
-    /**
-     * @brief attaches a sparse linear solver to the forward problem
-     *
-     * @param which identifier of the backwards problem
-     * @param nx number of state variables
-     * @param nnz number of nonzero entries in the jacobian
-     * @param sparsetype sparse storage type, CSC_MAT for column matrix,
-     * CSR_MAT for row matrix
-     */
-    virtual void kluB(int which, int nx, int nnz, int sparsetype) = 0;
-
-    /**
      * @brief reports the number of solver steps
      *
      * @param ami_mem pointer to the solver memory instance (can be from
@@ -1073,8 +926,17 @@ class Solver {
      */
     virtual void getLastOrder(void *ami_mem, int *order) const = 0;
 
+    /**
+     * initializeLinearSolver sets the linear solver for the forward problem
+     *
+     * @param model pointer to the model object
+     */
+
     void initializeLinearSolver(const Model *model);
 
+    virtual void setLinearSolver() = 0;
+
+    virtual void setLinearSolverB(int which) = 0;
     /**
      * @brief Sets the linear solver for the backward problem
      *
@@ -1117,6 +979,19 @@ class Solver {
      * @return solverMemory->(cv|ida)__adjMallocDone
      */
     virtual bool getAdjMallocDone() const = 0;
+
+
+    /**
+     * @brief attaches a diagonal linear solver to the forward problem
+     */
+    virtual void diag() = 0;
+
+    /**
+     * @brief attaches a diagonal linear solver to the backward problem
+     *
+     * @param which identifier of the backwards problem
+     */
+    virtual void diagB(int which) = 0;
 
 protected:
 
@@ -1188,6 +1063,9 @@ protected:
     /** maximum number of allowed integration steps */
     int maxsteps = 10000;
 
+    std::unique_ptr<SUNLinSolWrapper> linearSolver;
+    std::unique_ptr<SUNLinSolWrapper> linearSolverB;
+
 private:
 
     /** method for sensitivity computation */
@@ -1253,6 +1131,7 @@ private:
 
     /** flag indicating whether sensitivities are supposed to be computed */
     SensitivityOrder sensi = SensitivityOrder::none;
+
 };
 
 bool operator ==(const Solver &a, const Solver &b);

@@ -20,6 +20,8 @@ SUNLinSolWrapper::~SUNLinSolWrapper()
 SUNLinSolWrapper::SUNLinSolWrapper(SUNLinSolWrapper &&other) noexcept
 {
     std::swap(linsol, other.linsol);
+    std::swap(A, other.A);
+    std::swap(y, other.y);
 }
 
 SUNLinearSolver SUNLinSolWrapper::get() const
@@ -67,6 +69,11 @@ long SUNLinSolWrapper::getLastFlag()
 int SUNLinSolWrapper::space(long *lenrwLS, long *leniwLS)
 {
     return SUNLinSolSpace(linsol, lenrwLS, leniwLS);
+}
+
+SUNMatrix SUNLinSolWrapper::getMatrix() const
+{
+    return A.get();
 }
 
 SUNNonLinSolWrapper::SUNNonLinSolWrapper(SUNNonlinearSolver sol_)
