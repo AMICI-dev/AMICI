@@ -452,7 +452,7 @@ void CVodeSolver::turnOffRootFinding() {
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeRootInit");
 }
-    
+
 int CVodeSolver::nplist() const {
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
@@ -466,7 +466,7 @@ int CVodeSolver::nx() const {
     auto cv_mem = (CVodeMem) solverMemory.get();
     return NV_LENGTH_S(cv_mem->cv_zn[0]);
 }
-    
+
 const Model *CVodeSolver::getModel() const {
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
@@ -480,14 +480,14 @@ bool CVodeSolver::getMallocDone() const {
     auto cv_mem = (CVodeMem) solverMemory.get();
     return cv_mem->cv_MallocDone;
 }
-    
+
 bool CVodeSolver::getAdjMallocDone() const {
     if (!solverMemory)
         return false;
     auto cv_mem = (CVodeMem) solverMemory.get();
     return cv_mem->cv_adjMallocDone;
 }
-    
+
     /** Jacobian of xdot with respect to states x
      * @param N number of state variables
      * @param t timepoint
@@ -681,10 +681,21 @@ bool CVodeSolver::getAdjMallocDone() const {
      * @param user_data object with user input @type Model_ODE
      * @return status flag indicating successful execution
      */
-    int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
-        auto model = static_cast<Model_ODE*>(user_data);
+    int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot,
+                           void *user_data) {
+        auto model = static_cast<Model_ODE *>(user_data);
+
+        if (t > 1e200 && !amici::checkFinite(model->nx_solver,
+                                             N_VGetArrayPointer(x), "fxdot"))
+            return AMICI_UNRECOVERABLE_ERROR;
+            /* when t is large (typically ~1e300), CVODES may pass all NaN x
+               to fxdot from which we typically cannot recover. To save time 
+               on normal execution, we do not always want to check finiteness
+               of x, but only do so when t is large and we expect problems. */
+
         model->fxdot(t, x, xdot);
-        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(xdot),"fxdot");
+        return model->checkFinite(model->nx_solver, N_VGetArrayPointer(xdot),
+                                  "fxdot");
     }
 
     /** Right hand side of differential equation for adjoint state xB
@@ -738,7 +749,7 @@ bool CVodeSolver::getAdjMallocDone() const {
         model->fsxdot(t, x, ip, sx, sxdot);
         return model->checkFinite(model->nx_solver,N_VGetArrayPointer(sxdot),"sxdot");
     }
-    
+
     bool operator ==(const CVodeSolver &a, const CVodeSolver &b)
     {
         return static_cast<Solver const&>(a) == static_cast<Solver const&>(b);
