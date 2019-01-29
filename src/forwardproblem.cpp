@@ -7,25 +7,10 @@
 #include "amici/rdata.h"
 #include "amici/steadystateproblem.h"
 
-#include <cvodes/cvodes.h> // return/option codes
-
 #include <cmath>
 #include <cstring>
 
 namespace amici {
-
-// Ensure AMICI options are in sync with Sundials options
-static_assert((int)InternalSensitivityMethod::simultaneous == CV_SIMULTANEOUS, "");
-static_assert((int)InternalSensitivityMethod::staggered == CV_STAGGERED, "");
-static_assert((int)InternalSensitivityMethod::staggered1 == CV_STAGGERED1, "");
-
-static_assert((int)InterpolationType::hermite == CV_HERMITE, "");
-static_assert((int)InterpolationType::polynomial == CV_POLYNOMIAL, "");
-
-static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
-static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
-
-static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
