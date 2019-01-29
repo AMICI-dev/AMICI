@@ -51,22 +51,18 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     } catch (NewtonFailure const &ex1) {
         try {
             /* Newton solver did not work, so try a simulation */
-            if (it < 1) {
-                /* There was no previous time point computed, set t = t0 */
+            if (it < 1) /* No previous time point computed, set t = t0 */
                 *t = model->t0();
-                if (it < 0) {
-                    /* Preequilibration? -> Create a new CVode object for sim */
-                    auto newtonSimSolver =
-                        createSteadystateSimSolver(solver, model, *t);
-                    getSteadystateSimulation(rdata, newtonSimSolver.get(),
-                                             model, it);
-                } else {
-                    /* Solver was already created, use this one */
-                    getSteadystateSimulation(rdata, solver, model, it);
-                }
-            } else {
-                /* Carry on simulating from last point */
+            else /* Carry on simulating from last point */
                 *t = model->t(it - 1);
+            if (it < 0) {
+                /* Preequilibration? -> Create a new CVode object for sim */
+                auto newtonSimSolver =
+                    createSteadystateSimSolver(solver, model, *t);
+                getSteadystateSimulation(rdata, newtonSimSolver.get(), model,
+                                         it);
+            } else {
+                /* Solver was already created, use this one */
                 getSteadystateSimulation(rdata, solver, model, it);
             }
             newton_status = NewtonStatus::newt_sim;
