@@ -1734,11 +1734,6 @@ class ODEModel:
             component = self._variable_prototype[name]
         elif name in self._equation_prototype:
             component = self._equation_prototype[name]
-        elif name == 'x':
-            self._names[name]= [
-                s._name for s in self._states if s.conservation_law is None
-            ]
-            return
         else:
             raise Exception(f'No names for {name}')
 
@@ -2232,7 +2227,7 @@ class ODEExporter:
             'PARAMETER_NAMES_INITIALIZER_LIST':
                 self._getSymbolNameInitializerList('p'),
             'STATE_NAMES_INITIALIZER_LIST':
-                self._getSymbolNameInitializerList('x'),
+                self._getSymbolNameInitializerList('x_rdata'),
             'FIXED_PARAMETER_NAMES_INITIALIZER_LIST':
                 self._getSymbolNameInitializerList('k'),
             'OBSERVABLE_NAMES_INITIALIZER_LIST':
@@ -2240,7 +2235,7 @@ class ODEExporter:
             'PARAMETER_IDS_INITIALIZER_LIST':
                 self._getSymbolIDInitializerList('p'),
             'STATE_IDS_INITIALIZER_LIST':
-                self._getSymbolIDInitializerList('x'),
+                self._getSymbolIDInitializerList('x_rdata'),
             'FIXED_PARAMETER_IDS_INITIALIZER_LIST':
                 self._getSymbolIDInitializerList('k'),
             'OBSERVABLE_IDS_INITIALIZER_LIST':
