@@ -184,10 +184,11 @@ function example_steadystate
         solss = simulate_model_steadystate(tt,log10(p),k,[],options);
         ssxdot(it,:) = solss.diagnosis.xdot;
     end
-    
+
     % Compute steady state wihtout integration before
     sol = simulate_model_steadystate(inf,log10(p),k,[],options);
     
+
     % Test recapturing in the case of Newton solver failing
     options.newton_maxsteps = 4;
     options.maxsteps = 300;
@@ -218,7 +219,7 @@ function example_steadystate
         
         subplot(1,3,3);
         hold on;
-        bar(sol_newton_fail.diagnosis.newton_numsteps);
+        bar(sol_newton_fail.diagnosis.newton_numsteps([1, 3]));
         legend boxoff;
         title('Number of Newton steps');
         xlabel('Solver run');
