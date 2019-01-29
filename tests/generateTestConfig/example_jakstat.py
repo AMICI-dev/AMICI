@@ -17,7 +17,7 @@ class ExampleJakStatAdjoint(AmiciExample):
         self.numK = 2
 
         curPath = os.path.dirname(os.path.realpath(__file__))
-        dataPath = curPath + "/../matlab/examples/example_jakstat_adjoint/pnas_data_original.xls"
+        dataPath = curPath + "/../../matlab/examples/example_jakstat_adjoint/pnas_data_original.xls"
         xls = pd.ExcelFile(dataPath).parse()
         self.modelOptions['ts'] = xls.time
         self.modelOptions['theta'] = np.array([0.60, 3, -0.95, -0.0075, 0,
