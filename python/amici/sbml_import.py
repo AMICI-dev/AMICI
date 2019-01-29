@@ -1152,8 +1152,8 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
         full_sym = sym
 
     unsupported_functions = [
-        sp.functions.factorial, sp.functions.ceiling,
-        sp.functions.Piecewise, spTrue, spFalse
+        sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
+        sp.functions.Piecewise, spTrue, spFalse, sp.function.UndefinedFunction
     ]
 
     unsupp_fun_type = next(
@@ -1168,7 +1168,7 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
         raise SBMLException(f'Encountered unsupported expression '
                             f'"{sym.func}" of type '
                             f'"{unsupp_fun_type}" as part of a '
-                            f'{expression_type}: "{full_sym}"')
+                            f'{expression_type}: "{full_sym}"!')
     for fun in list(sym._args) + [sym]:
         unsupp_fun_type = next(
             (
@@ -1182,6 +1182,6 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
             raise SBMLException(f'Encountered unsupported expression '
                                 f'"{fun}" of type '
                                 f'"{unsupp_fun_type}" as part of a '
-                                f'{expression_type}: "{full_sym}"')
+                                f'{expression_type}: "{full_sym}"!')
         if fun is not sym:
             _check_unsupported_functions(fun, expression_type)
