@@ -26,8 +26,9 @@ class TestAmiciSBMLTestSuite(unittest.TestCase):
         self.test_sbml_testsuite()
 
     def test_sbml_testsuite(self):
-        for testId in range(1, 1781):
-            self.run_sbml_testsuite_case(get_test_str(testId))
+        for testId in range(0, 1781):
+            with self.subTest(testId=testId):
+                self.run_sbml_testsuite_case(get_test_str(testId))
 
     def run_sbml_testsuite_case(self, test_id):
         try:
@@ -73,9 +74,10 @@ class TestAmiciSBMLTestSuite(unittest.TestCase):
             self.assertTrue(
                 np.isclose(simulated_x, test_x, atol, rtol).all()
             )
+            print(f'TestCase {test_id} passed.')
 
         except amici.sbml_import.SBMLException as err:
-            pass
+            print(f'TestCase {test_id} was skipped: {err}')
 
 
 def get_amount_and_variables(current_test_path, test_id):
