@@ -35,8 +35,9 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Create banded matrix. See SUNBandMatrix in sunmatrix_band.h
-     * @param M Number of rows
-     * @param N Number of columns
+     * @param M Number of rows and columns
+     * @param ubw Upper bandwidth
+     * @param lbw Lower bandwidth
      */
     SUNMatrixWrapper(int M, int ubw, int lbw);
 

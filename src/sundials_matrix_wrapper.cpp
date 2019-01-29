@@ -28,7 +28,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int ubw, int lbw)
         throw std::bad_alloc();
 }
 
-SUNMatrixWrapper::SUNMatrixWrapper(::SUNMatrix mat) : matrix(mat) {}
+SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix(mat) {}
 
 SUNMatrixWrapper::~SUNMatrixWrapper() {
     if (matrix)
