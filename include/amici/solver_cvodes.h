@@ -99,6 +99,12 @@ class CVodeSolver : public Solver {
 
     void setLinearSolverB(int which) override;
 
+    void setNonLinearSolver() override;
+
+    void setNonLinearSolverSens() override;
+
+    void setNonLinearSolverB(int which) override;
+
   protected:
     void allocateSolver() override;
 

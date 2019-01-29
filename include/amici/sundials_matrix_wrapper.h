@@ -15,7 +15,7 @@ public:
     SUNMatrixWrapper() = default;
 
     /**
-     * @brief See SUNSparseMatrix in sunmatrix_sparse.h
+     * @brief Create sparse matrix. See SUNSparseMatrix in sunmatrix_sparse.h
      * @param M Number of rows
      * @param N Number of columns
      * @param NNZ Number of nonzeros
@@ -24,7 +24,7 @@ public:
     SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype);
     
     /**
-     * @brief See SUNDenseMatrix in sunmatrix_dense.h
+     * @brief Create dense matrix. See SUNDenseMatrix in sunmatrix_dense.h
      * @param M Number of rows
      * @param N Number of columns
      */
@@ -32,15 +32,11 @@ public:
 
 
     /**
-     * @brief See SUNBandMatrix in sunmatrix_band.h
+     * @brief Create banded matrix. See SUNBandMatrix in sunmatrix_band.h
      * @param M Number of rows
      * @param N Number of columns
      */
     SUNMatrixWrapper(int M, int ubw, int lbw);
-
-
-
-
 
     /**
      * @brief SlsMatWrapper

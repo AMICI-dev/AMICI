@@ -23,20 +23,11 @@ namespace amici {
 /**
  * @brief A RAII wrapper for SUNLinearSolver structs.
  *
- * More members to be added as required.
- * Start accessing through SUNLinSolWrapper::linsol().
- *
  * TODO: check return values
  */
 class SUNLinSolWrapper {
 public:
     SUNLinSolWrapper() = default;
-
-    SUNLinSolWrapper(int nx)
-        : y(nx)
-    {
-
-    }
 
     /**
      * @brief SUNLinSolWrapper from existing SUNLinearSolver
@@ -122,7 +113,7 @@ public:
      */
     int space(long int *lenrwLS, long int *leniwLS);
 
-    SUNMatrix getMatrix() const;
+    virtual SUNMatrix getMatrix() const;
 
 protected:
 
@@ -134,13 +125,6 @@ protected:
 
     /** the wrapped solver */
     SUNLinearSolver linsol = nullptr;
-
-    /** matrix for the solver to operate on */
-    SUNMatrixWrapper A;
-
-    /** vector for the solver to operate on */
-    AmiVector y {0};
-
 };
 
 
@@ -151,35 +135,25 @@ public:
      * @param y
      * @param A
      */
-    SUNLinSolBand(N_Vector y, SUNMatrix A)
-        : SUNLinSolWrapper(SUNLinSol_Band(y, A))
-    {
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolBand(N_Vector y, SUNMatrix A);
 
-    SUNLinSolBand(int nx, int ubw, int lbw)
-        : SUNLinSolWrapper (nx)
-    {
-        A = SUNMatrixWrapper(nx, ubw, lbw);
-        linsol = SUNLinSol_Band(y.getNVector(), A.get());
-    }
+    SUNLinSolBand(AmiVector const& x, int ubw, int lbw);
+
+    SUNMatrix getMatrix() const override;
+
+private:
+    SUNMatrixWrapper A;
 };
 
 
 class SUNLinSolDense: public SUNLinSolWrapper {
 public:
-    SUNLinSolDense(int nx)
-        : SUNLinSolWrapper(nx)
-    {
-        A = SUNMatrixWrapper(nx, nx);
-        linsol = SUNLinSol_Dense(y.getNVector(), A.get());
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolDense(AmiVector const& x);
 
+    SUNMatrix getMatrix() const override;
+
+private:
+    SUNMatrixWrapper A;
 };
 
 
@@ -190,40 +164,18 @@ public:
      * @param y
      * @param A
      */
-    SUNLinSolKLU(N_Vector y, SUNMatrix A)
-        : SUNLinSolWrapper(SUNLinSol_KLU(y, A))
-    {
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolKLU(N_Vector y, SUNMatrix A);
 
-    SUNLinSolKLU(int nx, int nnz, int sparsetype, StateOrdering ordering)
-        : SUNLinSolWrapper (nx)
-    {
-        A = SUNMatrixWrapper(nx, nx, nnz, sparsetype);
-        linsol = SUNLinSol_KLU(y.getNVector(), A.get());
+    SUNLinSolKLU(AmiVector const& x, int nnz, int sparsetype, StateOrdering ordering);
 
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
+    SUNMatrix getMatrix() const override;
 
-        setOrdering(ordering);
-    }
+    void reInit(int nnz, int reinit_type);
 
-    void reInit(int nnz, int reinit_type) {
-        int status = SUNLinSol_KLUReInit(linsol, A.get(), nnz, reinit_type);
-        if(status != SUNLS_SUCCESS)
-            throw AmiException("SUNLinSol_KLUReInit failed with %d", status);
-    }
+    void setOrdering(StateOrdering ordering);
 
-
-    void setOrdering(StateOrdering ordering) {
-        auto status = SUNLinSol_KLUSetOrdering(linsol, static_cast<int>(ordering));
-        if(status != SUNLS_SUCCESS)
-            throw AmiException("SUNLinSol_KLUSetOrdering failed with %d", status);
-
-    }
+private:
+    SUNMatrixWrapper A;
 };
 
 
@@ -235,87 +187,42 @@ public:
      * @param pretype
      * @param maxl
      */
-    SUNLinSolPCG(N_Vector y, int pretype, int maxl)
-        : SUNLinSolWrapper(SUNLinSol_PCG(y, pretype, maxl))
-    {
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolPCG(N_Vector y, int pretype, int maxl);
 
-    int setATimes(void* A_data, ATimesFn ATimes)
-    {
-        return SUNLinSolSetATimes_PCG(linsol, A_data, ATimes);
-    }
+    int setATimes(void* A_data, ATimesFn ATimes);
 
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
-        return SUNLinSolSetPreconditioner_PCG(linsol, P_data, Pset, Psol);
-    }
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
 
-    int setScalingVectors(N_Vector s, N_Vector nul) {
-        return SUNLinSolSetScalingVectors_PCG(linsol, s, nul);
-    }
+    int setScalingVectors(N_Vector s, N_Vector nul);
 
-    int getNumIters() {
-        return SUNLinSolNumIters_PCG(linsol);
-    }
+    int getNumIters();
 
-    realtype getResNorm() {
-        return SUNLinSolResNorm_PCG(linsol);
-    }
+    realtype getResNorm();
 
-    N_Vector getResid() {
-        return SUNLinSolResid_PCG(linsol);
-    }
+    N_Vector getResid();
 
 };
 
 
 class SUNLinSolSPBCGS : public SUNLinSolWrapper {
 public:
-    SUNLinSolSPBCGS(N_Vector y, int pretype, int maxl)
-        : SUNLinSolWrapper(SUNLinSol_SPBCGS(y, pretype, maxl))
-    {
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolSPBCGS(N_Vector y, int pretype, int maxl);
 
 
-    SUNLinSolSPBCGS(int nx, int pretype, int maxl)
-    {
-        y = AmiVector(nx);
-        linsol = SUNLinSol_SPBCGS(y.getNVector(), pretype, maxl);
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolSPBCGS(AmiVector const& x, int pretype, int maxl);
 
 
-    int setATimes(void* A_data, ATimesFn ATimes)
-    {
-        return SUNLinSolSetATimes_SPBCGS(linsol, A_data, ATimes);
-    }
+    int setATimes(void* A_data, ATimesFn ATimes);
 
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
-        return SUNLinSolSetPreconditioner_SPBCGS(linsol, P_data, Pset, Psol);
-    }
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
 
-    int setScalingVectors(N_Vector s, N_Vector nul) {
-        return SUNLinSolSetScalingVectors_SPBCGS(linsol, s, nul);
-    }
+    int setScalingVectors(N_Vector s, N_Vector nul);
 
-    int getNumIters() {
-        return SUNLinSolNumIters_SPBCGS(linsol);
-    }
+    int getNumIters();
 
-    realtype getResNorm() {
-        return SUNLinSolResNorm_SPBCGS(linsol);
-    }
+    realtype getResNorm();
 
-    N_Vector getResid() {
-        return SUNLinSolResid_SPBCGS(linsol);
-    }
+    N_Vector getResid();
 
 };
 
@@ -328,38 +235,19 @@ public:
      * @param pretype
      * @param maxl
      */
-    SUNLinSolSPFGMR(N_Vector y, int pretype, int maxl)
-        : SUNLinSolWrapper(SUNLinSol_SPFGMR(y, pretype, maxl))
-    {
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolSPFGMR(AmiVector const& x, int pretype, int maxl);
 
-    int setATimes(void* A_data, ATimesFn ATimes)
-    {
-        return SUNLinSolSetATimes_SPFGMR(linsol, A_data, ATimes);
-    }
+    int setATimes(void* A_data, ATimesFn ATimes);
 
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
-        return SUNLinSolSetPreconditioner_SPFGMR(linsol, P_data, Pset, Psol);
-    }
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
 
-    int setScalingVectors(N_Vector s, N_Vector nul) {
-        return SUNLinSolSetScalingVectors_SPFGMR(linsol, s, nul);
-    }
+    int setScalingVectors(N_Vector s, N_Vector nul);
 
-    int getNumIters() {
-        return SUNLinSolNumIters_SPFGMR(linsol);
-    }
+    int getNumIters();
 
-    realtype getResNorm() {
-        return SUNLinSolResNorm_SPFGMR(linsol);
-    }
+    realtype getResNorm();
 
-    N_Vector getResid() {
-        return SUNLinSolResid_SPFGMR(linsol);
-    }
+    N_Vector getResid();
 
 };
 
@@ -372,48 +260,20 @@ public:
      * @param pretype
      * @param maxl
      */
-    SUNLinSolSPGMR(N_Vector y, int pretype, int maxl)
-        : SUNLinSolWrapper(SUNLinSol_SPGMR(y, pretype, maxl))
-    {
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
-
-    SUNLinSolSPGMR(int nx, int pretype, int maxl)
-    {
-        y = AmiVector(nx);
-        linsol = SUNLinSol_SPGMR(y.getNVector(), pretype, maxl);
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolSPGMR(AmiVector const& x, int pretype, int maxl);
 
 
-    int setATimes(void* A_data, ATimesFn ATimes)
-    {
-        return SUNLinSolSetATimes_SPGMR(linsol, A_data, ATimes);
-    }
+    int setATimes(void* A_data, ATimesFn ATimes);
 
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
-        return SUNLinSolSetPreconditioner_SPGMR(linsol, P_data, Pset, Psol);
-    }
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
 
-    int setScalingVectors(N_Vector s, N_Vector nul) {
-        return SUNLinSolSetScalingVectors_SPGMR(linsol, s, nul);
-    }
+    int setScalingVectors(N_Vector s, N_Vector nul);
 
-    int getNumIters() {
-        return SUNLinSolNumIters_SPGMR(linsol);
-    }
+    int getNumIters();
 
-    realtype getResNorm() {
-        return SUNLinSolResNorm_SPGMR(linsol);
-    }
+    realtype getResNorm();
 
-    N_Vector getResid() {
-        return SUNLinSolResid_SPGMR(linsol);
-    }
+    N_Vector getResid();
 };
 
 
@@ -425,48 +285,22 @@ public:
      * @param pretype
      * @param maxl
      */
-    SUNLinSolSPTFQMR(N_Vector y, int pretype, int maxl)
-        : SUNLinSolWrapper(SUNLinSol_SPTFQMR(y, pretype, maxl))
-    {
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolSPTFQMR(N_Vector y, int pretype, int maxl);
 
 
-    SUNLinSolSPTFQMR(int nx, int pretype, int maxl)
-    {
-        y = AmiVector(nx);
-        linsol = SUNLinSol_SPTFQMR(y.getNVector(), pretype, maxl);
-        if(!linsol)
-            throw AmiException("Failed to create solver.");
-        initialize();
-    }
+    SUNLinSolSPTFQMR(AmiVector const& x, int pretype, int maxl);
 
-    int setATimes(void* A_data, ATimesFn ATimes)
-    {
-        return SUNLinSolSetATimes_SPTFQMR(linsol, A_data, ATimes);
-    }
+    int setATimes(void* A_data, ATimesFn ATimes);
 
-    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol) {
-        return SUNLinSolSetPreconditioner_SPTFQMR(linsol, P_data, Pset, Psol);
-    }
+    int setPreconditioner(void* P_data, PSetupFn Pset, PSolveFn Psol);
 
-    int setScalingVectors(N_Vector s, N_Vector nul) {
-        return SUNLinSolSetScalingVectors_SPTFQMR(linsol, s, nul);
-    }
+    int setScalingVectors(N_Vector s, N_Vector nul);
 
-    int getNumIters() {
-        return SUNLinSolNumIters_SPTFQMR(linsol);
-    }
+    int getNumIters();
 
-    realtype getResNorm() {
-        return SUNLinSolResNorm_SPTFQMR(linsol);
-    }
+    realtype getResNorm();
 
-    N_Vector getResid() {
-        return SUNLinSolResid_SPTFQMR(linsol);
-    }
+    N_Vector getResid();
 
 };
 
@@ -538,52 +372,21 @@ public:
               N_Vector w, realtype tol,
               booleantype callLSetup, void *mem);
 
-    int setSysFn(SUNNonlinSolSysFn SysFn) {
-        return SUNNonlinSolSetSysFn(solver, SysFn);
-    }
+    int setSysFn(SUNNonlinSolSysFn SysFn);
 
-    int setLSetupFn(SUNNonlinSolLSetupFn SetupFn) {
-        return SUNNonlinSolSetLSetupFn(solver, SetupFn);
-    }
+    int setLSetupFn(SUNNonlinSolLSetupFn SetupFn);
 
-    int setLSolveFn(SUNNonlinSolLSolveFn SolveFn) {
-        return SUNNonlinSolSetLSolveFn(solver, SolveFn);
-    }
+    int setLSolveFn(SUNNonlinSolLSolveFn SolveFn);
 
-    int setConvTestFn(SUNNonlinSolConvTestFn CTestFn) {
-        return SUNNonlinSolSetConvTestFn(solver, CTestFn);
-    }
+    int setConvTestFn(SUNNonlinSolConvTestFn CTestFn);
 
-    int setMaxIters(int maxiters) {
-        return SUNNonlinSolSetMaxIters(solver, maxiters);
-    }
+    int setMaxIters(int maxiters);
 
-    long int getNumIters() {
-        long int niters = -1;
-        auto res = SUNNonlinSolGetNumIters(solver, &niters);
-        if(res != SUN_NLS_SUCCESS) {
-            throw AmiException("SUNNonlinSolGetNumIters failed with code %d", res);
-        }
-        return niters;
-    }
+    long int getNumIters();
 
-    int getCurIter() {
-        int iter = -1;
-        auto res = SUNNonlinSolGetCurIter(solver, &iter);
-        if(res != SUN_NLS_SUCCESS) {
-            throw AmiException("SUNNonlinSolGetCurIter failed with code %d", res);
-        }
-        return iter;
-    }
+    int getCurIter();
 
-    long int getNumConvFails() {
-        long int nconvfails = -1;
-        auto res = SUNNonlinSolGetNumConvFails(solver, &nconvfails);
-        if(res != SUN_NLS_SUCCESS) {
-            throw AmiException("SUNNonlinSolGetNumConvFails failed with code %d", res);
-        }
-        return nconvfails;
-    }
+    long int getNumConvFails();
 
 protected:
 
@@ -591,7 +394,7 @@ protected:
      * @brief initialize
      * @return
      */
-    int initialize();
+    void initialize();
 
     /** the wrapper solver */
     SUNNonlinearSolver solver = nullptr;
@@ -601,41 +404,23 @@ protected:
 
 class SUNNonLinSolNewton: public SUNNonLinSolWrapper {
 public:
-    SUNNonLinSolNewton(N_Vector y)
-        :SUNNonLinSolWrapper(SUNNonlinSol_Newton(y))
-    {
-        initialize();
-    }
 
-    SUNNonLinSolNewton(int count, N_Vector y)
-        :SUNNonLinSolWrapper(SUNNonlinSol_NewtonSens(count, y))
-    {
-        initialize();
-    }
+    SUNNonLinSolNewton(N_Vector x);
 
-    int getSysFn(SUNNonlinSolSysFn *SysFn) {
-        return SUNNonlinSolGetSysFn_Newton(solver, SysFn);
-    }
+
+    SUNNonLinSolNewton(int count, N_Vector x);
+
+    int getSysFn(SUNNonlinSolSysFn *SysFn);
 };
 
 
 class SUNNonLinSolFixedPoint: public SUNNonLinSolWrapper {
 public:
-    SUNNonLinSolFixedPoint(N_Vector y, int m)
-        :SUNNonLinSolWrapper(SUNNonlinSol_FixedPoint(y, m))
-    {
-        initialize();
-    }
+    SUNNonLinSolFixedPoint(N_Vector x, int m = 0);
 
-    SUNNonLinSolFixedPoint(int count, N_Vector y, int m)
-        :SUNNonLinSolWrapper(SUNNonlinSol_FixedPointSens(count, y, m))
-    {
-        initialize();
-    }
+    SUNNonLinSolFixedPoint(int count, N_Vector x, int m = 0);
 
-    int getSysFn(SUNNonlinSolSysFn *SysFn) {
-        return SUNNonlinSolGetSysFn_FixedPoint(solver, SysFn);
-    }
+    int getSysFn(SUNNonlinSolSysFn *SysFn);
 };
 
 

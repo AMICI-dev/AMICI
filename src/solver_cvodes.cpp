@@ -154,6 +154,48 @@ void CVodeSolver::setLinearSolverB(int which)
         throw CvodeException(status,"setLinearSolverB");
 }
 
+void CVodeSolver::setNonLinearSolver()
+{
+    int status = CVodeSetNonlinearSolver(solverMemory.get(), nonLinearSolver->get());
+    if(status != CV_SUCCESS)
+        throw CvodeException(status,"CVodeSetNonlinearSolver");
+}
+
+void CVodeSolver::setNonLinearSolverSens()
+{
+    if(getSensitivityOrder() < SensitivityOrder::first)
+        return;
+    if(getSensitivityMethod() != SensitivityMethod::forward)
+        return;
+
+    int status = CV_SUCCESS;
+
+    switch (ism) {
+    case InternalSensitivityMethod::staggered:
+        status = CVodeSetNonlinearSolverSensStg(solverMemory.get(), nonLinearSolverSens->get());
+        break;
+    case InternalSensitivityMethod::simultaneous:
+        status = CVodeSetNonlinearSolverSensSim(solverMemory.get(), nonLinearSolverSens->get());
+        break;
+    case InternalSensitivityMethod::staggered1:
+        status = CVodeSetNonlinearSolverSensStg1(solverMemory.get(), nonLinearSolverSens->get());
+        break;
+    default:
+        throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
+    }
+
+    if(status != CV_SUCCESS)
+        throw CvodeException(status,"CVodeSolver::setNonLinearSolverSens");
+
+}
+
+void CVodeSolver::setNonLinearSolverB(int which)
+{
+    int status = CVodeSetNonlinearSolverB(solverMemory.get(), which, nonLinearSolverB->get());
+    if(status != CV_SUCCESS)
+        throw CvodeException(status,"CVodeSetNonlinearSolverB");
+}
+
 void CVodeSolver::setErrHandlerFn() {
     int status = CVodeSetErrHandlerFn(solverMemory.get(), wrapErrHandlerFn, nullptr);
     if(status != CV_SUCCESS)

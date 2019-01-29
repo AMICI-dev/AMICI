@@ -454,6 +454,45 @@ void IDASolver::setLinearSolverB(int which)
 
 }
 
+void IDASolver::setNonLinearSolver()
+{
+    int status = IDASetNonlinearSolver(solverMemory.get(), nonLinearSolver->get());
+    if(status != IDA_SUCCESS)
+        throw CvodeException(status,"CVodeSetNonlinearSolver");
+}
+
+void IDASolver::setNonLinearSolverSens()
+{
+    if(getSensitivityOrder() < SensitivityOrder::first)
+        return;
+    if(getSensitivityMethod() != SensitivityMethod::forward)
+        return;
+
+    int status = IDA_SUCCESS;
+
+    switch (ism) {
+    case InternalSensitivityMethod::staggered:
+        status = IDASetNonlinearSolverSensStg(solverMemory.get(), nonLinearSolverSens->get());
+        break;
+    case InternalSensitivityMethod::simultaneous:
+        status = IDASetNonlinearSolverSensSim(solverMemory.get(), nonLinearSolverSens->get());
+        break;
+    case InternalSensitivityMethod::staggered1:
+    default:
+        throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
+    }
+
+    if(status != IDA_SUCCESS)
+        throw CvodeException(status,"CVodeSolver::setNonLinearSolverSens");
+}
+
+void IDASolver::setNonLinearSolverB(int which)
+{
+    int status = IDASetNonlinearSolverB(solverMemory.get(), which, nonLinearSolverB->get());
+    if(status != IDA_SUCCESS)
+        throw CvodeException(status,"CVodeSetNonlinearSolverB");
+}
+
 /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
  * @param t timepoint
  * @param cj scalar in Jacobian

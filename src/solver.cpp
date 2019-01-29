@@ -71,7 +71,8 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     
     rootInit(model->ne);
     
-    initializeLinearSolver(model);
+    initializeLinearSolver(model, x);
+    initializeNonLinearSolver(x);
 
     if (computeSensitivities) {
         auto plist = model->getParameterList();
@@ -82,6 +83,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
 
             /* Activate sensitivity calculations */
             sensInit1(sx, sdx, plist.size());
+            initalizeNonLinearSolverSens(x, model);
             setSensParams(par.data(), nullptr, plist.data());
             
             applyTolerancesFSA();
@@ -125,8 +127,9 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
     /* Number of maximal internal steps */
     setMaxNumStepsB(bwd->getwhich(), (maxstepsB == 0) ? maxsteps * 100 : maxstepsB);
     
-    initializeLinearSolverB(model, bwd->getwhich());
-    
+    initializeLinearSolverB(model, xB, bwd->getwhich());
+    initializeNonLinearSolverB(xB, bwd->getwhich(), model);
+
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
     
@@ -209,19 +212,19 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
     }
 }
 
-void Solver::initializeLinearSolver(const Model *model) {
+void Solver::initializeLinearSolver(const Model *model, AmiVector *x) {
     switch (linsol) {
 
     /* DIRECT SOLVERS */
 
     case LinearSolver::dense:
-        linearSolver = std::make_unique<SUNLinSolDense>(nx());
+        linearSolver = std::make_unique<SUNLinSolDense>(*x);
         setLinearSolver();
         setDenseJacFn();
         break;
 
     case LinearSolver::band:
-        linearSolver = std::make_unique<SUNLinSolBand>(model->nx_solver, model->ubw, model->lbw);
+        linearSolver = std::make_unique<SUNLinSolBand>(*x, model->ubw, model->lbw);
         setLinearSolver();
         setBandJacFn();
         break;
@@ -240,19 +243,19 @@ void Solver::initializeLinearSolver(const Model *model) {
         /* ITERATIVE SOLVERS */
 
     case LinearSolver::SPGMR:
-        linearSolver = std::make_unique<SUNLinSolSPGMR>(nx(), PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        linearSolver = std::make_unique<SUNLinSolSPGMR>(*x, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
         setLinearSolver();
         setJacTimesVecFn();
         break;
 
     case LinearSolver::SPBCG:
-        linearSolver = std::make_unique<SUNLinSolSPBCGS>(nx(), PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        linearSolver = std::make_unique<SUNLinSolSPBCGS>(*x, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
         setLinearSolver();
         setJacTimesVecFn();
         break;
 
     case LinearSolver::SPTFQMR:
-        linearSolver = std::make_unique<SUNLinSolSPTFQMR>(nx(), PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        linearSolver = std::make_unique<SUNLinSolSPTFQMR>(*x, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
         setLinearSolver();
         setJacTimesVecFn();
         break;
@@ -260,8 +263,7 @@ void Solver::initializeLinearSolver(const Model *model) {
         /* SPARSE SOLVERS */
 
     case LinearSolver::KLU:
-        linearSolver = std::make_unique<SUNLinSolKLU>(
-                    model->nx_solver, model->nnz, CSC_MAT, getStateOrdering());
+        linearSolver = std::make_unique<SUNLinSolKLU>(*x, model->nnz, CSC_MAT, getStateOrdering());
         setLinearSolver();
         setSparseJacFn();
         break;
@@ -272,17 +274,33 @@ void Solver::initializeLinearSolver(const Model *model) {
     }
 }
 
-void Solver::initializeLinearSolverB(const Model *model, const int which) {
+void Solver::initializeNonLinearSolver(AmiVector *x)
+{
+    switch(iter) { // TODO: rename to nonLinearSolver? Rename function to fixedpoint?
+    case NonlinearSolverIteration::newton:
+        nonLinearSolver = std::make_unique<SUNNonLinSolNewton>(x->getNVector());
+        break;
+    case NonlinearSolverIteration::functional:
+        nonLinearSolver = std::make_unique<SUNNonLinSolFixedPoint>(x->getNVector());
+        break;
+    default:
+        throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
+    }
+
+    setNonLinearSolver();
+}
+
+void Solver::initializeLinearSolverB(const Model *model, AmiVector *x, const int which) {
     switch (linsol) {
     /* DIRECT SOLVERS */
     case LinearSolver::dense:
-        linearSolverB = std::make_unique<SUNLinSolDense>(nx());
+        linearSolverB = std::make_unique<SUNLinSolDense>(*x);
         setLinearSolverB(which);
         setDenseJacFnB(which);
         break;
 
     case LinearSolver::band:
-        linearSolverB = std::make_unique<SUNLinSolBand>(model->nx_solver, model->ubw, model->lbw);
+        linearSolverB = std::make_unique<SUNLinSolBand>(*x, model->ubw, model->lbw);
         setLinearSolverB(which);
         setBandJacFnB(which);
         break;
@@ -301,19 +319,19 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
         /* ITERATIVE SOLVERS */
 
     case LinearSolver::SPGMR:
-        linearSolverB = std::make_unique<SUNLinSolSPGMR>(nx(), PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPGMR>(*x, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
 
     case LinearSolver::SPBCG:
-        linearSolverB = std::make_unique<SUNLinSolSPBCGS>(nx(), PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPBCGS>(*x, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
 
     case LinearSolver::SPTFQMR:
-        linearSolverB = std::make_unique<SUNLinSolSPTFQMR>(nx(), PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPTFQMR>(*x, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
@@ -321,7 +339,7 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
         /* SPARSE SOLVERS */
 
     case LinearSolver::KLU:
-        linearSolverB = std::make_unique<SUNLinSolKLU>(model->nx_solver, model->nnz, CSC_MAT, getStateOrdering());
+        linearSolverB = std::make_unique<SUNLinSolKLU>(*x, model->nnz, CSC_MAT, getStateOrdering());
         setLinearSolverB(which);
         setSparseJacFnB(which);
         break;
@@ -329,6 +347,38 @@ void Solver::initializeLinearSolverB(const Model *model, const int which) {
     default:
         throw AmiException("Invalid choice of solver: %d", static_cast<int>(linsol));
     }
+}
+
+void Solver::initializeNonLinearSolverB(AmiVector *xB, const int which, Model *model)
+{
+    switch(iter) {
+    case NonlinearSolverIteration::newton:
+        switch(ism) {
+        case InternalSensitivityMethod::staggered:
+        case InternalSensitivityMethod::simultaneous:
+        case InternalSensitivityMethod::staggered1:
+            nonLinearSolverB = std::make_unique<SUNNonLinSolNewton>(xB->getNVector());
+            break;
+        default:
+            throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
+        }
+        break;
+    case NonlinearSolverIteration::functional:
+        switch(ism) {
+        case InternalSensitivityMethod::staggered:
+        case InternalSensitivityMethod::simultaneous:
+        case InternalSensitivityMethod::staggered1:
+            nonLinearSolverB = std::make_unique<SUNNonLinSolFixedPoint>(xB->getNVector());
+            break;
+        default:
+            throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
+        }
+        break;
+    default:
+        throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
+    }
+
+    setNonLinearSolverB(which);
 }
 
 bool operator ==(const Solver &a, const Solver &b)
@@ -764,5 +814,41 @@ void Solver::setInternalSensitivityMethod(InternalSensitivityMethod ism) {
     this->ism = ism;
 }
 
+void Solver::initalizeNonLinearSolverSens(AmiVector *x, Model *model)
+{
+    switch(iter) { // TODO: rename to nonLinearSolver? Rename function to fixedpoint?
+    case NonlinearSolverIteration::newton:
+        switch(ism) {
+        case InternalSensitivityMethod::staggered:
+        case InternalSensitivityMethod::simultaneous:
+            nonLinearSolverSens = std::make_unique<SUNNonLinSolNewton>(1 + model->nplist(), x->getNVector());
+            break;
+        case InternalSensitivityMethod::staggered1:
+            nonLinearSolverSens = std::make_unique<SUNNonLinSolNewton>(x->getNVector());
+            break;
+        default:
+            throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
+        }
+        break;
+    case NonlinearSolverIteration::functional:
+        switch(ism) {
+        case InternalSensitivityMethod::staggered:
+        case InternalSensitivityMethod::simultaneous:
+            nonLinearSolverSens = std::make_unique<SUNNonLinSolFixedPoint>(1 + model->nplist(), x->getNVector());
+            break;
+        case InternalSensitivityMethod::staggered1:
+            nonLinearSolverSens = std::make_unique<SUNNonLinSolFixedPoint>(x->getNVector());
+            break;
+        default:
+            throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
+
+        }
+        break;
+    default:
+        throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
+    }
+
+    setNonLinearSolverSens();
+}
 
 } // namespace amici

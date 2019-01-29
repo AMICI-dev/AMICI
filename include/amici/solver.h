@@ -640,6 +640,8 @@ class Solver {
      */
     virtual void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) = 0;
 
+    void initalizeNonLinearSolverSens(AmiVector *x, Model *model);
+
     /**
      * @brief Set the dense Jacobian function
      *
@@ -932,11 +934,19 @@ class Solver {
      * @param model pointer to the model object
      */
 
-    void initializeLinearSolver(const Model *model);
+    void initializeLinearSolver(const Model *model,  AmiVector *x);
+
+    void initializeNonLinearSolver(AmiVector *x);
 
     virtual void setLinearSolver() = 0;
 
     virtual void setLinearSolverB(int which) = 0;
+
+    virtual void setNonLinearSolver() = 0;
+
+    virtual void setNonLinearSolverB(int which) = 0;
+    virtual void setNonLinearSolverSens() = 0;
+
     /**
      * @brief Sets the linear solver for the backward problem
      *
@@ -944,7 +954,9 @@ class Solver {
      * @param which index of the backward problem
      */
 
-    void initializeLinearSolverB(const Model *model, const int which);
+    void initializeLinearSolverB(const Model *model, AmiVector *x, const int which);
+
+    void initializeNonLinearSolverB(AmiVector *xB, const int which, Model *model);
 
     /**
      * @brief Accessor function to the number of sensitivity parameters in the
@@ -1065,6 +1077,11 @@ protected:
 
     std::unique_ptr<SUNLinSolWrapper> linearSolver;
     std::unique_ptr<SUNLinSolWrapper> linearSolverB;
+
+    /** non-linear solver*/
+    std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolver;
+    std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverB;
+    std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverSens;
 
 private:
 
