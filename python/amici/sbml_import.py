@@ -6,7 +6,8 @@ import sympy as sp
 import libsbml as sbml
 import re
 import math
-from sympy.logic.boolalg import Boolean as spBoolean
+from sympy.logic.boolalg import BooleanTrue as spTrue
+from sympy.logic.boolalg import BooleanFalse as spFalse
 
 from .ode_export import ODEExporter, ODEModel
 
@@ -1149,7 +1150,7 @@ def _check_unsupported_functions(sym):
 
     unsupported_functions = [
         sp.functions.factorial, sp.functions.ceiling,
-        sp.functions.Piecewise, spBoolean
+        sp.functions.Piecewise, spTrue, spFalse
     ]
     if isinstance(sym.func, sp.function.UndefinedFunction):
         raise SBMLException(f'Encountered unsupported function type '
@@ -1164,7 +1165,8 @@ def _check_unsupported_functions(sym):
             None
         )
         if unsupp_fun_type:
-            raise SBMLException(f'Encountered unsupported function type '
+            raise SBMLException(f'Encountered unsupported expression '
+                                f'"{fun}" of type '
                                 f'"{unsupp_fun_type}" in subexpression '
                                 f'"{sym}"')
         if fun is not sym:
