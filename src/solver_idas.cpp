@@ -525,7 +525,6 @@ int IDASolver::fJBandB(realtype t, realtype cj, N_Vector x, N_Vector dx,
     return fJB(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B,
                tmp3B);
 }
-
     /** Matrix vector product of J with a vector v (for iterative solvers)
      * @param t timepoint @type realtype
      * @param cj scaling factor, inverse of the step size
@@ -595,10 +594,20 @@ int IDASolver::fJBandB(realtype t, realtype cj, N_Vector x, N_Vector dx,
      * @return status flag indicating successful execution
      */
     int IDASolver::fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
-                     void *user_data) {
-        auto model = static_cast<Model_DAE*>(user_data);
-        model->fxdot(t,x,dx,xdot);
-        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(xdot),"fxdot");
+                         void *user_data) {
+        auto model = static_cast<Model_DAE *>(user_data);
+
+        if (t > 1e200 && !amici::checkFinite(model->nx_solver,
+                                             N_VGetArrayPointer(x), "fxdot"))
+            return AMICI_UNRECOVERABLE_ERROR;
+        /* when t is large (typically ~1e300), CVODES may pass all NaN x
+           to fxdot from which we typically cannot recover. To save time
+           on normal execution, we do not always want to check finiteness
+           of x, but only do so when t is large and we expect problems. */
+
+        model->fxdot(t, x, dx, xdot);
+        return model->checkFinite(model->nx_solver, N_VGetArrayPointer(xdot),
+                                  "fxdot");
     }
 
     /** Right hand side of differential equation for adjoint state xB

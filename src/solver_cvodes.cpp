@@ -611,10 +611,21 @@ int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
      * @param user_data object with user input @type Model_ODE
      * @return status flag indicating successful execution
      */
-    int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
-        auto model = static_cast<Model_ODE*>(user_data);
+    int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot,
+                           void *user_data) {
+        auto model = static_cast<Model_ODE *>(user_data);
+
+        if (t > 1e200 && !amici::checkFinite(model->nx_solver,
+                                             N_VGetArrayPointer(x), "fxdot"))
+            return AMICI_UNRECOVERABLE_ERROR;
+            /* when t is large (typically ~1e300), CVODES may pass all NaN x
+               to fxdot from which we typically cannot recover. To save time 
+               on normal execution, we do not always want to check finiteness
+               of x, but only do so when t is large and we expect problems. */
+
         model->fxdot(t, x, xdot);
-        return model->checkFinite(model->nx_solver,N_VGetArrayPointer(xdot),"fxdot");
+        return model->checkFinite(model->nx_solver, N_VGetArrayPointer(xdot),
+                                  "fxdot");
     }
 
     /** Right hand side of differential equation for adjoint state xB
