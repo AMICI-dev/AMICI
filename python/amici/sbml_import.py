@@ -344,10 +344,12 @@ class SbmlImporter:
                 index = species_ids.index(
                         initial_assignment.getId()
                     )
-                speciesInitial[index] = sp.sympify(
+                symMath = sp.sympify(
                     sbml.formulaToL3String(initial_assignment.getMath())
                 )
-                _check_unsupported_functions(speciesInitial[index])
+                if symMath is not None:
+                    _check_unsupported_functions(symMath)
+                    speciesInitial[index] = symMath
 
         # flatten initSpecies
         while any([species in speciesInitial.free_symbols
@@ -537,26 +539,31 @@ class SbmlImporter:
             sym = sp.sympify(sbml.formulaToL3String(assignment.getMath()))
             # this is an initial assignment so we need to use
             # initial conditions
-            sym = sym.subs(
-                self.symbols['species']['identifier'],
-                self.symbols['species']['value']
-            )
+            if sym is not None:
+                sym = sym.subs(
+                    self.symbols['species']['identifier'],
+                    self.symbols['species']['value']
+                )
             return sym
 
         def getElementStoichiometry(element):
             if element.isSetId():
                 if element.getId() in assignment_ids:
-                    return getElementFromAssignment(element.getId())
+                    symMath = getElementFromAssignment(element.getId())
+                    if symMath is None:
+                        symMath = sp.sympify(element.getStoichiometry())
                 elif element.getId() in rulevars:
-                    return sp.sympify(element.getId())
+                    return sp.Symbol(element.getId())
                 else:
                     # dont put the symbol if it wont get replaced by a
                     # rule
-                    return sp.sympify(element.getStoichiometry())
+                    symMath = sp.sympify(element.getStoichiometry())
             elif element.isSetStoichiometry():
-                return sp.sympify(element.getStoichiometry())
+                symMath = sp.sympify(element.getStoichiometry())
             else:
                 return sp.sympify(1.0)
+            _check_unsupported_functions(symMath)
+            return symMath
 
         def isConstant(specie):
             return specie in self.constantSpecies or \
@@ -1144,7 +1151,9 @@ def _check_unsupported_functions(sym):
         sp.functions.factorial, sp.functions.ceiling,
         sp.functions.Piecewise, spBoolean
     ]
-
+    if isinstance(sym.func, sp.function.UndefinedFunction):
+        raise SBMLException(f'Encountered unsupported function type '
+                            f'"{type(sym)}"')
     for fun in list(sym._args) + [sym]:
         unsupp_fun_type = next(
             (
