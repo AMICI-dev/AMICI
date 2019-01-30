@@ -51,16 +51,18 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     } catch (NewtonFailure const &ex1) {
         try {
             /* Newton solver did not work, so try a simulation */
-            if (it < 1) {
-                /* Preequilibration: Create a new CVode object for simulation */
+            if (it < 1) /* No previous time point computed, set t = t0 */
                 *t = model->t0();
+            else /* Carry on simulating from last point */
+                *t = model->t(it - 1);
+            if (it < 0) {
+                /* Preequilibration? -> Create a new CVode object for sim */
                 auto newtonSimSolver =
                     createSteadystateSimSolver(solver, model, *t);
                 getSteadystateSimulation(rdata, newtonSimSolver.get(), model,
                                          it);
             } else {
-                /* Carry on simulating from last point */
-                *t = model->t(it - 1);
+                /* Solver was already created, use this one */
                 getSteadystateSimulation(rdata, solver, model, it);
             }
             newton_status = NewtonStatus::newt_sim;
@@ -178,7 +180,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
         }
 
         /* Try a full, undamped Newton step */
-        N_VLinearSum(1.0, x_old.getNVector(), -gamma, delta.getNVector(), x->getNVector());
+        N_VLinearSum(1.0, x_old.getNVector(), gamma, delta.getNVector(), x->getNVector());
 
         /* Compute new xdot and residuals */
         model->fxdot(*t, x, &dx, &xdot);
@@ -273,8 +275,11 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
         converged = checkConvergence(solver, model);
         /* increase counter, check for maxsteps */
         steps_newton++;
-        if (steps_newton >= solver->getMaxSteps() && !converged)
+        if (steps_newton >= solver->getMaxSteps() && !converged) {
+            rdata->newton_numsteps.at(static_cast<int>(NewtonStatus::newt_sim) - 1) =
+                steps_newton;
             throw NewtonFailure(AMICI_TOO_MUCH_WORK, "exceeded maximum number of steps");
+        }
     }
     rdata->newton_numsteps.at(static_cast<int>(NewtonStatus::newt_sim) - 1) =
         steps_newton;

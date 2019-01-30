@@ -895,8 +895,13 @@ class ODEModel:
             [sp.Symbol(f'flux_r{idx}') for idx in range(len(si.fluxVector))]
         )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
-        symbols['species']['dt'] = \
-            si.stoichiometricMatrix * self.sym('w')
+        if len(si.stoichiometricMatrix):
+            symbols['species']['dt'] = \
+                si.stoichiometricMatrix * self.sym('w')
+        else:
+            symbols['species']['dt'] = sp.zeros(
+                *symbols['species']['identifier'].shape
+            )
 
         for symbol in [s for s in symbols if s != 'my']:
             # transform dict of lists into a list of dicts
@@ -1395,11 +1400,23 @@ class ODEModel:
             # if x0_fixedParameters>0 else 0
             # sx0_fixedParameters = sx+deltasx =
             # dx0_fixedParametersdx*sx+dx0_fixedParametersdp
-            self._eqs[name] = \
-                self.eq('x0_fixedParameters').jacobian(self.sym('p'))
+            if len(self.sym('p')):
+                self._eqs[name] = \
+                    self.eq('x0_fixedParameters').jacobian(self.sym('p'))
+            else:
+                self._eqs[name] = sp.zeros(
+                    len(self.eq('x0_fixedParameters')),
+                    len(self.sym('p'))
+                )
 
-            dx0_fixedParametersdx = \
-                self.eq('x0_fixedParameters').jacobian(self.sym('x'))
+            if len(self.sym('x')):
+                dx0_fixedParametersdx = \
+                    self.eq('x0_fixedParameters').jacobian(self.sym('x'))
+            else:
+                dx0_fixedParametersdx = sp.zeros(
+                    len(self.eq('x0_fixedParameters')),
+                    len(self.sym('x'))
+                )
 
             if dx0_fixedParametersdx.is_zero is not True:
                 for ip in range(self._eqs[name].shape[1]):
@@ -1407,9 +1424,7 @@ class ODEModel:
                         dx0_fixedParametersdx \
                         * self.sym('sx0') \
 
-            for index, formula in enumerate(
-                    self.eq('x0_fixedParameters')
-            ):
+            for index, formula in enumerate(self.eq('x0_fixedParameters')):
                 if formula == 0 or formula == 0.0:
                     self._eqs[name][index, :] = \
                         sp.zeros(1, self._eqs[name].shape[1])
@@ -1639,7 +1654,11 @@ class ODEModel:
         else:
             xx = variables[x]
 
-        self._eqs[name] = sign * xx * variables[y]
+        if xx.is_zero is not True and variables[y].is_zero is not True \
+                and len(xx) and len(variables[y]):
+            self._eqs[name] = sign * xx * variables[y]
+        else:
+            self._eqs[name] = sp.zeros(len(xx), len(variables[y]))
 
     def _equationFromComponent(self, name, component):
         """Generates the formulas of a symbolic variable from the attributes
@@ -1715,11 +1734,6 @@ class ODEModel:
             component = self._variable_prototype[name]
         elif name in self._equation_prototype:
             component = self._equation_prototype[name]
-        elif name == 'x':
-            self._names[name]= [
-                s._name for s in self._states if s.conservation_law is None
-            ]
-            return
         else:
             raise Exception(f'No names for {name}')
 
@@ -2213,7 +2227,7 @@ class ODEExporter:
             'PARAMETER_NAMES_INITIALIZER_LIST':
                 self._getSymbolNameInitializerList('p'),
             'STATE_NAMES_INITIALIZER_LIST':
-                self._getSymbolNameInitializerList('x'),
+                self._getSymbolNameInitializerList('x_rdata'),
             'FIXED_PARAMETER_NAMES_INITIALIZER_LIST':
                 self._getSymbolNameInitializerList('k'),
             'OBSERVABLE_NAMES_INITIALIZER_LIST':
@@ -2221,7 +2235,7 @@ class ODEExporter:
             'PARAMETER_IDS_INITIALIZER_LIST':
                 self._getSymbolIDInitializerList('p'),
             'STATE_IDS_INITIALIZER_LIST':
-                self._getSymbolIDInitializerList('x'),
+                self._getSymbolIDInitializerList('x_rdata'),
             'FIXED_PARAMETER_IDS_INITIALIZER_LIST':
                 self._getSymbolIDInitializerList('k'),
             'OBSERVABLE_IDS_INITIALIZER_LIST':
