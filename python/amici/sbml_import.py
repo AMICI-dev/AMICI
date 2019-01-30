@@ -6,6 +6,8 @@ import sympy as sp
 import libsbml as sbml
 import re
 import math
+from sympy.logic.boolalg import BooleanTrue as spTrue
+from sympy.logic.boolalg import BooleanFalse as spFalse
 
 from .ode_export import ODEExporter, ODEModel
 
@@ -343,23 +345,39 @@ class SbmlImporter:
                 index = species_ids.index(
                         initial_assignment.getId()
                     )
-                speciesInitial[index] = sp.sympify(
+                symMath = sp.sympify(
                     sbml.formulaToL3String(initial_assignment.getMath())
                 )
-                _check_unsupported_functions(speciesInitial[index])
+                if symMath is not None:
+                    _check_unsupported_functions(symMath, 'InitialAssignment')
+                    speciesInitial[index] = symMath
 
         # flatten initSpecies
         while any([species in speciesInitial.free_symbols
                    for species in self.symbols['species']['identifier']]):
-            speciesInitial = speciesInitial.subs(
-                self.symbols['species']['identifier'],
-                speciesInitial
-            )
+            identical_assignment = next((
+                symbol == init
+                for symbol, init in zip(
+                    self.symbols['species']['identifier'], speciesInitial
+                )
+            ), None)
+            if identical_assignment is not None:
+                raise SBMLException('Species without initial assignment are '
+                                    'currently not supported (this is error '
+                                    'is likely to be due to the existence of '
+                                    'a species assignment rule, which is '
+                                    'also not supported)!')
+            speciesInitial = speciesInitial.subs([
+                (symbol, init)
+                for symbol, init in zip(
+                    self.symbols['species']['identifier'], speciesInitial
+                )
+            ])
 
         self.symbols['species']['value'] = speciesInitial
 
         if self.sbml.isSetConversionFactor():
-            conversion_factor = self.sbml.getConversionFactor()
+            conversion_factor = sp.Symbol(self.sbml.getConversionFactor())
         else:
             conversion_factor = 1.0
 
@@ -481,7 +499,7 @@ class SbmlImporter:
                     sbml.formulaToL3String(initial_assignment.getMath())
                 )
 
-        for comp, vol in zip(self.compartmentSymbols,self.compartmentVolume):
+        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
             self.replaceInAllExpressions(
                comp, vol
             )
@@ -519,29 +537,34 @@ class SbmlImporter:
             assignment = self.sbml.getInitialAssignment(
                 element_id
             )
-            sym = sp.sympify(assignment.getFormula())
+            sym = sp.sympify(sbml.formulaToL3String(assignment.getMath()))
             # this is an initial assignment so we need to use
             # initial conditions
-            sym = sym.subs(
-                self.symbols['species']['identifier'],
-                self.symbols['species']['value']
-            )
+            if sym is not None:
+                sym = sym.subs(
+                    self.symbols['species']['identifier'],
+                    self.symbols['species']['value']
+                )
             return sym
 
         def getElementStoichiometry(element):
             if element.isSetId():
                 if element.getId() in assignment_ids:
-                    return getElementFromAssignment(element.getId())
+                    symMath = getElementFromAssignment(element.getId())
+                    if symMath is None:
+                        symMath = sp.sympify(element.getStoichiometry())
                 elif element.getId() in rulevars:
-                    return sp.sympify(element.getId())
+                    return sp.Symbol(element.getId())
                 else:
                     # dont put the symbol if it wont get replaced by a
                     # rule
-                    return sp.sympify(element.getStoichiometry())
+                    symMath = sp.sympify(element.getStoichiometry())
             elif element.isSetStoichiometry():
-                return sp.sympify(element.getStoichiometry())
+                symMath = sp.sympify(element.getStoichiometry())
             else:
                 return sp.sympify(1.0)
+            _check_unsupported_functions(symMath, 'Stoichiometry')
+            return symMath
 
         def isConstant(specie):
             return specie in self.constantSpecies or \
@@ -578,7 +601,7 @@ class SbmlImporter:
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
-            _check_unsupported_functions(symMath)
+            _check_unsupported_functions(symMath, 'KineticLaw')
             for r in reactions:
                 elements = list(r.getListOfReactants()) \
                            + list(r.getListOfProducts())
@@ -629,7 +652,7 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable())
             # avoid incorrect parsing of pow(x, -1) in symengine
             formula = sp.sympify(sbml.formulaToL3String(rule.getMath()))
-            _check_unsupported_functions(formula)
+            _check_unsupported_functions(formula, 'Rule')
 
             if variable in stoichvars:
                 self.stoichiometricMatrix = \
@@ -1112,35 +1135,53 @@ def checkLibSBMLErrors(sbml_doc, show_warnings=False):
         )
 
 
-def _check_unsupported_functions(sym):
+def _check_unsupported_functions(sym, expression_type, full_sym=None):
     """Recursively checks the symbolic expression for unsupported symbolic
     functions
 
         Arguments:
             sym: symbolic expressions @type sympy.Basic
+            expression_type: type of expression
 
         Returns:
 
         Raises:
             raises SBMLException if an unsupported function is encountered
     """
+    if full_sym is None:
+        full_sym = sym
 
     unsupported_functions = [
-        sp.functions.factorial, sp.functions.ceiling,
-        sp.functions.Piecewise,
+        sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
+        sp.functions.Piecewise, spTrue, spFalse, sp.function.UndefinedFunction
     ]
 
-    for arg in sym._args:
-        unsupp_fun = next(
+    unsupp_fun_type = next(
+        (
+            fun_type
+            for fun_type in unsupported_functions
+            if isinstance(sym.func, fun_type)
+        ),
+        None
+    )
+    if unsupp_fun_type:
+        raise SBMLException(f'Encountered unsupported expression '
+                            f'"{sym.func}" of type '
+                            f'"{unsupp_fun_type}" as part of a '
+                            f'{expression_type}: "{full_sym}"!')
+    for fun in list(sym._args) + [sym]:
+        unsupp_fun_type = next(
             (
-                fun
-                for fun in unsupported_functions
-                if isinstance(arg, fun)
+                fun_type
+                for fun_type in unsupported_functions
+                if isinstance(fun, fun_type)
             ),
             None
         )
-        if unsupp_fun:
-            raise SBMLException(f'Encountered unsupported function type '
-                                f'"{unsupp_fun}" in subexpression "{sym}"')
-
-        _check_unsupported_functions(arg)
+        if unsupp_fun_type:
+            raise SBMLException(f'Encountered unsupported expression '
+                                f'"{fun}" of type '
+                                f'"{unsupp_fun_type}" as part of a '
+                                f'{expression_type}: "{full_sym}"!')
+        if fun is not sym:
+            _check_unsupported_functions(fun, expression_type)
