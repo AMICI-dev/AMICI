@@ -59,7 +59,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     init(x, dx, model->t0());
 
     applyTolerances();
-    
+
     /* Set optional inputs */
     setErrHandlerFn();
     /* attaches userdata*/
@@ -68,9 +68,9 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     setMaxNumSteps(maxsteps);
     /* activates stability limit detection */
     setStabLimDet(stldet);
-    
+
     rootInit(model->ne);
-    
+
     initializeLinearSolver(model, x);
     initializeNonLinearSolver(x);
 
@@ -85,7 +85,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
             sensInit1(sx, sdx, plist.size());
             initalizeNonLinearSolverSens(x, model);
             setSensParams(par.data(), nullptr, plist.data());
-            
+
             applyTolerancesFSA();
         } else if (sensi_meth == SensitivityMethod::adjoint) {
             /* Allocate space for the adjoint computation */
@@ -126,13 +126,13 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
 
     /* Number of maximal internal steps */
     setMaxNumStepsB(bwd->getwhich(), (maxstepsB == 0) ? maxsteps * 100 : maxstepsB);
-    
+
     initializeLinearSolverB(model, xB, bwd->getwhich());
-    initializeNonLinearSolverB(xB, bwd->getwhich(), model);
+    initializeNonLinearSolverB(xB, bwd->getwhich());
 
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
-    
+
     applyTolerancesASA(bwd->getwhich());
     applyQuadTolerancesASA(bwd->getwhich());
 
@@ -173,40 +173,40 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
 
     warnMsgIdAndTxt(buffid, buffer);
 }
-    
+
 void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     long int number;
 
     if(solverWasCalled && solverMemory) {
         getNumSteps(solverMemory.get(), &number);
         rdata->numsteps[it] = number;
-        
+
         getNumRhsEvals(solverMemory.get(), &number);
         rdata->numrhsevals[it] = number;
-        
+
         getNumErrTestFails(solverMemory.get(), &number);
         rdata->numerrtestfails[it] = number;
-        
+
         getNumNonlinSolvConvFails(solverMemory.get(), &number);
         rdata->numnonlinsolvconvfails[it] = number;
-        
+
         getLastOrder(solverMemory.get(), &rdata->order[it]);
     }
 }
 
 void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
     long int number;
-    
+
     if(solverWasCalled && solverMemoryB.at(which)) {
         getNumSteps(solverMemoryB.at(which).get(), &number);
         rdata->numstepsB[it] = (double)number;
-        
+
         getNumRhsEvals(solverMemoryB.at(which).get(), &number);
         rdata->numrhsevalsB[it] = (double)number;
-        
+
         getNumErrTestFails(solverMemoryB.at(which).get(), &number);
         rdata->numerrtestfailsB[it] = (double)number;
-        
+
         getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
         rdata->numnonlinsolvconvfailsB[it] = (double)number;
     }
@@ -290,17 +290,17 @@ void Solver::initializeNonLinearSolver(AmiVector *x)
     setNonLinearSolver();
 }
 
-void Solver::initializeLinearSolverB(const Model *model, AmiVector *x, const int which) {
+void Solver::initializeLinearSolverB(const Model *model, AmiVector *xB, const int which) {
     switch (linsol) {
     /* DIRECT SOLVERS */
     case LinearSolver::dense:
-        linearSolverB = std::make_unique<SUNLinSolDense>(*x);
+        linearSolverB = std::make_unique<SUNLinSolDense>(*xB);
         setLinearSolverB(which);
         setDenseJacFnB(which);
         break;
 
     case LinearSolver::band:
-        linearSolverB = std::make_unique<SUNLinSolBand>(*x, model->ubw, model->lbw);
+        linearSolverB = std::make_unique<SUNLinSolBand>(*xB, model->ubw, model->lbw);
         setLinearSolverB(which);
         setBandJacFnB(which);
         break;
@@ -319,19 +319,19 @@ void Solver::initializeLinearSolverB(const Model *model, AmiVector *x, const int
         /* ITERATIVE SOLVERS */
 
     case LinearSolver::SPGMR:
-        linearSolverB = std::make_unique<SUNLinSolSPGMR>(*x, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPGMR>(*xB, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
 
     case LinearSolver::SPBCG:
-        linearSolverB = std::make_unique<SUNLinSolSPBCGS>(*x, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPBCGS>(*xB, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
 
     case LinearSolver::SPTFQMR:
-        linearSolverB = std::make_unique<SUNLinSolSPTFQMR>(*x, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPTFQMR>(*xB, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
@@ -339,7 +339,7 @@ void Solver::initializeLinearSolverB(const Model *model, AmiVector *x, const int
         /* SPARSE SOLVERS */
 
     case LinearSolver::KLU:
-        linearSolverB = std::make_unique<SUNLinSolKLU>(*x, model->nnz, CSC_MAT, getStateOrdering());
+        linearSolverB = std::make_unique<SUNLinSolKLU>(*xB, model->nnz, CSC_MAT, getStateOrdering());
         setLinearSolverB(which);
         setSparseJacFnB(which);
         break;
@@ -349,30 +349,14 @@ void Solver::initializeLinearSolverB(const Model *model, AmiVector *x, const int
     }
 }
 
-void Solver::initializeNonLinearSolverB(AmiVector *xB, const int which, Model *model)
+void Solver::initializeNonLinearSolverB(AmiVector *xB, const int which)
 {
     switch(iter) {
     case NonlinearSolverIteration::newton:
-        switch(ism) {
-        case InternalSensitivityMethod::staggered:
-        case InternalSensitivityMethod::simultaneous:
-        case InternalSensitivityMethod::staggered1:
-            nonLinearSolverB = std::make_unique<SUNNonLinSolNewton>(xB->getNVector());
-            break;
-        default:
-            throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
-        }
+        nonLinearSolverB = std::make_unique<SUNNonLinSolNewton>(xB->getNVector());
         break;
     case NonlinearSolverIteration::functional:
-        switch(ism) {
-        case InternalSensitivityMethod::staggered:
-        case InternalSensitivityMethod::simultaneous:
-        case InternalSensitivityMethod::staggered1:
-            nonLinearSolverB = std::make_unique<SUNNonLinSolFixedPoint>(xB->getNVector());
-            break;
-        default:
-            throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
-        }
+        nonLinearSolverB = std::make_unique<SUNNonLinSolFixedPoint>(xB->getNVector());
         break;
     default:
         throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
@@ -417,53 +401,53 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.sensi == b.sensi)
             && (a.sensi_meth == b.sensi_meth);
 }
-    
+
 void Solver::applyTolerances() {
     if (!getMallocDone())
         throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
-    
+
     setSStolerances(RCONST(this->rtol), RCONST(this->atol));
 }
-    
+
 void Solver::applyTolerancesFSA() {
     if (!getMallocDone())
         throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
-    
+
     if (sensi < SensitivityOrder::first)
         return;
-    
+
     if(nplist()) {
         std::vector<realtype> atols(nplist(), getAbsoluteToleranceFSA());
         setSensSStolerances(getRelativeToleranceFSA(), atols.data());
         setSensErrCon(true);
     }
 }
-    
+
 void Solver::applyTolerancesASA(int which) {
     if (!getAdjMallocDone())
         throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be applied yet!"));
-    
+
     if (sensi < SensitivityOrder::first)
         return;
-    
+
     /* specify integration tolerances for backward problem */
     setSStolerancesB(which, RCONST(getRelativeToleranceB()), RCONST(getAbsoluteToleranceB()));
 }
-    
+
 void Solver::applyQuadTolerancesASA(int which) {
     if (!getAdjMallocDone())
         throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be applied yet!"));
-    
+
     if (sensi < SensitivityOrder::first)
         return;
-    
+
     double quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
     double quad_atol = isNaN(this->quad_atol) ? atol : this->quad_atol;
-    
+
     /* Enable Quadrature Error Control */
     setQuadErrConB(which,
                    !std::isinf(quad_atol) && !std::isinf(quad_rtol));
-    
+
     quadSStolerancesB(which,
                       RCONST(quad_rtol),
                       RCONST(quad_atol));
@@ -472,7 +456,7 @@ void Solver::applyQuadTolerancesASA(int which) {
 void Solver::applySensitivityTolerances() {
     if (sensi < SensitivityOrder::first)
         return;
-    
+
     if (sensi_meth == SensitivityMethod::forward)
         applyTolerancesFSA();
     else if (sensi_meth == SensitivityMethod::adjoint && getAdjMallocDone()) {
@@ -480,7 +464,7 @@ void Solver::applySensitivityTolerances() {
             applyTolerancesASA(iMem);
     }
 }
-    
+
 SensitivityMethod Solver::getSensitivityMethod() const{
     return sensi_meth;
 }
@@ -488,25 +472,25 @@ SensitivityMethod Solver::getSensitivityMethod() const{
 void Solver::setSensitivityMethod(SensitivityMethod sensi_meth) {
     this->sensi_meth = sensi_meth;
 }
-    
+
 int Solver::getNewtonMaxSteps() const {
     return newton_maxsteps;
 }
-    
+
 void Solver::setNewtonMaxSteps(int newton_maxsteps) {
     if(newton_maxsteps < 0)
         throw AmiException("newton_maxsteps must be a non-negative number");
     this->newton_maxsteps = newton_maxsteps;
 }
-    
+
 bool Solver::getNewtonPreequilibration() const {
     return newton_preeq;
 }
-    
+
 void Solver::setNewtonPreequilibration(bool newton_preeq) {
     this->newton_preeq = newton_preeq;
 }
-    
+
 int Solver::getNewtonMaxLinearSteps() const {
     return newton_maxlinsteps;
 }
@@ -523,7 +507,7 @@ SensitivityOrder Solver::getSensitivityOrder() const {
 
 void Solver::setSensitivityOrder(SensitivityOrder sensi) {
     this->sensi = sensi;
-    
+
     if(getMallocDone())
         applySensitivityTolerances();
 }
@@ -535,9 +519,9 @@ double Solver::getRelativeTolerance() const {
 void Solver::setRelativeTolerance(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     this->rtol = rtol;
-    
+
     if(getMallocDone()) {
         applyTolerances();
         applySensitivityTolerances();
@@ -551,15 +535,15 @@ double Solver::getAbsoluteTolerance() const {
 void Solver::setAbsoluteTolerance(double atol) {
     if(atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     this->atol = atol;
-    
+
     if(getMallocDone()) {
         applyTolerances();
         applySensitivityTolerances();
     }
 }
-    
+
 double Solver::getRelativeToleranceFSA() const {
     return isNaN(rtol_fsa) ? rtol : rtol_fsa;
 }
@@ -567,9 +551,9 @@ double Solver::getRelativeToleranceFSA() const {
 void Solver::setRelativeToleranceFSA(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     rtol_fsa = rtol;
-    
+
     if(getMallocDone()) {
         applySensitivityTolerances();
     }
@@ -582,9 +566,9 @@ double Solver::getAbsoluteToleranceFSA() const {
 void Solver::setAbsoluteToleranceFSA(double atol) {
     if(atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     atol_fsa = atol;
-    
+
     if(getMallocDone()) {
         applySensitivityTolerances();
     }
@@ -631,12 +615,12 @@ double Solver::getRelativeToleranceQuadratures() const {
 void Solver::setRelativeToleranceQuadratures(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     this->quad_rtol = rtol;
-    
+
     if (sensi_meth != SensitivityMethod::adjoint)
         return;
-    
+
     for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
         if(solverMemoryB.at(iMem))
             applyQuadTolerancesASA(iMem);
@@ -649,17 +633,17 @@ double Solver::getAbsoluteToleranceQuadratures() const {
 void Solver::setAbsoluteToleranceQuadratures(double atol) {
     if (atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     this->quad_atol = atol;
-    
+
     if (sensi_meth != SensitivityMethod::adjoint)
         return;
-    
+
     for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
         if(solverMemoryB.at(iMem))
             applyTolerancesASA(iMem);
 }
-    
+
 double Solver::getRelativeToleranceSteadyState() const {
     return isNaN(ss_rtol) ? rtol : ss_rtol;
 }
@@ -667,7 +651,7 @@ double Solver::getRelativeToleranceSteadyState() const {
 void Solver::setRelativeToleranceSteadyState(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     this->ss_rtol = rtol;
 }
 
@@ -678,10 +662,10 @@ double Solver::getAbsoluteToleranceSteadyState() const {
 void Solver::setAbsoluteToleranceSteadyState(double atol) {
     if (atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     this->ss_atol = atol;
 }
-    
+
 double Solver::getRelativeToleranceSteadyStateSensi() const {
     return isNaN(ss_rtol_sensi) ? rtol : ss_rtol_sensi;
 }
@@ -689,7 +673,7 @@ double Solver::getRelativeToleranceSteadyStateSensi() const {
 void Solver::setRelativeToleranceSteadyStateSensi(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     this->ss_rtol_sensi = rtol;
 }
 
@@ -700,7 +684,7 @@ double Solver::getAbsoluteToleranceSteadyStateSensi() const {
 void Solver::setAbsoluteToleranceSteadyStateSensi(double atol) {
     if (atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     this->ss_atol_sensi = atol;
 }
 
@@ -711,7 +695,7 @@ int Solver::getMaxSteps() const {
 void Solver::setMaxSteps(int maxsteps) {
     if (maxsteps < 0)
         throw AmiException("maxsteps must be a non-negative number");
-    
+
     this->maxsteps = maxsteps;
     if(solverMemory)
         setMaxNumSteps(this->maxsteps);
@@ -724,7 +708,7 @@ int Solver::getMaxStepsBackwardProblem() const {
 void Solver::setMaxStepsBackwardProblem(int maxsteps) {
     if (maxsteps < 0)
         throw AmiException("maxsteps must be a non-negative number");
-    
+
     this->maxstepsB = maxsteps;
     for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
         if(solverMemoryB.at(iMem))
@@ -782,7 +766,7 @@ int Solver::getStabilityLimitFlag() const {
 void Solver::setStabilityLimitFlag(int stldet) {
     if (stldet != TRUE && stldet != FALSE)
         throw AmiException("Invalid stldet flag, valid values are %i or %i",TRUE,FALSE);
-    
+
     this->stldet = stldet;
     if (solverMemory) {
         setStabLimDet(stldet);

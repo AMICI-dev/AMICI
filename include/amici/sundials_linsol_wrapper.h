@@ -515,7 +515,7 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPTFQMR(N_Vector y, int pretype, int maxl);
+    SUNLinSolSPTFQMR(N_Vector x, int pretype, int maxl);
 
     /**
      * @brief Create SPTFQMR solver

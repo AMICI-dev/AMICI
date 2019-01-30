@@ -954,9 +954,9 @@ class Solver {
      * @param which index of the backward problem
      */
 
-    void initializeLinearSolverB(const Model *model, AmiVector *x, const int which);
+    void initializeLinearSolverB(const Model *model, AmiVector *xB, const int which);
 
-    void initializeNonLinearSolverB(AmiVector *xB, const int which, Model *model);
+    void initializeNonLinearSolverB(AmiVector *xB, const int which);
 
     /**
      * @brief Accessor function to the number of sensitivity parameters in the
