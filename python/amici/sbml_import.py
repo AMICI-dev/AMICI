@@ -499,7 +499,7 @@ class SbmlImporter:
                     sbml.formulaToL3String(initial_assignment.getMath())
                 )
 
-        for comp, vol in zip(self.compartmentSymbols,self.compartmentVolume):
+        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
             self.replaceInAllExpressions(
                comp, vol
             )
