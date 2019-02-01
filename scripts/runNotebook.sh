@@ -12,9 +12,11 @@ runNotebook () {
     tempfile=$(mktemp)
     jupyter nbconvert --debug --stdout --execute --ExecutePreprocessor.timeout=300 --to markdown $@ &> $tempfile
     ret=$?
-    if [[ $ret != 0 ]]; then cat $tempfile; fi
+    if [[ $ret != 0 ]]; then
+      cat $tempfile
+      exit $ret
+    fi
     rm $tempfile
-    exit $ret
     set -e
 }
 
