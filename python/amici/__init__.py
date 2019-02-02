@@ -23,6 +23,8 @@ Attributes:
     hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
     has_clibs: boolean indicating if this is the full package with swig
                interface or the raw package without
+    capture_cstdout: context to redirect C/C++ stdout to python stdout if
+        python stdout was redirected (doing nothing if not redirected).
 """
 
 import os
@@ -32,10 +34,10 @@ from contextlib import suppress
 
 # redirect C/C++ stdout to python stdout if python stdout is redirected,
 # e.g. in ipython notebook
-sys_pipes = suppress
+capture_cstdout = suppress
 if sys.stdout != sys.__stdout__:
     try:
-        from wurlitzer import sys_pipes
+        from wurlitzer import sys_pipes as capture_cstdout
     except ModuleNotFoundError:
         pass
 
@@ -119,7 +121,7 @@ def runAmiciSimulation(model, solver, edata=None):
     if edata and edata.__class__.__name__ == 'ExpDataPtr':
         edata = edata.get()
 
-    with sys_pipes():
+    with capture_cstdout():
         rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
 
@@ -164,7 +166,7 @@ def runAmiciSimulations(model, solver, edata_list, num_threads=1):
     Raises:
 
     """
-    with sys_pipes():
+    with capture_cstdout():
         edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
         rdata_ptr_list = amici.runAmiciSimulations(solver.get(),
                                                    edata_ptr_vector,
