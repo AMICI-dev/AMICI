@@ -37,50 +37,38 @@ namespace amici {
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
 /** warnMsgIdAndTxt is a function pointer for printWarnMsgIdAndTxt  */
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
-    
 
-std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model) {
-    
+
+std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model, bool rethrow) {
     std::unique_ptr<ReturnData> rdata;
-    
-    auto originalFixedParameters = model.getFixedParameters(); // to restore after simulation
-    auto originalTimepoints = model.getTimepoints();
-    if(edata) {
-        if(!edata->fixedParameters.empty()) {
-            // fixed parameter in model are superseded by those provided in edata
-            if(edata->fixedParameters.size() != (unsigned) model.nk())
-                throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
-                                   model.nk(), edata->fixedParameters.size());
-            model.setFixedParameters(edata->fixedParameters);
-        }
-        if(edata->nt()) {
-            // fixed parameter in model are superseded by those provided in edata
-            model.setTimepoints(edata->getTimepoints());
-        }
-    }
-    
+
+    /* Applies condition-specific model settings and restores them when going
+     * out of scope */
+    ConditionContext conditionContext(&model, edata);
+
     try{
         rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model));
+
         if (model.nx_solver <= 0) {
-            model.setFixedParameters(originalFixedParameters);
-            model.setTimepoints(originalTimepoints);
             return rdata;
         }
-        
+
         auto fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),edata,&model,&solver));
         fwd->workForwardProblem();
 
         auto bwd = std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
         bwd->workBackwardProblem();
-    
+
         rdata->status = AMICI_SUCCESS;
     } catch (amici::IntegrationFailure const& ex) {
         rdata->invalidate(ex.time);
         rdata->status = ex.error_code;
+        if(rethrow) throw;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI forward simulation failed at t = %f:\n%s\n",ex.time,ex.what());
     } catch (amici::IntegrationFailureB const& ex) {
-        rdata->invalidateLLH();
+        rdata->invalidateSLLH();
         rdata->status = ex.error_code;
+        if(rethrow) throw;
         amici::warnMsgIdAndTxt(
                     "AMICI:mex:simulation",
                     "AMICI backward simulation failed when trying to solve until t = %f"
@@ -89,19 +77,14 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     } catch (amici::AmiException const& ex) {
         rdata->invalidate(model.t0());
         rdata->status = AMICI_ERROR;
+        if(rethrow) throw;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
-    } catch (std::exception const& ex) {
-        model.setFixedParameters(originalFixedParameters);
-        model.setTimepoints(originalTimepoints);
-        throw;
     } catch (...) {
-        model.setFixedParameters(originalFixedParameters);
-        model.setTimepoints(originalTimepoints);
         throw std::runtime_error("Unknown internal error occured!");
     }
-    model.setFixedParameters(originalFixedParameters);
-    model.setTimepoints(originalTimepoints);
+
     rdata->applyChainRuleFactorToSimulationResults(&model);
+
     return rdata;
 }
 
