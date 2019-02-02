@@ -27,9 +27,10 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
  * @param solver Solver instance
  * @param edata pointer to experimental data object
  * @param model model specification object
+ * @param rethrow rethrow integration exceptions?
  * @return rdata pointer to return data object
  */
-std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model);
+std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model, bool rethrow=false);
 
 /*!
  * runAmiciSimulations does the same as runAmiciSimulation, but for multiple ExpData instances.
