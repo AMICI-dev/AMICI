@@ -38,7 +38,7 @@ class ExpData {
      */
     ExpData(int nytrue, int nztrue, int nmaxevent,
             std::vector<realtype>  const& ts);
-    
+
     /**
      * constructor that initializes timepoints and fixed parameters from vectors
      *
@@ -351,18 +351,18 @@ class ExpData {
     realtype t_presim = 0;
 
 protected:
-    
+
     /**
      * resizes observedData, observedDataStdDev, observedEvents and
      * observedEventsStdDev
      */
     void applyDimensions();
-    
+
     /**
      * resizes observedData and observedDataStdDev
      */
     void applyDataDimension();
-    
+
     /**
      * resizes observedEvents and observedEventsStdDev
      */
@@ -424,6 +424,44 @@ void checkSigmaPositivity(std::vector<realtype> const& sigmaVector, const char *
  * @param sigmaName name of the input
  */
 void checkSigmaPositivity(const realtype sigma, const char *sigmaName);
+
+
+/**
+ * @brief The ConditionContext class applies condition-specific amici::Model
+ * settings and restores them when going out of scope
+ */
+class ConditionContext {
+public:
+    /**
+     * @brief Apply condition-specific settings from edata to model while
+     * keeping a backup of the original values.
+     * @param model
+     * @param edata
+     */
+    ConditionContext(Model *model, const ExpData *edata = nullptr);
+
+    ~ConditionContext();
+
+    /**
+     * @brief Apply condition-specific settings from edata to the
+     * constructor-supplied model, not changing the settings which were
+     * backed-up in the constructor call.
+     * @param edata
+     */
+    void applyCondition(const ExpData *edata);
+
+    /**
+     * @brief Restore original settings on constructor-supplied amici::Model.
+     * Will be called during destruction. Explicit call is generally not
+     * necessary.
+     */
+    void restore();
+
+private:
+    Model *model = nullptr;
+    std::vector<realtype> originalFixedParameters;
+    std::vector<realtype> originalTimepoints;
+};
 
 } // namespace amici
 

@@ -11,9 +11,6 @@
 namespace amici {
 
 ReturnData::ReturnData()
-    /**
-     * @brief default constructor
-     */
     : np(0), nk(0), nx(0), nx_solver(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0), ne(0),
       nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0),
     pscale(std::vector<ParameterScaling>(0, ParameterScaling::none)), o2mode(SecondOrderMode::none),
@@ -27,13 +24,6 @@ ReturnData::ReturnData(Solver const& solver, const Model *model)
                  solver.getNewtonMaxSteps(), model->getParameterScale(),
                  model->o2mode, solver.getSensitivityOrder(),
                  static_cast<SensitivityMethod>(solver.getSensitivityMethod())) {
-    /**
-     * @brief constructor that uses information from model and solver to
-     * appropriately initialize fields
-     * @param solver solver
-     * @param model pointer to model specification object
-     * bool
-     */
 }
 
 
@@ -73,7 +63,7 @@ ReturnData::ReturnData(
         numerrtestfails.resize(nt, 0);
         numnonlinsolvconvfails.resize(nt, 0);
         order.resize(nt, 0);
-        
+
         if (sensi_meth == SensitivityMethod::adjoint && sensi >= SensitivityOrder::first) {
             numstepsB.resize(nt, 0);
             numrhsevalsB.resize(nt, 0);
@@ -83,9 +73,9 @@ ReturnData::ReturnData(
     }
 
     x0.resize(nx, getNaN());
-        
+
     x_ss.resize(nx, getNaN());
-    
+
     res.resize(nt * nytrue, 0.0);
 
     llh = getNaN();
@@ -94,18 +84,18 @@ ReturnData::ReturnData(
         sllh.resize(nplist, getNaN());
         sx0.resize(nx * nplist, getNaN());
         sx_ss.resize(nx * nplist, getNaN());
-        
+
         if (sensi_meth == SensitivityMethod::forward || sensi >= SensitivityOrder::second){
             // for second order we can fill in from the augmented states
             sx.resize(nt * nx * nplist, 0.0);
             sy.resize(nt * ny * nplist, 0.0);
             sz.resize(nmaxevent * nz * nplist, 0.0);
             srz.resize(nmaxevent * nz * nplist, 0.0);
-            
+
             FIM.resize(nplist * nplist, 0.0);
             sres.resize(nt * nytrue * nplist, 0.0);
         }
-        
+
         ssigmay.resize(nt * ny * nplist, 0.0);
         ssigmaz.resize(nmaxevent * nz * nplist, 0.0);
         if (sensi >= SensitivityOrder::second) {
@@ -114,23 +104,19 @@ ReturnData::ReturnData(
                 s2rz.resize(nmaxevent * nztrue * nplist * nplist, 0.0);
         }
     }
-    
+
 }
 
 void ReturnData::invalidate(const realtype t) {
-    /**
-     * @brief routine to set likelihood, state variables, outputs and respective sensitivities to NaN
-     * (typically after integration failure)
-     * @param t time of integration failure
-     */
     invalidateLLH();
-    
+    invalidateSLLH();
+
     // find it corresponding to datapoint after integration failure
     int it_start;
     for (it_start = 0; it_start < nt; it_start++)
         if(ts.at(it_start)>t)
             break;
-    
+
     for (int it = it_start; it < nt; it++){
         for (int ix = 0; ix < nx; ix++)
             x.at(ix + nx * it) = getNaN();
@@ -155,26 +141,19 @@ void ReturnData::invalidate(const realtype t) {
         }
     }
 }
-    
-void ReturnData::invalidateLLH() {
-    /**
-     * @brief routine to set likelihood and respective sensitivities to NaN
-     * (typically after integration failure)
-     */
 
+void ReturnData::invalidateLLH()
+{
     llh = getNaN();
     chi2 = getNaN();
-    std::fill(sllh.begin(),sllh.end(),getNaN());
-    std::fill(s2llh.begin(),s2llh.end(),getNaN());
+}
+
+void ReturnData::invalidateSLLH() {
+    std::fill(sllh.begin(), sllh.end(), getNaN());
+    std::fill(s2llh.begin(), s2llh.end(), getNaN());
 }
 
 void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
-    /**
-     * @brief applies the chain rule to account for parameter transformation
-     * in the sensitivities of simulation results
-     * @param model Model from which the ReturnData was obtained
-     */
-
     // chain-rule factor: multiplier for am_p
     std::vector<realtype> coefficient(nplist, 1.0);
     std::vector<realtype> pcoefficient(nplist, 1.0);
@@ -183,7 +162,7 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     unscaleParameters(unscaledParameters, model->getParameterScale(), unscaledParameters);
 
     std::vector<realtype> augcoefficient(np, 1.0);
-    
+
     if (sensi == SensitivityOrder::second && o2mode == SecondOrderMode::full) {
         for (int ip = 0; ip < np; ++ip) {
             switch (pscale[ip]) {
@@ -240,12 +219,12 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
 
         for (int ip = 0; ip < nplist; ++ip)
             sllh.at(ip) *= pcoefficient.at(ip);
-        
+
         if(!sres.empty())
             for (int iyt = 0; iyt < nytrue*nt; ++iyt)
                 for (int ip = 0; ip < nplist; ++ip)
                     sres.at((iyt * nplist + ip)) *= pcoefficient.at(ip);
-        
+
         if(!FIM.empty())
             for (int ip = 0; ip < nplist; ++ip)
                 for (int jp = 0; jp < nplist; ++jp)

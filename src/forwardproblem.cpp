@@ -152,6 +152,7 @@ void ForwardProblem::workForwardProblem() {
     // set likelihood
     if (!edata) {
         rdata->invalidateLLH();
+        rdata->invalidateSLLH();
     }
 
     storeJacobianAndDerivativeInReturnData();
