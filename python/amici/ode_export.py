@@ -2350,7 +2350,8 @@ class ODEExporter:
         """
 
         templateData = {'MODELNAME': self.modelName,
-                        'VERSION': '0.1.0'}
+                        'AMICI_VERSION': __version__,
+                        'PACKAGE_VERSION': '0.1.0'}
         applyTemplate(os.path.join(amiciModulePath, 'setup.template.py'),
                       os.path.join(self.modelPath, 'setup.py'), templateData)
 
