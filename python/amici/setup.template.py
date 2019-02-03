@@ -88,7 +88,7 @@ model_module = Extension('TPL_MODELNAME._TPL_MODELNAME',
 # Install
 setup(
     name='TPL_MODELNAME',
-    version='TPL_VERSION',
+    version='TPL_PACKAGE_VERSION',
     description='AMICI-generated module for model TPL_MODELNAME',
     url='https://github.com/ICB-DCM/AMICI',
     author='model-author-todo',
@@ -96,8 +96,7 @@ setup(
     #license = 'BSD',
     ext_modules=[model_module],
     packages=find_packages(),
-    # TODO: should specify amici version with which the model was generated
-    install_requires=['amici'],
+    install_requires=['amici==TPL_AMICI_VERSION'],
     extras_require={'wurlitzer': ['wurlitzer']},
     python_requires='>=3.6',
     package_data={
