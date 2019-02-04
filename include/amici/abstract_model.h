@@ -28,12 +28,6 @@ class AbstractModel {
     virtual ~AbstractModel() = default;
 
     /**
-     * Retrieves the solver object
-     * @return The Solver instance
-     */
-    virtual std::unique_ptr<Solver> getSolver() = 0;
-
-    /**
      * Root function
      * @param t time
      * @param x state
