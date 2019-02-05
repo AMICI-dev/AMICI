@@ -67,9 +67,9 @@ functions = {
     },
     'JSparse': {
         'signature':
-            '(SUNMatrixContent_Sparse JSparse, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *dwdx)',
+            '(SUNMatrixContent_Sparse JSparse, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k,  '
+            'const realtype *h, const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -77,9 +77,10 @@ functions = {
     },
     'JSparseB': {
         'signature':
-            '(SUNMatrixContent_Sparse JSparseB, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *xB, const realtype *w, const realtype *dwdx)',
+            '(SUNMatrixContent_Sparse JSparseB, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *xB, const realtype *w, '
+            'const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
