@@ -147,15 +147,18 @@ SUNLinSolBand::SUNLinSolBand(N_Vector x, SUNMatrix A)
         throw AmiException("Failed to create solver.");
 }
 
-SUNLinSolBand::SUNLinSolBand(const AmiVector &x, int ubw, int lbw) {
-    A = SUNMatrixWrapper(x.getLength(), ubw, lbw);
+SUNLinSolBand::SUNLinSolBand(const AmiVector &x, int ubw, int lbw) :
+    A(SUNMatrixWrapper(x.getLength(), ubw, lbw)) {
     solver = SUNLinSol_Band(x.getNVector(), A.get());
+    if (!solver)
+        throw AmiException("Failed to create solver.");
+
 }
 
 SUNMatrix SUNLinSolBand::getMatrix() const { return A.get(); }
 
-SUNLinSolDense::SUNLinSolDense(const AmiVector &x) {
-    A = SUNMatrixWrapper(x.getLength(), x.getLength());
+SUNLinSolDense::SUNLinSolDense(const AmiVector &x) :
+    A(SUNMatrixWrapper(x.getLength(), x.getLength())) {
     solver = SUNLinSol_Dense(x.getNVector(), A.get());
     if (!solver)
         throw AmiException("Failed to create solver.");
@@ -170,10 +173,9 @@ SUNLinSolKLU::SUNLinSolKLU(N_Vector x, SUNMatrix A)
 }
 
 SUNLinSolKLU::SUNLinSolKLU(const AmiVector &x, int nnz, int sparsetype,
-                           StateOrdering ordering) {
-    A = SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype);
+                           StateOrdering ordering) :
+      A(SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype)) {
     solver = SUNLinSol_KLU(x.getNVector(), A.get());
-
     if (!solver)
         throw AmiException("Failed to create solver.");
 
