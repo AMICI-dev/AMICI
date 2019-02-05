@@ -111,14 +111,10 @@ end
 
 function sources_sundials = getSourcesSundials()
     sources_sundials = {
-        fullfile('src', 'sunmat_dense', 'fsunmatrix_dense.c');
         fullfile('src', 'sunmat_dense', 'sunmatrix_dense.c');
-        fullfile('src', 'sunlinsol_spgmr', 'fsunlinsol_spgmr.c');
         fullfile('src', 'sunlinsol_spgmr', 'sunlinsol_spgmr.c');
-        fullfile('src', 'sunlinsol_sptfqmr', 'fsunlinsol_sptfqmr.c');
         fullfile('src', 'sunlinsol_sptfqmr', 'sunlinsol_sptfqmr.c');
         fullfile('src', 'sunlinsol_klu', 'sunlinsol_klu.c');
-        fullfile('src', 'sunlinsol_klu', 'fsunlinsol_klu.c');
         fullfile('src', 'idas', 'idas_direct.c');
         fullfile('src', 'idas', 'idaa.c');
         fullfile('src', 'idas', 'idas_ic.c');
@@ -149,28 +145,16 @@ function sources_sundials = getSourcesSundials()
         fullfile('src', 'sundials', 'sundials_nonlinearsolver.c');
         fullfile('src', 'sundials', 'sundials_linearsolver.c');
         fullfile('src', 'sundials', 'sundials_band.c');
-        fullfile('src', 'sunlinsol_dense', 'fsunlinsol_dense.c');
         fullfile('src', 'sunlinsol_dense', 'sunlinsol_dense.c');
         fullfile('src', 'sunmat_band', 'sunmatrix_band.c');
-        fullfile('src', 'sunmat_band', 'fsunmatrix_band.c');
-        fullfile('src', 'sunlinsol_spfgmr', 'fsunlinsol_spfgmr.c');
         fullfile('src', 'sunlinsol_spfgmr', 'sunlinsol_spfgmr.c');
-        fullfile('src', 'sunnonlinsol', 'newton', ...
-                     'fsunnonlinsol_newton.c');
         fullfile('src', 'sunnonlinsol', 'newton', 'sunnonlinsol_newton.c');
-        fullfile('src', 'sunnonlinsol', 'fixedpoint', ...
-                     'fsunnonlinsol_fixedpoint.c');
         fullfile('src', 'sunnonlinsol', 'fixedpoint', ...
                      'sunnonlinsol_fixedpoint.c');
         fullfile('src', 'sunmat_sparse', 'sunmatrix_sparse.c');
-        fullfile('src', 'sunmat_sparse', 'fsunmatrix_sparse.c');
         fullfile('src', 'nvec_ser', 'nvector_serial.c');
-        fullfile('src', 'nvec_ser', 'fnvector_serial.c');
         fullfile('src', 'sunlinsol_pcg', 'sunlinsol_pcg.c');
-        fullfile('src', 'sunlinsol_pcg', 'fsunlinsol_pcg.c');
-        fullfile('src', 'sunlinsol_spbcgs', 'fsunlinsol_spbcgs.c');
         fullfile('src', 'sunlinsol_spbcgs', 'sunlinsol_spbcgs.c');
-        fullfile('src', 'sunlinsol_band', 'fsunlinsol_band.c');
         fullfile('src', 'sunlinsol_band', 'sunlinsol_band.c');
         fullfile('src', 'cvodes', 'cvodes_spils.c');
         fullfile('src', 'cvodes', 'cvodes_nls_stg.c');
@@ -278,14 +262,10 @@ end
 
 function objects_sundials = getObjectsSundials(o_suffix)
     objects_sundials = {
-        'fsunmatrix_dense.o';
         'sunmatrix_dense.o';
-        'fsunlinsol_spgmr.o';
         'sunlinsol_spgmr.o';
-        'fsunlinsol_sptfqmr.o';
         'sunlinsol_sptfqmr.o';
         'sunlinsol_klu.o';
-        'fsunlinsol_klu.o';
         'idas_direct.o';
         'idaa.o';
         'idas_ic.o';
@@ -316,25 +296,15 @@ function objects_sundials = getObjectsSundials(o_suffix)
         'sundials_nonlinearsolver.o';
         'sundials_linearsolver.o';
         'sundials_band.o';
-        'fsunlinsol_dense.o';
         'sunlinsol_dense.o';
         'sunmatrix_band.o';
-        'fsunmatrix_band.o';
-        'fsunlinsol_spfgmr.o';
         'sunlinsol_spfgmr.o';
-        'fsunnonlinsol_newton.o';
         'sunnonlinsol_newton.o';
-        'fsunnonlinsol_fixedpoint.o';
         'sunnonlinsol_fixedpoint.o';
         'sunmatrix_sparse.o';
-        'fsunmatrix_sparse.o';
         'nvector_serial.o';
-        'fnvector_serial.o';
         'sunlinsol_pcg.o';
-        'fsunlinsol_pcg.o';
-        'fsunlinsol_spbcgs.o';
         'sunlinsol_spbcgs.o';
-        'fsunlinsol_band.o';
         'sunlinsol_band.o';
         'cvodes_spils.o';
         'cvodes_nls_stg.o';
