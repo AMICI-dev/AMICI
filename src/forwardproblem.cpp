@@ -14,13 +14,7 @@ namespace amici {
 
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
-/**
-  * Constructor
-  * @param rdata pointer to ReturnData instance
-  * @param edata pointer to ExpData instance
-  * @param model pointer to Model instance
-  * @param solver pointer to Solver instance
-  */
+
 ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
                                Model *model, Solver *solver)
     : model(model),
@@ -54,15 +48,13 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
 {
 }
 
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
+
+ForwardProblem::~ForwardProblem() {
+    DestroyMat(Jtmp);
+}
+
 
 void ForwardProblem::workForwardProblem() {
-    /**
-     * workForwardProblem solves the forward problem. if forward sensitivities
-     * are enabled this will also compute sensitivies
-     */
 
     try {
         solver->setup(&x, &dx, &sx, &sdx, model);
@@ -71,6 +63,7 @@ void ForwardProblem::workForwardProblem() {
     } catch (...) {
         throw AmiException("AMICI setup failed due to an unknown error");
     }
+
     model->fx_rdata(&x_rdata, &x);
     if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
         model->fsx_rdata(&sx_rdata, &sx);
@@ -387,11 +380,6 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 }
 
 void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
-    /**
-     * evaluates the Jacobian and differential equation right hand side, stores
-     * it in rdata
-     */
-
     model->fxdot(t, &x, &dx, &xdot);
     rdata->xdot = xdot.getVector();
 

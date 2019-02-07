@@ -100,7 +100,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
         calcIC(model->t(1), x, dx);
 }
 
-void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
+void Solver::setupB(BackwardProblem *bwd, Model *model) {
     if (!solverMemory)
         throw AmiException("Solver for the forward problem must be setup first");
 
@@ -270,7 +270,6 @@ void Solver::initializeLinearSolver(const Model *model, AmiVector *x) {
 
     default:
         throw AmiException("Invalid choice of solver: %d", static_cast<int>(linsol));
-
     }
 }
 

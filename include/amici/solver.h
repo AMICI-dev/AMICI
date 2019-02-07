@@ -77,7 +77,7 @@ class Solver {
      * @param model pointer to the model object
      */
 
-    void setupAMIB(BackwardProblem *bwd, Model *model);
+    void setupB(BackwardProblem *bwd, Model *model);
 
     /**
      * @brief Extracts diagnosis information from solver memory block and

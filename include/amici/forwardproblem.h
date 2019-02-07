@@ -18,123 +18,149 @@ class Model;
 
 /**
  * @brief The ForwardProblem class groups all functions for solving the
- * backwards problem.
- * Has only static members.
+ * forward problem.
  */
 class ForwardProblem {
   public:
+    /**
+      * @brief Constructor
+      * @param rdata pointer to ReturnData instance
+      * @param edata pointer to ExpData instance
+      * @param model pointer to Model instance
+      * @param solver pointer to Solver instance
+      */
     ForwardProblem(ReturnData *rdata, const ExpData *edata,
                    Model *model, Solver *solver);
 
     ~ForwardProblem() = default;
     
+    /**
+     * @brief Solve the forward problem.
+     *
+     * If forward sensitivities are enabled this will also compute sensitivies.
+     */
     void workForwardProblem();
-        
-    /** accessor for t
+
+    /**
+     * @brief Accessor for t
      * @return t
      */
     realtype getTime() const {
         return t;
     }
-    
-    /** accessor for sx
+
+    /**
+     * @brief Accessor for sx
      * @return sx
      */
     AmiVectorArray const& getStateSensitivity() const {
         return sx;
     }
-    
-    /** accessor for x_disc
+
+    /**
+     * @brief Accessor for x_disc
      * @return x_disc
      */
     AmiVectorArray const& getStatesAtDiscontinuities() const {
         return x_disc;
     }
-    
-    /** accessor for xdot_disc
+
+    /**
+     * @brief Accessor for xdot_disc
      * @return xdot_disc
      */
     AmiVectorArray const& getRHSAtDiscontinuities() const {
         return xdot_disc;
     }
-    
-    /** accessor for xdot_old_disc
+
+    /**
+     * @brief Accessor for xdot_old_disc
      * @return xdot_old_disc
      */
     AmiVectorArray const& getRHSBeforeDiscontinuities() const {
         return xdot_old_disc;
     }
-    
-    /** accessor for nroots
+
+    /**
+     * @brief Accessor for nroots
      * @return nroots
      */
     std::vector<int> const& getNumberOfRoots() const {
         return nroots;
     }
-    
-    /** accessor for discs
+
+    /**
+     * @brief Accessor for discs
      * @return discs
      */
     std::vector<realtype> const& getDiscontinuities() const {
         return discs;
     }
-    
-    /** accessor for rootidx
+
+    /**
+     * @brief Accessor for rootidx
      * @return rootidx
      */
     std::vector<int> const& getRootIndexes() const {
         return rootidx;
     }
-    
-    /** accessor for dJydx
+
+    /**
+     * @brief Accessor for dJydx
      * @return dJydx
      */
    std::vector<realtype> const& getDJydx() const {
         return dJydx;
     }
-    
-    /** accessor for dJzdx
+
+    /**
+     * @brief Accessor for dJzdx
      * @return dJzdx
      */
     std::vector<realtype> const& getDJzdx() const {
         return dJzdx;
     }
-    
-    /** accessor for iroot
+
+    /**
+     * @brief Accessor for iroot
      * @return iroot
      */
     int getRootCounter() const {
         return iroot;
     }
-    
-    /** accessor for pointer to x
+
+    /**
+     * @brief Accessor for pointer to x
      * @return &x
      */
     AmiVector *getStatePointer() {
         return &x;
     }
-    
-    /** accessor for pointer to dx
+
+    /**
+     * @brief Accessor for pointer to dx
      * @return &dx
      */
     AmiVector *getStateDerivativePointer() {
         return &dx;
     }
-    
-    /** accessor for pointer to sx
+
+    /**
+     * @brief accessor for pointer to sx
      * @return &sx
      */
     AmiVectorArray *getStateSensitivityPointer() {
         return &sx;
     }
-    
-    /** accessor for pointer to sdx
+
+    /**
+     * @brief Accessor for pointer to sdx
      * @return &sdx
      */
     AmiVectorArray *getStateDerivativeSensitivityPointer() {
         return &sdx;
     }
-    
+
     /** pointer to model instance */
     Model *model;
     /** pointer to return data instance */
@@ -149,13 +175,17 @@ class ForwardProblem {
      * @brief Perform preequilibration
      */
     void handlePreequilibration();
-    
+
     void updateAndReinitStatesAndSensitivities();
-    
+
     void handlePresimulation(int *ncheck);
 
     void handleEvent(realtype *tlastroot,const bool seflag);
 
+    /**
+     * @brief Evaluates the Jacobian and differential equation right hand side,
+     * stores it in RetunData
+     */
     void storeJacobianAndDerivativeInReturnData();
 
     void getEventOutput();
@@ -175,7 +205,7 @@ class ForwardProblem {
     void applyEventBolus();
 
     void applyEventSensiBolusFSA();
-    
+
     /** array of index which root has been found  (dimension: ne * ne * nmaxevent, ordering = ?) */
     std::vector<int> rootidx;
     /** array of number of found roots for a certain event type (dimension: ne) */
@@ -184,31 +214,31 @@ class ForwardProblem {
     std::vector<realtype> rootvals;
     /** temporary rootval storage to check crossing in secondary event (dimension: ne) */
     std::vector<realtype> rvaltmp;
-    
+
     /** array containing the time-points of discontinuities (dimension: nmaxevent x ne, ordering = ?) */
     std::vector<realtype> discs;
     /** array containing the index of discontinuities (dimension: nmaxevent x ne, ordering = ?) */
     std::vector<realtype> irdiscs;
-    
+
     /** current root index, will be increased during the forward solve and
      * decreased during backward solve */
     int iroot = 0;
-    
+
     /** array of state vectors at discontinuities  (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray x_disc;
     /** array of differential state vectors at discontinuities (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray xdot_disc;
     /** array of old differential state vectors at discontinuities (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray xdot_old_disc;
-    
+
     /** state derivative of data likelihood (dimension nJ x nx x nt, ordering =?) */
     std::vector<realtype> dJydx;
     /** state derivative of event likelihood (dimension nJ x nx x nMaxEvent, ordering =?) */
     std::vector<realtype> dJzdx;
-        
+
     /** current time */
     realtype t;
-    
+
     /** array of flags indicating which root has beend found.
      *  array of length nr (ne) with the indices of the user functions gi found to
      * have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
@@ -232,8 +262,8 @@ class ForwardProblem {
     AmiVector xdot;
     /** old time derivative state vector (dimension: nx_solver) */
     AmiVector xdot_old;
-    
-    
+
+
 
     /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sx;
