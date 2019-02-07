@@ -869,7 +869,6 @@ class ODEModel:
             'xBdot': {
                 'x': 'JB',
                 'y': 'xB',
-                'sign': -1,
             },
         }
 
@@ -1433,7 +1432,7 @@ class ODEModel:
                         sp.zeros(1, self._eqs[name].shape[1])
 
         elif name == 'JB':
-            self._eqs[name] = self.eq('J').transpose()
+            self._eqs[name] = -self.eq('J').transpose()
 
         elif name == 'JDiag':
             self._eqs[name] = getSymbolicDiagonal(self.eq('J'))
