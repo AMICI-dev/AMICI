@@ -1,6 +1,6 @@
 """Setuptools file for creating AMICI module
 
-This file is based on setuptools alone and does not require CMake. 
+This file is based on setuptools alone and does not require CMake.
 All sources are compiled anew.
 
 This file expects to be run from within its directory.
@@ -272,8 +272,13 @@ def main():
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
-        install_requires=['sympy', 'python-libsbml', 'h5py', 'pandas', 'setuptools>=40.6.3'],
+        install_requires=['sympy',
+                          'python-libsbml',
+                          'h5py',
+                          'pandas',
+                          'setuptools>=40.6.3'],
         python_requires='>=3.6',
+        extras_require={'wurlitzer': ['wurlitzer']},
         package_data={
             'amici': ['amici/include/amici/*',
                       'src/*template*',

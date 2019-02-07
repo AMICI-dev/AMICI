@@ -866,7 +866,6 @@ class ODEModel:
             'xBdot': {
                 'x': 'JB',
                 'y': 'xB',
-                'sign': -1,
             },
         }
 
@@ -1430,7 +1429,7 @@ class ODEModel:
                         sp.zeros(1, self._eqs[name].shape[1])
 
         elif name == 'JB':
-            self._eqs[name] = self.eq('J').transpose()
+            self._eqs[name] = -self.eq('J').transpose()
 
         elif name == 'JDiag':
             self._eqs[name] = getSymbolicDiagonal(self.eq('J'))
@@ -2350,7 +2349,8 @@ class ODEExporter:
         """
 
         templateData = {'MODELNAME': self.modelName,
-                        'VERSION': '0.1.0'}
+                        'AMICI_VERSION': __version__,
+                        'PACKAGE_VERSION': '0.1.0'}
         applyTemplate(os.path.join(amiciModulePath, 'setup.template.py'),
                       os.path.join(self.modelPath, 'setup.py'), templateData)
 

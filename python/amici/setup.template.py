@@ -48,7 +48,7 @@ if hdf5_enabled:
     libraries.extend(['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'])
 
 sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
-    
+
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
 # C++ to fix warnings.
@@ -67,7 +67,7 @@ if 'AMICI_LDFLAGS' in os.environ:
 model_module = Extension('TPL_MODELNAME._TPL_MODELNAME',
                          sources=sources,
                          include_dirs=[os.getcwd(),
-                                       os.path.join(amici_path, 'include'), 
+                                       os.path.join(amici_path, 'include'),
                                        os.path.join(amici_path, 'ThirdParty/sundials/include'),
                                        os.path.join(amici_path, 'ThirdParty/SuiteSparse/include'),
                                        *h5pkgcfg['include_dirs'],
@@ -88,7 +88,7 @@ model_module = Extension('TPL_MODELNAME._TPL_MODELNAME',
 # Install
 setup(
     name='TPL_MODELNAME',
-    version='TPL_VERSION',
+    version='TPL_PACKAGE_VERSION',
     description='AMICI-generated module for model TPL_MODELNAME',
     url='https://github.com/ICB-DCM/AMICI',
     author='model-author-todo',
@@ -96,9 +96,9 @@ setup(
     #license = 'BSD',
     ext_modules=[model_module],
     packages=find_packages(),
-    # TODO: should specify amici version with which the model was generated
-    install_requires=['amici'],
-    python_requires='>=3',
+    install_requires=['amici==TPL_AMICI_VERSION'],
+    extras_require={'wurlitzer': ['wurlitzer']},
+    python_requires='>=3.6',
     package_data={
     },
     zip_safe = False,

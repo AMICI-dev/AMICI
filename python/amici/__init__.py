@@ -23,10 +23,23 @@ Attributes:
     hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
     has_clibs: boolean indicating if this is the full package with swig
                interface or the raw package without
+    capture_cstdout: context to redirect C/C++ stdout to python stdout if
+        python stdout was redirected (doing nothing if not redirected).
 """
 
 import os
 import re
+import sys
+from contextlib import suppress
+
+# redirect C/C++ stdout to python stdout if python stdout is redirected,
+# e.g. in ipython notebook
+capture_cstdout = suppress
+if sys.stdout != sys.__stdout__:
+    try:
+        from wurlitzer import sys_pipes as capture_cstdout
+    except ModuleNotFoundError:
+        pass
 
 hdf5_enabled = False
 has_clibs = False
@@ -103,12 +116,13 @@ def runAmiciSimulation(model, solver, edata=None):
         ReturnData object with simulation results
 
     Raises:
-        
+
     """
     if edata and edata.__class__.__name__ == 'ExpDataPtr':
         edata = edata.get()
 
-    rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
+    with capture_cstdout():
+        rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
     return rdataToNumPyArrays(rdata)
 
 
@@ -134,7 +148,7 @@ def ExpData(*args):
         return amici.ExpData(args[0].get(), *args[:1])
     else:
         return amici.ExpData(*args)
-      
+
 
 def runAmiciSimulations(model, solver, edata_list, num_threads=1):
     """ Convenience wrapper for loops of amici.runAmiciSimulation
@@ -152,9 +166,10 @@ def runAmiciSimulations(model, solver, edata_list, num_threads=1):
     Raises:
 
     """
-    edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
-    rdata_ptr_list = amici.runAmiciSimulations(solver.get(),
-                                               edata_ptr_vector,
-                                               model.get(),
-                                               num_threads)
+    with capture_cstdout():
+        edata_ptr_vector = amici.ExpDataPtrVector(edata_list)
+        rdata_ptr_list = amici.runAmiciSimulations(solver.get(),
+                                                   edata_ptr_vector,
+                                                   model.get(),
+                                                   num_threads)
     return [numpy.rdataToNumPyArrays(r) for r in rdata_ptr_list]
