@@ -61,7 +61,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     init(x, dx, model->t0());
 
     applyTolerances();
-    
+
     /* Set optional inputs */
     setErrHandlerFn();
     /* attaches userdata*/
@@ -70,9 +70,9 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     setMaxNumSteps(maxsteps);
     /* activates stability limit detection */
     setStabLimDet(stldet);
-    
+
     rootInit(model->ne);
-    
+
     initializeLinearSolver(model);
 
     if (computeSensitivities) {
@@ -85,7 +85,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
             /* Activate sensitivity calculations */
             sensInit1(sx, sdx, plist.size());
             setSensParams(par.data(), nullptr, plist.data());
-            
+
             applyTolerancesFSA();
         } else if (sensi_meth == SensitivityMethod::adjoint) {
             /* Allocate space for the adjoint computation */
@@ -100,7 +100,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
         calcIC(model->t(1), x, dx);
 }
 
-void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
+void Solver::setupB(BackwardProblem *bwd, Model *model) {
     if (!solverMemory)
         throw AmiException("Solver for the forward problem must be setup first");
 
@@ -126,12 +126,12 @@ void Solver::setupAMIB(BackwardProblem *bwd, Model *model) {
 
     /* Number of maximal internal steps */
     setMaxNumStepsB(bwd->getwhich(), (maxstepsB == 0) ? maxsteps * 100 : maxstepsB);
-    
+
     initializeLinearSolverB(model, bwd->getwhich());
-    
+
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
-    
+
     applyTolerancesASA(bwd->getwhich());
     applyQuadTolerancesASA(bwd->getwhich());
 
@@ -172,40 +172,40 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
 
     warnMsgIdAndTxt(buffid, buffer);
 }
-    
+
 void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     long int number;
 
     if(solverWasCalled && solverMemory) {
         getNumSteps(solverMemory.get(), &number);
         rdata->numsteps[it] = number;
-        
+
         getNumRhsEvals(solverMemory.get(), &number);
         rdata->numrhsevals[it] = number;
-        
+
         getNumErrTestFails(solverMemory.get(), &number);
         rdata->numerrtestfails[it] = number;
-        
+
         getNumNonlinSolvConvFails(solverMemory.get(), &number);
         rdata->numnonlinsolvconvfails[it] = number;
-        
+
         getLastOrder(solverMemory.get(), &rdata->order[it]);
     }
 }
 
 void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
     long int number;
-    
+
     if(solverWasCalled && solverMemoryB.at(which)) {
         getNumSteps(solverMemoryB.at(which).get(), &number);
         rdata->numstepsB[it] = (double)number;
-        
+
         getNumRhsEvals(solverMemoryB.at(which).get(), &number);
         rdata->numrhsevalsB[it] = (double)number;
-        
+
         getNumErrTestFails(solverMemoryB.at(which).get(), &number);
         rdata->numerrtestfailsB[it] = (double)number;
-        
+
         getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
         rdata->numnonlinsolvconvfailsB[it] = (double)number;
     }
@@ -222,140 +222,140 @@ void Solver::initializeLinearSolver(const Model *model) {
     switch (linsol) {
 
             /* DIRECT SOLVERS */
-            
+
         case LinearSolver::dense:
             dense(model->nx_solver);
             setDenseJacFn();
             break;
-            
+
         case LinearSolver::band:
             band(model->nx_solver, model->ubw, model->lbw);
             setBandJacFn();
             break;
-            
+
         case LinearSolver::LAPACKDense:
             throw AmiException("Solver currently not supported!");
             /* status = CVLapackDense(ami_mem, nx_solver);
              if (status != AMICI_SUCCESS) return;
-             
+
              status = SetDenseJacFn(ami_mem);
              if (status != AMICI_SUCCESS) return;
              */
-            
+
         case LinearSolver::LAPACKBand:
             throw AmiException("Solver currently not supported!");
             /* status = CVLapackBand(ami_mem, nx_solver);
              if (status != AMICI_SUCCESS) return;
-             
+
              status = SetBandJacFn(ami_mem);
              if (status != AMICI_SUCCESS) return;
              */
-            
+
         case LinearSolver::diag:
             diag();
             break;
-            
-            
+
+
             /* ITERATIVE SOLVERS */
-            
+
         case LinearSolver::SPGMR:
             spgmr(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
-            
+
         case LinearSolver::SPBCG:
             spbcg(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
-            
+
         case LinearSolver::SPTFQMR:
             sptfqmr(PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFn();
             break;
-            
+
             /* SPARSE SOLVERS */
-            
+
         case LinearSolver::KLU:
             klu(model->nx_solver, model->nnz, CSC_MAT);
             setSparseJacFn();
             kluSetOrdering((int) getStateOrdering());
             break;
-            
+
         default:
             throw AmiException("Invalid choice of solver!");
-            
+
     }
 }
 
 void Solver::initializeLinearSolverB(const Model *model, const int which) {
     switch (linsol) {
-            
+
             /* DIRECT SOLVERS */
-            
+
         case LinearSolver::dense:
             denseB(which, model->nx_solver);
             setDenseJacFnB(which);
             break;
-            
+
         case LinearSolver::band:
             bandB(which, model->nx_solver, model->ubw, model->lbw);
             setBandJacFnB(which);
             break;
-            
+
         case LinearSolver::LAPACKDense:
-            
+
             /* #if SUNDIALS_BLAS_LAPACK
              status = CVLapackDenseB(ami_mem, bwd->getwhich(), nx_solver);
              if (status != AMICI_SUCCESS) return;
-             
+
              status = SetDenseJacFnB(ami_mem, bwd->getwhich());
              if (status != AMICI_SUCCESS) return;
              #else*/
             throw AmiException("Solver currently not supported!");
             /* #endif*/
-            
+
         case LinearSolver::LAPACKBand:
-            
+
             /* #if SUNDIALS_BLAS_LAPACK
              status = CVLapackBandB(ami_mem, bwd->getwhich(), nx_solver, ubw, lbw);
              if (status != AMICI_SUCCESS) return;
-             
+
              status = SetBandJacFnB(ami_mem, bwd->getwhich());
              if (status != AMICI_SUCCESS) return;
              #else*/
             throw AmiException("Solver currently not supported!");
             /* #endif*/
-            
+
         case LinearSolver::diag:
             diagB(which);
             setDenseJacFnB(which);
             break;
-            
+
             /* ITERATIVE SOLVERS */
-            
+
         case LinearSolver::SPGMR:
             spgmrB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
-            
+
         case LinearSolver::SPBCG:
             spbcgB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
-            
+
         case LinearSolver::SPTFQMR:
             sptfqmrB(which, PREC_NONE, CVSPILS_MAXL);
             setJacTimesVecFnB(which);
             break;
-            
+
             /* SPARSE SOLVERS */
-            
+
         case LinearSolver::KLU:
             kluB(which, model->nx_solver, model->nnz, CSC_MAT);
             setSparseJacFnB(which);
             kluSetOrderingB(which, (int) getStateOrdering());
             break;
-            
+
         default:
             throw AmiException("Invalid local Solver!");
     }
@@ -397,53 +397,53 @@ bool operator ==(const Solver &a, const Solver &b)
             && (a.sensi == b.sensi)
             && (a.sensi_meth == b.sensi_meth);
 }
-    
+
 void Solver::applyTolerances() {
     if (!getMallocDone())
         throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
-    
+
     setSStolerances(RCONST(this->rtol), RCONST(this->atol));
 }
-    
+
 void Solver::applyTolerancesFSA() {
     if (!getMallocDone())
         throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
-    
+
     if (sensi < SensitivityOrder::first)
         return;
-    
+
     if(nplist()) {
         std::vector<realtype> atols(nplist(), getAbsoluteToleranceFSA());
         setSensSStolerances(getRelativeToleranceFSA(), atols.data());
         setSensErrCon(true);
     }
 }
-    
+
 void Solver::applyTolerancesASA(int which) {
     if (!getAdjMallocDone())
         throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be applied yet!"));
-    
+
     if (sensi < SensitivityOrder::first)
         return;
-    
+
     /* specify integration tolerances for backward problem */
     setSStolerancesB(which, RCONST(getRelativeToleranceB()), RCONST(getAbsoluteToleranceB()));
 }
-    
+
 void Solver::applyQuadTolerancesASA(int which) {
     if (!getAdjMallocDone())
         throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be applied yet!"));
-    
+
     if (sensi < SensitivityOrder::first)
         return;
-    
+
     double quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
     double quad_atol = isNaN(this->quad_atol) ? atol : this->quad_atol;
-    
+
     /* Enable Quadrature Error Control */
     setQuadErrConB(which,
                    !std::isinf(quad_atol) && !std::isinf(quad_rtol));
-    
+
     quadSStolerancesB(which,
                       RCONST(quad_rtol),
                       RCONST(quad_atol));
@@ -452,7 +452,7 @@ void Solver::applyQuadTolerancesASA(int which) {
 void Solver::applySensitivityTolerances() {
     if (sensi < SensitivityOrder::first)
         return;
-    
+
     if (sensi_meth == SensitivityMethod::forward)
         applyTolerancesFSA();
     else if (sensi_meth == SensitivityMethod::adjoint && getAdjMallocDone()) {
@@ -460,7 +460,7 @@ void Solver::applySensitivityTolerances() {
             applyTolerancesASA(iMem);
     }
 }
-    
+
 SensitivityMethod Solver::getSensitivityMethod() const{
     return sensi_meth;
 }
@@ -468,25 +468,25 @@ SensitivityMethod Solver::getSensitivityMethod() const{
 void Solver::setSensitivityMethod(SensitivityMethod sensi_meth) {
     this->sensi_meth = sensi_meth;
 }
-    
+
 int Solver::getNewtonMaxSteps() const {
     return newton_maxsteps;
 }
-    
+
 void Solver::setNewtonMaxSteps(int newton_maxsteps) {
     if(newton_maxsteps < 0)
         throw AmiException("newton_maxsteps must be a non-negative number");
     this->newton_maxsteps = newton_maxsteps;
 }
-    
+
 bool Solver::getNewtonPreequilibration() const {
     return newton_preeq;
 }
-    
+
 void Solver::setNewtonPreequilibration(bool newton_preeq) {
     this->newton_preeq = newton_preeq;
 }
-    
+
 int Solver::getNewtonMaxLinearSteps() const {
     return newton_maxlinsteps;
 }
@@ -503,7 +503,7 @@ SensitivityOrder Solver::getSensitivityOrder() const {
 
 void Solver::setSensitivityOrder(SensitivityOrder sensi) {
     this->sensi = sensi;
-    
+
     if(getMallocDone())
         applySensitivityTolerances();
 }
@@ -515,9 +515,9 @@ double Solver::getRelativeTolerance() const {
 void Solver::setRelativeTolerance(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     this->rtol = rtol;
-    
+
     if(getMallocDone()) {
         applyTolerances();
         applySensitivityTolerances();
@@ -531,15 +531,15 @@ double Solver::getAbsoluteTolerance() const {
 void Solver::setAbsoluteTolerance(double atol) {
     if(atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     this->atol = atol;
-    
+
     if(getMallocDone()) {
         applyTolerances();
         applySensitivityTolerances();
     }
 }
-    
+
 double Solver::getRelativeToleranceFSA() const {
     return isNaN(rtol_fsa) ? rtol : rtol_fsa;
 }
@@ -547,9 +547,9 @@ double Solver::getRelativeToleranceFSA() const {
 void Solver::setRelativeToleranceFSA(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     rtol_fsa = rtol;
-    
+
     if(getMallocDone()) {
         applySensitivityTolerances();
     }
@@ -562,9 +562,9 @@ double Solver::getAbsoluteToleranceFSA() const {
 void Solver::setAbsoluteToleranceFSA(double atol) {
     if(atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     atol_fsa = atol;
-    
+
     if(getMallocDone()) {
         applySensitivityTolerances();
     }
@@ -611,12 +611,12 @@ double Solver::getRelativeToleranceQuadratures() const {
 void Solver::setRelativeToleranceQuadratures(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     this->quad_rtol = rtol;
-    
+
     if (sensi_meth != SensitivityMethod::adjoint)
         return;
-    
+
     for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
         if(solverMemoryB.at(iMem))
             applyQuadTolerancesASA(iMem);
@@ -629,17 +629,17 @@ double Solver::getAbsoluteToleranceQuadratures() const {
 void Solver::setAbsoluteToleranceQuadratures(double atol) {
     if (atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     this->quad_atol = atol;
-    
+
     if (sensi_meth != SensitivityMethod::adjoint)
         return;
-    
+
     for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
         if(solverMemoryB.at(iMem))
             applyTolerancesASA(iMem);
 }
-    
+
 double Solver::getRelativeToleranceSteadyState() const {
     return isNaN(ss_rtol) ? rtol : ss_rtol;
 }
@@ -647,7 +647,7 @@ double Solver::getRelativeToleranceSteadyState() const {
 void Solver::setRelativeToleranceSteadyState(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     this->ss_rtol = rtol;
 }
 
@@ -658,10 +658,10 @@ double Solver::getAbsoluteToleranceSteadyState() const {
 void Solver::setAbsoluteToleranceSteadyState(double atol) {
     if (atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     this->ss_atol = atol;
 }
-    
+
 double Solver::getRelativeToleranceSteadyStateSensi() const {
     return isNaN(ss_rtol_sensi) ? rtol : ss_rtol_sensi;
 }
@@ -669,7 +669,7 @@ double Solver::getRelativeToleranceSteadyStateSensi() const {
 void Solver::setRelativeToleranceSteadyStateSensi(double rtol) {
     if(rtol < 0)
         throw AmiException("rtol must be a non-negative number");
-    
+
     this->ss_rtol_sensi = rtol;
 }
 
@@ -680,7 +680,7 @@ double Solver::getAbsoluteToleranceSteadyStateSensi() const {
 void Solver::setAbsoluteToleranceSteadyStateSensi(double atol) {
     if (atol < 0)
         throw AmiException("atol must be a non-negative number");
-    
+
     this->ss_atol_sensi = atol;
 }
 
@@ -691,7 +691,7 @@ int Solver::getMaxSteps() const {
 void Solver::setMaxSteps(int maxsteps) {
     if (maxsteps < 0)
         throw AmiException("maxsteps must be a non-negative number");
-    
+
     this->maxsteps = maxsteps;
     if(solverMemory)
         setMaxNumSteps(this->maxsteps);
@@ -704,7 +704,7 @@ int Solver::getMaxStepsBackwardProblem() const {
 void Solver::setMaxStepsBackwardProblem(int maxsteps) {
     if (maxsteps < 0)
         throw AmiException("maxsteps must be a non-negative number");
-    
+
     this->maxstepsB = maxsteps;
     for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
         if(solverMemoryB.at(iMem))
@@ -762,7 +762,7 @@ int Solver::getStabilityLimitFlag() const {
 void Solver::setStabilityLimitFlag(int stldet) {
     if (stldet != TRUE && stldet != FALSE)
         throw AmiException("Invalid stldet flag, valid values are %i or %i",TRUE,FALSE);
-    
+
     this->stldet = stldet;
     if (solverMemory) {
         setStabLimDet(stldet);
