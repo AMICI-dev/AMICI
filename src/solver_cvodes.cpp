@@ -4,15 +4,21 @@
 #include "amici/exception.h"
 
 #include <cvodes/cvodes.h>
-// TODO: do we really need _impl headers?
 #include <cvodes/cvodes_impl.h>
+#include <cvodes/cvodes_diag.h>
+#include <sundials/sundials_math.h>
+
 #include "amici/sundials_linsol_wrapper.h"
 
-#include <cvodes/cvodes_diag.h>
+
 #include <amd.h>
 #include <btf.h>
 #include <colamd.h>
 #include <klu.h>
+
+#define ZERO    RCONST(0.0)
+#define ONE     RCONST(1.0)
+#define FOUR    RCONST(4.0)
 
 /**
  * @ brief extract information from a property of a matlab class (matrix)
@@ -249,17 +255,76 @@ void CVodeSolver::setStabLimDetB(int which, int stldet) {
 void CVodeSolver::setId(Model *model) { }
 
 void CVodeSolver::setSuppressAlg(bool flag) { }
+    
+void CVodeSolver::resetState(CVodeMem cv_mem, N_Vector y0) {
+    
+    /* here we force the order in the next step to zero, and update the
+     Nordsieck history array, this is largely copied from CVodeReInit with
+     explanations from cvodes_impl.h
+     */
+    
+    /* Set step parameters */
+    
+    /* current order */
+    cv_mem->cv_q      = 1;
+    /* L = q + 1 */
+    cv_mem->cv_L      = 2;
+    /* number of steps to wait before updating in q */
+    cv_mem->cv_qwait  = cv_mem->cv_L;
+    /* last successful q value used                */
+    cv_mem->cv_qu     = 0;
+    /* last successful h value used                */
+    cv_mem->cv_hu     = ZERO;
+    /* tolerance scale factor                      */
+    cv_mem->cv_tolsf  = ONE;
+    
+    /* Initialize other integrator optional outputs */
+    
+    /* actual initial stepsize                     */
+    cv_mem->cv_h0u      = ZERO;
+    /* step size to be used on the next step       */
+    cv_mem->cv_next_h   = ZERO;
+    /* order to be used on the next step           */
+    cv_mem->cv_next_q   = 0;
+    
+    /* write updated state to Nordsieck history array  */
+    N_VScale(ONE, y0, cv_mem->cv_zn[0]);
+}
+    
+    
+void CVodeSolver::reInitPostProcessF(realtype *t, realtype tnext) {
+    CVodeSolver::reInitPostProcess(solverMemory.get(), t, tnext);
+}
 
+void CVodeSolver::reInitPostProcessB(int which, realtype *t, realtype tnext) {
+    CVodeSolver::reInitPostProcess(static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which)), t, tnext);
+}
+
+void CVodeSolver::reInitPostProcess(CVodeMem cv_mem, realtype *t, AmiVector *yout, realtype tout) {
+    auto nst_tmp = cv_mem->cv_nst
+    cv_mem->cv_nst = 0;
+    int CVode(static_cast<void*> cv_mem, tout, yout->getNVector(), t, CV_ONE_STEP);
+    cv_mem->cv_nst = nst_tmp+1;
+}
+    
 void CVodeSolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
-    int status = CVodeReInit(solverMemory.get(), t0, yy0->getNVector());
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeReInit");
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    /* set time */
+    cv_mem->cv_tn = t0;
+    resetState(cv_mem, yy0->getNVector());
 }
 
 void CVodeSolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
-    int status = CVodeSensReInit(solverMemory.get(), static_cast<int>(ism), yS0->getNVectorArray());
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    /* Initialize znS[0] in the history array */
+    
+    for (int is=0; is<cv_mem->cv_Ns; is++)
+        cv_mem->cv_cvals[is] = ONE;
+    
+    int status = N_VScaleVectorArray(cv_mem->cv_Ns, cv_mem->cv_cvals,
+                                 yS0->getNVectorArray(), cv_mem->cv_znS[0]);
     if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeSensReInit");
+         throw CvodeException(CV_VECTOROP_ERR,"CVodeSensReInit");
 }
 
 void CVodeSolver::setSensParams(realtype *p, realtype *pbar, int *plist) {
@@ -299,9 +364,9 @@ void CVodeSolver::allocateSolverB(int *which) {
 
 void CVodeSolver::reInitB(int which, realtype tB0, AmiVector *yyB0,
                             AmiVector *ypB0) {
-    int status = CVodeReInitB(solverMemory.get(), which, tB0, yyB0->getNVector());
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeReInitB");
+    auto cv_memB = static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
+    cv_memB->cv_tn = tB0;
+    resetState(cv_memB, yyB0->getNVector());
 }
 
 void CVodeSolver::setSStolerancesB(int which, realtype relTolB,
@@ -312,9 +377,8 @@ void CVodeSolver::setSStolerancesB(int which, realtype relTolB,
 }
 
 void CVodeSolver::quadReInitB(int which, AmiVector *yQB0) {
-    int status = CVodeQuadReInitB(solverMemory.get(), which, yQB0->getNVector());
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeQuadReInitB");
+    auto cv_memB = static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
+    N_VScale(ONE, yQB0->getNVector(), cv_memB->cv_znQ[0]);
 }
 
 void CVodeSolver::quadSStolerancesB(int which, realtype reltolQB,
@@ -740,5 +804,4 @@ int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
     {
         return static_cast<Solver const&>(a) == static_cast<Solver const&>(b);
     }
-
 } // namespace amici

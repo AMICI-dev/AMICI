@@ -6,6 +6,7 @@
 #include "amici/vector.h"
 
 #include <sundials/sundials_matrix.h>
+#include <cvodes/cvodes_impl.h>
 
 namespace amici {
 
@@ -35,6 +36,12 @@ class CVodeSolver : public Solver {
      * @return The clone
      */
     virtual Solver* clone() const override;
+    
+    void reInitPostProcessF(realtype *t, realtype tnext) override;
+    
+    void reInitPostProcessB(int which, realtype *t, realtype tnext) override;
+    
+    void reInitPostProcess(CVodeMem cv_mem, realtype *t);
 
     void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
 
@@ -131,12 +138,16 @@ class CVodeSolver : public Solver {
     void setId(Model *model) override;
 
     void setSuppressAlg(bool flag) override;
+    
+    void resetState(CVodeMem cv_mem, N_Vector y0);
 
     void setSensParams(realtype *p, realtype *pbar, int *plist) override;
 
     void adjInit() override;
 
     void allocateSolverB(int *which) override;
+    
+    CVodeMem getMemB(int which);
 
     void setSStolerancesB(int which, realtype relTolB,
                          realtype absTolB) override;
