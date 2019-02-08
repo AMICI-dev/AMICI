@@ -402,17 +402,16 @@ def _compute_monomers_with_fixed_initial_conditions(model):
     """
     monomers_with_fixed_initial_conditions = set()
 
-    if hasattr(model, 'initial_conditions_fixed'):
-        for monomer in model.monomers:
-            # check if monomer has an initial condition that is fixed (means
-            #  that corresponding state is constant and all conservation
-            # laws are broken)
-            if any([
-                model.initial_conditions_fixed[ix] # true or false
-                for ix, cp in enumerate(model.initial_conditions)
-                if monomer.name in extract_monomers(cp[0])
-            ]):
-                monomers_with_fixed_initial_conditions |= {monomer.name}
+    for monomer in model.monomers:
+        # check if monomer has an initial condition that is fixed (means
+        #  that corresponding state is constant and all conservation
+        # laws are broken)
+        if any([
+            ic.fixed  # true or false
+            for ic in model.initials
+            if monomer.name in extract_monomers(ic.pattern)
+        ]):
+            monomers_with_fixed_initial_conditions |= {monomer.name}
 
     return monomers_with_fixed_initial_conditions
 
