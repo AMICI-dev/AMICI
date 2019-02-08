@@ -120,6 +120,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
             'bngwiki_enzymatic_cycle_mm', 'bngwiki_simple', 'earm_1_0',
             'earm_1_3', 'move_connected', 'michment', 'kinase_cascade',
             'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
+            'fixed_initial',
         ]
 
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
