@@ -309,11 +309,37 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t,
     auto cv_mem = static_cast<CVodeMem>(ami_mem);
     auto nst_tmp = cv_mem->cv_nst;
     cv_mem->cv_nst = 0;
+    
     auto status = CVode(ami_mem, tout, yout->getNVector(),
                         t, CV_ONE_STEP);
     if(status != CV_SUCCESS)
         throw CvodeException(status, "reInitPostProcess");
+    
     cv_mem->cv_nst = nst_tmp+1;
+    if (cv_mem->cv_adjMallocDone == SUNTRUE) {
+        /* add new step to history array, this is copied from CVodeF */
+        auto ca_mem = cv_mem->cv_adj_mem;
+        auto dt_mem = ca_mem->dt_mem;
+        
+        if (cv_mem->cv_nst % ca_mem->ca_nsteps == 0) {
+            /* currently not implemented, we should never get here as we
+             limit cv_mem->cv_nst < ca_mem->ca_nsteps, keeping this for
+             future regression */
+            throw CvodeException(AMICI_ERROR, "reInitPostProcess");
+        }
+            
+        /* Load next point in dt_mem */
+        dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]->t = *t;
+        ca_mem->ca_IMstore(cv_mem, dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]);
+        
+        /* Set t1 field of the current ckeck point structure
+         for the case in which there will be no future
+         check points */
+        ca_mem->ck_mem->ck_t1 = *t;
+        
+        /* tfinal is now set to *tret */
+        ca_mem->ca_tfinal = *t;
+    }
 }
     
 void CVodeSolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
