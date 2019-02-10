@@ -256,8 +256,9 @@ void CVodeSolver::setId(Model *model) { }
 
 void CVodeSolver::setSuppressAlg(bool flag) { }
     
-void CVodeSolver::resetState(CVodeMem cv_mem, N_Vector y0) {
+void CVodeSolver::resetState(void *ami_mem, N_Vector y0) {
     
+    auto cv_mem = static_cast<CVodeMem>(ami_mem);
     /* here we force the order in the next step to zero, and update the
      Nordsieck history array, this is largely copied from CVodeReInit with
      explanations from cvodes_impl.h
@@ -292,18 +293,26 @@ void CVodeSolver::resetState(CVodeMem cv_mem, N_Vector y0) {
 }
     
     
-void CVodeSolver::reInitPostProcessF(realtype *t, realtype tnext) {
-    CVodeSolver::reInitPostProcess(solverMemory.get(), t, tnext);
+void CVodeSolver::reInitPostProcessF(realtype *t, AmiVector *yout,
+                                     AmiVector *ypout, realtype tnext) {
+    reInitPostProcess(solverMemory.get(), t, yout, tnext);
 }
 
-void CVodeSolver::reInitPostProcessB(int which, realtype *t, realtype tnext) {
-    CVodeSolver::reInitPostProcess(static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which)), t, tnext);
+void CVodeSolver::reInitPostProcessB(int which, realtype *t, AmiVector *yBout,
+                                     AmiVector *ypBout, realtype tnext) {
+    reInitPostProcess(CVodeGetAdjCVodeBmem(solverMemory.get(), which),
+                      t, yBout, tnext);
 }
 
-void CVodeSolver::reInitPostProcess(CVodeMem cv_mem, realtype *t, AmiVector *yout, realtype tout) {
-    auto nst_tmp = cv_mem->cv_nst
+void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t,
+                                    AmiVector *yout, realtype tout) {
+    auto cv_mem = static_cast<CVodeMem>(ami_mem);
+    auto nst_tmp = cv_mem->cv_nst;
     cv_mem->cv_nst = 0;
-    int CVode(static_cast<void*> cv_mem, tout, yout->getNVector(), t, CV_ONE_STEP);
+    auto status = CVode(ami_mem, tout, yout->getNVector(),
+                        t, CV_ONE_STEP);
+    if(status != CV_SUCCESS)
+        throw CvodeException(status, "reInitPostProcess");
     cv_mem->cv_nst = nst_tmp+1;
 }
     

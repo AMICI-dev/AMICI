@@ -123,6 +123,12 @@ class Solver {
      * @param yp0 new derivative state variables (DAE only)
      */
     virtual void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) = 0;
+    
+    virtual void reInitPostProcessF(realtype *t, AmiVector *yout,
+                                    AmiVector *ypout, realtype tnext) = 0;
+    
+    virtual void reInitPostProcessB(int which, realtype *t, AmiVector *yBout,
+                                    AmiVector *ypBout, realtype tnext) = 0;
 
     /**
      * @brief Reinitializes the state sensitivites in the solver after an

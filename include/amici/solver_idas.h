@@ -4,6 +4,7 @@
 #include "amici/solver.h"
 
 #include <sundials/sundials_matrix.h>
+#include <idas/idas_impl.h>
 
 namespace amici {
 
@@ -18,6 +19,12 @@ class IDASolver : public Solver {
      */
     virtual Solver* clone() const override;
 
+    void reInitPostProcessF(realtype *t, AmiVector *yout, AmiVector *ypout,
+                            realtype tnext) override;
+    
+    void reInitPostProcessB(int which, realtype *t, AmiVector *yBout,
+                            AmiVector *ypBout, realtype tnext) override;
+    
     void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
 
     void sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
@@ -90,6 +97,9 @@ class IDASolver : public Solver {
 
 
   protected:
+    
+    void reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
+                           AmiVector *ypout, realtype tout);
 
     void allocateSolver() override;
 

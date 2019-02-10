@@ -49,11 +49,6 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
 }
 
 
-ForwardProblem::~ForwardProblem() {
-    DestroyMat(Jtmp);
-}
-
-
 void ForwardProblem::workForwardProblem() {
 
     try {
@@ -376,6 +371,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
                 solver->sensReInit(&sx, &sdx);
             }
         }
+        solver->reInitPostProcessF(&t, &x, &dx,
+                                   model->gett(model->nt() - 1, rdata));
     }
 }
 

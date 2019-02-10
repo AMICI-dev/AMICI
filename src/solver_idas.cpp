@@ -7,10 +7,8 @@
 
 #include <idas/idas.h>
 #include <idas/idas_impl.h>
-/*#include <idas/idas_lapack.h>*/
 #include <idas/idas_bbdpre.h>
-/*#include <idas/idas_diag.h>*/
-#include<idas/idas_ls.h>
+#include <idas/idas_ls.h>
 
 #include <amd.h>
 #include <btf.h>
@@ -166,6 +164,32 @@ void IDASolver::setSuppressAlg(bool flag) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetSuppressAlg");
 }
+    
+void IDASolver::reInitPostProcessF(realtype *t, AmiVector *yout,
+                                   AmiVector *ypout, realtype tnext) {
+    reInitPostProcess(solverMemory.get(), t, yout, ypout,  tnext);
+}
+
+void IDASolver::reInitPostProcessB(int which, realtype *t, AmiVector *yBout,
+                                   AmiVector *ypBout, realtype tnext) {
+    reInitPostProcess(IDAGetAdjIDABmem(solverMemory.get(), which),
+                      t, yBout, ypBout, tnext);
+}
+
+void IDASolver::reInitPostProcess(void *ami_mem, realtype *t,
+                                  AmiVector *yout, AmiVector *ypout,
+                                  realtype tout) {
+    auto ida_mem = static_cast<IDAMem>(ami_mem);
+    auto nst_tmp = ida_mem->ida_nst;
+    ida_mem->ida_nst = 0;
+    auto status = IDASolve(ami_mem, tout, t,
+                           yout->getNVector(), ypout->getNVector(),
+                           IDA_ONE_STEP);
+    if(status != IDA_SUCCESS)
+        throw IDAException(status, "reInitPostProcess");
+    ida_mem->ida_nst = nst_tmp+1;
+}
+    
 void IDASolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
     int status = IDAReInit(solverMemory.get(), t0, yy0->getNVector(), yp0->getNVector());
     if(status != IDA_SUCCESS)
