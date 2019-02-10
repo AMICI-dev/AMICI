@@ -404,7 +404,7 @@ def _compute_monomers_with_fixed_initial_conditions(model):
 
     for monomer in model.monomers:
         # check if monomer has an initial condition that is fixed (means
-        #  that corresponding state is constant and all conservation
+        # that corresponding state is constant and all conservation
         # laws are broken)
         if any([
             ic.fixed  # true or false
