@@ -92,8 +92,10 @@ else:
     __commit__ = 'unknown'
 
 
-if has_clibs:
-    # these module require the swig interface
+try:
+    # These module require the swig interface and other dependencies which will
+    # be installed if the the AMICI package was properly installed. If not,
+    # AMICI was probably imported from setup.py and we don't need those.
     from .sbml_import import SbmlImporter, assignmentRules2observables, \
         constantSpeciesToParameters
     from .numpy import rdataToNumPyArrays, edataToNumPyArrays
@@ -102,6 +104,8 @@ if has_clibs:
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
     from .ode_export import ODEModel, ODEExporter
     from .pysb_import import pysb2amici, ODEModel_from_pysb_importer
+except ImportError:
+    pass
 
 
 def runAmiciSimulation(model, solver, edata=None):

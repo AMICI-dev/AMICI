@@ -44,14 +44,6 @@ except ImportError:
     # retry
     import numpy as np
 
-try:
-    # required in amici/__init__.py
-    import sympy as sp
-except ImportError:
-    try_install('sympy')
-    import sympy as sp
-
-
 from amici import __version__
 
 from amici.setuptools import (
