@@ -22,25 +22,40 @@ class ForwardProblem;
 
 class BackwardProblem {
   public:
-    void workBackwardProblem();
-
+    /**
+     * @brief Construct backward problem from forward problem
+     * @param fwd pointer to corresponding forward problem
+     * @return new BackwardProblem instance
+     */
     explicit BackwardProblem(const ForwardProblem *fwd);
 
-    /** accessor for t
+    /**
+     * @brief Solve the backward problem.
+     *
+     * If adjoint sensitivities are enabled this will also compute
+     * sensitivities. workForwardProblem must be called before this is
+     * function is called.
+     */
+    void workBackwardProblem();
+
+    /**
+     * @brief Accessor for current time t
      * @return t
      */
     realtype gett() const {
         return t;
     }
 
-    /** accessor for which
+    /**
+     * @brief Accessor for which
      * @return which
      */
     int getwhich() const {
         return which;
     }
 
-    /** accessor for pointer to which
+    /**
+     * @brief Accessor for pointer to which
      * @return which
      */
     int *getwhichptr() {
@@ -54,7 +69,8 @@ class BackwardProblem {
         return &xB;
     }
 
-    /** accessor for pointer to xQB
+    /**
+     * @brief accessor for pointer to xQB
      * @return &xQB
      */
     AmiVector *getxQBptr() {
@@ -68,7 +84,8 @@ class BackwardProblem {
         return &dxB;
     }
 
-    /** accessor for dJydx
+    /**
+     * @brief Accessor for dJydx
      * @return dJydx
      */
     std::vector<realtype> const& getdJydx() const {
@@ -76,14 +93,41 @@ class BackwardProblem {
     }
 
   private:
-
+    /**
+     * @brief Execute everything necessary for the handling of events
+     * for the backward problem
+     *
+     * @param iroot index of event @type int
+     */
     void handleEventB(int iroot);
 
+    /**
+     * @brief Execute everything necessary for the handling of data
+     * points for the backward problems
+     *
+     * @param it index of data point @type int
+     */
     void handleDataPointB(const int it);
 
-    void updateHeavisideB(const int iroot);
 
+    /**
+     * @brief Compute the next timepoint to integrate to.
+     *
+     * This is the maximum of tdata and troot but also takes into account if
+     * it<0 or iroot<0 where these expressions do not necessarily make sense.
+     *
+     * @param troot timepoint of next event @type realtype
+     * @param iroot index of next event @type int
+     * @param it index of next data point @type int
+     * @param model pointer to model specification object @type Model
+     * @return tnext next timepoint @type realtype
+     */
     realtype getTnext(std::vector<realtype> const& troot, const int iroot, const int it);
+
+    /**
+     * @brief Compute likelihood sensitivities.
+     */
+    void computeLikelihoodSensitivities();
 
     Model *model;
     ReturnData *rdata;
