@@ -42,13 +42,13 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 
 
 void CVodeSolver::init(AmiVector *x, AmiVector *dx, realtype t) {
-    int status = CVodeInit(solverMemory.get(), fxdot, RCONST(t), x->getNVector());
+    int status = CVodeInit(solverMemory.get(), fxdot, t, x->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeInit");
 }
 
 void CVodeSolver::binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) {
-    int status = CVodeInitB(solverMemory.get(), which, fxBdot, RCONST(t), xB->getNVector());
+    int status = CVodeInitB(solverMemory.get(), which, fxBdot, t, xB->getNVector());
     if(status != CV_SUCCESS)
          throw CvodeException(status,"CVodeInitB");
 }
@@ -255,17 +255,17 @@ void CVodeSolver::setStabLimDetB(int which, int stldet) {
 void CVodeSolver::setId(Model *model) { }
 
 void CVodeSolver::setSuppressAlg(bool flag) { }
-    
+
 void CVodeSolver::resetState(void *ami_mem, N_Vector y0) {
-    
+
     auto cv_mem = static_cast<CVodeMem>(ami_mem);
     /* here we force the order in the next step to zero, and update the
      Nordsieck history array, this is largely copied from CVodeReInit with
      explanations from cvodes_impl.h
      */
-    
+
     /* Set step parameters */
-    
+
     /* current order */
     cv_mem->cv_q      = 1;
     /* L = q + 1 */
@@ -278,21 +278,21 @@ void CVodeSolver::resetState(void *ami_mem, N_Vector y0) {
     cv_mem->cv_hu     = ZERO;
     /* tolerance scale factor                      */
     cv_mem->cv_tolsf  = ONE;
-    
+
     /* Initialize other integrator optional outputs */
-    
+
     /* actual initial stepsize                     */
     cv_mem->cv_h0u      = ZERO;
     /* step size to be used on the next step       */
     cv_mem->cv_next_h   = ZERO;
     /* order to be used on the next step           */
     cv_mem->cv_next_q   = 0;
-    
+
     /* write updated state to Nordsieck history array  */
     N_VScale(ONE, y0, cv_mem->cv_zn[0]);
 }
-    
-    
+
+
 void CVodeSolver::reInitPostProcessF(realtype *t, AmiVector *yout,
                                      AmiVector *ypout, realtype tnext) {
     reInitPostProcess(solverMemory.get(), t, yout, tnext);
@@ -309,39 +309,39 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t,
     auto cv_mem = static_cast<CVodeMem>(ami_mem);
     auto nst_tmp = cv_mem->cv_nst;
     cv_mem->cv_nst = 0;
-    
+
     auto status = CVode(ami_mem, tout, yout->getNVector(),
                         t, CV_ONE_STEP);
     if(status != CV_SUCCESS)
         throw CvodeException(status, "reInitPostProcess");
-    
+
     cv_mem->cv_nst = nst_tmp+1;
     if (cv_mem->cv_adjMallocDone == SUNTRUE) {
         /* add new step to history array, this is copied from CVodeF */
         auto ca_mem = cv_mem->cv_adj_mem;
         auto dt_mem = ca_mem->dt_mem;
-        
+
         if (cv_mem->cv_nst % ca_mem->ca_nsteps == 0) {
             /* currently not implemented, we should never get here as we
              limit cv_mem->cv_nst < ca_mem->ca_nsteps, keeping this for
              future regression */
             throw CvodeException(AMICI_ERROR, "reInitPostProcess");
         }
-            
+
         /* Load next point in dt_mem */
         dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]->t = *t;
         ca_mem->ca_IMstore(cv_mem, dt_mem[cv_mem->cv_nst % ca_mem->ca_nsteps]);
-        
+
         /* Set t1 field of the current ckeck point structure
          for the case in which there will be no future
          check points */
         ca_mem->ck_mem->ck_t1 = *t;
-        
+
         /* tfinal is now set to *tret */
         ca_mem->ca_tfinal = *t;
     }
 }
-    
+
 void CVodeSolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     /* set time */
@@ -352,10 +352,10 @@ void CVodeSolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
 void CVodeSolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     /* Initialize znS[0] in the history array */
-    
+
     for (int is=0; is<cv_mem->cv_Ns; is++)
         cv_mem->cv_cvals[is] = ONE;
-    
+
     int status = N_VScaleVectorArray(cv_mem->cv_Ns, cv_mem->cv_cvals,
                                  yS0->getNVectorArray(), cv_mem->cv_znS[0]);
     if(status != CV_SUCCESS)
@@ -774,7 +774,7 @@ int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
                                              N_VGetArrayPointer(x), "fxdot"))
             return AMICI_UNRECOVERABLE_ERROR;
             /* when t is large (typically ~1e300), CVODES may pass all NaN x
-               to fxdot from which we typically cannot recover. To save time 
+               to fxdot from which we typically cannot recover. To save time
                on normal execution, we do not always want to check finiteness
                of x, but only do so when t is large and we expect problems. */
 

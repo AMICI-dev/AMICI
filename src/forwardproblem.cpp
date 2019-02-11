@@ -113,10 +113,10 @@ void ForwardProblem::workForwardProblem() {
                     int status;
                     if (solver->getSensitivityMethod() == SensitivityMethod::adjoint &&
                             solver->getSensitivityOrder() >= SensitivityOrder::first) {
-                        status = solver->solveF(RCONST(nextTimepoint), &x, &dx,
+                        status = solver->solveF(nextTimepoint, &x, &dx,
                                                    &(t), AMICI_NORMAL, &ncheck);
                     } else {
-                        status = solver->solve(RCONST(nextTimepoint), &x, &dx,
+                        status = solver->solve(nextTimepoint, &x, &dx,
                                                   &(t), AMICI_NORMAL);
                     }
 
@@ -218,10 +218,10 @@ void ForwardProblem::handlePresimulation(int *ncheck)
 
     if (solver->getSensitivityMethod() == SensitivityMethod::adjoint &&
         solver->getSensitivityOrder() >= SensitivityOrder::first) {
-        solver->solveF(RCONST(model->t0()), &x, &dx,
+        solver->solveF(model->t0(), &x, &dx,
                        &(t), AMICI_NORMAL, ncheck);
     } else {
-        solver->solve(RCONST(model->t0()), &x, &dx,
+        solver->solve(model->t0(), &x, &dx,
                       &(t), AMICI_NORMAL);
     }
 

@@ -20,12 +20,12 @@
 namespace amici {
 
 void IDASolver::init(AmiVector *x, AmiVector *dx, realtype t) {
-    int status = IDAInit(solverMemory.get(), fxdot, RCONST(t), x->getNVector(), dx->getNVector());
+    int status = IDAInit(solverMemory.get(), fxdot, t, x->getNVector(), dx->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAInit");
 }
 void IDASolver::binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) {
-    int status = IDAInitB(solverMemory.get(), which, fxBdot, RCONST(t), xB->getNVector(), dxB->getNVector());
+    int status = IDAInitB(solverMemory.get(), which, fxBdot, t, xB->getNVector(), dxB->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAInitB");
 }
@@ -164,7 +164,7 @@ void IDASolver::setSuppressAlg(bool flag) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetSuppressAlg");
 }
-    
+
 void IDASolver::reInitPostProcessF(realtype *t, AmiVector *yout,
                                    AmiVector *ypout, realtype tnext) {
     reInitPostProcess(solverMemory.get(), t, yout, ypout,  tnext);
@@ -189,7 +189,7 @@ void IDASolver::reInitPostProcess(void *ami_mem, realtype *t,
         throw IDAException(status, "reInitPostProcess");
     ida_mem->ida_nst = nst_tmp+1;
 }
-    
+
 void IDASolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
     int status = IDAReInit(solverMemory.get(), t0, yy0->getNVector(), yp0->getNVector());
     if(status != IDA_SUCCESS)

@@ -405,7 +405,7 @@ void Solver::applyTolerances() {
     if (!getMallocDone())
         throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
 
-    setSStolerances(RCONST(this->rtol), RCONST(this->atol));
+    setSStolerances(this->rtol, this->atol);
 }
 
 void Solver::applyTolerancesFSA() {
@@ -430,7 +430,7 @@ void Solver::applyTolerancesASA(int which) {
         return;
 
     /* specify integration tolerances for backward problem */
-    setSStolerancesB(which, RCONST(getRelativeToleranceB()), RCONST(getAbsoluteToleranceB()));
+    setSStolerancesB(which, getRelativeToleranceB(), getAbsoluteToleranceB());
 }
 
 void Solver::applyQuadTolerancesASA(int which) {
@@ -447,9 +447,7 @@ void Solver::applyQuadTolerancesASA(int which) {
     setQuadErrConB(which,
                    !std::isinf(quad_atol) && !std::isinf(quad_rtol));
 
-    quadSStolerancesB(which,
-                      RCONST(quad_rtol),
-                      RCONST(quad_atol));
+    quadSStolerancesB(which, quad_rtol, quad_atol);
 }
 
 void Solver::applySensitivityTolerances() {
