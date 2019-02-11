@@ -24,8 +24,20 @@ import glob
 import sysconfig
 import subprocess
 from shutil import copyfile
-import numpy as np # for include directory
-import setup_clibs  # Must run from within containing directory
+import setup_clibs # Must run from within containing directory
+
+try:
+    # required for include directory
+    import numpy as np
+except ImportError:
+    # We need numpy, but setup_requires fires too late
+    # Try installation via pip
+    errno = subprocess.call([sys.executable, "-m", "pip", "install", "numpy"])
+    if errno:
+        print("Failed trying to install numpy. Please install manually.")
+        raise SystemExit(errno)
+    # retry
+    import numpy as np
 
 from amici import __version__
 
