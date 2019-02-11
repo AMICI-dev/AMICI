@@ -9,7 +9,7 @@ AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 pip3 install twine
 # in case we are running with pyenv, we need to update pyenv shims after installing packages with binaries
-if [[ -z "${PYENV_VERSION}" ]]; then
+if [[ -n "${PYENV_VERSION}" ]]; then
     pyenv rehash
 fi
 
