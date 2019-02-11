@@ -26,18 +26,31 @@ import subprocess
 from shutil import copyfile
 import setup_clibs # Must run from within containing directory
 
+
+def try_install(package):
+    """Try installing the given package using pip. Exit on error."""
+    errno = subprocess.call([sys.executable, "-m", "pip", "install", package])
+    if errno:
+        print(f"Failed trying to install {package}. Please install manually.")
+        raise SystemExit(errno)
+
+
 try:
     # required for include directory
     import numpy as np
 except ImportError:
     # We need numpy, but setup_requires fires too late
-    # Try installation via pip
-    errno = subprocess.call([sys.executable, "-m", "pip", "install", "numpy"])
-    if errno:
-        print("Failed trying to install numpy. Please install manually.")
-        raise SystemExit(errno)
+    try_install('numpy')
     # retry
     import numpy as np
+
+try:
+    # required in amici/__init__.py
+    import sympy as sp
+except ImportError:
+    try_install('sympy')
+    import sympy as sp
+
 
 from amici import __version__
 
