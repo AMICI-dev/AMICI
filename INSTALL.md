@@ -94,10 +94,9 @@ You can now import it as python module:
 
 #### Anaconda
 
-To use an Anaconda installation of python, proceeed as follows:
+To use an Anaconda installation of python, proceed as follows:
 
-Since Anaconda provides own versions of packages which might not work with amici, create a minimum
-virtual environment via:
+Since Anaconda provides own versions of some packages which might not work with amici (in particular the gcc compiler), create a minimal virtual environment via:
 
     conda create --name ENV_NAME pip python
 
