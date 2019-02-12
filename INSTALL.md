@@ -84,7 +84,7 @@ Note that Microsoft Visual Studio compilers are currently not supported.
 
 ###  python
 
-To use AMICI from python, install the module and all other requirements using pip from pypi:
+To use AMICI from python, install the module and all other requirements using pip:
 
     pip3 install amici
     
@@ -100,7 +100,7 @@ Since Anaconda provides own versions of some packages which might not work with 
 
     conda create --name ENV_NAME pip python
 
-To activate the environment, do:
+Here, replace ENV_NAME by some name for the environment. To activate the environment, do:
 
     source activate ENV_NAME
 
