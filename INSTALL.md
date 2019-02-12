@@ -106,17 +106,17 @@ Here, replace ENV_NAME by some name for the environment. To activate the environ
 
 (and `conda deactivate` later to deactivate it again).
 
-SWIG must be installed, as well as CBLAS. You can also use conda to install the latter locally, using:
+SWIG must be installed and available in your `PATH`, and a CBLAS-compatible BLAS must be available. You can also use conda to install the latter locally, using:
 
     conda install -c conda-forge openblas
 
-To install amici, now do:
+To install AMICI, now do:
 
     pip install amici
 
 The option `--no-cache` may be helpful here to make sure the installation is done completely anew.
 
-Now, you are ready to use amici in the virtual environment.
+Now, you are ready to use AMICI in the virtual environment.
 
 ### C++
 
