@@ -84,13 +84,40 @@ Note that Microsoft Visual Studio compilers are currently not supported.
 
 ###  python
 
-To use AMICI from python, install the module and all other requirements using pip  
+To use AMICI from python, install the module and all other requirements using pip from pypi:
 
     pip3 install amici
     
 You can now import it as python module:
 
     import amici
+
+#### Anaconda
+
+To use an Anaconda installation of python, proceeed as follows:
+
+Since Anaconda provides own versions of packages which might not work with amici, create a minimum
+virtual environment via:
+
+    conda create --name ENV_NAME pip python
+
+To activate the environment, do:
+
+    source activate ENV_NAME
+
+(and `conda deactivate` later to deactivate it again).
+
+SWIG must be installed, as well as CBLAS. You can also use conda to install the latter locally, using:
+
+    conda install -c conda-forge openblas
+
+To install amici, now do:
+
+    pip install amici
+
+The option `--no-cache` may be helpful here to make sure the installation is done completely anew.
+
+Now, you are ready to use amici in the virtual environment.
 
 ### C++
 
