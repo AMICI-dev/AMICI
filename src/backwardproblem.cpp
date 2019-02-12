@@ -91,7 +91,7 @@ void BackwardProblem::workBackwardProblem() {
         solver->solveB(model->t0(), AMICI_NORMAL);
         solver->getQuadB(which, &(t), &xQB);
         solver->getB(which, &(t), &xB, &dxB);
-        solver->getDiagnosisB(it, rdata, this->which);
+        solver->getDiagnosisB(0, rdata, this->which);
     }
 
     computeLikelihoodSensitivities();
