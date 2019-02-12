@@ -3,7 +3,7 @@
 
 namespace amici {
 
-    void Model_ODE::fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
+    void Model_ODE::fJ(realtype t, realtype  /*cj*/, AmiVector *x, AmiVector * /*dx*/,
                           AmiVector *xdot, SUNMatrix J) {
         fJ(t, x->getNVector(), xdot->getNVector(), J);
 
@@ -17,7 +17,7 @@ namespace amici {
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
      **/
-    void Model_ODE::fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J) {
+    void Model_ODE::fJ(realtype t, N_Vector x, N_Vector  /*xdot*/, SUNMatrix J) {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
@@ -26,8 +26,8 @@ namespace amici {
            w.data(), dwdx.data());
     }
 
-    void Model_ODE::fJSparse(realtype t, realtype cj, AmiVector *x,
-                             AmiVector *dx, AmiVector *xdot, SUNMatrix J) {
+    void Model_ODE::fJSparse(realtype t, realtype  /*cj*/, AmiVector *x,
+                             AmiVector * /*dx*/, AmiVector * /*xdot*/, SUNMatrix J) {
         fJSparse(t, x->getNVector(), J);
     }
 
@@ -47,8 +47,8 @@ namespace amici {
                  fixedParameters.data(), h.data(), w.data(), dwdx.data());
     }
 
-    void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
-                        AmiVector *v, AmiVector *Jv, realtype cj){
+    void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector * /*dx*/, AmiVector * /*xdot*/,
+                        AmiVector *v, AmiVector *Jv, realtype  /*cj*/){
         fJv(v->getNVector(),Jv->getNVector(),t,x->getNVector());
     }
 
@@ -69,7 +69,7 @@ namespace amici {
             N_VGetArrayPointer(v),w.data(),dwdx.data());
     }
 
-    void Model_ODE::froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root){
+    void Model_ODE::froot(realtype t, AmiVector *x, AmiVector * /*dx*/, realtype *root){
         froot(t,x->getNVector(),root);
     }
 

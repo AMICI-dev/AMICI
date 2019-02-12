@@ -20,28 +20,28 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype>  const& ts_)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
+                 std::vector<realtype> ts_)
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts_))
 {
     applyDimensions();
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype>  const& ts_,
-                 std::vector<realtype>  const& fixedParameters_
+                 std::vector<realtype> ts_,
+                 std::vector<realtype> fixedParameters_
                  )
-    : fixedParameters(fixedParameters_), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
+    : fixedParameters(std::move(fixedParameters_)), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts_))
 {
     applyDimensions();
 }
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
-                 std::vector<realtype> const& ts_,
+                 std::vector<realtype> ts_,
                  std::vector<realtype> const& observedData,
                  std::vector<realtype> const& observedDataStdDev,
                  std::vector<realtype> const& observedEvents,
                  std::vector<realtype> const& observedEventsStdDev)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(ts_)
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts_))
 {
     applyDimensions();
     setObservedData(observedData);
@@ -209,7 +209,7 @@ void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents, int
 }
 
 bool ExpData::isSetObservedEvents(int ie, int iz) const {
-    return !observedEvents.size() && !isNaN(observedEvents.at(ie * nztrue_ + iz));
+    return !observedEvents.empty() && !isNaN(observedEvents.at(ie * nztrue_ + iz));
 }
 
 std::vector<realtype> const& ExpData::getObservedEvents() const {
@@ -287,12 +287,12 @@ void ExpData::applyEventDimension() {
     observedEventsStdDev.resize(nmaxevent_*nztrue_, getNaN());
 }
 
-void ExpData::checkDataDimension(std::vector<realtype> input, const char *fieldname) const {
+void ExpData::checkDataDimension(std::vector<realtype> const& input, const char *fieldname) const {
     if (input.size() != (unsigned) nt()*nytrue_ && !input.empty())
         throw AmiException("Input %s did not match dimensions nt (%i) x nytrue (%i), was %i", fieldname, nt(), nytrue_, input.size());
 }
 
-void ExpData::checkEventsDimension(std::vector<realtype> input, const char *fieldname) const {
+void ExpData::checkEventsDimension(std::vector<realtype> const& input, const char *fieldname) const {
     if (input.size() != (unsigned) nmaxevent_*nztrue_ && !input.empty())
         throw AmiException("Input %s did not match dimensions nt (%i) x nytrue (%i), was %i", fieldname, nmaxevent_, nztrue_, input.size());
 }

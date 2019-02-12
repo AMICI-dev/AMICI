@@ -18,7 +18,7 @@ namespace amici {
 
      **/
     void Model_DAE::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                       N_Vector xdot, SUNMatrix J) {
+                       N_Vector  /*xdot*/, SUNMatrix J) {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
@@ -28,7 +28,7 @@ namespace amici {
     }
 
     void Model_DAE::fJSparse(realtype t, realtype cj, AmiVector *x,
-                             AmiVector *dx, AmiVector *xdot, SUNMatrix J) {
+                             AmiVector *dx, AmiVector * /*xdot*/, SUNMatrix J) {
         fJSparse(t, cj, x->getNVector(), dx->getNVector(), J);
     }
 
@@ -50,7 +50,7 @@ namespace amici {
                  w.data(), dwdx.data());
     }
 
-    void Model_DAE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
+    void Model_DAE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector * /*xdot*/,
                         AmiVector *v, AmiVector *Jv, realtype cj){
         fJv(t,x->getNVector(),dx->getNVector(),v->getNVector(),
                     Jv->getNVector(),cj);
@@ -117,7 +117,7 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    void Model_DAE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
+    void Model_DAE::fJDiag(realtype t, AmiVector *JDiag, realtype  /*cj*/, AmiVector *x,
                           AmiVector *dx) {
         auto x_pos = computeX_pos(x->getNVector());
         fdwdx(t,N_VGetArrayPointer(x_pos));
