@@ -113,7 +113,7 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    void Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
+    void Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype  /*cj*/, AmiVector *x,
                           AmiVector * /*dx*/) {
         fJDiag(t, JDiag->getNVector(), x->getNVector());
         if(checkFinite(nx_solver,JDiag->data(),"Jacobian") != AMICI_SUCCESS)

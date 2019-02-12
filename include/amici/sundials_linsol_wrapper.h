@@ -89,7 +89,7 @@ class SUNLinSolWrapper {
      * @param A
      * @return
      */
-    void setup(SUNMatrixWrapper A) const;
+    void setup(const SUNMatrixWrapper& A) const;
 
     /**
      * @brief Solves a linear system A*x = b

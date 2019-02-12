@@ -52,7 +52,7 @@ int isInf(double what) { return std::isinf(what); }
 double getNaN() { return NAN; }
 
 /**
- * c implementation of log function, this prevents returning NaN values for
+ * C implementation of log function, this prevents returning NaN values for
  * negative values
  *
  * @param x argument
@@ -61,25 +61,23 @@ double getNaN() { return NAN; }
  */
 double log(double x) {
     if (x <= 0) {
-        return (-std::log(DBL_MAX));
-    } else {
-        return (std::log(x));
+        return -std::log(DBL_MAX);
     }
+    return std::log(x);
 }
 
 /**
- * c implementation of matlab function dirac
+ * C implementation of matlab function dirac
  *
  * @param x argument
  * @return if(x==0) then INF else 0
  *
  */
 double dirac(double x) {
-    if (x == 0) {
-        return (DBL_MAX);
-    } else {
-        return (0);
+    if (x == 0.0) {
+        return DBL_MAX;
     }
+    return 0.0;
 }
 
 /**
@@ -90,11 +88,10 @@ double dirac(double x) {
  *
  */
 double heaviside(double x) {
-    if (x <= 0) {
-        return (0);
-    } else {
-        return (1);
+    if (x <= 0.0) {
+        return 0.0;
     }
+    return 1.0;
 }
 
 /**
@@ -105,15 +102,13 @@ double heaviside(double x) {
  *
  */
 double sign(double x) {
-    if (x > 0) {
-        return (1);
-    } else {
-        if (x < 0) {
-            return (-1);
-        } else {
-            return (0);
-        }
-    }
+    if (x > 0.0)
+        return 1.0;
+
+    if (x < 0.0)
+        return -1.0;
+
+    return 0.0;
 }
 
 /**
@@ -136,7 +131,7 @@ double max(double a, double b, double c) {
     }
     return (std::max(a, b));
 }
-    
+
 /**
  * c implementation of matlab function min
  *
@@ -162,21 +157,17 @@ double min(double a, double b, double c) {
  *
  */
 double Dmax(int id, double a, double b, double c) {
-    if (id == 1) {
-        if (a > b) {
-            return (1);
-        } else {
-            return (0);
-        }
-    } else {
-        if (a > b) {
-            return (0);
-        } else {
-            return (1);
-        }
+    if (id == 1.0) {
+        if (a > b)
+            return 1.0;
+        return 0.0;
     }
+    if (a > b) {
+        return 0.0;
+    }
+    return 1.0;
 }
-    
+
 /**
  * parameter derivative of c implementation of matlab function max
  *
@@ -189,7 +180,7 @@ double Dmax(int id, double a, double b, double c) {
  *
  */
 double Dmin(int id, double a, double b, double c) {
-    return(Dmax(id,-a,-b,c));
+    return Dmax(id,-a,-b,c);
 }
 
 /**
@@ -204,10 +195,11 @@ double pos_pow(double base, double exponent) {
     // we do NOT want to propagate NaN values here, if base is nan, so should the output be
     return pow(std::max(base, 0.0),exponent);
 }
-    
+
 /**
- * spline function, takes variable argument pairs (ti,pi) with `ti`: location of
- * node i and
+ * @brief Spline function
+ *
+ * Takes variable argument pairs (ti,pi) with `ti`: location of node i and
  * `pi`: spline value at node i. the last two arguments are always `ss`: flag
  * indicating whether slope at first node should be user defined
  * and `dudt` user defined slope at first node. All arguments must be of type
@@ -227,12 +219,12 @@ double spline(double t, int num, ...) {
     double ss;
     double dudt;
 
-    double *ts = (double *)alloca(num * sizeof(double));
-    double *us = (double *)alloca(num * sizeof(double));
+    auto *ts = (double *)alloca(num * sizeof(double));
+    auto *us = (double *)alloca(num * sizeof(double));
 
-    double *b = (double *)alloca(num * sizeof(double));
-    double *c = (double *)alloca(num * sizeof(double));
-    double *d = (double *)alloca(num * sizeof(double));
+    auto *b = (double *)alloca(num * sizeof(double));
+    auto *c = (double *)alloca(num * sizeof(double));
+    auto *d = (double *)alloca(num * sizeof(double));
 
     /* Variable list type macro */
     /* initialize valist for num number of arguments */
@@ -252,17 +244,17 @@ double spline(double t, int num, ...) {
     spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
 
-    return (uout);
+    return uout;
 }
 
 /**
- * exponentiated spline function, takes variable argument pairs (ti,pi) with
- `ti`: location of node i and
+ * @brief Exponentiated spline function
+ *
+ * Takes variable argument pairs (ti,pi) with `ti`: location of node i and
  * `pi`: spline value at node i. the last two arguments are always `ss`: flag
- indicating whether slope at first node should be user defined
+ * indicating whether slope at first node should be user defined
  * and `dudt` user defined slope at first node. All arguments must be of type
- double.
-
+ * double.
  *
  * @param t point at which the spline should be evaluated
  * @param num number of spline nodes
@@ -278,13 +270,13 @@ double spline_pos(double t, int num, ...) {
     double ss;
     double dudt;
 
-    double *ts = (double *)alloca(num * sizeof(double));
-    double *us = (double *)alloca(num * sizeof(double));
-    double *uslog = (double *)alloca(num * sizeof(double));
+    auto *ts = (double *)alloca(num * sizeof(double));
+    auto *us = (double *)alloca(num * sizeof(double));
+    auto *uslog = (double *)alloca(num * sizeof(double));
 
-    double *b = (double *)alloca(num * sizeof(double));
-    double *c = (double *)alloca(num * sizeof(double));
-    double *d = (double *)alloca(num * sizeof(double));
+    auto *b = (double *)alloca(num * sizeof(double));
+    auto *c = (double *)alloca(num * sizeof(double));
+    auto *d = (double *)alloca(num * sizeof(double));
 
     /* initialize valist for num number of arguments */
     va_start(valist, num);
@@ -304,12 +296,13 @@ double spline_pos(double t, int num, ...) {
     spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
     uout = seval(num, t, ts, uslog, b, c, d);
 
-    return (exp(uout));
+    return exp(uout);
 }
 
 /**
- * derivation of a spline function, takes variable argument pairs (ti,pi) with
- * `ti`: location of node i and
+ * @brief Derivation of a spline function
+ *
+ * Takes variable argument pairs (ti,pi) with `ti`: location of node i and
  * `pi`: spline value at node i. the last two arguments are always `ss`: flag
  * indicating whether slope at first node should be user defined
  * and `dudt` user defined slope at first node. All arguments but id must be of
@@ -338,7 +331,7 @@ double Dspline(int id, double t, int num, ...) {
     double *b = (double *)alloca(num * sizeof(double));
     double *c = (double *)alloca(num * sizeof(double));
     double *d = (double *)alloca(num * sizeof(double));
-    
+
     int did = id / 2 - 2;
 
     /* initialize valist for num number of arguments */
@@ -360,12 +353,13 @@ double Dspline(int id, double t, int num, ...) {
     spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
 
-    return (uout);
+    return uout;
 }
 
 /**
- * derivation of an exponentiated spline function, takes variable argument pairs
- * (ti,pi) with `ti`: location of node i and
+ * @brief Derivation of an exponentiated spline function
+ *
+ * Takes variable argument pairs (ti,pi) with `ti`: location of node i and
  * `pi`: spline value at node i. the last two arguments are always `ss`: flag
  * indicating whether slope at first node should be user defined
  * and `dudt` user defined slope at first node. All arguments but id must be of
@@ -424,12 +418,13 @@ double Dspline_pos(int id, double t, int num, ...) {
     suspline = seval(num, t, ts, sus, b, c, d);
     uout = suspline * uspline_pos / us[did];
 
-    return (uout);
+    return uout;
 }
 
 /**
- * second derivation of a spline function, takes variable argument pairs (ti,pi)
- * with `ti`: location of node i and
+ * @brief Second derivation of a spline function
+ *
+ * Takes variable argument pairs (ti,pi) with `ti`: location of node i and
  * `pi`: spline value at node i. the last two arguments are always `ss`: flag
  * indicating whether slope at first node should be user defined
  * and `dudt` user defined slope at first node. All arguments but id1 and id2
@@ -443,13 +438,13 @@ double Dspline_pos(int id, double t, int num, ...) {
  * @param num number of spline nodes
  *
  * @return ddspline(t)
- *
  */
-double DDspline(int id1, int id2, double t, int num, ...) { return (0.0); }
+double DDspline(int id1, int id2, double t, int num, ...) { return 0.0; }
 
 /**
- * derivation of an exponentiated spline function, takes variable argument pairs
- * (ti,pi) with `ti`: location of node i and
+ * @brief Derivation of an exponentiated spline function
+ *
+ * Takes variable argument pairs (ti,pi) with `ti`: location of node i and
  * `pi`: spline value at node i. the last two arguments are always `ss`: flag
  * indicating whether slope at first node should be user defined
  * and `dudt` user defined slope at first node. All arguments but id1 and id2
@@ -524,7 +519,7 @@ double DDspline_pos(int id1, int id2, double t, int num, ...) {
     }
     uout = uout / us[did1] / us[did2];
 
-    return (uout);
+    return uout;
 }
 
 } // namespace amici

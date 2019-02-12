@@ -297,7 +297,7 @@ void IDASolver::diag() {
     throw AmiException("Diag Solver was not implemented for DAEs");
 }
 
-void IDASolver::diagB(int which) {
+void IDASolver::diagB(int  /*which*/) {
     throw AmiException("Diag Solver was not implemented for DAEs");
 }
 
@@ -409,8 +409,8 @@ bool IDASolver::getAdjMallocDone() const {
  * @return status flag indicating successful execution
  **/
 int IDASolver::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                  N_Vector xdot, SUNMatrix J, void *user_data, N_Vector tmp1,
-                  N_Vector tmp2, N_Vector tmp3) {
+                  N_Vector xdot, SUNMatrix J, void *user_data, N_Vector  /*tmp1*/,
+                  N_Vector  /*tmp2*/, N_Vector  /*tmp3*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJ(t, cj, x, dx, xdot, J);
     return model->checkFinite(SM_ROWS_D(J), SM_DATA_D(J), "Jacobian");
@@ -433,9 +433,9 @@ int IDASolver::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
  * @return status flag indicating successful execution
  **/
 int IDASolver::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                   N_Vector xB, N_Vector dxB, N_Vector xBdot, SUNMatrix JB,
-                   void *user_data, N_Vector tmp1B, N_Vector tmp2B,
-                   N_Vector tmp3B) {
+                   N_Vector xB, N_Vector dxB, N_Vector  /*xBdot*/, SUNMatrix JB,
+                   void *user_data, N_Vector  /*tmp1B*/, N_Vector  /*tmp2B*/,
+                   N_Vector  /*tmp3B*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJB(t, cj, x, dx, xB, dxB, JB);
     return model->checkFinite(SM_ROWS_D(JB), SM_DATA_D(JB), "Jacobian");
@@ -455,8 +455,8 @@ int IDASolver::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
  * @return status flag indicating successful execution
  */
 int IDASolver::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                        N_Vector xdot, SUNMatrix J, void *user_data,
-                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+                        N_Vector  /*xdot*/, SUNMatrix J, void *user_data,
+                        N_Vector  /*tmp1*/, N_Vector  /*tmp2*/, N_Vector  /*tmp3*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJSparse(t, cj, x, dx, J);
     return model->checkFinite(SM_NNZ_S(J), SM_DATA_S(J), "Jacobian");
@@ -533,9 +533,9 @@ void IDASolver::setNonLinearSolverB(int which)
  * @return status flag indicating successful execution
  */
 int IDASolver::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                         N_Vector xB, N_Vector dxB, N_Vector xBdot,
-                         SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                         N_Vector tmp2B, N_Vector tmp3B) {
+                         N_Vector xB, N_Vector dxB, N_Vector  /*xBdot*/,
+                         SUNMatrix JB, void *user_data, N_Vector  /*tmp1B*/,
+                         N_Vector  /*tmp2B*/, N_Vector  /*tmp3B*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
     return model->checkFinite(SM_NNZ_S(JB), SM_DATA_S(JB), "Jacobian");
@@ -602,8 +602,8 @@ int IDASolver::fJBandB(realtype t, realtype cj, N_Vector x, N_Vector dx,
      * @param tmp2 temporary storage vector
      * @return status flag indicating successful execution
      **/
-    int IDASolver::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv,
-                   realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) {
+    int IDASolver::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector  /*xdot*/, N_Vector v, N_Vector Jv,
+                   realtype cj, void *user_data, N_Vector  /*tmp1*/, N_Vector  /*tmp2*/) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fJv(t, x, dx, v, Jv, cj);
         return model->checkFinite(model->nx_solver,N_VGetArrayPointer(Jv),"Jacobian");
@@ -625,9 +625,9 @@ int IDASolver::fJBandB(realtype t, realtype cj, N_Vector x, N_Vector dx,
      * @param tmpB2 temporary storage vector
      * @return status flag indicating successful execution
      **/
-    int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
+    int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector  /*xBdot*/,
                     N_Vector vB, N_Vector JvB, realtype cj, void *user_data,
-                    N_Vector tmpB1, N_Vector tmpB2) {
+                    N_Vector  /*tmpB1*/, N_Vector  /*tmpB2*/) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
         return model->checkFinite(model->nx_solver,N_VGetArrayPointer(JvB),"Jacobian");
@@ -722,9 +722,9 @@ int IDASolver::fJBandB(realtype t, realtype cj, N_Vector x, N_Vector dx,
      * @param tmp3 temporary storage vector
      * @return status flag indicating successful execution
      */
-    int IDASolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
+    int IDASolver::fsxdot(int  /*Ns*/, realtype t, N_Vector x, N_Vector dx, N_Vector  /*xdot*/,
                       N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+                      N_Vector  /*tmp1*/, N_Vector  /*tmp2*/, N_Vector  /*tmp3*/) {
         auto model = static_cast<Model_DAE*>(user_data);
         for(int ip = 0; ip < model->nplist(); ip++){
             model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);

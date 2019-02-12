@@ -199,16 +199,16 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
 
     if(solverWasCalled && solverMemoryB.at(which)) {
         getNumSteps(solverMemoryB.at(which).get(), &number);
-        rdata->numstepsB[it] = (double)number;
+        rdata->numstepsB[it] = number;
 
         getNumRhsEvals(solverMemoryB.at(which).get(), &number);
-        rdata->numrhsevalsB[it] = (double)number;
+        rdata->numrhsevalsB[it] = number;
 
         getNumErrTestFails(solverMemoryB.at(which).get(), &number);
-        rdata->numerrtestfailsB[it] = (double)number;
+        rdata->numerrtestfailsB[it] = number;
 
         getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
-        rdata->numnonlinsolvconvfailsB[it] = (double)number;
+        rdata->numnonlinsolvconvfailsB[it] = number;
     }
 }
 

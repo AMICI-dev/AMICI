@@ -36,7 +36,7 @@ void SUNLinSolWrapper::setup(SUNMatrix A) const {
         throw AmiException("Solver setup failed with code %d", res);
 }
 
-void SUNLinSolWrapper::setup(SUNMatrixWrapper A) const { return setup(A.get()); }
+void SUNLinSolWrapper::setup(const SUNMatrixWrapper& A) const { return setup(A.get()); }
 
 int SUNLinSolWrapper::Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol) const {
     return SUNLinSolSolve(solver, A, x, b, tol);
