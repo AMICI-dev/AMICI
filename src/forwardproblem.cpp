@@ -1,12 +1,14 @@
+#include "amici/forwardproblem.h"
+
 #include "amici/cblas.h"
 #include "amici/model.h"
-#include "amici/forwardproblem.h"
 #include "amici/solver.h"
 #include "amici/exception.h"
 #include "amici/edata.h"
 #include "amici/rdata.h"
 #include "amici/steadystateproblem.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -75,7 +77,7 @@ void ForwardProblem::workForwardProblem() {
         model->fx_rdata(&x_rdata, &x);
         rdata->x0 = std::move(x_rdata.getVector());
         if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
-            solver->getSensitivityOrder() >= SensitivityOrder::first) {
+                solver->getSensitivityOrder() >= SensitivityOrder::first) {
             model->fsx_rdata(&sx_rdata, &sx);
             for (int ix = 0; ix < rdata->nx; ix++) {
                 for (int ip = 0; ip < model->nplist(); ip++)
@@ -97,12 +99,13 @@ void ForwardProblem::workForwardProblem() {
         solver->setStopTime(nextTimepoint);
 
         if (nextTimepoint > model->t0()) {
-            while (t < nextTimepoint) {
-                if (model->nx_solver == 0) {
-                    t = nextTimepoint;
-                    continue;
-                }
+            if (model->nx_solver == 0) {
+                t = nextTimepoint;
+                break;
+            }
 
+            // Solve for nextTimepoint
+            while (t < nextTimepoint) {
                 if (std::isinf(nextTimepoint)) {
                     SteadystateProblem sstate = SteadystateProblem(&t, &x, &sx);
                     sstate.workSteadyStateProblem(rdata, solver, model, it);
@@ -111,10 +114,10 @@ void ForwardProblem::workForwardProblem() {
                     if (solver->getSensitivityMethod() == SensitivityMethod::adjoint &&
                             solver->getSensitivityOrder() >= SensitivityOrder::first) {
                         status = solver->solveF(nextTimepoint, &x, &dx,
-                                                   &(t), AMICI_NORMAL, &ncheck);
+                                                &t, AMICI_NORMAL, &ncheck);
                     } else {
                         status = solver->solve(nextTimepoint, &x, &dx,
-                                                  &(t), AMICI_NORMAL);
+                                               &t, AMICI_NORMAL);
                     }
 
                     if (status == AMICI_ILL_INPUT) {
@@ -143,6 +146,7 @@ void ForwardProblem::workForwardProblem() {
     storeJacobianAndDerivativeInReturnData();
 }
 
+
 void ForwardProblem::handlePreequilibration()
 {
     // Are there dedicated condition preequilibration parameters provided?
@@ -163,12 +167,14 @@ void ForwardProblem::handlePreequilibration()
 
     sstate.workSteadyStateProblem(rdata, solver, model, -1);
 
-    if(overrideFixedParameters) { // Restore
+    if(overrideFixedParameters) {
+        // Restore
         model->setFixedParameters(originalFixedParameters);
     }
 
     updateAndReinitStatesAndSensitivities();
 }
+
 
 void ForwardProblem::updateAndReinitStatesAndSensitivities() {
 
@@ -195,6 +201,7 @@ void ForwardProblem::updateAndReinitStatesAndSensitivities() {
             solver->sensReInit(&sx, &sdx);
     }
 }
+
 
 void ForwardProblem::handlePresimulation(int *ncheck)
 {
@@ -229,17 +236,8 @@ void ForwardProblem::handlePresimulation(int *ncheck)
     updateAndReinitStatesAndSensitivities();
 }
 
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
 
 void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
-    /**
-     * handleEvent executes everything necessary for the handling of events
-     *
-     * @param tlastroot pointer to the timepoint of the last event
-     */
-
     /* store heaviside information at event occurence */
     model->froot(t, &x, &dx, rootvals.data());
 
@@ -317,7 +315,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
                         "Event was recorded but not reported as the number of "
                         "occured events exceeded (nmaxevents)*(number of "
                         "events in model definition)!");
-        solver->reInit(t, &x, &dx); /* reinitialise so that we can continue in peace */
+        /* reinitialise so that we can continue in peace */
+        solver->reInit(t, &x, &dx);
         return;
     }
 
@@ -373,6 +372,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
 }
 
+
 void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     model->fxdot(t, &x, &dx, &xdot);
     rdata->xdot = xdot.getVector();
@@ -387,11 +387,8 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     }
 }
 
-void ForwardProblem::getEventOutput() {
-    /**
-     * getEventOutput extracts output information for events
-     */
 
+void ForwardProblem::getEventOutput() {
     if (t == model->gett(model->nt() - 1,rdata)) {
         // call from fillEvent at last timepoint
         model->froot(t, &x, &dx, rootvals.data());
@@ -441,17 +438,8 @@ void ForwardProblem::getEventOutput() {
     }
 }
 
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------ */
 
 void ForwardProblem::prepEventSensis(int ie) {
-    /**
-     * prepEventSensis preprocesses the provided experimental data to compute
-     * event sensitivities via adjoint or forward methods later on
-     *
-     * @param ie index of current event
-     */
 
     if(!edata)
         return;
@@ -492,13 +480,8 @@ void ForwardProblem::prepEventSensis(int ie) {
 
 }
 
+
 void ForwardProblem::getEventSensisFSA(int ie) {
-    /**
-     * getEventSensisFSA extracts event information for forward sensitivity
-     * analysis
-     *
-     * @param ie index of event type
-     */
     if (t == model->t(model->nt() - 1)) {
         // call from fillEvent at last timepoint
         model->fsz_tf(nroots.data(),ie, rdata);
@@ -512,13 +495,8 @@ void ForwardProblem::getEventSensisFSA(int ie) {
     }
 }
 
+
 void ForwardProblem::handleDataPoint(int it) {
-    /**
-     * handleDataPoint executes everything necessary for the handling of data
-     * points
-     *
-     * @param it index of data point
-     */
     model->fx_rdata(&x_rdata, &x);
     std::copy_n(x_rdata.data(), rdata->nx, &rdata->x.at(it*rdata->nx));
 
@@ -529,13 +507,8 @@ void ForwardProblem::handleDataPoint(int it) {
     getDataOutput(it);
 }
 
-void ForwardProblem::getDataOutput(int it) {
-    /**
-     * getDataOutput extracts output information for data-points
-     *
-     * @param it index of current timepoint
-     */
 
+void ForwardProblem::getDataOutput(int it) {
     model->fy(rdata->ts[it], it, &x, rdata);
     model->fsigmay(it, rdata, edata);
     model->fJy(it, rdata, edata);
@@ -549,14 +522,8 @@ void ForwardProblem::getDataOutput(int it) {
     }
 }
 
-void ForwardProblem::prepDataSensis(int it) {
-    /**
-     * prepDataSensis preprocesses the provided experimental data to compute
-     * sensitivities via adjoint or forward methods later on
-     *
-     * @param it index of current timepoint
-     */
 
+void ForwardProblem::prepDataSensis(int it) {
     model->fdydx(rdata->ts[it], &x);
     model->fdydp(rdata->ts[it], &x);
 
@@ -570,14 +537,8 @@ void ForwardProblem::prepDataSensis(int it) {
     model->fdJydp(it, rdata, edata);
 }
 
-void ForwardProblem::getDataSensisFSA(int it) {
-    /**
-     * getDataSensisFSA extracts data information for forward sensitivity
-     * analysis
-     *
-     * @param it index of current timepoint
-     */
 
+void ForwardProblem::getDataSensisFSA(int it) {
     if (!std::isinf(model->t(it)) && model->t(it) > model->t0()) {
         solver->getSens(&(t), &sx);
     }
@@ -600,13 +561,8 @@ void ForwardProblem::getDataSensisFSA(int it) {
     }
 }
 
-void ForwardProblem::applyEventBolus() {
-    /**
-     * applyEventBolus applies the event bolus to the current state
-     *
-     * @param model pointer to model specification object
-     */
 
+void ForwardProblem::applyEventBolus() {
     for (int ie = 0; ie < model->ne; ie++) {
         if (rootsfound.at(ie) == 1) {
             /* only consider transitions false -> true */
@@ -617,11 +573,8 @@ void ForwardProblem::applyEventBolus() {
     }
 }
 
+
 void ForwardProblem::applyEventSensiBolusFSA() {
-    /**
-     * applyEventSensiBolusFSA applies the event bolus to the current
-     * sensitivities
-     */
     for (int ie = 0; ie < model->ne; ie++) {
         if (rootsfound.at(ie) == 1) {
             /* only consider transitions false -> true */

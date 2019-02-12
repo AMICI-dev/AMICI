@@ -797,7 +797,7 @@ void Solver::setInternalSensitivityMethod(InternalSensitivityMethod ism) {
 
 void Solver::initalizeNonLinearSolverSens(AmiVector *x, Model *model)
 {
-    switch(iter) { // TODO: rename to nonLinearSolver? Rename function to fixedpoint?
+    switch(iter) {
     case NonlinearSolverIteration::newton:
         switch(ism) {
         case InternalSensitivityMethod::staggered:
