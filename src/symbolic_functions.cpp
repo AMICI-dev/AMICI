@@ -120,7 +120,7 @@ double sign(double x) {
  * @return if(a > b) then a else b
  *
  */
-double max(double a, double b, double c) {
+double max(double a, double b, double  /*c*/) {
     int anan = isNaN(a), bnan = isNaN(b);
     if (anan || bnan) {
         if (anan && !bnan)
@@ -156,7 +156,7 @@ double min(double a, double b, double c) {
  * @return id == 2:  if(a > b) then 0 else 1
  *
  */
-double Dmax(int id, double a, double b, double c) {
+double Dmax(int id, double a, double b, double  /*c*/) {
     if (id == 1.0) {
         if (a > b)
             return 1.0;
@@ -377,14 +377,14 @@ double Dspline_pos(int id, double t, int num, ...) {
 
     va_list valist;
 
-    double *ts = (double *)alloca(num * sizeof(double));
-    double *us = (double *)alloca(num * sizeof(double));
-    double *sus = (double *)alloca(num * sizeof(double));
-    double *uslog = (double *)alloca(num * sizeof(double));
+    auto *ts = (double *)alloca(num * sizeof(double));
+    auto *us = (double *)alloca(num * sizeof(double));
+    auto *sus = (double *)alloca(num * sizeof(double));
+    auto *uslog = (double *)alloca(num * sizeof(double));
 
-    double *b = (double *)alloca(num * sizeof(double));
-    double *c = (double *)alloca(num * sizeof(double));
-    double *d = (double *)alloca(num * sizeof(double));
+    auto *b = (double *)alloca(num * sizeof(double));
+    auto *c = (double *)alloca(num * sizeof(double));
+    auto *d = (double *)alloca(num * sizeof(double));
 
     double uout;
     double ss;
@@ -439,7 +439,7 @@ double Dspline_pos(int id, double t, int num, ...) {
  *
  * @return ddspline(t)
  */
-double DDspline(int id1, int id2, double t, int num, ...) { return 0.0; }
+double DDspline(int  /*id1*/, int  /*id2*/, double  /*t*/, int  /*num*/, ...) { return 0.0; }
 
 /**
  * @brief Derivation of an exponentiated spline function
@@ -464,15 +464,15 @@ double DDspline_pos(int id1, int id2, double t, int num, ...) {
 
     va_list valist;
 
-    double *ts = (double *)alloca(num * sizeof(double));
-    double *us = (double *)alloca(num * sizeof(double));
-    double *sus1 = (double *)alloca(num * sizeof(double));
-    double *sus2 = (double *)alloca(num * sizeof(double));
-    double *uslog = (double *)alloca(num * sizeof(double));
+    auto *ts = (double *)alloca(num * sizeof(double));
+    auto *us = (double *)alloca(num * sizeof(double));
+    auto *sus1 = (double *)alloca(num * sizeof(double));
+    auto *sus2 = (double *)alloca(num * sizeof(double));
+    auto *uslog = (double *)alloca(num * sizeof(double));
 
-    double *b = (double *)alloca(num * sizeof(double));
-    double *c = (double *)alloca(num * sizeof(double));
-    double *d = (double *)alloca(num * sizeof(double));
+    auto *b = (double *)alloca(num * sizeof(double));
+    auto *c = (double *)alloca(num * sizeof(double));
+    auto *d = (double *)alloca(num * sizeof(double));
 
     double uout;
     double ss;

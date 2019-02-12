@@ -26,7 +26,7 @@ class SteadystateProblem {
   public:
     void workSteadyStateProblem(ReturnData *rdata, Solver *solver,
                                       Model *model, int it);
-    
+
     /**
      * Computes the weighted root mean square of xdot
      * the weights are computed according to x:
@@ -43,7 +43,7 @@ class SteadystateProblem {
                          realtype atol,
                          realtype rtol
                          );
-    
+
     /**
      * Checks convergence for state and respective sensitivities
      *
@@ -89,8 +89,8 @@ class SteadystateProblem {
      * @param it current timepoint index, <0 indicates preequilibration
      */
     void getSteadystateSimulation(ReturnData *rdata, Solver *solver,
-                                  Model *model, int it);
-    
+                                  Model *model);
+
     /**
      * initialize CVodeSolver instance for preequilibration simulation
      *
@@ -99,7 +99,7 @@ class SteadystateProblem {
      * @param tstart time point for starting Newton simulation
      * @return solver instance
      */
-    std::unique_ptr<Solver> createSteadystateSimSolver(Solver *solver, Model *model, realtype tstart);
+    std::unique_ptr<Solver> createSteadystateSimSolver(Solver *solver, Model *model);
 
     /** default constructor
      * @param t pointer to time variable
@@ -146,10 +146,10 @@ class SteadystateProblem {
     AmiVectorArray *sx;
     /** state differential sensitivities */
     AmiVectorArray sdx;
-    
+
     /** weighted root-mean-square error */
     realtype wrms = NAN;
-    
+
 };
 
 } // namespace amici
