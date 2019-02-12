@@ -169,7 +169,7 @@ NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model, Re
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolverDense::prepareLinearSystem(int ntry, int nnewt) {
+void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver
@@ -237,7 +237,7 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model, 
 
 /* ------------------------------------------------------------------------- */
 
-void NewtonSolverSparse::prepareLinearSystem(int ntry, int nnewt) {
+void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
      * solver

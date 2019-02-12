@@ -82,11 +82,11 @@ namespace amici {
      */
     void Model_ODE::froot(realtype t, N_Vector x, realtype *root) {
         auto x_pos = computeX_pos(x);
-        memset(root,0.0,sizeof(realtype)*ne);
+        memset(root,0,sizeof(realtype)*ne);
         froot(root,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data());
     }
 
-    void Model_ODE::fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) {
+    void Model_ODE::fxdot(realtype t, AmiVector *x, AmiVector * /*dx*/, AmiVector *xdot) {
         fxdot(t,x->getNVector(),xdot->getNVector());
     }
 
@@ -114,7 +114,7 @@ namespace amici {
      * @return status flag indicating successful execution
      **/
     void Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
-                          AmiVector *dx) {
+                          AmiVector * /*dx*/) {
         fJDiag(t, JDiag->getNVector(), x->getNVector());
         if(checkFinite(nx_solver,JDiag->data(),"Jacobian") != AMICI_SUCCESS)
             throw AmiException("Evaluation of fJDiag failed!");
@@ -146,7 +146,7 @@ namespace amici {
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
      **/
-    void Model_ODE::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+    void Model_ODE::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector  /*xBdot*/,
                         SUNMatrix JB) {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
@@ -166,7 +166,7 @@ namespace amici {
      * @param JB Matrix to which the Jacobian will be written
      */
     void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB,
-                              N_Vector xBdot, SUNMatrix JB) {
+                              N_Vector  /*xBdot*/, SUNMatrix JB) {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(JB);
@@ -239,8 +239,8 @@ namespace amici {
                           N_VGetArrayPointer(xB),w.data(),dwdp.data());
     }
 
-    void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
-                           AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) {
+    void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector * /*dx*/, int ip,
+                           AmiVector *sx, AmiVector * /*sdx*/, AmiVector *sxdot) {
         fsxdot(t,x->getNVector(), ip, sx->getNVector(), sxdot->getNVector());
     }
 

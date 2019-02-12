@@ -85,7 +85,7 @@ namespace amici {
      * @param root array with root function values
      */
     void Model_DAE::froot(realtype t, N_Vector x, N_Vector dx, realtype *root) {
-        memset(root,0.0,sizeof(realtype)*ne);
+        memset(root, 0,sizeof(realtype)*ne);
         auto x_pos = computeX_pos(x);
         froot(root,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                      N_VGetArrayPointer(dx));
@@ -121,7 +121,7 @@ namespace amici {
                           AmiVector *dx) {
         auto x_pos = computeX_pos(x->getNVector());
         fdwdx(t,N_VGetArrayPointer(x_pos));
-        memset(JDiag->data(),0.0,sizeof(realtype)*nx_solver);
+        JDiag->set(0.0);
         fJDiag(JDiag->data(),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                0.0,dx->data(),w.data(),dwdx.data());
         if(!checkFinite(nx_solver,JDiag->data(),"Jacobian"))
