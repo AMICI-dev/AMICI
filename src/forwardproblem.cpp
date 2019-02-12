@@ -94,10 +94,7 @@ void ForwardProblem::workForwardProblem() {
     for (int it = 0; it < model->nt(); it++) {
         auto nextTimepoint = model->t(it);
 
-        if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
-            solver->getSensitivityOrder() >= SensitivityOrder::first) {
-            solver->setStopTime(nextTimepoint);
-        }
+        solver->setStopTime(nextTimepoint);
 
         if (nextTimepoint > model->t0()) {
             while (t < nextTimepoint) {

@@ -309,9 +309,14 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t,
     auto cv_mem = static_cast<CVodeMem>(ami_mem);
     auto nst_tmp = cv_mem->cv_nst;
     cv_mem->cv_nst = 0;
+    
+    auto status = CVodeSetStopTime(cv_mem, tout);
+    if(status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetStopTime");
 
-    auto status = CVode(ami_mem, tout, yout->getNVector(),
+    status = CVode(ami_mem, tout, yout->getNVector(),
                         t, CV_ONE_STEP);
+    
     if(status != CV_SUCCESS)
         throw CvodeException(status, "reInitPostProcess");
 
