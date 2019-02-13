@@ -101,7 +101,7 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     if constant_species_to_parameters:
         # Turn species which are marked constant in the SBML model into
         # parameters
-        constant_species = amici.sbml_import.constantSpeciesToParameters(
+        constant_species = petab.constant_species_to_parameters(
             sbml_model)
         print("Constant species converted to parameters",
               len(constant_species))
@@ -177,13 +177,6 @@ def import_model(sbml_file, condition_file, model_name=None,
 
 def main():
     args = parse_cli_args()
-
-    """
-    sbml_file = 'PEtab/CS_Signalling_ERBB_RAS_AKT_petab.xml'
-    condition_file = 'PEtab/conditions_petab.tsv'
-    measurement_file = 'PEtab/measurements_petab.tsv'
-    parameter_file = 'PEtab/parameters_petab.tsv'
-    """
 
     init_colorama(autoreset=True)
 
