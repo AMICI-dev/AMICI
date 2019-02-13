@@ -123,20 +123,9 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     return fixed_parameters
 
 
-def ensure_amici_compatible():
-    minimum_amici_version = (0, 8, 4)
-    current_amici_version = \
-        tuple([int(x) for x in amici.__version__.split('.')])
-    if current_amici_version < minimum_amici_version:
-        raise RuntimeError(f'Must use AMICI version {minimum_amici_version}'
-                           ' or newer')
-
-
 def import_model(sbml_file, condition_file, model_name=None,
                  model_output_dir=None, verbose=True):
     """Import AMICI model"""
-
-    ensure_amici_compatible()
 
     if model_name is None:
         model_name = os.path.splitext(os.path.split(sbml_file)[-1])[0]
