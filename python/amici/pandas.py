@@ -9,8 +9,7 @@ from amici import ExpData
 
 
 def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
-    """ 
-    Write Observables from experimental data as DataFrame.
+    """ Write Observables from experimental data as DataFrame.
 
     Arguments:
         model: Model instance.
@@ -29,10 +28,13 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
     if isinstance(edata_list, amici.amici.ExpData):
         edata_list = [edata_list]
 
-    # find observable column names using either parameter ids or names
+    # list of all column names using either ids or names
     cols = _get_extended_observable_cols(model, by_id=by_id)
 
+    # initialize dataframe with columns
     df_edata = pd.DataFrame(columns=cols)
+
+    # append all converted edatas
     for edata in edata_list:
         npdata = edataToNumPyArrays(edata)
         for i_time, timepoint in enumerate(edata.getTimepoints()):
@@ -40,12 +42,14 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
                 'time': timepoint,
                 'datatype': 'data'
             }
+            # add observables and noises
             for i_obs, obs in enumerate(_get_names_or_ids(
                     model, 'Observable', by_id=by_id)):
                 datadict[obs] = npdata['observedData'][i_time, i_obs]
-                datadict[obs + '_std'] = npdata['observedDataStdDev'][
-                    i_time, i_obs]
-
+                datadict[obs + '_std'] = \
+                    npdata['observedDataStdDev'][i_time, i_obs]
+    
+            # add conditions
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
 
             df_edata.loc[len(df_edata)] = datadict
@@ -55,41 +59,50 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
 
 def getSimulationObservablesAsDataFrame(
         model, edata_list, rdata_list, by_id=False):
-    """ Write Observables from simulation results as DataFrame
+    """ Write Observables from simulation results as DataFrame.
 
     Arguments:
-        model: Model instance
-        edata_list: list of ExpData instances with experimental data
-        rdata_list: list of ReturnData instances corresponding to ExpData
+        model: Model instance.
+        edata_list: list of ExpData instances with experimental data.
+        rdata_list: list of ReturnData instances corresponding to ExpData.
         by_id: bool, optional (default = False)
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
     Returns:
-        pandas DataFrame with conditions and observables
+        pandas DataFrame with conditions and observables.
 
     Raises:
 
     """
     if isinstance(edata_list, amici.amici.ExpData):
         edata_list = [edata_list]
+    if isinstance(rdata_list, amici.amici.ReturnData):
+        rdata_list = [rdata_list]
 
+    # list of all column names using either names or ids
     cols = _get_extended_observable_cols(model, by_id=by_id)
+    
+    # initialize dataframe with columns
     df_rdata = pd.DataFrame(columns=cols)
 
+    # append all converted rdatas
     for edata, rdata in zip(edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
             datadict = {
                 'time': timepoint,
                 'datatype': 'simulation',
             }
+            # append simulations
             for i_obs, obs in enumerate(_get_names_or_ids(
                     model, 'Observable', by_id=by_id)):
                 datadict[obs] = rdata['y'][i_time, i_obs]
                 datadict[obs + '_std'] = rdata['sigmay'][i_time, i_obs]
 
+            # use edata to fill conditions columns
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
-
+            
+            # append to dataframe
             df_rdata.loc[len(df_rdata)] = datadict
 
     return df_rdata
@@ -97,18 +110,18 @@ def getSimulationObservablesAsDataFrame(
 
 def getSimulationStatesAsDataFrame(
         model, edata_list, rdata_list, by_id=False):
-    """ Compute model residuals according to a list of ReturnData and ExpData
+    """ Compute model residuals according to lists of ReturnData and ExpData.
 
     Arguments:
-        model: Model instance
-        edata_list: list of ExpData instances with experimental data
-        rdata_list: list of ReturnData instances corresponding to ExpData
+        model: Model instance.
+        edata_list: list of ExpData instances with experimental data.
+        rdata_list: list of ReturnData instances corresponding to ExpData.
         by_id: bool, optional (default = False)
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
     Returns:
-        pandas DataFrame with conditions and observables
+        pandas DataFrame with conditions and observables.
 
     Raises:
 
@@ -118,38 +131,46 @@ def getSimulationStatesAsDataFrame(
     if isinstance(rdata_list, amici.amici.ReturnData):
         rdata_list = [rdata_list]
 
+    # get conditions and state column names by name or id
     cols = _get_state_cols(model, by_id=by_id)
+
+    # initialize dataframe with columns
     df_rdata = pd.DataFrame(columns=cols)
 
+    # append states
     for edata, rdata in zip(edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
             datadict = {
                 'time': timepoint,
             }
 
+            # append states
             for i_state, state in enumerate(
                     _get_names_or_ids(model, 'State', by_id=by_id)):
                 datadict[state] = rdata['x'][i_time, i_state]
 
+            # use data to fill condition columns
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
 
+            # append to dataframe
             df_rdata.loc[len(df_rdata)] = datadict
+
     return df_rdata
 
 
 def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
-    """ Convert a list of ExpData to pandas DataFrame
+    """ Convert a list of ExpData to pandas DataFrame.
 
     Arguments:
-        model: Model instance
-        edata_list: list of ExpData instances with experimental data
-        rdata_list: list of ReturnData instances corresponding to ExpData
+        model: Model instance.
+        edata_list: list of ExpData instances with experimental data.
+        rdata_list: list of ReturnData instances corresponding to ExpData.
         by_id: bool, optional (default = False)
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
     Returns:
-        pandas DataFrame with conditions and observables
+        pandas DataFrame with conditions and observables.
 
     Raises:
 
@@ -159,52 +180,69 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
     if isinstance(rdata_list, amici.amici.ReturnData):
         rdata_list = [rdata_list]
 
-    df_edata = getDataObservablesAsDataFrame(model, edata_list, by_id=by_id)
-    df_rdata = getSimulationObservablesAsDataFrame(model, edata_list,
-                                                   rdata_list, by_id=by_id)
+    # create observable and simulation dataframes
+    df_edata = getDataObservablesAsDataFrame(
+        model, edata_list, by_id=by_id)
+    df_rdata = getSimulationObservablesAsDataFrame(
+        model, edata_list, rdata_list, by_id=by_id)
 
+    # get all column names using names or ids
     cols = _get_observable_cols(model, by_id=by_id)
 
+    #  initialize dataframe with columns
     df_res = pd.DataFrame(columns=cols)
 
+    # iterate over rdata rows
     for row in df_rdata.index:
         datadict = {
             'time': df_rdata.loc[row]['time'],
             't_presim': df_rdata.loc[row]['t_presim']
         }
+
+        # iterate over observables
         for obs in _get_names_or_ids(model, 'Observable', by_id=by_id):
+            # compute residual and append to dict
             datadict[obs] = abs(
                 (df_edata.loc[row][obs] - df_rdata.loc[row][obs]) /
                 df_rdata.loc[row][obs + '_std'])
+
+        # iterate over fixed parameters
         for par in _get_names_or_ids(model, 'FixedParameter', by_id=by_id):
+            # fill in conditions
             datadict[par] = df_rdata.loc[row][par]
             datadict[par + '_preeq'] = df_rdata.loc[row][par + '_preeq']
             datadict[par + '_presim'] = df_rdata.loc[row][par + '_presim']
+
+        # append to dataframe
         df_res.loc[len(df_res)] = datadict
 
     return df_res
 
 
 def _fill_conditions_dict(datadict, model, edata, by_id) -> dict:
-    """ Helper function that fills in condition parameters from model and edata
+    """
+    Helper function that fills in condition parameters from model and
+    edata.
 
     Arguments:
         datadict: dictionary in which condition parameters will be inserted
-        as key value pairs
-        model: Model instance
-        edata: ExpData instance
+            as key value pairs.
+        model: Model instance.
+        edata: ExpData instance.
         by_id: bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
+
     Returns:
-        dictionary with filled condition parameters
+        dictionary with filled condition parameters.
 
     Raises:
 
     """
     datadict['t_presim'] = edata.t_presim
 
-    for i_par, par in enumerate(_get_names_or_ids(model, 'FixedParameter', by_id=by_id)):
+    for i_par, par in enumerate(
+            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)):
         if len(edata.fixedParameters):
             datadict[par] = edata.fixedParameters[i_par]
         else:
@@ -225,16 +263,16 @@ def _fill_conditions_dict(datadict, model, edata, by_id) -> dict:
 
 
 def _get_extended_observable_cols(model, by_id) -> list:
-    """ Construction helper for extended observable dataframe headers
+    """ Construction helper for extended observable dataframe headers.
 
     Arguments:
-        model: Model instance
+        model: Model instance.
         by_id: bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
     Returns:
-        column names as list
+        column names as list.
 
     Raises:
 
@@ -242,26 +280,26 @@ def _get_extended_observable_cols(model, by_id) -> list:
     return \
         ['time', 'datatype', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
-        [name + '_preeq' for name in
-         _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
+        [name + '_preeq' for name in 
+            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
         [name + '_presim' for name in
-         _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
+            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
         _get_names_or_ids(model, 'Observable', by_id=by_id) + \
-        [name + '_std' for name in _get_names_or_ids(
-            model, 'Observable', by_id=by_id)]
+        [name + '_std' for name in
+            _get_names_or_ids(model, 'Observable', by_id=by_id)]
 
 
 def _get_observable_cols(model, by_id):
-    """ Construction helper for observable dataframe headers
+    """ Construction helper for observable dataframe headers.
 
     Arguments:
-        model: Model instance
+        model: Model instance.
         by_id: bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
     Returns:
-        column names as list
+        column names as list.
 
     Raises:
 
@@ -277,16 +315,16 @@ def _get_observable_cols(model, by_id):
 
 
 def _get_state_cols(model, by_id):
-    """ Construction helper for state dataframe headers
+    """ Construction helper for state dataframe headers.
 
     Arguments:
-        model: Model instance
+        model: Model instance.
         by_id: bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
     Returns:
-        column names as list
+        column names as list.
 
     Raises:
 
@@ -294,60 +332,70 @@ def _get_state_cols(model, by_id):
     return \
         ['time', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
-        [name + '_preeq' for name in
-         _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        [name + '_presim' for name in
-         _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
+        [name + '_preeq' for name in \
+            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
+        [name + '_presim' for name in \
+            _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
         _get_names_or_ids(model, 'State', by_id=by_id)
 
 
 def _get_names_or_ids(model, variable, by_id):
-    """ Obtains a unique list of identifiers for the specified variable
-        first tries model.getVariableNames and then uses model.getVariableIds
+    """
+    Obtains a unique list of identifiers for the specified variable.
+    First tries model.getVariableNames and then uses model.getVariableIds.
 
     Arguments:
-        model: Model instance
-        variable: variable name
+        model: Model instance.
+        variable: variable name.
         by_id: bool
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
+            If True, ids are used as identifiers, otherwise first the possibly
+            more descriptive names are used.
 
     Returns:
-        column names as list
+        column names as list.
 
     Raises:
 
     """
+    # check whether variable type permitted
     variable_options = ['Parameter', 'FixedParameter', 'Observable', 'State']
     if variable not in variable_options:
         raise ValueError('variable must be in ' + str(variable_options))
+    
+    # functions to extract attributes
     namegetter = getattr(model, 'get' + variable + 'Names')
     idgetter = getattr(model, 'get' + variable + 'Ids')
+
+    # extract labels
     if not by_id and len(set(namegetter())) == len(namegetter()) \
             and model.hasObservableNames():
+        # use variable names
         return list(namegetter())
     elif model.hasObservableIds():
+        # use variable ids
         return list(idgetter())
     else:
+        # unable to create unique lables
         raise RuntimeError('Model Observable Names are not unique and '
                            'Observable Ids are not set. ')
 
 
 def _get_specialized_fixed_parameters(
         model, condition, overwrite, by_id) -> list:
-    """ Copies values in condition and overwrites them according to key
-    value pairs specified in overwrite
+    """
+    Copies values in condition and overwrites them according to key
+    value pairs specified in overwrite.
 
     Arguments:
-        model: Model instance
-        condition: dict/pd.Series containing FixedParameter values
-        overwrite: dict specifying which values in condition are to be replaced
+        model: Model instance.
+        condition: dict/pd.Series containing FixedParameter values.
+        overwrite: dict specifying which values in condition are to be replaced.
         by_id: bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
     Returns:
-        overwritten FixedParameter as list
+        overwritten FixedParameter as list.
 
     Raises:
 
@@ -360,22 +408,23 @@ def _get_specialized_fixed_parameters(
 
 
 def constructEdataFromDataFrame(df, model, condition):
-    """ Constructs an ExpData instance according to the provided Model and DataFrame
+    """ Constructs an ExpData instance according to the provided Model and DataFrame.
 
     Arguments:
-        df: pd.DataFrame with Observable Names/Ids as columns
-            standard deviations may be specified by appending '_std' as suffix
-        model: Model instance
-        condition: pd.Series with FixedParameter Names/Ids as columns
-            preequilibration conditions may be specified by appending '_preeq' as suffix
-            presimulation conditions may be specified by appending '_presim' as suffix
+        df: pd.DataFrame with Observable Names/Ids as columns.
+            Standard deviations may be specified by appending '_std' as suffix.
+        model: Model instance.
+        condition: pd.Series with FixedParameter Names/Ids as columns.
+            Preequilibration conditions may be specified by appending '_preeq' as suffix.
+            Presimulation conditions may be specified by appending '_presim' as suffix.
 
     Returns:
-        ExpData instance
+        ExpData instance.
 
     Raises:
 
     """
+    # initialize edata
     edata = ExpData(model.get())
 
     # timepoints
