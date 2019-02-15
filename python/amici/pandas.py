@@ -280,7 +280,7 @@ def _get_extended_observable_cols(model, by_id) -> list:
     return \
         ['time', 'datatype', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
-        [name + '_preeq' for name in 
+        [name + '_preeq' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
         [name + '_presim' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
@@ -449,7 +449,7 @@ def constructEdataFromDataFrame(df, model, condition, by_id=False):
     # fill in fixed parameters
     edata.fixedParameters = \
         condition[_get_names_or_ids(model, 'FixedParameter', by_id=by_id)].values
-    
+
     # fill in preequilibration parameters
     if any([overwrite_preeq[key] != condition[key] for key in
             overwrite_preeq.keys()]):
