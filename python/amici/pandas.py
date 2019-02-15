@@ -2,30 +2,37 @@ import pandas as pd
 import numpy as np
 import math
 import copy
+
 from .numpy import edataToNumPyArrays
+import amici
 from amici import ExpData
 
+
 def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
-    """ Write Observables from experimental data as DataFrame
+    """ 
+    Write Observables from experimental data as DataFrame.
 
     Arguments:
-        model: Model instance
-        edata_list: list of ExpData instances with experimental data
+        model: Model instance.
+        edata_list: list of ExpData instances with experimental data.
         by_id: bool (optional, default = False)
             If True, uses observable ids as identifiers in dataframe,
             otherwise the possibly more descriptive observable names
             are used.
 
     Returns:
-        pandas DataFrame with conditions and observables
+        pandas DataFrame with conditions and observables.
 
     Raises:
 
     """
+    if isinstance(edata_list, amici.amici.ExpData):
+        edata_list = [edata_list]
 
+    # find observable column names using either parameter ids or names
     cols = _get_extended_observable_cols(model, by_id=by_id)
-    df_edata = pd.DataFrame(columns=cols)
 
+    df_edata = pd.DataFrame(columns=cols)
     for edata in edata_list:
         npdata = edataToNumPyArrays(edata)
         for i_time, timepoint in enumerate(edata.getTimepoints()):
@@ -64,6 +71,8 @@ def getSimulationObservablesAsDataFrame(
     Raises:
 
     """
+    if isinstance(edata_list, amici.amici.ExpData):
+        edata_list = [edata_list]
 
     cols = _get_extended_observable_cols(model, by_id=by_id)
     df_rdata = pd.DataFrame(columns=cols)
@@ -104,6 +113,10 @@ def getSimulationStatesAsDataFrame(
     Raises:
 
     """
+    if isinstance(edata_list, amici.amici.ExpData):
+        edata_list = [edata_list]
+    if isinstance(rdata_list, amici.amici.ReturnData):
+        rdata_list = [rdata_list]
 
     cols = _get_state_cols(model, by_id=by_id)
     df_rdata = pd.DataFrame(columns=cols)
@@ -141,6 +154,10 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
     Raises:
 
     """
+    if isinstance(edata_list, amici.amici.ExpData):
+        edata_list = [edata_list]
+    if isinstance(rdata_list, amici.amici.ReturnData):
+        rdata_list = [rdata_list]
 
     df_edata = getDataObservablesAsDataFrame(model, edata_list, by_id=by_id)
     df_rdata = getSimulationObservablesAsDataFrame(model, edata_list,
