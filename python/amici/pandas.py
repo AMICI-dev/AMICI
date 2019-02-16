@@ -361,7 +361,7 @@ def _get_names_or_ids(model, variable, by_id):
     variable_options = ['Parameter', 'FixedParameter', 'Observable', 'State']
     if variable not in variable_options:
         raise ValueError('variable must be in ' + str(variable_options))
-    
+
     # functions to extract attributes
     namegetter = getattr(model, 'get' + variable + 'Names')
     idgetter = getattr(model, 'get' + variable + 'Ids')
