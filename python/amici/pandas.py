@@ -48,7 +48,7 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
                 datadict[obs] = npdata['observedData'][i_time, i_obs]
                 datadict[obs + '_std'] = \
                     npdata['observedDataStdDev'][i_time, i_obs]
-    
+
             # add conditions
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
 
@@ -82,7 +82,7 @@ def getSimulationObservablesAsDataFrame(
 
     # list of all column names using either names or ids
     cols = _get_extended_observable_cols(model, by_id=by_id)
-    
+
     # initialize dataframe with columns
     df_rdata = pd.DataFrame(columns=cols)
 
@@ -101,7 +101,7 @@ def getSimulationObservablesAsDataFrame(
 
             # use edata to fill conditions columns
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
-            
+
             # append to dataframe
             df_rdata.loc[len(df_rdata)] = datadict
 
@@ -332,9 +332,9 @@ def _get_state_cols(model, by_id):
     return \
         ['time', 't_presim'] + \
         _get_names_or_ids(model, 'FixedParameter', by_id=by_id) + \
-        [name + '_preeq' for name in \
+        [name + '_preeq' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
-        [name + '_presim' for name in \
+        [name + '_presim' for name in
             _get_names_or_ids(model, 'FixedParameter', by_id=by_id)] + \
         _get_names_or_ids(model, 'State', by_id=by_id)
 
@@ -455,7 +455,7 @@ def constructEdataFromDataFrame(df, model, condition, by_id=False):
             overwrite_preeq.keys()]):
         edata.fixedParametersPreequilibration = \
             _get_specialized_fixed_parameters(
-                model, condition,overwrite_preeq, by_id=by_id)
+                model, condition, overwrite_preeq, by_id=by_id)
     elif len(overwrite_preeq.keys()):
         edata.fixedParametersPreequilibration = copy.deepcopy(
             edata.fixedParameters
@@ -465,7 +465,7 @@ def constructEdataFromDataFrame(df, model, condition, by_id=False):
     if any([overwrite_presim[key] != condition[key] for key in
             overwrite_presim.keys()]):
         edata.fixedParametersPresimulation = _get_specialized_fixed_parameters(
-            model, condition,overwrite_presim, by_id=by_id
+            model, condition, overwrite_presim, by_id=by_id
         )
     elif len(overwrite_presim.keys()):
         edata.fixedParametersPresimulation = copy.deepcopy(
