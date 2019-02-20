@@ -375,10 +375,10 @@ def _get_names_or_ids(model, variable, by_id):
 
     # extract labels
     if not by_id and len(set(namegetter())) == len(namegetter()) \
-            and model.hasObservableNames():
+            and getattr(model, f"has{variable}Names")():
         # use variable names
         return list(namegetter())
-    elif model.hasObservableIds():
+    elif getattr(model, f"has{variable}Ids")():
         # use variable ids
         return list(idgetter())
     else:
