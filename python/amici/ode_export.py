@@ -304,9 +304,7 @@ class ModelQuantity:
 
     """
     def __init__(self, identifier,  name, value):
-        """Create a new ModelQuantity instance. This function sanitizes
-        input from pysb to make sure we are operating on flat symby.Symbol and
-        sympy.Basic and not respective derived pysb classes
+        """Create a new ModelQuantity instance.
 
         Arguments:
             identifier: unique identifier of the quantity @type sympy.Symbol
@@ -323,17 +321,11 @@ class ModelQuantity:
         TypeError:
             is thrown if input types do not match documented types
         """
+
         if not isinstance(identifier, sp.Symbol):
             raise TypeError(f'identifier must be sympy.Symbol, was '
                             f'{type(identifier)}')
-        if pysb and isinstance(identifier, pysb.Component):
-            # strip pysb type and transform into a flat sympy.Symbol.
-            # this prevents issues where pysb expressions, observables or
-            # parameters are not recognized as an sp.Symbol with same
-            # symbolic name
-            self._identifier = sp.Symbol(identifier.name)
-        else:
-            self._identifier = identifier
+        self._identifier = identifier
 
         if not isinstance(name, str):
             raise TypeError(f'name must be str, was {type(name)}')
@@ -345,10 +337,7 @@ class ModelQuantity:
         if not isinstance(value, sp.Basic) and not isinstance(value, float):
             raise TypeError(f'value must be sympy.Symbol or float, was '
                             f'{type(value)}')
-        if isinstance(value, sp.Basic):
-            self._value = sanitize_basic_sympy(value)
-        else:
-            self._value = value
+        self._value = value
 
     def __repr__(self):
         """Representation of the ModelQuantity object
@@ -440,7 +429,7 @@ class State(ModelQuantity):
             raise TypeError(f'dt must have type sympy.Basic, was '
                             f'{type(dt)}')
 
-        self._dt = sanitize_basic_sympy(dt)
+        self._dt = dt
         self.conservation_law = None
 
     def set_conservation_law(self, law):
@@ -1219,7 +1208,7 @@ class ODEModel:
             ])
             if name == 'y':
                 self._syms['my'] = sp.Matrix([
-                    sp.Symbol(f'm{comp.get_id()}')
+                    sp.Symbol(f'm{strip_pysb(comp.get_id())}')
                     for comp in getattr(self, component)
                 ])
             return
@@ -1233,7 +1222,7 @@ class ODEModel:
         elif name == 'dtcldp':
             self._syms[name] = sp.Matrix([
                 [
-                    sp.Symbol(f's{tcl.get_id()}{ip}')
+                    sp.Symbol(f's{strip_pysb(tcl.get_id())}{ip}')
                     for ip in range(len(self.sym('p')))
                 ]
                 for tcl in self._conservationlaws
@@ -1549,7 +1538,8 @@ class ODEModel:
         Arguments:
             name: name of resulting symbolic variable @type str
 
-            eq: name of the symbolic variable that defines the formula @type str
+            eq: name of the symbolic variable that defines the formula
+            @type str
 
             chainvars: names of the symbolic variable that define the
             identifiers with respect to which the chain rules are applied
@@ -2017,16 +2007,17 @@ class ODEExporter:
             raise Exception('Unknown symbolic array')
 
         for index, symbol in enumerate(symbols):
-            symbol_name = str(symbol)
+            symbol_name = strip_pysb(symbol)
             lines.append(
                 f'#define {symbol_name} {name}[{index}]'
             )
 
-        with open(os.path.join(self.modelPath,f'{name}.h'), 'w') as fileout:
+        with open(os.path.join(self.modelPath, f'{name}.h'), 'w') as fileout:
             fileout.write('\n'.join(lines))
 
     def _writeFunctionFile(self, function):
-        """Generate equations and write the C++ code for the function `function`.
+        """Generate equations and write the C++ code for the function
+        `function`.
 
         Arguments:
             function: name of the function to be written (see self.functions)
@@ -2062,7 +2053,7 @@ class ODEExporter:
         # function signature
         signature = self.functions[function]['signature']
 
-        if not signature.find('SlsMat') == -1:
+        if 'SlsMat' in signature:
             lines.append('#include <sundials/sundials_sparse.h>')
 
         lines.append('')
@@ -2120,7 +2111,8 @@ class ODEExporter:
         if min(symbol.shape) == 0:
             return lines
 
-        if not self.allow_reinit_fixpar_initcond and function in ['sx0_fixedParameters', 'x0_fixedParameters']:
+        if not self.allow_reinit_fixpar_initcond \
+                and function in ['sx0_fixedParameters', 'x0_fixedParameters']:
             return lines
 
         if function == 'sx0_fixedParameters':
@@ -2268,8 +2260,8 @@ class ODEExporter:
         )
 
     def _getSymbolNameInitializerList(self, name):
-        """Get SBML name initializer list for vector of names for the given model
-        entity
+        """Get SBML name initializer list for vector of names for the given
+        model entity
 
         Arguments:
             name: any key present in self.model._syms @type str
@@ -2281,11 +2273,15 @@ class ODEExporter:
 
         """
         return '\n'.join(
-            [f'"{symbol}",' for symbol in self.model.name(name)]
+            [
+                f'"{strip_pysb(symbol)}",'
+                for symbol in self.model.name(name)
+            ]
         )
 
     def _getSymbolIDInitializerList(self, name):
-        """Get C++ initializer list for vector of names for the given model entity
+        """Get C++ initializer list for vector of names for the given model
+        entity
 
         Arguments:
             name: any key present in self.model._syms @type str
@@ -2297,7 +2293,10 @@ class ODEExporter:
 
         """
         return '\n'.join(
-            [f'"{symbol}",' for symbol in self.model.sym(name)]
+            [
+                f'"{strip_pysb(symbol)}",'
+                for symbol in self.model.sym(name)
+            ]
         )
 
     def _writeCMakeFile(self):
@@ -2492,6 +2491,7 @@ class ODEExporter:
         """
         self.modelName = modelName
 
+
 def getSymbolicDiagonal(matrix):
     """Get symbolic matrix with diagonal of matrix `matrix`.
 
@@ -2511,6 +2511,7 @@ def getSymbolicDiagonal(matrix):
     diagonal = [matrix[index,index] for index in range(matrix.cols)]
 
     return sp.Matrix(diagonal)
+
 
 class TemplateAmici(Template):
     """Template format used in AMICI (see string.template for more details).
@@ -2546,40 +2547,26 @@ def applyTemplate(sourceFile,targetFile,templateData):
         fileout.write(result)
 
 
-def sanitize_basic_sympy(basic):
-    """Strips pysb info from the sympy.Basic object
+def strip_pysb(symbol):
+    """Strips pysb info from a pysb.Component object
 
     Arguments:
-        basic: symbolic expression @type sympy.Basic
+        symbol: symbolic expression @type sympy.Basic
 
     Returns:
-    sanitized sympy.Basic
+    stripped sympy.Basic
 
     Raises:
 
     """
     # strip pysb type and transform into a flat sympy.Basic.
-    # this prevents issues where pysb expressions, observables or
-    # parameters are not recognized as an sp.Symbol with same
-    # symbolic name
-    if pysb and isinstance(basic, pysb.Component):
-        # this is the case where value only consists of a
-        # pysb.Component, here str(value) would print the full
-        # value.__repr__
-        return sp.Symbol(basic.name)
+    # this ensures that the pysb type specific __repr__ is used when converting
+    # to string
+    if pysb and isinstance(symbol, pysb.Component):
+        return sp.Symbol(symbol.name)
     else:
-        # if this expression contains any pysb.Components, we can
-        # safely apply str() to the full expression as str will do
-        # the right thing here
-
-        # ensure that pysb symbols are correctly interpreted as symbols and
-        # not as functions etc
-        local_vars = {
-            fs.name: sp.Symbol(fs.name)
-            for fs in list(basic.expr_free_symbols)
-            if pysb and isinstance(fs, pysb.core.Component)
-        }
-        return sp.sympify(str(basic), locals=local_vars)
+        # in this case we will use sympy specific transform anyways
+        return symbol
 
 
 def get_function_definition(fun, name):
