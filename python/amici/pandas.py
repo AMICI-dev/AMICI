@@ -14,6 +14,7 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
     Arguments:
         model: Model instance.
         edata_list: list of ExpData instances with experimental data.
+            May also be a single ExpData instance.
         by_id: bool (optional, default = False)
             If True, uses observable ids as identifiers in dataframe,
             otherwise the possibly more descriptive observable names
@@ -64,7 +65,9 @@ def getSimulationObservablesAsDataFrame(
     Arguments:
         model: Model instance.
         edata_list: list of ExpData instances with experimental data.
+            May also be a single ExpData instance.
         rdata_list: list of ReturnData instances corresponding to ExpData.
+            May also be a single ReturnData instance.
         by_id: bool, optional (default = False)
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
@@ -115,7 +118,9 @@ def getSimulationStatesAsDataFrame(
     Arguments:
         model: Model instance.
         edata_list: list of ExpData instances with experimental data.
+            May also be a single ExpData instance.
         rdata_list: list of ReturnData instances corresponding to ExpData.
+            May also be a single ReturnData instance.
         by_id: bool, optional (default = False)
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
@@ -164,7 +169,9 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
     Arguments:
         model: Model instance.
         edata_list: list of ExpData instances with experimental data.
+            May also be a single ExpData instance.
         rdata_list: list of ReturnData instances corresponding to ExpData.
+            May also be a single ReturnData instance.
         by_id: bool, optional (default = False)
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
