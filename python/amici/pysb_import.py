@@ -622,7 +622,7 @@ def _greedy_target_index_update(cl_prototypes):
             prototype['diff_fillin'] = \
                 prototype['alternate_fillin'] - prototype['fillin']
         else:
-            prototype['diff_fillin'] = 0
+            prototype['diff_fillin'] = -1
 
     # this puts prototypes with high diff_fillin last
     cl_prototypes = sorted(
@@ -642,7 +642,7 @@ def _greedy_target_index_update(cl_prototypes):
         # this will always be the monomer with the highest diff_fillin (note
         # that the target indice counts are recomputed on the fly
 
-        if prototype['diff_fillin'] > 0 \
+        if prototype['diff_fillin'] > -1 \
                 and get_target_indices(cl_prototypes).count(
                     prototype['target_index']
                 ) > 1:
