@@ -17,8 +17,7 @@ if [ ! -d "cpputest-master" ]; then
         wget -q -O cpputest-master.zip https://codeload.github.com/cpputest/cpputest/zip/23a8ec83bd129b0afe4d9e38509e9bdb489fce55 # https://codeload.github.com/cpputest/cpputest/zip/master
     fi
     unzip -q cpputest-master.zip
-    mv cpputest-23a8ec83bd129b0afe4d9e38509e9bdb489fce55 cpputest-master
-   #cd cpputest-master/ && ./autogen.sh && ./configure && make
+    #cd cpputest-master/ && ./autogen.sh && ./configure && make
 fi
 
 cd cpputest-master
