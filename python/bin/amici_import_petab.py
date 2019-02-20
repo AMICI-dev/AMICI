@@ -10,6 +10,7 @@ import petab
 import os
 import time
 import argparse
+import numpy as np
 from colorama import init as init_colorama
 from colorama import Fore
 
@@ -123,8 +124,12 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     return fixed_parameters
 
 
-def import_model(sbml_file, condition_file, model_name=None,
-                 model_output_dir=None, verbose=True):
+def import_model(sbml_file: str,
+                 condition_file: str,
+                 measurement_file: str = None,
+                 model_name: str = None,
+                 model_output_dir: str = None,
+                 verbose: bool = True):
     """Import AMICI model"""
 
     if model_name is None:
@@ -144,9 +149,23 @@ def import_model(sbml_file, condition_file, model_name=None,
 
     show_model_info(sbml_model)
 
-    observables = petab.get_observables(sbml_importer.sbml)
+    observables = petab.get_observables(sbml_importer.sbml, remove=True)
 
-    sigmas = petab.get_sigmas(sbml_importer.sbml)
+    sigmas = petab.get_sigmas(sbml_importer.sbml, remove=True)
+
+    measurement_df = petab.get_measurement_df(measurement_file)
+    if 'observableTransformation' in measurement_df \
+            and not np.issubdtype(
+        measurement_df.observableTransformation.dtype, np.number) \
+            and np.any(measurement_df.observableTransformation != 'lin'):
+        raise ValueError(Fore.YELLOW + "Non-lin observables specified. "
+                                       "Don't know how to handle that.")
+
+    # Replace observables in assignment
+    import sympy as sp
+    for observable_id, formula in sigmas.items():
+        repl = sp.sympify(formula).subs(observable_id, observables[observable_id]['formula'])
+        sigmas[observable_id] = str(repl)
 
     if verbose:
         print('Observables', len(observables))
@@ -181,14 +200,18 @@ def main():
     init_colorama(autoreset=True)
 
     # First check for valid PEtab
-    pp = petab.Problem(args.sbml_file_name,
-                       args.condition_file_name,
-                       args.measurement_file_name,
-                       args.parameter_file_name)
+    pp = petab.Problem.from_files(
+        sbml_file=args.sbml_file_name,
+        condition_file=args.condition_file_name,
+        measurement_file=args.measurement_file_name,
+        parameter_file=args.parameter_file_name)
     petab.lint_problem(pp)
 
-    import_model(args.sbml_file_name, args.condition_file_name,
-                 model_output_dir=args.model_output_dir, verbose=True)
+    import_model(args.sbml_file_name,
+                 args.condition_file_name,
+                 args.measurement_file_name,
+                 model_output_dir=args.model_output_dir,
+                 verbose=True)
 
 
 if __name__ == '__main__':
