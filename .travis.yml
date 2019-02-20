@@ -5,6 +5,7 @@ branches:
   only:
     - master
     - develop
+    # Version tags
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
 matrix:
