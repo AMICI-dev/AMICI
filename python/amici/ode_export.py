@@ -10,6 +10,7 @@ import sys
 import os
 import copy
 import numbers
+import itertools
 try:
     import pysb
 except ImportError:
@@ -1281,16 +1282,20 @@ class ODEModel:
         Raises:
 
         """
+        free_symbols_dt = list(itertools.chain.from_iterable(
+            list(state.get_dt().free_symbols)
+            for state in self._states
+        ))
+
+        free_symbols_expr = list(itertools.chain.from_iterable(
+            list(expr.get_val().free_symbols)
+            for expr in self._expressions
+        ))
+
         return [
-            sum(
-                self._states[idx].get_id() in state.get_dt().free_symbols
-                for state in self._states
-            )
+            free_symbols_dt.count(self._states[idx].get_id())
             +
-            sum(
-                self._states[idx].get_id() in expr.get_val().free_symbols
-                for expr in self._expressions
-            )
+            free_symbols_expr.count(self._states[idx].get_id())
             for idx in idxs
         ]
 
