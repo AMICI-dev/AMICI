@@ -382,9 +382,13 @@ def _get_names_or_ids(model, variable, by_id):
         # use variable ids
         return list(idgetter())
     else:
-        # unable to create unique lables
-        raise RuntimeError('Model Observable Names are not unique and '
-                           'Observable Ids are not set. ')
+        # unable to create unique labels
+        if by_id:
+            raise RuntimeError(f"Model {variable} ids are not set.")
+        else:
+            raise RuntimeError(
+                f"Model {variable} names are not unique and "
+                f"{variable} ids are not set.")
 
 
 def _get_specialized_fixed_parameters(
