@@ -26,7 +26,7 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
     Raises:
 
     """
-    if isinstance(edata_list, amici.amici.ExpData):
+    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
         edata_list = [edata_list]
 
     # list of all column names using either ids or names
@@ -78,9 +78,9 @@ def getSimulationObservablesAsDataFrame(
     Raises:
 
     """
-    if isinstance(edata_list, amici.amici.ExpData):
+    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
         edata_list = [edata_list]
-    if isinstance(rdata_list, amici.amici.ReturnData):
+    if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
         rdata_list = [rdata_list]
 
     # list of all column names using either names or ids
@@ -131,9 +131,9 @@ def getSimulationStatesAsDataFrame(
     Raises:
 
     """
-    if isinstance(edata_list, amici.amici.ExpData):
+    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
         edata_list = [edata_list]
-    if isinstance(rdata_list, amici.amici.ReturnData):
+    if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
         rdata_list = [rdata_list]
 
     # get conditions and state column names by name or id
@@ -182,9 +182,9 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
     Raises:
 
     """
-    if isinstance(edata_list, amici.amici.ExpData):
+    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
         edata_list = [edata_list]
-    if isinstance(rdata_list, amici.amici.ReturnData):
+    if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
         rdata_list = [rdata_list]
 
     # create observable and simulation dataframes
