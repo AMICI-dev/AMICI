@@ -674,7 +674,8 @@ EXCLUDE                = "src/solver_cvodes.cpp" \
                          "src/wrapfunctions.ODE_template.h" \
                          "src/model_header.ODE_template.h" \
                          "include/amici/solver_cvodes.h" \
-                         "include/amici/solver_idas.h"
+                         "include/amici/solver_idas.h" \
+                         "python/amici/setup.template.py"
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
