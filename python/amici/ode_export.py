@@ -1272,19 +1272,25 @@ class ODEModel:
 
         """
         free_symbols_dt = list(itertools.chain.from_iterable(
-            list(state.get_dt().free_symbols)
+            [
+                str(symbol)
+                for symbol in state.get_dt().free_symbols
+            ]
             for state in self._states
         ))
 
         free_symbols_expr = list(itertools.chain.from_iterable(
-            list(expr.get_val().free_symbols)
+            [
+                str(symbol)
+                for symbol in expr.get_val().free_symbols
+            ]
             for expr in self._expressions
         ))
 
         return [
-            free_symbols_dt.count(self._states[idx].get_id())
+            free_symbols_dt.count(str(self._states[idx].get_id()))
             +
-            free_symbols_expr.count(self._states[idx].get_id())
+            free_symbols_expr.count(str(self._states[idx].get_id()))
             for idx in idxs
         ]
 
