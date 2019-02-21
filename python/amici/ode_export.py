@@ -1879,7 +1879,8 @@ class ODEExporter:
         self.allow_reinit_fixpar_initcond = allow_reinit_fixpar_initcond
 
     def generateModelCode(self):
-        """Generates the native C++ code for the loaded model
+        """Generates the native C++ code for the loaded model and a Matlab
+        script that can be run to compile a mex file from the C++ code
 
         Arguments:
 
@@ -1890,6 +1891,7 @@ class ODEExporter:
         """
         self._prepareModelFolder()
         self._generateCCode()
+        self._generateMCode()
 
     def compileModel(self):
         """Compiles the generated code it into a simulatable module
@@ -1944,7 +1946,6 @@ class ODEExporter:
         shutil.copy(os.path.join(amiciSrcPath, 'main.template.cpp'),
                     os.path.join(self.modelPath, 'main.cpp'))
 
-
     def _compileCCode(self, verbose=False, compiler=None):
         """Compile the generated model code
 
@@ -1988,6 +1989,54 @@ class ODEExporter:
 
         if verbose:
             print(result.stdout.decode('utf-8'))
+
+    def _generateMCode(self):
+        """Create a Matlab script for compiling code files to a mex file
+
+        Arguments:
+
+        Returns:
+
+        Raises:
+
+        """
+        # creating the code lines for the Matlab compile script
+        lines = []
+
+        # Events are not yet implemented. Once this is done, the variable nz
+        # will have to be replaced by "self.model.nz()"
+        nz = 0
+
+        # Second order code is not yet implemented. Once this is done,
+        # those variables will have to be replaced by
+        # "self.model.<var>true()", or the corresponding "model.self.o2flag"
+        nxtrue_rdata = self.model.nx_rdata()
+        nytrue = self.model.ny()
+        o2flag = 0
+
+        # a preliminary comment
+        lines.append('% This compile script was automatically created from Python SBML import.')
+        lines.append('% If mex compiler is set up within MATLAB, it can be run from MATLAB ')
+        lines.append('% in order to compile a mex-file from the Python generated C++ files.')
+        lines.append('')
+
+        # write the actual compiling code
+        lines.append('''modelName = '{model_name}';'''.format(
+            model_name=self.modelName))
+        lines.append('''amimodel.compileAndLinkModel(modelName, '', [], [], [], []);''')
+        lines.append('''amimodel.generateMatlabWrapper({nx}, {ny}, {np}, {nk}, {nz}, {o2flag}, [], ...
+            ['simulate_' modelName '.m'], modelName, 'lin', 1, 1);'''.format(
+            nx=nxtrue_rdata,
+            ny=nytrue,
+            np=self.model.np(),
+            nk=self.model.nk(),
+            nz=nz,
+            o2flag=o2flag
+            ))
+
+        # write compile script (for mex)
+        with open(os.path.join(self.modelPath, 'compileMexFile.m'), 'w') as fileout:
+            fileout.write('\n'.join(lines))
 
     def _writeIndexFiles(self, name):
         """Write index file for a symbolic array.
