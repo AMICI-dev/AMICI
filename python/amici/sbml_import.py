@@ -152,48 +152,47 @@ class SbmlImporter:
         self.sbml = self.sbml_doc.getModel()
 
     def sbml2amici(self,
-                   modelName: str,
-                   output_dir: str = None,
-                   observables: dict = None,
-                   constantParameters: list = None,
-                   sigmas: dict = None,
-                   verbose: bool = False,
-                   assume_pow_positivity: bool = False,
-                   compiler: str = None,
-                   allow_reinit_fixpar_initcond: bool = True,
-                   compile: bool = True
+                   modelName,
+                   output_dir = None,
+                   observables = None,
+                   constantParameters = None,
+                   sigmas = None,
+                   verbose = False,
+                   assume_pow_positivity = False,
+                   compiler = None,
+                   allow_reinit_fixpar_initcond = True,
+                   compile = True
                    ):
         """Generate AMICI C++ files for the model provided to the constructor.
 
         Arguments:
-            modelName:
-                name of the model/model directory @type str
-            output_dir:
-                see sbml_import.setPaths()  @type str
-            observables:
-                dictionary( observableId:{'name':observableName
+            modelName: name of the model/model directory @type str
+
+            output_dir: see sbml_import.setPaths() @type str
+
+            observables: dictionary( observableId:{'name':observableName
                 (optional), 'formula':formulaString)}) to be added to the model
                 @type dict
-            sigmas:
-                dictionary(observableId: sigma value or (existing)
-                parameter name) @type dict
-            constantParameters:
-                list of SBML Ids identifying constant
-                parameters @type list
-            verbose:
-                more verbose output if True @type bool
-            assume_pow_positivity:
-                if set to true, a special pow function is
+
+            sigmas: dictionary(observableId: sigma value or (existing) parameter name)
+                @type dict
+
+            constantParameters: list of SBML Ids identifying constant parameters
+                @type list
+
+            verbose: more verbose output if True @type bool
+
+            assume_pow_positivity: if set to true, a special pow function is
                 used to avoid problems with state variables that may become
                 negative due to numerical errors @type bool
-            compiler:
-                distutils/setuptools compiler selection to build the
+
+            compiler: distutils/setuptools compiler selection to build the
                 python extension @type str
-            allow_reinit_fixpar_initcond:
-                see ode_export.ODEExporter
-            compile:
-                If True, compile the generated Python package, if False, just
-                generate code.
+
+            allow_reinit_fixpar_initcond: see ode_export.ODEExporter @type bool
+
+            compile: If True, compile the generated Python package, if False, just
+                generate code. @type bool
 
         Returns:
 
