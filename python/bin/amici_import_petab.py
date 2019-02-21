@@ -42,6 +42,7 @@ def parse_cli_args():
                         help='Model name where all files are in the working '
                         'directory and follow PEtab naming convention. '
                         'Specifying -[smcp] will override defaults')
+
     args = parser.parse_args()
 
     if args.model_name:
@@ -102,8 +103,9 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     if constant_species_to_parameters:
         # Turn species which are marked constant in the SBML model into
         # parameters
-        constant_species = petab.constant_species_to_parameters(
-            sbml_model)
+        constant_species = \
+            petab.constant_species_to_parameters(sbml_model)
+
         print("Constant species converted to parameters",
               len(constant_species))
         print("Non-constant species", len(sbml_model.getListOfSpecies()))
@@ -113,12 +115,14 @@ def get_fixed_parameters(condition_file_name, sbml_model,
         if species not in fixed_parameters:
             fixed_parameters.append(species)
 
-    # Ensure mentioned parameters exist in the model. remove additional ones
+    # Ensure mentioned parameters exist in the model. Remove additional ones
+    # from list
     for fixed_parameter in fixed_parameters[:]:
         # check global parameters
-        if not sbml_model.getParameter(fixed_parameter):
-            print(f"{Fore.YELLOW}Parameter '{fixed_parameter}' provided in "
-                  "condition table but not present in model.")
+        if not sbml_model.getParameter(fixed_parameter) \
+                and not sbml_model.getSpecies(fixed_parameter):
+            print(f"{Fore.YELLOW}Parameter or species '{fixed_parameter}' "
+                  "provided in condition table but not present in model.")
             fixed_parameters.remove(fixed_parameter)
 
     return fixed_parameters
@@ -129,7 +133,9 @@ def import_model(sbml_file: str,
                  measurement_file: str = None,
                  model_name: str = None,
                  model_output_dir: str = None,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 allow_reinit_fixpar_initcond: bool = False,
+                 **kwargs):
     """Import AMICI model"""
 
     if model_name is None:
@@ -155,9 +161,10 @@ def import_model(sbml_file: str,
 
     measurement_df = petab.get_measurement_df(measurement_file)
     if 'observableTransformation' in measurement_df \
-            and not np.issubdtype(
-        measurement_df.observableTransformation.dtype, np.number) \
+        and not np.issubdtype(
+            measurement_df.observableTransformation.dtype, np.number) \
             and np.any(measurement_df.observableTransformation != 'lin'):
+
         raise ValueError(Fore.YELLOW + "Non-lin observables specified. "
                                        "Don't know how to handle that.")
 
@@ -170,7 +177,11 @@ def import_model(sbml_file: str,
     if verbose:
         print('Observables', len(observables))
         print('Sigmas', len(sigmas))
-    assert(len(sigmas) == len(observables))
+
+    if not len(sigmas) == len(observables):
+        raise AssertionError(
+            f'Number of provided observables ({len(observables)}) and sigmas '
+            f'({len(sigmas)}) do not match.')
 
     fixed_parameters = get_fixed_parameters(condition_file, sbml_model)
 
@@ -181,14 +192,16 @@ def import_model(sbml_file: str,
 
     # Create Python module from SBML model
     start = time.time()
-    sbml_importer.sbml2amici(model_name,
-                             output_dir=model_output_dir,
-                             observables=observables,
-                             constantParameters=fixed_parameters,
-                             sigmas=sigmas,
-                             allow_reinit_fixpar_initcond=False,
-                            )
+    sbml_importer.sbml2amici(
+        model_name,
+        output_dir=model_output_dir,
+        observables=observables,
+        constantParameters=fixed_parameters,
+        sigmas=sigmas,
+        allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
+        **kwargs)
     end = time. time()
+
     if verbose:
         print(f"{Fore.GREEN}Model imported successfully in "
               f"{round(end - start, 2)}s")
