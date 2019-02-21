@@ -695,7 +695,8 @@ class SbmlImporter:
 
             if variable in rulevars:
                 for nested_rule in rules:
-                    nested_formula = sp.sympify(nested_rule.getFormula())
+                    nested_formula = sp.sympify(
+                        sbml.formulaToL3String(nested_rule.getMath()))
                     nested_formula = \
                         nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
@@ -957,7 +958,7 @@ def getRuleVars(rules):
 
     """
     return sp.Matrix(
-        [sp.sympify(rule.getFormula()) for rule in rules
+        [sp.sympify(sbml.formulaToL3String(rule.getMath())) for rule in rules
          if rule.getFormula() != '']
     ).free_symbols
 
