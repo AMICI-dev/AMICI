@@ -2003,6 +2003,17 @@ class ODEExporter:
         # creating the code lines for the Matlab compile script
         lines = []
 
+        # Events are not yet implemented. Once this is done, the variable nz
+        # will have to be replaced by "self.model.nz()"
+        nz = 0
+
+        # Second order code is not yet implemented. Once this is done,
+        # those variables will have to be replaced by
+        # "self.model.<var>true()", or the corresponding "model.self.o2flag"
+        nxtrue_rdata = self.model.nx_rdata()
+        nytrue = self.model.ny()
+        o2flag = 0
+
         # a preliminary comment
         lines.append('% This compile script was automatically created from Python SBML import.')
         lines.append('% If mex compiler is set up within MATLAB, it can be run from MATLAB ')
@@ -2014,17 +2025,15 @@ class ODEExporter:
             model_name=self.modelName))
         lines.append('''modelDir = '{model_output_dir}';'''.format(
             model_output_dir=os.path.abspath(self.modelPath)))
-        lines.append('''amimodel.compileAndLinkModel(modelName, modelDir, 
-            [], [], [], []);''')
-        lines.append('''amimodel.generateMatlabWrapper({nx}, {ny}, {np}, 
-            {nk}, {nz}, {o2flag}, [], [ modelDir '/simulate_' modelName 
-            '.m'], modelName, 'lin', 1, 1);'''.format(
-            nx=self.model.nxtrue_rdata,
-            ny=self.model.nytrue,
+        lines.append('''amimodel.compileAndLinkModel(modelName, modelDir, [], [], [], []);''')
+        lines.append('''amimodel.generateMatlabWrapper({nx}, {ny}, {np}, {nk}, {nz}, {o2flag}, [], ...
+            [ modelDir '/simulate_' modelName '.m'], modelName, 'lin', 1, 1);'''.format(
+            nx=nxtrue_rdata,
+            ny=nytrue,
             np=self.model.np(),
             nk=self.model.nk(),
-            nz=self.model.nz,
-            o2flag=self.model.o2mode
+            nz=nz,
+            o2flag=o2flag
             ))
 
         # write compile script (for mex)
