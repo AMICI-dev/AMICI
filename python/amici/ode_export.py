@@ -2023,11 +2023,9 @@ class ODEExporter:
         # write the actual compiling code
         lines.append('''modelName = '{model_name}';'''.format(
             model_name=self.modelName))
-        lines.append('''modelDir = '{model_output_dir}';'''.format(
-            model_output_dir=os.path.abspath(self.modelPath)))
-        lines.append('''amimodel.compileAndLinkModel(modelName, modelDir, [], [], [], []);''')
+        lines.append('''amimodel.compileAndLinkModel(modelName, '', [], [], [], []);''')
         lines.append('''amimodel.generateMatlabWrapper({nx}, {ny}, {np}, {nk}, {nz}, {o2flag}, [], ...
-            [ modelDir '/simulate_' modelName '.m'], modelName, 'lin', 1, 1);'''.format(
+            ['simulate_' modelName '.m'], modelName, 'lin', 1, 1);'''.format(
             nx=nxtrue_rdata,
             ny=nytrue,
             np=self.model.np(),
