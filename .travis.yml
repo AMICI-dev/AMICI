@@ -5,6 +5,7 @@ branches:
   only:
     - master
     - develop
+    # Version tags
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
 matrix:
@@ -12,18 +13,18 @@ matrix:
   include:
     - os: linux
       before_install:
-            - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev valgrind lcov cppcheck libboost-serialization-dev
+            - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev lcov libboost-serialization-dev
             - sudo add-apt-repository -y 'deb http://us.archive.ubuntu.com/ubuntu/ xenial main universe restricted'
             - sudo add-apt-repository -y 'deb http://gb.archive.ubuntu.com/ubuntu/ xenial-updates main restricted'
             - sudo apt-get update -q
-            - sudo apt-get install swig3.0 g++-4.9
+            - sudo apt-get install swig3.0 g++-4.9 valgrind cppcheck
             # full support of <regex> requires gcc4.9
             - export CC="gcc-4.9" CXX="g++-4.9"
             # Python distutils only looks for `swig` and does not find `swig3.0`
             - mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH
             - pyenv shell 2.7 3.6
       compiler: gcc
-      env: 
+      env:
         - ENABLE_GCOV_COVERAGE=TRUE
         - CI_MODE=test
       after_script:
