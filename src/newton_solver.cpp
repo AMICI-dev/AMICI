@@ -331,6 +331,7 @@ void NewtonSolverIterative::solveLinearSystem(AmiVector *rhs) {
      */
 
     linsolveSPBCG(newton_try, i_newton, rhs);
+    rhs->minus();
 }
 
 
