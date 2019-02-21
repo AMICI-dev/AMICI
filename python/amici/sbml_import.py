@@ -6,11 +6,12 @@ import sympy as sp
 import libsbml as sbml
 import re
 import math
+import warnings
 from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
 
 from .ode_export import ODEExporter, ODEModel
-
+from . import has_clibs
 
 class SBMLException(Exception):
     pass
@@ -26,6 +27,7 @@ default_symbols = {
     'my': {},
     'llhy': {},
 }
+
 
 class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in
@@ -151,42 +153,46 @@ class SbmlImporter:
 
     def sbml2amici(self,
                    modelName,
-                   output_dir=None,
-                   observables=None,
-                   constantParameters=None,
-                   sigmas=None,
-                   verbose=False,
-                   assume_pow_positivity=False,
-                   compiler=None,
-                   allow_reinit_fixpar_initcond = True
+                   output_dir = None,
+                   observables = None,
+                   constantParameters = None,
+                   sigmas = None,
+                   verbose = False,
+                   assume_pow_positivity = False,
+                   compiler = None,
+                   allow_reinit_fixpar_initcond = True,
+                   compile = True
                    ):
         """Generate AMICI C++ files for the model provided to the constructor.
 
         Arguments:
             modelName: name of the model/model directory @type str
 
-            output_dir: see sbml_import.setPaths()  @type str
+            output_dir: see sbml_import.setPaths() @type str
 
             observables: dictionary( observableId:{'name':observableName
-            (optional), 'formula':formulaString)}) to be added to the model
-            @type dict
+                (optional), 'formula':formulaString)}) to be added to the model
+                @type dict
 
-            sigmas: dictionary(observableId: sigma value or (existing)
-            parameter name) @type dict
+            sigmas: dictionary(observableId: sigma value or (existing) parameter name)
+                @type dict
 
-            constantParameters: list of SBML Ids identifying constant
-            parameters @type dict
+            constantParameters: list of SBML Ids identifying constant parameters
+                @type list
 
             verbose: more verbose output if True @type bool
 
             assume_pow_positivity: if set to true, a special pow function is
-            used to avoid problems with state variables that may become
-            negative due to numerical errors @type bool
+                used to avoid problems with state variables that may become
+                negative due to numerical errors @type bool
 
             compiler: distutils/setuptools compiler selection to build the
-            python extension @type str
+                python extension @type str
 
-            allow_reinit_fixpar_initcond: see ode_export.ODEExporter
+            allow_reinit_fixpar_initcond: see ode_export.ODEExporter @type bool
+
+            compile: If True, compile the generated Python package, if False, just
+                generate code. @type bool
 
         Returns:
 
@@ -218,7 +224,12 @@ class SbmlImporter:
         exporter.setName(modelName)
         exporter.setPaths(output_dir)
         exporter.generateModelCode()
-        exporter.compileModel()
+
+        if compile:
+            if not has_clibs:
+                warnings.warn('AMICI C++ extensions have not been built. '
+                              'Generated model code, but unable to compile.')
+            exporter.compileModel()
 
     def processSBML(self, constantParameters=None):
         """Read parameters, species, reactions, and so on from SBML model
