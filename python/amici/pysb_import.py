@@ -1,6 +1,6 @@
 from .ode_export import (
     ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
-    Expression, LogLikelihood, strip_pysb
+    Expression, LogLikelihood
 )
 
 import sympy as sp
@@ -696,16 +696,13 @@ def _construct_conservation_from_prototypes(cl_prototypes, model):
         # x_j = (T - sum_i≠j(a_i * x_i))/a_j
         # law: sum_i≠j(a_i * x_i))/a_j
         # state: x_j
-        target_expression = strip_pysb(
-            sum(
-                sp.Symbol(f'__s{ix}')
-                * extract_monomers(specie).count(monomer_name)
-                for ix, specie in enumerate(model.species)
-                if ix != target_index
-            )
-            /
-            extract_monomers(model.species[target_index]).count(monomer_name)
-        )  # normalize by the stoichiometry of the target species
+        target_expression = sum(
+            sp.Symbol(f'__s{ix}')
+            * extract_monomers(specie).count(monomer_name)
+            for ix, specie in enumerate(model.species)
+            if ix != target_index
+        ) / extract_monomers(model.species[target_index]).count(monomer_name)
+        # normalize by the stoichiometry of the target species
         target_state = sp.Symbol(f'__s{target_index}')
         # = x_j
 
@@ -775,9 +772,37 @@ def _flatten_conservation_laws(conservation_laws):
     # we actually need to ma
     while len(conservation_law_subs):
         for cl in conservation_laws:
-            cl['state_expr'] = cl['state_expr'].subs(conservation_law_subs)
-            conservation_law_subs = \
-                _get_conservation_law_subs(conservation_laws)
+            if _sub_matches_cl(conservation_law_subs, cl['state_expr']):
+                # this optimization is done by subs anyways, but we dont
+                # want to recompute the subs if we did not change anything
+                cl['state_expr'] = cl['state_expr'].subs(conservation_law_subs)
+                conservation_law_subs = \
+                    _get_conservation_law_subs(conservation_laws)
+
+
+def _sub_matches_cl(subs, state_expr):
+    """ Checks whether any of the substitutions in subs will be applied to
+    state_expr
+
+    Arguments:
+        subs: subsitutions in tuple format
+        state_expr: target symbolic expressions in which substitutions will
+        be applied
+
+    Returns:
+    boolean indicating positive match
+
+    Raises:
+
+    """
+    return len(
+        set(
+            sub[0]
+            for sub in subs
+        ).intersection(
+            state_expr.free_symbols
+        )
+    ) > 0
 
 
 def _get_conservation_law_subs(conservation_laws):
