@@ -59,7 +59,8 @@ matrix:
       env:
         - CI_MODE=deploy
       before_install:
-        - travis_wait brew install doxygen ragel graphviz homebrew/cask/mactex # cppcheck
+        - travis_wait brew install doxygen ragel graphviz # cppcheck
+        - travis_wait brew cask install basictex # cppcheck
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
       after_success:
