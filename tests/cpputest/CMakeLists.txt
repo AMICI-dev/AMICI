@@ -39,6 +39,9 @@ set(TEST_MODELS
     )
 
 if(ENABLE_SWIG AND ENABLE_PYTHON)
+    if(DEFINED ENV{PYTHON_EXECUTABLE})
+        set( PYTHON_EXECUTABLE $ENV{PYTHON_EXECUTABLE} )
+    endif()
     find_package(PythonInterp 3.6)
     if(PythonInterp_FOUND)
         add_custom_target(python-tests
