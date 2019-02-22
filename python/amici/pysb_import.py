@@ -943,7 +943,7 @@ def _select_valid_cls(subs, state):
     laws that are self-referential
 
     Arguments:
-        subs: subsitutions in tuple format
+        subs: substitutions in tuple format
         state: target symbolic state to which substitutions will
         be applied
 
