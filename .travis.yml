@@ -15,7 +15,7 @@ matrix:
       dist: xenial
       before_install:
             - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev lcov libboost-serialization-dev
-            - sudo apt-get install swig3.0 g++-4.9 valgrind cppcheck
+            - sudo apt-get install swig3.0 g++-5 valgrind cppcheck
             # Python distutils only looks for `swig` and does not find `swig3.0`
             - mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH
             - pyenv shell 3.6
