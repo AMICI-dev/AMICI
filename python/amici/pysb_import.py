@@ -965,7 +965,7 @@ def _sub_matches_cl(subs, state_expr, state):
     state_expr
 
     Arguments:
-        subs: subsitutions in tuple format
+        subs: substitutions in tuple format
         state_expr: target symbolic expressions in which substitutions will
         be applied
         state: target symbolic state to which substitutions will
