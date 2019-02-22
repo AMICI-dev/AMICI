@@ -1,4 +1,4 @@
-sudo: false
+language: python
 
 branches:
   only:
@@ -11,7 +11,6 @@ matrix:
   fast_finish: true
   include:
     - os: linux
-      language: python
       dist: xenial
       python: 3.7
       compiler: gcc
@@ -43,7 +42,6 @@ matrix:
           tags: true
 
     - os: osx
-      language: minimal
       osx_image: xcode9.3
       compiler: clang
       env:
@@ -58,7 +56,6 @@ matrix:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
 
     - os: osx
-      language: minimal
       osx_image: xcode9.3
       compiler: clang
       env:
