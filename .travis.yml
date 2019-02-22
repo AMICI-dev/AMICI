@@ -64,9 +64,6 @@ matrix:
         - travis_wait brew cask install basictex # cppcheck
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-        - which pdflatex
-        - which dvips
-        - ls /Users/travis/Library/Python
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
       deploy:
@@ -81,7 +78,8 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
-    - if [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
+    - if [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
+    - if [[ "$CI_MODE" == "deploy" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
