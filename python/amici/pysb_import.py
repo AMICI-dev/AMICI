@@ -502,7 +502,7 @@ def _compute_dependency_idx(cl_prototypes):
     """Compute connecting species, this allows us to efficiently compute
     whether the respective conservation law would induce a cyclic dependency.
     Adds a 'dependency_idx' field to the prototype dict that
-    itself is a dict where keys corresond to indexes that, when used as
+    itself is a dict where keys correspond to indexes that, when used as
     target index yield dependencies on conservation laws of monomers in
     the respective values
 
