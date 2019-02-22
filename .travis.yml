@@ -25,6 +25,7 @@ matrix:
             - swig3.0
             - g++-5
             - cppcheck
+            - libc6-dbg
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
         - CI_MODE=test
