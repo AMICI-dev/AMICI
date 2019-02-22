@@ -12,6 +12,7 @@ matrix:
   fast_finish: true
   include:
     - os: linux
+      dist: xenial
       before_install:
             - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev lcov libboost-serialization-dev
             - sudo add-apt-repository -y 'deb http://us.archive.ubuntu.com/ubuntu/ xenial main universe restricted'
