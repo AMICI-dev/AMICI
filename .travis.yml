@@ -13,12 +13,12 @@ matrix:
   include:
     - os: linux
       dist: xenial
+      python: "3.7"
       before_install:
             - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev lcov libboost-serialization-dev
             - sudo apt-get install swig3.0 g++-5 valgrind cppcheck
             # Python distutils only looks for `swig` and does not find `swig3.0`
             - mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH
-            - pyenv global 3.7
       compiler: gcc
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
