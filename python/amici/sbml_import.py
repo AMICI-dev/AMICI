@@ -695,7 +695,8 @@ class SbmlImporter:
 
             if variable in rulevars:
                 for nested_rule in rules:
-                    nested_formula = sp.sympify(nested_rule.getFormula())
+                    nested_formula = sp.sympify(
+                        sbml.formulaToL3String(nested_rule.getMath()))
                     nested_formula = \
                         nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
@@ -957,93 +958,9 @@ def getRuleVars(rules):
 
     """
     return sp.Matrix(
-        [sp.sympify(rule.getFormula()) for rule in rules
+        [sp.sympify(sbml.formulaToL3String(rule.getMath())) for rule in rules
          if rule.getFormula() != '']
     ).free_symbols
-
-
-def assignmentRules2observables(sbml_model,
-                                filter_function=lambda *_: True):
-    """Turn assignment rules into observables.
-
-    Arguments:
-    sbml_model: an sbml Model instance
-
-    filter_function: callback function taking assignment variable as input
-    and returning True/False to indicate if the respective rule should be
-    turned into an observable
-
-    Returns:
-    A dictionary(observableId:{
-        'name': observableName,
-        'formula': formulaString
-    })
-
-    Raises:
-
-    """
-    observables = {}
-    for p in sbml_model.getListOfParameters():
-        parameter_id = p.getId()
-        if filter_function(p):
-            observables[parameter_id] = {
-                'name': p.getName(),
-                'formula': sbml_model.getAssignmentRuleByVariable(
-                    parameter_id
-                ).getFormula()
-            }
-
-    for parameter_id in observables:
-        sbml_model.removeRuleByVariable(parameter_id)
-        sbml_model.removeParameter(parameter_id)
-
-    return observables
-
-
-def constantSpeciesToParameters(sbml_model):
-    """Convert constant species in the SBML model to constant parameters
-
-    Arguments:
-
-    sbml_model: libsbml model instance
-
-    Returns:
-    species IDs that have been turned into constants
-
-    Raises:
-
-    """
-    transformable = []
-    for species in sbml_model.getListOfSpecies():
-        if not species.getConstant() and not species.getBoundaryCondition():
-            continue
-        if species.getHasOnlySubstanceUnits():
-            print(f"Ignoring {species.getId()} which has only substance units."
-                  " Conversion not yet implemented.")
-            continue
-        if math.isnan(species.getInitialConcentration()):
-            print(f"Ignoring {species.getId()} which has no initial "
-                  "concentration. Amount conversion not yet implemented.")
-            continue
-        transformable.append(species.getId())
-
-    # Must not remove species while iterating over getListOfSpecies()
-    for speciesId in transformable:
-        species = sbml_model.removeSpecies(speciesId)
-        par = sbml_model.createParameter()
-        par.setId(species.getId())
-        par.setName(species.getName())
-        par.setConstant(True)
-        par.setValue(species.getInitialConcentration())
-        par.setUnits(species.getUnits())
-
-    # Remove from reactants and products
-    for reaction in sbml_model.getListOfReactions():
-        for speciesId in transformable:
-            reaction.removeReactant(speciesId)
-            reaction.removeProduct(speciesId)
-
-    return transformable
 
 
 def replaceLogAB(x):
@@ -1196,3 +1113,39 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
                                 f'{expression_type}: "{full_sym}"!')
         if fun is not sym:
             _check_unsupported_functions(fun, expression_type)
+
+
+def assignmentRules2observables(sbml_model,
+                                filter_function=lambda *_: True):
+    """Turn assignment rules into observables.
+    Arguments:
+    sbml_model: an sbml Model instance
+    filter_function: callback function taking assignment variable as input
+    and returning True/False to indicate if the respective rule should be
+    turned into an observable
+    Returns:
+    A dictionary(observableId:{
+        'name': observableName,
+        'formula': formulaString
+    })
+    Raises:
+    """
+    warnings.warn("This function will be removed in future releases. "
+                  "This functionality is now included in "
+                  "https://github.com/ICB-DCM/PEtab .", DeprecationWarning)
+    observables = {}
+    for p in sbml_model.getListOfParameters():
+        parameter_id = p.getId()
+        if filter_function(p):
+            observables[parameter_id] = {
+                'name': p.getName(),
+                'formula': sbml_model.getAssignmentRuleByVariable(
+                    parameter_id
+                ).getFormula()
+            }
+
+    for parameter_id in observables:
+        sbml_model.removeRuleByVariable(parameter_id)
+        sbml_model.removeParameter(parameter_id)
+
+    return observables
