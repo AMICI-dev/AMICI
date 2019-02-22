@@ -17,6 +17,8 @@ from setuptools.command.build_ext import build_ext
 from setuptools.command.sdist import sdist
 from setuptools.command.install_lib import install_lib
 from setuptools.command.develop import develop
+from setuptools.command.install import install
+from setuptools.command.build_clib import build_clib
 
 import os
 import sys
@@ -44,6 +46,8 @@ except ImportError:
     # retry
     import numpy as np
 
+
+sys.path.insert(0, os.getcwd())
 from amici import __version__
 
 from amici.setuptools import (
@@ -131,13 +135,62 @@ amici_module = Extension(
 )
 
 
+class my_install(install):
+    """Custom install to handle extra arguments"""
+
+    # Passing --no-clibs allows to install the Python-only part of AMICI
+    user_options = install.user_options + [
+        ('no-clibs', None, "Don't build AMICI C++ extension"),
+    ]
+
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.no_clibs = False
+
+    def finalize_options(self):
+        if self.no_clibs:
+            self.no_clibs = True
+        install.finalize_options(self)
+
+    def run(self):
+        install.run(self)
+
+
+class my_build_clib(build_clib):
+    """Custom build_clib"""
+
+    def build_libraries(self, libraries):
+        no_clibs = self.get_finalized_command('develop').no_clibs
+        no_clibs |= self.get_finalized_command('install').no_clibs
+
+        if no_clibs:
+            return
+
+        build_clib.build_libraries(self, libraries)
+
+
 class my_develop(develop):
     """Custom develop to build clibs"""
+
+    # Passing --no-clibs allows to install the Python-only part of AMICI
+    user_options = develop.user_options + [
+        ('no-clibs', None, "Don't build AMICI C++ extension"),
+    ]
+
+    def initialize_options(self):
+        develop.initialize_options(self)
+        self.no_clibs = False
+
+    def finalize_options(self):
+        if self.no_clibs:
+            self.no_clibs = True
+        develop.finalize_options(self)
+
     def run(self):
+        if not self.no_clibs:
+            generateSwigInterfaceFiles()
+            self.run_command('build')
 
-        generateSwigInterfaceFiles()
-
-        self.run_command('build')
         develop.run(self)
 
 
@@ -149,7 +202,9 @@ class my_install_lib(install_lib):
         Returns:
 
         """
-        if 'ENABLE_AMICI_DEBUGGING' in os.environ and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' and sys.platform == 'darwin':
+        if 'ENABLE_AMICI_DEBUGGING' in os.environ \
+                and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' \
+                and sys.platform == 'darwin':
             search_dir = os.path.join(os.getcwd(),self.build_dir,'amici')
             for file in os.listdir(search_dir):
                 if file.endswith('.so'):
@@ -170,6 +225,11 @@ class my_build_ext(build_ext):
         Returns:
 
         """
+        no_clibs = self.get_finalized_command('develop').no_clibs
+        no_clibs |= self.get_finalized_command('install').no_clibs
+
+        if no_clibs:
+            return
 
         if not self.dry_run:  # --dry-run
             libraries = []
@@ -195,8 +255,8 @@ class my_build_ext(build_ext):
                 libfilenames = glob.glob(
                     '%s%s*%s.*' % (build_clib.build_clib, os.sep, lib)
                 )
-                assert len(
-                    libfilenames) == 1, "Found unexpected number of files: " % libfilenames
+                assert len(libfilenames) == 1, \
+                    "Found unexpected number of files: " % libfilenames
 
                 copyfile(libfilenames[0],
                          os.path.join(target_dir, os.path.basename(libfilenames[0])))
@@ -269,8 +329,10 @@ def main():
     setup(
         name='amici',
         cmdclass={
+            'install': my_install,
             'sdist': my_sdist,
             'build_ext': my_build_ext,
+            'build_clib': my_build_clib,
             'install_lib': my_install_lib,
             'develop': my_develop,
         },
@@ -289,6 +351,7 @@ def main():
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
+        scripts=['bin/amici_import_petab.py'],
         install_requires=['sympy',
                           'python-libsbml',
                           'h5py',

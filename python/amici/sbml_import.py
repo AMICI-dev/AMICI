@@ -6,11 +6,12 @@ import sympy as sp
 import libsbml as sbml
 import re
 import math
+import warnings
 from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
 
 from .ode_export import ODEExporter, ODEModel
-
+from . import has_clibs
 
 class SBMLException(Exception):
     pass
@@ -26,6 +27,7 @@ default_symbols = {
     'my': {},
     'llhy': {},
 }
+
 
 class SbmlImporter:
     """The SbmlImporter class generates AMICI C++ files for a model provided in
@@ -151,42 +153,46 @@ class SbmlImporter:
 
     def sbml2amici(self,
                    modelName,
-                   output_dir=None,
-                   observables=None,
-                   constantParameters=None,
-                   sigmas=None,
-                   verbose=False,
-                   assume_pow_positivity=False,
-                   compiler=None,
-                   allow_reinit_fixpar_initcond = True
+                   output_dir = None,
+                   observables = None,
+                   constantParameters = None,
+                   sigmas = None,
+                   verbose = False,
+                   assume_pow_positivity = False,
+                   compiler = None,
+                   allow_reinit_fixpar_initcond = True,
+                   compile = True
                    ):
         """Generate AMICI C++ files for the model provided to the constructor.
 
         Arguments:
             modelName: name of the model/model directory @type str
 
-            output_dir: see sbml_import.setPaths()  @type str
+            output_dir: see sbml_import.setPaths() @type str
 
             observables: dictionary( observableId:{'name':observableName
-            (optional), 'formula':formulaString)}) to be added to the model
-            @type dict
+                (optional), 'formula':formulaString)}) to be added to the model
+                @type dict
 
-            sigmas: dictionary(observableId: sigma value or (existing)
-            parameter name) @type dict
+            sigmas: dictionary(observableId: sigma value or (existing) parameter name)
+                @type dict
 
-            constantParameters: list of SBML Ids identifying constant
-            parameters @type dict
+            constantParameters: list of SBML Ids identifying constant parameters
+                @type list
 
             verbose: more verbose output if True @type bool
 
             assume_pow_positivity: if set to true, a special pow function is
-            used to avoid problems with state variables that may become
-            negative due to numerical errors @type bool
+                used to avoid problems with state variables that may become
+                negative due to numerical errors @type bool
 
             compiler: distutils/setuptools compiler selection to build the
-            python extension @type str
+                python extension @type str
 
-            allow_reinit_fixpar_initcond: see ode_export.ODEExporter
+            allow_reinit_fixpar_initcond: see ode_export.ODEExporter @type bool
+
+            compile: If True, compile the generated Python package, if False, just
+                generate code. @type bool
 
         Returns:
 
@@ -218,7 +224,12 @@ class SbmlImporter:
         exporter.setName(modelName)
         exporter.setPaths(output_dir)
         exporter.generateModelCode()
-        exporter.compileModel()
+
+        if compile:
+            if not has_clibs:
+                warnings.warn('AMICI C++ extensions have not been built. '
+                              'Generated model code, but unable to compile.')
+            exporter.compileModel()
 
     def processSBML(self, constantParameters=None):
         """Read parameters, species, reactions, and so on from SBML model
@@ -684,7 +695,8 @@ class SbmlImporter:
 
             if variable in rulevars:
                 for nested_rule in rules:
-                    nested_formula = sp.sympify(nested_rule.getFormula())
+                    nested_formula = sp.sympify(
+                        sbml.formulaToL3String(nested_rule.getMath()))
                     nested_formula = \
                         nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
@@ -946,93 +958,9 @@ def getRuleVars(rules):
 
     """
     return sp.Matrix(
-        [sp.sympify(rule.getFormula()) for rule in rules
+        [sp.sympify(sbml.formulaToL3String(rule.getMath())) for rule in rules
          if rule.getFormula() != '']
     ).free_symbols
-
-
-def assignmentRules2observables(sbml_model,
-                                filter_function=lambda *_: True):
-    """Turn assignment rules into observables.
-
-    Arguments:
-    sbml_model: an sbml Model instance
-
-    filter_function: callback function taking assignment variable as input
-    and returning True/False to indicate if the respective rule should be
-    turned into an observable
-
-    Returns:
-    A dictionary(observableId:{
-        'name': observableName,
-        'formula': formulaString
-    })
-
-    Raises:
-
-    """
-    observables = {}
-    for p in sbml_model.getListOfParameters():
-        parameter_id = p.getId()
-        if filter_function(p):
-            observables[parameter_id] = {
-                'name': p.getName(),
-                'formula': sbml_model.getAssignmentRuleByVariable(
-                    parameter_id
-                ).getFormula()
-            }
-
-    for parameter_id in observables:
-        sbml_model.removeRuleByVariable(parameter_id)
-        sbml_model.removeParameter(parameter_id)
-
-    return observables
-
-
-def constantSpeciesToParameters(sbml_model):
-    """Convert constant species in the SBML model to constant parameters
-
-    Arguments:
-
-    sbml_model: libsbml model instance
-
-    Returns:
-    species IDs that have been turned into constants
-
-    Raises:
-
-    """
-    transformable = []
-    for species in sbml_model.getListOfSpecies():
-        if not species.getConstant() and not species.getBoundaryCondition():
-            continue
-        if species.getHasOnlySubstanceUnits():
-            print(f"Ignoring {species.getId()} which has only substance units."
-                  " Conversion not yet implemented.")
-            continue
-        if math.isnan(species.getInitialConcentration()):
-            print(f"Ignoring {species.getId()} which has no initial "
-                  "concentration. Amount conversion not yet implemented.")
-            continue
-        transformable.append(species.getId())
-
-    # Must not remove species while iterating over getListOfSpecies()
-    for speciesId in transformable:
-        species = sbml_model.removeSpecies(speciesId)
-        par = sbml_model.createParameter()
-        par.setId(species.getId())
-        par.setName(species.getName())
-        par.setConstant(True)
-        par.setValue(species.getInitialConcentration())
-        par.setUnits(species.getUnits())
-
-    # Remove from reactants and products
-    for reaction in sbml_model.getListOfReactions():
-        for speciesId in transformable:
-            reaction.removeReactant(speciesId)
-            reaction.removeProduct(speciesId)
-
-    return transformable
 
 
 def replaceLogAB(x):
@@ -1185,3 +1113,39 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
                                 f'{expression_type}: "{full_sym}"!')
         if fun is not sym:
             _check_unsupported_functions(fun, expression_type)
+
+
+def assignmentRules2observables(sbml_model,
+                                filter_function=lambda *_: True):
+    """Turn assignment rules into observables.
+    Arguments:
+    sbml_model: an sbml Model instance
+    filter_function: callback function taking assignment variable as input
+    and returning True/False to indicate if the respective rule should be
+    turned into an observable
+    Returns:
+    A dictionary(observableId:{
+        'name': observableName,
+        'formula': formulaString
+    })
+    Raises:
+    """
+    warnings.warn("This function will be removed in future releases. "
+                  "This functionality is now included in "
+                  "https://github.com/ICB-DCM/PEtab .", DeprecationWarning)
+    observables = {}
+    for p in sbml_model.getListOfParameters():
+        parameter_id = p.getId()
+        if filter_function(p):
+            observables[parameter_id] = {
+                'name': p.getName(),
+                'formula': sbml_model.getAssignmentRuleByVariable(
+                    parameter_id
+                ).getFormula()
+            }
+
+    for parameter_id in observables:
+        sbml_model.removeRuleByVariable(parameter_id)
+        sbml_model.removeParameter(parameter_id)
+
+    return observables
