@@ -668,7 +668,8 @@ def _cl_has_cycle(monomer, cl_prototypes):
     )
 
 def _is_in_cycle(monomer, cl_prototypes, visited, root):
-    """Recursively checks for cycles in conservation law dependencies via DFS
+    """Recursively checks for cycles in conservation law dependencies via
+    Depth First Search
 
     Arguments:
         monomer: current location in cl dependency graph
