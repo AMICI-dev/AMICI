@@ -516,16 +516,14 @@ def _compute_dependency_idx(cl_prototypes):
 
     """
     #
-    for monomer_i in cl_prototypes:
-        prototype_i = cl_prototypes[monomer_i]
+    for monomer_i, prototype_i in cl_prototypes.items():
         if 'dependency_idx' not in prototype_i:
             prototype_i['dependency_idx'] = dict()
 
-        for monomer_j in cl_prototypes:
+        for monomer_j, prototype_j in cl_prototypes.items():
             if monomer_i == monomer_j:
                 continue
 
-            prototype_j = cl_prototypes[monomer_j]
             if 'dependency_idx' not in prototype_j:
                 prototype_j['dependency_idx'] = dict()
 
@@ -623,14 +621,17 @@ def _cl_prototypes_are_valid(cl_prototypes):
     Raises:
 
     """
-    # 1) target indexes are unique
-    # 2) conservation law dependencies are cycle free
-    return \
-        len(cl_prototypes) == len(set(get_target_indices(cl_prototypes))) \
-        and all(
-            not _cl_has_cycle(monomer, cl_prototypes)
-            for monomer in cl_prototypes
-        )
+    # target indices are unique
+    if len(cl_prototypes) != len(set(get_target_indices(cl_prototypes))):
+        return False
+    # conservation law dependencies are cycle free
+    if all(
+        not _cl_has_cycle(monomer, cl_prototypes)
+        for monomer in cl_prototypes
+    ):
+        return False
+
+    return True
 
 def _cl_has_cycle(monomer, cl_prototypes):
     """Checks whether monomer has a conservation law that is part of a
@@ -919,7 +920,6 @@ def _flatten_conservation_laws(conservation_laws):
     conservation_law_subs = \
         _get_conservation_law_subs(conservation_laws)
 
-    # we actually need to ma
     while len(conservation_law_subs):
         for cl in conservation_laws:
             if _sub_matches_cl(
@@ -977,17 +977,16 @@ def _sub_matches_cl(subs, state_expr, state):
     Raises:
 
     """
-    return len(
-        set(
-            sub[0]
-            for sub in subs
-            if str(state) not in [
-                str(symbol) for symbol in sub[1].free_symbols
-            ]
-        ).intersection(
-            state_expr.free_symbols
-        )
-    ) > 0
+
+    sub_symbols = set(
+        sub[0]
+        for sub in subs
+        if str(state) not in [
+            str(symbol) for symbol in sub[1].free_symbols
+        ]
+    )
+
+    return len(sub_symbols.intersection(state_expr.free_symbols)) > 0
 
 
 def _get_conservation_law_subs(conservation_laws):
