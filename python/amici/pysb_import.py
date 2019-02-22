@@ -709,7 +709,7 @@ def _is_in_cycle(monomer, cl_prototypes, visited, root):
 
 
 def _greedy_target_index_update(cl_prototypes):
-    """Computes unique target indices for conservation laws from prossible
+    """Computes unique target indices for conservation laws from possible
     indices  such that expected fill in in symbolic derivatives is minimized
 
 
