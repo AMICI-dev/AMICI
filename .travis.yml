@@ -66,6 +66,7 @@ matrix:
         - which pdflatex
         - which dvips
         - ls /Users/travis/Library/Python
+        - pip3 install -U numpy
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
       deploy:
