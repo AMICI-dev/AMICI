@@ -18,8 +18,7 @@ matrix:
       before_install:
         - export IMAGE=dweindl/custom_ci_image_travis:latest
         - docker pull $IMAGE
-        # --com --token $GITHUB_TOKEN
-        - docker run -it --rm --env-file <(env | grep TRAVIS) -eGITHUB_TOKEN=$GITHUB_TOKEN $IMAGE bash -c 'printenv && set -x && sudo apt install jq && git clone --depth=10 https://github.com/ICB-DCM/AMICI.git ICB-DCM/AMICI && cd ICB-DCM/AMICI && travis compile --org --debug $TRAVIS_JOB_ID > travis_compile.sh && bash travis_compile.sh'
+        - docker run -it --rm --env-file <(env | grep TRAVIS) -eGITHUB_TOKEN=$GITHUB_TOKEN $IMAGE bash -c 'printenv && set -x && sudo apt install jq && git clone --depth=10 https://github.com/ICB-DCM/AMICI.git ICB-DCM/AMICI && cd ICB-DCM/AMICI && travis compile --org --token $GITHUB_TOKEN --debug $TRAVIS_JOB_ID > travis_compile.sh && bash travis_compile.sh'
         - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev lcov libboost-serialization-dev
         - sudo add-apt-repository -y 'deb http://us.archive.ubuntu.com/ubuntu/ xenial main universe restricted'
         - sudo add-apt-repository -y 'deb http://gb.archive.ubuntu.com/ubuntu/ xenial-updates main restricted'
