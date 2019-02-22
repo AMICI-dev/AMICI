@@ -75,7 +75,7 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
-    - if [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
+    - if [[ "$CI_MODE" == "test" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
