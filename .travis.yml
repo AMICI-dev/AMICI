@@ -13,7 +13,7 @@ matrix:
   include:
     - os: linux
       dist: xenial
-      python: "3.7"
+      python: 3.7
       before_install:
             - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev lcov libboost-serialization-dev
             - sudo apt-get install swig3.0 g++-5 valgrind cppcheck
