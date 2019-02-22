@@ -50,7 +50,7 @@ matrix:
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - travis_wait brew install hdf5 swig # cppcheck
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-        - pip3 install -U numpy
+        - pip3 install --user -U numpy
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
 
@@ -60,8 +60,7 @@ matrix:
       env:
         - CI_MODE=deploy
       before_install:
-        - travis_wait brew install doxygen ragel graphviz # cppcheck
-        - travis_wait brew cask install basictex # cppcheck
+        - travis_wait brew install doxygen ragel graphviz homebrew/cask/mactex # cppcheck
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
       after_success:
