@@ -1,4 +1,4 @@
-sudo: required
+sudo: false
 
 branches:
   only:
@@ -14,12 +14,18 @@ matrix:
       language: python
       dist: xenial
       python: 3.7
-      before_install:
-            - sudo apt-get install libhdf5-serial-dev zlib1g-dev libatlas-base-dev lcov libboost-serialization-dev
-            - sudo apt-get install swig3.0 g++-5 valgrind cppcheck
-            # Python distutils only looks for `swig` and does not find `swig3.0`
-            - mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH
       compiler: gcc
+      addons:
+        apt:
+          - libhdf5-serial-dev
+          - zlib1g-dev
+          - libatlas-base-dev
+          - lcov
+          - libboost-serialization-dev
+          - swig3.0
+          - g++-5
+          - valgrind
+          - cppcheck
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
         - CI_MODE=test
@@ -75,6 +81,10 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
+    # Python distutils only looks for `swig` and does not find `swig3.0`
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi
+    # cmake wont be able to find python3 on its own ...
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; export PYTHON_EXECUTABLE=$(which python3); fi
     - if [[ "$CI_MODE" == "test" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
@@ -99,7 +109,7 @@ script:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then $FOLD sbmltestsuite ./scripts/run-SBMLTestsuite.sh; fi
 
 after_failure:
-    - $FOLD ls ls -alR
+    - $FOLD ls -alR
 
 # cache dependencies
 cache:
