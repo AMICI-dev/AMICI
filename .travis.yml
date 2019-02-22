@@ -24,11 +24,12 @@ matrix:
             - libboost-serialization-dev
             - swig3.0
             - g++-5
-            - valgrind
             - cppcheck
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
         - CI_MODE=test
+      before_install:
+        - ./scripts/buildValgrind.sh
       after_script:
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
