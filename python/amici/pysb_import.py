@@ -1,6 +1,6 @@
 from .ode_export import (
     ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
-    Expression, LogLikelihood, sanitize_basic_sympy
+    Expression, LogLikelihood, strip_pysb
 )
 
 import sympy as sp
@@ -171,14 +171,15 @@ def _process_pysb_species(model, ODE):
                 if ic[1] in model.expressions:
                     init = model.expressions[ic[1].name].expand_expr()
                 else:
-                    init = sp.Symbol(ic[1].name)
+                    init = ic[1]
 
         ODE.add_component(
             State(
                 sp.Symbol(f'__s{ix}'),
                 f'{specie}',
                 init,
-                xdot[ix])
+                xdot[ix]
+            )
         )
 
 
@@ -338,7 +339,7 @@ def _process_pysb_observables(model, ODE):
     # only add those pysb observables that occur in the added
     # Observables as expressions
     for obs in model.observables:
-        if sp.Symbol(obs.name) in ODE.eq('y').free_symbols:
+        if obs in ODE.eq('y').free_symbols:
             ODE.add_component(
                 Expression(
                     obs,
@@ -694,7 +695,7 @@ def _construct_conservation_from_prototypes(cl_prototypes, model):
         # x_j = (T - sum_i≠j(a_i * x_i))/a_j
         # law: sum_i≠j(a_i * x_i))/a_j
         # state: x_j
-        target_expression = sanitize_basic_sympy(
+        target_expression = strip_pysb(
             sum(
                 sp.Symbol(f'__s{ix}')
                 * extract_monomers(specie).count(monomer_name)
