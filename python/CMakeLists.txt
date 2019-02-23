@@ -1,3 +1,6 @@
+if(DEFINED ENV{PYTHON_EXECUTABLE})
+    set( PYTHON_EXECUTABLE $ENV{PYTHON_EXECUTABLE} )
+endif()
 find_package(PythonInterp 3.6 REQUIRED)
 
 add_custom_target(install-python
