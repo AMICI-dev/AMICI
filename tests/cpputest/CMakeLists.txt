@@ -2,13 +2,14 @@ project(amiciIntegrationTests)
 cmake_minimum_required(VERSION 2.8)
 
 find_package(CppUTest REQUIRED)
+# because Cpputest doesn't seem to care about MEMORY_LEAK_DETECTION=OFF
+add_definitions(-DD_MemoryLeakWarningPlugin_h)
 
 # models depend on Upstream::amici
 add_library(Upstream::amici ALIAS amici)
 
-# CppUTest includes for memory leak detector
 set(CMAKE_CXX_FLAGS_OLD "${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include sstream -include functional -include CppUTest/MemoryLeakDetectorNewMacros.h")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -include sstream -include functional")
 
 # Amici testing library
 add_library(amici-testing testfunctions.cpp)
