@@ -7,7 +7,6 @@ import sympy as sp
 import numpy as np
 import itertools
 
-
 try:
     import pysb.bng
     ## bool indicating whether pysb is available
