@@ -41,7 +41,7 @@ matrix:
           tags: true
 
     - os: osx
-      osx_image: xcode9.3
+      osx_image: xcode10.1
       compiler: clang
       env:
         - CI_MODE=test
@@ -49,13 +49,13 @@ matrix:
         - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - travis_wait brew install hdf5 swig # cppcheck
-        - brew upgrade python
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
+        - pip3 install --user -U numpy
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
 
     - os: osx
-      osx_image: xcode9.3
+      osx_image: xcode10.1
       compiler: clang
       env:
         - CI_MODE=deploy
@@ -77,7 +77,8 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
-    - if [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig doxypypy scipy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
+    - if [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
+    - if [[ "$CI_MODE" == "deploy" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
     - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
