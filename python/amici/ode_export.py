@@ -1222,7 +1222,7 @@ class ODEModel:
         elif name == 'dtcldp':
             self._syms[name] = sp.Matrix([
                 [
-                    sp.Symbol(f's{strip_pysb(tcl.get_id())}{ip}')
+                    sp.Symbol(f's{strip_pysb(tcl.get_id())}_{ip}')
                     for ip in range(len(self.sym('p')))
                 ]
                 for tcl in self._conservationlaws
