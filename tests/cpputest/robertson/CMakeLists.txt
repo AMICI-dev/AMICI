@@ -2,7 +2,7 @@ get_filename_component(MODEL_NAME ${CMAKE_CURRENT_LIST_DIR} NAME)
 project(model_${MODEL_NAME}_test)
 
 set(SRC_LIST
-    main.cpp
+    ../main.cpp
     tests1.cpp
 )
 

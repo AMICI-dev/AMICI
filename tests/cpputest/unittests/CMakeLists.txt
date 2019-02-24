@@ -5,7 +5,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_OLD}")
 find_package(Boost COMPONENTS serialization)
 
 set(SRC_LIST
-    main.cpp
+    ../main.cpp
     tests1.cpp
 )
 

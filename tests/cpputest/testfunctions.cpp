@@ -9,10 +9,13 @@
 #include <utility>
 #include <unistd.h>
 
+#include <CppUTest/TestHarness.h>
+#include <CppUTestExt/MockSupport.h>
+
 extern std::unique_ptr<amici::Model> getModel();
 
 namespace amici {
-    
+
 std::vector<std::string> getVariableNames(const char* name, int length)
 {
     std::vector<std::string> names;
@@ -63,7 +66,7 @@ void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& h
     // perform second simulation to check reuse of solver and model object
     auto rdata_resimulation = runAmiciSimulation(*solver, edata.get(), *model);
     std::string resultPath = path + "/results";
-    
+
     // write
     // delete destination group
     H5::H5File in(hdffileOptions, H5F_ACC_RDONLY);
@@ -165,7 +168,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     double llhExp = hdf5::getDoubleScalarAttribute(file, resultPath, "llh");
     CHECK_TRUE(withinTolerance(llhExp, rdata->llh, atol, rtol, 1, "llh"));
-    
+
     double chi2Exp = hdf5::getDoubleScalarAttribute(file, resultPath, "chi2");
     CHECK_TRUE(withinTolerance(chi2Exp, rdata->chi2, atol, rtol, 1, "chi2"));
 
@@ -179,7 +182,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     expected = hdf5::getDoubleDataset2D(file, resultPath + "/y", m, n);
     checkEqualArray(expected, rdata->y, atol, rtol, "y");
-    
+
     if(hdf5::locationExists(file, resultPath + "/res")) {
         expected = hdf5::getDoubleDataset1D(file, resultPath + "/res");
         checkEqualArray(expected, rdata->res, atol, rtol, "res");
@@ -210,7 +213,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
 
     expected = hdf5::getDoubleDataset1D(file, resultPath + "/diagnosis/xdot");
     checkEqualArray(expected, rdata->xdot, atol, rtol, "xdot");
-    
+
     expected = hdf5::getDoubleDataset1D(file, resultPath + "/x0");
     checkEqualArray(expected, rdata->x0, atol, rtol, "x0");
 
@@ -234,33 +237,33 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
     }
 
     if(rdata->sensi_meth == SensitivityMethod::forward) {
-    
+
         if(hdf5::locationExists(file, resultPath + "/sx0")) {
             expected = hdf5::getDoubleDataset2D(file, resultPath + "/sx0", m, n);
             checkEqualArray(expected, rdata->sx0, atol, rtol, "sx0");
         } else {
             CHECK_TRUE(rdata->sx0.empty());
         }
-        
+
         if(hdf5::locationExists(file, resultPath + "/sres")) {
             expected = hdf5::getDoubleDataset2D(file, resultPath + "/sres", m, n);
             checkEqualArray(expected, rdata->sres, atol, rtol, "sres");
         } else {
             CHECK_TRUE(rdata->sres.empty());
         }
-        
+
         if(hdf5::locationExists(file, resultPath + "/FIM")) {
             expected = hdf5::getDoubleDataset2D(file, resultPath + "/FIM", m, n);
             checkEqualArray(expected, rdata->FIM, atol, rtol, "FIM");
         } else {
             CHECK_TRUE(rdata->FIM.empty());
         }
-        
-        
+
+
         /* TODO REMOVE ASAP */
         if(rdata->sensi < SensitivityOrder::second) {
         /* /TODO REMOVE ASAP */
-            
+
             if(hdf5::locationExists(file, resultPath + "/sx")) {
                 expected = hdf5::getDoubleDataset3D(file, resultPath + "/sx", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
@@ -295,7 +298,7 @@ void verifyReturnDataSensitivities(H5::H5File const& file, std::string const& re
                             &rdata->srz[ip * model->nMaxEvent() * model->nz],
                             model->nMaxEvent() * model->nztrue, atol, rtol, "srz");
             }
-            
+
             if(hdf5::locationExists(file, resultPath + "/ssigmay") || !rdata->ssigmay.empty()) {
                 expected = hdf5::getDoubleDataset3D(file, resultPath + "/ssigmay", m, n, o);
                 for(int ip = 0; ip < model->nplist(); ++ip)
