@@ -26,6 +26,9 @@ def parse_cli_args():
                         help='More verbose output')
     parser.add_argument('-o', '--output-dir', dest='model_output_dir',
                         help='Name of the model directory to create')
+    parser.add_argument('--no-compile', action='store_false',
+                        dest='compile',
+                        help='Only generate model code, do not compile')
 
     # Call with set of files
     parser.add_argument('-s', '--sbml', dest='sbml_file_name',
@@ -224,6 +227,7 @@ def main():
                  args.condition_file_name,
                  args.measurement_file_name,
                  model_output_dir=args.model_output_dir,
+                 compile=args.compile,
                  verbose=True)
 
 
