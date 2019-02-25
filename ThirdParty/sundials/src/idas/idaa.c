@@ -506,7 +506,12 @@ int IDASolveF(void *ida_mem, realtype tout, realtype *tret,
 
     /* In IDA_ONE_STEP mode break from loop */
     if (itask == IDA_ONE_STEP) break;
-
+    
+    /* Return if root reached */
+    if ( flag == IDA_ROOT_RETURN ) {
+        IDAGetSolution(IDA_mem, *tret, yret, ypret);
+        break;
+    }
     /* Return if tout reached */
     if ( (*tret - tout)*IDA_mem->ida_hh >= ZERO ) {
       *tret = tout;

@@ -524,6 +524,11 @@ int CVodeF(void *cvode_mem, realtype tout, N_Vector yout,
     /* Return if in CV_ONE_STEP mode */
     if (iret) break;
 
+    /* Return if root reached */
+    if ( flag == CV_ROOT_RETURN ) {
+        CVodeGetDky(cv_mem, *tret, 0, yout);
+        break;
+    }
     /* Return if tout reached */
     if ( (*tret - tout)*cv_mem->cv_h >= ZERO ) {
       *tret = tout;
