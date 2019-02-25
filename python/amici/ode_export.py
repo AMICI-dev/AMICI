@@ -10,6 +10,7 @@ import sys
 import os
 import copy
 import numbers
+import itertools
 try:
     import pysb
 except ImportError:
@@ -1224,7 +1225,7 @@ class ODEModel:
         elif name == 'dtcldp':
             self._syms[name] = sp.Matrix([
                 [
-                    sp.Symbol(f's{strip_pysb(tcl.get_id())}{ip}')
+                    sp.Symbol(f's{strip_pysb(tcl.get_id())}_{ip}')
                     for ip in range(len(self.sym('p')))
                 ]
                 for tcl in self._conservationlaws
@@ -1273,16 +1274,26 @@ class ODEModel:
         Raises:
 
         """
+        free_symbols_dt = list(itertools.chain.from_iterable(
+            [
+                str(symbol)
+                for symbol in state.get_dt().free_symbols
+            ]
+            for state in self._states
+        ))
+
+        free_symbols_expr = list(itertools.chain.from_iterable(
+            [
+                str(symbol)
+                for symbol in expr.get_val().free_symbols
+            ]
+            for expr in self._expressions
+        ))
+
         return [
-            sum(
-                self._states[idx].get_id() in state.get_dt().free_symbols
-                for state in self._states
-            )
+            free_symbols_dt.count(str(self._states[idx].get_id()))
             +
-            sum(
-                self._states[idx].get_id() in expr.get_val().free_symbols
-                for expr in self._expressions
-            )
+            free_symbols_expr.count(str(self._states[idx].get_id()))
             for idx in idxs
         ]
 
