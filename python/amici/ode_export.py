@@ -2111,7 +2111,7 @@ class ODEExporter:
         # function signature
         signature = self.functions[function]['signature']
 
-        if 'SlsMat' in signature:
+        if 'SUNMatrixContent_Sparse' in signature:
             lines.append('#include <sundials/sundials_sparse.h>')
 
         lines.append('')
