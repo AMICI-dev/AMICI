@@ -126,6 +126,8 @@ class IDASolver : public Solver {
     void setId(Model *model) override;
 
     void setSuppressAlg(bool flag) override;
+    
+     void resetState(void *ida_mem, N_Vector yy0, N_Vector yp0);
 
     void setSensParams(realtype *p, realtype *pbar, int *plist) override;
 

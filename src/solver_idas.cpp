@@ -1,21 +1,19 @@
-#include "amici/solver_idas.h"
-
 #include "amici/misc.h"
-#include "amici/model.h"
-#include "amici/exception.h"
 #include "amici/model_dae.h"
+#include "amici/solver_idas.h"
+#include "amici/exception.h"
 
 #include <idas/idas.h>
 #include <idas/idas_impl.h>
-#include <idas/idas_bbdpre.h>
-#include <idas/idas_ls.h>
+
+#include "amici/sundials_linsol_wrapper.h"
 
 #include <amd.h>
 #include <btf.h>
 #include <colamd.h>
 #include <klu.h>
 
-#include <cstring>
+#define ONE     RCONST(1.0)
 
 namespace amici {
 
@@ -164,6 +162,29 @@ void IDASolver::setSuppressAlg(bool flag) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetSuppressAlg");
 }
+    
+void IDASolver::resetState(void *ami_mem, N_Vector yy0, N_Vector yp0) {
+    
+    auto ida_mem = static_cast<IDAMem>(ami_mem);
+    /* here we force the order in the next step to zero, and update the
+     phi arrays, this is largely copied from IDAReInit with
+     explanations from idas_impl.h
+     */
+    
+    /* Initialize the phi array */
+    
+    N_VScale(ONE, yy0, ida_mem->ida_phi[0]);
+    N_VScale(ONE, yp0, ida_mem->ida_phi[1]);
+    
+    /* Set step parameters */
+    
+    /* current order */
+    ida_mem->ida_kk      = 0;
+    
+    /* Initial setup not done yet */
+    
+    ida_mem->ida_SetupDone = SUNFALSE;
+}
 
 void IDASolver::reInitPostProcessF(realtype *t, AmiVector *yout,
                                    AmiVector *ypout, realtype tnext) {
@@ -178,27 +199,32 @@ void IDASolver::reInitPostProcessB(int which, realtype *t, AmiVector *yBout,
 
 void IDASolver::reInitPostProcess(void *ami_mem, realtype *t,
                                   AmiVector *yout, AmiVector *ypout,
-                                  realtype tout) {
-    auto ida_mem = static_cast<IDAMem>(ami_mem);
-    auto nst_tmp = ida_mem->ida_nst;
-    ida_mem->ida_nst = 0;
-    auto status = IDASolve(ami_mem, tout, t,
-                           yout->getNVector(), ypout->getNVector(),
-                           IDA_ONE_STEP);
-    if(status != IDA_SUCCESS)
-        throw IDAException(status, "reInitPostProcess");
-    ida_mem->ida_nst = nst_tmp+1;
-}
+                                  realtype tout) {}
 
 void IDASolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
-    int status = IDAReInit(solverMemory.get(), t0, yy0->getNVector(), yp0->getNVector());
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAReInit");
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
+    /* set time */
+    ida_mem->ida_tn = t0;
+    resetState(ida_mem, yy0->getNVector(), yp0->getNVector());
 }
 void IDASolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
-    int status = IDASensReInit(solverMemory.get(), static_cast<int>(ism), yS0->getNVectorArray(), ypS0->getNVectorArray());
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
+    /* Initialize znS[0] in the history array */
+    
+    for (int is=0; is<ida_mem->ida_Ns; is++)
+        ida_mem->ida_cvals[is] = ONE;
+    
+    auto status = N_VScaleVectorArray(ida_mem->ida_Ns, ida_mem->ida_cvals,
+                                     yS0->getNVectorArray(),
+                                     ida_mem->ida_phiS[0]);
     if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASensReInit");
+        throw IDAException(IDA_VECTOROP_ERR,"IDASensReInit");
+    
+    status = N_VScaleVectorArray(ida_mem->ida_Ns, ida_mem->ida_cvals,
+                                     ypS0->getNVectorArray(),
+                                     ida_mem->ida_phiS[1]);
+    if(status != IDA_SUCCESS)
+        throw IDAException(IDA_VECTOROP_ERR,"IDASensReInit");
 }
 void IDASolver::setSensParams(realtype *p, realtype *pbar, int *plist) {
     int status = IDASetSensParams(solverMemory.get(), p, pbar, plist);
@@ -232,9 +258,9 @@ void IDASolver::allocateSolverB(int *which) {
 }
 void IDASolver::reInitB(int which, realtype tB0, AmiVector *yyB0,
                           AmiVector *ypB0) {
-    int status = IDAReInitB(solverMemory.get(), which, tB0, yyB0->getNVector(), ypB0->getNVector());
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAReInitB");
+    auto ida_memB = static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
+    ida_memB->ida_tn = tB0;
+    resetState(ida_memB, yyB0->getNVector(), ypB0->getNVector());
 }
 void IDASolver::setSStolerancesB(int which, realtype relTolB, realtype absTolB) {
     int status = IDASStolerancesB(solverMemory.get(), which, relTolB, absTolB);
@@ -242,9 +268,8 @@ void IDASolver::setSStolerancesB(int which, realtype relTolB, realtype absTolB) 
          throw IDAException(status,"IDASStolerancesB");
 }
 void IDASolver::quadReInitB(int which, AmiVector *yQB0) {
-    int status = IDAQuadReInitB(solverMemory.get(), which, yQB0->getNVector());
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAQuadReInitB");
+    auto ida_memB = static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
+    N_VScale(ONE, yQB0->getNVector(), ida_memB->ida_phiQ[0]);
 }
 void IDASolver::quadSStolerancesB(int which, realtype reltolQB,
                                     realtype abstolQB) {

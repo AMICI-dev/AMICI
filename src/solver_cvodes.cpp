@@ -6,7 +6,6 @@
 #include <cvodes/cvodes.h>
 #include <cvodes/cvodes_impl.h>
 #include <cvodes/cvodes_diag.h>
-#include <sundials/sundials_math.h>
 
 #include "amici/sundials_linsol_wrapper.h"
 
