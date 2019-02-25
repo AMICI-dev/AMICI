@@ -1,12 +1,11 @@
 from .ode_export import (
     ODEExporter, ODEModel, State, Constant, Parameter, Observable, SigmaY,
-    Expression, LogLikelihood, strip_pysb
+    Expression, LogLikelihood
 )
 
 import sympy as sp
 import numpy as np
 import itertools
-
 
 try:
     import pysb.bng
@@ -436,6 +435,7 @@ def _generate_cl_prototypes(excluded_monomers, model, ODE):
     cl_prototypes = dict()
 
     _compute_possible_indices(cl_prototypes, model, ODE, excluded_monomers)
+    _compute_dependency_idx(cl_prototypes)
     _compute_target_index(cl_prototypes, ODE)
 
     return cl_prototypes
@@ -453,8 +453,6 @@ def _compute_possible_indices(cl_prototypes, model, ODE, excluded_monomers):
         ODE: ODEModel instance @type ODEModel
         excluded_monomers: monomers for which no conservation laws will be
         computed @type list
-
-
 
     Returns:
 
@@ -498,6 +496,52 @@ def _compute_possible_indices(cl_prototypes, model, ODE, excluded_monomers):
                 cl_prototypes[monomer.name] = prototype
 
 
+def _compute_dependency_idx(cl_prototypes):
+    """Compute connecting species, this allows us to efficiently compute
+    whether the respective conservation law would induce a cyclic dependency.
+    Adds a 'dependency_idx' field to the prototype dict that
+    itself is a dict where keys correspond to indexes that, when used as
+    target index yield dependencies on conservation laws of monomers in
+    the respective values
+
+    Arguments:
+        cl_prototypes: dict in which possible indices will be written @type
+        dict
+
+    Returns:
+
+    Raises:
+
+    """
+    #
+    for monomer_i, prototype_i in cl_prototypes.items():
+        if 'dependency_idx' not in prototype_i:
+            prototype_i['dependency_idx'] = dict()
+
+        for monomer_j, prototype_j in cl_prototypes.items():
+            if monomer_i == monomer_j:
+                continue
+
+            if 'dependency_idx' not in prototype_j:
+                prototype_j['dependency_idx'] = dict()
+
+            idx_overlap = set(prototype_i['possible_indices']).intersection(
+                set(prototype_j['possible_indices'])
+            )
+            if len(idx_overlap) == 0:
+                continue
+
+            for idx in idx_overlap:
+                if idx not in prototype_i['dependency_idx']:
+                    prototype_i['dependency_idx'][idx] = set()
+
+                if idx not in prototype_j['dependency_idx']:
+                    prototype_j['dependency_idx'][idx] = set()
+
+                prototype_i['dependency_idx'][idx] |= {monomer_j}
+                prototype_j['dependency_idx'][idx] |= {monomer_i}
+
+
 def _compute_target_index(cl_prototypes, ODE):
     """Computes the target index for every monomer
 
@@ -526,6 +570,8 @@ def _compute_target_index(cl_prototypes, ODE):
     # fixed if this becomes an actual problem
     appearance_counts = ODE.get_appearance_counts(possible_indices)
 
+    # in this initial guess we ignore the cost of having cyclic dependencies
+    # between conservation laws
     for monomer in cl_prototypes:
         prototype = cl_prototypes[monomer]
         # extract monomer specific appearance counts
@@ -557,12 +603,112 @@ def _compute_target_index(cl_prototypes, ODE):
 
     # we might end up with the same index for multiple monomers, so loop until
     # we have a set of unique target indices
-    while len(cl_prototypes) > len(set(get_target_indices(cl_prototypes))):
+    while not _cl_prototypes_are_valid(cl_prototypes):
         _greedy_target_index_update(cl_prototypes)
+
+def _cl_prototypes_are_valid(cl_prototypes):
+    """Checks consistency of cl_prototypes by asserting that target indices
+    are unique and there are no cyclic dependencies
+
+    Arguments:
+        cl_prototypes: dict that contains dependency and target indexes for
+        every monomer @type dict
+
+    Returns:
+
+    Raises:
+
+    """
+    # target indices are unique
+    if len(cl_prototypes) != len(set(get_target_indices(cl_prototypes))):
+        return False
+    # conservation law dependencies are cycle free
+    if any(
+        _cl_has_cycle(monomer, cl_prototypes)
+        for monomer in cl_prototypes
+    ):
+        return False
+
+    return True
+
+def _cl_has_cycle(monomer, cl_prototypes):
+    """Checks whether monomer has a conservation law that is part of a
+    cyclic dependency
+
+    Arguments:
+        monomer: name of monomer for which conservation law is to be checked
+        cl_prototypes: dict that contains dependency and target indexes for
+        every monomer @type dict
+
+    Returns:
+
+    Raises:
+
+    """
+
+    prototype = cl_prototypes[monomer]
+
+    if prototype['target_index'] not in prototype['dependency_idx']:
+        return False
+
+    visited = [monomer]
+    root = monomer
+    return any(
+        _is_in_cycle(
+            connecting_monomer,
+            cl_prototypes,
+            visited,
+            root
+        )
+        for connecting_monomer in prototype['dependency_idx'][
+            prototype['target_index']
+        ]
+    )
+
+def _is_in_cycle(monomer, cl_prototypes, visited, root):
+    """Recursively checks for cycles in conservation law dependencies via
+    Depth First Search
+
+    Arguments:
+        monomer: current location in cl dependency graph
+        cl_prototypes: dict that contains dependency and target indexes for
+        every monomer @type dict
+        visited: history of visited monomers with conservation laws
+        root: monomer at which the cycle search was started
+
+    Returns:
+
+    Raises:
+
+    """
+    if monomer == root:
+        return True # we found a cycle and root is part of it
+
+    if monomer in visited:
+        return False # we found a cycle but root is not part of it
+
+    visited.append(monomer)
+
+    prototype = cl_prototypes[monomer]
+
+    if prototype['target_index'] not in prototype['dependency_idx']:
+        return False
+
+    return any(
+        _is_in_cycle(
+            connecting_monomer,
+            cl_prototypes,
+            visited,
+            root
+        )
+        for connecting_monomer in prototype['dependency_idx'][
+            prototype['target_index']
+        ]
+    )
 
 
 def _greedy_target_index_update(cl_prototypes):
-    """Computes unique target indices for conservation laws from prossible
+    """Computes unique target indices for conservation laws from possible
     indices  such that expected fill in in symbolic derivatives is minimized
 
 
@@ -579,9 +725,9 @@ def _greedy_target_index_update(cl_prototypes):
 
     target_indices = get_target_indices(cl_prototypes)
 
-    for monomer in cl_prototypes:
-        prototype = cl_prototypes[monomer]
-        if target_indices.count(prototype['target_index']) > 1:
+    for monomer, prototype in cl_prototypes.items():
+        if target_indices.count(prototype['target_index']) > 1 or \
+                _cl_has_cycle(monomer, cl_prototypes):
             # compute how much fillin the next best target_index would yield
 
             # we exclude already existing target indices to avoid that
@@ -601,10 +747,8 @@ def _greedy_target_index_update(cl_prototypes):
                     del prototype['appearance_counts'][local_idx]
 
             if len(prototype['possible_indices']) == 0:
-                # we have exhausted all possible target indices, nothing left
-                # we can do
-                raise Exception('Could not compute a valid set of '
-                                'conservation laws for this model')
+                prototype['diff_fillin'] = -1
+                continue
 
             idx = np.argmin(prototype['appearance_counts'])
 
@@ -621,7 +765,14 @@ def _greedy_target_index_update(cl_prototypes):
             prototype['diff_fillin'] = \
                 prototype['alternate_fillin'] - prototype['fillin']
         else:
-            prototype['diff_fillin'] = 0
+            prototype['diff_fillin'] = -1
+
+    if all(
+        prototype['diff_fillin'] == -1
+        for prototype in cl_prototypes.values()
+    ):
+        raise Exception('Could not compute a valid set of conservation '
+                        'laws for this model!')
 
     # this puts prototypes with high diff_fillin last
     cl_prototypes = sorted(
@@ -637,15 +788,19 @@ def _greedy_target_index_update(cl_prototypes):
         # we check that we
         # A) have an alternative index computed, i.e. that
         # that monomer originally had a non-unique target_index
-        # B) that the target_index still is not unique. due to the sorting,
-        # this will always be the monomer with the highest diff_fillin (note
-        # that the target indice counts are recomputed on the fly
+        # B) that the target_index still is not unique or part of a cyclic
+        # dependency. due to the sorting, this will always be the monomer
+        # with the highest diff_fillin (note that the target index counts
+        # are recomputed on the fly)
 
-        if prototype['diff_fillin'] > 0 \
-                and get_target_indices(cl_prototypes).count(
-                    prototype['target_index']
-                ) > 1:
 
+        if prototype['diff_fillin'] > -1 \
+                and (
+                    get_target_indices(cl_prototypes).count(
+                        prototype['target_index']
+                    ) > 1
+                    or _cl_has_cycle(monomer, cl_prototypes)
+        ):
             prototype['fillin'] = prototype['alternate_fillin']
             prototype['target_index'] = prototype['alternate_target_index']
             prototype['appearance_count'] = \
@@ -695,16 +850,13 @@ def _construct_conservation_from_prototypes(cl_prototypes, model):
         # x_j = (T - sum_i≠j(a_i * x_i))/a_j
         # law: sum_i≠j(a_i * x_i))/a_j
         # state: x_j
-        target_expression = strip_pysb(
-            sum(
-                sp.Symbol(f'__s{ix}')
-                * extract_monomers(specie).count(monomer_name)
-                for ix, specie in enumerate(model.species)
-                if ix != target_index
-            )
-            /
-            extract_monomers(model.species[target_index]).count(monomer_name)
-        )  # normalize by the stoichiometry of the target species
+        target_expression = sum(
+            sp.Symbol(f'__s{ix}')
+            * extract_monomers(specie).count(monomer_name)
+            for ix, specie in enumerate(model.species)
+            if ix != target_index
+        ) / extract_monomers(model.species[target_index]).count(monomer_name)
+        # normalize by the stoichiometry of the target species
         target_state = sp.Symbol(f'__s{target_index}')
         # = x_j
 
@@ -771,12 +923,73 @@ def _flatten_conservation_laws(conservation_laws):
     conservation_law_subs = \
         _get_conservation_law_subs(conservation_laws)
 
-    # we actually need to ma
     while len(conservation_law_subs):
         for cl in conservation_laws:
-            cl['state_expr'] = cl['state_expr'].subs(conservation_law_subs)
-            conservation_law_subs = \
-                _get_conservation_law_subs(conservation_laws)
+            if _sub_matches_cl(
+                    conservation_law_subs,
+                    cl['state_expr'],
+                    cl['state']
+            ):
+                # this optimization is done by subs anyways, but we dont
+                # want to recompute the subs if we did not change anything
+                valid_subs = _select_valid_cls(
+                    conservation_law_subs,
+                    cl['state']
+                )
+                if len(valid_subs) > 0:
+                    cl['state_expr'] = cl['state_expr'].subs(valid_subs)
+                    conservation_law_subs = \
+                        _get_conservation_law_subs(conservation_laws)
+
+def _select_valid_cls(subs, state):
+    """ Subselect substitutions such that we do not end up with conservation
+    laws that are self-referential
+
+    Arguments:
+        subs: substitutions in tuple format
+        state: target symbolic state to which substitutions will
+        be applied
+
+    Returns:
+    list of valid substitutions
+
+    Raises:
+
+    """
+    return [
+        sub
+        for sub in subs
+        if str(state) not in [str(symbol) for symbol in sub[1].free_symbols]
+    ]
+
+
+def _sub_matches_cl(subs, state_expr, state):
+    """ Checks whether any of the substitutions in subs will be applied to
+    state_expr
+
+    Arguments:
+        subs: substitutions in tuple format
+        state_expr: target symbolic expressions in which substitutions will
+        be applied
+        state: target symbolic state to which substitutions will
+        be applied
+
+    Returns:
+    boolean indicating positive match
+
+    Raises:
+
+    """
+
+    sub_symbols = set(
+        sub[0]
+        for sub in subs
+        if str(state) not in [
+            str(symbol) for symbol in sub[1].free_symbols
+        ]
+    )
+
+    return len(sub_symbols.intersection(state_expr.free_symbols)) > 0
 
 
 def _get_conservation_law_subs(conservation_laws):
