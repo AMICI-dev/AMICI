@@ -623,8 +623,8 @@ def _cl_prototypes_are_valid(cl_prototypes):
     if len(cl_prototypes) != len(set(get_target_indices(cl_prototypes))):
         return False
     # conservation law dependencies are cycle free
-    if all(
-        not _cl_has_cycle(monomer, cl_prototypes)
+    if any(
+        _cl_has_cycle(monomer, cl_prototypes)
         for monomer in cl_prototypes
     ):
         return False
@@ -725,8 +725,7 @@ def _greedy_target_index_update(cl_prototypes):
 
     target_indices = get_target_indices(cl_prototypes)
 
-    for monomer in cl_prototypes:
-        prototype = cl_prototypes[monomer]
+    for monomer, prototype in cl_prototypes.items():
         if target_indices.count(prototype['target_index']) > 1 or \
                 _cl_has_cycle(monomer, cl_prototypes):
             # compute how much fillin the next best target_index would yield
@@ -748,10 +747,8 @@ def _greedy_target_index_update(cl_prototypes):
                     del prototype['appearance_counts'][local_idx]
 
             if len(prototype['possible_indices']) == 0:
-                # we have exhausted all possible target indices, nothing left
-                # we can do
-                raise Exception('Could not compute a valid set of '
-                                'conservation laws for this model')
+                prototype['diff_fillin'] = -1
+                continue
 
             idx = np.argmin(prototype['appearance_counts'])
 
@@ -769,6 +766,13 @@ def _greedy_target_index_update(cl_prototypes):
                 prototype['alternate_fillin'] - prototype['fillin']
         else:
             prototype['diff_fillin'] = -1
+
+    if all(
+        prototype['diff_fillin'] == -1
+        for prototype in cl_prototypes.values()
+    ):
+        raise Exception('Could not compute a valid set of conservation '
+                        'laws for this model!')
 
     # this puts prototypes with high diff_fillin last
     cl_prototypes = sorted(
