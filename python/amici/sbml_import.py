@@ -363,21 +363,15 @@ class SbmlImporter:
                     _check_unsupported_functions(symMath, 'InitialAssignment')
                     speciesInitial[index] = symMath
 
+        for ix, (symbol, init) in enumerate(zip(
+                    self.symbols['species']['identifier'], speciesInitial
+        )):
+            if symbol == init:
+                speciesInitial[ix] = sp.sympify(0.0)
+
         # flatten initSpecies
         while any([species in speciesInitial.free_symbols
                    for species in self.symbols['species']['identifier']]):
-            identical_assignment = next((
-                symbol == init
-                for symbol, init in zip(
-                    self.symbols['species']['identifier'], speciesInitial
-                )
-            ), None)
-            if identical_assignment is not None:
-                raise SBMLException('Species without initial assignment are '
-                                    'currently not supported (this is error '
-                                    'is likely to be due to the existence of '
-                                    'a species assignment rule, which is '
-                                    'also not supported)!')
             speciesInitial = speciesInitial.subs([
                 (symbol, init)
                 for symbol, init in zip(
