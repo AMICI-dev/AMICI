@@ -107,7 +107,9 @@ if 'AMICI_LDFLAGS' in os.environ:
 libamici = setup_clibs.getLibAmici(
     h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg, extra_compiler_flags=cxx_flags)
 libsundials = setup_clibs.getLibSundials(extra_compiler_flags=cxx_flags)
-libsuitesparse = setup_clibs.getLibSuiteSparse(extra_compiler_flags=cxx_flags)
+libsuitesparse = setup_clibs.getLibSuiteSparse(
+    extra_compiler_flags=cxx_flags + ['-DDLONG']
+)
 
 # Build shared object
 amici_module = Extension(

@@ -1,19 +1,16 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4388 $
- * $Date: 2015-02-25 15:50:00 -0800 (Wed, 25 Feb 2015) $
- * ----------------------------------------------------------------- 
  * Programmer(s): Steven Smith @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This file (companion of nvector_openmp.h) contains the
  * definitions needed for the initialization of openmp
@@ -71,8 +68,8 @@ extern N_Vector F2C_KINSOL_vec;
 
 extern N_Vector F2C_ARKODE_vec;
 
-/* 
- * Prototypes of exported functions 
+/*
+ * Prototypes of exported functions
  *
  * FNV_INITOMP    - initializes openmp vector operations for main problem
  * FNV_INITOMP_Q  - initializes openmp vector operations for quadratures

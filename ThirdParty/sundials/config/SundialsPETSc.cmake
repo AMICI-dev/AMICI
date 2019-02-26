@@ -1,21 +1,19 @@
 # ---------------------------------------------------------------
-# $Revision:  $
-# $Date:  $
-# ---------------------------------------------------------------
 # Programmer:  Eddy Banks @ LLNL
 # ---------------------------------------------------------------
-# LLNS Copyright Start
-# Copyright (c) 2014, Lawrence Livermore National Security
-# This work was performed under the auspices of the U.S. Department 
-# of Energy by Lawrence Livermore National Laboratory in part under 
-# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
-# Produced at the Lawrence Livermore National Laboratory.
+# SUNDIALS Copyright Start
+# Copyright (c) 2002-2019, Lawrence Livermore National Security
+# and Southern Methodist University.
 # All rights reserved.
-# For details, see the LICENSE file.
-# LLNS Copyright End
+#
+# See the top-level LICENSE and NOTICE files for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# SUNDIALS Copyright End
 # ---------------------------------------------------------------
 # PETSc tests for SUNDIALS CMake-based configuration.
 # 
+
 ### This is only set if running GUI - simply return first time enabled
 IF(PETSC_DISABLED)
   SET(PETSC_DISABLED FALSE CACHE INTERNAL "GUI - now enabled" FORCE)
@@ -35,11 +33,11 @@ if(PETSC_LIBRARIES)
   file(MAKE_DIRECTORY ${PETSCTest_DIR})
   # Create a CMakeLists.txt file 
   file(WRITE ${PETSCTest_DIR}/CMakeLists.txt
-    "CMAKE_MINIMUM_REQUIRED(VERSION 2.4)\n"
+    "CMAKE_MINIMUM_REQUIRED(VERSION 3.0.2)\n"
     "PROJECT(ltest C)\n"
     "SET(CMAKE_VERBOSE_MAKEFILE ON)\n"
     "SET(CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\")\n"
-    "SET(CMAKE_C_COMPILER ${MPI_MPICC})\n"
+    "SET(CMAKE_C_COMPILER ${MPI_C_COMPILER})\n"
     "SET(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS}\")\n"
     "SET(CMAKE_C_FLAGS_RELEASE \"${CMAKE_C_FLAGS_RELEASE}\")\n"
     "SET(CMAKE_C_FLAGS_DEBUG \"${CMAKE_C_FLAGS_DEBUG}\")\n"

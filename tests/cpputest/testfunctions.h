@@ -96,11 +96,11 @@ public:
     virtual void fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip, AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) override {
         throw AmiException("not implemented");
     }
-    virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx, AmiVector *xdot, DlsMat J) override {
+    virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx, AmiVector *xdot, SUNMatrix J) override {
         throw AmiException("not implemented");
     }
     virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                          AmiVector *xdot, SlsMat J) override {
+                          AmiVector *xdot, SUNMatrix J) override {
         throw AmiException("not implemented");
     }
     virtual void fJDiag(realtype t, AmiVector *Jdiag, realtype cj, AmiVector *x,

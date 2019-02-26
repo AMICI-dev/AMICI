@@ -1,20 +1,17 @@
 /*
- * -----------------------------------------------------------------
- * $Revision: 4845 $
- * $Date: 2016-08-03 15:45:09 -0700 (Wed, 03 Aug 2016) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Allan G. Taylor, Alan C. Hindmarsh, Radu Serban,
  *                and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the header (include) file for the main IDA solver.
  * -----------------------------------------------------------------
@@ -34,6 +31,8 @@
 
 #include <stdio.h>
 #include <sundials/sundials_nvector.h>
+#include <sundials/sundials_nonlinearsolver.h>
+#include <ida/ida_ls.h>
 
 #ifdef __cplusplus     /* wrapper to enable C++ usage */
 extern "C" {
@@ -87,6 +86,8 @@ extern "C" {
 #define IDA_FIRST_RES_FAIL  -12
 #define IDA_LINESEARCH_FAIL -13
 #define IDA_NO_RECOVERY     -14
+#define IDA_NLS_INIT_FAIL   -15
+#define IDA_NLS_SETUP_FAIL  -16
 
 #define IDA_MEM_NULL        -20
 #define IDA_MEM_FAIL        -21
@@ -96,8 +97,9 @@ extern "C" {
 #define IDA_BAD_K           -25
 #define IDA_BAD_T           -26
 #define IDA_BAD_DKY         -27
+#define IDA_VECTOROP_ERR    -28
 
-#define IDA_UNRECOGNISED_ERROR -99
+#define IDA_UNRECOGNIZED_ERROR -99
 
 /*
  * ----------------------------------------------------------------
@@ -291,9 +293,9 @@ SUNDIALS_EXPORT void *IDACreate(void);
  * IDASetSuppressAlg    | flag to indicate whether or not to      
  *                      | suppress algebraic variables in the     
  *                      | local error tests:                      
- *                      | FALSE = do not suppress;                 
- *                      | TRUE = do suppress;                     
- *                      | [FALSE]                                 
+ *                      | SUNFALSE = do not suppress;                 
+ *                      | SUNTRUE = do suppress;                     
+ *                      | [SUNFALSE]                                 
  *                      | NOTE: if suppressed algebraic variables 
  *                      | is selected, the nvector 'id' must be   
  *                      | supplied for identification of those    
@@ -516,18 +518,21 @@ SUNDIALS_EXPORT int IDAWFtolerances(void *ida_mem, IDAEwtFn efun);
  *                        |                                        
  * IDASetLineSearchOffIC  | a boolean flag to turn off the        
  *                        | linesearch algorithm.                 
- *                        | [FALSE]                               
+ *                        | [SUNFALSE]                               
  *                        |                                        
  * IDASetStepToleranceIC  | positive lower bound on the norm of   
  *                        | a Newton step.                        
  *                        | [(unit roundoff)^(2/3)                
- *                                                                
+ *                        |                                        
+ * IDASetMaxBacksIC       | maximum number of linesearch backtrack
+ *                        | operations per Newton iteration.
+ *                        | [100]
+ *
  * ---------------------------------------------------------------- 
  * Return flag:
  *   IDA_SUCCESS   if successful
  *   IDA_MEM_NULL  if the ida memory is NULL
  *   IDA_ILL_INPUT if an argument has an illegal value
- *
  * ----------------------------------------------------------------
  */
 
@@ -537,6 +542,7 @@ SUNDIALS_EXPORT int IDASetMaxNumJacsIC(void *ida_mem, int maxnj);
 SUNDIALS_EXPORT int IDASetMaxNumItersIC(void *ida_mem, int maxnit);
 SUNDIALS_EXPORT int IDASetLineSearchOffIC(void *ida_mem, booleantype lsoff);
 SUNDIALS_EXPORT int IDASetStepToleranceIC(void *ida_mem, realtype steptol);
+SUNDIALS_EXPORT int IDASetMaxBacksIC(void *ida_mem, int maxbacks);
 
 /*
  * -----------------------------------------------------------------
@@ -936,6 +942,16 @@ SUNDIALS_EXPORT char *IDAGetReturnFlagName(long int flag);
  */
 
 SUNDIALS_EXPORT void IDAFree(void **ida_mem);
+
+/*
+ * ----------------------------------------------------------------
+ * Function : IDASetNonlinearSolver
+ * ----------------------------------------------------------------
+ * Set the nonlinear solver in IDA
+ * ----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT int IDASetNonlinearSolver(void *ida_mem, SUNNonlinearSolver NLS);
 
 #ifdef __cplusplus
 }

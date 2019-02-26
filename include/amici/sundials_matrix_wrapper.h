@@ -1,140 +1,94 @@
 #ifndef AMICI_SUNDIALS_MATRIX_WRAPPER_H
 #define AMICI_SUNDIALS_MATRIX_WRAPPER_H
 
-#include <sundials/sundials_direct.h> // DlsMat
-#include <sundials/sundials_sparse.h> // SlsMat
+#include <sunmatrix/sunmatrix_band.h>   // SUNMatrix_Band
+#include <sunmatrix/sunmatrix_dense.h>  // SUNMatrix_Dense
+#include <sunmatrix/sunmatrix_sparse.h> // SUNMatrix_Sparse
 
 namespace amici {
 
 /**
- * @brief A RAII wrapper for Sundials SlsMat sparse matrices.
+ * @brief A RAII wrapper for SUNMatrix structs.
+ *
+ * This can create dense, sparse, or banded matrices using the respective
+ * constructor.
  */
-class SlsMatWrapper {
-public:
-    SlsMatWrapper() = default;
+class SUNMatrixWrapper {
+  public:
+    SUNMatrixWrapper() = default;
 
     /**
-     * @brief See SparseNewMat in sundials_sparse.h
+     * @brief Create sparse matrix. See SUNSparseMatrix in sunmatrix_sparse.h
      * @param M Number of rows
      * @param N Number of columns
      * @param NNZ Number of nonzeros
      * @param sparsetype Sparse type
      */
-    SlsMatWrapper(int M, int N, int NNZ, int sparsetype);
+    SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype);
 
     /**
-     * @brief SlsMatWrapper
-     * @param mat
-     */
-    explicit SlsMatWrapper(SlsMat mat);
-
-    ~SlsMatWrapper();
-
-    /**
-     * @brief Copy constructor
-     * @param other
-     */
-    SlsMatWrapper(const SlsMatWrapper& other);
-
-    /**
-     * @brief Move constructor
-     * @param other
-     */
-    SlsMatWrapper(SlsMatWrapper&& other) noexcept;
-
-    /**
-     * @brief Copy assignment
-     * @param other
-     * @return
-     */
-    SlsMatWrapper& operator=(const SlsMatWrapper& other);
-
-    /**
-     * @brief Move assignment
-     * @param other
-     * @return
-     */
-    SlsMatWrapper& operator=(SlsMatWrapper&& other) noexcept;
-
-    /**
-     * @brief Access raw data
-     * @return raw data pointer
-     */
-    realtype *data();
-
-    /**
-     * @brief Get the wrapped SlsMat
-     * @return SlsMat
-     */
-    SlsMat slsmat() const;
-
-private:
-    SlsMat matrix = nullptr;
-};
-
-
-/**
- * @brief A RAII wrapper for Sundials DlsMat dense matrices.
- */
-class DlsMatWrapper {
-public:
-    DlsMatWrapper() = default;
-
-    /**
-     * @brief See NewDenseMat in sundials_direct.h
+     * @brief Create dense matrix. See SUNDenseMatrix in sunmatrix_dense.h
      * @param M Number of rows
      * @param N Number of columns
      */
-    DlsMatWrapper(long int M, long int N);
+    SUNMatrixWrapper(int M, int N);
 
     /**
-     * @brief DlsMatWrapper
+     * @brief Create banded matrix. See SUNBandMatrix in sunmatrix_band.h
+     * @param M Number of rows and columns
+     * @param ubw Upper bandwidth
+     * @param lbw Lower bandwidth
+     */
+    SUNMatrixWrapper(int M, int ubw, int lbw);
+
+    /**
+     * @brief Wrap existing SUNMatrix
      * @param mat
      */
-    explicit DlsMatWrapper(DlsMat mat);
+    explicit SUNMatrixWrapper(SUNMatrix mat);
 
-    ~DlsMatWrapper();
+    ~SUNMatrixWrapper();
 
     /**
      * @brief Copy constructor
      * @param other
      */
-    DlsMatWrapper(const DlsMatWrapper& other);
+    SUNMatrixWrapper(const SUNMatrixWrapper &other);
 
     /**
      * @brief Move constructor
      * @param other
      */
-    DlsMatWrapper(DlsMatWrapper&& other) noexcept;
+    SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept;
 
     /**
      * @brief Copy assignment
      * @param other
      * @return
      */
-    DlsMatWrapper& operator=(const DlsMatWrapper& other);
+    SUNMatrixWrapper &operator=(const SUNMatrixWrapper &other);
 
     /**
      * @brief Move assignment
      * @param other
      * @return
      */
-    DlsMatWrapper& operator=(DlsMatWrapper&& other) noexcept;
+    SUNMatrixWrapper &operator=(SUNMatrixWrapper &&other) noexcept;
 
     /**
      * @brief Access raw data
      * @return raw data pointer
      */
-    realtype *data();
+    realtype *data() const;
 
     /**
-     * @brief Get the wrapped DlsMat
-     * @return DlsMat
+     * @brief Get the wrapped SUNMatrix
+     * @return SlsMat
      */
-    DlsMat dlsmat() const;
+    SUNMatrix get() const;
 
-private:
-    DlsMat matrix = nullptr;
+  private:
+    SUNMatrix matrix = nullptr;
 };
 
 } // namespace amici

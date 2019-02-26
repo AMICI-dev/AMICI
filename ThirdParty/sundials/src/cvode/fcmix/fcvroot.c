@@ -1,19 +1,16 @@
 /*
- * -----------------------------------------------------------------
- * $Revision: 4294 $
- * $Date: 2014-12-15 13:18:40 -0800 (Mon, 15 Dec 2014) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * The FCVROOT module contains the routines necessary to use
  * the rootfinding feature of the CVODE module and to interface
@@ -35,9 +32,9 @@
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-  extern void FCV_ROOTFN(realtype *, realtype*, realtype*,  /* T, Y, G    */
-                         long int*, realtype*,              /* IPAR, RPAR */
-                         int *ier);                         /* IER        */
+  extern void FCV_ROOTFN(realtype *T, realtype *Y, realtype *G,
+                         long int *IPAR, realtype *RPAR,
+                         int *ier);
 #ifdef __cplusplus
 }
 #endif

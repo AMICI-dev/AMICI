@@ -1,126 +1,83 @@
 #include <amici/sundials_matrix_wrapper.h>
 
-#include <utility>
-#include <new> // bad_alloc
+#include <amici/exception.h>
 
-#include <sundials/sundials_dense.h> // DenseCopy
+#include <new> // bad_alloc
+#include <utility>
 
 namespace amici {
 
-SlsMatWrapper::SlsMatWrapper(int M, int N, int NNZ, int sparsetype)
-    : matrix(SparseNewMat(M, N, NNZ, sparsetype))
-{
-    if(NNZ && !matrix)
+SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
+    : matrix(SUNSparseMatrix(M, N, NNZ, sparsetype)) {
+    if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
+        throw AmiException("Invalid sparsetype. Must be CSC_MAT or CSR_MAT");
+
+    if (NNZ && !matrix)
         throw std::bad_alloc();
 }
 
-SlsMatWrapper::SlsMatWrapper(SlsMat mat)
-    : matrix(mat)
-{}
-
-SlsMatWrapper::~SlsMatWrapper()
-{
-    if(matrix)
-        SparseDestroyMat(matrix);
+SUNMatrixWrapper::SUNMatrixWrapper(int M, int N)
+    : matrix(SUNDenseMatrix(M, N)) {
+    if (M && N && !matrix)
+        throw std::bad_alloc();
 }
 
-SlsMatWrapper::SlsMatWrapper(const SlsMatWrapper &other)
-{
-    if(!other.matrix)
+SUNMatrixWrapper::SUNMatrixWrapper(int M, int ubw, int lbw)
+    : matrix(SUNBandMatrix(M, ubw, lbw)) {
+    if (M && !matrix)
+        throw std::bad_alloc();
+}
+
+SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix(mat) {}
+
+SUNMatrixWrapper::~SUNMatrixWrapper() {
+    if (matrix)
+        SUNMatDestroy(matrix);
+}
+
+SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other) {
+    if (!other.matrix)
         return;
 
-    matrix = SparseNewMat(other.matrix->M,
-                          other.matrix->N,
-                          other.matrix->NNZ,
-                          other.matrix->sparsetype);
-    if(!matrix)
+    matrix = SUNMatClone(other.matrix);
+    if (!matrix)
         throw std::bad_alloc();
 
-    SparseCopyMat(other.matrix, matrix);
+    SUNMatCopy(other.matrix, matrix);
 }
 
-SlsMatWrapper::SlsMatWrapper(SlsMatWrapper &&other) noexcept
-{
+SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept {
     std::swap(matrix, other.matrix);
-
 }
 
-SlsMatWrapper &SlsMatWrapper::operator=(const SlsMatWrapper &other)
-{
-    return *this = SlsMatWrapper(other);
+SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
+    return *this = SUNMatrixWrapper(other);
 }
 
-SlsMatWrapper &SlsMatWrapper::operator=(SlsMatWrapper &&other) noexcept
-{
+SUNMatrixWrapper &SUNMatrixWrapper::
+operator=(SUNMatrixWrapper &&other) noexcept {
     std::swap(matrix, other.matrix);
     return *this;
 }
 
-realtype *SlsMatWrapper::data() {
-    if(matrix)
-        return matrix->data;
-    return nullptr;
+realtype *SUNMatrixWrapper::data() const {
+    if (!matrix)
+        return nullptr;
+
+    switch (SUNMatGetID(matrix)) {
+    case SUNMATRIX_DENSE:
+        return SM_DATA_D(matrix);
+    case SUNMATRIX_SPARSE:
+        return SM_DATA_S(matrix);
+    case SUNMATRIX_BAND:
+        return SM_DATA_B(matrix);
+    case SUNMATRIX_CUSTOM:
+        throw AmiException("Amici currently does not support custom matrix "
+                           "types.");
+    }
+    return nullptr; // -Wreturn-type
 }
 
-SlsMat SlsMatWrapper::slsmat() const {
-    return matrix;
-}
+SUNMatrix SUNMatrixWrapper::get() const { return matrix; }
 
-
-
-DlsMatWrapper::DlsMatWrapper(long int M, long int N)
-    : matrix(NewDenseMat(M, N))
-{
-    if((M*N > 0) && !matrix)
-        throw std::bad_alloc();
-}
-
-DlsMatWrapper::DlsMatWrapper(DlsMat mat)
-    : matrix(mat)
-{}
-
-DlsMatWrapper::~DlsMatWrapper()
-{
-    if(matrix)
-        DestroyMat(matrix);
-}
-
-DlsMatWrapper::DlsMatWrapper(const DlsMatWrapper &other)
-{
-    if(!other.matrix)
-        return;
-
-    matrix = NewDenseMat(other.matrix->M,
-                          other.matrix->N);
-    if(!matrix)
-        throw std::bad_alloc();
-
-    DenseCopy(other.matrix, matrix);
-}
-
-DlsMatWrapper::DlsMatWrapper(DlsMatWrapper &&other) noexcept
-{
-    std::swap(matrix, other.matrix);
-}
-
-DlsMatWrapper &DlsMatWrapper::operator=(const DlsMatWrapper &other)
-{
-    return *this = DlsMatWrapper(other);
-}
-
-DlsMatWrapper &DlsMatWrapper::operator=(DlsMatWrapper &&other) noexcept
-{
-    std::swap(matrix, other.matrix);
-    return *this;
-}
-
-realtype *DlsMatWrapper::data() {
-    if(matrix)
-        return matrix->data;
-    return nullptr;
-}
-
-DlsMat DlsMatWrapper::dlsmat() const {
-    return matrix;
-}
 } // namespace amici

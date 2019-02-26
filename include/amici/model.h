@@ -1326,7 +1326,7 @@ class Model : public AbstractModel {
     N_Vector computeX_pos(N_Vector x);
 
     /** Sparse Jacobian (dimension: nnz)*/
-    SlsMatWrapper J;
+    SUNMatrixWrapper J;
 
     /** current observable (dimension: nytrue) */
     std::vector<realtype> my;

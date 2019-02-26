@@ -96,7 +96,7 @@ In case you only want to use the AMICI Python package for generating model code
 for use with Matlab or C++ and don't want to bothered with any unnecessary 
 dependencies, you can run
 
-    pip3 install --install-option --no-clibs
+    pip3 install --install-option --no-clibs amici
     
 Note, however, that you will not be able to compile any model into a Python
 extension with this installation.

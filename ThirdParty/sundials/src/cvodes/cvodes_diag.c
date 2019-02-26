@@ -1,19 +1,16 @@
 /*
- * -----------------------------------------------------------------
- * $Revision: 4923 $
- * $Date: 2016-09-19 14:35:51 -0700 (Mon, 19 Sep 2016) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the CVDIAG linear solver.
  * -----------------------------------------------------------------
@@ -94,7 +91,7 @@ static int CVDiagFree(CVodeMem cv_mem);
  * respectively.  It allocates memory for a structure of type
  * CVDiagMemRec and sets the cv_lmem field in (*cvode_mem) to the
  * address of this structure.  It sets setupNonNull in (*cvode_mem) to
- * TRUE.  Finally, it allocates memory for M, bit, and bitcomp.
+ * SUNTRUE.  Finally, it allocates memory for M, bit, and bitcomp.
  * The CVDiag return value is SUCCESS = 0, LMEM_FAIL = -1, or 
  * LIN_ILL_INPUT=-2.
  * -----------------------------------------------------------------
@@ -136,9 +133,6 @@ int CVDiag(void *cvode_mem)
   }
 
   last_flag = CVDIAG_SUCCESS;
-
-  /* Set flag setupNonNull = TRUE */
-  setupNonNull = TRUE;
 
   /* Allocate memory for M, bit, and bitcomp */
     
@@ -383,8 +377,8 @@ static int CVDiagSetup(CVodeMem cv_mem, int convfail, N_Vector ypred,
     return(1);
   }
 
-  /* Set jcur = TRUE, save gamma in gammasv, and return */
-  *jcurPtr = TRUE;
+  /* Set jcur = SUNTRUE, save gamma in gammasv, and return */
+  *jcurPtr = SUNTRUE;
   gammasv = gamma;
   last_flag = CVDIAG_SUCCESS;
   return(0);
@@ -487,7 +481,7 @@ int CVDiagB(void *cvode_mem, int which)
   cv_mem = (CVodeMem) cvode_mem;
 
   /* Was ASA initialized? */
-  if (cv_mem->cv_adjMallocDone == FALSE) {
+  if (cv_mem->cv_adjMallocDone == SUNFALSE) {
     cvProcessError(cv_mem, CVDIAG_NO_ADJ, "CVSDIAG", "CVDiagB", MSGDG_NO_ADJ);
     return(CVDIAG_NO_ADJ);
   } 

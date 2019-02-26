@@ -1,20 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision$
+ * $Date$
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh, Radu Serban
  *                and Dan Shumaker @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the interface file for the main CVODE integrator.
  * -----------------------------------------------------------------
@@ -35,6 +35,8 @@
 
 #include <stdio.h>
 #include <sundials/sundials_nvector.h>
+#include <sundials/sundials_nonlinearsolver.h>
+#include <cvode/cvode_ls.h>
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
@@ -50,7 +52,7 @@ extern "C" {
  * -----------------------------------------------------------------
  * Enumerations for inputs to CVodeCreate and CVode.
  * -----------------------------------------------------------------
- * Symbolic constants for the lmm and iter parameters to CVodeCreate
+ * Symbolic constants for the lmm parameter to CVodeCreate
  * and the input parameter itask to CVode, are given below.
  *
  * lmm:   The user of the CVODE package specifies whether to use the
@@ -58,14 +60,6 @@ extern "C" {
  *        Formula) linear multistep method. The BDF method is
  *        recommended for stiff problems, and the CV_ADAMS method is
  *        recommended for nonstiff problems.
- *
- * iter:  At each internal time step, a nonlinear equation must
- *        be solved. The user can specify either CV_FUNCTIONAL
- *        iteration, which does not require linear algebra, or a
- *        CV_NEWTON iteration, which requires the solution of linear
- *        systems. In the CV_NEWTON case, the user also specifies a
- *        CVODE linear solver. CV_NEWTON is recommended in case of
- *        stiff problems.
  *
  * itask: The itask input parameter to CVode indicates the job
  *        of the solver for the next user step. The CV_NORMAL
@@ -81,10 +75,6 @@ extern "C" {
 /* lmm */
 #define CV_ADAMS 1
 #define CV_BDF   2
-
-/* iter */
-#define CV_FUNCTIONAL 1
-#define CV_NEWTON     2
 
 /* itask */
 #define CV_NORMAL         1
@@ -115,6 +105,9 @@ extern "C" {
 #define CV_REPTD_RHSFUNC_ERR    -10
 #define CV_UNREC_RHSFUNC_ERR    -11
 #define CV_RTFUNC_FAIL          -12
+#define CV_NLS_INIT_FAIL        -13
+#define CV_NLS_SETUP_FAIL       -14
+#define CV_CONSTR_FAIL          -15
 
 #define CV_MEM_FAIL             -20
 #define CV_MEM_NULL             -21
@@ -124,6 +117,7 @@ extern "C" {
 #define CV_BAD_T                -25
 #define CV_BAD_DKY              -26
 #define CV_TOO_CLOSE            -27
+#define CV_VECTOROP_ERR         -28
 
 /*
  * =================================================================
@@ -243,10 +237,6 @@ typedef void (*CVErrHandlerFn)(int error_code,
  *       The legal values are CV_ADAMS and CV_BDF (see previous
  *       description).
  *
- * iter  is the type of iteration used to solve the nonlinear
- *       system that arises during each internal time step.
- *       The legal values are CV_FUNCTIONAL and CV_NEWTON.
- *
  * If successful, CVodeCreate returns a pointer to initialized
  * problem memory. This pointer should be passed to CVodeInit.
  * If an initialization error occurs, CVodeCreate prints an error
@@ -254,7 +244,7 @@ typedef void (*CVErrHandlerFn)(int error_code,
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT void *CVodeCreate(int lmm, int iter);
+SUNDIALS_EXPORT void *CVodeCreate(int lmm);
 
 /*
  * -----------------------------------------------------------------
@@ -303,12 +293,12 @@ SUNDIALS_EXPORT void *CVodeCreate(int lmm, int iter);
  *                         | [10]
  *                         |
  * CVodeSetStabLimDet      | flag to turn on/off stability limit
- *                         | detection (TRUE = on, FALSE = off).
+ *                         | detection (SUNTRUE = on, SUNFALSE = off).
  *                         | When BDF is used and order is 3 or
  *                         | greater, CVsldet is called to detect
  *                         | stability limit.  If limit is detected,
  *                         | the order is reduced.
- *                         | [FALSE]
+ *                         | [SUNFALSE]
  *                         |
  * CVodeSetInitStep        | initial step size.
  *                         | [estimated by CVODE]
@@ -341,11 +331,22 @@ SUNDIALS_EXPORT void *CVodeCreate(int lmm, int iter);
  *                         | convergence test.
  *                         | [0.1]
  *                         |
- * -----------------------------------------------------------------
- *                         |
- * CVodeSetIterType        | Changes the current nonlinear iteration
- *                         | type.
- *                         | [set by CVodecreate]
+ * CVodeSetConstraints	   | an N_Vector defining inequality
+ *                         | constraints for each component of the
+ *                         | solution vector y. If a given element
+ *                         | of this vector has values +2 or -2,
+ *                         | then the corresponding component of y
+ *                         | will be constrained to be > 0.0 or
+ *                         | < 0.0, respectively, while if it is +1
+ *                         | or -1, the y component is constrained
+ *                         | to be >= 0.0 or <= 0.0, respectively.
+ *                         | If a component of constraints is 0.0,
+ *                         | then no constraint is imposed on the
+ *                         | corresponding component of y.
+ *                         | The presence of a non-NULL constraints
+ *                         | vector that is not 0.0 (ZERO) in all
+ *                         | components will cause constraint
+ *                         | checking to be performed.
  *                         |
  * -----------------------------------------------------------------
  *                            |
@@ -381,8 +382,7 @@ SUNDIALS_EXPORT int CVodeSetMaxErrTestFails(void *cvode_mem, int maxnef);
 SUNDIALS_EXPORT int CVodeSetMaxNonlinIters(void *cvode_mem, int maxcor);
 SUNDIALS_EXPORT int CVodeSetMaxConvFails(void *cvode_mem, int maxncf);
 SUNDIALS_EXPORT int CVodeSetNonlinConvCoef(void *cvode_mem, realtype nlscoef);
-
-SUNDIALS_EXPORT int CVodeSetIterType(void *cvode_mem, int iter);
+SUNDIALS_EXPORT int CVodeSetConstraints(void *cvode_mem, N_Vector constraints);
 
 SUNDIALS_EXPORT int CVodeSetRootDirection(void *cvode_mem, int *rootdir);
 SUNDIALS_EXPORT int CVodeSetNoInactiveRootWarn(void *cvode_mem);
@@ -592,6 +592,9 @@ SUNDIALS_EXPORT int CVodeRootInit(void *cvode_mem, int nrtfn, CVRootFn g);
  * CV_TOO_MUCH_ACC: The solver could not satisfy the accuracy
  *                  demanded by the user for some internal step.
  *
+ * CV_CONSTR_FAIL:  The inequality constraints were violated,
+ *                  and the solver was unable to recover.
+ *
  * CV_ERR_FAILURE:  Error test failures occurred too many times
  *                  (= MXNEF = 7) during one internal time step or
  *                  occurred with |h| = hmin.
@@ -786,6 +789,17 @@ SUNDIALS_EXPORT char *CVodeGetReturnFlagName(long int flag);
  */
 
 SUNDIALS_EXPORT void CVodeFree(void **cvode_mem);
+
+/*
+ * -----------------------------------------------------------------
+ * Function : CVodeSetNonlinearSolver
+ * -----------------------------------------------------------------
+ * CVodeNonlinearSolver attaches a nonlinear solver object to the
+ * CVODE memory.
+ * -----------------------------------------------------------------
+ */
+
+SUNDIALS_EXPORT int CVodeSetNonlinearSolver(void *cvode_mem, SUNNonlinearSolver NLS);
 
 #ifdef __cplusplus
 }

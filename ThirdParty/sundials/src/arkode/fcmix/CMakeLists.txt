@@ -1,9 +1,15 @@
 # ---------------------------------------------------------------
 # Programmer:  Daniel R. Reynolds @ SMU
 # ---------------------------------------------------------------
-# Copyright (c) 2013, Southern Methodist University.
+# SUNDIALS Copyright Start
+# Copyright (c) 2002-2019, Lawrence Livermore National Security
+# and Southern Methodist University.
 # All rights reserved.
-# For details, see the LICENSE file.
+#
+# See the top-level LICENSE and NOTICE files for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# SUNDIALS Copyright End
 # ---------------------------------------------------------------
 # CMakeLists.txt file for the FARKODE library
 
@@ -20,35 +26,69 @@ SET(farkode_SOURCES
   farkexpstab.c
   farkjtimes.c
   farkmtimes.c
+  farknullnonlinsol.c
+  farknulllinsol.c
+  farknullmatrix.c
   farkode.c
   farkpreco.c
   farkmasspreco.c
   farkroot.c
+  farksparse.c 
+  farksparsemass.c
   )
 
-IF(LAPACK_FOUND)
-  SET(farkode_BL_SOURCES farklapack.c farklapdense.c farklapdensemass.c farklapband.c farklapbandmass.c)
-ELSE(LAPACK_FOUND)
-  SET(farkode_BL_SOURCES "")
-ENDIF(LAPACK_FOUND)
+# Add variable shared_SOURCES with the common SUNDIALS sources which will
+# also be included in the ARKODE library
+SET(shared_SOURCES
+  ${sundials_SOURCE_DIR}/src/nvec_ser/fnvector_serial.c
+  )
 
-IF(KLU_FOUND OR SUPERLUMT_FOUND)
-  SET(farkode_SPARSE_SOURCES farksparse.c farksparsemass.c)
-ELSE(SPARSE_FOUND)
-  SET(farkode_SPARSE_SOURCES "")
-ENDIF(KLU_FOUND OR SUPERLUMT_FOUND)
+# Add variable sunmatrix_SOURCES with the common SUNMatrix sources which will
+# also be included in the ARKODE library
+SET(sunmatrix_SOURCES
+  ${sundials_SOURCE_DIR}/src/sunmat_band/fsunmatrix_band.c
+  ${sundials_SOURCE_DIR}/src/sunmat_dense/fsunmatrix_dense.c
+  ${sundials_SOURCE_DIR}/src/sunmat_sparse/fsunmatrix_sparse.c
+  )
+
+# Add variable sunlinsol_SOURCES with the common SUNLinearSolver sources which will
+# also be included in the ARKODE library
+SET(sunlinsol_SOURCES
+  ${sundials_SOURCE_DIR}/src/sunlinsol_band/fsunlinsol_band.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol_dense/fsunlinsol_dense.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol_spbcgs/fsunlinsol_spbcgs.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol_spfgmr/fsunlinsol_spfgmr.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol_spgmr/fsunlinsol_spgmr.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol_sptfqmr/fsunlinsol_sptfqmr.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol_pcg/fsunlinsol_pcg.c
+  )
 
 IF(KLU_FOUND)
-  SET(farkode_KLU_SOURCES farkklu.c)
-ELSE(KLU_FOUND)
-  SET(farkode_KLU_SOURCES "")
-ENDIF(KLU_FOUND)
+  LIST(APPEND sunlinsol_SOURCES
+    ${sundials_SOURCE_DIR}/src/sunlinsol_klu/fsunlinsol_klu.c
+    )
+ENDIF()
 
 IF(SUPERLUMT_FOUND)
-  SET(farkode_SUPERLUMT_SOURCES farksuperlumt.c)
-ELSE(SUPERLUMT_FOUND)
-  SET(farkode_SUPERLUMT_SOURCES "")
-ENDIF(SUPERLUMT_FOUND)
+  LIST(APPEND sunlinsol_SOURCES
+    ${sundials_SOURCE_DIR}/src/sunlinsol_superlumt/fsunlinsol_superlumt.c
+    )
+ENDIF()
+
+IF(LAPACK_FOUND)
+  LIST(APPEND sunlinsol_SOURCES
+    ${sundials_SOURCE_DIR}/src/sunlinsol_lapackband/fsunlinsol_lapackband.c
+    ${sundials_SOURCE_DIR}/src/sunlinsol_lapackdense/fsunlinsol_lapackdense.c
+    )
+ENDIF()
+
+# Add variable sunnonlinsol_SOURCES with the common SUNNonlinearSolver sources 
+# which will also be included in the ARKODE library
+SET(sunnonlinsol_SOURCES
+  ${sundials_SOURCE_DIR}/src/sunnonlinsol_newton/fsunnonlinsol_newton.c
+  ${sundials_SOURCE_DIR}/src/sunnonlinsol_fixedpoint/fsunnonlinsol_fixedpoint.c
+  )
+
 
 # Add source directories to include directories for access to
 # implementation only header files (both for farkode and arkode)
@@ -63,14 +103,15 @@ ADD_DEFINITIONS(-DBUILD_SUNDIALS_LIBRARY)
 # coming from inexistent user-provided functions)
 
 # Add the build target for the FARKODE library
-ADD_LIBRARY(sundials_farkode_static STATIC ${farkode_SOURCES} ${farkode_BL_SOURCES} ${farkode_SPARSE_SOURCES} ${farkode_KLU_SOURCES} ${farkode_SUPERLUMT_SOURCES})
+ADD_LIBRARY(sundials_farkode_static STATIC
+  ${farkode_SOURCES} ${shared_SOURCES} ${sunmatrix_SOURCES} ${sunlinsol_SOURCES})
 
 # Set the library name and make sure it is not deleted
 SET_TARGET_PROPERTIES(sundials_farkode_static
   PROPERTIES OUTPUT_NAME sundials_farkode CLEAN_DIRECT_OUTPUT 1)
 
 # Install the FARKODE library
-INSTALL(TARGETS sundials_farkode_static DESTINATION lib)
+INSTALL(TARGETS sundials_farkode_static DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 #
 MESSAGE(STATUS "Added ARKODE FCMIX module")

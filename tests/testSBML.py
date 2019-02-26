@@ -6,12 +6,12 @@ import unittest
 import os
 import copy
 import numpy as np
-from testModels import checkDerivatives
+from testModels import check_derivatives
 
 class TestAmiciSBMLModel(unittest.TestCase):
-    '''
+    """
     TestCase class for testing SBML import and simulation from AMICI python interface
-    '''
+    """
 
     expectedResultsFile = os.path.join(os.path.dirname(__file__),
                                        'cpputest', 'expectedResults.h5')
@@ -32,6 +32,9 @@ class TestAmiciSBMLModel(unittest.TestCase):
         self.test_steadystate_scaled()
 
     def test_presimulation(self):
+        def assert_fun(x):
+            return self.assertTrue(x)
+
         sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python',
                                 'examples', 'example_presimulation',
                                 'model_presimulation.xml')
@@ -73,12 +76,14 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
         solver.setRelativeTolerance(1e-12)
         solver.setAbsoluteTolerance(1e-12)
-        checkDerivatives(model, solver, edata, epsilon=1e-6)
+        check_derivatives(model, solver, edata, assert_fun, epsilon=1e-4)
 
     def test_steadystate_scaled(self):
-        '''
+        """
         Test SBML import and simulation from AMICI python interface
-        '''
+        """
+        def assert_fun(x):
+            return self.assertTrue(x)
 
         sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python',
                                 'examples', 'example_steadystate',
@@ -165,8 +170,8 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
         solver.setRelativeTolerance(1e-12)
         solver.setAbsoluteTolerance(1e-12)
-        checkDerivatives(model, solver, edata[0], atol=1e-3,
-                         rtol=1e-3, epsilon=1e-7)
+        check_derivatives(model, solver, edata[0], assert_fun, atol=1e-3,
+                         rtol=1e-3, epsilon=1e-4)
 
 
 if __name__ == '__main__':

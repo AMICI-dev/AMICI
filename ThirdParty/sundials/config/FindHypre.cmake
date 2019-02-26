@@ -1,24 +1,21 @@
 # ---------------------------------------------------------------
-# $Revision: 4713 $
-# $Date: 2016-03-28 07:20:43 -0700 (Mon, 28 Mar 2016) $
-# ---------------------------------------------------------------
 # Programmer:  Slaven Peles @ LLNL, Jean Sexton @ SMU,
 #              Eddy Banks @ LLNL
 # ---------------------------------------------------------------
-# LLNS Copyright Start
-# Copyright (c) 2014, Lawrence Livermore National Security
-# This work was performed under the auspices of the U.S. Department 
-# of Energy by Lawrence Livermore National Laboratory in part under 
-# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
-# Produced at the Lawrence Livermore National Laboratory.
+# SUNDIALS Copyright Start
+# Copyright (c) 2002-2019, Lawrence Livermore National Security
+# and Southern Methodist University.
 # All rights reserved.
-# For details, see the LICENSE file.
-# LLNS Copyright End
+#
+# See the top-level LICENSE and NOTICE files for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# SUNDIALS Copyright End
 # ---------------------------------------------------------------
 # - Find hypre
 
 #  HYPRE_INCLUDE_DIR = cached location of HYPRE.h
-#  HYPRE_LIBRARY    = cached list of HYPRE library to link in
+#  HYPRE_LIBRARY     = cached list of HYPRE library to link in
 
 ### Find include dir
 find_path(temp_HYPRE_INCLUDE_DIR hypre.h ${HYPRE_INCLUDE_DIR})

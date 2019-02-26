@@ -1,29 +1,25 @@
-/*
- * -----------------------------------------------------------------
- * $Revision: 4780 $
- * $Date: 2016-06-22 17:28:19 -0700 (Wed, 22 Jun 2016) $
- * -----------------------------------------------------------------
+/* -----------------------------------------------------------------
  * Programmer: Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This header file contains definitions and declarations for use by
  * generic direct linear solvers for Ax = b. It defines types for
  * dense and banded matrices and corresponding accessor macros.
- * -----------------------------------------------------------------
- */
+ * -----------------------------------------------------------------*/
 
 #ifndef _SUNDIALS_DIRECT_H
 #define _SUNDIALS_DIRECT_H
 
+#include <stdio.h>
 #include <sundials/sundials_types.h>
 
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
@@ -118,14 +114,14 @@ extern "C" {
 
 typedef struct _DlsMat {
   int type;
-  long int M;
-  long int N;
-  long int ldim;
-  long int mu;
-  long int ml;
-  long int s_mu;
+  sunindextype M;
+  sunindextype N;
+  sunindextype ldim;
+  sunindextype mu;
+  sunindextype ml;
+  sunindextype s_mu;
   realtype *data;
-  long int ldata;
+  sunindextype ldata;
   realtype **cols;
 } *DlsMat;
 
@@ -199,7 +195,7 @@ typedef struct _DlsMat {
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT DlsMat NewDenseMat(long int M, long int N);
+SUNDIALS_EXPORT DlsMat NewDenseMat(sunindextype M, sunindextype N);
 
 /*
  * -----------------------------------------------------------------
@@ -221,7 +217,7 @@ SUNDIALS_EXPORT DlsMat NewDenseMat(long int M, long int N);
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT DlsMat NewBandMat(long int N, long int mu, long int ml, long int smu);
+SUNDIALS_EXPORT DlsMat NewBandMat(sunindextype N, sunindextype mu, sunindextype ml, sunindextype smu);
 
 /*
  * -----------------------------------------------------------------
@@ -247,15 +243,15 @@ SUNDIALS_EXPORT int *NewIntArray(int N);
 
 /*
  * -----------------------------------------------------------------
- * Function: NewLintArray
+ * Function: NewIndexArray
  * -----------------------------------------------------------------
- * NewLintArray allocates memory an array of N long int's and returns
- * the pointer to the memory it allocates. If the request for
- * memory storage cannot be satisfied, it returns NULL.
+ * NewIndexArray allocates memory an array of N sunindextype's and
+ * returns the pointer to the memory it allocates. If the request
+ * for memory storage cannot be satisfied, it returns NULL.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT long int *NewLintArray(long int N);
+SUNDIALS_EXPORT sunindextype *NewIndexArray(sunindextype N);
 
 /*
  * -----------------------------------------------------------------
@@ -267,13 +263,13 @@ SUNDIALS_EXPORT long int *NewLintArray(long int N);
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT realtype *NewRealArray(long int N);
+SUNDIALS_EXPORT realtype *NewRealArray(sunindextype N);
 
 /*
  * -----------------------------------------------------------------
  * Function: DestroyArray
  * -----------------------------------------------------------------
- * DestroyArray frees memory allocated by NewIntArray, NewLintArray,
+ * DestroyArray frees memory allocated by NewIntArray, NewIndexArray,
  * or NewRealArray.
  * -----------------------------------------------------------------
  */
@@ -309,14 +305,14 @@ SUNDIALS_EXPORT void SetToZero(DlsMat A);
  * Functions: PrintMat
  * -----------------------------------------------------------------
  * This function prints the M-by-N (dense or band) matrix A to
- * standard output as it would normally appear on paper.
+ * outfile as it would normally appear on paper.
  * It is intended as debugging tools with small values of M and N.
  * The elements are printed using the %g/%lg/%Lg option. 
  * A blank line is printed before and after the matrix.
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT void PrintMat(DlsMat A);
+SUNDIALS_EXPORT void PrintMat(DlsMat A, FILE *outfile);
 
 
 /*
@@ -325,12 +321,12 @@ SUNDIALS_EXPORT void PrintMat(DlsMat A);
  * ==================================================================
  */
 
-SUNDIALS_EXPORT realtype **newDenseMat(long int m, long int n);
-SUNDIALS_EXPORT realtype **newBandMat(long int n, long int smu, long int ml);
+SUNDIALS_EXPORT realtype **newDenseMat(sunindextype m, sunindextype n);
+SUNDIALS_EXPORT realtype **newBandMat(sunindextype n, sunindextype smu, sunindextype ml);
 SUNDIALS_EXPORT void destroyMat(realtype **a);
 SUNDIALS_EXPORT int *newIntArray(int n);
-SUNDIALS_EXPORT long int *newLintArray(long int n);
-SUNDIALS_EXPORT realtype *newRealArray(long int m);
+SUNDIALS_EXPORT sunindextype *newIndexArray(sunindextype n);
+SUNDIALS_EXPORT realtype *newRealArray(sunindextype m);
 SUNDIALS_EXPORT void destroyArray(void *v);
 
 

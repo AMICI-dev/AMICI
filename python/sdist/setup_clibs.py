@@ -12,48 +12,65 @@ import re
 def getSundialsSources():
     """Get list of Sundials source files"""
     srcs = [
-        os.path.join('src', 'cvodes', 'cvodes_band.c'),
-        os.path.join('src', 'cvodes', 'cvodes_bandpre.c'),
-        os.path.join('src', 'cvodes', 'cvodes_bbdpre.c'),
-        os.path.join('src', 'cvodes', 'cvodes_direct.c'),
-        os.path.join('src', 'cvodes', 'cvodes_dense.c'),
-        os.path.join('src', 'cvodes', 'cvodes_sparse.c'),
-        os.path.join('src', 'cvodes', 'cvodes_diag.c'),
-        os.path.join('src', 'cvodes', 'cvodea.c'),
-        os.path.join('src', 'cvodes', 'cvodes.c'),
-        os.path.join('src', 'cvodes', 'cvodes_io.c'),
-        os.path.join('src', 'cvodes', 'cvodea_io.c'),
-        os.path.join('src', 'cvodes', 'cvodes_spils.c'),
-        os.path.join('src', 'cvodes', 'cvodes_spbcgs.c'),
-        os.path.join('src', 'cvodes', 'cvodes_spgmr.c'),
-        os.path.join('src', 'cvodes', 'cvodes_sptfqmr.c'),
-        os.path.join('src', 'cvodes', 'cvodes_klu.c'),
-        os.path.join('src', 'idas', 'idas.c'),
-        os.path.join('src', 'idas', 'idas_sptfqmr.c'),
-        os.path.join('src', 'idas', 'idas_spils.c'),
-        os.path.join('src', 'idas', 'idas_spgmr.c'),
-        os.path.join('src', 'idas', 'idas_spbcgs.c'),
-        os.path.join('src', 'idas', 'idas_sparse.c'),
-        os.path.join('src', 'idas', 'idas_klu.c'),
-        os.path.join('src', 'idas', 'idas_io.c'),
-        os.path.join('src', 'idas', 'idas_ic.c'),
+        os.path.join('src', 'sunmat_dense', 'sunmatrix_dense.c'),
+        os.path.join('src', 'sunlinsol_spgmr', 'sunlinsol_spgmr.c'),
+        os.path.join('src', 'sunlinsol_sptfqmr', 'sunlinsol_sptfqmr.c'),
+        os.path.join('src', 'sunlinsol_klu', 'sunlinsol_klu.c'),
         os.path.join('src', 'idas', 'idas_direct.c'),
-        os.path.join('src', 'idas', 'idas_dense.c'),
-        os.path.join('src', 'idas', 'idas_bbdpre.c'),
-        os.path.join('src', 'idas', 'idas_band.c'),
         os.path.join('src', 'idas', 'idaa.c'),
+        os.path.join('src', 'idas', 'idas_ic.c'),
+        os.path.join('src', 'idas', 'idas_nls_stg.c'),
+        os.path.join('src', 'idas', 'idas.c'),
+        os.path.join('src', 'idas', 'idas_bbdpre.c'),
+        os.path.join('src', 'idas', 'idas_spils.c'),
+        os.path.join('src', 'idas', 'idas_nls.c'),
+        os.path.join('src', 'idas', 'idas_ls.c'),
+        os.path.join('src', 'idas', 'idas_io.c'),
+        os.path.join('src', 'idas', 'idas_nls_sim.c'),
         os.path.join('src', 'idas', 'idaa_io.c'),
-        os.path.join('src', 'sundials', 'sundials_band.c'),
+        os.path.join('src', 'sundials', 'sundials_math.c'),
+        os.path.join('src', 'sundials', 'sundials_mpi.c'),
+        os.path.join('src', 'sundials', 'sundials_sptfqmr.c'),
+        os.path.join('src', 'sundials', 'sundials_matrix.c'),
+        os.path.join('src', 'sundials', 'sundials_pcg.c'),
+        os.path.join('src', 'sundials', 'sundials_direct.c'),
+        os.path.join('src', 'sundials', 'sundials_spgmr.c'),
+        os.path.join('src', 'sundials', 'sundials_spbcgs.c'),
+        os.path.join('src', 'sundials', 'sundials_nvector_senswrapper.c'),
         os.path.join('src', 'sundials', 'sundials_dense.c'),
+        os.path.join('src', 'sundials', 'sundials_nvector.c'),
+        os.path.join('src', 'sundials', 'sundials_version.c'),
+        os.path.join('src', 'sundials', 'sundials_spfgmr.c'),
         os.path.join('src', 'sundials', 'sundials_sparse.c'),
         os.path.join('src', 'sundials', 'sundials_iterative.c'),
-        os.path.join('src', 'sundials', 'sundials_nvector.c'),
-        os.path.join('src', 'sundials', 'sundials_direct.c'),
-        os.path.join('src', 'sundials', 'sundials_spbcgs.c'),
-        os.path.join('src', 'sundials', 'sundials_spgmr.c'),
-        os.path.join('src', 'sundials', 'sundials_sptfqmr.c'),
-        os.path.join('src', 'sundials', 'sundials_math.c'),
+        os.path.join('src', 'sundials', 'sundials_nonlinearsolver.c'),
+        os.path.join('src', 'sundials', 'sundials_linearsolver.c'),
+        os.path.join('src', 'sundials', 'sundials_band.c'),
+        os.path.join('src', 'sunlinsol_dense', 'sunlinsol_dense.c'),
+        os.path.join('src', 'sunmat_band', 'sunmatrix_band.c'),
+        os.path.join('src', 'sunlinsol_spfgmr', 'sunlinsol_spfgmr.c'),
+        os.path.join('src', 'sunnonlinsol', 'newton', 'sunnonlinsol_newton.c'),
+        os.path.join('src', 'sunnonlinsol', 'fixedpoint',
+                     'sunnonlinsol_fixedpoint.c'),
+        os.path.join('src', 'sunmat_sparse', 'sunmatrix_sparse.c'),
         os.path.join('src', 'nvec_ser', 'nvector_serial.c'),
+        os.path.join('src', 'sunlinsol_pcg', 'sunlinsol_pcg.c'),
+        os.path.join('src', 'sunlinsol_spbcgs', 'sunlinsol_spbcgs.c'),
+        os.path.join('src', 'sunlinsol_band', 'sunlinsol_band.c'),
+        os.path.join('src', 'cvodes', 'cvodes_spils.c'),
+        os.path.join('src', 'cvodes', 'cvodes_nls_stg.c'),
+        os.path.join('src', 'cvodes', 'cvodes_ls.c'),
+        os.path.join('src', 'cvodes', 'cvodes_nls_stg1.c'),
+        os.path.join('src', 'cvodes', 'cvodes_bbdpre.c'),
+        os.path.join('src', 'cvodes', 'cvodes.c'),
+        os.path.join('src', 'cvodes', 'cvodes_bandpre.c'),
+        os.path.join('src', 'cvodes', 'cvodea.c'),
+        os.path.join('src', 'cvodes', 'cvodes_nls_sim.c'),
+        os.path.join('src', 'cvodes', 'cvodea_io.c'),
+        os.path.join('src', 'cvodes', 'cvodes_nls.c'),
+        os.path.join('src', 'cvodes', 'cvodes_diag.c'),
+        os.path.join('src', 'cvodes', 'cvodes_io.c'),
+        os.path.join('src', 'cvodes', 'cvodes_direct.c')
     ]
     return [os.path.join('amici', 'ThirdParty', 'sundials', src) for src in srcs]
 
@@ -104,23 +121,23 @@ def getAmiciBaseSources(withHDF5=True):
     """Get list of source files for the amici base library
 
     Expects that we are inside $AMICI_ROOT/python/sdist
-    
+
     Arguments:
         withHDF5: compile with HDF5 support
     """
-    
+
     amiciBaseSources = glob.glob('amici{s}src{s}*.cpp'.format(s=os.sep))
     amiciBaseSources = [src for src in amiciBaseSources if not re.search(
         r'(matlab)|(\.template\.)', src)]
-    
+
     if not withHDF5:
         try:
             # sometimes this fails for unknwon reasons...
             amiciBaseSources.remove('amici{s}src{s}hdf5.cpp'.format(s=os.sep))
         except ValueError:
-            print('Warning: could not find %s in %s' % ('amici{s}src{s}hdf5.cpp'.format(s=os.sep), 
-                                                        amiciBaseSources)) 
-    
+            print('Warning: could not find %s in %s' % ('amici{s}src{s}hdf5.cpp'.format(s=os.sep),
+                                                        amiciBaseSources))
+
     return amiciBaseSources
 
 

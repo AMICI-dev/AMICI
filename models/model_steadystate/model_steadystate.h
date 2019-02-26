@@ -4,7 +4,7 @@
 #include <cmath>
 #include <memory>
 #include "amici/defines.h"
-#include <sundials/sundials_sparse.h> //SlsMat definition
+#include <sunmatrix/sunmatrix_sparse.h> //SUNMatrixContent_Sparse definition
 #include "amici/solver_cvodes.h"
 #include "amici/model_ode.h"
 
@@ -16,8 +16,8 @@ class Solver;
 extern void J_model_steadystate(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx);
 extern void JB_model_steadystate(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void JDiag_model_steadystate(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
-extern void JSparse_model_steadystate(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
-extern void JSparseB_model_steadystate(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
+extern void JSparse_model_steadystate(SUNMatrixContent_Sparse JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx);
+extern void JSparseB_model_steadystate(SUNMatrixContent_Sparse JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx);
 extern void Jv_model_steadystate(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx);
 extern void JvB_model_steadystate(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx);
 extern void Jy_model_steadystate(double *nllh, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my);
@@ -78,11 +78,11 @@ public:
         JDiag_model_steadystate(JDiag, t, x, p, k, h, w, dwdx);
     }
 
-    virtual void fJSparse(SlsMat JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
+    virtual void fJSparse(SUNMatrixContent_Sparse JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) override {
         JSparse_model_steadystate(JSparse, t, x, p, k, h, w, dwdx);
     }
 
-    virtual void fJSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) override {
+    virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) override {
         JSparseB_model_steadystate(JSparseB, t, x, p, k, h, xB, w, dwdx);
     }
 

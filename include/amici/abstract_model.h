@@ -5,6 +5,10 @@
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
+#include <sunmatrix/sunmatrix_band.h>
+#include <sunmatrix/sunmatrix_sparse.h>
+#include <sunmatrix/sunmatrix_dense.h>
+
 #include <memory>
 
 namespace amici {
@@ -74,7 +78,7 @@ class AbstractModel {
      * @param J dense matrix to which values of the jacobian will be written
      */
     virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                    AmiVector *xdot, DlsMat J) = 0;
+                    AmiVector *xdot, SUNMatrix J) = 0;
 
     /**
      * Sparse Jacobian function
@@ -86,7 +90,7 @@ class AbstractModel {
      * @param J sparse matrix to which values of the Jacobian will be written
      */
     virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                          AmiVector *xdot, SlsMat J) = 0;
+                          AmiVector *xdot, SUNMatrix J) = 0;
 
     /**
      * Diagonal Jacobian function

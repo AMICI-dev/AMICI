@@ -1,13 +1,15 @@
 # ---------------------------------------------------------------
-# $Revision: 4955 $
-# $Date: 2016-09-23 10:01:28 -0700 (Fri, 23 Sep 2016) $
-# ---------------------------------------------------------------
 # Programmer:  Steven Smith @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2013, The Regents of the University of California.
-# Produced at the Lawrence Livermore National Laboratory.
+# SUNDIALS Copyright Start
+# Copyright (c) 2002-2019, Lawrence Livermore National Security
+# and Southern Methodist University.
 # All rights reserved.
-# For details, see the LICENSE file.
+#
+# See the top-level LICENSE and NOTICE files for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# SUNDIALS Copyright End
 # ---------------------------------------------------------------
 # KLU tests for SUNDIALS CMake-based configuration.
 #    - loosely based on SundialsLapack.cmake

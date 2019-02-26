@@ -1,38 +1,29 @@
-#include "amici/solver_idas.h"
-
 #include "amici/misc.h"
-#include "amici/model.h"
-#include "amici/exception.h"
 #include "amici/model_dae.h"
+#include "amici/solver_idas.h"
+#include "amici/exception.h"
 
 #include <idas/idas.h>
 #include <idas/idas_impl.h>
-/*#include <idas/idas_lapack.h>*/
-#include <idas/idas_band.h>
-#include <idas/idas_bbdpre.h>
-#include <idas/idas_dense.h>
-/*#include <idas/idas_diag.h>*/
-#include <idas/idas_klu.h>
-#include <idas/idas_spbcgs.h>
-#include <idas/idas_spgmr.h>
-#include <idas/idas_sptfqmr.h>
+
+#include "amici/sundials_linsol_wrapper.h"
 
 #include <amd.h>
 #include <btf.h>
 #include <colamd.h>
 #include <klu.h>
 
-#include <cstring>
+#define ONE     RCONST(1.0)
 
 namespace amici {
 
 void IDASolver::init(AmiVector *x, AmiVector *dx, realtype t) {
-    int status = IDAInit(solverMemory.get(), fxdot, RCONST(t), x->getNVector(), dx->getNVector());
+    int status = IDAInit(solverMemory.get(), fxdot, t, x->getNVector(), dx->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAInit");
 }
 void IDASolver::binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) {
-    int status = IDAInitB(solverMemory.get(), which, fxBdot, RCONST(t), xB->getNVector(), dxB->getNVector());
+    int status = IDAInitB(solverMemory.get(), which, fxBdot, t, xB->getNVector(), dxB->getNVector());
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAInitB");
 }
@@ -53,44 +44,44 @@ void IDASolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
          throw IDAException(status,"IDASensInit");
 }
 void IDASolver::setDenseJacFn() {
-    int status = IDADlsSetDenseJacFn(solverMemory.get(), fJ);
+    int status = IDASetJacFn(solverMemory.get(), fJ);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDADlsSetDenseJacFn");
 }
 
 void IDASolver::setSparseJacFn() {
-    int status = IDASlsSetSparseJacFn(solverMemory.get(), fJSparse);
+    int status = IDASetJacFn(solverMemory.get(), fJSparse);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDASlsSetSparseJacFn");
 }
 void IDASolver::setBandJacFn() {
-    int status = IDADlsSetBandJacFn(solverMemory.get(), fJBand);
+    int status = IDASetJacFn(solverMemory.get(), fJBand);
     if(status != IDA_SUCCESS)
         throw IDAException(status,"IDADlsSetBandJacFn");
 }
 
 void IDASolver::setJacTimesVecFn() {
-    int status = IDASpilsSetJacTimesVecFn(solverMemory.get(), fJv);
+    int status = IDASetJacTimes(solverMemory.get(), nullptr, fJv);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpilsSetJacTimesVecFn");
 }
 void IDASolver::setDenseJacFnB(int which) {
-    int status = IDADlsSetDenseJacFnB(solverMemory.get(), which, fJB);
+    int status = IDASetJacFnB(solverMemory.get(), which, fJB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDADlsSetDenseJacFnB");
 }
 void IDASolver::setSparseJacFnB(int which) {
-    int status = IDASlsSetSparseJacFnB(solverMemory.get(), which, fJSparseB);
+    int status = IDASetJacFnB(solverMemory.get(), which, fJSparseB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASlsSetSparseJacFnB");
 }
 void IDASolver::setBandJacFnB(int which) {
-    int status = IDADlsSetBandJacFnB(solverMemory.get(), which, fJBandB);
+    int status = IDASetJacFnB(solverMemory.get(), which, fJBandB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDADlsSetBandJacFnB");
 }
 void IDASolver::setJacTimesVecFnB(int which) {
-    int status = IDASpilsSetJacTimesVecFnB(solverMemory.get(), which, fJvB);
+    int status = IDASetJacTimesB(solverMemory.get(), which, nullptr, fJvB);
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASpilsSetJacTimesVecFnB");
 }
@@ -171,15 +162,69 @@ void IDASolver::setSuppressAlg(bool flag) {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDASetSuppressAlg");
 }
+    
+void IDASolver::resetState(void *ami_mem, N_Vector yy0, N_Vector yp0) {
+    
+    auto ida_mem = static_cast<IDAMem>(ami_mem);
+    /* here we force the order in the next step to zero, and update the
+     phi arrays, this is largely copied from IDAReInit with
+     explanations from idas_impl.h
+     */
+    
+    /* Initialize the phi array */
+    
+    N_VScale(ONE, yy0, ida_mem->ida_phi[0]);
+    N_VScale(ONE, yp0, ida_mem->ida_phi[1]);
+    
+    /* Set step parameters */
+    
+    /* current order */
+    ida_mem->ida_kk      = 0;
+    
+    /* Initial setup not done yet */
+    
+    ida_mem->ida_SetupDone = SUNFALSE;
+}
+
+void IDASolver::reInitPostProcessF(realtype *t, AmiVector *yout,
+                                   AmiVector *ypout, realtype tnext) {
+    reInitPostProcess(solverMemory.get(), t, yout, ypout,  tnext);
+}
+
+void IDASolver::reInitPostProcessB(int which, realtype *t, AmiVector *yBout,
+                                   AmiVector *ypBout, realtype tnext) {
+    reInitPostProcess(IDAGetAdjIDABmem(solverMemory.get(), which),
+                      t, yBout, ypBout, tnext);
+}
+
+void IDASolver::reInitPostProcess(void *ami_mem, realtype *t,
+                                  AmiVector *yout, AmiVector *ypout,
+                                  realtype tout) {}
+
 void IDASolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
-    int status = IDAReInit(solverMemory.get(), t0, yy0->getNVector(), yp0->getNVector());
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAReInit");
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
+    /* set time */
+    ida_mem->ida_tn = t0;
+    resetState(ida_mem, yy0->getNVector(), yp0->getNVector());
 }
 void IDASolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
-    int status = IDASensReInit(solverMemory.get(), static_cast<int>(ism), yS0->getNVectorArray(), ypS0->getNVectorArray());
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
+    /* Initialize znS[0] in the history array */
+    
+    for (int is=0; is<ida_mem->ida_Ns; is++)
+        ida_mem->ida_cvals[is] = ONE;
+    
+    auto status = N_VScaleVectorArray(ida_mem->ida_Ns, ida_mem->ida_cvals,
+                                     yS0->getNVectorArray(),
+                                     ida_mem->ida_phiS[0]);
     if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASensReInit");
+        throw IDAException(IDA_VECTOROP_ERR,"IDASensReInit");
+    
+    status = N_VScaleVectorArray(ida_mem->ida_Ns, ida_mem->ida_cvals,
+                                     ypS0->getNVectorArray(),
+                                     ida_mem->ida_phiS[1]);
+    if(status != IDA_SUCCESS)
+        throw IDAException(IDA_VECTOROP_ERR,"IDASensReInit");
 }
 void IDASolver::setSensParams(realtype *p, realtype *pbar, int *plist) {
     int status = IDASetSensParams(solverMemory.get(), p, pbar, plist);
@@ -213,9 +258,9 @@ void IDASolver::allocateSolverB(int *which) {
 }
 void IDASolver::reInitB(int which, realtype tB0, AmiVector *yyB0,
                           AmiVector *ypB0) {
-    int status = IDAReInitB(solverMemory.get(), which, tB0, yyB0->getNVector(), ypB0->getNVector());
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAReInitB");
+    auto ida_memB = static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
+    ida_memB->ida_tn = tB0;
+    resetState(ida_memB, yyB0->getNVector(), ypB0->getNVector());
 }
 void IDASolver::setSStolerancesB(int which, realtype relTolB, realtype absTolB) {
     int status = IDASStolerancesB(solverMemory.get(), which, relTolB, absTolB);
@@ -223,9 +268,8 @@ void IDASolver::setSStolerancesB(int which, realtype relTolB, realtype absTolB) 
          throw IDAException(status,"IDASStolerancesB");
 }
 void IDASolver::quadReInitB(int which, AmiVector *yQB0) {
-    int status = IDAQuadReInitB(solverMemory.get(), which, yQB0->getNVector());
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAQuadReInitB");
+    auto ida_memB = static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
+    N_VScale(ONE, yQB0->getNVector(), ida_memB->ida_phiQ[0]);
 }
 void IDASolver::quadSStolerancesB(int which, realtype reltolQB,
                                     realtype abstolQB) {
@@ -273,86 +317,15 @@ void IDASolver::getQuadB(int which, realtype *tret, AmiVector *qB) const {
     if(status != IDA_SUCCESS)
          throw IDAException(status,"IDAGetQuadB");
 }
-void IDASolver::dense(int nx) {
-    int status = IDADense(solverMemory.get(), nx);
-    if(status != IDA_SUCCESS)
-        throw IDAException(status,"IDADense");
-}
 
-void IDASolver::denseB(int which, int nx) {
-    int status = IDADenseB(solverMemory.get(), which, nx);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDADenseB");
-}
-
-void IDASolver::band(int nx, int ubw, int lbw) {
-    int status = IDABand(solverMemory.get(), nx, ubw, lbw);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDABand");
-}
-void IDASolver::bandB(int which, int nx, int ubw, int lbw) {
-    int status = IDABandB(solverMemory.get(), which, nx, ubw, lbw);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDABandB");
-}
 void IDASolver::diag() {
     throw AmiException("Diag Solver was not implemented for DAEs");
 }
 
-void IDASolver::diagB(int which) {
+void IDASolver::diagB(int  /*which*/) {
     throw AmiException("Diag Solver was not implemented for DAEs");
 }
 
-void IDASolver::spgmr(int prectype, int maxl) {
-    int status = IDASpgmr(solverMemory.get(), maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASpgmr");
-}
-void IDASolver::spgmrB(int which, int prectype, int maxl) {
-    int status = IDASpgmrB(solverMemory.get(), which, maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASpgmrB");
-}
-void IDASolver::spbcg(int prectype, int maxl) {
-    int status = IDASpbcg(solverMemory.get(), maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASpbcg");
-}
-void IDASolver::spbcgB(int which, int prectype, int maxl) {
-    int status = IDASpbcgB(solverMemory.get(), which, maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASpbcgB");
-}
-void IDASolver::sptfqmr(int prectype, int maxl) {
-    int status = IDASptfqmr(solverMemory.get(), maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASptfqmr");
-}
-void IDASolver::sptfqmrB(int which, int prectype, int maxl) {
-    int status = IDASptfqmrB(solverMemory.get(), which, maxl);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDASptfqmrB");
-}
-void IDASolver::klu(int nx, int nnz, int sparsetype) {
-    int status = IDAKLU(solverMemory.get(), nx, nnz, sparsetype);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAKLU");
-}
-void IDASolver::kluSetOrdering(int ordering) {
-    int status = IDAKLUSetOrdering(solverMemory.get(), ordering);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAKLUSetOrdering");
-}
-void IDASolver::kluSetOrderingB(int which, int ordering) {
-    int status = IDAKLUSetOrderingB(solverMemory.get(), which, ordering);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAKLUSetOrderingB");
-}
-void IDASolver::kluB(int which, int nx, int nnz, int sparsetype) {
-    int status = IDAKLUB(solverMemory.get(), which, nx, nnz, sparsetype);
-    if(status != IDA_SUCCESS)
-         throw IDAException(status,"IDAKLUB");
-}
 void IDASolver::getNumSteps(void *ami_mem, long *numsteps) const {
     int status = IDAGetNumSteps(ami_mem, numsteps);
     if(status != IDA_SUCCESS)
@@ -446,145 +419,200 @@ bool IDASolver::getAdjMallocDone() const {
     return ida_mem->ida_adjMallocDone;
 }
 
-    /** Jacobian of xdot with respect to states x
-     * @param N number of state variables
-     * @param t timepoint
-     * @param cj scaling factor, inverse of the step size
-     * @param x Vector with the states
-     * @param dx Vector with the derivative states
-     * @param xdot Vector with the right hand side
-     * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_DAE
-     * @param tmp1 temporary storage vector
-     * @param tmp2 temporary storage vector
-     * @param tmp3 temporary storage vector
-     * @return status flag indicating successful execution
-     **/
-    int IDASolver::fJ(long int N, realtype t, realtype cj, N_Vector x, N_Vector dx,
-                  N_Vector xdot, DlsMat J, void *user_data, N_Vector tmp1,
-                  N_Vector tmp2, N_Vector tmp3) {
-        auto model = static_cast<Model_DAE*>(user_data);
-        model->fJ(t,cj, x, dx, xdot, J);
-        return model->checkFinite(N,J->data,"Jacobian");
+/** Jacobian of xdot with respect to states x
+ * @param N number of state variables
+ * @param t timepoint
+ * @param cj scaling factor, inverse of the step size
+ * @param x Vector with the states
+ * @param dx Vector with the derivative states
+ * @param xdot Vector with the right hand side
+ * @param J Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_DAE
+ * @param tmp1 temporary storage vector
+ * @param tmp2 temporary storage vector
+ * @param tmp3 temporary storage vector
+ * @return status flag indicating successful execution
+ **/
+int IDASolver::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                  N_Vector xdot, SUNMatrix J, void *user_data, N_Vector  /*tmp1*/,
+                  N_Vector  /*tmp2*/, N_Vector  /*tmp3*/) {
+    auto model = static_cast<Model_DAE *>(user_data);
+    model->fJ(t, cj, x, dx, xdot, J);
+    return model->checkFinite(SM_ROWS_D(J), SM_DATA_D(J), "Jacobian");
+}
+
+/** Jacobian of xBdot with respect to adjoint state xB
+ * @param NeqBdot number of adjoint state variables
+ * @param t timepoint
+ * @param cj scaling factor, inverse of the step size
+ * @param x Vector with the states
+ * @param dx Vector with the derivative states
+ * @param xB Vector with the adjoint states
+ * @param dxB Vector with the adjoint derivative states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_DAE
+ * @param tmp1B temporary storage vector
+ * @param tmp2B temporary storage vector
+ * @param tmp3B temporary storage vector
+ * @return status flag indicating successful execution
+ **/
+int IDASolver::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                   N_Vector xB, N_Vector dxB, N_Vector  /*xBdot*/, SUNMatrix JB,
+                   void *user_data, N_Vector  /*tmp1B*/, N_Vector  /*tmp2B*/,
+                   N_Vector  /*tmp3B*/) {
+    auto model = static_cast<Model_DAE *>(user_data);
+    model->fJB(t, cj, x, dx, xB, dxB, JB);
+    return model->checkFinite(SM_ROWS_D(JB), SM_DATA_D(JB), "Jacobian");
+}
+
+/** J in sparse form (for sparse solvers from the SuiteSparse Package)
+ * @param t timepoint
+ * @param cj scalar in Jacobian (inverse stepsize)
+ * @param x Vector with the states
+ * @param dx Vector with the derivative states
+ * @param xdot Vector with the right hand side
+ * @param J Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_DAE
+ * @param tmp1 temporary storage vector
+ * @param tmp2 temporary storage vector
+ * @param tmp3 temporary storage vector
+ * @return status flag indicating successful execution
+ */
+int IDASolver::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                        N_Vector  /*xdot*/, SUNMatrix J, void *user_data,
+                        N_Vector  /*tmp1*/, N_Vector  /*tmp2*/, N_Vector  /*tmp3*/) {
+    auto model = static_cast<Model_DAE *>(user_data);
+    model->fJSparse(t, cj, x, dx, J);
+    return model->checkFinite(SM_NNZ_S(J), SM_DATA_S(J), "Jacobian");
+}
+
+void IDASolver::setLinearSolver()
+{
+    int status = IDASetLinearSolver(solverMemory.get(), linearSolver->get(), linearSolver->getMatrix());
+    if(status != IDA_SUCCESS)
+        throw IDAException(status, "setLinearSolver");
+
+}
+
+void IDASolver::setLinearSolverB(int which)
+{
+    int status = IDASetLinearSolverB(solverMemoryB[which].get(), which, linearSolverB->get(), linearSolverB->getMatrix());
+    if(status != IDA_SUCCESS)
+        throw IDAException(status, "setLinearSolverB");
+
+}
+
+void IDASolver::setNonLinearSolver()
+{
+    int status = IDASetNonlinearSolver(solverMemory.get(), nonLinearSolver->get());
+    if(status != IDA_SUCCESS)
+        throw CvodeException(status,"CVodeSetNonlinearSolver");
+}
+
+void IDASolver::setNonLinearSolverSens()
+{
+    if(getSensitivityOrder() < SensitivityOrder::first)
+        return;
+    if(getSensitivityMethod() != SensitivityMethod::forward)
+        return;
+
+    int status = IDA_SUCCESS;
+
+    switch (ism) {
+    case InternalSensitivityMethod::staggered:
+        status = IDASetNonlinearSolverSensStg(solverMemory.get(), nonLinearSolverSens->get());
+        break;
+    case InternalSensitivityMethod::simultaneous:
+        status = IDASetNonlinearSolverSensSim(solverMemory.get(), nonLinearSolverSens->get());
+        break;
+    case InternalSensitivityMethod::staggered1:
+    default:
+        throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
     }
 
-    /** Jacobian of xBdot with respect to adjoint state xB
-     * @param NeqBdot number of adjoint state variables
-     * @param t timepoint
-     * @param cj scaling factor, inverse of the step size
-     * @param x Vector with the states
-     * @param dx Vector with the derivative states
-     * @param xB Vector with the adjoint states
-     * @param dxB Vector with the adjoint derivative states
-     * @param xBdot Vector with the adjoint right hand side
-     * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_DAE
-     * @param tmp1B temporary storage vector
-     * @param tmp2B temporary storage vector
-     * @param tmp3B temporary storage vector
-     * @return status flag indicating successful execution
-     **/
-    int IDASolver::fJB(long int NeqBdot, realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
-                   N_Vector xBdot, DlsMat JB, void *user_data, N_Vector tmp1B,
-                   N_Vector tmp2B, N_Vector tmp3B) {
-        auto model = static_cast<Model_DAE*>(user_data);
-        model->fJB(t, cj, x, dx, xB, dxB, JB);
-        return model->checkFinite(NeqBdot,JB->data,"Jacobian");
-    }
+    if(status != IDA_SUCCESS)
+        throw CvodeException(status,"CVodeSolver::setNonLinearSolverSens");
+}
 
-    /** J in sparse form (for sparse solvers from the SuiteSparse Package)
-     * @param t timepoint
-     * @param cj scalar in Jacobian (inverse stepsize)
-     * @param x Vector with the states
-     * @param dx Vector with the derivative states
-     * @param xdot Vector with the right hand side
-     * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_DAE
-     * @param tmp1 temporary storage vector
-     * @param tmp2 temporary storage vector
-     * @param tmp3 temporary storage vector
-     * @return status flag indicating successful execution
-     */
-    int IDASolver::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, SlsMat J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3) {
-        auto model = static_cast<Model_DAE*>(user_data);
-        model->fJSparse(t, cj, x, dx, J);
-        return model->checkFinite(J->NNZ,J->data,"Jacobian");
-    }
+void IDASolver::setNonLinearSolverB(int which)
+{
+    int status = IDASetNonlinearSolverB(solverMemory.get(), which, nonLinearSolverB->get());
+    if(status != IDA_SUCCESS)
+        throw CvodeException(status,"CVodeSetNonlinearSolverB");
+}
 
-    /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
-     * @param t timepoint
-     * @param cj scalar in Jacobian
-     * @param x Vector with the states
-     * @param dx Vector with the derivative states
-     * @param xB Vector with the adjoint states
-     * @param dxB Vector with the adjoint derivative states
-     * @param xBdot Vector with the adjoint right hand side
-     * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_DAE
-     * @param tmp1B temporary storage vector
-     * @param tmp2B temporary storage vector
-     * @param tmp3B temporary storage vector
-     * @return status flag indicating successful execution
-     */
-    int IDASolver::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
-                         SlsMat JB, void *user_data, N_Vector tmp1B,
-                         N_Vector tmp2B, N_Vector tmp3B) {
-        auto model = static_cast<Model_DAE*>(user_data);
-        model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
-        return model->checkFinite(JB->NNZ,JB->data,"Jacobian");
-    }
+/** JB in sparse form (for sparse solvers from the SuiteSparse Package)
+ * @param t timepoint
+ * @param cj scalar in Jacobian
+ * @param x Vector with the states
+ * @param dx Vector with the derivative states
+ * @param xB Vector with the adjoint states
+ * @param dxB Vector with the adjoint derivative states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_DAE
+ * @param tmp1B temporary storage vector
+ * @param tmp2B temporary storage vector
+ * @param tmp3B temporary storage vector
+ * @return status flag indicating successful execution
+ */
+int IDASolver::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                         N_Vector xB, N_Vector dxB, N_Vector  /*xBdot*/,
+                         SUNMatrix JB, void *user_data, N_Vector  /*tmp1B*/,
+                         N_Vector  /*tmp2B*/, N_Vector  /*tmp3B*/) {
+    auto model = static_cast<Model_DAE *>(user_data);
+    model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
+    return model->checkFinite(SM_NNZ_S(JB), SM_DATA_S(JB), "Jacobian");
+}
 
-    /** J in banded form (for banded solvers)
-     * @param N number of states
-     * @param mupper upper matrix bandwidth
-     * @param mlower lower matrix bandwidth
-     * @param t timepoint
-     * @param cj scalar in Jacobian (inverse stepsize)
-     * @param x Vector with the states
-     * @param dx Vector with the derivative states
-     * @param xdot Vector with the right hand side
-     * @param J Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_DAE
-     * @param tmp1 temporary storage vector
-     * @param tmp2 temporary storage vector
-     * @param tmp3 temporary storage vector
-     * @return status flag indicating successful execution
-     */
-    int IDASolver::fJBand(long int N, long int mupper, long int mlower, realtype t, realtype cj,
-                      N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J, void *user_data,
+/** J in banded form (for banded solvers)
+ * @param N number of states
+ * @param mupper upper matrix bandwidth
+ * @param mlower lower matrix bandwidth
+ * @param t timepoint
+ * @param cj scalar in Jacobian (inverse stepsize)
+ * @param x Vector with the states
+ * @param dx Vector with the derivative states
+ * @param xdot Vector with the right hand side
+ * @param J Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_DAE
+ * @param tmp1 temporary storage vector
+ * @param tmp2 temporary storage vector
+ * @param tmp3 temporary storage vector
+ * @return status flag indicating successful execution
+ */
+int IDASolver::fJBand(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                      N_Vector xdot, SUNMatrix J, void *user_data,
                       N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
-        return fJ(N,t,cj,x,dx,xdot,J,user_data,tmp1,tmp2,tmp3);
-    }
+    return fJ(t, cj, x, dx, xdot, J, user_data, tmp1, tmp2, tmp3);
+}
 
-    /** JB in banded form (for banded solvers)
-     * @param NeqBdot number of states
-     * @param mupper upper matrix bandwidth
-     * @param mlower lower matrix bandwidth
-     * @param t timepoint
-     * @param cj scalar in Jacobian (inverse stepsize)
-     * @param x Vector with the states
-     * @param dx Vector with the derivative states
-     * @param xB Vector with the adjoint states
-     * @param dxB Vector with the adjoint derivative states
-     * @param xBdot Vector with the adjoint right hand side
-     * @param JB Matrix to which the Jacobian will be written
-     * @param user_data object with user input @type Model_DAE
-     * @param tmp1B temporary storage vector
-     * @param tmp2B temporary storage vector
-     * @param tmp3B temporary storage vector
-     * @return status flag indicating successful execution
-     */
-    int IDASolver::fJBandB(long int NeqBdot, long int mupper, long int mlower,
-                       realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
-                       DlsMat JB, void *user_data, N_Vector tmp1B,
-                       N_Vector tmp2B, N_Vector tmp3B) {
-        return fJB(NeqBdot,t,cj,x,dx,xB,dxB,xBdot,JB,user_data,tmp1B,tmp2B,tmp3B);
-    }
-
-
-
+/** JB in banded form (for banded solvers)
+ * @param NeqBdot number of states
+ * @param mupper upper matrix bandwidth
+ * @param mlower lower matrix bandwidth
+ * @param t timepoint
+ * @param cj scalar in Jacobian (inverse stepsize)
+ * @param x Vector with the states
+ * @param dx Vector with the derivative states
+ * @param xB Vector with the adjoint states
+ * @param dxB Vector with the adjoint derivative states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_DAE
+ * @param tmp1B temporary storage vector
+ * @param tmp2B temporary storage vector
+ * @param tmp3B temporary storage vector
+ * @return status flag indicating successful execution
+ */
+int IDASolver::fJBandB(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                       N_Vector xB, N_Vector dxB, N_Vector xBdot, SUNMatrix JB,
+                       void *user_data, N_Vector tmp1B, N_Vector tmp2B,
+                       N_Vector tmp3B) {
+    return fJB(t, cj, x, dx, xB, dxB, xBdot, JB, user_data, tmp1B, tmp2B,
+               tmp3B);
+}
     /** Matrix vector product of J with a vector v (for iterative solvers)
      * @param t timepoint @type realtype
      * @param cj scaling factor, inverse of the step size
@@ -599,8 +627,8 @@ bool IDASolver::getAdjMallocDone() const {
      * @param tmp2 temporary storage vector
      * @return status flag indicating successful execution
      **/
-    int IDASolver::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector xdot, N_Vector v, N_Vector Jv,
-                   realtype cj, void *user_data, N_Vector tmp1, N_Vector tmp2) {
+    int IDASolver::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector  /*xdot*/, N_Vector v, N_Vector Jv,
+                   realtype cj, void *user_data, N_Vector  /*tmp1*/, N_Vector  /*tmp2*/) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fJv(t, x, dx, v, Jv, cj);
         return model->checkFinite(model->nx_solver,N_VGetArrayPointer(Jv),"Jacobian");
@@ -622,9 +650,9 @@ bool IDASolver::getAdjMallocDone() const {
      * @param tmpB2 temporary storage vector
      * @return status flag indicating successful execution
      **/
-    int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
+    int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector  /*xBdot*/,
                     N_Vector vB, N_Vector JvB, realtype cj, void *user_data,
-                    N_Vector tmpB1, N_Vector tmpB2) {
+                    N_Vector  /*tmpB1*/, N_Vector  /*tmpB2*/) {
         auto model = static_cast<Model_DAE*>(user_data);
         model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
         return model->checkFinite(model->nx_solver,N_VGetArrayPointer(JvB),"Jacobian");
@@ -719,9 +747,9 @@ bool IDASolver::getAdjMallocDone() const {
      * @param tmp3 temporary storage vector
      * @return status flag indicating successful execution
      */
-    int IDASolver::fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
+    int IDASolver::fsxdot(int  /*Ns*/, realtype t, N_Vector x, N_Vector dx, N_Vector  /*xdot*/,
                       N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
+                      N_Vector  /*tmp1*/, N_Vector  /*tmp2*/, N_Vector  /*tmp3*/) {
         auto model = static_cast<Model_DAE*>(user_data);
         for(int ip = 0; ip < model->nplist(); ip++){
             model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);

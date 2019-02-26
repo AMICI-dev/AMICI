@@ -68,9 +68,9 @@ functions = {
     },
     'JSparse': {
         'signature':
-            '(SlsMat JSparse, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *dwdx)',
+            '(SUNMatrixContent_Sparse JSparse, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k,  '
+            'const realtype *h, const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -78,9 +78,10 @@ functions = {
     },
     'JSparseB': {
         'signature':
-            '(SlsMat JSparseB, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *xB, const realtype *w, const realtype *dwdx)',
+            '(SUNMatrixContent_Sparse JSparseB, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const realtype *xB, const realtype *w, '
+            'const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -731,10 +732,12 @@ class ODEModel:
         sparsified variables  @type dict
 
         _colptrs: carries column pointers for sparsified variables. See
-        SlsMat definition in CVODES for more details about ColPtrs @type dict
+        SUNMatrixContent_Sparse definition in <sunmatrix/sunmatrix_sparse.h>
+        @type dict
 
-        _rowvals: carries row values for sparsified variables. See SlsMat
-        definition in CVODES for more details about RowVals @type dict
+        _rowvals: carries row values for sparsified variables. See
+        SUNMatrixContent_Sparse definition in <sunmatrix/sunmatrix_sparse.h>
+        @type dict
 
         _equation_prototype: defines the attribute from which an equation
         should be generated via list comprehension (see
@@ -2108,8 +2111,8 @@ class ODEExporter:
         # function signature
         signature = self.functions[function]['signature']
 
-        if 'SlsMat' in signature:
-            lines.append('#include <sundials/sundials_sparse.h>')
+        if 'SUNMatrixContent_Sparse' in signature:
+            lines.append('#include <sunmatrix/sunmatrix_sparse.h>')
 
         lines.append('')
 
@@ -2455,11 +2458,11 @@ class ODEExporter:
         Arguments:
             symbolList: symbolic terms @type int
 
-            RowVals: row indices of each nonzero entry (see CVODES SlsMat
-            documentation for details) @type list
+            RowVals: row indices of each nonzero entry (see
+            SUNMatrixContent_Sparse documentation for details) @type list
 
-            ColPtrs: indices of the first column entries (see CVODES SlsMat
-            documentation for details) @type list
+            ColPtrs: indices of the first column entries (see
+            SUNMatrixContent_Sparse documentation for details) @type list
 
             variable: name of the C++ array to assign to @type str
 
@@ -2693,7 +2696,7 @@ def remove_typedefs(signature):
         'realtype *',
         'const int ',
         'int ',
-        'SlsMat ',
+        'SUNMatrixContent_Sparse ',
     ]
 
     for typedef in typedefs:

@@ -228,7 +228,7 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
 }
 
 void Model::initialize(AmiVector *x, AmiVector *dx,
-                       AmiVectorArray *sx, AmiVectorArray *sdx,
+                       AmiVectorArray *sx, AmiVectorArray * /*sdx*/,
                        bool computeSensitivities) {
     initializeStates(x);
     if(computeSensitivities)
@@ -528,7 +528,7 @@ bool Model::getReinitializeFixedParameterInitialStates() const {
     return reinitializeFixedParameterInitialStates;
 }
 
-void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver, const realtype *tcl) {
+void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver, const realtype * /*tcl*/) {
     if (nx_solver != nx_rdata)
         throw AmiException(
                 "A model that has differing nx_solver and nx_rdata needs "
@@ -536,7 +536,7 @@ void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver, const realtype
     std::copy_n(x_solver, nx_solver, x_rdata);
 }
 
-void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver, const realtype *stcl, const int ip) {
+void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver, const realtype *stcl, const int  /*ip*/) {
     fx_rdata(sx_rdata, sx_solver, stcl);
 }
 
@@ -555,14 +555,14 @@ void Model::fsx_solver(realtype *sx_solver, const realtype *sx_rdata) {
     fx_solver(sx_solver, sx_rdata);
 }
 
-void Model::ftotal_cl(realtype *total_cl, const realtype *x_rdata) {
+void Model::ftotal_cl(realtype * /*total_cl*/, const realtype * /*x_rdata*/) {
     if (nx_solver != nx_rdata)
         throw AmiException(
                 "A model that has differing nx_solver and nx_rdata needs "
                 "to implement its own ftotal_cl");
 }
 
-void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata, const int ip) {
+void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata, const int  /*ip*/) {
     /* for the moment we do not need an implementation of fstotal_cl as
      * we can simply reuse ftotal_cl and replace states by their
      * sensitivities */
@@ -662,7 +662,7 @@ void Model::setTimepoints(const std::vector<realtype> &ts) {
         throw AmiException("Encountered non-monotonic timepoints, please order"
                            " timepoints such that they are monotonically"
                            " increasing!");
-    this->ts = std::move(ts);
+    this->ts = ts;
 }
 
 std::vector<bool> const& Model::getStateIsNonNegative() const {
@@ -714,11 +714,11 @@ std::vector<realtype> const& Model::getInitialStates() const {
 }
 
 void Model::setInitialStates(const std::vector<realtype> &x0) {
-    if (x0.size() != (unsigned)nx_rdata && x0.size() != 0)
+    if (x0.size() != (unsigned)nx_rdata && !x0.empty())
         throw AmiException("Dimension mismatch. Size of x0 does not match "
                            "number of model states.");
 
-    if (x0.size() == 0) {
+    if (x0.empty()) {
         x0data.clear();
         return;
     }
@@ -731,12 +731,12 @@ const std::vector<realtype> &Model::getInitialStateSensitivities() const {
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
-    if (sx0.size() != (unsigned)nx_rdata * nplist() && sx0.size() != 0)
+    if (sx0.size() != (unsigned)nx_rdata * nplist() && !sx0.empty())
         throw AmiException("Dimension mismatch. Size of sx0 does not match "
                            "number of model states * number of parameter "
                            "selected for sensitivities.");
 
-    if (sx0.size() == 0) {
+    if (sx0.empty()) {
         sx0data.clear();
         return;
     }
@@ -769,12 +769,12 @@ void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
 
 void Model::setUnscaledInitialStateSensitivities(
     const std::vector<realtype> &sx0) {
-    if (sx0.size() != (unsigned)nx_rdata * nplist() && sx0.size() != 0)
+    if (sx0.size() != (unsigned)nx_rdata * nplist() && !sx0.empty())
         throw AmiException("Dimension mismatch. Size of sx0 does not match "
                            "number of model states * number of parameter "
                            "selected for sensitivities.");
 
-    if (sx0.size() == 0) {
+    if (sx0.empty()) {
         sx0data.clear();
         return;
     }
@@ -1299,7 +1299,7 @@ void Model::fJz(const int nroots, ReturnData *rdata, const ExpData *edata) {
     }
 }
 
-void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData *edata) {
+void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData * /*edata*/) {
     std::vector<realtype> nllh(nJ,0.0);
     getrz(nroots,rdata);
     for(int iztrue = 0; iztrue < nztrue; iztrue++){
@@ -1405,7 +1405,7 @@ void Model::fdJrzdz(const int nroots, const ReturnData *rdata,
 }
 
 void Model::fdJrzdsigma(const int nroots,const ReturnData *rdata,
-                        const ExpData *edata) {
+                        const ExpData * /*edata*/) {
     std::fill(dJrzdsigma.begin(),dJrzdsigma.end(),0.0);
     for(int iztrue = 0; iztrue < nztrue; iztrue++){
         if(!isNaN(mz.at(iztrue))){
@@ -1631,9 +1631,9 @@ N_Vector Model::computeX_pos(N_Vector x) {
             x_pos_tmp.at(ix) = (stateIsNonNegative.at(ix) && NV_Ith_S(x, ix) < 0) ? 0 : NV_Ith_S(x, ix);
         }
         return x_pos_tmp.getNVector();
-    } else {
-        return x;
     }
+
+    return x;
 }
 
 } // namespace amici

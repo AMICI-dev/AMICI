@@ -11,7 +11,7 @@ amiwrap('model_adjoint','model_adjoint_syms',exdir)
 % SIMULATION
 
 % time vector
-t = [linspace(0,4,5)];
+t = linspace(0,4,5);
 p = [1.1,0.3,1];
 k = [];
 

@@ -2,7 +2,7 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
     %COMPILEAMICIDEPENDENCIES Compiles Sundials and SuiteSparse libraries required by AMICI
 
     sundials_path = fullfile(dependencyPath,'sundials');
-    sundials_ver = '2.7.0';
+    sundials_ver = '4.0.2';
     
     ssparse_path = fullfile(dependencyPath,'SuiteSparse');
     ssparse_ver = '4.5.3';
@@ -42,6 +42,9 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
             sourcesToCompile = [sourcesToCompile, ' ', fullfile(ssparse_path,sources_ssparse{j})];
         end
     end
+    
+    % sundials compatiable int type for suitesparse
+    COPT = [COPT ' -DDLONG'];
     
     % compile
     if(~strcmp(sourcesToCompile, ''))
@@ -108,49 +111,65 @@ end
 
 function sources_sundials = getSourcesSundials()
     sources_sundials = {
-        %    'src/cvodes/cvodes_lapack.c';
-        fullfile('src','cvodes','cvodes_band.c');
-        fullfile('src','cvodes','cvodes_bandpre.c');
-        fullfile('src','cvodes','cvodes_bbdpre.c');
-        fullfile('src','cvodes','cvodes_direct.c');
-        fullfile('src','cvodes','cvodes_dense.c');
-        fullfile('src','cvodes','cvodes_sparse.c');
-        fullfile('src','cvodes','cvodes_diag.c');
-        fullfile('src','cvodes','cvodea.c');
-        fullfile('src','cvodes','cvodes.c');
-        fullfile('src','cvodes','cvodes_io.c');
-        fullfile('src','cvodes','cvodea_io.c');
-        fullfile('src','cvodes','cvodes_spils.c');
-        fullfile('src','cvodes','cvodes_spbcgs.c');
-        fullfile('src','cvodes','cvodes_spgmr.c');
-        fullfile('src','cvodes','cvodes_sptfqmr.c');
-        fullfile('src','cvodes','cvodes_klu.c');
-        fullfile('src','idas','idas.c');
-        fullfile('src','idas','idas_sptfqmr.c');
-        fullfile('src','idas','idas_spils.c');
-        fullfile('src','idas','idas_spgmr.c');
-        fullfile('src','idas','idas_spbcgs.c');
-        fullfile('src','idas','idas_sparse.c');
-        fullfile('src','idas','idas_klu.c');
-        fullfile('src','idas','idas_io.c');
-        fullfile('src','idas','idas_ic.c');
-        fullfile('src','idas','idas_direct.c');
-        fullfile('src','idas','idas_dense.c');
-        fullfile('src','idas','idas_bbdpre.c');
-        fullfile('src','idas','idas_band.c');
-        fullfile('src','idas','idaa.c');
-        fullfile('src','idas','idaa_io.c');
-        fullfile('src','sundials','sundials_band.c');
-        fullfile('src','sundials','sundials_dense.c');
-        fullfile('src','sundials','sundials_sparse.c');
-        fullfile('src','sundials','sundials_iterative.c');
-        fullfile('src','sundials','sundials_nvector.c');
-        fullfile('src','sundials','sundials_direct.c');
-        fullfile('src','sundials','sundials_spbcgs.c');
-        fullfile('src','sundials','sundials_spgmr.c');
-        fullfile('src','sundials','sundials_sptfqmr.c');
-        fullfile('src','sundials','sundials_math.c');
-        fullfile('src','nvec_ser','nvector_serial.c');
+        fullfile('src', 'sunmat_dense', 'sunmatrix_dense.c');
+        fullfile('src', 'sunlinsol_spgmr', 'sunlinsol_spgmr.c');
+        fullfile('src', 'sunlinsol_sptfqmr', 'sunlinsol_sptfqmr.c');
+        fullfile('src', 'sunlinsol_klu', 'sunlinsol_klu.c');
+        fullfile('src', 'idas', 'idas_direct.c');
+        fullfile('src', 'idas', 'idaa.c');
+        fullfile('src', 'idas', 'idas_ic.c');
+        fullfile('src', 'idas', 'idas_nls_stg.c');
+        fullfile('src', 'idas', 'idas.c');
+        fullfile('src', 'idas', 'idas_bbdpre.c');
+        fullfile('src', 'idas', 'idas_spils.c');
+        fullfile('src', 'idas', 'idas_nls.c');
+        fullfile('src', 'idas', 'idas_ls.c');
+        fullfile('src', 'idas', 'idas_io.c');
+        fullfile('src', 'idas', 'idas_nls_sim.c');
+        fullfile('src', 'idas', 'idaa_io.c');
+        fullfile('src', 'sundials', 'sundials_math.c');
+        fullfile('src', 'sundials', 'sundials_mpi.c');
+        fullfile('src', 'sundials', 'sundials_sptfqmr.c');
+        fullfile('src', 'sundials', 'sundials_matrix.c');
+        fullfile('src', 'sundials', 'sundials_pcg.c');
+        fullfile('src', 'sundials', 'sundials_direct.c');
+        fullfile('src', 'sundials', 'sundials_spgmr.c');
+        fullfile('src', 'sundials', 'sundials_spbcgs.c');
+        fullfile('src', 'sundials', 'sundials_nvector_senswrapper.c');
+        fullfile('src', 'sundials', 'sundials_dense.c');
+        fullfile('src', 'sundials', 'sundials_nvector.c');
+        fullfile('src', 'sundials', 'sundials_version.c');
+        fullfile('src', 'sundials', 'sundials_spfgmr.c');
+        fullfile('src', 'sundials', 'sundials_sparse.c');
+        fullfile('src', 'sundials', 'sundials_iterative.c');
+        fullfile('src', 'sundials', 'sundials_nonlinearsolver.c');
+        fullfile('src', 'sundials', 'sundials_linearsolver.c');
+        fullfile('src', 'sundials', 'sundials_band.c');
+        fullfile('src', 'sunlinsol_dense', 'sunlinsol_dense.c');
+        fullfile('src', 'sunmat_band', 'sunmatrix_band.c');
+        fullfile('src', 'sunlinsol_spfgmr', 'sunlinsol_spfgmr.c');
+        fullfile('src', 'sunnonlinsol', 'newton', 'sunnonlinsol_newton.c');
+        fullfile('src', 'sunnonlinsol', 'fixedpoint', ...
+                     'sunnonlinsol_fixedpoint.c');
+        fullfile('src', 'sunmat_sparse', 'sunmatrix_sparse.c');
+        fullfile('src', 'nvec_ser', 'nvector_serial.c');
+        fullfile('src', 'sunlinsol_pcg', 'sunlinsol_pcg.c');
+        fullfile('src', 'sunlinsol_spbcgs', 'sunlinsol_spbcgs.c');
+        fullfile('src', 'sunlinsol_band', 'sunlinsol_band.c');
+        fullfile('src', 'cvodes', 'cvodes_spils.c');
+        fullfile('src', 'cvodes', 'cvodes_nls_stg.c');
+        fullfile('src', 'cvodes', 'cvodes_ls.c');
+        fullfile('src', 'cvodes', 'cvodes_nls_stg1.c');
+        fullfile('src', 'cvodes', 'cvodes_bbdpre.c');
+        fullfile('src', 'cvodes', 'cvodes.c');
+        fullfile('src', 'cvodes', 'cvodes_bandpre.c');
+        fullfile('src', 'cvodes', 'cvodea.c');
+        fullfile('src', 'cvodes', 'cvodes_nls_sim.c');
+        fullfile('src', 'cvodes', 'cvodea_io.c');
+        fullfile('src', 'cvodes', 'cvodes_nls.c');
+        fullfile('src', 'cvodes', 'cvodes_diag.c');
+        fullfile('src', 'cvodes', 'cvodes_io.c');
+        fullfile('src', 'cvodes', 'cvodes_direct.c');
         };
 end
 
@@ -243,49 +262,64 @@ end
 
 function objects_sundials = getObjectsSundials(o_suffix)
     objects_sundials = {
-        %    'cvodes_lapack.o';
-        'cvodes_band.o';
-        'cvodes_bandpre.o';
-        'cvodes_bbdpre.o';
-        'cvodes_direct.o';
-        'cvodes_dense.o';
-        'cvodes_sparse.o';
-        'cvodes_diag.o';
-        'cvodea.o';
-        'cvodes.o';
-        'cvodes_io.o';
-        'cvodea_io.o';
-        'cvodes_spils.o';
-        'cvodes_spbcgs.o';
-        'cvodes_spgmr.o';
-        'cvodes_sptfqmr.o';
-        'cvodes_klu.o';
-        'idas.o';
-        'idas_sptfqmr.o';
-        'idas_spils.o';
-        'idas_spgmr.o';
-        'idas_spbcgs.o';
-        'idas_sparse.o';
-        'idas_klu.o';
-        'idas_io.o';
-        'idas_ic.o';
+        'sunmatrix_dense.o';
+        'sunlinsol_spgmr.o';
+        'sunlinsol_sptfqmr.o';
+        'sunlinsol_klu.o';
         'idas_direct.o';
-        'idas_dense.o';
-        'idas_bbdpre.o';
-        'idas_band.o';
         'idaa.o';
+        'idas_ic.o';
+        'idas_nls_stg.o';
+        'idas.o';
+        'idas_bbdpre.o';
+        'idas_spils.o';
+        'idas_nls.o';
+        'idas_ls.o';
+        'idas_io.o';
+        'idas_nls_sim.o';
         'idaa_io.o';
-        'sundials_band.o';
+        'sundials_math.o';
+        'sundials_mpi.o';
+        'sundials_sptfqmr.o';
+        'sundials_matrix.o';
+        'sundials_pcg.o';
+        'sundials_direct.o';
+        'sundials_spgmr.o';
+        'sundials_spbcgs.o';
+        'sundials_nvector_senswrapper.o';
         'sundials_dense.o';
+        'sundials_nvector.o';
+        'sundials_version.o';
+        'sundials_spfgmr.o';
         'sundials_sparse.o';
         'sundials_iterative.o';
-        'sundials_nvector.o';
-        'sundials_direct.o';
-        'sundials_spbcgs.o';
-        'sundials_spgmr.o';
-        'sundials_sptfqmr.o';
-        'sundials_math.o';
+        'sundials_nonlinearsolver.o';
+        'sundials_linearsolver.o';
+        'sundials_band.o';
+        'sunlinsol_dense.o';
+        'sunmatrix_band.o';
+        'sunlinsol_spfgmr.o';
+        'sunnonlinsol_newton.o';
+        'sunnonlinsol_fixedpoint.o';
+        'sunmatrix_sparse.o';
         'nvector_serial.o';
+        'sunlinsol_pcg.o';
+        'sunlinsol_spbcgs.o';
+        'sunlinsol_band.o';
+        'cvodes_spils.o';
+        'cvodes_nls_stg.o';
+        'cvodes_ls.o';
+        'cvodes_nls_stg1.o';
+        'cvodes_bbdpre.o';
+        'cvodes.o';
+        'cvodes_bandpre.o';
+        'cvodea.o';
+        'cvodes_nls_sim.o';
+        'cvodea_io.o';
+        'cvodes_nls.o';
+        'cvodes_diag.o';
+        'cvodes_io.o';
+        'cvodes_direct.o';
         };
     
     if(~strcmp(o_suffix, '.o'))

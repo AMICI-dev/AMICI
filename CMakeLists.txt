@@ -41,11 +41,22 @@ set(SUITESPARSE_LIBRARIES
     )
 
 set(SUNDIALS_LIB_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib")
-set(SUNDIALS_LIBRARIES ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_STATIC_LIBRARY_SUFFIX}
+set(SUNDIALS_LIBRARIES 
+    ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolband${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolklu${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolpcg${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolspbcgs${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolspfgmr${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixband${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixdense${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunmatrixsparse${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunnonlinsolfixedpoint${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${SUNDIALS_LIB_DIR}/libsundials_sunnonlinsolnewton${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUNDIALS_LIB_DIR}/libsundials_cvodes${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUNDIALS_LIB_DIR}/libsundials_idas${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
-set(SUNDIALS_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/include")
+set(SUNDIALS_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/include")
 
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.
@@ -89,6 +100,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/steadystateproblem.cpp
     ${CMAKE_SOURCE_DIR}/src/backwardproblem.cpp
     ${CMAKE_SOURCE_DIR}/src/sundials_matrix_wrapper.cpp
+    ${CMAKE_SOURCE_DIR}/src/sundials_linsol_wrapper.cpp
     ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
     )
 

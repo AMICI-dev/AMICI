@@ -1,20 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4529 $
- * $Date: 2015-09-02 15:41:00 -0700 (Wed, 02 Sep 2015) $
+ * $Revision$
+ * $Date$
  * ----------------------------------------------------------------- 
  * Programmer(s): Alan Hindmarsh, Radu Serban and
  *                Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the optional inputs and     
  * outputs for the IDA solver.                                    
@@ -38,15 +38,6 @@
  * IDA optional input functions
  * =================================================================
  */
-
-/* 
- * Readability constants
- */
-
-#define lrw  (IDA_mem->ida_lrw)
-#define liw  (IDA_mem->ida_liw)
-#define lrw1 (IDA_mem->ida_lrw1)
-#define liw1 (IDA_mem->ida_liw1)
 
 int IDASetErrHandlerFn(void *ida_mem, IDAErrHandlerFn ehfun, void *eh_data)
 {
@@ -230,7 +221,7 @@ int IDASetStopTime(void *ida_mem, realtype tstop)
   }
 
   IDA_mem->ida_tstop = tstop;
-  IDA_mem->ida_tstopset = TRUE;
+  IDA_mem->ida_tstopset = SUNTRUE;
 
   return(IDA_SUCCESS);
 }
@@ -301,15 +292,21 @@ int IDASetMaxNonlinIters(void *ida_mem, int maxcor)
   IDAMem IDA_mem;
 
   if (ida_mem==NULL) {
-    IDAProcessError(NULL, IDA_MEM_NULL, "IDA", "IDASetMaxNonlinIters", MSG_NO_MEM);
-    return (IDA_MEM_NULL);
+    IDAProcessError(NULL, IDA_MEM_NULL, "IDA",
+                    "IDASetMaxNonlinIters", MSG_NO_MEM);
+    return(IDA_MEM_NULL);
   }
 
   IDA_mem = (IDAMem) ida_mem;
 
-  IDA_mem->ida_maxcor = maxcor;
+  /* check that the NLS is non-NULL */
+  if (IDA_mem->NLS == NULL) {
+    IDAProcessError(NULL, IDA_MEM_FAIL, "IDA",
+                    "IDASetMaxNonlinIters", MSG_MEM_FAIL);
+    return(IDA_MEM_FAIL);
+  }
 
-  return(IDA_SUCCESS);
+  return(SUNNonlinSolSetMaxIters(IDA_mem->NLS, maxcor));
 }
 
 /*-----------------------------------------------------------------*/
@@ -346,18 +343,18 @@ int IDASetId(void *ida_mem, N_Vector id)
   if (id == NULL) {
     if (IDA_mem->ida_idMallocDone) {
       N_VDestroy(IDA_mem->ida_id);
-      lrw -= lrw1;
-      liw -= liw1;
+      IDA_mem->ida_lrw -= IDA_mem->ida_lrw1;
+      IDA_mem->ida_liw -= IDA_mem->ida_liw1;
     }
-    IDA_mem->ida_idMallocDone = FALSE;    
+    IDA_mem->ida_idMallocDone = SUNFALSE;    
     return(IDA_SUCCESS);
   }
 
   if ( !(IDA_mem->ida_idMallocDone) ) {
     IDA_mem->ida_id = N_VClone(id);
-    lrw += lrw1;
-    liw += liw1;
-    IDA_mem->ida_idMallocDone = TRUE;
+    IDA_mem->ida_lrw += IDA_mem->ida_lrw1;
+    IDA_mem->ida_liw += IDA_mem->ida_liw1;
+    IDA_mem->ida_idMallocDone = SUNTRUE;
   }
 
   /* Load the id vector */
@@ -384,11 +381,11 @@ int IDASetConstraints(void *ida_mem, N_Vector constraints)
   if (constraints == NULL) {
     if (IDA_mem->ida_constraintsMallocDone) {
       N_VDestroy(IDA_mem->ida_constraints);
-      lrw -= lrw1;
-      liw -= liw1;
+      IDA_mem->ida_lrw -= IDA_mem->ida_lrw1;
+      IDA_mem->ida_liw -= IDA_mem->ida_liw1;
     }
-    IDA_mem->ida_constraintsMallocDone = FALSE;
-    IDA_mem->ida_constraintsSet = FALSE;
+    IDA_mem->ida_constraintsMallocDone = SUNFALSE;
+    IDA_mem->ida_constraintsSet = SUNFALSE;
     return(IDA_SUCCESS);
   }
 
@@ -413,16 +410,16 @@ int IDASetConstraints(void *ida_mem, N_Vector constraints)
 
   if ( !(IDA_mem->ida_constraintsMallocDone) ) {
     IDA_mem->ida_constraints = N_VClone(constraints);
-    lrw += lrw1;
-    liw += liw1;
-    IDA_mem->ida_constraintsMallocDone = TRUE;
+    IDA_mem->ida_lrw += IDA_mem->ida_lrw1;
+    IDA_mem->ida_liw += IDA_mem->ida_liw1;
+    IDA_mem->ida_constraintsMallocDone = SUNTRUE;
   }
 
   /* Load the constraints vector */
 
   N_VScale(ONE, constraints, IDA_mem->ida_constraints);
 
-  IDA_mem->ida_constraintsSet = TRUE;
+  IDA_mem->ida_constraintsSet = SUNTRUE;
 
   return(IDA_SUCCESS);
 }
@@ -643,35 +640,6 @@ int IDASetStepToleranceIC(void *ida_mem, realtype steptol)
 
 /* 
  * =================================================================
- * Readability constants
- * =================================================================
- */
-
-#define ewt         (IDA_mem->ida_ewt)
-#define kk          (IDA_mem->ida_kk)
-#define hh          (IDA_mem->ida_hh)
-#define h0u         (IDA_mem->ida_h0u)
-#define tn          (IDA_mem->ida_tn)
-#define nbacktr     (IDA_mem->ida_nbacktr)
-#define nst         (IDA_mem->ida_nst)
-#define nre         (IDA_mem->ida_nre)
-#define ncfn        (IDA_mem->ida_ncfn)
-#define netf        (IDA_mem->ida_netf)
-#define nni         (IDA_mem->ida_nni)
-#define nsetups     (IDA_mem->ida_nsetups)
-#define lrw         (IDA_mem->ida_lrw)
-#define liw         (IDA_mem->ida_liw)
-#define kused       (IDA_mem->ida_kused)          
-#define hused       (IDA_mem->ida_hused)         
-#define tolsf       (IDA_mem->ida_tolsf) 
-#define efun        (IDA_mem->ida_efun)
-#define edata       (IDA_mem->ida_edata)
-#define nge         (IDA_mem->ida_nge)
-#define iroots      (IDA_mem->ida_iroots)
-#define ee          (IDA_mem->ida_ee)
-
-/* 
- * =================================================================
  * IDA optional input functions
  * =================================================================
  */
@@ -687,7 +655,7 @@ int IDAGetNumSteps(void *ida_mem, long int *nsteps)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *nsteps = nst;
+  *nsteps = IDA_mem->ida_nst;
 
   return(IDA_SUCCESS);
 }
@@ -705,7 +673,7 @@ int IDAGetNumResEvals(void *ida_mem, long int *nrevals)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *nrevals = nre;
+  *nrevals = IDA_mem->ida_nre;
 
   return(IDA_SUCCESS);
 }
@@ -723,7 +691,7 @@ int IDAGetNumLinSolvSetups(void *ida_mem, long int *nlinsetups)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *nlinsetups = nsetups;
+  *nlinsetups = IDA_mem->ida_nsetups;
 
   return(IDA_SUCCESS);
 }
@@ -741,7 +709,7 @@ int IDAGetNumErrTestFails(void *ida_mem, long int *netfails)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *netfails = netf;
+  *netfails = IDA_mem->ida_netf;
 
   return(IDA_SUCCESS);
 }
@@ -759,7 +727,7 @@ int IDAGetNumBacktrackOps(void *ida_mem, long int *nbacktracks)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *nbacktracks = nbacktr;
+  *nbacktracks = IDA_mem->ida_nbacktr;
 
   return(IDA_SUCCESS);
 }
@@ -801,7 +769,7 @@ int IDAGetLastOrder(void *ida_mem, int *klast)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *klast = kused;
+  *klast = IDA_mem->ida_kused;
 
   return(IDA_SUCCESS);
 }
@@ -819,7 +787,7 @@ int IDAGetCurrentOrder(void *ida_mem, int *kcur)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *kcur = kk;
+  *kcur = IDA_mem->ida_kk;
 
   return(IDA_SUCCESS);
 }
@@ -837,7 +805,7 @@ int IDAGetActualInitStep(void *ida_mem, realtype *hinused)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *hinused = h0u;
+  *hinused = IDA_mem->ida_h0u;
 
   return(IDA_SUCCESS);
 }
@@ -855,7 +823,7 @@ int IDAGetLastStep(void *ida_mem, realtype *hlast)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *hlast = hused;
+  *hlast = IDA_mem->ida_hused;
 
   return(IDA_SUCCESS);
 }
@@ -873,7 +841,7 @@ int IDAGetCurrentStep(void *ida_mem, realtype *hcur)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *hcur = hh;
+  *hcur = IDA_mem->ida_hh;
 
   return(IDA_SUCCESS);
 }
@@ -891,7 +859,7 @@ int IDAGetCurrentTime(void *ida_mem, realtype *tcur)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *tcur = tn;
+  *tcur = IDA_mem->ida_tn;
 
   return(IDA_SUCCESS);
 }
@@ -909,7 +877,7 @@ int IDAGetTolScaleFactor(void *ida_mem, realtype *tolsfact)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *tolsfact = tolsf;
+  *tolsfact = IDA_mem->ida_tolsf;
 
   return(IDA_SUCCESS);
 }
@@ -927,7 +895,7 @@ int IDAGetErrWeights(void *ida_mem, N_Vector eweight)
 
   IDA_mem = (IDAMem) ida_mem; 
 
-  N_VScale(ONE, ewt, eweight);
+  N_VScale(ONE, IDA_mem->ida_ewt, eweight);
 
   return(IDA_SUCCESS);
 }
@@ -944,7 +912,7 @@ int IDAGetEstLocalErrors(void *ida_mem, N_Vector ele)
   }
   IDA_mem = (IDAMem) ida_mem;
 
-  N_VScale(ONE, ee, ele);
+  N_VScale(ONE, IDA_mem->ida_ee, ele);
 
   return(IDA_SUCCESS);
 }
@@ -962,8 +930,8 @@ int IDAGetWorkSpace(void *ida_mem, long int *lenrw, long int *leniw)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *leniw = liw;
-  *lenrw = lrw;
+  *leniw = IDA_mem->ida_liw;
+  *lenrw = IDA_mem->ida_lrw;
 
   return(IDA_SUCCESS);
 }
@@ -984,16 +952,16 @@ int IDAGetIntegratorStats(void *ida_mem, long int *nsteps, long int *nrevals,
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *nsteps     = nst;
-  *nrevals    = nre;
-  *nlinsetups = nsetups;
-  *netfails   = netf;
-  *klast      = kused;
-  *kcur       = kk;
-  *hinused    = h0u;
-  *hlast      = hused;
-  *hcur       = hh;  
-  *tcur       = tn;
+  *nsteps     = IDA_mem->ida_nst;
+  *nrevals    = IDA_mem->ida_nre;
+  *nlinsetups = IDA_mem->ida_nsetups;
+  *netfails   = IDA_mem->ida_netf;
+  *klast      = IDA_mem->ida_kused;
+  *kcur       = IDA_mem->ida_kk;
+  *hinused    = IDA_mem->ida_h0u;
+  *hlast      = IDA_mem->ida_hused;
+  *hcur       = IDA_mem->ida_hh;  
+  *tcur       = IDA_mem->ida_tn;
 
   return(IDA_SUCCESS);
 }
@@ -1011,7 +979,7 @@ int IDAGetNumGEvals(void *ida_mem, long int *ngevals)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *ngevals = nge;
+  *ngevals = IDA_mem->ida_nge;
 
   return(IDA_SUCCESS);
 }
@@ -1032,7 +1000,7 @@ int IDAGetRootInfo(void *ida_mem, int *rootsfound)
 
   nrt = IDA_mem->ida_nrtfn;
 
-  for (i=0; i<nrt; i++) rootsfound[i] = iroots[i];
+  for (i=0; i<nrt; i++) rootsfound[i] = IDA_mem->ida_iroots[i];
 
   return(IDA_SUCCESS);
 }
@@ -1042,15 +1010,33 @@ int IDAGetRootInfo(void *ida_mem, int *rootsfound)
 int IDAGetNumNonlinSolvIters(void *ida_mem, long int *nniters)
 {
   IDAMem IDA_mem;
+  long int nls_iters;
+  int retval;
 
   if (ida_mem==NULL) {
-    IDAProcessError(NULL, IDA_MEM_NULL, "IDA", "IDAGetNumNonlinSolvIters", MSG_NO_MEM);
+    IDAProcessError(NULL, IDA_MEM_NULL, "IDA",
+                    "IDAGetNumNonlinSolvIters", MSG_NO_MEM);
     return(IDA_MEM_NULL);
   }
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *nniters = nni;
+  /* get number of iterations for IC calc */
+  *nniters = IDA_mem->ida_nni;
+
+  /* check that the NLS is non-NULL */
+  if (IDA_mem->NLS == NULL) {
+    IDAProcessError(NULL, IDA_MEM_FAIL, "IDA",
+                    "IDAGetNumNonlinSolvIters", MSG_MEM_FAIL);
+    return(IDA_MEM_FAIL);
+  }
+
+  /* get number of iterations from the NLS */
+  retval = SUNNonlinSolGetNumIters(IDA_mem->NLS, &nls_iters);
+  if (retval != IDA_SUCCESS) return(retval);
+
+  /* update the number of nonlinear iterations */  
+  *nniters += nls_iters;
 
   return(IDA_SUCCESS);
 }
@@ -1068,7 +1054,7 @@ int IDAGetNumNonlinSolvConvFails(void *ida_mem, long int *nncfails)
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *nncfails = ncfn;
+  *nncfails = IDA_mem->ida_ncfn;
 
   return(IDA_SUCCESS);
 }
@@ -1078,16 +1064,33 @@ int IDAGetNumNonlinSolvConvFails(void *ida_mem, long int *nncfails)
 int IDAGetNonlinSolvStats(void *ida_mem, long int *nniters, long int *nncfails)
 {
   IDAMem IDA_mem;
+  long int nls_iters;
+  int retval;
 
   if (ida_mem==NULL) {
-    IDAProcessError(NULL, IDA_MEM_NULL, "IDA", "IDAGetNonlinSolvStats", MSG_NO_MEM);
+    IDAProcessError(NULL, IDA_MEM_NULL, "IDA",
+                    "IDAGetNonlinSolvStats", MSG_NO_MEM);
     return(IDA_MEM_NULL);
   }
 
   IDA_mem = (IDAMem) ida_mem;
 
-  *nniters  = nni;
-  *nncfails = ncfn;
+  *nniters  = IDA_mem->ida_nni;
+  *nncfails = IDA_mem->ida_ncfn;
+
+  /* check that the NLS is non-NULL */
+  if (IDA_mem->NLS == NULL) {
+    IDAProcessError(NULL, IDA_MEM_FAIL, "IDA",
+                    "IDAGetNonlinSolvStats", MSG_MEM_FAIL);
+    return(IDA_MEM_FAIL);
+  }
+
+  /* get number of iterations from the NLS */
+  retval = SUNNonlinSolGetNumIters(IDA_mem->NLS, &nls_iters);
+  if (retval != IDA_SUCCESS) return(retval);
+  
+  /* update the number of nonlinear iterations */
+  *nniters += nls_iters;
 
   return(IDA_SUCCESS);
 }
