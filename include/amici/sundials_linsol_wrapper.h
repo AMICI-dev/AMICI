@@ -172,7 +172,7 @@ class SUNLinSolDense : public SUNLinSolWrapper {
      * @brief Create dense solver
      * @param x A template for cloning vectors needed within the solver.
      */
-    SUNLinSolDense(AmiVector const &x);
+    explicit SUNLinSolDense(AmiVector const &x);
 
     SUNMatrix getMatrix() const override;
 
@@ -729,7 +729,7 @@ class SUNNonLinSolNewton : public SUNNonLinSolWrapper {
      * @brief Create Newton solver
      * @param x A template for cloning vectors needed within the solver.
      */
-    SUNNonLinSolNewton(N_Vector x);
+    explicit SUNNonLinSolNewton(N_Vector x);
 
     /**
      * @brief Create Newton solver for enabled sensitivity analysis
