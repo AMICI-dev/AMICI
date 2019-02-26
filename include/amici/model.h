@@ -1327,6 +1327,9 @@ class Model : public AbstractModel {
 
     /** Sparse Jacobian (dimension: nnz)*/
     SUNMatrixWrapper J;
+    
+    /** Sparse Jacobian (dimension: nx_solver x nx_solver)*/
+    SUNMatrixWrapper M;
 
     /** current observable (dimension: nytrue) */
     std::vector<realtype> my;
@@ -1378,9 +1381,7 @@ class Model : public AbstractModel {
     /** tempory storage of sparse dwdp data across functions (dimension: ndwdp)
      */
     std::vector<realtype> dwdp;
-    /** tempory storage of mass matrix data across functions (dimension:
-     * nx_solver) */
-    std::vector<realtype> M;
+    
     /** tempory storage of stau data across functions (dimension: nplist) */
     std::vector<realtype> stau;
 

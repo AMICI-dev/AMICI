@@ -67,11 +67,9 @@ namespace amici {
      **/
     void Model_DAE::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv,
                        realtype cj) {
-        auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
-        N_VConst(0.0,Jv);
-        fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                   cj,N_VGetArrayPointer(dx),N_VGetArrayPointer(v),w.data(),dwdx.data());
+        N_VConst(0.0, Jv);
+        fJSparse(t, cj, x, dx, J.get());
+        J.multiply(Jv, v);
     }
 
      void Model_DAE::froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root){
@@ -149,7 +147,7 @@ namespace amici {
      * @param x Vector with the states
      */
      void Model_DAE::fM(realtype t, const N_Vector x) {
-         std::fill(M.begin(),M.end(),0.0);
+         SUNMatZero(M.get());
          auto x_pos = computeX_pos(x);
          fM(M.data(),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data());
     }
@@ -210,14 +208,11 @@ namespace amici {
      *written
      * @param cj scalar in Jacobian (inverse stepsize)
      **/
-    void Model_DAE::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
-                        N_Vector vB, N_Vector JvB, realtype cj) {
-        auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
-        N_VConst(0.0,JvB);
-        fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                    cj,N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
-                    N_VGetArrayPointer(vB),w.data(),dwdx.data());
+    void Model_DAE::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
+                         N_Vector dxB, N_Vector vB, N_Vector JvB, realtype cj) {
+        N_VConst(0.0, JvB);
+        fJSparseB(t, cj, x, dx, xB, dxB, J.get());
+        J.multiply(JvB, vB);
     }
 
     /** Right hand side of differential equation for adjoint state xB
@@ -230,12 +225,11 @@ namespace amici {
      */
     void Model_DAE::fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                           N_Vector dxB, N_Vector xBdot) {
-        auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
-        N_VConst(0.0,xBdot);
-        fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                      N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),
-                      w.data(),dwdx.data());
+        N_VConst(0.0, xBdot);
+        fJSparseB(t, 1.0, x, dx, xB, dxB, J.get());
+        fM(t, x);
+        J.multiply(xBdot, xB);
+        M.multiply(xBdot, dxB);
     }
 
     /** Right hand side of integral equation for quadrature states qB
@@ -246,14 +240,17 @@ namespace amici {
      * @param dxB Vector with the adjoint derivative states
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
-    void Model_DAE::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot) {
-        auto x_pos = computeX_pos(x);
-        fdwdp(t,N_VGetArrayPointer(x_pos));
-        N_VConst(0.0,qBdot);
+    void Model_DAE::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
+                           N_Vector dxB, N_Vector qBdot) {
+        N_VConst(0.0, qBdot);
+        fdxdotdp(t, x, dx);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
-        for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-            fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),
-                   h.data(),N_VGetArrayPointer(xB),N_VGetArrayPointer(dx),N_VGetArrayPointer(dxB),w.data(),dwdp.data());
+        for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
+            for (int ix = 0; ix < nx_solver; ix++) {
+                qBdot_tmp[ip * nJ] -=
+                dxdotdp.at(ip * nx_solver + ix) * NV_Ith_S(xB, ix);
+            }
+        }
     }
 
     void Model_DAE::fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
@@ -273,16 +270,20 @@ namespace amici {
      * @param sxdot Vector with the sensitivity right hand side
      */
     void Model_DAE::fsxdot(realtype t, N_Vector x, N_Vector dx, int ip,
-                          N_Vector sx, N_Vector sdx, N_Vector sxdot) {
-        auto x_pos = computeX_pos(x);
-        if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
-            fM(t,x_pos);
-            fdxdotdp(t,x_pos,dx);
-            fJSparse(t, 0.0, x_pos, dx, J.get());// also calls dwdx & dx
+                           N_Vector sx, N_Vector sdx, N_Vector sxdot) {
+        if(ip == 0) {
+            // we only need to call this for the first parameter index will be
+            // the same for all remaining
+            fM(t, x);
+            fdxdotdp(t, x, dx);
+            fJSparse(t, 0.0, x, dx, J.get());
         }
-        N_VConst(0.0,sxdot);
-        fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-               plist_[ip],N_VGetArrayPointer(dx),N_VGetArrayPointer(sx),N_VGetArrayPointer(sdx),
-               w.data(),dwdx.data(),J.data(),M.data(),&dxdotdp.at(ip*nx_solver));
+        std::copy(&dxdotdp.at(ip * nx_solver),
+                  &dxdotdp.at(ip * nx_solver) + nx_solver,
+                  N_VGetArrayPointer(sxdot));
+        J.multiply(sxdot, sx);
+        N_VScale(-1.0, sdx, sdx);
+        M.multiply(sxdot, sdx);
+        N_VScale(-1.0, sdx, sdx);
     }
 }

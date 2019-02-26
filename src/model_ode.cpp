@@ -223,9 +223,8 @@ namespace amici {
      */
     void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB,
                            N_Vector qBdot) {
-        auto x_pos = computeX_pos(x);
         N_VConst(0.0, qBdot);
-        fdxdotdp(t, x_pos);
+        fdxdotdp(t, x);
         realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
         for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
             for (int ix = 0; ix < nx_solver; ix++) {
