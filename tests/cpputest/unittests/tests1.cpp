@@ -796,3 +796,54 @@ TEST(amivector, vectorArray)
             CHECK_EQUAL(flattened.at(i * av.getLength() + j), av.at(j));
     }
 }
+
+TEST_GROUP(sunmatrixwrapper)
+{
+    //inputs
+    std::vector<double> c{0.82, 0.91, 0.13};
+    std::vector<double> b{0.77, 0.80};
+    SUNMatrixWrapper A = SUNMatrixWrapper(3, 2);
+    // result
+    std::vector<double> d{1.3753, 1.5084, 1.1655};
+    
+    
+    void setup() {
+        SM_ELEMENT_D(A.get(), 0, 0) = 0.69;
+        SM_ELEMENT_D(A.get(), 1, 0) = 0.32;
+        SM_ELEMENT_D(A.get(), 2, 0) = 0.95;
+        SM_ELEMENT_D(A.get(), 0, 1) = 0.03;
+        SM_ELEMENT_D(A.get(), 1, 1) = 0.44;
+        SM_ELEMENT_D(A.get(), 2, 1) = 0.38;
+    }
+    
+    void teardown() {}
+};
+
+TEST(sunmatrixwrapper, sparse_multiply)
+{
+    auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
+    A_sparse.multiply(c, b);
+    checkEqualArray(c, d, TEST_ATOL, TEST_RTOL, "multiply");
+}
+
+TEST(sunmatrixwrapper, dense_multiply)
+{
+    A.multiply(c, b);
+    checkEqualArray(c, d, TEST_ATOL, TEST_RTOL, "multiply");
+}
+
+TEST(sunmatrixwrapper, multiply_throws)
+{
+    CHECK_THROWS(AmiException, A.multiply(b, c));
+    CHECK_THROWS(AmiException, A.multiply(c, c));
+    CHECK_THROWS(AmiException, A.multiply(b, b));
+    auto A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
+    CHECK_THROWS(AmiException, A_sparse.multiply(c, b));
+}
+
+TEST(sunmatrixwrapper, tranform_throws)
+{
+    CHECK_THROWS(AmiException, SUNMatrixWrapper(A, 0.0, 13));
+    auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
+    CHECK_THROWS(AmiException, SUNMatrixWrapper(A_sparse, 0.0, CSR_MAT));
+}

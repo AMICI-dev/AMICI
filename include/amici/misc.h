@@ -2,6 +2,7 @@
 #define AMICI_MISC_H
 
 #include "amici/defines.h"
+#include <sunmatrix/sunmatrix_sparse.h> // SUNMatrixContent_Sparse
 
 #include <algorithm>
 #include <vector>
