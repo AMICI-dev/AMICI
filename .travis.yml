@@ -102,6 +102,7 @@ script:
     - cd $BASE_DIR
     - if [[ "$CI_MODE" == "test" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
     - if [[ "$CI_MODE" == "deploy" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
