@@ -5,6 +5,8 @@
 #include <sunmatrix/sunmatrix_dense.h>  // SUNMatrix_Dense
 #include <sunmatrix/sunmatrix_sparse.h> // SUNMatrix_Sparse
 
+#include <nvector/nvector_serial.h>
+
 #include <vector>
 
 namespace amici {
@@ -131,11 +133,25 @@ class SUNMatrixWrapper {
     int sparsetype() const;
     
     /**
-     * @brief Perform matrix vector multiplication c += A*b
+     * @brief std::vector interface for multiply
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
     void multiply(std::vector<realtype> &c, const std::vector<realtype> &b);
+    
+    /**
+     * @brief N_Vector interface for multiply
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     */
+    void multiply(N_Vector c, const N_Vector b);
+    
+    /**
+     * @brief Perform matrix vector multiplication c += A*b
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     */
+    void multiply(realtype *c, const realtype *b);
 
   private:
     SUNMatrix matrix = nullptr;

@@ -837,6 +837,14 @@ TEST(sunmatrixwrapper, multiply_throws)
     CHECK_THROWS(AmiException, A.multiply(b, c));
     CHECK_THROWS(AmiException, A.multiply(c, c));
     CHECK_THROWS(AmiException, A.multiply(b, b));
+    auto b_amivector = AmiVector(b);
+    auto c_amivector = AmiVector(c);
+    CHECK_THROWS(AmiException, A.multiply(b_amivector.getNVector(),
+                                          c_amivector.getNVector()));
+    CHECK_THROWS(AmiException, A.multiply(c_amivector.getNVector(),
+                                          c_amivector.getNVector()));
+    CHECK_THROWS(AmiException, A.multiply(b_amivector.getNVector(),
+                                          b_amivector.getNVector()));
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
     CHECK_THROWS(AmiException, A_sparse.multiply(c, b));
 }
