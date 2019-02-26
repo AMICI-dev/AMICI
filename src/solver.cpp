@@ -275,11 +275,11 @@ void Solver::initializeLinearSolver(const Model *model, AmiVector *x) {
 
 void Solver::initializeNonLinearSolver(AmiVector *x)
 {
-    switch(iter) { // TODO: rename to nonLinearSolver? Rename function to fixedpoint?
+    switch(iter) {
     case NonlinearSolverIteration::newton:
         nonLinearSolver = std::make_unique<SUNNonLinSolNewton>(x->getNVector());
         break;
-    case NonlinearSolverIteration::functional:
+    case NonlinearSolverIteration::fixedpoint:
         nonLinearSolver = std::make_unique<SUNNonLinSolFixedPoint>(x->getNVector());
         break;
     default:
@@ -354,7 +354,7 @@ void Solver::initializeNonLinearSolverB(AmiVector *xB, const int which)
     case NonlinearSolverIteration::newton:
         nonLinearSolverB = std::make_unique<SUNNonLinSolNewton>(xB->getNVector());
         break;
-    case NonlinearSolverIteration::functional:
+    case NonlinearSolverIteration::fixedpoint:
         nonLinearSolverB = std::make_unique<SUNNonLinSolFixedPoint>(xB->getNVector());
         break;
     default:
@@ -811,7 +811,7 @@ void Solver::initalizeNonLinearSolverSens(AmiVector *x, Model *model)
             throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
         }
         break;
-    case NonlinearSolverIteration::functional:
+    case NonlinearSolverIteration::fixedpoint:
         switch(ism) {
         case InternalSensitivityMethod::staggered:
         case InternalSensitivityMethod::simultaneous:

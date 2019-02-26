@@ -15,8 +15,6 @@ stylesheets/*
 
 sed-ml/*
 
-scripts/env.sh
-
 models/*
 !models/model_dirac
 models/model_dirac/build/*
