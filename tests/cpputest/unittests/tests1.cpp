@@ -800,7 +800,7 @@ TEST(amivector, vectorArray)
 TEST_GROUP(sunmatrixwrapper)
 {
     //inputs
-    std::vector<double> c{0.82, 0.91, 0.13};
+    std::vector<double> a{0.82, 0.91, 0.13};
     std::vector<double> b{0.77, 0.80};
     SUNMatrixWrapper A = SUNMatrixWrapper(3, 2);
     // result
@@ -822,31 +822,34 @@ TEST_GROUP(sunmatrixwrapper)
 TEST(sunmatrixwrapper, sparse_multiply)
 {
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
+    auto c(a); //copy c
     A_sparse.multiply(c, b);
-    checkEqualArray(c, d, TEST_ATOL, TEST_RTOL, "multiply");
+    checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
     
     A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
+    c = a; //copy c
     A_sparse.multiply(c, b);
-    checkEqualArray(c, d, TEST_ATOL, TEST_RTOL, "multiply");
+    checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
 }
 
 TEST(sunmatrixwrapper, dense_multiply)
 {
+    auto c(a); //copy c
     A.multiply(c, b);
-    checkEqualArray(c, d, TEST_ATOL, TEST_RTOL, "multiply");
+    checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
 }
 
 TEST(sunmatrixwrapper, multiply_throws)
 {
-    CHECK_THROWS(AmiException, A.multiply(b, c));
-    CHECK_THROWS(AmiException, A.multiply(c, c));
+    CHECK_THROWS(AmiException, A.multiply(b, a));
+    CHECK_THROWS(AmiException, A.multiply(a, a));
     CHECK_THROWS(AmiException, A.multiply(b, b));
     auto b_amivector = AmiVector(b);
-    auto c_amivector = AmiVector(c);
+    auto a_amivector = AmiVector(a);
     CHECK_THROWS(AmiException, A.multiply(b_amivector.getNVector(),
-                                          c_amivector.getNVector()));
-    CHECK_THROWS(AmiException, A.multiply(c_amivector.getNVector(),
-                                          c_amivector.getNVector()));
+                                          a_amivector.getNVector()));
+    CHECK_THROWS(AmiException, A.multiply(a_amivector.getNVector(),
+                                          a_amivector.getNVector()));
     CHECK_THROWS(AmiException, A.multiply(b_amivector.getNVector(),
                                           b_amivector.getNVector()));
 }

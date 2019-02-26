@@ -195,9 +195,10 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) {
             for (sunindextype i = 0; i < columns(); ++i) {
                 for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1];
                      ++k) {
-                    c[indexvals()[k]] += data()[k] * b[k];
+                    c[indexvals()[k]] += data()[k] * b[i];
                 }
             }
+            break;
         case CSR_MAT:
             for (sunindextype i = 0; i < rows(); ++i) {
                 for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1];
