@@ -116,7 +116,6 @@ double sign(double x) {
  *
  * @param a value1
  * @param b value2
- * @param c bogus parameter to ensure correct parsing as a function
  * @return if(a > b) then a else b
  *
  */
@@ -151,7 +150,6 @@ double min(double a, double b, double c) {
  * @param id argument index for differentiation
  * @param a value1
  * @param b value2
- * @param c bogus parameter to ensure correct parsing as a function
  * @return id == 1:  if(a > b) then 1 else 0
  * @return id == 2:  if(a > b) then 0 else 1
  *
@@ -439,7 +437,7 @@ double Dspline_pos(int id, double t, int num, ...) {
  *
  * @return ddspline(t)
  */
-double DDspline(int  /*id1*/, int  /*id2*/, double  /*t*/, int  /*num*/, ...) { return 0.0; }
+double DDspline(int  id1, int  id2, double  t, int  num, ...) { return 0.0; }
 
 /**
  * @brief Derivation of an exponentiated spline function
