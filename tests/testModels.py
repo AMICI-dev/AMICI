@@ -78,12 +78,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     rdata = amici.runAmiciSimulation(self.model, self.solver,
                                                      edata)
 
-                    if model_name in 'model_events':
-                        epsilon = 1e-3
-                    elif model_name in 'model_nested_events':
-                        epsilon = 1e-4
-                    else:
-                        epsilon = 1e-4
+                    epsilon = 1e-3
 
                     if edata \
                             and self.solver.getSensitivityMethod() \
@@ -98,7 +93,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                         verify_simulation_results(
                             rdata, expected_results[subTest][case]['results'],
                             assert_fun,
-                            atol=1e-5, rtol=1e-4
+                            atol=1e-5, rtol=1e-3
                         )
                     else:
                         verify_simulation_results(
@@ -151,7 +146,7 @@ def check_close(result, expected, assert_fun, atol, rtol, field, ip=None):
 
 
 def check_finite_difference(x0, model, solver, edata, ip, fields,
-                            assert_fun, atol=1e-4, rtol=1e-4, epsilon=1e-4):
+                            assert_fun, atol=1e-4, rtol=1e-4, epsilon=1e-3):
     old_sensitivity_order = solver.getSensitivityOrder()
     old_parameters = model.getParameters()
     old_plist = model.getParameterList()
@@ -199,7 +194,7 @@ def check_finite_difference(x0, model, solver, edata, ip, fields,
 
 
 def check_derivatives(model, solver, edata, assert_fun,
-                      atol=1e-4, rtol=1e-4, epsilon=1e-4):
+                      atol=1e-4, rtol=1e-4, epsilon=1e-3):
     """Finite differences check for likelihood gradient
 
     Arguments:
