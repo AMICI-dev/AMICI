@@ -78,7 +78,10 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     rdata = amici.runAmiciSimulation(self.model, self.solver,
                                                      edata)
 
-                    epsilon = 1e-3
+                    if model_name == 'model_nested_events':
+                        rtol = 1e-2
+                    else:
+                        rtol = 1e-4
 
                     if edata \
                             and self.solver.getSensitivityMethod() \
@@ -87,7 +90,7 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                             and not model_name.startswith('model_neuron') \
                             and not case.endswith('byhandpreeq'):
                         check_derivatives(self.model, self.solver, edata,
-                                          assert_fun, epsilon=epsilon)
+                                          assert_fun, rtol=rtol)
 
                     if model_name == 'model_neuron_o2':
                         verify_simulation_results(
