@@ -78,25 +78,12 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     rdata = amici.runAmiciSimulation(self.model, self.solver,
                                                      edata)
 
-                    # todo: set higher tolerances in testcase options and
-                    # regenerate results
-                    if model_name == 'model_jakstat_adjoint_o2':
-                        self.solver.setRelativeTolerance(1e-10)
-                        self.solver.setAbsoluteTolerance(1e-10)
-
-                    if model_name in [
-                        'model_jakstat_adjoint', 'model_nested_events',
-                        'model_steadystate'
-                    ]:
-                        self.solver.setRelativeTolerance(1e-12)
-                        self.solver.setAbsoluteTolerance(1e-12)
-
                     if model_name in 'model_events':
                         epsilon = 1e-3
-                    elif model_name == 'model_nested_events':
+                    elif model_name in 'model_nested_events':
                         epsilon = 1e-4
                     else:
-                        epsilon = 1e-5
+                        epsilon = 1e-4
 
                     if edata \
                             and self.solver.getSensitivityMethod() \
@@ -108,17 +95,10 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                                           assert_fun, epsilon=epsilon)
 
                     if model_name == 'model_neuron_o2':
-                        self.solver.setRelativeTolerance(1e-14)
                         verify_simulation_results(
                             rdata, expected_results[subTest][case]['results'],
                             assert_fun,
                             atol=1e-5, rtol=1e-4
-                        )
-                    elif model_name == 'model_robertson':
-                        verify_simulation_results(
-                            rdata, expected_results[subTest][case]['results'],
-                            assert_fun,
-                            atol=1e-6, rtol=1e-2
                         )
                     else:
                         verify_simulation_results(
@@ -171,7 +151,7 @@ def check_close(result, expected, assert_fun, atol, rtol, field, ip=None):
 
 
 def check_finite_difference(x0, model, solver, edata, ip, fields,
-                            assert_fun, atol=1e-4, rtol=1e-4, epsilon=1e-5):
+                            assert_fun, atol=1e-4, rtol=1e-4, epsilon=1e-4):
     old_sensitivity_order = solver.getSensitivityOrder()
     old_parameters = model.getParameters()
     old_plist = model.getParameterList()
@@ -180,13 +160,12 @@ def check_finite_difference(x0, model, solver, edata, ip, fields,
     p = copy.deepcopy(x0)
     plist = [ip]
 
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
     model.setParameters(p)
     model.setParameterList(plist)
     rdata = amici.runAmiciSimulation(model, solver, edata)
 
     # finite difference
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    solver.setSensitivityOrder(amici.SensitivityOrder_none)
 
     # forward:
     p = copy.deepcopy(x0)
@@ -220,7 +199,7 @@ def check_finite_difference(x0, model, solver, edata, ip, fields,
 
 
 def check_derivatives(model, solver, edata, assert_fun,
-                      atol=1e-4, rtol=1e-4, epsilon=1e-5):
+                      atol=1e-4, rtol=1e-4, epsilon=1e-4):
     """Finite differences check for likelihood gradient
 
     Arguments:
