@@ -61,6 +61,7 @@ namespace amici {
      * written
      **/
     void Model_ODE::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x) {
+        N_VConst(0.0, Jv);
         fJSparse(t, x, J.get());
         J.multiply(Jv, v);
     }
@@ -196,8 +197,8 @@ namespace amici {
      **/
     void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
                          N_Vector xB) {
-        auto x_pos = computeX_pos(x);
-        fJSparseB(t, x_pos, xB, nullptr, J.get());
+        N_VConst(0.0, JvB);
+        fJSparseB(t, x, xB, nullptr, J.get());
         J.multiply(JvB, vB);
     }
 
@@ -209,11 +210,9 @@ namespace amici {
      */
     void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB,
                            N_Vector xBdot) {
-        auto x_pos = computeX_pos(x);
-        fdwdx(t, N_VGetArrayPointer(x_pos));
         N_VConst(0.0, xBdot);
-        fJSparse(t, x_pos, J.get());
-        J.multiply(xBdot, x_pos);
+        fJSparseB(t, x, xB, nullptr, J.get());
+        J.multiply(xBdot, xB);
     }
 
     /** implementation of fqBdot at the N_Vector level
@@ -250,21 +249,15 @@ namespace amici {
      */
     void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
                            N_Vector sxdot) {
-        auto x_pos = computeX_pos(x);
         if (ip == 0) {
             // we only need to call this for the first parameter index will be
             // the same for all remaining
-            fdxdotdp(t, x_pos);
-            fJSparse(t, x_pos, J.get());
+            fdxdotdp(t, x);
+            fJSparse(t, x, J.get());
         }
-        N_VConst(0.0, sxdot);
-        try {
-            fsxdot(N_VGetArrayPointer(sxdot), t, N_VGetArrayPointer(x_pos),
-                   unscaledParameters.data(), fixedParameters.data(), h.data(),
-                   plist_[ip], N_VGetArrayPointer(sx), w.data(), dwdx.data(),
-                   J.data(), &dxdotdp.at(ip * nx_solver));
-        } catch (AmiException &) {
-            J.multiply(N_VGetArrayPointer(sxdot), &dxdotdp.at(ip * nx_solver));
-        }
+        std::copy(&dxdotdp.at(ip * nx_solver),
+                  &dxdotdp.at(ip * nx_solver) + nx_solver,
+                  N_VGetArrayPointer(sxdot));
+        J.multiply(sxdot, sx);
     }
 }
