@@ -824,6 +824,10 @@ TEST(sunmatrixwrapper, sparse_multiply)
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
     A_sparse.multiply(c, b);
     checkEqualArray(c, d, TEST_ATOL, TEST_RTOL, "multiply");
+    
+    A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
+    A_sparse.multiply(c, b);
+    checkEqualArray(c, d, TEST_ATOL, TEST_RTOL, "multiply");
 }
 
 TEST(sunmatrixwrapper, dense_multiply)
@@ -845,11 +849,9 @@ TEST(sunmatrixwrapper, multiply_throws)
                                           c_amivector.getNVector()));
     CHECK_THROWS(AmiException, A.multiply(b_amivector.getNVector(),
                                           b_amivector.getNVector()));
-    auto A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
-    CHECK_THROWS(AmiException, A_sparse.multiply(c, b));
 }
 
-TEST(sunmatrixwrapper, tranform_throws)
+TEST(sunmatrixwrapper, transform_throws)
 {
     CHECK_THROWS(AmiException, SUNMatrixWrapper(A, 0.0, 13));
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);

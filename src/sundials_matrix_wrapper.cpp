@@ -189,10 +189,15 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) {
                     columns(), 1.0, data(), rows(), b, 1, 1.0, c, 1);
         break;
     case SUNMATRIX_SPARSE:
-        // http://www.mathcs.emory.edu/~cheung/Courses/561/Syllabus/3-C/sparse.html
+        
         switch (sparsetype()) {
         case CSC_MAT:
-            throw AmiException("Not Implemented");
+            for (sunindextype i = 0; i < columns(); ++i) {
+                for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1];
+                     ++k) {
+                    c[indexvals()[k]] += data()[k] * b[k];
+                }
+            }
         case CSR_MAT:
             for (sunindextype i = 0; i < rows(); ++i) {
                 for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1];
