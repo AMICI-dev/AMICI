@@ -78,7 +78,7 @@ class SteadystateProblem {
      * @param it current timepoint index, <0 indicates preequilibration
      */
     void writeNewtonOutput(ReturnData *rdata, const Model *model,
-                         NewtonStatus newton_status, double run_time, int it);
+                           NewtonStatus newton_status, double run_time, int it);
 
     /**
      * Forward simulation is launched, if Newton solver fails in first try
@@ -86,7 +86,6 @@ class SteadystateProblem {
      * @param solver pointer to the AMICI solver object
      * @param model pointer to the AMICI model object
      * @param rdata pointer to the return data object
-     * @param it current timepoint index, <0 indicates preequilibration
      */
     void getSteadystateSimulation(ReturnData *rdata, Solver *solver,
                                   Model *model);
@@ -96,10 +95,10 @@ class SteadystateProblem {
      *
      * @param solver pointer to the AMICI solver object
      * @param model pointer to the AMICI model object
-     * @param tstart time point for starting Newton simulation
      * @return solver instance
      */
-    std::unique_ptr<Solver> createSteadystateSimSolver(Solver *solver, Model *model);
+    std::unique_ptr<Solver> createSteadystateSimSolver(Solver *solver,
+                                                       Model *model);
 
     /** default constructor
      * @param t pointer to time variable
