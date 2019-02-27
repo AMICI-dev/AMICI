@@ -48,7 +48,7 @@ namespace amici {
                      h.data(), w.data(), dwdx.data());
             fJSparse_colptrs(SM_INDEXPTRS_S(J));
             fJSparse_rowvals(SM_INDEXVALS_S(J));
-        } catch (AmiException &) {
+        } catch (std::invalid_argument &) {
             fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
                      N_VGetArrayPointer(x_pos), unscaledParameters.data(),
                      fixedParameters.data(), h.data(), w.data(), dwdx.data());
@@ -152,7 +152,7 @@ namespace amici {
             for (int ip = 0; ip < nplist(); ip++) {
                 dxdotdw.multiply(dxdotdp.data(ip), &dwdp.at(nw * ip));
             }
-        } catch (AmiException &) {
+        } catch (std::invalid_argument &) {
             // matlab generated
             auto x_pos = computeX_pos(x);
             for (int ip = 0; ip < nplist(); ip++) {
@@ -206,7 +206,7 @@ namespace amici {
                       h.data(), N_VGetArrayPointer(xB), w.data(), dwdx.data());
             fJSparseB_colptrs(SM_INDEXPTRS_S(JB));
             fJSparseB_rowvals(SM_INDEXVALS_S(JB));
-        } catch (AmiException &) {
+        } catch (std::invalid_argument &) {
             fJSparseB(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(JB)), t,
                       N_VGetArrayPointer(x_pos), unscaledParameters.data(),
                       fixedParameters.data(), h.data(), N_VGetArrayPointer(xB),

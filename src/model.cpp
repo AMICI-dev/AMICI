@@ -1438,7 +1438,7 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
               fixedParameters.data(), h.data(), w.data(), total_cl.data(),
               stotal_cl.data());
-    } catch (AmiException &) {
+    } catch (std::invalid_argument &) {
         realtype *stcl = nullptr;
         for (int ip = 0; ip < nplist(); ++ip) {
             if (ncl() > 0)
