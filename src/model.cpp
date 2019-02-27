@@ -4,8 +4,6 @@
 #include "amici/exception.h"
 #include "amici/symbolic_functions.h"
 
-#include <sundials/sundials_matrix.h> // SUNMatZero
-
 #include <numeric>
 #include <algorithm>
 #include <cstring>
@@ -1458,7 +1456,7 @@ void Model::fdwdp(const realtype t, const realtype *x) {
 
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t,x);
-    SUNMatZero(dwdx.get());
+    dwdx.reset();
     fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
           h.data(), w.data(), total_cl.data());
     fdwdx_colptrs(dwdx.indexptrs());
