@@ -106,25 +106,25 @@ class SUNMatrixWrapper {
      * @brief Get the number of rows
      * @return number
      */
-    indextype rows() const;
+    sunindextype rows() const;
 
     /**
      * @brief Get the number of columns
      * @return number
      */
-    indextype columns() const;
+    sunindextype columns() const;
 
     /**
      * @brief Get the index values of a sparse matrix
      * @return index array
      */
-    indextype *indexvals() const;
+    sunindextype *indexvals() const;
 
     /**
      * @brief Get the index pointers of a sparse matrix
      * @return index array
      */
-    indextype *indexptrs() const;
+    sunindextype *indexptrs() const;
 
     /**
      * @brief Get the type of sparse matrix
