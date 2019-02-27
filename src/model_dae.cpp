@@ -256,25 +256,18 @@ namespace amici {
                            N_Vector dxB, N_Vector qBdot) {
         N_VConst(0.0, qBdot);
         fdxdotdp(t, x, dx);
-        switch (o2mode) {
-        case SecondOrderMode::none:
-            N_VDotProdMulti(1, xB, dxdotdp.getNVectorArray(), NV_DATA_S(qBdot));
-            break;
-        case SecondOrderMode::directional:
-        case SecondOrderMode::full:
-            for (int ip = 0; ip < nplist(); ip++) {
+        for (int ip = 0; ip < nplist(); ip++) {
+            for (int ix = 0; ix < nxtrue_solver; ix++)
+                NV_Ith_S(qBdot, ip * nJ) -=
+                NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
+            // second order part
+            for (int iJ = 1; iJ < nJ; iJ++)
                 for (int ix = 0; ix < nxtrue_solver; ix++)
-                    NV_Ith_S(qBdot, ip * nJ) -=
-                    NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
-                for (int iJ = 1; iJ < nJ; iJ++)
-                    for (int ix = 0; ix < nxtrue_solver; ix++)
-                        NV_Ith_S(qBdot, ip * nJ + iJ) +=
-                        NV_Ith_S(xB, ix) *
-                        dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
-                        NV_Ith_S(xB, ix + iJ * nxtrue_solver) *
-                        dxdotdp.at(ix, ip);
-            }
-            break;
+                    NV_Ith_S(qBdot, ip * nJ + iJ) -=
+                    NV_Ith_S(xB, ix) *
+                    dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
+                    NV_Ith_S(xB, ix + iJ * nxtrue_solver) *
+                    dxdotdp.at(ix, ip);
         }
     }
 
