@@ -245,7 +245,7 @@ namespace amici {
                 for (int ix = 0; ix < nxtrue_solver; ix++)
                     NV_Ith_S(qBdot, ip * nJ + iJ) -=
                         NV_Ith_S(xB, ix) *
-                            dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
+                            dxdotdp.at(ix + iJ * nxtrue_solver, ip) -
                         NV_Ith_S(xB, ix + iJ * nxtrue_solver) *
                             dxdotdp.at(ix, ip);
         }
