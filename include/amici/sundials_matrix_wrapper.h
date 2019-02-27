@@ -5,6 +5,10 @@
 #include <sunmatrix/sunmatrix_dense.h>  // SUNMatrix_Dense
 #include <sunmatrix/sunmatrix_sparse.h> // SUNMatrix_Sparse
 
+#include <nvector/nvector_serial.h>
+
+#include <vector>
+
 namespace amici {
 
 /**
@@ -40,6 +44,17 @@ class SUNMatrixWrapper {
      * @param lbw Lower bandwidth
      */
     SUNMatrixWrapper(int M, int ubw, int lbw);
+
+    /**
+     * @brief Create sparse matrix from dense or banded matrix. See
+     * SUNSparseFromDenseMatrix and SUNSparseFromBandMatrix in
+     * sunmatrix_sparse.h
+     * @param A Wrapper for dense matrix
+     * @param droptol tolerance for dropping entries
+     * @param sparsetype Sparse type
+     */
+    SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
+                     int sparsetype);
 
     /**
      * @brief Wrap existing SUNMatrix
@@ -86,6 +101,57 @@ class SUNMatrixWrapper {
      * @return SlsMat
      */
     SUNMatrix get() const;
+
+    /**
+     * @brief Get the number of rows
+     * @return number
+     */
+    sunindextype rows() const;
+
+    /**
+     * @brief Get the number of columns
+     * @return number
+     */
+    sunindextype columns() const;
+
+    /**
+     * @brief Get the index values of a sparse matrix
+     * @return index array
+     */
+    sunindextype *indexvals() const;
+
+    /**
+     * @brief Get the index pointers of a sparse matrix
+     * @return index array
+     */
+    sunindextype *indexptrs() const;
+
+    /**
+     * @brief Get the type of sparse matrix
+     * @return index array
+     */
+    int sparsetype() const;
+
+    /**
+     * @brief std::vector interface for multiply
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     */
+    void multiply(std::vector<realtype> &c, const std::vector<realtype> &b) const;
+
+    /**
+     * @brief N_Vector interface for multiply
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     */
+    void multiply(N_Vector c, const N_Vector b) const;
+
+    /**
+     * @brief Perform matrix vector multiplication c += A*b
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     */
+    void multiply(realtype *c, const realtype *b) const;
 
   private:
     SUNMatrix matrix = nullptr;

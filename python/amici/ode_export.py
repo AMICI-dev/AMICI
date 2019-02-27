@@ -87,23 +87,6 @@ functions = {
         'assume_pow_positivity':
             True,
     },
-    'Jv': {
-        'signature':
-            '(realtype *Jv, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *v, const realtype *w, const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
-    },
-    'JvB': {
-        'signature':
-            '(realtype *JvB, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *xB, const realtype *vB, const realtype *w, '
-            'const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
-    },
     'Jy': {
         'signature':
             '(realtype *Jy, const int iy, const realtype *p, '
@@ -167,29 +150,10 @@ functions = {
             '(realtype *dsigmaydp, const realtype t, const realtype *p, '
             'const realtype *k, const int ip)',
     },
-    'qBdot': {
-        'signature':
-            '(realtype *qBdot, const int ip, const realtype t, '
-            'const realtype *x, const realtype *p, const realtype *k, '
-            'const realtype *h, const realtype *xB, '
-            'const realtype *w, const realtype *dwdp)',
-        'assume_pow_positivity':
-            True,
-    },
     'sigmay': {
         'signature':
             '(realtype *sigmay, const realtype t, const realtype *p, '
             'const realtype *k)',
-    },
-    'sxdot': {
-        'signature':
-            '(realtype *sxdot, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ip, const realtype *sx, const realtype *w, '
-            'const realtype *dwdx, const realtype *JSparse, '
-            'const realtype *dxdotdp)',
-        'assume_pow_positivity':
-            True,
     },
     'w': {
         'signature':
@@ -219,15 +183,6 @@ functions = {
             '(realtype *sx0_fixedParameters, const realtype t, '
             'const realtype *x0, const realtype *p, const realtype *k, '
             'const int ip)',
-    },
-    'xBdot': {
-        'signature':
-            '(realtype *xBdot, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *xB, const realtype *w, '
-            'const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
     },
     'xdot': {
         'signature':

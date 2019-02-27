@@ -36,15 +36,6 @@ extern void JSparseB_TPL_MODELNAME(SUNMatrixContent_Sparse JSparseB,
                                    const realtype *p, const realtype *k,
                                    const realtype *h, const realtype *xB,
                                    const realtype *w, const realtype *dwdx);
-extern void Jv_TPL_MODELNAME(realtype *Jv, const realtype t, const realtype *x,
-                             const realtype *p, const realtype *k,
-                             const realtype *h, const realtype *v,
-                             const realtype *w, const realtype *dwdx);
-extern void JvB_TPL_MODELNAME(realtype *JvB, const realtype t,
-                              const realtype *x, const realtype *p,
-                              const realtype *k, const realtype *h,
-                              const realtype *xB, const realtype *vB,
-                              const realtype *w, const realtype *dwdx);
 extern void Jy_TPL_MODELNAME(double *nllh, const int iy, const realtype *p,
                              const realtype *k, const double *y,
                              const double *sigmay, const double *my);
@@ -74,19 +65,8 @@ extern void dydp_TPL_MODELNAME(double *dydp, const realtype t,
 extern void dsigmaydp_TPL_MODELNAME(double *dsigmaydp, const realtype t,
                                     const realtype *p, const realtype *k,
                                     const int ip);
-extern void qBdot_TPL_MODELNAME(realtype *qBdot, const int ip, const realtype t,
-                                const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *h,
-                                const realtype *xB, const realtype *w,
-                                const realtype *dwdp);
 extern void sigmay_TPL_MODELNAME(double *sigmay, const realtype t,
                                  const realtype *p, const realtype *k);
-extern void sxdot_TPL_MODELNAME(realtype *sxdot, const realtype t,
-                                const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *h,
-                                const int ip, const realtype *sx,
-                                const realtype *w, const realtype *dwdx,
-                                const realtype *J, const realtype *dxdotdp);
 TPL_W_DEF
 extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p,
                              const realtype *k);
@@ -100,11 +80,6 @@ extern void sx0_fixedParameters_TPL_MODELNAME(realtype *sx0, const realtype t,
                                               const realtype *x0,
                                               const realtype *p,
                                               const realtype *k, const int ip);
-extern void xBdot_TPL_MODELNAME(realtype *xBdot, const realtype t,
-                                const realtype *x, const realtype *p,
-                                const realtype *k, const realtype *h,
-                                const realtype *xB, const realtype *w,
-                                const realtype *dwdx);
 extern void xdot_TPL_MODELNAME(realtype *xdot, const realtype t,
                                const realtype *x, const realtype *p,
                                const realtype *k, const realtype *h,
@@ -246,37 +221,6 @@ public:
      * @param sigmaz event measurement standard deviation at timepoint
      **/
     virtual void fJrz(double *nllh, const int iz, const realtype *p, const realtype *k, const double *rz, const double *sigmaz) override {
-    }
-
-    /** model specific implementation for fJv
-     * @param Jv Matrix vector product of J with a vector v
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param v Vector with which the Jacobian is multiplied
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJv(realtype *Jv, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *v, const realtype *w, const realtype *dwdx) override {
-        Jv_TPL_MODELNAME(Jv, t, x, p, k, h, v, w, dwdx);
-    }
-
-    /** model specific implementation for fJvB
-     * @param JvB Matrix vector product of JB with a vector v
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param xB Vector with the adjoint states
-     * @param vB Vector with which the Jacobian is multiplied
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJvB(realtype *JvB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *vB, const realtype *w, const realtype *dwdx) override {
-        JvB_TPL_MODELNAME(JvB, t, x, p, k, h, xB, vB, w, dwdx);
     }
 
     /** model specific implementation of fJy
@@ -557,22 +501,6 @@ TPL_DWDX_IMPL
     virtual void fdzdx(double *dzdx, const int ie, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h) override {
     }
 
-    /** model specific implementation for fqBdot
-     * @param qBdot adjoint quadrature equation
-     * @param ip sensitivity index
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param xB Vector with the adjoint states
-     * @param w vector with helper variables
-     * @param dwdp derivative of w wrt p
-     **/
-    virtual void fqBdot(realtype *qBdot, const int ip, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdp) override {
-        qBdot_TPL_MODELNAME(qBdot, ip, t, x, p, k, h, xB, w, dwdp);
-    }
-
     /** model specific implementation for froot
      * @param root values of the trigger function
      * @param t timepoint
@@ -667,24 +595,6 @@ TPL_DWDX_IMPL
         sx0_fixedParameters_TPL_MODELNAME(sx0, t, x0, p, k, ip);
     }
 
-    /** model specific implementation of fsxdot
-     * @param sxdot sensitivity rhs
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param ip parameter index
-     * @param sx Vector with the state sensitivities
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     * @param J jacobian
-     * @param dxdotdp parameter derivative of residual function
-     */
-    virtual void fsxdot(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *sx, const realtype *w, const realtype *dwdx, const realtype *J, const realtype *dxdotdp) override {
-        sxdot_TPL_MODELNAME(sxdot, t, x, p, k, h, ip, sx, w, dwdx, J, dxdotdp);
-    }
-
     /** model specific implementation of fsz
      * @param sz Sensitivity of rz, total derivative
      * @param ie event index
@@ -719,21 +629,6 @@ TPL_W_IMPL
      **/
     virtual void fx0_fixedParameters(realtype *x0, const realtype t, const realtype *p, const realtype *k) override {
         x0_fixedParameters_TPL_MODELNAME(x0, t, p, k);
-    }
-
-    /** model specific implementation for fxBdot
-     * @param xBdot adjoint residual function
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param xB Vector with the adjoint states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fxBdot(realtype *xBdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) override {
-        xBdot_TPL_MODELNAME(xBdot, t, x, p, k, h, xB, w, dwdx);
     }
 
     /** model specific implementation for fxdot

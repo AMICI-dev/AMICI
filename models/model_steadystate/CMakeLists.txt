@@ -26,8 +26,6 @@ ${MODEL_DIR}/model_steadystate_JB.cpp
 ${MODEL_DIR}/model_steadystate_JDiag.cpp
 ${MODEL_DIR}/model_steadystate_JSparse.cpp
 ${MODEL_DIR}/model_steadystate_JSparseB.cpp
-${MODEL_DIR}/model_steadystate_Jv.cpp
-${MODEL_DIR}/model_steadystate_JvB.cpp
 ${MODEL_DIR}/model_steadystate_Jy.cpp
 ${MODEL_DIR}/model_steadystate_dJydsigma.cpp
 ${MODEL_DIR}/model_steadystate_dJydy.cpp
@@ -35,12 +33,9 @@ ${MODEL_DIR}/model_steadystate_dwdp.cpp
 ${MODEL_DIR}/model_steadystate_dwdx.cpp
 ${MODEL_DIR}/model_steadystate_dxdotdp.cpp
 ${MODEL_DIR}/model_steadystate_dydx.cpp
-${MODEL_DIR}/model_steadystate_qBdot.cpp
 ${MODEL_DIR}/model_steadystate_sigmay.cpp
-${MODEL_DIR}/model_steadystate_sxdot.cpp
 ${MODEL_DIR}/model_steadystate_w.cpp
 ${MODEL_DIR}/model_steadystate_x0.cpp
-${MODEL_DIR}/model_steadystate_xBdot.cpp
 ${MODEL_DIR}/model_steadystate_xdot.cpp
 ${MODEL_DIR}/model_steadystate_y.cpp
 

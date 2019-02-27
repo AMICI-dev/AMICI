@@ -27,8 +27,6 @@ ${MODEL_DIR}/model_neuron_o2_JDiag.cpp
 ${MODEL_DIR}/model_neuron_o2_JSparse.cpp
 ${MODEL_DIR}/model_neuron_o2_JSparseB.cpp
 ${MODEL_DIR}/model_neuron_o2_Jrz.cpp
-${MODEL_DIR}/model_neuron_o2_Jv.cpp
-${MODEL_DIR}/model_neuron_o2_JvB.cpp
 ${MODEL_DIR}/model_neuron_o2_Jy.cpp
 ${MODEL_DIR}/model_neuron_o2_Jz.cpp
 ${MODEL_DIR}/model_neuron_o2_dJrzdsigma.cpp
@@ -46,7 +44,6 @@ ${MODEL_DIR}/model_neuron_o2_dwdx.cpp
 ${MODEL_DIR}/model_neuron_o2_dxdotdp.cpp
 ${MODEL_DIR}/model_neuron_o2_dydx.cpp
 ${MODEL_DIR}/model_neuron_o2_dzdx.cpp
-${MODEL_DIR}/model_neuron_o2_qBdot.cpp
 ${MODEL_DIR}/model_neuron_o2_root.cpp
 ${MODEL_DIR}/model_neuron_o2_rz.cpp
 ${MODEL_DIR}/model_neuron_o2_sigmay.cpp
@@ -54,11 +51,9 @@ ${MODEL_DIR}/model_neuron_o2_sigmaz.cpp
 ${MODEL_DIR}/model_neuron_o2_srz.cpp
 ${MODEL_DIR}/model_neuron_o2_stau.cpp
 ${MODEL_DIR}/model_neuron_o2_sx0.cpp
-${MODEL_DIR}/model_neuron_o2_sxdot.cpp
 ${MODEL_DIR}/model_neuron_o2_sz.cpp
 ${MODEL_DIR}/model_neuron_o2_w.cpp
 ${MODEL_DIR}/model_neuron_o2_x0.cpp
-${MODEL_DIR}/model_neuron_o2_xBdot.cpp
 ${MODEL_DIR}/model_neuron_o2_xdot.cpp
 ${MODEL_DIR}/model_neuron_o2_y.cpp
 ${MODEL_DIR}/model_neuron_o2_z.cpp

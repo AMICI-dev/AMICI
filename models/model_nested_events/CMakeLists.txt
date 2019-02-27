@@ -26,8 +26,6 @@ ${MODEL_DIR}/model_nested_events_JB.cpp
 ${MODEL_DIR}/model_nested_events_JDiag.cpp
 ${MODEL_DIR}/model_nested_events_JSparse.cpp
 ${MODEL_DIR}/model_nested_events_JSparseB.cpp
-${MODEL_DIR}/model_nested_events_Jv.cpp
-${MODEL_DIR}/model_nested_events_JvB.cpp
 ${MODEL_DIR}/model_nested_events_Jy.cpp
 ${MODEL_DIR}/model_nested_events_dJydsigma.cpp
 ${MODEL_DIR}/model_nested_events_dJydy.cpp
@@ -36,14 +34,11 @@ ${MODEL_DIR}/model_nested_events_deltasx.cpp
 ${MODEL_DIR}/model_nested_events_deltax.cpp
 ${MODEL_DIR}/model_nested_events_dxdotdp.cpp
 ${MODEL_DIR}/model_nested_events_dydx.cpp
-${MODEL_DIR}/model_nested_events_qBdot.cpp
 ${MODEL_DIR}/model_nested_events_root.cpp
 ${MODEL_DIR}/model_nested_events_sigmay.cpp
 ${MODEL_DIR}/model_nested_events_stau.cpp
 ${MODEL_DIR}/model_nested_events_sx0.cpp
-${MODEL_DIR}/model_nested_events_sxdot.cpp
 ${MODEL_DIR}/model_nested_events_x0.cpp
-${MODEL_DIR}/model_nested_events_xBdot.cpp
 ${MODEL_DIR}/model_nested_events_xdot.cpp
 ${MODEL_DIR}/model_nested_events_y.cpp
 

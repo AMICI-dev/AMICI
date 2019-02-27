@@ -818,9 +818,10 @@ std::vector<std::string> Model::getParameterIds() const {
 
 
 Model::Model()
-    : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0), nytrue(0), nz(0), nztrue(0),
-      ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0), nJ(0), ubw(0), lbw(0),
-      o2mode(SecondOrderMode::none), x_pos_tmp(0) {}
+    : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0),
+    nytrue(0), nz(0), nztrue(0), ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0),
+    nJ(0), ubw(0), lbw(0), o2mode(SecondOrderMode::none), dxdotdp(0,0),
+    x_pos_tmp(0) {}
 
 Model::Model(const int nx_rdata,
              const int nxtrue_rdata,
@@ -869,8 +870,9 @@ Model::Model(const int nx_rdata,
       deltasx(nx_solver*plist.size(), 0.0),
       deltaxB(nx_solver, 0.0),
       deltaqB(nJ*plist.size(), 0.0),
-      dxdotdp(nx_solver*plist.size(), 0.0),
+      dxdotdp(nx_solver, plist.size()),
       J(nx_solver, nx_solver, nnz, CSC_MAT),
+      M(nx_solver, nx_solver),
       my(nytrue, 0.0),
       mz(nztrue, 0.0),
       dJydy(nJ*nytrue*ny, 0.0),
@@ -888,7 +890,6 @@ Model::Model(const int nx_rdata,
       w(nw, 0.0),
       dwdx(ndwdx, 0.0),
       dwdp(ndwdp, 0.0),
-      M(nx_solver*nx_solver, 0.0),
       stau(plist.size(), 0.0),
       sx(nx_solver*plist.size(), 0.0),
       x_rdata(nx_rdata, 0.0),
@@ -915,7 +916,7 @@ void Model::initializeVectors()
     dJzdp.resize(nJ * nplist(), 0.0);
     deltasx.resize(nx_solver * nplist(), 0.0);
     deltaqB.resize(nJ * nplist(), 0.0);
-    dxdotdp.resize(nx_solver * nplist(), 0.0);
+    dxdotdp = AmiVectorArray(nx_solver, nplist());
     dzdp.resize(nz * nplist(), 0.0);
     drzdp.resize(nz * nplist(), 0.0);
     dydp.resize(ny * nplist(), 0.0);

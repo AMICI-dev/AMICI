@@ -47,14 +47,13 @@ namespace amici {
                  fixedParameters.data(), h.data(), w.data(), dwdx.data());
     }
 
-    void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector * /*dx*/, AmiVector * /*xdot*/,
-                        AmiVector *v, AmiVector *Jv, realtype  /*cj*/){
-        fJv(v->getNVector(),Jv->getNVector(),t,x->getNVector());
+    void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector * /*dx*/,
+                        AmiVector * /*xdot*/, AmiVector *v, AmiVector *Jv,
+                        realtype /*cj*/) {
+        fJv(v->getNVector(), Jv->getNVector(), t, x->getNVector());
     }
 
-    /** implementation of fJv at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation aswell as the AmiVector
-     * level implementation
+    /** implementation of fJv at the N_Vector level.
      * @param t timepoint
      * @param x Vector with the states
      * @param v Vector with which the Jacobian is multiplied
@@ -62,11 +61,9 @@ namespace amici {
      * written
      **/
     void Model_ODE::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x) {
-        auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
-        N_VConst(0.0,Jv);
-        fJv(N_VGetArrayPointer(Jv),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-            N_VGetArrayPointer(v),w.data(),dwdx.data());
+        N_VConst(0.0, Jv);
+        fJSparse(t, x, J.get());
+        J.multiply(Jv, v);
     }
 
     void Model_ODE::froot(realtype t, AmiVector *x, AmiVector * /*dx*/, realtype *root){
@@ -127,11 +124,13 @@ namespace amici {
      */
     void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         auto x_pos = computeX_pos(x);
-        std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,N_VGetArrayPointer(x_pos));
-        for(int ip = 0; ip < nplist(); ip++)
-            fdxdotdp(&dxdotdp.at(nx_solver*ip),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                     plist_[ip],w.data(),dwdp.data());
+        for(int ip = 0; ip < nplist(); ip++) {
+            N_VConst(0.0, dxdotdp.getNVector(ip));
+            fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
+                     unscaledParameters.data(), fixedParameters.data(),
+                     h.data(), plist_[ip], w.data(), dwdp.data());
+        }
     }
 
     std::unique_ptr<Solver> Model_ODE::getSolver() {
@@ -190,8 +189,7 @@ namespace amici {
                       w.data(),dwdx.data());
     }
 
-    /** implementation of fJvB at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation
+    /** implementation of fJvB at the N_Vector level
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
@@ -199,44 +197,49 @@ namespace amici {
      * @param JvB Vector to which the Jacobian vector product will be
      *written
      **/
-    void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB) {
-        auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
-        N_VConst(0.0,JvB);
-        fJvB(N_VGetArrayPointer(JvB),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                    N_VGetArrayPointer(xB),N_VGetArrayPointer(vB),w.data(),dwdx.data());
+    void Model_ODE::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
+                         N_Vector xB) {
+        N_VConst(0.0, JvB);
+        fJSparseB(t, x, xB, nullptr, J.get());
+        J.multiply(JvB, vB);
     }
 
-    /** implementation of fxBdot at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation
+    /** implementation of fxBdot at the N_Vector level
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
      * @param xBdot Vector with the adjoint right hand side
      */
-    void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
-        auto x_pos = computeX_pos(x);
-        fdwdx(t,N_VGetArrayPointer(x_pos));
-        N_VConst(0.0,xBdot);
-        fxBdot(N_VGetArrayPointer(xBdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                      N_VGetArrayPointer(xB),w.data(),dwdx.data());
+    void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB,
+                           N_Vector xBdot) {
+        N_VConst(0.0, xBdot);
+        fJSparseB(t, x, xB, nullptr, J.get());
+        J.multiply(xBdot, xB);
     }
 
-    /** implementation of fqBdot at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation
+    /** implementation of fqBdot at the N_Vector level
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
-    void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
-        auto x_pos = computeX_pos(x);
-        fdwdp(t,N_VGetArrayPointer(x_pos));
-        N_VConst(0.0,qBdot);
-        realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
-        for(int ip = 0; (unsigned)ip < plist_.size(); ip++)
-            fqBdot(&qBdot_tmp[ip*nJ],plist_[ip],t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                          N_VGetArrayPointer(xB),w.data(),dwdp.data());
+    void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB,
+                           N_Vector qBdot) {
+        N_VConst(0.0, qBdot);
+        fdxdotdp(t, x);
+        for (int ip = 0; ip < nplist(); ip++) {
+            for (int ix = 0; ix < nxtrue_solver; ix++)
+                NV_Ith_S(qBdot, ip * nJ) -=
+                NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
+            // second order part
+            for (int iJ = 1; iJ < nJ; iJ++)
+                for (int ix = 0; ix < nxtrue_solver; ix++)
+                    NV_Ith_S(qBdot, ip * nJ + iJ) -=
+                        NV_Ith_S(xB, ix) *
+                            dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
+                        NV_Ith_S(xB, ix + iJ * nxtrue_solver) *
+                            dxdotdp.at(ix, ip);
+        }
     }
 
     void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector * /*dx*/, int ip,
@@ -244,24 +247,22 @@ namespace amici {
         fsxdot(t,x->getNVector(), ip, sx->getNVector(), sxdot->getNVector());
     }
 
-    /** implementation of fsxdot at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation
+    /** implementation of fsxdot at the N_Vector level
      * @param t timepoint
      * @param x Vector with the states
      * @param ip parameter index
      * @param sx Vector with the state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
      */
-    void Model_ODE::fsxdot(realtype t, N_Vector x, int ip,
-                            N_Vector sx, N_Vector sxdot) {
-        auto x_pos = computeX_pos(x);
-        if(ip == 0) { // we only need to call this for the first parameter index will be the same for all remaining
-            fdxdotdp(t, x_pos);
-            fJSparse(t, x_pos, J.get());
+    void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
+                           N_Vector sxdot) {
+        if (ip == 0) {
+            // we only need to call this for the first parameter index will be
+            // the same for all remaining
+            fdxdotdp(t, x);
+            fJSparse(t, x, J.get());
         }
-        N_VConst(0.0,sxdot);
-        fsxdot(N_VGetArrayPointer(sxdot),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                      plist_[ip],N_VGetArrayPointer(sx),
-                      w.data(),dwdx.data(),J.data(),&dxdotdp.at(ip*nx_solver));
+        N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
+        J.multiply(sxdot, sx);
     }
 }

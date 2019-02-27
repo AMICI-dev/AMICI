@@ -4,6 +4,7 @@
 #include "amici/abstract_model.h"
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
+#include "amici/vector.h"
 
 #include <memory>
 #include <vector>
@@ -1198,7 +1199,7 @@ class Model : public AbstractModel {
 
     /** tempory storage of dxdotdp data across functions (dimension: nplist x
      * nx_solver, row-major) */
-    std::vector<realtype> dxdotdp;
+    AmiVectorArray dxdotdp;
 
   protected:
     /**
@@ -1327,6 +1328,9 @@ class Model : public AbstractModel {
 
     /** Sparse Jacobian (dimension: nnz)*/
     SUNMatrixWrapper J;
+    
+    /** Sparse Jacobian (dimension: nx_solver x nx_solver)*/
+    SUNMatrixWrapper M;
 
     /** current observable (dimension: nytrue) */
     std::vector<realtype> my;
@@ -1378,9 +1382,7 @@ class Model : public AbstractModel {
     /** tempory storage of sparse dwdp data across functions (dimension: ndwdp)
      */
     std::vector<realtype> dwdp;
-    /** tempory storage of mass matrix data across functions (dimension:
-     * nx_solver) */
-    std::vector<realtype> M;
+    
     /** tempory storage of stau data across functions (dimension: nplist) */
     std::vector<realtype> stau;
 

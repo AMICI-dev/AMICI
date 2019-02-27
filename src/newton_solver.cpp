@@ -137,7 +137,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
     for (int ip = 0; ip < model->nplist(); ip++) {
 
         for (int ix = 0; ix < model->nx_solver; ix++) {
-            sx->at(ix,ip) = -model->dxdotdp[model->nx_solver * ip + ix];
+            sx->at(ix,ip) = -model->dxdotdp.at(ix, ip);
         }
         solveLinearSystem(&((*sx)[ip]));
     }
