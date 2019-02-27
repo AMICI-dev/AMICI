@@ -180,7 +180,8 @@ public:
         }
     }
     
-    /** copy-move assignment operator
+    /** 
+     * @brief copy assignment operator
      * @param other right hand side
      * @return left hand side
      */
