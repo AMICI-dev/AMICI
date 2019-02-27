@@ -45,7 +45,7 @@ public:
         nvec = N_VMake_Serial(static_cast<long int>(vold.vec.size()), vec.data());
     }
 
-    /** copy-move assignment operator
+    /** copy assignment operator
       * @param other right hand side
       * @return left hand side
       */
