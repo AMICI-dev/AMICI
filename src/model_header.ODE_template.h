@@ -5,6 +5,8 @@
 #include "amici/defines.h"
 #include "amici/solver_cvodes.h"
 #include "amici/model_ode.h"
+using amici::realtype;
+using amici::indextype;
 
 namespace amici {
 class Solver;
