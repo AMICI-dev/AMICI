@@ -412,20 +412,7 @@ function [this,model] = getSyms(this,model)
                 syms t
                 this.sym = diff(transpose(model.fun.M.sym),t)*model.fun.xB.sym + transpose(model.fun.M.sym)*model.fun.dxB.sym - transpose(model.fun.dfdx.sym)*model.fun.xB.sym;
             else
-                % Augmenting the system needs transposition of submatrices
-                % I'm sure, there is a more intelligent solution to it...
-                this.sym = sym(zeros(nx,1));
-                if(model.o2flag)
-                    for ix = 1 : model.ng
-                        for jx = 1 : model.ng
-                            this.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue) = this.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue) - ...
-                                transpose(model.fun.J.sym((ix-1)*model.nxtrue+1 : ix*model.nxtrue , (jx-1)*model.nxtrue+1 : jx*model.nxtrue)) ...
-                                * model.fun.xB.sym((jx-1)*model.nxtrue+1 : jx*model.nxtrue);
-                        end
-                    end
-                else
-                    this.sym = -transpose(model.fun.J.sym) * model.fun.xB.sym;
-                end
+                this.sym = model.fun.JB.sym * model.fun.xB.sym;
             end
             
         case 'qBdot'

@@ -214,16 +214,7 @@ namespace amici {
                            N_Vector xBdot) {
         N_VConst(0.0, xBdot);
         fJSparseB(t, x, xB, nullptr, J.get());
-        switch(o2mode){
-        case SecondOrderMode::none:
-            J.multiply(xBdot, xB);
-            break;
-        case SecondOrderMode::full:
-        case SecondOrderMode::directional:
-            J.multiply_subblocks(xBdot, xB, nxtrue_solver);
-            break;
-        }
-
+        J.multiply(xBdot, xB);
     }
 
     /** implementation of fqBdot at the N_Vector level
@@ -245,7 +236,7 @@ namespace amici {
                 for (int ix = 0; ix < nxtrue_solver; ix++)
                     NV_Ith_S(qBdot, ip * nJ + iJ) -=
                         NV_Ith_S(xB, ix) *
-                            dxdotdp.at(ix + iJ * nxtrue_solver, ip) -
+                            dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
                         NV_Ith_S(xB, ix + iJ * nxtrue_solver) *
                             dxdotdp.at(ix, ip);
         }

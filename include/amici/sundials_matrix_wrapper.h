@@ -153,35 +153,6 @@ class SUNMatrixWrapper {
      */
     void multiply(realtype *c, const realtype *b);
 
-    /**
-     * @brief std::vector interface for multiply_submatrix
-     * @param c output vector, may already contain values
-     * @param b multiplication vector
-     */
-    void multiply_subblocks(std::vector<realtype> &c,
-                            const std::vector<realtype> &b,
-                            sunindextype max_index);
-
-    /**
-     * @brief N_Vector interface for multiply_submatrix
-     * @param c output vector, may already contain values
-     * @param b multiplication vector
-     */
-    void multiply_subblocks(N_Vector c, const N_Vector b,
-                            sunindextype max_index);
-
-    /**
-     * @brief Perform submatrix vector multiplication 3 block example:
-     * [ A B C ] [a]   [ Aa + Db + Gc ]
-     * [ D E F ] [b] = [ Ba + Eb + Hc ]
-     * [ G H I ] [c]   [ Ca + Fb + Ic ]
-     *
-     * @param c output vector, may already contain values
-     * @param b multiplication vector
-     */
-    void multiply_subblocks(realtype *c, const realtype *b,
-                            sunindextype max_index);
-
   private:
     SUNMatrix matrix = nullptr;
 };

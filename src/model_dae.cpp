@@ -231,17 +231,7 @@ namespace amici {
         N_VConst(0.0, xBdot);
         fJSparseB(t, 1.0, x, dx, xB, dxB, J.get());
         fM(t, x);
-        switch(o2mode){
-        case SecondOrderMode::none:
-            J.multiply(xBdot, xB);
-            M.multiply(xBdot, dxB);
-            break;
-        case SecondOrderMode::full:
-        case SecondOrderMode::directional:
-            J.multiply_subblocks(xBdot, xB, nxtrue_solver);
-            M.multiply_subblocks(xBdot, dxB, nxtrue_solver);
-            break;
-        }
+        J.multiply(xBdot, xB);
     }
 
     /** Right hand side of integral equation for quadrature states qB
@@ -265,7 +255,7 @@ namespace amici {
                 for (int ix = 0; ix < nxtrue_solver; ix++)
                     NV_Ith_S(qBdot, ip * nJ + iJ) -=
                     NV_Ith_S(xB, ix) *
-                    dxdotdp.at(ix + iJ * nxtrue_solver, ip) -
+                    dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
                     NV_Ith_S(xB, ix + iJ * nxtrue_solver) *
                     dxdotdp.at(ix, ip);
         }

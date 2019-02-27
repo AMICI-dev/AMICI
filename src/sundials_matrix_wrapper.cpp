@@ -217,64 +217,6 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) {
     }
 }
 
-void SUNMatrixWrapper::multiply_subblocks(std::vector<realtype> &c,
-                                          const std::vector<realtype> &b,
-                                          sunindextype blocksize) {
-    if (c.size() != rows())
-        throw AmiException("Dimension mismatch between number of rows in A (%i)"
-                           " and elements in c (%i).",
-                           rows(), c.size());
-    
-    if (b.size() != columns())
-        throw AmiException("Dimension mismatch between number of cols in A (%i)"
-                           " and elements in b (%i).",
-                           columns(), b.size());
-
-    multiply_subblocks(c.data(), b.data(), blocksize);
-}
-
-void SUNMatrixWrapper::multiply_subblocks(N_Vector c, const N_Vector b,
-                                          sunindextype blocksize) {
-    if (NV_LENGTH_S(c) != rows())
-        throw AmiException("Dimension mismatch between number of rows in A (%i)"
-                           " and elements in c (%i).",
-                           rows(), NV_LENGTH_S(c));
-    
-    if (NV_LENGTH_S(b) != columns())
-        throw AmiException("Dimension mismatch between number of cols in A (%i)"
-                           " and elements in b (%i).",
-                           columns(), NV_LENGTH_S(b));
-
-    multiply_subblocks(NV_DATA_S(c), NV_DATA_S(b), blocksize);
-}
-
-void SUNMatrixWrapper::multiply_subblocks(realtype *c, const realtype *b,
-                                          sunindextype blocksize) {
-    if (SUNMatGetID(matrix) != SUNMATRIX_SPARSE)
-        throw AmiException("Not Implemented");
-
-    switch (sparsetype()) {
-    case CSC_MAT:
-        for (sunindextype i = 0; i < columns(); ++i) {
-            auto div_col = div(i, blocksize);
-            for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1]; ++k) {
-                auto div_row = div(indexvals()[k], blocksize);
-                c[div_col.quot*blocksize + div_row.rem] += data()[k] * b[div_row.quot*blocksize + div_col.rem];
-            }
-        }
-        break;
-    case CSR_MAT:
-        for (sunindextype i = 0; i < rows(); ++i) {
-            auto div_row = div(i, blocksize);
-            for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1]; ++k) {
-                auto div_col = div(indexvals()[k], blocksize);
-                c[div_col.quot*blocksize + div_row.rem] += data()[k] * b[div_row.quot*blocksize + div_col.rem];
-            }
-        }
-        break;
-    }
-}
-
 SUNMatrix SUNMatrixWrapper::get() const { return matrix; }
 
 } // namespace amici
