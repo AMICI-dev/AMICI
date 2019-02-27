@@ -155,6 +155,12 @@ private:
 */
 class AmiVectorArray {
 public:
+    
+    /** default constructor
+     * @return new empty AmiVectorArray instance
+     */
+    AmiVectorArray() {}
+    
     /** creates an std::vector<realype> and attaches the
       * data pointer to a newly created N_VectorArray
       * using CloneVectorArrayEmpty ensures that the N_Vector
@@ -179,8 +185,8 @@ public:
      */
     AmiVectorArray& operator=(AmiVectorArray const& other) {
         vec_array = other.vec_array;
-        nvec_array.resize(vec_array.size());
-        for (int idx = 0; idx < vec_array.size(); idx++) {
+        nvec_array.resize(other.getLength());
+        for (int idx = 0; idx < other.getLength(); idx++) {
             nvec_array.at(idx) = vec_array.at(idx).getNVector();
         }
         return *this;

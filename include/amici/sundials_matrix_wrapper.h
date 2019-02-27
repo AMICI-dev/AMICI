@@ -137,21 +137,21 @@ class SUNMatrixWrapper {
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(std::vector<realtype> &c, const std::vector<realtype> &b);
+    void multiply(std::vector<realtype> &c, const std::vector<realtype> &b) const;
 
     /**
      * @brief N_Vector interface for multiply
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(N_Vector c, const N_Vector b);
+    void multiply(N_Vector c, const N_Vector b) const;
 
     /**
      * @brief Perform matrix vector multiplication c += A*b
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(realtype *c, const realtype *b);
+    void multiply(realtype *c, const realtype *b) const;
 
   private:
     SUNMatrix matrix = nullptr;

@@ -154,13 +154,13 @@ int SUNMatrixWrapper::sparsetype() const {
 }
 
 void SUNMatrixWrapper::multiply(std::vector<realtype> &c,
-                                const std::vector<realtype> &b) {
-    if (c.size() != rows())
+                                const std::vector<realtype> &b) const {
+    if (static_cast<sunindextype>(c.size()) != rows())
         throw AmiException("Dimension mismatch between number of rows in A (%i)"
                            " and elements in c (%i).",
                            rows(), c.size());
 
-    if (b.size() != columns())
+    if (static_cast<sunindextype>(b.size()) != columns())
         throw AmiException("Dimension mismatch between number of cols in A (%i)"
                            " and elements in b (%i).",
                            columns(), b.size());
@@ -168,7 +168,7 @@ void SUNMatrixWrapper::multiply(std::vector<realtype> &c,
     multiply(c.data(), b.data());
 }
 
-void SUNMatrixWrapper::multiply(N_Vector c, const N_Vector b) {
+void SUNMatrixWrapper::multiply(N_Vector c, const N_Vector b) const {
     if (NV_LENGTH_S(c) != rows())
         throw AmiException("Dimension mismatch between number of rows in A (%i)"
                            " and elements in c (%i).",
@@ -182,7 +182,7 @@ void SUNMatrixWrapper::multiply(N_Vector c, const N_Vector b) {
     multiply(NV_DATA_S(c), NV_DATA_S(b));
 }
 
-void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) {
+void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans, rows(),
