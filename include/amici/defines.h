@@ -51,6 +51,9 @@ constexpr double pi = 3.14159265358979323846;
 /** defines variable type for simulation variables (determines numerical accuracy) */
 typedef double realtype;
 
+/** defines variable type for index variables */
+typedef long long indextype;
+
 /** BLAS Matrix Layout, affects dgemm and gemv calls */
 enum class BLASLayout{
     rowMajor = 101,

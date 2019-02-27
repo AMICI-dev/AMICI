@@ -29,7 +29,10 @@ static_assert(AMICI_ILL_INPUT == CV_ILL_INPUT,
               "AMICI_ILL_INPUT != CV_ILL_INPUT");
 static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
 static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
-static_assert(std::is_same<amici::realtype, realtype>::value, "Definition of realtype does not match");
+static_assert(std::is_same<amici::realtype, realtype>::value,
+              "Definition of realtype does not match");
+static_assert(std::is_same<amici::indextype, sunindextype>::value,
+              "Definition of indextype does not match");
 
 namespace amici {
 

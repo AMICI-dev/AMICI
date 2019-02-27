@@ -176,23 +176,9 @@ TPL_JSPARSE_IMPL
 TPL_JSPARSE_COLPTRS_IMPL
 TPL_JSPARSE_ROWVALS_IMPL
 
-TPL_JSPARSE_IMPL
-TPL_JSPARSE_COLPTRS_IMPL
-TPL_JSPARSE_ROWVALS_IMPL
-    
-    /** model specific implementation of JSparse, colptrs part
-     * @param indexptrs column pointers
-     */
-    virtual void fJSparseB_colptrs(sunindextype *indexptrs) {
-        JSparseB_colptrs_TPL_MODELNAME(indexptrs);
-    }
-    
-    /** model specific implementation of JSparse, rowvals part
-     * @param indexptrs column pointers
-     */
-    virtual void fJSparseB_rowvals(sunindextype *indexptrs) {
-        JSparseB_rowvals_TPL_MODELNAME(indexptrs);
-    }
+TPL_JSPARSEB_IMPL
+TPL_JSPARSEB_COLPTRS_IMPL
+TPL_JSPARSEB_ROWVALS_IMPL
 
     /** model specific implementation of fJrz
      * @param nllh regularization for event measurements z
@@ -418,21 +404,6 @@ TPL_JSPARSE_ROWVALS_IMPL
 TPL_DWDP_IMPL
 TPL_DWDX_IMPL
 TPL_DXDOTDW_IMPL
-
-    /** model specific implementation of fdxdotdp
-     * @param dxdotdp partial derivative xdot wrt p
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param ip parameter index
-     * @param w vector with helper variables
-     * @param dwdp derivative of w wrt p
-     */
-    virtual void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) override {
-        dxdotdp_TPL_MODELNAME(dxdotdp, t, x, p, k, h, ip, w, dwdp);
-    }
 
     /** model specific implementation of fdydx
      * @param dydx partial derivative of observables y w.r.t. model states x

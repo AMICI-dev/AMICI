@@ -68,9 +68,9 @@ functions = {
     },
     'JSparse': {
         'signature':
-            '(SUNMatrixContent_Sparse JSparse, const realtype t, '
-            'const realtype *x, const realtype *p, const realtype *k,  '
-            'const realtype *h, const realtype *w, const realtype *dwdx)',
+            '(realtype *JSparse, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -78,10 +78,9 @@ functions = {
     },
     'JSparseB': {
         'signature':
-            '(SUNMatrixContent_Sparse JSparseB, const realtype t, '
-            'const realtype *x, const realtype *p, const realtype *k, '
-            'const realtype *h, const realtype *xB, const realtype *w, '
-            'const realtype *dwdx)',
+            '(realtype *JSparseB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -1076,7 +1075,7 @@ class ODEModel:
             self._generateSparseSymbol(name)
         return self._sparseeqs[name]
 
-    def colptr(self, name):
+    def colptrs(self, name):
         """Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
 
@@ -1095,7 +1094,7 @@ class ODEModel:
             self._generateSparseSymbol(name)
         return self._colptrs[name]
 
-    def rowval(self, name):
+    def rowvals(self, name):
         """Returns (and constructs if necessary) the row values for a
         sparsified symbolic variable.
 
@@ -1890,8 +1889,8 @@ class ODEExporter:
         for function in self.functions.keys():
             self._writeFunctionFile(function)
             if function in sparse_functions:
-                self._write_index(function, 'colptrs')
-                self._write_index(function, 'rowvals')
+                self._write_function_index(function, 'colptrs')
+                self._write_function_index(function, 'rowvals')
 
         for name in self.model.symNames():
             self._writeIndexFiles(name)
@@ -2101,13 +2100,14 @@ class ODEExporter:
         ) as fileout:
             fileout.write('\n'.join(lines))
 
-    def _write_function_index(self, function, type):
+    def _write_function_index(self, function, indextype):
         """Generate equations and write the C++ code for the function
         `function`.
 
         Arguments:
             function: name of the function to be written (see self.functions)
             @type str
+            indextype: type of index {'colptrs', 'rowvals'}
 
         Returns:
 
@@ -2116,29 +2116,30 @@ class ODEExporter:
         """
 
         # function signature
-        signature = f'(sunindextype *{type})'
+        signature = f'(indextype *{indextype})'
 
-        if type == 'colptrs':
+        if indextype == 'colptrs':
             values = self.model.colptrs(function)
-        elif type == 'rowvals':
+        elif indextype == 'rowvals':
             values = self.model.rowvals(function)
         else:
             raise ValueError('Invalid value for type, must be colptr or '
                              'rowval')
 
-        lines = [
-            '#include "amici/defines.h" //sunindextype definition',
-            ''
-        ]
-        lines.append(f'void {function}_{type}_{self.modelName}{signature}{{')
+        lines = list()
+        lines.append('#include "amici/defines.h" //indextype definition')
+        lines.append('using amici::indextype;')
+        lines.append('')
+        lines.append(f'void {function}_{indextype}_{self.modelName}{signature}{{')
         lines.extend(
-            [' ' * 4 + f'{type}[{index}] = {value};'
+            [' ' * 4 + f'{indextype}[{index}] = {value};'
              for index, value in enumerate(values)]
         )
         lines.append('}')
         with open(os.path.join(
-                self.modelPath, f'{self.modelName}_{function}_{type}.cpp'), 'w'
-        ) as fileout:
+                self.modelPath,
+                f'{self.modelName}_{function}_{indextype}.cpp'
+        ), 'w') as fileout:
             fileout.write('\n'.join(lines))
 
     def _getFunctionBody(self, function, symbol):
@@ -2306,7 +2307,6 @@ class ODEExporter:
                     get_sunindex_definition(fun, self.modelName, 'rowvals')
                 tplData[f'{fun.upper()}_ROWVALS_IMPL'] = \
                     get_sunindex_implementation(fun, self.modelName, 'rowvals')
-
 
         if self.model.nx_solver() == self.model.nx_rdata():
             tplData['X_RDATA_DEF'] = ''
@@ -2601,7 +2601,7 @@ def get_function_definition(fun, name):
         f'extern void {fun}_{name}{functions[fun]["signature"]};'
 
 
-def get_sunindex_definition(fun, name, typw):
+def get_sunindex_definition(fun, name, indextype):
     """Constructs the function definition for an index function of a given
     function
 
@@ -2617,7 +2617,7 @@ def get_sunindex_definition(fun, name, typw):
 
     """
     return \
-        f'extern void {fun}_{type}_{name}(sunindextype *{type});'
+        f'extern void {fun}_{indextype}_{name}(indextype *{indextype});'
 
 
 def get_function_implementation(fun, name):
@@ -2646,7 +2646,7 @@ def get_function_implementation(fun, name):
         )
 
 
-def get_sunindex_implementation(fun, name, type):
+def get_sunindex_implementation(fun, name, indextype):
     """Constructs the function implementation for an index function of a given
     function
 
@@ -2662,16 +2662,16 @@ def get_sunindex_implementation(fun, name, type):
 
     """
     return \
-        '{ind4}virtual void f{fun}_{type}{signature} override {{\n' \
-        '{ind8}{fun}_{type}_{name}{eval_signature};\n' \
+        '{ind4}virtual void f{fun}_{indextype}{signature} override {{\n' \
+        '{ind8}{fun}_{indextype}_{name}{eval_signature};\n' \
         '{ind4}}}\n'.format(
             ind4=' '*4,
             ind8=' '*8,
             fun=fun,
-            type=type,
+            indextype=indextype,
             name=name,
-            signature=f'(sunindextype *{type})',
-            eval_signature=f'({type})',
+            signature=f'(indextype *{indextype})',
+            eval_signature=f'({indextype})',
         )
 
 
