@@ -4,6 +4,7 @@
 #include "amici/abstract_model.h"
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
+#include "amici/vector.h"
 
 #include <memory>
 #include <vector>
@@ -1198,7 +1199,7 @@ class Model : public AbstractModel {
 
     /** tempory storage of dxdotdp data across functions (dimension: nplist x
      * nx_solver, row-major) */
-    std::vector<realtype> dxdotdp;
+    AmiVectorArray dxdotdp;
 
   protected:
     /**

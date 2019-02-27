@@ -124,11 +124,13 @@ namespace amici {
      */
     void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         auto x_pos = computeX_pos(x);
-        std::fill(dxdotdp.begin(),dxdotdp.end(),0.0);
         fdwdp(t,N_VGetArrayPointer(x_pos));
-        for(int ip = 0; ip < nplist(); ip++)
-            fdxdotdp(&dxdotdp.at(nx_solver*ip),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                     plist_[ip],w.data(),dwdp.data());
+        for(int ip = 0; ip < nplist(); ip++) {
+            N_VConst(0.0, dxdotdp.getNVector(ip));
+            fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
+                     unscaledParameters.data(), fixedParameters.data(),
+                     h.data(), plist_[ip], w.data(), dwdp.data());
+        }
     }
 
     std::unique_ptr<Solver> Model_ODE::getSolver() {
@@ -225,13 +227,7 @@ namespace amici {
                            N_Vector qBdot) {
         N_VConst(0.0, qBdot);
         fdxdotdp(t, x);
-        realtype *qBdot_tmp = N_VGetArrayPointer(qBdot);
-        for (int ip = 0; (unsigned)ip < plist_.size(); ip++) {
-            for (int ix = 0; ix < nx_solver; ix++) {
-                qBdot_tmp[ip * nJ] -=
-                    dxdotdp.at(ip * nx_solver + ix) * NV_Ith_S(xB, ix);
-            }
-        }
+        N_VDotProdMulti(1, xB, dxdotdp.getNVectorArray(), NV_DATA_S(qBdot));
     }
 
     void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector * /*dx*/, int ip,
@@ -254,9 +250,7 @@ namespace amici {
             fdxdotdp(t, x);
             fJSparse(t, x, J.get());
         }
-        std::copy(&dxdotdp.at(ip * nx_solver),
-                  &dxdotdp.at(ip * nx_solver) + nx_solver,
-                  N_VGetArrayPointer(sxdot));
+        N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
         J.multiply(sxdot, sx);
     }
 }
