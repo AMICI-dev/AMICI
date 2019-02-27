@@ -167,7 +167,7 @@ if(isfield(this.fun,'J'))
     if(this.adjoint)
         if(isfield(this.fun,'JB'))
             fprintf('sparseB | ')
-            MB = transpose(M);
+            MB = double(logical(this.fun.JB.sym~=sym(zeros(size(this.fun.JB.sym)))));
             this.sparseidxB = find(MB);
             I = arrayfun(@(x) find(MB(:,x))-1,1:nx,'UniformOutput',false);
             this.rowvalsB = [];
