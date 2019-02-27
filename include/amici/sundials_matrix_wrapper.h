@@ -44,7 +44,7 @@ class SUNMatrixWrapper {
      * @param lbw Lower bandwidth
      */
     SUNMatrixWrapper(int M, int ubw, int lbw);
-    
+
     /**
      * @brief Create sparse matrix from dense or banded matrix. See
      * SUNSparseFromDenseMatrix and SUNSparseFromBandMatrix in
@@ -101,57 +101,83 @@ class SUNMatrixWrapper {
      * @return SlsMat
      */
     SUNMatrix get() const;
-    
+
     /**
      * @brief Get the number of rows
      * @return number
      */
     sunindextype rows() const;
-    
+
     /**
      * @brief Get the number of columns
      * @return number
      */
     sunindextype columns() const;
-    
+
     /**
      * @brief Get the index values of a sparse matrix
      * @return index array
      */
     sunindextype *indexvals() const;
-    
+
     /**
      * @brief Get the index pointers of a sparse matrix
      * @return index array
      */
     sunindextype *indexptrs() const;
-    
+
     /**
      * @brief Get the type of sparse matrix
      * @return index array
      */
     int sparsetype() const;
-    
+
     /**
      * @brief std::vector interface for multiply
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
     void multiply(std::vector<realtype> &c, const std::vector<realtype> &b);
-    
+
     /**
      * @brief N_Vector interface for multiply
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
     void multiply(N_Vector c, const N_Vector b);
-    
+
     /**
      * @brief Perform matrix vector multiplication c += A*b
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
     void multiply(realtype *c, const realtype *b);
+
+    /**
+     * @brief std::vector interface for multiply_submatrix
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     */
+    void multiply_subblocks(std::vector<realtype> &c,
+                            const std::vector<realtype> &b,
+                            sunindextype max_index);
+
+    /**
+     * @brief N_Vector interface for multiply_submatrix
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     */
+    void multiply_subblocks(N_Vector c, const N_Vector b,
+                            sunindextype max_index);
+
+    /**
+     * @brief Perform submatrix vector multiplication c[1:max_index] +=
+     * A[1:max_index,1:max_index]*b[1:max_index]
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     */
+    void multiply_subblocks(realtype *c, const realtype *b,
+                            sunindextype max_index);
 
   private:
     SUNMatrix matrix = nullptr;

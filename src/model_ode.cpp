@@ -214,7 +214,16 @@ namespace amici {
                            N_Vector xBdot) {
         N_VConst(0.0, xBdot);
         fJSparseB(t, x, xB, nullptr, J.get());
-        J.multiply(xBdot, xB);
+        switch(o2mode){
+        case SecondOrderMode::none:
+            J.multiply(xBdot, xB);
+            break;
+        case SecondOrderMode::full:
+        case SecondOrderMode::directional:
+            J.multiply_subblocks(xBdot, xB, nxtrue_solver);
+            break;
+        }
+
     }
 
     /** implementation of fqBdot at the N_Vector level
@@ -227,7 +236,26 @@ namespace amici {
                            N_Vector qBdot) {
         N_VConst(0.0, qBdot);
         fdxdotdp(t, x);
-        N_VDotProdMulti(1, xB, dxdotdp.getNVectorArray(), NV_DATA_S(qBdot));
+        switch (o2mode) {
+        case SecondOrderMode::none:
+            N_VDotProdMulti(1, xB, dxdotdp.getNVectorArray(), NV_DATA_S(qBdot));
+            break;
+        case SecondOrderMode::directional:
+        case SecondOrderMode::full:
+            for (int ip = 0; ip < nplist(); ip++) {
+                for (int ix = 0; ix < nxtrue_solver; ix++)
+                    NV_Ith_S(qBdot, ip * nJ) -=
+                        NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
+                for (int iJ = 1; iJ < nJ; iJ++)
+                    for (int ix = 0; ix < nxtrue_solver; ix++)
+                        NV_Ith_S(qBdot, ip * nJ + iJ) +=
+                            NV_Ith_S(xB, ix) *
+                                dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
+                            NV_Ith_S(xB, ix + iJ * nxtrue_solver) *
+                                dxdotdp.at(ix, ip);
+            }
+            break;
+        }
     }
 
     void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector * /*dx*/, int ip,

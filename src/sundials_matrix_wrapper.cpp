@@ -189,7 +189,7 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) {
                     columns(), 1.0, data(), rows(), b, 1, 1.0, c, 1);
         break;
     case SUNMATRIX_SPARSE:
-        
+
         switch (sparsetype()) {
         case CSC_MAT:
             for (sunindextype i = 0; i < columns(); ++i) {
@@ -217,6 +217,69 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) {
     }
 }
 
+void SUNMatrixWrapper::multiply_subblocks(std::vector<realtype> &c,
+                                          const std::vector<realtype> &b,
+                                          sunindextype blocksize) {
+    if (c.size() != rows())
+        throw AmiException("Dimension mismatch between number of rows in A (%i)"
+                           " and elements in c (%i).",
+                           rows(), c.size());
+    
+    if (b.size() != columns())
+        throw AmiException("Dimension mismatch between number of cols in A (%i)"
+                           " and elements in b (%i).",
+                           columns(), b.size());
+
+    multiply_subblocks(c.data(), b.data(), blocksize);
+}
+
+void SUNMatrixWrapper::multiply_subblocks(N_Vector c, const N_Vector b,
+                                          sunindextype blocksize) {
+    if (NV_LENGTH_S(c) != rows())
+        throw AmiException("Dimension mismatch between number of rows in A (%i)"
+                           " and elements in c (%i).",
+                           rows(), NV_LENGTH_S(c));
+    
+    if (NV_LENGTH_S(b) != columns())
+        throw AmiException("Dimension mismatch between number of cols in A (%i)"
+                           " and elements in b (%i).",
+                           columns(), NV_LENGTH_S(b));
+
+    multiply_subblocks(NV_DATA_S(c), NV_DATA_S(b), blocksize);
+}
+    
+static inline bool same_block(sunindextype a, sunindextype b, sunindextype denom) {
+    auto div_t_a = div(a, denom);
+    auto div_t_b = div(b, denom);
+    return div_t_a.quot == div_t_b.quot;
+}
+
+void SUNMatrixWrapper::multiply_subblocks(realtype *c, const realtype *b,
+                                          sunindextype blocksize) {
+    if (SUNMatGetID(matrix) != SUNMATRIX_SPARSE)
+        throw AmiException("Not Implemented");
+
+    switch (sparsetype()) {
+    case CSC_MAT:
+        for (sunindextype i = 0; i < columns(); ++i) {
+            for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1]; ++k) {
+                if (same_block(indexvals()[k], i, blocksize))
+                    c[indexvals()[k]] += data()[k] * b[i];
+            }
+        }
+        break;
+    case CSR_MAT:
+        for (sunindextype i = 0; i < rows(); ++i) {
+            for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1]; ++k) {
+                if (same_block(indexvals()[k], i, blocksize))
+                    c[i] += data()[k] * b[indexvals()[k]];
+            }
+        }
+        break;
+    }
+}
+
 SUNMatrix SUNMatrixWrapper::get() const { return matrix; }
 
 } // namespace amici
+
