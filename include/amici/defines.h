@@ -1,6 +1,7 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
 #include <cmath>
+#include <climits> // LLONG_MAX
 
 namespace amici {
 
@@ -51,8 +52,24 @@ constexpr double pi = 3.14159265358979323846;
 /** defines variable type for simulation variables (determines numerical accuracy) */
 typedef double realtype;
 
+
+#if defined (int64_t)
+/** defines variable type for index variables */
+typedef int64_t indextype;
+#else
+#if defined (__int64)
+/** defines variable type for index variables */
+typedef __int64 indextype;
+#else
+#if defined LLONG_MAX // proxy for long long for most compilers
 /** defines variable type for index variables */
 typedef long long indextype;
+#else
+/** defines variable type for index variables */
+typedef long indextype;
+#endif
+#endif
+#endif
 
 /** BLAS Matrix Layout, affects dgemm and gemv calls */
 enum class BLASLayout{
