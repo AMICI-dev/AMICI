@@ -247,12 +247,6 @@ void SUNMatrixWrapper::multiply_subblocks(N_Vector c, const N_Vector b,
 
     multiply_subblocks(NV_DATA_S(c), NV_DATA_S(b), blocksize);
 }
-    
-static inline bool same_block(sunindextype a, sunindextype b, sunindextype denom) {
-    auto div_t_a = div(a, denom);
-    auto div_t_b = div(b, denom);
-    return div_t_a.quot == div_t_b.quot;
-}
 
 void SUNMatrixWrapper::multiply_subblocks(realtype *c, const realtype *b,
                                           sunindextype blocksize) {
@@ -262,17 +256,19 @@ void SUNMatrixWrapper::multiply_subblocks(realtype *c, const realtype *b,
     switch (sparsetype()) {
     case CSC_MAT:
         for (sunindextype i = 0; i < columns(); ++i) {
+            auto div_col = div(i, blocksize);
             for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1]; ++k) {
-                if (same_block(indexvals()[k], i, blocksize))
-                    c[indexvals()[k]] += data()[k] * b[i];
+                auto div_row = div(indexvals()[k], blocksize);
+                c[div_col.quot*blocksize + div_row.rem] += data()[k] * b[div_row.quot*blocksize + div_col.rem];
             }
         }
         break;
     case CSR_MAT:
         for (sunindextype i = 0; i < rows(); ++i) {
+            auto div_row = div(i, blocksize);
             for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1]; ++k) {
-                if (same_block(indexvals()[k], i, blocksize))
-                    c[i] += data()[k] * b[indexvals()[k]];
+                auto div_col = div(indexvals()[k], blocksize);
+                c[div_col.quot*blocksize + div_row.rem] += data()[k] * b[div_row.quot*blocksize + div_col.rem];
             }
         }
         break;

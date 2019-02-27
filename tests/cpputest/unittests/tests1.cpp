@@ -806,6 +806,14 @@ TEST_GROUP(sunmatrixwrapper)
     // result
     std::vector<double> d{1.3753, 1.5084, 1.1655};
     
+    //inputs
+    std::vector<double> e{0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    std::vector<double> f{0.17, 0.60, 0.26, 0.65, 0.69, 0.75};
+    SUNMatrixWrapper B = SUNMatrixWrapper(6, 6);
+    //result
+    std::vector<double> h{2.0672, 1.4032, 1.8297, 1.3930, 0.8997, 1.4478};
+    
+    
     
     void setup() {
         SM_ELEMENT_D(A.get(), 0, 0) = 0.69;
@@ -814,6 +822,43 @@ TEST_GROUP(sunmatrixwrapper)
         SM_ELEMENT_D(A.get(), 0, 1) = 0.03;
         SM_ELEMENT_D(A.get(), 1, 1) = 0.44;
         SM_ELEMENT_D(A.get(), 2, 1) = 0.38;
+        
+        SM_ELEMENT_D(B.get(), 0, 0) = 0.15;
+        SM_ELEMENT_D(B.get(), 1, 0) = 0.26;
+        SM_ELEMENT_D(B.get(), 2, 0) = 0.35;
+        SM_ELEMENT_D(B.get(), 3, 0) = 0.83;
+        SM_ELEMENT_D(B.get(), 4, 0) = 0.53;
+        SM_ELEMENT_D(B.get(), 5, 0) = 0.78;
+        SM_ELEMENT_D(B.get(), 0, 1) = 0.84;
+        SM_ELEMENT_D(B.get(), 1, 1) = 0.25;
+        SM_ELEMENT_D(B.get(), 2, 1) = 0.59;
+        SM_ELEMENT_D(B.get(), 3, 1) = 0.55;
+        SM_ELEMENT_D(B.get(), 4, 1) = 0.93;
+        SM_ELEMENT_D(B.get(), 5, 1) = 0.13;
+        SM_ELEMENT_D(B.get(), 0, 2) = 0.81;
+        SM_ELEMENT_D(B.get(), 1, 2) = 0.24;
+        SM_ELEMENT_D(B.get(), 2, 2) = 0.92;
+        SM_ELEMENT_D(B.get(), 3, 2) = 0.29;
+        SM_ELEMENT_D(B.get(), 4, 2) = 0.57;
+        SM_ELEMENT_D(B.get(), 5, 2) = 0.47;
+        SM_ELEMENT_D(B.get(), 0, 3) = 0.93;
+        SM_ELEMENT_D(B.get(), 1, 3) = 0.35;
+        SM_ELEMENT_D(B.get(), 2, 3) = 0.76;
+        SM_ELEMENT_D(B.get(), 3, 3) = 0.75;
+        SM_ELEMENT_D(B.get(), 4, 3) = 0.01;
+        SM_ELEMENT_D(B.get(), 5, 3) = 0.34;
+        SM_ELEMENT_D(B.get(), 0, 4) = 0.2;
+        SM_ELEMENT_D(B.get(), 1, 4) = 0.25;
+        SM_ELEMENT_D(B.get(), 2, 4) = 0.38;
+        SM_ELEMENT_D(B.get(), 3, 4) = 0.57;
+        SM_ELEMENT_D(B.get(), 4, 4) = 0.16;
+        SM_ELEMENT_D(B.get(), 5, 4) = 0.79;
+        SM_ELEMENT_D(B.get(), 0, 5) = 0.62;
+        SM_ELEMENT_D(B.get(), 1, 5) = 0.47;
+        SM_ELEMENT_D(B.get(), 2, 5) = 0.08;
+        SM_ELEMENT_D(B.get(), 3, 5) = 0.05;
+        SM_ELEMENT_D(B.get(), 4, 5) = 0.31;
+        SM_ELEMENT_D(B.get(), 5, 5) = 0.53;
     }
     
     void teardown() {}
@@ -830,6 +875,19 @@ TEST(sunmatrixwrapper, sparse_multiply)
     c = a; //copy c
     A_sparse.multiply(c, b);
     checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
+}
+
+TEST(sunmatrixwrapper, sparse_multiply_sublocks)
+{
+    auto B_sparse = SUNMatrixWrapper(B, 0.0, CSR_MAT);
+    auto g(e); //copy g
+    B_sparse.multiply_subblocks(g, f, 2);
+    checkEqualArray(h, g, TEST_ATOL, TEST_RTOL, "multiply_sublocks");
+    
+    B_sparse = SUNMatrixWrapper(B, 0.0, CSC_MAT);
+    g = e; //copy g
+    B_sparse.multiply_subblocks(g, f, 2);
+    checkEqualArray(h, g, TEST_ATOL, TEST_RTOL, "multiply_sublocks");
 }
 
 TEST(sunmatrixwrapper, dense_multiply)

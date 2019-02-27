@@ -171,8 +171,11 @@ class SUNMatrixWrapper {
                             sunindextype max_index);
 
     /**
-     * @brief Perform submatrix vector multiplication c[1:max_index] +=
-     * A[1:max_index,1:max_index]*b[1:max_index]
+     * @brief Perform submatrix vector multiplication 3 block example:
+     * [ A B C ] [a]   [ Aa + Db + Gc ]
+     * [ D E F ] [b] = [ Ba + Eb + Hc ]
+     * [ G H I ] [c]   [ Ca + Fb + Ic ]
+     *
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
