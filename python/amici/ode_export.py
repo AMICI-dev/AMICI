@@ -2608,7 +2608,7 @@ def get_sunindex_definition(fun, name, indextype):
     Arguments:
         fun: function name @type str
         name: model name @type str
-        type: index function {'colptrs', 'rowvals'} @type str
+        indextype: index function {'colptrs', 'rowvals'} @type str
 
     Returns:
     c++ function definition string
@@ -2653,7 +2653,7 @@ def get_sunindex_implementation(fun, name, indextype):
     Arguments:
         fun: function name @type str
         name: model name @type str
-        type: index function {'colptrs', 'rowvals'} @type str
+        indextype: index function {'colptrs', 'rowvals'} @type str
 
     Returns:
     c++ function implementation string

@@ -322,7 +322,7 @@ namespace amici {
         }
 
         /** model specific implementation of fdxdotdw, data part
-         * @param dxdotwp partial derivative xdot wrt w
+         * @param ddxdotw partial derivative xdot wrt w
          * @param t timepoint
          * @param x Vector with the states
          * @param p parameter vector
