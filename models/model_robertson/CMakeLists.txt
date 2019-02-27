@@ -26,8 +26,6 @@ ${MODEL_DIR}/model_robertson_JB.cpp
 ${MODEL_DIR}/model_robertson_JDiag.cpp
 ${MODEL_DIR}/model_robertson_JSparse.cpp
 ${MODEL_DIR}/model_robertson_JSparseB.cpp
-${MODEL_DIR}/model_robertson_Jv.cpp
-${MODEL_DIR}/model_robertson_JvB.cpp
 ${MODEL_DIR}/model_robertson_Jy.cpp
 ${MODEL_DIR}/model_robertson_M.cpp
 ${MODEL_DIR}/model_robertson_dJydsigma.cpp
@@ -36,12 +34,9 @@ ${MODEL_DIR}/model_robertson_dwdp.cpp
 ${MODEL_DIR}/model_robertson_dwdx.cpp
 ${MODEL_DIR}/model_robertson_dxdotdp.cpp
 ${MODEL_DIR}/model_robertson_dydx.cpp
-${MODEL_DIR}/model_robertson_qBdot.cpp
 ${MODEL_DIR}/model_robertson_sigmay.cpp
-${MODEL_DIR}/model_robertson_sxdot.cpp
 ${MODEL_DIR}/model_robertson_w.cpp
 ${MODEL_DIR}/model_robertson_x0.cpp
-${MODEL_DIR}/model_robertson_xBdot.cpp
 ${MODEL_DIR}/model_robertson_xdot.cpp
 ${MODEL_DIR}/model_robertson_y.cpp
 

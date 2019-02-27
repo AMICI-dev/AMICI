@@ -119,13 +119,13 @@ if(this.recompile)
 end
 % compute functions
 
-funs = {'xdot','w','dwdx','J','x0','Jv','JSparse','JDiag','y','z','rz','deltax','root','Jy','Jz','Jrz','sigma_y','sigma_z'};
+funs = {'xdot','w','dwdx','J','x0','JSparse','JDiag','y','z','rz','deltax','root','Jy','Jz','Jrz','sigma_y','sigma_z'};
 
 if(this.forward)
-    funs = {funs{:},'sxdot','sx0','sz','deltasx','stau','srz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drzdx','drzdp'};
+    funs = {funs{:},'sx0','sz','deltasx','stau','srz','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp','dsigma_ydp','dsigma_zdp','dydx','dzdx','dzdp','drzdx','drzdp'};
 end
 if(this.adjoint)
-    funs = {funs{:},'xBdot','qBdot','JB','JvB','JSparseB','dydx','dzdx','dzdp','drzdx','drzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp'};
+    funs = {funs{:},'JB','JSparseB','dydx','dzdx','dzdp','drzdx','drzdp','deltaxB','deltaqB','dsigma_ydp','dsigma_zdp','sx0','dJydy','dJydsigma','dJzdz','dJzdsigma','dJrzdz','dJrzdsigma','dwdp','dxdotdp','dydp'};
 end
 
 if(strcmp(this.wtype,'iw'))
