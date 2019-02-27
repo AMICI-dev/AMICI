@@ -1342,8 +1342,6 @@ class Model : public AbstractModel {
     
     /** Dense Mass matrix (dimension: nx_solver x nx_solver) */
     SUNMatrixWrapper M;
-    
-    
 
     /** current observable (dimension: nytrue) */
     std::vector<realtype> my;

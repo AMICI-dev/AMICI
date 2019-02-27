@@ -236,3 +236,4 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
 SUNMatrix SUNMatrixWrapper::get() const { return matrix; }
 
 } // namespace amici
+
