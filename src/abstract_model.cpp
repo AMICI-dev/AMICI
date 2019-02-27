@@ -288,11 +288,29 @@ void AbstractModel::fw(realtype *w, const realtype t, const realtype *x,
 void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
                           const realtype *h, const realtype *w,
-                          const realtype *tcl, const realtype *stcl) {}
+                          const realtype *tcl, const realtype *stcl) {
+    throw AmiException("Requested functionality is not supported as (%s) is "
+                       "not implemented for this model!",
+                       __func__);
+}
+
+void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
+                          const realtype *p, const realtype *k,
+                          const realtype *h, const realtype *w,
+                          const realtype *tcl, const realtype *stcl,
+                          const int ip) {
+    throw AmiException("Requested functionality is not supported as (%s) is "
+                       "not implemented for this model!",
+                       __func__);
+}
 
 void AbstractModel::fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
                           const realtype *h, const realtype *w,
                           const realtype *tcl) {}
+    
+void AbstractModel::fdwdx_colptrs(sunindextype *indexvals) {}
+
+void AbstractModel::fdwdx_rowvals(sunindextype *indexvals) {}
 
 } // namespace amici

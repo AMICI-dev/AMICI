@@ -649,7 +649,7 @@ class AbstractModel {
                     const realtype *tcl);
 
     /**
-     * Model specific implementation of dwdp
+     * Model specific sparse implementation of dwdp
      * @param dwdp Recurring terms in xdot, parameter derivative
      * @param t timepoint
      * @param x vector with the states
@@ -664,9 +664,27 @@ class AbstractModel {
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
                        const realtype *stcl);
+    
+    /**
+     * Model specific sensitivity implementation of dwdp
+     * @param dwdp Recurring terms in xdot, parameter derivative
+     * @param t timepoint
+     * @param x vector with the states
+     * @param p parameter vector
+     * @param k constants vector
+     * @param h heavyside vector
+     * @param w vector with helper variables
+     * @param tcl total abundances for conservations laws
+     * @param stcl sensitivities of total abundances for conservations laws
+     * @param ip sensitivity parameter index
+     */
+    virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
+                       const realtype *p, const realtype *k, const realtype *h,
+                       const realtype *w, const realtype *tcl,
+                       const realtype *stcl, const int ip);
 
     /**
-     * Model specific implementation of dwdx
+     * Model specific implementation of dwdx, data part
      * @param dwdx Recurring terms in xdot, state derivative
      * @param t timepoint
      * @param x vector with the states
@@ -679,6 +697,16 @@ class AbstractModel {
     virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl);
+    
+    /** model specific implementation for dwdx, column pointers
+     * @param indexptrs column pointers
+     **/
+    virtual void fdwdx_colptrs(sunindextype *indexptrs);
+    
+    /** model specific implementation for dwdx, row values
+     * @param indexvals row values
+     **/
+    virtual void fdwdx_rowvals(sunindextype *indexvals);
 };
 
 } // namespace amici

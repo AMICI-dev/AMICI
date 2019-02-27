@@ -3,7 +3,6 @@
 #include <cmath>
 #include <memory>
 #include "amici/defines.h"
-#include <sunmatrix/sunmatrix_sparse.h> //SUNMatrixContent_Sparse definition
 #include "amici/solver_cvodes.h"
 #include "amici/model_ode.h"
 
@@ -26,16 +25,12 @@ extern void JDiag_TPL_MODELNAME(realtype *JDiag, const realtype t,
                                 const realtype *x, const realtype *p,
                                 const realtype *k, const realtype *h,
                                 const realtype *w, const realtype *dwdx);
-extern void JSparse_TPL_MODELNAME(SUNMatrixContent_Sparse JSparse,
-                                  const realtype t, const realtype *x,
-                                  const realtype *p, const realtype *k,
-                                  const realtype *h, const realtype *w,
-                                  const realtype *dwdx);
-extern void JSparseB_TPL_MODELNAME(SUNMatrixContent_Sparse JSparseB,
-                                   const realtype t, const realtype *x,
-                                   const realtype *p, const realtype *k,
-                                   const realtype *h, const realtype *xB,
-                                   const realtype *w, const realtype *dwdx);
+TPL_JSPARSE_DEF
+TPL_JSPARSE_COLPTRS_DEF
+TPL_JSPARSE_ROWVALS_DEF
+TPL_JSPARSEB_DEF
+TPL_JSPARSEB_COLPTRS_DEF
+TPL_JSPARSEB_ROWVALS_DEF
 extern void Jy_TPL_MODELNAME(double *nllh, const int iy, const realtype *p,
                              const realtype *k, const double *y,
                              const double *sigmay, const double *my);
@@ -48,11 +43,11 @@ extern void dJydy_TPL_MODELNAME(double *dJydy, const int iy, const realtype *p,
                                 const double *sigmay, const double *my);
 TPL_DWDP_DEF
 TPL_DWDX_DEF
-extern void dxdotdp_TPL_MODELNAME(realtype *dxdotdp, const realtype t,
-                                  const realtype *x, const realtype *p,
-                                  const realtype *k, const realtype *h,
-                                  const int ip, const realtype *w,
-                                  const realtype *dwdp);
+TPL_DWDX_COLPTRS_DEF
+TPL_DWDX_ROWVALS_DEF
+TPL_DXDOTDW_DEF
+TPL_DXDOTDW_COLPTRS_DEF
+TPL_DXDOTDW_ROWVALS_DEF
 extern void dydx_TPL_MODELNAME(double *dydx, const realtype t,
                                const realtype *x, const realtype *p,
                                const realtype *k, const realtype *h,
@@ -115,6 +110,7 @@ public:
                        TPL_NW, // nw
                        TPL_NDWDX, // ndwdx
                        TPL_NDWDP, // ndwdp
+                       TPL_NDXDOTDW, // ndxdotdw
                        TPL_NNZ, // nnz
                        TPL_UBW, // ubw
                        TPL_LBW, // lbw
@@ -176,40 +172,26 @@ public:
         JDiag_TPL_MODELNAME(JDiag, t, x, p, k, h, w, dwdx);
     }
 
-    /** model specific implementation for fJSparse
-     * @param JSparse Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJSparse(SUNMatrixContent_Sparse JSparse, const realtype t,
-                          const realtype *x, const realtype *p,
-                          const realtype *k, const realtype *h,
-                          const realtype *w, const realtype *dwdx) override {
-        JSparse_TPL_MODELNAME(JSparse, t, x, p, k, h, w, dwdx);
-    }
+TPL_JSPARSE_IMPL
+TPL_JSPARSE_COLPTRS_IMPL
+TPL_JSPARSE_ROWVALS_IMPL
 
-    /** model specific implementation for fJSparseB
-     * @param JSparseB Matrix to which the Jacobian will be written
-     * @param t timepoint
-     * @param x Vector with the states
-     * @param p parameter vector
-     * @param k constants vector
-     * @param h heavyside vector
-     * @param xB Vector with the adjoint states
-     * @param w vector with helper variables
-     * @param dwdx derivative of w wrt x
-     **/
-    virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB, const realtype t,
-                           const realtype *x, const realtype *p,
-                           const realtype *k, const realtype *h,
-                           const realtype *xB, const realtype *w,
-                           const realtype *dwdx) override {
-        JSparseB_TPL_MODELNAME(JSparseB, t, x, p, k, h, xB, w, dwdx);
+TPL_JSPARSE_IMPL
+TPL_JSPARSE_COLPTRS_IMPL
+TPL_JSPARSE_ROWVALS_IMPL
+    
+    /** model specific implementation of JSparse, colptrs part
+     * @param indexptrs column pointers
+     */
+    virtual void fJSparseB_colptrs(sunindextype *indexptrs) {
+        JSparseB_colptrs_TPL_MODELNAME(indexptrs);
+    }
+    
+    /** model specific implementation of JSparse, rowvals part
+     * @param indexptrs column pointers
+     */
+    virtual void fJSparseB_rowvals(sunindextype *indexptrs) {
+        JSparseB_rowvals_TPL_MODELNAME(indexptrs);
     }
 
     /** model specific implementation of fJrz
@@ -435,6 +417,7 @@ public:
 
 TPL_DWDP_IMPL
 TPL_DWDX_IMPL
+TPL_DXDOTDW_IMPL
 
     /** model specific implementation of fdxdotdp
      * @param dxdotdp partial derivative xdot wrt p

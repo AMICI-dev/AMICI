@@ -106,6 +106,8 @@ namespace amici {
 
         void fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot);
 
+        void fdxdotdw(const realtype t, const N_Vector x);
+
         void fdxdotdp(const realtype t, const N_Vector x);
         virtual void fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) override {
             fdxdotdp(t,x->getNVector());
@@ -160,7 +162,48 @@ namespace amici {
         virtual void fJSparse(SUNMatrixContent_Sparse JSparse, const realtype t,
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
-                              const realtype *w, const realtype *dwdx) = 0;
+                              const realtype *w, const realtype *dwdx) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
+        }
+
+        /** model specific implementation for fJSparse, data only
+         * @param JSparse Matrix to which the Jacobian will be written
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
+         **/
+        virtual void fJSparse(realtype *JSparse, const realtype t,
+                              const realtype *x, const realtype *p,
+                              const realtype *k, const realtype *h,
+                              const realtype *w, const realtype *dwdx) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
+        }
+
+        /** model specific implementation for fJSparse, column pointers
+         * @param indexptrs column pointers
+         **/
+        virtual void fJSparse_colptrs(sunindextype *indexptrs) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
+        }
+
+        /** model specific implementation for fJSparse, row values
+         * @param indexvals row values
+         **/
+        virtual void fJSparse_rowvals(sunindextype *indexvals) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
+        }
 
         /** model specific implementation for fJSparseB
          * @param JSparseB Matrix to which the Jacobian will be written
@@ -178,6 +221,45 @@ namespace amici {
                                const realtype *p, const realtype *k,
                                const realtype *h, const realtype *xB,
                                const realtype *w, const realtype *dwdx) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
+        }
+
+        /** model specific implementation for fJSparseB
+         * @param JSparseB data array
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param xB Vector with the adjoint states
+         * @param w vector with helper variables
+         * @param dwdx derivative of w wrt x
+         **/
+        virtual void fJSparseB(realtype *JSparseB,
+                               const realtype t, const realtype *x,
+                               const realtype *p, const realtype *k,
+                               const realtype *h, const realtype *xB,
+                               const realtype *w, const realtype *dwdx) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
+        }
+
+        /** model specific implementation for fJSparse, column pointers
+         * @param indexptrs column pointers
+         **/
+        virtual void fJSparseB_colptrs(sunindextype *indexptrs) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
+        }
+
+        /** model specific implementation for fJSparse, row values
+         * @param indexvals row values
+         **/
+        virtual void fJSparseB_rowvals(sunindextype *indexvals) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__);
@@ -235,6 +317,42 @@ namespace amici {
         virtual void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                               const int ip, const realtype *w, const realtype *dwdp) {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
+        }
+
+        /** model specific implementation of fdxdotdw, data part
+         * @param dxdotwp partial derivative xdot wrt w
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param w vector with helper variables
+         */
+        virtual void fdxdotdw(realtype *dxdotdw, const realtype t,
+                              const realtype *x, const realtype *p,
+                              const realtype *k, const realtype *h,
+                              const realtype *w) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
+        }
+
+        /** model specific implementation of fdxdotdw, colptrs part
+         * @param indexptrs column pointers
+         */
+        virtual void fdxdotdw_colptrs(sunindextype *indexptrs) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
+        }
+
+        /** model specific implementation of fdxdotdw, colptrs part
+         * @param indexvals row values
+         */
+        virtual void fdxdotdw_rowvals(sunindextype *indexvals) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
     };
 

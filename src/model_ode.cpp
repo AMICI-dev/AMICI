@@ -42,9 +42,17 @@ namespace amici {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
-        fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
-                 N_VGetArrayPointer(x_pos), unscaledParameters.data(),
-                 fixedParameters.data(), h.data(), w.data(), dwdx.data());
+        try {
+            fJSparse(SM_DATA_S(J), t, N_VGetArrayPointer(x_pos),
+                     unscaledParameters.data(), fixedParameters.data(),
+                     h.data(), w.data(), dwdx.data());
+            fJSparse_colptrs(SM_INDEXPTRS_S(J));
+            fJSparse_rowvals(SM_INDEXVALS_S(J));
+        } catch (AmiException &) {
+            fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
+                     N_VGetArrayPointer(x_pos), unscaledParameters.data(),
+                     fixedParameters.data(), h.data(), w.data(), dwdx.data());
+        }
     }
 
     void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector * /*dx*/,
@@ -117,19 +125,42 @@ namespace amici {
             throw AmiException("Evaluation of fJDiag failed!");
     }
 
+    /** Sensitivity of dx/dt wrt model parameters w
+     * @param t timepoint
+     * @param x Vector with the states
+     * @return status flag indicating successful execution
+     */
+    void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
+        auto x_pos = computeX_pos(x);
+        fdxdotdw(dxdotdw.data(), t, N_VGetArrayPointer(x_pos),
+                 unscaledParameters.data(), fixedParameters.data(),
+                 h.data(), w.data());
+        fdxdotdw_colptrs(dxdotdw.indexptrs());
+        fdxdotdw_rowvals(dxdotdw.indexvals());
+    }
+
     /** Sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states
      * @return status flag indicating successful execution
      */
     void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
-        auto x_pos = computeX_pos(x);
-        fdwdp(t,N_VGetArrayPointer(x_pos));
-        for(int ip = 0; ip < nplist(); ip++) {
-            N_VConst(0.0, dxdotdp.getNVector(ip));
-            fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
-                     unscaledParameters.data(), fixedParameters.data(),
-                     h.data(), plist_[ip], w.data(), dwdp.data());
+        fdwdp(t, N_VGetArrayPointer(x));
+        try {
+            // python generated
+            fdxdotdw(t, x);
+            for (int ip = 0; ip < nplist(); ip++) {
+                dxdotdw.multiply(dxdotdp.data(ip), &dwdp.at(nw * ip));
+            }
+        } catch (AmiException &) {
+            // matlab generated
+            auto x_pos = computeX_pos(x);
+            for (int ip = 0; ip < nplist(); ip++) {
+                N_VConst(0.0, dxdotdp.getNVector(ip));
+                fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
+                         unscaledParameters.data(), fixedParameters.data(),
+                         h.data(), plist_[ip], w.data(), dwdp.data());
+            }
         }
     }
 
@@ -165,14 +196,22 @@ namespace amici {
      * @param JB Matrix to which the Jacobian will be written
      */
     void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB,
-                              N_Vector  /*xBdot*/, SUNMatrix JB) {
+                              N_Vector /*xBdot*/, SUNMatrix JB) {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(JB);
-        fJSparseB(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(JB)), t,
-                  N_VGetArrayPointer(x_pos), unscaledParameters.data(),
-                  fixedParameters.data(), h.data(), N_VGetArrayPointer(xB),
-                  w.data(), dwdx.data());
+        try {
+            fJSparseB(SM_DATA_S(JB), t, N_VGetArrayPointer(x_pos),
+                      unscaledParameters.data(), fixedParameters.data(),
+                      h.data(), N_VGetArrayPointer(xB), w.data(), dwdx.data());
+            fJSparseB_colptrs(SM_INDEXPTRS_S(JB));
+            fJSparseB_rowvals(SM_INDEXVALS_S(JB));
+        } catch (AmiException &) {
+            fJSparseB(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(JB)), t,
+                      N_VGetArrayPointer(x_pos), unscaledParameters.data(),
+                      fixedParameters.data(), h.data(), N_VGetArrayPointer(xB),
+                      w.data(), dwdx.data());
+        }
     }
 
     /** implementation of fJDiag at the N_Vector level, this function provides an interface

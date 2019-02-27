@@ -56,6 +56,7 @@ class Model : public AbstractModel {
      * repeating elements
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
+     * @param ndxdotdw number of nonzero elements in the w derivate of xdot
      * @param nnz number of nonzero elements in Jacobian
      * @param ubw upper matrix bandwidth in the Jacobian
      * @param lbw lower matrix bandwidth in the Jacobian
@@ -69,8 +70,8 @@ class Model : public AbstractModel {
     Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
           const int nxtrue_solver, const int ny, const int nytrue, const int nz,
           const int nztrue, const int ne, const int nJ, const int nw,
-          const int ndwdx, const int ndwdp, const int nnz, const int ubw,
-          const int lbw, amici::SecondOrderMode o2mode,
+          const int ndwdx, const int ndwdp, const int ndxdotdw, const int nnz,
+          const int ubw, const int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event);
@@ -108,6 +109,8 @@ class Model : public AbstractModel {
     using AbstractModel::fdsigmazdp;
     using AbstractModel::fdwdp;
     using AbstractModel::fdwdx;
+    using AbstractModel::fdwdx_colptrs;
+    using AbstractModel::fdwdx_rowvals;
     using AbstractModel::fdydp;
     using AbstractModel::fdydx;
     using AbstractModel::fdzdp;
@@ -1153,6 +1156,8 @@ class Model : public AbstractModel {
     const int ndwdx;
     /** number of derivatives of common expressions wrt p */
     const int ndwdp;
+    /** number of nonzero entries in dxdotdw */
+    const int ndxdotdw;
     /** number of nonzero entries in jacobian */
     const int nnz;
     /** dimension of the augmented objective function for 2nd order ASA */
@@ -1329,8 +1334,16 @@ class Model : public AbstractModel {
     /** Sparse Jacobian (dimension: nnz)*/
     SUNMatrixWrapper J;
     
-    /** Sparse Jacobian (dimension: nx_solver x nx_solver)*/
+    /** Sparse dxdotdw temporary storage (dimension: ndxdotdw) */
+    SUNMatrixWrapper dxdotdw;
+    
+    /** Sparse dwdx temporary storage (dimension: ndwdx) */
+    SUNMatrixWrapper dwdx;
+    
+    /** Dense Mass matrix (dimension: nx_solver x nx_solver) */
     SUNMatrixWrapper M;
+    
+    
 
     /** current observable (dimension: nytrue) */
     std::vector<realtype> my;
@@ -1376,10 +1389,8 @@ class Model : public AbstractModel {
     std::vector<realtype> dydx;
     /** tempory storage of w data across functions (dimension: nw) */
     std::vector<realtype> w;
-    /** tempory storage of sparse dwdx data across functions (dimension: ndwdx)
-     */
-    std::vector<realtype> dwdx;
-    /** tempory storage of sparse dwdp data across functions (dimension: ndwdp)
+    /** tempory storage of sparse/dense dwdp data across functions
+     (dimension: ndwdp)
      */
     std::vector<realtype> dwdp;
     

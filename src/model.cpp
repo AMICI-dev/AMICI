@@ -4,6 +4,8 @@
 #include "amici/exception.h"
 #include "amici/symbolic_functions.h"
 
+#include <sundials/sundials_matrix.h> // SUNMatZero
+
 #include <numeric>
 #include <algorithm>
 #include <cstring>
@@ -819,7 +821,7 @@ std::vector<std::string> Model::getParameterIds() const {
 
 Model::Model()
     : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0),
-    nytrue(0), nz(0), nztrue(0), ne(0), nw(0), ndwdx(0), ndwdp(0), nnz(0),
+    nytrue(0), nz(0), nztrue(0), ne(0), nw(0), ndwdx(0), ndwdp(0), ndxdotdw(0), nnz(0),
     nJ(0), ubw(0), lbw(0), o2mode(SecondOrderMode::none), dxdotdp(0,0),
     x_pos_tmp(0) {}
 
@@ -836,6 +838,7 @@ Model::Model(const int nx_rdata,
              const int nw,
              const int ndwdx,
              const int ndwdp,
+             const int ndxdotdw,
              const int nnz,
              const int ubw,
              const int lbw,
@@ -853,6 +856,7 @@ Model::Model(const int nx_rdata,
       nw(nw),
       ndwdx(ndwdx),
       ndwdp(ndwdp),
+      ndxdotdw(ndxdotdw),
       nnz(nnz),
       nJ(nJ),
       ubw(ubw),
@@ -872,6 +876,8 @@ Model::Model(const int nx_rdata,
       deltaqB(nJ*plist.size(), 0.0),
       dxdotdp(nx_solver, plist.size()),
       J(nx_solver, nx_solver, nnz, CSC_MAT),
+      dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
+      dwdx(nw, nx_solver, ndwdx, CSC_MAT),
       M(nx_solver, nx_solver),
       my(nytrue, 0.0),
       mz(nztrue, 0.0),
@@ -888,7 +894,6 @@ Model::Model(const int nx_rdata,
       dydp(ny*plist.size(), 0.0),
       dydx(ny*nx_solver,0.0),
       w(nw, 0.0),
-      dwdx(ndwdx, 0.0),
       dwdp(ndwdp, 0.0),
       stau(plist.size(), 0.0),
       sx(nx_solver*plist.size(), 0.0),
@@ -1429,22 +1434,38 @@ void Model::fw(const realtype t, const realtype *x) {
 }
 
 void Model::fdwdp(const realtype t, const realtype *x) {
-    fw(t,x);
-    std::fill(dwdp.begin(),dwdp.end(),0.0);
-    fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), w.data(), total_cl.data(), stotal_cl.data());
+    fw(t, x);
+    std::fill(dwdp.begin(), dwdp.end(), 0.0);
+    try {
+        fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
+              fixedParameters.data(), h.data(), w.data(), total_cl.data(),
+              stotal_cl.data());
+    } catch (AmiException &) {
+        realtype *stcl = nullptr;
+        for (int ip = 0; ip < nplist(); ++ip) {
+            if (ncl() > 0)
+                stcl = &stotal_cl.at(plist(ip) * ncl());
+            fdwdp(&dwdp.at(nw * ip), t, x, unscaledParameters.data(),
+                  fixedParameters.data(), h.data(), w.data(), total_cl.data(),
+                  stcl, plist_[ip]);
+        }
+    }
 
-    if(alwaysCheckFinite) {
+    if (alwaysCheckFinite) {
         amici::checkFinite(dwdp, "dwdp");
     }
 }
 
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t,x);
-    std::fill(dwdx.begin(),dwdx.end(),0.0);
-    fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(), h.data(), w.data(), total_cl.data());
+    SUNMatZero(dwdx.get());
+    fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
+          h.data(), w.data(), total_cl.data());
+    fdwdx_colptrs(dwdx.indexptrs());
+    fdwdx_rowvals(dwdx.indexptrs());
 
     if(alwaysCheckFinite) {
-        amici::checkFinite(dwdx, "dwdx");
+        amici::checkFinite(ndwdx, dwdx.data(), "dwdx");
     }
 }
 
