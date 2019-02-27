@@ -156,7 +156,8 @@ private:
 class AmiVectorArray {
 public:
     
-    /** default constructor
+    /**
+     * @brief Default constructor
      * @return new empty AmiVectorArray instance
      */
     AmiVectorArray() {}
