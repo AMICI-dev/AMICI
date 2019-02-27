@@ -100,7 +100,7 @@ realtype *SUNMatrixWrapper::data() const {
     return nullptr; // -Wreturn-type
 }
 
-sunindextype SUNMatrixWrapper::rows() const {
+indextype SUNMatrixWrapper::rows() const {
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         return SM_ROWS_D(matrix);
@@ -114,7 +114,7 @@ sunindextype SUNMatrixWrapper::rows() const {
     }
 }
 
-sunindextype SUNMatrixWrapper::columns() const {
+indextype SUNMatrixWrapper::columns() const {
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         return SM_COLUMNS_D(matrix);
@@ -128,7 +128,7 @@ sunindextype SUNMatrixWrapper::columns() const {
     }
 }
 
-sunindextype *SUNMatrixWrapper::indexvals() const {
+indextype *SUNMatrixWrapper::indexvals() const {
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_SPARSE:
         return SM_INDEXVALS_S(matrix);
@@ -137,7 +137,7 @@ sunindextype *SUNMatrixWrapper::indexvals() const {
     }
 }
 
-sunindextype *SUNMatrixWrapper::indexptrs() const {
+indextype *SUNMatrixWrapper::indexptrs() const {
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_SPARSE:
         return SM_INDEXPTRS_S(matrix);
@@ -155,12 +155,12 @@ int SUNMatrixWrapper::sparsetype() const {
 
 void SUNMatrixWrapper::multiply(std::vector<realtype> &c,
                                 const std::vector<realtype> &b) const {
-    if (static_cast<sunindextype>(c.size()) != rows())
+    if (static_cast<indextype>(c.size()) != rows())
         throw AmiException("Dimension mismatch between number of rows in A (%i)"
                            " and elements in c (%i).",
                            rows(), c.size());
 
-    if (static_cast<sunindextype>(b.size()) != columns())
+    if (static_cast<indextype>(b.size()) != columns())
         throw AmiException("Dimension mismatch between number of cols in A (%i)"
                            " and elements in b (%i).",
                            columns(), b.size());
@@ -192,16 +192,16 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
 
         switch (sparsetype()) {
         case CSC_MAT:
-            for (sunindextype i = 0; i < columns(); ++i) {
-                for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1];
+            for (indextype i = 0; i < columns(); ++i) {
+                for (indextype k = indexptrs()[i]; k < indexptrs()[i + 1];
                      ++k) {
                     c[indexvals()[k]] += data()[k] * b[i];
                 }
             }
             break;
         case CSR_MAT:
-            for (sunindextype i = 0; i < rows(); ++i) {
-                for (sunindextype k = indexptrs()[i]; k < indexptrs()[i + 1];
+            for (indextype i = 0; i < rows(); ++i) {
+                for (indextype k = indexptrs()[i]; k < indexptrs()[i + 1];
                      ++k) {
                     c[i] += data()[k] * b[indexvals()[k]];
                 }
@@ -220,4 +220,3 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
 SUNMatrix SUNMatrixWrapper::get() const { return matrix; }
 
 } // namespace amici
-

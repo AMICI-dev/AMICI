@@ -664,7 +664,7 @@ class AbstractModel {
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
                        const realtype *stcl);
-    
+
     /**
      * Model specific sensitivity implementation of dwdp
      * @param dwdp Recurring terms in xdot, parameter derivative
@@ -697,16 +697,16 @@ class AbstractModel {
     virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl);
-    
+
     /** model specific implementation for dwdx, column pointers
      * @param indexptrs column pointers
      **/
-    virtual void fdwdx_colptrs(sunindextype *indexptrs);
-    
+    virtual void fdwdx_colptrs(indextype *indexptrs);
+
     /** model specific implementation for dwdx, row values
      * @param indexvals row values
      **/
-    virtual void fdwdx_rowvals(sunindextype *indexvals);
+    virtual void fdwdx_rowvals(indextype *indexvals);
 };
 
 } // namespace amici

@@ -192,7 +192,7 @@ namespace amici {
         /** model specific implementation for fJSparse, column pointers
          * @param indexptrs column pointers
          **/
-        virtual void fJSparse_colptrs(sunindextype *indexptrs) {
+        virtual void fJSparse_colptrs(indextype *indexptrs) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__);
@@ -201,7 +201,7 @@ namespace amici {
         /** model specific implementation for fJSparse, row values
          * @param indexvals row values
          **/
-        virtual void fJSparse_rowvals(sunindextype *indexvals) {
+        virtual void fJSparse_rowvals(indextype *indexvals) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__);
@@ -252,7 +252,7 @@ namespace amici {
         /** model specific implementation for fJSparse, column pointers
          * @param indexptrs column pointers
          **/
-        virtual void fJSparseB_colptrs(sunindextype *indexptrs) {
+        virtual void fJSparseB_colptrs(indextype *indexptrs) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__);
@@ -261,7 +261,7 @@ namespace amici {
         /** model specific implementation for fJSparse, row values
          * @param indexvals row values
          **/
-        virtual void fJSparseB_rowvals(sunindextype *indexvals) {
+        virtual void fJSparseB_rowvals(indextype *indexvals) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__);
@@ -342,7 +342,7 @@ namespace amici {
         /** model specific implementation of fdxdotdw, colptrs part
          * @param indexptrs column pointers
          */
-        virtual void fdxdotdw_colptrs(sunindextype *indexptrs) {
+        virtual void fdxdotdw_colptrs(indextype *indexptrs) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__); // not implemented
@@ -351,7 +351,7 @@ namespace amici {
         /** model specific implementation of fdxdotdw, colptrs part
          * @param indexvals row values
          */
-        virtual void fdxdotdw_rowvals(sunindextype *indexvals) {
+        virtual void fdxdotdw_rowvals(indextype *indexvals) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__); // not implemented
