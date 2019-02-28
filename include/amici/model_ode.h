@@ -192,7 +192,7 @@ namespace amici {
         /** model specific implementation for fJSparse, column pointers
          * @param indexptrs column pointers
          **/
-        virtual void fJSparse_colptrs(indextype *indexptrs) {
+        virtual void fJSparse_colptrs(sunindextype *indexptrs) {
             throw std::invalid_argument("Not implement for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
@@ -201,7 +201,7 @@ namespace amici {
         /** model specific implementation for fJSparse, row values
          * @param indexvals row values
          **/
-        virtual void fJSparse_rowvals(indextype *indexvals) {
+        virtual void fJSparse_rowvals(sunindextype *indexvals) {
             throw std::invalid_argument("Not implement for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
@@ -252,7 +252,7 @@ namespace amici {
         /** model specific implementation for fJSparse, column pointers
          * @param indexptrs column pointers
          **/
-        virtual void fJSparseB_colptrs(indextype *indexptrs) {
+        virtual void fJSparseB_colptrs(sunindextype *indexptrs) {
             throw std::invalid_argument("Not implement for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
@@ -261,7 +261,7 @@ namespace amici {
         /** model specific implementation for fJSparse, row values
          * @param indexvals row values
          **/
-        virtual void fJSparseB_rowvals(indextype *indexvals) {
+        virtual void fJSparseB_rowvals(sunindextype *indexvals) {
             throw std::invalid_argument("Not implement for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
@@ -322,7 +322,7 @@ namespace amici {
         }
 
         /** model specific implementation of fdxdotdw, data part
-         * @param ddxdotw partial derivative xdot wrt w
+         * @param ddxdotwsun partial derivative xdot wrt w
          * @param t timepoint
          * @param x Vector with the states
          * @param p parameter vector
@@ -342,7 +342,7 @@ namespace amici {
         /** model specific implementation of fdxdotdw, colptrs part
          * @param indexptrs column pointers
          */
-        virtual void fdxdotdw_colptrs(indextype *indexptrs) {
+        virtual void fdxdotdw_colptrs(sunindextype *indexptrs) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__); // not implemented
@@ -351,7 +351,7 @@ namespace amici {
         /** model specific implementation of fdxdotdw, colptrs part
          * @param indexvals row values
          */
-        virtual void fdxdotdw_rowvals(indextype *indexvals) {
+        virtual void fdxdotdw_rowvals(sunindextype *indexvals) {
             throw AmiException("Requested functionality is not supported as %s "
                                "is not implemented for this model!",
                                __func__); // not implemented

@@ -309,8 +309,8 @@ void AbstractModel::fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                           const realtype *h, const realtype *w,
                           const realtype *tcl) {}
     
-void AbstractModel::fdwdx_colptrs(indextype *indexvals) {}
+void AbstractModel::fdwdx_colptrs(sunindextype *indexvals) {}
 
-void AbstractModel::fdwdx_rowvals(indextype *indexvals) {}
+void AbstractModel::fdwdx_rowvals(sunindextype *indexvals) {}
 
 } // namespace amici

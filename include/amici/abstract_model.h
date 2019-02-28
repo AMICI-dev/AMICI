@@ -701,12 +701,12 @@ class AbstractModel {
     /** model specific implementation for dwdx, column pointers
      * @param indexptrs column pointers
      **/
-    virtual void fdwdx_colptrs(indextype *indexptrs);
+    virtual void fdwdx_colptrs(sunindextype *indexptrs);
 
     /** model specific implementation for dwdx, row values
      * @param indexvals row values
      **/
-    virtual void fdwdx_rowvals(indextype *indexvals);
+    virtual void fdwdx_rowvals(sunindextype *indexvals);
 };
 
 } // namespace amici

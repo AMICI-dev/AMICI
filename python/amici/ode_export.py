@@ -2634,7 +2634,7 @@ def get_function_implementation(fun, name):
 
     """
     return \
-        '{ind4}virtual void f{fun}{signature} override {{\n' \
+        'virtual void f{fun}{signature} override {{\n' \
         '{ind8}{fun}_{name}{eval_signature};\n' \
         '{ind4}}}\n'.format(
             ind4=' '*4,
@@ -2662,7 +2662,7 @@ def get_sunindex_implementation(fun, name, indextype):
 
     """
     return \
-        '{ind4}virtual void f{fun}_{indextype}{signature} override {{\n' \
+        'virtual void f{fun}_{indextype}{signature} override {{\n' \
         '{ind8}{fun}_{indextype}_{name}{eval_signature};\n' \
         '{ind4}}}\n'.format(
             ind4=' '*4,
