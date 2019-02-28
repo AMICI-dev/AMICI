@@ -288,11 +288,23 @@ void AbstractModel::fw(realtype *w, const realtype t, const realtype *x,
 void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
                           const realtype *h, const realtype *w,
-                          const realtype *tcl, const realtype *stcl) {}
+                          const realtype *tcl, const realtype *stcl) {
+}
+
+void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
+                          const realtype *p, const realtype *k,
+                          const realtype *h, const realtype *w,
+                          const realtype *tcl, const realtype *stcl,
+                          const int ip) {
+}
 
 void AbstractModel::fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
                           const realtype *h, const realtype *w,
                           const realtype *tcl) {}
+    
+void AbstractModel::fdwdx_colptrs(sunindextype *indexvals) {}
+
+void AbstractModel::fdwdx_rowvals(sunindextype *indexvals) {}
 
 } // namespace amici

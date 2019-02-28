@@ -45,6 +45,7 @@ namespace amici {
          * repeating elements
          * @param ndwdp number of nonzero elements in the p derivative of the
          * repeating elements
+         * @param ndxdotdw number of nonzero elements dxdotdw
          * @param nnz number of nonzero elements in Jacobian
          * @param ubw upper matrix bandwidth in the Jacobian
          * @param lbw lower matrix bandwidth in the Jacobian
@@ -59,14 +60,15 @@ namespace amici {
                   const int nx_solver, const int nxtrue_solver, const int ny,
                   const int nytrue, const int nz, const int nztrue,
                   const int ne, const int nJ, const int nw, const int ndwdx,
-                  const int ndwdp, const int nnz, const int ubw, const int lbw,
-                  const SecondOrderMode o2mode, std::vector<realtype> const &p,
+                  const int ndwdp, const int ndxdotdw, const int nnz,
+                  const int ubw, const int lbw, const SecondOrderMode o2mode,
+                  std::vector<realtype> const &p,
                   std::vector<realtype> const &k, std::vector<int> const &plist,
                   std::vector<realtype> const &idlist,
                   std::vector<int> const &z2event)
             : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny,
-                    nytrue, nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, nnz, ubw, lbw,
-                    o2mode, p, k, plist, idlist, z2event) {}
+                    nytrue, nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, nnz,
+                    ubw, lbw, o2mode, p, k, plist, idlist, z2event) {}
 
         virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
                         AmiVector *xdot, SUNMatrix J) override;

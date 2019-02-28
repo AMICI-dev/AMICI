@@ -68,6 +68,7 @@ TEST_GROUP(model)
                                   0,
                                   0,
                                   0,
+                                  0,
                                   SecondOrderMode::none,
                                   p,
                                   k,
@@ -293,6 +294,7 @@ TEST_GROUP(edata)
                                       nz,
                                       nz,
                                       nmaxevent,
+                                      0,
                                       0,
                                       0,
                                       0,
@@ -600,6 +602,7 @@ TEST_GROUP(solver)
                                       0,
                                       0,
                                       0,
+                                      0,
                                       1,
                                       0,
                                       0,
@@ -840,22 +843,22 @@ TEST(sunmatrixwrapper, dense_multiply)
 
 TEST(sunmatrixwrapper, multiply_throws)
 {
-    CHECK_THROWS(AmiException, A.multiply(b, a));
-    CHECK_THROWS(AmiException, A.multiply(a, a));
-    CHECK_THROWS(AmiException, A.multiply(b, b));
+    CHECK_THROWS(std::invalid_argument, A.multiply(b, a));
+    CHECK_THROWS(std::invalid_argument, A.multiply(a, a));
+    CHECK_THROWS(std::invalid_argument, A.multiply(b, b));
     auto b_amivector = AmiVector(b);
     auto a_amivector = AmiVector(a);
-    CHECK_THROWS(AmiException, A.multiply(b_amivector.getNVector(),
+    CHECK_THROWS(std::invalid_argument, A.multiply(b_amivector.getNVector(),
                                           a_amivector.getNVector()));
-    CHECK_THROWS(AmiException, A.multiply(a_amivector.getNVector(),
+    CHECK_THROWS(std::invalid_argument, A.multiply(a_amivector.getNVector(),
                                           a_amivector.getNVector()));
-    CHECK_THROWS(AmiException, A.multiply(b_amivector.getNVector(),
+    CHECK_THROWS(std::invalid_argument, A.multiply(b_amivector.getNVector(),
                                           b_amivector.getNVector()));
 }
 
 TEST(sunmatrixwrapper, transform_throws)
 {
-    CHECK_THROWS(AmiException, SUNMatrixWrapper(A, 0.0, 13));
+    CHECK_THROWS(std::invalid_argument, SUNMatrixWrapper(A, 0.0, 13));
     auto A_sparse = SUNMatrixWrapper(A, 0.0, CSR_MAT);
-    CHECK_THROWS(AmiException, SUNMatrixWrapper(A_sparse, 0.0, CSR_MAT));
+    CHECK_THROWS(std::invalid_argument, SUNMatrixWrapper(A_sparse, 0.0, CSR_MAT));
 }

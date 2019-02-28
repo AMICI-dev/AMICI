@@ -68,9 +68,9 @@ functions = {
     },
     'JSparse': {
         'signature':
-            '(SUNMatrixContent_Sparse JSparse, const realtype t, '
-            'const realtype *x, const realtype *p, const realtype *k,  '
-            'const realtype *h, const realtype *w, const realtype *dwdx)',
+            '(realtype *JSparse, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -78,10 +78,9 @@ functions = {
     },
     'JSparseB': {
         'signature':
-            '(SUNMatrixContent_Sparse JSparseB, const realtype t, '
-            'const realtype *x, const realtype *p, const realtype *k, '
-            'const realtype *h, const realtype *xB, const realtype *w, '
-            'const realtype *dwdx)',
+            '(realtype *JSparseB, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *xB, const realtype *w, const realtype *dwdx)',
         'sparse':
             True,
         'assume_pow_positivity':
@@ -109,9 +108,8 @@ functions = {
         'signature':
             '(realtype *dwdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl, const realtype *dtcldp)',
-        'sparse':
-            True,
+            'const realtype *w, const realtype *tcl, const realtype *dtcldp, '
+            'const int ip)',
         'assume_pow_positivity':
             True,
     },
@@ -125,11 +123,21 @@ functions = {
         'assume_pow_positivity':
             True,
     },
+    'dxdotdw': {
+        'signature':
+            '(realtype *dxdotdw, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const realtype *w)',
+        'sparse':
+            True,
+        'assume_pow_positivity':
+            True,
+    },
     'dxdotdp': {
         'signature':
             '(realtype *dxdotdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ip, const realtype *w, const realtype *dwdp)',
+            'const int ip, const realtype *w)',
         'assume_pow_positivity':
             True,
     },
@@ -805,12 +813,6 @@ class ODEModel:
                 'x': 'JB',
                 'y': 'vB',
             },
-            'qBdot': {
-                'x': 'xB',
-                'transpose_x': True,
-                'y': 'dxdotdp',
-                'sign': -1,
-            },
             'xBdot': {
                 'x': 'JB',
                 'y': 'xB',
@@ -1075,7 +1077,7 @@ class ODEModel:
             self._generateSparseSymbol(name)
         return self._sparseeqs[name]
 
-    def colptr(self, name):
+    def colptrs(self, name):
         """Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
 
@@ -1094,7 +1096,7 @@ class ODEModel:
             self._generateSparseSymbol(name)
         return self._colptrs[name]
 
-    def rowval(self, name):
+    def rowvals(self, name):
         """Returns (and constructs if necessary) the row values for a
         sparsified symbolic variable.
 
@@ -1179,10 +1181,7 @@ class ODEModel:
             return
         elif name == 'dtcldp':
             self._syms[name] = sp.Matrix([
-                [
-                    sp.Symbol(f's{strip_pysb(tcl.get_id())}_{ip}')
-                    for ip in range(len(self.sym('p')))
-                ]
+                sp.Symbol(f's{strip_pysb(tcl.get_id())}')
                 for tcl in self._conservationlaws
             ])
             return
@@ -1467,11 +1466,18 @@ class ODEModel:
 
         # automatically detect chainrule
         chainvars = []
+        ignore_chainrule = {
+            ('xdot', 'p'): 'w'  # has generic implementation in c++ code
+        }
         for cv in ['w', 'tcl']:
             if var_in_function_signature(eq, cv) \
                     and not self._lock_total_derivative \
                     and var is not cv \
-                    and min(self.sym(cv).shape):
+                    and min(self.sym(cv).shape) \
+                    and (
+                            (eq, var) not in ignore_chainrule
+                            or ignore_chainrule[(eq, var)] != cv
+                    ):
                 chainvars.append(cv)
 
         if len(chainvars):
@@ -1891,6 +1897,9 @@ class ODEExporter:
         """
         for function in self.functions.keys():
             self._writeFunctionFile(function)
+            if function in sparse_functions:
+                self._write_function_index(function, 'colptrs')
+                self._write_function_index(function, 'rowvals')
 
         for name in self.model.symNames():
             self._writeIndexFiles(name)
@@ -2057,17 +2066,14 @@ class ODEExporter:
         # function header
         lines = [
             '#include "amici/symbolic_functions.h"',
-            '#include "amici/defines.h" //realtype definition',
-            'using amici::realtype;',
+            '#include "amici/defines.h"',
+            '#include "sundials/sundials_types.h"',
             '#include <cmath>',
             ''
         ]
 
         # function signature
         signature = self.functions[function]['signature']
-
-        if 'SUNMatrixContent_Sparse' in signature:
-            lines.append('#include <sunmatrix/sunmatrix_sparse.h>')
 
         lines.append('')
 
@@ -2101,6 +2107,48 @@ class ODEExporter:
         with open(os.path.join(
                 self.modelPath, f'{self.modelName}_{function}.cpp'), 'w'
         ) as fileout:
+            fileout.write('\n'.join(lines))
+
+    def _write_function_index(self, function, indextype):
+        """Generate equations and write the C++ code for the function
+        `function`.
+
+        Arguments:
+            function: name of the function to be written (see self.functions)
+            @type str
+            indextype: type of index {'colptrs', 'rowvals'}
+
+        Returns:
+
+        Raises:
+
+        """
+
+        # function signature
+        signature = f'(sunindextype *{indextype})'
+
+        if indextype == 'colptrs':
+            values = self.model.colptrs(function)
+        elif indextype == 'rowvals':
+            values = self.model.rowvals(function)
+        else:
+            raise ValueError('Invalid value for type, must be colptr or '
+                             'rowval')
+
+        lines = [
+            '#include "sundials/sundials_types.h"',
+            '',
+            f'void {function}_{indextype}_{self.modelName}{signature}{{',
+        ]
+        lines.extend(
+            [' ' * 4 + f'{indextype}[{index}] = {value};'
+             for index, value in enumerate(values)]
+        )
+        lines.append('}')
+        with open(os.path.join(
+                self.modelPath,
+                f'{self.modelName}_{function}_{indextype}.cpp'
+        ), 'w') as fileout:
             fileout.write('\n'.join(lines))
 
     def _getFunctionBody(self, function, symbol):
@@ -2154,14 +2202,8 @@ class ODEExporter:
             lines.extend(getSwitchStatement('iy', cases, 1))
 
         else:
-            if function in ['JSparse', 'JSparseB']:
-                rowVals = self.model.rowval(function)
-                colPtrs = self.model.colptr(function)
-                lines += self._getSparseSymLines(
-                    symbol, rowVals, colPtrs, function, 4
-                )
-            else:
-                lines += self._getSymLines(symbol, function, 4)
+            lines += self._getSymLines(symbol, function, 4)
+
 
         return [line for line in lines if line]
 
@@ -2223,8 +2265,9 @@ class ODEExporter:
             'NEVENT': '0',
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
-            'NDWDP': str(len(self.model.sparsesym('dwdp'))),
+            'NDWDP': str(len(self.model.eq('dwdp'))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
+            'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NNZ': str(len(self.model.sparsesym('JSparse'))),
             'UBW': str(self.model.nx_solver()),
             'LBW': str(self.model.nx_solver()),
@@ -2256,11 +2299,23 @@ class ODEExporter:
             'AMICI_COMMIT_STRING': __commit__,
         }
 
-        for fun in ['w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl']:
+        for fun in [
+            'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
+            'dxdotdp', 'JSparse', 'JSparseB',
+        ]:
             tplData[f'{fun.upper()}_DEF'] = \
                 get_function_definition(fun, self.modelName)
             tplData[f'{fun.upper()}_IMPL'] = \
                 get_function_implementation(fun, self.modelName)
+            if fun in sparse_functions:
+                tplData[f'{fun.upper()}_COLPTRS_DEF'] = \
+                    get_sunindex_definition(fun, self.modelName, 'colptrs')
+                tplData[f'{fun.upper()}_COLPTRS_IMPL'] = \
+                    get_sunindex_implementation(fun, self.modelName, 'colptrs')
+                tplData[f'{fun.upper()}_ROWVALS_DEF'] = \
+                    get_sunindex_definition(fun, self.modelName, 'rowvals')
+                tplData[f'{fun.upper()}_ROWVALS_IMPL'] = \
+                    get_sunindex_implementation(fun, self.modelName, 'rowvals')
 
         if self.model.nx_solver() == self.model.nx_rdata():
             tplData['X_RDATA_DEF'] = ''
@@ -2403,50 +2458,6 @@ class ODEExporter:
                                     f'{self._printWithException(math)};'
                 for index, math in enumerate(symbols)
                 if not (math == 0 or math == 0.0)]
-
-    def _getSparseSymLines(
-            self, symbolList, RowVals, ColPtrs, variable, indentLevel
-    ):
-        """Generate C++ code for assigning sparse symbolic matrix to a C++ array
-        `variable`.
-
-        Arguments:
-            symbolList: symbolic terms @type int
-
-            RowVals: row indices of each nonzero entry (see
-            SUNMatrixContent_Sparse documentation for details) @type list
-
-            ColPtrs: indices of the first column entries (see
-            SUNMatrixContent_Sparse documentation for details) @type list
-
-            variable: name of the C++ array to assign to @type str
-
-            indentLevel: indentation level (number of leading blanks) @type int
-
-        Returns:
-        C++ code as list of lines
-
-        Raises:
-
-        """
-        lines = [
-            ' ' * indentLevel + f'{variable}->indexvals[{index}] = '
-                                f'{self._printWithException(math)};'
-            for index, math in enumerate(RowVals)
-        ]
-
-        lines.extend(
-            [' ' * indentLevel + f'{variable}->indexptrs[{index}] = '
-                                 f'{self._printWithException(math)};'
-             for index, math in enumerate(ColPtrs)]
-        )
-        lines.extend(
-            [' ' * indentLevel + f'{variable}->data[{index}] = '
-                                 f'{self._printWithException(math)};'
-             for index, math in enumerate(symbolList)]
-        )
-
-        return lines
 
     def _printWithException(self, math):
         """Generate C++ code for a symbolic expression
@@ -2599,6 +2610,25 @@ def get_function_definition(fun, name):
         f'extern void {fun}_{name}{functions[fun]["signature"]};'
 
 
+def get_sunindex_definition(fun, name, indextype):
+    """Constructs the function definition for an index function of a given
+    function
+
+    Arguments:
+        fun: function name @type str
+        name: model name @type str
+        indextype: index function {'colptrs', 'rowvals'} @type str
+
+    Returns:
+    c++ function definition string
+
+    Raises:
+
+    """
+    return \
+        f'extern void {fun}_{indextype}_{name}(sunindextype *{indextype});'
+
+
 def get_function_implementation(fun, name):
     """Constructs the function implementation for a given function
 
@@ -2613,7 +2643,7 @@ def get_function_implementation(fun, name):
 
     """
     return \
-        '{ind4}virtual void f{fun}{signature} override {{\n' \
+        'virtual void f{fun}{signature} override {{\n' \
         '{ind8}{fun}_{name}{eval_signature};\n' \
         '{ind4}}}\n'.format(
             ind4=' '*4,
@@ -2622,6 +2652,35 @@ def get_function_implementation(fun, name):
             name=name,
             signature=functions[fun]["signature"],
             eval_signature=remove_typedefs(functions[fun]["signature"])
+        )
+
+
+def get_sunindex_implementation(fun, name, indextype):
+    """Constructs the function implementation for an index function of a given
+    function
+
+    Arguments:
+        fun: function name @type str
+        name: model name @type str
+        indextype: index function {'colptrs', 'rowvals'} @type str
+
+    Returns:
+    c++ function implementation string
+
+    Raises:
+
+    """
+    return \
+        'virtual void f{fun}_{indextype}{signature} override {{\n' \
+        '{ind8}{fun}_{indextype}_{name}{eval_signature};\n' \
+        '{ind4}}}\n'.format(
+            ind4=' '*4,
+            ind8=' '*8,
+            fun=fun,
+            indextype=indextype,
+            name=name,
+            signature=f'(sunindextype *{indextype})',
+            eval_signature=f'({indextype})',
         )
 
 
