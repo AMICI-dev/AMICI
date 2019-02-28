@@ -1093,12 +1093,6 @@ class Solver {
      * @return solverMemory->(cv|ida)_nst > 0
      */
     virtual bool solverWasCalled() const = 0;
-    
-    /**
-     * @brief stored number of parameters
-     * @return solverMemory->(cv|ida)_Ns
-     */
-    virtual int Ns() const = 0;
 
 
 protected:

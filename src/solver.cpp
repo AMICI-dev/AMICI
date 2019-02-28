@@ -52,8 +52,8 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
 
     auto plist = model->getParameterList();
 
-    if (sensi_meth == SensitivityMethod::forward && !plist.empty() &&
-        getSensMallocDone() && Ns() != model->nplist())
+    if ((sensi_meth == SensitivityMethod::forward && !plist.empty()) ||
+        (getSensMallocDone() && nplist() != model->nplist()))
         solverMemory = nullptr; // force reset solver memory
 
     /* Create solver memory object if necessary */

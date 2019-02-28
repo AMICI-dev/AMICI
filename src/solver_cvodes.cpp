@@ -186,7 +186,6 @@ void CVodeSolver::getRootInfo(int *rootsfound) const {
 
 void CVodeSolver::setLinearSolver()
 {
-    auto cv_mem =
     int status = CVodeSetLinearSolver(solverMemory.get(), linearSolver->get(), linearSolver->getMatrix());
     if(status != CV_SUCCESS)
         throw CvodeException(status,"setLinearSolver");
