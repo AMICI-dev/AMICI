@@ -50,7 +50,13 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
             && model->nx_solver > 0;
     model->initialize(x, dx, sx, sdx, computeSensitivities);
 
-    /* Create solver memory object */
+    auto plist = model->getParameterList();
+
+    if (sensi_meth == SensitivityMethod::forward && !plist.empty() &&
+        getSensMallocDone() && Ns() != model->nplist())
+        solverMemory = nullptr; // force reset solver memory
+
+    /* Create solver memory object if necessary */
     allocateSolver();
     if (!solverMemory)
         throw AmiException("Failed to allocated solver memory!");
@@ -75,8 +81,6 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     initializeNonLinearSolver(x);
 
     if (computeSensitivities) {
-        auto plist = model->getParameterList();
-
         if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {
             /* Set sensitivity analysis optional inputs */
             auto par = model->getUnscaledParameters();
@@ -177,7 +181,7 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
 void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     long int number;
 
-    if(solverWasCalled && solverMemory) {
+    if(solverWasCalled() && solverMemory) {
         getNumSteps(solverMemory.get(), &number);
         rdata->numsteps[it] = number;
 
@@ -197,7 +201,7 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
 void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
     long int number;
 
-    if(solverWasCalled && solverMemoryB.at(which)) {
+    if(solverWasCalled() && solverMemoryB.at(which)) {
         getNumSteps(solverMemoryB.at(which).get(), &number);
         rdata->numstepsB[it] = number;
 

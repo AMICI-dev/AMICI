@@ -1038,16 +1038,37 @@ class Solver {
     /**
      * @brief checks whether memory for the forward problem has been allocated
      *
-     * @return solverMemory->(cv|ida)__MallocDone
+     * @return solverMemory->(cv|ida)_MallocDone
      */
     virtual bool getMallocDone() const = 0;
+    
+    /**
+     * @brief checks whether memory for forward sensitivities has been allocated
+     *
+     * @return solverMemory->(cv|ida)_SensMallocDone
+     */
+    virtual bool getSensMallocDone() const = 0;
 
+    /**
+     * @brief checks whether memory for forward interpolation has been allocated
+     *
+     * @return solverMemory->(cv|ida)_adjMallocDone
+     */
+    virtual bool getAdjMallocDone() const = 0;
+    
     /**
      * @brief checks whether memory for the backward problem has been allocated
      *
-     * @return solverMemory->(cv|ida)__adjMallocDone
+     * @return solverMemoryB->(cv|ida)_MallocDone
      */
-    virtual bool getAdjMallocDone() const = 0;
+    virtual bool getMallocDoneB(int which) const = 0;
+    
+    /**
+     * @brief checks whether memory for backward quadratures has been allocated
+     *
+     * @return solverMemoryB->(cv|ida)_QuadMallocDone
+     */
+    virtual bool getQuadMallocDoneB(int which) const = 0;
 
     /**
      * @brief attaches a diagonal linear solver to the forward problem
@@ -1060,6 +1081,18 @@ class Solver {
      * @param which identifier of the backwards problem
      */
     virtual void diagB(int which) = 0;
+    
+    /**
+     * @brief checks whether the solver was called
+     * @return solverMemory->(cv|ida)_nst > 0
+     */
+    virtual bool solverWasCalled() const = 0;
+    
+    /**
+     * @brief stored number of parameters
+     * @return solverMemory->(cv|ida)_Ns
+     */
+    virtual int Ns() const = 0;
 
 
 protected:
@@ -1113,10 +1146,7 @@ protected:
 
     /** pointer to solver memory block */
     std::vector<std::unique_ptr<void, std::function<void(void *)>>> solverMemoryB;
-
-    /** flag indicating whether the solver was called */
-    bool solverWasCalled = false;
-
+    
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */
     InternalSensitivityMethod ism = InternalSensitivityMethod::simultaneous;

@@ -41,7 +41,7 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 
 void CVodeSolver::init(AmiVector *x, AmiVector * /*dx*/, realtype t) {
     int status;
-    if (static_cast<CVodeMem>(solverMemory.get())->cv_MallocDone)
+    if (getMallocDone())
         status = CVodeReInit(solverMemory.get(), t, x->getNVector());
     else
         status = CVodeInit(solverMemory.get(), fxdot, t, x->getNVector());
@@ -52,8 +52,7 @@ void CVodeSolver::init(AmiVector *x, AmiVector * /*dx*/, realtype t) {
 void CVodeSolver::binit(int which, AmiVector *xB, AmiVector * /*dxB*/,
                         realtype t) {
     int status;
-    if (static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which))
-            ->cv_MallocDone)
+    if (getMallocDoneB(which))
         status = CVodeReInitB(solverMemory.get(), which, t, xB->getNVector());
     else
         status =
@@ -64,8 +63,7 @@ void CVodeSolver::binit(int which, AmiVector *xB, AmiVector * /*dxB*/,
 
 void CVodeSolver::qbinit(int which, AmiVector *qBdot) {
     int status;
-    if (static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which))
-            ->cv_QuadMallocDone)
+    if (getQuadMallocDoneB(which))
         status =
             CVodeQuadReInitB(solverMemory.get(), which, qBdot->getNVector());
     else
@@ -84,8 +82,8 @@ void CVodeSolver::rootInit(int ne) {
 void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray * /*sdx*/,
                             int nplist) {
     int status;
-    if (static_cast<CVodeMem>(solverMemory.get())->cv_SensMallocDone) {
-        if (static_cast<CVodeMem>(solverMemory.get())->cv_Ns != nplist)
+    if (getSensMallocDone()) {
+        if (Ns() != nplist)
             throw CvodeException(CV_ILL_INPUT, "CVodeSensInit1");
         status = CVodeSensReInit(solverMemory.get(),
                                  static_cast<int>(getSensitivityMethod()),
@@ -151,9 +149,10 @@ Solver *CVodeSolver::clone() const {
 }
 
 void CVodeSolver::allocateSolver() {
-    solverMemory = std::unique_ptr<void, std::function<void(void *)>>
-    (CVodeCreate(static_cast<int>(lmm)),
-                   [](void *ptr) { CVodeFree(&ptr); });
+    if (!solverMemory)
+        solverMemory = std::unique_ptr<void, std::function<void(void *)>>(
+            CVodeCreate(static_cast<int>(lmm)),
+            [](void *ptr) { CVodeFree(&ptr); });
 }
 
 void CVodeSolver::setSStolerances(double rtol, double atol) {
@@ -477,8 +476,6 @@ int CVodeSolver::solve(realtype tout, AmiVector *yret, AmiVector * /*ypret*/,
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     }
-
-    solverWasCalled = true;
     return status;
 }
 
@@ -488,8 +485,6 @@ int CVodeSolver::solveF(realtype tout, AmiVector *yret, AmiVector * /*ypret*/,
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     }
-
-    solverWasCalled = true;
     return status;
 }
 
@@ -607,11 +602,52 @@ bool CVodeSolver::getMallocDone() const {
     return cv_mem->cv_MallocDone;
 }
 
+bool CVodeSolver::getSensMallocDone() const {
+    if (!solverMemory)
+        return false;
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    return cv_mem->cv_SensMallocDone;
+}
+
 bool CVodeSolver::getAdjMallocDone() const {
     if (!solverMemory)
         return false;
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     return cv_mem->cv_adjMallocDone;
+}
+
+bool CVodeSolver::getMallocDoneB(int which) const {
+    if (!solverMemory)
+        return false;
+    auto cv_memB =
+        static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
+    return cv_memB->cv_MallocDone;
+}
+
+bool CVodeSolver::getQuadMallocDoneB(int which) const {
+    if (!solverMemory)
+        return false;
+    auto cv_memB =
+        static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
+    return cv_memB->cv_QuadMallocDone;
+}
+
+bool CVodeSolver::solverWasCalled() const {
+    if (!solverMemory)
+        return false;
+    if (!getMallocDone())
+        return false;
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    return cv_mem->cv_nst > 0;
+}
+
+int CVodeSolver::Ns() const {
+    if (!solverMemory)
+        return 0;
+    if (!getSensMallocDone())
+        return 0;
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    return cv_mem->cv_Ns;
 }
 
 /** Jacobian of xdot with respect to states x
