@@ -610,14 +610,6 @@ int CVodeGetAdjCheckPointsInfo(void *cvode_mem, CVadjCheckPointRec *ckpnt)
 
 }
 
-
-/* 
- * -----------------------------------------------------------------
- * Undocumented Development User-Callable Functions
- * -----------------------------------------------------------------
- */
-
-
 /*
  * CVodeGetAdjDataPointHermite
  *
@@ -715,6 +707,11 @@ int CVodeGetAdjDataPointPolynomial(void *cvode_mem, int which,
   return(CV_SUCCESS);
 }
 
+/* 
+ * -----------------------------------------------------------------
+ * UNDOCUMENTED development user-callable functions
+ * -----------------------------------------------------------------
+ */
 
 /*
  * CVodeGetAdjCurrentCheckPoint
