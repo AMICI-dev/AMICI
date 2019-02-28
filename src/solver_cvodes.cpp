@@ -39,23 +39,40 @@ static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 
-
 void CVodeSolver::init(AmiVector *x, AmiVector * /*dx*/, realtype t) {
-    int status = CVodeInit(solverMemory.get(), fxdot, t, x->getNVector());
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeInit");
+    int status;
+    if (static_cast<CVodeMem>(solverMemory.get())->cv_MallocDone)
+        status = CVodeReInit(solverMemory.get(), t, x->getNVector());
+    else
+        status = CVodeInit(solverMemory.get(), fxdot, t, x->getNVector());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeInit");
 }
 
-void CVodeSolver::binit(int which, AmiVector *xB, AmiVector * /*dxB*/, realtype t) {
-    int status = CVodeInitB(solverMemory.get(), which, fxBdot, t, xB->getNVector());
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeInitB");
+void CVodeSolver::binit(int which, AmiVector *xB, AmiVector * /*dxB*/,
+                        realtype t) {
+    int status;
+    if (static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which))
+            ->cv_MallocDone)
+        status = CVodeReInitB(solverMemory.get(), which, t, xB->getNVector());
+    else
+        status =
+            CVodeInitB(solverMemory.get(), which, fxBdot, t, xB->getNVector());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeInitB");
 }
 
 void CVodeSolver::qbinit(int which, AmiVector *qBdot) {
-    int status = CVodeQuadInitB(solverMemory.get(), which, fqBdot, qBdot->getNVector());
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeQuadInitB");
+    int status;
+    if (static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which))
+            ->cv_QuadMallocDone)
+        status =
+            CVodeQuadReInitB(solverMemory.get(), which, qBdot->getNVector());
+    else
+        status = CVodeQuadInitB(solverMemory.get(), which, fqBdot,
+                                qBdot->getNVector());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeQuadInitB");
 }
 
 void CVodeSolver::rootInit(int ne) {
@@ -64,11 +81,21 @@ void CVodeSolver::rootInit(int ne) {
          throw CvodeException(status,"CVodeRootInit");
 }
 
-void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray * /*sdx*/, int nplist) {
-    int status = CVodeSensInit1(solverMemory.get(), nplist, static_cast<int>(getSensitivityMethod()), fsxdot,
-                          sx->getNVectorArray());
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeSensInit1");
+void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray * /*sdx*/,
+                            int nplist) {
+    int status;
+    if (static_cast<CVodeMem>(solverMemory.get())->cv_SensMallocDone) {
+        if (static_cast<CVodeMem>(solverMemory.get())->cv_Ns != nplist)
+            throw CvodeException(CV_ILL_INPUT, "CVodeSensInit1");
+        status = CVodeSensReInit(solverMemory.get(),
+                                 static_cast<int>(getSensitivityMethod()),
+                                 sx->getNVectorArray());
+    } else
+        status = CVodeSensInit1(solverMemory.get(), nplist,
+                                static_cast<int>(getSensitivityMethod()),
+                                fsxdot, sx->getNVectorArray());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSensInit1");
 }
 
 void CVodeSolver::setDenseJacFn() {
@@ -385,9 +412,19 @@ void CVodeSolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
 }
 
 void CVodeSolver::adjInit() {
-    int status = CVodeAdjInit(solverMemory.get(), static_cast<int>(maxsteps), static_cast<int>(interpType));
-    if(status != CV_SUCCESS)
-         throw CvodeException(status,"CVodeAdjInit");
+    int status;
+    if (static_cast<CVodeMem>(solverMemory.get())->cv_adjMallocDone) {
+        auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+        if (static_cast<int>(interpType) != cv_mem->cv_adj_mem->ca_IMtype)
+            throw CvodeException(CV_ILL_INPUT, "CVodeAdjInit");
+        if (static_cast<int>(maxsteps) != cv_mem->cv_adj_mem->ca_nsteps)
+            throw CvodeException(CV_ILL_INPUT, "CVodeAdjInit");
+        status = CVodeAdjReInit(solverMemory.get());
+    } else
+        status = CVodeAdjInit(solverMemory.get(), static_cast<int>(maxsteps),
+                              static_cast<int>(interpType));
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeAdjInit");
 }
 
 void CVodeSolver::allocateSolverB(int *which) {
