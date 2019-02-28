@@ -279,16 +279,20 @@ void Solver::initializeLinearSolver(const Model *model, AmiVector *x) {
 
 void Solver::initializeNonLinearSolver(AmiVector *x)
 {
-    switch(iter) {
-    case NonlinearSolverIteration::newton:
-        nonLinearSolver = std::make_unique<SUNNonLinSolNewton>(x->getNVector());
-        break;
-    case NonlinearSolverIteration::fixedpoint:
-        nonLinearSolver = std::make_unique<SUNNonLinSolFixedPoint>(x->getNVector());
-        break;
-    default:
-        throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
-    }
+    if (nonLinearSolver.get()->getType() != static_cast<int>(getNonlinearSolverIteration()))
+        nonLinearSolver = nullptr; // force reset as we need a different solver type
+    
+    if (!nonLinearSolver)
+        switch(iter) {
+        case NonlinearSolverIteration::newton:
+            nonLinearSolver = std::make_unique<SUNNonLinSolNewton>(x->getNVector());
+            break;
+        case NonlinearSolverIteration::fixedpoint:
+            nonLinearSolver = std::make_unique<SUNNonLinSolFixedPoint>(x->getNVector());
+            break;
+        default:
+            throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
+        }
 
     setNonLinearSolver();
 }

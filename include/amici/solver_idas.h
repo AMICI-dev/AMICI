@@ -81,8 +81,6 @@ class IDASolver : public Solver {
     bool getQuadMallocDoneB(int which) const override;
     
     bool solverWasCalled() const override;
-    
-    int Ns() const override;
 
     static int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data);
@@ -167,6 +165,12 @@ class IDASolver : public Solver {
     void getLastOrder(void *ami_mem, int *order) const override;
 
     void *getAdjBmem(void *ami_mem, int which) override;
+    
+    IDAMem ida_mem() const;
+    
+    IDAMem ida_memB(int which) const;
+    
+    IDAadjMemRec *ca_mem() const;
 
     void init(AmiVector *x, AmiVector *dx, realtype t) override;
 
