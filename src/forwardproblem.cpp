@@ -405,19 +405,21 @@ void ForwardProblem::getEventOutput() {
             continue;
         }
 
+        /* get event output */
         model->fz(nroots.at(ie), ie, t, &x, rdata);
+        /* if called from fillEvent at last timepoint,
+         then also get the root function value */
+        if (t == model->gett(model->nt() - 1,rdata))
+            model->frz(nroots.at(ie), ie, t, &x, rdata);
 
         if (edata) {
             model->fsigmaz(t, ie, nroots.data(), rdata, edata);
             model->fJz(nroots.at(ie), rdata, edata);
 
-            if (t == model->gett(model->nt() - 1,rdata)) {
-                // call from fillEvent at last
-                // timepoint, add regularization
-                // based on rz
-                model->frz(nroots.at(ie), ie, t, &x, rdata);
+            /* if called from fillEvent at last timepoint,
+               add regularization based on rz */
+            if (t == model->gett(model->nt() - 1,rdata))
                 model->fJrz(nroots.at(ie), rdata, edata);
-            }
         }
 
         if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
