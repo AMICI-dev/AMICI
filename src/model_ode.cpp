@@ -156,7 +156,8 @@ namespace amici {
                 fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
                          unscaledParameters.data(), fixedParameters.data(),
                          h.data(), plist_[ip], w.data());
-                dxdotdw.multiply(dxdotdp.data(ip), &dwdp.at(nw * ip));
+                if (nw > 0)
+                    dxdotdw.multiply(dxdotdp.data(ip), &dwdp.at(nw * ip));
             }
         } catch (std::invalid_argument &) {
             // matlab generated
