@@ -40,52 +40,53 @@ std::vector<std::string> getVariableNames(const char* name, int length);
  */
 class Model_Test : public Model {
 public:
+  /** constructor with model dimensions
+   * @param nx number of state variables
+   * @param nxtrue number of state variables of the non-augmented model
+   * @param ny number of observables
+   * @param nytrue number of observables of the non-augmented model
+   * @param nz number of event observables
+   * @param nztrue number of event observables of the non-augmented model
+   * @param ne number of events
+   * @param nJ number of objective functions
+   * @param nw number of repeating elements
+   * @param ndwdx number of nonzero elements in the x derivative of the
+   * repeating elements
+   * @param ndwdp number of nonzero elements in the p derivative of the
+   * repeating elements
+   * @param nnz number of nonzero elements in Jacobian
+   * @param ubw upper matrix bandwidth in the Jacobian
+   * @param lbw lower matrix bandwidth in the Jacobian
+   * @param o2mode second order sensitivity mode
+   * @param p parameters
+   * @param k constants
+   * @param plist indexes wrt to which sensitivities are to be computed
+   * @param idlist indexes indicating algebraic components (DAE only)
+   * @param z2event mapping of event outputs to events
+   */
+  Model_Test(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
+             const int nxtrue_solver, const int ny, const int nytrue,
+             const int nz, const int nztrue, const int ne, const int nJ,
+             const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
+             const int nnz, const int ubw, const int lbw,
+             const SecondOrderMode o2mode, const std::vector<realtype> p,
+             const std::vector<realtype> k, const std::vector<int> plist,
+             const std::vector<realtype> idlist, const std::vector<int> z2event)
+      : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue, nz,
+              nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, nnz, ubw, lbw, o2mode,
+              p, k, plist, idlist, z2event) {}
 
-    /** constructor with model dimensions
-     * @param nx number of state variables
-     * @param nxtrue number of state variables of the non-augmented model
-     * @param ny number of observables
-     * @param nytrue number of observables of the non-augmented model
-     * @param nz number of event observables
-     * @param nztrue number of event observables of the non-augmented model
-     * @param ne number of events
-     * @param nJ number of objective functions
-     * @param nw number of repeating elements
-     * @param ndwdx number of nonzero elements in the x derivative of the
-     * repeating elements
-     * @param ndwdp number of nonzero elements in the p derivative of the
-     * repeating elements
-     * @param nnz number of nonzero elements in Jacobian
-     * @param ubw upper matrix bandwidth in the Jacobian
-     * @param lbw lower matrix bandwidth in the Jacobian
-     * @param o2mode second order sensitivity mode
-     * @param p parameters
-     * @param k constants
-     * @param plist indexes wrt to which sensitivities are to be computed
-     * @param idlist indexes indicating algebraic components (DAE only)
-     * @param z2event mapping of event outputs to events
-     */
-    Model_Test(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-               const int nxtrue_solver,
-               const int ny, const int nytrue, const int nz, const int nztrue,
-               const int ne, const int nJ, const int nw, const int ndwdx,
-               const int ndwdp, const int nnz, const int ubw, const int lbw,
-               const SecondOrderMode o2mode, const std::vector<realtype> p,
-               const std::vector<realtype> k, const std::vector<int> plist,
-               const std::vector<realtype> idlist, const std::vector<int> z2event)
-        : Model(nx_rdata,nxtrue_rdata,nx_solver,nxtrue_solver,ny,nytrue,nz,
-        nztrue,ne,nJ,nw,ndwdx,ndwdp,nnz,ubw,lbw,o2mode,p,k,plist,idlist,
-        z2event) {}
+  /** default constructor */
+  Model_Test()
+      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+              SecondOrderMode::none, std::vector<realtype>(),
+              std::vector<realtype>(), std::vector<int>(),
+              std::vector<realtype>(), std::vector<int>()) {}
 
-    /** default constructor */
-    Model_Test()
-    : Model(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,SecondOrderMode::none,
-    std::vector<realtype>(),std::vector<realtype>(),std::vector<int>(),std::vector<realtype>(),std::vector<int>()) {}
+  virtual Model *clone() const override { return new Model_Test(*this); }
 
-    virtual Model* clone() const override { return new Model_Test(*this); }
-
-    virtual std::unique_ptr<Solver> getSolver() override {
-        throw AmiException("not implemented");
+  virtual std::unique_ptr<Solver> getSolver() override {
+      throw AmiException("not implemented");
     }
     virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override {
         throw AmiException("not implemented");
@@ -119,37 +120,37 @@ public:
     {
         return getVariableNames("p", np());
     }
-    
+
     virtual std::vector<std::string> getStateNames() const override
     {
         return getVariableNames("x", nx_rdata);
     }
-    
+
     virtual std::vector<std::string> getFixedParameterNames() const override
     {
         return getVariableNames("k", nk());
     }
-    
+
     virtual std::vector<std::string> getObservableNames() const override
     {
         return getVariableNames("y", ny);
     }
-    
+
     virtual std::vector<std::string> getParameterIds() const override
     {
         return getVariableNames("p", np());
     }
-    
+
     virtual std::vector<std::string> getStateIds() const override
     {
         return getVariableNames("x", nx_rdata);
     }
-    
+
     virtual std::vector<std::string> getFixedParameterIds() const override
     {
         return getVariableNames("k", nk());
     }
-    
+
     virtual std::vector<std::string> getObservableIds() const override
     {
         return getVariableNames("y", ny);

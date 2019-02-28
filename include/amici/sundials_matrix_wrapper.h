@@ -131,6 +131,11 @@ class SUNMatrixWrapper {
      * @return index array
      */
     int sparsetype() const;
+    
+    /**
+     * @brief reset data to zeroes
+     */
+    void reset();
 
     /**
      * @brief std::vector interface for multiply
