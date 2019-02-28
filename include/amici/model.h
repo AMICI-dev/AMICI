@@ -56,7 +56,7 @@ class Model : public AbstractModel {
      * repeating elements
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
-     * @param ndxdotdw number of nonzero elements in the w derivate of xdot
+     * @param ndxdotdw number of nonzero elements in the w derivative of xdot
      * @param nnz number of nonzero elements in Jacobian
      * @param ubw upper matrix bandwidth in the Jacobian
      * @param lbw lower matrix bandwidth in the Jacobian
