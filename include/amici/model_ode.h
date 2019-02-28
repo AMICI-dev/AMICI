@@ -305,7 +305,7 @@ namespace amici {
          **/
         virtual void fxdot(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const             realtype *k, const realtype *h, const realtype *w) = 0;
 
-        /** model specific implementation of fdxdotdp
+        /** model specific implementation of fdxdotdp, with w chainrule
          * @param dxdotdp partial derivative xdot wrt p
          * @param t timepoint
          * @param x Vector with the states
@@ -326,7 +326,7 @@ namespace amici {
             // computational overhead
         }
 
-        /** model specific implementation of fdxdotdp
+        /** model specific implementation of fdxdotdp, without w chainrule
          * @param dxdotdp partial derivative xdot wrt p
          * @param t timepoint
          * @param x Vector with the states
@@ -335,7 +335,6 @@ namespace amici {
          * @param h heavyside vector
          * @param ip parameter index
          * @param w vector with helper variables
-         * @param dwdp derivative of w wrt p
          */
         virtual void fdxdotdp(realtype *dxdotdp, const realtype t,
                               const realtype *x, const realtype *p,
