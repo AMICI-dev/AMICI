@@ -80,8 +80,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
         rdata->status = AMICI_ERROR;
         if(rethrow) throw;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
-    } catch (...) {
-        throw std::runtime_error("Unknown internal error occured!");
     }
 
     rdata->applyChainRuleFactorToSimulationResults(&model);

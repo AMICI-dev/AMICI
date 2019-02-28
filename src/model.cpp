@@ -1035,7 +1035,7 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
     realtype *dwdp_tmp = dwdp.data();
     for(int ip = 0; ip < nplist(); ip++){
         // get dydp slice (ny) for current time and parameter
-        if (dense) // if dwdp is dense, fdydp will expect a slice
+        if (dense && nw > 0) // if dwdp is dense, fdydp will expect a slice
             dwdp_tmp = &dwdp.at(nw * ip);
         
         fdydp(&dydp.at(ip*ny),
@@ -1649,6 +1649,7 @@ bool operator ==(const Model &a, const Model &b)
             && (a.nw == b.nw)
             && (a.ndwdx == b.ndwdx)
             && (a.ndwdp == b.ndwdp)
+            && (a.ndxdotdw == a.ndxdotdw)
             && (a.nnz == b.nnz)
             && (a.nJ == b.nJ)
             && (a.ubw == b.ubw)
