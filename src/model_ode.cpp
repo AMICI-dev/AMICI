@@ -146,17 +146,20 @@ namespace amici {
      * @return status flag indicating successful execution
      */
     void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
+        auto x_pos = computeX_pos(x);
         fdwdp(t, N_VGetArrayPointer(x));
         try {
             // python generated
             fdxdotdw(t, x);
             for (int ip = 0; ip < nplist(); ip++) {
                 N_VConst(0.0, dxdotdp.getNVector(ip));
+                fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
+                         unscaledParameters.data(), fixedParameters.data(),
+                         h.data(), plist_[ip], w.data());
                 dxdotdw.multiply(dxdotdp.data(ip), &dwdp.at(nw * ip));
             }
         } catch (std::invalid_argument &) {
             // matlab generated
-            auto x_pos = computeX_pos(x);
             for (int ip = 0; ip < nplist(); ip++) {
                 N_VConst(0.0, dxdotdp.getNVector(ip));
                 fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),

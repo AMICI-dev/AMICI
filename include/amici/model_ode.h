@@ -316,9 +316,34 @@ namespace amici {
          * @param w vector with helper variables
          * @param dwdp derivative of w wrt p
          */
-        virtual void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                              const int ip, const realtype *w, const realtype *dwdp) {
-            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
+        virtual void fdxdotdp(realtype *dxdotdp, const realtype t,
+                              const realtype *x, const realtype *p,
+                              const realtype *k, const realtype *h,
+                              const int ip, const realtype *w,
+                              const realtype *dwdp) {
+            throw std::invalid_argument("Not implement for this model!");
+            // don't use AmiException as the backtrace causes some hefty
+            // computational overhead
+        }
+
+        /** model specific implementation of fdxdotdp
+         * @param dxdotdp partial derivative xdot wrt p
+         * @param t timepoint
+         * @param x Vector with the states
+         * @param p parameter vector
+         * @param k constants vector
+         * @param h heavyside vector
+         * @param ip parameter index
+         * @param w vector with helper variables
+         * @param dwdp derivative of w wrt p
+         */
+        virtual void fdxdotdp(realtype *dxdotdp, const realtype t,
+                              const realtype *x, const realtype *p,
+                              const realtype *k, const realtype *h,
+                              const int ip, const realtype *w) {
+            throw std::invalid_argument("Not implement for this model!");
+            // don't use AmiException as the backtrace causes some hefty
+            // computational overhead
         }
 
         /** model specific implementation of fdxdotdw, data part

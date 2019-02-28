@@ -1030,9 +1030,14 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
 
     std::fill(dydp.begin(),dydp.end(),0.0);
     fw(t,x->data());
-    fdwdp(t,x->data());
+    auto dense = fdwdp(t,x->data());
+    // if dwdp is not dense, fdydp will expect the full sparse array
+    realtype *dwdp_tmp = dwdp.data();
     for(int ip = 0; ip < nplist(); ip++){
         // get dydp slice (ny) for current time and parameter
+        if (dense) // if dwdp is dense, fdydp will expect a slice
+            dwdp_tmp = &dwdp.at(nw * ip);
+        
         fdydp(&dydp.at(ip*ny),
               t,
               x->data(),
@@ -1041,7 +1046,7 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
               h.data(),
               plist(ip),
               w.data(),
-              dwdp.data());
+              dwdp_tmp);
     }
 
     if(alwaysCheckFinite) {
@@ -1431,10 +1436,12 @@ void Model::fw(const realtype t, const realtype *x) {
     }
 }
 
-void Model::fdwdp(const realtype t, const realtype *x) {
+bool Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
     std::fill(dwdp.begin(), dwdp.end(), 0.0);
+    auto python_generated = false;
     try {
+        // python generated
         realtype *stcl = nullptr;
         for (int ip = 0; ip < nplist(); ++ip) {
             if (ncl() > 0)
@@ -1442,16 +1449,20 @@ void Model::fdwdp(const realtype t, const realtype *x) {
             fdwdp(&dwdp.at(nw * ip), t, x, unscaledParameters.data(),
                   fixedParameters.data(), h.data(), w.data(), total_cl.data(),
                   stcl, plist_[ip]);
+        python_generated = true;
         }
     } catch (std::invalid_argument &) {
+        // matlab generated
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
               fixedParameters.data(), h.data(), w.data(), total_cl.data(),
               stotal_cl.data());
+        python_generated = false;
     }
 
     if (alwaysCheckFinite) {
         amici::checkFinite(dwdp, "dwdp");
     }
+    return python_generated;
 }
 
 void Model::fdwdx(const realtype t, const realtype *x) {

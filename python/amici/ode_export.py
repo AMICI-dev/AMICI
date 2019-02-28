@@ -133,6 +133,14 @@ functions = {
         'assume_pow_positivity':
             True,
     },
+    'dxdotdp': {
+        'signature':
+            '(realtype *dxdotdp, const realtype t, const realtype *x, '
+            'const realtype *p, const realtype *k, const realtype *h, '
+            'const int ip, const realtype *w)',
+        'assume_pow_positivity':
+            True,
+    },
     'dydx': {
         'signature':
             '(realtype *dydx, const realtype t, const realtype *x, '
@@ -805,12 +813,6 @@ class ODEModel:
                 'x': 'JB',
                 'y': 'vB',
             },
-            'qBdot': {
-                'x': 'xB',
-                'transpose_x': True,
-                'y': 'dxdotdp',
-                'sign': -1,
-            },
             'xBdot': {
                 'x': 'JB',
                 'y': 'xB',
@@ -1464,11 +1466,18 @@ class ODEModel:
 
         # automatically detect chainrule
         chainvars = []
+        ignore_chainrule = {
+            ('xdot', 'p'): 'w'  # has generic implementation in c++ code
+        }
         for cv in ['w', 'tcl']:
             if var_in_function_signature(eq, cv) \
                     and not self._lock_total_derivative \
                     and var is not cv \
-                    and min(self.sym(cv).shape):
+                    and min(self.sym(cv).shape) \
+                    and (
+                            (eq, var) not in ignore_chainrule
+                            or ignore_chainrule[(eq, var)] != cv
+                    ):
                 chainvars.append(cv)
 
         if len(chainvars):
@@ -2292,7 +2301,7 @@ class ODEExporter:
 
         for fun in [
             'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'JSparse', 'JSparseB',
+            'dxdotdp', 'JSparse', 'JSparseB',
         ]:
             tplData[f'{fun.upper()}_DEF'] = \
                 get_function_definition(fun, self.modelName)

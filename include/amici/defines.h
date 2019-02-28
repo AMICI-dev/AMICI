@@ -1,7 +1,6 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
 #include <cmath>
-#include <climits> // LLONG_MAX
 
 namespace amici {
 
