@@ -4,13 +4,15 @@
 
 #include <new> // bad_alloc
 #include <utility>
+#include <stdexcept> // invalid_argument and domain_error
 
 namespace amici {
 
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
     : matrix(SUNSparseMatrix(M, N, NNZ, sparsetype)) {
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
-        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or CSR_MAT");
+        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
+                                    "CSR_MAT");
 
     if (NNZ && !matrix)
         throw std::bad_alloc();
