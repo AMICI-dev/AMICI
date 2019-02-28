@@ -42,13 +42,13 @@ namespace amici {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(J);
-        try {
+        if (wasPythonGenerated()) {
             fJSparse(SM_DATA_S(J), t, N_VGetArrayPointer(x_pos),
                      unscaledParameters.data(), fixedParameters.data(),
                      h.data(), w.data(), dwdx.data());
             fJSparse_colptrs(SM_INDEXPTRS_S(J));
             fJSparse_rowvals(SM_INDEXVALS_S(J));
-        } catch (std::invalid_argument &) {
+        } else {
             fJSparse(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(J)), t,
                      N_VGetArrayPointer(x_pos), unscaledParameters.data(),
                      fixedParameters.data(), h.data(), w.data(), dwdx.data());
@@ -148,7 +148,7 @@ namespace amici {
     void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         auto x_pos = computeX_pos(x);
         fdwdp(t, N_VGetArrayPointer(x));
-        try {
+        if (wasPythonGenerated()) {
             // python generated
             fdxdotdw(t, x);
             for (int ip = 0; ip < nplist(); ip++) {
@@ -159,7 +159,7 @@ namespace amici {
                 if (nw > 0)
                     dxdotdw.multiply(dxdotdp.data(ip), &dwdp.at(nw * ip));
             }
-        } catch (std::invalid_argument &) {
+        } else {
             // matlab generated
             for (int ip = 0; ip < nplist(); ip++) {
                 N_VConst(0.0, dxdotdp.getNVector(ip));
@@ -206,13 +206,13 @@ namespace amici {
         auto x_pos = computeX_pos(x);
         fdwdx(t, N_VGetArrayPointer(x_pos));
         SUNMatZero(JB);
-        try {
+        if (wasPythonGenerated()) {
             fJSparseB(SM_DATA_S(JB), t, N_VGetArrayPointer(x_pos),
                       unscaledParameters.data(), fixedParameters.data(),
                       h.data(), N_VGetArrayPointer(xB), w.data(), dwdx.data());
             fJSparseB_colptrs(SM_INDEXPTRS_S(JB));
             fJSparseB_rowvals(SM_INDEXVALS_S(JB));
-        } catch (std::invalid_argument &) {
+        } else {
             fJSparseB(static_cast<SUNMatrixContent_Sparse>(SM_CONTENT_S(JB)), t,
                       N_VGetArrayPointer(x_pos), unscaledParameters.data(),
                       fixedParameters.data(), h.data(), N_VGetArrayPointer(xB),

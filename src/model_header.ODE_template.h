@@ -787,7 +787,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
         return std::vector<std::string>{TPL_OBSERVABLE_IDS_INITIALIZER_LIST};
     }
 
-    /** function indicating whether reinitialization of states depending on
+    /**
+     * @brief function indicating whether reinitialization of states depending on
      fixed parameters is permissible
      * @return flag inidication whether reinitialization of states depending on
      fixed parameters is permissible
@@ -796,18 +797,24 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
         return TPL_REINIT_FIXPAR_INITCOND;
     }
 
-    /** returns the amici version that was used to generate the model
+    /**
+     * @brief returns the amici version that was used to generate the model
      * @return ver amici version string
      */
     virtual const std::string getAmiciVersion() const override {
         return "TPL_AMICI_VERSION_STRING";
     }
 
-    /** returns the amici version that was used to generate the model
+    /**
+     & @brief returns the amici version that was used to generate the model
      * @return commit amici git commit hash
      */
     virtual const std::string getAmiciCommit() const override {
         return "TPL_AMICI_COMMIT_STRING";
+    }
+    
+    virtual bool wasPythonGenerated() const override {
+        return true;
     }
 };
 

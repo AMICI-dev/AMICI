@@ -165,9 +165,9 @@ namespace amici {
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const realtype *w, const realtype *dwdx) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation for fJSparse, data only
@@ -184,27 +184,27 @@ namespace amici {
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const realtype *w, const realtype *dwdx) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation for fJSparse, column pointers
          * @param indexptrs column pointers
          **/
         virtual void fJSparse_colptrs(sunindextype *indexptrs) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation for fJSparse, row values
          * @param indexvals row values
          **/
         virtual void fJSparse_rowvals(sunindextype *indexvals) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation for fJSparseB
@@ -223,9 +223,9 @@ namespace amici {
                                const realtype *p, const realtype *k,
                                const realtype *h, const realtype *xB,
                                const realtype *w, const realtype *dwdx) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation for fJSparseB
@@ -244,27 +244,27 @@ namespace amici {
                                const realtype *p, const realtype *k,
                                const realtype *h, const realtype *xB,
                                const realtype *w, const realtype *dwdx) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation for fJSparse, column pointers
          * @param indexptrs column pointers
          **/
         virtual void fJSparseB_colptrs(sunindextype *indexptrs) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation for fJSparse, row values
          * @param indexvals row values
          **/
         virtual void fJSparseB_rowvals(sunindextype *indexvals) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation for fJDiag
@@ -321,9 +321,9 @@ namespace amici {
                               const realtype *k, const realtype *h,
                               const int ip, const realtype *w,
                               const realtype *dwdp) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation of fdxdotdp, without w chainrule
@@ -340,9 +340,9 @@ namespace amici {
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const int ip, const realtype *w) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation of fdxdotdw, data part
@@ -358,9 +358,9 @@ namespace amici {
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const realtype *w) {
-            throw std::invalid_argument("Not implemented for this model!");
-            // don't use AmiException as the backtrace causes some hefty
-            // computational overhead
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__); // not implemented
         }
 
         /** model specific implementation of fdxdotdw, colptrs part

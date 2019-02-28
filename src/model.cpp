@@ -1029,13 +1029,13 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
         return;
 
     std::fill(dydp.begin(),dydp.end(),0.0);
-    fw(t,x->data());
-    auto dense = fdwdp(t,x->data());
+    fw(t, x->data());
+    fdwdp(t, x->data());
     // if dwdp is not dense, fdydp will expect the full sparse array
     realtype *dwdp_tmp = dwdp.data();
     for(int ip = 0; ip < nplist(); ip++){
         // get dydp slice (ny) for current time and parameter
-        if (dense && nw > 0) // if dwdp is dense, fdydp will expect a slice
+        if (wasPythonGenerated() && nw)
             dwdp_tmp = &dwdp.at(nw * ip);
         
         fdydp(&dydp.at(ip*ny),
@@ -1436,26 +1436,15 @@ void Model::fw(const realtype t, const realtype *x) {
     }
 }
 
-bool Model::fdwdp(const realtype t, const realtype *x) {
-    // if nw is zero, slicing dwdp throw an exception, we don't actually know
-    // whether we are in the matlab (sparse) or python (dense) case, but
-    // simulating the sparse case will tell the upstream function not to slice
-    // dwdp
-    if (nw == 0)
-        return false;
-    
-    
+void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
     std::fill(dwdp.begin(), dwdp.end(), 0.0);
-    auto python_generated = false;
-    try {
-        // python generated
+    if (wasPythonGenerated()) {
         realtype *stcl = nullptr;
         
-        // avoid exception when dwdp.size() == 0, this is necessary but not /
-        // sufficient to identify matlab case
-        if (static_cast<int>(dwdp.size()) != nw * np())
-            throw std::invalid_argument("early termination, is matlab gen");
+        // avoid bad memory access when slicing
+        if (nw == 0)
+            return;
         
         for (int ip = 0; ip < nplist(); ++ip) {
             if (ncl() > 0)
@@ -1463,20 +1452,17 @@ bool Model::fdwdp(const realtype t, const realtype *x) {
             fdwdp(&dwdp.at(nw * ip), t, x, unscaledParameters.data(),
                   fixedParameters.data(), h.data(), w.data(), total_cl.data(),
                   stcl, plist_[ip]);
-        python_generated = true;
         }
-    } catch (std::invalid_argument &) {
+    } else {
         // matlab generated
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
               fixedParameters.data(), h.data(), w.data(), total_cl.data(),
               stotal_cl.data());
-        python_generated = false;
     }
 
     if (alwaysCheckFinite) {
         amici::checkFinite(dwdp, "dwdp");
     }
-    return python_generated;
 }
 
 void Model::fdwdx(const realtype t, const realtype *x) {

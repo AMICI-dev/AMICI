@@ -289,9 +289,6 @@ void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
                           const realtype *h, const realtype *w,
                           const realtype *tcl, const realtype *stcl) {
-    throw std::invalid_argument("Not available for this model!");
-    // don't use AmiException as the backtrace causes some hefty computational
-    // overhead
 }
 
 void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
@@ -299,9 +296,6 @@ void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                           const realtype *h, const realtype *w,
                           const realtype *tcl, const realtype *stcl,
                           const int ip) {
-    throw std::invalid_argument("Not available for this model!");
-    // don't use AmiException as the backtrace causes some hefty computational
-    // overhead
 }
 
 void AbstractModel::fdwdx(realtype *dwdx, const realtype t, const realtype *x,

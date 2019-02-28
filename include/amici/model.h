@@ -854,7 +854,7 @@ class Model : public AbstractModel {
      * @return flag indicating whether dwdp will be returned in dense storage
      * dense: true, sparse: false
      */
-    bool fdwdp(const realtype t, const realtype *x);
+    void fdwdp(const realtype t, const realtype *x);
 
     /**
      * @brief Recurring terms in xdot, state derivative
@@ -1132,6 +1132,14 @@ class Model : public AbstractModel {
      * @return that
      */
     bool getAlwaysCheckFinite() const;
+    
+    /**
+     * @brief check whether the model was generated from python
+     * @return that
+     */
+    virtual bool wasPythonGenerated() const {
+        return false;
+    }
 
     /** number of states */
     const int nx_rdata;
