@@ -452,6 +452,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DWDP_IMPL
     TPL_DWDX_IMPL
     TPL_DXDOTDW_IMPL
+    TPL_DXDOTDW_COLPTRS_IMPL
+    TPL_DXDOTDW_ROWVALS_IMPL
+    
 
     /** model specific implementation of fdydx
      * @param dydx partial derivative of observables y w.r.t. model states x

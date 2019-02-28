@@ -2057,8 +2057,8 @@ class ODEExporter:
         # function header
         lines = [
             '#include "amici/symbolic_functions.h"',
-            '#include "amici/defines.h" //realtype definition',
-            'using amici::realtype;',
+            '#include "amici/defines.h"',
+            '#include "sundials/sundials_types.h"',
             '#include <cmath>',
             ''
         ]
@@ -2116,7 +2116,7 @@ class ODEExporter:
         """
 
         # function signature
-        signature = f'(indextype *{indextype})'
+        signature = f'(sunindextype *{indextype})'
 
         if indextype == 'colptrs':
             values = self.model.colptrs(function)
@@ -2127,10 +2127,10 @@ class ODEExporter:
                              'rowval')
 
         lines = list()
-        lines.append('#include "amici/defines.h" //indextype definition')
-        lines.append('using amici::indextype;')
+        lines.append('#include "sundials/sundials_types.h"')
         lines.append('')
-        lines.append(f'void {function}_{indextype}_{self.modelName}{signature}{{')
+        lines.append(f'void {function}_{indextype}_{self.modelName}'
+                     f'{signature}{{')
         lines.extend(
             [' ' * 4 + f'{indextype}[{index}] = {value};'
              for index, value in enumerate(values)]
@@ -2617,7 +2617,7 @@ def get_sunindex_definition(fun, name, indextype):
 
     """
     return \
-        f'extern void {fun}_{indextype}_{name}(indextype *{indextype});'
+        f'extern void {fun}_{indextype}_{name}(sunindextype *{indextype});'
 
 
 def get_function_implementation(fun, name):
@@ -2670,7 +2670,7 @@ def get_sunindex_implementation(fun, name, indextype):
             fun=fun,
             indextype=indextype,
             name=name,
-            signature=f'(indextype *{indextype})',
+            signature=f'(sunindextype *{indextype})',
             eval_signature=f'({indextype})',
         )
 
