@@ -1437,12 +1437,26 @@ void Model::fw(const realtype t, const realtype *x) {
 }
 
 bool Model::fdwdp(const realtype t, const realtype *x) {
+    // if nw is zero, slicing dwdp throw an exception, we don't actually know
+    // whether we are in the matlab (sparse) or python (dense) case, but
+    // simulating the sparse case will tell the upstream function not to slice
+    // dwdp
+    if (nw == 0)
+        return false;
+    
+    
     fw(t, x);
     std::fill(dwdp.begin(), dwdp.end(), 0.0);
     auto python_generated = false;
     try {
         // python generated
         realtype *stcl = nullptr;
+        
+        // avoid exception when dwdp.size() == 0, this is necessary but not /
+        // sufficient to identify matlab case
+        if (static_cast<int>(dwdp.size()) != nw * nplist())
+            throw std::invalid_argument("early termination, is matlab gen");
+        
         for (int ip = 0; ip < nplist(); ++ip) {
             if (ncl() > 0)
                 stcl = &stotal_cl.at(plist(ip) * ncl());
