@@ -1454,7 +1454,7 @@ bool Model::fdwdp(const realtype t, const realtype *x) {
         
         // avoid exception when dwdp.size() == 0, this is necessary but not /
         // sufficient to identify matlab case
-        if (static_cast<int>(dwdp.size()) != nw * nplist())
+        if (static_cast<int>(dwdp.size()) != nw * np())
             throw std::invalid_argument("early termination, is matlab gen");
         
         for (int ip = 0; ip < nplist(); ++ip) {

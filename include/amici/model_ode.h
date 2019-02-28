@@ -165,7 +165,7 @@ namespace amici {
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const realtype *w, const realtype *dwdx) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -184,7 +184,7 @@ namespace amici {
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const realtype *w, const realtype *dwdx) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -193,7 +193,7 @@ namespace amici {
          * @param indexptrs column pointers
          **/
         virtual void fJSparse_colptrs(sunindextype *indexptrs) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -202,7 +202,7 @@ namespace amici {
          * @param indexvals row values
          **/
         virtual void fJSparse_rowvals(sunindextype *indexvals) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -223,7 +223,7 @@ namespace amici {
                                const realtype *p, const realtype *k,
                                const realtype *h, const realtype *xB,
                                const realtype *w, const realtype *dwdx) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -244,7 +244,7 @@ namespace amici {
                                const realtype *p, const realtype *k,
                                const realtype *h, const realtype *xB,
                                const realtype *w, const realtype *dwdx) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -253,7 +253,7 @@ namespace amici {
          * @param indexptrs column pointers
          **/
         virtual void fJSparseB_colptrs(sunindextype *indexptrs) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -262,7 +262,7 @@ namespace amici {
          * @param indexvals row values
          **/
         virtual void fJSparseB_rowvals(sunindextype *indexvals) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -321,7 +321,7 @@ namespace amici {
                               const realtype *k, const realtype *h,
                               const int ip, const realtype *w,
                               const realtype *dwdp) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -340,7 +340,7 @@ namespace amici {
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const int ip, const realtype *w) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
@@ -358,7 +358,7 @@ namespace amici {
                               const realtype *x, const realtype *p,
                               const realtype *k, const realtype *h,
                               const realtype *w) {
-            throw std::invalid_argument("Not implement for this model!");
+            throw std::invalid_argument("Not implemented for this model!");
             // don't use AmiException as the backtrace causes some hefty
             // computational overhead
         }
