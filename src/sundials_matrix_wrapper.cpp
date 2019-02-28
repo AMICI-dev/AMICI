@@ -1,17 +1,18 @@
 #include <amici/sundials_matrix_wrapper.h>
 
 #include <amici/cblas.h>
-#include <amici/exception.h>
 
 #include <new> // bad_alloc
 #include <utility>
+#include <stdexcept> // invalid_argument and domain_error
 
 namespace amici {
 
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
     : matrix(SUNSparseMatrix(M, N, NNZ, sparsetype)) {
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
-        throw AmiException("Invalid sparsetype. Must be CSC_MAT or CSR_MAT");
+        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
+                                    "CSR_MAT");
 
     if (NNZ && !matrix)
         throw std::bad_alloc();
@@ -32,7 +33,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int ubw, int lbw)
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
                                    int sparsetype) {
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
-        throw AmiException("Invalid sparsetype. Must be CSC_MAT or CSR_MAT");
+        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
+                                    "CSR_MAT");
 
     switch (SUNMatGetID(A.get())) {
     case SUNMATRIX_DENSE:
@@ -42,8 +44,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
         matrix = SUNSparseFromBandMatrix(A.get(), droptol, sparsetype);
         break;
     default:
-        throw AmiException("Invalid Matrix. Must be SUNMATRIX_DENSE or"
-                           " SUNMATRIX_BAND");
+        throw std::invalid_argument("Invalid Matrix. Must be SUNMATRIX_DENSE or"
+                                    " SUNMATRIX_BAND");
     }
 
     if (!matrix)
@@ -94,13 +96,16 @@ realtype *SUNMatrixWrapper::data() const {
     case SUNMATRIX_BAND:
         return SM_DATA_B(matrix);
     case SUNMATRIX_CUSTOM:
-        throw AmiException("Amici currently does not support custom matrix "
-                           "types.");
+        throw std::domain_error("Amici currently does not support custom matrix"
+                                " types.");
     }
     return nullptr; // -Wreturn-type
 }
 
 sunindextype SUNMatrixWrapper::rows() const {
+    if (!matrix)
+        return 0;
+    
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         return SM_ROWS_D(matrix);
@@ -109,12 +114,15 @@ sunindextype SUNMatrixWrapper::rows() const {
     case SUNMATRIX_BAND:
         return SM_ROWS_B(matrix);
     case SUNMATRIX_CUSTOM:
-        throw AmiException("Amici currently does not support custom matrix "
-                           "types.");
+        throw std::domain_error("Amici currently does not support custom matrix"
+                                " types.");
     }
 }
 
 sunindextype SUNMatrixWrapper::columns() const {
+    if (!matrix)
+        return 0;
+    
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         return SM_COLUMNS_D(matrix);
@@ -123,26 +131,32 @@ sunindextype SUNMatrixWrapper::columns() const {
     case SUNMATRIX_BAND:
         return SM_COLUMNS_B(matrix);
     case SUNMATRIX_CUSTOM:
-        throw AmiException("Amici currently does not support custom matrix "
-                           "types.");
+        throw std::domain_error("Amici currently does not support custom matrix"
+                                " types.");
     }
 }
 
 sunindextype *SUNMatrixWrapper::indexvals() const {
+    if (!matrix)
+        return nullptr;
+    
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_SPARSE:
         return SM_INDEXVALS_S(matrix);
     default:
-        throw AmiException("Function only available for sparse matrices");
+        throw std::domain_error("Function only available for sparse matrices");
     }
 }
 
 sunindextype *SUNMatrixWrapper::indexptrs() const {
+    if (!matrix)
+        return nullptr;
+    
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_SPARSE:
         return SM_INDEXPTRS_S(matrix);
     default:
-        throw AmiException("Function only available for sparse matrices");
+        throw std::domain_error("Function only available for sparse matrices");
     }
 }
 
@@ -150,39 +164,43 @@ int SUNMatrixWrapper::sparsetype() const {
     if (SUNMatGetID(matrix) == SUNMATRIX_SPARSE)
         return SM_SPARSETYPE_S(matrix);
     else
-        throw AmiException("Function only available for sparse matrices");
+        throw std::domain_error("Function only available for sparse matrices");
+}
+    
+void SUNMatrixWrapper::reset() {
+    if (matrix)
+        SUNMatZero(matrix);
 }
 
 void SUNMatrixWrapper::multiply(std::vector<realtype> &c,
                                 const std::vector<realtype> &b) const {
     if (static_cast<sunindextype>(c.size()) != rows())
-        throw AmiException("Dimension mismatch between number of rows in A (%i)"
-                           " and elements in c (%i).",
-                           rows(), c.size());
+        throw std::invalid_argument("Dimension mismatch between number of rows"
+                                    "in A and elements in c");
 
     if (static_cast<sunindextype>(b.size()) != columns())
-        throw AmiException("Dimension mismatch between number of cols in A (%i)"
-                           " and elements in b (%i).",
-                           columns(), b.size());
+        throw std::invalid_argument("Dimension mismatch between number of cols"
+                                    "in A and elements in b");
 
     multiply(c.data(), b.data());
 }
 
 void SUNMatrixWrapper::multiply(N_Vector c, const N_Vector b) const {
     if (NV_LENGTH_S(c) != rows())
-        throw AmiException("Dimension mismatch between number of rows in A (%i)"
-                           " and elements in c (%i).",
-                           rows(), NV_LENGTH_S(c));
+        throw std::invalid_argument("Dimension mismatch between number of rows"
+                                    "in A and elements in c");
 
     if (NV_LENGTH_S(b) != columns())
-        throw AmiException("Dimension mismatch between number of cols in A (%i)"
-                           " and elements in b (%i).",
-                           columns(), NV_LENGTH_S(b));
+        throw std::invalid_argument("Dimension mismatch between number of cols"
+                                    "in A and elements in b");
 
     multiply(NV_DATA_S(c), NV_DATA_S(b));
 }
 
 void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
+    if (!matrix)
+        return;
+    
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans, rows(),
@@ -210,10 +228,10 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
         }
         break;
     case SUNMATRIX_BAND:
-        throw AmiException("Not Implemented");
+        throw std::domain_error("Not Implemented.");
     case SUNMATRIX_CUSTOM:
-        throw AmiException("Amici currently does not support custom matrix "
-                           "types.");
+        throw std::domain_error("Amici currently does not support custom"
+                                " matrix types.");
     }
 }
 

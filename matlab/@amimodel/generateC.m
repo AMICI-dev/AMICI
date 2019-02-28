@@ -161,6 +161,7 @@ fprintf(fid,['                    ' num2str(this.ng) ',\n']);
 fprintf(fid,['                    ' num2str(this.nw) ',\n']);
 fprintf(fid,['                    ' num2str(this.ndwdx) ',\n']);
 fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
+fprintf(fid,['                    0,\n']);
 fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
 fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
