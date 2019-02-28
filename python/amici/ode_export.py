@@ -2135,11 +2135,11 @@ class ODEExporter:
             raise ValueError('Invalid value for type, must be colptr or '
                              'rowval')
 
-        lines = list()
-        lines.append('#include "sundials/sundials_types.h"')
-        lines.append('')
-        lines.append(f'void {function}_{indextype}_{self.modelName}'
-                     f'{signature}{{')
+        lines = [
+            '#include "sundials/sundials_types.h"',
+            '',
+            f'void {function}_{indextype}_{self.modelName}{signature}{{',
+        ]
         lines.extend(
             [' ' * 4 + f'{indextype}[{index}] = {value};'
              for index, value in enumerate(values)]

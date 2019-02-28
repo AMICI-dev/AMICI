@@ -134,7 +134,6 @@ class SUNMatrixWrapper {
     
     /**
      * @brief reset data to zeroes
-     * @return index array
      */
     void reset();
 
