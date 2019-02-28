@@ -131,6 +131,7 @@ namespace amici {
      * @return status flag indicating successful execution
      */
     void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
+        dxdotdw.reset();
         auto x_pos = computeX_pos(x);
         fdxdotdw(dxdotdw.data(), t, N_VGetArrayPointer(x_pos),
                  unscaledParameters.data(), fixedParameters.data(),
@@ -150,6 +151,7 @@ namespace amici {
             // python generated
             fdxdotdw(t, x);
             for (int ip = 0; ip < nplist(); ip++) {
+                N_VConst(0.0, dxdotdp.getNVector(ip));
                 dxdotdw.multiply(dxdotdp.data(ip), &dwdp.at(nw * ip));
             }
         } catch (std::invalid_argument &) {

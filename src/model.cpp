@@ -1435,10 +1435,6 @@ void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
     std::fill(dwdp.begin(), dwdp.end(), 0.0);
     try {
-        fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
-              fixedParameters.data(), h.data(), w.data(), total_cl.data(),
-              stotal_cl.data());
-    } catch (std::invalid_argument &) {
         realtype *stcl = nullptr;
         for (int ip = 0; ip < nplist(); ++ip) {
             if (ncl() > 0)
@@ -1447,6 +1443,10 @@ void Model::fdwdp(const realtype t, const realtype *x) {
                   fixedParameters.data(), h.data(), w.data(), total_cl.data(),
                   stcl, plist_[ip]);
         }
+    } catch (std::invalid_argument &) {
+        fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
+              fixedParameters.data(), h.data(), w.data(), total_cl.data(),
+              stotal_cl.data());
     }
 
     if (alwaysCheckFinite) {
