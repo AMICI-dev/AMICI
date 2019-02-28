@@ -111,10 +111,17 @@ end
 
 function sources_sundials = getSourcesSundials()
     sources_sundials = {
-        fullfile('src', 'sunmat_dense', 'sunmatrix_dense.c');
-        fullfile('src', 'sunlinsol_spgmr', 'sunlinsol_spgmr.c');
-        fullfile('src', 'sunlinsol_sptfqmr', 'sunlinsol_sptfqmr.c');
-        fullfile('src', 'sunlinsol_klu', 'sunlinsol_klu.c');
+        fullfile('src', 'sunmatrix', 'dense',   'sunmatrix_dense.c');
+        fullfile('src', 'sunmatrix', 'sparse',  'sunmatrix_sparse.c');
+        fullfile('src', 'sunmatrix', 'band',    'sunmatrix_band.c');
+        fullfile('src', 'sunlinsol', 'spgmr',   'sunlinsol_spgmr.c');
+        fullfile('src', 'sunlinsol', 'sptfqmr', 'sunlinsol_sptfqmr.c');
+        fullfile('src', 'sunlinsol', 'klu',     'sunlinsol_klu.c');
+        fullfile('src', 'sunlinsol', 'dense',   'sunlinsol_dense.c');
+        fullfile('src', 'sunlinsol', 'spfgmr',  'sunlinsol_spfgmr.c');
+        fullfile('src', 'sunlinsol', 'pcg',     'sunlinsol_pcg.c');
+        fullfile('src', 'sunlinsol', 'spbcgs',  'sunlinsol_spbcgs.c');
+        fullfile('src', 'sunlinsol', 'band',    'sunlinsol_band.c');
         fullfile('src', 'idas', 'idas_direct.c');
         fullfile('src', 'idas', 'idaa.c');
         fullfile('src', 'idas', 'idas_ic.c');
@@ -145,17 +152,10 @@ function sources_sundials = getSourcesSundials()
         fullfile('src', 'sundials', 'sundials_nonlinearsolver.c');
         fullfile('src', 'sundials', 'sundials_linearsolver.c');
         fullfile('src', 'sundials', 'sundials_band.c');
-        fullfile('src', 'sunlinsol_dense', 'sunlinsol_dense.c');
-        fullfile('src', 'sunmat_band', 'sunmatrix_band.c');
-        fullfile('src', 'sunlinsol_spfgmr', 'sunlinsol_spfgmr.c');
         fullfile('src', 'sunnonlinsol', 'newton', 'sunnonlinsol_newton.c');
         fullfile('src', 'sunnonlinsol', 'fixedpoint', ...
                      'sunnonlinsol_fixedpoint.c');
-        fullfile('src', 'sunmat_sparse', 'sunmatrix_sparse.c');
-        fullfile('src', 'nvec_ser', 'nvector_serial.c');
-        fullfile('src', 'sunlinsol_pcg', 'sunlinsol_pcg.c');
-        fullfile('src', 'sunlinsol_spbcgs', 'sunlinsol_spbcgs.c');
-        fullfile('src', 'sunlinsol_band', 'sunlinsol_band.c');
+        fullfile('src', 'nvector', 'serial', 'nvector_serial.c');
         fullfile('src', 'cvodes', 'cvodes_spils.c');
         fullfile('src', 'cvodes', 'cvodes_nls_stg.c');
         fullfile('src', 'cvodes', 'cvodes_ls.c');
