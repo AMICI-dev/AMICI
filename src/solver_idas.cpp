@@ -19,33 +19,42 @@ namespace amici {
 
 void IDASolver::init(AmiVector *x, AmiVector *dx, realtype t) {
     int status;
-    if (getMallocDone())
+    if (getInitDone()) {
+        if (nx() != x->getLength())
+            throw IDAException(IDA_ILL_INPUT, "IDAInit");
         status =
             IDAReInit(solverMemory.get(), t, x->getNVector(), dx->getNVector());
-    else
+    } else {
         status = IDAInit(solverMemory.get(), fxdot, t, x->getNVector(),
                          dx->getNVector());
+        _nx = x->getLength();
+        setInitDone();
+    }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAInit");
 }
 void IDASolver::binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) {
     int status;
-    if (getMallocDoneB(which))
+    if (getInitDoneB(which))
         status = IDAReInitB(solverMemory.get(), which, t, xB->getNVector(),
                             dxB->getNVector());
-    else
+    else {
         status = IDAInitB(solverMemory.get(), which, fxBdot, t,
                           xB->getNVector(), dxB->getNVector());
+        setInitDoneB(which);
+    }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAInitB");
 }
 void IDASolver::qbinit(int which, AmiVector *qBdot) {
     int status;
-    if (getQuadMallocDoneB(which))
+    if (getQuadInitDoneB(which))
         status = IDAQuadReInitB(solverMemory.get(), which, qBdot->getNVector());
-    else
+    else {
         status = IDAQuadInitB(solverMemory.get(), which, fqBdot,
                               qBdot->getNVector());
+        setQuadInitDoneB(which);
+    }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAQuadInitB");
 }
@@ -56,7 +65,7 @@ void IDASolver::rootInit(int ne) {
 }
 void IDASolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
     int status;
-    if (getSensMallocDone()) {
+    if (getSensInitDone()) {
         if (this->nplist() != nplist)
             throw CvodeException(IDA_ILL_INPUT, "IDASensInit");
         status = IDASensReInit(solverMemory.get(),
@@ -229,24 +238,26 @@ void IDASolver::reInitPostProcess(void *ami_mem, realtype *t,
                                   realtype tout) {}
 
 void IDASolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
     /* set time */
-    ida_mem()->ida_tn = t0;
+    ida_mem->ida_tn = t0;
     resetState(ida_mem, yy0->getNVector(), yp0->getNVector());
 }
 void IDASolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) {
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
     /* Initialize znS[0] in the history array */
     for (int is=0; is<nplist(); is++)
-        ida_mem()->ida_cvals[is] = ONE;
+        ida_mem->ida_cvals[is] = ONE;
 
-    auto status = N_VScaleVectorArray(nplist(), ida_mem()->ida_cvals,
+    auto status = N_VScaleVectorArray(nplist(), ida_mem->ida_cvals,
                                      yS0->getNVectorArray(),
-                                     ida_mem()->ida_phiS[0]);
+                                     ida_mem->ida_phiS[0]);
     if(status != IDA_SUCCESS)
         throw IDAException(IDA_VECTOROP_ERR,"IDASensReInit");
 
-    status = N_VScaleVectorArray(nplist(), ida_mem()->ida_cvals,
+    status = N_VScaleVectorArray(nplist(), ida_mem->ida_cvals,
                                      ypS0->getNVectorArray(),
-                                     ida_mem()->ida_phiS[1]);
+                                     ida_mem->ida_phiS[1]);
     if(status != IDA_SUCCESS)
         throw IDAException(IDA_VECTOROP_ERR,"IDASensReInit");
 }
@@ -268,15 +279,13 @@ void IDASolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
 
 void IDASolver::adjInit() {
     int status;
-    if (getAdjMallocDone()) {
-        if (static_cast<int>(interpType) != ca_mem()->ia_interpType)
-            throw CvodeException(IDA_ILL_INPUT, "IDAAdjInit");
-        if (static_cast<int>(maxsteps) != ca_mem()->ia_nsteps)
-            throw CvodeException(IDA_ILL_INPUT, "IDAAdjInit");
+    if (getAdjInitDone()) {
         status = IDAAdjReInit(solverMemory.get());
-    } else
+    } else {
         status = IDAAdjInit(solverMemory.get(), static_cast<int>(maxsteps),
                             static_cast<int>(interpType));
+        setAdjInitDone();
+    }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAAdjInit");
 }
@@ -291,8 +300,9 @@ void IDASolver::allocateSolverB(int *which) {
 }
 void IDASolver::reInitB(int which, realtype tB0, AmiVector *yyB0,
                           AmiVector *ypB0) {
-    ida_memB(which)->ida_tn = tB0;
-    resetState(ida_memB(which), yyB0->getNVector(), ypB0->getNVector());
+    auto ida_memB = static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
+    ida_memB->ida_tn = tB0;
+    resetState(ida_memB, yyB0->getNVector(), ypB0->getNVector());
 }
 void IDASolver::setSStolerancesB(int which, realtype relTolB, realtype absTolB) {
     int status = IDASStolerancesB(solverMemory.get(), which, relTolB, absTolB);
@@ -300,7 +310,8 @@ void IDASolver::setSStolerancesB(int which, realtype relTolB, realtype absTolB) 
          throw IDAException(status,"IDASStolerancesB");
 }
 void IDASolver::quadReInitB(int which, AmiVector *yQB0) {
-    N_VScale(ONE, yQB0->getNVector(), ida_memB(which)->ida_phiQ[0]);
+    auto ida_memB = static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
+    N_VScale(ONE, yQB0->getNVector(), ida_memB->ida_phiQ[0]);
 }
 void IDASolver::quadSStolerancesB(int which, realtype reltolQB,
                                     realtype abstolQB) {
@@ -314,6 +325,7 @@ int IDASolver::solve(realtype tout, AmiVector *yret, AmiVector *ypret,
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     }
+    solverWasCalled = true;
     return status;
 }
 int IDASolver::solveF(realtype tout, AmiVector *yret, AmiVector *ypret,
@@ -322,6 +334,7 @@ int IDASolver::solveF(realtype tout, AmiVector *yret, AmiVector *ypret,
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     }
+    solverWasCalled = true;
     return status;
 }
 void IDASolver::solveB(realtype tBout, int itaskB) {
@@ -411,73 +424,11 @@ void IDASolver::turnOffRootFinding() {
         throw IDAException(status,"IDARootInit");
 }
 
-int IDASolver::nplist() const {
-    if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
-    return ida_mem()->ida_Ns;
-}
-
-int IDASolver::nx() const {
-    if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
-    return NV_LENGTH_S(ida_mem()->ida_yy0);
-}
-
 const Model *IDASolver::getModel() const {
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
     if (!solverMemory)
         throw AmiException("Solver has not been allocated, information is not available");
-    return static_cast<Model *>(ida_mem()->ida_user_data);
-}
-
-bool IDASolver::getMallocDone() const {
-    if (!solverMemory)
-        return false;
-    return ida_mem()->ida_MallocDone;
-}
-
-bool IDASolver::getSensMallocDone() const {
-    if (!solverMemory)
-        return false;
-    return ida_mem()->ida_sensMallocDone;
-}
-
-bool IDASolver::getAdjMallocDone() const {
-    if (!solverMemory)
-        return false;
-    return ida_mem()->ida_adjMallocDone;
-}
-
-bool IDASolver::getMallocDoneB(int which) const {
-    if (!solverMemory)
-        return false;
-    return ida_memB(which)->ida_MallocDone;
-}
-
-bool IDASolver::getQuadMallocDoneB(int which) const {
-    if (!solverMemory)
-        return false;
-    return ida_memB(which)->ida_quadMallocDone;
-}
-
-bool IDASolver::solverWasCalled() const {
-    if (!solverMemory)
-        return false;
-    if (!getMallocDone())
-        return false;
-
-    return ida_mem()->ida_nst > 0;
-}
-    
-IDAMem IDASolver::ida_mem() const {
-    return static_cast<IDAMem>(solverMemory.get());
-}
-
-IDAMem IDASolver::ida_memB(int which) const {
-    return static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
-}
-
-IDAadjMemRec *IDASolver::ca_mem() const {
-    return ida_mem()->ida_adj_mem;
+    return static_cast<Model *>(ida_mem->ida_user_data);
 }
 
 /** Jacobian of xdot with respect to states x

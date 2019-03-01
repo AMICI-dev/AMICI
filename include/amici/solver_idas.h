@@ -4,7 +4,19 @@
 #include "amici/solver.h"
 
 #include <sundials/sundials_matrix.h>
-#include <idas/idas_impl.h>
+
+namespace amici{
+class ExpData;
+class ReturnData;
+class Model_DAE;
+class IDASolver;
+}
+
+// for serialization friend in Solver
+namespace boost { namespace serialization {
+    template <class Archive>
+    void serialize(Archive &ar, amici::IDASolver &u, const unsigned int version);
+}}
 
 namespace amici {
 
@@ -64,23 +76,7 @@ class IDASolver : public Solver {
 
     void turnOffRootFinding() override;
 
-    int nplist() const override;
-
-    int nx() const override;
-
     const Model *getModel() const override;
-
-    bool getMallocDone() const override;
-    
-    bool getSensMallocDone() const override;
-    
-    bool getAdjMallocDone() const override;
-    
-    bool getMallocDoneB(int which) const override;
-    
-    bool getQuadMallocDoneB(int which) const override;
-    
-    bool solverWasCalled() const override;
 
     static int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data);
@@ -165,12 +161,6 @@ class IDASolver : public Solver {
     void getLastOrder(void *ami_mem, int *order) const override;
 
     void *getAdjBmem(void *ami_mem, int which) override;
-    
-    IDAMem ida_mem() const;
-    
-    IDAMem ida_memB(int which) const;
-    
-    IDAadjMemRec *ca_mem() const;
 
     void init(AmiVector *x, AmiVector *dx, realtype t) override;
 

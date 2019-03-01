@@ -53,7 +53,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
     auto plist = model->getParameterList();
 
     if ((sensi_meth == SensitivityMethod::forward && !plist.empty()) ||
-        (getSensMallocDone() && nplist() != model->nplist()))
+        (getSensInitDone() && nplist() != model->nplist()))
         solverMemory = nullptr; // force reset solver memory
 
     /* Create solver memory object if necessary */
@@ -181,7 +181,7 @@ void Solver::wrapErrHandlerFn(int error_code, const char *module,
 void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     long int number;
 
-    if(solverWasCalled() && solverMemory) {
+    if(solverWasCalled && solverMemory) {
         getNumSteps(solverMemory.get(), &number);
         rdata->numsteps[it] = number;
 
@@ -201,7 +201,7 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
 void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
     long int number;
 
-    if(solverWasCalled() && solverMemoryB.at(which)) {
+    if(solverWasCalled && solverMemoryB.at(which)) {
         getNumSteps(solverMemoryB.at(which).get(), &number);
         rdata->numstepsB[it] = number;
 
@@ -410,14 +410,14 @@ bool operator ==(const Solver &a, const Solver &b)
 }
 
 void Solver::applyTolerances() {
-    if (!getMallocDone())
+    if (!getInitDone())
         throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
 
     setSStolerances(this->rtol, this->atol);
 }
 
 void Solver::applyTolerancesFSA() {
-    if (!getMallocDone())
+    if (!getInitDone())
         throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
 
     if (sensi < SensitivityOrder::first)
@@ -431,7 +431,7 @@ void Solver::applyTolerancesFSA() {
 }
 
 void Solver::applyTolerancesASA(int which) {
-    if (!getAdjMallocDone())
+    if (!getAdjInitDone())
         throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be applied yet!"));
 
     if (sensi < SensitivityOrder::first)
@@ -442,7 +442,7 @@ void Solver::applyTolerancesASA(int which) {
 }
 
 void Solver::applyQuadTolerancesASA(int which) {
-    if (!getAdjMallocDone())
+    if (!getAdjInitDone())
         throw AmiException(("Adjoint solver instance was not yet set up, the tolerances cannot be applied yet!"));
 
     if (sensi < SensitivityOrder::first)
@@ -464,7 +464,7 @@ void Solver::applySensitivityTolerances() {
 
     if (sensi_meth == SensitivityMethod::forward)
         applyTolerancesFSA();
-    else if (sensi_meth == SensitivityMethod::adjoint && getAdjMallocDone()) {
+    else if (sensi_meth == SensitivityMethod::adjoint && getAdjInitDone()) {
         for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
             applyTolerancesASA(iMem);
     }
@@ -513,7 +513,7 @@ SensitivityOrder Solver::getSensitivityOrder() const {
 void Solver::setSensitivityOrder(SensitivityOrder sensi) {
     this->sensi = sensi;
 
-    if(getMallocDone())
+    if(getInitDone())
         applySensitivityTolerances();
 }
 
@@ -527,7 +527,7 @@ void Solver::setRelativeTolerance(double rtol) {
 
     this->rtol = rtol;
 
-    if(getMallocDone()) {
+    if(getInitDone()) {
         applyTolerances();
         applySensitivityTolerances();
     }
@@ -543,7 +543,7 @@ void Solver::setAbsoluteTolerance(double atol) {
 
     this->atol = atol;
 
-    if(getMallocDone()) {
+    if(getInitDone()) {
         applyTolerances();
         applySensitivityTolerances();
     }
@@ -559,7 +559,7 @@ void Solver::setRelativeToleranceFSA(double rtol) {
 
     rtol_fsa = rtol;
 
-    if(getMallocDone()) {
+    if(getInitDone()) {
         applySensitivityTolerances();
     }
 }
@@ -574,7 +574,7 @@ void Solver::setAbsoluteToleranceFSA(double atol) {
 
     atol_fsa = atol;
 
-    if(getMallocDone()) {
+    if(getInitDone()) {
         applySensitivityTolerances();
     }
 }
@@ -591,7 +591,7 @@ void Solver::setRelativeToleranceB(double rtol)
 
     rtolB = rtol;
 
-    if(getMallocDone()) {
+    if(getInitDone()) {
         applySensitivityTolerances();
     }
 }
@@ -608,7 +608,7 @@ void Solver::setAbsoluteToleranceB(double atol)
 
     atolB = atol;
 
-    if(getMallocDone()) {
+    if(getInitDone()) {
         applySensitivityTolerances();
     }
 }
@@ -700,10 +700,18 @@ int Solver::getMaxSteps() const {
 void Solver::setMaxSteps(int maxsteps) {
     if (maxsteps < 0)
         throw AmiException("maxsteps must be a non-negative number");
+    
+    if(solverMemory) {
+        if(getAdjInitDone())
+            throw AmiException("Checkpointing Scheme was already set up, "
+                               "the linear system multistep method can no "
+                               "longer be changed!");
+        else
+            setMaxNumSteps(this->maxsteps);
+    }
 
     this->maxsteps = maxsteps;
-    if(solverMemory)
-        setMaxNumSteps(this->maxsteps);
+    
 }
 
 int Solver::getMaxStepsBackwardProblem() const {
@@ -838,6 +846,58 @@ void Solver::initalizeNonLinearSolverSens(AmiVector *x, Model *model)
     }
 
     setNonLinearSolverSens();
+}
+    
+int Solver::nplist() const {
+    return _nplist;
+}
+    
+int Solver::nx() const {
+    return _nx;
+}
+    
+bool Solver::getInitDone() const{
+    return initialized;
+};
+
+bool Solver::getSensInitDone() const{
+    return sensInitialized;
+}
+
+bool Solver::getAdjInitDone() const{
+    return adjInitialized;
+}
+
+bool Solver::getInitDoneB(int which) const{
+    return static_cast<int>(initializedB.size()) > which && initializedB.at(which);
+}
+
+bool Solver::getQuadInitDoneB(int which) const{
+    return static_cast<int>(initializedQB.size()) > which && initializedQB.at(which);
+}
+    
+void Solver::setInitDone() {
+    initialized = true;
+};
+
+void Solver::setSensInitDone() {
+    sensInitialized = true;
+}
+
+void Solver::setAdjInitDone() {
+    adjInitialized = true;
+}
+
+void Solver::setInitDoneB(int which) {
+    if (which >= static_cast<int>(initializedB.size()))
+        initializedB.resize(which, false);
+    initializedB.at(which) = true;
+}
+
+void Solver::setQuadInitDoneB(int which) {
+    if (which >= static_cast<int>(initializedQB.size()))
+        initializedQB.resize(which, false);
+    initializedQB.at(which) = true;
 }
 
 } // namespace amici

@@ -6,10 +6,8 @@
 #include "amici/vector.h"
 
 #include <sundials/sundials_matrix.h>
-#include <cvodes/cvodes_impl.h>
 
-namespace amici {
-
+namespace amici{
 class ExpData;
 class ReturnData;
 class Model_ODE;
@@ -79,23 +77,7 @@ class CVodeSolver : public Solver {
 
     void turnOffRootFinding() override;
 
-    int nplist() const override;
-
-    int nx() const override;
-
     const Model *getModel() const override;
-
-    bool getMallocDone() const override;
-    
-    bool getSensMallocDone() const override;
-
-    bool getAdjMallocDone() const override;
-
-    bool getMallocDoneB(int which) const override;
-    
-    bool getQuadMallocDoneB(int which) const override;
-    
-    bool solverWasCalled() const override;
 
     static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
 
@@ -184,12 +166,6 @@ class CVodeSolver : public Solver {
     void getLastOrder(void *ami_ami_mem, int *order) const override;
 
     void *getAdjBmem(void *ami_mem, int which) override;
-    
-    CVodeMem cv_mem() const;
-    
-    CVodeMem cv_memB(int which) const;
-    
-    CVadjMemRec *ca_mem() const;
 
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, CVodeSolver &r, const unsigned int version);

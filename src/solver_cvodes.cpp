@@ -5,6 +5,7 @@
 
 #include <cvodes/cvodes.h>
 #include <cvodes/cvodes_diag.h>
+#include <cvodes/cvodes_impl.h>
 
 #include "amici/sundials_linsol_wrapper.h"
 
@@ -40,10 +41,15 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 
 void CVodeSolver::init(AmiVector *x, AmiVector * /*dx*/, realtype t) {
     int status;
-    if (getMallocDone())
+    if (getInitDone()){
+        if (nx() != x->getLength())
+            throw CvodeException(CV_ILL_INPUT, "CVodeInit");
         status = CVodeReInit(solverMemory.get(), t, x->getNVector());
-    else
+    } else {
         status = CVodeInit(solverMemory.get(), fxdot, t, x->getNVector());
+        _nx = x->getLength();
+        setInitDone();
+    }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeInit");
 }
@@ -51,23 +57,27 @@ void CVodeSolver::init(AmiVector *x, AmiVector * /*dx*/, realtype t) {
 void CVodeSolver::binit(int which, AmiVector *xB, AmiVector * /*dxB*/,
                         realtype t) {
     int status;
-    if (getMallocDoneB(which))
+    if (getInitDoneB(which))
         status = CVodeReInitB(solverMemory.get(), which, t, xB->getNVector());
-    else
+    else {
         status =
             CVodeInitB(solverMemory.get(), which, fxBdot, t, xB->getNVector());
+        setInitDoneB(which);
+    }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeInitB");
 }
 
 void CVodeSolver::qbinit(int which, AmiVector *qBdot) {
     int status;
-    if (getQuadMallocDoneB(which))
+    if (getQuadInitDoneB(which))
         status =
             CVodeQuadReInitB(solverMemory.get(), which, qBdot->getNVector());
-    else
+    else {
         status = CVodeQuadInitB(solverMemory.get(), which, fqBdot,
                                 qBdot->getNVector());
+        setQuadInitDoneB(which);
+    }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeQuadInitB");
 }
@@ -81,16 +91,19 @@ void CVodeSolver::rootInit(int ne) {
 void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray * /*sdx*/,
                             int nplist) {
     int status;
-    if (getSensMallocDone()) {
+    if (getSensInitDone()) {
         if (this->nplist() != nplist)
             throw CvodeException(CV_ILL_INPUT, "CVodeSensInit1");
         status = CVodeSensReInit(solverMemory.get(),
                                  static_cast<int>(getSensitivityMethod()),
                                  sx->getNVectorArray());
-    } else
+    } else {
         status = CVodeSensInit1(solverMemory.get(), nplist,
                                 static_cast<int>(getSensitivityMethod()),
                                 fsxdot, sx->getNVectorArray());
+        _nx = nplist;
+        setSensInitDone();
+    }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSensInit1");
 }
@@ -282,6 +295,7 @@ void CVodeSolver::setSuppressAlg(bool flag) { }
 
 void CVodeSolver::resetState(void *ami_mem, N_Vector y0) {
 
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     /* here we force the order in the next step to zero, and update the
      Nordsieck history array, this is largely copied from CVodeReInit with
      explanations from cvodes_impl.h
@@ -290,29 +304,29 @@ void CVodeSolver::resetState(void *ami_mem, N_Vector y0) {
     /* Set step parameters */
 
     /* current order */
-    cv_mem()->cv_q      = 1;
+    cv_mem->cv_q      = 1;
     /* L = q + 1 */
-    cv_mem()->cv_L      = 2;
+    cv_mem->cv_L      = 2;
     /* number of steps to wait before updating in q */
-    cv_mem()->cv_qwait  = cv_mem()->cv_L;
+    cv_mem->cv_qwait  = cv_mem->cv_L;
     /* last successful q value used                */
-    cv_mem()->cv_qu     = 0;
+    cv_mem->cv_qu     = 0;
     /* last successful h value used                */
-    cv_mem()->cv_hu     = ZERO;
+    cv_mem->cv_hu     = ZERO;
     /* tolerance scale factor                      */
-    cv_mem()->cv_tolsf  = ONE;
+    cv_mem->cv_tolsf  = ONE;
 
     /* Initialize other integrator optional outputs */
 
     /* actual initial stepsize                     */
-    cv_mem()->cv_h0u      = ZERO;
+    cv_mem->cv_h0u      = ZERO;
     /* step size to be used on the next step       */
-    cv_mem()->cv_next_h   = ZERO;
+    cv_mem->cv_next_h   = ZERO;
     /* order to be used on the next step           */
-    cv_mem()->cv_next_q   = 0;
+    cv_mem->cv_next_q   = 0;
 
     /* write updated state to Nordsieck history array  */
-    N_VScale(ONE, y0, cv_mem()->cv_zn[0]);
+    N_VScale(ONE, y0, cv_mem->cv_zn[0]);
 }
 
 
@@ -372,17 +386,19 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t,
 
 void CVodeSolver::reInit(realtype t0, AmiVector *yy0, AmiVector * /*yp0*/) {
     /* set time */
-    cv_mem()->cv_tn = t0;
-    resetState(cv_mem(), yy0->getNVector());
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    cv_mem->cv_tn = t0;
+    resetState(cv_mem, yy0->getNVector());
 }
 
 void CVodeSolver::sensReInit(AmiVectorArray *yS0, AmiVectorArray * /*ypS0*/) {
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     /* Initialize znS[0] in the history array */
     for (int is=0; is<nplist(); is++)
-        cv_mem()->cv_cvals[is] = ONE;
+        cv_mem->cv_cvals[is] = ONE;
 
-    int status = N_VScaleVectorArray(nplist(), cv_mem()->cv_cvals,
-                                 yS0->getNVectorArray(), cv_mem()->cv_znS[0]);
+    int status = N_VScaleVectorArray(nplist(), cv_mem->cv_cvals,
+                                 yS0->getNVectorArray(), cv_mem->cv_znS[0]);
     if(status != CV_SUCCESS)
          throw CvodeException(CV_VECTOROP_ERR,"CVodeSensReInit");
 }
@@ -407,15 +423,13 @@ void CVodeSolver::getSens(realtype *tret, AmiVectorArray *yySout) const {
 
 void CVodeSolver::adjInit() {
     int status;
-    if (CVodeMem()->cv_adjMallocDone) {
-        if (static_cast<int>(interpType) != ca_mem()->ca_IMtype)
-            throw CvodeException(CV_ILL_INPUT, "CVodeAdjInit");
-        if (static_cast<int>(maxsteps) != ca_mem()->ca_nsteps)
-            throw CvodeException(CV_ILL_INPUT, "CVodeAdjInit");
+    if (getAdjInitDone())
         status = CVodeAdjReInit(solverMemory.get());
-    } else
+    else {
         status = CVodeAdjInit(solverMemory.get(), static_cast<int>(maxsteps),
                               static_cast<int>(interpType));
+        setAdjInitDone();
+    }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeAdjInit");
 }
@@ -433,8 +447,9 @@ void CVodeSolver::allocateSolverB(int *which) {
 
 void CVodeSolver::reInitB(int which, realtype tB0, AmiVector *yyB0,
                             AmiVector * /*ypB0*/) {
-    cv_memB(which)->cv_tn = tB0;
-    resetState(cv_memB(which), yyB0->getNVector());
+    auto cv_memB = static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
+    cv_memB->cv_tn = tB0;
+    resetState(cv_memB, yyB0->getNVector());
 }
 
 void CVodeSolver::setSStolerancesB(int which, realtype relTolB,
@@ -445,7 +460,8 @@ void CVodeSolver::setSStolerancesB(int which, realtype relTolB,
 }
 
 void CVodeSolver::quadReInitB(int which, AmiVector *yQB0) {
-    N_VScale(ONE, yQB0->getNVector(), cv_memB(which)->cv_znQ[0]);
+    auto cv_memB = static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
+    N_VScale(ONE, yQB0->getNVector(), cv_memB->cv_znQ[0]);
 }
 
 void CVodeSolver::quadSStolerancesB(int which, realtype reltolQB,
@@ -468,6 +484,7 @@ int CVodeSolver::solve(realtype tout, AmiVector *yret, AmiVector * /*ypret*/,
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     }
+    solverWasCalled = true;
     return status;
 }
 
@@ -477,6 +494,7 @@ int CVodeSolver::solveF(realtype tout, AmiVector *yret, AmiVector * /*ypret*/,
     if(status<0) {
         throw IntegrationFailure(status,*tret);
     }
+    solverWasCalled = true;
     return status;
 }
 
@@ -566,72 +584,12 @@ void CVodeSolver::turnOffRootFinding() {
          throw CvodeException(status,"CVodeRootInit");
 }
 
-int CVodeSolver::nplist() const {
-    if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
-    return cv_mem()->cv_Ns;
-}
-
-int CVodeSolver::nx() const {
-    if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
-    return NV_LENGTH_S(cv_mem()->cv_zn[0]);
-}
-
 const Model *CVodeSolver::getModel() const {
     if (!solverMemory)
-        throw AmiException("Solver has not been allocated, information is not available");
-    return static_cast<Model *>(cv_mem()->cv_user_data);
-}
-
-bool CVodeSolver::getMallocDone() const {
-    if (!solverMemory)
-        return false;
-    return cv_mem()->cv_MallocDone;
-}
-
-bool CVodeSolver::getSensMallocDone() const {
-    if (!solverMemory)
-        return false;
-    return cv_mem()->cv_SensMallocDone;
-}
-
-bool CVodeSolver::getAdjMallocDone() const {
-    if (!solverMemory)
-        return false;
-    return cv_mem()->cv_adjMallocDone;
-}
-
-bool CVodeSolver::getMallocDoneB(int which) const {
-    if (!solverMemory)
-        return false;
-    return cv_memB(which)->cv_MallocDone;
-}
-
-bool CVodeSolver::getQuadMallocDoneB(int which) const {
-    if (!solverMemory)
-        return false;
-    return cv_memB(which)->cv_QuadMallocDone;
-}
-
-bool CVodeSolver::solverWasCalled() const {
-    if (!solverMemory)
-        return false;
-    if (!getMallocDone())
-        return false;
-    return cv_mem()->cv_nst > 0;
-}
-    
-CVodeMem CVodeSolver::cv_mem() const {
-    return static_cast<CVodeMem>(solverMemory.get());
-}
-    
-CVodeMem CVodeSolver::cv_memB(int which) const {
-    return static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
-}
-    
-CVadjMemRec *CVodeSolver::ca_mem() const {
-    return cv_mem()->cv_adj_mem;
+        throw AmiException("Solver has not been allocated, information is not "
+                           "available");
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    return static_cast<Model *>(cv_mem->cv_user_data);
 }
 
 /** Jacobian of xdot with respect to states x

@@ -1021,60 +1021,46 @@ class Solver {
     void initializeNonLinearSolverB(AmiVector *xB, const int which);
 
     /**
-     * @brief Accessor function to the number of sensitivity parameters in the
-     * model stored in the user data
-     *
-     * @return number of sensitivity parameters
-     */
-    virtual int nplist() const = 0;
-    /**
-     * @brief Accessor function to the number of state variables in the model
-     * stored in the user data
-     *
-     * @return number of state variables
-     */
-    virtual int nx() const = 0;
-    /**
      * Accessor function to the model stored in the user data
      *
      * @return user data model
      */
-    virtual const Model *getModel() const = 0;
+    virtual const Model *getModel() const;
 
     /**
      * @brief checks whether memory for the forward problem has been allocated
      *
-     * @return solverMemory->(cv|ida)_MallocDone
+     * @return proxy for solverMemory->(cv|ida)_MallocDone
      */
-    virtual bool getMallocDone() const = 0;
+    bool getInitDone() const;
     
     /**
      * @brief checks whether memory for forward sensitivities has been allocated
      *
-     * @return solverMemory->(cv|ida)_SensMallocDone
+     * @return proxy for solverMemory->(cv|ida)_SensMallocDone
      */
-    virtual bool getSensMallocDone() const = 0;
+    bool getSensInitDone() const;
 
     /**
      * @brief checks whether memory for forward interpolation has been allocated
      *
-     * @return solverMemory->(cv|ida)_adjMallocDone
+     * @return proxy for solverMemory->(cv|ida)_adjMallocDone
      */
-    virtual bool getAdjMallocDone() const = 0;
+    bool getAdjInitDone() const;
     
     /**
      * @brief checks whether memory for the backward problem has been allocated
      *
-     * @return solverMemoryB->(cv|ida)_MallocDone
+     * @return proxy for solverMemoryB->(cv|ida)_MallocDone
      */
-    virtual bool getMallocDoneB(int which) const = 0;
+    bool getInitDoneB(int which) const;
     
     /**
      * @brief checks whether memory for backward quadratures has been allocated
      *
-     * @return solverMemoryB->(cv|ida)_QuadMallocDone
+     * @return proxy for solverMemoryB->(cv|ida)_QuadMallocDone
      */
-    virtual bool getQuadMallocDoneB(int which) const = 0;
+    bool getQuadInitDoneB(int which) const;
 
     /**
      * @brief attaches a diagonal linear solver to the forward problem
@@ -1088,11 +1074,9 @@ class Solver {
      */
     virtual void diagB(int which) = 0;
     
-    /**
-     * @brief checks whether the solver was called
-     * @return solverMemory->(cv|ida)_nst > 0
-     */
-    virtual bool solverWasCalled() const = 0;
+    int nplist() const;
+    
+    int nx() const;
 
 
 protected:
@@ -1179,8 +1163,38 @@ protected:
     std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverB;
     /** non-linear solver for the sensitivities*/
     std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverSens;
-
-
+    
+    bool solverWasCalled = false;
+    
+    int _nplist = 0;
+    
+    int _nx = 0;
+    
+    /**
+     * @brief sets that memory for the forward problem has been allocated
+     */
+    void setInitDone();
+    
+    /**
+     * @brief sets that memory for forward sensitivities has been allocated
+     */
+    void setSensInitDone();
+    
+    /**
+     * @brief sets that memory for forward interpolation has been allocated
+     */
+    void setAdjInitDone();
+    
+    /**
+     * @brief sets that memory for the backward problem has been allocated
+     */
+    void setInitDoneB(int which);
+    
+    /**
+     * @brief sets that memory for backward quadratures has been allocated
+     */
+    void setQuadInitDoneB(int which);
+    
 private:
 
     /** method for sensitivity computation */
@@ -1247,6 +1261,11 @@ private:
     /** flag indicating whether sensitivities are supposed to be computed */
     SensitivityOrder sensi = SensitivityOrder::none;
 
+    bool initialized = false;
+    bool sensInitialized = false;
+    bool adjInitialized = false;
+    std::vector<bool> initializedB;
+    std::vector<bool> initializedQB;
 };
 
 bool operator ==(const Solver &a, const Solver &b);
