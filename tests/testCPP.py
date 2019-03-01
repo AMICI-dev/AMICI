@@ -92,12 +92,6 @@ class TestAmiciCPP(unittest.TestCase):
                     )
 
 
-if __name__ == '__main__':
-    suite = unittest.TestSuite()
-    suite.addTest(TestAmiciCPP())
-    unittest.main()
-
-
 def is_callable_but_not_getter(obj, attr):
     if not callable(getattr(obj, attr)):
         return False
@@ -136,3 +130,9 @@ def set_val(obj, attr, val):
         )
     else:
         setattr(obj, attr, val)
+
+
+if __name__ == '__main__':
+    suite = unittest.TestSuite()
+    suite.addTest(TestAmiciCPP())
+    unittest.main()

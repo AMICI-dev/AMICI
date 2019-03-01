@@ -4,8 +4,9 @@
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
-source build/venv/bin/activate
+source ${AMICI_PATH}/build/venv/bin/activate
 pip install coverage
+pip install -U git+https://github.com/pysb/pysb
 python ./tests/testCoverage.py
 ret=$?
 if [[ $ret != 0 ]]; then exit $ret; fi
