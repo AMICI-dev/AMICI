@@ -26,7 +26,7 @@ TEST(groupDirac, testSimulationExpData) {
 }
 
 TEST(groupDirac, testSensitivityForward) {
-   amici::simulateVerifyWrite("/model_dirac/sensiforward/");
+    amici::simulateVerifyWrite("/model_dirac/sensiforward/");
 }
 
 TEST(groupDirac, testSensitivityState) {

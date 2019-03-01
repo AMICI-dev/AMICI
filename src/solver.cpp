@@ -4,13 +4,11 @@
 #include "amici/backwardproblem.h"
 #include "amici/model.h"
 #include "amici/rdata.h"
+#include "amici/misc.h"
 
 #include <cmath>
 #include <cstdio>
 #include <cstring>
-
-#include <sundials/sundials_spgmr.h>
-#include <cvodes/cvodes_spils.h>
 
 namespace amici {
 
@@ -73,7 +71,8 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
 
     rootInit(model->ne);
 
-    initializeLinearSolver(model);
+    initializeLinearSolver(model, x);
+    initializeNonLinearSolver(x);
 
     if (computeSensitivities) {
         auto plist = model->getParameterList();
@@ -84,6 +83,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
 
             /* Activate sensitivity calculations */
             sensInit1(sx, sdx, plist.size());
+            initalizeNonLinearSolverSens(x, model);
             setSensParams(par.data(), nullptr, plist.data());
 
             applyTolerancesFSA();
@@ -127,7 +127,8 @@ void Solver::setupB(BackwardProblem *bwd, Model *model) {
     /* Number of maximal internal steps */
     setMaxNumStepsB(bwd->getwhich(), (maxstepsB == 0) ? maxsteps * 100 : maxstepsB);
 
-    initializeLinearSolverB(model, bwd->getwhich());
+    initializeLinearSolverB(model, xB, bwd->getwhich());
+    initializeNonLinearSolverB(xB, bwd->getwhich());
 
     /* Initialise quadrature calculation */
     qbinit(bwd->getwhich(), bwd->getxQBptr());
@@ -198,167 +199,169 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata, int which) const {
 
     if(solverWasCalled && solverMemoryB.at(which)) {
         getNumSteps(solverMemoryB.at(which).get(), &number);
-        rdata->numstepsB[it] = (double)number;
+        rdata->numstepsB[it] = number;
 
         getNumRhsEvals(solverMemoryB.at(which).get(), &number);
-        rdata->numrhsevalsB[it] = (double)number;
+        rdata->numrhsevalsB[it] = number;
 
         getNumErrTestFails(solverMemoryB.at(which).get(), &number);
-        rdata->numerrtestfailsB[it] = (double)number;
+        rdata->numerrtestfailsB[it] = number;
 
         getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
-        rdata->numnonlinsolvconvfailsB[it] = (double)number;
+        rdata->numnonlinsolvconvfailsB[it] = number;
     }
 }
 
-/**
- * initializeLinearSolver sets the linear solver for the forward problem
- *
- * @param model pointer to the model object
- */
-void Solver::initializeLinearSolver(const Model *model) {
-    /* Attach linear solver module */
-
+void Solver::initializeLinearSolver(const Model *model, AmiVector *x) {
     switch (linsol) {
 
-            /* DIRECT SOLVERS */
+    /* DIRECT SOLVERS */
 
-        case LinearSolver::dense:
-            dense(model->nx_solver);
-            setDenseJacFn();
-            break;
+    case LinearSolver::dense:
+        linearSolver = std::make_unique<SUNLinSolDense>(*x);
+        setLinearSolver();
+        setDenseJacFn();
+        break;
 
-        case LinearSolver::band:
-            band(model->nx_solver, model->ubw, model->lbw);
-            setBandJacFn();
-            break;
+    case LinearSolver::band:
+        linearSolver = std::make_unique<SUNLinSolBand>(*x, model->ubw, model->lbw);
+        setLinearSolver();
+        setBandJacFn();
+        break;
 
-        case LinearSolver::LAPACKDense:
-            throw AmiException("Solver currently not supported!");
-            /* status = CVLapackDense(ami_mem, nx_solver);
-             if (status != AMICI_SUCCESS) return;
+    case LinearSolver::LAPACKDense:
+        throw AmiException("Solver currently not supported!");
 
-             status = SetDenseJacFn(ami_mem);
-             if (status != AMICI_SUCCESS) return;
-             */
+    case LinearSolver::LAPACKBand:
+        throw AmiException("Solver currently not supported!");
 
-        case LinearSolver::LAPACKBand:
-            throw AmiException("Solver currently not supported!");
-            /* status = CVLapackBand(ami_mem, nx_solver);
-             if (status != AMICI_SUCCESS) return;
+    case LinearSolver::diag:
+        diag();
+        setDenseJacFn();
+        break;
 
-             status = SetBandJacFn(ami_mem);
-             if (status != AMICI_SUCCESS) return;
-             */
+        /* ITERATIVE SOLVERS */
 
-        case LinearSolver::diag:
-            diag();
-            break;
+    case LinearSolver::SPGMR:
+        linearSolver = std::make_unique<SUNLinSolSPGMR>(*x, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        setLinearSolver();
+        setJacTimesVecFn();
+        break;
 
+    case LinearSolver::SPBCG:
+        linearSolver = std::make_unique<SUNLinSolSPBCGS>(*x, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        setLinearSolver();
+        setJacTimesVecFn();
+        break;
 
-            /* ITERATIVE SOLVERS */
+    case LinearSolver::SPTFQMR:
+        linearSolver = std::make_unique<SUNLinSolSPTFQMR>(*x, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        setLinearSolver();
+        setJacTimesVecFn();
+        break;
 
-        case LinearSolver::SPGMR:
-            spgmr(PREC_NONE, CVSPILS_MAXL);
-            setJacTimesVecFn();
-            break;
+        /* SPARSE SOLVERS */
 
-        case LinearSolver::SPBCG:
-            spbcg(PREC_NONE, CVSPILS_MAXL);
-            setJacTimesVecFn();
-            break;
+    case LinearSolver::KLU:
+        linearSolver = std::make_unique<SUNLinSolKLU>(*x, model->nnz, CSC_MAT, getStateOrdering());
+        setLinearSolver();
+        setSparseJacFn();
+        break;
 
-        case LinearSolver::SPTFQMR:
-            sptfqmr(PREC_NONE, CVSPILS_MAXL);
-            setJacTimesVecFn();
-            break;
-
-            /* SPARSE SOLVERS */
-
-        case LinearSolver::KLU:
-            klu(model->nx_solver, model->nnz, CSC_MAT);
-            setSparseJacFn();
-            kluSetOrdering((int) getStateOrdering());
-            break;
-
-        default:
-            throw AmiException("Invalid choice of solver!");
-
+    default:
+        throw AmiException("Invalid choice of solver: %d", static_cast<int>(linsol));
     }
 }
 
-void Solver::initializeLinearSolverB(const Model *model, const int which) {
-    switch (linsol) {
-
-            /* DIRECT SOLVERS */
-
-        case LinearSolver::dense:
-            denseB(which, model->nx_solver);
-            setDenseJacFnB(which);
-            break;
-
-        case LinearSolver::band:
-            bandB(which, model->nx_solver, model->ubw, model->lbw);
-            setBandJacFnB(which);
-            break;
-
-        case LinearSolver::LAPACKDense:
-
-            /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackDenseB(ami_mem, bwd->getwhich(), nx_solver);
-             if (status != AMICI_SUCCESS) return;
-
-             status = SetDenseJacFnB(ami_mem, bwd->getwhich());
-             if (status != AMICI_SUCCESS) return;
-             #else*/
-            throw AmiException("Solver currently not supported!");
-            /* #endif*/
-
-        case LinearSolver::LAPACKBand:
-
-            /* #if SUNDIALS_BLAS_LAPACK
-             status = CVLapackBandB(ami_mem, bwd->getwhich(), nx_solver, ubw, lbw);
-             if (status != AMICI_SUCCESS) return;
-
-             status = SetBandJacFnB(ami_mem, bwd->getwhich());
-             if (status != AMICI_SUCCESS) return;
-             #else*/
-            throw AmiException("Solver currently not supported!");
-            /* #endif*/
-
-        case LinearSolver::diag:
-            diagB(which);
-            setDenseJacFnB(which);
-            break;
-
-            /* ITERATIVE SOLVERS */
-
-        case LinearSolver::SPGMR:
-            spgmrB(which, PREC_NONE, CVSPILS_MAXL);
-            setJacTimesVecFnB(which);
-            break;
-
-        case LinearSolver::SPBCG:
-            spbcgB(which, PREC_NONE, CVSPILS_MAXL);
-            setJacTimesVecFnB(which);
-            break;
-
-        case LinearSolver::SPTFQMR:
-            sptfqmrB(which, PREC_NONE, CVSPILS_MAXL);
-            setJacTimesVecFnB(which);
-            break;
-
-            /* SPARSE SOLVERS */
-
-        case LinearSolver::KLU:
-            kluB(which, model->nx_solver, model->nnz, CSC_MAT);
-            setSparseJacFnB(which);
-            kluSetOrderingB(which, (int) getStateOrdering());
-            break;
-
-        default:
-            throw AmiException("Invalid local Solver!");
+void Solver::initializeNonLinearSolver(AmiVector *x)
+{
+    switch(iter) {
+    case NonlinearSolverIteration::newton:
+        nonLinearSolver = std::make_unique<SUNNonLinSolNewton>(x->getNVector());
+        break;
+    case NonlinearSolverIteration::fixedpoint:
+        nonLinearSolver = std::make_unique<SUNNonLinSolFixedPoint>(x->getNVector());
+        break;
+    default:
+        throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
     }
+
+    setNonLinearSolver();
+}
+
+void Solver::initializeLinearSolverB(const Model *model, AmiVector *xB, const int which) {
+    switch (linsol) {
+    /* DIRECT SOLVERS */
+    case LinearSolver::dense:
+        linearSolverB = std::make_unique<SUNLinSolDense>(*xB);
+        setLinearSolverB(which);
+        setDenseJacFnB(which);
+        break;
+
+    case LinearSolver::band:
+        linearSolverB = std::make_unique<SUNLinSolBand>(*xB, model->ubw, model->lbw);
+        setLinearSolverB(which);
+        setBandJacFnB(which);
+        break;
+
+    case LinearSolver::LAPACKDense:
+        throw AmiException("Solver currently not supported!");
+
+    case LinearSolver::LAPACKBand:
+        throw AmiException("Solver currently not supported!");
+
+    case LinearSolver::diag:
+        diagB(which);
+        setDenseJacFnB(which);
+        break;
+
+        /* ITERATIVE SOLVERS */
+
+    case LinearSolver::SPGMR:
+        linearSolverB = std::make_unique<SUNLinSolSPGMR>(*xB, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        setLinearSolverB(which);
+        setJacTimesVecFnB(which);
+        break;
+
+    case LinearSolver::SPBCG:
+        linearSolverB = std::make_unique<SUNLinSolSPBCGS>(*xB, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        setLinearSolverB(which);
+        setJacTimesVecFnB(which);
+        break;
+
+    case LinearSolver::SPTFQMR:
+        linearSolverB = std::make_unique<SUNLinSolSPTFQMR>(*xB, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        setLinearSolverB(which);
+        setJacTimesVecFnB(which);
+        break;
+
+        /* SPARSE SOLVERS */
+
+    case LinearSolver::KLU:
+        linearSolverB = std::make_unique<SUNLinSolKLU>(*xB, model->nnz, CSC_MAT, getStateOrdering());
+        setLinearSolverB(which);
+        setSparseJacFnB(which);
+        break;
+
+    default:
+        throw AmiException("Invalid choice of solver: %d", static_cast<int>(linsol));
+    }
+}
+
+void Solver::initializeNonLinearSolverB(AmiVector *xB, const int which)
+{
+    switch(iter) {
+    case NonlinearSolverIteration::newton:
+        nonLinearSolverB = std::make_unique<SUNNonLinSolNewton>(xB->getNVector());
+        break;
+    case NonlinearSolverIteration::fixedpoint:
+        nonLinearSolverB = std::make_unique<SUNNonLinSolFixedPoint>(xB->getNVector());
+        break;
+    default:
+        throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
+    }
+
+    setNonLinearSolverB(which);
 }
 
 bool operator ==(const Solver &a, const Solver &b)
@@ -402,7 +405,7 @@ void Solver::applyTolerances() {
     if (!getMallocDone())
         throw AmiException(("Solver instance was not yet set up, the tolerances cannot be applied yet!"));
 
-    setSStolerances(RCONST(this->rtol), RCONST(this->atol));
+    setSStolerances(this->rtol, this->atol);
 }
 
 void Solver::applyTolerancesFSA() {
@@ -427,7 +430,7 @@ void Solver::applyTolerancesASA(int which) {
         return;
 
     /* specify integration tolerances for backward problem */
-    setSStolerancesB(which, RCONST(getRelativeToleranceB()), RCONST(getAbsoluteToleranceB()));
+    setSStolerancesB(which, getRelativeToleranceB(), getAbsoluteToleranceB());
 }
 
 void Solver::applyQuadTolerancesASA(int which) {
@@ -444,9 +447,7 @@ void Solver::applyQuadTolerancesASA(int which) {
     setQuadErrConB(which,
                    !std::isinf(quad_atol) && !std::isinf(quad_rtol));
 
-    quadSStolerancesB(which,
-                      RCONST(quad_rtol),
-                      RCONST(quad_atol));
+    quadSStolerancesB(which, quad_rtol, quad_atol);
 }
 
 void Solver::applySensitivityTolerances() {
@@ -748,10 +749,10 @@ StateOrdering Solver::getStateOrdering() const {
 void Solver::setStateOrdering(StateOrdering ordering) {
     this->ordering = ordering;
     if (solverMemory && linsol == LinearSolver::KLU) {
-        kluSetOrdering((int)ordering);
-        for (int iMem = 0; iMem < (int) solverMemoryB.size(); ++iMem)
-            if(solverMemoryB.at(iMem))
-                kluSetOrderingB(iMem, (int) ordering);
+        auto klu = dynamic_cast<SUNLinSolKLU*>(linearSolver.get());
+        klu->setOrdering(ordering);
+        klu = dynamic_cast<SUNLinSolKLU*>(linearSolverB.get());
+        klu->setOrdering(ordering);
     }
 }
 
@@ -794,5 +795,41 @@ void Solver::setInternalSensitivityMethod(InternalSensitivityMethod ism) {
     this->ism = ism;
 }
 
+void Solver::initalizeNonLinearSolverSens(AmiVector *x, Model *model)
+{
+    switch(iter) {
+    case NonlinearSolverIteration::newton:
+        switch(ism) {
+        case InternalSensitivityMethod::staggered:
+        case InternalSensitivityMethod::simultaneous:
+            nonLinearSolverSens = std::make_unique<SUNNonLinSolNewton>(1 + model->nplist(), x->getNVector());
+            break;
+        case InternalSensitivityMethod::staggered1:
+            nonLinearSolverSens = std::make_unique<SUNNonLinSolNewton>(x->getNVector());
+            break;
+        default:
+            throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
+        }
+        break;
+    case NonlinearSolverIteration::fixedpoint:
+        switch(ism) {
+        case InternalSensitivityMethod::staggered:
+        case InternalSensitivityMethod::simultaneous:
+            nonLinearSolverSens = std::make_unique<SUNNonLinSolFixedPoint>(1 + model->nplist(), x->getNVector());
+            break;
+        case InternalSensitivityMethod::staggered1:
+            nonLinearSolverSens = std::make_unique<SUNNonLinSolFixedPoint>(x->getNVector());
+            break;
+        default:
+            throw AmiException("Unsupported internal sensitivity method selected: %d", ism);
+
+        }
+        break;
+    default:
+        throw AmiException("Invalid non-linear solver specified (%d).", static_cast<int>(iter));
+    }
+
+    setNonLinearSolverSens();
+}
 
 } // namespace amici

@@ -19,7 +19,7 @@
 #include <memory>
 
 namespace amici {
-    
+
     int dbl2int(const double x);
 
 /**
@@ -88,7 +88,7 @@ void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
                  const int K, const double alpha, const double *A,
                  const int lda, const double *B, const int ldb,
                  const double beta, double *C, const int ldc) {
-    assert(layout == BLASLayout::rowMajor);
+    assert(layout == BLASLayout::colMajor);
 
     const ptrdiff_t M_ = M;
     const ptrdiff_t N_ = N;
@@ -128,7 +128,7 @@ void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
                  const int M, const int N, const double alpha, const double *A,
                  const int lda, const double *X, const int incX,
                  const double beta, double *Y, const int incY) {
-    assert(layout == BLASLayout::rowMajor);
+    assert(layout == BLASLayout::colMajor);
 
     const ptrdiff_t M_ = M;
     const ptrdiff_t N_ = N;
@@ -201,11 +201,11 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
         mexCallMATLAB(1, &dataYT, 1, &dataY, "transpose");
         auto observedData = mxArrayToVector(dataYT, ny_my * nt_my);
         edata->setObservedData(observedData);
-        
+
     } else {
         throw AmiException("Field Y not specified as field in data struct!");
     }
-    
+
     // Sigma Y
     if (mxArray *dataSigmaY = mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Y")) {
         auto ny_sigmay = static_cast<int>(mxGetN(dataSigmaY));
@@ -220,7 +220,7 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
                                "does not match provided time vector (%i)",
                                nt_sigmay, model.nt());
         }
-        
+
         mxArray *dataSigmaYT;
         mexCallMATLAB(1, &dataSigmaYT, 1, &dataSigmaY, "transpose");
         auto observedDataSigma = mxArrayToVector(dataSigmaYT, ny_sigmay * nt_sigmay);
@@ -228,7 +228,7 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
     } else {
         throw AmiException("Field Sigma_Y not specified as field in data struct!");
     }
-    
+
     // Z
     if (mxArray *dataZ = mxGetProperty(prhs[RHS_DATA], 0, "Z")) {
         auto nz_mz = static_cast<int>(mxGetN(dataZ));
@@ -250,7 +250,7 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
     } else {
         throw AmiException("Field Z not specified as field in data struct!");
     }
-    
+
     // Sigma Z
     if (mxArray *dataSigmaZ = mxGetProperty(prhs[RHS_DATA], 0, "Sigma_Z")) {
         auto nz_sigmaz = static_cast<int>(mxGetN(dataSigmaZ));
@@ -271,7 +271,7 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
         edata->setObservedEventsStdDev(observedEventsSigma);
     } else {
         throw AmiException("Field Sigma_Z not specified as field in data struct!");
-        
+
     }
 
     // preequilibration condition parameters
@@ -323,11 +323,11 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ss_atol")) {
             solver.setAbsoluteToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ss_atol")));
         }
-        
+
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ss_rtol")) {
             solver.setRelativeToleranceQuadratures(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ss_rtol")));
         }
-        
+
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "maxsteps")) {
             solver.setMaxSteps(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "maxsteps"))));
         }
@@ -526,7 +526,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // use matlab error reporting
     amici::warnMsgIdAndTxt = &mexWarnMsgIdAndTxt;
     amici::errMsgIdAndTxt = &mexErrMsgIdAndTxt;
-    
+
     if (nlhs != 1) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","Incorrect number of output arguments (must be 1)!");
     } else if(nrhs < amici::RHS_NUMARGS_REQUIRED) {
@@ -549,11 +549,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                solver->getSensitivityMethod() == amici::SensitivityMethod::adjoint) {
         amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
     }
-    
+
     /* ensures that plhs[0] is available */
     auto rdata = amici::runAmiciSimulation(*solver, edata.get(), *model);
     plhs[0] = getReturnDataMatlabFromAmiciCall(rdata.get());
-    
+
 }
 
 

@@ -1,20 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4761 $
- * $Date: 2016-05-18 20:00:35 -0700 (Wed, 18 May 2016) $
+ * $Revision$
+ * $Date$
  * -----------------------------------------------------------------
  * Programmers: Carol Woodward, Slaven Peles @ LLNL
  *              Daniel R. Reynolds @ SMU
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for operations on the SUNDIALS
  * sparse matrix structure.
@@ -309,8 +309,8 @@ int SparseCopyMat(const SlsMat A, SlsMat B)
   /* ensure that B is allocated with at least as 
      much memory as we have nonzeros in A */
   if (B->NNZ < A_nz) {
-    B->indexvals = realloc(B->indexvals, A_nz*sizeof(int));
-    B->data = realloc(B->data, A_nz*sizeof(realtype));
+    B->indexvals = (int *) realloc(B->indexvals, A_nz*sizeof(int));
+    B->data = (realtype *) realloc(B->data, A_nz*sizeof(realtype));
     B->NNZ = A_nz;
   }
 
@@ -702,8 +702,8 @@ int SparseReallocMat(SlsMat A)
   int nzmax; 
 
   nzmax = A->indexptrs[A->NP];
-  A->indexvals = realloc(A->indexvals, nzmax*sizeof(int));
-  A->data = realloc(A->data, nzmax*sizeof(realtype));
+  A->indexvals = (int *) realloc(A->indexvals, nzmax*sizeof(int));
+  A->data = (realtype *) realloc(A->data, nzmax*sizeof(realtype));
   A->NNZ = nzmax;
   
   return 0;

@@ -14,7 +14,6 @@
 #include <sundials/sundials_dense.h>
 #include <memory>
 #include <cvodes/cvodes.h>
-#include <cvodes/cvodes_klu.h>
 
 namespace amici {
 
@@ -58,12 +57,11 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
             if (it < 0) {
                 /* Preequilibration? -> Create a new CVode object for sim */
                 auto newtonSimSolver =
-                    createSteadystateSimSolver(solver, model, *t);
-                getSteadystateSimulation(rdata, newtonSimSolver.get(), model,
-                                         it);
+                    createSteadystateSimSolver(solver, model);
+                getSteadystateSimulation(rdata, newtonSimSolver.get(), model);
             } else {
                 /* Solver was already created, use this one */
-                getSteadystateSimulation(rdata, solver, model, it);
+                getSteadystateSimulation(rdata, solver, model);
             }
             newton_status = NewtonStatus::newt_sim;
         } catch (AmiException const &ex2) {
@@ -256,7 +254,7 @@ void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,const Model *model,
 /* ------------------------------------------------------------------ */
 
 void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *solver,
-                                                  Model *model, int it)
+                                                  Model *model)
 {
     /* Loop over steps and check for convergence */
     bool converged = checkConvergence(solver, model);
@@ -288,7 +286,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
 }
 
 std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
-        Solver *solver, Model *model, realtype tstart)
+        Solver *solver, Model *model)
 {
     /* Create new CVode solver object */
 

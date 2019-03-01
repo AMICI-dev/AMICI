@@ -1,3 +1,16 @@
+# ---------------------------------------------------------------
+# Programmer:  Daniel R. Reynolds @ SMU
+# ---------------------------------------------------------------
+# SUNDIALS Copyright Start
+# Copyright (c) 2002-2019, Lawrence Livermore National Security
+# and Southern Methodist University.
+# All rights reserved.
+#
+# See the top-level LICENSE and NOTICE files for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# SUNDIALS Copyright End
+# ---------------------------------------------------------------
 # CMakeLists.txt file for the FIDA library
 
 # Add variable fida_SOURCES with the sources for the FIDA library
@@ -8,33 +21,63 @@ SET(fida_SOURCES
   fidadense.c
   fidaewt.c
   fidajtimes.c
+  fidanullmatrix.c
+  fidanullnonlinsol.c
   fidapreco.c
   fidaroot.c
+  fidasparse.c
   )
 
-IF(LAPACK_FOUND)
-  SET(fida_BL_SOURCES fidalapack.c fidalapdense.c fidalapband.c)
-ELSE(LAPACK_FOUND)
-  SET(fida_BL_SOURCES "")
-ENDIF(LAPACK_FOUND)
+# Add variable shared_SOURCES with the common SUNDIALS sources which will
+# also be included in the IDA library
+SET(shared_SOURCES
+  ${sundials_SOURCE_DIR}/src/nvector/serial/fnvector_serial.c
+  )
 
-IF(KLU_FOUND OR SUPERLUMT_FOUND)
-  SET(fida_SPARSE_SOURCES fidasparse.c)
-ELSE(SPARSE_FOUND)
-  SET(fida_SPARSE_SOURCES "")
-ENDIF(KLU_FOUND OR SUPERLUMT_FOUND)
- 
+# Add variable sunmatrix_SOURCES with the common SUNMatrix sources which will
+# also be included in the IDA library
+SET(sunmatrix_SOURCES
+  ${sundials_SOURCE_DIR}/src/sunmatrix/band/fsunmatrix_band.c
+  ${sundials_SOURCE_DIR}/src/sunmatrix/dense/fsunmatrix_dense.c
+  ${sundials_SOURCE_DIR}/src/sunmatrix/sparse/fsunmatrix_sparse.c
+  )
+
+# Add variable sunlinsol_SOURCES with the common SUNLinearSolver sources which will
+# also be included in the IDA library
+SET(sunlinsol_SOURCES
+  ${sundials_SOURCE_DIR}/src/sunlinsol/band/fsunlinsol_band.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol/dense/fsunlinsol_dense.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol/spbcgs/fsunlinsol_spbcgs.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol/spfgmr/fsunlinsol_spfgmr.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol/spgmr/fsunlinsol_spgmr.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol/sptfqmr/fsunlinsol_sptfqmr.c
+  ${sundials_SOURCE_DIR}/src/sunlinsol/pcg/fsunlinsol_pcg.c
+  )
+
 IF(KLU_FOUND)
-  SET(fida_KLU_SOURCES fidaklu.c)
-ELSE(KLU_FOUND)
-  SET(fida_KLU_SOURCES "")
-ENDIF(KLU_FOUND)
- 
+  LIST(APPEND sunlinsol_SOURCES
+    ${sundials_SOURCE_DIR}/src/sunlinsol/klu/fsunlinsol_klu.c
+    )
+ENDIF()
+
 IF(SUPERLUMT_FOUND)
-  SET(fida_SUPERLUMT_SOURCES fidasuperlumt.c)
-ELSE(SUPERLUMT_FOUND)
-  SET(fida_SUPERLUMT_SOURCES "")
-ENDIF(SUPERLUMT_FOUND)
+  LIST(APPEND sunlinsol_SOURCES
+    ${sundials_SOURCE_DIR}/src/sunlinsol/superlumt/fsunlinsol_superlumt.c
+    )
+ENDIF()
+
+IF(LAPACK_FOUND)
+  LIST(APPEND sunlinsol_SOURCES
+    ${sundials_SOURCE_DIR}/src/sunlinsol/lapackband/fsunlinsol_lapackband.c
+    ${sundials_SOURCE_DIR}/src/sunlinsol/lapackdense/fsunlinsol_lapackdense.c
+    )
+ENDIF()
+
+# Add variable sunnonlinsol_SOURCES with the common SUNNonlinearSolver sources
+# which will also be included in the IDA library
+SET(sunnonlinsol_SOURCES
+  ${sundials_SOURCE_DIR}/src/sunnonlinsol/newton/fsunnonlinsol_newton.c
+  )
 
 # Add source directories to include directories for access to
 # implementation only header files (both for fida and ida)
@@ -49,13 +92,15 @@ ADD_DEFINITIONS(-DBUILD_SUNDIALS_LIBRARY)
 # coming from inexistent user-provided functions)
 
 # Add the build target for the FIDA library
-ADD_LIBRARY(sundials_fida_static STATIC ${fida_SOURCES} ${fida_BL_SOURCES} ${fida_SPARSE_SOURCES} ${fida_KLU_SOURCES} ${fida_SUPERLUMT_SOURCES})
+ADD_LIBRARY(sundials_fida_static STATIC
+  ${fida_SOURCES} ${shared_SOURCES} ${sunmatrix_SOURCES} ${sunlinsol_SOURCES}
+  ${sunnonlinsol_SOURCES})
 
 # Set the library name and make sure it is not deleted
 SET_TARGET_PROPERTIES(sundials_fida_static
   PROPERTIES OUTPUT_NAME sundials_fida CLEAN_DIRECT_OUTPUT 1)
 
 # Install the FIDA library
-INSTALL(TARGETS sundials_fida_static DESTINATION lib)
+INSTALL(TARGETS sundials_fida_static DESTINATION ${CMAKE_INSTALL_LIBDIR})
 #
 MESSAGE(STATUS "Added IDA FCMIX module")

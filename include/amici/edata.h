@@ -37,7 +37,7 @@ class ExpData {
      * @param ts                   (dimension: nt)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent,
-            std::vector<realtype>  const& ts);
+            std::vector<realtype> ts);
 
     /**
      * constructor that initializes timepoints and fixed parameters from vectors
@@ -49,8 +49,8 @@ class ExpData {
      * @param fixedParameters      (dimension: nk)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent,
-            std::vector<realtype>  const& ts,
-            std::vector<realtype>  const& fixedParameters);
+            std::vector<realtype> ts,
+            std::vector<realtype> fixedParameters);
 
 
     /**
@@ -66,7 +66,7 @@ class ExpData {
      * @param observedEventsStdDev (dimension: nmaxevent x nztrue, row-major)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent,
-            std::vector<realtype> const& ts,
+            std::vector<realtype> ts,
             std::vector<realtype> const& observedData,
             std::vector<realtype> const& observedDataStdDev,
             std::vector<realtype> const& observedEvents,
@@ -374,7 +374,7 @@ protected:
      * @param input vector input to be checked
      * @param fieldname name of the input
      */
-    void checkDataDimension(std::vector<realtype> input, const char *fieldname) const;
+    void checkDataDimension(std::vector<realtype> const& input, const char *fieldname) const;
 
     /**
      * checker for dimensions of input observedEvents or observedEventsStdDev
@@ -382,7 +382,7 @@ protected:
      * @param input vector input to be checkedjupyter_contrib_nbextensions
      * @param fieldname name of the input
      */
-    void checkEventsDimension(std::vector<realtype> input, const char *fieldname) const;
+    void checkEventsDimension(std::vector<realtype> const& input, const char *fieldname) const;
 
     /** number of observables */
     int nytrue_;

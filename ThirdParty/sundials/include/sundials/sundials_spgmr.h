@@ -1,20 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
- * ----------------------------------------------------------------- 
+ * $Revision$
+ * $Date$
+ * -----------------------------------------------------------------
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the header file for the implementation of SPGMR Krylov
  * iterative linear solver.  The SPGMR algorithm is based on the
@@ -127,7 +127,7 @@ extern "C" {
  * storage during calculations.
  * -----------------------------------------------------------------
  */
-  
+
 typedef struct _SpgmrMemRec {
 
   int l_max;
@@ -240,13 +240,13 @@ SUNDIALS_EXPORT SpgmrMem SpgmrMalloc(int l_max, N_Vector vec_tmpl);
  * SpgmrMalloc must be made to obtain new memory for SpgmrSolve
  * to use.
  * -----------------------------------------------------------------
- */                                                                
-     
+ */
+
 SUNDIALS_EXPORT int SpgmrSolve(SpgmrMem mem, void *A_data, N_Vector x, N_Vector b,
-			       int pretype, int gstype, realtype delta, 
-			       int max_restarts, void *P_data, N_Vector s1, 
-			       N_Vector s2, ATimesFn atimes, PSolveFn psolve, 
-			       realtype *res_norm, int *nli, int *nps);
+                               int pretype, int gstype, realtype delta,
+                               int max_restarts, void *P_data, N_Vector s1,
+                               N_Vector s2, ATimesFn atimes, PSolveFn psolve,
+                               realtype *res_norm, int *nli, int *nps);
 
 
 /* Return values for SpgmrSolve */
@@ -258,12 +258,12 @@ SUNDIALS_EXPORT int SpgmrSolve(SpgmrMem mem, void *A_data, N_Vector x, N_Vector 
 #define SPGMR_QRFACT_FAIL        3  /* QRfact found singular matrix  */
 #define SPGMR_PSOLVE_FAIL_REC    4  /* psolve failed recoverably     */
 #define SPGMR_ATIMES_FAIL_REC    5  /* atimes failed recoverably     */
-#define SPGMR_PSET_FAIL_REC      6  /* pset faild recoverably        */
+#define SPGMR_PSET_FAIL_REC      6  /* pset failed recoverably       */
 
 #define SPGMR_MEM_NULL          -1  /* mem argument is NULL          */
 #define SPGMR_ATIMES_FAIL_UNREC -2  /* atimes returned failure flag  */
 #define SPGMR_PSOLVE_FAIL_UNREC -3  /* psolve failed unrecoverably   */
-#define SPGMR_GS_FAIL           -4  /* Gram-Schmidt routine faiuled  */        
+#define SPGMR_GS_FAIL           -4  /* Gram-Schmidt routine faiuled  */
 #define SPGMR_QRSOL_FAIL        -5  /* QRsol found singular R        */
 #define SPGMR_PSET_FAIL_UNREC   -6  /* pset failed unrecoverably     */
 
@@ -274,7 +274,7 @@ SUNDIALS_EXPORT int SpgmrSolve(SpgmrMem mem, void *A_data, N_Vector x, N_Vector 
  * SpgmrMalloc frees the memory allocated by SpgmrMalloc. It is
  * illegal to use the pointer mem after a call to SpgmrFree.
  * -----------------------------------------------------------------
- */                                                                
+ */
 
 SUNDIALS_EXPORT void SpgmrFree(SpgmrMem mem);
 

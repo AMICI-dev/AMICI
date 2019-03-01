@@ -1,19 +1,19 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision$
+ * $Date$
  * -----------------------------------------------------------------
  * Programmer(s): Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the header file for the implementation of the scaled
  * preconditioned Transpose-Free Quasi-Minimal Residual (SPTFQMR)
@@ -206,19 +206,19 @@ SUNDIALS_EXPORT SptfqmrMem SptfqmrMalloc(int l_max, N_Vector vec_tmpl);
  */
 
 SUNDIALS_EXPORT int SptfqmrSolve(SptfqmrMem mem, void *A_data, N_Vector x, N_Vector b,
-				 int pretype, realtype delta, void *P_data, N_Vector sx,
-				 N_Vector sb, ATimesFn atimes, PSolveFn psolve,
-				 realtype *res_norm, int *nli, int *nps);
+                                 int pretype, realtype delta, void *P_data, N_Vector sx,
+                                 N_Vector sb, ATimesFn atimes, PSolveFn psolve,
+                                 realtype *res_norm, int *nli, int *nps);
 
 /* Return values for SptfqmrSolve */
 
 #define SPTFQMR_SUCCESS            0  /* SPTFQMR algorithm converged          */
 #define SPTFQMR_RES_REDUCED        1  /* SPTFQMR did NOT converge, but the
-				         residual was reduced                 */
+                                         residual was reduced                 */
 #define SPTFQMR_CONV_FAIL          2  /* SPTFQMR algorithm failed to converge */
 #define SPTFQMR_PSOLVE_FAIL_REC    3  /* psolve failed recoverably            */
 #define SPTFQMR_ATIMES_FAIL_REC    4  /* atimes failed recoverably            */
-#define SPTFQMR_PSET_FAIL_REC      5  /* pset faild recoverably               */
+#define SPTFQMR_PSET_FAIL_REC      5  /* pset failed recoverably              */
 
 #define SPTFQMR_MEM_NULL          -1  /* mem argument is NULL                 */
 #define SPTFQMR_ATIMES_FAIL_UNREC -2  /* atimes returned failure flag         */

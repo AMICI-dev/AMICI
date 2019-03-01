@@ -126,7 +126,8 @@ enum class LinearMultistepMethod {
 
 /** CVODES/IDAS Nonlinear Iteration method */
 enum class NonlinearSolverIteration {
-    functional = 1,
+    functional = 1, /** deprecated */
+    fixedpoint = 1,
     newton = 2
 };
 
@@ -136,7 +137,7 @@ enum class StateOrdering {
     COLAMD,
     natural
 };
-  
+
 /** Sensitivity computation mode in steadyStateProblem */
 enum class SteadyStateSensitivityMode {
     newtonOnly,
@@ -150,7 +151,7 @@ enum class NewtonStatus {
     newt_sim=2,
     newt_sim_newt=3,
 };
-    
+
 /**
  * @brief msgIdAndTxtFp
  * @param identifier string with error message identifier

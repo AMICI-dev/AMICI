@@ -1,93 +1,148 @@
 # ---------------------------------------------------------------
-# Author:  Steven Smith @ LLNL
+# Author: Steven Smith and David J. Gardner @ LLNL
 # ---------------------------------------------------------------
-# LLNS Copyright Start
-# Copyright (c) 2013, Lawrence Livermore National Security
-# This work was performed under the auspices of the U.S. Department 
-# of Energy by Lawrence Livermore National Laboratory in part under 
-# Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
-# Produced at the Lawrence Livermore National Laboratory.
+# SUNDIALS Copyright Start
+# Copyright (c) 2002-2019, Lawrence Livermore National Security
+# and Southern Methodist University.
 # All rights reserved.
-# For details, see the LICENSE file.
-# LLNS Copyright End
+#
+# See the top-level LICENSE and NOTICE files for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# SUNDIALS Copyright End
 # ---------------------------------------------------------------
 #
-# SUNDIALS_ADD_TEST(<test name> <executable> )
-# 
-# Add Sundials regression test.
+# SUNDIALS_ADD_TEST(<test name> <executable>)
+#
+# CMake macro to add a Sundials regression test. Keyword input
+# arguments can be added after <executable> to set regression
+# test options (see oneValueArgs and multiValueArgs below).
+#
+# When SUNDIALS_DEVTEST is OFF (default) the executable is run
+# and pass/fail is determined by the executable return value.
+#
+# When SUNDIALS_DEVTESTS is ON the executable is run and its
+# output compared with the corresponding .out file. If the output
+# differs significantly then the test fails. The default level of
+# signicance is 4 decimal points for floating values and 10% for
+# integer values.
+#
+# The level of precision can be adjusted for all tests using:
+#  -D SUNDIALS_DEVTESTS_FLOAT_PRECISION=<number of digits>
+#  -D SUNDIALS_DEVTESTS_INTEGER_PRECISION=<% difference>
+# ---------------------------------------------------------------
 
-# Executable is run and output is compared with output in the
-# test/answers directory.  If output differs significantly then test
-# fails.  Default signicance is 4 decimal points for floating values
-# and 10% for integer values.
+MACRO(SUNDIALS_ADD_TEST NAME EXECUTABLE)
 
-IF(EXAMPLES_ENABLE)
+  # macro options
+  # NODIFF = do not diff the test output against an answer file
+  SET(options "NODIFF")
 
-  find_package(PythonInterp)
-  IF(${PYTHON_VERSION_MAJOR} LESS 3)
-      IF(${PYTHON_VERSION_MINOR} LESS 7)
-	message( WARNING "***************************************************************************\nWARNING\nPython version must be 2.7.x or greater in order to run regression tests.\nExamples will build but 'make test' will fail.\n***************************************************************************")
-      ENDIF()
-  ENDIF()
+  # macro keyword inputs followed by a single value
+  # MPI_NPROCS         = number of mpi tasks to use in parallel tests
+  # FLOAT_PRECISION    = precision for floating point failure comparision (num digits)
+  # INTEGER_PRECENTAGE = integer percentage difference for failure comparison
+  # ANSWER_DIR         = path to the directory containing the test answer file
+  # ANSWER_FILE        = name of test answer file
+  # EXAMPLE_TYPE       = release or develop examples
+  SET(oneValueArgs "MPI_NPROCS" "FLOAT_PRECISION" "INTEGER_PERCENTAGE"
+    "ANSWER_DIR" "ANSWER_FILE" "EXAMPLE_TYPE")
 
-  FIND_PROGRAM(TESTRUNNER testRunner PATHS test)
-ENDIF(EXAMPLES_ENABLE)
+  # macro keyword inputs followed by multiple values
+  # TEST_ARGS = command line arguments to pass to the test executable
+  SET(multiValueArgs "TEST_ARGS")
 
-macro(SUNDIALS_ADD_TEST NAME EXECUTABLE)
-
-  set(options "")
-  set(oneValueArgs "MPI_NPROCS" "ANSWER_FILE" "FLOAT_PRECISION" "INTEGER_PERCENTAGE")
-  set(multiValueArgs "TEST_ARGS")
-
-  CMAKE_PARSE_ARGUMENTS(SUNDIALS_ADD_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  # parse inputs and create variables SUNDIALS_ADD_TEST_<keyword>
+  CMAKE_PARSE_ARGUMENTS(SUNDIALS_ADD_TEST
+    "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   # SGS add check to make sure parallel is integer
   # SGS add check for float and integer precision
 
-  set(TEST_ARGS  "-v" "--testname=${NAME}" 
-    "--executablename=$<TARGET_FILE:${EXECUTABLE}>"
-    "--answersdir=${CMAKE_SOURCE_DIR}/test/answers"
-    "--outputdir=${CMAKE_BINARY_DIR}/Testing/output"
-    )
+  # check that the test is not excluded
+  if(NOT ("${SUNDIALS_ADD_TEST_EXAMPLE_TYPE}" STREQUAL "exclude"))
 
-  IF("${SUNDIALS_ADD_TEST_MPI_NPROCS}" STREQUAL "")
-  ELSE()
+    # add test using the dev test runner
+    IF(SUNDIALS_DEVTESTS)
 
-    IF(MPI_ENABLE)
-      IF(MPI_RUN_COMMAND MATCHES "srun")
-	set(RUN_COMMAND "srun -N1 -n${SUNDIALS_ADD_TEST_MPI_NPROCS} -ppdebug")
-      ELSE(MPI_RUN_COMMAND MATCHES "srun")
-	set(RUN_COMMAND "mpirun -n ${SUNDIALS_ADD_TEST_MPI_NPROCS}")
-      ENDIF(MPI_RUN_COMMAND MATCHES "srun")
-      
-      LIST(APPEND TEST_ARGS "--runcommand=\"${RUN_COMMAND}\"")
+      # command line arguments for the test runner script
+      SET(TEST_ARGS
+        "--verbose"
+        "--testname=${NAME}"
+        "--executablename=$<TARGET_FILE:${EXECUTABLE}>"
+        "--outputdir=${CMAKE_BINARY_DIR}/Testing/output"
+        )
 
-    ENDIF(MPI_ENABLE)
+      # do not diff the output and answer files
+      IF(SUNDIALS_ADD_TEST_NODIFF)
+        LIST(APPEND TEST_ARGS "--nodiff")
+      ENDIF()
 
-  ENDIF()
-  
-  IF("${SUNDIALS_ADD_TEST_TEST_ARGS}" STREQUAL "")
-  ELSE()
-    string (REPLACE ";" " " USER_ARGS "${SUNDIALS_ADD_TEST_TEST_ARGS}")
-    LIST(APPEND TEST_ARGS "--runargs=\"${USER_ARGS}\"")
-  ENDIF()
+      # check if this test is run with MPI and set the MPI run command
+      IF(NOT ("${SUNDIALS_ADD_TEST_MPI_NPROCS}" STREQUAL "") AND
+          NOT ("${MPIEXEC_EXECUTABLE}" STREQUAL ""))
 
-  IF("${SUNDIALS_ADD_TEST_ANSWER_FILE}" STREQUAL "")
-  ELSE()
-    LIST(APPEND TEST_ARGS "--answerfile=${SUNDIALS_ADD_TEST_ANSWER_FILE}")
-  ENDIF()
+        IF(MPIEXEC_EXECUTABLE MATCHES "srun")
+          SET(RUN_COMMAND "srun -N1 -n${SUNDIALS_ADD_TEST_MPI_NPROCS} -ppdebug")
+        ELSE()
+          SET(RUN_COMMAND "${MPIEXEC_EXECUTABLE} -n ${SUNDIALS_ADD_TEST_MPI_NPROCS}")
+        ENDIF()
 
-  IF("${SUNDIALS_ADD_TEST_FLOAT_PRECISION}" STREQUAL "")
-  ELSE()
-    LIST(APPEND TEST_ARGS "--floatprecision=${SUNDIALS_ADD_TEST_FLOAT_PRECISION}")
-  ENDIF()
+        LIST(APPEND TEST_ARGS "--runcommand=\"${RUN_COMMAND}\"")
 
-  IF("${SUNDIALS_ADD_TEST_INTEGER_PERCENTAGE}" STREQUAL "")
-  ELSE()
-    LIST(APPEND TEST_ARGS "--integerpercentage=${SUNDIALS_ADD_TEST_INTEGER_PERCENTAGE}")
-  ENDIF()
+      ENDIF()
 
-  ADD_TEST(NAME ${NAME}
-    COMMAND ${PYTHON_EXECUTABLE} ${TESTRUNNER} ${TEST_ARGS})
+      # set the test input args
+      IF(NOT ("${SUNDIALS_ADD_TEST_TEST_ARGS}" STREQUAL ""))
+        STRING (REPLACE ";" " " USER_ARGS "${SUNDIALS_ADD_TEST_TEST_ARGS}")
+        LIST(APPEND TEST_ARGS "--runargs=\"${USER_ARGS}\"")
+      ENDIF()
 
-endmacro()
+      # set the test answer directory name (default is test/answers)
+      IF(NOT ("${SUNDIALS_ADD_TEST_ANSWER_DIR}" STREQUAL ""))
+        LIST(APPEND TEST_ARGS "--answerdir=${SUNDIALS_ADD_TEST_ANSWER_DIR}")
+      ENDIF()
+
+      # set the test answer file name (default is test_name_test_agrs)
+      IF(NOT ("${SUNDIALS_ADD_TEST_ANSWER_FILE}" STREQUAL ""))
+        LIST(APPEND TEST_ARGS "--answerfile=${SUNDIALS_ADD_TEST_ANSWER_FILE}")
+      ENDIF()
+
+      # set the precision for floating point failure comparison (number of digits, default 4)
+      IF(SUNDIALS_DEVTESTS_FLOAT_PRECISION)
+        LIST(APPEND TEST_ARGS "--floatprecision=${SUNDIALS_DEVTESTS_FLOAT_PRECISION}")
+      ELSEIF(NOT ("${SUNDIALS_ADD_TEST_FLOAT_PRECISION}" STREQUAL ""))
+        LIST(APPEND TEST_ARGS "--floatprecision=${SUNDIALS_ADD_TEST_FLOAT_PRECISION}")
+      ENDIF()
+
+      # set the integer percentage difference for failure comparison (default 10%)
+      IF(SUNDIALS_DEVTESTS_INTEGER_PRECISION)
+        LIST(APPEND TEST_ARGS "--integerpercentage=${SUNDIALS_DEVTESTS_INTEGER_PRECISION}")
+      ELSEIF(NOT ("${SUNDIALS_ADD_TEST_INTEGER_PERCENTAGE}" STREQUAL ""))
+        LIST(APPEND TEST_ARGS "--integerpercentage=${SUNDIALS_ADD_TEST_INTEGER_PERCENTAGE}")
+      ENDIF()
+
+      # create test case with the corresponding test runner command and arguments
+      # all tests are added during development and only unlabeled tests when released
+      ADD_TEST(NAME ${NAME} COMMAND ${PYTHON_EXECUTABLE} ${TESTRUNNER} ${TEST_ARGS})
+
+    elseif("${SUNDIALS_ADD_TEST_EXAMPLE_TYPE}" STREQUAL "")
+
+      # convert string to list
+      IF(NOT ("${SUNDIALS_ADD_TEST_TEST_ARGS}" STREQUAL ""))
+        STRING(REPLACE " " ";" TEST_ARGS "${SUNDIALS_ADD_TEST_TEST_ARGS}")
+      ENDIF()
+
+      # check if this test is run with MPI and add the test run command
+      if(NOT ("${SUNDIALS_ADD_TEST_MPI_NPROCS}" STREQUAL "") AND
+          NOT ("${MPIEXEC_EXECUTABLE}" STREQUAL ""))
+        ADD_TEST(NAME ${NAME} COMMAND ${MPIEXEC_EXECUTABLE} -n ${SUNDIALS_ADD_TEST_MPI_NPROCS} $<TARGET_FILE:${EXECUTABLE}> ${TEST_ARGS})
+      else()
+        ADD_TEST(NAME ${NAME} COMMAND $<TARGET_FILE:${EXECUTABLE}> ${TEST_ARGS})
+      endif()
+
+    endif()
+
+  endif()
+
+ENDMACRO()

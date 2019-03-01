@@ -27,8 +27,6 @@ ${MODEL_DIR}/model_events_JDiag.cpp
 ${MODEL_DIR}/model_events_JSparse.cpp
 ${MODEL_DIR}/model_events_JSparseB.cpp
 ${MODEL_DIR}/model_events_Jrz.cpp
-${MODEL_DIR}/model_events_Jv.cpp
-${MODEL_DIR}/model_events_JvB.cpp
 ${MODEL_DIR}/model_events_Jy.cpp
 ${MODEL_DIR}/model_events_Jz.cpp
 ${MODEL_DIR}/model_events_dJrzdsigma.cpp
@@ -43,17 +41,14 @@ ${MODEL_DIR}/model_events_dxdotdp.cpp
 ${MODEL_DIR}/model_events_dydp.cpp
 ${MODEL_DIR}/model_events_dydx.cpp
 ${MODEL_DIR}/model_events_dzdx.cpp
-${MODEL_DIR}/model_events_qBdot.cpp
 ${MODEL_DIR}/model_events_root.cpp
 ${MODEL_DIR}/model_events_rz.cpp
 ${MODEL_DIR}/model_events_sigmay.cpp
 ${MODEL_DIR}/model_events_sigmaz.cpp
 ${MODEL_DIR}/model_events_srz.cpp
 ${MODEL_DIR}/model_events_stau.cpp
-${MODEL_DIR}/model_events_sxdot.cpp
 ${MODEL_DIR}/model_events_sz.cpp
 ${MODEL_DIR}/model_events_x0.cpp
-${MODEL_DIR}/model_events_xBdot.cpp
 ${MODEL_DIR}/model_events_xdot.cpp
 ${MODEL_DIR}/model_events_y.cpp
 ${MODEL_DIR}/model_events_z.cpp

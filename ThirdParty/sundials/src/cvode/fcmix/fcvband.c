@@ -1,21 +1,19 @@
 /*
- * -----------------------------------------------------------------
- * $Revision: 4294 $
- * $Date: 2014-12-15 13:18:40 -0800 (Mon, 15 Dec 2014) $
  * ----------------------------------------------------------------- 
- * Programmer(s): Alan C. Hindmarsh and Radu Serban @ LLNL
+ * Programmer(s): Daniel R. Reynolds @ SMU
+ *                Alan C. Hindmarsh and Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
- * Fortran/C interface routines for CVODE/CVBAND, for the case of 
+ * Fortran/C interface routines for CVODE/CVLS, for the case of 
  * a user-supplied Jacobian approximation routine.                
  * -----------------------------------------------------------------
  */
@@ -26,7 +24,8 @@
 #include "fcvode.h"     /* actual fn. names, prototypes and global vars.*/
 #include "cvode_impl.h" /* definition of CVodeMem type                  */
 
-#include <cvode/cvode_band.h>
+#include <cvode/cvode_ls.h>
+#include <sunmatrix/sunmatrix_band.h>
 
 /******************************************************************************/
 
@@ -35,13 +34,11 @@
 #ifdef __cplusplus  /* wrapper to enable C++ usage */
 extern "C" {
 #endif
-  extern void FCV_BJAC(long int*, long int*, long int*, long int*,  /* N,MU,ML,EBAND */
-                       realtype*, realtype*, realtype*,  /* T, Y, FY         */
-                       realtype*,                        /* BJAC             */
-                       realtype*,                        /* H                */
-                       long int*, realtype*,             /* IPAR, RPAR       */
-                       realtype*, realtype*, realtype*,  /* V1, V2, V3       */
-                       int*);                            /* IER              */
+  extern void FCV_BJAC(long int *N, long int *MU, long int *ML,
+                       long int *EBAND, realtype *T, realtype *Y,
+                       realtype *FY, realtype *BJAC, realtype *H,
+                       long int *IPAR, realtype *RPAR, realtype *V1, 
+                       realtype *V2, realtype *V3, int *IER);
 #ifdef __cplusplus
 }
 #endif
@@ -51,9 +48,9 @@ extern "C" {
 void FCV_BANDSETJAC(int *flag, int *ier)
 {
   if (*flag == 0) {
-    *ier = CVDlsSetBandJacFn(CV_cvodemem, NULL);
+    *ier = CVodeSetJacFn(CV_cvodemem, NULL);
   } else {
-    *ier = CVDlsSetBandJacFn(CV_cvodemem, FCVBandJac);
+    *ier = CVodeSetJacFn(CV_cvodemem, FCVBandJac);
   }
 }
 
@@ -61,22 +58,20 @@ void FCV_BANDSETJAC(int *flag, int *ier)
 
 /* C function CVBandJac interfaces between CVODE and a Fortran subroutine
    FCVBJAC for solution of a linear system with band Jacobian approximation.
-   Addresses of arguments are passed to FCVBJAC, using the macro 
-   BAND_COL from BAND and the routine N_VGetArrayPointer from NVECTOR.
+   Addresses of arguments are passed to FCVBJAC, using the accessor routines
+   from the SUNBandMatrix and N_Vector modules.
    The address passed for J is that of the element in column 0 with row 
    index -mupper.  An extended bandwith equal to (J->smu) + mlower + 1 is
-   passed as the column dimension of the corresponding array.
-   Auxiliary data is assumed to be communicated by Common. */
+   passed as the column dimension of the corresponding array. */
 
-int FCVBandJac(long int N, long int mupper, long int mlower,
-               realtype t, N_Vector y, N_Vector fy, 
-               DlsMat J, void *user_data,
-               N_Vector vtemp1, N_Vector vtemp2, N_Vector vtemp3)
+int FCVBandJac(realtype t, N_Vector y, N_Vector fy, SUNMatrix J,
+               void *user_data, N_Vector vtemp1, N_Vector vtemp2,
+               N_Vector vtemp3)
 {
   int ier;
   realtype *ydata, *fydata, *jacdata, *v1data, *v2data, *v3data;
   realtype h;
-  long int eband;
+  long int N, mupper, mlower, smu, eband;
   FCVUserData CV_userdata;
 
   CVodeGetLastStep(CV_cvodemem, &h);
@@ -87,13 +82,18 @@ int FCVBandJac(long int N, long int mupper, long int mlower,
   v2data  = N_VGetArrayPointer(vtemp2);
   v3data  = N_VGetArrayPointer(vtemp3);
 
-  eband = (J->s_mu) + mlower + 1;
-  jacdata = BAND_COL(J,0) - mupper;
+  N = SUNBandMatrix_Columns(J);
+  mupper = SUNBandMatrix_UpperBandwidth(J);
+  mlower = SUNBandMatrix_LowerBandwidth(J);
+  smu = SUNBandMatrix_StoredUpperBandwidth(J);
+  eband = smu + mlower + 1;
+  jacdata = SUNBandMatrix_Column(J,0) - mupper;
 
   CV_userdata = (FCVUserData) user_data;
 
-  FCV_BJAC(&N, &mupper, &mlower, &eband, &t, ydata, fydata, jacdata, &h,
-           CV_userdata->ipar, CV_userdata->rpar, v1data, v2data, v3data, &ier);
+  FCV_BJAC(&N, &mupper, &mlower, &eband, &t, ydata, fydata,
+           jacdata, &h, CV_userdata->ipar, CV_userdata->rpar,
+           v1data, v2data, v3data, &ier);
 
   return(ier);
 }

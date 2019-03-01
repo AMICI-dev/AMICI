@@ -45,7 +45,7 @@ public:
         nvec = N_VMake_Serial(static_cast<long int>(vold.vec.size()), vec.data());
     }
 
-    /** copy-move assignment operator
+    /** copy assignment operator
       * @param other right hand side
       * @return left hand side
       */
@@ -155,6 +155,13 @@ private:
 */
 class AmiVectorArray {
 public:
+    
+    /**
+     * @brief Default constructor
+     * @return new empty AmiVectorArray instance
+     */
+    AmiVectorArray() {}
+    
     /** creates an std::vector<realype> and attaches the
       * data pointer to a newly created N_VectorArray
       * using CloneVectorArrayEmpty ensures that the N_Vector
@@ -165,13 +172,26 @@ public:
       * @return New AmiVectorArray instance
       */
     AmiVectorArray(long int length_inner, long int length_outer)
-        : vec_array(static_cast<decltype(vec_array)::size_type>(length_outer),
-                    AmiVector(length_inner))
+        : vec_array(length_outer, AmiVector(length_inner))
     {
-        nvec_array = new N_Vector[length_outer];
+        nvec_array.resize(length_outer);
         for (int idx = 0; idx < length_outer; idx++) {
-            nvec_array[idx] = vec_array.at(static_cast<decltype(vec_array)::size_type>(idx)).getNVector();
+            nvec_array.at(idx) = vec_array.at(idx).getNVector();
         }
+    }
+    
+    /** 
+     * @brief copy assignment operator
+     * @param other right hand side
+     * @return left hand side
+     */
+    AmiVectorArray& operator=(AmiVectorArray const& other) {
+        vec_array = other.vec_array;
+        nvec_array.resize(other.getLength());
+        for (int idx = 0; idx < other.getLength(); idx++) {
+            nvec_array.at(idx) = vec_array.at(idx).getNVector();
+        }
+        return *this;
     }
 
     /** copy constructor
@@ -179,9 +199,9 @@ public:
       * @return new AmiVectorArray instance
       */
     AmiVectorArray(const AmiVectorArray& vaold) : vec_array(vaold.vec_array) {
-        nvec_array = new N_Vector[vaold.getLength()];
+        nvec_array.resize(vaold.getLength());
         for (int idx = 0; idx < vaold.getLength(); idx++) {
-            nvec_array[idx] = vec_array.at(static_cast<decltype(vec_array)::size_type>(idx)).getNVector();
+            nvec_array.at(idx) = vec_array.at(idx).getNVector();
         }
     }
 
@@ -190,7 +210,7 @@ public:
       * @return pointer to data array
       */
     realtype *data(int pos) {
-        return vec_array.at(static_cast<decltype(vec_array)::size_type>(pos)).data();
+        return vec_array.at(pos).data();
     }
 
     /** const accessor to data of AmiVector elements
@@ -198,7 +218,7 @@ public:
       * @return const pointer to data array
       */
     const realtype *data(int pos) const {
-        return vec_array.at(static_cast<decltype(vec_array)::size_type>(pos)).data();
+        return vec_array.at(pos).data();
     }
 
     /** accessor to elements of AmiVector elements
@@ -207,7 +227,7 @@ public:
      * @return element
      */
     realtype& at(int ipos, int jpos) {
-        return vec_array.at(static_cast<decltype(vec_array)::size_type>(jpos)).at(ipos);
+        return vec_array.at(jpos).at(ipos);
     }
 
     /** accessor to elements of AmiVector elements
@@ -216,14 +236,14 @@ public:
       * @return element
       */
     const realtype& at(int ipos, int jpos) const {
-        return vec_array.at(static_cast<decltype(vec_array)::size_type>(jpos)).at(ipos);
+        return vec_array.at(jpos).at(ipos);
     }
 
     /** accessor to NVectorArray
       * @return N_VectorArray
       */
     N_Vector *getNVectorArray() {
-        return nvec_array;
+        return nvec_array.data();
     }
 
     /** accessor to NVector element
@@ -231,7 +251,7 @@ public:
       * @return N_Vector
       */
     N_Vector getNVector(int pos) {
-        return nvec_array[pos];
+        return nvec_array.at(pos);
     }
 
     /** accessor to AmiVector elements
@@ -239,7 +259,7 @@ public:
       * @return AmiVector
       */
     AmiVector& operator[](int pos) {
-        return vec_array.at(static_cast<decltype(vec_array)::size_type>(pos));
+        return vec_array.at(pos);
     }
 
     /** const accessor to AmiVector elements
@@ -247,7 +267,7 @@ public:
       * @return const AmiVector
       */
     const AmiVector& operator[](int pos) const {
-        return vec_array.at(static_cast<decltype(vec_array)::size_type>(pos));
+        return vec_array.at(pos);
     }
 
     /** length of AmiVectorArray
@@ -285,9 +305,7 @@ public:
         }
     }
 
-    ~AmiVectorArray(){
-        delete[] nvec_array;
-    }
+    ~AmiVectorArray() = default;
 
 private:
     /** main data storage */
@@ -295,7 +313,7 @@ private:
     /** N_Vector array, will be synchronised such that it points to
       * respective elements in the vec_array
       */
-    N_Vector *nvec_array = nullptr;
+    std::vector<N_Vector> nvec_array;
 };
 
 }

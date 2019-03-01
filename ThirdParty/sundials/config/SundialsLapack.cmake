@@ -1,17 +1,17 @@
 # ---------------------------------------------------------------
-# $Revision: 4511 $
-# $Date: 2015-06-29 16:48:09 -0700 (Mon, 29 Jun 2015) $
-# ---------------------------------------------------------------
 # Programmer:  Radu Serban @ LLNL
 # ---------------------------------------------------------------
-# Copyright (c) 2008, The Regents of the University of California.
-# Produced at the Lawrence Livermore National Laboratory.
+# SUNDIALS Copyright Start
+# Copyright (c) 2002-2019, Lawrence Livermore National Security
+# and Southern Methodist University.
 # All rights reserved.
-# For details, see the LICENSE file.
+#
+# See the top-level LICENSE and NOTICE files for details.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+# SUNDIALS Copyright End
 # ---------------------------------------------------------------
 # BLAS/LAPACK tests for SUNDIALS CMake-based configuration.
-#
-# 
 
 SET(LAPACK_FOUND FALSE)
 
@@ -28,14 +28,22 @@ if(NOT LAPACK_LIBRARIES)
       "$ENV{ProgramFiles}/LAPACK/Lib"
       )
   endif(F77_FOUND)
-endif(NOT LAPACK_LIBRARIES)
+
+  # If the xSDK flag is used, set it to what was found
+  if(LAPACK_LIBRARIES AND TPL_ENABLE_LAPACK)
+    SET(DOCSTR "Lapack library")
+    FORCE_VARIABLE(TPL_LAPACK_LIBRARIES STRING "${DOCSTR}" "${LAPACK_LIBRARIES}")
+  endif()
+endif()
 
 # If we have the LAPACK libraries, test them
 if(LAPACK_LIBRARIES)
   message(STATUS "Looking for LAPACK libraries... OK")
+
   # Create the LapackTest directory
   set(LapackTest_DIR ${PROJECT_BINARY_DIR}/LapackTest)
   file(MAKE_DIRECTORY ${LapackTest_DIR})
+
   # Create a CMakeLists.txt file 
   file(WRITE ${LapackTest_DIR}/CMakeLists.txt
     "CMAKE_MINIMUM_REQUIRED(VERSION 2.4)\n"
@@ -48,7 +56,8 @@ if(LAPACK_LIBRARIES)
     "SET(CMAKE_C_FLAGS_RELWITHDEBUGINFO \"${CMAKE_C_FLAGS_RELWITHDEBUGINFO}\")\n"
     "SET(CMAKE_C_FLAGS_MINSIZE \"${CMAKE_C_FLAGS_MINSIZE}\")\n"
     "ADD_EXECUTABLE(ltest ltest.c)\n"
-    "TARGET_LINK_LIBRARIES(ltest ${LAPACK_LIBRARIES})\n")    
+    "TARGET_LINK_LIBRARIES(ltest ${LAPACK_LIBRARIES})\n")
+
   # Create a C source file which calls a Blas function (dcopy) and an Lapack function (dgetrf)
   file(WRITE ${LapackTest_DIR}/ltest.c
     "${F77_MANGLE_MACRO1}\n"
@@ -63,19 +72,34 @@ if(LAPACK_LIBRARIES)
     "dgetrf_f77(&n, &n, &x, &n, &n, &n);\n"
     "return(0);\n"
     "}\n")
+
   # Attempt to link the "ltest" executable
   try_compile(LTEST_OK ${LapackTest_DIR} ${LapackTest_DIR}
-    ltest OUTPUT_VARIABLE MY_OUTPUT)    
+    ltest OUTPUT_VARIABLE MY_OUTPUT)
+
   # To ensure we do not use stuff from the previous attempts, 
   # we must remove the CMakeFiles directory.
   file(REMOVE_RECURSE ${LapackTest_DIR}/CMakeFiles)
+
   # Process test result
   if(LTEST_OK)
-    message(STATUS "Checking if Lapack works... OK")
+    message(STATUS "Checking if LAPACK works... OK")
     set(LAPACK_FOUND TRUE)
+
+    # get path to LAPACK library to use in generated makefiles for examples, if
+    # LAPACK_LIBRARIES contains multiple items only use the path of the first entry
+    list(LENGTH LAPACK_LIBRARIES len)
+    if(len EQUAL 1)
+      get_filename_component(LAPACK_LIBRARY_DIR ${LAPACK_LIBRARIES} PATH)
+    else()
+      list(GET LAPACK_LIBRARIES 0 TMP_LAPACK_LIBRARIES)
+      get_filename_component(LAPACK_LIBRARY_DIR ${TMP_LAPACK_LIBRARIES} PATH)
+    endif()
+
   else(LTEST_OK)
-    message(STATUS "Checking if Lapack works... FAILED")
+    message(STATUS "Checking if LAPACK works... FAILED")
   endif(LTEST_OK)
+
 else(LAPACK_LIBRARIES)
   message(STATUS "Looking for LAPACK libraries... FAILED")
 endif(LAPACK_LIBRARIES)

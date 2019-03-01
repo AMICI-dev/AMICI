@@ -5,9 +5,10 @@
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
 
+#include "sundials/sundials_linearsolver.h" // SUNLinearSolver
+
 #include <memory>
 
-#include <klu.h>
 
 
 namespace amici {
@@ -94,11 +95,11 @@ class NewtonSolverDense : public NewtonSolver {
     void prepareLinearSystem(int ntry, int nnewt) override;
 
   private:
-    /** temporary storage of pivot array */
-    long int *pivots = nullptr;
-
     /** temporary storage of Jacobian */
-    DlsMatWrapper Jtmp;
+    SUNMatrixWrapper Jtmp;
+    
+    /** dense linear solver */
+    SUNLinearSolver linsol = nullptr;
 };
 
 /**
@@ -116,16 +117,11 @@ class NewtonSolverSparse : public NewtonSolver {
     void prepareLinearSystem(int ntry, int nnewt) override;
 
   private:
-    /** klu common storage? */
-    klu_common common;
-    /** klu symbolic storage? */
-    klu_symbolic *symbolic = nullptr;
-    /** klu numeric stoarge? */
-    klu_numeric *numeric = nullptr;
-    /** klu status flag  */
-    int klu_status = 0;
     /** temporary storage of Jacobian */
-    SlsMatWrapper Jtmp;
+    SUNMatrixWrapper Jtmp;
+    
+    /** sparse linear solver */
+    SUNLinearSolver linsol = nullptr;
 };
 
 /**

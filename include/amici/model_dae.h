@@ -4,8 +4,10 @@
 #include "amici/model.h"
 
 #include <nvector/nvector_serial.h>
-#include <sundials/sundials_direct.h>
-#include <sundials/sundials_sparse.h>
+
+#include <sunmatrix/sunmatrix_band.h>
+#include <sunmatrix/sunmatrix_sparse.h>
+#include <sunmatrix/sunmatrix_dense.h>
 
 #include <vector>
 
@@ -43,6 +45,7 @@ namespace amici {
          * repeating elements
          * @param ndwdp number of nonzero elements in the p derivative of the
          * repeating elements
+         * @param ndxdotdw number of nonzero elements dxdotdw
          * @param nnz number of nonzero elements in Jacobian
          * @param ubw upper matrix bandwidth in the Jacobian
          * @param lbw lower matrix bandwidth in the Jacobian
@@ -57,36 +60,44 @@ namespace amici {
                   const int nx_solver, const int nxtrue_solver, const int ny,
                   const int nytrue, const int nz, const int nztrue,
                   const int ne, const int nJ, const int nw, const int ndwdx,
-                  const int ndwdp, const int nnz, const int ubw, const int lbw,
-                  const SecondOrderMode o2mode, std::vector<realtype> const &p,
+                  const int ndwdp, const int ndxdotdw, const int nnz,
+                  const int ubw, const int lbw, const SecondOrderMode o2mode,
+                  std::vector<realtype> const &p,
                   std::vector<realtype> const &k, std::vector<int> const &plist,
                   std::vector<realtype> const &idlist,
                   std::vector<int> const &z2event)
             : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny,
-                    nytrue, nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, nnz, ubw, lbw,
-                    o2mode, p, k, plist, idlist, z2event) {}
+                    nytrue, nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, nnz,
+                    ubw, lbw, o2mode, p, k, plist, idlist, z2event) {}
 
         virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                        AmiVector *xdot, DlsMat J) override;
-        void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot, DlsMat J);
+                        AmiVector *xdot, SUNMatrix J) override;
+        void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot,
+                SUNMatrix J);
 
-        void fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, DlsMat JB);
+        void fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB,
+                 N_Vector dxB, SUNMatrix JB);
 
-        virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                              AmiVector *xdot, SlsMat J) override;
-        void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx, SlsMat J);
+        virtual void fJSparse(realtype t, realtype cj, AmiVector *x,
+                              AmiVector *dx, AmiVector *xdot,
+                              SUNMatrix J) override;
+        void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                      SUNMatrix J);
 
-        void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, SlsMat JB);
+        void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                       N_Vector xB, N_Vector dxB, SUNMatrix JB);
 
-        virtual void fJDiag(realtype t, AmiVector *JDiag, realtype cj, AmiVector *x,
-                            AmiVector *dx) override;
+        virtual void fJDiag(realtype t, AmiVector *JDiag, realtype cj,
+                            AmiVector *x, AmiVector *dx) override;
 
-        virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
-                         AmiVector *v, AmiVector *nJv, realtype cj) override;
-        void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv, realtype cj);
+        virtual void fJv(realtype t, AmiVector *x, AmiVector *dx,
+                         AmiVector *xdot, AmiVector *v, AmiVector *nJv,
+                         realtype cj) override;
+        void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv,
+                 realtype cj);
 
-        void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
-                  N_Vector vB, N_Vector JvB, realtype cj);
+        void fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
+                  N_Vector dxB, N_Vector vB, N_Vector JvB, realtype cj);
 
         virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override;
         void froot(realtype t, N_Vector x, N_Vector dx, realtype *root);
@@ -161,8 +172,11 @@ namespace amici {
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
          **/
-        virtual void fJSparse(SlsMat JSparse, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
-                              const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) = 0;
+        virtual void fJSparse(SUNMatrixContent_Sparse JSparse, const realtype t,
+                              const realtype *x, const double *p,
+                              const double *k, const realtype *h,
+                              const realtype cj, const realtype *dx,
+                              const realtype *w, const realtype *dwdx) = 0;
 
         /** model specific implementation for fJSparseB
          * @param JSparseB Matrix to which the Jacobian will be written
@@ -178,10 +192,16 @@ namespace amici {
          * @param w vector with helper variables
          * @param dwdx derivative of w wrt x
          **/
-        virtual void fJSparseB(SlsMat JSparseB, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
-                               const realtype cj, const realtype *xB, const realtype *dx, const realtype *dxB,
-                               const realtype *w, const realtype *dwdx){
-            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
+        virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB,
+                               const realtype t, const realtype *x,
+                               const double *p, const double *k,
+                               const realtype *h, const realtype cj,
+                               const realtype *xB, const realtype *dx,
+                               const realtype *dxB, const realtype *w,
+                               const realtype *dwdx) {
+            throw AmiException("Requested functionality is not supported as %s "
+                               "is not implemented for this model!",
+                               __func__);
         }
 
         /** model specific implementation for fJDiag
@@ -198,25 +218,6 @@ namespace amici {
          **/
         virtual void fJDiag(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                             const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx){
-            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
-        }
-
-        /** model specific implementation for fJv
-         * @param Jv Matrix vector product of J with a vector v
-         * @param t timepoint
-         * @param x Vector with the states
-         * @param p parameter vector
-         * @param k constants vector
-         * @param h heavyside vector
-         * @param cj scaling factor, inverse of the step size
-         * @param dx Vector with the derivative states
-         * @param v Vector with which the Jacobian is multiplied
-         * @param w vector with helper variables
-         * @param dwdx derivative of w wrt x
-         **/
-        virtual void fJv(realtype *Jv, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
-                         const realtype cj, const realtype *dx,const realtype *v,
-                         const realtype *w, const realtype *dwdx){
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         }
 
@@ -268,45 +269,6 @@ namespace amici {
         virtual void fxdot(realtype *xdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
                            const realtype *dx, const realtype *w) = 0;
 
-        /** model specific implementation for fxBdot
-         * @param xBdot adjoint residual function
-         * @param t timepoint
-         * @param x Vector with the states
-         * @param p parameter vector
-         * @param k constants vector
-         * @param h heavyside vector
-         * @param xB Vector with the adjoint states
-         * @param dx Vector with the derivative states
-         * @param dxB Vector with the adjoint derivative states
-         * @param w vector with helper variables
-         * @param dwdx derivative of w wrt x
-         **/
-        virtual void fxBdot(realtype *xBdot, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
-                            const realtype *xB, const realtype *dx, const realtype *dxB,
-                            const realtype *w, const realtype *dwdx) {
-            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
-        }
-
-        /** model specific implementation for fqBdot
-         * @param qBdot adjoint quadrature equation
-         * @param ip sensitivity index
-         * @param t timepoint
-         * @param x Vector with the states
-         * @param p parameter vector
-         * @param k constants vector
-         * @param h heavyside vector
-         * @param xB Vector with the adjoint states
-         * @param dx Vector with the derivative states
-         * @param dxB Vector with the adjoint derivative states
-         * @param w vector with helper variables
-         * @param dwdp derivative of w wrt p
-         **/
-        virtual void fqBdot(realtype *qBdot, const int ip, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
-                            const realtype *xB, const realtype *dx, const realtype *dxB,
-                            const realtype *w, const realtype *dwdp) {
-            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__); // not implemented
-        }
-
         /** model specific implementation of fdxdotdp
          * @param dxdotdp partial derivative xdot wrt p
          * @param t timepoint
@@ -321,30 +283,6 @@ namespace amici {
          */
         virtual void fdxdotdp(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
                               const int ip, const realtype *dx, const realtype *w, const realtype *dwdp) {
-            throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
-        };
-
-        /** model specific implementation of fsxdot
-         * @param sxdot sensitivity rhs
-         * @param t timepoint
-         * @param x Vector with the states
-         * @param p parameter vector
-         * @param k constants vector
-         * @param h heavyside vector
-         * @param ip parameter index
-         * @param dx Vector with the derivative states
-         * @param sx Vector with the state sensitivities
-         * @param sdx Vector with the derivative state sensitivities
-         * @param w vector with helper variables
-         * @param dwdx derivative of w wrt x
-         * @param M mass matrix
-         * @param J jacobian
-         * @param dxdotdp parameter derivative of residual function
-         */
-        virtual void fsxdot(realtype *sxdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                            const int ip, const realtype *dx, const realtype *sx, const realtype *sdx,
-                            const realtype *w, const realtype *dwdx, const realtype *M, const realtype *J,
-                            const realtype *dxdotdp) {
             throw AmiException("Requested functionality is not supported as %s is not implemented for this model!",__func__);
         };
 

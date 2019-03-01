@@ -1,19 +1,19 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
+ * $Revision$
+ * $Date$
  * -----------------------------------------------------------------
  * Programmer(s): Peter Brown and Aaron Collier @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the header file for the implementation of the scaled,
  * preconditioned Bi-CGSTAB (SPBCG) iterative linear solver.
@@ -41,11 +41,11 @@ extern "C" {
  *  l_max  maximum Krylov subspace dimension that SpbcgSolve will
  *         be permitted to use
  *
- *  r  vector (type N_Vector) which holds the scaled, preconditioned
- *     linear system residual
- *
  *  r_star  vector (type N_Vector) which holds the initial scaled,
  *          preconditioned linear system residual
+ *
+ *  r  vector (type N_Vector) which holds the scaled, preconditioned
+ *     linear system residual
  *
  *  p, q, u and Ap  vectors (type N_Vector) used for workspace by
  *                  the SPBCG algorithm
@@ -152,19 +152,19 @@ SUNDIALS_EXPORT SpbcgMem SpbcgMalloc(int l_max, N_Vector vec_tmpl);
  */
 
 SUNDIALS_EXPORT int SpbcgSolve(SpbcgMem mem, void *A_data, N_Vector x, N_Vector b,
-			       int pretype, realtype delta, void *P_data, N_Vector sx,
-			       N_Vector sb, ATimesFn atimes, PSolveFn psolve,
-			       realtype *res_norm, int *nli, int *nps);
+                               int pretype, realtype delta, void *P_data, N_Vector sx,
+                               N_Vector sb, ATimesFn atimes, PSolveFn psolve,
+                               realtype *res_norm, int *nli, int *nps);
 
 /* Return values for SpbcgSolve */
 
 #define SPBCG_SUCCESS            0  /* SPBCG algorithm converged          */
 #define SPBCG_RES_REDUCED        1  /* SPBCG did NOT converge, but the
-				       residual was reduced               */
+                                       residual was reduced               */
 #define SPBCG_CONV_FAIL          2  /* SPBCG algorithm failed to converge */
 #define SPBCG_PSOLVE_FAIL_REC    3  /* psolve failed recoverably          */
 #define SPBCG_ATIMES_FAIL_REC    4  /* atimes failed recoverably          */
-#define SPBCG_PSET_FAIL_REC      5  /* pset faild recoverably             */
+#define SPBCG_PSET_FAIL_REC      5  /* pset failed recoverably            */
 
 #define SPBCG_MEM_NULL          -1  /* mem argument is NULL               */
 #define SPBCG_ATIMES_FAIL_UNREC -2  /* atimes returned failure flag       */

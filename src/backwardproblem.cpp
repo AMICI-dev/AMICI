@@ -78,6 +78,11 @@ void BackwardProblem::workBackwardProblem() {
         solver->reInitB(which, t, &xB, &dxB);
         solver->quadReInitB(which, &xQB);
         solver->calcICB(which, t, &xB, &dxB);
+        
+        /* if we have to integrate further we need to postprocess for step size
+         computation */
+        if (t > model->t0())
+            solver->reInitPostProcessB(which, &t, &xB, &dxB, model->t0());
     }
 
     /* we still need to integrate from first datapoint to tstart */

@@ -26,8 +26,6 @@ ${MODEL_DIR}/model_dirac_JB.cpp
 ${MODEL_DIR}/model_dirac_JDiag.cpp
 ${MODEL_DIR}/model_dirac_JSparse.cpp
 ${MODEL_DIR}/model_dirac_JSparseB.cpp
-${MODEL_DIR}/model_dirac_Jv.cpp
-${MODEL_DIR}/model_dirac_JvB.cpp
 ${MODEL_DIR}/model_dirac_Jy.cpp
 ${MODEL_DIR}/model_dirac_dJydsigma.cpp
 ${MODEL_DIR}/model_dirac_dJydy.cpp
@@ -35,12 +33,9 @@ ${MODEL_DIR}/model_dirac_deltasx.cpp
 ${MODEL_DIR}/model_dirac_deltax.cpp
 ${MODEL_DIR}/model_dirac_dxdotdp.cpp
 ${MODEL_DIR}/model_dirac_dydx.cpp
-${MODEL_DIR}/model_dirac_qBdot.cpp
 ${MODEL_DIR}/model_dirac_root.cpp
 ${MODEL_DIR}/model_dirac_sigmay.cpp
 ${MODEL_DIR}/model_dirac_stau.cpp
-${MODEL_DIR}/model_dirac_sxdot.cpp
-${MODEL_DIR}/model_dirac_xBdot.cpp
 ${MODEL_DIR}/model_dirac_xdot.cpp
 ${MODEL_DIR}/model_dirac_y.cpp
 

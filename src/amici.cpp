@@ -29,7 +29,8 @@ static_assert(AMICI_ILL_INPUT == CV_ILL_INPUT,
               "AMICI_ILL_INPUT != CV_ILL_INPUT");
 static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
 static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
-static_assert(std::is_same<amici::realtype, realtype>::value, "Definition of realtype does not match");
+static_assert(std::is_same<amici::realtype, realtype>::value,
+              "Definition of realtype does not match");
 
 namespace amici {
 
@@ -79,8 +80,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
         rdata->status = AMICI_ERROR;
         if(rethrow) throw;
         amici::warnMsgIdAndTxt("AMICI:mex:simulation","AMICI simulation failed:\n%s\nError occured in:\n%s",ex.what(),ex.getBacktrace());
-    } catch (...) {
-        throw std::runtime_error("Unknown internal error occured!");
     }
 
     rdata->applyChainRuleFactorToSimulationResults(&model);

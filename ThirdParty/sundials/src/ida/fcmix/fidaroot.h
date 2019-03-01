@@ -1,19 +1,16 @@
 /*
- * -----------------------------------------------------------------
- * $Revision: 4378 $
- * $Date: 2015-02-19 10:55:14 -0800 (Thu, 19 Feb 2015) $
  * ----------------------------------------------------------------- 
  * Programmer(s): Aaron Collier and Alan C. Hindmarsh @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the Fortran interface include file for the rootfinding
  * feature of IDA.
@@ -57,7 +54,7 @@
  *   Y  = dependent variable vector y  [input]
  *   YP = dependent variable derivative vector y'  [input]
  *   G  = function values g(t,y,y')  [output]
- *   IPAR, RPAR = user (integer and real) data [input/output]
+ *   IPAR, RPAR = user (long int and realtype) data [input/output]
  *   IER = return flag (set on 0 if successful, non-zero if an error occurred)
  *
  * 2. After calling FIDAMALLOC but prior to calling FIDASOLVE, the user must

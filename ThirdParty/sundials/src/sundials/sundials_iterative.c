@@ -1,20 +1,20 @@
 /*
  * -----------------------------------------------------------------
- * $Revision: 4272 $
- * $Date: 2014-12-02 11:19:41 -0800 (Tue, 02 Dec 2014) $
+ * $Revision$
+ * $Date$
  * ----------------------------------------------------------------- 
  * Programmer(s): Scott D. Cohen, Alan C. Hindmarsh and
  *                Radu Serban @ LLNL
  * -----------------------------------------------------------------
- * LLNS Copyright Start
- * Copyright (c) 2014, Lawrence Livermore National Security
- * This work was performed under the auspices of the U.S. Department 
- * of Energy by Lawrence Livermore National Laboratory in part under 
- * Contract W-7405-Eng-48 and in part under Contract DE-AC52-07NA27344.
- * Produced at the Lawrence Livermore National Laboratory.
+ * SUNDIALS Copyright Start
+ * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * and Southern Methodist University.
  * All rights reserved.
- * For details, see the LICENSE file.
- * LLNS Copyright End
+ *
+ * See the top-level LICENSE and NOTICE files for details.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ * SUNDIALS Copyright End
  * -----------------------------------------------------------------
  * This is the implementation file for the iterative.h header
  * file. It contains the implementation of functions that may be
@@ -99,26 +99,31 @@ int ModifiedGS(N_Vector *v, realtype **h, int k, int p,
  * -----------------------------------------------------------------
  */
 
-int ClassicalGS(N_Vector *v, realtype **h, int k, int p, 
-                realtype *new_vk_norm, N_Vector temp, realtype *s)
+int ClassicalGS(N_Vector *v, realtype **h, int k, int p, realtype *new_vk_norm,
+                realtype *stemp, N_Vector *vtemp)
 {
-  int  i, k_minus_1, i0;
+  int  i, i0, k_minus_1, retval;
   realtype vk_norm;
 
   k_minus_1 = k - 1;
-  
+  i0 = SUNMAX(k-p,0);
+
   /* Perform Classical Gram-Schmidt */
 
-  vk_norm = SUNRsqrt(N_VDotProd(v[k], v[k]));
+  retval = N_VDotProdMulti(k-i0+1, v[k], v+i0, stemp);
+  if (retval != 0) return(-1);
 
-  i0 = SUNMAX(k-p, 0);
-  for (i=i0; i < k; i++) {
-    h[i][k_minus_1] = N_VDotProd(v[i], v[k]);
+  vk_norm = SUNRsqrt(stemp[k-i0]);
+  for (i=k-i0-1; i >= 0; i--) {
+    h[i][k_minus_1] = stemp[i];
+    stemp[i+1] = -stemp[i];
+    vtemp[i+1] = v[i];
   }
+  stemp[0] = ONE;
+  vtemp[0] = v[k];
 
-  for (i=i0; i < k; i++) {
-    N_VLinearSum(ONE, v[k], -h[i][k_minus_1], v[i], v[k]);
-  }
+  retval = N_VLinearCombination(k-i0+1, stemp, vtemp, v[k]);
+  if (retval != 0) return(-1);
 
   /* Compute the norm of the new vector at v[k] */
 
@@ -128,19 +133,19 @@ int ClassicalGS(N_Vector *v, realtype **h, int k, int p,
 
   if ((FACTOR * (*new_vk_norm)) < vk_norm) {
 
+    retval = N_VDotProdMulti(k-i0, v[k], v+i0, stemp+1);
+    if (retval != 0) return(-1);
+
+    stemp[0] = ONE;
+    vtemp[0] = v[k];
     for (i=i0; i < k; i++) {
-      s[i] = N_VDotProd(v[i], v[k]);
+      h[i][k_minus_1] += stemp[i-i0+1];
+      stemp[i-i0+1] = -stemp[i-i0+1];
+      vtemp[i-i0+1] = v[i-i0];
     }
 
-    if (i0 < k) {
-      N_VScale(s[i0], v[i0], temp);
-      h[i0][k_minus_1] += s[i0];
-    }
-    for (i=i0+1; i < k; i++) {
-      N_VLinearSum(s[i], v[i], ONE, temp, temp);
-      h[i][k_minus_1] += s[i];
-    }
-    N_VLinearSum(ONE, v[k], -ONE, temp, v[k]);
+    retval = N_VLinearCombination(k+1, stemp, vtemp, v[k]);
+    if (retval != 0) return(-1);
 
     *new_vk_norm = SUNRsqrt(N_VDotProd(v[k],v[k]));
   }

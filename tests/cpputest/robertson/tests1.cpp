@@ -21,7 +21,7 @@ TEST(groupRobertson, testSimulation) {
 }
 
 TEST(groupRobertson, testSensitivityForward) {
-    amici::simulateVerifyWrite("/model_robertson/sensiforward/");
+    amici::simulateVerifyWrite("/model_robertson/sensiforward/", 1e6*TEST_ATOL, 1e2*TEST_RTOL);
 }
 
 
