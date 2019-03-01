@@ -1074,10 +1074,20 @@ class Solver {
      */
     virtual void diagB(int which) = 0;
     
+    /**
+     * @brief number of parameters with which the solver was initialized
+     */
     int nplist() const;
     
+    /**
+     * @brief number of states with which the solver was initialized
+     */
     int nx() const;
-
+    
+    /**
+     * @brief resets solverMemory and solverMemoryB
+     */
+    void reset();
 
 protected:
 
@@ -1261,11 +1271,18 @@ private:
     /** flag indicating whether sensitivities are supposed to be computed */
     SensitivityOrder sensi = SensitivityOrder::none;
 
+    /** flag indicating whether init was called */
     bool initialized = false;
+    /** flag indicating whether sensInit1 was called */
     bool sensInitialized = false;
+    /** flag indicating whether adjInit was called */
     bool adjInitialized = false;
-    std::vector<bool> initializedB;
-    std::vector<bool> initializedQB;
+    /** vector of flags indicating whether binit was called for respective
+     which */
+    std::vector<bool> initializedB{false};
+    /** vector of flags indicating whether qbinit was called for respective
+     which */
+    std::vector<bool> initializedQB{false};
 };
 
 bool operator ==(const Solver &a, const Solver &b);

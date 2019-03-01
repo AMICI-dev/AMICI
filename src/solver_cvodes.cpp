@@ -101,7 +101,7 @@ void CVodeSolver::sensInit1(AmiVectorArray *sx, AmiVectorArray * /*sdx*/,
         status = CVodeSensInit1(solverMemory.get(), nplist,
                                 static_cast<int>(getSensitivityMethod()),
                                 fsxdot, sx->getNVectorArray());
-        _nx = nplist;
+        _nplist = nplist;
         setSensInitDone();
     }
     if (status != CV_SUCCESS)

@@ -52,9 +52,9 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
 
     auto plist = model->getParameterList();
 
-    if ((sensi_meth == SensitivityMethod::forward && !plist.empty()) ||
-        (getSensInitDone() && nplist() != model->nplist()))
-        solverMemory = nullptr; // force reset solver memory
+    if (sensi_meth == SensitivityMethod::forward && !plist.empty() &&
+        getSensInitDone() && nplist() != model->nplist())
+        reset();
 
     /* Create solver memory object if necessary */
     allocateSolver();
@@ -894,6 +894,18 @@ void Solver::setQuadInitDoneB(int which) {
     if (which >= static_cast<int>(initializedQB.size()))
         initializedQB.resize(which, false);
     initializedQB.at(which) = true;
+}
+    
+void Solver::reset() {
+    solverMemory = nullptr;
+    solverMemoryB.clear();
+    initialized = false;
+    sensInitialized = false;
+    initializedB.clear();
+    initializedQB.clear();
+    _nplist = 0;
+    _nx = 0;
+    solverWasCalled = false;
 }
 
 } // namespace amici

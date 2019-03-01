@@ -71,10 +71,13 @@ void IDASolver::sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) {
         status = IDASensReInit(solverMemory.get(),
                                static_cast<int>(getSensitivityMethod()),
                                sx->getNVectorArray(), sdx->getNVectorArray());
-    } else
+    } else {
         status = IDASensInit(solverMemory.get(), nplist,
                              static_cast<int>(getSensitivityMethod()), fsxdot,
                              sx->getNVectorArray(), sdx->getNVectorArray());
+        _nplist = nplist;
+        setSensInitDone();
+    }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASensInit");
 }
