@@ -1050,14 +1050,14 @@ class Solver {
     
     /**
      * @brief checks whether memory for the backward problem has been allocated
-     *
+     * @param which adjoint problem index
      * @return proxy for solverMemoryB->(cv|ida)_MallocDone
      */
     bool getInitDoneB(int which) const;
     
     /**
      * @brief checks whether memory for backward quadratures has been allocated
-     *
+     * @param which adjoint problem index
      * @return proxy for solverMemoryB->(cv|ida)_QuadMallocDone
      */
     bool getQuadInitDoneB(int which) const;
@@ -1076,11 +1076,13 @@ class Solver {
     
     /**
      * @brief number of parameters with which the solver was initialized
+     * @return nplist
      */
     int nplist() const;
     
     /**
      * @brief number of states with which the solver was initialized
+     * @return nx
      */
     int nx() const;
     
@@ -1171,13 +1173,16 @@ protected:
     std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolver;
     /** non-linear solver for the backward problem */
     std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverB;
-    /** non-linear solver for the sensitivities*/
+    /** non-linear solver for the sensitivities */
     std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverSens;
     
+    /** flag indicating whether the solver has been called */
     bool solverWasCalled = false;
     
+    /** number of parameters with which the solverMemory was initialized */
     int _nplist = 0;
     
+    /** number os states with which the solverMemory was initialized */
     int _nx = 0;
     
     /**
@@ -1197,11 +1202,13 @@ protected:
     
     /**
      * @brief sets that memory for the backward problem has been allocated
+     * @param which adjoint problem index
      */
     void setInitDoneB(int which);
     
     /**
      * @brief sets that memory for backward quadratures has been allocated
+     * @param which adjoint problem index
      */
     void setQuadInitDoneB(int which);
     
