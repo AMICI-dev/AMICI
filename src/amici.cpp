@@ -31,8 +31,6 @@ static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
 static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
 static_assert(std::is_same<amici::realtype, realtype>::value,
               "Definition of realtype does not match");
-static_assert(SUNNONLINEARSOLVER_ROOTFIND == static_cast<int>(amici::NonlinearSolverIteration::newton), "NonlinearSolverIteration::newton != SUNNONLINEARSOLVER_ROOTFIND");
-static_assert(SUNNONLINEARSOLVER_FIXEDPOINT == static_cast<int>(amici::NonlinearSolverIteration::fixedpoint), "NonlinearSolverIteration::fixedpoint != SUNNONLINEARSOLVER_FIXEDPOINT");
 
 
 namespace amici {

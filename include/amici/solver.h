@@ -1025,7 +1025,7 @@ class Solver {
      *
      * @return user data model
      */
-    virtual const Model *getModel() const;
+    virtual const Model *getModel() const = 0;
 
     /**
      * @brief checks whether memory for the forward problem has been allocated

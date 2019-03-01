@@ -128,7 +128,7 @@ enum class LinearMultistepMethod {
 enum class NonlinearSolverIteration {
     functional = 1, /** deprecated */
     fixedpoint = 1,
-    newton = 0
+    newton = 2
 };
 
 /** KLU state reordering */
