@@ -584,12 +584,6 @@ class Solver {
      * @return
      */
     LinearSolver getLinearSolver() const;
-    
-    /**
-     * @brief getLinearSolver
-     * @return
-     */
-    LinearSolver getLinearSolverB() const;
 
     /**
      * @brief setLinearSolver
