@@ -293,6 +293,10 @@ void IDASolver::adjInit() {
         throw IDAException(status, "IDAAdjInit");
 }
 void IDASolver::allocateSolverB(int *which) {
+    if(solverMemoryB.size()) {
+        *which = 0;
+        return;
+    }
     int status = IDACreateB(solverMemory.get(), which);
     if (*which + 1 > static_cast<int>(solverMemoryB.size()))
         solverMemoryB.resize(*which + 1);

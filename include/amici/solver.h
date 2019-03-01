@@ -1087,7 +1087,7 @@ class Solver {
     /**
      * @brief resets solverMemory and solverMemoryB
      */
-    void reset();
+    void resetMemory();
 
 protected:
 

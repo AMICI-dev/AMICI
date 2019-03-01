@@ -54,7 +54,7 @@ void Solver::setup(AmiVector *x, AmiVector *dx, AmiVectorArray *sx, AmiVectorArr
 
     if (sensi_meth == SensitivityMethod::forward && !plist.empty() &&
         getSensInitDone() && nplist() != model->nplist())
-        reset();
+        resetMemory();
 
     /* Create solver memory object if necessary */
     allocateSolver();
@@ -696,7 +696,8 @@ int Solver::getMaxSteps() const {
 void Solver::setMaxSteps(int maxsteps) {
     if (maxsteps < 0)
         throw AmiException("maxsteps must be a non-negative number");
-    
+
+    this->maxsteps = maxsteps;
     if(solverMemory) {
         if(getAdjInitDone())
             throw AmiException("Checkpointing Scheme was already set up, "
@@ -705,9 +706,6 @@ void Solver::setMaxSteps(int maxsteps) {
         else
             setMaxNumSteps(this->maxsteps);
     }
-
-    this->maxsteps = maxsteps;
-    
 }
 
 int Solver::getMaxStepsBackwardProblem() const {
@@ -886,17 +884,17 @@ void Solver::setAdjInitDone() {
 
 void Solver::setInitDoneB(int which) {
     if (which >= static_cast<int>(initializedB.size()))
-        initializedB.resize(which, false);
+        initializedB.resize(which+1, false);
     initializedB.at(which) = true;
 }
 
 void Solver::setQuadInitDoneB(int which) {
     if (which >= static_cast<int>(initializedQB.size()))
-        initializedQB.resize(which, false);
+        initializedQB.resize(which+1, false);
     initializedQB.at(which) = true;
 }
     
-void Solver::reset() {
+void Solver::resetMemory() {
     solverMemory = nullptr;
     solverMemoryB.clear();
     initialized = false;

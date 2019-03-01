@@ -295,7 +295,7 @@ void CVodeSolver::setSuppressAlg(bool flag) { }
 
 void CVodeSolver::resetState(void *ami_mem, N_Vector y0) {
 
-    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    auto cv_mem = static_cast<CVodeMem>(ami_mem);
     /* here we force the order in the next step to zero, and update the
      Nordsieck history array, this is largely copied from CVodeReInit with
      explanations from cvodes_impl.h
@@ -435,8 +435,13 @@ void CVodeSolver::adjInit() {
 }
 
 void CVodeSolver::allocateSolverB(int *which) {
+    
+    if(solverMemoryB.size()) {
+        *which = 0;
+        return;
+    }
+    
     int status = CVodeCreateB(solverMemory.get(), static_cast<int>(lmm), which);
-
     if (*which + 1 > static_cast<int>(solverMemoryB.size()))
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) = std::unique_ptr<void, std::function<void(void *)>>
