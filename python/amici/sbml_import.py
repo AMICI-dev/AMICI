@@ -40,7 +40,7 @@ class SbmlImporter:
 
         symbols: dict carrying symbolic definitions @type dict
 
-        SBMLreader: the libSBML sbml reader [!not storing this will result
+        sbml_reader: the libSBML sbml reader [!not storing this will result
         in a segfault!]
 
         sbml_doc: document carrying the sbml definition [!not storing this
@@ -81,20 +81,30 @@ class SbmlImporter:
             sbml_source: str,
             show_sbml_warnings: bool = False,
             from_file: bool = True):
-        """Create a new Model instance.
+        """
+        Create a new Model instance.
 
-        Arguments:
+        Parameters
+        ----------
 
-        SBMLFile: Path to SBML file where the model is specified @type string
+        sbml_source: str
+            Either: Path to SBML file where the model is specified.
+            Or: A model string as created by sbml.sbmlWriter().writeSBMLToString().
 
-        show_sbml_warnings: indicates whether libSBML warnings should be
-        displayed @type bool
+        show_sbml_warnings: bool, optional (default = False)
+            Indicates whether libSBML warnings should be displayed.
 
-        Returns:
+        from_file: bool, optional (default = True)
+            Whether `sbml_source` is a file name (True), or an sbml string
+            (False).
+
+        Returns
+        -------
+
         SbmlImporter instance with attached SBML document
 
-        Raises:
-
+        Raises
+        ------
         """
         self.sbml_reader = sbml.SBMLReader()
 
