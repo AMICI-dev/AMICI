@@ -950,6 +950,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Reports whether the model has parameter names set.
+     * Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether parameter names were set
      */
     virtual bool hasParameterNames() const;
@@ -962,6 +963,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Reports whether the model has state names set.
+     * Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether state names were set
      */
     virtual bool hasStateNames() const;
@@ -974,6 +976,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Reports whether the model has fixed parameter names set.
+     * Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether fixed parameter names were set
      */
     virtual bool hasFixedParameterNames() const;
@@ -986,6 +989,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Reports whether the model has observable names set.
+     * Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether observabke names were set
      */
     virtual bool hasObservableNames() const;
@@ -998,6 +1002,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Reports whether the model has parameter ids set.
+     * Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether parameter ids were set
      */
     virtual bool hasParameterIds() const;
@@ -1057,7 +1062,8 @@ class Model : public AbstractModel {
 
     /**
      * @brief Reports whether the model has state ids set.
-     * @return
+     * Also returns true if the number of corresponding variables is just zero.
+     * @return boolean indicating whether state ids were set
      */
     virtual bool hasStateIds() const;
 
@@ -1069,6 +1075,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Reports whether the model has fixed parameter ids set.
+     * Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether fixed parameter ids were set
      */
     virtual bool hasFixedParameterIds() const;
@@ -1081,6 +1088,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Reports whether the model has observable ids set.
+     * Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether observale ids were set
      */
     virtual bool hasObservableIds() const;
