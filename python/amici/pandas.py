@@ -373,11 +373,15 @@ def _get_names_or_ids(model, variable, by_id):
     names = list(getattr(model, f'get{variable}Names')())
     ids = list(getattr(model, f'get{variable}Ids')())
 
+    # find out if model has names and ids
+    has_names = getattr(model, f'has{variable}Names')()
+    has_ids = getattr(model, f'has{variable}Ids')()
+
     # extract labels
-    if not by_id and len(set(names)) == len(names):
+    if not by_id and has_names and len(set(names)) == len(names):
         # use variable names
         return names
-    elif len(ids) > 0 or len(ids) == 0 and len(names) == 0:
+    elif has_ids:
         # use variable ids
         return ids
     else:
