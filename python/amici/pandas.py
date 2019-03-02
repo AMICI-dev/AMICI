@@ -367,28 +367,27 @@ def _get_names_or_ids(model, variable, by_id):
     # check whether variable type permitted
     variable_options = ['Parameter', 'FixedParameter', 'Observable', 'State']
     if variable not in variable_options:
-        raise ValueError('variable must be in ' + str(variable_options))
+        raise ValueError('Variable must be in ' + str(variable_options))
 
-    # functions to extract attributes
-    namegetter = getattr(model, 'get' + variable + 'Names')
-    idgetter = getattr(model, 'get' + variable + 'Ids')
+    # extract attributes
+    names = list(getattr(model, f'get{variable}Names')())
+    ids = list(getattr(model, f'get{variable}Ids')())
 
     # extract labels
-    if not by_id and len(set(namegetter())) == len(namegetter()) \
-            and getattr(model, f"has{variable}Names")():
+    if not by_id and len(set(names)) == len(names):
         # use variable names
-        return list(namegetter())
-    elif getattr(model, f"has{variable}Ids")():
+        return names
+    elif len(ids) > 0 or len(ids) == 0 and len(names) == 0:
         # use variable ids
-        return list(idgetter())
+        return ids
     else:
         # unable to create unique labels
         if by_id:
-            raise RuntimeError(f"Model {variable} ids are not set.")
+            msg = f"Model {variable} ids are not set."
         else:
-            raise RuntimeError(
-                f"Model {variable} names are not unique and "
-                f"{variable} ids are not set.")
+            msg = f"Model {variable} names are not unique and " \
+                  f"{variable} ids are not set."
+        raise ValueError(msg)
 
 
 def _get_specialized_fixed_parameters(
