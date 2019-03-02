@@ -142,6 +142,8 @@ python/sdist/amici/amici_wrap_without_hdf5.cxx
 python/sdist/build/*
 python/sdist/amici/git_version.txt
 
+python/sdist/dist
+
 AMICI_guide.pdf
 
 ThirdParty/bionetgen.tar.gz
