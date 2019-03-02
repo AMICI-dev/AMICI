@@ -96,24 +96,24 @@ class SbmlImporter:
         Raises:
 
         """
-    self.sbml_reader = sbml.SBMLReader()
+        self.sbml_reader = sbml.SBMLReader()
 
-    if from_file:
-        sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
-    else:
-        sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
-    self.sbml_doc = sbml_doc
+        if from_file:
+            sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
+        else:
+            sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
+        self.sbml_doc = sbml_doc
 
-    # process document
-    self.process_document()
+        self.show_sbml_warnings = show_sbml_warnings
 
-    self.sbml = self.sbml_doc.getModel()
+        # process document
+        self.process_document()
 
-    self.show_sbml_warnings = show_sbml_warnings
+        self.sbml = self.sbml_doc.getModel()
 
-    # Long and short names for model components
-    self.symbols = dict()
-    self.reset_symbols()
+        # Long and short names for model components
+        self.symbols = dict()
+        self.reset_symbols()
 
     def process_document(self):
         """
@@ -151,44 +151,6 @@ class SbmlImporter:
 
         """
         self.symbols = default_symbols
-
-    def loadSBMLFile(self, SBMLFile):
-        """Parse the provided SBML file.
-
-        Arguments:
-            SBMLFile: path to SBML file @type str
-
-        Returns:
-
-        Raises:
-
-        """
-
-        self.SBMLreader = sbml.SBMLReader()
-        self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
-
-        # Ensure we got a valid SBML model, otherwise further processing
-        # might lead to undefined results
-        self.sbml_doc.validateSBML()
-        checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
-
-        # apply several model simplifications that make our life substantially
-        # easier
-        if len(self.sbml_doc.getModel().getListOfFunctionDefinitions()) > 0:
-            convertConfig = sbml.SBMLFunctionDefinitionConverter()\
-                .getDefaultProperties()
-            self.sbml_doc.convert(convertConfig)
-
-        convertConfig = sbml.SBMLLocalParameterConverter().\
-            getDefaultProperties()
-        self.sbml_doc.convert(convertConfig)
-
-        # If any of the above calls produces an error, this will be added to
-        # the SBMLError log in the sbml document. Thus, it is sufficient to
-        # check the error log just once after all conversion/validation calls.
-        checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
-
-        self.sbml = self.sbml_doc.getModel()
 
     def sbml2amici(self,
                    modelName,
