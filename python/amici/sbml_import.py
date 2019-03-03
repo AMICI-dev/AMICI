@@ -81,30 +81,28 @@ class SbmlImporter:
             sbml_source: str,
             show_sbml_warnings: bool = False,
             from_file: bool = True):
-        """
-        Create a new Model instance.
+        """Create a new Model instance.
 
-        Parameters
-        ----------
+        Arguments:
 
-        sbml_source: str
+        sbml_source:
             Either: Path to SBML file where the model is specified.
-            Or: A model string as created by sbml.sbmlWriter().writeSBMLToString().
+            Or: A model string as created by
+            sbml.sbmlWriter().writeSBMLToString(). @type string
 
-        show_sbml_warnings: bool, optional (default = False)
-            Indicates whether libSBML warnings should be displayed.
+        show_sbml_warnings:
+            Indicates whether libSBML warnings should be displayed
+            (default = True). @type bool
 
-        from_file: bool, optional (default = True)
-            Whether `sbml_source` is a file name (True), or an sbml string
-            (False).
+        from_file:
+            Whether `sbml_source` is a file name (True, default), or an
+            sbml string (False). @type bool
 
-        Returns
-        -------
+        Returns:
 
         SbmlImporter instance with attached SBML document
 
-        Raises
-        ------
+        Raises:
         """
         self.sbml_reader = sbml.SBMLReader()
 
@@ -126,9 +124,7 @@ class SbmlImporter:
         self.reset_symbols()
 
     def process_document(self):
-        """
-        Validate and simplify document.
-        """
+        """Validate and simplify document."""
         # Ensure we got a valid SBML model, otherwise further processing
         # might lead to undefined results
         self.sbml_doc.validateSBML()
