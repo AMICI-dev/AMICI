@@ -5,18 +5,20 @@
 
 #include <sundials/sundials_matrix.h>
 
-namespace amici{
+namespace amici {
 class ExpData;
 class ReturnData;
 class Model_DAE;
 class IDASolver;
-}
+} // namespace amici
 
 // for serialization friend in Solver
-namespace boost { namespace serialization {
-    template <class Archive>
-    void serialize(Archive &ar, amici::IDASolver &u, const unsigned int version);
-}}
+namespace boost {
+namespace serialization {
+template <class Archive>
+void serialize(Archive &ar, amici::IDASolver &u, const unsigned int version);
+}
+} // namespace boost
 
 namespace amici {
 
@@ -29,52 +31,53 @@ class IDASolver : public Solver {
      * @brief Clone this instance
      * @return The clone
      */
-    virtual Solver* clone() const override;
+    virtual Solver *clone() const override;
 
-    void reInitPostProcessF(realtype *t, AmiVector *yout, AmiVector *ypout,
-                            realtype tnext) override;
-    
-    void reInitPostProcessB(int which, realtype *t, AmiVector *yBout,
-                            AmiVector *ypBout, realtype tnext) override;
-    
-    void reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) override;
+    void reInitPostProcessF(const realtype tnext) const override;
 
-    void sensReInit(AmiVectorArray *yS0, AmiVectorArray *ypS0) override;
+    void reInitPostProcessB(const realtype tnext) const override;
 
-    void reInitB(int which, realtype tB0, AmiVector *yyB0,
-                   AmiVector *ypB0) override;
+    void reInit(const realtype t0) const override;
 
-    void quadReInitB(int which, AmiVector *yQB0) override;
+    void sensReInit() const override;
 
-    void quadSStolerancesB(int which, realtype reltolQB,
-                             realtype abstolQB) override;
+    void reInitB(const int which, const realtype tB0) const override;
 
-    int solve(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
-                 int itask) override;
+    void quadReInitB(const int which) const override;
 
-    int solveF(realtype tout, AmiVector *yret, AmiVector *ypret, realtype *tret,
-                  int itask, int *ncheckPtr) override;
+    void quadSStolerancesB(const int which, const realtype reltolQB,
+                           const realtype abstolQB) const override;
 
-    void solveB(realtype tBout, int itaskB) override;
+    int solve(const realtype tout, const int itask) const override;
+
+    int solveF(const realtype tout, const int itask,
+               int *ncheckPtr) const override;
+
+    void solveB(const realtype tBout, const int itaskB) const override;
 
     void getRootInfo(int *rootsfound) const override;
 
-    void getDky(realtype t, int k, AmiVector *dky) const override;
+    void getDky(const realtype t, int k) const override;
 
-    void getSens(realtype *tret, AmiVectorArray *yySout) const override;
+    void getSens() const override;
 
-    void getB(int which, realtype *tret, AmiVector *yy, AmiVector *yp) const override;
+    void getSensDky(const realtype t, int k) const override;
 
-    void getQuadB(int which, realtype *tret, AmiVector *qB) const override;
+    void getB(int which) const override;
 
-    void calcIC(realtype tout1, AmiVector *x, AmiVector *dx) override;
+    void getDkyB(const realtype t, int k, int which) const override;
 
-    void calcICB(int which, realtype tout1, AmiVector *xB,
-                 AmiVector *dxB) override;
+    void getQuadB(int which) const override;
 
-    void setStopTime(realtype tstop) override;
+    void getQuadDkyB(const realtype t, int k, int which) const override;
 
-    void turnOffRootFinding() override;
+    void calcIC(realtype tout1) const override;
+
+    void calcICB(int which, realtype tout1) const override;
+
+    void setStopTime(realtype tstop) const override;
+
+    void turnOffRootFinding() const override;
 
     const Model *getModel() const override;
 
@@ -89,109 +92,114 @@ class IDASolver : public Solver {
                         N_Vector xdot, SUNMatrix J, void *user_data,
                         N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
 
-    void setLinearSolver() override;
+    void setLinearSolver() const override;
 
-    void setLinearSolverB(int which) override;
+    void setLinearSolverB(int which) const override;
 
-    void setNonLinearSolver() override;
+    void setNonLinearSolver() const override;
 
-    void setNonLinearSolverSens() override;
+    void setNonLinearSolverSens() const override;
 
-    void setNonLinearSolverB(int which) override;
-
+    void setNonLinearSolverB(int which) const override;
 
   protected:
-    
     void reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
-                           AmiVector *ypout, realtype tout);
+                           AmiVector *ypout, realtype tout) const;
 
-    void allocateSolver() override;
+    void allocateSolver() const override;
 
-    void setSStolerances(double rtol, double atol) override;
+    void setSStolerances(const realtype rtol,
+                         const realtype atol) const override;
 
-    void setSensSStolerances(double rtol, double *atol) override;
+    void setSensSStolerances(const realtype rtol,
+                             const realtype *atol) const override;
 
-    void setSensErrCon(bool error_corr) override;
+    void setSensErrCon(const bool error_corr) const override;
 
-    void setQuadErrConB(int which, bool flag) override;
+    void setQuadErrConB(const int which, const bool flag) const override;
 
-    void setErrHandlerFn() override;
+    void setErrHandlerFn() const override;
 
-    void setUserData(Model *model) override;
+    void setUserData(Model *model) const override;
 
-    void setUserDataB(int which, Model *model) override;
+    void setUserDataB(const int which, Model *model) const override;
 
-    void setMaxNumSteps(long int mxsteps) override;
+    void setMaxNumSteps(const long int mxsteps) const override;
 
-    void setStabLimDet(int stldet) override;
+    void setStabLimDet(const int stldet) const override;
 
-    void setStabLimDetB(int which, int stldet) override;
+    void setStabLimDetB(const int which, const int stldet) const override;
 
-    void setId(Model *model) override;
+    void setId(const Model *model) const override;
 
-    void setSuppressAlg(bool flag) override;
-    
-     void resetState(void *ida_mem, N_Vector yy0, N_Vector yp0);
+    void setSuppressAlg(bool flag) const override;
 
-    void setSensParams(realtype *p, realtype *pbar, int *plist) override;
+    void resetState(void *ida_mem, const N_Vector yy0,
+                    const N_Vector yp0) const;
 
-    void adjInit() override;
+    void setSensParams(const realtype *p, const realtype *pbar,
+                       const int *plist) const override;
 
-    void allocateSolverB(int *which) override;
+    void adjInit() const override;
 
-    void setMaxNumStepsB(int which, long int mxstepsB) override;
+    void allocateSolverB(int *which) const override;
 
-    void setSStolerancesB(int which, realtype relTolB,
-                          realtype absTolB) override;
+    void setMaxNumStepsB(const int which,
+                         const long int mxstepsB) const override;
 
-    void diag() override;
+    void setSStolerancesB(const int which, const realtype relTolB,
+                          const realtype absTolB) const override;
 
-    void diagB(int which) override;
+    void diag() const override;
 
-    void getNumSteps(void *ami_mem, long int *numsteps) const override;
+    void diagB(const int which) const override;
 
-    void getNumRhsEvals(void *ami_mem, long int *numrhsevals) const override;
+    void getNumSteps(const void *ami_mem, long int *numsteps) const override;
 
-    void getNumErrTestFails(void *ami_mem,
+    void getNumRhsEvals(const void *ami_mem,
+                        long int *numrhsevals) const override;
+
+    void getNumErrTestFails(const void *ami_mem,
                             long int *numerrtestfails) const override;
 
-    void getNumNonlinSolvConvFails(void *ami_mem,
-                                   long int *numnonlinsolvconvfails) const override;
+    void
+    getNumNonlinSolvConvFails(const void *ami_mem,
+                              long int *numnonlinsolvconvfails) const override;
 
-    void getLastOrder(void *ami_mem, int *order) const override;
+    void getLastOrder(const void *ami_mem, int *order) const override;
 
-    void *getAdjBmem(void *ami_mem, int which) override;
+    void *getAdjBmem(void *ami_mem, int which) const override;
 
-    void init(AmiVector *x, AmiVector *dx, realtype t) override;
+    void init(const realtype t) const override;
 
-    void binit(int which, AmiVector *xB, AmiVector *dxB, realtype t) override;
+    void sensInit1() const override;
 
-    void qbinit(int which, AmiVector *qBdot) override;
+    void binit(int which, const realtype t) const override;
 
-    void rootInit(int ne) override;
+    void qbinit(int which) const override;
 
-    void sensInit1(AmiVectorArray *sx, AmiVectorArray *sdx, int nplist) override;
+    void rootInit(int ne) const override;
 
-    void setDenseJacFn() override;
+    void setDenseJacFn() const override;
 
-    void setSparseJacFn() override;
+    void setSparseJacFn() const override;
 
-    void setBandJacFn() override;
+    void setBandJacFn() const override;
 
-    void setJacTimesVecFn() override;
+    void setJacTimesVecFn() const override;
 
-    void setDenseJacFnB(int which) override;
+    void setDenseJacFnB(const int which) const override;
 
-    void setSparseJacFnB(int which) override;
+    void setSparseJacFnB(const int which) const override;
 
-    void setBandJacFnB(int which) override;
+    void setBandJacFnB(const int which) const override;
 
-    void setJacTimesVecFnB(int which) override;
+    void setJacTimesVecFnB(const int which) const override;
 
-    static int fJB(realtype t, realtype cj, N_Vector x,
-                   N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector xBdot,
-                   SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                   N_Vector tmp2B, N_Vector tmp3B);
+    static int fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                   N_Vector xB, N_Vector dxB, N_Vector xBdot, SUNMatrix JB,
+                   void *user_data, N_Vector tmp1B, N_Vector tmp2B,
+                   N_Vector tmp3B);
 
     static int fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                          N_Vector xB, N_Vector dxB, N_Vector xBdot,
@@ -222,12 +230,13 @@ class IDASolver : public Solver {
     static int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                       N_Vector dxB, N_Vector xBdot, void *user_data);
 
-    static int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB, N_Vector qBdot,
-                      void *user_data);
+    static int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
+                      N_Vector dxB, N_Vector qBdot, void *user_data);
 
-    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
-                      N_Vector *sx, N_Vector *sdx, N_Vector *sxdot, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx,
+                      N_Vector xdot, N_Vector *sx, N_Vector *sdx,
+                      N_Vector *sxdot, void *user_data, N_Vector tmp1,
+                      N_Vector tmp2, N_Vector tmp3);
 };
 
 } // namespace amici
