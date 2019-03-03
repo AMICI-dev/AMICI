@@ -85,24 +85,22 @@ class SbmlImporter:
 
         Arguments:
 
-        sbml_source:
-            Either: Path to SBML file where the model is specified.
-            Or: A model string as created by
-            sbml.sbmlWriter().writeSBMLToString(). @type string
+            sbml_source:  Either a path to SBML file where the model is specified.
+            Or a model string as created by  sbml.sbmlWriter().writeSBMLToString().
+            @type string
 
-        show_sbml_warnings:
-            Indicates whether libSBML warnings should be displayed
-            (default = True). @type bool
+            show_sbml_warnings: Indicates whether libSBML warnings should be
+            displayed (default = True). @type bool
 
-        from_file:
-            Whether `sbml_source` is a file name (True, default), or an
+            from_file: Whether `sbml_source` is a file name (True, default), or an
             sbml string (False). @type bool
 
         Returns:
 
-        SbmlImporter instance with attached SBML document
+            SbmlImporter instance with attached SBML document
 
         Raises:
+
         """
         self.sbml_reader = sbml.SBMLReader()
 
@@ -124,7 +122,15 @@ class SbmlImporter:
         self.reset_symbols()
 
     def process_document(self):
-        """Validate and simplify document."""
+        """Validate and simplify document.
+
+        Arguments:
+
+        Returns:
+
+        Raises:
+
+        """
         # Ensure we got a valid SBML model, otherwise further processing
         # might lead to undefined results
         self.sbml_doc.validateSBML()
