@@ -37,13 +37,16 @@ class IDASolver : public Solver {
 
     void reInitPostProcessB(const realtype tnext) const override;
 
-    void reInit(const realtype t0) const override;
-
-    void sensReInit() const override;
-
-    void reInitB(const int which, const realtype tB0) const override;
-
-    void quadReInitB(const int which) const override;
+    void reInit(const realtype t0, const AmiVector &yy0,
+                const AmiVector &yp0) const override;
+    
+    void sensReInit(const AmiVectorArray &yyS0,
+                    const AmiVectorArray &ypS0) const override;
+    
+    void reInitB(const int which, const realtype tB0,
+                 const AmiVector &yyB0, const AmiVector &ypB0) const override;
+    
+    void quadReInitB(const int which, const AmiVector &yQB0) const override;
 
     void quadSStolerancesB(const int which, const realtype reltolQB,
                            const realtype abstolQB) const override;
@@ -170,13 +173,15 @@ class IDASolver : public Solver {
 
     void *getAdjBmem(void *ami_mem, int which) const override;
 
-    void init(const realtype t) const override;
+    void init(const realtype t0, const AmiVector &x0,
+              const AmiVector &dx0) const override;
 
-    void sensInit1() const override;
+    void sensInit1(const AmiVectorArray &sx0, const AmiVectorArray &sdx0) const override;
 
-    void binit(int which, const realtype t) const override;
+    void binit(const int which, const realtype tf,
+               const AmiVector &xB0, const AmiVector &dxB0) const override;
 
-    void qbinit(int which) const override;
+    void qbinit(const int which, const AmiVector &xQB0) const override;
 
     void rootInit(int ne) const override;
 

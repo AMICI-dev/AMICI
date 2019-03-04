@@ -102,6 +102,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/sundials_matrix_wrapper.cpp
     ${CMAKE_SOURCE_DIR}/src/sundials_linsol_wrapper.cpp
     ${CMAKE_SOURCE_DIR}/src/abstract_model.cpp
+    ${CMAKE_SOURCE_DIR}/src/vector.cpp
     )
 
 add_library(${PROJECT_NAME} ${AMICI_SRC_LIST})

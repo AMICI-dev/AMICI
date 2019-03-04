@@ -35,14 +35,17 @@ class CVodeSolver : public Solver {
      * @return The clone
      */
     virtual Solver *clone() const override;
-
-    void reInit(const realtype t0) const override;
-
-    void sensReInit() const override;
-
-    void reInitB(const int which, const realtype tB0) const override;
-
-    void quadReInitB(const int which) const override;
+    
+    void reInit(const realtype t0, const AmiVector &yy0,
+                const AmiVector &yp0) const override;
+    
+    void sensReInit(const AmiVectorArray &yyS0,
+                    const AmiVectorArray &ypS0) const override;
+    
+    void reInitB(const int which, const realtype tB0,
+                 const AmiVector &yyB0, const AmiVector &ypB0) const override;
+    
+    void quadReInitB(const int which, const AmiVector &yQB0) const override;
 
     int solve(const realtype tout, const int itask) const override;
 
@@ -91,6 +94,7 @@ class CVodeSolver : public Solver {
     void setNonLinearSolverB(const int which) const override;
 
   protected:
+    
     void calcIC(const realtype tout1) const override;
 
     void calcICB(const int which, const realtype tout1) const override;
@@ -168,7 +172,7 @@ class CVodeSolver : public Solver {
     getNumNonlinSolvConvFails(const void *ami_mem,
                               long int *numnonlinsolvconvfails) const override;
 
-    void getLastOrder(void *ami_ami_mem, int *order) const override;
+    void getLastOrder(const void *ami_ami_mem, int *order) const override;
 
     void *getAdjBmem(void *ami_mem, int which) const override;
 
@@ -178,13 +182,16 @@ class CVodeSolver : public Solver {
 
     friend bool operator==(const CVodeSolver &a, const CVodeSolver &b);
 
-    void init(const realtype t0) const override;
+    void init(const realtype t0, const AmiVector &x0, const AmiVector &dx0)
+    const override;
 
-    void sensInit1() const override;
+    void sensInit1(const AmiVectorArray &sx0, const AmiVectorArray &sdx0)
+    const override;
 
-    void binit(const int which, const realtype tf) const override;
+    void binit(const int which, const realtype tf, const AmiVector &xB0,
+               const AmiVector &dxB0) const override;
 
-    void qbinit(const int which) const override;
+    void qbinit(const int which, const AmiVector &xQB0) const override;
 
     void rootInit(const int ne) const override;
 

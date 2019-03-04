@@ -42,8 +42,9 @@ void BackwardProblem::workBackwardProblem() {
         solver->getSensitivityMethod() != SensitivityMethod::adjoint || model->nplist() == 0) {
         return;
     }
-
-    solver->setupB(this, model);
+    
+    model->initializeB(xB, dxB, xQB);
+    solver->setupB(&which, rdata->ts[rdata->nt-1], model, xB, dxB, xQB);
 
     int it = rdata->nt - 2;
     --iroot;
@@ -55,8 +56,9 @@ void BackwardProblem::workBackwardProblem() {
 
         if (tnext < t) {
             solver->solveB(tnext, AMICI_NORMAL);
-            solver->getB(which, &t, &xB, &dxB);
-            solver->getQuadB(which, &t, &xQB);
+            xB.copy(solver->getAdjointState(which, t));
+            dxB.copy(solver->getAdjointDerivativeState(which, t));
+            xQB.copy(solver->getAdjointQuadrature(which, t));
             solver->getDiagnosisB(it, rdata, this->which);
         }
 
@@ -75,22 +77,17 @@ void BackwardProblem::workBackwardProblem() {
         }
 
         /* reinit states */
-        solver->reInitB(which, t, &xB, &dxB);
-        solver->quadReInitB(which, &xQB);
-        solver->calcICB(which, t, &xB, &dxB);
-        
-        /* if we have to integrate further we need to postprocess for step size
-         computation */
-        if (t > model->t0())
-            solver->reInitPostProcessB(which, &t, &xB, &dxB, model->t0());
+        solver->reInitB(which, t, xB, dxB);
+        solver->quadReInitB(which, xQB);
+        solver->calcICB(which, t);
     }
 
     /* we still need to integrate from first datapoint to tstart */
     if (t > model->t0()) {
         /* solve for backward problems */
         solver->solveB(model->t0(), AMICI_NORMAL);
-        solver->getQuadB(which, &(t), &xQB);
-        solver->getB(which, &(t), &xB, &dxB);
+        solver->getQuadB(which, &xQB);
+        solver->getB(which, &xB, &dxB);
         solver->getDiagnosisB(0, rdata, this->which);
     }
 

@@ -1,7 +1,5 @@
 #include "amici/solver.h"
-#include "amici/backwardproblem.h"
 #include "amici/exception.h"
-#include "amici/forwardproblem.h"
 #include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/rdata.h"
@@ -43,25 +41,42 @@ Solver::Solver(const Solver &other) : Solver() {
     ordering = other.ordering;
 }
 
-void Solver::setup(Model *model) const {
-    bool computeSensitivities =
-        sensi >= SensitivityOrder::first && model->nx_solver > 0;
-
+int Solver::run(const realtype tout) const {
+    setStopTime(tout);
+    int status;
+    if (getAdjInitDone()) {
+        status = solveF(tout, AMICI_NORMAL, &ncheckPtr);
+    } else {
+        status = solve(tout, AMICI_NORMAL);
+    }
+    return status;
+}
+    
+int Solver::step(const realtype tout) const {
+    int status;
+    if (getAdjInitDone()) {
+        status = solveF(tout, AMICI_ONE_STEP, &ncheckPtr);
+    } else {
+        status = solve(tout, AMICI_ONE_STEP);
+    }
+    return status;
+}
+    
+void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
+                   const AmiVector &dx0, const AmiVectorArray &sx0,
+                   const AmiVectorArray &sdx0) const {
     if (nx() != model->nx_solver || nplist() != model->nplist() ||
         nquad() != model->nJ * model->nplist()) {
-        resetMemory(model->nx_solver, model->nplist(),
-                    model->nJ * model->nplist());
+        resetMutableMemory(model->nx_solver, model->nplist(),
+                           model->nJ * model->nplist());
     }
-
-    model->initialize(&x, &dx, &sx, &sdx, computeSensitivities);
-
     /* Create solver memory object if necessary */
     allocateSolver();
     if (!solverMemory)
         throw AmiException("Failed to allocated solver memory!");
 
     /* Initialize CVodes/IDAs solver*/
-    init(model->t0());
+    init(t0, x0, dx0);
 
     applyTolerances();
 
@@ -79,14 +94,14 @@ void Solver::setup(Model *model) const {
     initializeLinearSolver(model);
     initializeNonLinearSolver();
 
-    if (computeSensitivities) {
+    if (sensi >= SensitivityOrder::first && model->nx_solver > 0) {
         auto plist = model->getParameterList();
         if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {
             /* Set sensitivity analysis optional inputs */
             auto par = model->getUnscaledParameters();
 
             /* Activate sensitivity calculations */
-            sensInit1();
+            sensInit1(sx0, sdx0);
             initalizeNonLinearSolverSens(model);
             setSensParams(par.data(), nullptr, plist.data());
 
@@ -104,19 +119,21 @@ void Solver::setup(Model *model) const {
         calcIC(model->t(1));
 }
 
-void Solver::setupB(int *which, const realtype tf, Model *model) const {
+void Solver::setupB(int *which, const realtype tf, Model *model,
+                    const AmiVector &xB0, const AmiVector &dxB0,
+                    const AmiVector &xQB0) const {
     if (!solverMemory)
         throw AmiException(
             "Solver for the forward problem must be setup first");
 
     /* write initial conditions */
-    model->initializeB(&xB, &dxB);
+    
 
     /* allocate memory for the backward problem */
     allocateSolverB(which);
 
     /* initialise states */
-    binit(*which, tf);
+    binit(*which, tf, xB0, dxB0);
 
     /* Attach user data */
     setUserDataB(*which, model);
@@ -128,7 +145,7 @@ void Solver::setupB(int *which, const realtype tf, Model *model) const {
     initializeNonLinearSolverB(*which);
 
     /* Initialise quadrature calculation */
-    qbinit(*which);
+    qbinit(*which, xQB0);
 
     applyTolerancesASA(*which);
     applyQuadTolerancesASA(*which);
@@ -477,7 +494,7 @@ SensitivityMethod Solver::getSensitivityMethod() const { return sensi_meth; }
 
 void Solver::setSensitivityMethod(const SensitivityMethod sensi_meth) {
     if (sensi_meth != this->sensi_meth)
-        resetMemory(nx(), nplist(), nquad());
+        resetMutableMemory(nx(), nplist(), nquad());
     this->sensi_meth = sensi_meth;
 }
 
@@ -507,7 +524,7 @@ SensitivityOrder Solver::getSensitivityOrder() const { return sensi; }
 
 void Solver::setSensitivityOrder(const SensitivityOrder sensi) {
     if (this->sensi != sensi)
-        resetMemory(nx(), nplist(), nquad());
+        resetMutableMemory(nx(), nplist(), nquad());
     this->sensi = sensi;
 
     if (getInitDone())
@@ -698,7 +715,7 @@ void Solver::setMaxSteps(const long int maxsteps) {
 
     this->maxsteps = maxsteps;
     if (getAdjInitDone())
-        resetMemory(nx(), nplist(), nquad());
+        resetMutableMemory(nx(), nplist(), nquad());
 }
 
 long int Solver::getMaxStepsBackwardProblem() const { return maxstepsB; }
@@ -721,7 +738,7 @@ LinearMultistepMethod Solver::getLinearMultistepMethod() const { return lmm; }
 
 void Solver::setLinearMultistepMethod(const LinearMultistepMethod lmm) {
     if (solverMemory)
-        resetMemory(nx(), nplist(), nquad());
+        resetMutableMemory(nx(), nplist(), nquad());
     this->lmm = lmm;
 }
 
@@ -731,7 +748,7 @@ NonlinearSolverIteration Solver::getNonlinearSolverIteration() const {
 
 void Solver::setNonlinearSolverIteration(const NonlinearSolverIteration iter) {
     if (solverMemory)
-        resetMemory(nx(), nplist(), nquad());
+        resetMutableMemory(nx(), nplist(), nquad());
     this->iter = iter;
 }
 
@@ -739,7 +756,7 @@ InterpolationType Solver::getInterpolationType() const { return interpType; }
 
 void Solver::setInterpolationType(const InterpolationType interpType) {
     if (!solverMemoryB.empty())
-        resetMemory(nx(), nplist(), nquad());
+        resetMutableMemory(nx(), nplist(), nquad());
     this->interpType = interpType;
 }
 
@@ -775,7 +792,7 @@ LinearSolver Solver::getLinearSolver() const { return linsol; }
 
 void Solver::setLinearSolver(LinearSolver linsol) {
     if (solverMemory)
-        resetMemory(nx(), nplist(), nquad());
+        resetMutableMemory(nx(), nplist(), nquad());
     this->linsol = linsol;
     /*if(solverMemory)
      initializeLinearSolver(getModel());*/
@@ -787,7 +804,7 @@ InternalSensitivityMethod Solver::getInternalSensitivityMethod() const {
 
 void Solver::setInternalSensitivityMethod(const InternalSensitivityMethod ism) {
     if (solverMemory)
-        resetMemory(nx(), nplist(), nquad());
+        resetMutableMemory(nx(), nplist(), nquad());
     this->ism = ism;
 }
 
@@ -873,7 +890,7 @@ void Solver::setQuadInitDoneB(const int which) const {
     initializedQB.at(which) = true;
 }
 
-void Solver::resetMemory(const int nx, const int nplist,
+void Solver::resetMutableMemory(const int nx, const int nplist,
                          const int nquad) const {
     solverMemory = nullptr;
     initialized = false;
@@ -896,45 +913,51 @@ void Solver::resetMemory(const int nx, const int nplist,
     initializedQB.clear();
 }
 
-const AmiVector *Solver::getStatePointer(const realtype t) const {
+const AmiVector& Solver::getState(const realtype t) const {
     if (t == this->t) {
-        return &x;
+        return x;
     } else {
         getDky(t, 0);
+        return dky;
     }
-    return &dky;
+}
+    
+const AmiVector& Solver::getDerivativeState(const realtype t) const {
+    if (t == this->t) {
+        return dx;
+    } else {
+        getDky(t, 0);
+        return dx;
+    }
 }
 
-const AmiVectorArray *
-Solver::getStateSensitivityPointer(const realtype t) const {
+const AmiVectorArray& Solver::getStateSensitivity(const realtype t) const {
     if (t == this->t) {
         getSens();
-        return &sx;
+        return sx;
     } else {
         getSensDky(t, 0);
-        return &sx;
+        return sx;
     }
 }
 
-const AmiVector *Solver::getAdjointStatePointer(const int which,
-                                                const realtype t) const {
+const AmiVector& Solver::getAdjointState(const int which, const realtype t) const {
     if (t == this->t) {
         getB(which);
-        return &xB;
+        return xB;
     } else {
         getDkyB(t, 0, which);
-        return &xB;
+        return xB;
     }
 }
 
-const AmiVector *Solver::getAdjointQuadraturePointer(const int which,
-                                                     const realtype t) const {
+const AmiVector& Solver::getAdjointQuadrature(const int which, const realtype t) const {
     if (t == this->t) {
         getQuadB(which);
-        return &xQB;
+        return xQB;
     } else {
         getQuadDkyB(t, 0, which);
-        return &xQB;
+        return xQB;
     }
 }
 

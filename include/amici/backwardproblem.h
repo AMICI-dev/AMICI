@@ -62,28 +62,6 @@ class BackwardProblem {
         return &which;
     }
 
-    /** accessor for pointer to xB
-     * @return &xB
-     */
-    AmiVector *getxBptr() {
-        return &xB;
-    }
-
-    /**
-     * @brief accessor for pointer to xQB
-     * @return &xQB
-     */
-    AmiVector *getxQBptr() {
-        return &xQB;
-    }
-
-    /** accessor for pointer to dxB
-     * @return &dxB
-     */
-    AmiVector *getdxBptr() {
-        return &dxB;
-    }
-
     /**
      * @brief Accessor for dJydx
      * @return dJydx

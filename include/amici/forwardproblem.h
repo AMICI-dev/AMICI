@@ -178,7 +178,7 @@ class ForwardProblem {
 
     void updateAndReinitStatesAndSensitivities();
 
-    void handlePresimulation(int *ncheck);
+    void handlePresimulation();
 
     /**
      * @brief Execute everything necessary for the handling of events
