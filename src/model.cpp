@@ -489,19 +489,19 @@ int Model::setParametersByNameRegex(std::string const& par_name_regex, realtype 
     return n_found;
 }
 
-bool Model::hasStateIds() const { return nx_rdata && !getStateIds().empty(); }
+bool Model::hasStateIds() const { return nx_rdata == 0 || !getStateIds().empty(); }
 
 std::vector<std::string> Model::getStateIds() const {
     return std::vector<std::string>();
 }
 
-bool Model::hasFixedParameterIds() const { return nk() && !getFixedParameterIds().empty(); }
+bool Model::hasFixedParameterIds() const { return nk() == 0 || !getFixedParameterIds().empty(); }
 
 std::vector<std::string> Model::getFixedParameterIds() const {
     return std::vector<std::string>();
 }
 
-bool Model::hasObservableIds() const { return ny && !getObservableIds().empty(); }
+bool Model::hasObservableIds() const { return ny == 0 || !getObservableIds().empty(); }
 
 std::vector<std::string> Model::getObservableIds() const {
     return std::vector<std::string>();
@@ -794,23 +794,23 @@ int Model::plist(int pos) const{
     return plist_.at(pos);
 }
 
-bool Model::hasParameterNames() const { return np() && !getParameterNames().empty(); }
+bool Model::hasParameterNames() const { return np() == 0 || !getParameterNames().empty(); }
 
 std::vector<std::string> Model::getParameterNames() const { return std::vector<std::string>(); }
 
-bool Model::hasStateNames() const { return nx_rdata && !getStateNames().empty(); }
+bool Model::hasStateNames() const { return nx_rdata == 0 || !getStateNames().empty(); }
 
 std::vector<std::string> Model::getStateNames() const { return std::vector<std::string>(); }
 
-bool Model::hasFixedParameterNames() const { return nk() && !getFixedParameterNames().empty(); }
+bool Model::hasFixedParameterNames() const { return nk() == 0 || !getFixedParameterNames().empty(); }
 
 std::vector<std::string> Model::getFixedParameterNames() const { return std::vector<std::string>(); }
 
-bool Model::hasObservableNames() const { return ny && !getObservableNames().empty(); }
+bool Model::hasObservableNames() const { return ny == 0 || !getObservableNames().empty(); }
 
 std::vector<std::string> Model::getObservableNames() const { return std::vector<std::string>(); }
 
-bool Model::hasParameterIds() const { return np() && !getParameterIds().empty(); }
+bool Model::hasParameterIds() const { return np() == 0 || !getParameterIds().empty(); }
 
 std::vector<std::string> Model::getParameterIds() const {
     return std::vector<std::string>();

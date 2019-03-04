@@ -40,7 +40,7 @@ class SbmlImporter:
 
         symbols: dict carrying symbolic definitions @type dict
 
-        SBMLreader: the libSBML sbml reader [!not storing this will result
+        sbml_reader: the libSBML sbml reader [!not storing this will result
         in a segfault!]
 
         sbml_doc: document carrying the sbml definition [!not storing this
@@ -76,33 +76,53 @@ class SbmlImporter:
 
     """
 
-    def __init__(self, SBMLFile, show_sbml_warnings=False):
+    def __init__(
+            self,
+            sbml_source: str,
+            show_sbml_warnings: bool = False,
+            from_file: bool = True):
         """Create a new Model instance.
 
         Arguments:
 
-        SBMLFile: Path to SBML file where the model is specified @type string
+            sbml_source:  Either a path to SBML file where the model is specified.
+            Or a model string as created by  sbml.sbmlWriter().writeSBMLToString().
+            @type string
 
-        show_sbml_warnings: indicates whether libSBML warnings should be
-        displayed @type bool
+            show_sbml_warnings: Indicates whether libSBML warnings should be
+            displayed (default = True). @type bool
+
+            from_file: Whether `sbml_source` is a file name (True, default), or an
+            sbml string (False). @type bool
 
         Returns:
-        SbmlImporter instance with attached SBML document
+
+            SbmlImporter instance with attached SBML document
 
         Raises:
 
         """
+        self.sbml_reader = sbml.SBMLReader()
+
+        if from_file:
+            sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
+        else:
+            sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
+        self.sbml_doc = sbml_doc
 
         self.show_sbml_warnings = show_sbml_warnings
 
-        self.loadSBMLFile(SBMLFile)
+        # process document
+        self.process_document()
 
-        """Long and short names for model components"""
+        self.sbml = self.sbml_doc.getModel()
+
+        # Long and short names for model components
         self.symbols = dict()
         self.reset_symbols()
 
-    def reset_symbols(self):
-        """Reset the symbols attribute to default values
+    def process_document(self):
+        """Validate and simplify document.
 
         Arguments:
 
@@ -111,23 +131,6 @@ class SbmlImporter:
         Raises:
 
         """
-        self.symbols = default_symbols
-
-    def loadSBMLFile(self, SBMLFile):
-        """Parse the provided SBML file.
-
-        Arguments:
-            SBMLFile: path to SBML file @type str
-
-        Returns:
-
-        Raises:
-
-        """
-
-        self.SBMLreader = sbml.SBMLReader()
-        self.sbml_doc = self.SBMLreader.readSBML(SBMLFile)
-
         # Ensure we got a valid SBML model, otherwise further processing
         # might lead to undefined results
         self.sbml_doc.validateSBML()
@@ -149,7 +152,17 @@ class SbmlImporter:
         # check the error log just once after all conversion/validation calls.
         checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
 
-        self.sbml = self.sbml_doc.getModel()
+    def reset_symbols(self):
+        """Reset the symbols attribute to default values
+
+        Arguments:
+
+        Returns:
+
+        Raises:
+
+        """
+        self.symbols = default_symbols
 
     def sbml2amici(self,
                    modelName,
