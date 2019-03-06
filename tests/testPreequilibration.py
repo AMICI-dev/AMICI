@@ -148,6 +148,35 @@ class TestAmiciPreequilibration(unittest.TestCase):
                         1e-6, 1e-6
                     ).all())
 
+    def test_parameter_in_ExpData(self):
+        rdata = amici.runAmiciSimulation(
+            self.model, self.solver, self.edata
+        )
+
+        # set ExpData parameters
+        self.edata.parameters = self.model.getParameters()
+        # perturb model parameters
+        self.model.setParameters(self.model.getParameters() * 2)
+
+        self.edata.x0 = rdata['x_ss']
+        self.edata.sx0 = rdata['sx_ss']
+
+        # perturb model initial states
+        self.model.setInitialStates(rdata['x_ss'] * 4)
+        self.model.setInitialStateSensitivities(rdata['sx_ss'] / 2)
+
+        rdata_edata = amici.runAmiciSimulation(
+            self.model, self.solver, self.edata
+        )
+        for variable in ['x', 'sx']:
+            with self.subTest(variable=variable):
+                self.assertTrue(np.isclose(
+                    rdata[variable][0, :],
+                    rdata_edata[variable][0, :],
+                    1e-6, 1e-6
+                ).all())
+
+
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
