@@ -336,13 +336,22 @@ class ExpData {
      */
     const realtype *getObservedEventsStdDevPtr(int ie) const;
 
-    /** condition-specific parameters of size Model::nk() or empty */
+    /** condition-specific fixed parameters of size Model::nk() or empty */
     std::vector<realtype> fixedParameters;
-    /** condition-specific parameters for pre-equilibration of size Model::nk() or empty.
+    /** condition-specific fixed parameters for pre-equilibration of size Model::nk() or empty.
      * Overrides Solver::newton_preeq */
     std::vector<realtype> fixedParametersPreequilibration;
-    /** condition-specific parameters for pre-simulation of size Model::nk() or empty. */
+    /** condition-specific fixed parameters for pre-simulation of size Model::nk() or empty. */
     std::vector<realtype> fixedParametersPresimulation;
+    
+    /** condition-specific parameters of size Model::np() or empty */
+    std::vector<realtype> parameters;
+    /** condition-specific initial conditions of size Model::nx() or empty */
+    std::vector<realtype> x0;
+    /** condition-specific initial condition sensitivities of size
+     * Model::nx()*Model::nplist() or empty */
+    std::vector<realtype> sx0;
+    
     /**
      * @brief duration of pre-simulation
      * if this is > 0, presimualation will be performed from (model->t0 - t_presim) to model->t0
