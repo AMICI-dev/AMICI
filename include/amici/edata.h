@@ -454,7 +454,8 @@ class ExpData {
     /** @brief observed events (dimension: nmaxevents x nztrue, row-major) */
     std::vector<realtype> observedEvents;
     /** @brief standard deviation of observed events/roots
-     * (dimension: nmaxevents x nztrue, row-major)*/
+     * (dimension: nmaxevents x nztrue, row-major)
+     */
     std::vector<realtype> observedEventsStdDev;
 };
 
@@ -510,6 +511,9 @@ class ConditionContext {
 
   private:
     Model *model = nullptr;
+    std::vector<realtype> originalx0;
+    std::vector<realtype> originalsx0;
+    std::vector<realtype> originalParameters;
     std::vector<realtype> originalFixedParameters;
     std::vector<realtype> originalTimepoints;
 };

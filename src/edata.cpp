@@ -324,6 +324,9 @@ int ExpData::nmaxevent() const
 
 ConditionContext::ConditionContext(Model *model, const ExpData *edata)
     : model(model),
+      originalx0(model->getInitialStates()),
+      originalsx0(model->getInitialStateSensitivities()),
+      originalParameters(model->getParameters()),
       originalFixedParameters(model->getFixedParameters()),
       originalTimepoints(model->getTimepoints())
 {
@@ -339,11 +342,37 @@ void ConditionContext::applyCondition(const ExpData *edata)
 {
     if(!edata)
         return;
+    
+    if(!edata->x0.empty()) {
+        if(edata->x0.size() != (unsigned) model->nx_rdata)
+            throw AmiException("Number of initial conditions (%d) in model does"
+                               " not match ExpData (%zd).",
+                               model->nx_rdata, edata->x0.size());
+        model->setInitialStates(edata->x0);
+    }
+    
+    if(!edata->sx0.empty()) {
+        if(edata->sx0.size() != (unsigned) model->nx_rdata * model->nplist())
+            throw AmiException("Number of initial conditions sensitivities (%d)"
+                               " in model does not match ExpData (%zd).",
+                               model->nx_rdata * model->nplist(),
+                               edata->sx0.size());
+        model->setInitialStateSensitivities(edata->sx0);
+    }
+    
+    if(!edata->parameters.empty()) {
+        if(edata->parameters.size() != (unsigned) model->np())
+            throw AmiException("Number of parameters (%d) in model does not"
+                               " match ExpData (%zd).",
+                               model->np(), edata->parameters.size());
+        model->setParameters(edata->parameters);
+    }
 
     if(!edata->fixedParameters.empty()) {
         // fixed parameter in model are superseded by those provided in edata
         if(edata->fixedParameters.size() != (unsigned) model->nk())
-            throw AmiException("Number of fixed parameters (%d) in model does not match ExpData (%zd).",
+            throw AmiException("Number of fixed parameters (%d) in model does"
+                               " not match ExpData (%zd).",
                                model->nk(), edata->fixedParameters.size());
         model->setFixedParameters(edata->fixedParameters);
     }
@@ -356,6 +385,9 @@ void ConditionContext::applyCondition(const ExpData *edata)
 
 void ConditionContext::restore()
 {
+    model->setInitialStates(originalx0);
+    model->setInitialStateSensitivities(originalsx0);
+    model->setParameters(originalParameters);
     model->setFixedParameters(originalFixedParameters);
     model->setTimepoints(originalTimepoints);
 }
