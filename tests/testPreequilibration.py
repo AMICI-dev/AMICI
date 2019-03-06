@@ -156,14 +156,16 @@ class TestAmiciPreequilibration(unittest.TestCase):
         # set ExpData parameters
         self.edata.parameters = self.model.getParameters()
         # perturb model parameters
-        self.model.setParameters(self.model.getParameters() * 2)
+        self.model.setParameters(tuple(
+            p * 2 for p in self.model.getParameters()
+        ))
 
         self.edata.x0 = rdata['x_ss']
-        self.edata.sx0 = rdata['sx_ss']
+        self.edata.sx0 = rdata['sx_ss'].flatten()
 
         # perturb model initial states
         self.model.setInitialStates(rdata['x_ss'] * 4)
-        self.model.setInitialStateSensitivities(rdata['sx_ss'] / 2)
+        self.model.setInitialStateSensitivities(rdata['sx_ss'].flatten() / 2)
 
         rdata_edata = amici.runAmiciSimulation(
             self.model, self.solver, self.edata
