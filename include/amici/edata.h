@@ -387,7 +387,7 @@ class ExpData {
      */
     std::vector<realtype> x0;
     /** @brief condition-specific initial condition sensitivities of size
-     * Model::nx()*Model::nplist() or empty
+     * Model::nx() * Model::nplist() or empty
      */
     std::vector<realtype> sx0;
 
