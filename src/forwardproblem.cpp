@@ -172,13 +172,14 @@ void ForwardProblem::handlePreequilibration()
         model->setFixedParameters(originalFixedParameters);
     }
 
-    updateAndReinitStatesAndSensitivities();
+    updateAndReinitStatesAndSensitivities(true);
 }
 
 
-void ForwardProblem::updateAndReinitStatesAndSensitivities() {
+void ForwardProblem::updateAndReinitStatesAndSensitivities(bool isSteadystate) {
 
-    rdata->x_ss = std::move(x_rdata.getVector());
+    if (isSteadystate)
+        rdata->x_ss = std::move(x_rdata.getVector());
 
     model->fx0_fixedParameters(&x);
     solver->reInit(t, &x, &dx);
@@ -186,9 +187,10 @@ void ForwardProblem::updateAndReinitStatesAndSensitivities() {
 
     rdata->x0 = std::move(x_rdata.getVector());
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
-        for (int ip = 0; ip < model->nplist(); ip++)
-            std::copy_n(sx_rdata.data(ip), rdata->nx,
-                        &rdata->sx_ss.at(ip * rdata->nx));
+        if (isSteadystate)
+            for (int ip = 0; ip < model->nplist(); ip++)
+                std::copy_n(sx_rdata.data(ip), rdata->nx,
+                            &rdata->sx_ss.at(ip * rdata->nx));
 
         model->fsx0_fixedParameters(&sx, &x);
         model->fsx_rdata(&sx_rdata, &sx);
@@ -218,7 +220,7 @@ void ForwardProblem::handlePresimulation(int *ncheck)
         model->setFixedParameters(edata->fixedParametersPresimulation);
     }
     t = model->t0() - edata->t_presim;
-    updateAndReinitStatesAndSensitivities();
+    updateAndReinitStatesAndSensitivities(false);
 
     if (solver->getSensitivityMethod() == SensitivityMethod::adjoint &&
         solver->getSensitivityOrder() >= SensitivityOrder::first) {
@@ -233,7 +235,7 @@ void ForwardProblem::handlePresimulation(int *ncheck)
         model->setFixedParameters(originalFixedParameters);
     }
     t = model->t0();
-    updateAndReinitStatesAndSensitivities();
+    updateAndReinitStatesAndSensitivities(false);
 }
 
 
