@@ -79,7 +79,8 @@ class ExpData {
     explicit ExpData(const Model &model);
 
     /**
-     * @brief constructor that initializes with returnData, adds
+     * @brief constructor that initializes with returnData, adds noise
+     * according to specified sigmas
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y scalar standard deviations for all observables
@@ -88,7 +89,8 @@ class ExpData {
     ExpData(const ReturnData &rdata, realtype sigma_y, realtype sigma_z);
 
     /**
-     * @brief constructor that initializes with returnData, adds
+     * @brief constructor that initializes with returnData, adds noise
+     * according to specified sigmas
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y vector of standard deviations for observables (dimension:

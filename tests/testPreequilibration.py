@@ -148,7 +148,7 @@ class TestAmiciPreequilibration(unittest.TestCase):
                         1e-6, 1e-6
                     ).all())
 
-    def test_parameter_in_ExpData(self):
+    def test_parameter_in_expdata(self):
         rdata = amici.runAmiciSimulation(
             self.model, self.solver, self.edata
         )
