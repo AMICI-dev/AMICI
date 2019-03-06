@@ -18,7 +18,7 @@ class ExpData {
     /** @brief default constructor */
     ExpData();
 
-    /** @brief default copy constructor, needs to be declared to be generated in
+    /** @brief Copy constructor, needs to be declared to be generated in
      * swig*/
     ExpData(const ExpData &) = default;
 
