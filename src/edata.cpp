@@ -386,7 +386,7 @@ void ConditionContext::applyCondition(const ExpData *edata)
 void ConditionContext::restore()
 {
     model->setInitialStates(originalx0);
-    model->setInitialStateSensitivities(originalsx0);
+    model->setUnscaledInitialStateSensitivities(originalsx0);
     model->setParameters(originalParameters);
     model->setFixedParameters(originalFixedParameters);
     model->setTimepoints(originalTimepoints);
