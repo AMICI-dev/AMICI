@@ -153,6 +153,23 @@ class TestAmiciPreequilibration(unittest.TestCase):
             self.model, self.solver, self.edata
         )
 
+        # set ExpData plist
+        self.edata.plist = self.model.getParameterList()
+        # perturb model parameter list
+        self.model.setParameterList([
+            i for i in reversed(self.model.getParameterList())
+        ])
+
+        # set ExpData pscale
+        self.edata.pscale = self.model.getParameterScale()
+        # perturb model pscale
+        self.model.setParameterScale(amici.parameterScalingFromIntVector([
+            amici.ParameterScaling_log10
+            if scaling == amici.ParameterScaling_none
+            else amici.ParameterScaling_none
+            for scaling in self.model.getParameterScale()
+        ]))
+
         # set ExpData parameters
         self.edata.parameters = self.model.getParameters()
         # perturb model parameters
