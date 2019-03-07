@@ -404,7 +404,7 @@ void ConditionContext::restore()
 {
     // parameter list has to be set before initial state sensitivities
     model->setParameterList(originalParameterList);
-    // parameter scale has to be done befor initial state sensitivities
+    // parameter scale has to be set before initial state sensitivities
     model->setParameterScale(originalScaling);
     model->setInitialStates(originalx0);
     model->setUnscaledInitialStateSensitivities(originalsx0);
