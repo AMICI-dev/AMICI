@@ -345,7 +345,7 @@ void ConditionContext::applyCondition(const ExpData *edata)
     if(!edata)
         return;
     
-    // this needs to go first, otherwise nplist will not have the right the
+    // this needs to go first, otherwise nplist will not have the```
     // right dimension for all other fields that depend on model::nplist
     if(!edata->plist.empty())
         model->setParameterList(edata->plist);
