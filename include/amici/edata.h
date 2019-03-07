@@ -387,11 +387,11 @@ class ExpData {
      */
     std::vector<realtype> x0;
     /** @brief condition-specific initial condition sensitivities of size
-     * Model::nx() * Model::nplist() or empty
+     * Model::nx() * Model::nplist(), Model::nx() * ExpDataplist.size(), if
+     * ExpData::plist is not empty, or empty
      */
     std::vector<realtype> sx0;
-    /** @brief condition-specific parameter scales of size Model::nplist()
-     * or ExpData::plist.size() if plist is not empty
+    /** @brief condition-specific parameter scales of size Model::np()
      */
     std::vector<ParameterScaling> pscale;
     /** @brief condition-specific parameter list */
