@@ -328,7 +328,9 @@ ConditionContext::ConditionContext(Model *model, const ExpData *edata)
       originalsx0(model->getInitialStateSensitivities()),
       originalParameters(model->getParameters()),
       originalFixedParameters(model->getFixedParameters()),
-      originalTimepoints(model->getTimepoints())
+      originalTimepoints(model->getTimepoints()),
+      originalParameterList(model->getParameterList()),
+      originalScaling(model->getParameterScale())
 {
     applyCondition(edata);
 }
@@ -342,6 +344,21 @@ void ConditionContext::applyCondition(const ExpData *edata)
 {
     if(!edata)
         return;
+    
+    // this needs to go first, otherwise nplist will not have the right
+    // dimension for all other fields that depend on Model::nplist
+    if(!edata->plist.empty())
+        model->setParameterList(edata->plist);
+    
+    // this needs to go second as setParameterScale will reset sx0
+    if(!edata->pscale.empty()) {
+        if(edata->pscale.size() != (unsigned) model->np())
+            throw AmiException("Number of parameters (%d) in model does not"
+                               " match ExpData (%zd).",
+                               model->np(), edata->pscale.size());
+        model->setParameterScale(edata->pscale);
+        
+    }
     
     if(!edata->x0.empty()) {
         if(edata->x0.size() != (unsigned) model->nx_rdata)
@@ -367,7 +384,7 @@ void ConditionContext::applyCondition(const ExpData *edata)
                                model->np(), edata->parameters.size());
         model->setParameters(edata->parameters);
     }
-
+    
     if(!edata->fixedParameters.empty()) {
         // fixed parameter in model are superseded by those provided in edata
         if(edata->fixedParameters.size() != (unsigned) model->nk())
@@ -385,11 +402,16 @@ void ConditionContext::applyCondition(const ExpData *edata)
 
 void ConditionContext::restore()
 {
+    // parameter list has to be set before initial state sensitivities
+    model->setParameterList(originalParameterList);
+    // parameter scale has to be set before initial state sensitivities
+    model->setParameterScale(originalScaling);
     model->setInitialStates(originalx0);
     model->setUnscaledInitialStateSensitivities(originalsx0);
     model->setParameters(originalParameters);
     model->setFixedParameters(originalFixedParameters);
     model->setTimepoints(originalTimepoints);
+    
 }
 
 

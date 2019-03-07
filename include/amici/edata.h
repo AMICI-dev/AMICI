@@ -387,10 +387,16 @@ class ExpData {
      */
     std::vector<realtype> x0;
     /** @brief condition-specific initial condition sensitivities of size
-     * Model::nx() * Model::nplist() or empty
+     * Model::nx() * Model::nplist(), Model::nx() * ExpDataplist.size(), if
+     * ExpData::plist is not empty, or empty
      */
     std::vector<realtype> sx0;
-
+    /** @brief condition-specific parameter scales of size Model::np()
+     */
+    std::vector<ParameterScaling> pscale;
+    /** @brief condition-specific parameter list */
+    std::vector<int> plist;
+    
     /**
      * @brief duration of pre-simulation
      * if this is > 0, presimualation will be performed from
@@ -518,6 +524,9 @@ class ConditionContext {
     std::vector<realtype> originalParameters;
     std::vector<realtype> originalFixedParameters;
     std::vector<realtype> originalTimepoints;
+    std::vector<int> originalParameterList;
+    std::vector<amici::ParameterScaling> originalScaling;
+    
 };
 
 } // namespace amici

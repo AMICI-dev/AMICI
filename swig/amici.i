@@ -52,6 +52,8 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %naturalvar amici::ExpData::x0;
 %naturalvar amici::ExpData::sx0;
 %naturalvar amici::ExpData::parameters;
+%naturalvar amici::ExpData::pscale;
+%naturalvar amici::ExpData::plist;
 %naturalvar amici::ExpData::fixedParameters;
 %naturalvar amici::ExpData::fixedParametersPreequilibration;
 %naturalvar amici::ExpData::fixedParametersPresimulation;
