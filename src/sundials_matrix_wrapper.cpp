@@ -105,7 +105,7 @@ realtype *SUNMatrixWrapper::data() const {
 sunindextype SUNMatrixWrapper::rows() const {
     if (!matrix)
         return 0;
-    
+
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         return SM_ROWS_D(matrix);
@@ -116,13 +116,15 @@ sunindextype SUNMatrixWrapper::rows() const {
     case SUNMATRIX_CUSTOM:
         throw std::domain_error("Amici currently does not support custom matrix"
                                 " types.");
+    default:
+        throw std::domain_error("Invalid SUNMatrix type.");
     }
 }
 
 sunindextype SUNMatrixWrapper::columns() const {
     if (!matrix)
         return 0;
-    
+
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         return SM_COLUMNS_D(matrix);
@@ -133,13 +135,15 @@ sunindextype SUNMatrixWrapper::columns() const {
     case SUNMATRIX_CUSTOM:
         throw std::domain_error("Amici currently does not support custom matrix"
                                 " types.");
+    default:
+        throw std::domain_error("Invalid SUNMatrix type.");
     }
 }
 
 sunindextype *SUNMatrixWrapper::indexvals() const {
     if (!matrix)
         return nullptr;
-    
+
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_SPARSE:
         return SM_INDEXVALS_S(matrix);
@@ -151,7 +155,7 @@ sunindextype *SUNMatrixWrapper::indexvals() const {
 sunindextype *SUNMatrixWrapper::indexptrs() const {
     if (!matrix)
         return nullptr;
-    
+
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_SPARSE:
         return SM_INDEXPTRS_S(matrix);
@@ -166,7 +170,7 @@ int SUNMatrixWrapper::sparsetype() const {
     else
         throw std::domain_error("Function only available for sparse matrices");
 }
-    
+
 void SUNMatrixWrapper::reset() {
     if (matrix)
         SUNMatZero(matrix);
@@ -200,7 +204,7 @@ void SUNMatrixWrapper::multiply(N_Vector c, const N_Vector b) const {
 void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
     if (!matrix)
         return;
-    
+
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans, rows(),
