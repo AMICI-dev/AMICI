@@ -37,6 +37,34 @@ class my_install(install):
         install.run(self)
 
 
+def compile_parallel(self, sources, output_dir=None, macros=None,
+            include_dirs=None, debug=0, extra_preargs=None,
+            extra_postargs=None, depends=None):
+    """Parallelized version of distutils.ccompiler.compile"""
+    macros, objects, extra_postargs, pp_opts, build = \
+        self._setup_compile(output_dir, macros, include_dirs, sources,
+                            depends, extra_postargs)
+    cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+
+    # parallel compilation
+    num_threads = os.cpu_count()
+
+    import multiprocessing.pool
+
+    def _single_compile(obj):
+        try:
+            src, ext = build[obj]
+        except KeyError:
+            return
+        self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
+
+    # convert to list, imap is evaluated on-demand
+    list(multiprocessing.pool.ThreadPool(num_threads).imap(
+        _single_compile, objects))
+
+    return objects
+
+
 class my_build_clib(build_clib):
     """Custom build_clib"""
 
@@ -46,6 +74,10 @@ class my_build_clib(build_clib):
 
         if no_clibs:
             return
+
+        # Override for parallel compilation
+        import distutils.ccompiler
+        distutils.ccompiler.CCompiler.compile = compile_parallel
 
         build_clib.build_libraries(self, libraries)
 
