@@ -1163,7 +1163,9 @@ class ODEModel:
         if name in self._variable_prototype:
             component = self._variable_prototype[name]
             self._syms[name] = sp.Matrix([
-                comp.get_id()
+                sp.Symbol(comp.get_name())  # fix for energy expressions
+                if comp.get_name().startswith('_')
+                else comp.get_id()
                 for comp in getattr(self, component)
             ])
             if name == 'y':
