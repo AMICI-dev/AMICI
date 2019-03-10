@@ -232,9 +232,9 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
 
 #define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                               \
     if (!s##QUANT.empty())                                                        \
-        for (int (IND1) = 0; (IND1) < (N1T); ++(IND1))                                  \
+        for (int IND1 = 0; (IND1) < (N1T); ++(IND1))                                  \
             for (int ip = 0; ip < nplist; ++ip)                                 \
-                for (int (IND2) = 0; (IND2) < (N2); ++(IND2)) {                         \
+                for (int IND2 = 0; (IND2) < (N2); ++(IND2)) {                         \
                     s##QUANT.at(((IND2)*nplist + ip)*(N1) + (IND1)) *=                \
                         pcoefficient.at(ip);                                    \
                 }
