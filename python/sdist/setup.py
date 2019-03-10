@@ -198,7 +198,7 @@ def main():
         },
         test_suite="tests",
         classifiers=[
-            'Development Status :: 3 - Alpha',
+            'Development Status :: 5 - Production/Stable',
             'Intended Audience :: Science/Research',
             'License :: OSI Approved :: BSD License',
             'Operating System :: POSIX :: Linux',
