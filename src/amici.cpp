@@ -149,6 +149,8 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
         auto myModel = std::unique_ptr<Model>(model.clone());
 
         results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+        if (results[i]->status < 0)
+            return results;
     }
 
     return results;
