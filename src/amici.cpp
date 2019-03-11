@@ -132,6 +132,7 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
 std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solver,
                                                               const std::vector<ExpData*> &edatas,
                                                               const Model &model,
+                                                              const bool failfast,
 #if defined(_OPENMP)
                                                               int num_threads
 #else
@@ -149,7 +150,7 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
         auto myModel = std::unique_ptr<Model>(model.clone());
 
         results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
-        if (results[i]->status < 0)
+        if (results[i]->status < 0 && failfast)
             return results;
     }
 
