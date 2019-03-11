@@ -16,18 +16,26 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
 
     if (NNZ && !matrix)
         throw std::bad_alloc();
+        
+    data_ptr = SM_DATA_S(matrix);
+    indexptrs_ptr = SM_INDEXPTRS_S(matrix);
+    indexvals_ptr = SM_INDEXVALS_S(matrix);
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int N)
     : matrix(SUNDenseMatrix(M, N)) {
     if (M && N && !matrix)
         throw std::bad_alloc();
+        
+    data_ptr = SM_DATA_D(matrix);
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int ubw, int lbw)
     : matrix(SUNBandMatrix(M, ubw, lbw)) {
     if (M && !matrix)
         throw std::bad_alloc();
+    
+    data_ptr = SM_DATA_B(matrix);
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
@@ -50,6 +58,10 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
 
     if (!matrix)
         throw std::bad_alloc();
+    
+    data_ptr = SM_DATA_S(matrix);
+    indexptrs_ptr = SM_INDEXPTRS_S(matrix);
+    indexvals_ptr = SM_INDEXVALS_S(matrix);
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix(mat) {}
@@ -57,6 +69,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix(mat) {}
 SUNMatrixWrapper::~SUNMatrixWrapper() {
     if (matrix)
         SUNMatDestroy(matrix);
+    data_ptr = nullptr;
+    indexptrs_ptr = nullptr;
+    indexvals_ptr = nullptr;
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other) {
@@ -68,10 +83,16 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other) {
         throw std::bad_alloc();
 
     SUNMatCopy(other.matrix, matrix);
+    data_ptr = other.data_ptr;
+    indexptrs_ptr = other.indexptrs_ptr;
+    indexvals_ptr = other.indexvals_ptr;
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept {
     std::swap(matrix, other.matrix);
+    data_ptr = other.data_ptr;
+    indexptrs_ptr = other.indexptrs_ptr;
+    indexvals_ptr = other.indexvals_ptr;
 }
 
 SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
@@ -81,25 +102,14 @@ SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
 SUNMatrixWrapper &SUNMatrixWrapper::
 operator=(SUNMatrixWrapper &&other) noexcept {
     std::swap(matrix, other.matrix);
+    data_ptr = other.data_ptr;
+    indexptrs_ptr = other.indexptrs_ptr;
+    indexvals_ptr = other.indexvals_ptr;
     return *this;
 }
 
 realtype *SUNMatrixWrapper::data() const {
-    if (!matrix)
-        return nullptr;
-
-    switch (SUNMatGetID(matrix)) {
-    case SUNMATRIX_DENSE:
-        return SM_DATA_D(matrix);
-    case SUNMATRIX_SPARSE:
-        return SM_DATA_S(matrix);
-    case SUNMATRIX_BAND:
-        return SM_DATA_B(matrix);
-    case SUNMATRIX_CUSTOM:
-        throw std::domain_error("Amici currently does not support custom matrix"
-                                " types.");
-    }
-    return nullptr; // -Wreturn-type
+    return data_ptr;
 }
 
 sunindextype SUNMatrixWrapper::rows() const {
@@ -141,27 +151,17 @@ sunindextype SUNMatrixWrapper::columns() const {
 }
 
 sunindextype *SUNMatrixWrapper::indexvals() const {
-    if (!matrix)
-        return nullptr;
-
-    switch (SUNMatGetID(matrix)) {
-    case SUNMATRIX_SPARSE:
-        return SM_INDEXVALS_S(matrix);
-    default:
+    if(!indexvals_ptr)
         throw std::domain_error("Function only available for sparse matrices");
-    }
+        
+    return indexvals_ptr;
 }
 
 sunindextype *SUNMatrixWrapper::indexptrs() const {
-    if (!matrix)
-        return nullptr;
-
-    switch (SUNMatGetID(matrix)) {
-    case SUNMATRIX_SPARSE:
-        return SM_INDEXPTRS_S(matrix);
-    default:
+    if(!indexptrs_ptr)
         throw std::domain_error("Function only available for sparse matrices");
-    }
+    
+    return indexptrs_ptr;
 }
 
 int SUNMatrixWrapper::sparsetype() const {
