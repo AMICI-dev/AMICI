@@ -69,9 +69,6 @@ SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix(mat) {}
 SUNMatrixWrapper::~SUNMatrixWrapper() {
     if (matrix)
         SUNMatDestroy(matrix);
-    data_ptr = nullptr;
-    indexptrs_ptr = nullptr;
-    indexvals_ptr = nullptr;
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other) {
