@@ -691,6 +691,9 @@ class ODEModel:
         _syms: carries symbolic identifiers of the symbolic variables of the
         model  @type dict
 
+        _strippedsyms: carries symbolic identifiers that were stripped of
+        additional class information @type dict
+
         _sparsesyms: carries linear list of all symbolic identifiers for
         sparsified variables  @type dict
 
@@ -759,6 +762,7 @@ class ODEModel:
         self._vals = dict()
         self._names = dict()
         self._syms = dict()
+        self._strippedsyms = dict()
         self._sparsesyms = dict()
         self._colptrs = dict()
         self._rowvals = dict()
@@ -913,7 +917,7 @@ class ODEModel:
         state_id = self._states[ix].get_id()
 
         self.add_component(
-            Expression(state_id, f'cl_{state_id}', state_expr)
+            Expression(state_id, str(state_id), state_expr)
         )
 
         self.add_component(
@@ -1004,22 +1008,31 @@ class ODEModel:
         """
         return len(self.sym('p'))
 
-    def sym(self, name):
+    def sym(self, name, stripped=False):
         """Returns (and constructs if necessary) the identifiers for a symbolic
         entity.
 
         Arguments:
             name: name of the symbolic variable @type str
+            stripped: (optional) should additional class information be
+            stripped from the symbolic variables? @type bool
 
         Returns:
         containing the symbolic identifiers @type symengine.DenseMatrix
 
         Raises:
-
+        ValueError if stripped symbols not available
         """
         if name not in self._syms:
             self._generateSymbol(name)
-        return self._syms[name]
+
+        if stripped:
+            if name not in self._variable_prototype:
+                raise ValueError('Stripped symbols only available for '
+                                 'variables from variable prototypes')
+            return self._strippedsyms[name]
+        else:
+            return self._syms[name]
 
     def sparsesym(self, name):
         """Returns (and constructs if necessary) the sparsified identifiers for
@@ -1164,6 +1177,10 @@ class ODEModel:
             component = self._variable_prototype[name]
             self._syms[name] = sp.Matrix([
                 comp.get_id()
+                for comp in getattr(self, component)
+            ])
+            self._strippedsyms[name] = sp.Matrix([
+                sp.Symbol(comp.get_name())
                 for comp in getattr(self, component)
             ])
             if name == 'y':
@@ -1486,13 +1503,26 @@ class ODEModel:
             self._lock_total_derivative = False
             return
 
+        # this is the basic requirement check
+        needs_stripped_symbols = eq == 'xdot' and var != 'x'
+
         # partial derivative
         if eq == 'Jy':
             eq = self.eq(eq).transpose()
         else:
             eq = self.eq(eq)
 
-        sym_var = self.sym(var)
+        if pysb is not None and needs_stripped_symbols:
+            needs_stripped_symbols = not any(
+                isinstance(sym, pysb.Component)
+                for sym in eq.free_symbols
+            )
+
+        # now check whether we are working with energy_modeling branch
+        # where pysb class info is already stripped
+        # TODO: fixme as soon as energy_modeling made it to the main pysb
+        #  branch
+        sym_var = self.sym(var, needs_stripped_symbols)
 
         if min(eq.shape) and min(sym_var.shape) \
                 and eq.is_zero is not True and sym_var.is_zero is not True:
