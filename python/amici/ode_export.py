@@ -917,7 +917,7 @@ class ODEModel:
         state_id = self._states[ix].get_id()
 
         self.add_component(
-            Expression(state_id, f'cl_{state_id}', state_expr)
+            Expression(state_id, str(state_id), state_expr)
         )
 
         self.add_component(
