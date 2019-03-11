@@ -1037,7 +1037,7 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
         // get dydp slice (ny) for current time and parameter
         if (wasPythonGenerated() && nw)
             dwdp_tmp = &dwdp.at(nw * ip);
-        
+
         fdydp(&dydp.at(ip*ny),
               t,
               x->data(),
@@ -1441,11 +1441,11 @@ void Model::fdwdp(const realtype t, const realtype *x) {
     std::fill(dwdp.begin(), dwdp.end(), 0.0);
     if (wasPythonGenerated()) {
         realtype *stcl = nullptr;
-        
+
         // avoid bad memory access when slicing
         if (nw == 0)
             return;
-        
+
         for (int ip = 0; ip < nplist(); ++ip) {
             if (ncl() > 0)
                 stcl = &stotal_cl.at(plist(ip) * ncl());
@@ -1635,7 +1635,7 @@ bool operator ==(const Model &a, const Model &b)
             && (a.nw == b.nw)
             && (a.ndwdx == b.ndwdx)
             && (a.ndwdp == b.ndwdp)
-            && (a.ndxdotdw == a.ndxdotdw)
+            && (a.ndxdotdw == b.ndxdotdw)
             && (a.nnz == b.nnz)
             && (a.nJ == b.nJ)
             && (a.ubw == b.ubw)
