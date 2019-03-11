@@ -87,6 +87,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &const_cast<int &>(u.nw);
     ar &const_cast<int &>(u.ndwdx);
     ar &const_cast<int &>(u.ndwdp);
+    ar &const_cast<int &>(u.ndxdotdw);
     ar &const_cast<int &>(u.nnz);
     ar &const_cast<int &>(u.nJ);
     ar &const_cast<int &>(u.ubw);
