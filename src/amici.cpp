@@ -141,17 +141,22 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
 )
 {
     std::vector<std::unique_ptr<ReturnData> > results(edatas.size());
+    bool failed = false;
 
 #if defined(_OPENMP)
     #pragma omp parallel for num_threads(num_threads)
 #endif
     for(int i = 0; i < (int)edatas.size(); ++i) {
+        if(failed)
+            continue;
+        
         auto mySolver = std::unique_ptr<Solver>(solver.clone());
         auto myModel = std::unique_ptr<Model>(model.clone());
-
+            
         results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+        
         if (results[i]->status < 0 && failfast)
-            return results;
+            failed = true;
     }
 
     return results;
