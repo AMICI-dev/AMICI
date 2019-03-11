@@ -47,9 +47,11 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
 
     # parallel compilation
-    num_threads = os.cpu_count()
-
-    import multiprocessing.pool
+    num_threads = 1
+    if 'AMICI_PARALLEL_COMPILE' in os.environ:
+        max_threads = int(os.environ['AMICI_PARALLEL_COMPILE'])
+        num_threads = min(len(objects), max_threads)
+        num_threads = max(1, num_threads)
 
     def _single_compile(obj):
         try:
@@ -58,9 +60,14 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
             return
         self._compile(obj, src, ext, cc_args, extra_postargs, pp_opts)
 
-    # convert to list, imap is evaluated on-demand
-    list(multiprocessing.pool.ThreadPool(num_threads).imap(
-        _single_compile, objects))
+    if num_threads > 1:
+        import multiprocessing.pool
+        # convert to list, imap is evaluated on-demand
+        list(multiprocessing.pool.ThreadPool(num_threads).imap(
+            _single_compile, objects))
+    else:
+        for obj in objects:
+            _single_compile(obj)
 
     return objects
 
