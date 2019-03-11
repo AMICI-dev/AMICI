@@ -38,12 +38,14 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
  * @param solver Solver instance
  * @param edatas experimental data objects
  * @param model model specification object
+ * @param failfast flag to allow early termination
  * @param num_threads number of threads for parallel execution
  * @return vector of pointers to return data objects
  */
 std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(Solver const& solver,
                                                              const std::vector<ExpData *> &edatas,
                                                              Model const& model,
+                                                             const bool failfast,
                                                              int num_threads);
 
 } // namespace amici

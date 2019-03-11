@@ -153,13 +153,15 @@ def ExpData(*args):
         return amici.ExpData(*args)
 
 
-def runAmiciSimulations(model, solver, edata_list, num_threads=1):
+def runAmiciSimulations(model, solver, edata_list, failfast=True,
+                        num_threads=1):
     """ Convenience wrapper for loops of amici.runAmiciSimulation
 
     Arguments:
         model: Model instance
         solver: Solver instance, must be generated from Model.getSolver()
         edata_list: list of ExpData instances
+        failfast: returns as soon as an integration failure is encountered
         num_threads: number of threads to use
                      (only used if compiled with openmp)
 
@@ -174,5 +176,6 @@ def runAmiciSimulations(model, solver, edata_list, num_threads=1):
         rdata_ptr_list = amici.runAmiciSimulations(solver.get(),
                                                    edata_ptr_vector,
                                                    model.get(),
+                                                   failfast,
                                                    num_threads)
     return [numpy.rdataToNumPyArrays(r) for r in rdata_ptr_list]
