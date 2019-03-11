@@ -793,7 +793,6 @@ def _greedy_target_index_update(cl_prototypes):
         # with the highest diff_fillin (note that the target index counts
         # are recomputed on the fly)
 
-
         if prototype['diff_fillin'] > -1 \
                 and (
                     get_target_indices(cl_prototypes).count(

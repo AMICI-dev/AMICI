@@ -1503,7 +1503,8 @@ class ODEModel:
             self._lock_total_derivative = False
             return
 
-        stripped = eq == 'xdot' and var != 'x'
+        # this is the basic requirement check
+        needs_stripped_symbols = eq == 'xdot' and var != 'x'
 
         # partial derivative
         if eq == 'Jy':
@@ -1511,7 +1512,17 @@ class ODEModel:
         else:
             eq = self.eq(eq)
 
-        sym_var = self.sym(var, stripped)
+        if pysb is not None and needs_stripped_symbols:
+            needs_stripped_symbols = not any(
+                isinstance(sym, pysb.Component)
+                for sym in eq.free_symbols
+            )
+
+        # now check whether we are working with energy_modeling branch
+        # where pysb class info is already stripped
+        # TODO: fixme as soon as energy_modeling made it to the main pysb
+        #  branch
+        sym_var = self.sym(var, needs_stripped_symbols)
 
         if min(eq.shape) and min(sym_var.shape) \
                 and eq.is_zero is not True and sym_var.is_zero is not True:
