@@ -16,26 +16,28 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
 
     if (NNZ && !matrix)
         throw std::bad_alloc();
-        
-    data_ptr = SM_DATA_S(matrix);
-    indexptrs_ptr = SM_INDEXPTRS_S(matrix);
-    indexvals_ptr = SM_INDEXVALS_S(matrix);
+    
+    if (NNZ) {
+        data_ptr = SM_DATA_S(matrix);
+        indexptrs_ptr = SM_INDEXPTRS_S(matrix);
+        indexvals_ptr = SM_INDEXVALS_S(matrix);
+    }
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int N)
     : matrix(SUNDenseMatrix(M, N)) {
     if (M && N && !matrix)
         throw std::bad_alloc();
-        
-    data_ptr = SM_DATA_D(matrix);
+    if (M && N)
+        data_ptr = SM_DATA_D(matrix);
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int ubw, int lbw)
     : matrix(SUNBandMatrix(M, ubw, lbw)) {
     if (M && !matrix)
         throw std::bad_alloc();
-    
-    data_ptr = SM_DATA_B(matrix);
+    if (M)
+        data_ptr = SM_DATA_B(matrix);
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
@@ -58,10 +60,11 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &A, realtype droptol,
 
     if (!matrix)
         throw std::bad_alloc();
-    
-    data_ptr = SM_DATA_S(matrix);
-    indexptrs_ptr = SM_INDEXPTRS_S(matrix);
-    indexvals_ptr = SM_INDEXVALS_S(matrix);
+    else {
+        data_ptr = SM_DATA_S(matrix);
+        indexptrs_ptr = SM_INDEXPTRS_S(matrix);
+        indexvals_ptr = SM_INDEXVALS_S(matrix);
+    }
 }
 
 SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrix mat) : matrix(mat) {}
@@ -148,16 +151,10 @@ sunindextype SUNMatrixWrapper::columns() const {
 }
 
 sunindextype *SUNMatrixWrapper::indexvals() const {
-    if(!indexvals_ptr)
-        throw std::domain_error("Function only available for sparse matrices");
-        
     return indexvals_ptr;
 }
 
 sunindextype *SUNMatrixWrapper::indexptrs() const {
-    if(!indexptrs_ptr)
-        throw std::domain_error("Function only available for sparse matrices");
-    
     return indexptrs_ptr;
 }
 
