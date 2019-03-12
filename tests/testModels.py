@@ -104,10 +104,18 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                             assert_fun,
                         )
 
+                    if model_name == 'model_steadystate' and \
+                            case == 'sensiforwarderrorint':
+                        edata = amici.amici.ExpData(self.model.get())
+
                     if edata and model_name != 'model_neuron_o2':
                         # Test runAmiciSimulations: ensure running twice
                         # with same ExpData yields same results
-                        edatas = [edata.get(), edata.get()]
+                        if isinstance(edata, amici.amici.ExpData):
+                            edatas = [edata, edata]
+                        else:
+                            edatas = [edata.get(), edata.get()]
+
                         rdatas = amici.runAmiciSimulations(
                             self.model, self.solver, edatas, num_threads=2
                         )

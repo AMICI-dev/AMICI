@@ -150,6 +150,8 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
         auto mySolver = std::unique_ptr<Solver>(solver.clone());
         auto myModel = std::unique_ptr<Model>(model.clone());
 
+        /* if we fail we need to write empty return datas for the python
+         interface */
         if (failed) {
             ConditionContext conditionContext(myModel.get(), edatas[i]);
             results[i] =
