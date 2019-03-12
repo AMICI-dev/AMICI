@@ -97,7 +97,6 @@ def check_derivatives(model, solver, edata, assert_fun,
                                 epsilon=epsilon)
 
 
-
 def check_close(result, expected, assert_fun, atol, rtol, field, ip=None):
     close = np.isclose(result, expected, atol=atol, rtol=rtol, equal_nan=True)
 
