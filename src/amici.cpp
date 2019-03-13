@@ -133,6 +133,7 @@ void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
 std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solver,
                                                               const std::vector<ExpData*> &edatas,
                                                               const Model &model,
+                                                              const bool failfast,
 #if defined(_OPENMP)
                                                               int num_threads
 #else
@@ -141,6 +142,7 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
 )
 {
     std::vector<std::unique_ptr<ReturnData> > results(edatas.size());
+    bool failed = false;
 
 #if defined(_OPENMP)
     #pragma omp parallel for num_threads(num_threads)
@@ -149,7 +151,18 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
         auto mySolver = std::unique_ptr<Solver>(solver.clone());
         auto myModel = std::unique_ptr<Model>(model.clone());
 
+        /* if we fail we need to write empty return datas for the python
+         interface */
+        if (failed) {
+            ConditionContext conditionContext(myModel.get(), edatas[i]);
+            results[i] =
+                std::unique_ptr<ReturnData>(new ReturnData(solver, &model));
+        }
+
         results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
+
+        if (results[i]->status < 0 && failfast)
+            failed = true;
     }
 
     return results;

@@ -6,15 +6,15 @@ import amici
 import unittest
 import importlib
 import os
-import numpy as np
 import copy
+from amici.gradient_check import check_derivatives, check_results
 
 
 class TestAmiciPregeneratedModel(unittest.TestCase):
     """
     TestCase class for tests that were pregenerated using the the matlab code
     generation routines and cmake build routines
-    
+
     NOTE: requires having run `make python-tests` in /build/ before to build
     the python modules for the test models
     """
@@ -104,10 +104,18 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                             assert_fun,
                         )
 
+                    if model_name == 'model_steadystate' and \
+                            case == 'sensiforwarderrorint':
+                        edata = amici.amici.ExpData(self.model.get())
+
                     if edata and model_name != 'model_neuron_o2':
                         # Test runAmiciSimulations: ensure running twice
                         # with same ExpData yields same results
-                        edatas = [edata.get(), edata.get()]
+                        if isinstance(edata, amici.amici.ExpData):
+                            edatas = [edata, edata]
+                        else:
+                            edatas = [edata.get(), edata.get()]
+
                         rdatas = amici.runAmiciSimulations(
                             self.model, self.solver, edatas, num_threads=2
                         )
@@ -129,122 +137,12 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     )
 
 
-def check_close(result, expected, assert_fun, atol, rtol, field, ip=None):
-    close = np.isclose(result, expected, atol=atol, rtol=rtol, equal_nan=True)
-
-    if not close.all():
-        if ip is None:
-            index_str = ''
-            check_type = 'Regression check  '
-        else:
-            index_str = f'at index ip={ip} '
-            check_type = 'FD check '
-        print(f'{check_type} failed for {field} {index_str}for '
-              f'{close.sum()} indices:')
-        adev = np.abs(result - expected)
-        rdev = np.abs((result - expected)/(expected + atol))
-        print(f'max(adev): {adev.max()}, max(rdev): {rdev.max()}')
-
-    assert_fun(close.all())
-
-
-def check_finite_difference(x0, model, solver, edata, ip, fields,
-                            assert_fun, atol=1e-4, rtol=1e-4, epsilon=1e-3):
-    old_sensitivity_order = solver.getSensitivityOrder()
-    old_parameters = model.getParameters()
-    old_plist = model.getParameterList()
-
-    # sensitivity
-    p = copy.deepcopy(x0)
-    plist = [ip]
-
-    model.setParameters(p)
-    model.setParameterList(plist)
-    rdata = amici.runAmiciSimulation(model, solver, edata)
-
-    # finite difference
-    solver.setSensitivityOrder(amici.SensitivityOrder_none)
-
-    # forward:
-    p = copy.deepcopy(x0)
-    p[ip] += epsilon/2
-    model.setParameters(p)
-    rdataf = amici.runAmiciSimulation(model, solver, edata)
-
-    # backward:
-    p = copy.deepcopy(x0)
-    p[ip] -= epsilon/2
-    model.setParameters(p)
-    rdatab = amici.runAmiciSimulation(model, solver, edata)
-
-    for field in fields:
-        sensi_raw = rdata[f's{field}']
-        fd = (rdataf[field]-rdatab[field])/epsilon
-        if len(sensi_raw.shape) == 1:
-            sensi = sensi_raw[0]
-        elif len(sensi_raw.shape) == 2:
-            sensi = sensi_raw[:, 0]
-        elif len(sensi_raw.shape) == 3:
-            sensi = sensi_raw[:, 0, :]
-        else:
-            assert_fun(False)  # not implemented
-
-        check_close(sensi, fd, assert_fun, atol, rtol, field, ip=ip)
-
-    solver.setSensitivityOrder(old_sensitivity_order)
-    model.setParameters(old_parameters)
-    model.setParameterList(old_plist)
-
-
-def check_derivatives(model, solver, edata, assert_fun,
-                      atol=1e-4, rtol=1e-4, epsilon=1e-3):
-    """Finite differences check for likelihood gradient
-
-    Arguments:
-        model: amici model
-        solver: amici solver
-        edata: exp data
-        atol: absolute tolerance
-        rtol: relative tolerance
-        epsilon: finite difference step-size
-    """
-    p = np.array(model.getParameters())
-
-    rdata = amici.runAmiciSimulation(model, solver, edata)
-
-    fields = ['llh']
-
-    leastsquares_applicable = \
-        solver.getSensitivityMethod() == amici.SensitivityMethod_forward
-
-    if 'ssigmay' in rdata.keys():
-        if rdata['ssigmay'] is not None:
-            if rdata['ssigmay'].any():
-                leastsquares_applicable = False
-
-    if leastsquares_applicable:
-        fields += ['res', 'x', 'y']
-
-        check_results(rdata, 'FIM',
-                      np.dot(rdata['sres'].transpose(), rdata['sres']),
-                      assert_fun,
-                      1e-8, 1e-4)
-        check_results(rdata, 'sllh',
-                      -np.dot(rdata['res'].transpose(), rdata['sres']),
-                      assert_fun,
-                      1e-8, 1e-4)
-    for ip in range(len(p)):
-        check_finite_difference(p, model, solver, edata, ip, fields,
-                                assert_fun, atol=atol, rtol=rtol,
-                                epsilon=epsilon)
-
-
 def verify_simulation_results(rdata, expected_results, assert_fun,
                               atol=1e-8, rtol=1e-4):
     """
     compares all fields of the simulation results in rdata against the
     expectedResults using the provided tolerances
-    
+
     Arguments:
         rdata: simulation results as returned by amici.runAmiciSimulation
         expected_results: stored test results
@@ -273,26 +171,6 @@ def verify_simulation_results(rdata, expected_results, assert_fun,
     for attr in expected_results.attrs.keys():
         check_results(rdata, attr, expected_results.attrs[attr], assert_fun,
                       atol, rtol)
-
-
-def check_results(rdata, field, expected, assert_fun, atol, rtol):
-    """
-    checks whether rdata[field] agrees with expected according to provided
-    tolerances
-    
-    Arguments:
-        rdata: simulation results as returned by amici.runAmiciSimulation
-        field: name of the field to check
-        expected: expected test results 
-        atol: absolute tolerance
-        rtol: relative tolerance
-    """
-
-    result = rdata[field]
-    if type(result) is float:
-        result = np.array(result)
-
-    check_close(result, expected, assert_fun, atol, rtol, field)
 
 
 if __name__ == '__main__':

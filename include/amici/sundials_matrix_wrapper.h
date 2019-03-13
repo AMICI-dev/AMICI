@@ -159,7 +159,12 @@ class SUNMatrixWrapper {
     void multiply(realtype *c, const realtype *b) const;
 
   private:
+    void update_ptrs();
+    
     SUNMatrix matrix = nullptr;
+    realtype *data_ptr = nullptr;
+    sunindextype *indexptrs_ptr = nullptr;
+    sunindextype *indexvals_ptr = nullptr;
 };
 
 } // namespace amici

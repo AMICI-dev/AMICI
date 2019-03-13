@@ -176,7 +176,7 @@ class ForwardProblem {
      */
     void handlePreequilibration();
 
-    void updateAndReinitStatesAndSensitivities();
+    void updateAndReinitStatesAndSensitivities(bool isSteadystate);
 
     void handlePresimulation();
 
