@@ -124,9 +124,9 @@ after_failure:
 
 # cache dependencies
 cache:
-  - pip
   directories:
     - $HOME/Library/Caches/Homebrew
+    - $HOME/.cache/pip
     
 before_cache:
   - brew cleanup
