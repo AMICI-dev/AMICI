@@ -50,7 +50,6 @@ matrix:
       env:
         - CI_MODE=test
       before_install:
-        - brew update # without this homebrew can stumble over wrong ruby version
         - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - travis_wait brew install hdf5 swig # cppcheck
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
