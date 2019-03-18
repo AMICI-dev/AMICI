@@ -78,9 +78,9 @@ class SbmlImporter:
 
     def __init__(
             self,
-            sbml_source: str,
-            show_sbml_warnings: bool = False,
-            from_file: bool = True):
+            sbml_source,
+            show_sbml_warnings = False,
+            from_file = True):
         """Create a new Model instance.
 
         Arguments:
