@@ -126,6 +126,7 @@ after_failure:
 cache:
   directories:
     - $HOME/Library/Caches/Homebrew
+    - $HOME/Library/Caches/pip
     - $HOME/.cache/pip
   timeout: 1200
     
