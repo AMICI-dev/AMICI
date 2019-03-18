@@ -127,6 +127,7 @@ cache:
   directories:
     - $HOME/Library/Caches/Homebrew
     - $HOME/.cache/pip
+  timeout: 1200
     
 before_cache:
   - brew cleanup
