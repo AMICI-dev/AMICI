@@ -170,7 +170,7 @@ class SbmlImporter:
                    observables = None,
                    constantParameters = None,
                    sigmas = None,
-                   costs = None,
+                   noise_distributions = None,
                    verbose = False,
                    assume_pow_positivity = False,
                    compiler = None,
@@ -194,7 +194,7 @@ class SbmlImporter:
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
                 @type dict
 
-            costs: dictionary(observableId: cost function type). If nothing is passed
+            noise_distributions: dictionary(observableId: noise type). If nothing is passed
                 for some observable id, a normal model is assumed as default.
                 @type dict
 
@@ -764,7 +764,7 @@ class SbmlImporter:
 
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
 
-    def processObservables(self, observables, sigmas, costs):
+    def processObservables(self, observables, sigmas, noise_distributions):
         """Perform symbolic computations required for objective function
         evaluation.
 
@@ -776,7 +776,7 @@ class SbmlImporter:
             sigmas: dictionary(observableId: sigma value or (existing)
             parameter name) @type dict
 
-            costs: dictionary(observableId: cost type) @type dict
+            noise_distributions: dictionary(observableId: noise type) @type dict
 
             llhs: dictionary(observableId: llh_string)
             Here, llh_string is a string encoding the log-likelihood in a
@@ -802,15 +802,15 @@ class SbmlImporter:
                     f"Sigma provided for unknown observableIds: "
                     f"{unknown_ids}.")
         
-        if costs is None:
-            costs = {}
+        if noise_distributions is None:
+            noise_distributions = {}
         else:
             # Ensure no non-existing observableIds have been specified
             # (no problem here, bu usually an upstream bug)
-            unknown_ids = set(costs.keys()) - set(observables.keys())
+            unknown_ids = set(noise_distributions.keys()) - set(observables.keys())
             if unknown_ids:
                 raise ValueError(
-                    f"Cost provided for unknown observableIds: "
+                    f"Noise distribution provided for unknown observableIds: "
                     f"{unknown_ids}.")
 
         speciesSyms = self.symbols['species']['identifier']
@@ -877,7 +877,8 @@ class SbmlImporter:
         # set cost functions
         llhYStrings = []
         for y_name in observables:
-            llhYStrings.append(cost_code_to_cost(costs.get(y_name, 'normal')))
+            llhYStrings.append(noise_distribution_to_cost_function(
+                noise_distributions.get(y_name, 'normal')))
 
         llhYValues = sp.Matrix(
             [sp.sympify(llhYString(symbol))
@@ -1187,42 +1188,42 @@ def assignmentRules2observables(sbml_model,
     return observables
 
 
-def cost_code_to_cost(cost_code):
+def noise_distribution_to_cost_function(noise_distribution):
     """
     Parse cost string to a cost function definition amici can work with.
 
     Arguments:
 
-    cost_code: A code specifying a noise model. Can be any of
+    noise_distribution: A code specifying a noise model. Can be any of
     [normal, log-normal, log10-normal, laplace, log-laplace, log10-laplace].
     @type str
     """
-    if cost_code == 'normal':
+    if noise_distribution == 'normal':
         llhYString = lambda strSymbol: \
             f'0.5*log(2*pi*sigma{strSymbol}**2) ' \
             f'+ 0.5*(({strSymbol} - m{strSymbol}) ' \
             f'/ sigma{strSymbol})**2'
-    elif cost_code == 'log-normal':
+    elif noise_distribution == 'log-normal':
         llhYString = lambda strSymbol: \
             f'0.5*log(2*pi*sigma{strSymbol}**2*m{strSymbol}**2) ' \
             f'+ 0.5*((log({strSymbol}) - log(m{strSymbol})) ' \
             f'/ sigma{strSymbol})**2'
-    elif cost_code == 'log10-normal':
+    elif noise_distribution == 'log10-normal':
         llhYString = lambda strSymbol: \
             f'0.5*log(2*pi*sigma{strSymbol}**2*m{strSymbol}**2) ' \
             f'+ 0.5*((log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
             f'/ sigma{strSymbol})**2'
-    elif cost_code == 'laplace':
+    elif noise_distribution == 'laplace':
         llhYString = lambda strSymbol: \
             f'log(2*sigma{strSymbol}) ' \
             f'+ abs({strSymbol} - m{strSymbol}) ' \
             f'/ sigma{strSymbol}'
-    elif cost_code == 'log-laplace':
+    elif noise_distribution == 'log-laplace':
         llhYString = lambda strSymbol: \
             f'log(2*sigma{strSymbol}*m{strSymbol}) ' \
             f'+ abs(log({strSymbol}) - log(m{strSymbol})) ' \
             f'/ sigma{strSymbol}'
-    elif cost_code == 'log10-laplace':
+    elif noise_distribution == 'log10-laplace':
         llhYString = lambda strSymbol: \
             f'log(2*sigma{strSymbol}*m{strSymbol}) ' \
             f'+ abs(log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
