@@ -1090,7 +1090,7 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
 
     unsupported_functions = [
         sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.functions.Piecewise, spTrue, spFalse, sp.function.UndefinedFunction
+        sp.function.UndefinedFunction
     ]
 
     unsupp_fun_type = next(
@@ -1135,16 +1135,16 @@ def _parse_special_functions(sym):
 
         Raises:
     """
-    args = tuple(_parse_special_functions(arg) for arg in sym._args )
+    args = tuple(_parse_special_functions(arg) for arg in sym._args)
 
     # Do we have piecewise expressions?
     if sym.__class__.__name__ == 'piecewise':
         # how many condition-expression pairs will we have?
         return sp.Piecewise(*grouper(args, 2, True))
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
-        return sym.__class__(args)
-    else:
-        return sym
+        sym._args = args
+
+    return sym
 
 def grouper(iterable, n, fillvalue=None):
     "Collect data into fixed-length chunks or blocks"
