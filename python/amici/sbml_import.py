@@ -6,6 +6,7 @@ import sympy as sp
 import libsbml as sbml
 import re
 import math
+import itertools as itt
 import warnings
 from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
@@ -670,6 +671,7 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable())
             # avoid incorrect parsing of pow(x, -1) in symengine
             formula = sp.sympify(sbml.formulaToL3String(rule.getMath()))
+            _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
 
             if variable in stoichvars:
@@ -1120,6 +1122,35 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
                                 f'{expression_type}: "{full_sym}"!')
         if fun is not sym:
             _check_unsupported_functions(fun, expression_type)
+
+
+def _parse_special_functions(sym):
+    """Recursively checks the symbolic expression for functions which have be
+    to parsed in a special way, such as piecewise functions
+
+        Arguments:
+            sym: symbolic expressions @type sympy.Basic
+
+        Returns:
+
+        Raises:
+    """
+    args = tuple(_parse_special_functions(arg) for arg in sym._args )
+
+    # Do we have piecewise expressions?
+    if sym.__class__.__name__ == 'piecewise':
+        # how many condition-expression pairs will we have?
+        return sp.Piecewise(*grouper(args, 2, True))
+    elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
+        return sym.__class__(args)
+    else:
+        return sym
+
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return itt.zip_longest(*args, fillvalue=fillvalue)
 
 
 def assignmentRules2observables(sbml_model,
