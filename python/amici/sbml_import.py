@@ -170,6 +170,7 @@ class SbmlImporter:
                    observables = None,
                    constantParameters = None,
                    sigmas = None,
+                   costs = None,
                    verbose = False,
                    assume_pow_positivity = False,
                    compiler = None,
@@ -187,11 +188,15 @@ class SbmlImporter:
                 (optional), 'formula':formulaString)}) to be added to the model
                 @type dict
 
+            constantParameters: list of SBML Ids identifying constant parameters
+                @type list
+
             sigmas: dictionary(observableId: sigma value or (existing) parameter name)
                 @type dict
 
-            constantParameters: list of SBML Ids identifying constant parameters
-                @type list
+            costs: dictionary(observableId: cost function type). If nothing is passed
+                for some observable id, a normal model is assumed as default.
+                @type dict
 
             verbose: more verbose output if True @type bool
 
@@ -221,9 +226,12 @@ class SbmlImporter:
         if sigmas is None:
             sigmas = {}
 
+        if costs is None:
+            costs = {}
+
         self.reset_symbols()
         self.processSBML(constantParameters)
-        self.processObservables(observables, sigmas)
+        self.processObservables(observables, sigmas, costs)
         ode_model = ODEModel()
         ode_model.import_from_sbml_importer(self)
         exporter = ODEExporter(
@@ -756,7 +764,7 @@ class SbmlImporter:
 
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
 
-    def processObservables(self, observables, sigmas, llhs=None):
+    def processObservables(self, observables, sigmas, costs):
         """Perform symbolic computations required for objective function
         evaluation.
 
@@ -767,6 +775,8 @@ class SbmlImporter:
 
             sigmas: dictionary(observableId: sigma value or (existing)
             parameter name) @type dict
+
+            costs: dictionary(observableId: cost type) @type dict
 
             llhs: dictionary(observableId: llh_string)
             Here, llh_string is a string encoding the log-likelihood in a
@@ -786,10 +796,22 @@ class SbmlImporter:
         else:
             # Ensure no non-existing observableIds have been specified
             # (no problem here, but usually an upstream bug)
-            unknown_observables = set(sigmas.keys()) - set(observables.keys())
-            if unknown_observables:
-                raise ValueError('Sigma provided for an unknown observableId: '
-                                 + str(unknown_observables))
+            unknown_ids = set(sigmas.keys()) - set(observables.keys())
+            if unknown_ids:
+                raise ValueError(
+                    f"Sigma provided for unknown observableIds: "
+                    f"{unknown_ids}.")
+        
+        if costs is None:
+            costs = {}
+        else:
+            # Ensure no non-existing observableIds have been specified
+            # (no problem here, bu usually an upstream bug)
+            unknown_ids = set(costs.keys()) - set(observables.keys())
+            if unknown_ids:
+                raise ValueError(
+                    f"Cost provided for unknown observableIds: "
+                    f"{unknown_ids}.")
 
         speciesSyms = self.symbols['species']['identifier']
 
@@ -852,18 +874,21 @@ class SbmlImporter:
             [0.0] * len(observableSyms)
         )
 
-        llhYString = lambda \
-            strSymbol: f'0.5*log(2*pi*sigma{strSymbol}**2)' \
-                       f'+ 0.5*(({strSymbol} - m{strSymbol})' \
-                       f'/ sigma{strSymbol})**2'
+        # set cost functions
+        llhYStrings = []
+        for y_name in observables:
+            llhYStrings.append(cost_code_to_cost(costs.get(y_name, 'normal')))
+
         llhYValues = sp.Matrix(
             [sp.sympify(llhYString(symbol))
-             for symbol in observableSyms]
+             for llhYString, symbol in zip(llhYStrings, observableSyms)]
         )
+
         llhYSyms = sp.Matrix(
             [sp.Symbol(f'J{symbol}') for symbol in observableSyms]
         )
-
+        
+        # set symbols
         self.symbols['observable']['identifier'] = observableSyms
         self.symbols['observable']['name'] = l2s(observableNames)
         self.symbols['observable']['value'] = observableValues
@@ -1025,7 +1050,7 @@ def replaceLogAB(x):
 
 
 def l2s(inputs):
-    """transforms an list into list of strings
+    """Transforms a list into list of strings.
 
     Arguments:
         inputs: objects @type list
@@ -1040,7 +1065,7 @@ def l2s(inputs):
 
 
 def checkLibSBMLErrors(sbml_doc, show_warnings=False):
-    """Checks the error log in the current self.sbml_doc
+    """Checks the error log in the current self.sbml_doc.
 
     Arguments:
         sbml_doc: SBML document @type libsbml.SBMLDocument
@@ -1160,3 +1185,50 @@ def assignmentRules2observables(sbml_model,
         sbml_model.removeParameter(parameter_id)
 
     return observables
+
+
+def cost_code_to_cost(cost_code):
+    """
+    Parse cost string to a cost function definition amici can work with.
+
+    Arguments:
+
+    cost_code: A code specifying a noise model. Can be any of
+    [normal, log-normal, log10-normal, laplace, log-laplace, log10-laplace].
+    @type str
+    """
+    if cost_code == 'normal':
+        llhYString = lambda strSymbol: \
+            f'0.5*log(2*pi*sigma{strSymbol}**2) ' \
+            f'+ 0.5*(({strSymbol} - m{strSymbol}) ' \
+            f'/ sigma{strSymbol})**2'
+    elif cost_code == 'log-normal':
+        llhYString = lambda strSymbol: \
+            f'0.5*log(2*pi*sigma{strSymbol}**2*m{strSymbol}**2) ' \
+            f'+ 0.5*((log({strSymbol}) - log(m{strSymbol})) ' \
+            f'/ sigma{strSymbol})**2'
+    elif cost_code == 'log10-normal':
+        llhYString = lambda strSymbol: \
+            f'0.5*log(2*pi*sigma{strSymbol}**2*m{strSymbol}**2) ' \
+            f'+ 0.5*((log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
+            f'/ sigma{strSymbol})**2'
+    elif cost_code == 'laplace':
+        llhYString = lambda strSymbol: \
+            f'log(2*sigma{strSymbol}) ' \
+            f'+ abs({strSymbol} - m{strSymbol}) ' \
+            f'/ sigma{strSymbol}'
+    elif cost_code == 'log-laplace':
+        llhYString = lambda strSymbol: \
+            f'log(2*sigma{strSymbol}*m{strSymbol}) ' \
+            f'+ abs(log({strSymbol}) - log(m{strSymbol})) ' \
+            f'/ sigma{strSymbol}'
+    elif cost_code == 'log10-laplace':
+        llhYString = lambda strSymbol: \
+            f'log(2*sigma{strSymbol}*m{strSymbol}) ' \
+            f'+ abs(log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
+            f'/ sigma{strSymbol}'
+    else:
+        raise ValueError(
+            f"Cost type {cost_code} not reconized.")
+ 
+    return llhYString
