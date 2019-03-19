@@ -49,10 +49,14 @@ matrix:
       compiler: clang
       env:
         - CI_MODE=test
+      addons:
+        homebrew:
+          packages:
+            - hdf5
+            - swig
+            - gcc
       before_install:
-        - brew update # without this homebrew can stumble over wrong ruby version
-        - travis_wait brew install gcc || brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
-        - travis_wait brew install hdf5 swig # cppcheck
+        - travis_wait brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
         - pip3 install --user -U numpy
       after_success:
@@ -64,8 +68,15 @@ matrix:
       compiler: clang
       env:
         - CI_MODE=deploy
+      addons:
+        homebrew:
+          casks:
+            - mactex
+          packages:
+            - doxygen
+            - ragel
+            - graphviz
       before_install:
-        - travis_wait brew install doxygen ragel graphviz homebrew/cask/mactex # cppcheck
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
       after_success:
@@ -113,4 +124,11 @@ after_failure:
 
 # cache dependencies
 cache:
-  - pip
+  directories:
+    - $HOME/Library/Caches/Homebrew
+    - $HOME/Library/Caches/pip
+    - $HOME/.cache/pip
+  timeout: 1200
+    
+before_cache:
+  - brew cleanup
