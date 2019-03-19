@@ -1230,5 +1230,5 @@ def cost_code_to_cost(cost_code):
     else:
         raise ValueError(
             f"Cost type {cost_code} not reconized.")
- 
+
     return llhYString
