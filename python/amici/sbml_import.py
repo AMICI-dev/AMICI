@@ -226,12 +226,12 @@ class SbmlImporter:
         if sigmas is None:
             sigmas = {}
 
-        if costs is None:
-            costs = {}
+        if noise_distributions is None:
+            noise_distributions = {}
 
         self.reset_symbols()
         self.processSBML(constantParameters)
-        self.processObservables(observables, sigmas, costs)
+        self.processObservables(observables, sigmas, noise_distributions)
         ode_model = ODEModel()
         ode_model.import_from_sbml_importer(self)
         exporter = ODEExporter(
@@ -1198,7 +1198,7 @@ def noise_distribution_to_cost_function(noise_distribution):
     [normal, log-normal, log10-normal, laplace, log-laplace, log10-laplace].
     @type str
     """
-    if noise_distribution == 'normal':
+    if noise_distribution in ['normal', 'lin-normal']:
         llhYString = lambda strSymbol: \
             f'0.5*log(2*pi*sigma{strSymbol}**2) ' \
             f'+ 0.5*(({strSymbol} - m{strSymbol}) ' \
@@ -1213,7 +1213,7 @@ def noise_distribution_to_cost_function(noise_distribution):
             f'0.5*log(2*pi*sigma{strSymbol}**2*m{strSymbol}**2) ' \
             f'+ 0.5*((log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
             f'/ sigma{strSymbol})**2'
-    elif noise_distribution == 'laplace':
+    elif noise_distribution in ['laplace', 'lin-laplace']:
         llhYString = lambda strSymbol: \
             f'log(2*sigma{strSymbol}) ' \
             f'+ abs({strSymbol} - m{strSymbol}) ' \
