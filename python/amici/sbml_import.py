@@ -1190,13 +1190,13 @@ def assignmentRules2observables(sbml_model,
 
 def noise_distribution_to_cost_function(noise_distribution):
     """
-    Parse cost string to a cost function definition amici can work with.
+    Parse noise distribution to a cost function definition amici can work with.
 
     Arguments:
 
     noise_distribution: A code specifying a noise model. Can be any of
-    [normal, log-normal, log10-normal, laplace, log-laplace, log10-laplace].
-    @type str
+    [normal (, lin-normal), log-normal, log10-normal, laplace (, lin-laplace),
+    log-laplace, log10-laplace]. @type str
     """
     if noise_distribution in ['normal', 'lin-normal']:
         llhYString = lambda strSymbol: \
@@ -1230,6 +1230,6 @@ def noise_distribution_to_cost_function(noise_distribution):
             f'/ sigma{strSymbol}'
     else:
         raise ValueError(
-            f"Cost type {cost_code} not reconized.")
+            f"Noise type {noise_distribution} not recognized.")
 
     return llhYString
