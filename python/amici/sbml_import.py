@@ -671,7 +671,7 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable())
             # avoid incorrect parsing of pow(x, -1) in symengine
             formula = sp.sympify(sbml.formulaToL3String(rule.getMath()))
-            _parse_special_functions(formula)
+            formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
 
             if variable in stoichvars:
