@@ -756,17 +756,21 @@ class SbmlImporter:
 
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
 
-    def processObservables(self, observables, sigmas):
+    def processObservables(self, observables, sigmas, llhs=None):
         """Perform symbolic computations required for objective function
         evaluation.
 
         Arguments:
-            observables: dictionary( observableId:{'name':observableName
+            observables: dictionary(observableId: {'name':observableName
             (optional), 'formula':formulaString)}) to be added to the model
             @type dict
 
             sigmas: dictionary(observableId: sigma value or (existing)
             parameter name) @type dict
+
+            llhs: dictionary(observableId: llh_string)
+            Here, llh_string is a string encoding the log-likelihood in a
+            specific format.
 
         Returns:
 
