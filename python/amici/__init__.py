@@ -126,7 +126,7 @@ def runAmiciSimulation(model, solver, edata=None):
 
     with capture_cstdout():
         rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
-    return rdataToNumPyArrays(rdata)
+    return numpy.ReturnDataView(rdata)
 
 
 def ExpData(*args):
@@ -178,4 +178,4 @@ def runAmiciSimulations(model, solver, edata_list, failfast=True,
                                                    model.get(),
                                                    failfast,
                                                    num_threads)
-    return [numpy.rdataToNumPyArrays(r) for r in rdata_ptr_list]
+    return [numpy.ReturnDataView(r) for r in rdata_ptr_list]
