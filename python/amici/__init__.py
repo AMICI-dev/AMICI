@@ -141,7 +141,7 @@ def ExpData(*args):
     Raises:
 
     """
-    if isinstance(args[0], ExpDataView):
+    if isinstance(args[0], ReturnDataView):
         return amici.ExpData(args[0]['ptr'].get(), *args[1:])
     elif isinstance(args[0], ExpDataPtr):
         # the *args[:1] should be empty, but by the time you read this,
