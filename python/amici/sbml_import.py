@@ -806,7 +806,7 @@ class SbmlImporter:
             noise_distributions = {}
         else:
             # Ensure no non-existing observableIds have been specified
-            # (no problem here, bu usually an upstream bug)
+            # (no problem here, but usually an upstream bug)
             unknown_ids = set(noise_distributions.keys()) - set(observables.keys())
             if unknown_ids:
                 raise ValueError(

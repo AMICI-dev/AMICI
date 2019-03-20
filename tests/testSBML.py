@@ -178,4 +178,4 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestAmiciSBMLModel())
     unittest.main()
-    
+
