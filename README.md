@@ -15,6 +15,8 @@ Online documentation is available as [github-pages](http://icb-dcm.github.io/AMI
 
 [Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017). Parameter estimation for dynamical systems with discrete events and logical operations. Bioinformatics, 33(7), 1049-1056. doi: 10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
 
+[Full list](documentation/references.md)
+
 ## Current build status
 
 [![PyPI version](https://badge.fury.io/py/amici.svg)](https://badge.fury.io/py/amici)
