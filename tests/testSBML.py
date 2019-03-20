@@ -176,7 +176,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
     def test_likelihoods(self):
         """
-        Test SBML import and simulation from AMICI python interface
+        Test the custom noise distributions used to define cost functions.
         """
         def assert_fun(x):
             return self.assertTrue(x)
