@@ -1198,6 +1198,13 @@ def noise_distribution_to_cost_function(noise_distribution):
     noise_distribution: A code specifying a noise model. Can be any of
     [normal, log-normal, log10-normal, laplace, log-laplace, log10-laplace].
     @type str
+
+    Returns:
+
+    A function that takes a strSymbol and then creates a cost function string
+    from it, which can be sympified.
+
+    Raises:
     """
     if noise_distribution in ['normal', 'lin-normal']:
         llhYString = lambda strSymbol: \
