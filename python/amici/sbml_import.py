@@ -801,7 +801,7 @@ class SbmlImporter:
                 raise ValueError(
                     f"Sigma provided for unknown observableIds: "
                     f"{unknown_ids}.")
-        
+
         if noise_distributions is None:
             noise_distributions = {}
         else:
