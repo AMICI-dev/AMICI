@@ -844,7 +844,7 @@ class SbmlImporter:
                 for index, observable in enumerate(observables)
             ]
             observableSyms = sp.Matrix([
-                sp.Symbol(obs) for obs in observables.keys()
+                sp.symbols(obs, real=True) for obs in observables.keys()
             ])
         else:
             observableValues = speciesSyms
@@ -852,11 +852,11 @@ class SbmlImporter:
                 f'x{index}' for index in range(len(speciesSyms))
             ]
             observableSyms = sp.Matrix(
-                [sp.Symbol(f'y{index}') for index in range(len(speciesSyms))]
+                [sp.symbols(f'y{index}', real=True) for index in range(len(speciesSyms))]
             )
 
         sigmaYSyms = sp.Matrix(
-            [sp.Symbol(f'sigma{symbol}') for symbol in observableSyms]
+            [sp.symbols(f'sigma{symbol}', real=True) for symbol in observableSyms]
         )
         sigmaYValues = sp.Matrix(
             [1.0] * len(observableSyms)
@@ -868,7 +868,7 @@ class SbmlImporter:
                 sigmaYValues[iy] = sigmas[obsName]
 
         measurementYSyms = sp.Matrix(
-            [sp.Symbol(f'm{symbol}') for symbol in observableSyms]
+            [sp.symbols(f'm{symbol}', real=True) for symbol in observableSyms]
         )
         measurementYValues = sp.Matrix(
             [0.0] * len(observableSyms)
@@ -880,10 +880,11 @@ class SbmlImporter:
             llhYStrings.append(noise_distribution_to_cost_function(
                 noise_distributions.get(y_name, 'normal')))
 
-        llhYValues = sp.Matrix(
-            [sp.sympify(llhYString(symbol))
-             for llhYString, symbol in zip(llhYStrings, observableSyms)]
-        )
+        llhYValues = []
+        for llhYString, o_sym, m_sym, s_sym in zip(llhYStrings, observableSyms, measurementYSyms, sigmaYSyms):
+            f = sp.sympify(llhYString(o_sym), locals={str(o_sym): o_sym, str(m_sym): m_sym, str(s_sym): s_sym})
+            llhYValues.append(f)
+        llhYValues = sp.Matrix(llhYValues)
 
         llhYSyms = sp.Matrix(
             [sp.Symbol(f'J{symbol}') for symbol in observableSyms]
@@ -1190,13 +1191,13 @@ def assignmentRules2observables(sbml_model,
 
 def noise_distribution_to_cost_function(noise_distribution):
     """
-    Parse noise distribution to a cost function definition amici can work with.
+    Parse cost string to a cost function definition amici can work with.
 
     Arguments:
 
     noise_distribution: A code specifying a noise model. Can be any of
-    [normal (, lin-normal), log-normal, log10-normal, laplace (, lin-laplace),
-    log-laplace, log10-laplace]. @type str
+    [normal, log-normal, log10-normal, laplace, log-laplace, log10-laplace].
+    @type str
     """
     if noise_distribution in ['normal', 'lin-normal']:
         llhYString = lambda strSymbol: \
@@ -1216,20 +1217,20 @@ def noise_distribution_to_cost_function(noise_distribution):
     elif noise_distribution in ['laplace', 'lin-laplace']:
         llhYString = lambda strSymbol: \
             f'log(2*sigma{strSymbol}) ' \
-            f'+ abs({strSymbol} - m{strSymbol}) ' \
+            f'+ Abs({strSymbol} - m{strSymbol}) ' \
             f'/ sigma{strSymbol}'
     elif noise_distribution == 'log-laplace':
         llhYString = lambda strSymbol: \
             f'log(2*sigma{strSymbol}*m{strSymbol}) ' \
-            f'+ abs(log({strSymbol}) - log(m{strSymbol})) ' \
+            f'+ Abs(log({strSymbol}) - log(m{strSymbol})) ' \
             f'/ sigma{strSymbol}'
     elif noise_distribution == 'log10-laplace':
         llhYString = lambda strSymbol: \
             f'log(2*sigma{strSymbol}*m{strSymbol}) ' \
-            f'+ abs(log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
+            f'+ Abs(log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
             f'/ sigma{strSymbol}'
     else:
         raise ValueError(
-            f"Noise type {noise_distribution} not recognized.")
+            f"Cost type {cost_code} not reconized.")
 
     return llhYString
