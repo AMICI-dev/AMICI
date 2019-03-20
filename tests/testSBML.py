@@ -72,7 +72,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
         edata.fixedParametersPreequilibration = [3, 0]
         self.assertIsInstance(
             amici.runAmiciSimulation(model, solver, edata),
-            dict)
+            amici.ReturnDataView)
 
         solver.setRelativeTolerance(1e-12)
         solver.setAbsoluteTolerance(1e-12)
@@ -122,17 +122,17 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
         self.assertTrue(
             np.isclose(
-                amici.edataToNumPyArrays(edata[0])
+                amici.ExpDataView(edata[0])
                 ['observedData'],
-                amici.edataToNumPyArrays(edata_reconstructed[0])
+                amici.ExpDataView(edata_reconstructed[0])
                 ['observedData'],
             ).all()
         )
         self.assertTrue(
             np.isclose(
-                amici.edataToNumPyArrays(edata[0])
+                amici.ExpDataView(edata[0])
                 ['observedDataStdDev'],
-                amici.edataToNumPyArrays(edata_reconstructed[0])
+                amici.ExpDataView(edata_reconstructed[0])
                 ['observedDataStdDev'],
             ).all()
         )

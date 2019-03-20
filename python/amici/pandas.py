@@ -3,7 +3,7 @@ import numpy as np
 import math
 import copy
 
-from .numpy import edataToNumPyArrays
+from .numpy import ExpDataView
 import amici
 from amici import ExpData
 
@@ -37,7 +37,7 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
 
     # append all converted edatas
     for edata in edata_list:
-        npdata = edataToNumPyArrays(edata)
+        npdata = ExpDataView(edata)
         for i_time, timepoint in enumerate(edata.getTimepoints()):
             datadict = {
                 'time': timepoint,
