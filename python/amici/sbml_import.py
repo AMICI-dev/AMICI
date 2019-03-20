@@ -889,7 +889,7 @@ class SbmlImporter:
         llhYSyms = sp.Matrix(
             [sp.Symbol(f'J{symbol}') for symbol in observableSyms]
         )
-        
+
         # set symbols
         self.symbols['observable']['identifier'] = observableSyms
         self.symbols['observable']['name'] = l2s(observableNames)
