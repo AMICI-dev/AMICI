@@ -1,6 +1,4 @@
 ---
 bibliography: amici_refs.bib
-nocite: '@*'
+nocite: '@DharmarajanKal2019,@Schmiester579045'
 ...
-
-# Bibliography
