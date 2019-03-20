@@ -97,7 +97,7 @@ try:
     # be installed if the the AMICI package was properly installed. If not,
     # AMICI was probably imported from setup.py and we don't need those.
     from .sbml_import import SbmlImporter, assignmentRules2observables
-    from .numpy import rdataToNumPyArrays, edataToNumPyArrays
+    from .numpy import ReturnDataView, ExpDataView
     from .pandas import getEdataFromDataFrame, \
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
@@ -141,8 +141,7 @@ def ExpData(*args):
     Raises:
 
     """
-    if isinstance(args[0], dict):
-        # rdata dict created by rdataToNumPyArrays
+    if isinstance(args[0], ExpDataView):
         return amici.ExpData(args[0]['ptr'].get(), *args[1:])
     elif isinstance(args[0], ExpDataPtr):
         # the *args[:1] should be empty, but by the time you read this,
