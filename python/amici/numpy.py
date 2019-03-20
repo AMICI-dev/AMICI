@@ -163,6 +163,14 @@ class ReturnDataView(SwigPtrView):
     ]
 
     def __init__(self, rdata):
+        """Constructor
+
+        Arguments:
+            rdata: pointer to the ReturnData instance
+
+        Returns:
+            ReturnDataView instance @type ReturnDataView
+        """
         if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
             raise TypeError(f'Unsupported pointer {type(rdata)}, must be'
                             f'amici.ExpDataPtr!')
@@ -215,6 +223,14 @@ class ReturnDataView(SwigPtrView):
         super(ReturnDataView, self).__init__(rdata)
 
     def __getitem__(self, item):
+        """Custom getitem implementation shim to map `t` to `ts`
+
+        Arguments:
+            item field/attribute key
+
+        Returns:
+            self[item] @type numpy.array/float
+        """
         if item == 't':
             item = 'ts'
         return super(ReturnDataView, self).__getitem__(item)
@@ -233,6 +249,14 @@ class ExpDataView(SwigPtrView):
     ]
 
     def __init__(self, edata):
+        """Constructor
+
+        Arguments:
+            edata: pointer to the ExpData instance
+
+        Returns:
+            ExpDataView instance @type ExpDataView
+        """
         if not isinstance(edata, (ExpDataPtr, ExpData)):
             raise TypeError(f'Unsupported pointer {type(edata)}, must be'
                             f'amici.ExpDataPtr!')
