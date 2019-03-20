@@ -42,6 +42,9 @@
 <div id="ref-HrossFie2016">
 <p>Hross, S., A. Fiedler, F. J. Theis, and J. Hasenauer. 2016. “Quantitative Comparison of Competing PDE Models for Pom1p Dynamics in Fission Yeast.” In <em>Proc. 6th IFAC Conf. Found. Syst. Biol. Eng.</em>, edited by R. Findeisen, E. Bullinger, E. Balsa-Canto, and K. Bernaerts, 49:264–69. 26. IFAC-PapersOnLine. <a href="https://doi.org/10.1016/j.ifacol.2016.12.136" class="uri">https://doi.org/10.1016/j.ifacol.2016.12.136</a>.</p>
 </div>
+<div id="ref-KaltenbacherPed2018">
+<p>Kaltenbacher, Barbara, and Barbara Pedretscher. 2018. “Parameter Estimation in Sdes via the Fokker–Planck Equation: Likelihood Function and Adjoint Based Gradient Computation.” <em>Journal of Mathematical Analysis and Applications</em> 465 (2): 872–84. <a href="https://doi.org/https://doi.org/10.1016/j.jmaa.2018.05.048" class="uri">https://doi.org/https://doi.org/10.1016/j.jmaa.2018.05.048</a>.</p>
+</div>
 <div id="ref-KazeroonianFro2016">
 <p>Kazeroonian, A., F. Fröhlich, A. Raue, F. J. Theis, and J. Hasenauer. 2016. “CERENA: Chemical REaction Network Analyzer – A Toolbox for the Simulation and Analysis of Stochastic Chemical Kinetics.” <em>PLoS ONE</em> 11 (1): e0146732. <a href="https://doi.org/10.1371/journal.pone.0146732" class="uri">https://doi.org/10.1371/journal.pone.0146732</a>.</p>
 </div>
@@ -62,6 +65,9 @@
 </div>
 <div id="ref-MaierLoo2017">
 <p>Maier, C., C. Loos, and J. Hasenauer. 2017. “Robust Parameter Estimation for Dynamical Systems from Outlier-Corrupted Data.” <em>Bioinformatics</em> 33 (5): 718–25. <a href="https://doi.org/10.1093/bioinformatics/btw703" class="uri">https://doi.org/10.1093/bioinformatics/btw703</a>.</p>
+</div>
+<div id="ref-PittBan2019">
+<p>Pitt, Jake Alan, and Julio R Banga. 2019. “Parameter Estimation in Models of Biological Oscillators: An Automated Regularised Estimation Approach.” <em>BMC Bioinformatics</em> 20 (1): 82. <a href="https://doi.org/10.1186/s12859-019-2630-y" class="uri">https://doi.org/10.1186/s12859-019-2630-y</a>.</p>
 </div>
 <div id="ref-SchaelteSta2018">
 <p>Schälte, Y., P. Stapor, and J. Hasenauer. 2018. “Evaluation of Derivative-Free Optimizers for Parameter Estimation in Systems Biology.” <em>To Appear in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
