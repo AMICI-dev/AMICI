@@ -5,12 +5,23 @@ import warnings
 
 
 def parse_vars_and_values(line):
+
     try:
-        id, value, unit = re.findall('(\S+)\s*=\s*(\d+\.?\d*)\s*(\S*)', line)[0]
+        id, value, unit = re.findall('(\S+)\s*=\s*(\d+\.?\d+|\w+)\s*(\S*)', line)[0]
     except IndexError:
         raise Exception('Error in parsing: line \n' + line + '\n is not correctly formated! \n'
                         'Make sure it has the format <variable> = <value> [<unit>] (where unit is optional)')
     return id, value, unit
+
+
+def parse_equations(line):
+
+    try:
+        id, arguments, formula = re.findall('(\w+)\((\S+)\)=(\S+)', line.replace(' ', ''))[0]
+    except IndexError:
+        raise Exception('Error in parsing: line \n' + line + '\n is not correctly formated! \n'
+                        'Make sure it has the format <function name> ( <arguments> ) = <formula>')
+    return id, arguments, formula
 
 
 def create_species(model, id, initial_amount,
@@ -18,7 +29,7 @@ def create_species(model, id, initial_amount,
 
     s = model.createSpecies()
     s.setId(id)
-    s.setInitialAmount(initial_amount)
+    s.setInitialAmount(float(initial_amount))
 
     substance_units = substance_units if substance_units else 'mole'  # if not specified set units to mole
 
@@ -31,7 +42,7 @@ def create_parameter(model, id, constant, value, units):
     k.setId(id)
     k.setName(id)
     k.setConstant(constant)
-    k.setValue(value)
+    k.setValue(float(value))
 
     units = units if units else 'dimensionless'  # if not specified set units to dimensionless
 
@@ -39,16 +50,35 @@ def create_parameter(model, id, constant, value, units):
     return k
 
 
+def create_functions(model, id, arguments, formula):
+    lambda_sting = 'lambda('+arguments+', '+formula
+    f = model.createFunctionDefinition()
+    f.setId(id)
+    math_ast = parseL3Formula(formula)
+    f.setMath(math_ast)
+    return f
+
+
+def create_rate_rule(model, id, species, formula):
+    r = model.createRateRule()
+    r.setMetaId('d/' + id + '_'+species)
+    math_ast = parseL3Formula(formula)
+    r.setMath(math_ast)
+    return r
+
 
 def read_time_block(model, line):
+
     if line.strip() != '':
         try:
-           time_var, time_unit = re.findall('(\S+)\s*(\S*)', line)[0]
+            time_var, time_unit = re.findall('(\S+)\s*(\S*)', line)[0]
+            return time_var, time_unit
         except IndexError:
             raise('Error in parsing: line \n' + line + '\n is not correctly formated! \n'
                         'Make sure it has the format <time_variable> [<unit>] (where unit is optional)')
+        time_unit = time_unit if time_unit else "seconds"
+        model.setTimeUnits(time_unit)
 
-    
 
 def read_constants_block(model, line):
     if line.strip() != '':
@@ -70,16 +100,21 @@ def read_species_block(model, line):
     if line.strip() != '':
 
         id, inital_amount, unit = parse_vars_and_values(line)
-
         create_species(model, id, inital_amount, unit)
 
 
-
 def read_functions_block(model, line):
-    pass
+    if line.strip() != '':
+
+        id, arguments, formula = parse_equations(line)
+        create_functions(model, id, arguments, formula)
+
 
 def read_odes_block(model, line):
-    pass
+    if line.strip() != '':
+
+        id, arguments, formula = parse_equations(line)
+        create_rate_rule(model, id, arguments, formula)
 
 def read_observables_block(model, line):
     warnings.warn('Observables nor supported yet')
@@ -131,20 +166,23 @@ def parse_txt(text_file):
 def reimport_from_SBML(sbmlfile):
     pass
 
-def import_from_txt():
-    pass
 
-    parse_txt()
-    export_to_SBML()
-    reimport_from_SBML()
+def import_from_txt(text_file, sbml_file):
 
-
-
-
+    print(parse_txt(text_file))
+    sbml_as_string = parse_txt(text_file)
+    with open(sbml_file, 'w') as f_out:
+        f_out.write(sbml_as_string)
+    # reimport_from_SBML()
 
 
+import_from_txt('/Users/jvanhoefer/Dokumente/GitHub/DCM Software/Hackathon Frankfurt /ode_input.txt',
+                '/Users/jvanhoefer/Dokumente/GitHub/DCM Software/Hackathon Frankfurt /sbml_out.xml')
 
 
+
+
+"""
 ###################################################
 
 def create_unit_definitions(model):
@@ -339,3 +377,4 @@ def create_model():
 
 if __name__ == '__main__':
     print(create_model())
+"""
