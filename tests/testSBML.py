@@ -8,6 +8,7 @@ import copy
 import numpy as np
 from testModels import check_derivatives
 
+
 class TestAmiciSBMLModel(unittest.TestCase):
     """
     TestCase class for testing SBML import and simulation from AMICI python interface
@@ -103,7 +104,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                 observables=observables,
                                 constantParameters=['k0'],
                                 sigmas={'observable_x1withsigma':
-                                            'observable_x1withsigma_sigma'})
+                                        'observable_x1withsigma_sigma'})
 
         sys.path.insert(0, outdir)
         import test_model_steadystate_scaled as modelModule
@@ -171,11 +172,79 @@ class TestAmiciSBMLModel(unittest.TestCase):
         solver.setRelativeTolerance(1e-12)
         solver.setAbsoluteTolerance(1e-12)
         check_derivatives(model, solver, edata[0], assert_fun, atol=1e-3,
-                         rtol=1e-3, epsilon=1e-4)
+                          rtol=1e-3, epsilon=1e-4)
+
+    def test_likelihoods(self):
+        """
+        Test SBML import and simulation from AMICI python interface
+        """
+        def assert_fun(x):
+            return self.assertTrue(x)
+
+        sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python',
+                                'examples', 'example_steadystate',
+                                'model_steadystate_scaled.xml')
+        sbmlImporter = amici.SbmlImporter(sbmlFile)
+
+        observables = amici.assignmentRules2observables(
+            sbmlImporter.sbml,
+            filter_function=lambda variable:
+                variable.getId().startswith('observable_') and
+                not variable.getId().endswith('_sigma')
+        )
+
+        # assign different noise models
+
+        obs_keys = list(observables.keys())
+
+        # exponentiate observable formulas
+        obs1 = observables[obs_keys[1]]
+        obs3 = observables[obs_keys[3]]
+        obs1['formula'] = '10^(' + obs1['formula'] + ')'
+        obs3['formula'] = 'exp(' + obs3['formula'] + ')'
+
+        # customize noise distributions
+        noise_distributions = {
+            obs_keys[0]: 'normal',
+            obs_keys[1]: 'log-normal',
+            obs_keys[2]: 'laplace',
+            obs_keys[3]: 'log10-laplace',
+        }
+
+        outdir = 'test_likelihoods'
+        sbmlImporter.sbml2amici('test_likelihoods',
+                                outdir,
+                                observables=observables,
+                                constantParameters=['k0'],
+                                sigmas={'observable_x1withsigma':
+                                        'observable_x1withsigma_sigma'},
+                                noise_distributions=noise_distributions
+                                )
+
+        sys.path.insert(0, outdir)
+        import test_likelihoods as modelModule
+
+        model = modelModule.getModel()
+        model.setTimepoints(np.linspace(0, 60, 60))
+        solver = model.getSolver()
+        solver.setSensitivityOrder(amici.SensitivityOrder_first)
+
+        # run model once to create an edata
+        rdata = amici.runAmiciSimulation(model, solver)
+        edata = [amici.ExpData(rdata, 1, 0)]
+        # and now run for real and also compute likelihood values
+        rdata = amici.runAmiciSimulations(model, solver, edata)[0]
+        for key in ['llh', 'sllh']:
+            print(key, rdata[key])
+
+        # it would be good to compute the expected llh+sllh by hand,
+        # here, we only check if they make overall sense
+        self.assertTrue(np.isfinite(rdata['llh']))
+        self.assertTrue(np.all(np.isfinite(rdata['sllh'])))
+        self.assertTrue(np.any(rdata['sllh']))
 
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestAmiciSBMLModel())
     unittest.main()
-
