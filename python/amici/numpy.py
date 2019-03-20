@@ -130,7 +130,7 @@ class SwigPtrView(collections.abc.Mapping):
         """
         return item in self._field_names
 
-    def __deepcopy__(self):
+    def __deepcopy__(self, memo):
         """Create a deep copy
 
         Arguments:
