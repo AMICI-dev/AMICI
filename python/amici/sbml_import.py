@@ -776,11 +776,8 @@ class SbmlImporter:
             sigmas: dictionary(observableId: sigma value or (existing)
             parameter name) @type dict
 
-            noise_distributions: dictionary(observableId: noise type) @type dict
-
-            llhs: dictionary(observableId: llh_string)
-            Here, llh_string is a string encoding the log-likelihood in a
-            specific format.
+            noise_distributions: dictionary(observableId: noise type)
+            See `sbml2amici`. @type dict
 
         Returns:
 
