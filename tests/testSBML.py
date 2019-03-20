@@ -31,6 +31,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
     def runTest(self):
         self.test_presimulation()
         self.test_steadystate_scaled()
+        self.test_likelihoods()
 
     def test_presimulation(self):
         def assert_fun(x):
@@ -232,8 +233,17 @@ class TestAmiciSBMLModel(unittest.TestCase):
         # run model once to create an edata
         rdata = amici.runAmiciSimulation(model, solver)
         edata = [amici.ExpData(rdata, 1, 0)]
+
+        # just make all observables positive since some are logarithmic
+        for ed in edata:
+            y = ed.getObservedData()
+            y = tuple([max(val, 1e-4) for val in y])
+            ed.setObservedData(y)
+
         # and now run for real and also compute likelihood values
         rdata = amici.runAmiciSimulations(model, solver, edata)[0]
+
+        # output for easy debugging
         for key in ['llh', 'sllh']:
             print(key, rdata[key])
 
