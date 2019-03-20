@@ -72,7 +72,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
         edata.fixedParametersPreequilibration = [3, 0]
         self.assertIsInstance(
             amici.runAmiciSimulation(model, solver, edata),
-            dict)
+            amici.ReturnDataView)
 
         solver.setRelativeTolerance(1e-12)
         solver.setAbsoluteTolerance(1e-12)
