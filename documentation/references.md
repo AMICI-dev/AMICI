@@ -1,3 +1,7 @@
+# References
+
+List of publications using AMICI. Total number is 27.
+
 <h1 id="section" class="unnumbered">2019</h1>
 <div id="refs" class="references">
 <div id="ref-DharmarajanKal2019">
@@ -9,7 +13,7 @@
 <div id="ref-PittBan2019">
 <p>Pitt, Jake Alan, and Julio R Banga. 2019. “Parameter Estimation in Models of Biological Oscillators: An Automated Regularised Estimation Approach.” <em>BMC Bioinformatics</em> 20 (1): 82. <a href="https://doi.org/10.1186/s12859-019-2630-y" class="uri">https://doi.org/10.1186/s12859-019-2630-y</a>.</p>
 </div>
-<div id="ref-Schmiester579045">
+<div id="ref-SchmiesterSch2019">
 <p>Schmiester, Leonard, Yannik Schaelte, Fabian Froehlich, Jan Hasenauer, and Daniel Weindl. 2019. “Efficient Parameterization of Large-Scale Dynamic Models Based on Relative Measurements.” <em>bioRxiv</em>. Cold Spring Harbor Laboratory. <a href="https://doi.org/10.1101/579045" class="uri">https://doi.org/10.1101/579045</a>.</p>
 </div>
 </div>
