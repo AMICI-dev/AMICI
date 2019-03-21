@@ -152,7 +152,7 @@ Then, follow these steps:
     + C:\pkg-config-lite-0.28-1_bin-win32\pkg-config-lite-0.28-1\bin
 * Install AMICI using:
 
-    pip install --global-option="build_clib" --global-option="--compiler=mingw32" --global-option="build_ext" --global-option="--compiler=mingw32" amici --no-cache-dir --verbose
+    `pip install --global-option="build_clib" --global-option="--compiler=mingw32" --global-option="build_ext" --global-option="--compiler=mingw32" amici --no-cache-dir --verbose`
 
 Possible sources of errors:
 
