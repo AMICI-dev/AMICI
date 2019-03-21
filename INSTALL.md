@@ -136,20 +136,19 @@ Some general remarks:
 * Install all libraries in a path not containing white spaces, e.g. directly under C:.
 * Replace the following paths according to your installation.
 * Slashes can be preferable to backslashes for some environment variables.
-* See also #425 for further discussion.
+* See also [#425](https://github.com/icb-dcm/amici/issues/425) for further discussion.
 
 Then, follow these steps:
 
 * A python environment for Windows is required. We recommend [Anaconda](https://www.anaconda.com/distribution/) with python >=3.6.
-* Install [mingw64](https://sourceforge.net/projects/mingw-w64/files/latest/download) (32bit will succeed to compile, but fail during linking). During installation, select Version=8.1.0, Architecture=x64_64. Add the following entry to the path:
+* Install [mingw64](https://sourceforge.net/projects/mingw-w64/files/latest/download) (32bit will succeed to compile, but fail during linking). During installation, select Version=8.1.0, Architecture=x64_64. Add the following directory to `PATH`:
     + `C:\mingw-w64\x86_64-8.1.0-posix-sjlj-rt_v6-rev0\mingw64\bin`
-* Make sure that this is the compiler that is found by the system (e.g. `where gcc` in a cmd should point to this installation).
+* Make sure that this is the compiler that is found by the system (e.g. `where gcc` in a `cmd` should point to this installation).
 * Download CBLAS headers and libraries, e.g. [OpenBLAS](https://sourceforge.net/projects/openblas/files/v0.2.19/), binary distribution 0.2.19. Set the following environment variables:
     + `BLAS_CFLAGS=-IC:/OpenBLAS-v0.2.19-Win64-int32/include`
     + `BLAS_LIBS=-Wl,-Bstatic -LC:/OpenBLAS-v0.2.19-Win64-int32/lib -lopenblas -Wl,-Bdynamic`
-* Install [SWIG](http://www.swig.org/download.html) (version swigwin-3.0.12 worked) and [PKG-CONFIG](https://sourceforge.net/projects/pkgconfiglite/) and add the following entries to the path:
+* Install [SWIG](http://www.swig.org/download.html) (version swigwin-3.0.12 worked) and add the following directory to `PATH`:
     + `C:\swigwin-3.0.12`
-    + `C:\pkg-config-lite-0.28-1_bin-win32\pkg-config-lite-0.28-1\bin`
 * Install AMICI using:
 
     `pip install --global-option="build_clib" --global-option="--compiler=mingw32" --global-option="build_ext" --global-option="--compiler=mingw32" amici --no-cache-dir --verbose`
