@@ -2410,6 +2410,16 @@ class ODEExporter:
         sources = [self.modelName + '_' + function + '.cpp '
                    for function in self.functions.keys()
                    if self.functions[function]['body'] is not None]
+
+        # add extra source files for sparse matrices
+        for function in self.functions.keys():
+            if 'sparse' in self.functions[function] and \
+                    self.functions[function]['sparse']:
+                sources.append(self.modelName + '_' + function
+                               + '_colptrs.cpp')
+                sources.append(self.modelName + '_' + function
+                               + '_rowvals.cpp ')
+
         templateData = {'MODELNAME': self.modelName,
                         'SOURCES': '\n'.join(sources)}
         applyTemplate(
