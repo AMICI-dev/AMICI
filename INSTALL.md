@@ -156,7 +156,7 @@ Then, follow these steps:
 Possible sources of errors:
 
 * On recent Windows versions, `anaconda3\Lib\distutils\cygwinccompiler.py` fails linking `msvcr140.dll` with `[...] x86_64-w64-mingw32/bin/ld.exe: cannot find -lmsvcr140`. This is not required for amici, so in `cygwinccompiler.py` `return ['msvcr140']` can be changed to `return []`.
-* If you use a python version where python/cpython#880 has not been fixed yet, you need to disable `#define hypot _hypot in anaconda3\include/pyconfig.h` yourself.
+* If you use a python version where [python/cpython#880](https://github.com/python/cpython/pull/880) has not been fixed yet, you need to disable `#define hypot _hypot in anaconda3\include/pyconfig.h` yourself.
 * `import amici` in python resulting in the very informative "ImportError: DLL load failed: The specified module could not be found." means that some amici module dependencies were not found (not the amici module itself). [DependencyWalker](http://www.dependencywalker.com/) will show you which ones.
 
 ### C++
