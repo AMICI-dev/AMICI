@@ -92,7 +92,7 @@ matrix:
           branch: master
 
 install:
-    - export BASE_DIR=`pwd` 
+    - export BASE_DIR=`pwd`
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi # Python distutils only looks for `swig` and does not find `swig3.0`
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PYTHON_EXECUTABLE=$(which python3); fi # cmake wont be able to find python3 on its own ...
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
@@ -113,6 +113,7 @@ script:
     - if [[ "$CI_MODE" == "test" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests ./tests/testCMakeCompilation.sh; fi
     - if [[ "$CI_MODE" == "deploy" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
@@ -129,6 +130,6 @@ cache:
     - $HOME/Library/Caches/pip
     - $HOME/.cache/pip
   timeout: 1200
-    
+
 before_cache:
   - brew cleanup

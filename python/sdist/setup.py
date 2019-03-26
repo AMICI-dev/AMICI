@@ -63,6 +63,7 @@ def main():
     define_macros = []
 
     blaspkgcfg = getBlasConfig()
+    amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
     amici_module_linker_flags.extend(
         '-l%s' % l for l in blaspkgcfg['libraries'])
 
