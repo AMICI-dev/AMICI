@@ -107,20 +107,22 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
     return N_VWrmsNorm(xdot.getNVector(), ewt.getNVector());
 }
 
-bool SteadystateProblem::checkConvergence(
-                                         const Solver *solver,
-                                         Model *model
-                                         ) {
+bool SteadystateProblem::checkConvergence(const Solver *solver, Model *model) {
     model->fxdot(*t, x, &dx, &xdot);
-    wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
+    wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyState(),
+                       solver->getRelativeToleranceSteadyState());
     bool converged = wrms < RCONST(1.0);
-    if (solver->getSensitivityOrder()>SensitivityOrder::none &&
-        solver->getSensitivityMethod() == SensitivityMethod::forward) {
+    if (solver->getSensitivityOrder() > SensitivityOrder::none &&
+        solver->getSensitivityMethod() == SensitivityMethod::forward &&
+        model->getSteadyStateSensitivityMode() ==
+            SteadyStateSensitivityMode::simulationFSA) {
         for (int ip = 0; ip < model->nplist(); ++ip) {
             if (converged) {
                 solver->getSens(t, sx);
                 model->fsxdot(*t, x, &dx, ip, &(*sx)[ip], &dx, &xdot);
-                wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyStateSensi(), solver->getRelativeToleranceSteadyStateSensi());
+                wrms = getWrmsNorm(
+                    *x, xdot, solver->getAbsoluteToleranceSteadyStateSensi(),
+                    solver->getRelativeToleranceSteadyStateSensi());
                 converged = wrms < RCONST(1.0);
             }
         }
