@@ -11,6 +11,7 @@ try:
     import pysb.bng
     ## bool indicating whether pysb is available
     pysb_available = True
+    import pysb.pattern
 except ImportError:
     pysb_available = False
 
@@ -165,7 +166,7 @@ def _process_pysb_species(model, ODE):
     for ix, specie in enumerate(model.species):
         init = sp.sympify('0.0')
         for ic in model.odes.model.initial_conditions:
-            if str(ic[0]) == str(specie):
+            if pysb.pattern.match_complex_pattern(ic[0], specie, exact=True):
                 # we don't want to allow expressions in initial conditions
                 if ic[1] in model.expressions:
                     init = model.expressions[ic[1].name].expand_expr()
@@ -1048,13 +1049,20 @@ def has_fixed_parameter_ic(specie, model, ODE):
 
     """
     # ComplexPatterns are not hashable, so we have to compare by string
-    ic_strs = [str(ic[0]) for ic in model.initial_conditions]
-    if str(specie) not in ic_strs:
-        # no initial condition at all
+    ic_index = next(
+        (
+            ic
+            for ic, condition in enumerate(model.initial_conditions)
+            if pysb.pattern.match_complex_pattern(condition[0],
+                                                  specie, exact=True)
+        ),
+        None
+    )
+    if ic_index is None:
         return False
     else:
         return ODE.state_has_fixed_parameter_initial_condition(
-            ic_strs.index(str(specie))
+            ic_index
         )
 
 
