@@ -1174,9 +1174,20 @@ def _parse_special_functions(sym):
 
     return sym
 
+
 def grouper(iterable, n, fillvalue=None):
-    "Collect data into fixed-length chunks or blocks"
-    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    """Collect data into fixed-length chunks or blocks
+
+    E.g. grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+
+    Arguments:
+        iterable: any iterable
+        n: chunk length
+        fillvalue: padding for last chunk if length < n
+
+    Returns:
+        itertools.zip_longest of requested chunks
+    """
     args = [iter(iterable)] * n
     return itt.zip_longest(*args, fillvalue=fillvalue)
 
