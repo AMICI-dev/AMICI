@@ -49,8 +49,11 @@ def main():
     outfile = 'references.md'
 
     by_year = get_keys_by_year(bibfile)
-
+    num_total = sum(map(len, by_year.values()))
     with open(outfile, 'w') as f:
+        f.write('# References\n\n')
+        f.write('List of publications using AMICI. '
+                f'Total number is {num_total}.\n\n')
         for year in reversed(sorted(by_year.keys())):
             cur_bib = get_sub_bibliography(year, by_year)
             f.write(cur_bib)
