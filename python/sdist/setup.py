@@ -179,7 +179,8 @@ def main():
                           'python-libsbml',
                           'h5py',
                           'pandas',
-                          'setuptools>=40.6.3'],
+                          'pkgconfig'],
+        setup_requires=['setuptools>=40.6.3'],
         python_requires='>=3.6',
         extras_require={'wurlitzer': ['wurlitzer']},
         package_data={
