@@ -68,6 +68,7 @@ def getHdf5Config():
 
     """
     if pkgconfig:
+        h5pkgcfg = {}
         try:
             h5pkgcfg = pkgconfig.parse('hdf5')
         except pkgconfig.PackageNotFoundError:
