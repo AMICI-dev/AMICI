@@ -583,6 +583,7 @@ class SbmlImporter:
                 symMath = sp.sympify(element.getStoichiometry())
             else:
                 return sp.sympify(1.0)
+            symMath = _parse_special_functions(symMath)
             _check_unsupported_functions(symMath, 'Stoichiometry')
             return symMath
 
