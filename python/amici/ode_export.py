@@ -25,9 +25,12 @@ from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__
 )
 
+## Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
+## Template for model/swig/CMakeLists.txt
 SWIG_CMAKE_TEMPLATE_FILE = os.path.join(amiciSwigPath,
                                         'CMakeLists_model.cmake')
+## Template for model/CMakeLists.txt
 MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
                                          'CMakeLists.template.cmake')
 
