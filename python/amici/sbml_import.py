@@ -374,6 +374,7 @@ class SbmlImporter:
                     sbml.formulaToL3String(initial_assignment.getMath())
                 )
                 if symMath is not None:
+                    symMath = _parse_special_functions(symMath)
                     _check_unsupported_functions(symMath, 'InitialAssignment')
                     speciesInitial[index] = symMath
 
@@ -620,6 +621,7 @@ class SbmlImporter:
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
+            symMath = _parse_special_functions(symMath)
             _check_unsupported_functions(symMath, 'KineticLaw')
             for r in reactions:
                 elements = list(r.getListOfReactants()) \
