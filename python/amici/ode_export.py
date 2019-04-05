@@ -25,6 +25,11 @@ from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__
 )
 
+CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
+SWIG_CMAKE_TEMPLATE_FILE = os.path.join(amiciSwigPath,
+                                        'CMakeLists_model.cmake')
+MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
+                                         'CMakeLists.template.cmake')
 
 ## prototype for generated C++ functions, keys are the names of functions
 #
@@ -1941,7 +1946,7 @@ class ODEExporter:
         self._writeSwigFiles()
         self._writeModuleSetup()
 
-        shutil.copy(os.path.join(amiciSrcPath, 'main.template.cpp'),
+        shutil.copy(CXX_MAIN_TEMPLATE_FILE,
                     os.path.join(self.modelPath, 'main.cpp'))
 
     def _compileCCode(self, verbose=False, compiler=None):
@@ -2421,7 +2426,7 @@ class ODEExporter:
         templateData = {'MODELNAME': self.modelName,
                         'SOURCES': '\n'.join(sources)}
         applyTemplate(
-            os.path.join(amiciSrcPath, 'CMakeLists.template.txt'),
+            MODEL_CMAKE_TEMPLATE_FILE,
             os.path.join(self.modelPath, 'CMakeLists.txt'),
             templateData
         )
@@ -2444,7 +2449,7 @@ class ODEExporter:
             os.path.join(self.modelSwigPath, self.modelName + '.i'),
             templateData
         )
-        shutil.copy(os.path.join(amiciSwigPath, 'CMakeLists_model.txt'),
+        shutil.copy(SWIG_CMAKE_TEMPLATE_FILE,
                     os.path.join(self.modelSwigPath, 'CMakeLists.txt'))
 
     def _writeModuleSetup(self):

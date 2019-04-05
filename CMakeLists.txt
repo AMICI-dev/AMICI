@@ -142,12 +142,12 @@ add_custom_target(matlabInterface SOURCES src/interface_matlab.cpp src/returndat
 add_custom_target(
     fileTemplates
     SOURCES
-    src/CMakeLists.template.txt
+    src/CMakeLists.template.cmake
     src/main.template.cpp
     src/model_header.ODE_template.h
     src/wrapfunctions.ODE_template.h
     src/wrapfunctions.template.cpp
-    swig/CMakeLists_model.txt
+    swig/CMakeLists_model.cmake
     swig/modelname.template.i
     )
 
