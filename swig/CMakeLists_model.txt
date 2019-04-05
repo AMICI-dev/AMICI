@@ -12,7 +12,7 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 
 set(SWIG_LIBRARY_NAME _${PROJECT_NAME})
 set(CMAKE_SWIG_FLAGS "")
-set_source_file_properties(${PROJECT_NAME}.i PROPERTIES CPLUSPLUS ON)
+set_source_files_properties(${PROJECT_NAME}.i PROPERTIES CPLUSPLUS ON)
 
 # swig does not use INTERFACE_INCLUDE_DIRS of linked libraries, so add manually
 get_target_property(AMICI_INCLUDE_DIRS Upstream::amici INTERFACE_INCLUDE_DIRECTORIES)
