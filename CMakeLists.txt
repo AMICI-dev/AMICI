@@ -2,6 +2,10 @@
 # Build AMICI library
 #
 cmake_minimum_required(VERSION 3.3)
+
+cmake_policy(SET CMP0065 NEW)
+cmake_policy(SET CMP0077 NEW)
+
 project(amici)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
@@ -41,7 +45,7 @@ set(SUITESPARSE_LIBRARIES
     )
 
 set(SUNDIALS_LIB_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib")
-set(SUNDIALS_LIBRARIES 
+set(SUNDIALS_LIBRARIES
     ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolband${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolklu${CMAKE_STATIC_LIBRARY_SUFFIX}
