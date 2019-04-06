@@ -243,19 +243,19 @@ void Solver::initializeLinearSolver(const Model *model, AmiVector *x) {
         /* ITERATIVE SOLVERS */
 
     case LinearSolver::SPGMR:
-        linearSolver = std::make_unique<SUNLinSolSPGMR>(*x, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        linearSolver = std::make_unique<SUNLinSolSPGMR>(*x);
         setLinearSolver();
         setJacTimesVecFn();
         break;
 
     case LinearSolver::SPBCG:
-        linearSolver = std::make_unique<SUNLinSolSPBCGS>(*x, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        linearSolver = std::make_unique<SUNLinSolSPBCGS>(*x);
         setLinearSolver();
         setJacTimesVecFn();
         break;
 
     case LinearSolver::SPTFQMR:
-        linearSolver = std::make_unique<SUNLinSolSPTFQMR>(*x, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        linearSolver = std::make_unique<SUNLinSolSPTFQMR>(*x);
         setLinearSolver();
         setJacTimesVecFn();
         break;
@@ -331,19 +331,19 @@ void Solver::initializeLinearSolverB(const Model *model, AmiVector *xB, const in
         /* ITERATIVE SOLVERS */
 
     case LinearSolver::SPGMR:
-        linearSolverB = std::make_unique<SUNLinSolSPGMR>(*xB, PREC_NONE, SUNSPGMR_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPGMR>(*xB);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
 
     case LinearSolver::SPBCG:
-        linearSolverB = std::make_unique<SUNLinSolSPBCGS>(*xB, PREC_NONE, SUNSPBCGS_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPBCGS>(*xB);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
 
     case LinearSolver::SPTFQMR:
-        linearSolverB = std::make_unique<SUNLinSolSPTFQMR>(*xB, PREC_NONE, SUNSPTFQMR_MAXL_DEFAULT);
+        linearSolverB = std::make_unique<SUNLinSolSPTFQMR>(*xB);
         setLinearSolverB(which);
         setJacTimesVecFnB(which);
         break;
