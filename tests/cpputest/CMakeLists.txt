@@ -64,6 +64,8 @@ foreach(MODEL IN ITEMS ${TEST_MODELS})
     ExternalProject_Add_StepDependencies(external_model_${MODEL} build amici)
 
     add_library(model_${MODEL} STATIC IMPORTED)
+    add_dependencies(model_${MODEL} external_model_${MODEL})
+
     set_target_properties(model_${MODEL}
         PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES
