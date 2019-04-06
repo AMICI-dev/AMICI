@@ -131,7 +131,7 @@ enum class NonlinearSolverIteration {
     newton = 2
 };
 
-/** KLU state reordering */
+/** KLU state reordering (different from SuperLUMT ordering!) */
 enum class StateOrdering {
     AMD,
     COLAMD,

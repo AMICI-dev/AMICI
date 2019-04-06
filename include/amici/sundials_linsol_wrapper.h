@@ -5,6 +5,7 @@
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
+#include <sundials/sundials_config.h>
 #include <sunlinsol/sunlinsol_band.h>
 #include <sunlinsol/sunlinsol_dense.h>
 #include <sunlinsol/sunlinsol_klu.h>
@@ -13,7 +14,9 @@
 #include <sunlinsol/sunlinsol_spfgmr.h>
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
-
+#ifdef SUNDIALS_SUPERLUMT
+#include <sunlinsol/superlumt/fsunlinsol_superlumt.h>
+#endif
 #include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
 #include <sunnonlinsol/sunnonlinsol_newton.h>
 
@@ -228,6 +231,54 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
     SUNMatrixWrapper A;
 };
 
+#ifdef SUNDIALS_SUPERLUMT
+/**
+ * @brief SUNDIALS SuperLUMT sparse direct solver.
+ */
+class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
+  public:
+    /** SuperLUMT ordering (different from KLU ordering!) */
+    enum class StateOrdering {
+        natural,
+        minDegATA,
+        minDegATPlusA,
+        COLAMD,
+    };
+
+    /**
+     * @brief Create SuperLUMT solver with given matrix
+     * @param x A template for cloning vectors needed within the solver.
+     * @param A sparse matrix
+     * @param numThreads Number of threads to be used by SuperLUMT
+     */
+    SUNLinSolSuperLUMT(N_Vector x, SUNMatrix A, int numThreads = 1);
+
+    /**
+     * @brief Create SuperLUMT solver and matrix to operate on
+     * @param x A template for cloning vectors needed within the solver.
+     * @param nnz Number of non-zeros in matrix A
+     * @param sparsetype Sparse matrix type (CSC_MAT, CSR_MAT)
+     * @param ordering
+     * @param numThreads Number of threads to be used by SuperLUMT
+     */
+    SUNLinSolSuperLUMT(AmiVector const &x, int nnz, int sparsetype,
+                       StateOrdering ordering, int numThreads = 1);
+
+    SUNMatrix getMatrix() const override;
+
+    /**
+     * @brief Sets the ordering used by SuperLUMT for reducing fill in the
+     * linear solve.
+     * @param ordering
+     */
+    void setOrdering(StateOrdering ordering);
+
+  private:
+    /** Sparse matrix A for solver, only if created by here. */
+    SUNMatrixWrapper A;
+};
+
+#endif
 
 /**
  * @brief SUNDIALS scaled preconditioned CG (Conjugate Gradient method) (PCG)
