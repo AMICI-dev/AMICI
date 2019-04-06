@@ -62,8 +62,9 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
 
     /* SPARSE SOLVERS */
-    case LinearSolver::KLU:
     case LinearSolver::SuperLUMT:
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
+    case LinearSolver::KLU:
         solver.reset(new NewtonSolverSparse(t, x, model, rdata));
         break;
     default:
@@ -223,12 +224,7 @@ void NewtonSolverIterative::solveLinearSystem(AmiVector *rhs) {
 }
 
 
-void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delta) {
-    double rho;
-    double alpha;
-    double omega;
-    double res;
-
+void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta) {
     xdot = *ns_delta;
     xdot.minus();
 
@@ -247,9 +243,9 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     ns_v.reset();
     ns_delta->reset();
     ns_tmp.reset();
-    rho = 1.0;
-    omega = 1.0;
-    alpha = 1.0;
+    double rho = 1.0;
+    double omega = 1.0;
+    double alpha = 1.0;
 
     // can be set to 0 at the moment
     model->fJv(*t, x, &dx, &xdot, ns_delta, &ns_Jv, 0.0);
@@ -257,7 +253,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry,int nnewt, AmiVector *ns_delt
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv.getNVector(), 1.0, xdot.getNVector(), ns_r.getNVector());
     N_VDiv(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
-    res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
+    double res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
     ns_rt = ns_r;
 
     for (int i_linstep = 0; i_linstep < maxlinsteps;
