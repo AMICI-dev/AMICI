@@ -36,9 +36,9 @@ def isArray(var):
                             pd.core.series.Series))
 
 class AmiciExample:
-  
+
     def __init__(self):
-        
+
         self.modelOptions = {
             #'pscale' : []
             'theta' : [],
@@ -68,7 +68,6 @@ class AmiciExample:
             # sx0
             # x0
         }
-        #self.modelOptions['qpositivex'] = [0] * self.numX
         #self.modelOptions['sx0'] = [1.0] * np
         #self.modelOptions['x0'] = [1.0] * np
         self.data = {}
@@ -82,4 +81,4 @@ class AmiciExample:
             if 'data' in self.__dict__ and len(self.data):
                 g = f.require_group(root + '/data')
                 dict2hdf5(g, self.data)
-    
+

@@ -2,6 +2,14 @@
 # Build AMICI library
 #
 cmake_minimum_required(VERSION 3.3)
+
+if(POLICY CMP0065)
+  cmake_policy(SET CMP0065 NEW)
+endif(POLICY CMP0065)
+if(POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW)
+endif(POLICY CMP0077)
+
 project(amici)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
@@ -137,12 +145,12 @@ add_custom_target(matlabInterface SOURCES src/interface_matlab.cpp src/returndat
 add_custom_target(
     fileTemplates
     SOURCES
-    src/CMakeLists.template.txt
+    src/CMakeLists.template.cmake
     src/main.template.cpp
     src/model_header.ODE_template.h
     src/wrapfunctions.ODE_template.h
     src/wrapfunctions.template.cpp
-    swig/CMakeLists_model.txt
+    swig/CMakeLists_model.cmake
     swig/modelname.template.i
     )
 
