@@ -15,7 +15,7 @@
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
 #ifdef SUNDIALS_SUPERLUMT
-#include <sunlinsol/superlumt/fsunlinsol_superlumt.h>
+#include <sunlinsol/sunlinsol_superlumt.h>
 #endif
 #include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
 #include <sunnonlinsol/sunnonlinsol_newton.h>
