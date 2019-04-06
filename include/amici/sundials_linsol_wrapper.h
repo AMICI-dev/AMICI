@@ -190,6 +190,13 @@ class SUNLinSolDense : public SUNLinSolWrapper {
  */
 class SUNLinSolKLU : public SUNLinSolWrapper {
   public:
+    /** KLU state reordering (different from SuperLUMT ordering!) */
+    enum class StateOrdering {
+        AMD,
+        COLAMD,
+        natural
+    };
+
     /**
      * @brief Create KLU solver with given matrix
      * @param x A template for cloning vectors needed within the solver.

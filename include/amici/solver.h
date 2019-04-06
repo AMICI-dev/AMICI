@@ -555,17 +555,17 @@ class Solver {
     void setInterpolationType(InterpolationType interpType);
 
     /**
-     * @brief sets KLU state ordering mode
+     * @brief sets KLU / SuperLUMT state ordering mode
      * @return
      */
-    StateOrdering getStateOrdering() const;
+    int getStateOrdering() const;
 
     /**
-     * @brief sets KLU state ordering mode (only applies when linsol is set to
-     * amici.AMICI_KLU)
+     * @brief Sets KLU / SuperLUMT state ordering mode (only applies when linsol
+     * is set to LinearSolver::KLU or LinearSolver::SuperLUMT
      * @param ordering state ordering
      */
-    void setStateOrdering(StateOrdering ordering);
+    void setStateOrdering(int ordering);
 
     /**
      * @brief returns stability limit detection mode
@@ -1160,7 +1160,7 @@ private:
     booleantype stldet = true;
 
     /** state ordering */
-    StateOrdering ordering = StateOrdering::AMD;
+    int ordering = static_cast<int>(SUNLinSolKLU::StateOrdering::AMD);
 
     /** maximum number of allowed Newton steps for steady state computation */
     int newton_maxsteps = 0;

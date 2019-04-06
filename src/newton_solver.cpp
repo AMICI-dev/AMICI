@@ -90,6 +90,7 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
 
     /* SPARSE SOLVERS */
     case LinearSolver::KLU:
+    case LinearSolver::SuperLUMT:
         solver.reset(new NewtonSolverSparse(t, x, model, rdata));
         break;
     default:
@@ -199,7 +200,7 @@ void NewtonSolverDense::solveLinearSystem(AmiVector *rhs) {
                                       rhs->getNVector(), rhs->getNVector(),
                                       0.0);
     // last argument is tolerance and does not have any influence on result
-    
+
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve_Dense");
 }
@@ -269,7 +270,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector *rhs) {
                                     rhs->getNVector(), rhs->getNVector(),
                                     0.0);
     // last argument is tolerance and does not have any influence on result
-    
+
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSolve_Dense");
 }

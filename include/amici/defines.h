@@ -102,7 +102,8 @@ enum class LinearSolver {
     SPGMR       = 6,
     SPBCG       = 7,
     SPTFQMR     = 8,
-    KLU         = 9
+    KLU         = 9,
+    SuperLUMT   = 10,
 };
 
 /** CVODES/IDAS forward sensitivity computation method */
@@ -129,13 +130,6 @@ enum class NonlinearSolverIteration {
     functional = 1, /** deprecated */
     fixedpoint = 1,
     newton = 2
-};
-
-/** KLU state reordering (different from SuperLUMT ordering!) */
-enum class StateOrdering {
-    AMD,
-    COLAMD,
-    natural
 };
 
 /** Sensitivity computation mode in steadyStateProblem */

@@ -263,11 +263,24 @@ void Solver::initializeLinearSolver(const Model *model, AmiVector *x) {
         /* SPARSE SOLVERS */
 
     case LinearSolver::KLU:
-        linearSolver = std::make_unique<SUNLinSolKLU>(*x, model->nnz, CSC_MAT, getStateOrdering());
+        linearSolver = std::make_unique<SUNLinSolKLU>(
+                    *x, model->nnz, CSC_MAT,
+                    static_cast<SUNLinSolKLU::StateOrdering>(getStateOrdering()));
         setLinearSolver();
         setSparseJacFn();
         break;
 
+#ifdef SUNDIALS_SUPERLUMT
+    case LinearSolver::SuperLUMT:
+        // TODO state ordering
+        linearSolver = std::make_unique<SUNLinSolSuperLUMT>(
+                    *x, model->nnz, CSC_MAT,
+                    static_cast<SUNLinSolSuperLUMT::StateOrdering>(getStateOrdering()));
+
+        setLinearSolver();
+        setSparseJacFn();
+        break;
+#endif
     default:
         throw AmiException("Invalid choice of solver: %d", static_cast<int>(linsol));
     }
@@ -338,11 +351,21 @@ void Solver::initializeLinearSolverB(const Model *model, AmiVector *xB, const in
         /* SPARSE SOLVERS */
 
     case LinearSolver::KLU:
-        linearSolverB = std::make_unique<SUNLinSolKLU>(*xB, model->nnz, CSC_MAT, getStateOrdering());
+        linearSolverB = std::make_unique<SUNLinSolKLU>(
+                    *xB, model->nnz, CSC_MAT,
+                    static_cast<SUNLinSolKLU::StateOrdering>(getStateOrdering()));
         setLinearSolverB(which);
         setSparseJacFnB(which);
         break;
-
+#ifdef SUNDIALS_SUPERLUMT
+    case LinearSolver::SuperLUMT:
+        linearSolverB = std::make_unique<SUNLinSolSuperLUMT>(
+                    *xB, model->nnz, CSC_MAT,
+                    static_cast<SUNLinSolSuperLUMT::StateOrdering>(getStateOrdering()));
+        setLinearSolverB(which);
+        setSparseJacFnB(which);
+        break;
+#endif
     default:
         throw AmiException("Invalid choice of solver: %d", static_cast<int>(linsol));
     }
@@ -742,18 +765,26 @@ void Solver::setInterpolationType(InterpolationType interpType) {
     this->interpType = interpType;
 }
 
-StateOrdering Solver::getStateOrdering() const {
+int Solver::getStateOrdering() const {
     return ordering;
 }
 
-void Solver::setStateOrdering(StateOrdering ordering) {
+void Solver::setStateOrdering(int ordering) {
     this->ordering = ordering;
     if (solverMemory && linsol == LinearSolver::KLU) {
         auto klu = dynamic_cast<SUNLinSolKLU*>(linearSolver.get());
-        klu->setOrdering(ordering);
+        klu->setOrdering(static_cast<SUNLinSolKLU::StateOrdering>(ordering));
         klu = dynamic_cast<SUNLinSolKLU*>(linearSolverB.get());
-        klu->setOrdering(ordering);
+        klu->setOrdering(static_cast<SUNLinSolKLU::StateOrdering>(ordering));
     }
+#ifdef SUNDIALS_SUPERLUMT
+    if (solverMemory && linsol == LinearSolver::SuperLUMT) {
+        auto klu = dynamic_cast<SUNLinSolSuperLUMT*>(linearSolver.get());
+        klu->setOrdering(static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering));
+        klu = dynamic_cast<SUNLinSolSuperLUMT*>(linearSolverB.get());
+        klu->setOrdering(static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering));
+    }
+#endif
 }
 
 int Solver::getStabilityLimitFlag() const {

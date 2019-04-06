@@ -98,7 +98,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     hsize_t m, n;
 
     auto edata = std::unique_ptr<ExpData>(new ExpData(model));
-    
+
     if (model.ny * model.nt() > 0) {
         if(locationExists(file,  hdf5Root + "/Y")) {
             auto my = getDoubleDataset2D(file, hdf5Root + "/Y", m, n);
@@ -107,7 +107,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         } else {
             throw AmiException("Missing %s/Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
-        
+
         if(locationExists(file,  hdf5Root + "/Sigma_Y")) {
             auto sigmay = getDoubleDataset2D(file, hdf5Root + "/Sigma_Y", m, n);
             checkMeasurementDimensionsCompatible(m, n, model);
@@ -116,7 +116,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
             throw AmiException("Missing %s/Sigma_Y in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
     }
-    
+
     if (model.nz * model.nMaxEvent() > 0) {
         if(locationExists(file,  hdf5Root + "/Z")) {
             auto mz = getDoubleDataset2D(file, hdf5Root + "/Z", m, n);
@@ -125,7 +125,7 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         } else {
             throw AmiException("Missing %s/Z in %s", hdf5Root.c_str(), hdf5Filename.c_str());
         }
-        
+
         if(locationExists(file,  hdf5Root + "/Sigma_Z")) {
             auto sigmaz = getDoubleDataset2D(file, hdf5Root + "/Sigma_Z", m, n);
             checkEventDimensionsCompatible(m, n, model);
@@ -142,15 +142,15 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
     if(locationExists(file,  hdf5Root + "/conditionPreequilibration")) {
         edata->fixedParametersPreequilibration = getDoubleDataset1D(file, hdf5Root + "/conditionPreequilibration");
     }
-    
+
     if(locationExists(file,  hdf5Root + "/conditionPresimulation")) {
         edata->fixedParametersPresimulation = getDoubleDataset1D(file, hdf5Root + "/conditionPresimulation");
     }
-    
+
     if(attributeExists(file, hdf5Root, "t_presim")) {
         edata->t_presim = getDoubleScalarAttribute(file, hdf5Root, "t_presim");
     }
-    
+
     if(locationExists(file,  hdf5Root + "/ts")) {
         edata->setTimepoints(getDoubleDataset1D(file, hdf5Root + "/ts"));
     }
@@ -160,28 +160,28 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
 
 void writeSimulationExpData(const ExpData &edata, H5::H5File const& file, const std::string &hdf5Location)
 {
-        
+
     if(!locationExists(file, hdf5Location))
         createGroup(file, hdf5Location);
-    
+
     if (edata.nt())
         createAndWriteDouble1DDataset(file, hdf5Location + "/ts",
                                       edata.getTimepoints().data(), edata.nt());
-    
+
     if (!edata.fixedParameters.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/condition",
                                       edata.fixedParameters.data(), edata.fixedParameters.size());
-    
+
     if (!edata.fixedParametersPreequilibration.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/conditionPreequilibration",
                                       edata.fixedParametersPreequilibration.data(), edata.fixedParametersPreequilibration.size());
-    
+
     if (!edata.fixedParametersPresimulation.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/conditionPresimulation",
                                       edata.fixedParametersPresimulation.data(), edata.fixedParametersPresimulation.size());
-    
+
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "t_presim", &edata.t_presim, 1);
-    
+
     if (!edata.getObservedData().empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/Y", edata.getObservedData().data(),
                                       edata.nt(), edata.nytrue());
@@ -214,7 +214,7 @@ void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std:
     if (!rdata.sllh.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/sllh",
                                       rdata.sllh.data(), rdata.nplist);
-    
+
     if (!rdata.res.empty())
         createAndWriteDouble1DDataset(file, hdf5Location + "/res",
                                       rdata.res.data(), rdata.nt*rdata.nytrue);
@@ -530,8 +530,8 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver, const st
     }
 
     if(attributeExists(file, datasetPath, "ordering")) {
-        solver.setStateOrdering(static_cast<StateOrdering>(
-                                    getIntScalarAttribute(file, datasetPath, "ordering")));
+        solver.setStateOrdering(
+                    getIntScalarAttribute(file, datasetPath, "ordering"));
     }
 
     if(attributeExists(file, datasetPath, "interpType")) {
@@ -599,7 +599,7 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model, const std::stri
     if(attributeExists(file, datasetPath, "nmaxevent")) {
         model.setNMaxEvent(getIntScalarAttribute(file, datasetPath, "nmaxevent"));
     }
-    
+
     if(attributeExists(file, datasetPath, "steadyStateSensitivityMode")) {
         model.setSteadyStateSensitivityMode(static_cast<SteadyStateSensitivityMode>(
                 getIntScalarAttribute(file, datasetPath, "steadyStateSensitivityMode")));
