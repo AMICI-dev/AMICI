@@ -258,7 +258,21 @@ class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
      * @param A sparse matrix
      * @param numThreads Number of threads to be used by SuperLUMT
      */
-    SUNLinSolSuperLUMT(N_Vector x, SUNMatrix A, int numThreads = 1);
+    SUNLinSolSuperLUMT(N_Vector x, SUNMatrix A, int numThreads);
+
+    /**
+     * @brief Create SuperLUMT solver and matrix to operate on
+     *
+     * Will set number of threads according to environment variable
+     * AMICI_SUPERLUMT_NUM_THREADS. Will default to 1 thread if unset.
+     *
+     * @param x A template for cloning vectors needed within the solver.
+     * @param nnz Number of non-zeros in matrix A
+     * @param sparsetype Sparse matrix type (CSC_MAT, CSR_MAT)
+     * @param ordering
+     */
+    SUNLinSolSuperLUMT(AmiVector const &x, int nnz, int sparsetype,
+                       StateOrdering ordering);
 
     /**
      * @brief Create SuperLUMT solver and matrix to operate on
@@ -269,7 +283,7 @@ class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
      * @param numThreads Number of threads to be used by SuperLUMT
      */
     SUNLinSolSuperLUMT(AmiVector const &x, int nnz, int sparsetype,
-                       StateOrdering ordering, int numThreads = 1);
+                       StateOrdering ordering, int numThreads);
 
     SUNMatrix getMatrix() const override;
 

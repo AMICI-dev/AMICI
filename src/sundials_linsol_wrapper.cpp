@@ -1,8 +1,10 @@
-#include <amici/exception.h>
 #include <amici/sundials_linsol_wrapper.h>
+
+#include <amici/exception.h>
 
 #include <new> // bad_alloc
 #include <utility>
+#include <iostream>
 
 namespace amici {
 
@@ -374,6 +376,25 @@ SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(N_Vector x, SUNMatrix A, int numThreads)
 {
     if (!solver)
         throw AmiException("Failed to create solver.");
+}
+
+SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(
+        const AmiVector &x, int nnz, int sparsetype,
+        SUNLinSolSuperLUMT::StateOrdering ordering)
+    : A(SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype))
+{
+    int numThreads = 1;
+    if(auto env = std::getenv("AMICI_SUPERLUMT_NUM_THREADS")) {
+        numThreads = std::min(1, std::stoi(env));
+    }
+
+    std::cout<<"SUNLinSolSuperLUMT with "<<numThreads<<" threads\n";
+
+    solver = SUNLinSol_SuperLUMT(x.getNVector(), A.get(), numThreads);
+    if (!solver)
+        throw AmiException("Failed to create solver.");
+
+    setOrdering(ordering);
 }
 
 SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(const AmiVector &x, int nnz,
