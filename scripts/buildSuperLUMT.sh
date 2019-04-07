@@ -17,6 +17,8 @@ if [[ ! -d SuperLU_MT_3.1 ]]; then
 fi
 
 cd SuperLU_MT_3.1/
+# interferes with std::queue
+test -f SRC/queue && mv SRC/queue SRC/queue.bak
 cp MAKE_INC/make.pthread make.inc
 # Add -fPIC
 sed -ri 's/(CFLAGS\W*=\W*.*)(\#.*)/\1-fPIC \2/' make.inc
