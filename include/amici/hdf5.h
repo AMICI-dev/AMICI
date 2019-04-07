@@ -7,6 +7,8 @@
 
 #include <H5Cpp.h>
 
+#include <gsl/gsl-lite.hpp>
+
 #undef AMI_HDF5_H_DEBUG
 
 /* Macros for enabling/disabling  HDF5 error auto-printing
@@ -45,7 +47,8 @@ H5::H5File createOrOpenForWriting(std::string const& hdf5filename);
  * @param solver solver to set options on
  * @param datasetPath Path inside the HDF5 file
  */
-void readSolverSettingsFromHDF5(const H5::H5File &file, Solver& solver, std::string const& datasetPath);
+void readSolverSettingsFromHDF5(const H5::H5File &file, Solver& solver,
+                                std::string const& datasetPath);
 
 /**
  * @brief Read solver options from HDF5 file
@@ -53,7 +56,8 @@ void readSolverSettingsFromHDF5(const H5::H5File &file, Solver& solver, std::str
  * @param solver solver to set options on
  * @param datasetPath Path inside the HDF5 file
  */
-void readSolverSettingsFromHDF5(std::string const& hdffile, Solver& solver, std::string const& datasetPath);
+void readSolverSettingsFromHDF5(std::string const& hdffile, Solver& solver,
+                                std::string const& datasetPath);
 
 /**
  * @brief Read model data from HDF5 file
@@ -61,7 +65,8 @@ void readSolverSettingsFromHDF5(std::string const& hdffile, Solver& solver, std:
  * @param model model to set data on
  * @param datasetPath Path inside the HDF5 file
  */
-void readModelDataFromHDF5(std::string const& hdffile, Model& model, std::string const& datasetPath);
+void readModelDataFromHDF5(std::string const& hdffile, Model& model,
+                           std::string const& datasetPath);
 
 /**
  * @brief Read model data from HDF5 file
@@ -69,7 +74,8 @@ void readModelDataFromHDF5(std::string const& hdffile, Model& model, std::string
  * @param model model to set data on
  * @param datasetPath Path inside the HDF5 file
  */
-void readModelDataFromHDF5(H5::H5File const&file, Model& model, std::string const& datasetPath);
+void readModelDataFromHDF5(H5::H5File const&file, Model& model,
+                           std::string const& datasetPath);
 
 
 /**
@@ -88,8 +94,8 @@ void writeReturnData(const ReturnData &rdata,
                      const std::string& hdf5Location);
 
 void writeReturnDataDiagnosis(const ReturnData &rdata,
-                     H5::H5File const& file,
-                     const std::string& hdf5Location);
+                              H5::H5File const& file,
+                              const std::string& hdf5Location);
 
 /**
  * @brief Create the given group and possibly parents
@@ -114,7 +120,7 @@ void createGroup(const H5::H5File &file,
 std::unique_ptr<ExpData> readSimulationExpData(const std::string &hdf5Filename,
                                                const std::string &hdf5Root,
                                                const Model &model);
-    
+
 /**
  * @brief writeSimulationExpData writes AMICI experimental data to
  * attributes in HDF5 file.
@@ -145,31 +151,27 @@ bool attributeExists(H5::H5Object const& object,
 
 
 void createAndWriteInt1DDataset(H5::H5File const& file,
-                                     std::string const& datasetName,
-                                     const int *buffer, hsize_t m);
-
-void createAndWriteInt1DDataset(H5::H5File const& file,
                                 std::string const& datasetName,
-                                std::vector<int> const& buffer);
+                                gsl::span<const int> buffer);
 
 void createAndWriteInt2DDataset(H5::H5File const& file,
-                                     std::string const& datasetName,
-                                     const int *buffer, hsize_t m,
-                                     hsize_t n);
+                                std::string const& datasetName,
+                                gsl::span<const int> buffer, hsize_t m,
+                                hsize_t n);
 
 void createAndWriteDouble1DDataset(H5::H5File const& file,
-                                     std::string const& datasetName,
-                                     const double *buffer, hsize_t m);
+                                   std::string const& datasetName,
+                                   gsl::span<const double> buffer);
 
 void createAndWriteDouble2DDataset(H5::H5File const& file,
-                                     std::string const& datasetName,
-                                     const double *buffer, hsize_t m,
-                                     hsize_t n);
+                                   std::string const& datasetName,
+                                   gsl::span<const double> buffer, hsize_t m,
+                                   hsize_t n);
 
 void createAndWriteDouble3DDataset(H5::H5File const& file,
-                                     std::string const& datasetName,
-                                     const double *buffer, hsize_t m,
-                                     hsize_t n, hsize_t o);
+                                   std::string const& datasetName,
+                                   gsl::span<const double> buffer, hsize_t m,
+                                   hsize_t n, hsize_t o);
 
 double getDoubleScalarAttribute(const H5::H5File& file,
                                 const std::string &optionsObject,
@@ -181,21 +183,22 @@ int getIntScalarAttribute(const H5::H5File &file,
 
 
 std::vector<int> getIntDataset1D(const H5::H5File &file,
-                                              std::string const& name);
+                                 std::string const& name);
 
 std::vector<double> getDoubleDataset1D(const H5::H5File &file,
-                                              std::string const& name);
+                                       std::string const& name);
 
 std::vector<double> getDoubleDataset2D(const H5::H5File &file,
-                                              std::string const& name,
-                                              hsize_t &m, hsize_t &n);
+                                       std::string const& name,
+                                       hsize_t &m, hsize_t &n);
 
 std::vector<double> getDoubleDataset3D(const H5::H5File &file,
-                                              std::string const& name,
-                                              hsize_t &m, hsize_t &n, hsize_t &o);
+                                       std::string const& name,
+                                       hsize_t &m, hsize_t &n, hsize_t &o);
 
 /**
- * @brief Check if the given location (group, link or dataset) exists in the given file
+ * @brief Check if the given location (group, link or dataset) exists in the
+ * given file
  * @param filename
  * @param location
  * @return

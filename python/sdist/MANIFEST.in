@@ -1,5 +1,6 @@
 recursive-include amici/ThirdParty/SuiteSparse *.c *.h LICENSE.txt
 recursive-include amici/ThirdParty/sundials *.c *.h LICENSE
+recursive-include amici/ThirdParty/gsl *.hpp
 recursive-include amici/include *.h
 recursive-include amici/swig *.i *.h
 include amici/*

@@ -66,6 +66,8 @@ set(SUNDIALS_LIBRARIES
     )
 set(SUNDIALS_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/include")
 
+set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
+
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.
 set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
@@ -121,6 +123,7 @@ target_include_directories(${PROJECT_NAME}
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     PUBLIC swig
+    PUBLIC ${GSL_LITE_INCLUDE_DIR}
     PUBLIC ${SUNDIALS_INCLUDE_DIRS}
     PUBLIC ${SUITESPARSE_INCLUDE_DIRS}
     PUBLIC ${HDF5_INCLUDE_DIRS}
