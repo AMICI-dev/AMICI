@@ -4,7 +4,6 @@
 
 #include <new> // bad_alloc
 #include <utility>
-#include <iostream>
 
 namespace amici {
 
@@ -385,10 +384,8 @@ SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(
 {
     int numThreads = 1;
     if(auto env = std::getenv("AMICI_SUPERLUMT_NUM_THREADS")) {
-        numThreads = std::min(1, std::stoi(env));
+        numThreads = std::max(1, std::stoi(env));
     }
-
-    std::cout<<"SUNLinSolSuperLUMT with "<<numThreads<<" threads\n";
 
     solver = SUNLinSol_SuperLUMT(x.getNVector(), A.get(), numThreads);
     if (!solver)
