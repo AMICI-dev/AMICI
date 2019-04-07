@@ -116,6 +116,7 @@ def main():
         name='amici._amici',
         sources=extension_sources,
         include_dirs=['amici/include',
+                      'amici/ThirdParty/gsl/',
                       *libsundials[1]['include_dirs'],
                       *libsuitesparse[1]['include_dirs'],
                       *h5pkgcfg['include_dirs'],

@@ -213,7 +213,8 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
                          'amici/ThirdParty/SuiteSparse/SuiteSparse_config/',
                          'amici/ThirdParty/SuiteSparse/include',
                          'amici/ThirdParty/sundials/include',
-                         'amici/ThirdParty/sundials/src'
+                         'amici/ThirdParty/sundials/src',
+                         'amici/ThirdParty/gsl/',
                          ],
         'cflags': ['-std=c++11', *extra_compiler_flags]
     })
