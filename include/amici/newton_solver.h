@@ -62,6 +62,11 @@ class NewtonSolver {
      */
     void getStep(int ntry, int nnewt, AmiVector *delta);
 
+    /**
+     * Computes steady state sensitivities
+     *
+     * @param sx pointer to state variable sensitivities
+     */
     void computeNewtonSensis(AmiVectorArray *sx);
 
     /**

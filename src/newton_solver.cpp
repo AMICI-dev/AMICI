@@ -92,11 +92,6 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector *delta) {
 /* ------------------------------------------------------------------------- */
 
 void NewtonSolver::computeNewtonSensis(AmiVectorArray *sx) {
-    /**
-     * Computes steady state sensitivities
-     *
-     * @param sx pointer to state variable sensitivities
-     */
     prepareLinearSystem(0, -1);
 
     model->fdxdotdp(*t, x, &dx);
