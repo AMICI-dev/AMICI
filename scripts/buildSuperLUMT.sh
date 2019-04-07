@@ -22,4 +22,8 @@ test -f SRC/queue && mv SRC/queue SRC/queue.bak
 cp MAKE_INC/make.pthread make.inc
 # Add -fPIC
 sed -ri 's/(CFLAGS\W*=\W*.*)(\#.*)/\1-fPIC \2/' make.inc
+# Use 64bit integers
+sed -ri 's/# (CFLAGS\W*+=.*-D_LONGINT.*)/\1/' make.inc
+sed -ri 's/# (FFLAGS\W*+=.*-fdefault-integer-8.*)/\1/' make.inc
+
 make superlulib
