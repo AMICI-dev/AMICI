@@ -163,13 +163,9 @@ def import_model(sbml_file: str,
     sigmas = petab.get_sigmas(sbml_importer.sbml, remove=True)
 
     measurement_df = petab.get_measurement_df(measurement_file)
-    if 'observableTransformation' in measurement_df \
-        and not np.issubdtype(
-            measurement_df.observableTransformation.dtype, np.number) \
-            and np.any(measurement_df.observableTransformation != 'lin'):
 
-        raise ValueError(Fore.YELLOW + "Non-lin observables specified. "
-                                       "Don't know how to handle that.")
+    noise_distrs = petab_noise_distributions_to_amici(
+        petab.get_noise_distributions(measurement_df))
 
     # Replace observables in assignment
     import sympy as sp
@@ -202,12 +198,32 @@ def import_model(sbml_file: str,
         constantParameters=fixed_parameters,
         sigmas=sigmas,
         allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
+        noise_distributions=noise_distrs,
         **kwargs)
     end = time. time()
 
     if verbose:
         print(f"{Fore.GREEN}Model imported successfully in "
               f"{round(end - start, 2)}s")
+
+
+def petab_noise_distributions_to_amici(noise_distributions):
+    """
+    Map from the petab to the amici format of noise distribution
+    identifiers.
+
+    Arguments:
+        noise_distributions: as obtained from `petab.get_noise_distributions`
+    """
+    amici_distrs = {}
+    for id_, val in noise_distributions.items():
+        amici_val = ''
+        if val['observableTransformation']:
+            amici_val += val['observableTransformation'] + '-'
+        if val['noiseDistribution']:
+            amici_val += val['noiseDistribution']
+        amici_distrs[id_] = amici_val
+    return amici_distrs
 
 
 def main():
