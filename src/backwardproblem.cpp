@@ -77,7 +77,6 @@ void BackwardProblem::workBackwardProblem() {
         /* reinit states */
         solver->reInitB(which, t, xB, dxB);
         solver->quadReInitB(which, xQB);
-        solver->calcICB(which, t);
     }
 
     /* we still need to integrate from first datapoint to tstart */

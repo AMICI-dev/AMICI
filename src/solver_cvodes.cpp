@@ -345,7 +345,8 @@ void CVodeSolver::reInitPostProcessB(const realtype tnext) const {
     auto ca_mem = cv_mem->cv_adj_mem;
     auto cvB_mem = ca_mem->cvB_mem;
     while (cvB_mem != nullptr) {
-        reInitPostProcess(static_cast<void *>(cvB_mem), &tBret, &xB, tnext);
+        reInitPostProcess(static_cast<void *>(cvB_mem->cv_mem), &tBret, &xB,
+                          tnext);
         cvB_mem->cv_tout = tBret;
         cvB_mem = cvB_mem->cv_next;
     }

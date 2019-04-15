@@ -100,29 +100,36 @@ class SteadystateProblem {
     std::unique_ptr<Solver> createSteadystateSimSolver(Solver *solver,
                                                        Model *model);
 
-    /** default constructor
-     * @param t pointer to time variable
-     * @param x pointer to state variables
-     * @param sx pointer to state sensitivity variables
+    /**
+     * @brief constructor
+     * @param solver pointer to Solver instance
      */
-    SteadystateProblem(realtype *t, AmiVector *x, AmiVectorArray *sx) :
-    delta(x->getLength()),
-    ewt(x->getLength()),
-    rel_x_newton(x->getLength()),
-    x_newton(x->getLength()),
-    x_old(x->getLength()),
-    dx(x->getLength()),
-    xdot(x->getLength()),
-    xdot_old(x->getLength()),
-    sdx(x->getLength(),sx->getLength())
-    {
-        this->t = t;
-        this->x = x;
-        this->sx = sx;
-    }
+    SteadystateProblem(const Solver *solver):
+    t(solver->gett()),
+    delta(solver->nx()),
+    ewt(solver->nx()),
+    rel_x_newton(solver->nx()),
+    x_newton(solver->nx()),
+    x(solver->nx()),
+    x_old(solver->nx()),
+    dx(solver->nx()),
+    xdot(solver->nx()),
+    xdot_old(solver->nx()),
+    sx(solver->nx(), solver->nplist()),
+    sdx(solver->nx(), solver->nplist()) {}
+    
+    /**
+     * @brief routine that writes solutions of steadystate problem to target
+     vectors
+     * @param t final timepoint
+     * @param x steadystate state
+     * @param sx steadystate state sensitivity
+     */
+    void writeSolution(realtype *t, AmiVector &x, AmiVectorArray &sx);
+    
 
   private:
-    realtype *t;
+    realtype t;
     /** newton step? */
     AmiVector delta;
     /** error weights */
@@ -132,7 +139,7 @@ class SteadystateProblem {
     /** container for absolute error calcuation? */
     AmiVector x_newton;
     /** state vector */
-    AmiVector *x;
+    AmiVector x;
     /** old state vector */
     AmiVector x_old;
     /** differential state vector */
@@ -142,7 +149,7 @@ class SteadystateProblem {
     /** old time derivative state vector */
     AmiVector xdot_old;
     /** state sensitivities */
-    AmiVectorArray *sx;
+    AmiVectorArray sx;
     /** state differential sensitivities */
     AmiVectorArray sdx;
 

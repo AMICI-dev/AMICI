@@ -101,8 +101,9 @@ void ForwardProblem::workForwardProblem() {
             // Solve for nextTimepoint
             while (solver->gett() < nextTimepoint) {
                 if (std::isinf(nextTimepoint)) {
-                    SteadystateProblem sstate = SteadystateProblem(&t, &x, &sx);
+                    SteadystateProblem sstate = SteadystateProblem(solver);
                     sstate.workSteadyStateProblem(rdata, solver, model, it);
+                    sstate.writeSolution(&t, x, sx);
                 } else {
                     int status = solver->run(nextTimepoint);
                     t = solver->gett();
@@ -150,9 +151,10 @@ void ForwardProblem::handlePreequilibration()
     }
 
     // pre-equilibrate
-    SteadystateProblem sstate = SteadystateProblem(&t, &x, &sx);
+    SteadystateProblem sstate = SteadystateProblem(solver);
 
     sstate.workSteadyStateProblem(rdata, solver, model, -1);
+    sstate.writeSolution(&t, x, sx);
 
     if(overrideFixedParameters) {
         // Restore

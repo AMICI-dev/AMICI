@@ -245,8 +245,8 @@ void IDASolver::reInitPostProcessB(const realtype tnext) const {
     auto idaadj_mem = ida_mem->ida_adj_mem;
     auto idaB_mem = idaadj_mem->IDAB_mem;
     while (idaB_mem != nullptr) {
-        reInitPostProcess(static_cast<void *>(idaB_mem), &tBret, &xB, &dxB,
-                          tnext);
+        reInitPostProcess(static_cast<void *>(idaB_mem->IDA_mem), &tBret, &xB,
+                          &dxB, tnext);
         // idaB_mem->ida_tout = tBret;
         idaB_mem = idaB_mem->ida_next;
     }
@@ -334,7 +334,7 @@ void IDASolver::getB(const int which) const {
 }
 void IDASolver::getDkyB(const realtype t, int k, const int which) const {
     int status = IDAGetDky(IDAGetAdjIDABmem(solverMemory.get(), which), t, k,
-                           xB.getNVector());
+                           dky.getNVector());
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetB");
 }
