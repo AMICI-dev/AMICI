@@ -14,14 +14,14 @@
 
 namespace amici {
 
-void Model::fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata) {
+void Model::fsy(const int it, const AmiVectorArray &sx, ReturnData *rdata) {
     if (!ny)
         return;
 
     // copy dydp for current time to sy
     std::copy(dydp.begin(), dydp.end(), &rdata->sy[it * nplist() * ny]);
 
-    sx->flatten_to_vector(this->sx);
+    sx.flatten_to_vector(this->sx);
 
     // compute sy = 1.0*dydx*sx + 1.0*sy
     // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
@@ -42,13 +42,13 @@ void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
                 rdata->sz.at((nroots[ie]*nplist()+ip)*nz + iz) = 0.0;
 }
 
-void Model::fsJy(const int it, const std::vector<realtype>& dJydx, const AmiVectorArray *sx, ReturnData *rdata) {
+void Model::fsJy(const int it, const std::vector<realtype>& dJydx, const AmiVectorArray &sx, ReturnData *rdata) {
 
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ        x nx_solver
     // sx           rdata->nt x nx_solver x nplist()
     std::vector<realtype> multResult(nJ * nplist(), 0);
-    sx->flatten_to_vector(this->sx);
+    sx.flatten_to_vector(this->sx);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
@@ -138,7 +138,7 @@ void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *ed
     }
 }
 
-void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, const AmiVectorArray *sx, ReturnData *rdata) {
+void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, const AmiVectorArray &sx, ReturnData *rdata) {
     // sJz           nJ x nplist()
     // dJzdp         nJ x nplist()
     // dJzdx         nmaxevent x nJ        x nx_solver
@@ -149,7 +149,7 @@ void Model::fsJz(const int nroots, const std::vector<realtype>& dJzdx, const Ami
     // sx           rdata->nt x nx_solver x nplist()
 
     std::vector<realtype> multResult(nJ * nplist(), 0);
-    sx->flatten_to_vector(this->sx);
+    sx.flatten_to_vector(this->sx);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans, nJ,
@@ -227,8 +227,8 @@ void Model::fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t, c
     }
 }
 
-void Model::initialize(AmiVector *x, AmiVector *dx,
-                       AmiVectorArray *sx, AmiVectorArray * /*sdx*/,
+void Model::initialize(AmiVector &x, AmiVector &dx,
+                       AmiVectorArray &sx, AmiVectorArray & /*sdx*/,
                        bool computeSensitivities) {
     initializeStates(x);
     if(computeSensitivities)
@@ -243,18 +243,18 @@ void Model::initialize(AmiVector *x, AmiVector *dx,
 
 }
 
-void Model::initializeB(AmiVector *xB, AmiVector *dxB, AmiVector *xQB,
+void Model::initializeB(AmiVector &xB, AmiVector&dxB, AmiVector &xQB,
                         const std::vector<realtype> &dJydx) {
-    xB->reset();
+    xB.reset();
     for (int ix = 0; ix < nxtrue_solver; ++ix)
         for (int iJ = 0; iJ < nJ; ++iJ)
-            xB->at(ix + iJ * nxtrue_solver) +=
+            xB.at(ix + iJ * nxtrue_solver) +=
             dJydx.at(iJ + ( ix + (nt() - 1)  * nx_solver ) * nJ);
-    dxB->reset();
-    xQB->reset();
+    dxB.reset();
+    xQB.reset();
 }
 
-void Model::initializeStates(AmiVector *x) {
+void Model::initializeStates(AmiVector &x) {
     if (x0data.empty()) {
         fx0(x);
     } else {
@@ -262,12 +262,12 @@ void Model::initializeStates(AmiVector *x) {
         ftotal_cl(total_cl.data(), x0data.data());
         fx_solver(x0_solver.data(), x0data.data());
         for (int ix = 0; ix < nx_solver; ix++) {
-            (*x)[ix] = (realtype) x0_solver.at(ix);
+            x[ix] = (realtype) x0_solver.at(ix);
         }
     }
 }
 
-void Model::initializeStateSensitivities(AmiVectorArray *sx, AmiVector *x) {
+void Model::initializeStateSensitivities(AmiVectorArray &sx, AmiVector &x) {
     if (sx0data.empty()) {
         fsx0(sx, x);
     } else {
@@ -279,13 +279,13 @@ void Model::initializeStateSensitivities(AmiVectorArray *sx, AmiVector *x) {
             fstotal_cl(stcl, &sx0data.at(ip*nx_rdata), plist(ip));
             fsx_solver(sx0_solver_slice.data(), &sx0data.at(ip*nx_rdata));
             for (int ix = 0; ix < nx_solver; ix++) {
-                sx->at(ix,ip) = (realtype) sx0_solver_slice.at(ix);
+                sx.at(ix,ip) = (realtype) sx0_solver_slice.at(ix);
             }
         }
     }
 }
 
-void Model::initHeaviside(AmiVector *x, AmiVector *dx) {
+void Model::initHeaviside(AmiVector &x, AmiVector &dx) {
     std::vector<realtype> rootvals(ne,0.0);
     froot(tstart, x, dx, rootvals.data());
     for (int ie = 0; ie < ne; ie++) {
@@ -938,109 +938,110 @@ void Model::initializeVectors()
     sx0data.clear();
 }
 
-void Model::fx_rdata(AmiVector *x_rdata, const AmiVector *x) {
-    fx_rdata(x_rdata->data(), x->data(), total_cl.data());
+void Model::fx_rdata(AmiVector &x_rdata, const AmiVector &x) {
+    fx_rdata(x_rdata.data(), x.data(), total_cl.data());
     if(alwaysCheckFinite)
-        checkFinite(x_rdata->getLength(), x_rdata->data(), "x_rdata");
+        checkFinite(x_rdata.getLength(), x_rdata.data(), "x_rdata");
 }
 
-void Model::fx0(AmiVector *x) {
+void Model::fx0(AmiVector &x) {
     std::fill(x_rdata.begin(), x_rdata.end(), 0.0);
     /* this function  also computes initial total abundances */
     fx0(x_rdata.data(), tstart, unscaledParameters.data(),
         fixedParameters.data());
-    fx_solver(x->data(), x_rdata.data());
+    fx_solver(x.data(), x_rdata.data());
     ftotal_cl(total_cl.data(), x_rdata.data());
 
     if(alwaysCheckFinite) {
         checkFinite(x_rdata.size(), x_rdata.data(), "x0 x_rdata");
-        checkFinite(x->getLength(), x->data(), "x0 x");
+        checkFinite(x.getLength(), x.data(), "x0 x");
     }
 }
 
-void Model::fx0_fixedParameters(AmiVector *x) {
+void Model::fx0_fixedParameters(AmiVector &x) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
     /* we transform to the unreduced states x_rdata and then apply
      x0_fixedparameters to (i) enable updates to states that were removed from
      conservation laws and (ii) be able to correctly compute total abundances
      after updating the state variables */
-    fx_rdata(x_rdata.data(), x->data(), total_cl.data());
+    fx_rdata(x_rdata.data(), x.data(), total_cl.data());
     fx0_fixedParameters(x_rdata.data(), tstart, unscaledParameters.data(),
                         fixedParameters.data());
-    fx_solver(x->data(), x_rdata.data());
+    fx_solver(x.data(), x_rdata.data());
     /* update total abundances */
     ftotal_cl(total_cl.data(), x_rdata.data());
 }
 
 
 
-void Model::fsx_rdata(AmiVectorArray *sx_full, const AmiVectorArray *sx) {
+void Model::fsx_rdata(AmiVectorArray &sx_full, const AmiVectorArray &sx) {
     realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
             stcl = &stotal_cl.at(plist(ip) * ncl());
-        fsx_rdata(sx_full->data(ip), sx->data(ip), stcl, ip);
+        fsx_rdata(sx_full.data(ip), sx.data(ip), stcl, ip);
     }
 }
 
-void Model::fsx0(AmiVectorArray *sx, const AmiVector *x) {
+void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
     /* this function  also computes initial total abundance sensitivities */
     realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
             stcl = &stotal_cl.at(plist(ip) * ncl());
         std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
-        fsx0(sx_rdata.data(), tstart, x->data(), unscaledParameters.data(),
+        fsx0(sx_rdata.data(), tstart, x.data(), unscaledParameters.data(),
              fixedParameters.data(), plist(ip));
-        fsx_solver(sx->data(ip), sx_rdata.data());
+        fsx_solver(sx.data(ip), sx_rdata.data());
         fstotal_cl(stcl, sx_rdata.data(), plist(ip));
     }
 }
 
-void Model::fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x) {
+void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
     realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
             stcl = &stotal_cl.at(plist(ip) * ncl());
-        fsx_rdata(sx_rdata.data(), sx->data(ip), stcl, plist(ip));
-        fsx0_fixedParameters(sx_rdata.data(), tstart, x->data(),
+        fsx_rdata(sx_rdata.data(), sx.data(ip), stcl, plist(ip));
+        fsx0_fixedParameters(sx_rdata.data(), tstart, x.data(),
                              unscaledParameters.data(), fixedParameters.data(),
                              plist(ip));
-        fsx_solver(sx->data(ip), sx_rdata.data());
+        fsx_solver(sx.data(ip), sx_rdata.data());
         fstotal_cl(stcl, sx_rdata.data(), plist(ip));
     }
 }
 
 void Model::fsdx0() {}
 
-void Model::fstau(const realtype t, const int ie, const AmiVector *x, const AmiVectorArray *sx) {
+void Model::fstau(const realtype t, const int ie, const AmiVector &x, const AmiVectorArray &sx) {
     std::fill(stau.begin(),stau.end(),0.0);
     for(int ip = 0; ip < nplist(); ip++){
-        fstau(&stau.at(ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist(ip),ie);
+        fstau(&stau.at(ip),t,x.data(), unscaledParameters.data(),
+              fixedParameters.data(), h.data(), sx.data(ip), plist(ip), ie);
     }
 }
 
-void Model::fy(const realtype t, const int it, const AmiVector *x, ReturnData *rdata) {
+void Model::fy(const realtype t, const int it, const AmiVector &x, ReturnData *rdata) {
     if (!ny)
         return;
-    fw(t,x->data());
-    fy(&rdata->y.at(it*ny),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
+    fw(t,x.data());
+    fy(&rdata->y.at(it*ny),t,x.data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data());
 
     if(alwaysCheckFinite) {
         amici::checkFinite(ny, &rdata->y.at(it*ny), "y");
     }
 }
 
-void Model::fdydp(const realtype t, const AmiVector *x) {
+void Model::fdydp(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
 
     std::fill(dydp.begin(),dydp.end(),0.0);
-    fw(t, x->data());
-    fdwdp(t, x->data());
+    fw(t, x.data());
+    fdwdp(t, x.data());
     // if dwdp is not dense, fdydp will expect the full sparse array
     realtype *dwdp_tmp = dwdp.data();
     for(int ip = 0; ip < nplist(); ip++){
@@ -1048,15 +1049,8 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
         if (wasPythonGenerated() && nw)
             dwdp_tmp = &dwdp.at(nw * ip);
 
-        fdydp(&dydp.at(ip*ny),
-              t,
-              x->data(),
-              unscaledParameters.data(),
-              fixedParameters.data(),
-              h.data(),
-              plist(ip),
-              w.data(),
-              dwdp_tmp);
+        fdydp(&dydp.at(ip*ny), t, x.data(), unscaledParameters.data(),
+              fixedParameters.data(), h.data(), plist(ip), w.data(), dwdp_tmp);
     }
 
     if(alwaysCheckFinite) {
@@ -1064,44 +1058,52 @@ void Model::fdydp(const realtype t, const AmiVector *x) {
     }
 }
 
-void Model::fdydx(const realtype t, const AmiVector *x) {
+void Model::fdydx(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
 
     std::fill(dydx.begin(),dydx.end(),0.0);
-    fw(t,x->data());
-    fdwdx(t,x->data());
-    fdydx(dydx.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),dwdx.data());
+    fw(t,x.data());
+    fdwdx(t,x.data());
+    fdydx(dydx.data(), t, x.data(), unscaledParameters.data(),
+          fixedParameters.data(), h.data(), w.data(), dwdx.data());
 
     if(alwaysCheckFinite) {
         amici::checkFinite(dydx, "dydx");
     }
 }
 
-void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
-    fz(&rdata->z.at(nroots*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+void Model::fz(const int nroots, const int ie, const realtype t, const AmiVector &x, ReturnData *rdata) {
+    fz(&rdata->z.at(nroots*nz), ie, t, x.data(), unscaledParameters.data(),
+       fixedParameters.data(), h.data());
 }
 
-void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
+void Model::fsz(const int nroots, const int ie, const realtype t, const AmiVector &x, const AmiVectorArray &sx, ReturnData *rdata) {
     for(int ip = 0; ip < nplist();  ip++ ){
-        fsz(&rdata->sz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist(ip));
+        fsz(&rdata->sz.at((nroots*nplist()+ip)*nz), ie, t, x.data(),
+            unscaledParameters.data(), fixedParameters.data(), h.data(),
+            sx.data(ip), plist(ip));
     }
 }
 
-void Model::frz(const int nroots, const int ie, const realtype t, const AmiVector *x, ReturnData *rdata) {
-    frz(&rdata->rz.at(nroots*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+void Model::frz(const int nroots, const int ie, const realtype t, const AmiVector &x, ReturnData *rdata) {
+    frz(&rdata->rz.at(nroots*nz), ie, t, x.data(), unscaledParameters.data(),
+        fixedParameters.data(), h.data());
 }
 
-void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata) {
+void Model::fsrz(const int nroots, const int ie, const realtype t, const AmiVector &x, const AmiVectorArray &sx, ReturnData *rdata) {
     for(int ip = 0; ip < nplist();  ip++ ){
-        fsrz(&rdata->srz.at((nroots*nplist()+ip)*nz),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),sx->data(ip),plist(ip));
+        fsrz(&rdata->srz.at((nroots*nplist()+ip)*nz), ie, t, x.data(),
+             unscaledParameters.data(), fixedParameters.data(), h.data(),
+             sx.data(ip), plist(ip));
     }
 }
 
-void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
+void Model::fdzdp(const realtype t, const int ie, const AmiVector &x) {
     std::fill(dzdp.begin(),dzdp.end(),0.0);
     for(int ip = 0; ip < nplist(); ip++){
-        fdzdp(dzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist(ip));
+        fdzdp(dzdp.data(), ie, t, x.data(), unscaledParameters.data(),
+              fixedParameters.data(), h.data(), plist(ip));
     }
 
     if(alwaysCheckFinite) {
@@ -1109,19 +1111,21 @@ void Model::fdzdp(const realtype t, const int ie, const AmiVector *x) {
     }
 }
 
-void Model::fdzdx(const realtype t, const int ie, const AmiVector *x) {
+void Model::fdzdx(const realtype t, const int ie, const AmiVector &x) {
     std::fill(dzdx.begin(),dzdx.end(),0.0);
-    fdzdx(dzdx.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+    fdzdx(dzdx.data(), ie, t, x.data(), unscaledParameters.data(),
+          fixedParameters.data(), h.data());
 
     if(alwaysCheckFinite) {
         amici::checkFinite(dzdx, "dzdx");
     }
 }
 
-void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
+void Model::fdrzdp(const realtype t, const int ie, const AmiVector &x) {
     std::fill(drzdp.begin(),drzdp.end(),0.0);
     for(int ip = 0; ip < nplist(); ip++){
-        fdrzdp(drzdp.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),plist(ip));
+        fdrzdp(drzdp.data(), ie, t, x.data(), unscaledParameters.data(),
+               fixedParameters.data(), h.data(), plist(ip));
     }
 
     if(alwaysCheckFinite) {
@@ -1130,54 +1134,62 @@ void Model::fdrzdp(const realtype t, const int ie, const AmiVector *x) {
 }
 
 
-void Model::fdrzdx(const realtype t, const int ie, const AmiVector *x) {
+void Model::fdrzdx(const realtype t, const int ie, const AmiVector &x) {
     std::fill(drzdx.begin(),drzdx.end(),0.0);
-    fdrzdx(drzdx.data(),ie,t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data());
+    fdrzdx(drzdx.data(), ie, t, x.data(), unscaledParameters.data(),
+           fixedParameters.data(), h.data());
 
     if(alwaysCheckFinite) {
         amici::checkFinite(drzdx, "drzdx");
     }
 }
 
-void Model::fdeltax(const int ie, const realtype t, const AmiVector *x,
-                    const AmiVector *xdot, const AmiVector *xdot_old) {
+void Model::fdeltax(const int ie, const realtype t, const AmiVector &x,
+                    const AmiVector &xdot, const AmiVector &xdot_old) {
     std::fill(deltax.begin(),deltax.end(),0.0);
-    fdeltax(deltax.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),ie,xdot->data(),xdot_old->data());
+    fdeltax(deltax.data(), t, x.data(), unscaledParameters.data(),
+            fixedParameters.data(), h.data(), ie, xdot.data(),
+            xdot_old.data());
 
     if(alwaysCheckFinite) {
         amici::checkFinite(deltax, "deltax");
     }
 }
 
-void Model::fdeltasx(const int ie, const realtype t, const AmiVector *x, const AmiVectorArray *sx,
-                     const AmiVector *xdot, const AmiVector *xdot_old) {
-    fw(t,x->data());
+void Model::fdeltasx(const int ie, const realtype t, const AmiVector &x, const AmiVectorArray &sx,
+                     const AmiVector &xdot, const AmiVector &xdot_old) {
+    fw(t,x.data());
     std::fill(deltasx.begin(),deltasx.end(),0.0);
     for(int ip = 0; ip < nplist(); ip++)
-        fdeltasx(&deltasx.at(nx_solver*ip),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),w.data(),
-                 plist(ip),ie,xdot->data(),xdot_old->data(),sx->data(ip),&stau.at(ip));
+        fdeltasx(&deltasx.at(nx_solver*ip), t, x.data(),
+                 unscaledParameters.data(), fixedParameters.data(),
+                 h.data(), w.data(), plist(ip), ie, xdot.data(),
+                 xdot_old.data(), sx.data(ip), &stau.at(ip));
 
     if(alwaysCheckFinite) {
         amici::checkFinite(deltasx, "deltasx");
     }
 }
 
-void Model::fdeltaxB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
-                     const AmiVector *xdot, const AmiVector *xdot_old) {
+void Model::fdeltaxB(const int ie, const realtype t, const AmiVector &x, const AmiVector &xB,
+                     const AmiVector &xdot, const AmiVector &xdot_old) {
     std::fill(deltaxB.begin(),deltaxB.end(),0.0);
-    fdeltaxB(deltaxB.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),ie,xdot->data(),xdot_old->data(),xB->data());
+    fdeltaxB(deltaxB.data(), t, x.data(), unscaledParameters.data(),
+             fixedParameters.data(), h.data(), ie, xdot.data(),
+             xdot_old.data(), xB.data());
 
     if(alwaysCheckFinite) {
         amici::checkFinite(deltaxB, "deltaxB");
     }
 }
 
-void Model::fdeltaqB(const int ie, const realtype t, const AmiVector *x, const AmiVector *xB,
-                     const AmiVector *xdot, const AmiVector *xdot_old) {
+void Model::fdeltaqB(const int ie, const realtype t, const AmiVector &x, const AmiVector &xB,
+                     const AmiVector &xdot, const AmiVector &xdot_old) {
     std::fill(deltaqB.begin(),deltaqB.end(),0.0);
     for(int ip = 0; ip < nplist(); ip++)
-        fdeltaqB(deltaqB.data(),t,x->data(), unscaledParameters.data(),fixedParameters.data(),h.data(),
-                 plist(ip),ie,xdot->data(),xdot_old->data(),xB->data());
+        fdeltaqB(deltaqB.data(), t, x.data(), unscaledParameters.data(),
+                 fixedParameters.data(), h.data(), plist(ip), ie, xdot.data(),
+                 xdot_old.data(), xB.data());
 
     if(alwaysCheckFinite) {
         amici::checkFinite(deltaqB, "deltaqB");

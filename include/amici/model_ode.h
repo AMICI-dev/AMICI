@@ -70,15 +70,15 @@ namespace amici {
                     nytrue, nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, nnz,
                     ubw, lbw, o2mode, p, k, plist, idlist, z2event) {}
 
-        virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                        AmiVector *xdot, SUNMatrix J) override;
+        virtual void fJ(realtype t, realtype cj, AmiVector &x, AmiVector &dx,
+                        AmiVector &xdot, SUNMatrix J) override;
         void fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J);
 
         void fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                  SUNMatrix JB);
 
-        virtual void fJSparse(realtype t, realtype cj, AmiVector *x,
-                              AmiVector *dx, AmiVector *xdot,
+        virtual void fJSparse(realtype t, realtype cj, AmiVector &x,
+                              AmiVector &dx, AmiVector &xdot,
                               SUNMatrix J) override;
         void fJSparse(realtype t, N_Vector x, SUNMatrix J);
 
@@ -86,22 +86,22 @@ namespace amici {
                        SUNMatrix JB);
 
         void fJDiag(realtype t, N_Vector JDiag, N_Vector x);
-        virtual void fJDiag(realtype t, AmiVector *Jdiag, realtype cj,
-                            AmiVector *x, AmiVector *dx) override;
+        virtual void fJDiag(realtype t, AmiVector &Jdiag, realtype cj,
+                            AmiVector &x, AmiVector &dx) override;
 
-        virtual void fJv(realtype t, AmiVector *x, AmiVector *dx,
-                         AmiVector *xdot, AmiVector *v, AmiVector *nJv,
+        virtual void fJv(realtype t, AmiVector &x, AmiVector &dx,
+                         AmiVector &xdot, AmiVector &v, AmiVector &nJv,
                          realtype cj) override;
         void fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x);
 
         void fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
                   N_Vector xB);
 
-        virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override;
+        virtual void froot(realtype t, AmiVector &x, AmiVector &dx, realtype *root) override;
 
         void froot(realtype t, N_Vector x, realtype *root);
 
-        virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) override;
+        virtual void fxdot(realtype t, AmiVector &x, AmiVector &dx, AmiVector &xdot) override;
         void fxdot(realtype t, N_Vector x, N_Vector xdot);
 
         void fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot);
@@ -111,12 +111,12 @@ namespace amici {
         void fdxdotdw(const realtype t, const N_Vector x);
 
         void fdxdotdp(const realtype t, const N_Vector x);
-        virtual void fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) override {
-            fdxdotdp(t,x->getNVector());
+        virtual void fdxdotdp(realtype t, AmiVector &x, AmiVector &dx) override {
+            fdxdotdp(t,x.getNVector());
         }
 
-        void fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
-                    AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) override;
+        void fsxdot(realtype t, AmiVector &x, AmiVector &dx, int ip,
+                    AmiVector &sx, AmiVector &sdx, AmiVector &sxdot) override;
         void fsxdot(realtype t, N_Vector x, int ip, N_Vector sx, N_Vector sxdot);
 
         virtual std::unique_ptr<Solver> getSolver() override;

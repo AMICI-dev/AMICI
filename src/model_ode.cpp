@@ -3,9 +3,9 @@
 
 namespace amici {
 
-    void Model_ODE::fJ(realtype t, realtype  /*cj*/, AmiVector *x, AmiVector * /*dx*/,
-                          AmiVector *xdot, SUNMatrix J) {
-        fJ(t, x->getNVector(), xdot->getNVector(), J);
+    void Model_ODE::fJ(realtype t, realtype  /*cj*/, AmiVector &x, AmiVector & /*dx*/,
+                          AmiVector &xdot, SUNMatrix J) {
+        fJ(t, x.getNVector(), xdot.getNVector(), J);
 
     }
 
@@ -26,9 +26,9 @@ namespace amici {
            w.data(), dwdx.data());
     }
 
-    void Model_ODE::fJSparse(realtype t, realtype  /*cj*/, AmiVector *x,
-                             AmiVector * /*dx*/, AmiVector * /*xdot*/, SUNMatrix J) {
-        fJSparse(t, x->getNVector(), J);
+    void Model_ODE::fJSparse(realtype t, realtype  /*cj*/, AmiVector &x,
+                             AmiVector & /*dx*/, AmiVector & /*xdot*/, SUNMatrix J) {
+        fJSparse(t, x.getNVector(), J);
     }
 
     /** implementation of fJSparse at the N_Vector level, this function provides
@@ -55,10 +55,10 @@ namespace amici {
         }
     }
 
-    void Model_ODE::fJv(realtype t, AmiVector *x, AmiVector * /*dx*/,
-                        AmiVector * /*xdot*/, AmiVector *v, AmiVector *Jv,
+    void Model_ODE::fJv(realtype t, AmiVector &x, AmiVector & /*dx*/,
+                        AmiVector & /*xdot*/, AmiVector &v, AmiVector &Jv,
                         realtype /*cj*/) {
-        fJv(v->getNVector(), Jv->getNVector(), t, x->getNVector());
+        fJv(v.getNVector(), Jv.getNVector(), t, x.getNVector());
     }
 
     /** implementation of fJv at the N_Vector level.
@@ -74,8 +74,8 @@ namespace amici {
         J.multiply(Jv, v);
     }
 
-    void Model_ODE::froot(realtype t, AmiVector *x, AmiVector * /*dx*/, realtype *root){
-        froot(t,x->getNVector(),root);
+    void Model_ODE::froot(realtype t, AmiVector &x, AmiVector & /*dx*/, realtype *root){
+        froot(t,x.getNVector(),root);
     }
 
     /** implementation of froot at the N_Vector level, this function provides an interface
@@ -91,8 +91,8 @@ namespace amici {
         froot(root,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data());
     }
 
-    void Model_ODE::fxdot(realtype t, AmiVector *x, AmiVector * /*dx*/, AmiVector *xdot) {
-        fxdot(t,x->getNVector(),xdot->getNVector());
+    void Model_ODE::fxdot(realtype t, AmiVector &x, AmiVector & /*dx*/, AmiVector &xdot) {
+        fxdot(t,x.getNVector(), xdot.getNVector());
     }
 
     /** implementation of fxdot at the N_Vector level, this function provides an interface
@@ -118,10 +118,10 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    void Model_ODE::fJDiag(realtype t, AmiVector *JDiag, realtype  /*cj*/, AmiVector *x,
-                          AmiVector * /*dx*/) {
-        fJDiag(t, JDiag->getNVector(), x->getNVector());
-        if(checkFinite(nx_solver,JDiag->data(),"Jacobian") != AMICI_SUCCESS)
+    void Model_ODE::fJDiag(realtype t, AmiVector &JDiag, realtype  /*cj*/, AmiVector &x,
+                          AmiVector & /*dx*/) {
+        fJDiag(t, JDiag.getNVector(), x.getNVector());
+        if(checkFinite(nx_solver, JDiag.data(),"Jacobian") != AMICI_SUCCESS)
             throw AmiException("Evaluation of fJDiag failed!");
     }
 
@@ -287,9 +287,9 @@ namespace amici {
         }
     }
 
-    void Model_ODE::fsxdot(realtype t, AmiVector *x, AmiVector * /*dx*/, int ip,
-                           AmiVector *sx, AmiVector * /*sdx*/, AmiVector *sxdot) {
-        fsxdot(t,x->getNVector(), ip, sx->getNVector(), sxdot->getNVector());
+    void Model_ODE::fsxdot(realtype t, AmiVector &x, AmiVector & /*dx*/, int ip,
+                           AmiVector &sx, AmiVector & /*sdx*/, AmiVector &sxdot) {
+        fsxdot(t,x.getNVector(), ip, sx.getNVector(), sxdot.getNVector());
     }
 
     /** implementation of fsxdot at the N_Vector level

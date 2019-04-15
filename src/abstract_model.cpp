@@ -35,7 +35,7 @@ void AbstractModel::fsx0(realtype * /*sx0*/, const realtype  /*t*/, const realty
                        __func__);
 }
 
-void AbstractModel::fdx0(AmiVector *x0, AmiVector *dx0) {}
+void AbstractModel::fdx0(AmiVector &x0, AmiVector &dx0) {}
 
 void AbstractModel::fstau(realtype * /*stau*/, const realtype  /*t*/, const realtype * /*x*/,
                           const realtype * /*p*/, const realtype * /*k*/,

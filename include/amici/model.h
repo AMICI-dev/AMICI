@@ -139,7 +139,7 @@ class Model : public AbstractModel {
      * @param x_solver pointer to state variables with conservation laws
      * applied (solver returns this)
      */
-    void fx_rdata(AmiVector *x_rdata, const AmiVector *x_solver);
+    void fx_rdata(AmiVector &x_rdata, const AmiVector &x_solver);
 
     /**
      * Expands conservation law for state sensitivities
@@ -148,26 +148,26 @@ class Model : public AbstractModel {
      * @param sx_solver pointer to state variable sensitivities with
      * conservation laws applied (solver returns this)
      */
-    void fsx_rdata(AmiVectorArray *sx_rdata, const AmiVectorArray *sx_solver);
+    void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver);
 
     /**
      * Initial states
      * @param x pointer to state variables
      */
-    void fx0(AmiVector *x);
+    void fx0(AmiVector &x);
 
     /**
      * Sets only those initial states that are specified via fixedParmeters
      * @param x pointer to state variables
      */
-    void fx0_fixedParameters(AmiVector *x);
+    void fx0_fixedParameters(AmiVector &x);
 
     /**
      * Initial value for initial state sensitivities
      * @param sx pointer to state sensitivity variables
      * @param x pointer to state variables
      **/
-    void fsx0(AmiVectorArray *sx, const AmiVector *x);
+    void fsx0(AmiVectorArray &sx, const AmiVector &x);
 
     /**
      * Sets only those initial states sensitivities that are affected from fx0
@@ -175,7 +175,7 @@ class Model : public AbstractModel {
      * @param sx pointer to state sensitivity variables
      * @param x pointer to state variables
      **/
-    void fsx0_fixedParameters(AmiVectorArray *sx, const AmiVector *x);
+    void fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x);
 
     /**
      * Sensitivity of derivative initial states sensitivities sdx0 (only
@@ -190,8 +190,8 @@ class Model : public AbstractModel {
      * @param x pointer to state variables
      * @param sx pointer to state sensitivity variables
      */
-    void fstau(const realtype t, const int ie, const AmiVector *x,
-               const AmiVectorArray *sx);
+    void fstau(const realtype t, const int ie, const AmiVector &x,
+               const AmiVectorArray &sx);
 
     /**
      * Observables / measurements
@@ -200,7 +200,7 @@ class Model : public AbstractModel {
      * @param x current state
      * @param rdata pointer to return data instance
      */
-    void fy(const realtype t, const int it, const AmiVector *x,
+    void fy(const realtype t, const int it, const AmiVector &x,
             ReturnData *rdata);
 
     /**
@@ -208,14 +208,14 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdydp(const realtype t, const AmiVector *x);
+    void fdydp(const realtype t, const AmiVector &x);
 
     /**
      * Partial derivative of observables y w.r.t. state variables x
      * @param t current timepoint
      * @param x current state
      */
-    void fdydx(const realtype t, const AmiVector *x);
+    void fdydx(const realtype t, const AmiVector &x);
 
     /** Event-resolved output
      * @param nroots number of events for event index
@@ -225,7 +225,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      */
     void fz(const int nroots, const int ie, const realtype t,
-            const AmiVector *x, ReturnData *rdata);
+            const AmiVector &x, ReturnData *rdata);
 
     /** Sensitivity of z, total derivative
      * @param nroots number of events for event index
@@ -236,7 +236,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      */
     void fsz(const int nroots, const int ie, const realtype t,
-             const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
+             const AmiVector &x, const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
      * Event root function of events (equal to froot but does not include
@@ -248,7 +248,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      */
     void frz(const int nroots, const int ie, const realtype t,
-             const AmiVector *x, ReturnData *rdata);
+             const AmiVector &x, ReturnData *rdata);
 
     /**
      * Sensitivity of rz, total derivative
@@ -260,7 +260,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      */
     void fsrz(const int nroots, const int ie, const realtype t,
-              const AmiVector *x, const AmiVectorArray *sx, ReturnData *rdata);
+              const AmiVector &x, const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
      * Partial derivative of event-resolved output z w.r.t. to model parameters
@@ -269,7 +269,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdzdp(const realtype t, const int ie, const AmiVector *x);
+    void fdzdp(const realtype t, const int ie, const AmiVector &x);
 
     /**
      * Partial derivative of event-resolved output z w.r.t. to model states x
@@ -277,7 +277,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdzdx(const realtype t, const int ie, const AmiVector *x);
+    void fdzdx(const realtype t, const int ie, const AmiVector &x);
 
     /**
      * Sensitivity of event-resolved root output w.r.t. to model parameters p
@@ -285,7 +285,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdrzdp(const realtype t, const int ie, const AmiVector *x);
+    void fdrzdp(const realtype t, const int ie, const AmiVector &x);
 
     /**
      * Sensitivity of event-resolved measurements rz w.r.t. to model states x
@@ -293,7 +293,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdrzdx(const realtype t, const int ie, const AmiVector *x);
+    void fdrzdx(const realtype t, const int ie, const AmiVector &x);
 
     /**
      * State update functions for events
@@ -303,8 +303,8 @@ class Model : public AbstractModel {
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
      */
-    void fdeltax(const int ie, const realtype t, const AmiVector *x,
-                 const AmiVector *xdot, const AmiVector *xdot_old);
+    void fdeltax(const int ie, const realtype t, const AmiVector &x,
+                 const AmiVector &xdot, const AmiVector &xdot_old);
 
     /**
      * Sensitivity update functions for events, total derivative
@@ -315,9 +315,9 @@ class Model : public AbstractModel {
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
      */
-    void fdeltasx(const int ie, const realtype t, const AmiVector *x,
-                  const AmiVectorArray *sx, const AmiVector *xdot,
-                  const AmiVector *xdot_old);
+    void fdeltasx(const int ie, const realtype t, const AmiVector &x,
+                  const AmiVectorArray &sx, const AmiVector &xdot,
+                  const AmiVector &xdot_old);
 
     /**
      * Adjoint state update functions for events
@@ -328,9 +328,9 @@ class Model : public AbstractModel {
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
      */
-    void fdeltaxB(const int ie, const realtype t, const AmiVector *x,
-                  const AmiVector *xB, const AmiVector *xdot,
-                  const AmiVector *xdot_old);
+    void fdeltaxB(const int ie, const realtype t, const AmiVector &x,
+                  const AmiVector &xB, const AmiVector &xdot,
+                  const AmiVector &xdot_old);
 
     /**
      * Quadrature state update functions for events
@@ -341,9 +341,9 @@ class Model : public AbstractModel {
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
      */
-    void fdeltaqB(const int ie, const realtype t, const AmiVector *x,
-                  const AmiVector *xB, const AmiVector *xdot,
-                  const AmiVector *xdot_old);
+    void fdeltaqB(const int ie, const realtype t, const AmiVector &x,
+                  const AmiVector &xB, const AmiVector &xdot,
+                  const AmiVector &xdot_old);
 
     /**
      * Standard deviation of measurements
@@ -472,7 +472,7 @@ class Model : public AbstractModel {
      * @param sx pointer to state sensitivities
      * @param rdata pointer to return data instance
      */
-    void fsy(const int it, const AmiVectorArray *sx, ReturnData *rdata);
+    void fsy(const int it, const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
      * Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
@@ -492,7 +492,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      */
     void fsJy(const int it, const std::vector<realtype> &dJydx,
-              const AmiVectorArray *sx, ReturnData *rdata);
+              const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
      * Compute sensitivity of time-resolved measurement negative log-likelihood
@@ -523,7 +523,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      */
     void fsJz(const int nroots, const std::vector<realtype> &dJzdx,
-              const AmiVectorArray *sx, ReturnData *rdata);
+              const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
      * Sensitivity of event-resolved measurement negative log-likelihood Jz
@@ -558,31 +558,31 @@ class Model : public AbstractModel {
      * @param computeSensitivities flag indicating whether sensitivities
      * are to be computed
      */
-    void initialize(AmiVector *x, AmiVector *dx, AmiVectorArray *sx,
-                    AmiVectorArray *sdx, bool computeSensitivities);
+    void initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
+                    AmiVectorArray &sdx, bool computeSensitivities);
 
     /**
      * Initialization of model properties
-     * @param xB pointer to adjoint state variables
-     * @param dxB pointer to time derivative of adjoint states (DAE only)
-     * @param xQB pointer to adjoint quadratures
+     * @param xB adjoint state variables
+     * @param dxB time derivative of adjoint states (DAE only)
+     * @param xQB adjoint quadratures
      * @param dJydx vector with values of state derivative of Jy
      */
-    void initializeB(AmiVector *xB, AmiVector *dxB, AmiVector *xQB,
+    void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB,
                      const std::vector<realtype> &dJydx);
     
     /**
      * Initialization of initial states
      * @param x pointer to state variables
      */
-    void initializeStates(AmiVector *x);
+    void initializeStates(AmiVector &x);
 
     /**
      * Initialization of initial state sensitivities
      * @param sx pointer to state variable sensititivies
      * @param x pointer to state variables
      */
-    void initializeStateSensitivities(AmiVectorArray *sx, AmiVector *x);
+    void initializeStateSensitivities(AmiVectorArray &sx, AmiVector &x);
 
     /**
      * Initialises the heaviside variables h at the intial time t0
@@ -590,7 +590,7 @@ class Model : public AbstractModel {
      * @param x pointer to state variables
      * @param dx pointer to time derivative of states (DAE only)
      */
-    void initHeaviside(AmiVector *x, AmiVector *dx);
+    void initHeaviside(AmiVector &x, AmiVector &dx);
 
     /**
      * @brief Number of parameters wrt to which sensitivities are computed

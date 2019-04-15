@@ -18,7 +18,7 @@ namespace serialization {
 template <class Archive>
 void serialize(Archive &ar, amici::IDASolver &u, const unsigned int version);
 }
-} // namespace boost
+} // namespace boost::serialization
 
 namespace amici {
 

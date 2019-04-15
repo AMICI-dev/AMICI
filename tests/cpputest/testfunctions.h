@@ -88,31 +88,31 @@ public:
   virtual std::unique_ptr<Solver> getSolver() override {
       throw AmiException("not implemented");
     }
-    virtual void froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root) override {
+    virtual void froot(realtype t, AmiVector &x, AmiVector &dx, realtype *root) override {
         throw AmiException("not implemented");
     }
-    virtual void fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot) override {
+    virtual void fxdot(realtype t, AmiVector &x, AmiVector &dx, AmiVector &xdot) override {
         throw AmiException("not implemented");
     }
-    virtual void fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip, AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) override {
+    virtual void fsxdot(realtype t, AmiVector &x, AmiVector &dx, int ip, AmiVector &sx, AmiVector &sdx, AmiVector &sxdot) override {
         throw AmiException("not implemented");
     }
-    virtual void fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx, AmiVector *xdot, SUNMatrix J) override {
+    virtual void fJ(realtype t, realtype cj, AmiVector &x, AmiVector &dx, AmiVector &xdot, SUNMatrix J) override {
         throw AmiException("not implemented");
     }
-    virtual void fJSparse(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                          AmiVector *xdot, SUNMatrix J) override {
+    virtual void fJSparse(realtype t, realtype cj, AmiVector &x, AmiVector &dx,
+                          AmiVector &xdot, SUNMatrix J) override {
         throw AmiException("not implemented");
     }
-    virtual void fJDiag(realtype t, AmiVector *Jdiag, realtype cj, AmiVector *x,
-                        AmiVector *dx) override {
+    virtual void fJDiag(realtype t, AmiVector &Jdiag, realtype cj, AmiVector &x,
+                        AmiVector &dx) override {
         throw AmiException("not implemented");
     }
-    virtual void fdxdotdp(realtype t, AmiVector *x, AmiVector *dx) override {
+    virtual void fdxdotdp(realtype t, AmiVector &x, AmiVector &dx) override {
         throw AmiException("not implemented");
     }
-    virtual void fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot,
-                     AmiVector *v, AmiVector *nJv, realtype cj) override {
+    virtual void fJv(realtype t, AmiVector &x, AmiVector &dx, AmiVector &xdot,
+                     AmiVector &v, AmiVector &nJv, realtype cj) override {
         throw AmiException("not implemented");
     }
 

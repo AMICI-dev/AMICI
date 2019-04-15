@@ -41,7 +41,7 @@ void BackwardProblem::workBackwardProblem() {
         return;
     }
     
-    model->initializeB(&xB, &dxB, &xQB, dJydx);
+    model->initializeB(xB, dxB, xQB, dJydx);
     solver->setupB(&which, rdata->ts[rdata->nt-1], model, xB, dxB, xQB);
 
     int it = rdata->nt - 2;
@@ -99,8 +99,10 @@ void BackwardProblem::handleEventB(const int iroot) {
             continue;
         }
 
-        model->fdeltaqB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
-        model->fdeltaxB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
+        model->fdeltaqB(ie, t, x_disc[iroot], xB, xdot_disc[iroot],
+                        xdot_old_disc[iroot]);
+        model->fdeltaxB(ie, t, x_disc[iroot], xB, xdot_disc[iroot],
+                        xdot_old_disc[iroot]);
 
         for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
             for (int iJ = 0; iJ < model->nJ; ++iJ) {

@@ -126,9 +126,6 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
         throw AmiException(
             "Solver for the forward problem must be setup first");
 
-    /* write initial conditions */
-    
-
     /* allocate memory for the backward problem */
     allocateSolverB(which);
 

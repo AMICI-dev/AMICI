@@ -89,7 +89,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
          newton_status == NewtonStatus::newt_sim_newt ||
          model->getSteadyStateSensitivityMode() != SteadyStateSensitivityMode::simulationFSA))
         // for newton_status == 2 the sensis were computed via FSA
-        newtonSolver->computeNewtonSensis(&sx);
+        newtonSolver->computeNewtonSensis(sx);
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     writeNewtonOutput(rdata, model, newton_status, run_time, it);
@@ -111,7 +111,7 @@ bool SteadystateProblem::checkConvergence(
                                          const Solver *solver,
                                          Model *model
                                          ) {
-    model->fxdot(t, &x, &dx, &xdot);
+    model->fxdot(t, x, dx, xdot);
     wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
     bool converged = wrms < RCONST(1.0);
     if (solver->getSensitivityOrder()>SensitivityOrder::none &&
@@ -119,7 +119,7 @@ bool SteadystateProblem::checkConvergence(
         for (int ip = 0; ip < model->nplist(); ++ip) {
             if (converged) {
                 sx = solver->getStateSensitivity(t);
-                model->fsxdot(t, &x, &dx, ip, &sx[ip], &dx, &xdot);
+                model->fsxdot(t, x, dx, ip, sx[ip], dx, xdot);
                 wrms = getWrmsNorm(x, xdot,
                                    solver->getAbsoluteToleranceSteadyStateSensi(),
                                    solver->getRelativeToleranceSteadyStateSensi());
@@ -145,7 +145,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
     /* initialize output of linear solver for Newton step */
     delta.reset();
 
-    model->fxdot(t, &x, &dx, &xdot);
+    model->fxdot(t, x, dx,xdot);
 
     /* Check for relative error, but make sure not to divide by 0!
         Ensure positivity of the state */
@@ -164,7 +164,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
                 delta = xdot;
                 newtonSolver->getStep(steadystate_try == NewtonStatus::newt ? 1
                                                                             : 2,
-                                      i_newtonstep, &delta);
+                                      i_newtonstep, delta);
             } catch (NewtonFailure const &ex) {
                 rdata->newton_numsteps.at(steadystate_try == NewtonStatus::newt
                                               ? 0
@@ -184,7 +184,7 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
                      x.getNVector());
 
         /* Compute new xdot and residuals */
-        model->fxdot(t, &x, &dx, &xdot);
+        model->fxdot(t, x, dx, xdot);
         realtype wrms_tmp = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
                                         newtonSolver->rtol);
 

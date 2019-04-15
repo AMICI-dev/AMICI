@@ -3,9 +3,9 @@
 
 namespace amici {
 
-    void Model_DAE::fJ(realtype t, realtype cj, AmiVector *x, AmiVector *dx,
-                       AmiVector *xdot, SUNMatrix J) {
-        fJ(t,cj, x->getNVector(), dx->getNVector(), xdot->getNVector(), J);
+    void Model_DAE::fJ(realtype t, realtype cj, AmiVector &x, AmiVector &dx,
+                       AmiVector &xdot, SUNMatrix J) {
+        fJ(t,cj, x.getNVector(), dx.getNVector(), xdot.getNVector(), J);
     }
 
     /** Jacobian of xdot with respect to states x
@@ -27,9 +27,9 @@ namespace amici {
            N_VGetArrayPointer(dx), w.data(), dwdx.data());
     }
 
-    void Model_DAE::fJSparse(realtype t, realtype cj, AmiVector *x,
-                             AmiVector *dx, AmiVector * /*xdot*/, SUNMatrix J) {
-        fJSparse(t, cj, x->getNVector(), dx->getNVector(), J);
+    void Model_DAE::fJSparse(realtype t, realtype cj, AmiVector &x,
+                             AmiVector &dx, AmiVector & /*xdot*/, SUNMatrix J) {
+        fJSparse(t, cj, x.getNVector(), dx.getNVector(), J);
     }
 
     /** J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -50,10 +50,10 @@ namespace amici {
                  w.data(), dwdx.data());
     }
 
-    void Model_DAE::fJv(realtype t, AmiVector *x, AmiVector *dx, AmiVector * /*xdot*/,
-                        AmiVector *v, AmiVector *Jv, realtype cj){
-        fJv(t,x->getNVector(),dx->getNVector(),v->getNVector(),
-                    Jv->getNVector(),cj);
+    void Model_DAE::fJv(realtype t, AmiVector &x, AmiVector &dx, AmiVector & /*xdot*/,
+                        AmiVector &v, AmiVector &Jv, realtype cj){
+        fJv(t,x.getNVector(),dx.getNVector(),v.getNVector(),
+                    Jv.getNVector(),cj);
     }
 
     /** Matrix vector product of J with a vector v (for iterative solvers)
@@ -72,8 +72,8 @@ namespace amici {
         J.multiply(Jv, v);
     }
 
-     void Model_DAE::froot(realtype t, AmiVector *x, AmiVector *dx, realtype *root){
-        froot(t,x->getNVector(),dx->getNVector(),root);
+     void Model_DAE::froot(realtype t, AmiVector &x, AmiVector &dx, realtype *root){
+        froot(t,x.getNVector(),dx.getNVector(),root);
     }
 
     /** Event trigger function for events
@@ -89,8 +89,8 @@ namespace amici {
                      N_VGetArrayPointer(dx));
     }
 
-    void Model_DAE::fxdot(realtype t, AmiVector *x, AmiVector *dx, AmiVector *xdot){
-        fxdot(t,x->getNVector(),dx->getNVector(),xdot->getNVector());
+    void Model_DAE::fxdot(realtype t, AmiVector &x, AmiVector &dx, AmiVector &xdot){
+        fxdot(t,x.getNVector(),dx.getNVector(),xdot.getNVector());
     }
 
     /** residual function of the DAE
@@ -115,14 +115,15 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    void Model_DAE::fJDiag(realtype t, AmiVector *JDiag, realtype  /*cj*/, AmiVector *x,
-                          AmiVector *dx) {
-        auto x_pos = computeX_pos(x->getNVector());
+    void Model_DAE::fJDiag(realtype t, AmiVector &JDiag, realtype  /*cj*/, AmiVector &x,
+                          AmiVector &dx) {
+        auto x_pos = computeX_pos(x.getNVector());
         fdwdx(t,N_VGetArrayPointer(x_pos));
-        JDiag->set(0.0);
-        fJDiag(JDiag->data(),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-               0.0,dx->data(),w.data(),dwdx.data());
-        if(!checkFinite(nx_solver,JDiag->data(),"Jacobian"))
+        JDiag.set(0.0);
+        fJDiag(JDiag.data(), t, N_VGetArrayPointer(x_pos),
+               unscaledParameters.data(), fixedParameters.data(), h.data(),
+               0.0, dx.data(), w.data(), dwdx.data());
+        if(!checkFinite(nx_solver, JDiag.data(), "Jacobian"))
             throw AmiException("Evaluation of fJDiag failed!");
     }
 
@@ -261,11 +262,11 @@ namespace amici {
         }
     }
 
-    void Model_DAE::fsxdot(realtype t, AmiVector *x, AmiVector *dx, int ip,
-                           AmiVector *sx, AmiVector *sdx, AmiVector *sxdot) {
-        fsxdot(t,x->getNVector(),dx->getNVector(), ip,
-               sx->getNVector(),sdx->getNVector(),
-               sxdot->getNVector());
+    void Model_DAE::fsxdot(realtype t, AmiVector &x, AmiVector &dx, int ip,
+                           AmiVector &sx, AmiVector &sdx, AmiVector &sxdot) {
+        fsxdot(t,x.getNVector(),dx.getNVector(), ip,
+               sx.getNVector(),sdx.getNVector(),
+               sxdot.getNVector());
     }
 
     /** Right hand side of differential equation for state sensitivities sx
