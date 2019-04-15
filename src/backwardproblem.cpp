@@ -12,6 +12,11 @@
 namespace amici {
 
 BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
+    model(fwd->model),
+    rdata(fwd->rdata),
+    edata(fwd->edata),
+    solver(fwd->solver),
+    t(fwd->getTime()),
     llhS0(static_cast<decltype(llhS0)::size_type>(fwd->model->nJ * fwd->model->nplist()), 0.0),
     xB(fwd->model->nx_solver),
     dxB(fwd->model->nx_solver),
@@ -23,16 +28,10 @@ BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
     nroots(fwd->getNumberOfRoots()),
     discs(fwd->getDiscontinuities()),
     irdiscs(fwd->getDiscontinuities()),
+    iroot(fwd->getRootCounter()),
     rootidx(fwd->getRootIndexes()),
     dJydx(fwd->getDJydx()),
-    dJzdx(fwd->getDJzdx())
-    {
-        t = fwd->getTime();
-        model = fwd->model;
-        solver = fwd->solver;
-        rdata = fwd->rdata;
-        iroot = fwd->getRootCounter();
-    }
+    dJzdx(fwd->getDJzdx()) {}
 
 
 void BackwardProblem::workBackwardProblem() {
@@ -43,7 +42,7 @@ void BackwardProblem::workBackwardProblem() {
         return;
     }
     
-    model->initializeB(xB, dxB, xQB);
+    model->initializeB(&xB, &dxB, edata);
     solver->setupB(&which, rdata->ts[rdata->nt-1], model, xB, dxB, xQB);
 
     int it = rdata->nt - 2;
@@ -86,8 +85,8 @@ void BackwardProblem::workBackwardProblem() {
     if (t > model->t0()) {
         /* solve for backward problems */
         solver->solveB(model->t0(), AMICI_NORMAL);
-        solver->getQuadB(which, &xQB);
-        solver->getB(which, &xB, &dxB);
+        xQB.copy(solver->getAdjointQuadrature(which, t));
+        xB.copy(solver->getAdjointState(which, t));
         solver->getDiagnosisB(0, rdata, this->which);
     }
 

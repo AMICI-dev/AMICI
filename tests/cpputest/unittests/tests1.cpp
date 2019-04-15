@@ -661,7 +661,7 @@ TEST(solver, testSettersGettersWithSetup)
 
     testModel.setInitialStates(std::vector<realtype>{ 0 });
 
-    solver.setup(&x, &dx, &sx, &sdx, &testModel);
+    solver.setup(0, &testModel, x, dx, sx, sdx);
 
     testSolverGetterSetters(solver,
                             sensi_meth,

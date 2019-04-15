@@ -926,8 +926,8 @@ const AmiVector& Solver::getDerivativeState(const realtype t) const {
     if (t == this->t) {
         return dx;
     } else {
-        getDky(t, 0);
-        return dx;
+        getDky(t, 1);
+        return dky;
     }
 }
 
@@ -947,8 +947,14 @@ const AmiVector& Solver::getAdjointState(const int which, const realtype t) cons
         return xB;
     } else {
         getDkyB(t, 0, which);
-        return xB;
+        return dky;
     }
+}
+    
+const AmiVector& Solver::getAdjointDerivativeState(const int which,
+                                                   const realtype t) const {
+        getDkyB(t, 1, which);
+        return dky;
 }
 
 const AmiVector& Solver::getAdjointQuadrature(const int which, const realtype t) const {

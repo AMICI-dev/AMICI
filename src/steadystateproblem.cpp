@@ -118,7 +118,7 @@ bool SteadystateProblem::checkConvergence(
         solver->getSensitivityMethod() == SensitivityMethod::forward) {
         for (int ip = 0; ip < model->nplist(); ++ip) {
             if (converged) {
-                solver->getSens(t, sx);
+                *sx = solver->getStateSensitivity(*t);
                 model->fsxdot(*t, x, &dx, ip, &(*sx)[ip], &dx, &xdot);
                 wrms = getWrmsNorm(*x, xdot, solver->getAbsoluteToleranceSteadyStateSensi(), solver->getRelativeToleranceSteadyStateSensi());
                 converged = wrms < RCONST(1.0);
@@ -267,7 +267,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
          multiplication with 10 ensures nonzero difference and should ensure stable computation
          value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
          */
-        solver->solve(std::max(*t,1.0) * 10, x, &dx, t, AMICI_ONE_STEP);
+        solver->step(std::max(*t,1.0) * 10);
 
         /* Check for convergence */
         converged = checkConvergence(solver, model);
@@ -282,7 +282,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
     rdata->newton_numsteps.at(static_cast<int>(NewtonStatus::newt_sim) - 1) =
         steps_newton;
     if (solver->getSensitivityOrder()>SensitivityOrder::none)
-        solver->getSens(t, sx);
+        *sx = solver->getStateSensitivity(*t);
 }
 
 std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
@@ -306,7 +306,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
         newton_solver->setSensitivityMethod(SensitivityMethod::none);
 
     // use x and sx as dummies for dx and sdx (they wont get touched in a CVodeSolver)
-    newton_solver->setup(x,x,sx,sx,model);
+    newton_solver->setup(model->t0(), model, *x, *x, *sx, *sx);
 
     return newton_solver;
 }

@@ -243,14 +243,10 @@ void Model::initialize(AmiVector *x, AmiVector *dx,
 
 }
 
-void Model::initializeB(AmiVector *xB, AmiVector *dxB, const ExpData edata) {
+void Model::initializeB(AmiVector *xB, AmiVector *dxB, const ExpData *edata) {
     xB->reset();
     dxB->reset();
-    
 }
-    
-
-
 
 void Model::initializeStates(AmiVector *x) {
     if (x0data.empty()) {

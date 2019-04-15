@@ -522,6 +522,13 @@ class Solver {
      * @return &x or interpolated solution dky
      */
     const AmiVector &getState(const realtype t) const;
+    
+    /**
+     * @brief Access derivative state solution at time t
+     * @param t time
+     * @return &dx or interpolated solution dky
+     */
+    const AmiVector &getDerivativeState(const realtype t) const;
 
     /**
      * @brief Access state sensitivity solution at time t
@@ -536,6 +543,14 @@ class Solver {
      * @return (interpolated) solution xB
      */
     const AmiVector &getAdjointState(const int which, const realtype t) const;
+    
+    /**
+     * @brief Access adjoint derivative solution at time t
+     * @param t time
+     * @return (interpolated) solution dxB
+     */
+    const AmiVector &getAdjointDerivativeState(const int which,
+                                               const realtype t) const;
 
     /**
      * @brief Access adjoint quadrature solution at time t

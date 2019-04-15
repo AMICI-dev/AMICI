@@ -562,6 +562,15 @@ class Model : public AbstractModel {
                     AmiVectorArray *sdx, bool computeSensitivities);
 
     /**
+     * Initialization of model properties
+     * @param xB pointer to adjoint state variables
+     * @param dxB pointer to time derivative of adjoint states (DAE only)
+     * are to be computed
+     * @param edata pointer to experimental data instance
+     */
+    void initializeB(AmiVector *xB, AmiVector *dxB, const ExpData *edata);
+    
+    /**
      * Initialization of initial states
      * @param x pointer to state variables
      */

@@ -472,7 +472,7 @@ void CVodeSolver::getSensDky(const realtype t, const int k) const {
 void CVodeSolver::getDkyB(const realtype t, const int k,
                           const int which) const {
     int status = CVodeGetDky(CVodeGetAdjCVodeBmem(solverMemory.get(), which), t,
-                             k, xQB.getNVector());
+                             k, dky.getNVector());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetDkyB");
 }

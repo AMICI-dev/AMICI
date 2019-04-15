@@ -66,13 +66,19 @@ class AmiVector {
      * @brief const data accessor
      * @return const pointer to data array
      */
-    const realtype *data();
+    const realtype *data() const;
 
     /**
      * @brief N_Vector accessor
      * @return N_Vector
      */
     N_Vector getNVector();
+    
+    /**
+     * @brief N_Vector accessor
+     * @return N_Vector
+     */
+    const N_Vector getNVector() const;
 
     /**
      * @brief Vector accessor
@@ -120,7 +126,7 @@ class AmiVector {
      * @param pos index of element
      * @return element
      */
-    const realtype &at(int pos);
+    const realtype &at(int pos) const;
 
     /**
      * @brief copies data from another AmiVector
@@ -162,8 +168,7 @@ class AmiVectorArray {
      * @param length_outer number of vectors
      * @return New AmiVectorArray instance
      */
-    AmiVectorArray(long int length_inner, long int length_outer)
-        : vec_array(length_outer, AmiVector(length_inner));
+    AmiVectorArray(long int length_inner, long int length_outer);
     /**
      * @brief copy assignment operator
      * @param other right hand side
@@ -176,7 +181,7 @@ class AmiVectorArray {
      * @param vaold object to copy from
      * @return new AmiVectorArray instance
      */
-    AmiVectorArray(const AmiVectorArray &vaold) : vec_array(vaold.vec_array);
+    AmiVectorArray(const AmiVectorArray &vaold);
 
     /**
      * @brief accessor to data of AmiVector elements
@@ -201,7 +206,7 @@ class AmiVectorArray {
     realtype &at(int ipos, int jpos);
 
     /**
-     * @brief accessor to elements of AmiVector elements
+     * @brief const accessor to elements of AmiVector elements
      * @param ipos inner index in AmiVector
      * @param jpos outer index in AmiVectorArray
      * @return element
@@ -220,6 +225,13 @@ class AmiVectorArray {
      * @return N_Vector
      */
     N_Vector getNVector(int pos);
+    
+    /**
+     * @brief const accessor to NVector element
+     * @param pos index of corresponding AmiVector
+     * @return N_Vector
+     */
+    const N_Vector getNVector(int pos) const;
 
     /**
      * @brief accessor to AmiVector elements
