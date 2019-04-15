@@ -365,9 +365,6 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     if (!seflag) {
         solver->reInit(t, &x, &dx);
 
-        /* make time derivative consistent */
-        solver->calcIC(t, &x, &dx);
-
         if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
             if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
                 solver->sensReInit(&sx, &sdx);
