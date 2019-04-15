@@ -14,7 +14,6 @@ namespace amici {
 BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
     model(fwd->model),
     rdata(fwd->rdata),
-    edata(fwd->edata),
     solver(fwd->solver),
     t(fwd->getTime()),
     llhS0(static_cast<decltype(llhS0)::size_type>(fwd->model->nJ * fwd->model->nplist()), 0.0),
@@ -42,7 +41,7 @@ void BackwardProblem::workBackwardProblem() {
         return;
     }
     
-    model->initializeB(&xB, &dxB, edata);
+    model->initializeB(&xB, &dxB, &xQB, dJydx);
     solver->setupB(&which, rdata->ts[rdata->nt-1], model, xB, dxB, xQB);
 
     int it = rdata->nt - 2;

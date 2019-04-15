@@ -243,9 +243,15 @@ void Model::initialize(AmiVector *x, AmiVector *dx,
 
 }
 
-void Model::initializeB(AmiVector *xB, AmiVector *dxB, const ExpData *edata) {
+void Model::initializeB(AmiVector *xB, AmiVector *dxB, AmiVector *xQB,
+                        const std::vector<realtype> &dJydx) {
     xB->reset();
+    for (int ix = 0; ix < nxtrue_solver; ++ix)
+        for (int iJ = 0; iJ < nJ; ++iJ)
+            xB->at(ix + iJ * nxtrue_solver) +=
+            dJydx.at(iJ + ( ix + (nt() - 1)  * nx_solver ) * nJ);
     dxB->reset();
+    xQB->reset();
 }
 
 void Model::initializeStates(AmiVector *x) {

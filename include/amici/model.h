@@ -565,10 +565,11 @@ class Model : public AbstractModel {
      * Initialization of model properties
      * @param xB pointer to adjoint state variables
      * @param dxB pointer to time derivative of adjoint states (DAE only)
-     * are to be computed
-     * @param edata pointer to experimental data instance
+     * @param xQB pointer to adjoint quadratures
+     * @param dJydx vector with values of state derivative of Jy
      */
-    void initializeB(AmiVector *xB, AmiVector *dxB, const ExpData *edata);
+    void initializeB(AmiVector *xB, AmiVector *dxB, AmiVector *xQB,
+                     const std::vector<realtype> &dJydx);
     
     /**
      * Initialization of initial states

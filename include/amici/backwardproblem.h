@@ -109,7 +109,6 @@ class BackwardProblem {
 
     Model *model;
     ReturnData *rdata;
-    const ExpData *edata;
     Solver *solver;
 
     /** current time */
