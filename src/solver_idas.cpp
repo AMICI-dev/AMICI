@@ -180,10 +180,6 @@ void IDASolver::resetState(void *ami_mem, N_Vector yy0, N_Vector yp0) {
     
     /* current order */
     ida_mem->ida_kk      = 0;
-    
-    /* Initial setup not done yet */
-    
-    ida_mem->ida_SetupDone = SUNFALSE;
 }
 
 void IDASolver::reInitPostProcessF(realtype *t, AmiVector *yout,
@@ -199,7 +195,48 @@ void IDASolver::reInitPostProcessB(int which, realtype *t, AmiVector *yBout,
 
 void IDASolver::reInitPostProcess(void *ami_mem, realtype *t,
                                   AmiVector *yout, AmiVector *ypout,
-                                  realtype tout) {}
+                                  realtype tout) {
+    auto ida_mem = static_cast<IDAMem>(ami_mem);
+    auto nst_tmp = ida_mem->ida_nst;
+    ida_mem->ida_nst = 0;
+    
+    auto status = IDASetStopTime(ida_mem, tout);
+    if(status != IDA_SUCCESS)
+        throw IDAException(status, "CVodeSetStopTime");
+    
+    status = IDASolve(ami_mem, tout, t, yout->getNVector(), ypout->getNVector(),
+                      IDA_ONE_STEP);
+    
+    if(status != IDA_SUCCESS)
+        throw IDAException(status, "reInitPostProcess");
+    
+    ida_mem->ida_nst = nst_tmp+1;
+    if (ida_mem->ida_adjMallocDone == SUNTRUE) {
+        /* add new step to history array, this is copied from CVodeF */
+        auto ia_mem = ida_mem->ida_adj_mem;
+        auto dt_mem = ia_mem->dt_mem;
+        
+        if (ida_mem->ida_nst % ia_mem->ia_nsteps == 0) {
+            /* currently not implemented, we should never get here as we
+             limit cv_mem->cv_nst < ca_mem->ca_nsteps, keeping this for
+             future regression */
+            throw IDAException(AMICI_ERROR, "reInitPostProcess");
+        }
+        
+        /* Load next point in dt_mem */
+        dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps]->t = *t;
+        ia_mem->ia_storePnt(ida_mem,
+                            dt_mem[ida_mem->ida_nst % ia_mem->ia_nsteps]);
+        
+        /* Set t1 field of the current ckeck point structure
+         for the case in which there will be no future
+         check points */
+        ia_mem->ck_mem->ck_t1 = *t;
+        
+        /* tfinal is now set to *tret */
+        ia_mem->ia_tfinal = *t;
+    }
+}
 
 void IDASolver::reInit(realtype t0, AmiVector *yy0, AmiVector *yp0) {
     auto ida_mem = static_cast<IDAMem>(solverMemory.get());
