@@ -4,9 +4,7 @@ namespace amici {
 
 AmiVector &AmiVector::operator=(AmiVector const &other) {
     vec = other.vec;
-    if (nvec)
-        N_VDestroy_Serial(nvec);
-    nvec = N_VMake_Serial(static_cast<long int>(vec.size()), vec.data());
+    synchroniseNVector();
     return *this;
 }
 
@@ -45,7 +43,15 @@ const realtype &AmiVector::at(int pos) const {
 }
 
 void AmiVector::copy(const AmiVector &other) {
-    std::copy(other.vec.begin(), other.vec.end(), std::back_inserter(vec));
+    if(getLength() != other.getLength())
+        throw AmiException("Dimension of AmiVector (%i) does not "
+                           "match input dimension (%i)",
+                           getLength(), other.getLength());
+    std::copy(other.vec.begin(), other.vec.end(), vec.begin());
+    synchroniseNVector();
+}
+    
+void AmiVector::synchroniseNVector() {
     if (nvec)
         N_VDestroy_Serial(nvec);
     nvec = N_VMake_Serial(static_cast<long int>(vec.size()), vec.data());
@@ -132,10 +138,12 @@ void AmiVectorArray::flatten_to_vector(std::vector<realtype> &vec) const {
 void AmiVectorArray::copy(const AmiVectorArray &other) {
     if (getLength() != other.getLength())
         throw AmiException("Dimension of AmiVectorArray (%i) does not "
-                           "match input vector dimension (%i)",
+                           "match input dimension (%i)",
                            getLength(), other.getLength());
 
-    for (int iv = 0; iv < getLength(); ++iv)
+    for (int iv = 0; iv < getLength(); ++iv) {
         vec_array.at(iv).copy(other.vec_array.at(iv));
+        nvec_array[iv] = vec_array.at(iv).getNVector();
+    }
 }
 } // namespace amici

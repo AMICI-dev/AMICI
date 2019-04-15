@@ -145,6 +145,11 @@ class AmiVector {
     /** N_Vector, will be synchronised such that it points to
      * data in vec */
     N_Vector nvec = nullptr;
+    
+    /**
+     * @brief reconstructs nvec such that data pointer points to vec data array
+     */
+    void synchroniseNVector();
 };
 
 /** AmiVectorArray class.

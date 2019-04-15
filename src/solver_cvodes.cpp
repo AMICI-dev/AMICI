@@ -42,6 +42,7 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 void CVodeSolver::init(const realtype t0, const AmiVector &x0,
                        const AmiVector &dx0) const {
     solverWasCalledF = false;
+    t=t0;
     x.copy(x0);
     int status;
     if (getInitDone()) {
