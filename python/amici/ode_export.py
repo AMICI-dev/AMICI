@@ -25,6 +25,14 @@ from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__
 )
 
+## Template for model simulation main.cpp file
+CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
+## Template for model/swig/CMakeLists.txt
+SWIG_CMAKE_TEMPLATE_FILE = os.path.join(amiciSwigPath,
+                                        'CMakeLists_model.cmake')
+## Template for model/CMakeLists.txt
+MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
+                                         'CMakeLists.template.cmake')
 
 ## prototype for generated C++ functions, keys are the names of functions
 #
@@ -1941,7 +1949,7 @@ class ODEExporter:
         self._writeSwigFiles()
         self._writeModuleSetup()
 
-        shutil.copy(os.path.join(amiciSrcPath, 'main.template.cpp'),
+        shutil.copy(CXX_MAIN_TEMPLATE_FILE,
                     os.path.join(self.modelPath, 'main.cpp'))
 
     def _compileCCode(self, verbose=False, compiler=None):
@@ -2410,10 +2418,18 @@ class ODEExporter:
         sources = [self.modelName + '_' + function + '.cpp '
                    for function in self.functions.keys()
                    if self.functions[function]['body'] is not None]
+
+        # add extra source files for sparse matrices
+        for function in sparse_functions:
+            sources.append(self.modelName + '_' + function
+                           + '_colptrs.cpp')
+            sources.append(self.modelName + '_' + function
+                           + '_rowvals.cpp ')
+
         templateData = {'MODELNAME': self.modelName,
                         'SOURCES': '\n'.join(sources)}
         applyTemplate(
-            os.path.join(amiciSrcPath, 'CMakeLists.template.txt'),
+            MODEL_CMAKE_TEMPLATE_FILE,
             os.path.join(self.modelPath, 'CMakeLists.txt'),
             templateData
         )
@@ -2436,7 +2452,7 @@ class ODEExporter:
             os.path.join(self.modelSwigPath, self.modelName + '.i'),
             templateData
         )
-        shutil.copy(os.path.join(amiciSwigPath, 'CMakeLists_model.txt'),
+        shutil.copy(SWIG_CMAKE_TEMPLATE_FILE,
                     os.path.join(self.modelSwigPath, 'CMakeLists.txt'))
 
     def _writeModuleSetup(self):

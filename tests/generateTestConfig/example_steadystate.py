@@ -11,13 +11,11 @@ class ExampleSteadystate(AmiciExample):
         self.numX = 3
         self.numP = 5
         self.numK = 4
-        
+
         self.modelOptions['theta'] = np.log10([1, 0.5, 0.4, 2, 0.1])
         self.modelOptions['kappa'] = [0.1, 0.4, 0.7, 1]
         self.modelOptions['ts'] = np.linspace(0, 100, 50)
         self.modelOptions['pscale'] = 2
-        self.modelOptions['qpositivex'] = [0] * self.numX 
-
 
 def writeNoSensi(filename):
     ex = ExampleSteadystate()
@@ -48,14 +46,14 @@ def writeSensiForwardPlist(filename):
 
 def writeSensiForwardDense(filename):
     ex = ExampleSteadystate()
-    
+
     ex.modelOptions['ts'] = np.append(np.linspace(0, 100, 50), np.inf)
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['linsol'] = 1
     ex.writeToFile(filename, '/model_steadystate/sensiforwarddense/')
 
-    
+
 def writeNosensiSPBCG(filename):
     ex = ExampleSteadystate()
 
@@ -80,14 +78,14 @@ def writeSensiForwardErrorInt(filename):
 
 def writeSensiForwardErrorNewt(filename):
     ex = ExampleSteadystate()
-   
+
     ex.modelOptions['ts'] = [0, np.inf]
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['linsol'] = 9
     ex.solverOptions['maxsteps'] = 100
     ex.solverOptions['newton_maxsteps'] = 2
-    
+
     ex.writeToFile(filename, '/model_steadystate/sensiforwarderrornewt/')
 
 
