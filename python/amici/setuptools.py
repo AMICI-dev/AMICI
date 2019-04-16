@@ -68,9 +68,13 @@ def getHdf5Config():
 
     """
     if pkgconfig:
-        h5pkgcfg = pkgconfig.parse('hdf5')
+        h5pkgcfg = {}
+        try:
+            h5pkgcfg = pkgconfig.parse('hdf5')
+        except pkgconfig.PackageNotFoundError:
+            pass
         # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true
-        # althoughno libraries or include dirs are available
+        # although no libraries or include dirs are available
         h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg \
                             and h5pkgcfg['include_dirs']
         if h5pkgcfg['found']:

@@ -1,10 +1,11 @@
 recursive-include amici/ThirdParty/SuiteSparse *.c *.h LICENSE.txt
 recursive-include amici/ThirdParty/sundials *.c *.h LICENSE
+recursive-include amici/ThirdParty/gsl *.hpp
 recursive-include amici/include *.h
 recursive-include amici/swig *.i *.h
 include amici/*
 include amici/src/*template*
-include amici/swig/CMakeLists_model.txt
+include amici/swig/CMakeLists_model.cmake
 include setup_clibs.py
 include custom_commands.py
 include version.txt
