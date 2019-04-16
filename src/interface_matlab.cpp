@@ -365,7 +365,7 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")) {
-            solver.setStateOrdering(static_cast<StateOrdering>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")))));
+            solver.setStateOrdering(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering"))));
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "stldet")) {
