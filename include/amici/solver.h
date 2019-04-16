@@ -555,14 +555,20 @@ class Solver {
     void setInterpolationType(InterpolationType interpType);
 
     /**
-     * @brief sets KLU / SuperLUMT state ordering mode
-     * @return
+     * @brief Gets KLU / SuperLUMT state ordering mode
+     *
+     * @return State-ordering as integer according to
+     * SUNLinSolKLU::StateOrdering or SUNLinSolSuperLUMT::StateOrdering
+     * (which differ).
      */
     int getStateOrdering() const;
 
     /**
-     * @brief Sets KLU / SuperLUMT state ordering mode (only applies when linsol
-     * is set to LinearSolver::KLU or LinearSolver::SuperLUMT
+     * @brief Sets KLU / SuperLUMT state ordering mode
+     *
+     * This only applies when linsol is set to LinearSolver::KLU or
+     * LinearSolver::SuperLUMT. Mind the difference between
+     * SUNLinSolKLU::StateOrdering and SUNLinSolSuperLUMT::StateOrdering.
      * @param ordering state ordering
      */
     void setStateOrdering(int ordering);
