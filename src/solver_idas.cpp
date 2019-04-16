@@ -245,7 +245,11 @@ void IDASolver::reInitPostProcessB(const realtype tnext) const {
     auto ida_mem = static_cast<IDAMem>(solverMemory.get());
     auto idaadj_mem = ida_mem->ida_adj_mem;
     auto idaB_mem = idaadj_mem->IDAB_mem;
+    // loop over all backward problems
     while (idaB_mem != nullptr) {
+        // store current backward problem in ca_mem to make it accessible in
+        // adjoint rhs wrapper functions
+        idaadj_mem->ia_bckpbCrt = idaB_mem;
         reInitPostProcess(static_cast<void *>(idaB_mem->IDA_mem), &tBret, &xB,
                           &dxB, tnext);
         // idaB_mem->ida_tout = tBret;

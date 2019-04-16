@@ -344,7 +344,11 @@ void CVodeSolver::reInitPostProcessB(const realtype tnext) const {
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     auto ca_mem = cv_mem->cv_adj_mem;
     auto cvB_mem = ca_mem->cvB_mem;
+    // loop over all backward problems
     while (cvB_mem != nullptr) {
+        // store current backward problem in ca_mem to make it accessible in
+        // adjoint rhs wrapper functions
+        ca_mem->ca_bckpbCrt = cvB_mem;
         reInitPostProcess(static_cast<void *>(cvB_mem->cv_mem), &tBret, &xB,
                           tnext);
         cvB_mem->cv_tout = tBret;
