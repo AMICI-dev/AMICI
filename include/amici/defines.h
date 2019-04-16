@@ -138,7 +138,7 @@ enum class SteadyStateSensitivityMode {
     simulationFSA
 };
 
-/** State in which the steady state computationfinished */
+/** State in which the steady state computation finished */
 enum class NewtonStatus {
     failed=-1,
     newt=1,
