@@ -59,7 +59,7 @@ class Solver {
     virtual Solver *clone() const = 0;
 
     /**
-     * @brief runs a simulation until the specified timepoint
+     * @brief runs a forward simulation until the specified timepoint
      *
      * @param tout next timepooint
      * @return status flag
@@ -73,6 +73,14 @@ class Solver {
      * @return status flag
      */
     int step(const realtype tout) const;
+    
+    /**
+     * @brief runs a backward simulation until the specified timepoint
+     *
+     * @param tout next timepooint
+     * @return status flag
+     */
+    void runB(const realtype tout) const;
     
     /**
      * @brief Initialises the ami memory object and applies specified options

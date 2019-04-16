@@ -62,6 +62,11 @@ int Solver::step(const realtype tout) const {
     return status;
 }
     
+void Solver::runB(const realtype tout) const {
+    solveB(tout, AMICI_NORMAL);
+    t = tout;
+}
+    
 void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
                    const AmiVector &dx0, const AmiVectorArray &sx0,
                    const AmiVectorArray &sdx0) const {

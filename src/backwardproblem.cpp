@@ -48,7 +48,7 @@ void BackwardProblem::workBackwardProblem() {
     handleDataPointB(it);
     solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
     
-    it--;
+    --it;
     --iroot;
 
     while (it >= 0 || iroot >= 0) {
@@ -57,7 +57,7 @@ void BackwardProblem::workBackwardProblem() {
         double tnext = getTnext(discs, iroot, it);
 
         if (tnext < t) {
-            solver->solveB(tnext, AMICI_NORMAL);
+            solver->runB(tnext);
             solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
             solver->getDiagnosisB(it, rdata, this->which);
         }
@@ -84,7 +84,7 @@ void BackwardProblem::workBackwardProblem() {
     /* we still need to integrate from first datapoint to tstart */
     if (t > model->t0()) {
         /* solve for backward problems */
-        solver->solveB(model->t0(), AMICI_NORMAL);
+        solver->runB(model->t0());
         solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
         solver->getDiagnosisB(0, rdata, this->which);
     }
