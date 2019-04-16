@@ -95,7 +95,7 @@ TEST_GROUP(dataSerialization){
         solver.setNewtonMaxSteps(1e6);
         solver.setNewtonMaxLinearSteps(1e6);
         solver.setNewtonPreequilibration(true);
-        solver.setStateOrdering(amici::StateOrdering::COLAMD);
+        solver.setStateOrdering(static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD));
         solver.setInterpolationType(amici::InterpolationType::polynomial);
         solver.setStabilityLimitFlag(0);
         solver.setLinearSolver(amici::LinearSolver::dense);
@@ -157,11 +157,11 @@ TEST(dataSerialization, testString) {
                                             std::vector<int>(np,0),
                                             std::vector<realtype>(nx,0.0),
                                             std::vector<int>(nz,0));
-    
+
     amici::ReturnData r(solver, &m);
-    
+
     std::string serialized = amici::serializeToString(r);
-    
+
     checkReturnDataEqual(r, amici::deserializeFromString<amici::ReturnData>(serialized));
 }
 

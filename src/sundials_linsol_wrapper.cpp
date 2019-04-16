@@ -1,5 +1,6 @@
-#include <amici/exception.h>
 #include <amici/sundials_linsol_wrapper.h>
+
+#include <amici/exception.h>
 
 #include <new> // bad_alloc
 #include <utility>
@@ -366,5 +367,58 @@ SUNNonLinSolFixedPoint::SUNNonLinSolFixedPoint(int count, const N_Vector x, int 
 int SUNNonLinSolFixedPoint::getSysFn(SUNNonlinSolSysFn *SysFn) const {
     return SUNNonlinSolGetSysFn_FixedPoint(solver, SysFn);
 }
+
+#ifdef SUNDIALS_SUPERLUMT
+
+SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(N_Vector x, SUNMatrix A, int numThreads)
+    : SUNLinSolWrapper(SUNLinSol_SuperLUMT(x, A, numThreads))
+{
+    if (!solver)
+        throw AmiException("Failed to create solver.");
+}
+
+SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(
+        const AmiVector &x, int nnz, int sparsetype,
+        SUNLinSolSuperLUMT::StateOrdering ordering)
+    : A(SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype))
+{
+    int numThreads = 1;
+    if(auto env = std::getenv("AMICI_SUPERLUMT_NUM_THREADS")) {
+        numThreads = std::max(1, std::stoi(env));
+    }
+
+    solver = SUNLinSol_SuperLUMT(x.getNVector(), A.get(), numThreads);
+    if (!solver)
+        throw AmiException("Failed to create solver.");
+
+    setOrdering(ordering);
+}
+
+SUNLinSolSuperLUMT::SUNLinSolSuperLUMT(const AmiVector &x, int nnz,
+                                       int sparsetype, StateOrdering ordering,
+                                       int numThreads)
+    : A(SUNMatrixWrapper(x.getLength(), x.getLength(), nnz, sparsetype))
+{
+  solver = SUNLinSol_SuperLUMT(x.getNVector(), A.get(), numThreads);
+  if (!solver)
+      throw AmiException("Failed to create solver.");
+
+  setOrdering(ordering);
+}
+
+SUNMatrix SUNLinSolSuperLUMT::getMatrix() const
+{
+    return A.get();
+}
+
+
+void SUNLinSolSuperLUMT::setOrdering(StateOrdering ordering)
+{
+    auto status = SUNLinSol_SuperLUMTSetOrdering(solver, static_cast<int>(ordering));
+    if (status != SUNLS_SUCCESS)
+        throw AmiException("SUNLinSol_SuperLUMTSetOrdering failed with %d", status);
+}
+
+#endif
 
 } // namespace amici

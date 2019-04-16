@@ -80,6 +80,8 @@ python/.idea/*
 *.log
 *.pyc
 *.so
+*.bak
+*.sav
 
 matlab/mtoc/config/latexextras.sty-e
 matlab/mtoc/config/latexextras.sty
@@ -154,3 +156,5 @@ ThirdParty/mtocpp-master*
 ThirdParty/sundials/build/*
 ThirdParty/SuiteSparse/lib/*
 ThirdParty/SuiteSparse/share/*
+ThirdParty/SuperLU_MT_3.1/
+ThirdParty/superlu_mt_3.1.tar.gz
