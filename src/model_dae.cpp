@@ -3,8 +3,9 @@
 
 namespace amici {
 
-    void Model_DAE::fJ(realtype t, realtype cj, AmiVector &x, AmiVector &dx,
-                       AmiVector &xdot, SUNMatrix J) {
+    void Model_DAE::fJ(const realtype t, const realtype cj,const AmiVector &x,
+                       const AmiVector &dx, const AmiVector &xdot, SUNMatrix J)
+    {
         fJ(t,cj, x.getNVector(), dx.getNVector(), xdot.getNVector(), J);
     }
 
@@ -27,8 +28,9 @@ namespace amici {
            N_VGetArrayPointer(dx), w.data(), dwdx.data());
     }
 
-    void Model_DAE::fJSparse(realtype t, realtype cj, AmiVector &x,
-                             AmiVector &dx, AmiVector & /*xdot*/, SUNMatrix J) {
+    void Model_DAE::fJSparse(const realtype t, const realtype cj,
+                             const AmiVector &x, const AmiVector &dx,
+                             const AmiVector & /*xdot*/, SUNMatrix J) {
         fJSparse(t, cj, x.getNVector(), dx.getNVector(), J);
     }
 
@@ -50,8 +52,9 @@ namespace amici {
                  w.data(), dwdx.data());
     }
 
-    void Model_DAE::fJv(realtype t, AmiVector &x, AmiVector &dx, AmiVector & /*xdot*/,
-                        AmiVector &v, AmiVector &Jv, realtype cj){
+    void Model_DAE::fJv(const realtype t, const AmiVector &x,
+                        const AmiVector &dx, const AmiVector & /*xdot*/,
+                        const AmiVector &v, AmiVector &Jv, const realtype cj){
         fJv(t,x.getNVector(),dx.getNVector(),v.getNVector(),
                     Jv.getNVector(),cj);
     }
@@ -72,7 +75,8 @@ namespace amici {
         J.multiply(Jv, v);
     }
 
-     void Model_DAE::froot(realtype t, AmiVector &x, AmiVector &dx, realtype *root){
+     void Model_DAE::froot(const realtype t, const AmiVector &x,
+                           const AmiVector &dx, realtype *root){
         froot(t,x.getNVector(),dx.getNVector(),root);
     }
 
@@ -89,7 +93,8 @@ namespace amici {
                      N_VGetArrayPointer(dx));
     }
 
-    void Model_DAE::fxdot(realtype t, AmiVector &x, AmiVector &dx, AmiVector &xdot){
+    void Model_DAE::fxdot(const realtype t, const AmiVector &x,
+                          const AmiVector &dx, AmiVector &xdot){
         fxdot(t,x.getNVector(),dx.getNVector(),xdot.getNVector());
     }
 
@@ -115,8 +120,9 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    void Model_DAE::fJDiag(realtype t, AmiVector &JDiag, realtype  /*cj*/, AmiVector &x,
-                          AmiVector &dx) {
+    void Model_DAE::fJDiag(const realtype t, AmiVector &JDiag,
+                           const realtype  /*cj*/, const AmiVector &x,
+                           const AmiVector &dx) {
         auto x_pos = computeX_pos(x.getNVector());
         fdwdx(t,N_VGetArrayPointer(x_pos));
         JDiag.set(0.0);
@@ -262,8 +268,10 @@ namespace amici {
         }
     }
 
-    void Model_DAE::fsxdot(realtype t, AmiVector &x, AmiVector &dx, int ip,
-                           AmiVector &sx, AmiVector &sdx, AmiVector &sxdot) {
+    void Model_DAE::fsxdot(const realtype t, const AmiVector &x,
+                           const AmiVector &dx, const int ip,
+                           const AmiVector &sx, const AmiVector &sdx,
+                           AmiVector &sxdot) {
         fsxdot(t,x.getNVector(),dx.getNVector(), ip,
                sx.getNVector(),sdx.getNVector(),
                sxdot.getNVector());

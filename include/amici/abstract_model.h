@@ -40,8 +40,8 @@ class AbstractModel {
      * @param dx time derivative of state (DAE only)
      * @param root array to which values of the root function will be written
      */
-    virtual void froot(realtype t, AmiVector &x, AmiVector &dx,
-                       realtype *root) = 0;
+    virtual void froot(const realtype t, const AmiVector &x,
+                       const AmiVector &dx, realtype *root) = 0;
 
     /**
      * Residual function
@@ -51,8 +51,8 @@ class AbstractModel {
      * @param xdot array to which values of the residual function will be
      * written
      */
-    virtual void fxdot(realtype t, AmiVector &x, AmiVector &dx,
-                       AmiVector &xdot) = 0;
+    virtual void fxdot(const realtype t, const AmiVector &x,
+                       const AmiVector &dx, AmiVector &xdot) = 0;
 
     /**
      * Sensitivity Residual function
@@ -65,8 +65,9 @@ class AbstractModel {
      * @param sxdot array to which values of the sensitivity residual function
      * will be written
      */
-    virtual void fsxdot(realtype t, AmiVector &x, AmiVector &dx, int ip,
-                        AmiVector &sx, AmiVector &sdx, AmiVector &sxdot) = 0;
+    virtual void fsxdot(const realtype t, const AmiVector &x,
+                        const AmiVector &dx, const int ip, const AmiVector &sx,
+                        const AmiVector &sdx, AmiVector &sxdot) = 0;
 
     /**
      * Dense Jacobian function
@@ -77,8 +78,9 @@ class AbstractModel {
      * @param xdot values of residual function (unused)
      * @param J dense matrix to which values of the jacobian will be written
      */
-    virtual void fJ(realtype t, realtype cj, AmiVector &x, AmiVector &dx,
-                    AmiVector &xdot, SUNMatrix J) = 0;
+    virtual void fJ(const realtype t, const realtype cj, const AmiVector &x,
+                    const AmiVector &dx, const AmiVector &xdot,
+                    SUNMatrix J) = 0;
 
     /**
      * Sparse Jacobian function
@@ -89,8 +91,9 @@ class AbstractModel {
      * @param xdot values of residual function (unused)
      * @param J sparse matrix to which values of the Jacobian will be written
      */
-    virtual void fJSparse(realtype t, realtype cj, AmiVector &x, AmiVector &dx,
-                          AmiVector &xdot, SUNMatrix J) = 0;
+    virtual void fJSparse(const realtype t, const realtype cj,
+                          const AmiVector &x, const AmiVector &dx,
+                          const AmiVector &xdot, SUNMatrix J) = 0;
 
     /**
      * Diagonal Jacobian function
@@ -101,8 +104,9 @@ class AbstractModel {
      * @param dx time derivative of state (DAE only)
      * @return flag indicating successful evaluation
      */
-    virtual void fJDiag(realtype t, AmiVector &Jdiag, realtype cj, AmiVector &x,
-                        AmiVector &dx) = 0;
+    virtual void fJDiag(const realtype t, AmiVector &Jdiag,
+                        const realtype cj, const AmiVector &x,
+                        const AmiVector &dx) = 0;
 
     /**
      * Parameter derivative of residual function
@@ -111,7 +115,8 @@ class AbstractModel {
      * @param dx time derivative of state (DAE only)
      * @return flag indicating successful evaluation
      */
-    virtual void fdxdotdp(realtype t, AmiVector &x, AmiVector &dx) = 0;
+    virtual void fdxdotdp(const realtype t, const AmiVector &x,
+                          const AmiVector &dx) = 0;
 
     /**
      * Jacobian multiply function
@@ -123,8 +128,9 @@ class AbstractModel {
      * @param nJv array to which result of multiplication will be written
      * @param cj scaling factor (inverse of timestep, DAE only)
      */
-    virtual void fJv(realtype t, AmiVector &x, AmiVector &dx, AmiVector &xdot,
-                     AmiVector &v, AmiVector &nJv, realtype cj) = 0;
+    virtual void fJv(const realtype t, const AmiVector &x, const AmiVector &dx,
+                     const AmiVector &xdot, const AmiVector &v, AmiVector &nJv,
+                     const realtype cj) = 0;
 
     /**
      * @brief Returns the amici version that was used to generate the model

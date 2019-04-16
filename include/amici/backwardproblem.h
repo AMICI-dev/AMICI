@@ -128,7 +128,7 @@ class BackwardProblem {
     /** array of old differential state vectors at discontinuities*/
     const AmiVectorArray xdot_old_disc;
     /** sensitivity state vector array */
-    AmiVectorArray sx;
+    AmiVectorArray sx0;
     /** array of number of found roots for a certain event type */
     std::vector<int> nroots;
     /** array containing the time-points of discontinuities*/

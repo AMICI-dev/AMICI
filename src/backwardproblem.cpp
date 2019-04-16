@@ -23,7 +23,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
     x_disc(fwd->getStatesAtDiscontinuities()),
     xdot_disc(fwd->getRHSAtDiscontinuities()),
     xdot_old_disc(fwd->getRHSBeforeDiscontinuities()),
-    sx(fwd->getStateSensitivity()),
+    sx0(fwd->getStateSensitivity()),
     nroots(fwd->getNumberOfRoots()),
     discs(fwd->getDiscontinuities()),
     irdiscs(fwd->getDiscontinuities()),
@@ -36,15 +36,19 @@ BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
 void BackwardProblem::workBackwardProblem() {
 
 
-    if (model->nx_solver <= 0 || solver->getSensitivityOrder() < SensitivityOrder::first ||
-        solver->getSensitivityMethod() != SensitivityMethod::adjoint || model->nplist() == 0) {
+    if (model->nx_solver <= 0 ||
+        solver->getSensitivityOrder() < SensitivityOrder::first ||
+        solver->getSensitivityMethod() != SensitivityMethod::adjoint ||
+        model->nplist() == 0) {
         return;
     }
     
-    model->initializeB(xB, dxB, xQB, dJydx);
-    solver->setupB(&which, rdata->ts[rdata->nt-1], model, xB, dxB, xQB);
-
-    int it = rdata->nt - 2;
+    int it = rdata->nt - 1;
+    model->initializeB(xB, dxB, xQB);
+    handleDataPointB(it);
+    solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
+    
+    it--;
     --iroot;
 
     while (it >= 0 || iroot >= 0) {
@@ -54,9 +58,7 @@ void BackwardProblem::workBackwardProblem() {
 
         if (tnext < t) {
             solver->solveB(tnext, AMICI_NORMAL);
-            xB.copy(solver->getAdjointState(which, t));
-            dxB.copy(solver->getAdjointDerivativeState(which, t));
-            xQB.copy(solver->getAdjointQuadrature(which, t));
+            solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
             solver->getDiagnosisB(it, rdata, this->which);
         }
 
@@ -83,8 +85,7 @@ void BackwardProblem::workBackwardProblem() {
     if (t > model->t0()) {
         /* solve for backward problems */
         solver->solveB(model->t0(), AMICI_NORMAL);
-        xQB.copy(solver->getAdjointQuadrature(which, t));
-        xB.copy(solver->getAdjointState(which, t));
+        solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
         solver->getDiagnosisB(0, rdata, this->which);
     }
 
@@ -138,7 +139,6 @@ void BackwardProblem::handleDataPointB(const int it) {
     }
 }
 
-
 realtype BackwardProblem::getTnext(std::vector<realtype> const& troot,
                                    const int iroot, const int it) {
     if (it < 0
@@ -157,7 +157,7 @@ void BackwardProblem::computeLikelihoodSensitivities()
             for (int ip = 0; ip < model->nplist(); ++ip) {
                 llhS0[ip] = 0.0;
                 for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
-                    llhS0[ip] += xB[ix] * sx.at(ix,ip);
+                    llhS0[ip] += xB[ix] * sx0.at(ix,ip);
                 }
             }
         } else {
@@ -165,8 +165,8 @@ void BackwardProblem::computeLikelihoodSensitivities()
                 llhS0[ip + iJ * model->nplist()] = 0.0;
                 for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
                     llhS0[ip + iJ * model->nplist()] +=
-                        xB[ix + iJ * model->nxtrue_solver] * sx.at(ix,ip)+
-                        xB[ix] * sx.at(ix + iJ * model->nxtrue_solver,ip);
+                        xB[ix + iJ * model->nxtrue_solver] * sx0.at(ix,ip)+
+                        xB[ix] * sx0.at(ix + iJ * model->nxtrue_solver,ip);
                 }
             }
         }

@@ -515,18 +515,39 @@ class Solver {
      * @param ism internal sensitivity method
      */
     void setInternalSensitivityMethod(const InternalSensitivityMethod ism);
-
+    
+    /**
+     * @brief write solution from forward simulation
+     * @param t time
+     * @param x state
+     * @param dx derivative state
+     * @param sx state sensitivity
+     */
+    void writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
+                       AmiVectorArray &sx) const;
+    
+    /**
+     * @brief write solution from forward simulation
+     * @param t time
+     * @param xB adjoint state
+     * @param dxB adjoint derivative state
+     * @param xQB adjoint quadrature
+     * @param which index of adjoint problem
+     */
+    void writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
+                        AmiVector &xQB, const int which) const;
+    
     /**
      * @brief Access state solution at time t
      * @param t time
-     * @return &x or interpolated solution dky
+     * @return x or interpolated solution dky
      */
     const AmiVector &getState(const realtype t) const;
     
     /**
      * @brief Access derivative state solution at time t
      * @param t time
-     * @return &dx or interpolated solution dky
+     * @return dx or interpolated solution dky
      */
     const AmiVector &getDerivativeState(const realtype t) const;
 

@@ -106,8 +106,9 @@ void ForwardProblem::workForwardProblem() {
                     sstate.writeSolution(&t, x, sx);
                 } else {
                     int status = solver->run(nextTimepoint);
-                    t = solver->gett();
-                    x.copy(solver->getState(t));
+                    solver->writeSolution(&t, x, dx, sx);
+                    /* sx will be copied from solver on demand if sensitivities
+                     are computed */
                     if (status == AMICI_ILL_INPUT) {
                         /* clustering of roots => turn off rootfinding */
                         solver->turnOffRootFinding();
@@ -525,10 +526,6 @@ void ForwardProblem::prepDataSensis(int it) {
 
 
 void ForwardProblem::getDataSensisFSA(int it) {
-    if (!std::isinf(model->t(it)) && model->t(it) > model->t0()) {
-        sx.copy(solver->getStateSensitivity(model->t(it)));
-    }
-
     model->fsx_rdata(sx_rdata, sx);
     for (int ix = 0; ix < rdata->nx; ix++) {
         for (int ip = 0; ip < model->nplist(); ip++) {

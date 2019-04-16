@@ -909,6 +909,24 @@ void Solver::resetMutableMemory(const int nx, const int nplist,
     initializedB.clear();
     initializedQB.clear();
 }
+    
+void Solver::writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
+                           AmiVectorArray &sx) const {
+    *t = gett();
+    x.copy(getState(*t));
+    dx.copy(getDerivativeState(*t));
+    if(sensInitialized) {
+        sx.copy(getStateSensitivity(*t));
+    }
+}
+    
+void Solver::writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
+                            AmiVector &xQB, const int which) const {
+    *t = gett();
+    xB.copy(getAdjointState(which, *t));
+    dxB.copy(getAdjointDerivativeState(which, *t));
+    xQB.copy(getAdjointQuadrature(which, *t));
+}
 
 const AmiVector& Solver::getState(const realtype t) const {
     if (t == this->t) {
