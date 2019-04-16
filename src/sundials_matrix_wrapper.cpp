@@ -5,7 +5,6 @@
 #include <new> // bad_alloc
 #include <utility>
 #include <stdexcept> // invalid_argument and domain_error
-#include <iostream>
 
 namespace amici {
 
@@ -202,7 +201,6 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c, gsl::span<const realtype>
             for (sunindextype i = 0; i < rows(); ++i) {
                 for (sunindextype k = indexptrs_ptr[i]; k < indexptrs_ptr[i + 1];
                      ++k) {
-                    std::cout<<"i "<<i<<" ,k"<<k<<": c"<<i<<"="<<data_ptr[k]<<"*"<<b[indexvals_ptr[k]]<<std::endl;
                     c[i] += data_ptr[k] * b[indexvals_ptr[k]];
                 }
             }
