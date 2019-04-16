@@ -66,6 +66,17 @@ set(SUNDIALS_LIBRARIES
     )
 set(SUNDIALS_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/include")
 
+option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
+if(SUNDIALS_SUPERLUMT_ENABLE)
+    set(SUNDIALS_LIBRARIES ${SUNDIALS_LIBRARIES}
+        ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolsuperlumt${CMAKE_STATIC_LIBRARY_SUFFIX}
+        ${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/lib/libsuperlu_mt_PTHREAD${CMAKE_STATIC_LIBRARY_SUFFIX}
+        -lblas
+        )
+    set(SUNDIALS_INCLUDE_DIRS ${SUNDIALS_INCLUDE_DIRS}
+        "${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/SRC/")
+endif()
+
 set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
