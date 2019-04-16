@@ -101,7 +101,7 @@ void ForwardProblem::workForwardProblem() {
             }
 
             // Solve for nextTimepoint
-            while (solver->gett() < nextTimepoint) {
+            while (t < nextTimepoint) {
                 if (std::isinf(nextTimepoint)) {
                     SteadystateProblem sstate = SteadystateProblem(solver);
                     sstate.workSteadyStateProblem(rdata, solver, model, it);

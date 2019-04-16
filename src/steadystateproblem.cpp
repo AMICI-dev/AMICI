@@ -231,9 +231,10 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
 /* ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------ */
 
-void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,const Model *model,
-                                         NewtonStatus newton_status,
-                                         double run_time, int it)
+void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,
+                                           const Model *model,
+                                           const NewtonStatus newton_status,
+                                           const double run_time, const int it)
 {
 
     /* Get cpu time for Newton solve in seconds */
@@ -256,7 +257,8 @@ void SteadystateProblem::writeNewtonOutput(ReturnData *rdata,const Model *model,
 /* ------------------------------------------------------------------ */
 /* ------------------------------------------------------------------ */
 
-void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *solver,
+void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata,
+                                                  Solver *solver,
                                                   Model *model)
 {
     /* Loop over steps and check for convergence */
@@ -290,7 +292,7 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
 }
 
 std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
-        Solver *solver, Model *model)
+        const Solver *solver, Model *model) const
 {
     /* Create new CVode solver object */
 
@@ -316,7 +318,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 }
     
 void SteadystateProblem::writeSolution(realtype *t, AmiVector &x,
-                                       AmiVectorArray &sx) {
+                                       AmiVectorArray &sx) const {
     *t = this->t;
     x.copy(this->x);
     sx.copy(this->sx);

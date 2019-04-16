@@ -97,8 +97,8 @@ class SteadystateProblem {
      * @param model pointer to the AMICI model object
      * @return solver instance
      */
-    std::unique_ptr<Solver> createSteadystateSimSolver(Solver *solver,
-                                                       Model *model);
+    std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
+                                                       Model *model) const;
 
     /**
      * @brief constructor
@@ -125,7 +125,7 @@ class SteadystateProblem {
      * @param x steadystate state
      * @param sx steadystate state sensitivity
      */
-    void writeSolution(realtype *t, AmiVector &x, AmiVectorArray &sx);
+    void writeSolution(realtype *t, AmiVector &x, AmiVectorArray &sx) const;
     
 
   private:
