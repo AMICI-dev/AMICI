@@ -21,6 +21,7 @@ void IDASolver::init(const realtype t0, const AmiVector &x0,
                      const AmiVector &dx0) const {
     int status;
     solverWasCalledF = false;
+    t=t0;
     x.copy(x0);
     dx.copy(dx0);
     if (getInitDone()) {

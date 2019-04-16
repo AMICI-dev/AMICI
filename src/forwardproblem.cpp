@@ -58,6 +58,8 @@ void ForwardProblem::workForwardProblem() {
     
     model->initialize(x, dx, sx, sdx, computeSensitivities);
     solver->setup(model->t0(), model, x, dx, sx, sdx);
+    // update x0 after computing consistence IC, only important for DAEs
+    x.copy(solver->getState(model->t0()));
 
     model->fx_rdata(x_rdata, x);
     if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
