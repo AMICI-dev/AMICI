@@ -270,7 +270,8 @@ void SteadystateProblem::getSteadystateSimulation(ReturnData *rdata, Solver *sol
          multiplication with 10 ensures nonzero difference and should ensure stable computation
          value is not important for AMICI_ONE_STEP mode, only direction w.r.t. current t
          */
-        solver->step(std::max(t,1.0) * 10);
+        solver->step(std::max(t, 1.0) * 10);
+        solver->writeSolution(&t, x, dx, sx);
 
         /* Check for convergence */
         converged = checkConvergence(solver, model);
