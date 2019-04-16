@@ -84,7 +84,8 @@ class Solver {
     
     /**
      * @brief Initialises the ami memory object and applies specified options
-     * @param model pointer to the model object
+     * @param t0 initial timepoint
+     * @param model pointer to the model instance
      * @param x0 initial states
      * @param dx0 initial derivative states
      * @param sx0 initial state sensitivities
@@ -99,7 +100,7 @@ class Solver {
      * @brief Initialises the AMI memory object for the backwards problem
      * @param which index of the backward problem, will be set by this routine
      * @param tf final timepoint (initial timepoint for the bwd problem)
-     * @param model pointer to the model object
+     * @param model pointer to the model instance
      * @param xB0 initial adjoint states
      * @param dxB0 initial adjoint derivative states
      * @param xQB0 initial adjoint quadratures
@@ -568,6 +569,7 @@ class Solver {
 
     /**
      * @brief Access adjoint solution at time t
+     * @param which adjoint problem index
      * @param t time
      * @return (interpolated) solution xB
      */
@@ -575,6 +577,7 @@ class Solver {
     
     /**
      * @brief Access adjoint derivative solution at time t
+     * @param which adjoint problem index
      * @param t time
      * @return (interpolated) solution dxB
      */
@@ -583,6 +586,7 @@ class Solver {
 
     /**
      * @brief Access adjoint quadrature solution at time t
+     * @param which adjoint problem index
      * @param t time
      * @return (interpolated) solution xQB
      */
@@ -591,7 +595,7 @@ class Solver {
     /**
      * @brief Reinitializes the states in the solver after an event occurence
      *
-     * @param t0 initial timepoint
+     * @param t0 reinitialization timepoint
      * @param yy0 inital state variables
      * @param yp0 initial derivative state variables (DAE only)
      */
@@ -602,7 +606,7 @@ class Solver {
      * @brief Reinitializes the state sensitivites in the solver after an
      * event occurence
      *
-     * @param yS0 new state sensitivity
+     * @param yyS0 new state sensitivity
      * @param ypS0 new derivative state sensitivities (DAE only)
      */
     virtual void sensReInit(const AmiVectorArray &yyS0,
@@ -612,8 +616,9 @@ class Solver {
      * @brief Reinitializes the adjoint states after an event occurence
      *
      * @param which identifier of the backwards problem
-     * @param yQB0 new adjoint state
-     * @param yQB0 new adjoint derivative state
+     * @param tB0 reinitialization timepoint
+     * @param yyB0 new adjoint state
+     * @param ypB0 new adjoint derivative state
      */
     virtual void reInitB(const int which, const realtype tB0,
                          const AmiVector &yyB0, const AmiVector &ypB0) const = 0;
@@ -626,6 +631,10 @@ class Solver {
      */
     virtual void quadReInitB(const int which, const AmiVector &yQB0) const = 0;
 
+    /**
+     * @brief current solver timepoint
+     * @return t
+     */
     const realtype gett() const;
     
     /**
@@ -756,7 +765,7 @@ class Solver {
      * @brief Initialise the quadrature states at the specified final timepoint
      *
      * @param which identifier of the backwards problem
-     * @param qQB0 intial adjoint quadrature state
+     * @param xQB0 intial adjoint quadrature state
      */
     virtual void qbinit(const int which, const AmiVector &xQB0) const = 0;
 
@@ -769,10 +778,9 @@ class Solver {
 
     /**
      * @brief Initalize non-linear solver for sensitivities
-     * @param x
-     * @param model
+     * @param model Model instance
      */
-    void initalizeNonLinearSolverSens(const Model *model) const;
+    void initializeNonLinearSolverSens(const Model *model) const;
 
     /**
      * @brief Set the dense Jacobian function
@@ -891,7 +899,7 @@ class Solver {
      * @brief Attaches the user data instance (here this is a Model) to the
      * forward problem
      *
-     * @param model Model instance,
+     * @param model Model instance
      */
     virtual void setUserData(Model *model) const = 0;
 
@@ -900,7 +908,7 @@ class Solver {
      * backward problem
      *
      * @param which identifier of the backwards problem
-     * @param model Model instance,
+     * @param model Model instance
      */
     virtual void setUserDataB(const int which, Model *model) const = 0;
 
@@ -971,7 +979,6 @@ class Solver {
      *
      * @param t timepoint
      * @param k derivative order
-     * @param dky interpolated solution
      */
     virtual void getDky(const realtype t, const int k) const = 0;
 
@@ -981,7 +988,6 @@ class Solver {
      *
      * @param t timepoint
      * @param k derivative order
-     * @param dky interpolated solution
      * @param which index of backward problem
      */
     virtual void getDkyB(const realtype t, const int k,
@@ -993,7 +999,6 @@ class Solver {
      *
      * @param t timepoint
      * @param k derivative order
-     * @param dky interpolated solution
      */
     virtual void getSensDky(const realtype t, const int k) const = 0;
 
@@ -1003,7 +1008,6 @@ class Solver {
      *
      * @param t timepoint
      * @param k derivative order
-     * @param dky interpolated solution
      * @param which index of backward problem
      */
     virtual void getQuadDkyB(const realtype t, const int k,
@@ -1099,13 +1103,11 @@ class Solver {
      * @brief Initializes and sets the linear solver for the forward problem
      *
      * @param model pointer to the model object
-     * @param x
      */
     void initializeLinearSolver(const Model *model) const;
 
     /**
      * @brief Sets the non-linear solver
-     * @param x
      */
     void initializeNonLinearSolver() const;
 
@@ -1116,7 +1118,7 @@ class Solver {
 
     /**
      * @brief Sets the linear solver for the backward problem
-     * @param which
+     * @param which index of the backward problem
      */
     virtual void setLinearSolverB(const int which) const = 0;
 
@@ -1127,7 +1129,7 @@ class Solver {
 
     /**
      * @brief Set the non-linear solver for the backward problem
-     * @param which
+     * @param which index of the backward problem
      */
     virtual void setNonLinearSolverB(const int which) const = 0;
 
@@ -1140,7 +1142,6 @@ class Solver {
      * @brief Initializes the linear solver for the backward problem
      *
      * @param model pointer to the model object
-     * @param xB
      * @param which index of the backward problem
      */
 
@@ -1148,8 +1149,7 @@ class Solver {
 
     /**
      * @brief Initializes the non-linear solver for the backward problem
-     * @param xB
-     * @param which
+     * @param which index of the backward problem
      */
     void initializeNonLinearSolverB(const int which) const;
 
@@ -1209,6 +1209,10 @@ class Solver {
 
     /**
      * @brief resets solverMemory and solverMemoryB
+     * @param nx new number of state variables
+     * @param nplist new number of sensitivity parameters
+     * @param nquad new number of quadratures (only differs from nplist for
+     * higher order senisitivity computation)
      */
     void resetMutableMemory(const int nx, const int nplist, const int nquad) const;
 

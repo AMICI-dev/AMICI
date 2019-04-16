@@ -107,7 +107,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
             /* Activate sensitivity calculations */
             sensInit1(sx0, sdx0);
-            initalizeNonLinearSolverSens(model);
+            initializeNonLinearSolverSens(model);
             setSensParams(par.data(), nullptr, plist.data());
 
             applyTolerancesFSA();
@@ -810,7 +810,7 @@ void Solver::setInternalSensitivityMethod(const InternalSensitivityMethod ism) {
     this->ism = ism;
 }
 
-void Solver::initalizeNonLinearSolverSens(const Model *model) const {
+void Solver::initializeNonLinearSolverSens(const Model *model) const {
     switch (iter) {
     case NonlinearSolverIteration::newton:
         switch (ism) {
