@@ -148,7 +148,7 @@ public:
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    void fJDiag(realtype t, AmiVector &Jdiag,
+    void fJDiag(realtype t, AmiVector &JDiag,
                         realtype cj, const AmiVector &x,
                         const AmiVector &dx) override;
 
