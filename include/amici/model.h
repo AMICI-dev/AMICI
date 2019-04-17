@@ -136,29 +136,6 @@ class Model : public AbstractModel {
     using AbstractModel::fz;
 
     /**
-     * Model specific implementation of fdJydy colptrs
-     * @param indexptrs column pointers
-     * @param index ytrue index
-     */
-    virtual void fdJydy_colptrs(sunindextype *indexptrs, int index) {
-        throw AmiException("Requested functionality is not supported as %s "
-                           "is not implemented for this model!",
-                           __func__); // not implemented
-    }
-
-    /**
-     * Model specific implementation of fdxdotdw row vals
-     * @param indexptrs row val pointers
-     * @param index ytrue index
-     */
-    virtual void fdJydy_rowvals(sunindextype *indexptrs, int index) {
-        throw AmiException("Requested functionality is not supported as %s "
-                           "is not implemented for this model!",
-                           __func__); // not implemented
-    }
-
-
-    /**
      * Expands conservation law for states
      * @param x_rdata pointer to state variables with conservation laws
      * expanded (stored in rdata)
@@ -436,6 +413,20 @@ class Model : public AbstractModel {
     void fJrz(const int nroots, ReturnData *rdata, const ExpData *edata);
 
     /**
+     * Model specific implementation of fdJydy colptrs
+     * @param indexptrs column pointers
+     * @param index ytrue index
+     */
+    virtual void fdJydy_colptrs(sunindextype *indexptrs, int index);
+
+    /**
+     * Model specific implementation of fdxdotdw row vals
+     * @param indexptrs row val pointers
+     * @param index ytrue index
+     */
+    virtual void fdJydy_rowvals(sunindextype *indexptrs, int index);
+
+    /**
      * Partial derivative of time-resolved measurement negative log-likelihood
      * Jy
      * @param it timepoint index
@@ -594,7 +585,7 @@ class Model : public AbstractModel {
      * @param xQB adjoint quadratures
      */
     void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB);
-    
+
     /**
      * Initialization of initial states
      * @param x pointer to state variables
@@ -952,7 +943,7 @@ class Model : public AbstractModel {
      * @param version Version number
      */
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, Model &r,
+    friend void boost::serialization::serialize(Archive &ar, Model &u,
                                                 const unsigned int version);
 
     /**
@@ -981,6 +972,16 @@ class Model : public AbstractModel {
      * AMICI_SUCCESS otherwise
      */
     int checkFinite(const int N, const realtype *array, const char *fun) const;
+
+    /**
+     * @brief Check if the given array has only finite elements.
+     * If not try to give hints by which other fields this could be caused.
+     * @param array arrays of values
+     * @param fun name of the fucntion that generated the values
+     * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,
+     * AMICI_SUCCESS otherwise
+     */
+    int checkFinite(gsl::span<const realtype> array, const char *fun) const;
 
     /**
      * @brief Reports whether the model has parameter names set.

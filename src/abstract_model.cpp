@@ -302,8 +302,8 @@ void AbstractModel::fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
                           const realtype *h, const realtype *w,
                           const realtype *tcl) {}
-    
-void AbstractModel::fdwdx_colptrs(sunindextype *indexvals) {}
+
+void AbstractModel::fdwdx_colptrs(sunindextype *indexptrs) {}
 
 void AbstractModel::fdwdx_rowvals(sunindextype *indexvals) {}
 

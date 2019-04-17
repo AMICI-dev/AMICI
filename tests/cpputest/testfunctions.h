@@ -89,7 +89,7 @@ public:
       throw AmiException("not implemented");
     }
     virtual void froot(const realtype t, const AmiVector &x,
-                       const AmiVector &dx, realtype *root) override {
+                       const AmiVector &dx, gsl::span<realtype> root) override {
         throw AmiException("not implemented");
     }
     virtual void fxdot(const realtype t, const AmiVector &x,

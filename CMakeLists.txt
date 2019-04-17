@@ -108,6 +108,7 @@ set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/misc.cpp
     ${CMAKE_SOURCE_DIR}/src/rdata.cpp
     ${CMAKE_SOURCE_DIR}/src/edata.cpp
+    ${CMAKE_SOURCE_DIR}/src/exception.cpp
     ${CMAKE_SOURCE_DIR}/src/hdf5.cpp
     ${CMAKE_SOURCE_DIR}/src/spline.cpp
     ${CMAKE_SOURCE_DIR}/src/solver.cpp

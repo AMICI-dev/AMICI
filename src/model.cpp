@@ -14,6 +14,128 @@
 
 namespace amici {
 
+Model::Model()
+    : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0),
+    nytrue(0), nz(0), nztrue(0), ne(0), nw(0), ndwdx(0), ndwdp(0), ndxdotdw(0), nnz(0),
+    nJ(0), ubw(0), lbw(0), o2mode(SecondOrderMode::none), dxdotdp(0,0),
+    x_pos_tmp(0) {}
+
+Model::Model(const int nx_rdata,
+             const int nxtrue_rdata,
+             const int nx_solver,
+             const int nxtrue_solver,
+             const int ny,
+             const int nytrue,
+             const int nz,
+             const int nztrue,
+             const int ne,
+             const int nJ,
+             const int nw,
+             const int ndwdx,
+             const int ndwdp,
+             const int ndxdotdw,
+             std::vector<int> ndJydy,
+             const int nnz,
+             const int ubw,
+             const int lbw,
+             SecondOrderMode o2mode,
+             const std::vector<realtype>& p,
+             std::vector<realtype> k,
+             const std::vector<int>& plist,
+             std::vector<realtype> idlist,
+             std::vector<int> z2event)
+    : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata),
+      nx_solver(nx_solver), nxtrue_solver(nxtrue_solver),
+      ny(ny), nytrue(nytrue),
+      nz(nz), nztrue(nztrue),
+      ne(ne),
+      nw(nw),
+      ndwdx(ndwdx),
+      ndwdp(ndwdp),
+      ndxdotdw(ndxdotdw),
+      ndJydy(std::move(ndJydy)),
+      nnz(nnz),
+      nJ(nJ),
+      ubw(ubw),
+      lbw(lbw),
+      o2mode(o2mode),
+      z2event(std::move(z2event)),
+      idlist(std::move(idlist)),
+      sigmay(ny, 0.0),
+      dsigmaydp(ny*plist.size(), 0.0),
+      sigmaz(nz, 0.0),
+      dsigmazdp(nz*plist.size(), 0.0),
+      dJydp(nJ*plist.size(), 0.0),
+      dJzdp(nJ*plist.size(), 0.0),
+      deltax(nx_solver, 0.0),
+      deltasx(nx_solver*plist.size(), 0.0),
+      deltaxB(nx_solver, 0.0),
+      deltaqB(nJ*plist.size(), 0.0),
+      dxdotdp(nx_solver, plist.size()),
+      J(nx_solver, nx_solver, nnz, CSC_MAT),
+      dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
+      dwdx(nw, nx_solver, ndwdx, CSC_MAT),
+      M(nx_solver, nx_solver),
+      my(nytrue, 0.0),
+      mz(nztrue, 0.0),
+      dJydsigma(nJ*nytrue*ny, 0.0),
+      dJzdz(nJ*nztrue*nz, 0.0),
+      dJzdsigma(nJ*nztrue*nz, 0.0),
+      dJrzdz(nJ*nztrue*nz, 0.0),
+      dJrzdsigma(nJ*nztrue*nz, 0.0),
+      dzdx(nz*nx_solver, 0.0),
+      dzdp(nz*plist.size(), 0.0),
+      drzdx(nz*nx_solver, 0.0),
+      drzdp(nz*plist.size(), 0.0),
+      dydp(ny*plist.size(), 0.0),
+      dydx(ny*nx_solver,0.0),
+      w(nw, 0.0),
+      dwdp(ndwdp, 0.0),
+      stau(plist.size(), 0.0),
+      sx(nx_solver*plist.size(), 0.0),
+      x_rdata(nx_rdata, 0.0),
+      sx_rdata(nx_rdata, 0.0),
+      h(ne,0.0),
+      unscaledParameters(p),
+      originalParameters(p),
+      fixedParameters(std::move(k)),
+      total_cl(nx_rdata-nx_solver),
+      stotal_cl((nx_rdata-nx_solver) * np()),
+      plist_(plist),
+      stateIsNonNegative(nx_solver, false),
+      x_pos_tmp(nx_solver),
+      pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
+{
+    // Can't use derivedClass::wasPythonGenerated() in ctor.
+    // Guess we are using Python if ndJydy is not empty
+    if(!this->ndJydy.empty()) {
+        if(static_cast<unsigned>(nytrue) != this->ndJydy.size())
+            throw std::runtime_error("Number of elements in ndJydy is not equal "
+                                     " nytrue.");
+
+        for(int iytrue = 0; iytrue < nytrue; ++iytrue)
+            dJydy.push_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue],
+                                             CSC_MAT));
+    } else {
+        dJydy_matlab = std::vector<realtype>(nJ*nytrue*ny, 0.0);
+    }
+
+    requireSensitivitiesForAllParameters();
+}
+
+void Model::fdJydy_colptrs(sunindextype *indexptrs, int index) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model::fdJydy_rowvals(sunindextype *indexptrs, int index) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+
 void Model::fsy(const int it, const AmiVectorArray &sx, ReturnData *rdata) {
     if (!ny)
         return;
@@ -302,8 +424,8 @@ void Model::initializeStateSensitivities(AmiVectorArray &sx, AmiVector &x) {
 }
 
 void Model::initHeaviside(AmiVector &x, AmiVector &dx) {
-    std::vector<realtype> rootvals(ne,0.0);
-    froot(tstart, x, dx, rootvals.data());
+    std::vector<realtype> rootvals(ne, 0.0);
+    froot(tstart, x, dx, rootvals);
     for (int ie = 0; ie < ne; ie++) {
         if (rootvals.at(ie) < 0) {
             h.at(ie) = 0.0;
@@ -842,116 +964,6 @@ std::vector<std::string> Model::getParameterIds() const {
     return std::vector<std::string>();
 }
 
-
-Model::Model()
-    : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0),
-    nytrue(0), nz(0), nztrue(0), ne(0), nw(0), ndwdx(0), ndwdp(0), ndxdotdw(0), nnz(0),
-    nJ(0), ubw(0), lbw(0), o2mode(SecondOrderMode::none), dxdotdp(0,0),
-    x_pos_tmp(0) {}
-
-Model::Model(const int nx_rdata,
-             const int nxtrue_rdata,
-             const int nx_solver,
-             const int nxtrue_solver,
-             const int ny,
-             const int nytrue,
-             const int nz,
-             const int nztrue,
-             const int ne,
-             const int nJ,
-             const int nw,
-             const int ndwdx,
-             const int ndwdp,
-             const int ndxdotdw,
-             std::vector<int> ndJydy,
-             const int nnz,
-             const int ubw,
-             const int lbw,
-             SecondOrderMode o2mode,
-             const std::vector<realtype>& p,
-             std::vector<realtype> k,
-             const std::vector<int>& plist,
-             std::vector<realtype> idlist,
-             std::vector<int> z2event)
-    : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata),
-      nx_solver(nx_solver), nxtrue_solver(nxtrue_solver),
-      ny(ny), nytrue(nytrue),
-      nz(nz), nztrue(nztrue),
-      ne(ne),
-      nw(nw),
-      ndwdx(ndwdx),
-      ndwdp(ndwdp),
-      ndxdotdw(ndxdotdw),
-      ndJydy(std::move(ndJydy)),
-      nnz(nnz),
-      nJ(nJ),
-      ubw(ubw),
-      lbw(lbw),
-      o2mode(o2mode),
-      z2event(std::move(z2event)),
-      idlist(std::move(idlist)),
-      sigmay(ny, 0.0),
-      dsigmaydp(ny*plist.size(), 0.0),
-      sigmaz(nz, 0.0),
-      dsigmazdp(nz*plist.size(), 0.0),
-      dJydp(nJ*plist.size(), 0.0),
-      dJzdp(nJ*plist.size(), 0.0),
-      deltax(nx_solver, 0.0),
-      deltasx(nx_solver*plist.size(), 0.0),
-      deltaxB(nx_solver, 0.0),
-      deltaqB(nJ*plist.size(), 0.0),
-      dxdotdp(nx_solver, plist.size()),
-      J(nx_solver, nx_solver, nnz, CSC_MAT),
-      dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
-      dwdx(nw, nx_solver, ndwdx, CSC_MAT),
-      M(nx_solver, nx_solver),
-      my(nytrue, 0.0),
-      mz(nztrue, 0.0),
-      dJydsigma(nJ*nytrue*ny, 0.0),
-      dJzdz(nJ*nztrue*nz, 0.0),
-      dJzdsigma(nJ*nztrue*nz, 0.0),
-      dJrzdz(nJ*nztrue*nz, 0.0),
-      dJrzdsigma(nJ*nztrue*nz, 0.0),
-      dzdx(nz*nx_solver, 0.0),
-      dzdp(nz*plist.size(), 0.0),
-      drzdx(nz*nx_solver, 0.0),
-      drzdp(nz*plist.size(), 0.0),
-      dydp(ny*plist.size(), 0.0),
-      dydx(ny*nx_solver,0.0),
-      w(nw, 0.0),
-      dwdp(ndwdp, 0.0),
-      stau(plist.size(), 0.0),
-      sx(nx_solver*plist.size(), 0.0),
-      x_rdata(nx_rdata, 0.0),
-      sx_rdata(nx_rdata, 0.0),
-      h(ne,0.0),
-      unscaledParameters(p),
-      originalParameters(p),
-      fixedParameters(std::move(k)),
-      total_cl(nx_rdata-nx_solver),
-      stotal_cl((nx_rdata-nx_solver) * np()),
-      plist_(plist),
-      stateIsNonNegative(nx_solver, false),
-      x_pos_tmp(nx_solver),
-      pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
-{
-    // Can't use derivedClass::wasPythonGenerated() in ctor.
-    // Guess we are using Python if ndJydy is not empty
-    if(!this->ndJydy.empty()) {
-        if(static_cast<unsigned>(nytrue) != this->ndJydy.size())
-            throw std::runtime_error("Number of elements in ndJydy is not equal "
-                                     " nytrue.");
-
-        for(int iytrue = 0; iytrue < nytrue; ++iytrue)
-            dJydy.push_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue],
-                                             CSC_MAT));
-    } else {
-        dJydy_matlab = std::vector<realtype>(nJ*nytrue*ny, 0.0);
-    }
-
-    requireSensitivitiesForAllParameters();
-}
-
 void Model::initializeVectors()
 {
     dsigmaydp.resize(ny * nplist(), 0.0);
@@ -1006,12 +1018,12 @@ void Model::fx0_fixedParameters(AmiVector &x) {
 
 
 
-void Model::fsx_rdata(AmiVectorArray &sx_full, const AmiVectorArray &sx) {
+void Model::fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx) {
     realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
             stcl = &stotal_cl.at(plist(ip) * ncl());
-        fsx_rdata(sx_full.data(ip), sx.data(ip), stcl, ip);
+        fsx_rdata(sx_rdata.data(ip), sx.data(ip), stcl, ip);
     }
 }
 
@@ -1689,6 +1701,11 @@ int Model::checkFinite(const int N, const realtype *array,
     }
 
     return result;
+}
+
+int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const
+{
+    return checkFinite(array.size(), array.data(), fun);
 }
 
 void Model::requireSensitivitiesForAllParameters() {

@@ -76,8 +76,8 @@ namespace amici {
     }
 
      void Model_DAE::froot(const realtype t, const AmiVector &x,
-                           const AmiVector &dx, realtype *root){
-        froot(t,x.getNVector(),dx.getNVector(),root);
+                           const AmiVector &dx, gsl::span<realtype> root){
+        froot(t, x.getNVector(), dx.getNVector(), root);
     }
 
     /** Event trigger function for events
@@ -86,11 +86,13 @@ namespace amici {
      * @param dx Vector with the derivative states
      * @param root array with root function values
      */
-    void Model_DAE::froot(realtype t, N_Vector x, N_Vector dx, realtype *root) {
-        memset(root, 0,sizeof(realtype)*ne);
+    void Model_DAE::froot(realtype t, N_Vector x, N_Vector dx,
+                          gsl::span<realtype> root) {
+        std::fill(root.begin(), root.end(), 0.0);
         auto x_pos = computeX_pos(x);
-        froot(root,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
-                     N_VGetArrayPointer(dx));
+        froot(root.data(), t, N_VGetArrayPointer(x_pos),
+              unscaledParameters.data(), fixedParameters.data(), h.data(),
+              N_VGetArrayPointer(dx));
     }
 
     void Model_DAE::fxdot(const realtype t, const AmiVector &x,
@@ -147,8 +149,8 @@ namespace amici {
              fdxdotdp(dxdotdp.data(ip),t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data(),
                       plist_[ip],N_VGetArrayPointer(dx),w.data(),dwdp.data());
          }
-         
-         
+
+
     }
 
     /**

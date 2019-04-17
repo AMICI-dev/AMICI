@@ -35,16 +35,16 @@ class CVodeSolver : public Solver {
      * @return The clone
      */
     virtual Solver *clone() const override;
-    
+
     void reInit(const realtype t0, const AmiVector &yy0,
                 const AmiVector &yp0) const override;
-    
+
     void sensReInit(const AmiVectorArray &yyS0,
                     const AmiVectorArray &ypS0) const override;
-    
+
     void reInitB(const int which, const realtype tB0,
                  const AmiVector &yyB0, const AmiVector &ypB0) const override;
-    
+
     void quadReInitB(const int which, const AmiVector &yQB0) const override;
 
     int solve(const realtype tout, const int itask) const override;
@@ -94,7 +94,7 @@ class CVodeSolver : public Solver {
     void setNonLinearSolverB(const int which) const override;
 
   protected:
-    
+
     void calcIC(const realtype tout1) const override;
 
     void calcICB(const int which, const realtype tout1) const override;

@@ -25,7 +25,7 @@ int checkFinite(std::vector <realtype> const& array, const char* fun);
  * @param fun name of calling function
  * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
  */
-int checkFinite(const int N, const realtype *array, const char* fun);
+int checkFinite(int N, const realtype *array, const char* fun);
 
 
 /**
