@@ -73,26 +73,32 @@ void Model::fsJy(const int it, const std::vector<realtype>& dJydx, const AmiVect
 }
 
 void Model::fdJydp(const int it, ReturnData *rdata, const ExpData *edata) {
-
-    // dJydy         nJ x nytrue x ny
+    // dJydy         nJ, nytrue x ny
     // dydp          nplist * ny
     // dJydp         nplist x nJ
     // dJydsigma
 
-    getmy(it,edata);
+    getmy(it, edata);
     std::fill(dJydp.begin(), dJydp.end(), 0.0);
 
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (isNaN(my.at(iyt)))
             continue;
 
-        // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
-        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
-                    nJ, nplist(), ny,
-                    1.0, &dJydy.at(iyt*nJ*ny), nJ,
-                    dydp.data(), ny,
-                    1.0, dJydp.data(), nJ);
-
+        if(wasPythonGenerated()) {
+            // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
+            for(int iplist = 0; iplist < nplist(); ++iplist) {
+                dJydy[iyt].multiply(
+                            gsl::span<realtype>(&dJydp.at(iplist * nJ), nJ),
+                            gsl::span<const realtype>(&dydp.at(iplist * ny), ny));
+            }
+        } else {
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
+                        nJ, nplist(), ny,
+                        1.0, &dJydy_matlab.at(iyt*nJ*ny), nJ,
+                        dydp.data(), ny,
+                        1.0, dJydp.data(), nJ);
+        }
         // dJydp = 1.0 * dJydp +  1.0 * dJydsigma * dsigmaydp
         amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
                     nJ, nplist(), ny,
@@ -119,22 +125,37 @@ void Model::fdJydp(const int it, ReturnData *rdata, const ExpData *edata) {
     }
 }
 
-void Model::fdJydx(std::vector<realtype> *dJydx, const int it, const ExpData *edata) {
+void Model::fdJydx(std::vector<realtype>& dJydx, const int it, const ExpData *edata) {
 
-    // dJydy         nJ x ny        x nytrue
-    // dydx          ny x nx_solver
-    // dJydx         nJ x nx_solver x nt
-    getmy(it,edata);
+    // dJydy: nJ, ny x nytrue
+    // dydx :     ny x nx_solver
+    // dJydx:     nJ x nx_solver x nt
+    getmy(it, edata);
+
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (isNaN(my.at(iyt)))
             continue;
-    // dJydy A[nyt,nJ,ny] * dydx B[ny,nx_solver] = dJydx C[it,nJ,nx_solver]
-    //         slice                                       slice
-    //             M  K            K  N                       M  N
-    //             lda             ldb                        ldc
-        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
-                    nJ, nx_solver, ny, 1.0, &dJydy.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
-                    &dJydx->at(it*nx_solver*nJ), nJ);
+        // dJydy A[nyt,nJ,ny] * dydx B[ny,nx_solver] = dJydx C[it,nJ,nx_solver]
+        //         slice                                       slice
+        //          M  K            K  N                       M  N
+        //           lda             ldb                        ldc
+
+        if(wasPythonGenerated()) {
+            for(int ix = 0; ix < nx_solver; ++ix) {
+                dJydy[iyt].multiply(
+                            gsl::span<realtype>(&dJydx.at(it * nx_solver * nJ
+                                                          + ix * nJ), nJ),
+                            gsl::span<const realtype>(&dydx.at(ix * ny), ny));
+            }
+        } else {
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans, BLASTranspose::noTrans,
+                        nJ, nx_solver, ny, 1.0, &dJydy_matlab.at(iyt*ny*nJ), nJ, dydx.data(), ny, 1.0,
+                        &dJydx.at(it*nx_solver*nJ), nJ);
+        }
+    }
+
+    if(alwaysCheckFinite) {
+        amici::checkFinite(dJydx, "dJydx");
     }
 }
 
@@ -837,6 +858,7 @@ Model::Model(const int nx_rdata,
              const int ndwdx,
              const int ndwdp,
              const int ndxdotdw,
+             std::vector<int> ndJydy,
              const int nnz,
              const int ubw,
              const int lbw,
@@ -855,6 +877,7 @@ Model::Model(const int nx_rdata,
       ndwdx(ndwdx),
       ndwdp(ndwdp),
       ndxdotdw(ndxdotdw),
+      ndJydy(std::move(ndJydy)),
       nnz(nnz),
       nJ(nJ),
       ubw(ubw),
@@ -879,7 +902,6 @@ Model::Model(const int nx_rdata,
       M(nx_solver, nx_solver),
       my(nytrue, 0.0),
       mz(nztrue, 0.0),
-      dJydy(nJ*nytrue*ny, 0.0),
       dJydsigma(nJ*nytrue*ny, 0.0),
       dJzdz(nJ*nztrue*nz, 0.0),
       dJzdsigma(nJ*nztrue*nz, 0.0),
@@ -908,6 +930,20 @@ Model::Model(const int nx_rdata,
       x_pos_tmp(nx_solver),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none))
 {
+    // Can't use derivedClass::wasPythonGenerated() in ctor.
+    // Guess we are using Python if ndJydy is not empty
+    if(!this->ndJydy.empty()) {
+        if(static_cast<unsigned>(nytrue) != this->ndJydy.size())
+            throw std::runtime_error("Number of elements in ndJydy is not equal "
+                                     " nytrue.");
+
+        for(int iytrue = 0; iytrue < nytrue; ++iytrue)
+            dJydy.push_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue],
+                                             CSC_MAT));
+    } else {
+        dJydy_matlab = std::vector<realtype>(nJ*nytrue*ny, 0.0);
+    }
+
     requireSensitivitiesForAllParameters();
 }
 
@@ -1193,9 +1229,10 @@ void Model::fsigmay(const int it, ReturnData *rdata, const ExpData *edata) {
         }
     }
 
-    for(int i = 0; i < nytrue; ++i)
-        checkSigmaPositivity(sigmay[i], "sigmay");
-
+    for(int i = 0; i < nytrue; ++i) {
+        if(edata && !std::isnan(edata->getObservedData()[it * nytrue + i]))
+            checkSigmaPositivity(sigmay[i], "sigmay");
+    }
     std::copy_n(sigmay.data(), nytrue, &rdata->sigmay[it * rdata->ny]);
 }
 
@@ -1323,24 +1360,49 @@ void Model::fJrz(const int nroots, ReturnData *rdata, const ExpData * /*edata*/)
 void Model::fdJydy(const int it, const ReturnData *rdata,
                    const ExpData *edata) {
     // load measurements to my
-    getmy(it,edata);
-    std::fill(dJydy.begin(),dJydy.end(),0.0);
+    getmy(it, edata);
 
-    for(int iytrue = 0; iytrue < nytrue; iytrue++){
-        if(!isNaN(my.at(iytrue))){
+    if(wasPythonGenerated()) {
+        for(int iytrue = 0; iytrue < nytrue; iytrue++) {
+            dJydy[iytrue].zero();
+            fdJydy_colptrs(dJydy[iytrue].indexptrs(), iytrue);
+            fdJydy_rowvals(dJydy[iytrue].indexvals(), iytrue);
+
+            if(isNaN(my.at(iytrue))) {
+                continue;
+            }
+
             // get dJydy slice (ny) for current timepoint and observable
-            fdJydy(&dJydy.at(iytrue*ny*nJ),
+            fdJydy(dJydy[iytrue].data(),
                    iytrue,
                    unscaledParameters.data(),
                    fixedParameters.data(),
                    gety(it,rdata),
                    sigmay.data(),
                    my.data());
-        }
-    }
 
-    if(alwaysCheckFinite) {
-        amici::checkFinite(dJydy, "dJydy");
+            if(alwaysCheckFinite) {
+                amici::checkFinite(ndJydy[iytrue], dJydy[iytrue].data(), "dJydy");
+            }
+        }
+    } else {
+        std::fill(dJydy_matlab.begin(), dJydy_matlab.end(), 0.0);
+        for(int iytrue = 0; iytrue < nytrue; iytrue++) {
+            if(isNaN(my.at(iytrue))) {
+                continue;
+            }
+            fdJydy(&dJydy_matlab.at(iytrue*ny*nJ),
+                               iytrue,
+                               unscaledParameters.data(),
+                               fixedParameters.data(),
+                               gety(it,rdata),
+                               sigmay.data(),
+                               my.data());
+        }
+        if(alwaysCheckFinite) {
+            // get dJydy slice (ny) for current timepoint and observable
+            amici::checkFinite(dJydy_matlab, "dJydy");
+        }
     }
 }
 
