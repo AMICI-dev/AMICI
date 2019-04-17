@@ -16,7 +16,7 @@ class ExpData {
 
   public:
     /** @brief default constructor */
-    ExpData();
+    ExpData() = default;
 
     /** @brief Copy constructor, needs to be declared to be generated in
      * swig*/
@@ -208,7 +208,7 @@ class ExpData {
      *
      * @param stdDev standard deviation (dimension: scalar)
      */
-    void setObservedDataStdDev(const realtype stdDev);
+    void setObservedDataStdDev(realtype stdDev);
 
     /**
      * @brief set function that copies standard deviation of observed data for
@@ -228,7 +228,7 @@ class ExpData {
      * @param stdDev standard deviation (dimension: scalar)
      * @param iy observed data index
      */
-    void setObservedDataStdDev(const realtype stdDev, int iy);
+    void setObservedDataStdDev(realtype stdDev, int iy);
 
     /**
      * @brief get function that checks whether standard deviation of data at
@@ -316,7 +316,7 @@ class ExpData {
      *
      * @param stdDev standard deviation (dimension: scalar)
      */
-    void setObservedEventsStdDev(const realtype stdDev);
+    void setObservedEventsStdDev(realtype stdDev);
 
     /**
      * @brief set function that copies standard deviation of observed data for
@@ -337,7 +337,7 @@ class ExpData {
      * @param stdDev standard deviation (dimension: scalar)
      * @param iz observed data index
      */
-    void setObservedEventsStdDev(const realtype stdDev, int iz);
+    void setObservedEventsStdDev(realtype stdDev, int iz);
 
     /**
      * @brief get function that checks whether standard deviation of even data
@@ -396,7 +396,7 @@ class ExpData {
     std::vector<ParameterScaling> pscale;
     /** @brief condition-specific parameter list */
     std::vector<int> plist;
-    
+
     /**
      * @brief duration of pre-simulation
      * if this is > 0, presimualation will be performed from
@@ -442,13 +442,13 @@ class ExpData {
                               const char *fieldname) const;
 
     /** @brief number of observables */
-    int nytrue_;
+    int nytrue_{0};
 
     /** @brief number of event observables */
-    int nztrue_;
+    int nztrue_{0};
 
     /** @brief maximal number of event occurences */
-    int nmaxevent_;
+    int nmaxevent_{0};
 
     /** @brief observation timepoints (dimension: nt) */
     std::vector<realtype> ts;
@@ -482,7 +482,7 @@ void checkSigmaPositivity(std::vector<realtype> const &sigmaVector,
  * @param sigma input to be checked
  * @param sigmaName name of the input
  */
-void checkSigmaPositivity(const realtype sigma, const char *sigmaName);
+void checkSigmaPositivity(realtype sigma, const char *sigmaName);
 
 /**
  * @brief The ConditionContext class applies condition-specific amici::Model
@@ -526,7 +526,7 @@ class ConditionContext {
     std::vector<realtype> originalTimepoints;
     std::vector<int> originalParameterList;
     std::vector<amici::ParameterScaling> originalScaling;
-    
+
 };
 
 } // namespace amici

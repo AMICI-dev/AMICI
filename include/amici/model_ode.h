@@ -104,9 +104,9 @@ namespace amici {
                   N_Vector xB);
 
         virtual void froot(const realtype t, const AmiVector &x,
-                           const AmiVector &dx, realtype *root) override;
+                           const AmiVector &dx, gsl::span<realtype> root) override;
 
-        void froot(realtype t, N_Vector x, realtype *root);
+        void froot(realtype t, N_Vector x, gsl::span<realtype> root);
 
         virtual void fxdot(const realtype t, const AmiVector &x,
                            const AmiVector &dx, AmiVector &xdot) override;

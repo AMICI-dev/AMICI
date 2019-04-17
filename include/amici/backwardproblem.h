@@ -85,7 +85,7 @@ class BackwardProblem {
      *
      * @param it index of data point @type int
      */
-    void handleDataPointB(const int it);
+    void handleDataPointB(int it);
 
 
     /**
@@ -100,7 +100,7 @@ class BackwardProblem {
      * @param model pointer to model specification object @type Model
      * @return tnext next timepoint @type realtype
      */
-    realtype getTnext(std::vector<realtype> const& troot, const int iroot, const int it);
+    realtype getTnext(std::vector<realtype> const& troot, int iroot, int it);
 
     /**
      * @brief Compute likelihood sensitivities.

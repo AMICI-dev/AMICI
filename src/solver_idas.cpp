@@ -762,7 +762,7 @@ int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
 int IDASolver::froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
                      void *user_data) {
     auto model = static_cast<Model_DAE *>(user_data);
-    model->froot(t, x, dx, root);
+    model->froot(t, x, dx, gsl::make_span<realtype>(root, model->ne));
     return model->checkFinite(model->ne, root, "root function");
 }
 

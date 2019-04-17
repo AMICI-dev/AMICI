@@ -424,7 +424,7 @@ void CVodeSolver::sensReInit(const AmiVectorArray &yyS0,
     if (status != CV_SUCCESS)
         throw CvodeException(CV_VECTOROP_ERR, "CVodeSensReInit");
 }
-    
+
 void CVodeSolver::reInitB(const int which, const realtype tB0,
                           const AmiVector &yyB0, const AmiVector &ypB0) const {
     auto cv_memB =
@@ -837,7 +837,8 @@ int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
                               "Jacobian");
 }
 
-/** Event trigger function for events
+/**
+ * @brief Event trigger function for events
  * @param t timepoint
  * @param x Vector with the states
  * @param root array with root function values
@@ -847,11 +848,12 @@ int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
 int CVodeSolver::froot(realtype t, N_Vector x, realtype *root,
                        void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
-    model->froot(t, x, root);
+    model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
     return model->checkFinite(model->ne, root, "root function");
 }
 
-/** residual function of the ODE
+/**
+ * @brief residual function of the ODE
  * @param t timepoint
  * @param x Vector with the states
  * @param xdot Vector with the right hand side

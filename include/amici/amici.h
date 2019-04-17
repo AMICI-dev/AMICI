@@ -45,7 +45,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
 std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(Solver const& solver,
                                                              const std::vector<ExpData *> &edatas,
                                                              Model const& model,
-                                                             const bool failfast,
+                                                             bool failfast,
                                                              int num_threads);
 
 } // namespace amici

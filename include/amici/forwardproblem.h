@@ -186,7 +186,7 @@ class ForwardProblem {
      * @param tlastroot pointer to the timepoint of the last event
      */
 
-    void handleEvent(realtype *tlastroot,const bool seflag);
+    void handleEvent(realtype *tlastroot,bool seflag);
 
     /**
      * @brief Evaluates the Jacobian and differential equation right hand side,

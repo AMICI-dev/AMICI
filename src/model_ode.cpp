@@ -78,21 +78,24 @@ namespace amici {
     }
 
     void Model_ODE::froot(const realtype t, const AmiVector &x,
-                          const AmiVector & /*dx*/, realtype *root){
-        froot(t,x.getNVector(),root);
+                          const AmiVector & /*dx*/, gsl::span<realtype> root){
+        froot(t, x.getNVector(), root);
     }
 
-    /** implementation of froot at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation aswell as the AmiVector
-     * level implementation
+    /**
+     * @brief implementation of froot at the N_Vector level
+     *
+     * This function provides an interface to the model specific routines for
+     * the solver implementation aswell as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param root array with root function values
      */
-    void Model_ODE::froot(realtype t, N_Vector x, realtype *root) {
+    void Model_ODE::froot(realtype t, N_Vector x, gsl::span<realtype> root) {
         auto x_pos = computeX_pos(x);
-        memset(root,0,sizeof(realtype)*ne);
-        froot(root,t,N_VGetArrayPointer(x_pos),unscaledParameters.data(),fixedParameters.data(),h.data());
+        std::fill(root.begin(), root.end(), 0.0);
+        froot(root.data(), t, N_VGetArrayPointer(x_pos),
+              unscaledParameters.data(), fixedParameters.data(), h.data());
     }
 
     void Model_ODE::fxdot(const realtype t, const AmiVector &x,

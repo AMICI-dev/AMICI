@@ -55,7 +55,7 @@ void ForwardProblem::workForwardProblem() {
     bool computeSensitivities =
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
         model->nx_solver > 0;
-    
+
     model->initialize(x, dx, sx, sdx, computeSensitivities);
     solver->setup(model->t0(), model, x, dx, sx, sdx);
     // update x0 after computing consistence IC, only important for DAEs
@@ -228,7 +228,7 @@ void ForwardProblem::handlePresimulation()
 
 void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     /* store heaviside information at event occurence */
-    model->froot(t, x, dx, rootvals.data());
+    model->froot(t, x, dx, rootvals);
 
     if (!seflag) {
         solver->getRootInfo(rootsfound.data());
@@ -319,7 +319,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     int secondevent = 0;
 
     /* check whether we need to fire a secondary event */
-    model->froot(t, x, dx, rootvals.data());
+    model->froot(t, x, dx, rootvals);
     for (int ie = 0; ie < model->ne; ie++) {
         /* the same event should not trigger itself */
         if (rootsfound.at(ie) == 0) {
@@ -378,7 +378,7 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
 void ForwardProblem::getEventOutput() {
     if (t == model->gett(model->nt() - 1,rdata)) {
         // call from fillEvent at last timepoint
-        model->froot(t, x, dx, rootvals.data());
+        model->froot(t, x, dx, rootvals);
     }
 
     /* EVENT OUTPUT */
