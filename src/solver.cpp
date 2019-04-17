@@ -286,8 +286,8 @@ void Solver::initializeLinearSolver(const Model *model) const {
 
     case LinearSolver::KLU:
         linearSolver = std::make_unique<SUNLinSolKLU>(
-                    x, model->nnz, CSC_MAT,
-                    static_cast<SUNLinSolKLU::StateOrdering>(getStateOrdering()));
+            x, model->nnz, CSC_MAT,
+            static_cast<SUNLinSolKLU::StateOrdering>(getStateOrdering()));
         setLinearSolver();
         setSparseJacFn();
         break;
@@ -296,8 +296,8 @@ void Solver::initializeLinearSolver(const Model *model) const {
     case LinearSolver::SuperLUMT:
         // TODO state ordering
         linearSolver = std::make_unique<SUNLinSolSuperLUMT>(
-                    *x, model->nnz, CSC_MAT,
-                    static_cast<SUNLinSolSuperLUMT::StateOrdering>(getStateOrdering()));
+            *x, model->nnz, CSC_MAT,
+            static_cast<SUNLinSolSuperLUMT::StateOrdering>(getStateOrdering()));
 
         setLinearSolver();
         setSparseJacFn();
@@ -378,16 +378,16 @@ void Solver::initializeLinearSolverB(const Model *model,
 
     case LinearSolver::KLU:
         linearSolverB = std::make_unique<SUNLinSolKLU>(
-                    xB, model->nnz, CSC_MAT,
-                    static_cast<SUNLinSolKLU::StateOrdering>(getStateOrdering()));
+            xB, model->nnz, CSC_MAT,
+            static_cast<SUNLinSolKLU::StateOrdering>(getStateOrdering()));
         setLinearSolverB(which);
         setSparseJacFnB(which);
         break;
 #ifdef SUNDIALS_SUPERLUMT
     case LinearSolver::SuperLUMT:
         linearSolverB = std::make_unique<SUNLinSolSuperLUMT>(
-                    *xB, model->nnz, CSC_MAT,
-                    static_cast<SUNLinSolSuperLUMT::StateOrdering>(getStateOrdering()));
+            *xB, model->nnz, CSC_MAT,
+            static_cast<SUNLinSolSuperLUMT::StateOrdering>(getStateOrdering()));
         setLinearSolverB(which);
         setSparseJacFnB(which);
         break;
@@ -772,24 +772,24 @@ void Solver::setInterpolationType(const InterpolationType interpType) {
     this->interpType = interpType;
 }
 
-int Solver::getStateOrdering() const {
-    return ordering;
-}
+int Solver::getStateOrdering() const { return ordering; }
 
 void Solver::setStateOrdering(int ordering) {
     this->ordering = ordering;
     if (solverMemory && linsol == LinearSolver::KLU) {
-        auto klu = dynamic_cast<SUNLinSolKLU*>(linearSolver.get());
+        auto klu = dynamic_cast<SUNLinSolKLU *>(linearSolver.get());
         klu->setOrdering(static_cast<SUNLinSolKLU::StateOrdering>(ordering));
-        klu = dynamic_cast<SUNLinSolKLU*>(linearSolverB.get());
+        klu = dynamic_cast<SUNLinSolKLU *>(linearSolverB.get());
         klu->setOrdering(static_cast<SUNLinSolKLU::StateOrdering>(ordering));
     }
 #ifdef SUNDIALS_SUPERLUMT
     if (solverMemory && linsol == LinearSolver::SuperLUMT) {
-        auto klu = dynamic_cast<SUNLinSolSuperLUMT*>(linearSolver.get());
-        klu->setOrdering(static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering));
-        klu = dynamic_cast<SUNLinSolSuperLUMT*>(linearSolverB.get());
-        klu->setOrdering(static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering));
+        auto klu = dynamic_cast<SUNLinSolSuperLUMT *>(linearSolver.get());
+        klu->setOrdering(
+            static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering));
+        klu = dynamic_cast<SUNLinSolSuperLUMT *>(linearSolverB.get());
+        klu->setOrdering(
+            static_cast<SUNLinSolSuperLUMT::StateOrdering>(ordering));
     }
 #endif
 }
@@ -913,7 +913,7 @@ void Solver::setQuadInitDoneB(const int which) const {
 }
 
 void Solver::resetMutableMemory(const int nx, const int nplist,
-                         const int nquad) const {
+                                const int nquad) const {
     solverMemory = nullptr;
     initialized = false;
     adjInitialized = false;
@@ -940,7 +940,7 @@ void Solver::writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
     *t = gett();
     x.copy(getState(*t));
     dx.copy(getDerivativeState(*t));
-    if(sensInitialized) {
+    if (sensInitialized) {
         sx.copy(getStateSensitivity(*t));
     }
 }
@@ -953,28 +953,28 @@ void Solver::writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
     xQB.copy(getAdjointQuadrature(which, *t));
 }
 
-const AmiVector& Solver::getState(const realtype t) const {
+const AmiVector &Solver::getState(const realtype t) const {
     if (t == this->t)
         return x;
 
     if (solverWasCalledF)
         getDky(t, 0);
-    
+
     return dky;
 }
 
-const AmiVector& Solver::getDerivativeState(const realtype t) const {
+const AmiVector &Solver::getDerivativeState(const realtype t) const {
     if (t == this->t)
         return dx;
-    
+
     if (solverWasCalledF)
         getDky(t, 1);
-    
+
     return dky;
 }
 
-const AmiVectorArray& Solver::getStateSensitivity(const realtype t) const {
-    if(sensInitialized) {
+const AmiVectorArray &Solver::getStateSensitivity(const realtype t) const {
+    if (sensInitialized) {
         if (solverWasCalledF) {
             if (t == this->t) {
                 getSens();
@@ -988,7 +988,8 @@ const AmiVectorArray& Solver::getStateSensitivity(const realtype t) const {
     return sx;
 }
 
-const AmiVector& Solver::getAdjointState(const int which, const realtype t) const {
+const AmiVector &Solver::getAdjointState(const int which,
+                                         const realtype t) const {
     if (adjInitialized) {
         if (solverWasCalledB) {
             if (t == this->t) {
@@ -1003,7 +1004,7 @@ const AmiVector& Solver::getAdjointState(const int which, const realtype t) cons
     return dky;
 }
 
-const AmiVector& Solver::getAdjointDerivativeState(const int which,
+const AmiVector &Solver::getAdjointDerivativeState(const int which,
                                                    const realtype t) const {
     if (adjInitialized) {
         if (solverWasCalledB) {
@@ -1019,8 +1020,8 @@ const AmiVector& Solver::getAdjointDerivativeState(const int which,
     return dky;
 }
 
-const AmiVector& Solver::getAdjointQuadrature(const int which, const realtype t)
-const {
+const AmiVector &Solver::getAdjointQuadrature(const int which,
+                                              const realtype t) const {
     if (adjInitialized) {
         if (solverWasCalledB) {
             if (t == this->t) {

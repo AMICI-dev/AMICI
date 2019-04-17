@@ -21,7 +21,7 @@ void IDASolver::init(const realtype t0, const AmiVector &x0,
                      const AmiVector &dx0) const {
     int status;
     solverWasCalledF = false;
-    t=t0;
+    t = t0;
     x.copy(x0);
     dx.copy(dx0);
     if (getInitDone()) {
@@ -55,8 +55,8 @@ void IDASolver::sensInit1(const AmiVectorArray &sx0,
         throw IDAException(status, "IDASensInit");
 }
 
-void IDASolver::binit(const int which, const realtype tf,
-                      const AmiVector &xB0, const AmiVector &dxB0) const {
+void IDASolver::binit(const int which, const realtype tf, const AmiVector &xB0,
+                      const AmiVector &dxB0) const {
     int status;
     xB.copy(xB0);
     dxB.copy(dxB0);
@@ -296,14 +296,14 @@ void IDASolver::reInitB(const int which, const realtype tB0,
     xB.copy(yyB0);
     dxB.copy(ypB0);
     auto ida_memB =
-    static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
+        static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
     ida_memB->ida_tn = tB0;
     resetState(ida_memB, xB.getNVector(), dxB.getNVector());
 }
 void IDASolver::quadReInitB(const int which, const AmiVector &yQB0) const {
     xQB.copy(yQB0);
     auto ida_memB =
-    static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
+        static_cast<IDAMem>(IDAGetAdjIDABmem(solverMemory.get(), which));
     N_VScale(ONE, xQB.getNVector(), ida_memB->ida_phiQ[0]);
 }
 void IDASolver::setSensParams(const realtype *p, const realtype *pbar,

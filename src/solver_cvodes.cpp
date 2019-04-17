@@ -42,7 +42,7 @@ static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 void CVodeSolver::init(const realtype t0, const AmiVector &x0,
                        const AmiVector & /*dx0*/) const {
     solverWasCalledF = false;
-    t=t0;
+    t = t0;
     x.copy(x0);
     int status;
     if (getInitDone()) {
@@ -74,7 +74,8 @@ void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
 }
 
 void CVodeSolver::binit(const int which, const realtype tf,
-                        const AmiVector &xB0, const AmiVector & /*dxB0*/) const {
+                        const AmiVector &xB0,
+                        const AmiVector & /*dxB0*/) const {
     solverWasCalledB = false;
     xB.copy(xB0);
     int status;
@@ -426,9 +427,10 @@ void CVodeSolver::sensReInit(const AmiVectorArray &yyS0,
 }
 
 void CVodeSolver::reInitB(const int which, const realtype tB0,
-                          const AmiVector &yyB0, const AmiVector & /*ypB0*/) const {
+                          const AmiVector &yyB0,
+                          const AmiVector & /*ypB0*/) const {
     auto cv_memB =
-    static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
+        static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
     if (solverWasCalledB)
         forceReInitPostProcessB = true;
     cv_memB->cv_tn = tB0;
@@ -438,7 +440,7 @@ void CVodeSolver::reInitB(const int which, const realtype tB0,
 
 void CVodeSolver::quadReInitB(int which, const AmiVector &yQB0) const {
     auto cv_memB =
-    static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
+        static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
     if (solverWasCalledB)
         forceReInitPostProcessB = true;
     xQB.copy(yQB0);
