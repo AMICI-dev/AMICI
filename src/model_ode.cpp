@@ -163,7 +163,8 @@ namespace amici {
                          unscaledParameters.data(), fixedParameters.data(),
                          h.data(), plist_[ip], w.data());
                 if (nw > 0)
-                    dxdotdw.multiply(dxdotdp.data(ip), &dwdp.at(nw * ip));
+                    dxdotdw.multiply(gsl::span<realtype>(dxdotdp.data(ip), nx_solver),
+                                     gsl::span<const realtype>(&dwdp.at(nw * ip), nw));
             }
         } else {
             // matlab generated
