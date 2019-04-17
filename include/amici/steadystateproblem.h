@@ -104,7 +104,7 @@ class SteadystateProblem {
      * @brief constructor
      * @param solver pointer to Solver instance
      */
-    SteadystateProblem(const Solver *solver):
+    explicit SteadystateProblem(const Solver *solver):
     t(solver->gett()),
     delta(solver->nx()),
     ewt(solver->nx()),

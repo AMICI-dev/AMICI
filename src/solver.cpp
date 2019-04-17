@@ -13,6 +13,8 @@ namespace amici {
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 Solver::Solver(const Solver &other) : Solver() {
+    t = nan("");
+    ncheckPtr = nan("");
     sensi = other.sensi;
     atol = other.atol;
     rtol = other.rtol;
