@@ -129,8 +129,9 @@ class SteadystateProblem {
     
 
   private:
+    /** time variable for simulation steadystate finding */
     realtype t;
-    /** newton step? */
+    /** newton step */
     AmiVector delta;
     /** error weights */
     AmiVector ewt;

@@ -415,23 +415,11 @@ class Solver {
     void setMaxSteps(const long int maxsteps);
 
     /**
-     * @brief sets the maximum number of solver steps for the forward problem
-     * @param maxsteps maximum number of solver steps (non-negative number)
-     */
-    void setMaxSteps(const int maxsteps);
-
-    /**
      * @brief returns the maximum number of solver steps for the backward
      * problem
      * @return maximum number of solver steps
      */
     long int getMaxStepsBackwardProblem() const;
-
-    /**
-     * @brief sets the maximum number of solver steps for the backward problem
-     * @param maxsteps maximum number of solver steps (non-negative number)
-     */
-    void setMaxStepsBackwardProblem(const int maxsteps);
 
     /**
      * @brief sets the maximum number of solver steps for the backward problem
@@ -710,30 +698,35 @@ class Solver {
                        int *ncheckPtr) const = 0;
     
     /**
-     * @brief reInitPostProcessF
+     * @brief reInitPostProcessF postprocessing of the solver memory after a
+     * discontinuity in the forward problem
      * @param tnext next timepoint (defines integration direction)
      */
     virtual void reInitPostProcessF(const realtype tnext) const = 0;
 
     /**
-     * @brief reInitPostProcessB
+     * @brief reInitPostProcessB postprocessing of the solver memory after a
+     * discontinuity in the backward problem
      * @param tnext next timepoint (defines integration direction)
      */
     virtual void reInitPostProcessB(const realtype tnext) const = 0;
 
     /**
-     * @brief sets sx to the state sensitivity at the current timepoint
+     * @brief extracts the state sensitivity at the current timepoint from
+     * solver memory and writes it to the sx member variable
      */
     virtual void getSens() const = 0;
 
     /**
-     * @brief sets xB to the adjoint state at the current timepoint
+     * @brief extracts the adjoint state at the current timepoint from
+     * solver memory and writes it to the xB member variable
      * @param which index of the backwards problem
      */
     virtual void getB(const int which) const = 0;
 
     /**
-     * @brief sets xQB to the adjoint quadrature state at the current timepoint
+     * @brief extracts the adjoint quadrature state at the current timepoint
+     * from solver memory and writes it to the xQB member variable
      * @param which index of the backwards problem
      */
     virtual void getQuadB(const int which) const = 0;

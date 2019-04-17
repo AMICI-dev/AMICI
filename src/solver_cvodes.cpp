@@ -554,7 +554,7 @@ int CVodeSolver::solve(const realtype tout, const int itask) const {
     if (forceReInitPostProcessF)
         reInitPostProcessF(tout);
     int status = CVode(solverMemory.get(), tout, x.getNVector(), &t, itask);
-    if (status < 0)
+    if (status < 0) // status > 0 is okay and is used for e.g. root return
         throw IntegrationFailure(status, t);
     solverWasCalledF = true;
     return status;
@@ -566,7 +566,7 @@ int CVodeSolver::solveF(const realtype tout, const int itask,
         reInitPostProcessF(tout);
     int status =
         CVodeF(solverMemory.get(), tout, x.getNVector(), &t, itask, ncheckPtr);
-    if (status < 0)
+    if (status < 0) // status > 0 is okay and is used for e.g. root return
         throw IntegrationFailure(status, t);
     solverWasCalledF = true;
     return status;

@@ -722,10 +722,6 @@ void Solver::setAbsoluteToleranceSteadyStateSensi(const double atol) {
 
 long int Solver::getMaxSteps() const { return maxsteps; }
 
-void Solver::setMaxSteps(const int maxsteps) {
-    setMaxSteps(static_cast<long int>(maxsteps));
-}
-
 void Solver::setMaxSteps(const long int maxsteps) {
     if (maxsteps < 0)
         throw AmiException("maxsteps must be a non-negative number");
@@ -736,10 +732,6 @@ void Solver::setMaxSteps(const long int maxsteps) {
 }
 
 long int Solver::getMaxStepsBackwardProblem() const { return maxstepsB; }
-
-void Solver::setMaxStepsBackwardProblem(const int maxsteps) {
-    setMaxStepsBackwardProblem(static_cast<long int>(maxsteps));
-}
 
 void Solver::setMaxStepsBackwardProblem(const long int maxsteps) {
     if (maxsteps < 0)
@@ -959,41 +951,39 @@ void Solver::writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
 }
 
 const AmiVector& Solver::getState(const realtype t) const {
-    if (t == this->t) {
+    if (t == this->t)
         return x;
-    } else {
-        getDky(t, 0);
-        return dky;
-    }
+    
+    getDky(t, 0);
+    return dky;
 }
     
 const AmiVector& Solver::getDerivativeState(const realtype t) const {
-    if (t == this->t) {
+    if (t == this->t)
         return dx;
-    } else {
-        getDky(t, 1);
-        return dky;
-    }
+    
+    getDky(t, 1);
+    return dky;
 }
 
 const AmiVectorArray& Solver::getStateSensitivity(const realtype t) const {
     if (t == this->t) {
         getSens();
         return sx;
-    } else {
-        getSensDky(t, 0);
-        return sx;
     }
+    
+    getSensDky(t, 0);
+    return sx;
 }
 
 const AmiVector& Solver::getAdjointState(const int which, const realtype t) const {
     if (t == this->t) {
         getB(which);
         return xB;
-    } else {
-        getDkyB(t, 0, which);
-        return dky;
     }
+        
+    getDkyB(t, 0, which);
+    return dky;
 }
     
 const AmiVector& Solver::getAdjointDerivativeState(const int which,
@@ -1001,20 +991,20 @@ const AmiVector& Solver::getAdjointDerivativeState(const int which,
     if (t == this->t) {
         getB(which);
         return dxB;
-    } else {
-        getDkyB(t, 1, which);
-        return dky;
     }
+    
+    getDkyB(t, 1, which);
+    return dky;
 }
 
 const AmiVector& Solver::getAdjointQuadrature(const int which, const realtype t) const {
     if (t == this->t) {
         getQuadB(which);
         return xQB;
-    } else {
-        getQuadDkyB(t, 0, which);
-        return xQB;
     }
+        
+    getQuadDkyB(t, 0, which);
+    return xQB;
 }
 
 const realtype Solver::gett() const { return t; }

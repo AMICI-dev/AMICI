@@ -90,8 +90,8 @@ TEST_GROUP(dataSerialization){
         solver.setRelativeToleranceSteadyState(4);
         solver.setSensitivityMethod(amici::SensitivityMethod::adjoint);
         solver.setSensitivityOrder(amici::SensitivityOrder::second);
-        solver.setMaxSteps(static_cast<long int>(1e6));
-        solver.setMaxStepsBackwardProblem(static_cast<long int>(1e6));
+        solver.setMaxSteps(1e6);
+        solver.setMaxStepsBackwardProblem(1e6);
         solver.setNewtonMaxSteps(1e6);
         solver.setNewtonMaxLinearSteps(1e6);
         solver.setNewtonPreequilibration(true);

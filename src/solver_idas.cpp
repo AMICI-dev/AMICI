@@ -401,7 +401,7 @@ int IDASolver::solve(const realtype tout, const int itask) const {
     int status = IDASolve(solverMemory.get(), tout, &t, x.getNVector(),
                           dx.getNVector(), itask);
     solverWasCalledF = true;
-    if (status < 0)
+    if (status < 0) // status > 0 is okay and is used for e.g. root return
         throw IntegrationFailure(status, t);
     return status;
 }
@@ -410,7 +410,7 @@ int IDASolver::solveF(const realtype tout, const int itask,
     int status = IDASolveF(solverMemory.get(), tout, &t, x.getNVector(),
                            xB.getNVector(), itask, ncheckPtr);
     solverWasCalledF = true;
-    if (status < 0)
+    if (status < 0) // status > 0 is okay and is used for e.g. root return
         throw IntegrationFailure(status, t);
     return status;
 }
