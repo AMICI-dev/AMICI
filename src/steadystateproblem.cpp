@@ -16,6 +16,14 @@
 #include <cvodes/cvodes.h>
 
 namespace amici {
+    
+SteadystateProblem::SteadystateProblem(const Solver *solver):
+    t(solver->gett()), delta(solver->nx()), ewt(solver->nx()),
+    rel_x_newton(solver->nx()), x_newton(solver->nx()),
+    x(solver->getState(solver->gett())), x_old(solver->nx()),
+    dx(solver->nx()), xdot(solver->nx()), xdot_old(solver->nx()),
+    sx(solver->getStateSensitivity(solver->gett())),
+    sdx(solver->nx(), solver->nplist()) {}
 
 void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                                                Solver *solver, Model *model,

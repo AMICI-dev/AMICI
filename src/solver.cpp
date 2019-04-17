@@ -15,7 +15,7 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 Solver::Solver(const Solver &other) : Solver() {
     t = nan("");
-    ncheckPtr = nan("");
+    ncheckPtr = 0;
     sensi = other.sensi;
     atol = other.atol;
     rtol = other.rtol;
@@ -957,56 +957,81 @@ const AmiVector& Solver::getState(const realtype t) const {
     if (t == this->t)
         return x;
 
-    getDky(t, 0);
+    if (solverWasCalledF)
+        getDky(t, 0);
+    
     return dky;
 }
 
 const AmiVector& Solver::getDerivativeState(const realtype t) const {
     if (t == this->t)
         return dx;
-
-    getDky(t, 1);
+    
+    if (solverWasCalledF)
+        getDky(t, 1);
+    
     return dky;
 }
 
 const AmiVectorArray& Solver::getStateSensitivity(const realtype t) const {
-    if (t == this->t) {
-        getSens();
-        return sx;
+    if(sensInitialized) {
+        if (solverWasCalledF) {
+            if (t == this->t) {
+                getSens();
+            } else {
+                getSensDky(t, 0);
+            }
+        }
+    } else {
+        sx.reset();
     }
-
-    getSensDky(t, 0);
     return sx;
 }
 
 const AmiVector& Solver::getAdjointState(const int which, const realtype t) const {
-    if (t == this->t) {
-        getB(which);
-        return xB;
+    if (adjInitialized) {
+        if (solverWasCalledB) {
+            if (t == this->t) {
+                getB(which);
+                return xB;
+            }
+            getDkyB(t, 0, which);
+        }
+    } else {
+        dky.reset();
     }
-
-    getDkyB(t, 0, which);
     return dky;
 }
 
 const AmiVector& Solver::getAdjointDerivativeState(const int which,
                                                    const realtype t) const {
-    if (t == this->t) {
-        getB(which);
-        return dxB;
+    if (adjInitialized) {
+        if (solverWasCalledB) {
+            if (t == this->t) {
+                getB(which);
+                return dxB;
+            }
+            getDkyB(t, 1, which);
+        }
+    } else {
+        dky.reset();
     }
-
-    getDkyB(t, 1, which);
     return dky;
 }
 
-const AmiVector& Solver::getAdjointQuadrature(const int which, const realtype t) const {
-    if (t == this->t) {
-        getQuadB(which);
-        return xQB;
+const AmiVector& Solver::getAdjointQuadrature(const int which, const realtype t)
+const {
+    if (adjInitialized) {
+        if (solverWasCalledB) {
+            if (t == this->t) {
+                getQuadB(which);
+                return xQB;
+            }
+            getQuadDkyB(t, 0, which);
+        }
+    } else {
+        xQB.reset();
     }
-
-    getQuadDkyB(t, 0, which);
     return xQB;
 }
 

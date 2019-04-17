@@ -104,19 +104,7 @@ class SteadystateProblem {
      * @brief constructor
      * @param solver pointer to Solver instance
      */
-    explicit SteadystateProblem(const Solver *solver):
-    t(solver->gett()),
-    delta(solver->nx()),
-    ewt(solver->nx()),
-    rel_x_newton(solver->nx()),
-    x_newton(solver->nx()),
-    x(solver->nx()),
-    x_old(solver->nx()),
-    dx(solver->nx()),
-    xdot(solver->nx()),
-    xdot_old(solver->nx()),
-    sx(solver->nx(), solver->nplist()),
-    sdx(solver->nx(), solver->nplist()) {}
+    explicit SteadystateProblem(const Solver *solver);
     
     /**
      * @brief routine that writes solutions of steadystate problem to target
