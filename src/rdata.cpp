@@ -10,12 +10,6 @@
 
 namespace amici {
 
-ReturnData::ReturnData()
-    : np(0), nk(0), nx(0), nx_solver(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0), ne(0),
-      nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0),
-    pscale(std::vector<ParameterScaling>(0, ParameterScaling::none)), o2mode(SecondOrderMode::none),
-      sensi(SensitivityOrder::none), sensi_meth(SensitivityMethod::none) {}
-
 ReturnData::ReturnData(Solver const& solver, const Model *model)
     : ReturnData(model->getTimepoints(), model->np(), model->nk(),
                  model->nx_rdata, model->nx_solver, model->nxtrue_rdata,

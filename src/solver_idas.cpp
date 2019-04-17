@@ -369,7 +369,7 @@ void IDASolver::adjInit() const {
         throw IDAException(status, "IDAAdjInit");
 }
 void IDASolver::allocateSolverB(int *which) const {
-    if (solverMemoryB.size()) {
+    if (!solverMemoryB.empty()) {
         *which = 0;
         return;
     }

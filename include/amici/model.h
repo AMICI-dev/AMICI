@@ -22,7 +22,7 @@ class Solver;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::Model &u, const unsigned int version);
+void serialize(Archive &ar, amici::Model &u, unsigned int version);
 }
 } // namespace boost
 
@@ -69,12 +69,12 @@ class Model : public AbstractModel {
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      */
-    Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-          const int nxtrue_solver, const int ny, const int nytrue, const int nz,
-          const int nztrue, const int ne, const int nJ, const int nw,
-          const int ndwdx, const int ndwdp, const int ndxdotdw,
-          std::vector<int> ndJydy, const int nnz,
-          const int ubw, const int lbw, amici::SecondOrderMode o2mode,
+    Model(int nx_rdata, int nxtrue_rdata, int nx_solver,
+          int nxtrue_solver, int ny, int nytrue, int nz,
+          int nztrue, int ne, int nJ, int nw,
+          int ndwdx, int ndwdp, int ndxdotdw,
+          std::vector<int> ndJydy, int nnz,
+          int ubw, int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event);
@@ -193,7 +193,7 @@ class Model : public AbstractModel {
      * @param x pointer to state variables
      * @param sx pointer to state sensitivity variables
      */
-    void fstau(const realtype t, const int ie, const AmiVector &x,
+    void fstau(realtype t, int ie, const AmiVector &x,
                const AmiVectorArray &sx);
 
     /**
@@ -203,7 +203,7 @@ class Model : public AbstractModel {
      * @param x current state
      * @param rdata pointer to return data instance
      */
-    void fy(const realtype t, const int it, const AmiVector &x,
+    void fy(realtype t, int it, const AmiVector &x,
             ReturnData *rdata);
 
     /**
@@ -211,14 +211,14 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdydp(const realtype t, const AmiVector &x);
+    void fdydp(realtype t, const AmiVector &x);
 
     /**
      * Partial derivative of observables y w.r.t. state variables x
      * @param t current timepoint
      * @param x current state
      */
-    void fdydx(const realtype t, const AmiVector &x);
+    void fdydx(realtype t, const AmiVector &x);
 
     /** Event-resolved output
      * @param nroots number of events for event index
@@ -227,7 +227,7 @@ class Model : public AbstractModel {
      * @param x current state
      * @param rdata pointer to return data instance
      */
-    void fz(const int nroots, const int ie, const realtype t,
+    void fz(int nroots, int ie, realtype t,
             const AmiVector &x, ReturnData *rdata);
 
     /** Sensitivity of z, total derivative
@@ -238,7 +238,7 @@ class Model : public AbstractModel {
      * @param sx current state sensitivities
      * @param rdata pointer to return data instance
      */
-    void fsz(const int nroots, const int ie, const realtype t,
+    void fsz(int nroots, int ie, realtype t,
              const AmiVector &x, const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
@@ -250,7 +250,7 @@ class Model : public AbstractModel {
      * @param x current state
      * @param rdata pointer to return data instance
      */
-    void frz(const int nroots, const int ie, const realtype t,
+    void frz(int nroots, int ie, realtype t,
              const AmiVector &x, ReturnData *rdata);
 
     /**
@@ -262,7 +262,7 @@ class Model : public AbstractModel {
      * @param sx current state sensitivities
      * @param rdata pointer to return data instance
      */
-    void fsrz(const int nroots, const int ie, const realtype t,
+    void fsrz(int nroots, int ie, realtype t,
               const AmiVector &x, const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
@@ -272,7 +272,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdzdp(const realtype t, const int ie, const AmiVector &x);
+    void fdzdp(realtype t, int ie, const AmiVector &x);
 
     /**
      * Partial derivative of event-resolved output z w.r.t. to model states x
@@ -280,7 +280,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdzdx(const realtype t, const int ie, const AmiVector &x);
+    void fdzdx(realtype t, int ie, const AmiVector &x);
 
     /**
      * Sensitivity of event-resolved root output w.r.t. to model parameters p
@@ -288,7 +288,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdrzdp(const realtype t, const int ie, const AmiVector &x);
+    void fdrzdp(realtype t, int ie, const AmiVector &x);
 
     /**
      * Sensitivity of event-resolved measurements rz w.r.t. to model states x
@@ -296,7 +296,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void fdrzdx(const realtype t, const int ie, const AmiVector &x);
+    void fdrzdx(realtype t, int ie, const AmiVector &x);
 
     /**
      * State update functions for events
@@ -306,7 +306,7 @@ class Model : public AbstractModel {
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
      */
-    void fdeltax(const int ie, const realtype t, const AmiVector &x,
+    void fdeltax(int ie, realtype t, const AmiVector &x,
                  const AmiVector &xdot, const AmiVector &xdot_old);
 
     /**
@@ -318,7 +318,7 @@ class Model : public AbstractModel {
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
      */
-    void fdeltasx(const int ie, const realtype t, const AmiVector &x,
+    void fdeltasx(int ie, realtype t, const AmiVector &x,
                   const AmiVectorArray &sx, const AmiVector &xdot,
                   const AmiVector &xdot_old);
 
@@ -331,7 +331,7 @@ class Model : public AbstractModel {
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
      */
-    void fdeltaxB(const int ie, const realtype t, const AmiVector &x,
+    void fdeltaxB(int ie, realtype t, const AmiVector &x,
                   const AmiVector &xB, const AmiVector &xdot,
                   const AmiVector &xdot_old);
 
@@ -344,7 +344,7 @@ class Model : public AbstractModel {
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
      */
-    void fdeltaqB(const int ie, const realtype t, const AmiVector &x,
+    void fdeltaqB(int ie, realtype t, const AmiVector &x,
                   const AmiVector &xB, const AmiVector &xdot,
                   const AmiVector &xdot_old);
 
@@ -354,7 +354,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-    void fsigmay(const int it, ReturnData *rdata, const ExpData *edata);
+    void fsigmay(int it, ReturnData *rdata, const ExpData *edata);
 
     /**
      * Partial derivative of standard deviation of measurements w.r.t. model
@@ -362,7 +362,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to ExpData data instance holding sigma values
      */
-    void fdsigmaydp(const int it, ReturnData *rdata, const ExpData *edata);
+    void fdsigmaydp(int it, ReturnData *rdata, const ExpData *edata);
 
     /**
      * Standard deviation of events
@@ -372,7 +372,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-    void fsigmaz(const realtype t, const int ie, const int *nroots,
+    void fsigmaz(realtype t, int ie, const int *nroots,
                  ReturnData *rdata, const ExpData *edata);
 
     /**
@@ -384,7 +384,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdsigmazdp(const realtype t, const int ie, const int *nroots,
+    void fdsigmazdp(realtype t, int ie, const int *nroots,
                     ReturnData *rdata, const ExpData *edata);
 
     /**
@@ -393,7 +393,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fJy(const int it, ReturnData *rdata, const ExpData *edata);
+    void fJy(int it, ReturnData *rdata, const ExpData *edata);
 
     /**
      * Negative log-likelihood of event-resolved measurements z
@@ -401,7 +401,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fJz(const int nroots, ReturnData *rdata, const ExpData *edata);
+    void fJz(int nroots, ReturnData *rdata, const ExpData *edata);
 
     /**
      * Regularization of negative log-likelihood with roots of event-resolved
@@ -410,7 +410,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fJrz(const int nroots, ReturnData *rdata, const ExpData *edata);
+    void fJrz(int nroots, ReturnData *rdata, const ExpData *edata);
 
     /**
      * Model specific implementation of fdJydy colptrs
@@ -433,7 +433,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdJydy(const int it, const ReturnData *rdata, const ExpData *edata);
+    void fdJydy(int it, const ReturnData *rdata, const ExpData *edata);
 
     /**
      * Sensitivity of time-resolved measurement negative log-likelihood Jy
@@ -442,7 +442,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdJydsigma(const int it, const ReturnData *rdata,
+    void fdJydsigma(int it, const ReturnData *rdata,
                     const ExpData *edata);
 
     /**
@@ -451,7 +451,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdJzdz(const int nroots, const ReturnData *rdata,
+    void fdJzdz(int nroots, const ReturnData *rdata,
                 const ExpData *edata);
 
     /**
@@ -461,7 +461,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdJzdsigma(const int nroots, const ReturnData *rdata,
+    void fdJzdsigma(int nroots, const ReturnData *rdata,
                     const ExpData *edata);
 
     /**
@@ -470,7 +470,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdJrzdz(const int nroots, const ReturnData *rdata,
+    void fdJrzdz(int nroots, const ReturnData *rdata,
                  const ExpData *edata);
 
     /**
@@ -480,7 +480,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdJrzdsigma(const int nroots, const ReturnData *rdata,
+    void fdJrzdsigma(int nroots, const ReturnData *rdata,
                      const ExpData *edata);
 
     /**
@@ -489,7 +489,7 @@ class Model : public AbstractModel {
      * @param sx pointer to state sensitivities
      * @param rdata pointer to return data instance
      */
-    void fsy(const int it, const AmiVectorArray &sx, ReturnData *rdata);
+    void fsy(int it, const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
      * Sensitivity of z at final timepoint (ignores sensitivity of timepoint),
@@ -498,7 +498,7 @@ class Model : public AbstractModel {
      * @param ie event index
      * @param rdata pointer to return data instance
      */
-    void fsz_tf(const int *nroots, const int ie, ReturnData *rdata);
+    void fsz_tf(const int *nroots, int ie, ReturnData *rdata);
 
     /**
      * Sensitivity of time-resolved measurement negative log-likelihood Jy,
@@ -508,7 +508,7 @@ class Model : public AbstractModel {
      * @param dJydx vector with values of state derivative of Jy
      * @param rdata pointer to return data instance
      */
-    void fsJy(const int it, const std::vector<realtype> &dJydx,
+    void fsJy(int it, const std::vector<realtype> &dJydx,
               const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
@@ -519,7 +519,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-    void fdJydp(const int it, ReturnData *rdata, const ExpData *edata);
+    void fdJydp(int it, ReturnData *rdata, const ExpData *edata);
 
     /**
      * Sensitivity of time-resolved measurement negative log-likelihood Jy
@@ -528,7 +528,7 @@ class Model : public AbstractModel {
      * @param it timepoint index
      * @param edata pointer to experimental data instance
      */
-    void fdJydx(std::vector<realtype> &dJydx, const int it,
+    void fdJydx(std::vector<realtype> &dJydx, int it,
                 const ExpData *edata);
 
     /**
@@ -539,7 +539,7 @@ class Model : public AbstractModel {
      * @param sx pointer to state sensitivities
      * @param rdata pointer to return data instance
      */
-    void fsJz(const int nroots, const std::vector<realtype> &dJzdx,
+    void fsJz(int nroots, const std::vector<realtype> &dJzdx,
               const AmiVectorArray &sx, ReturnData *rdata);
 
     /**
@@ -550,7 +550,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-    void fdJzdp(const int nroots, realtype t, const ExpData *edata,
+    void fdJzdp(int nroots, realtype t, const ExpData *edata,
                 const ReturnData *rdata);
 
     /**
@@ -562,7 +562,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-    void fdJzdx(std::vector<realtype> *dJzdx, const int nroots, realtype t,
+    void fdJzdx(std::vector<realtype> *dJzdx, int nroots, realtype t,
                 const ExpData *edata, const ReturnData *rdata);
 
     /**
@@ -870,7 +870,7 @@ class Model : public AbstractModel {
      * @param t timepoint
      * @param x array with the states
      */
-    void fw(const realtype t, const realtype *x);
+    void fw(realtype t, const realtype *x);
 
     /**
      * @brief Recurring terms in xdot, parameter derivative
@@ -879,14 +879,14 @@ class Model : public AbstractModel {
      * @return flag indicating whether dwdp will be returned in dense storage
      * dense: true, sparse: false
      */
-    void fdwdp(const realtype t, const realtype *x);
+    void fdwdp(realtype t, const realtype *x);
 
     /**
      * @brief Recurring terms in xdot, state derivative
      * @param t timepoint
      * @param x array with the states
      */
-    void fdwdx(const realtype t, const realtype *x);
+    void fdwdx(realtype t, const realtype *x);
 
     /**
      * Residual function
@@ -894,14 +894,14 @@ class Model : public AbstractModel {
      * @param rdata ReturnData instance to which result will be written
      * @param edata ExpData instance containing observable data
      */
-    void fres(const int it, ReturnData *rdata, const ExpData *edata);
+    void fres(int it, ReturnData *rdata, const ExpData *edata);
 
     /**
      * Chi-squared function
      * @param it time index
      * @param rdata ReturnData instance to which result will be written
      */
-    void fchi2(const int it, ReturnData *rdata);
+    void fchi2(int it, ReturnData *rdata);
 
     /**
      * Residual sensitivity function
@@ -909,14 +909,14 @@ class Model : public AbstractModel {
      * @param rdata ReturnData instance to which result will be written
      * @param edata ExpData instance containing observable data
      */
-    void fsres(const int it, ReturnData *rdata, const ExpData *edata);
+    void fsres(int it, ReturnData *rdata, const ExpData *edata);
 
     /**
      * Fisher information matrix function
      * @param it time index
      * @param rdata ReturnData instance to which result will be written
      */
-    void fFIM(const int it, ReturnData *rdata);
+    void fFIM(int it, ReturnData *rdata);
 
     /**
      * Update the heaviside variables h on event occurences
@@ -944,7 +944,7 @@ class Model : public AbstractModel {
      */
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, Model &u,
-                                                const unsigned int version);
+                                                unsigned int version);
 
     /**
      * @brief Check equality of data members
@@ -960,7 +960,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @return current timepoint
      */
-    realtype gett(const int it, const ReturnData *rdata) const;
+    realtype gett(int it, const ReturnData *rdata) const;
 
     /**
      * @brief Check if the given array has only finite elements.
@@ -971,7 +971,7 @@ class Model : public AbstractModel {
      * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,
      * AMICI_SUCCESS otherwise
      */
-    int checkFinite(const int N, const realtype *array, const char *fun) const;
+    int checkFinite(int N, const realtype *array, const char *fun) const;
 
     /**
      * @brief Check if the given array has only finite elements.
@@ -1139,7 +1139,7 @@ class Model : public AbstractModel {
      * simulation
      * @param mode steadyStateSensitivityMode
      */
-    void setSteadyStateSensitivityMode(const SteadyStateSensitivityMode mode);
+    void setSteadyStateSensitivityMode(SteadyStateSensitivityMode mode);
 
     /**
      * @brief Gets the mode how sensitivities are computed in the steadystate
@@ -1185,45 +1185,45 @@ class Model : public AbstractModel {
     }
 
     /** number of states */
-    const int nx_rdata;
+    const int nx_rdata{0};
     /** number of states in the unaugmented system */
-    const int nxtrue_rdata;
+    const int nxtrue_rdata{0};
     /** number of states with conservation laws applied */
-    const int nx_solver;
+    const int nx_solver{0};
     /** number of states in the unaugmented system with conservation laws
      * applied */
-    const int nxtrue_solver;
+    const int nxtrue_solver{0};
     /** number of observables */
-    const int ny;
+    const int ny{0};
     /** number of observables in the unaugmented system */
-    const int nytrue;
+    const int nytrue{0};
     /** number of event outputs */
-    const int nz;
+    const int nz{0};
     /** number of event outputs in the unaugmented system */
-    const int nztrue;
+    const int nztrue{0};
     /** number of events */
-    const int ne;
+    const int ne{0};
     /** number of common expressions */
-    const int nw;
+    const int nw{0};
     /** number of derivatives of common expressions wrt x */
-    const int ndwdx;
+    const int ndwdx{0};
     /** number of derivatives of common expressions wrt p */
-    const int ndwdp;
+    const int ndwdp{0};
     /** number of nonzero entries in dxdotdw */
-    const int ndxdotdw;
+    const int ndxdotdw{0};
     /** number of nonzero entries in dJydy */
     std::vector<int> ndJydy;
     /** number of nonzero entries in jacobian */
-    const int nnz;
+    const int nnz{0};
     /** dimension of the augmented objective function for 2nd order ASA */
-    const int nJ;
+    const int nJ{0};
     /** upper bandwith of the jacobian */
-    const int ubw;
+    const int ubw{0};
     /** lower bandwith of the jacobian */
-    const int lbw;
+    const int lbw{0};
     /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
      * directional or full second order derivative will be computed */
-    const SecondOrderMode o2mode;
+    const SecondOrderMode o2mode{SecondOrderMode::none};
     /** index indicating to which event an event output belongs */
     const std::vector<int> z2event;
     /** flag array for DAE equations */
@@ -1294,7 +1294,7 @@ class Model : public AbstractModel {
      * @param ip sensitivity index
      **/
     virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
-                           const realtype *stcl, const int ip);
+                           const realtype *stcl, int ip);
 
     /**
      * Model specific implementation of fx_solver
@@ -1328,40 +1328,40 @@ class Model : public AbstractModel {
      * @param ip sensitivity index
      **/
     virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
-                            const int ip);
+                            int ip);
 
     /** create my slice at timepoint
      * @param it timepoint index
      * @param edata pointer to experimental data instance
      */
-    void getmy(const int it, const ExpData *edata);
+    void getmy(int it, const ExpData *edata);
 
     /** create mz slice at event
      * @param nroots event occurence
      * @param edata pointer to experimental data instance
      */
-    void getmz(const int nroots, const ExpData *edata);
+    void getmz(int nroots, const ExpData *edata);
 
     /** create y slice at timepoint
      * @param it timepoint index
      * @param rdata pointer to return data instance
      * @return y y-slice from rdata instance
      */
-    const realtype *gety(const int it, const ReturnData *rdata) const;
+    const realtype *gety(int it, const ReturnData *rdata) const;
 
     /** create z slice at event
      * @param nroots event occurence
      * @param rdata pointer to return data instance
      * @return z slice
      */
-    const realtype *getz(const int nroots, const ReturnData *rdata) const;
+    const realtype *getz(int nroots, const ReturnData *rdata) const;
 
     /** create rz slice at event
      * @param nroots event occurence
      * @param rdata pointer to return data instance
      * @return rz slice
      */
-    const realtype *getrz(const int nroots, const ReturnData *rdata) const;
+    const realtype *getrz(int nroots, const ReturnData *rdata) const;
 
     /** create sz slice at event
      * @param nroots event occurence
@@ -1369,7 +1369,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @return z slice
      */
-    const realtype *getsz(const int nroots, const int ip,
+    const realtype *getsz(int nroots, int ip,
                           const ReturnData *rdata) const;
 
     /** create srz slice at event
@@ -1378,7 +1378,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @return rz slice
      */
-    const realtype *getsrz(const int nroots, const int ip,
+    const realtype *getsrz(int nroots, int ip,
                            const ReturnData *rdata) const;
 
     /**

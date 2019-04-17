@@ -15,10 +15,7 @@
 namespace amici {
 
 Model::Model()
-    : nx_rdata(0), nxtrue_rdata(0), nx_solver(0), nxtrue_solver(0), ny(0),
-    nytrue(0), nz(0), nztrue(0), ne(0), nw(0), ndwdx(0), ndwdp(0), ndxdotdw(0), nnz(0),
-    nJ(0), ubw(0), lbw(0), o2mode(SecondOrderMode::none), dxdotdp(0,0),
-    x_pos_tmp(0) {}
+    : dxdotdp(0,0), x_pos_tmp(0) {}
 
 Model::Model(const int nx_rdata,
              const int nxtrue_rdata,
@@ -114,8 +111,8 @@ Model::Model(const int nx_rdata,
                                      " nytrue.");
 
         for(int iytrue = 0; iytrue < nytrue; ++iytrue)
-            dJydy.push_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue],
-                                             CSC_MAT));
+            dJydy.emplace_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue],
+                                                CSC_MAT));
     } else {
         dJydy_matlab = std::vector<realtype>(nJ*nytrue*ny, 0.0);
     }
@@ -123,13 +120,13 @@ Model::Model(const int nx_rdata,
     requireSensitivitiesForAllParameters();
 }
 
-void Model::fdJydy_colptrs(sunindextype *indexptrs, int index) {
+void Model::fdJydy_colptrs(sunindextype * /*indexptrs*/, int  /*index*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
 }
 
-void Model::fdJydy_rowvals(sunindextype *indexptrs, int index) {
+void Model::fdJydy_rowvals(sunindextype * /*indexptrs*/, int  /*index*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented

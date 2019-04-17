@@ -144,7 +144,7 @@ class SUNMatrixWrapper {
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(N_Vector c, const N_Vector b) const;
+    void multiply(N_Vector c, N_Vector b) const;
 
     /**
      * @brief Perform matrix vector multiplication c += A*b

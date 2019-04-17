@@ -15,7 +15,7 @@ class AmiVector {
      * @brief Default constructor
      * @return new empty AmiVectorArray instance
      */
-    AmiVector() {}
+    AmiVector() = default;
 
     /** Creates an std::vector<realtype> and attaches the
      * data pointer to a newly created N_Vector_Serial.
@@ -161,7 +161,7 @@ class AmiVectorArray {
      * @brief Default constructor
      * @return new empty AmiVectorArray instance
      */
-    AmiVectorArray() {}
+    AmiVectorArray() = default;
 
     /** creates an std::vector<realype> and attaches the
      * data pointer to a newly created N_VectorArray

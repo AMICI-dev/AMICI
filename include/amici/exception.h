@@ -43,7 +43,7 @@ public:
      * @brief Stores the current backtrace
      * @param nMaxFrames number of frams to go back in stacktrace
      */
-    void storeBacktrace(const int nMaxFrames);
+    void storeBacktrace(int nMaxFrames);
 
 private:
     char msg[500]{};
@@ -60,7 +60,7 @@ public:
      * @param error_code error code returned by cvode function
      * @param function cvode function name
      */
-    CvodeException(const int error_code, const char *function);
+    CvodeException(int error_code, const char *function);
 };
 
 
@@ -74,7 +74,7 @@ public:
      * @param error_code error code returned by ida function
      * @param function ida function name
      */
-    IDAException(const int error_code, const char *function);
+    IDAException(int error_code, const char *function);
 };
 
 

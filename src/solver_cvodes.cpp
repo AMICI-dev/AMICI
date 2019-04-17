@@ -40,7 +40,7 @@ static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
 
 void CVodeSolver::init(const realtype t0, const AmiVector &x0,
-                       const AmiVector &dx0) const {
+                       const AmiVector & /*dx0*/) const {
     solverWasCalledF = false;
     t=t0;
     x.copy(x0);
@@ -56,7 +56,7 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
 }
 
 void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
-                            const AmiVectorArray &sdx0) const {
+                            const AmiVectorArray & /*sdx0*/) const {
     int status;
     sx.copy(sx0);
     if (getSensInitDone()) {
@@ -74,7 +74,7 @@ void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
 }
 
 void CVodeSolver::binit(const int which, const realtype tf,
-                        const AmiVector &xB0, const AmiVector &dxB0) const {
+                        const AmiVector &xB0, const AmiVector & /*dxB0*/) const {
     solverWasCalledB = false;
     xB.copy(xB0);
     int status;
@@ -400,7 +400,7 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
 }
 
 void CVodeSolver::reInit(const realtype t0, const AmiVector &yy0,
-                         const AmiVector &yp0) const {
+                         const AmiVector & /*yp0*/) const {
     /* set time */
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     cv_mem->cv_tn = t0;
@@ -411,7 +411,7 @@ void CVodeSolver::reInit(const realtype t0, const AmiVector &yy0,
 }
 
 void CVodeSolver::sensReInit(const AmiVectorArray &yyS0,
-                             const AmiVectorArray &ypS0) const {
+                             const AmiVectorArray & /*ypS0*/) const {
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     /* Initialize znS[0] in the history array */
     for (int is = 0; is < nplist(); is++)
@@ -426,7 +426,7 @@ void CVodeSolver::sensReInit(const AmiVectorArray &yyS0,
 }
 
 void CVodeSolver::reInitB(const int which, const realtype tB0,
-                          const AmiVector &yyB0, const AmiVector &ypB0) const {
+                          const AmiVector &yyB0, const AmiVector & /*ypB0*/) const {
     auto cv_memB =
     static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));
     if (solverWasCalledB)
@@ -513,7 +513,7 @@ void CVodeSolver::adjInit() const {
 }
 
 void CVodeSolver::allocateSolverB(int *which) const {
-    if (solverMemoryB.size()) {
+    if (!solverMemoryB.empty()) {
         *which = 0;
         return;
     }

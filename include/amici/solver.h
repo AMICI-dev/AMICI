@@ -22,7 +22,7 @@ class Solver;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::Solver &u, const unsigned int version);
+void serialize(Archive &ar, amici::Solver &u, unsigned int version);
 }
 } // namespace boost::serialization
 
@@ -64,24 +64,24 @@ class Solver {
      * @param tout next timepooint
      * @return status flag
      */
-    int run(const realtype tout) const;
-    
+    int run(realtype tout) const;
+
     /**
      * @brief makes a single step in the simulation
      *
      * @param tout next timepooint
      * @return status flag
      */
-    int step(const realtype tout) const;
-    
+    int step(realtype tout) const;
+
     /**
      * @brief runs a backward simulation until the specified timepoint
      *
      * @param tout next timepooint
      * @return status flag
      */
-    void runB(const realtype tout) const;
-    
+    void runB(realtype tout) const;
+
     /**
      * @brief Initialises the ami memory object and applies specified options
      * @param t0 initial timepoint
@@ -92,7 +92,7 @@ class Solver {
      * @param sdx0 initial derivative state sensitivities
      */
 
-    void setup(const realtype t0, Model *model, const AmiVector &x0,
+    void setup(realtype t0, Model *model, const AmiVector &x0,
                const AmiVector &dx0, const AmiVectorArray &sx0,
                const AmiVectorArray &sdx0) const;
 
@@ -106,7 +106,7 @@ class Solver {
      * @param xQB0 initial adjoint quadratures
      */
 
-    void setupB(int *which, const realtype tf, Model *model,
+    void setupB(int *which, realtype tf, Model *model,
                 const AmiVector &xB0, const AmiVector &dxB0,
                 const AmiVector &xQB0) const;
 
@@ -117,7 +117,7 @@ class Solver {
      * @param it time-point index
      * @param rdata pointer to the return data object
      */
-    void getDiagnosis(const int it, ReturnData *rdata) const;
+    void getDiagnosis(int it, ReturnData *rdata) const;
 
     /**
      * @brief Extracts diagnosis information from solver memory block and
@@ -127,7 +127,7 @@ class Solver {
      * @param rdata pointer to the return data object
      * @param which identifier of the backwards problem
      */
-    void getDiagnosisB(const int it, ReturnData *rdata, const int which) const;
+    void getDiagnosisB(int it, ReturnData *rdata, int which) const;
 
     /**
      * getRootInfo extracts information which event occured
@@ -143,7 +143,7 @@ class Solver {
      *
      * @param tout1 next timepoint to be computed (sets timescale)
      */
-    virtual void calcIC(const realtype tout1) const = 0;
+    virtual void calcIC(realtype tout1) const = 0;
 
     /**
      * @brief Calculates consistent initial conditions for the backwards
@@ -152,7 +152,7 @@ class Solver {
      * @param which identifier of the backwards problem
      * @param tout1 next timepoint to be computed (sets timescale)
      */
-    virtual void calcICB(const int which, const realtype tout1) const = 0;
+    virtual void calcICB(int which, realtype tout1) const = 0;
 
     /**
      * @brief Solves the backward problem until a predefined timepoint
@@ -161,7 +161,7 @@ class Solver {
      * @param tBout timepoint until which simulation should be performed
      * @param itaskB task identifier, can be CV_NORMAL or CV_ONE_STEP
      */
-    virtual void solveB(const realtype tBout, const int itaskB) const = 0;
+    virtual void solveB(realtype tBout, int itaskB) const = 0;
 
     /**
      * @brief Disable rootfinding
@@ -192,7 +192,7 @@ class Solver {
      * computation
      * @param newton_maxsteps
      */
-    void setNewtonMaxSteps(const int newton_maxsteps);
+    void setNewtonMaxSteps(int newton_maxsteps);
 
     /**
      * @brief Get if preequilibration of model via Newton solver is enabled
@@ -204,7 +204,7 @@ class Solver {
      * @brief Enable/disable preequilibration of model via Newton solver
      * @param newton_preeq
      */
-    void setNewtonPreequilibration(const bool newton_preeq);
+    void setNewtonPreequilibration(bool newton_preeq);
 
     /**
      * @brief Get maximum number of allowed linear steps per Newton step for
@@ -218,7 +218,7 @@ class Solver {
      * steady state computation
      * @param newton_maxlinsteps
      */
-    void setNewtonMaxLinearSteps(const int newton_maxlinsteps);
+    void setNewtonMaxLinearSteps(int newton_maxlinsteps);
 
     /**
      * @brief Get sensitvity order
@@ -230,7 +230,7 @@ class Solver {
      * @brief Set the sensitvity order
      * @param sensi sensitivity order
      */
-    void setSensitivityOrder(const SensitivityOrder sensi);
+    void setSensitivityOrder(SensitivityOrder sensi);
 
     /**
      * @brief Get the relative tolerances for the forward problem
@@ -250,7 +250,7 @@ class Solver {
      *
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeTolerance(const double rtol);
+    void setRelativeTolerance(double rtol);
 
     /**
      * @brief Get the absolute tolerances for the forward problem
@@ -270,7 +270,7 @@ class Solver {
      *
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteTolerance(const double atol);
+    void setAbsoluteTolerance(double atol);
 
     /**
      * @brief Returns the relative tolerances for the forward sensitivity
@@ -283,7 +283,7 @@ class Solver {
      * @brief Sets the relative tolerances for the forward sensitivity problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceFSA(const double rtol);
+    void setRelativeToleranceFSA(double rtol);
 
     /**
      * @brief Returns the absolute tolerances for the forward sensitivity
@@ -296,7 +296,7 @@ class Solver {
      * @brief Sets the absolute tolerances for the forward sensitivity problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceFSA(const double atol);
+    void setAbsoluteToleranceFSA(double atol);
 
     /**
      * @brief Returns the relative tolerances for the adjoint sensitivity
@@ -309,7 +309,7 @@ class Solver {
      * @brief Sets the relative tolerances for the adjoint sensitivity problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceB(const double rtol);
+    void setRelativeToleranceB(double rtol);
 
     /**
      * @brief Returns the absolute tolerances for the backward problem for
@@ -323,7 +323,7 @@ class Solver {
      * adjoint sensitivity analysis
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceB(const double atol);
+    void setAbsoluteToleranceB(double atol);
 
     /**
      * @brief Returns the relative tolerance for the quadrature problem
@@ -335,7 +335,7 @@ class Solver {
      * @brief sets the relative tolerance for the quadrature problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceQuadratures(const double rtol);
+    void setRelativeToleranceQuadratures(double rtol);
 
     /**
      * @brief returns the absolute tolerance for the quadrature problem
@@ -347,7 +347,7 @@ class Solver {
      * @brief sets the absolute tolerance for the quadrature problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceQuadratures(const double atol);
+    void setAbsoluteToleranceQuadratures(double atol);
 
     /**
      * @brief returns the relative tolerance for the steady state problem
@@ -359,7 +359,7 @@ class Solver {
      * @brief sets the relative tolerance for the steady state problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceSteadyState(const double rtol);
+    void setRelativeToleranceSteadyState(double rtol);
 
     /**
      * @brief returns the absolute tolerance for the steady state problem
@@ -371,7 +371,7 @@ class Solver {
      * @brief sets the absolute tolerance for the steady state problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceSteadyState(const double atol);
+    void setAbsoluteToleranceSteadyState(double atol);
 
     /**
      * @brief returns the relative tolerance for the sensitivities of the
@@ -385,7 +385,7 @@ class Solver {
      * steady state problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceSteadyStateSensi(const double rtol);
+    void setRelativeToleranceSteadyStateSensi(double rtol);
 
     /**
      * @brief returns the absolute tolerance for the sensitivities of the
@@ -399,7 +399,7 @@ class Solver {
      * steady state problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceSteadyStateSensi(const double atol);
+    void setAbsoluteToleranceSteadyStateSensi(double atol);
 
     /**
      * @brief returns the maximum number of solver steps for the forward
@@ -412,7 +412,7 @@ class Solver {
      * @brief sets the maximum number of solver steps for the forward problem
      * @param maxsteps maximum number of solver steps (non-negative number)
      */
-    void setMaxSteps(const long int maxsteps);
+    void setMaxSteps(long int maxsteps);
 
     /**
      * @brief returns the maximum number of solver steps for the backward
@@ -437,7 +437,7 @@ class Solver {
      * @brief sets the linear system multistep method
      * @param lmm linear system multistep method
      */
-    void setLinearMultistepMethod(const LinearMultistepMethod lmm);
+    void setLinearMultistepMethod(LinearMultistepMethod lmm);
 
     /**
      * @brief returns the nonlinear system solution method
@@ -449,7 +449,7 @@ class Solver {
      * @brief sets the nonlinear system solution method
      * @param iter nonlinear system solution method
      */
-    void setNonlinearSolverIteration(const NonlinearSolverIteration iter);
+    void setNonlinearSolverIteration(NonlinearSolverIteration iter);
 
     /**
      * @brief getInterpolationType
@@ -462,7 +462,7 @@ class Solver {
      * the backwards problem
      * @param interpType interpolation type
      */
-    void setInterpolationType(const InterpolationType interpType);
+    void setInterpolationType(InterpolationType interpType);
 
     /**
      * @brief Gets KLU / SuperLUMT state ordering mode
@@ -493,7 +493,7 @@ class Solver {
      * @brief set stability limit detection mode
      * @param stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
      */
-    void setStabilityLimitFlag(const booleantype stldet);
+    void setStabilityLimitFlag(booleantype stldet);
 
     /**
      * @brief getLinearSolver
@@ -505,7 +505,7 @@ class Solver {
      * @brief setLinearSolver
      * @param linsol
      */
-    void setLinearSolver(const LinearSolver linsol);
+    void setLinearSolver(LinearSolver linsol);
 
     /**
      * @brief returns the internal sensitivity method
@@ -517,8 +517,8 @@ class Solver {
      * @brief sets the internal sensitivity method
      * @param ism internal sensitivity method
      */
-    void setInternalSensitivityMethod(const InternalSensitivityMethod ism);
-    
+    void setInternalSensitivityMethod(InternalSensitivityMethod ism);
+
     /**
      * @brief write solution from forward simulation
      * @param t time
@@ -528,7 +528,7 @@ class Solver {
      */
     void writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
                        AmiVectorArray &sx) const;
-    
+
     /**
      * @brief write solution from forward simulation
      * @param t time
@@ -538,28 +538,28 @@ class Solver {
      * @param which index of adjoint problem
      */
     void writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
-                        AmiVector &xQB, const int which) const;
-    
+                        AmiVector &xQB, int which) const;
+
     /**
      * @brief Access state solution at time t
      * @param t time
      * @return x or interpolated solution dky
      */
-    const AmiVector &getState(const realtype t) const;
-    
+    const AmiVector &getState(realtype t) const;
+
     /**
      * @brief Access derivative state solution at time t
      * @param t time
      * @return dx or interpolated solution dky
      */
-    const AmiVector &getDerivativeState(const realtype t) const;
+    const AmiVector &getDerivativeState(realtype t) const;
 
     /**
      * @brief Access state sensitivity solution at time t
      * @param t time
      * @return (interpolated) solution sx
      */
-    const AmiVectorArray &getStateSensitivity(const realtype t) const;
+    const AmiVectorArray &getStateSensitivity(realtype t) const;
 
     /**
      * @brief Access adjoint solution at time t
@@ -567,16 +567,16 @@ class Solver {
      * @param t time
      * @return (interpolated) solution xB
      */
-    const AmiVector &getAdjointState(const int which, const realtype t) const;
-    
+    const AmiVector &getAdjointState(int which, realtype t) const;
+
     /**
      * @brief Access adjoint derivative solution at time t
      * @param which adjoint problem index
      * @param t time
      * @return (interpolated) solution dxB
      */
-    const AmiVector &getAdjointDerivativeState(const int which,
-                                               const realtype t) const;
+    const AmiVector &getAdjointDerivativeState(int which,
+                                               realtype t) const;
 
     /**
      * @brief Access adjoint quadrature solution at time t
@@ -584,8 +584,8 @@ class Solver {
      * @param t time
      * @return (interpolated) solution xQB
      */
-    const AmiVector &getAdjointQuadrature(const int which, const realtype t) const;
-    
+    const AmiVector &getAdjointQuadrature(int which, realtype t) const;
+
     /**
      * @brief Reinitializes the states in the solver after an event occurence
      *
@@ -593,9 +593,9 @@ class Solver {
      * @param yy0 inital state variables
      * @param yp0 initial derivative state variables (DAE only)
      */
-    virtual void reInit(const realtype t0, const AmiVector &yy0,
+    virtual void reInit(realtype t0, const AmiVector &yy0,
                         const AmiVector &yp0) const = 0;
-    
+
     /**
      * @brief Reinitializes the state sensitivites in the solver after an
      * event occurence
@@ -605,7 +605,7 @@ class Solver {
      */
     virtual void sensReInit(const AmiVectorArray &yyS0,
                             const AmiVectorArray &ypS0) const = 0;
-    
+
     /**
      * @brief Reinitializes the adjoint states after an event occurence
      *
@@ -614,35 +614,35 @@ class Solver {
      * @param yyB0 new adjoint state
      * @param ypB0 new adjoint derivative state
      */
-    virtual void reInitB(const int which, const realtype tB0,
+    virtual void reInitB(int which, realtype tB0,
                          const AmiVector &yyB0, const AmiVector &ypB0) const = 0;
-    
+
     /**
      * @brief Reinitialize the adjoint states after an event occurence
      *
      * @param which identifier of the backwards problem
      * @param yQB0 new adjoint quadrature state
      */
-    virtual void quadReInitB(const int which, const AmiVector &yQB0) const = 0;
+    virtual void quadReInitB(int which, const AmiVector &yQB0) const = 0;
 
     /**
      * @brief current solver timepoint
      * @return t
      */
     const realtype gett() const;
-    
+
     /**
      * @brief number of states with which the solver was initialized
      * @return x.getLength()
      */
     int nx() const;
-    
+
     /**
      * @brief number of parameters with which the solver was initialized
      * @return sx.getLength()
      */
     int nplist() const;
-    
+
     /**
      * @brief number of quadratures with which the solver was initialized
      * @return xQB.getLength()
@@ -657,7 +657,7 @@ class Solver {
      */
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, Solver &r,
-                                                const unsigned int version);
+                                                unsigned int version);
 
     /**
      * @brief Check equality of data members excluding solver memory
@@ -673,8 +673,8 @@ class Solver {
      *
      * @param tstop timepoint until which simulation should be performed
      */
-    virtual void setStopTime(const realtype tstop) const = 0;
-    
+    virtual void setStopTime(realtype tstop) const = 0;
+
     /**
      * @brief Solves the forward problem until a predefined timepoint
      *
@@ -682,8 +682,8 @@ class Solver {
      * @param itask task identifier, can be CV_NORMAL or CV_ONE_STEP
      * @return status flag indicating success of execution
      */
-    virtual int solve(const realtype tout, const int itask) const = 0;
-    
+    virtual int solve(realtype tout, int itask) const = 0;
+
     /**
      * @brief Solves the forward problem until a predefined timepoint
      * (adjoint only)
@@ -694,22 +694,22 @@ class Solver {
      * checkpoints
      * @return status flag indicating success of execution
      */
-    virtual int solveF(const realtype tout, const int itask,
+    virtual int solveF(realtype tout, int itask,
                        int *ncheckPtr) const = 0;
-    
+
     /**
      * @brief reInitPostProcessF postprocessing of the solver memory after a
      * discontinuity in the forward problem
      * @param tnext next timepoint (defines integration direction)
      */
-    virtual void reInitPostProcessF(const realtype tnext) const = 0;
+    virtual void reInitPostProcessF(realtype tnext) const = 0;
 
     /**
      * @brief reInitPostProcessB postprocessing of the solver memory after a
      * discontinuity in the backward problem
      * @param tnext next timepoint (defines integration direction)
      */
-    virtual void reInitPostProcessB(const realtype tnext) const = 0;
+    virtual void reInitPostProcessB(realtype tnext) const = 0;
 
     /**
      * @brief extracts the state sensitivity at the current timepoint from
@@ -722,14 +722,14 @@ class Solver {
      * solver memory and writes it to the xB member variable
      * @param which index of the backwards problem
      */
-    virtual void getB(const int which) const = 0;
+    virtual void getB(int which) const = 0;
 
     /**
      * @brief extracts the adjoint quadrature state at the current timepoint
      * from solver memory and writes it to the xQB member variable
      * @param which index of the backwards problem
      */
-    virtual void getQuadB(const int which) const = 0;
+    virtual void getQuadB(int which) const = 0;
 
     /**
      * @brief Initialises the states at the specified initial timepoint
@@ -738,7 +738,7 @@ class Solver {
      * @param x0 initial states
      * @param dx0 initial derivative states
      */
-    virtual void init(const realtype t0, const AmiVector &x0,
+    virtual void init(realtype t0, const AmiVector &x0,
                       const AmiVector &dx0) const = 0;
 
     /**
@@ -757,7 +757,7 @@ class Solver {
      * @param xB0 initial adjoint state
      * @param dxB0 initial adjoint derivative state
      */
-    virtual void binit(const int which, const realtype tf, const AmiVector &xB0,
+    virtual void binit(int which, realtype tf, const AmiVector &xB0,
                        const AmiVector &dxB0) const = 0;
 
     /**
@@ -766,14 +766,14 @@ class Solver {
      * @param which identifier of the backwards problem
      * @param xQB0 intial adjoint quadrature state
      */
-    virtual void qbinit(const int which, const AmiVector &xQB0) const = 0;
+    virtual void qbinit(int which, const AmiVector &xQB0) const = 0;
 
     /**
      * @brief Initialises the rootfinding for events
      *
      * @param ne number of different events
      */
-    virtual void rootInit(const int ne) const = 0;
+    virtual void rootInit(int ne) const = 0;
 
     /**
      * @brief Initalize non-linear solver for sensitivities
@@ -806,28 +806,28 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      */
-    virtual void setDenseJacFnB(const int which) const = 0;
+    virtual void setDenseJacFnB(int which) const = 0;
 
     /**
      * @brief sets the sparse Jacobian function
      *
      * @param which identifier of the backwards problem
      */
-    virtual void setSparseJacFnB(const int which) const = 0;
+    virtual void setSparseJacFnB(int which) const = 0;
 
     /**
      * @brief sets the banded Jacobian function
      *
      * @param which identifier of the backwards problem
      */
-    virtual void setBandJacFnB(const int which) const = 0;
+    virtual void setBandJacFnB(int which) const = 0;
 
     /**
      * @brief sets the Jacobian vector multiplication function
      *
      * @param which identifier of the backwards problem
      */
-    virtual void setJacTimesVecFnB(const int which) const = 0;
+    virtual void setJacTimesVecFnB(int which) const = 0;
 
     /**
      * @brief Extracts diagnosis information from solver memory block and
@@ -857,8 +857,8 @@ class Solver {
      * @param rtol relative tolerances
      * @param atol absolute tolerances
      */
-    virtual void setSStolerances(const double rtol,
-                                 const double atol) const = 0;
+    virtual void setSStolerances(double rtol,
+                                 double atol) const = 0;
 
     /**
      * @brief activates sets scalar relative and absolute tolerances for the
@@ -867,7 +867,7 @@ class Solver {
      * @param rtol relative tolerances
      * @param atol array of absolute tolerances for every sensitivy variable
      */
-    virtual void setSensSStolerances(const double rtol,
+    virtual void setSensSStolerances(double rtol,
                                      const double *atol) const = 0;
 
     /**
@@ -876,7 +876,7 @@ class Solver {
      *
      * @param error_corr activation flag
      */
-    virtual void setSensErrCon(const bool error_corr) const = 0;
+    virtual void setSensErrCon(bool error_corr) const = 0;
 
     /**
      * @brief Specifies whether error control is also enforced for the
@@ -885,7 +885,7 @@ class Solver {
      * @param which identifier of the backwards problem
      * @param flag activation flag
      */
-    virtual void setQuadErrConB(const int which, const bool flag) const = 0;
+    virtual void setQuadErrConB(int which, bool flag) const = 0;
 
     /**
      * @brief Attaches the error handler function (errMsgIdAndTxt)
@@ -909,7 +909,7 @@ class Solver {
      * @param which identifier of the backwards problem
      * @param model Model instance
      */
-    virtual void setUserDataB(const int which, Model *model) const = 0;
+    virtual void setUserDataB(int which, Model *model) const = 0;
 
     /**
      * @brief specifies the maximum number of steps for the forward
@@ -926,7 +926,7 @@ class Solver {
      * @param which identifier of the backwards problem
      * @param mxstepsB number of steps
      */
-    virtual void setMaxNumStepsB(const int which, long int mxstepsB) const = 0;
+    virtual void setMaxNumStepsB(int which, long int mxstepsB) const = 0;
 
     /**
      * @brief activates stability limit detection for the forward
@@ -935,7 +935,7 @@ class Solver {
      * @param stldet flag for stability limit detection (TRUE or FALSE)
      *
      */
-    virtual void setStabLimDet(const int stldet) const = 0;
+    virtual void setStabLimDet(int stldet) const = 0;
 
     /**
      * @brief activates stability limit detection for the backward
@@ -945,7 +945,7 @@ class Solver {
      * @param stldet flag for stability limit detection (TRUE or FALSE)
      *
      */
-    virtual void setStabLimDetB(const int which, const int stldet) const = 0;
+    virtual void setStabLimDetB(int which, int stldet) const = 0;
 
     /**
      * @brief specify algebraic/differential components (DAE only)
@@ -979,7 +979,7 @@ class Solver {
      * @param t timepoint
      * @param k derivative order
      */
-    virtual void getDky(const realtype t, const int k) const = 0;
+    virtual void getDky(realtype t, int k) const = 0;
 
     /**
      * @brief interpolates the (derivative of the) solution at the requested
@@ -989,8 +989,8 @@ class Solver {
      * @param k derivative order
      * @param which index of backward problem
      */
-    virtual void getDkyB(const realtype t, const int k,
-                         const int which) const = 0;
+    virtual void getDkyB(realtype t, int k,
+                         int which) const = 0;
 
     /**
      * @brief interpolates the (derivative of the) solution at the requested
@@ -999,7 +999,7 @@ class Solver {
      * @param t timepoint
      * @param k derivative order
      */
-    virtual void getSensDky(const realtype t, const int k) const = 0;
+    virtual void getSensDky(realtype t, int k) const = 0;
 
     /**
      * @brief interpolates the (derivative of the) solution at the requested
@@ -1009,8 +1009,8 @@ class Solver {
      * @param k derivative order
      * @param which index of backward problem
      */
-    virtual void getQuadDkyB(const realtype t, const int k,
-                             const int which) const = 0;
+    virtual void getQuadDkyB(realtype t, int k,
+                             int which) const = 0;
 
     /**
      * @brief initializes the adjoint problem
@@ -1034,8 +1034,8 @@ class Solver {
      * @param relTolB relative tolerances
      * @param absTolB absolute tolerances
      */
-    virtual void setSStolerancesB(const int which, const realtype relTolB,
-                                  const realtype absTolB) const = 0;
+    virtual void setSStolerancesB(int which, realtype relTolB,
+                                  realtype absTolB) const = 0;
 
     /**
      * @brief sets relative and absolute tolerances for the quadrature
@@ -1045,8 +1045,8 @@ class Solver {
      * @param reltolQB relative tolerances
      * @param abstolQB absolute tolerances
      */
-    virtual void quadSStolerancesB(const int which, const realtype reltolQB,
-                                   const realtype abstolQB) const = 0;
+    virtual void quadSStolerancesB(int which, realtype reltolQB,
+                                   realtype abstolQB) const = 0;
 
     /**
      * @brief reports the number of solver steps
@@ -1119,7 +1119,7 @@ class Solver {
      * @brief Sets the linear solver for the backward problem
      * @param which index of the backward problem
      */
-    virtual void setLinearSolverB(const int which) const = 0;
+    virtual void setLinearSolverB(int which) const = 0;
 
     /**
      * @brief Set the non-linear solver for the forward problem
@@ -1130,7 +1130,7 @@ class Solver {
      * @brief Set the non-linear solver for the backward problem
      * @param which index of the backward problem
      */
-    virtual void setNonLinearSolverB(const int which) const = 0;
+    virtual void setNonLinearSolverB(int which) const = 0;
 
     /**
      * @brief Set the non-linear solver for sensitivities
@@ -1144,13 +1144,13 @@ class Solver {
      * @param which index of the backward problem
      */
 
-    void initializeLinearSolverB(const Model *model, const int which) const;
+    void initializeLinearSolverB(const Model *model, int which) const;
 
     /**
      * @brief Initializes the non-linear solver for the backward problem
      * @param which index of the backward problem
      */
-    void initializeNonLinearSolverB(const int which) const;
+    void initializeNonLinearSolverB(int which) const;
 
     /**
      * Accessor function to the model stored in the user data
@@ -1185,14 +1185,14 @@ class Solver {
      * @param which adjoint problem index
      * @return proxy for solverMemoryB->(cv|ida)_MallocDone
      */
-    bool getInitDoneB(const int which) const;
+    bool getInitDoneB(int which) const;
 
     /**
      * @brief checks whether memory for backward quadratures has been allocated
      * @param which adjoint problem index
      * @return proxy for solverMemoryB->(cv|ida)_QuadMallocDone
      */
-    bool getQuadInitDoneB(const int which) const;
+    bool getQuadInitDoneB(int which) const;
 
     /**
      * @brief attaches a diagonal linear solver to the forward problem
@@ -1204,7 +1204,7 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      */
-    virtual void diagB(const int which) const = 0;
+    virtual void diagB(int which) const = 0;
 
     /**
      * @brief resets solverMemory and solverMemoryB
@@ -1213,7 +1213,7 @@ class Solver {
      * @param nquad new number of quadratures (only differs from nplist for
      * higher order senisitivity computation)
      */
-    void resetMutableMemory(const int nx, const int nplist, const int nquad) const;
+    void resetMutableMemory(int nx, int nplist, int nquad) const;
 
     /**
      * @brief retrieves the solver memory instance for the backward problem
@@ -1222,7 +1222,7 @@ class Solver {
      * @param ami_mem pointer to the forward solver memory instance
      * @return ami_memB pointer to the backward solver memory instance
      */
-    virtual void *getAdjBmem(void *ami_mem, const int which) const = 0;
+    virtual void *getAdjBmem(void *ami_mem, int which) const = 0;
 
     /**
      * @brief updates solver tolerances according to the currently specified
@@ -1242,7 +1242,7 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      */
-    void applyTolerancesASA(const int which) const;
+    void applyTolerancesASA(int which) const;
 
     /**
      * @brief updates ASA quadrature solver tolerances according to the
@@ -1250,7 +1250,7 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      */
-    void applyQuadTolerancesASA(const int which) const;
+    void applyQuadTolerancesASA(int which) const;
 
     /**
      * @brief updates all senstivivity solver tolerances according to the
@@ -1322,13 +1322,13 @@ class Solver {
      * @brief sets that memory for the backward problem has been allocated
      * @param which adjoint problem index
      */
-    void setInitDoneB(const int which) const;
+    void setInitDoneB(int which) const;
 
     /**
      * @brief sets that memory for backward quadratures has been allocated
      * @param which adjoint problem index
      */
-    void setQuadInitDoneB(const int which) const;
+    void setQuadInitDoneB(int which) const;
 
     /** state (dimension: nx_solver) */
     mutable AmiVector x = AmiVector(0);
@@ -1360,7 +1360,7 @@ class Solver {
     mutable bool forceReInitPostProcessB = false;
 
   private:
-    
+
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth = SensitivityMethod::forward;
 
@@ -1437,7 +1437,7 @@ class Solver {
     /** vector of flags indicating whether qbinit was called for respective
      which */
     mutable std::vector<bool> initializedQB{false};
-    
+
     /* number of checkpoints in the forward problem */
     mutable int ncheckPtr;
 };

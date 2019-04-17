@@ -229,7 +229,7 @@ class NewtonSolverIterative : public NewtonSolver {
      * @param rdata pointer to the return data object
      */
     NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
-    virtual ~NewtonSolverIterative() = default;
+    ~NewtonSolverIterative() override = default;
 
     /**
      * Solves the linear system for the Newton step by passing it to

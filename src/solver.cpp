@@ -1,4 +1,5 @@
 #include "amici/solver.h"
+
 #include "amici/exception.h"
 #include "amici/misc.h"
 #include "amici/model.h"
@@ -53,7 +54,7 @@ int Solver::run(const realtype tout) const {
     }
     return status;
 }
-    
+
 int Solver::step(const realtype tout) const {
     int status;
     if (getAdjInitDone()) {
@@ -63,12 +64,12 @@ int Solver::step(const realtype tout) const {
     }
     return status;
 }
-    
+
 void Solver::runB(const realtype tout) const {
     solveB(tout, AMICI_NORMAL);
     t = tout;
 }
-    
+
 void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
                    const AmiVector &dx0, const AmiVectorArray &sx0,
                    const AmiVectorArray &sdx0) const {
@@ -933,7 +934,7 @@ void Solver::resetMutableMemory(const int nx, const int nplist,
     initializedB.clear();
     initializedQB.clear();
 }
-    
+
 void Solver::writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
                            AmiVectorArray &sx) const {
     *t = gett();
@@ -943,7 +944,7 @@ void Solver::writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
         sx.copy(getStateSensitivity(*t));
     }
 }
-    
+
 void Solver::writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
                             AmiVector &xQB, const int which) const {
     *t = gett();
@@ -955,15 +956,15 @@ void Solver::writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
 const AmiVector& Solver::getState(const realtype t) const {
     if (t == this->t)
         return x;
-    
+
     getDky(t, 0);
     return dky;
 }
-    
+
 const AmiVector& Solver::getDerivativeState(const realtype t) const {
     if (t == this->t)
         return dx;
-    
+
     getDky(t, 1);
     return dky;
 }
@@ -973,7 +974,7 @@ const AmiVectorArray& Solver::getStateSensitivity(const realtype t) const {
         getSens();
         return sx;
     }
-    
+
     getSensDky(t, 0);
     return sx;
 }
@@ -983,18 +984,18 @@ const AmiVector& Solver::getAdjointState(const int which, const realtype t) cons
         getB(which);
         return xB;
     }
-        
+
     getDkyB(t, 0, which);
     return dky;
 }
-    
+
 const AmiVector& Solver::getAdjointDerivativeState(const int which,
                                                    const realtype t) const {
     if (t == this->t) {
         getB(which);
         return dxB;
     }
-    
+
     getDkyB(t, 1, which);
     return dky;
 }
@@ -1004,7 +1005,7 @@ const AmiVector& Solver::getAdjointQuadrature(const int which, const realtype t)
         getQuadB(which);
         return xQB;
     }
-        
+
     getQuadDkyB(t, 0, which);
     return xQB;
 }

@@ -14,7 +14,7 @@ class Solver;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::ReturnData &u, const unsigned int version);
+void serialize(Archive &ar, amici::ReturnData &u, unsigned int version);
 }}
 
 namespace amici {
@@ -29,7 +29,7 @@ class ReturnData {
     /**
      * @brief default constructor
      */
-    ReturnData();
+    ReturnData() = default;
 
     /**
      * @brief ReturnData
@@ -82,7 +82,7 @@ class ReturnData {
      * sensitivities to NaN (typically after integration failure)
      * @param t time of integration failure
      */
-    void invalidate(const realtype t);
+    void invalidate(realtype t);
 
     /**
      * @brief Set likelihood and chi2 to NaN
@@ -256,44 +256,44 @@ class ReturnData {
     int status = 0;
 
     /** total number of model parameters */
-    const int np;
+    const int np{0};
     /** number of fixed parameters */
-    const int nk;
+    const int nk{0};
     /** number of states */
-    const int nx;
+    const int nx{0};
     /** number of states with conservation laws applied */
-    const int nx_solver;
+    const int nx_solver{0};
     /** number of states in the unaugmented system */
-    const int nxtrue;
+    const int nxtrue{0};
     /** number of observables */
-    const int ny;
+    const int ny{0};
     /** number of observables in the unaugmented system */
-    const int nytrue;
+    const int nytrue{0};
     /** number of event outputs */
-    const int nz;
+    const int nz{0};
     /** number of event outputs in the unaugmented system */
-    const int nztrue;
+    const int nztrue{0};
     /** number of events */
-    const int ne;
+    const int ne{0};
     /** dimension of the augmented objective function for 2nd order ASA */
-    const int nJ;
+    const int nJ{0};
 
     /** number of parameter for which sensitivities were requested */
-    const int nplist;
+    const int nplist{0};
     /** maximal number of occuring events (for every event type) */
-    const int nmaxevent;
+    const int nmaxevent{0};
     /** number of considered timepoints */
-    const int nt;
+    const int nt{0};
     /** maximal number of newton iterations for steady state calculation */
-    const int newton_maxsteps;
+    const int newton_maxsteps{0};
     /** scaling of parameterization (lin,log,log10) */
     std::vector<ParameterScaling> pscale;
     /** flag indicating whether second order sensitivities were requested */
-    const SecondOrderMode o2mode;
+    const SecondOrderMode o2mode{SecondOrderMode::none};
     /** sensitivity order */
-    const SensitivityOrder sensi;
+    const SensitivityOrder sensi{SensitivityOrder::none};
     /** sensitivity method */
-    const SensitivityMethod sensi_meth;
+    const SensitivityMethod sensi_meth{SensitivityMethod::none};
 
     /**
      * @brief Serialize ReturnData (see boost::serialization::serialize)
@@ -302,7 +302,7 @@ class ReturnData {
      * @param version Version number
      */
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, ReturnData &r, const unsigned int version);
+    friend void boost::serialization::serialize(Archive &ar, ReturnData &r, unsigned int version);
 };
 
 } // namespace amici

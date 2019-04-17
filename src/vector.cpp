@@ -23,9 +23,8 @@ int AmiVector::getLength() const { return static_cast<int>(vec.size()); }
 void AmiVector::reset() { set(0.0); }
 
 void AmiVector::minus() {
-    for (std::vector<realtype>::iterator it = vec.begin(); it != vec.end();
-         ++it)
-        *it = -*it;
+    for (auto & it : vec)
+        it = -it;
 }
 
 void AmiVector::set(realtype val) { std::fill(vec.begin(), vec.end(), val); }
@@ -50,7 +49,7 @@ void AmiVector::copy(const AmiVector &other) {
     std::copy(other.vec.begin(), other.vec.end(), vec.begin());
     synchroniseNVector();
 }
-    
+
 void AmiVector::synchroniseNVector() {
     if (nvec)
         N_VDestroy_Serial(nvec);

@@ -151,8 +151,7 @@ sunindextype *SUNMatrixWrapper::indexptrs() const {
 int SUNMatrixWrapper::sparsetype() const {
     if (SUNMatGetID(matrix) == SUNMATRIX_SPARSE)
         return SM_SPARSETYPE_S(matrix);
-    else
-        throw std::domain_error("Function only available for sparse matrices");
+    throw std::domain_error("Function only available for sparse matrices");
 }
 
 void SUNMatrixWrapper::reset() {

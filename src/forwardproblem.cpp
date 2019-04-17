@@ -75,7 +75,7 @@ void ForwardProblem::workForwardProblem() {
         handlePreequilibration();
     } else {
         model->fx_rdata(x_rdata, x);
-        rdata->x0 = std::move(x_rdata.getVector());
+        rdata->x0 = x_rdata.getVector();
         if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
                 solver->getSensitivityOrder() >= SensitivityOrder::first) {
             model->fsx_rdata(sx_rdata, sx);
@@ -171,14 +171,14 @@ void ForwardProblem::updateAndReinitStatesAndSensitivities(bool isSteadystate) {
 
     if (isSteadystate) {
         model->fx_rdata(x_rdata, x);
-        rdata->x_ss = std::move(x_rdata.getVector());
+        rdata->x_ss = x_rdata.getVector();
     }
 
     model->fx0_fixedParameters(x);
     solver->reInit(t, x, dx);
     model->fx_rdata(x_rdata, x);
 
-    rdata->x0 = std::move(x_rdata.getVector());
+    rdata->x0 = x_rdata.getVector();
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
         if (isSteadystate) {
             model->fsx_rdata(sx_rdata, sx);

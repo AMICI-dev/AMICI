@@ -16,7 +16,7 @@ class IDASolver;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::IDASolver &u, const unsigned int version);
+void serialize(Archive &ar, amici::IDASolver &u, unsigned int version);
 }
 } // namespace boost::serialization
 
@@ -31,48 +31,48 @@ class IDASolver : public Solver {
      * @brief Clone this instance
      * @return The clone
      */
-    virtual Solver *clone() const override;
+    Solver *clone() const override;
 
-    void reInitPostProcessF(const realtype tnext) const override;
+    void reInitPostProcessF(realtype tnext) const override;
 
-    void reInitPostProcessB(const realtype tnext) const override;
+    void reInitPostProcessB(realtype tnext) const override;
 
-    void reInit(const realtype t0, const AmiVector &yy0,
+    void reInit(realtype t0, const AmiVector &yy0,
                 const AmiVector &yp0) const override;
-    
+
     void sensReInit(const AmiVectorArray &yyS0,
                     const AmiVectorArray &ypS0) const override;
-    
-    void reInitB(const int which, const realtype tB0,
+
+    void reInitB(int which, realtype tB0,
                  const AmiVector &yyB0, const AmiVector &ypB0) const override;
-    
-    void quadReInitB(const int which, const AmiVector &yQB0) const override;
 
-    void quadSStolerancesB(const int which, const realtype reltolQB,
-                           const realtype abstolQB) const override;
+    void quadReInitB(int which, const AmiVector &yQB0) const override;
 
-    int solve(const realtype tout, const int itask) const override;
+    void quadSStolerancesB(int which, realtype reltolQB,
+                           realtype abstolQB) const override;
 
-    int solveF(const realtype tout, const int itask,
+    int solve(realtype tout, int itask) const override;
+
+    int solveF(realtype tout, int itask,
                int *ncheckPtr) const override;
 
-    void solveB(const realtype tBout, const int itaskB) const override;
+    void solveB(realtype tBout, int itaskB) const override;
 
     void getRootInfo(int *rootsfound) const override;
 
-    void getDky(const realtype t, int k) const override;
+    void getDky(realtype t, int k) const override;
 
     void getSens() const override;
 
-    void getSensDky(const realtype t, int k) const override;
+    void getSensDky(realtype t, int k) const override;
 
     void getB(int which) const override;
 
-    void getDkyB(const realtype t, int k, int which) const override;
+    void getDkyB(realtype t, int k, int which) const override;
 
     void getQuadB(int which) const override;
 
-    void getQuadDkyB(const realtype t, int k, int which) const override;
+    void getQuadDkyB(realtype t, int k, int which) const override;
 
     void calcIC(realtype tout1) const override;
 
@@ -111,34 +111,34 @@ class IDASolver : public Solver {
 
     void allocateSolver() const override;
 
-    void setSStolerances(const realtype rtol,
-                         const realtype atol) const override;
+    void setSStolerances(realtype rtol,
+                         realtype atol) const override;
 
-    void setSensSStolerances(const realtype rtol,
+    void setSensSStolerances(realtype rtol,
                              const realtype *atol) const override;
 
-    void setSensErrCon(const bool error_corr) const override;
+    void setSensErrCon(bool error_corr) const override;
 
-    void setQuadErrConB(const int which, const bool flag) const override;
+    void setQuadErrConB(int which, bool flag) const override;
 
     void setErrHandlerFn() const override;
 
     void setUserData(Model *model) const override;
 
-    void setUserDataB(const int which, Model *model) const override;
+    void setUserDataB(int which, Model *model) const override;
 
-    void setMaxNumSteps(const long int mxsteps) const override;
+    void setMaxNumSteps(long int mxsteps) const override;
 
-    void setStabLimDet(const int stldet) const override;
+    void setStabLimDet(int stldet) const override;
 
-    void setStabLimDetB(const int which, const int stldet) const override;
+    void setStabLimDetB(int which, int stldet) const override;
 
     void setId(const Model *model) const override;
 
     void setSuppressAlg(bool flag) const override;
 
-    void resetState(void *ida_mem, const N_Vector yy0,
-                    const N_Vector yp0) const;
+    void resetState(void *ida_mem, N_Vector yy0,
+                    N_Vector yp0) const;
 
     void setSensParams(const realtype *p, const realtype *pbar,
                        const int *plist) const override;
@@ -147,15 +147,15 @@ class IDASolver : public Solver {
 
     void allocateSolverB(int *which) const override;
 
-    void setMaxNumStepsB(const int which,
-                         const long int mxstepsB) const override;
+    void setMaxNumStepsB(int which,
+                         long int mxstepsB) const override;
 
-    void setSStolerancesB(const int which, const realtype relTolB,
-                          const realtype absTolB) const override;
+    void setSStolerancesB(int which, realtype relTolB,
+                          realtype absTolB) const override;
 
     void diag() const override;
 
-    void diagB(const int which) const override;
+    void diagB(int which) const override;
 
     void getNumSteps(const void *ami_mem, long int *numsteps) const override;
 
@@ -173,15 +173,15 @@ class IDASolver : public Solver {
 
     void *getAdjBmem(void *ami_mem, int which) const override;
 
-    void init(const realtype t0, const AmiVector &x0,
+    void init(realtype t0, const AmiVector &x0,
               const AmiVector &dx0) const override;
 
     void sensInit1(const AmiVectorArray &sx0, const AmiVectorArray &sdx0) const override;
 
-    void binit(const int which, const realtype tf,
+    void binit(int which, realtype tf,
                const AmiVector &xB0, const AmiVector &dxB0) const override;
 
-    void qbinit(const int which, const AmiVector &xQB0) const override;
+    void qbinit(int which, const AmiVector &xQB0) const override;
 
     void rootInit(int ne) const override;
 
@@ -193,13 +193,13 @@ class IDASolver : public Solver {
 
     void setJacTimesVecFn() const override;
 
-    void setDenseJacFnB(const int which) const override;
+    void setDenseJacFnB(int which) const override;
 
-    void setSparseJacFnB(const int which) const override;
+    void setSparseJacFnB(int which) const override;
 
-    void setBandJacFnB(const int which) const override;
+    void setBandJacFnB(int which) const override;
 
-    void setJacTimesVecFnB(const int which) const override;
+    void setJacTimesVecFnB(int which) const override;
 
     static int fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                    N_Vector xB, N_Vector dxB, N_Vector xBdot, SUNMatrix JB,
