@@ -111,6 +111,8 @@ functions = {
             '(realtype *dJydy, const int iy, const realtype *p, '
             'const realtype *k, const realtype *y, '
             'const realtype *sigmay, const realtype *my)',
+        'sparse':
+            True,
     },
     'dwdp': {
         'signature':
@@ -1290,31 +1292,34 @@ class ODEModel:
 
         """
         matrix = self.eq(name)
-        idx = 0
-        sparseMatrix = sp.zeros(matrix.rows, matrix.cols)
-        symbolList = []
-        sparseList = []
-        symbolColPtrs = []
-        symbolRowVals = []
-        for col in range(0, matrix.cols):
-            symbolColPtrs.append(idx)
-            for row in range(0, matrix.rows):
-                if not (matrix[row, col] == 0):
-                    symbolName = f'{name}{idx}'
-                    sparseMatrix[row, col] = sp.Symbol(symbolName)
-                    symbolList.append(symbolName)
-                    sparseList.append(matrix[row, col])
-                    symbolRowVals.append(row)
-                    idx += 1
 
-        symbolColPtrs.append(idx)
-        sparseList = sp.Matrix(sparseList)
+        if name == 'dJydy':
+            # One entry per y-slice
+            self._colptrs[name] = []
+            self._rowvals[name] = []
+            self._sparseeqs[name] = []
+            self._sparsesyms[name] = []
+            self._syms[name] = []
+            base_index = 0
+            for iy in range(self.ny()):
+                symbolColPtrs, symbolRowVals, sparseList, symbolList, \
+                sparseMatrix = csc_matrix(matrix[iy, :], name,
+                                          base_index=base_index)
+                base_index += len(symbolList)
+                self._colptrs[name].append(symbolColPtrs)
+                self._rowvals[name].append(symbolRowVals)
+                self._sparseeqs[name].append(sparseList)
+                self._sparsesyms[name].append(symbolList)
+                self._syms[name].append(sparseMatrix)
+        else:
+            symbolColPtrs, symbolRowVals, sparseList, symbolList, \
+                sparseMatrix = csc_matrix(matrix, name)
 
-        self._colptrs[name] = symbolColPtrs
-        self._rowvals[name] = symbolRowVals
-        self._sparseeqs[name] = sparseList
-        self._sparsesyms[name] = symbolList
-        self._syms[name] = sparseMatrix
+            self._colptrs[name] = symbolColPtrs
+            self._rowvals[name] = symbolRowVals
+            self._sparseeqs[name] = sparseList
+            self._sparsesyms[name] = symbolList
+            self._syms[name] = sparseMatrix
 
     def _compute_equation(self, name):
         """computes the symbolic formula for a symbolic variable
@@ -2162,9 +2167,6 @@ class ODEExporter:
 
         """
 
-        # function signature
-        signature = f'(sunindextype *{indextype})'
-
         if indextype == 'colptrs':
             values = self.model.colptrs(function)
         elif indextype == 'rowvals':
@@ -2173,15 +2175,29 @@ class ODEExporter:
             raise ValueError('Invalid value for type, must be colptr or '
                              'rowval')
 
+        # function signature
+        if function in multiobs_functions:
+            signature = f'(sunindextype *{indextype}, int index)'
+        else:
+            signature = f'(sunindextype *{indextype})'
+
         lines = [
             '#include "sundials/sundials_types.h"',
             '',
             f'void {function}_{indextype}_{self.modelName}{signature}{{',
         ]
-        lines.extend(
-            [' ' * 4 + f'{indextype}[{index}] = {value};'
-             for index, value in enumerate(values)]
-        )
+        if function in multiobs_functions:
+            # list of index vectors
+            cases = {switch_case: [' ' * 4 + f'{indextype}[{index}] = {value};'
+                     for index, value in enumerate(idx_vector)]
+                         for switch_case, idx_vector in enumerate(values)}
+            lines.extend(getSwitchStatement('index', cases, 1))
+        else:
+            # single index vector
+            lines.extend(
+                [' ' * 4 + f'{indextype}[{index}] = {value};'
+                 for index, value in enumerate(values)]
+            )
         lines.append('}')
         with open(os.path.join(
                 self.modelPath,
@@ -2207,7 +2223,8 @@ class ODEExporter:
 
         lines = []
 
-        if min(symbol.shape) == 0:
+        if len(symbol) == 0 or (isinstance(symbol, sp.Matrix)
+                                and min(symbol.shape) == 0):
             return lines
 
         if not self.allow_reinit_fixpar_initcond \
@@ -2235,8 +2252,12 @@ class ODEExporter:
             lines.extend(getSwitchStatement('ip', cases, 1))
 
         elif function in multiobs_functions:
-            cases = {iobs : self._getSymLines(symbol[:, iobs], function, 0)
-                     for iobs in range(self.model.ny())}
+            if function == 'dJydy':
+                cases = {iobs: self._getSymLines(symbol[iobs], function, 0)
+                         for iobs in range(self.model.ny())}
+            else:
+                cases = {iobs : self._getSymLines(symbol[:, iobs], function, 0)
+                         for iobs in range(self.model.ny())}
             lines.extend(getSwitchStatement('iy', cases, 1))
 
         else:
@@ -2306,6 +2327,9 @@ class ODEExporter:
             'NDWDP': str(len(self.model.eq('dwdp'))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
+            'NDJYDY': 'std::vector<int>{%s}'
+                      % ','.join(str(len(x))
+                                 for x in self.model.sparsesym('dJydy')),
             'NNZ': str(len(self.model.sparsesym('JSparse'))),
             'UBW': str(self.model.nx_solver()),
             'LBW': str(self.model.nx_solver()),
@@ -2339,21 +2363,21 @@ class ODEExporter:
 
         for fun in [
             'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'dxdotdp', 'JSparse', 'JSparseB',
+            'dxdotdp', 'JSparse', 'JSparseB', 'dJydy'
         ]:
             tplData[f'{fun.upper()}_DEF'] = \
-                get_function_definition(fun, self.modelName)
+                get_function_extern_declaration(fun, self.modelName)
             tplData[f'{fun.upper()}_IMPL'] = \
-                get_function_implementation(fun, self.modelName)
+                get_model_override_implementation(fun, self.modelName)
             if fun in sparse_functions:
                 tplData[f'{fun.upper()}_COLPTRS_DEF'] = \
-                    get_sunindex_definition(fun, self.modelName, 'colptrs')
+                    get_sunindex_extern_declaration(fun, self.modelName, 'colptrs')
                 tplData[f'{fun.upper()}_COLPTRS_IMPL'] = \
-                    get_sunindex_implementation(fun, self.modelName, 'colptrs')
+                    get_sunindex_override_implementation(fun, self.modelName, 'colptrs')
                 tplData[f'{fun.upper()}_ROWVALS_DEF'] = \
-                    get_sunindex_definition(fun, self.modelName, 'rowvals')
+                    get_sunindex_extern_declaration(fun, self.modelName, 'rowvals')
                 tplData[f'{fun.upper()}_ROWVALS_IMPL'] = \
-                    get_sunindex_implementation(fun, self.modelName, 'rowvals')
+                    get_sunindex_override_implementation(fun, self.modelName, 'rowvals')
 
         if self.model.nx_solver() == self.model.nx_rdata():
             tplData['X_RDATA_DEF'] = ''
@@ -2639,8 +2663,8 @@ def strip_pysb(symbol):
         return symbol
 
 
-def get_function_definition(fun, name):
-    """Constructs the function definition for a given function
+def get_function_extern_declaration(fun, name):
+    """Constructs the extern function declaration for a given function
 
     Arguments:
         fun: function name @type str
@@ -2656,8 +2680,8 @@ def get_function_definition(fun, name):
         f'extern void {fun}_{name}{functions[fun]["signature"]};'
 
 
-def get_sunindex_definition(fun, name, indextype):
-    """Constructs the function definition for an index function of a given
+def get_sunindex_extern_declaration(fun, name, indextype):
+    """Constructs the function declaration for an index function of a given
     function
 
     Arguments:
@@ -2666,17 +2690,18 @@ def get_sunindex_definition(fun, name, indextype):
         indextype: index function {'colptrs', 'rowvals'} @type str
 
     Returns:
-    c++ function definition string
+    c++ function declaration string
 
     Raises:
 
     """
+    index_arg = ', int index' if fun in multiobs_functions else ''
     return \
-        f'extern void {fun}_{indextype}_{name}(sunindextype *{indextype});'
+        f'extern void {fun}_{indextype}_{name}(sunindextype *{indextype}{index_arg});'
 
 
-def get_function_implementation(fun, name):
-    """Constructs the function implementation for a given function
+def get_model_override_implementation(fun, name):
+    """Constructs amici::Model::* override implementation for a given function
 
     Arguments:
         fun: function name @type str
@@ -2701,9 +2726,9 @@ def get_function_implementation(fun, name):
         )
 
 
-def get_sunindex_implementation(fun, name, indextype):
-    """Constructs the function implementation for an index function of a given
-    function
+def get_sunindex_override_implementation(fun, name, indextype):
+    """Constructs the amici::Model:: function implementation for an index
+    function of a given function
 
     Arguments:
         fun: function name @type str
@@ -2716,6 +2741,9 @@ def get_sunindex_implementation(fun, name, indextype):
     Raises:
 
     """
+    index_arg = ', int index' if fun in multiobs_functions else ''
+    index_arg_eval = ', index' if fun in multiobs_functions else ''
+
     return \
         'virtual void f{fun}_{indextype}{signature} override {{\n' \
         '{ind8}{fun}_{indextype}_{name}{eval_signature};\n' \
@@ -2725,8 +2753,8 @@ def get_sunindex_implementation(fun, name, indextype):
             fun=fun,
             indextype=indextype,
             name=name,
-            signature=f'(sunindextype *{indextype})',
-            eval_signature=f'({indextype})',
+            signature=f'(sunindextype *{indextype}{index_arg})',
+            eval_signature=f'({indextype}{index_arg_eval})',
         )
 
 
@@ -2806,3 +2834,43 @@ def getSwitchStatement(condition, cases,
         lines.append(indentation_level * indentation_step + '}')
 
     return lines
+
+
+def csc_matrix(matrix, name, base_index=0):
+    """Generates the sparse symbolic identifiers, symbolic identifiers,
+    sparse matrix, column pointers and row values for a symbolic
+    variable
+
+    Arguments:
+        matrix: dense matrix to be sparsified @type sp.Matrix
+        name: name of the symbolic variable @type str
+        base_index: index for first symbol name, defaults to 0
+
+    Returns:
+        symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix
+    Raises:
+
+    """
+    idx = 0
+    symbol_name_idx = base_index
+    sparseMatrix = sp.zeros(matrix.rows, matrix.cols)
+    symbolList = []
+    sparseList = []
+    symbolColPtrs = []
+    symbolRowVals = []
+    for col in range(0, matrix.cols):
+        symbolColPtrs.append(idx)
+        for row in range(0, matrix.rows):
+            if not (matrix[row, col] == 0):
+                symbolName = f'{name}{symbol_name_idx}'
+                sparseMatrix[row, col] = sp.Symbol(symbolName)
+                symbolList.append(symbolName)
+                sparseList.append(matrix[row, col])
+                symbolRowVals.append(row)
+                idx += 1
+                symbol_name_idx += 1
+
+    symbolColPtrs.append(idx)
+    sparseList = sp.Matrix(sparseList)
+
+    return symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix

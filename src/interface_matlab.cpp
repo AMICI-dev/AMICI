@@ -58,6 +58,7 @@ char amici_blasCBlasTransToBlasTrans(BLASTranspose trans) {
     case BLASTranspose::conjTrans:
         return 'C';
     }
+    throw std::invalid_argument("Invalid argument to amici_blasCBlasTransToBlasTrans");
 }
 
 /*!
