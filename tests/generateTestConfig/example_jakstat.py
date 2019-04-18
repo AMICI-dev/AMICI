@@ -30,7 +30,7 @@ class ExampleJakStatAdjoint(AmiciExample):
         self.solverOptions['atol'] = 1e-16
         self.solverOptions['maxsteps'] = 1e4
         self.solverOptions['nmaxevent'] = 10
-        self.solverOptions['rtol'] = 1e-8
+        self.solverOptions['rtol'] = 1e-12
         self.solverOptions['sensi'] = 0
         self.solverOptions['sensi_meth'] = 1
 
