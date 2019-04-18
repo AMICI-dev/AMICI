@@ -29,7 +29,7 @@ TEST(groupRobertson, testSensitivityForwardDense) {
 }
 
 TEST(groupRobertson, testSensitivityForwardSPBCG) {
-    amici::simulateVerifyWrite("/model_robertson/sensiforwardSPBCG/", 1e6*TEST_ATOL, 1e2*TEST_RTOL);
+    amici::simulateVerifyWrite("/model_robertson/sensiforwardSPBCG/", 1e7*TEST_ATOL, 1e2*TEST_RTOL);
 }
 
 
