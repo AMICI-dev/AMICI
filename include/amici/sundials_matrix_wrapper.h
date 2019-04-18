@@ -7,6 +7,8 @@
 
 #include <nvector/nvector_serial.h>
 
+#include <gsl/gsl-lite.hpp>
+
 #include <vector>
 
 namespace amici {
@@ -131,18 +133,11 @@ class SUNMatrixWrapper {
      * @return index array
      */
     int sparsetype() const;
-    
+
     /**
      * @brief reset data to zeroes
      */
     void reset();
-
-    /**
-     * @brief std::vector interface for multiply
-     * @param c output vector, may already contain values
-     * @param b multiplication vector
-     */
-    void multiply(std::vector<realtype> &c, const std::vector<realtype> &b) const;
 
     /**
      * @brief N_Vector interface for multiply
@@ -156,11 +151,16 @@ class SUNMatrixWrapper {
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(realtype *c, const realtype *b) const;
+    void multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const;
+
+    /**
+     * @brief Set to 0.0
+     */
+    void zero();
 
   private:
     void update_ptrs();
-    
+
     SUNMatrix matrix = nullptr;
     realtype *data_ptr = nullptr;
     sunindextype *indexptrs_ptr = nullptr;

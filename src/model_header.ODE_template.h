@@ -42,10 +42,9 @@ extern void dJydsigmay_TPL_MODELNAME(realtype *dJydsigmay, const int iy,
                                      const realtype *p, const realtype *k,
                                      const realtype *y, const realtype *sigmay,
                                      const realtype *my);
-extern void dJydy_TPL_MODELNAME(realtype *dJydy, const int iy,
-                                const realtype *p, const realtype *k,
-                                const realtype *y, const realtype *sigmay,
-                                const realtype *my);
+TPL_DJYDY_DEF
+TPL_DJYDY_COLPTRS_DEF
+TPL_DJYDY_ROWVALS_DEF
 TPL_DWDP_DEF
 TPL_DWDX_DEF
 TPL_DWDX_COLPTRS_DEF
@@ -116,6 +115,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_NDWDX,                                   // ndwdx
               TPL_NDWDP,                                   // ndwdp
               TPL_NDXDOTDW,                                // ndxdotdw
+              TPL_NDJYDY,                                  // ndjydy
               TPL_NNZ,                                     // nnz
               TPL_UBW,                                     // ubw
               TPL_LBW,                                     // lbw
@@ -186,15 +186,15 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     }
 
     TPL_JSPARSE_IMPL
-    
+
     TPL_JSPARSE_COLPTRS_IMPL
-    
+
     TPL_JSPARSE_ROWVALS_IMPL
 
     TPL_JSPARSEB_IMPL
-    
+
     TPL_JSPARSEB_COLPTRS_IMPL
-    
+
     TPL_JSPARSEB_ROWVALS_IMPL
 
     /** model specific implementation of fJrz
@@ -280,21 +280,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
         dJydsigmay_TPL_MODELNAME(dJydsigma, iy, p, k, y, sigmay, my);
     }
 
-    /** model specific implementation of fdJydy
-     * @param dJydy partial derivative of time-resolved measurement negative
-     *log-likelihood Jy
-     * @param iy output index
-     * @param p parameter vector
-     * @param k constant vector
-     * @param y model output at timepoint
-     * @param sigmay measurement standard deviation at timepoint
-     * @param my measurement at timepoint
-     **/
-    virtual void fdJydy(realtype *dJydy, const int iy, const realtype *p,
-                        const realtype *k, const realtype *y,
-                        const realtype *sigmay, const realtype *my) override {
-        dJydy_TPL_MODELNAME(dJydy, iy, p, k, y, sigmay, my);
-    }
 
     /** model specific implementation of fdJzdsigma
      * @param dJzdsigma Sensitivity of event measurement
@@ -454,16 +439,20 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                             const realtype *p, const realtype *k,
                             const int ip) override {}
 
+    TPL_DJYDY_IMPL
+    TPL_DJYDY_COLPTRS_IMPL
+    TPL_DJYDY_ROWVALS_IMPL
+
     TPL_DWDP_IMPL
-    
+
     TPL_DWDX_IMPL
-    
+
     TPL_DXDOTDW_IMPL
-    
+
     TPL_DXDOTDW_COLPTRS_IMPL
-    
+
     TPL_DXDOTDW_ROWVALS_IMPL
-    
+
     TPL_DXDOTDP_IMPL
 
     /** model specific implementation of fdydx
@@ -716,9 +705,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                     const realtype *h) override {}
 
     TPL_X_RDATA_IMPL
-    
+
     TPL_X_SOLVER_IMPL
-    
+
     TPL_TOTAL_CL_IMPL
 
     /**
@@ -812,7 +801,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     virtual const std::string getAmiciCommit() const override {
         return "TPL_AMICI_COMMIT_STRING";
     }
-    
+
     virtual bool wasPythonGenerated() const override {
         return true;
     }

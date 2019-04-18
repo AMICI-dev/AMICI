@@ -80,6 +80,8 @@ python/.idea/*
 *.log
 *.pyc
 *.so
+*.bak
+*.sav
 
 matlab/mtoc/config/latexextras.sty-e
 matlab/mtoc/config/latexextras.sty
@@ -101,6 +103,7 @@ tests/test_model_steadystate_scaled/*
 tests/test_model_presimulation/*
 tests/test_model_presimulation_pysb/*
 tests/test_model_presimulation_sbml/*
+tests/test_likelihoods/*
 tests/bax_pore_sequential_amici/*
 tests/bax_pore_amici/*
 tests/bngwiki_egfr_simple_amici/*
@@ -153,3 +156,5 @@ ThirdParty/mtocpp-master*
 ThirdParty/sundials/build/*
 ThirdParty/SuiteSparse/lib/*
 ThirdParty/SuiteSparse/share/*
+ThirdParty/SuperLU_MT_3.1/
+ThirdParty/superlu_mt_3.1.tar.gz

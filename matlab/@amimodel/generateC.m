@@ -26,24 +26,24 @@ for ifun = this.funs
         if(strcmp(ifun{1},'JSparseB'))
             bodyNotEmpty = any(this.fun.JB.sym(:)~=0);
         end
-        
+
         if(bodyNotEmpty)
             fprintf([ifun{1} ' | ']);
             fid = fopen(fullfile(this.wrap_path,'models',this.modelname,[this.modelname '_' cppFunctionName '.cpp']),'w');
             fprintf(fid,'\n');
             fprintf(fid,'#include "amici/symbolic_functions.h"\n');
             fprintf(fid,'#include "amici/defines.h" //realtype definition\n');
-            
+
             if(ismember(ifun{1},{'JSparse','JSparseB'}))
                 fprintf(fid,'#include <sunmatrix/sunmatrix_sparse.h> //SUNMatrixContent_Sparse definition\n');
             end
-            
+
             fprintf(fid,'typedef amici::realtype realtype;\n');
             fprintf(fid,'#include <cmath> \n');
             fprintf(fid,'\n');
             fprintf(fid,'using namespace amici;\n');
             fprintf(fid,'\n');
-            
+
             % function definition
             fprintf(fid,['void ' cppFunctionName '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
             if(strcmp(ifun{1},'JSparse'))
@@ -62,7 +62,7 @@ for ifun = this.funs
                     fprintf(fid,['  JSparseB->indexptrs[' num2str(i-1) '] = ' num2str(this.colptrsB(i)) ';\n']);
                 end
             end
-            
+
             if(strcmp(ifun{1},'JBand'))
                 fprintf(fid,['return(J_' this.modelname removeTypes(this.fun.J.argstr) ');']);
             elseif(strcmp(ifun{1},'JBandB'))
@@ -101,7 +101,7 @@ fclose(fid);
 %
 %----------------------------------------------------------------
 % modelname.h
-% model specific function declarations 
+% model specific function declarations
 %----------------------------------------------------------------
 %
 matVer = ver('MATLAB');
@@ -127,7 +127,7 @@ fprintf(fid,'\n');
 
 for ifun = this.funs
     if(~isfield(this.fun,ifun{1}))
-        
+
         this.fun(1).(ifun{1}) = amifun(ifun{1},this); % don't use getfun here
         % as we do not want symbolics to be generated, we only want to be able
         % access argstr
@@ -162,6 +162,7 @@ fprintf(fid,['                    ' num2str(this.nw) ',\n']);
 fprintf(fid,['                    ' num2str(this.ndwdx) ',\n']);
 fprintf(fid,['                    ' num2str(this.ndwdp) ',\n']);
 fprintf(fid,['                    0,\n']);
+fprintf(fid,['                    {},\n']);
 fprintf(fid,['                    ' num2str(this.nnz) ',\n']);
 fprintf(fid,['                    ' num2str(this.ubw) ',\n']);
 fprintf(fid,['                    ' num2str(this.lbw) ',\n']);
@@ -251,39 +252,39 @@ function generateCMakeFile(this)
             sourceStr = [ sourceStr, sprintf('${MODEL_DIR}/%s_%s.cpp\n', this.modelname, cppFunctionName) ];
         end
     end
-    
+
     t = template();
     t.add('TPL_MODELNAME', this.modelname);
     t.add('TPL_SOURCES', sourceStr);
     CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
-    CMakeTemplateFileName = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'src' , 'CMakeLists.template.txt');
+    CMakeTemplateFileName = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'src' , 'CMakeLists.template.cmake');
     t.replace(CMakeTemplateFileName, CMakeFileName);
 end
 
 function generateSwigInterfaceFiles(this)
-    
+
     modelSwigDir = fullfile(this.wrap_path,'models',this.modelname,'swig');
     amiciSwigDir = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))),'swig');
     if(~exist(modelSwigDir,'dir'))
         mkdir(modelSwigDir)
     end
-    
+
     %interface file
     t = template();
     t.add('TPL_MODELNAME', this.modelname);
     SwigInterfaceFile = fullfile(modelSwigDir,[this.modelname '.i']);
     SwigInterfaceTemplateFileName = fullfile(amiciSwigDir, 'modelname.template.i');
     t.replace(SwigInterfaceTemplateFileName, SwigInterfaceFile);
-    
+
     %CMakeLists.txt
     if(~exist(fullfile(this.wrap_path,'models',this.modelname,'swig'),'dir'))
         mkdir(fullfile(this.wrap_path,'models',this.modelname),'swig');
     end
-    copyfile(fullfile(amiciSwigDir,'CMakeLists_model.txt'),fullfile(modelSwigDir,'CMakeLists.txt'));
-    
+    copyfile(fullfile(amiciSwigDir,'CMakeLists_model.cmake'),fullfile(modelSwigDir,'CMakeLists.txt'));
+
 end
-    
-    
+
+
 
 function generateMainC(this)
     mainFileSource = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'src/main.template.cpp');

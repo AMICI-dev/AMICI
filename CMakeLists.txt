@@ -2,6 +2,14 @@
 # Build AMICI library
 #
 cmake_minimum_required(VERSION 3.3)
+
+if(POLICY CMP0065)
+  cmake_policy(SET CMP0065 NEW)
+endif(POLICY CMP0065)
+if(POLICY CMP0077)
+  cmake_policy(SET CMP0077 NEW)
+endif(POLICY CMP0077)
+
 project(amici)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
@@ -41,7 +49,7 @@ set(SUITESPARSE_LIBRARIES
     )
 
 set(SUNDIALS_LIB_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib")
-set(SUNDIALS_LIBRARIES 
+set(SUNDIALS_LIBRARIES
     ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolband${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolklu${CMAKE_STATIC_LIBRARY_SUFFIX}
@@ -57,6 +65,19 @@ set(SUNDIALS_LIBRARIES
     ${SUNDIALS_LIB_DIR}/libsundials_idas${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
 set(SUNDIALS_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/include")
+
+option(SUNDIALS_SUPERLUMT_ENABLE "Enable sundials SuperLUMT?" OFF)
+if(SUNDIALS_SUPERLUMT_ENABLE)
+    set(SUNDIALS_LIBRARIES ${SUNDIALS_LIBRARIES}
+        ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolsuperlumt${CMAKE_STATIC_LIBRARY_SUFFIX}
+        ${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/lib/libsuperlu_mt_PTHREAD${CMAKE_STATIC_LIBRARY_SUFFIX}
+        -lblas
+        )
+    set(SUNDIALS_INCLUDE_DIRS ${SUNDIALS_INCLUDE_DIRS}
+        "${CMAKE_SOURCE_DIR}/ThirdParty/SuperLU_MT_3.1/SRC/")
+endif()
+
+set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 
 # AMICI requires BLAS, currently Intel MKL, CBLAS or MATLAB BLAS can be used.
 # The latter is not supported via CMake yet.
@@ -113,6 +134,7 @@ target_include_directories(${PROJECT_NAME}
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
     PUBLIC swig
+    PUBLIC ${GSL_LITE_INCLUDE_DIR}
     PUBLIC ${SUNDIALS_INCLUDE_DIRS}
     PUBLIC ${SUITESPARSE_INCLUDE_DIRS}
     PUBLIC ${HDF5_INCLUDE_DIRS}
@@ -134,12 +156,12 @@ add_custom_target(matlabInterface SOURCES src/interface_matlab.cpp src/returndat
 add_custom_target(
     fileTemplates
     SOURCES
-    src/CMakeLists.template.txt
+    src/CMakeLists.template.cmake
     src/main.template.cpp
     src/model_header.ODE_template.h
     src/wrapfunctions.ODE_template.h
     src/wrapfunctions.template.cpp
-    swig/CMakeLists_model.txt
+    swig/CMakeLists_model.cmake
     swig/modelname.template.i
     )
 
