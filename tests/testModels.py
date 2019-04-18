@@ -159,7 +159,7 @@ def verify_simulation_results(rdata, expected_results, assert_fun,
             for subfield in ['J', 'xdot']:
                 check_results(rdata, subfield,
                               expected_results[field][subfield][()],
-                              assert_fun, 0, 2)
+                              assert_fun, 1e-8, 1e-8)
         else:
             if field == 's2llh':
                 check_results(rdata, field, expected_results[field][()],
