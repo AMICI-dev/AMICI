@@ -159,8 +159,8 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     CHECK_FALSE(rdata == nullptr);
     
     if(!hdf5::locationExists(hdffile, resultPath)) {
-        printf("WARNING: skipping checks for %s as no results data is "
-               "available!\n", resultPath.c_str());
+        fprintf(stderr, "ERROR: No results available for %s!\n",
+                resultPath.c_str());
         return;
     }
 
