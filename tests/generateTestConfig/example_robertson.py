@@ -59,6 +59,8 @@ def writeSensiForwardSPBCG(filename):
     ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
     ex.solverOptions['sensi'] = 1
     ex.solverOptions['linsol'] = 7
+    ex.solverOptions['atol'] = 1e-14
+    ex.solverOptions['rtol'] = 1e-12
 
     ex.writeToFile(filename, '/model_robertson/sensiforwardSPBCG/')
 
