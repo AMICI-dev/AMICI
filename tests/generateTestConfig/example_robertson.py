@@ -43,6 +43,26 @@ def writeSensiForward(filename):
     ex.writeToFile(filename, '/model_robertson/sensiforward/')
 
 
+def writeSensiForwardDense(filename):
+    ex = ExampleRobertson()
+
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
+    ex.solverOptions['sensi'] = 1
+    ex.solverOptions['linsol'] = 1
+
+    ex.writeToFile(filename, '/model_robertson/sensiforwarddense/')
+
+
+def writeSensiForwardSPBCG(filename):
+    ex = ExampleRobertson()
+
+    ex.solverOptions['sens_ind'] = np.arange(0, ex.numP)
+    ex.solverOptions['sensi'] = 1
+    ex.solverOptions['linsol'] = 7
+
+    ex.writeToFile(filename, '/model_robertson/sensiforwardSPBCG/')
+
+
 def main():
     if len(sys.argv) < 2:
         print("Error: Must provide output file as first and only argument.")
@@ -51,6 +71,8 @@ def main():
 
     writeNoSensi(filename)
     writeSensiForward(filename)
+    writeSensiForwardDense(filename)
+    writeSensiForwardSPBCG(filename)
 
 
 if __name__ == "__main__":

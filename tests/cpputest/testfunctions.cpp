@@ -89,7 +89,6 @@ void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& h
     verifyReturnData(hdffileResults, resultPath, rdata_resimulation.get(), model.get(), atol, rtol);
     // verify written results
     verifyReturnData(hdffilewrite, writePath, rdata.get(), model.get(), atol, rtol);
-    //remove(hdffilewrite.c_str());
 }
 
 std::unique_ptr<ExpData> getTestExpData(Model const& model) {
@@ -156,12 +155,21 @@ void checkEqualArrayStrided(const double *expected, const double *actual, int le
 
 void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
                       const ReturnData *rdata, const Model *model, double atol, double rtol) {
+    
     CHECK_FALSE(rdata == nullptr);
+    
+    if(!hdf5::locationExists(hdffile, resultPath)) {
+        printf("WARNING: skipping checks for %s as no results data is "
+               "available!\n", resultPath.c_str());
+        return;
+    }
 
     // compare to saved data in hdf file
     H5::H5File file(hdffile, H5F_ACC_RDONLY);
 
     hsize_t m, n;
+    
+    std::vector<realtype> expected;
 
     auto statusExp = hdf5::getIntScalarAttribute(file, resultPath, "status");
     CHECK_EQUAL(statusExp, rdata->status);
@@ -172,16 +180,28 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     double chi2Exp = hdf5::getDoubleScalarAttribute(file, resultPath, "chi2");
     CHECK_TRUE(withinTolerance(chi2Exp, rdata->chi2, atol, rtol, 1, "chi2"));
 
-    auto expected = hdf5::getDoubleDataset2D(file, resultPath + "/x", m, n);
-    checkEqualArray(expected, rdata->x, atol, rtol, "x");
+    if(hdf5::locationExists(file, resultPath + "/x")) {
+        expected = hdf5::getDoubleDataset2D(file, resultPath + "/x", m, n);
+        checkEqualArray(expected, rdata->x, atol, rtol, "x");
+    } else {
+        CHECK_TRUE(rdata->x.empty());
+    }
 
     //    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
+    
+    if(hdf5::locationExists(file, resultPath + "/diagnosis/J")) {
+        expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
+        checkEqualArray(expected, rdata->J, atol, rtol, "J");
+    } else {
+        CHECK_TRUE(rdata->J.empty());
+    }
 
-    expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
-    checkEqualArray(expected, rdata->J, atol, rtol, "J");
-
-    expected = hdf5::getDoubleDataset2D(file, resultPath + "/y", m, n);
-    checkEqualArray(expected, rdata->y, atol, rtol, "y");
+    if(hdf5::locationExists(file, resultPath + "/y")) {
+        expected = hdf5::getDoubleDataset2D(file, resultPath + "/y", m, n);
+        checkEqualArray(expected, rdata->y, atol, rtol, "y");
+    } else {
+        CHECK_TRUE(rdata->y.empty());
+    }
 
     if(hdf5::locationExists(file, resultPath + "/res")) {
         expected = hdf5::getDoubleDataset1D(file, resultPath + "/res");

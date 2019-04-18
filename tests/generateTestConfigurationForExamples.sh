@@ -19,3 +19,4 @@ cd ${AMICI_PATH}/tests/generateTestConfig
 ./example_neuron.py ${TEST_FILE}
 ./example_robertson.py ${TEST_FILE}
 ./example_steadystate.py ${TEST_FILE}
+./example_calvetti.py ${TEST_FILE}

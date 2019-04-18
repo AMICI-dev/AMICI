@@ -92,5 +92,18 @@ function wrapTestModels()
 
     cd(fileparts(mfilename('fullpath')));
     
+    %% EXAMPLE CALVETTI
+    cd([amiciPath '/examples/example_calvetti/']);
+    
+    try
+        [exdir,~,~]=fileparts(which('example_calvetti.m'));
+        amiwrap('model_calvetti', 'model_calvetti_syms', exdir);
+    catch err
+        disp(err.message)
+        cd(fileparts(mfilename('fullpath')));
+    end
+
+    cd(fileparts(mfilename('fullpath')));
+    
 end
 
