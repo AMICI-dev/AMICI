@@ -99,7 +99,12 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     if model_name.startswith('model_neuron'):
                         verify_simulation_opts['atol'] = 1e-5
                         verify_simulation_opts['rtol'] = 1e-2
-
+          
+                    if model_name.startswith('model_robertson') and \
+                            case == 'sensiforwardSPBCG':
+                        verify_simulation_opts['atol'] = 1e-3
+                        verify_simulation_opts['rtol'] = 1e-3
+                  
                     verify_simulation_results(
                         rdata, expected_results[subTest][case]['results'],
                         assert_fun, **verify_simulation_opts
@@ -109,7 +114,10 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                             case == 'sensiforwarderrorint':
                         edata = amici.amici.ExpData(self.model.get())
 
-                    if edata and model_name != 'model_neuron_o2':
+                    if edata and model_name != 'model_neuron_o2' and not (
+                        model_name == 'model_robertson' and
+                        case == 'sensiforwardSPBCG'
+                    ):
                         # Test runAmiciSimulations: ensure running twice
                         # with same ExpData yields same results
                         if isinstance(edata, amici.amici.ExpData):
@@ -160,7 +168,7 @@ def verify_simulation_results(rdata, expected_results, assert_fun,
             for subfield in ['J', 'xdot']:
                 check_results(rdata, subfield,
                               expected_results[field][subfield][()],
-                              assert_fun, 0, 2)
+                              assert_fun, 1e-8, 1e-8)
         else:
             if field == 's2llh':
                 check_results(rdata, field, expected_results[field][()],

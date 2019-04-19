@@ -34,6 +34,8 @@ models/model_events/build/*
 models/model_nested_events/build/*
 !models/model_robertson
 models/model_robertson/build/*
+!models/model_calvetti
+models/model_calvetti/build/*
 
 simulate_model_*_hdf.m
 simulate_model_*.m
