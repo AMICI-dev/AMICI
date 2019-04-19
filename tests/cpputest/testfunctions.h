@@ -73,12 +73,12 @@ public:
              const std::vector<realtype> k, const std::vector<int> plist,
              const std::vector<realtype> idlist, const std::vector<int> z2event)
       : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue, nz,
-              nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, nnz, ubw, lbw, o2mode,
+              nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, {}, nnz, ubw, lbw, o2mode,
               p, k, plist, idlist, z2event) {}
 
   /** default constructor */
   Model_Test()
-      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, 0, 0, 0,
               SecondOrderMode::none, std::vector<realtype>(),
               std::vector<realtype>(), std::vector<int>(),
               std::vector<realtype>(), std::vector<int>()) {}

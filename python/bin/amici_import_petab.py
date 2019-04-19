@@ -91,15 +91,22 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     into constant parameters *within* the given `sbml_model`.
     """
 
-    fixed_parameters_df = petab.get_condition_df(condition_file_name)
-    print(f'Condition table: {fixed_parameters_df.shape}')
+    condition_df = petab.get_condition_df(condition_file_name)
+    print(f'Condition table: {condition_df.shape}')
 
     # column names are model parameter names that should be made constant
-    fixed_parameters = list(fixed_parameters_df.columns)
+    # except for any overridden parameters
+    # (Could potentially still be made constant, but leaving them might
+    # increase model reusability)
+    fixed_parameters = list(condition_df.columns)
     try:
         fixed_parameters.remove('conditionName')
     except ValueError:
         pass
+    # remove overridden parameters
+    fixed_parameters = [p for p in fixed_parameters
+                        if condition_df[p].dtype != 'O']
+
     # must be unique
     assert(len(fixed_parameters) == len(set(fixed_parameters)))
 

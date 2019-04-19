@@ -37,6 +37,7 @@ set(TEST_MODELS
     events
     nested_events
     robertson
+    calvetti
     )
 
 if(ENABLE_SWIG AND ENABLE_PYTHON)

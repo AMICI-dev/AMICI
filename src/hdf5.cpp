@@ -590,8 +590,7 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
 
     if(attributeExists(file, datasetPath, "ordering")) {
         solver.setStateOrdering(
-                    static_cast<StateOrdering>(
-                        getIntScalarAttribute(file, datasetPath, "ordering")));
+                    getIntScalarAttribute(file, datasetPath, "ordering"));
     }
 
     if(attributeExists(file, datasetPath, "interpType")) {

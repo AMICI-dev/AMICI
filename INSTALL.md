@@ -7,17 +7,15 @@ The sources for AMICI are accessible as
 - Source  [zip](https://github.com/ICB-DCM/AMICI/zipball/master)
 - GIT repository on  [github](https://github.com/ICB-DCM/AMICI)
 
-### Obtaining AMICI via the GIT versioning system
+If AMICI was downloaded as a zip, it needs to be unpacked in a convenient directory. If AMICI was obtained via cloning of the git repository, no further unpacking is necessary.
+
+### Obtaining AMICI via the GIT version control system
 In order to always stay up-to-date with the latest AMICI versions, simply pull it from our GIT repository and
 recompile it when a new release is available. For more information about GIT checkout their [website](http://git-scm.com/)
 
 The GIT repository can currently be found at https://github.com/ICB-DCM/AMICI and a direct clone is possible via
 
     git clone https://github.com/ICB-DCM/AMICI.git AMICI
-
-## Installation
-
-If AMICI was downloaded as a zip, it needs to be unpacked in a convenient directory. If AMICI was obtained via cloning of the git repository, no further unpacking is necessary.
 
 ### Dependencies
 
@@ -82,7 +80,7 @@ For the compilation of .mex files, MATLAB needs to be configured with a working 
 For a list of supported compilers we refer to the mathworks documentation: [mathworks.com](http://mathworks.com/support/compilers/R2018b/index.html)
 Note that Microsoft Visual Studio compilers are currently not supported.
 
-###  python
+### Python
 
 To use AMICI from python, install the module and all other requirements using pip:
 
@@ -167,13 +165,23 @@ To use AMICI from C++, run the
     ./scripts/buildSuitesparse.sh
     ./scripts/buildAmici.sh
 
-script to compile amici libary. The static library file can then be linked from 
+script to compile amici library.
+
+The static library file can then be linked from
 
     ./build/libamici.a
 
 In CMake-based packages, amici can be linked via
 
     find_package(Amici)
+
+*Optional*: To build AMICI with SuperLU_MT support, run
+
+    ./scripts/buildSuperLUMT.sh
+    ./scripts/buildSundials.sh
+    cd build/
+    cmake -DSUNDIALS_SUPERLUMT_ENABLE=ON ..
+    make
 
 ## Dependencies
 
@@ -199,3 +207,11 @@ __Algorithm 837: AMD__, an approximate minimum degree ordering algorithm, Patric
 
 __Algorithm 836: COLAMD__, a column approximate minimum degree ordering algorithm, Timothy A. Davis, John R. Gilbert, Stefan I. Larimore, Esmond G. Ng
 _ACM Transactions on Mathematical Software_, Vol 30, Issue 3, 2004, pp 377 - 380. [PDF](http://dl.acm.org/authorize?734450)
+
+
+### Optional
+
+__SuperLU_MT__, "a general purpose library for the direct solution of large,
+sparse, nonsymmetric systems of linear equations"
+(https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu_mt).
+SuperLU_MT is optional and is so far only available from the C++ interface.

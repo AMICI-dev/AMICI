@@ -34,6 +34,8 @@ models/model_events/build/*
 models/model_nested_events/build/*
 !models/model_robertson
 models/model_robertson/build/*
+!models/model_calvetti
+models/model_calvetti/build/*
 
 simulate_model_*_hdf.m
 simulate_model_*.m
@@ -80,6 +82,8 @@ python/.idea/*
 *.log
 *.pyc
 *.so
+*.bak
+*.sav
 
 matlab/mtoc/config/latexextras.sty-e
 matlab/mtoc/config/latexextras.sty
@@ -154,3 +158,5 @@ ThirdParty/mtocpp-master*
 ThirdParty/sundials/build/*
 ThirdParty/SuiteSparse/lib/*
 ThirdParty/SuiteSparse/share/*
+ThirdParty/SuperLU_MT_3.1/
+ThirdParty/superlu_mt_3.1.tar.gz

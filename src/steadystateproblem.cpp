@@ -295,6 +295,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     switch(solver->getLinearSolver()) {
         case LinearSolver::dense:
         case LinearSolver::KLU:
+        case LinearSolver::SuperLUMT:
             break;
         default:
             throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "invalid solver for steadystate simulation");
