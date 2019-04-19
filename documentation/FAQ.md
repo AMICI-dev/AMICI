@@ -18,6 +18,12 @@ __A__: This may be due to an old compiler version. See [issue #161](https://gith
 
 ---
 
+__Q__: How are events interpreted in a DAE context?
+
+__A__: Currently we only support impulse free events. Also sensitivities have never been tested. Proceed with care and create an [issue](https://github.com/ICB-DCM/AMICI/issues) if any problems arise!
+
+---
+
 __Q__: The simulation/sensitivities I get are incorrect.
 
 __A__: There are some known issues, especially with adjoint sensitivities, events and DAEs. If your particular problem is not featured in the [issues](https://github.com/ICB-DCM/AMICI/issues) list, please add it!
