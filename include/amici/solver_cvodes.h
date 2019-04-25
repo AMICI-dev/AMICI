@@ -71,16 +71,8 @@ class CVodeSolver : public Solver {
 
     const Model *getModel() const override;
 
-    static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
-
-    static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3);
-
-    static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-                  void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
-
     using Solver::setLinearSolver;
+
     using Solver::setLinearSolverB;
 
     void setLinearSolver() const override;
@@ -210,46 +202,6 @@ class CVodeSolver : public Solver {
     void setBandJacFnB(int which) const override;
 
     void setJacTimesVecFnB(int which) const override;
-
-    /* The following static members are callback function to CVODES.
-     * Their signatures must not be changes.
-     */
-    static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                   SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                   N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                         SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                         N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-                      void *user_data, N_Vector tmp1, N_Vector tmp2,
-                      N_Vector tmp3);
-
-    static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                       SUNMatrix JB, void *user_data, N_Vector tmp1B,
-                       N_Vector tmp2B, N_Vector tmp3B);
-
-    static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data);
-
-    static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
-                   N_Vector xdot, void *user_data, N_Vector tmp);
-
-    static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-                    N_Vector xB, N_Vector xBdot, void *user_data,
-                    N_Vector tmpB);
-
-    static int froot(realtype t, N_Vector x, realtype *root, void *user_data);
-
-    static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-                      void *user_data);
-
-    static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
-                      void *user_data);
-
-    static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
-                      N_Vector sx, N_Vector sxdot, void *user_data,
-                      N_Vector tmp1, N_Vector tmp2);
 };
 
 } // namespace amici

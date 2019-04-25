@@ -1,13 +1,13 @@
 #include "amici/solver_cvodes.h"
+
 #include "amici/exception.h"
 #include "amici/misc.h"
 #include "amici/model_ode.h"
+#include "amici/sundials_linsol_wrapper.h"
 
 #include <cvodes/cvodes.h>
 #include <cvodes/cvodes_diag.h>
 #include <cvodes/cvodes_impl.h>
-
-#include "amici/sundials_linsol_wrapper.h"
 
 #include <amd.h>
 #include <btf.h>
@@ -17,11 +17,6 @@
 #define ZERO RCONST(0.0)
 #define ONE RCONST(1.0)
 #define FOUR RCONST(4.0)
-
-/**
- * @ brief extract information from a property of a matlab class (matrix)
- * @ param OPTION name of the property
- */
 
 namespace amici {
 
@@ -38,6 +33,61 @@ static_assert((int)LinearMultistepMethod::adams == CV_ADAMS, "");
 static_assert((int)LinearMultistepMethod::BDF == CV_BDF, "");
 
 static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN, "");
+
+
+/*
+ * The following static members are callback function to CVODES.
+ * Their signatures must not be changes.
+ */
+static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data);
+
+static int fJSparse(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+                    void *user_data, N_Vector tmp1, N_Vector tmp2,
+                    N_Vector tmp3);
+
+static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+              void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
+static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+               SUNMatrix JB, void *user_data, N_Vector tmp1B,
+               N_Vector tmp2B, N_Vector tmp3B);
+
+static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                     SUNMatrix JB, void *user_data, N_Vector tmp1B,
+                     N_Vector tmp2B, N_Vector tmp3B);
+
+static int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+                  void *user_data, N_Vector tmp1, N_Vector tmp2,
+                  N_Vector tmp3);
+
+static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                   SUNMatrix JB, void *user_data, N_Vector tmp1B,
+                   N_Vector tmp2B, N_Vector tmp3B);
+
+static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data)
+__attribute__((unused));
+
+static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
+               N_Vector xdot, void *user_data, N_Vector tmp);
+
+static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
+                N_Vector xB, N_Vector xBdot, void *user_data,
+                N_Vector tmpB);
+
+static int froot(realtype t, N_Vector x, realtype *root, void *user_data);
+
+static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+                  void *user_data);
+
+static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
+                  void *user_data);
+
+static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
+                  N_Vector sx, N_Vector sxdot, void *user_data,
+                  N_Vector tmp1, N_Vector tmp2);
+
+
+/* Function implementations */
 
 void CVodeSolver::init(const realtype t0, const AmiVector &x0,
                        const AmiVector & /*dx0*/) const {
@@ -677,7 +727,7 @@ const Model *CVodeSolver::getModel() const {
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  **/
-int CVodeSolver::fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
                     void *user_data, N_Vector /*tmp1*/, N_Vector /*tmp2*/,
                     N_Vector /*tmp3*/) {
     auto model = static_cast<Model_ODE *>(user_data);
@@ -699,7 +749,7 @@ int CVodeSolver::fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  **/
-int CVodeSolver::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                      SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
                      N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
     auto model = static_cast<Model_ODE *>(user_data);
@@ -707,7 +757,8 @@ int CVodeSolver::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
 
-/** J in sparse form (for sparse solvers from the SuiteSparse Package)
+/**
+ * @brief J in sparse form (for sparse solvers from the SuiteSparse Package)
  * @param t timepoint
  * @param x Vector with the states
  * @param xdot Vector with the right hand side
@@ -718,7 +769,7 @@ int CVodeSolver::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
+int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
                           SUNMatrix J, void *user_data, N_Vector /*tmp1*/,
                           N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
     auto model = static_cast<Model_ODE *>(user_data);
@@ -726,7 +777,8 @@ int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
     return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
 
-/** JB in sparse form (for sparse solvers from the SuiteSparse Package)
+/**
+ * @brief JB in sparse form (for sparse solvers from the SuiteSparse Package)
  * @param t timepoint
  * @param x Vector with the states
  * @param xB Vector with the adjoint states
@@ -738,7 +790,7 @@ int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  */
-int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                            SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
                            N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
     auto model = static_cast<Model_ODE *>(user_data);
@@ -746,7 +798,8 @@ int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
     return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
 
-/** J in banded form (for banded solvers)
+/**
+ * @brief J in banded form (for banded solvers)
  * @param N number of states
  * @param mupper upper matrix bandwidth
  * @param mlower lower matrix bandwidth
@@ -760,13 +813,13 @@ int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-int CVodeSolver::fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
-                        void *user_data, N_Vector tmp1, N_Vector tmp2,
-                        N_Vector tmp3) {
+int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+           void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
     return fJ(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
 
-/** JB in banded form (for banded solvers)
+/**
+ * @brief JB in banded form (for banded solvers)
  * @param NeqBdot number of states
  * @param mupper upper matrix bandwidth
  * @param mlower lower matrix bandwidth
@@ -781,26 +834,27 @@ int CVodeSolver::fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  */
-int CVodeSolver::fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                          SUNMatrix JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
     return fJB(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
 
-/** diagonalized Jacobian (for preconditioning)
+/**
+ * @brief Diagonalized Jacobian (for preconditioning)
  * @param t timepoint
  * @param JDiag Vector to which the Jacobian diagonal will be written
  * @param x Vector with the states
  * @param user_data object with user input @type Model_ODE
  **/
-int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
-                        void *user_data) {
+int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJDiag(t, JDiag, x);
     return model->checkFinite(gsl::make_span(JDiag), "Jacobian");
 }
 
-/** Matrix vector product of J with a vector v (for iterative solvers)
+/**
+ * @brief Matrix vector product of J with a vector v (for iterative solvers)
  * @param t timepoint
  * @param x Vector with the states
  * @param xdot Vector with the right hand side
@@ -811,14 +865,15 @@ int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
  * @param tmp temporary storage vector
  * @return status flag indicating successful execution
  **/
-int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
-                     N_Vector /*xdot*/, void *user_data, N_Vector /*tmp*/) {
+int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
+        N_Vector /*xdot*/, void *user_data, N_Vector /*tmp*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJv(v, Jv, t, x);
     return model->checkFinite(gsl::make_span(Jv), "Jacobian");
 }
 
-/** Matrix vector product of JB with a vector v (for iterative solvers)
+/**
+ * @brief Matrix vector product of JB with a vector v (for iterative solvers)
  * @param t timepoint
  * @param x Vector with the states
  * @param xB Vector with the adjoint states
@@ -830,9 +885,9 @@ int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
  * @param tmpB temporary storage vector
  * @return status flag indicating successful execution
  **/
-int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-                      N_Vector xB, N_Vector /*xBdot*/, void *user_data,
-                      N_Vector /*tmpB*/) {
+int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
+         N_Vector xB, N_Vector /*xBdot*/, void *user_data,
+         N_Vector /*tmpB*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJvB(vB, JvB, t, x, xB);
     return model->checkFinite(gsl::make_span(JvB), "Jacobian");
@@ -846,7 +901,7 @@ int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
  * @param user_data object with user input @type Model_ODE
  * @return status flag indicating successful execution
  */
-int CVodeSolver::froot(realtype t, N_Vector x, realtype *root,
+int froot(realtype t, N_Vector x, realtype *root,
                        void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
@@ -862,7 +917,7 @@ int CVodeSolver::froot(realtype t, N_Vector x, realtype *root,
  * @param user_data object with user input @type Model_ODE
  * @return status flag indicating successful execution
  */
-int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
+int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
 
     if (t > 1e200 && !amici::checkFinite(gsl::make_span(x), "fxdot")) {
@@ -877,7 +932,8 @@ int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     return model->checkFinite(gsl::make_span(xdot), "fxdot");
 }
 
-/** Right hand side of differential equation for adjoint state xB
+/**
+ * @brief Right hand side of differential equation for adjoint state xB
  * @param t timepoint
  * @param x Vector with the states
  * @param xB Vector with the adjoint states
@@ -885,14 +941,15 @@ int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
  * @param user_data object with user input @type Model_ODE
  * @return status flag indicating successful execution
  */
-int CVodeSolver::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                         void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fxBdot(t, x, xB, xBdot);
     return model->checkFinite(gsl::make_span(xBdot), "fxBdot");
 }
 
-/** Right hand side of integral equation for quadrature states qB
+/**
+ * @brief Right hand side of integral equation for quadrature states qB
  * @param t timepoint
  * @param x Vector with the states
  * @param xB Vector with the adjoint states
@@ -900,14 +957,15 @@ int CVodeSolver::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param user_data pointer to temp data object
  * @return status flag indicating successful execution
  */
-int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
+int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                         void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fqBdot(t, x, xB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot");
 }
 
-/** Right hand side of differential equation for state sensitivities sx
+/**
+ * @brief Right hand side of differential equation for state sensitivities sx
  * @param Ns number of parameters
  * @param t timepoint
  * @param x Vector with the states
@@ -921,7 +979,7 @@ int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-int CVodeSolver::fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
+int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
                         int ip, N_Vector sx, N_Vector sxdot, void *user_data,
                         N_Vector /*tmp1*/, N_Vector /*tmp2*/) {
     auto model = static_cast<Model_ODE *>(user_data);

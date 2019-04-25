@@ -52,6 +52,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       total_cl(nx_rdata - nx_solver), stotal_cl((nx_rdata - nx_solver) * np()),
       plist_(plist), stateIsNonNegative(nx_solver, false), x_pos_tmp(nx_solver),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
+
     // Can't use derivedClass::wasPythonGenerated() in ctor.
     // Guess we are using Python if ndJydy is not empty
     if (!this->ndJydy.empty()) {
