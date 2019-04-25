@@ -1695,7 +1695,7 @@ bool operator==(const Model &a, const Model &b) {
            (a.tstart == b.tstart);
 }
 
-N_Vector Model::computeX_pos(N_Vector x) {
+N_Vector Model::computeX_pos(const_N_Vector x) {
     if (anyStateNonNegative) {
         for (int ix = 0; ix < x_pos_tmp.getLength(); ++ix) {
             x_pos_tmp.at(ix) =

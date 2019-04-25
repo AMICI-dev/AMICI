@@ -86,7 +86,7 @@ void Model_ODE::fJDiag(const realtype t, AmiVector &JDiag,
         throw AmiException("Evaluation of fJDiag failed!");
 }
 
-void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
+void Model_ODE::fdxdotdw(const realtype t, const_N_Vector x) {
     dxdotdw.reset();
     auto x_pos = computeX_pos(x);
     fdxdotdw(dxdotdw.data(), t, N_VGetArrayPointer(x_pos),
@@ -96,7 +96,7 @@ void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
     fdxdotdw_rowvals(dxdotdw.indexvals());
 }
 
-void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
+void Model_ODE::fdxdotdp(const realtype t, const_N_Vector x) {
     auto x_pos = computeX_pos(x);
     fdwdp(t, N_VGetArrayPointer(x));
     if (wasPythonGenerated()) {

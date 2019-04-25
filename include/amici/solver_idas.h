@@ -137,8 +137,8 @@ class IDASolver : public Solver {
 
     void setSuppressAlg(bool flag) const override;
 
-    void resetState(void *ida_mem, N_Vector yy0,
-                    N_Vector yp0) const;
+    void resetState(void *ida_mem, const_N_Vector yy0,
+                    const_N_Vector yp0) const;
 
     void setSensParams(const realtype *p, const realtype *pbar,
                        const int *plist) const override;

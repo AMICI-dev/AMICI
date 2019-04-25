@@ -14,7 +14,7 @@ const realtype *AmiVector::data() const { return vec.data(); }
 
 N_Vector AmiVector::getNVector() { return nvec; }
 
-const N_Vector AmiVector::getNVector() const { return nvec; }
+const_N_Vector AmiVector::getNVector() const { return nvec; }
 
 std::vector<realtype> const &AmiVector::getVector() { return vec; }
 
@@ -145,4 +145,5 @@ void AmiVectorArray::copy(const AmiVectorArray &other) {
         nvec_array[iv] = vec_array.at(iv).getNVector();
     }
 }
+
 } // namespace amici

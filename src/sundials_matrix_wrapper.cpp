@@ -159,7 +159,7 @@ void SUNMatrixWrapper::reset() {
         SUNMatZero(matrix);
 }
 
-void SUNMatrixWrapper::multiply(N_Vector c, const N_Vector b) const {
+void SUNMatrixWrapper::multiply(N_Vector c, const_N_Vector b) const {
     multiply(gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),
              gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)));
 }

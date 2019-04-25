@@ -11,6 +11,8 @@
 
 #include <vector>
 
+#include "amici/vector.h"
+
 namespace amici {
 
 /**
@@ -144,7 +146,7 @@ class SUNMatrixWrapper {
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(N_Vector c, N_Vector b) const;
+    void multiply(N_Vector c, const_N_Vector b) const;
 
     /**
      * @brief Perform matrix vector multiplication c += A*b

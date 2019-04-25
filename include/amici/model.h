@@ -80,7 +80,7 @@ class Model : public AbstractModel {
           std::vector<int> z2event);
 
     /** destructor */
-    virtual ~Model() = default;
+    virtual ~Model() override = default;
 
     /**
      * Copy assignment is disabled until const members are removed
@@ -1186,46 +1186,66 @@ class Model : public AbstractModel {
 
     /** number of states */
     const int nx_rdata{0};
+
     /** number of states in the unaugmented system */
     const int nxtrue_rdata{0};
+
     /** number of states with conservation laws applied */
     const int nx_solver{0};
+
     /** number of states in the unaugmented system with conservation laws
      * applied */
     const int nxtrue_solver{0};
+
     /** number of observables */
     const int ny{0};
+
     /** number of observables in the unaugmented system */
     const int nytrue{0};
+
     /** number of event outputs */
     const int nz{0};
+
     /** number of event outputs in the unaugmented system */
     const int nztrue{0};
+
     /** number of events */
     const int ne{0};
+
     /** number of common expressions */
     const int nw{0};
+
     /** number of derivatives of common expressions wrt x */
     const int ndwdx{0};
+
     /** number of derivatives of common expressions wrt p */
     const int ndwdp{0};
+
     /** number of nonzero entries in dxdotdw */
     const int ndxdotdw{0};
+
     /** number of nonzero entries in dJydy */
     std::vector<int> ndJydy;
+
     /** number of nonzero entries in jacobian */
     const int nnz{0};
+
     /** dimension of the augmented objective function for 2nd order ASA */
     const int nJ{0};
+
     /** upper bandwith of the jacobian */
     const int ubw{0};
+
     /** lower bandwith of the jacobian */
     const int lbw{0};
+
     /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
      * directional or full second order derivative will be computed */
     const SecondOrderMode o2mode{SecondOrderMode::none};
+
     /** index indicating to which event an event output belongs */
     const std::vector<int> z2event;
+
     /** flag array for DAE equations */
     const std::vector<realtype> idlist;
 
@@ -1392,7 +1412,7 @@ class Model : public AbstractModel {
      * @return state vector with negative values replaced by 0 according to
      * stateIsNonNegative
      */
-    N_Vector computeX_pos(N_Vector x);
+    N_Vector computeX_pos(const_N_Vector x);
 
     /** Sparse Jacobian (dimension: nnz)*/
     SUNMatrixWrapper J;
@@ -1503,11 +1523,11 @@ class Model : public AbstractModel {
     std::vector<realtype> total_cl;
 
     /** sensitivities of total abundances for conservation laws
-         (dimension: (nx_rdata-nx_solver) * np, ordering = row-major)*/
+        (dimension: (nx_rdata-nx_solver) * np, ordering = row-major) */
     std::vector<realtype> stotal_cl;
 
-    /** indexes of parameters wrt to which sensitivities are computed (dimension
-     * nplist) */
+    /** indexes of parameters wrt to which sensitivities are computed
+     *  (dimension nplist) */
     std::vector<int> plist_;
 
     /** state initialisation (size nx_solver) */

@@ -224,14 +224,14 @@ public:
      * @param x Vector with the states
      * @return status flag indicating successful execution
      */
-    void fdxdotdw(realtype t, N_Vector x);
+    void fdxdotdw(realtype t, amici::const_N_Vector x);
 
     /** Sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states
      * @return status flag indicating successful execution
      */
-    void fdxdotdp(realtype t, N_Vector x);
+    void fdxdotdp(realtype t, const_N_Vector x);
 
     void fdxdotdp(realtype t, const AmiVector &x,
                           const AmiVector &dx) override;

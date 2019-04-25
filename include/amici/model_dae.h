@@ -226,7 +226,7 @@ class Model_DAE : public Model {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      */
-    void fdxdotdp(realtype t, N_Vector x, N_Vector dx);
+    void fdxdotdp(realtype t, const_N_Vector x, amici::const_N_Vector dx);
     void fdxdotdp(const realtype t, const AmiVector &x,
                   const AmiVector &dx) override {
         fdxdotdp(t,x.getNVector(),dx.getNVector());
@@ -251,7 +251,7 @@ class Model_DAE : public Model {
      * @param t timepoint
      * @param x Vector with the states
      */
-    void fM(realtype t, N_Vector x);
+    void fM(realtype t, const_N_Vector x);
 
     std::unique_ptr<Solver> getSolver() override;
 

@@ -212,8 +212,8 @@ void IDASolver::setSuppressAlg(const bool flag) const {
         throw IDAException(status, "IDASetSuppressAlg");
 }
 
-void IDASolver::resetState(void *ami_mem, const N_Vector yy0,
-                           const N_Vector yp0) const {
+void IDASolver::resetState(void *ami_mem, const_N_Vector yy0,
+                           const_N_Vector yp0) const {
 
     auto ida_mem = static_cast<IDAMem>(ami_mem);
     /* here we force the order in the next step to zero, and update the

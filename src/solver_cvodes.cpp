@@ -299,7 +299,7 @@ void CVodeSolver::setId(const Model *model) const {}
 
 void CVodeSolver::setSuppressAlg(const bool flag) const {}
 
-void CVodeSolver::resetState(void *ami_mem, const N_Vector y0) const {
+void CVodeSolver::resetState(void *ami_mem, const_N_Vector y0) const {
 
     auto cv_mem = static_cast<CVodeMem>(ami_mem);
     /* here we force the order in the next step to zero, and update the

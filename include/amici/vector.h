@@ -2,11 +2,17 @@
 #define AMICI_VECTOR_H
 
 #include <vector>
+#include <type_traits>
 
 #include <amici/exception.h>
 #include <nvector/nvector_serial.h>
 
+
 namespace amici {
+
+/** Since const N_Vector is not what we want */
+using const_N_Vector =
+    std::add_const<typename std::remove_pointer<N_Vector>::type *>::type;
 
 /** AmiVector class provides a generic interface to the NVector_Serial struct */
 class AmiVector {
@@ -73,12 +79,12 @@ class AmiVector {
      * @return N_Vector
      */
     N_Vector getNVector();
-    
+
     /**
      * @brief N_Vector accessor
      * @return N_Vector
      */
-    const N_Vector getNVector() const;
+    const_N_Vector getNVector() const;
 
     /**
      * @brief Vector accessor
@@ -142,19 +148,21 @@ class AmiVector {
   private:
     /** main data storage */
     std::vector<realtype> vec;
-    /** N_Vector, will be synchronised such that it points to
-     * data in vec */
+
+    /** N_Vector, will be synchronised such that it points to data in vec */
     N_Vector nvec = nullptr;
-    
+
     /**
      * @brief reconstructs nvec such that data pointer points to vec data array
      */
     void synchroniseNVector();
 };
 
-/** AmiVectorArray class.
-     provides a generic interface to arrays of NVector_Serial structs
-*/
+/**
+ * @brief AmiVectorArray class.
+ *
+ * Provides a generic interface to arrays of NVector_Serial structs
+ */
 class AmiVectorArray {
   public:
     /**
@@ -163,7 +171,8 @@ class AmiVectorArray {
      */
     AmiVectorArray() = default;
 
-    /** creates an std::vector<realype> and attaches the
+    /**
+     * Creates an std::vector<realype> and attaches the
      * data pointer to a newly created N_VectorArray
      * using CloneVectorArrayEmpty ensures that the N_Vector
      * module does not try to deallocate the data vector
@@ -174,6 +183,7 @@ class AmiVectorArray {
      * @return New AmiVectorArray instance
      */
     AmiVectorArray(long int length_inner, long int length_outer);
+
     /**
      * @brief copy assignment operator
      * @param other right hand side
@@ -230,13 +240,13 @@ class AmiVectorArray {
      * @return N_Vector
      */
     N_Vector getNVector(int pos);
-    
+
     /**
      * @brief const accessor to NVector element
      * @param pos index of corresponding AmiVector
      * @return N_Vector
      */
-    const N_Vector getNVector(int pos) const;
+    const_N_Vector getNVector(int pos) const;
 
     /**
      * @brief accessor to AmiVector elements
@@ -269,7 +279,7 @@ class AmiVectorArray {
      * have length equal to number of elements.
      */
     void flatten_to_vector(std::vector<realtype> &vec) const;
-    
+
     /**
      * @brief copies data from another AmiVectorArray
      * @param other data source
@@ -281,7 +291,9 @@ class AmiVectorArray {
   private:
     /** main data storage */
     std::vector<AmiVector> vec_array;
-    /** N_Vector array, will be synchronised such that it points to
+
+    /**
+     * N_Vector array, will be synchronised such that it points to
      * respective elements in the vec_array
      */
     std::vector<N_Vector> nvec_array;

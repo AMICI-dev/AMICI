@@ -837,7 +837,7 @@ class SUNNonLinSolFixedPoint : public SUNNonLinSolWrapper {
      * @param x template for cloning vectors needed within the solver.
      * @param m number of acceleration vectors to use
      */
-    SUNNonLinSolFixedPoint(N_Vector x, int m = 0);
+    SUNNonLinSolFixedPoint(const_N_Vector x, int m = 0);
 
     /**
      * @brief Create fixed-point solver for use with sensitivity analysis
@@ -848,7 +848,7 @@ class SUNNonLinSolFixedPoint : public SUNNonLinSolWrapper {
      * @param x template for cloning vectors needed within the solver.
      * @param m number of acceleration vectors to use
      */
-    SUNNonLinSolFixedPoint(int count, N_Vector x, int m = 0);
+    SUNNonLinSolFixedPoint(int count, const_N_Vector x, int m = 0);
 
     /**
      * @brief Get function to evaluate the fixed point function G(y) = y

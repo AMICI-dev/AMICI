@@ -139,7 +139,7 @@ class CVodeSolver : public Solver {
 
     void setSuppressAlg(bool flag) const override;
 
-    void resetState(void *cv_mem, N_Vector y0) const;
+    void resetState(void *cv_mem, const_N_Vector y0) const;
 
     void setSensParams(const realtype *p, const realtype *pbar,
                        const int *plist) const override;
