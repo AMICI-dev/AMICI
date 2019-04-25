@@ -41,7 +41,7 @@ public:
 
     /**
      * @brief Stores the current backtrace
-     * @param nMaxFrames number of frams to go back in stacktrace
+     * @param nMaxFrames number of frames to go back in stacktrace
      */
     void storeBacktrace(int nMaxFrames);
 
@@ -49,6 +49,7 @@ private:
     char msg[500]{};
     char trace[500]{};
 };
+
 
 /**
  * @brief cvode exception handler class
@@ -125,6 +126,7 @@ class IntegrationFailureB : public AmiException  {
     realtype time;
 };
 
+
 /**
  * @brief Setup failure exception
  *
@@ -157,6 +159,7 @@ public:
      * @param code error code
      */
     NewtonFailure(int code, const char *function);
+
     /** error code returned by solver */
     int error_code;
 };

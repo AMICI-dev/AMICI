@@ -86,6 +86,14 @@ void scaleParameters(const std::vector<double> &bufferUnscaled,
                      const std::vector<ParameterScaling> &pscale,
                      std::vector<double> &bufferScaled);
 
+/**
+ * @brief Returns the current backtrace as std::string
+ * @param maxFrames Number of frames to include
+ * @return Backtrace
+ */
+std::string backtraceString(int maxFrames);
+
+
 } // namespace amici
 
 #ifndef __cpp_lib_make_unique
