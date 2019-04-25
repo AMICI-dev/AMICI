@@ -629,7 +629,7 @@ class Solver {
      * @brief current solver timepoint
      * @return t
      */
-    const realtype gett() const;
+    realtype gett() const;
 
     /**
      * @brief number of states with which the solver was initialized
@@ -828,21 +828,6 @@ class Solver {
      * @param which identifier of the backwards problem
      */
     virtual void setJacTimesVecFnB(int which) const = 0;
-
-    /**
-     * @brief Extracts diagnosis information from solver memory block and
-     * writes them into the return data object for the backward problem
-     *
-     * @param error_code error identifier
-     * @param module name of the module in which the error occured
-     * @param function name of the function in which the error occured @type
-     * char
-     * @param msg error message
-     * @param eh_data unused input
-     */
-    static void wrapErrHandlerFn(int error_code, const char *module,
-                                 const char *function, char *msg,
-                                 void *eh_data);
 
     /**
      * @brief Create specifies solver method and initializes solver memory for
@@ -1216,11 +1201,11 @@ class Solver {
     void resetMutableMemory(int nx, int nplist, int nquad) const;
 
     /**
-     * @brief retrieves the solver memory instance for the backward problem
+     * @brief Retrieves the solver memory instance for the backward problem
      *
      * @param which identifier of the backwards problem
      * @param ami_mem pointer to the forward solver memory instance
-     * @return ami_memB pointer to the backward solver memory instance
+     * @return pointer to the backward solver memory instance
      */
     virtual void *getAdjBmem(void *ami_mem, int which) const = 0;
 
@@ -1288,18 +1273,22 @@ class Solver {
 
     /** linear solver for the forward problem */
     mutable std::unique_ptr<SUNLinSolWrapper> linearSolver;
+
     /** linear solver for the backward problem */
     mutable std::unique_ptr<SUNLinSolWrapper> linearSolverB;
 
     /** non-linear solver for the forward problem */
     mutable std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolver;
+
     /** non-linear solver for the backward problem */
     mutable std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverB;
+
     /** non-linear solver for the sensitivities */
     mutable std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverSens;
 
     /** flag indicating whether the forward solver has been called */
     mutable bool solverWasCalledF = false;
+
     /** flag indicating whether the backward solver has been called */
     mutable bool solverWasCalledB = false;
 
@@ -1332,10 +1321,13 @@ class Solver {
 
     /** state (dimension: nx_solver) */
     mutable AmiVector x = AmiVector(0);
+
     /** state interface variable (dimension: nx_solver) */
     mutable AmiVector dky = AmiVector(0);
+
     /** state derivative dummy (dimension: nx_solver) */
     mutable AmiVector dx = AmiVector(0);
+
     /** state sensititivities interface variable (dimension: nx_solver x nplist)
      */
     mutable AmiVectorArray sx = AmiVectorArray(0, 0);
@@ -1345,8 +1337,10 @@ class Solver {
 
     /** adjoint state interface variable (dimension: nx_solver) */
     mutable AmiVector xB = AmiVector(0);
+
     /** adjoint derivative dummy variable (dimension: nx_solver) */
     mutable AmiVector dxB = AmiVector(0);
+
     /** adjoint quadrature interface variable (dimension: nJ x nplist) */
     mutable AmiVector xQB = AmiVector(0);
 
@@ -1427,22 +1421,40 @@ class Solver {
 
     /** flag indicating whether init was called */
     mutable bool initialized = false;
+
     /** flag indicating whether sensInit1 was called */
     mutable bool sensInitialized = false;
+
     /** flag indicating whether adjInit was called */
     mutable bool adjInitialized = false;
+
     /** vector of flags indicating whether binit was called for respective
      which */
     mutable std::vector<bool> initializedB{false};
+
     /** vector of flags indicating whether qbinit was called for respective
      which */
     mutable std::vector<bool> initializedQB{false};
 
-    /* number of checkpoints in the forward problem */
+    /** number of checkpoints in the forward problem */
     mutable int ncheckPtr;
 };
 
 bool operator==(const Solver &a, const Solver &b);
+
+/**
+ * @brief Extracts diagnosis information from solver memory block and
+ * writes them into the return data object for the backward problem
+ *
+ * @param error_code error identifier
+ * @param module name of the module in which the error occured
+ * @param function name of the function in which the error occured @type
+ * char
+ * @param msg error message
+ * @param eh_data unused input
+ */
+void wrapErrHandlerFn(int error_code, const char *module,
+                      const char *function, char *msg, void *eh_data);
 
 } // namespace amici
 

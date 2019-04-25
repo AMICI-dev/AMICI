@@ -158,42 +158,6 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     setStabLimDetB(*which, stldet);
 }
 
-void Solver::wrapErrHandlerFn(int error_code, const char *module,
-                              const char *function, char *msg,
-                              void * /*eh_data*/) {
-    char buffer[250];
-    char buffid[250];
-    sprintf(buffer, "AMICI ERROR: in module %s in function %s : %s ", module,
-            function, msg);
-    switch (error_code) {
-    case 99:
-        sprintf(buffid, "AMICI:mex:%s:%s:WARNING", module, function);
-        break;
-
-    case -1:
-        sprintf(buffid, "AMICI:mex:%s:%s:TOO_MUCH_WORK", module, function);
-        break;
-
-    case -2:
-        sprintf(buffid, "AMICI:mex:%s:%s:TOO_MUCH_ACC", module, function);
-        break;
-
-    case -3:
-        sprintf(buffid, "AMICI:mex:%s:%s:ERR_FAILURE", module, function);
-        break;
-
-    case -4:
-        sprintf(buffid, "AMICI:mex:%s:%s:CONV_FAILURE", module, function);
-        break;
-
-    default:
-        sprintf(buffid, "AMICI:mex:%s:%s:OTHER", module, function);
-        break;
-    }
-
-    warnMsgIdAndTxt(buffid, buffer);
-}
-
 void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     long int number;
 
@@ -1036,6 +1000,41 @@ const AmiVector &Solver::getAdjointQuadrature(const int which,
     return xQB;
 }
 
-const realtype Solver::gett() const { return t; }
+realtype Solver::gett() const { return t; }
+
+void wrapErrHandlerFn(int error_code, const char *module,
+                      const char *function, char *msg, void * /*eh_data*/) {
+    char buffer[250];
+    char buffid[250];
+    sprintf(buffer, "AMICI ERROR: in module %s in function %s : %s ", module,
+            function, msg);
+    switch (error_code) {
+    case 99:
+        sprintf(buffid, "AMICI:mex:%s:%s:WARNING", module, function);
+        break;
+
+    case -1:
+        sprintf(buffid, "AMICI:mex:%s:%s:TOO_MUCH_WORK", module, function);
+        break;
+
+    case -2:
+        sprintf(buffid, "AMICI:mex:%s:%s:TOO_MUCH_ACC", module, function);
+        break;
+
+    case -3:
+        sprintf(buffid, "AMICI:mex:%s:%s:ERR_FAILURE", module, function);
+        break;
+
+    case -4:
+        sprintf(buffid, "AMICI:mex:%s:%s:CONV_FAILURE", module, function);
+        break;
+
+    default:
+        sprintf(buffid, "AMICI:mex:%s:%s:OTHER", module, function);
+        break;
+    }
+
+    warnMsgIdAndTxt(buffid, buffer);
+}
 
 } // namespace amici
