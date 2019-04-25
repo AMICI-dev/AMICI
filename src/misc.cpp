@@ -19,26 +19,6 @@
 
 namespace amici {
 
-int checkFinite(const int N, const realtype *array, const char *fun) {
-    for (int idx = 0; idx < N; idx++) {
-        if (isNaN(array[idx])) {
-            warnMsgIdAndTxt(
-                "AMICI:NaN",
-                "AMICI encountered a NaN value at index %i of %i in %s!", idx,
-                N, fun);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-        if (isInf(array[idx])) {
-            warnMsgIdAndTxt(
-                "AMICI:Inf",
-                "AMICI encountered an Inf value at index %i of %i in %s!", idx,
-                N, fun);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-    }
-    return AMICI_SUCCESS;
-}
-
 double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
 {
     switch (scaling) {
@@ -53,20 +33,19 @@ double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-void unscaleParameters(const double *bufferScaled, const ParameterScaling *pscale, int n, double *bufferUnscaled)
+void unscaleParameters(gsl::span<const realtype> bufferScaled,
+                       gsl::span<const ParameterScaling> pscale,
+                       gsl::span<realtype> bufferUnscaled)
 {
-    for (int ip = 0; ip < n; ++ip) {
+    Expects(bufferScaled.size() == pscale.size());
+    Expects(bufferScaled.size() == bufferUnscaled.size());
+
+    for (gsl::span<realtype>::index_type ip = 0;
+         ip < bufferScaled.size(); ++ip) {
         bufferUnscaled[ip] = getUnscaledParameter(bufferScaled[ip], pscale[ip]);
     }
-
 }
 
-void unscaleParameters(const std::vector<double> &bufferScaled, const std::vector<ParameterScaling> &pscale, std::vector<double> &bufferUnscaled)
-{
-    if(bufferScaled.size() != pscale.size() || pscale.size() != bufferUnscaled.size())
-        throw AmiException("Vector size mismatch in unscaleParameters.");
-    unscaleParameters(bufferScaled.data(), pscale.data(), bufferScaled.size(), bufferUnscaled.data());
-}
 
 double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
 {
@@ -83,19 +62,39 @@ double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
 }
 
 
-void scaleParameters(const std::vector<double> &bufferUnscaled, const std::vector<ParameterScaling> &pscale, std::vector<double> &bufferScaled)
+void scaleParameters(gsl::span<const realtype> bufferUnscaled,
+                     gsl::span<const ParameterScaling> pscale,
+                     gsl::span<realtype> bufferScaled)
 {
-    if(bufferScaled.size() != pscale.size() || pscale.size() != bufferUnscaled.size())
-        throw AmiException("Vector size mismatch in scaleParameters.");
-    for (int ip = 0; ip < (int) bufferUnscaled.size(); ++ip) {
+    Expects(bufferScaled.size() == pscale.size());
+    Expects(bufferScaled.size() == bufferUnscaled.size());
+
+    for (gsl::span<realtype>::index_type ip = 0;
+         ip < bufferUnscaled.size(); ++ip) {
         bufferScaled[ip] = getScaledParameter(bufferUnscaled[ip], pscale[ip]);
     }
 
 }
 
-int checkFinite(const std::vector<realtype> &array, const char *fun)
+int checkFinite(gsl::span<const realtype> array, const char *fun)
 {
-    return checkFinite(array.size(), array.data(), fun);
+    for (int idx = 0; idx < (int) array.size(); idx++) {
+        if (isNaN(array[idx])) {
+            warnMsgIdAndTxt(
+                "AMICI:NaN",
+                "AMICI encountered a NaN value at index %i of %i in %s!", idx,
+                (int) array.size(), fun);
+            return AMICI_RECOVERABLE_ERROR;
+        }
+        if (isInf(array[idx])) {
+            warnMsgIdAndTxt(
+                "AMICI:Inf",
+                "AMICI encountered an Inf value at index %i of %i in %s!", idx,
+                (int) array.size(), fun);
+            return AMICI_RECOVERABLE_ERROR;
+        }
+    }
+    return AMICI_SUCCESS;
 }
 
 std::string backtraceString(const int maxFrames)

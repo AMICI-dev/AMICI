@@ -101,7 +101,8 @@ void Model::fsy(const int it, const AmiVectorArray &sx, ReturnData *rdata) {
                 &rdata->sy[it * nplist() * ny], ny);
 
     if (alwaysCheckFinite)
-        checkFinite(nplist() * ny, &rdata->sy[it * nplist() * ny], "sy");
+        checkFinite(gsl::make_span(&rdata->sy[it * nplist() * ny],
+                    nplist() * ny), "sy");
 }
 
 void Model::fsz_tf(const int *nroots, const int ie, ReturnData *rdata) {
@@ -930,7 +931,7 @@ void Model::initializeVectors() {
 void Model::fx_rdata(AmiVector &x_rdata, const AmiVector &x) {
     fx_rdata(x_rdata.data(), x.data(), total_cl.data());
     if (alwaysCheckFinite)
-        checkFinite(x_rdata.getLength(), x_rdata.data(), "x_rdata");
+        checkFinite(x_rdata.getVector(), "x_rdata");
 }
 
 void Model::fx0(AmiVector &x) {
@@ -942,8 +943,8 @@ void Model::fx0(AmiVector &x) {
     ftotal_cl(total_cl.data(), x_rdata.data());
 
     if (alwaysCheckFinite) {
-        checkFinite(x_rdata.size(), x_rdata.data(), "x0 x_rdata");
-        checkFinite(x.getLength(), x.data(), "x0 x");
+        checkFinite(x_rdata, "x0 x_rdata");
+        checkFinite(x.getVector(), "x0 x");
     }
 }
 
@@ -1021,7 +1022,7 @@ void Model::fy(const realtype t, const int it, const AmiVector &x,
        fixedParameters.data(), h.data(), w.data());
 
     if (alwaysCheckFinite) {
-        amici::checkFinite(ny, &rdata->y.at(it * ny), "y");
+        amici::checkFinite(gsl::make_span(&rdata->y.at(it * ny), ny), "y");
     }
 }
 
@@ -1369,7 +1370,7 @@ void Model::fdJydy(const int it, const ReturnData *rdata,
                    my.data());
 
             if (alwaysCheckFinite) {
-                amici::checkFinite(ndJydy[iytrue], dJydy[iytrue].data(),
+                amici::checkFinite(gsl::make_span(dJydy[iytrue].get()),
                                    "dJydy");
             }
         }
@@ -1525,7 +1526,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
     fdwdx_rowvals(dwdx.indexptrs());
 
     if (alwaysCheckFinite) {
-        amici::checkFinite(ndwdx, dwdx.data(), "dwdx");
+        amici::checkFinite(gsl::make_span(dwdx.get()), "dwdx");
     }
 }
 
@@ -1647,23 +1648,17 @@ void Model::setAlwaysCheckFinite(bool alwaysCheck) {
 
 bool Model::getAlwaysCheckFinite() const { return alwaysCheckFinite; }
 
-int Model::checkFinite(const int N, const realtype *array,
-                       const char *fun) const {
-    auto result = amici::checkFinite(N, array, fun);
+int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
+    auto result = amici::checkFinite(array, fun);
 
     if (result != AMICI_SUCCESS) {
-        amici::checkFinite(ts.size(), ts.data(), "ts");
-        amici::checkFinite(fixedParameters.size(), fixedParameters.data(), "k");
-        amici::checkFinite(unscaledParameters.size(), unscaledParameters.data(),
-                           "p");
-        amici::checkFinite(w.size(), w.data(), "w");
+        amici::checkFinite(ts, "ts");
+        amici::checkFinite(fixedParameters, "k");
+        amici::checkFinite(unscaledParameters, "p");
+        amici::checkFinite(w, "w");
     }
 
     return result;
-}
-
-int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
-    return checkFinite(array.size(), array.data(), fun);
 }
 
 void Model::requireSensitivitiesForAllParameters() {

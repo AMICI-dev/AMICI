@@ -964,18 +964,9 @@ class Model : public AbstractModel {
 
     /**
      * @brief Check if the given array has only finite elements.
+     *
      * If not try to give hints by which other fields this could be caused.
-     * @param N number of datapoints in array
-     * @param array arrays of values
-     * @param fun name of the fucntion that generated the values
-     * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,
-     * AMICI_SUCCESS otherwise
-     */
-    int checkFinite(int N, const realtype *array, const char *fun) const;
-
-    /**
-     * @brief Check if the given array has only finite elements.
-     * If not try to give hints by which other fields this could be caused.
+     *
      * @param array arrays of values
      * @param fun name of the fucntion that generated the values
      * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,

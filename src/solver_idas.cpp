@@ -563,7 +563,7 @@ int IDASolver::fJ(realtype t, realtype cj, N_Vector x, N_Vector dx,
                   N_Vector /*tmp1*/, N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJ(t, cj, x, dx, xdot, J);
-    return model->checkFinite(SM_ROWS_D(J), SM_DATA_D(J), "Jacobian");
+    return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
 
 /** Jacobian of xBdot with respect to adjoint state xB
@@ -588,7 +588,7 @@ int IDASolver::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                    N_Vector /*tmp3B*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJB(t, cj, x, dx, xB, dxB, JB);
-    return model->checkFinite(SM_ROWS_D(JB), SM_DATA_D(JB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
 
 /** J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -610,7 +610,7 @@ int IDASolver::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
                         N_Vector /*tmp3*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJSparse(t, cj, x, dx, J);
-    return model->checkFinite(SM_NNZ_S(J), SM_DATA_S(J), "Jacobian");
+    return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
 
 void IDASolver::setLinearSolver() const {
@@ -690,7 +690,7 @@ int IDASolver::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                          N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJSparseB(t, cj, x, dx, xB, dxB, JB);
-    return model->checkFinite(SM_NNZ_S(JB), SM_DATA_S(JB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
 
 /** J in banded form (for banded solvers)
@@ -759,8 +759,7 @@ int IDASolver::fJv(realtype t, N_Vector x, N_Vector dx, N_Vector /*xdot*/,
                    N_Vector /*tmp1*/, N_Vector /*tmp2*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJv(t, x, dx, v, Jv, cj);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(Jv),
-                              "Jacobian");
+    return model->checkFinite(gsl::make_span(Jv), "Jacobian");
 }
 
 /** Matrix vector product of JB with a vector v (for iterative solvers)
@@ -785,8 +784,7 @@ int IDASolver::fJvB(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                     N_Vector /*tmpB2*/) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fJvB(t, x, dx, xB, dxB, vB, JvB, cj);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(JvB),
-                              "Jacobian");
+    return model->checkFinite(gsl::make_span(JvB), "Jacobian");
 }
 
 /** Event trigger function for events
@@ -801,7 +799,8 @@ int IDASolver::froot(realtype t, N_Vector x, N_Vector dx, realtype *root,
                      void *user_data) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->froot(t, x, dx, gsl::make_span<realtype>(root, model->ne));
-    return model->checkFinite(model->ne, root, "root function");
+    return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
+                              "root function");
 }
 
 /** residual function of the DAE
@@ -816,8 +815,7 @@ int IDASolver::fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data) {
     auto model = static_cast<Model_DAE *>(user_data);
 
-    if (t > 1e200 &&
-        !amici::checkFinite(model->nx_solver, N_VGetArrayPointer(x), "fxdot"))
+    if (t > 1e200 && !amici::checkFinite(gsl::make_span(x), "fxdot"))
         return AMICI_UNRECOVERABLE_ERROR;
     /* when t is large (typically ~1e300), CVODES may pass all NaN x
        to fxdot from which we typically cannot recover. To save time
@@ -825,8 +823,7 @@ int IDASolver::fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
        of x, but only do so when t is large and we expect problems. */
 
     model->fxdot(t, x, dx, xdot);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(xdot),
-                              "fxdot");
+    return model->checkFinite(gsl::make_span(xdot), "fxdot");
 }
 
 /** Right hand side of differential equation for adjoint state xB
@@ -843,8 +840,7 @@ int IDASolver::fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                       N_Vector dxB, N_Vector xBdot, void *user_data) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fxBdot(t, x, dx, xB, dxB, xBdot);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(xBdot),
-                              "xBdot");
+    return model->checkFinite(gsl::make_span(xBdot), "xBdot");
 }
 
 /** Right hand side of integral equation for quadrature states qB
@@ -861,8 +857,7 @@ int IDASolver::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                       N_Vector dxB, N_Vector qBdot, void *user_data) {
     auto model = static_cast<Model_DAE *>(user_data);
     model->fqBdot(t, x, dx, xB, dxB, qBdot);
-    return model->checkFinite(model->nJ * model->nplist(),
-                              N_VGetArrayPointer(qBdot), "qBdot");
+    return model->checkFinite(gsl::make_span(qBdot), "qBdot");
 }
 
 /** Right hand side of differential equation for state sensitivities sx
@@ -887,8 +882,8 @@ int IDASolver::fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector dx,
     auto model = static_cast<Model_DAE *>(user_data);
     for (int ip = 0; ip < model->nplist(); ip++) {
         model->fsxdot(t, x, dx, ip, sx[ip], sdx[ip], sxdot[ip]);
-        if (model->checkFinite(model->nx_solver, N_VGetArrayPointer(sxdot[ip]),
-                               "sxdot") != AMICI_SUCCESS)
+        if (model->checkFinite(gsl::make_span(sxdot[ip]), "sxdot")
+                != AMICI_SUCCESS)
             return AMICI_RECOVERABLE_ERROR;
     }
     return AMICI_SUCCESS;

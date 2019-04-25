@@ -5,8 +5,10 @@
 #include <type_traits>
 
 #include <amici/exception.h>
+
 #include <nvector/nvector_serial.h>
 
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 
@@ -300,5 +302,18 @@ class AmiVectorArray {
 };
 
 } // namespace amici
+
+
+namespace gsl {
+/**
+ * @brief Create span from N_Vector
+ * @param nv
+ * @return
+ */
+inline span<realtype> make_span(N_Vector nv)
+{
+    return span<realtype>(N_VGetArrayPointer(nv), N_VGetLength_Serial(nv));
+}
+} // namespace gsl
 
 #endif /* AMICI_VECTOR_H */

@@ -82,7 +82,7 @@ void Model_ODE::fJDiag(const realtype t, AmiVector &JDiag,
                        const realtype /*cj*/, const AmiVector &x,
                        const AmiVector & /*dx*/) {
     fJDiag(t, JDiag.getNVector(), x.getNVector());
-    if (checkFinite(nx_solver, JDiag.data(), "Jacobian") != AMICI_SUCCESS)
+    if (checkFinite(JDiag.getVector(), "Jacobian") != AMICI_SUCCESS)
         throw AmiException("Evaluation of fJDiag failed!");
 }
 

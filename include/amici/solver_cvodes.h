@@ -211,6 +211,9 @@ class CVodeSolver : public Solver {
 
     void setJacTimesVecFnB(int which) const override;
 
+    /* The following static members are callback function to CVODES.
+     * Their signatures must not be changes.
+     */
     static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                    SUNMatrix JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B);

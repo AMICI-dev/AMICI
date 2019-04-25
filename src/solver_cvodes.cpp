@@ -664,7 +664,8 @@ const Model *CVodeSolver::getModel() const {
     return static_cast<Model *>(cv_mem->cv_user_data);
 }
 
-/** Jacobian of xdot with respect to states x
+/**
+ * @brief Jacobian of xdot with respect to states x
  * @param N number of state variables
  * @param t timepoint
  * @param x Vector with the states
@@ -681,10 +682,11 @@ int CVodeSolver::fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
                     N_Vector /*tmp3*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJ(t, x, xdot, J);
-    return model->checkFinite(SM_ROWS_D(J), SM_DATA_D(J), "Jacobian");
+    return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
 
-/** Jacobian of xBdot with respect to adjoint state xB
+/**
+ * @brief Jacobian of xBdot with respect to adjoint state xB
  * @param NeqBdot number of adjoint state variables
  * @param t timepoint
  * @param x Vector with the states
@@ -702,7 +704,7 @@ int CVodeSolver::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                      N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJB(t, x, xB, xBdot, JB);
-    return model->checkFinite(SM_ROWS_D(JB), SM_DATA_D(JB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
 
 /** J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -721,7 +723,7 @@ int CVodeSolver::fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
                           N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJSparse(t, x, J);
-    return model->checkFinite(SM_NNZ_S(J), SM_DATA_S(J), "Jacobian");
+    return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
 
 /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -741,7 +743,7 @@ int CVodeSolver::fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                            N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJSparseB(t, x, xB, xBdot, JB);
-    return model->checkFinite(SM_NNZ_S(JB), SM_DATA_S(JB), "Jacobian");
+    return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
 
 /** J in banded form (for banded solvers)
@@ -795,8 +797,7 @@ int CVodeSolver::fJDiag(realtype t, N_Vector JDiag, N_Vector x,
                         void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJDiag(t, JDiag, x);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(JDiag),
-                              "Jacobian");
+    return model->checkFinite(gsl::make_span(JDiag), "Jacobian");
 }
 
 /** Matrix vector product of J with a vector v (for iterative solvers)
@@ -814,8 +815,7 @@ int CVodeSolver::fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
                      N_Vector /*xdot*/, void *user_data, N_Vector /*tmp*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJv(v, Jv, t, x);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(Jv),
-                              "Jacobian");
+    return model->checkFinite(gsl::make_span(Jv), "Jacobian");
 }
 
 /** Matrix vector product of JB with a vector v (for iterative solvers)
@@ -835,8 +835,7 @@ int CVodeSolver::fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
                       N_Vector /*tmpB*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJvB(vB, JvB, t, x, xB);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(JvB),
-                              "Jacobian");
+    return model->checkFinite(gsl::make_span(JvB), "Jacobian");
 }
 
 /**
@@ -851,7 +850,8 @@ int CVodeSolver::froot(realtype t, N_Vector x, realtype *root,
                        void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
-    return model->checkFinite(model->ne, root, "root function");
+    return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
+                              "root function");
 }
 
 /**
@@ -865,17 +865,16 @@ int CVodeSolver::froot(realtype t, N_Vector x, realtype *root,
 int CVodeSolver::fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
 
-    if (t > 1e200 &&
-        !amici::checkFinite(model->nx_solver, N_VGetArrayPointer(x), "fxdot"))
+    if (t > 1e200 && !amici::checkFinite(gsl::make_span(x), "fxdot")) {
+        /* when t is large (typically ~1e300), CVODES may pass all NaN x
+           to fxdot from which we typically cannot recover. To save time
+           on normal execution, we do not always want to check finiteness
+           of x, but only do so when t is large and we expect problems. */
         return AMICI_UNRECOVERABLE_ERROR;
-    /* when t is large (typically ~1e300), CVODES may pass all NaN x
-       to fxdot from which we typically cannot recover. To save time
-       on normal execution, we do not always want to check finiteness
-       of x, but only do so when t is large and we expect problems. */
+    }
 
     model->fxdot(t, x, xdot);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(xdot),
-                              "fxdot");
+    return model->checkFinite(gsl::make_span(xdot), "fxdot");
 }
 
 /** Right hand side of differential equation for adjoint state xB
@@ -890,8 +889,7 @@ int CVodeSolver::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                         void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fxBdot(t, x, xB, xBdot);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(xBdot),
-                              "fxBdot");
+    return model->checkFinite(gsl::make_span(xBdot), "fxBdot");
 }
 
 /** Right hand side of integral equation for quadrature states qB
@@ -906,8 +904,7 @@ int CVodeSolver::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                         void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fqBdot(t, x, xB, qBdot);
-    return model->checkFinite(model->nplist() * model->nJ,
-                              N_VGetArrayPointer(qBdot), "qBdot");
+    return model->checkFinite(gsl::make_span(qBdot), "qBdot");
 }
 
 /** Right hand side of differential equation for state sensitivities sx
@@ -929,11 +926,11 @@ int CVodeSolver::fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
                         N_Vector /*tmp1*/, N_Vector /*tmp2*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fsxdot(t, x, ip, sx, sxdot);
-    return model->checkFinite(model->nx_solver, N_VGetArrayPointer(sxdot),
-                              "sxdot");
+    return model->checkFinite(gsl::make_span(sxdot), "sxdot");
 }
 
 bool operator==(const CVodeSolver &a, const CVodeSolver &b) {
     return static_cast<Solver const &>(a) == static_cast<Solver const &>(b);
 }
+
 } // namespace amici
