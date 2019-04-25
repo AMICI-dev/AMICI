@@ -10,13 +10,13 @@
 
 namespace amici {
 
-ReturnData::ReturnData(Solver const& solver, const Model *model)
-    : ReturnData(model->getTimepoints(), model->np(), model->nk(),
-                 model->nx_rdata, model->nx_solver, model->nxtrue_rdata,
-                 model->ny, model->nytrue, model->nz, model->nztrue, model->ne, model->nJ,
-                 model->nplist(), model->nMaxEvent(), model->nt(),
-                 solver.getNewtonMaxSteps(), model->getParameterScale(),
-                 model->o2mode, solver.getSensitivityOrder(),
+ReturnData::ReturnData(Solver const& solver, const Model &model)
+    : ReturnData(model.getTimepoints(), model.np(), model.nk(),
+                 model.nx_rdata, model.nx_solver, model.nxtrue_rdata,
+                 model.ny, model.nytrue, model.nz, model.nztrue, model.ne, model.nJ,
+                 model.nplist(), model.nMaxEvent(), model.nt(),
+                 solver.getNewtonMaxSteps(), model.getParameterScale(),
+                 model.o2mode, solver.getSensitivityOrder(),
                  static_cast<SensitivityMethod>(solver.getSensitivityMethod())) {
 }
 

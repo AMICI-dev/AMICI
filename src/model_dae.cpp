@@ -89,8 +89,8 @@ void Model_DAE::fJDiag(const realtype t, AmiVector &JDiag,
         throw AmiException("Evaluation of fJDiag failed!");
 }
 
-void Model_DAE::fdxdotdp(const realtype t, const_N_Vector x,
-                         const_N_Vector dx) {
+void Model_DAE::fdxdotdp(const realtype t, const N_Vector x,
+                         const N_Vector dx) {
     auto x_pos = computeX_pos(x);
     fdwdp(t, N_VGetArrayPointer(x_pos));
     for (int ip = 0; ip < nplist(); ip++) {
@@ -101,7 +101,7 @@ void Model_DAE::fdxdotdp(const realtype t, const_N_Vector x,
     }
 }
 
-void Model_DAE::fM(realtype t, const_N_Vector x) {
+void Model_DAE::fM(realtype t, const N_Vector x) {
     SUNMatZero(M.get());
     auto x_pos = computeX_pos(x);
     fM(M.data(), t, N_VGetArrayPointer(x_pos), unscaledParameters.data(),

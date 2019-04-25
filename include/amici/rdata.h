@@ -19,7 +19,8 @@ void serialize(Archive &ar, amici::ReturnData &u, unsigned int version);
 
 namespace amici {
 
-/** @brief Stores all data to be returned by amici::runAmiciSimulation.
+/**
+ * @brief Stores all data to be returned by amici::runAmiciSimulation.
  *
  * NOTE: multidimensional arrays are stored in row-major order
  * (FORTRAN-style)
@@ -64,11 +65,11 @@ class ReturnData {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
-     * @param solver solver
-     * @param model pointer to model specification object
+     * @param solver solver instance
+     * @param model model instance
      * bool
      */
-    ReturnData(Solver const& solver, const Model *model);
+    ReturnData(Solver const& solver, const Model &model);
 
     ~ReturnData() = default;
 
@@ -257,41 +258,58 @@ class ReturnData {
 
     /** total number of model parameters */
     int np{0};
+
     /** number of fixed parameters */
     int nk{0};
+
     /** number of states */
     int nx{0};
+
     /** number of states with conservation laws applied */
     int nx_solver{0};
+
     /** number of states in the unaugmented system */
     int nxtrue{0};
+
     /** number of observables */
     int ny{0};
+
     /** number of observables in the unaugmented system */
     int nytrue{0};
+
     /** number of event outputs */
     int nz{0};
+
     /** number of event outputs in the unaugmented system */
     int nztrue{0};
+
     /** number of events */
     int ne{0};
+
     /** dimension of the augmented objective function for 2nd order ASA */
     int nJ{0};
 
     /** number of parameter for which sensitivities were requested */
     int nplist{0};
+
     /** maximal number of occuring events (for every event type) */
     int nmaxevent{0};
+
     /** number of considered timepoints */
     int nt{0};
+
     /** maximal number of newton iterations for steady state calculation */
     int newton_maxsteps{0};
+
     /** scaling of parameterization (lin,log,log10) */
     std::vector<ParameterScaling> pscale;
+
     /** flag indicating whether second order sensitivities were requested */
     SecondOrderMode o2mode{SecondOrderMode::none};
+
     /** sensitivity order */
     SensitivityOrder sensi{SensitivityOrder::none};
+
     /** sensitivity method */
     SensitivityMethod sensi_meth{SensitivityMethod::none};
 
@@ -302,7 +320,8 @@ class ReturnData {
      * @param version Version number
      */
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, ReturnData &r, unsigned int version);
+    friend void boost::serialization::serialize(Archive &ar, ReturnData &r,
+                                                unsigned int version);
 };
 
 } // namespace amici

@@ -226,7 +226,7 @@ class Model_DAE : public Model {
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      */
-    void fdxdotdp(realtype t, const_N_Vector x, amici::const_N_Vector dx);
+    void fdxdotdp(realtype t, const N_Vector x, const N_Vector dx);
     void fdxdotdp(const realtype t, const AmiVector &x,
                   const AmiVector &dx) override {
         fdxdotdp(t,x.getNVector(),dx.getNVector());
@@ -251,13 +251,14 @@ class Model_DAE : public Model {
      * @param t timepoint
      * @param x Vector with the states
      */
-    void fM(realtype t, const_N_Vector x);
+    void fM(realtype t, const N_Vector x);
 
     std::unique_ptr<Solver> getSolver() override;
 
 protected:
 
-    /** @brief Model specific implementation for fJ
+    /**
+     * @brief Model specific implementation for fJ
      * @param J Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -397,7 +398,8 @@ protected:
      * @param w vector with helper variables
      * @param dx Vector with the derivative states
      **/
-    virtual void fxdot(realtype *xdot, realtype t, const realtype *x, const double *p, const double *k, const realtype *h,
+    virtual void fxdot(realtype *xdot, realtype t, const realtype *x,
+                       const double *p, const double *k, const realtype *h,
                        const realtype *dx, const realtype *w) = 0;
 
     /**
@@ -413,8 +415,9 @@ protected:
      * @param w vector with helper variables
      * @param dwdp derivative of w wrt p
      */
-    virtual void fdxdotdp(realtype *dxdotdp, realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                          int ip, const realtype *dx, const realtype *w, const realtype *dwdp);;
+    virtual void fdxdotdp(realtype *dxdotdp, realtype t, const realtype *x,
+                          const realtype *p, const realtype *k, const realtype *h,
+                          int ip, const realtype *dx, const realtype *w, const realtype *dwdp);
 
     /**
      * @brief model specific implementation of fM
