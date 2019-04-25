@@ -88,6 +88,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept {
 }
 
 SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
+    if(&other == this)
+        return *this;
     return *this = SUNMatrixWrapper(other);
 }
 

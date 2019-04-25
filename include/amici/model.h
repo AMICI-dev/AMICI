@@ -80,7 +80,7 @@ class Model : public AbstractModel {
           std::vector<int> z2event);
 
     /** destructor */
-    virtual ~Model() override = default;
+    ~Model() override = default;
 
     /**
      * Copy assignment is disabled until const members are removed

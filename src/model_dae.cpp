@@ -133,7 +133,7 @@ void Model_DAE::fJDiag(realtype * /*JDiag*/, const realtype /*t*/,
                        __func__);
 }
 
-void Model_DAE::fJvB(realtype * /*JvB*/, const realtype t, const realtype *x,
+void Model_DAE::fJvB(realtype * /*JvB*/, const realtype  /*t*/, const realtype * /*x*/,
                      const double * /*p*/, const double * /*k*/,
                      const realtype * /*h*/, const realtype /*cj*/,
                      const realtype * /*xB*/, const realtype * /*dx*/,
@@ -145,7 +145,7 @@ void Model_DAE::fJvB(realtype * /*JvB*/, const realtype t, const realtype *x,
 }
 
 void Model_DAE::froot(realtype * /*root*/, const realtype /*t*/,
-                      const realtype *x, const double *p, const double *k,
+                      const realtype * /*x*/, const double * /*p*/, const double * /*k*/,
                       const realtype * /*h*/, const realtype * /*dx*/) {
     throw AmiException("Requested functionality is not supported as %s is not "
                        "implemented for this model!",

@@ -145,7 +145,7 @@ void Model_ODE::fJB(realtype * /*JB*/, const realtype /*t*/,
 void Model_ODE::fJSparse(SUNMatrixContent_Sparse /*JSparse*/,
                          const realtype /*t*/, const realtype * /*x*/,
                          const realtype * /*p*/, const realtype * /*k*/,
-                         const realtype * /*h*/, const realtype *w,
+                         const realtype * /*h*/, const realtype * /*w*/,
                          const realtype * /*dwdx*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
@@ -155,7 +155,7 @@ void Model_ODE::fJSparse(SUNMatrixContent_Sparse /*JSparse*/,
 void Model_ODE::fJSparse(realtype * /*JSparse*/, const realtype /*t*/,
                          const realtype * /*x*/, const realtype * /*p*/,
                          const realtype * /*k*/, const realtype * /*h*/,
-                         const realtype * /*w*/, const realtype *dwdx) {
+                         const realtype * /*w*/, const realtype * /*dwdx*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented

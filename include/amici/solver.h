@@ -425,7 +425,7 @@ class Solver {
      * @brief sets the maximum number of solver steps for the backward problem
      * @param maxsteps maximum number of solver steps (non-negative number)
      */
-    void setMaxStepsBackwardProblem(const long int maxsteps);
+    void setMaxStepsBackwardProblem(long int maxsteps);
 
     /**
      * @brief returns the linear system multistep method
