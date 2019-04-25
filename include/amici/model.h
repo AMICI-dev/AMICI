@@ -39,7 +39,7 @@ class Model : public AbstractModel {
     Model();
 
     /**
-     * Constructor with model dimensions
+     * @brief Constructor with model dimensions
      * @param nx_rdata number of state variables
      * @param nxtrue_rdata number of state variables of the non-augmented model
      * @param nx_solver number of state variables with conservation laws applied
@@ -1176,69 +1176,69 @@ class Model : public AbstractModel {
     }
 
     /** number of states */
-    const int nx_rdata{0};
+    int nx_rdata{0};
 
     /** number of states in the unaugmented system */
-    const int nxtrue_rdata{0};
+    int nxtrue_rdata{0};
 
     /** number of states with conservation laws applied */
-    const int nx_solver{0};
+    int nx_solver{0};
 
     /** number of states in the unaugmented system with conservation laws
      * applied */
-    const int nxtrue_solver{0};
+    int nxtrue_solver{0};
 
     /** number of observables */
-    const int ny{0};
+    int ny{0};
 
     /** number of observables in the unaugmented system */
-    const int nytrue{0};
+    int nytrue{0};
 
     /** number of event outputs */
-    const int nz{0};
+    int nz{0};
 
     /** number of event outputs in the unaugmented system */
-    const int nztrue{0};
+    int nztrue{0};
 
     /** number of events */
-    const int ne{0};
+    int ne{0};
 
     /** number of common expressions */
-    const int nw{0};
+    int nw{0};
 
     /** number of derivatives of common expressions wrt x */
-    const int ndwdx{0};
+    int ndwdx{0};
 
     /** number of derivatives of common expressions wrt p */
-    const int ndwdp{0};
+    int ndwdp{0};
 
     /** number of nonzero entries in dxdotdw */
-    const int ndxdotdw{0};
+    int ndxdotdw{0};
 
     /** number of nonzero entries in dJydy */
     std::vector<int> ndJydy;
 
     /** number of nonzero entries in jacobian */
-    const int nnz{0};
+    int nnz{0};
 
     /** dimension of the augmented objective function for 2nd order ASA */
-    const int nJ{0};
+    int nJ{0};
 
     /** upper bandwith of the jacobian */
-    const int ubw{0};
+    int ubw{0};
 
     /** lower bandwith of the jacobian */
-    const int lbw{0};
+    int lbw{0};
 
     /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
      * directional or full second order derivative will be computed */
-    const SecondOrderMode o2mode{SecondOrderMode::none};
+    SecondOrderMode o2mode{SecondOrderMode::none};
 
     /** index indicating to which event an event output belongs */
-    const std::vector<int> z2event;
+    std::vector<int> z2event;
 
     /** flag array for DAE equations */
-    const std::vector<realtype> idlist;
+    std::vector<realtype> idlist;
 
     /** data standard deviation for current timepoint (dimension: ny) */
     std::vector<realtype> sigmay;
