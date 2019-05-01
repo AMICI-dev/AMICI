@@ -86,9 +86,10 @@ class SbmlImporter:
 
         Arguments:
 
-            sbml_source:  Either a path to SBML file where the model is specified.
-            Or a model string as created by  sbml.sbmlWriter().writeSBMLToString().
-            @type string
+            sbml_source: Either a path to SBML file where the model is
+                specified, or a model string as created by
+                sbml.sbmlWriter().writeSBMLToString() or an instance of
+                libsbml.Model. @type str
 
             show_sbml_warnings: Indicates whether libSBML warnings should be
             displayed (default = True). @type bool
@@ -103,13 +104,15 @@ class SbmlImporter:
         Raises:
 
         """
-        self.sbml_reader = sbml.SBMLReader()
-
-        if from_file:
-            sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
+        if isinstance(sbml_source, sbml.Model):
+            self.sbml_doc = sbml_source.getSBMLDocument()
         else:
-            sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
-        self.sbml_doc = sbml_doc
+            self.sbml_reader = sbml.SBMLReader()
+            if from_file:
+                sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
+            else:
+                sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
+            self.sbml_doc = sbml_doc
 
         self.show_sbml_warnings = show_sbml_warnings
 
@@ -878,13 +881,17 @@ class SbmlImporter:
 
         # set cost functions
         llhYStrings = []
-        for y_name in observables:
+        for y_name in observableNames:
             llhYStrings.append(noise_distribution_to_cost_function(
                 noise_distributions.get(y_name, 'normal')))
 
         llhYValues = []
-        for llhYString, o_sym, m_sym, s_sym in zip(llhYStrings, observableSyms, measurementYSyms, sigmaYSyms):
-            f = sp.sympify(llhYString(o_sym), locals={str(o_sym): o_sym, str(m_sym): m_sym, str(s_sym): s_sym})
+        for llhYString, o_sym, m_sym, s_sym \
+                in zip(llhYStrings, observableSyms,
+                       measurementYSyms, sigmaYSyms):
+            f = sp.sympify(llhYString(o_sym), locals={str(o_sym): o_sym,
+                                                      str(m_sym): m_sym,
+                                                      str(s_sym): s_sym})
             llhYValues.append(f)
         llhYValues = sp.Matrix(llhYValues)
 
