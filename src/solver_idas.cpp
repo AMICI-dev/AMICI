@@ -378,13 +378,14 @@ void IDASolver::reInitPostProcess(void *ami_mem, realtype *t,
 
 void IDASolver::reInit(const realtype t0, const AmiVector &yy0,
                        const AmiVector &yp0) const {
+
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
+    ida_mem->ida_tn = t0;
+    if (solverWasCalledF)
+        forceReInitPostProcessF = true;
     x.copy(yy0);
     dx.copy(yp0);
-    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
-    /* set time */
-    ida_mem->ida_tn = t0;
     resetState(ida_mem, x.getNVector(), xB.getNVector());
-    calcIC(t);
 }
 
 void IDASolver::sensReInit(const AmiVectorArray &yyS0,

@@ -452,7 +452,6 @@ void CVodeSolver::reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
 
 void CVodeSolver::reInit(const realtype t0, const AmiVector &yy0,
                          const AmiVector & /*yp0*/) const {
-    /* set time */
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     cv_mem->cv_tn = t0;
     if (solverWasCalledF)
