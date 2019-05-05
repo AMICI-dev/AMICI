@@ -7,8 +7,8 @@
 
 #include <sundials/sundials_matrix.h>
 #include <sunmatrix/sunmatrix_band.h>
-#include <sunmatrix/sunmatrix_sparse.h>
 #include <sunmatrix/sunmatrix_dense.h>
+#include <sunmatrix/sunmatrix_sparse.h>
 
 #include <utility>
 #include <vector>
@@ -26,7 +26,7 @@ class CVodeSolver;
  * in sync, but may be updated asynchroneously.
  */
 class Model_ODE : public Model {
-public:
+  public:
     /** default constructor */
     Model_ODE() = default;
 
@@ -60,25 +60,23 @@ public:
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
      */
-    Model_ODE(const int nx_rdata, const int nxtrue_rdata,
-              const int nx_solver, const int nxtrue_solver, const int ny,
-              const int nytrue, const int nz, const int nztrue,
-              const int ne, const int nJ, const int nw, const int ndwdx,
-              const int ndwdp, const int ndxdotdw, std::vector<int> ndJydy,
-              const int nnz,
+    Model_ODE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
+              const int nxtrue_solver, const int ny, const int nytrue,
+              const int nz, const int nztrue, const int ne, const int nJ,
+              const int nw, const int ndwdx, const int ndwdp,
+              const int ndxdotdw, std::vector<int> ndJydy, const int nnz,
               const int ubw, const int lbw, const SecondOrderMode o2mode,
-              std::vector<realtype> const &p,
-              std::vector<realtype> const &k, std::vector<int> const &plist,
+              std::vector<realtype> const &p, std::vector<realtype> const &k,
+              std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event)
-        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny,
-                nytrue, nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw,
-                std::move(ndJydy), nnz,
-                ubw, lbw, o2mode, p, k, plist, idlist, z2event) {}
+        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
+                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw,
+                std::move(ndJydy), nnz, ubw, lbw, o2mode, p, k, plist, idlist,
+                z2event) {}
 
-    void fJ(realtype t, realtype cj, const AmiVector &x,
-                    const AmiVector &dx, const AmiVector &xdot, SUNMatrix J)
-    override;
+    void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
+            const AmiVector &xdot, SUNMatrix J) override;
 
     /**
      * @brief Implementation of fJ at the N_Vector level
@@ -101,12 +99,11 @@ public:
      * @param xBdot Vector with the adjoint right hand side
      * @param JB Matrix to which the Jacobian will be written
      **/
-    void fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
-             SUNMatrix JB);
+    void fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot, SUNMatrix JB);
 
-    void fJSparse(realtype t, realtype cj,
-                          const AmiVector &x, const AmiVector &dx,
-                          const AmiVector &xdot, SUNMatrix J) override;
+    void fJSparse(realtype t, realtype cj, const AmiVector &x,
+                  const AmiVector &dx, const AmiVector &xdot,
+                  SUNMatrix J) override;
 
     /**
      * Implementation of fJSparse at the N_Vector level, this function
@@ -131,8 +128,8 @@ public:
     void fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                    SUNMatrix JB);
 
-    /** implementation of fJDiag at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation
+    /** implementation of fJDiag at the N_Vector level, this function provides
+     *an interface to the model specific routines for the solver implementation
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
      * @param x Vector with the states
@@ -148,14 +145,12 @@ public:
      * @param dx Vector with the derivative states
      * @return status flag indicating successful execution
      **/
-    void fJDiag(realtype t, AmiVector &JDiag,
-                        realtype cj, const AmiVector &x,
-                        const AmiVector &dx) override;
+    void fJDiag(realtype t, AmiVector &JDiag, realtype cj, const AmiVector &x,
+                const AmiVector &dx) override;
 
-    void fJv(realtype t, const AmiVector &x,
-                     const AmiVector &dx, const AmiVector &xdot,
-                     const AmiVector &v, AmiVector &nJv,
-                     realtype cj) override;
+    void fJv(realtype t, const AmiVector &x, const AmiVector &dx,
+             const AmiVector &xdot, const AmiVector &v, AmiVector &nJv,
+             realtype cj) override;
 
     /** implementation of fJv at the N_Vector level.
      * @param t timepoint
@@ -174,11 +169,10 @@ public:
      * @param vB Vector with which the Jacobian is multiplied
      * @param JvB Vector to which the Jacobian vector product will be written
      **/
-    void fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
-              N_Vector xB);
+    void fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x, N_Vector xB);
 
-    void froot(realtype t, const AmiVector &x,
-                       const AmiVector &dx, gsl::span<realtype> root) override;
+    void froot(realtype t, const AmiVector &x, const AmiVector &dx,
+               gsl::span<realtype> root) override;
 
     /**
      * @brief implementation of froot at the N_Vector level
@@ -191,12 +185,12 @@ public:
      */
     void froot(realtype t, N_Vector x, gsl::span<realtype> root);
 
-    void fxdot(realtype t, const AmiVector &x,
-                       const AmiVector &dx, AmiVector &xdot) override;
+    void fxdot(realtype t, const AmiVector &x, const AmiVector &dx,
+               AmiVector &xdot) override;
 
-    /** implementation of fxdot at the N_Vector level, this function provides an interface
-     * to the model specific routines for the solver implementation aswell as the AmiVector
-     * level implementation
+    /** implementation of fxdot at the N_Vector level, this function provides an
+     * interface to the model specific routines for the solver implementation
+     * aswell as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
@@ -233,11 +227,10 @@ public:
      */
     void fdxdotdp(realtype t, const N_Vector x);
 
-    void fdxdotdp(realtype t, const AmiVector &x,
-                          const AmiVector &dx) override;
+    void fdxdotdp(realtype t, const AmiVector &x, const AmiVector &dx) override;
 
-    void fsxdot(realtype t, const AmiVector &x, const AmiVector &dx,
-                int ip, const AmiVector &sx, const AmiVector &sdx,
+    void fsxdot(realtype t, const AmiVector &x, const AmiVector &dx, int ip,
+                const AmiVector &sx, const AmiVector &sdx,
                 AmiVector &sxdot) override;
 
     /**
@@ -252,8 +245,7 @@ public:
 
     std::unique_ptr<Solver> getSolver() override;
 
-protected:
-
+  protected:
     /** model specific implementation for fJ
      * @param J Matrix to which the Jacobian will be written
      * @param t timepoint
@@ -264,7 +256,8 @@ protected:
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
-    virtual void fJ(realtype *J, realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
+    virtual void fJ(realtype *J, realtype t, const realtype *x,
+                    const realtype *p, const realtype *k, const realtype *h,
                     const realtype *w, const realtype *dwdx) = 0;
 
     /** model specific implementation for fJB
@@ -278,8 +271,10 @@ protected:
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
-    virtual void fJB(realtype *JB, realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h,
-                     const realtype *xB, const realtype *w, const realtype *dwdx);
+    virtual void fJB(realtype *JB, realtype t, const realtype *x,
+                     const realtype *p, const realtype *k, const realtype *h,
+                     const realtype *xB, const realtype *w,
+                     const realtype *dwdx);
 
     /** model specific implementation for fJSparse
      * @param JSparse Matrix to which the Jacobian will be written
@@ -306,10 +301,10 @@ protected:
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
-    virtual void fJSparse(realtype *JSparse, realtype t,
-                          const realtype *x, const realtype *p,
-                          const realtype *k, const realtype *h,
-                          const realtype *w, const realtype *dwdx);
+    virtual void fJSparse(realtype *JSparse, realtype t, const realtype *x,
+                          const realtype *p, const realtype *k,
+                          const realtype *h, const realtype *w,
+                          const realtype *dwdx);
 
     /**
      * @brief model specific implementation for fJSparse, column pointers
@@ -335,11 +330,11 @@ protected:
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
-    virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB,
-                           realtype t, const realtype *x,
-                           const realtype *p, const realtype *k,
-                           const realtype *h, const realtype *xB,
-                           const realtype *w, const realtype *dwdx);
+    virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB, realtype t,
+                           const realtype *x, const realtype *p,
+                           const realtype *k, const realtype *h,
+                           const realtype *xB, const realtype *w,
+                           const realtype *dwdx);
 
     /** model specific implementation for fJSparseB
      * @param JSparseB data array
@@ -352,8 +347,7 @@ protected:
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
-    virtual void fJSparseB(realtype *JSparseB,
-                           realtype t, const realtype *x,
+    virtual void fJSparseB(realtype *JSparseB, realtype t, const realtype *x,
                            const realtype *p, const realtype *k,
                            const realtype *h, const realtype *xB,
                            const realtype *w, const realtype *dwdx);
@@ -394,7 +388,8 @@ protected:
      * @param k constants vector
      * @param h heavyside vector
      **/
-    virtual void froot(realtype *root, realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h);
+    virtual void froot(realtype *root, realtype t, const realtype *x,
+                       const realtype *p, const realtype *k, const realtype *h);
 
     /** model specific implementation for fxdot
      * @param xdot residual function
@@ -405,7 +400,9 @@ protected:
      * @param h heavyside vector
      * @param w vector with helper variables
      **/
-    virtual void fxdot(realtype *xdot, realtype t, const realtype *x, const realtype *p, const             realtype *k, const realtype *h, const realtype *w) = 0;
+    virtual void fxdot(realtype *xdot, realtype t, const realtype *x,
+                       const realtype *p, const realtype *k, const realtype *h,
+                       const realtype *w) = 0;
 
     /** model specific implementation of fdxdotdp, with w chainrule
      * @param dxdotdp partial derivative xdot wrt p
@@ -418,10 +415,9 @@ protected:
      * @param w vector with helper variables
      * @param dwdp derivative of w wrt p
      */
-    virtual void fdxdotdp(realtype *dxdotdp, realtype t,
-                          const realtype *x, const realtype *p,
-                          const realtype *k, const realtype *h,
-                          int ip, const realtype *w,
+    virtual void fdxdotdp(realtype *dxdotdp, realtype t, const realtype *x,
+                          const realtype *p, const realtype *k,
+                          const realtype *h, int ip, const realtype *w,
                           const realtype *dwdp);
 
     /** model specific implementation of fdxdotdp, without w chainrule
@@ -434,10 +430,9 @@ protected:
      * @param ip parameter index
      * @param w vector with helper variables
      */
-    virtual void fdxdotdp(realtype *dxdotdp, realtype t,
-                          const realtype *x, const realtype *p,
-                          const realtype *k, const realtype *h,
-                          int ip, const realtype *w);
+    virtual void fdxdotdp(realtype *dxdotdp, realtype t, const realtype *x,
+                          const realtype *p, const realtype *k,
+                          const realtype *h, int ip, const realtype *w);
 
     /** model specific implementation of fdxdotdw, data part
      * @param dxdotdw partial derivative xdot wrt w
@@ -448,10 +443,9 @@ protected:
      * @param h heavyside vector
      * @param w vector with helper variables
      */
-    virtual void fdxdotdw(realtype *dxdotdw, realtype t,
-                          const realtype *x, const realtype *p,
-                          const realtype *k, const realtype *h,
-                          const realtype *w);
+    virtual void fdxdotdw(realtype *dxdotdw, realtype t, const realtype *x,
+                          const realtype *p, const realtype *k,
+                          const realtype *h, const realtype *w);
 
     /** model specific implementation of fdxdotdw, colptrs part
      * @param indexptrs column pointers

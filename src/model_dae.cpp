@@ -34,6 +34,18 @@ void Model_DAE::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
              fixedParameters.data(), h.data(), cj, N_VGetArrayPointer(dx),
              w.data(), dwdx.data());
 }
+    
+void Model_DAE::fJSparseB(SUNMatrixContent_Sparse   /*JSparseB*/,
+                       const realtype  /*t*/, const realtype * /*x*/,
+                       const double * /*p*/, const double * /*k*/,
+                       const realtype * /*h*/, const realtype   /*cj*/,
+                       const realtype * /*xB*/, const realtype * /*dx*/,
+                       const realtype * /*dxB*/, const realtype * /*w*/,
+                       const realtype * /*dwdx*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__);
+}
 
 void Model_DAE::fJv(const realtype t, const AmiVector &x, const AmiVector &dx,
                     const AmiVector & /*xdot*/, const AmiVector &v,
