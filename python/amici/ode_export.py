@@ -2451,7 +2451,8 @@ class ODEExporter:
                            + '_rowvals.cpp ')
 
         templateData = {'MODELNAME': self.modelName,
-                        'SOURCES': '\n'.join(sources)}
+                        'SOURCES': '\n'.join(sources),
+                        'AMICI_VERSION': __version__}
         applyTemplate(
             MODEL_CMAKE_TEMPLATE_FILE,
             os.path.join(self.modelPath, 'CMakeLists.txt'),
