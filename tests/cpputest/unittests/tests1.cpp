@@ -655,13 +655,13 @@ TEST(solver, testSettersGettersWithSetup)
                 static_cast<int>(sensi_meth));
 
     auto rdata =
-      std::unique_ptr<ReturnData>(new ReturnData(solver, &testModel));
+      std::unique_ptr<ReturnData>(new ReturnData(solver, testModel));
     AmiVector x(nx), dx(nx);
     AmiVectorArray sx(nx, 1), sdx(nx, 1);
 
     testModel.setInitialStates(std::vector<realtype>{ 0 });
 
-    solver.setup(&x, &dx, &sx, &sdx, &testModel);
+    solver.setup(0, &testModel, x, dx, sx, sdx);
 
     testSolverGetterSetters(solver,
                             sensi_meth,
@@ -808,7 +808,7 @@ TEST_GROUP(sunmatrixwrapper)
     SUNMatrixWrapper A = SUNMatrixWrapper(3, 2);
     // result
     std::vector<double> d{1.3753, 1.5084, 1.1655};
-    
+
     void setup() {
         SM_ELEMENT_D(A.get(), 0, 0) = 0.69;
         SM_ELEMENT_D(A.get(), 1, 0) = 0.32;
@@ -817,7 +817,7 @@ TEST_GROUP(sunmatrixwrapper)
         SM_ELEMENT_D(A.get(), 1, 1) = 0.44;
         SM_ELEMENT_D(A.get(), 2, 1) = 0.38;
     }
-    
+
     void teardown() {}
 };
 
@@ -827,7 +827,7 @@ TEST(sunmatrixwrapper, sparse_multiply)
     auto c(a); //copy c
     A_sparse.multiply(c, b);
     checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
-    
+
     A_sparse = SUNMatrixWrapper(A, 0.0, CSC_MAT);
     c = a; //copy c
     A_sparse.multiply(c, b);

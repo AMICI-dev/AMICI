@@ -4,28 +4,20 @@
 
 #include <cstdio>
 #include <cstring>
+#include <sstream>
+#if defined(_WIN32)
+#define PLATFORM_WINDOWS // Windows
+#elif defined(_WIN64)
+#define PLATFORM_WINDOWS // Windows
+#elif defined(__CYGWIN__) && !defined(_WIN32)
+#define PLATFORM_WINDOWS // Windows (Cygwin POSIX under Microsoft Window)
+#else
+#include <execinfo.h>
+#include <dlfcn.h>    // for dladdr
+#include <cxxabi.h>   // for __cxa_demangle
+#endif
 
 namespace amici {
-
-int checkFinite(const int N, const realtype *array, const char *fun) {
-    for (int idx = 0; idx < N; idx++) {
-        if (isNaN(array[idx])) {
-            warnMsgIdAndTxt(
-                "AMICI:NaN",
-                "AMICI encountered a NaN value at index %i of %i in %s!", idx,
-                N, fun);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-        if (isInf(array[idx])) {
-            warnMsgIdAndTxt(
-                "AMICI:Inf",
-                "AMICI encountered an Inf value at index %i of %i in %s!", idx,
-                N, fun);
-            return AMICI_RECOVERABLE_ERROR;
-        }
-    }
-    return AMICI_SUCCESS;
-}
 
 double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
 {
@@ -41,20 +33,19 @@ double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
     throw AmiException("Invalid value for ParameterScaling.");
 }
 
-void unscaleParameters(const double *bufferScaled, const ParameterScaling *pscale, int n, double *bufferUnscaled)
+void unscaleParameters(gsl::span<const realtype> bufferScaled,
+                       gsl::span<const ParameterScaling> pscale,
+                       gsl::span<realtype> bufferUnscaled)
 {
-    for (int ip = 0; ip < n; ++ip) {
+    Expects(bufferScaled.size() == pscale.size());
+    Expects(bufferScaled.size() == bufferUnscaled.size());
+
+    for (gsl::span<realtype>::index_type ip = 0;
+         ip < bufferScaled.size(); ++ip) {
         bufferUnscaled[ip] = getUnscaledParameter(bufferScaled[ip], pscale[ip]);
     }
-
 }
 
-void unscaleParameters(const std::vector<double> &bufferScaled, const std::vector<ParameterScaling> &pscale, std::vector<double> &bufferUnscaled)
-{
-    if(bufferScaled.size() != pscale.size() || pscale.size() != bufferUnscaled.size())
-        throw AmiException("Vector size mismatch in unscaleParameters.");
-    unscaleParameters(bufferScaled.data(), pscale.data(), bufferScaled.size(), bufferUnscaled.data());
-}
 
 double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
 {
@@ -71,19 +62,84 @@ double getScaledParameter(double unscaledParameter, ParameterScaling scaling)
 }
 
 
-void scaleParameters(const std::vector<double> &bufferUnscaled, const std::vector<ParameterScaling> &pscale, std::vector<double> &bufferScaled)
+void scaleParameters(gsl::span<const realtype> bufferUnscaled,
+                     gsl::span<const ParameterScaling> pscale,
+                     gsl::span<realtype> bufferScaled)
 {
-    if(bufferScaled.size() != pscale.size() || pscale.size() != bufferUnscaled.size())
-        throw AmiException("Vector size mismatch in scaleParameters.");
-    for (int ip = 0; ip < (int) bufferUnscaled.size(); ++ip) {
+    Expects(bufferScaled.size() == pscale.size());
+    Expects(bufferScaled.size() == bufferUnscaled.size());
+
+    for (gsl::span<realtype>::index_type ip = 0;
+         ip < bufferUnscaled.size(); ++ip) {
         bufferScaled[ip] = getScaledParameter(bufferUnscaled[ip], pscale[ip]);
     }
 
 }
 
-int checkFinite(const std::vector<realtype> &array, const char *fun)
+int checkFinite(gsl::span<const realtype> array, const char *fun)
 {
-    return checkFinite(array.size(), array.data(), fun);
+    for (int idx = 0; idx < (int) array.size(); idx++) {
+        if (isNaN(array[idx])) {
+            warnMsgIdAndTxt(
+                "AMICI:NaN",
+                "AMICI encountered a NaN value at index %i of %i in %s!", idx,
+                (int) array.size(), fun);
+            return AMICI_RECOVERABLE_ERROR;
+        }
+        if (isInf(array[idx])) {
+            warnMsgIdAndTxt(
+                "AMICI:Inf",
+                "AMICI encountered an Inf value at index %i of %i in %s!", idx,
+                (int) array.size(), fun);
+            return AMICI_RECOVERABLE_ERROR;
+        }
+    }
+    return AMICI_SUCCESS;
+}
+
+std::string backtraceString(const int maxFrames)
+{
+    std::ostringstream trace_buf;
+
+#ifdef PLATFORM_WINDOWS
+    trace_buf << "stacktrace not available on windows platforms\n";
+#else
+    void *callstack[maxFrames];
+    char buf[1024];
+    int nFrames = backtrace(callstack, maxFrames);
+    char **symbols = backtrace_symbols(callstack, nFrames);
+
+    // start at 2 to omit AmiException and storeBacktrace
+    for (int i = 2; i < nFrames; i++) {
+        // call
+        Dl_info info;
+        if (dladdr(callstack[i], &info) && info.dli_sname) {
+            char *demangled = nullptr;
+            int status = -1;
+            if (info.dli_sname[0] == '_')
+                demangled = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr,
+                                                &status);
+            snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n", i - 2,
+                     int(2 + sizeof(void *) * 2), callstack[i],
+                     status == 0 ? demangled
+                                 : info.dli_sname == nullptr ? symbols[i]
+                                                               : info.dli_sname,
+                     static_cast<ssize_t>((char *)callstack[i] -
+                                          (char *)info.dli_saddr));
+            free(demangled);
+        } else {
+            snprintf(buf, sizeof(buf), "%-3d %*p %s\n", i - 2,
+                     int(2 + sizeof(void *) * 2), callstack[i],
+                     symbols[i]);
+        }
+        trace_buf << buf;
+    }
+    free(symbols);
+
+    if (nFrames == maxFrames)
+        trace_buf << "[truncated]\n";
+#endif
+    return trace_buf.str();
 }
 
 } // namespace amici

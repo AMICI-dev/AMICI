@@ -108,7 +108,8 @@ TEST(groupSteadystate, testRethrow) {
 }
 
 TEST(groupSteadystate, testSimulation) {
-    amici::simulateVerifyWrite("/model_steadystate/nosensi/");
+    amici::simulateVerifyWrite("/model_steadystate/nosensi/",
+                               100*TEST_ATOL, 100*TEST_RTOL);
 }
 
 TEST(groupSteadystate, testSensitivityForward) {

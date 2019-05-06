@@ -356,11 +356,11 @@ int SUNNonLinSolNewton::getSysFn(SUNNonlinSolSysFn *SysFn) const {
     return SUNNonlinSolGetSysFn_Newton(solver, SysFn);
 }
 
-SUNNonLinSolFixedPoint::SUNNonLinSolFixedPoint(const N_Vector x, int m)
+SUNNonLinSolFixedPoint::SUNNonLinSolFixedPoint(const_N_Vector x, int m)
     : SUNNonLinSolWrapper(SUNNonlinSol_FixedPoint(x, m)) {
 }
 
-SUNNonLinSolFixedPoint::SUNNonLinSolFixedPoint(int count, const N_Vector x, int m)
+SUNNonLinSolFixedPoint::SUNNonLinSolFixedPoint(int count, const_N_Vector x, int m)
     : SUNNonLinSolWrapper(SUNNonlinSol_FixedPointSens(count, x, m)) {
 }
 

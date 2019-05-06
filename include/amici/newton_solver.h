@@ -48,8 +48,13 @@ class NewtonSolver {
      * @param rtol relative tolerance
      * @return solver NewtonSolver according to the specified linsolType
      */
-    static std::unique_ptr<NewtonSolver> getSolver(realtype *t, AmiVector *x, LinearSolver linsolType, Model *model,
-                                   ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol);
+    static std::unique_ptr<NewtonSolver> getSolver(realtype *t, AmiVector *x,
+                                                   LinearSolver linsolType,
+                                                   Model *model,
+                                                   ReturnData *rdata,
+                                                   int maxlinsteps,
+                                                   int maxsteps,
+                                                   double atol, double rtol);
 
     /**
      * Computes the solution of one Newton iteration
@@ -60,14 +65,14 @@ class NewtonSolver {
      * @param delta containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      */
-    void getStep(int ntry, int nnewt, AmiVector *delta);
+    void getStep(int ntry, int nnewt, AmiVector &delta);
 
     /**
      * Computes steady state sensitivities
      *
      * @param sx pointer to state variable sensitivities
      */
-    void computeNewtonSensis(AmiVectorArray *sx);
+    void computeNewtonSensis(AmiVectorArray &sx);
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
@@ -85,7 +90,7 @@ class NewtonSolver {
      * @param rhs containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      */
-    virtual void solveLinearSystem(AmiVector *rhs) = 0;
+    virtual void solveLinearSystem(AmiVector &rhs) = 0;
 
     virtual ~NewtonSolver() = default;
 
@@ -108,7 +113,7 @@ class NewtonSolver {
     ReturnData *rdata;
     /** right hand side AmiVector */
     AmiVector xdot;
-    /** current state*/
+    /** current state */
     AmiVector *x;
     /** current state time derivative (DAE) */
     AmiVector dx;
@@ -142,7 +147,7 @@ class NewtonSolverDense : public NewtonSolver {
      * @param rhs containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      */
-    void solveLinearSystem(AmiVector *rhs) override;
+    void solveLinearSystem(AmiVector &rhs) override;
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
@@ -185,10 +190,10 @@ class NewtonSolverSparse : public NewtonSolver {
     /**
      * Solves the linear system for the Newton step
      *
-     * @param rhs containing the RHS of the linear system,will be
+     * @param rhs containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      */
-    void solveLinearSystem(AmiVector *rhs) override;
+    void solveLinearSystem(AmiVector &rhs) override;
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
@@ -224,7 +229,7 @@ class NewtonSolverIterative : public NewtonSolver {
      * @param rdata pointer to the return data object
      */
     NewtonSolverIterative(realtype *t, AmiVector *x, Model *model, ReturnData *rdata);
-    virtual ~NewtonSolverIterative() = default;
+    ~NewtonSolverIterative() override = default;
 
     /**
      * Solves the linear system for the Newton step by passing it to
@@ -233,7 +238,7 @@ class NewtonSolverIterative : public NewtonSolver {
      * @param rhs containing the RHS of the linear system, will be
      * overwritten by solution to the linear system
      */
-    void solveLinearSystem(AmiVector *rhs) override;
+    void solveLinearSystem(AmiVector &rhs) override;
 
     /**
      * Writes the Jacobian for the Newton iteration and passes it to the linear
@@ -256,7 +261,7 @@ class NewtonSolverIterative : public NewtonSolver {
      * @param nnewt integer number of current Newton step
      * @param ns_delta Newton step
      */
-    void linsolveSPBCG(int ntry, int nnewt, AmiVector *ns_delta);
+    void linsolveSPBCG(int ntry, int nnewt, AmiVector &ns_delta);
 
   private:
     /** number of tries  */

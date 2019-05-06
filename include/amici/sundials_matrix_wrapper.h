@@ -5,11 +5,11 @@
 #include <sunmatrix/sunmatrix_dense.h>  // SUNMatrix_Dense
 #include <sunmatrix/sunmatrix_sparse.h> // SUNMatrix_Sparse
 
-#include <nvector/nvector_serial.h>
-
 #include <gsl/gsl-lite.hpp>
 
 #include <vector>
+
+#include "amici/vector.h"
 
 namespace amici {
 
@@ -144,7 +144,7 @@ class SUNMatrixWrapper {
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(N_Vector c, const N_Vector b) const;
+    void multiply(N_Vector c, const_N_Vector b) const;
 
     /**
      * @brief Perform matrix vector multiplication c += A*b
@@ -168,5 +168,24 @@ class SUNMatrixWrapper {
 };
 
 } // namespace amici
+
+namespace gsl {
+/**
+ * @brief Create span from SUNMatrix
+ * @param nv
+ * @return
+ */
+inline span<realtype> make_span(SUNMatrix m)
+{
+    switch (SUNMatGetID(m)) {
+    case SUNMATRIX_DENSE:
+        return span<realtype>(SM_DATA_D(m), SM_LDATA_D(m));
+    case SUNMATRIX_SPARSE:
+        return span<realtype>(SM_DATA_S(m), SM_NNZ_S(m));
+    default:
+        throw amici::AmiException("Unimplemented SUNMatrix type for make_span");
+    }
+}
+} // namespace gsl
 
 #endif // AMICI_SUNDIALS_MATRIX_WRAPPER_H

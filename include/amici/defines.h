@@ -1,5 +1,6 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
+
 #include <cmath>
 
 namespace amici {
@@ -48,8 +49,9 @@ constexpr double pi = 3.14159265358979323846;
 #define TRUE 1
 #endif
 
-/** defines variable type for simulation variables (determines numerical accuracy) */
-typedef double realtype;
+/** defines variable type for simulation variables
+ * (determines numerical accuracy) */
+using realtype = double;
 
 /** BLAS Matrix Layout, affects dgemm and gemv calls */
 enum class BLASLayout{
@@ -152,7 +154,7 @@ enum class NewtonStatus {
  * @param format string with error message printf-style format
  * @param ... arguments to be formatted
  */
-typedef void (*msgIdAndTxtFp)(const char *identifier, const char *format, ...);
+using msgIdAndTxtFp = void (*)(const char *, const char *, ...);
 
 // clang-format on
 
