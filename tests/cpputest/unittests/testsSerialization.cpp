@@ -158,7 +158,7 @@ TEST(dataSerialization, testString) {
                                             std::vector<realtype>(nx,0.0),
                                             std::vector<int>(nz,0));
 
-    amici::ReturnData r(solver, &m);
+    amici::ReturnData r(solver, m);
 
     std::string serialized = amici::serializeToString(r);
 
@@ -182,7 +182,3 @@ TEST(dataSerialization, testStdVec) {
 
     CHECK_TRUE(solver == v);
 }
-
-
-
-

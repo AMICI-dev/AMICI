@@ -2,321 +2,318 @@
 #define AMICI_VECTOR_H
 
 #include <vector>
+#include <type_traits>
+
+#include <amici/exception.h>
 
 #include <nvector/nvector_serial.h>
-#include <amici/exception.h>
+
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 
+/** Since const N_Vector is not what we want */
+using const_N_Vector =
+    std::add_const<typename std::remove_pointer<N_Vector>::type *>::type;
+
 /** AmiVector class provides a generic interface to the NVector_Serial struct */
 class AmiVector {
-public:
-    /**
-      * Creates an std::vector<realtype> and attaches the
-      * data pointer to a newly created N_Vector_Serial.
-      * Using N_VMake_Serial ensures that the N_Vector
-      * module does not try to deallocate the data vector
-      * when calling N_VDestroy_Serial
-      * @param length number of elements in vector
-      * @return new AmiVector instance
-      */
-
-    explicit AmiVector(const long int length)
-        : vec(static_cast<decltype(vec)::size_type>(length), 0.0),
-          nvec(N_VMake_Serial(length,vec.data()))
-    {
-    }
-
-    /** constructor from std::vector, copies data from std::vector
-      * and constructs an nvec that points to the data
-      * @param rvec vector from which the data will be copied
-      * @return new AmiVector instance
-      */
-    explicit AmiVector(std::vector<realtype> rvec)
-        : vec(std::move(rvec)),
-          nvec(N_VMake_Serial(static_cast<long int>(vec.size()), vec.data()))
-    {
-    }
-
-    /** copy constructor
-      * @param vold vector from which the data will be copied
-      */
-    AmiVector(const AmiVector& vold): vec(vold.vec) {
-        nvec = N_VMake_Serial(static_cast<long int>(vold.vec.size()), vec.data());
-    }
-
-    /** copy assignment operator
-      * @param other right hand side
-      * @return left hand side
-      */
-    AmiVector& operator=(AmiVector const& other) {
-        vec = other.vec;
-        if(nvec)
-            N_VDestroy_Serial(nvec);
-        nvec = N_VMake_Serial(static_cast<long int>(vec.size()),vec.data());
-        return *this;
-    }
-
-    /** data accessor
-      * @return pointer to data array
-      */
-    realtype *data() {
-        return vec.data();
-    }
-
-    /** const data accessor
-      * @return const pointer to data array
-      */
-    const realtype *data() const {
-        return vec.data();
-    }
-
-    /** N_Vector accessor
-      * @return N_Vector
-      */
-    N_Vector getNVector() const {
-        return nvec;
-    }
-
-    /** Vector accessor
-      * @return Vector
-      */
-    std::vector<realtype> const& getVector() const {
-        return vec;
-    }
-
-    /** returns the length of the vector
-      * @return length
-      */
-    int getLength() const {
-        return static_cast<int>(vec.size());
-    }
-
-    /** resets the Vector by filling with zero values
-      */
-    void reset() {
-        set(0.0);
-    }
-
-    /** changes the sign of data elements
-      */
-    void minus() {
-        for(std::vector<realtype>::iterator it = vec.begin();
-            it != vec.end(); ++it)
-         *it = -*it;
-    }
-
-    /** sets all data elements to a specific value
-      * @param val value for data elements
-      */
-    void set(realtype val) {
-        std::fill(vec.begin(), vec.end(), val);
-    }
-
-    /** accessor to data elements of the vector
-      * @param pos index of element
-      * @return element
-      */
-    realtype& operator[](int pos) {
-        return vec.at(static_cast<decltype(vec)::size_type>(pos));
-    }
-
-    /** accessor to data elements of the vector
-      * @param pos index of element
-      * @return element
-      */
-    realtype& at(int pos) {
-        return vec.at(static_cast<decltype(vec)::size_type>(pos));
-    }
-
-    /** accessor to data elements of the vector
-     * @param pos index of element
-     * @return element
-     */
-    const realtype& at(int pos) const {
-        return vec.at(static_cast<decltype(vec)::size_type>(pos));
-    }
-
-    ~AmiVector(){
-        N_VDestroy_Serial(nvec);
-    }
-
-private:
-    /** main data storage */
-    std::vector<realtype> vec;
-    /** N_Vector, will be synchronised such that it points to
-      * data in vec */
-    N_Vector nvec = nullptr;
-};
-
-
-/** AmiVectorArray class.
-     provides a generic interface to arrays of NVector_Serial structs
-*/
-class AmiVectorArray {
-public:
-    
+  public:
     /**
      * @brief Default constructor
      * @return new empty AmiVectorArray instance
      */
-    AmiVectorArray() {}
-    
-    /** creates an std::vector<realype> and attaches the
-      * data pointer to a newly created N_VectorArray
-      * using CloneVectorArrayEmpty ensures that the N_Vector
-      * module does not try to deallocate the data vector
-      * when calling N_VDestroyVectorArray_Serial
-      * @param length_inner length of vectors
-      * @param length_outer number of vectors
-      * @return New AmiVectorArray instance
-      */
-    AmiVectorArray(long int length_inner, long int length_outer)
-        : vec_array(length_outer, AmiVector(length_inner))
-    {
-        nvec_array.resize(length_outer);
-        for (int idx = 0; idx < length_outer; idx++) {
-            nvec_array.at(idx) = vec_array.at(idx).getNVector();
-        }
+    AmiVector() = default;
+
+    /** Creates an std::vector<realtype> and attaches the
+     * data pointer to a newly created N_Vector_Serial.
+     * Using N_VMake_Serial ensures that the N_Vector
+     * module does not try to deallocate the data vector
+     * when calling N_VDestroy_Serial
+     * @brief emmpty constructor
+     * @param length number of elements in vector
+     * @return new AmiVector instance
+     */
+    explicit AmiVector(const long int length)
+        : vec(static_cast<decltype(vec)::size_type>(length), 0.0),
+          nvec(N_VMake_Serial(length, vec.data())) {}
+
+    /** Copies data from std::vector and constructs an nvec that points to the
+     * data
+     * @brief constructor from std::vector,
+     * @param rvec vector from which the data will be copied
+     * @return new AmiVector instance
+     */
+    explicit AmiVector(std::vector<realtype> rvec)
+        : vec(std::move(rvec)),
+          nvec(N_VMake_Serial(static_cast<long int>(vec.size()), vec.data())) {}
+
+    /**
+     * @brief copy constructor
+     * @param vold vector from which the data will be copied
+     */
+    AmiVector(const AmiVector &vold) : vec(vold.vec) {
+        nvec =
+            N_VMake_Serial(static_cast<long int>(vold.vec.size()), vec.data());
     }
-    
-    /** 
+
+    /**
      * @brief copy assignment operator
      * @param other right hand side
      * @return left hand side
      */
-    AmiVectorArray& operator=(AmiVectorArray const& other) {
-        vec_array = other.vec_array;
-        nvec_array.resize(other.getLength());
-        for (int idx = 0; idx < other.getLength(); idx++) {
-            nvec_array.at(idx) = vec_array.at(idx).getNVector();
-        }
-        return *this;
-    }
+    AmiVector &operator=(AmiVector const &other);
 
-    /** copy constructor
-      * @param vaold object to copy from
-      * @return new AmiVectorArray instance
-      */
-    AmiVectorArray(const AmiVectorArray& vaold) : vec_array(vaold.vec_array) {
-        nvec_array.resize(vaold.getLength());
-        for (int idx = 0; idx < vaold.getLength(); idx++) {
-            nvec_array.at(idx) = vec_array.at(idx).getNVector();
-        }
-    }
+    /**
+     * @brief data accessor
+     * @return pointer to data array
+     */
+    realtype *data();
 
-    /** accessor to data of AmiVector elements
-      * @param pos index of AmiVector
-      * @return pointer to data array
-      */
-    realtype *data(int pos) {
-        return vec_array.at(pos).data();
-    }
+    /**
+     * @brief const data accessor
+     * @return const pointer to data array
+     */
+    const realtype *data() const;
 
-    /** const accessor to data of AmiVector elements
-      * @param pos index of AmiVector
-      * @return const pointer to data array
-      */
-    const realtype *data(int pos) const {
-        return vec_array.at(pos).data();
-    }
+    /**
+     * @brief N_Vector accessor
+     * @return N_Vector
+     */
+    N_Vector getNVector();
 
-    /** accessor to elements of AmiVector elements
+    /**
+     * @brief N_Vector accessor
+     * @return N_Vector
+     */
+    const_N_Vector getNVector() const;
+
+    /**
+     * @brief Vector accessor
+     * @return Vector
+     */
+    std::vector<realtype> const &getVector();
+
+    /**
+     * @brief returns the length of the vector
+     * @return length
+     */
+    int getLength() const;
+
+    /**
+     * @brief resets the Vector by filling with zero values
+     */
+    void reset();
+
+    /**
+     * @brief changes the sign of data elements
+     */
+    void minus();
+
+    /**
+     * @brief sets all data elements to a specific value
+     * @param val value for data elements
+     */
+    void set(realtype val);
+
+    /**
+     * @brief accessor to data elements of the vector
+     * @param pos index of element
+     * @return element
+     */
+    realtype &operator[](int pos);
+    /**
+     * @brief accessor to data elements of the vector
+     * @param pos index of element
+     * @return element
+     */
+    realtype &at(int pos);
+
+    /**
+     * @brief accessor to data elements of the vector
+     * @param pos index of element
+     * @return element
+     */
+    const realtype &at(int pos) const;
+
+    /**
+     * @brief copies data from another AmiVector
+     * @param other data source
+     */
+    void copy(const AmiVector &other);
+
+    /**
+     * @brief destructor
+     */
+    ~AmiVector();
+
+  private:
+    /** main data storage */
+    std::vector<realtype> vec;
+
+    /** N_Vector, will be synchronised such that it points to data in vec */
+    N_Vector nvec = nullptr;
+
+    /**
+     * @brief reconstructs nvec such that data pointer points to vec data array
+     */
+    void synchroniseNVector();
+};
+
+/**
+ * @brief AmiVectorArray class.
+ *
+ * Provides a generic interface to arrays of NVector_Serial structs
+ */
+class AmiVectorArray {
+  public:
+    /**
+     * @brief Default constructor
+     * @return new empty AmiVectorArray instance
+     */
+    AmiVectorArray() = default;
+
+    /**
+     * Creates an std::vector<realype> and attaches the
+     * data pointer to a newly created N_VectorArray
+     * using CloneVectorArrayEmpty ensures that the N_Vector
+     * module does not try to deallocate the data vector
+     * when calling N_VDestroyVectorArray_Serial
+     * @brief empty constructor
+     * @param length_inner length of vectors
+     * @param length_outer number of vectors
+     * @return New AmiVectorArray instance
+     */
+    AmiVectorArray(long int length_inner, long int length_outer);
+
+    /**
+     * @brief copy assignment operator
+     * @param other right hand side
+     * @return left hand side
+     */
+    AmiVectorArray &operator=(AmiVectorArray const &other);
+
+    /**
+     * @brief copy constructor
+     * @param vaold object to copy from
+     * @return new AmiVectorArray instance
+     */
+    AmiVectorArray(const AmiVectorArray &vaold);
+
+    /**
+     * @brief accessor to data of AmiVector elements
+     * @param pos index of AmiVector
+     * @return pointer to data array
+     */
+    realtype *data(int pos);
+
+    /**
+     * @brief const accessor to data of AmiVector elements
+     * @param pos index of AmiVector
+     * @return const pointer to data array
+     */
+    const realtype *data(int pos) const;
+
+    /**
+     * @brief accessor to elements of AmiVector elements
      * @param ipos inner index in AmiVector
      * @param jpos outer index in AmiVectorArray
      * @return element
      */
-    realtype& at(int ipos, int jpos) {
-        return vec_array.at(jpos).at(ipos);
-    }
+    realtype &at(int ipos, int jpos);
 
-    /** accessor to elements of AmiVector elements
-      * @param ipos inner index in AmiVector
-      * @param jpos outer index in AmiVectorArray
-      * @return element
-      */
-    const realtype& at(int ipos, int jpos) const {
-        return vec_array.at(jpos).at(ipos);
-    }
+    /**
+     * @brief const accessor to elements of AmiVector elements
+     * @param ipos inner index in AmiVector
+     * @param jpos outer index in AmiVectorArray
+     * @return element
+     */
+    const realtype &at(int ipos, int jpos) const;
 
-    /** accessor to NVectorArray
-      * @return N_VectorArray
-      */
-    N_Vector *getNVectorArray() {
-        return nvec_array.data();
-    }
+    /**
+     * @brief accessor to NVectorArray
+     * @return N_VectorArray
+     */
+    N_Vector *getNVectorArray();
 
-    /** accessor to NVector element
-      * @param pos index of corresponding AmiVector
-      * @return N_Vector
-      */
-    N_Vector getNVector(int pos) {
-        return nvec_array.at(pos);
-    }
+    /**
+     * @brief accessor to NVector element
+     * @param pos index of corresponding AmiVector
+     * @return N_Vector
+     */
+    N_Vector getNVector(int pos);
 
-    /** accessor to AmiVector elements
-      * @param pos index of AmiVector
-      * @return AmiVector
-      */
-    AmiVector& operator[](int pos) {
-        return vec_array.at(pos);
-    }
+    /**
+     * @brief const accessor to NVector element
+     * @param pos index of corresponding AmiVector
+     * @return N_Vector
+     */
+    const_N_Vector getNVector(int pos) const;
 
-    /** const accessor to AmiVector elements
-      * @param pos index of AmiVector
-      * @return const AmiVector
-      */
-    const AmiVector& operator[](int pos) const {
-        return vec_array.at(pos);
-    }
+    /**
+     * @brief accessor to AmiVector elements
+     * @param pos index of AmiVector
+     * @return AmiVector
+     */
+    AmiVector &operator[](int pos);
 
-    /** length of AmiVectorArray
-      * @return length
-      */
-    int getLength() const {
-        return static_cast<int>(vec_array.size());
-    }
+    /**
+     * @brief const accessor to AmiVector elements
+     * @param pos index of AmiVector
+     * @return const AmiVector
+     */
+    const AmiVector &operator[](int pos) const;
 
-    /** resets every AmiVector in AmiVectorArray */
-    void reset() {
-        for(auto &v: vec_array)
-            v.reset();
-    }
+    /**
+     * @brief length of AmiVectorArray
+     * @return length
+     */
+    int getLength() const;
 
-    /** flattens the AmiVectorArray to a vector in row-major format
+    /**
+     * @brief resets every AmiVector in AmiVectorArray
+     */
+    void reset();
+
+    /**
+     * @brief flattens the AmiVectorArray to a vector in row-major format
      * @param vec vector into which the AmiVectorArray will be flattened. Must
      * have length equal to number of elements.
      */
-    void flatten_to_vector(std::vector<realtype>& vec) const {
-        int n_outer = vec_array.size();
-        if(n_outer == 0)
-            return; //nothing to do ...
-        int n_inner = vec_array.at(0).getLength();
+    void flatten_to_vector(std::vector<realtype> &vec) const;
 
-        if (static_cast<int>(vec.size()) != n_inner * n_outer) {
-            throw AmiException("Dimension of AmiVectorArray (%ix%i) does not "
-                               "match target vector dimension (%u)",
-                               n_inner, n_outer, vec.size());
-        }
-
-        for (int outer = 0; outer < n_outer; ++outer) {
-            for (int inner = 0; inner < n_inner; ++inner)
-                vec.at(inner + outer * n_inner) = this->at(inner,outer);
-        }
-    }
+    /**
+     * @brief copies data from another AmiVectorArray
+     * @param other data source
+     */
+    void copy(const AmiVectorArray &other);
 
     ~AmiVectorArray() = default;
 
-private:
+  private:
     /** main data storage */
     std::vector<AmiVector> vec_array;
-    /** N_Vector array, will be synchronised such that it points to
-      * respective elements in the vec_array
-      */
+
+    /**
+     * N_Vector array, will be synchronised such that it points to
+     * respective elements in the vec_array
+     */
     std::vector<N_Vector> nvec_array;
 };
 
-}
+} // namespace amici
 
+
+namespace gsl {
+/**
+ * @brief Create span from N_Vector
+ * @param nv
+ * @return
+ */
+inline span<realtype> make_span(N_Vector nv)
+{
+    return span<realtype>(N_VGetArrayPointer(nv), N_VGetLength_Serial(nv));
+}
+} // namespace gsl
 
 #endif /* AMICI_VECTOR_H */
