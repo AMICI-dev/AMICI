@@ -43,8 +43,6 @@ Solver::Solver(const Solver &other) : Solver() {
     iter = other.iter;
     stldet = other.stldet;
     ordering = other.ordering;
-    cpu_time = other.cpu_time;
-    cpu_timeB = other.cpu_timeB;
 }
 
 int Solver::run(const realtype tout, ReturnData *rdata) const {
@@ -183,8 +181,6 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
 
         getLastOrder(solverMemory.get(), &rdata->order[it]);
     }
-    
-    rdata->cpu_time = this->cpu_time;
 }
 
 void Solver::getDiagnosisB(const int it, ReturnData *rdata,
@@ -204,8 +200,6 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata,
         getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
         rdata->numnonlinsolvconvfailsB[it] = number;
     }
-    
-    rdata->cpu_timeB = this->cpu_timeB;
 }
 
 void Solver::initializeLinearSolver(const Model *model) const {

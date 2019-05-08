@@ -107,7 +107,7 @@ void ForwardProblem::workForwardProblem() {
                     sstate.workSteadyStateProblem(rdata, solver, model, it);
                     sstate.writeSolution(&t, x, sx);
                 } else {
-                    int status = solver->run(nextTimepoint);
+                    int status = solver->run(nextTimepoint, rdata);
                     solver->writeSolution(&t, x, dx, sx);
                     /* sx will be copied from solver on demand if sensitivities
                      are computed */
@@ -216,7 +216,7 @@ void ForwardProblem::handlePresimulation()
     t = model->t0() - edata->t_presim;
     updateAndReinitStatesAndSensitivities(false);
 
-    solver->run(model->t0());
+    solver->run(model->t0(), rdata);
 
     if(overrideFixedParameters) {
         model->setFixedParameters(originalFixedParameters);

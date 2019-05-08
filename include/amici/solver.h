@@ -1438,12 +1438,6 @@ class Solver {
 
     /** number of checkpoints in the forward problem */
     mutable int ncheckPtr;
-
-    /** computation time of forward solve [s] */
-    double cpu_time = 0.0;
-
-    /** computation time of backward solve [s] */
-    double cpu_timeB = 0.0;
 };
 
 bool operator==(const Solver &a, const Solver &b);
