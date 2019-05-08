@@ -6,7 +6,7 @@ if(Git_FOUND)
         )
 endif()
 
-execute_process(COMMAND sh -c "cat version.txt"
+execute_process(COMMAND sh -c "cat version.txt | tr -d '\n'"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     OUTPUT_VARIABLE PROJECT_VERSION
     )
