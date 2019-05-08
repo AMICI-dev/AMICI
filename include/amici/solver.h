@@ -62,6 +62,7 @@ class Solver {
      * @brief runs a forward simulation until the specified timepoint
      *
      * @param tout next timepooint
+     * @param rdata pointer to the return data object
      * @return status flag
      */
     int run(realtype tout, ReturnData *rdata) const;
@@ -78,6 +79,7 @@ class Solver {
      * @brief runs a backward simulation until the specified timepoint
      *
      * @param tout next timepooint
+     * @param rdata pointer to the return data object
      * @return status flag
      */
     void runB(realtype tout, ReturnData *rdata) const;
