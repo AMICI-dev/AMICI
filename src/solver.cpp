@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 
 namespace amici {
 
@@ -46,12 +47,15 @@ Solver::Solver(const Solver &other) : Solver() {
 
 int Solver::run(const realtype tout) const {
     setStopTime(tout);
+    clock_t starttime = clock();
     int status;
     if (getAdjInitDone()) {
         status = solveF(tout, AMICI_NORMAL, &ncheckPtr);
     } else {
         status = solve(tout, AMICI_NORMAL);
     }
+    rdata->cpu_time +=
+        (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     return status;
 }
 
@@ -66,7 +70,10 @@ int Solver::step(const realtype tout) const {
 }
 
 void Solver::runB(const realtype tout) const {
+    clock_t starttime = clock();
     solveB(tout, AMICI_NORMAL);
+    rdata->cpu_timeB +=
+        (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     t = tout;
 }
 

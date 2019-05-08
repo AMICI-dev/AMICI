@@ -202,6 +202,12 @@ class ReturnData {
     /** employed order forward problem (dimension: nt) */
     std::vector<int> order;
 
+    /** computation time of forward solve [s] */
+    double cpu_time = 0.0;
+
+    /** computation time of backward solve [s] */
+    double cpu_timeB = 0.0;
+
     /** flag indicating success of Newton solver */
     int newton_status = 0;
 
