@@ -64,7 +64,7 @@ class Solver {
      * @param tout next timepooint
      * @return status flag
      */
-    int run(realtype tout) const;
+    int run(realtype tout, ReturnData *rdata) const;
 
     /**
      * @brief makes a single step in the simulation
@@ -80,7 +80,7 @@ class Solver {
      * @param tout next timepooint
      * @return status flag
      */
-    void runB(realtype tout) const;
+    void runB(realtype tout, ReturnData *rdata) const;
 
     /**
      * @brief Initialises the ami memory object and applies specified options
@@ -1438,6 +1438,12 @@ class Solver {
 
     /** number of checkpoints in the forward problem */
     mutable int ncheckPtr;
+
+    /** computation time of forward solve [s] */
+    double cpu_time = 0.0;
+
+    /** computation time of backward solve [s] */
+    double cpu_timeB = 0.0;
 };
 
 bool operator==(const Solver &a, const Solver &b);

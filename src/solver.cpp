@@ -43,9 +43,11 @@ Solver::Solver(const Solver &other) : Solver() {
     iter = other.iter;
     stldet = other.stldet;
     ordering = other.ordering;
+    cpu_time = other.cpu_time;
+    cpu_timeB = other.cpu_timeB;
 }
 
-int Solver::run(const realtype tout) const {
+int Solver::run(const realtype tout, ReturnData *rdata) const {
     setStopTime(tout);
     clock_t starttime = clock();
     int status;
@@ -54,8 +56,7 @@ int Solver::run(const realtype tout) const {
     } else {
         status = solve(tout, AMICI_NORMAL);
     }
-    rdata->cpu_time +=
-        (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    rdata->cpu_time +=(double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     return status;
 }
 
@@ -69,11 +70,10 @@ int Solver::step(const realtype tout) const {
     return status;
 }
 
-void Solver::runB(const realtype tout) const {
+void Solver::runB(const realtype tout, ReturnData *rdata) const {
     clock_t starttime = clock();
     solveB(tout, AMICI_NORMAL);
-    rdata->cpu_timeB +=
-        (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    rdata->cpu_timeB +=(double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     t = tout;
 }
 
@@ -183,6 +183,8 @@ void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
 
         getLastOrder(solverMemory.get(), &rdata->order[it]);
     }
+    
+    rdata->cpu_time = this->cpu_time;
 }
 
 void Solver::getDiagnosisB(const int it, ReturnData *rdata,
@@ -202,6 +204,8 @@ void Solver::getDiagnosisB(const int it, ReturnData *rdata,
         getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
         rdata->numnonlinsolvconvfailsB[it] = number;
     }
+    
+    rdata->cpu_timeB = this->cpu_timeB;
 }
 
 void Solver::initializeLinearSolver(const Model *model) const {
