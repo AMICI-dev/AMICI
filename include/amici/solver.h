@@ -1254,16 +1254,6 @@ class Solver {
      */
     void applySensitivityTolerances() const;
     
-    /**
-     * @brief Increments cpu_time by cpu_time_inc
-     */
-    void incrementCpuTime(realtype cpu_time_inc) const;
-
-    /**
-     * @brief Increments cpu_timeB by cpu_time_inc
-     */
-    void incrementCpuTimeB(realtype cpu_time_inc) const;
-    
     /** pointer to solver memory block */
     mutable std::unique_ptr<void, std::function<void(void *)>> solverMemory;
 

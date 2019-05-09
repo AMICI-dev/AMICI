@@ -54,7 +54,7 @@ int Solver::run(const realtype tout) const {
     } else {
         status = solve(tout, AMICI_NORMAL);
     }
-    incrementCpuTime((realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC);
+    cpu_time += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     return status;
 }
 
@@ -71,7 +71,7 @@ int Solver::step(const realtype tout) const {
 void Solver::runB(const realtype tout) const {
     clock_t starttime = clock();
     solveB(tout, AMICI_NORMAL);
-    incrementCpuTimeB((realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC);
+    cpu_timeB += (realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
     t = tout;
 }
 
@@ -879,14 +879,6 @@ void Solver::setQuadInitDoneB(const int which) const {
     if (which >= static_cast<int>(initializedQB.size()))
         initializedQB.resize(which + 1, false);
     initializedQB.at(which) = true;
-}
-
-void Solver::incrementCpuTime(realtype cpu_time_inc) const {
-    cpu_time += cpu_time_inc;
-}
-
-void Solver::incrementCpuTimeB(realtype cpu_time_inc) const {
-    cpu_timeB += cpu_time_inc;
 }
 
 realtype Solver::getCpuTime() const {
