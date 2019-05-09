@@ -45,7 +45,7 @@ Solver::Solver(const Solver &other) : Solver() {
     ordering = other.ordering;
 }
 
-int Solver::run(const realtype tout, ReturnData *rdata) const {
+int Solver::run(const realtype tout) const {
     setStopTime(tout);
     clock_t starttime = clock();
     int status;
@@ -54,7 +54,7 @@ int Solver::run(const realtype tout, ReturnData *rdata) const {
     } else {
         status = solve(tout, AMICI_NORMAL);
     }
-    rdata->cpu_time +=(double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    incrementCpuTime((realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC);
     return status;
 }
 
@@ -68,10 +68,10 @@ int Solver::step(const realtype tout) const {
     return status;
 }
 
-void Solver::runB(const realtype tout, ReturnData *rdata) const {
+void Solver::runB(const realtype tout) const {
     clock_t starttime = clock();
     solveB(tout, AMICI_NORMAL);
-    rdata->cpu_timeB +=(double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    incrementCpuTimeB((realtype)((clock() - starttime) * 1000) / CLOCKS_PER_SEC);
     t = tout;
 }
 
@@ -879,6 +879,22 @@ void Solver::setQuadInitDoneB(const int which) const {
     if (which >= static_cast<int>(initializedQB.size()))
         initializedQB.resize(which + 1, false);
     initializedQB.at(which) = true;
+}
+
+void incrementCpuTime(realtype cpu_time_inc) {
+    cpu_time += cpu_time_inc;
+}
+
+void incrementCpuTimeB(realtype cpu_time_inc) {
+    cpu_timeB += cpu_time_inc;
+}
+
+realtype incrementCpuTime() {
+    return cpu_time;
+}
+
+realtype incrementCpuTimeB() {
+    return cpu_timeB;
 }
 
 void Solver::resetMutableMemory(const int nx, const int nplist,

@@ -65,7 +65,7 @@ class Solver {
      * @param rdata pointer to the return data object
      * @return status flag
      */
-    int run(realtype tout, ReturnData *rdata) const;
+    int run(realtype tout) const;
 
     /**
      * @brief makes a single step in the simulation
@@ -79,10 +79,9 @@ class Solver {
      * @brief runs a backward simulation until the specified timepoint
      *
      * @param tout next timepooint
-     * @param rdata pointer to the return data object
      * @return status flag
      */
-    void runB(realtype tout, ReturnData *rdata) const;
+    void runB(realtype tout) const;
 
     /**
      * @brief Initialises the ami memory object and applies specified options
@@ -1245,6 +1244,26 @@ class Solver {
      */
     void applySensitivityTolerances() const;
 
+    /**
+     * @brief Reads out cpu_time by cpu_time_inc
+     */
+    realtype getCpuTime();
+    
+    /**
+     * @brief Reads out cpu_timeB by cpu_time_inc
+     */
+    realtype getCpuTimeB();
+    
+    /**
+     * @brief Increments cpu_time by cpu_time_inc
+     */
+    void incrementCpuTime(realtype cpu_time_inc);
+
+    /**
+     * @brief Increments cpu_timeB by cpu_time_inc
+     */
+    void incrementCpuTimeB(realtype cpu_time_inc);
+    
     /** pointer to solver memory block */
     mutable std::unique_ptr<void, std::function<void(void *)>> solverMemory;
 
@@ -1414,6 +1433,12 @@ class Solver {
 
     /** relative tolerances for steadystate computation */
     realtype ss_rtol_sensi = NAN;
+    
+    /** CPU time, forward solve */
+    realtype cpu_time = 0.0;
+    
+    /** CPU time, backward solve */
+    realtype cpu_timeB = 0.0;
 
     /** maximum number of allowed integration steps for backward problem */
     long int maxstepsB = 0;
