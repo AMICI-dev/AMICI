@@ -57,7 +57,7 @@ void BackwardProblem::workBackwardProblem() {
         double tnext = getTnext(discs, iroot, it);
 
         if (tnext < t) {
-            solver->runB(tnext, rdata);
+            solver->runB(tnext);
             solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
             solver->getDiagnosisB(it, rdata, this->which);
         }
@@ -84,12 +84,13 @@ void BackwardProblem::workBackwardProblem() {
     /* we still need to integrate from first datapoint to tstart */
     if (t > model->t0()) {
         /* solve for backward problems */
-        solver->runB(model->t0(), rdata);
+        solver->runB(model->t0());
         solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
         solver->getDiagnosisB(0, rdata, this->which);
     }
 
     computeLikelihoodSensitivities();
+    rdata->cpu_timeB = solver->getCpuTimeB();
 }
 
 

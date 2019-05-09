@@ -881,19 +881,19 @@ void Solver::setQuadInitDoneB(const int which) const {
     initializedQB.at(which) = true;
 }
 
-void incrementCpuTime(realtype cpu_time_inc) {
+void Solver::incrementCpuTime(realtype cpu_time_inc) const {
     cpu_time += cpu_time_inc;
 }
 
-void incrementCpuTimeB(realtype cpu_time_inc) {
+void Solver::incrementCpuTimeB(realtype cpu_time_inc) const {
     cpu_timeB += cpu_time_inc;
 }
 
-realtype incrementCpuTime() {
+realtype Solver::getCpuTime() const {
     return cpu_time;
 }
 
-realtype incrementCpuTimeB() {
+realtype Solver::getCpuTimeB() const {
     return cpu_timeB;
 }
 

@@ -631,6 +631,16 @@ class Solver {
      * @return t
      */
     realtype gett() const;
+    
+    /**
+     * @brief Reads out cpu_time by cpu_time_inc
+     */
+    realtype getCpuTime() const;
+    
+    /**
+     * @brief Reads out cpu_timeB by cpu_time_inc
+     */
+    realtype getCpuTimeB() const;
 
     /**
      * @brief number of states with which the solver was initialized
@@ -1243,26 +1253,16 @@ class Solver {
      * currently specified member variables
      */
     void applySensitivityTolerances() const;
-
-    /**
-     * @brief Reads out cpu_time by cpu_time_inc
-     */
-    realtype getCpuTime();
-    
-    /**
-     * @brief Reads out cpu_timeB by cpu_time_inc
-     */
-    realtype getCpuTimeB();
     
     /**
      * @brief Increments cpu_time by cpu_time_inc
      */
-    void incrementCpuTime(realtype cpu_time_inc);
+    void incrementCpuTime(realtype cpu_time_inc) const;
 
     /**
      * @brief Increments cpu_timeB by cpu_time_inc
      */
-    void incrementCpuTimeB(realtype cpu_time_inc);
+    void incrementCpuTimeB(realtype cpu_time_inc) const;
     
     /** pointer to solver memory block */
     mutable std::unique_ptr<void, std::function<void(void *)>> solverMemory;
@@ -1435,10 +1435,10 @@ class Solver {
     realtype ss_rtol_sensi = NAN;
     
     /** CPU time, forward solve */
-    realtype cpu_time = 0.0;
+    mutable realtype cpu_time = 0.0;
     
     /** CPU time, backward solve */
-    realtype cpu_timeB = 0.0;
+    mutable realtype cpu_timeB = 0.0;
 
     /** maximum number of allowed integration steps for backward problem */
     long int maxstepsB = 0;

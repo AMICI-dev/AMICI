@@ -107,7 +107,7 @@ void ForwardProblem::workForwardProblem() {
                     sstate.workSteadyStateProblem(rdata, solver, model, it);
                     sstate.writeSolution(&t, x, sx);
                 } else {
-                    int status = solver->run(nextTimepoint, rdata);
+                    int status = solver->run(nextTimepoint);
                     solver->writeSolution(&t, x, dx, sx);
                     /* sx will be copied from solver on demand if sensitivities
                      are computed */
@@ -135,6 +135,7 @@ void ForwardProblem::workForwardProblem() {
     }
 
     storeJacobianAndDerivativeInReturnData();
+    rdata->cpu_time = solver->getCpuTime();
 }
 
 
@@ -216,7 +217,7 @@ void ForwardProblem::handlePresimulation()
     t = model->t0() - edata->t_presim;
     updateAndReinitStatesAndSensitivities(false);
 
-    solver->run(model->t0(), rdata);
+    solver->run(model->t0());
 
     if(overrideFixedParameters) {
         model->setFixedParameters(originalFixedParameters);
