@@ -62,7 +62,6 @@ class Solver {
      * @brief runs a forward simulation until the specified timepoint
      *
      * @param tout next timepooint
-     * @param rdata pointer to the return data object
      * @return status flag
      */
     int run(realtype tout) const;
@@ -1253,7 +1252,7 @@ class Solver {
      * currently specified member variables
      */
     void applySensitivityTolerances() const;
-    
+
     /** pointer to solver memory block */
     mutable std::unique_ptr<void, std::function<void(void *)>> solverMemory;
 
