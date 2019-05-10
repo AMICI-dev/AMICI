@@ -1,6 +1,7 @@
 #include "amici/forwardproblem.h"
 
 #include "amici/cblas.h"
+#include "amici/misc.h"
 #include "amici/model.h"
 #include "amici/solver.h"
 #include "amici/exception.h"
@@ -390,22 +391,16 @@ void ForwardProblem::getEventOutput() {
         }
 
         /* get event output */
-        model->getEvent(
-            gsl::make_span(&rdata->z.at(nroots.at(ie) * rdata->nz), rdata->nz),
-            t, ie, x);
+        model->getEvent(slice(rdata->z, nroots.at(ie), rdata->nz), t, ie, x);
         /* if called from fillEvent at last timepoint,
          then also get the root function value */
         if (t == model->getTimepoint(model->nt() - 1))
-            model->getEventRegularization(
-                gsl::make_span(&rdata->rz.at(nroots.at(ie) * rdata->nz),
-                               rdata->nz),
-                ie, t, x);
+            model->getEventRegularization(slice(rdata->rz, nroots.at(ie),
+                                                rdata->nz), ie, t, x);
 
         if (edata) {
-            model->getEventSigma(
-                gsl::make_span(&rdata->sigmaz.at(nroots.at(ie) * rdata->nz),
-                               rdata->nz),
-                ie, nroots.at(ie), t, edata);
+            model->getEventSigma(slice(rdata->sigmaz, nroots.at(ie), rdata->nz),
+                                 ie, nroots.at(ie), t, edata);
             model->addEventObjective(rdata->llh, ie, nroots.at(ie), t, x,
                                      edata);
 
@@ -420,16 +415,13 @@ void ForwardProblem::getEventOutput() {
             if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
                 getEventSensisFSA(ie);
             } else {
-                model->getAdjointStateEventUpdate(
-                    gsl::make_span(
-                        &dJzdx.at(nroots.at(ie) * model->nx_solver * model->nJ),
-                        model->nx_solver * model->nJ),
-                    ie, nroots.at(ie), t, x, edata);
-                model->addPartialEventObjectiveSensitivity(
-                    gsl::make_span(rdata->sllh.data(), rdata->nplist),
-                    gsl::make_span(rdata->s2llh.data(),
-                                   rdata->nplist * rdata->nJ),
-                    ie, nroots.at(ie), t, x, edata);
+                model->getAdjointStateEventUpdate(slice(dJzdx, nroots.at(ie),
+                                                        model->nx_solver * model->nJ),
+                                                  ie, nroots.at(ie), t, x, edata);
+                model->addPartialEventObjectiveSensitivity(rdata->sllh,
+                                                           rdata->s2llh,
+                                                           ie, nroots.at(ie),
+                                                           t, x, edata);
             }
         }
 
@@ -449,29 +441,22 @@ void ForwardProblem::getEventOutput() {
 void ForwardProblem::getEventSensisFSA(int ie) {
     if (t == model->getTimepoint(model->nt() - 1)) {
         // call from fillEvent at last timepoint
-        model->getUnobservedEventSensitivity(
-            gsl::make_span(
-                &rdata->sz.at(nroots.at(ie) * rdata->nplist * rdata->nz),
-                rdata->nz * rdata->nplist),
-            ie);
-        model->getEventRegularizationSensitivity(
-            gsl::make_span(
-                &rdata->srz.at(nroots[ie] * model->nplist() * model->nz),
-                rdata->nz * rdata->nplist),
-            nroots.at(ie), ie, t, x, sx);
+        model->getUnobservedEventSensitivity(slice(rdata->sz, nroots.at(ie),
+                                                   rdata->nz * rdata->nplist),
+                                             ie);
+        model->getEventRegularizationSensitivity(slice(rdata->srz,
+                                                       nroots.at(ie),
+                                                       rdata->nz * rdata->nplist),
+                                                 nroots.at(ie), ie, t, x, sx);
     } else {
-        model->getEventSensitivity(
-            gsl::make_span(
-                &rdata->sz.at(nroots.at(ie) * rdata->nplist * rdata->nz),
-                rdata->nz * rdata->nplist),
-            ie, t, x, sx);
+        model->getEventSensitivity(slice(rdata->sz, nroots.at(ie),
+                                         rdata->nz * rdata->nplist),
+                                   ie, t, x, sx);
     }
 
     if (edata) {
-        model->addEventObjectiveSensitivity(
-            gsl::make_span(rdata->sllh.data(), rdata->nplist),
-            gsl::make_span(rdata->s2llh.data(), rdata->nplist * rdata->nJ), ie,
-            nroots.at(ie), t, x, sx, edata);
+        model->addEventObjectiveSensitivity(rdata->sllh, rdata->s2llh, ie,
+                                            nroots.at(ie), t, x, sx, edata);
     }
 }
 
@@ -498,14 +483,12 @@ void ForwardProblem::getDataOutput(int it) {
         if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
             getDataSensisFSA(it);
         } else {
-            model->getAdjointStateObservableUpdate(
-                gsl::make_span(&dJydx.at(it * model->nx_solver * model->nJ),
-                               model->nx_solver * model->nJ),
-                it, x, edata);
-            model->addPartialObservableObjectiveSensitivity(
-                gsl::make_span(rdata->sllh.data(), rdata->nplist),
-                gsl::make_span(rdata->s2llh.data(), rdata->nplist * rdata->nJ),
-                it, x, edata);
+            model->getAdjointStateObservableUpdate(slice(dJydx, it,
+                                                         model->nx_solver * model->nJ),
+                                                   it, x, edata);
+            model->addPartialObservableObjectiveSensitivity(rdata->sllh,
+                                                            rdata->s2llh,
+                                                            it, x, edata);
         }
     }
 }
@@ -519,19 +502,15 @@ void ForwardProblem::getDataSensisFSA(int it) {
         }
     }
 
-    model->getObservableSensitivity(
-        gsl::make_span(&rdata->sy.at(it * model->nplist() * model->ny),
-                       model->nplist() * model->ny),
-        t, x, sx);
-    model->getObservableSigmaSensitivity(
-        gsl::make_span(&rdata->ssigmay[it * model->nplist() * model->ny],
-                       model->nplist() * model->ny),
-        it, edata);
+    model->getObservableSensitivity(slice(rdata->sy, it,
+                                          model->nplist() * model->ny),
+                                    t, x, sx);
+    model->getObservableSigmaSensitivity(slice(rdata->ssigmay, it,
+                                               model->nplist() * model->ny),
+                                         it, edata);
     if (edata) {
-        model->addObservableObjectiveSensitivity(
-            gsl::make_span(rdata->sllh.data(), model->nplist()),
-            gsl::make_span(rdata->s2llh.data(), model->nplist() * model->nJ),
-            it, x, sx, edata);
+        model->addObservableObjectiveSensitivity(rdata->sllh, rdata->s2llh,
+                                                 it, x, sx, edata);
         rdata->fsres(it, edata);
         rdata->fFIM(it);
     }

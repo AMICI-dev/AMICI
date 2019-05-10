@@ -78,8 +78,8 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
     requireSensitivitiesForAllParameters();
 }
 
-void Model::checkLLHBufferSize(gsl::span<realtype> sllh,
-                               gsl::span<realtype> s2llh) {
+void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
+                               std::vector<realtype> &s2llh) {
     if (sllh.size() != nplist())
         throw AmiException("Incorrect sllh buffer size! Was %i, expected %i.",
                            sllh.size(), nplist());
@@ -138,8 +138,8 @@ void Model::getUnobservedEventSensitivity(gsl::span<realtype> sz,
                 sz.at(ip * nz + iz) = 0.0;
 }
 
-void Model::addPartialObservableObjectiveSensitivity(gsl::span<realtype> sllh,
-                                                     gsl::span<realtype> s2llh,
+void Model::addPartialObservableObjectiveSensitivity(std::vector<realtype> &sllh,
+                                                     std::vector<realtype> &s2llh,
                                                      const int it,
                                                      const AmiVector &x,
                                                      const ExpData *edata) {
@@ -154,8 +154,8 @@ void Model::addPartialObservableObjectiveSensitivity(gsl::span<realtype> sllh,
     amici_daxpy(nplist(), -1.0, &dJydp[1], nJ, s2llh.data(), nJ - 1);
 }
 
-void Model::addObservableObjectiveSensitivity(gsl::span<realtype> sllh,
-                                              gsl::span<realtype> s2llh,
+void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
+                                              std::vector<realtype> &s2llh,
                                               const int it, const AmiVector &x,
                                               const AmiVectorArray &sx,
                                               const ExpData *edata) {
@@ -269,8 +269,8 @@ void Model::fdJydx(const int it, const AmiVector x, const ExpData *edata) {
     }
 }
 
-void Model::addPartialEventObjectiveSensitivity(gsl::span<realtype> sllh,
-                                                gsl::span<realtype> s2llh,
+void Model::addPartialEventObjectiveSensitivity(std::vector<realtype> &sllh,
+                                                std::vector<realtype> &s2llh,
                                                 const int ie, const int nroots,
                                                 const realtype t,
                                                 const AmiVector &x,
@@ -286,8 +286,8 @@ void Model::addPartialEventObjectiveSensitivity(gsl::span<realtype> sllh,
     amici_daxpy(nplist(), -1.0, &dJzdp[1], nJ, s2llh.data(), nJ - 1);
 }
 
-void Model::addEventObjectiveSensitivity(gsl::span<realtype> sllh,
-                                         gsl::span<realtype> s2llh,
+void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
+                                         std::vector<realtype> &s2llh,
                                          const int ie, const int nroots,
                                          const realtype t, const AmiVector &x,
                                          const AmiVectorArray &sx,

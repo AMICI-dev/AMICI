@@ -11,6 +11,17 @@
 #include <gsl/gsl-lite.hpp>
 
 namespace amici {
+    
+/**
+ * @brief creates a slice from existing data
+ *
+ * @param data to be sliced
+ * @param index slice index
+ * @param size slice size
+ */
+ 
+ gsl::span<realtype> slice(std::vector<realtype> data, const int index,
+                           const int size);
 
 /**
  * @brief Checks the values in an array for NaNs and Infs

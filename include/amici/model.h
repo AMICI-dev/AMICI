@@ -471,8 +471,8 @@ class Model : public AbstractModel {
      * @param sx state sensitivities
      * @param edata pointer to experimental data instance
      */
-    void addObservableObjectiveSensitivity(gsl::span<realtype> sllh,
-                                           gsl::span<realtype> s2llh,
+    void addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
+                                           std::vector<realtype> &s2llh,
                                            const int it, const AmiVector &x,
                                            const AmiVectorArray &sx,
                                            const ExpData *edata);
@@ -485,8 +485,8 @@ class Model : public AbstractModel {
      * @param x state variables
      * @param edata pointer to experimental data instance
      */
-    void addPartialObservableObjectiveSensitivity(gsl::span<realtype> sllh,
-                                                  gsl::span<realtype> s2llh,
+    void addPartialObservableObjectiveSensitivity(std::vector<realtype> &sllh,
+                                                  std::vector<realtype> &s2llh,
                                                   const int it,
                                                   const AmiVector &x,
                                                   const ExpData *edata);
@@ -551,8 +551,8 @@ class Model : public AbstractModel {
      * @param sx state sensitivities
      * @param edata pointer to experimental data instance
      */
-    void addEventObjectiveSensitivity(gsl::span<realtype> sllh,
-                                      gsl::span<realtype> s2llh,
+    void addEventObjectiveSensitivity(std::vector<realtype> &sllh,
+                                      std::vector<realtype> &s2llh,
                                       const int ie, const int nroots,
                                       const realtype t, const AmiVector &x,
                                       const AmiVectorArray &sx,
@@ -569,8 +569,8 @@ class Model : public AbstractModel {
      * @param x state variables
      * @param edata pointer to experimental data instance
      */
-    void addPartialEventObjectiveSensitivity(gsl::span<realtype> sllh,
-                                             gsl::span<realtype> s2llh,
+    void addPartialEventObjectiveSensitivity(std::vector<realtype> &sllh,
+                                             std::vector<realtype> &s2llh,
                                              const int ie, const int nroots,
                                              const realtype t,
                                              const AmiVector &x,
@@ -1082,8 +1082,8 @@ class Model : public AbstractModel {
      * @param sllh first order buffer
      * @param s2llh second order buffer
      */
-    void checkLLHBufferSize(gsl::span<realtype> sllh,
-                            gsl::span<realtype> s2llh);
+    void checkLLHBufferSize(std::vector<realtype> &sllh,
+                            std::vector<realtype> &s2llh);
     
     /**
      * @brief Set the nplist-dependent vectors to their proper sizes
