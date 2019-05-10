@@ -632,12 +632,14 @@ class Solver {
     realtype gett() const;
     
     /**
-     * @brief Reads out cpu_time by cpu_time_inc
+     * @brief Reads out the cpu time needed for forward solve
+     * @return cpu_time
      */
     realtype getCpuTime() const;
     
     /**
-     * @brief Reads out cpu_timeB by cpu_time_inc
+     * @brief Reads out the cpu time needed for bavkward solve
+     * @return cpu_timeB
      */
     realtype getCpuTimeB() const;
 
