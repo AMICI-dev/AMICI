@@ -19,8 +19,8 @@
 
 namespace amici {
     
-gsl::span<realtype> slice(std::vector<realtype> data, const int index,
-                          const int size) {
+gsl::span<realtype> slice(std::vector<realtype> &data, const int index,
+                          const unsigned size) {
     if ((index + 1) * size > data.size())
         throw std::out_of_range("requested slice is out of data range");
     return gsl::make_span(&data.at(index*size), size);

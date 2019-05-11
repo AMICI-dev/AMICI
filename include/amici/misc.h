@@ -20,8 +20,8 @@ namespace amici {
  * @param size slice size
  */
  
- gsl::span<realtype> slice(std::vector<realtype> data, const int index,
-                           const int size);
+ gsl::span<realtype> slice(std::vector<realtype> &data, const int index,
+                           const unsigned size);
 
 /**
  * @brief Checks the values in an array for NaNs and Infs

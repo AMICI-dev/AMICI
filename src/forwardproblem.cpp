@@ -402,26 +402,28 @@ void ForwardProblem::getEventOutput() {
             model->getEventSigma(slice(rdata->sigmaz, nroots.at(ie), rdata->nz),
                                  ie, nroots.at(ie), t, edata);
             model->addEventObjective(rdata->llh, ie, nroots.at(ie), t, x,
-                                     edata);
+                                     *edata);
 
             /* if called from fillEvent at last timepoint,
                add regularization based on rz */
             if (t == model->getTimepoint(model->nt() - 1))
                 model->addEventObjectiveRegularization(
-                    rdata->llh, ie, nroots.at(ie), t, x, edata);
+                    rdata->llh, ie, nroots.at(ie), t, x, *edata);
         }
 
         if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
             if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
                 getEventSensisFSA(ie);
             } else {
+                if (edata) {
                 model->getAdjointStateEventUpdate(slice(dJzdx, nroots.at(ie),
                                                         model->nx_solver * model->nJ),
-                                                  ie, nroots.at(ie), t, x, edata);
+                                                  ie, nroots.at(ie), t, x, *edata);
                 model->addPartialEventObjectiveSensitivity(rdata->sllh,
                                                            rdata->s2llh,
                                                            ie, nroots.at(ie),
-                                                           t, x, edata);
+                                                           t, x, *edata);
+                }
             }
         }
 
@@ -456,7 +458,7 @@ void ForwardProblem::getEventSensisFSA(int ie) {
 
     if (edata) {
         model->addEventObjectiveSensitivity(rdata->sllh, rdata->s2llh, ie,
-                                            nroots.at(ie), t, x, sx, edata);
+                                            nroots.at(ie), t, x, sx, *edata);
     }
 }
 
@@ -464,7 +466,7 @@ void ForwardProblem::handleDataPoint(int it) {
     model->fx_rdata(x_rdata, x);
     std::copy_n(x_rdata.data(), rdata->nx, &rdata->x.at(it * rdata->nx));
 
-    if (edata->getTimepoint(it) > model->t0()) {
+    if (model->getTimepoint(it) > model->t0()) {
         solver->getDiagnosis(it, rdata);
     }
 
@@ -474,21 +476,25 @@ void ForwardProblem::handleDataPoint(int it) {
 void ForwardProblem::getDataOutput(int it) {
     model->getObservable(rdata->y.at(it * rdata->ny), rdata->ts[it], x);
     model->getObservableSigma(rdata->sigmay.at(it * rdata->ny), it, edata);
-    model->addObservableObjective(rdata->llh, it, x, edata);
-    rdata->fres(it, edata);
-    rdata->fchi2(it);
+    if (edata) {
+        model->addObservableObjective(rdata->llh, it, x, *edata);
+        rdata->fres(it, edata);
+        rdata->fchi2(it);
+    }
 
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
         model->nplist() > 0) {
         if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
             getDataSensisFSA(it);
         } else {
-            model->getAdjointStateObservableUpdate(slice(dJydx, it,
-                                                         model->nx_solver * model->nJ),
-                                                   it, x, edata);
-            model->addPartialObservableObjectiveSensitivity(rdata->sllh,
-                                                            rdata->s2llh,
-                                                            it, x, edata);
+            if (edata) {
+                model->getAdjointStateObservableUpdate(slice(dJydx, it,
+                                                             model->nx_solver * model->nJ),
+                                                       it, x, *edata);
+                model->addPartialObservableObjectiveSensitivity(rdata->sllh,
+                                                                rdata->s2llh,
+                                                                it, x, *edata);
+            }
         }
     }
 }
@@ -510,7 +516,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
                                          it, edata);
     if (edata) {
         model->addObservableObjectiveSensitivity(rdata->sllh, rdata->s2llh,
-                                                 it, x, sx, edata);
+                                                 it, x, sx, *edata);
         rdata->fsres(it, edata);
         rdata->fFIM(it);
     }

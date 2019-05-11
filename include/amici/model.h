@@ -469,13 +469,13 @@ class Model : public AbstractModel {
      * @param s2llh second order buffer
      * @param x state variables
      * @param sx state sensitivities
-     * @param edata pointer to experimental data instance
+     * @param edata experimental data instance
      */
     void addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
                                            std::vector<realtype> &s2llh,
                                            const int it, const AmiVector &x,
                                            const AmiVectorArray &sx,
-                                           const ExpData *edata);
+                                           const ExpData &edata);
     
     /**
      * Sensitivity of time-resolved measurement negative log-likelihood Jy,
@@ -489,18 +489,18 @@ class Model : public AbstractModel {
                                                   std::vector<realtype> &s2llh,
                                                   const int it,
                                                   const AmiVector &x,
-                                                  const ExpData *edata);
+                                                  const ExpData &edata);
     
     void getAdjointStateObservableUpdate(gsl::span<realtype>
                                          dJydx, const int it,
                                          const AmiVector &x,
-                                         const ExpData *edata);
+                                         const ExpData &edata);
     
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
                                        const int it, const ExpData *edata);
     
     void addObservableObjective(realtype &Jy, const int it, const AmiVector &x,
-                                const ExpData *edata);
+                                const ExpData &edata);
     
     void getEvent(gsl::span<realtype> z, const int ie, const realtype t,
                   const AmiVector &x);
@@ -532,12 +532,12 @@ class Model : public AbstractModel {
     
     void addEventObjective(realtype &Jz, const int ie, const int nroots,
                            const realtype t, const AmiVector &x,
-                           const ExpData *edata);
+                           const ExpData &edata);
     
     void addEventObjectiveRegularization(realtype &Jrz, const int ie,
                                          const int nroots, const realtype t,
                                          const AmiVector &rz,
-                                         const ExpData *edata);
+                                         const ExpData &edata);
     
     /**
      * Sensitivity of event-resolved measurement negative log-likelihood Jz,
@@ -556,7 +556,7 @@ class Model : public AbstractModel {
                                       const int ie, const int nroots,
                                       const realtype t, const AmiVector &x,
                                       const AmiVectorArray &sx,
-                                      const ExpData *edata);
+                                      const ExpData &edata);
     
     /**
      * Sensitivity of event-resolved measurement negative log-likelihood Jz,
@@ -574,12 +574,12 @@ class Model : public AbstractModel {
                                              const int ie, const int nroots,
                                              const realtype t,
                                              const AmiVector &x,
-                                             const ExpData *edata);
+                                             const ExpData &edata);
     
     void getAdjointStateEventUpdate(gsl::span<realtype> dJzdx, const int ie,
                                     const int nroots, const realtype t,
                                     const AmiVector &x,
-                                    const ExpData *edata);
+                                    const ExpData &edata);
     
     void getEventSigmaSensitivity(gsl::span<realtype> ssigmaz, const int ie,
                                   const int nroots, const realtype t,
@@ -1153,7 +1153,7 @@ class Model : public AbstractModel {
      * @param y simulated observable
      * @param edata pointer to experimental data instance
      */
-    void fJy(realtype &Jy, int it, const AmiVector &y, const ExpData *edata);
+    void fJy(realtype &Jy, int it, const AmiVector &y, const ExpData &edata);
     
     /**
      * Negative log-likelihood of event-resolved measurements z
@@ -1163,7 +1163,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      */
     void fJz(realtype &Jz, int nroots, const AmiVector &z,
-             const ExpData *edata);
+             const ExpData &edata);
     
     /**
      * Regularization of negative log-likelihood with roots of event-resolved
@@ -1174,7 +1174,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      */
     void fJrz(realtype &Jrz, int nroots, const AmiVector &rz,
-              const ExpData *edata);
+              const ExpData &edata);
 
     
     /**
@@ -1185,7 +1185,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-    void fdJydp(const int it, const AmiVector x, const ExpData *edata);
+    void fdJydp(const int it, const AmiVector x, const ExpData &edata);
     
     /**
      * Sensitivity of time-resolved measurement negative log-likelihood Jy
@@ -1195,7 +1195,7 @@ class Model : public AbstractModel {
      * @param sx state variables
      * @param edata pointer to experimental data instance
      */
-    void fdJydx(const int it, const AmiVector x, const ExpData *edata);
+    void fdJydx(const int it, const AmiVector x, const ExpData &edata);
     
     /**
      * Sensitivity of event-resolved measurement negative log-likelihood Jz
@@ -1205,7 +1205,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      */
     void fdJzdp(const int ie, const int nroots, realtype t, const AmiVector &x,
-                const ExpData *edata);
+                const ExpData &edata);
     
     /**
      * Sensitivity of event-resolved measurement negative log-likelihood Jz
@@ -1215,7 +1215,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      */
     void fdJzdx(const int ie, const int nroots, realtype t,
-                const AmiVector &x, const ExpData *edata);
+                const AmiVector &x, const ExpData &edata);
 
     /**
      * Model specific implementation of fx_rdata
@@ -1293,7 +1293,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdJydy(int it, const AmiVector &y, const ExpData *edata);
+    void fdJydy(int it, const AmiVector &y, const ExpData &edata);
     
     /**
      * Sensitivity of time-resolved measurement negative log-likelihood Jy
@@ -1302,7 +1302,7 @@ class Model : public AbstractModel {
      * @param rdata pointer to return data instance
      * @param edata pointer to experimental data instance
      */
-    void fdJydsigma(int it, const AmiVector &y, const ExpData *edata);
+    void fdJydsigma(int it, const AmiVector &y, const ExpData &edata);
     
     /**
      * Partial derivative of event measurement negative log-likelihood Jz
@@ -1311,7 +1311,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      */
     void fdJzdz(const int ie, const int nroots, const realtype t,
-                const AmiVector &x, const ExpData *edata);
+                const AmiVector &x, const ExpData &edata);
     
     /**
      * Sensitivity of event measurement negative log-likelihood Jz
@@ -1321,7 +1321,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      */
     void fdJzdsigma(const int ie, const int nroots, const realtype t,
-                    const AmiVector &x, const ExpData *edata);
+                    const AmiVector &x, const ExpData &edata);
     
     /**
      * Partial derivative of event measurement negative log-likelihood Jz
@@ -1330,7 +1330,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      */
     void fdJrzdz(const int ie, const int nroots, const realtype t,
-                 const AmiVector &x, const ExpData *edata);
+                 const AmiVector &x, const ExpData &edata);
     
     /**
      * Sensitivity of event measurement negative log-likelihood Jz
@@ -1340,7 +1340,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      */
     void fdJrzdsigma(const int ie, const int nroots, const realtype t,
-                     const AmiVector &x, const ExpData *edata);
+                     const AmiVector &x, const ExpData &edata);
     
     /**
      * Partial derivative of event-resolved output z w.r.t. to model parameters

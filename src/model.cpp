@@ -135,7 +135,7 @@ void Model::addPartialObservableObjectiveSensitivity(std::vector<realtype> &sllh
                                                      std::vector<realtype> &s2llh,
                                                      const int it,
                                                      const AmiVector &x,
-                                                     const ExpData *edata) {
+                                                     const ExpData &edata) {
     if (!ny)
         return;
 
@@ -151,7 +151,7 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
                                               std::vector<realtype> &s2llh,
                                               const int it, const AmiVector &x,
                                               const AmiVectorArray &sx,
-                                              const ExpData *edata) {
+                                              const ExpData &edata) {
 
     if (!ny)
         return;
@@ -180,7 +180,7 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
     amici_daxpy(nplist(), -1.0, &dJydp[1], nJ, s2llh.data(), nJ - 1);
 }
 
-void Model::fdJydp(const int it, const AmiVector x, const ExpData *edata) {
+void Model::fdJydp(const int it, const AmiVector x, const ExpData &edata) {
     // dJydy         nJ, nytrue x ny
     // dydp          nplist * ny
     // dJydp         nplist x nJ
@@ -188,12 +188,12 @@ void Model::fdJydp(const int it, const AmiVector x, const ExpData *edata) {
 
     dJydp.assign(nJ * nplist(), 0.0);
 
-    fdydp(edata->getTimepoint(it), x);
-    fdsigmaydp(it, edata);
+    fdydp(edata.getTimepoint(it), x);
+    fdsigmaydp(it, &edata);
     fdJydy(it, x, edata);
 
     for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (!edata->isSetObservedData(it, iyt))
+        if (!edata.isSetObservedData(it, iyt))
             continue;
 
         if (wasPythonGenerated()) {
@@ -219,23 +219,23 @@ void Model::fdJydp(const int it, const AmiVector x, const ExpData *edata) {
 
 void Model::getAdjointStateObservableUpdate(gsl::span<realtype> dJydx,
                                             const int it, const AmiVector &x,
-                                            const ExpData *edata) {
+                                            const ExpData &edata) {
     fdJydx(it, x, edata);
     writeSlice(this->dJydx, dJydx);
 }
 
-void Model::fdJydx(const int it, const AmiVector x, const ExpData *edata) {
+void Model::fdJydx(const int it, const AmiVector x, const ExpData &edata) {
 
     dJydx.assign(nJ * nx_solver, 0.0);
 
-    fdydx(edata->getTimepoint(it), x);
+    fdydx(edata.getTimepoint(it), x);
     fdJydy(it, x, edata);
 
     // dJydy: nJ, ny x nytrue
     // dydx :     ny x nx_solver
     // dJydx:     nJ x nx_solver x nt
     for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (!edata->isSetObservedData(it, iyt))
+        if (!edata.isSetObservedData(it, iyt))
             continue;
         // dJydy A[nyt,nJ,ny] * dydx B[ny,nx_solver] = dJydx C[it,nJ,nx_solver]
         //         slice                                       slice
@@ -267,7 +267,7 @@ void Model::addPartialEventObjectiveSensitivity(std::vector<realtype> &sllh,
                                                 const int ie, const int nroots,
                                                 const realtype t,
                                                 const AmiVector &x,
-                                                const ExpData *edata) {
+                                                const ExpData &edata) {
     if (!nz)
         return;
 
@@ -284,7 +284,7 @@ void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
                                          const int ie, const int nroots,
                                          const realtype t, const AmiVector &x,
                                          const AmiVectorArray &sx,
-                                         const ExpData *edata) {
+                                         const ExpData &edata) {
 
     if (!nz)
         return;
@@ -316,7 +316,7 @@ void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
 }
 
 void Model::fdJzdp(const int ie, const int nroots, realtype t,
-                   const AmiVector &x, const ExpData *edata) {
+                   const AmiVector &x, const ExpData &edata) {
     // dJzdz         nJ x nz x nztrue
     // dJzdsigma     nJ x nz x nztrue
     // dzdp          nz x nplist()
@@ -325,16 +325,16 @@ void Model::fdJzdp(const int ie, const int nroots, realtype t,
     dJzdp.assign(nJ * nplist(), 0.0);
 
     fdzdp(ie, t, x);
-    fdsigmazdp(ie, nroots, t, edata);
+    fdsigmazdp(ie, nroots, t, &edata);
 
     fdJzdz(ie, nroots, t, x, edata);
     fdJzdsigma(ie, nroots, t, x, edata);
 
     for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata->isSetObservedEvents(nroots, izt))
+        if (!edata.isSetObservedEvents(nroots, izt))
             continue;
 
-        if (t < edata->getTimepoint(edata->nt() - 1)) {
+        if (t < edata.getTimepoint(edata.nt() - 1)) {
             // with z
             fdJzdz(ie, nroots, t, x, edata);
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
@@ -367,13 +367,13 @@ void Model::fdJzdp(const int ie, const int nroots, realtype t,
 void Model::getAdjointStateEventUpdate(gsl::span<realtype> dJzdx, const int ie,
                                        const int nroots, const realtype t,
                                        const AmiVector &x,
-                                       const ExpData *edata) {
+                                       const ExpData &edata) {
     fdJzdx(ie, nroots, t, x, edata);
     writeSlice(this->dJzdx, dJzdx);
 }
 
 void Model::fdJzdx(const int ie, const int nroots, const realtype t,
-                   const AmiVector &x, const ExpData *edata) {
+                   const AmiVector &x, const ExpData &edata) {
     // dJzdz         nJ x nz        x nztrue
     // dzdx          nz x nx_solver
     // dJzdx         nJ x nx_solver x nmaxevent
@@ -383,10 +383,10 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
     fdJzdz(ie, nroots, t, x, edata);
 
     for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata->isSetObservedEvents(nroots, izt))
+        if (!edata.isSetObservedEvents(nroots, izt))
             continue;
 
-        if (t < edata->getTimepoint(edata->nt() - 1)) {
+        if (t < edata.getTimepoint(edata.nt() - 1)) {
             // z
             fdzdx(ie, t, x);
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
@@ -1089,6 +1089,9 @@ void Model::getObservable(gsl::span<realtype> y, const realtype t,
 void Model::fy(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
+    
+    y.assign(ny, 0.0);
+    
     fw(t, x.data());
     fy(y.data(), t, x.data(), unscaledParameters.data(), fixedParameters.data(),
        h.data(), w.data());
@@ -1336,7 +1339,7 @@ void Model::fsigmay(const int it, const ExpData *edata) {
 
     sigmay.assign(nytrue, 0.0);
 
-    fsigmay(sigmay.data(), edata->getTimepoint(it), unscaledParameters.data(),
+    fsigmay(sigmay.data(), getTimepoint(it), unscaledParameters.data(),
             fixedParameters.data());
 
     if (edata) {
@@ -1370,7 +1373,7 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
 
     for (int ip = 0; ip < nplist(); ip++)
         // get dsigmaydp slice (ny) for current timepoint and parameter
-        fdsigmaydp(&dsigmaydp.at(ip * ny), edata->getTimepoint(it),
+        fdsigmaydp(&dsigmaydp.at(ip * ny), getTimepoint(it),
                    unscaledParameters.data(), fixedParameters.data(),
                    plist(ip));
 
@@ -1405,9 +1408,9 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
 
     sigmaz.assign(nztrue, 0.0);
 
-    for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (z2event.at(iztrue) - 1 == ie) {
-            if (edata) {
+    if (edata) {
+        for (int iztrue = 0; iztrue < nztrue; iztrue++) {
+            if (z2event.at(iztrue) - 1 == ie) {
                 if (edata->isSetObservedEventsStdDev(nroots, iztrue)) {
                     auto sigmaz_edata =
                         edata->getObservedEventsStdDevPtr(nroots);
@@ -1458,17 +1461,17 @@ void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
 }
 
 void Model::addObservableObjective(realtype &Jy, const int it,
-                                   const AmiVector &x, const ExpData *edata) {
-    fy(edata->getTimepoint(it), x);
-    fsigmay(it, edata);
+                                   const AmiVector &x, const ExpData &edata) {
+    fy(edata.getTimepoint(it), x);
+    fsigmay(it, &edata);
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iyt = 0; iyt < nytrue; iyt++) {
-        if (!edata->isSetObservedData(it, iyt)) {
+        if (!edata.isSetObservedData(it, iyt)) {
             std::fill(nllh.begin(), nllh.end(), 0.0);
             fJy(nllh.data(), iyt, unscaledParameters.data(),
                 fixedParameters.data(), y.data(), sigmay.data(),
-                edata->getObservedDataPtr(it));
+                edata.getObservedDataPtr(it));
             Jy -= nllh.at(0);
         }
     }
@@ -1476,17 +1479,17 @@ void Model::addObservableObjective(realtype &Jy, const int it,
 
 void Model::addEventObjective(realtype &Jz, const int ie, const int nroots,
                               const realtype t, const AmiVector &x,
-                              const ExpData *edata) {
+                              const ExpData &edata) {
     fz(ie, t, x);
-    fsigmaz(ie, nroots, t, edata);
+    fsigmaz(ie, nroots, t, &edata);
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata->isSetObservedEvents(nroots, iztrue)) {
+        if (edata.isSetObservedEvents(nroots, iztrue)) {
             std::fill(nllh.begin(), nllh.end(), 0.0);
             fJz(nllh.data(), iztrue, unscaledParameters.data(),
                 fixedParameters.data(), z.data(), sigmaz.data(),
-                edata->getObservedEventsPtr(nroots));
+                edata.getObservedEventsPtr(nroots));
             Jz -= nllh.at(0);
         }
     }
@@ -1495,13 +1498,13 @@ void Model::addEventObjective(realtype &Jz, const int ie, const int nroots,
 void Model::addEventObjectiveRegularization(realtype &Jrz, const int ie,
                                             const int nroots, const realtype t,
                                             const AmiVector &x,
-                                            const ExpData *edata) {
+                                            const ExpData &edata) {
     frz(ie, t, x);
-    fsigmaz(ie, nroots, t, edata);
+    fsigmaz(ie, nroots, t, &edata);
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata->isSetObservedEvents(nroots, iztrue)) {
+        if (edata.isSetObservedEvents(nroots, iztrue)) {
             std::fill(nllh.begin(), nllh.end(), 0.0);
             fJrz(nllh.data(), iztrue, unscaledParameters.data(),
                  fixedParameters.data(), rz.data(), sigmaz.data());
@@ -1510,10 +1513,10 @@ void Model::addEventObjectiveRegularization(realtype &Jrz, const int ie,
     }
 }
 
-void Model::fdJydy(const int it, const AmiVector &x, const ExpData *edata) {
+void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
 
-    fy(edata->getTimepoint(it), x);
-    fsigmay(it, edata);
+    fy(edata.getTimepoint(it), x);
+    fsigmay(it, &edata);
 
     if (wasPythonGenerated()) {
         for (int iyt = 0; iyt < nytrue; iyt++) {
@@ -1521,13 +1524,13 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData *edata) {
             fdJydy_colptrs(dJydy[iyt].indexptrs(), iyt);
             fdJydy_rowvals(dJydy[iyt].indexvals(), iyt);
 
-            if (!edata->isSetObservedData(it, iyt))
+            if (!edata.isSetObservedData(it, iyt))
                 continue;
 
             // get dJydy slice (ny) for current timepoint and observable
             fdJydy(dJydy[iyt].data(), iyt, unscaledParameters.data(),
                    fixedParameters.data(), y.data(), sigmay.data(),
-                   edata->getObservedDataPtr(it));
+                   edata.getObservedDataPtr(it));
 
             if (alwaysCheckFinite) {
                 amici::checkFinite(gsl::make_span(dJydy[iyt].get()), "dJydy");
@@ -1536,11 +1539,11 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData *edata) {
     } else {
         std::fill(dJydy_matlab.begin(), dJydy_matlab.end(), 0.0);
         for (int iyt = 0; iyt < nytrue; iyt++) {
-            if (!edata->isSetObservedData(it, iyt))
+            if (!edata.isSetObservedData(it, iyt))
                 continue;
             fdJydy(&dJydy_matlab.at(iyt * ny * nJ), iyt,
                    unscaledParameters.data(), fixedParameters.data(), y.data(),
-                   sigmay.data(), edata->getObservedDataPtr(it));
+                   sigmay.data(), edata.getObservedDataPtr(it));
         }
         if (alwaysCheckFinite) {
             // get dJydy slice (ny) for current timepoint and observable
@@ -1549,19 +1552,19 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData *edata) {
     }
 }
 
-void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData *edata) {
+void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData &edata) {
 
     dJydsigma.assign(nytrue * ny * nJ, 0.0);
 
-    fy(edata->getTimepoint(it), x);
-    fsigmay(it, edata);
+    fy(edata.getTimepoint(it), x);
+    fsigmay(it, &edata);
 
     for (int iyt = 0; iyt < nytrue; iyt++) {
-        if (edata->isSetObservedData(it, iyt))
+        if (edata.isSetObservedData(it, iyt))
             // get dJydsigma slice (ny) for current timepoint and observable
             fdJydsigma(&dJydsigma.at(iyt * ny * nJ), iyt,
                        unscaledParameters.data(), fixedParameters.data(),
-                       y.data(), sigmay.data(), edata->getObservedDataPtr(it));
+                       y.data(), sigmay.data(), edata.getObservedDataPtr(it));
     }
 
     if (alwaysCheckFinite) {
@@ -1570,18 +1573,18 @@ void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData *edata) {
 }
 
 void Model::fdJzdz(const int ie, const int nroots, const realtype t,
-                   const AmiVector &x, const ExpData *edata) {
+                   const AmiVector &x, const ExpData &edata) {
 
     dJzdz.assign(nztrue * nz * nJ, 0.0);
 
     fz(ie, t, x);
-    fsigmaz(ie, nroots, t, edata);
+    fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata->isSetObservedEvents(nroots, iztrue)) {
+        if (edata.isSetObservedEvents(nroots, iztrue)) {
             fdJzdz(&dJzdz.at(iztrue * nz * nJ), iztrue,
                    unscaledParameters.data(), fixedParameters.data(), z.data(),
-                   sigmaz.data(), edata->getObservedEventsPtr(nroots));
+                   sigmaz.data(), edata.getObservedEventsPtr(nroots));
         }
     }
 
@@ -1591,19 +1594,19 @@ void Model::fdJzdz(const int ie, const int nroots, const realtype t,
 }
 
 void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
-                       const AmiVector &x, const ExpData *edata) {
+                       const AmiVector &x, const ExpData &edata) {
 
     dJzdsigma.assign(nztrue * nz * nJ, 0.0);
 
     fz(ie, t, x);
-    fsigmaz(ie, nroots, t, edata);
+    fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata->isSetObservedEvents(nroots, iztrue)) {
+        if (edata.isSetObservedEvents(nroots, iztrue)) {
             fdJzdsigma(&dJzdsigma.at(iztrue * nz * nJ), iztrue,
                        unscaledParameters.data(), fixedParameters.data(),
                        z.data(), sigmaz.data(),
-                       edata->getObservedEventsPtr(nroots));
+                       edata.getObservedEventsPtr(nroots));
         }
     }
 
@@ -1613,15 +1616,15 @@ void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
 }
 
 void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
-                    const AmiVector &x, const ExpData *edata) {
+                    const AmiVector &x, const ExpData &edata) {
 
     dJrzdz.assign(nztrue * nz * nJ, 0.0);
 
     frz(ie, t, x);
-    fsigmaz(ie, nroots, t, edata);
+    fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata->isSetObservedEvents(nroots, iztrue)) {
+        if (edata.isSetObservedEvents(nroots, iztrue)) {
             fdJrzdz(&dJrzdz.at(iztrue * nz * nJ), iztrue,
                     unscaledParameters.data(), fixedParameters.data(),
                     rz.data(), sigmaz.data());
@@ -1634,15 +1637,15 @@ void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
 }
 
 void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
-                        const AmiVector &x, const ExpData *edata) {
+                        const AmiVector &x, const ExpData &edata) {
 
     dJrzdsigma.assign(nztrue * nz * nJ, 0.0);
 
     frz(ie, t, x);
-    fsigmaz(ie, nroots, t, edata);
+    fsigmaz(ie, nroots, t, &edata);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata->isSetObservedEvents(nroots, iztrue)) {
+        if (edata.isSetObservedEvents(nroots, iztrue)) {
             fdJrzdsigma(&dJrzdsigma.at(iztrue * nz * nJ), iztrue,
                         unscaledParameters.data(), fixedParameters.data(),
                         rz.data(), sigmaz.data());
@@ -1728,7 +1731,6 @@ int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
     auto result = amici::checkFinite(array, fun);
 
     if (result != AMICI_SUCCESS) {
-        amici::checkFinite(ts, "ts");
         amici::checkFinite(fixedParameters, "k");
         amici::checkFinite(unscaledParameters, "p");
         amici::checkFinite(w, "w");
