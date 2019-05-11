@@ -46,9 +46,10 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       idlist(std::move(idlist)), J(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
       dwdx(nw, nx_solver, ndwdx, CSC_MAT), M(nx_solver, nx_solver),
-      x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
-      unscaledParameters(p), originalParameters(p),
-      fixedParameters(std::move(k)), total_cl(nx_rdata - nx_solver),
+      w(nw), dwdp(ndwdp), x_rdata(nx_rdata, 0.0),
+      sx_rdata(nx_rdata, 0.0), h(ne, 0.0), unscaledParameters(p),
+      originalParameters(p), fixedParameters(std::move(k)),
+      total_cl(nx_rdata - nx_solver),
       stotal_cl((nx_rdata - nx_solver) * np()), plist_(plist),
       stateIsNonNegative(nx_solver, false), x_pos_tmp(nx_solver),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
@@ -77,7 +78,8 @@ void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
         throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
                            sllh.size(), nplist());
 
-    if (s2llh.size() != static_cast<unsigned>(nJ * nplist()))
+    
+    if (nJ > 1 && s2llh.size() != static_cast<unsigned>(nJ * nplist()))
         throw AmiException("Incorrect s2llh buffer size! Was %u, expected %i.",
                            s2llh.size(), nJ * nplist());
 }
@@ -144,7 +146,8 @@ void Model::addPartialObservableObjectiveSensitivity(std::vector<realtype> &sllh
     fdJydp(it, x, edata);
 
     amici_daxpy(nplist(), -1.0, dJydp.data(), 1, sllh.data(), 1);
-    amici_daxpy(nplist(), -1.0, &dJydp[1], nJ, s2llh.data(), nJ - 1);
+    if (nJ > 1)
+        amici_daxpy(nplist(), -1.0, &dJydp[1], nJ, s2llh.data(), nJ - 1);
 }
 
 void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
@@ -177,7 +180,8 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
     // sx            nx_solver x nplist()
 
     amici_daxpy(nplist(), -1.0, dJydp.data(), 1, sllh.data(), 1);
-    amici_daxpy(nplist(), -1.0, &dJydp[1], nJ, s2llh.data(), nJ - 1);
+    if (nJ > 1)
+        amici_daxpy(nplist(), -1.0, &dJydp[1], nJ, s2llh.data(), nJ - 1);
 }
 
 void Model::fdJydp(const int it, const AmiVector x, const ExpData &edata) {
@@ -187,10 +191,12 @@ void Model::fdJydp(const int it, const AmiVector x, const ExpData &edata) {
     // dJydsigma
 
     dJydp.assign(nJ * nplist(), 0.0);
-
-    fdydp(edata.getTimepoint(it), x);
-    fdsigmaydp(it, &edata);
+    
     fdJydy(it, x, edata);
+    fdydp(edata.getTimepoint(it), x);
+
+    fdJydsigma(it, x, edata);
+    fdsigmaydp(it, &edata);
 
     for (int iyt = 0; iyt < nytrue; ++iyt) {
         if (!edata.isSetObservedData(it, iyt))
@@ -245,15 +251,14 @@ void Model::fdJydx(const int it, const AmiVector x, const ExpData &edata) {
         if (wasPythonGenerated()) {
             for (int ix = 0; ix < nx_solver; ++ix) {
                 dJydy[iyt].multiply(
-                    gsl::span<realtype>(
-                        &dJydx.at(it * nx_solver * nJ + ix * nJ), nJ),
+                    gsl::span<realtype>(&dJydx.at(ix * nJ), nJ),
                     gsl::span<const realtype>(&dydx.at(ix * ny), ny));
             }
         } else {
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, nx_solver, ny, 1.0,
                         &dJydy_matlab.at(iyt * ny * nJ), nJ, dydx.data(), ny,
-                        1.0, &dJydx.at(it * nx_solver * nJ), nJ);
+                        1.0, dJydx.data(), nJ);
         }
     }
 
@@ -276,7 +281,8 @@ void Model::addPartialEventObjectiveSensitivity(std::vector<realtype> &sllh,
     fdJzdp(ie, nroots, t, x, edata);
 
     amici_daxpy(nplist(), -1.0, dJzdp.data(), 1, sllh.data(), 1);
-    amici_daxpy(nplist(), -1.0, &dJzdp[1], nJ, s2llh.data(), nJ - 1);
+    if (nJ > 1)
+        amici_daxpy(nplist(), -1.0, &dJzdp[1], nJ, s2llh.data(), nJ - 1);
 }
 
 void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
@@ -312,7 +318,8 @@ void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
 
     // sJy += multResult + dJydp
     amici_daxpy(nplist(), -1.0, dJzdp.data(), 1, sllh.data(), 1);
-    amici_daxpy(nplist(), -1.0, &dJzdp[1], nJ, s2llh.data(), nJ - 1);
+    if (nJ > 1)
+        amici_daxpy(nplist(), -1.0, &dJzdp[1], nJ, s2llh.data(), nJ - 1);
 }
 
 void Model::fdJzdp(const int ie, const int nroots, realtype t,
@@ -1467,7 +1474,7 @@ void Model::addObservableObjective(realtype &Jy, const int it,
 
     std::vector<realtype> nllh(nJ, 0.0);
     for (int iyt = 0; iyt < nytrue; iyt++) {
-        if (!edata.isSetObservedData(it, iyt)) {
+        if (edata.isSetObservedData(it, iyt)) {
             std::fill(nllh.begin(), nllh.end(), 0.0);
             fJy(nllh.data(), iyt, unscaledParameters.data(),
                 fixedParameters.data(), y.data(), sigmay.data(),
