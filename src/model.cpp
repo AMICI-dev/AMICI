@@ -15,23 +15,16 @@
 namespace amici {
 
 static void checkBufferSize(gsl::span<realtype> buffer,
-                            __SIZE_TYPE__ expected_size) {
-    if (buffer.size() != static_cast<size_t>(expected_size))
-        throw AmiException("Incorrect buffer size! Was %i, expected %i.",
+                            unsigned expected_size) {
+    if (buffer.size() != expected_size)
+        throw AmiException("Incorrect buffer size! Was %u, expected %u.",
                            buffer.size(), expected_size);
 }
 
-static void writeSlice(std::vector<realtype> slice,
+    static void writeSlice(gsl::span<const realtype> slice,
                        gsl::span<realtype> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
-}
-
-static void reset_storage(std::vector<realtype> vec, const int size) {
-    if (vec.empty() or vec.size() != size)
-        vec.resize(size, 0.0);
-    else
-        std::fill(vec.begin(), vec.end(), 0.0);
 }
 
 Model::Model() : dxdotdp(0, 0), x_pos_tmp(0) {}
@@ -80,12 +73,12 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
 
 void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
                                std::vector<realtype> &s2llh) {
-    if (sllh.size() != nplist())
-        throw AmiException("Incorrect sllh buffer size! Was %i, expected %i.",
+    if (sllh.size() != static_cast<unsigned>(nplist()))
+        throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
                            sllh.size(), nplist());
 
-    if (s2llh.size() != nJ * nplist())
-        throw AmiException("Incorrect s2llh buffer size! Was %i, expected %i.",
+    if (s2llh.size() != static_cast<unsigned>(nJ * nplist()))
+        throw AmiException("Incorrect s2llh buffer size! Was %u, expected %i.",
                            s2llh.size(), nJ * nplist());
 }
 
@@ -110,7 +103,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     fdydx(t, x);
     fdydp(t, x);
 
-    reset_storage(this->sx, nx_solver * nplist());
+    this->sx.assign(nx_solver * nplist(), 0.0);
     sx.flatten_to_vector(this->sx);
 
     // compute sy = 1.0*dydx*sx + 1.0*sy
@@ -193,7 +186,7 @@ void Model::fdJydp(const int it, const AmiVector x, const ExpData *edata) {
     // dJydp         nplist x nJ
     // dJydsigma
 
-    reset_storage(dJydp, nJ * nplist());
+    dJydp.assign(nJ * nplist(), 0.0);
 
     fdydp(edata->getTimepoint(it), x);
     fdsigmaydp(it, edata);
@@ -233,7 +226,7 @@ void Model::getAdjointStateObservableUpdate(gsl::span<realtype> dJydx,
 
 void Model::fdJydx(const int it, const AmiVector x, const ExpData *edata) {
 
-    reset_storage(dJydx, nJ * nx_solver);
+    dJydx.assign(nJ * nx_solver, 0.0);
 
     fdydx(edata->getTimepoint(it), x);
     fdJydy(it, x, edata);
@@ -329,7 +322,7 @@ void Model::fdJzdp(const int ie, const int nroots, realtype t,
     // dzdp          nz x nplist()
     // dJzdp         nJ x nplist()
 
-    reset_storage(dJzdp, nJ * nplist());
+    dJzdp.assign(nJ * nplist(), 0.0);
 
     fdzdp(ie, t, x);
     fdsigmazdp(ie, nroots, t, edata);
@@ -385,7 +378,7 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
     // dzdx          nz x nx_solver
     // dJzdx         nJ x nx_solver x nmaxevent
 
-    reset_storage(dJzdx, nJ * nx_solver);
+    dJzdx.assign(nJ * nx_solver, 0.0);
 
     fdJzdz(ie, nroots, t, x, edata);
 
@@ -1109,7 +1102,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
 
-    reset_storage(dydp, ny * nplist());
+    dydp.assign(ny * nplist(), 0.0);
 
     fw(t, x.data());
     fdwdp(t, x.data());
@@ -1134,7 +1127,7 @@ void Model::fdydx(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
 
-    reset_storage(dydx, ny * nx_solver);
+    dydx.assign(ny * nx_solver, 0.0);
 
     fw(t, x.data());
     fdwdx(t, x.data());
@@ -1154,7 +1147,7 @@ void Model::getEvent(gsl::span<realtype> z, const int ie, const realtype t,
 
 void Model::fz(const int ie, const realtype t, const AmiVector &x) {
 
-    reset_storage(z, nz);
+    z.assign(nz, 0.0);
 
     fz(z.data(), ie, t, x.data(), unscaledParameters.data(),
        fixedParameters.data(), h.data());
@@ -1177,7 +1170,7 @@ void Model::getEventRegularization(gsl::span<realtype> rz, const int ie,
 
 void Model::frz(const int ie, const realtype t, const AmiVector &x) {
 
-    reset_storage(rz, nz);
+    rz.assign(nz, 0.0);
 
     frz(rz.data(), ie, t, x.data(), unscaledParameters.data(),
         fixedParameters.data(), h.data());
@@ -1196,7 +1189,7 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
 
 void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
 
-    reset_storage(dzdp, nz * nplist());
+    dzdp.assign(nz * nplist(), 0.0);
 
     for (int ip = 0; ip < nplist(); ip++) {
         fdzdp(dzdp.data(), ie, t, x.data(), unscaledParameters.data(),
@@ -1210,7 +1203,7 @@ void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
 
 void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
 
-    reset_storage(dzdx, nz * nx_solver);
+    dzdx.assign(nz * nx_solver, 0.0);
 
     fdzdx(dzdx.data(), ie, t, x.data(), unscaledParameters.data(),
           fixedParameters.data(), h.data());
@@ -1222,7 +1215,7 @@ void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
 
 void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
 
-    reset_storage(drzdx, nz * nplist());
+    drzdx.assign(nz * nplist(), 0.0);
 
     for (int ip = 0; ip < nplist(); ip++) {
         fdrzdp(drzdp.data(), ie, t, x.data(), unscaledParameters.data(),
@@ -1236,7 +1229,7 @@ void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
 
 void Model::fdrzdx(const int ie, const realtype t, const AmiVector &x) {
 
-    reset_storage(drzdx, nz * nplist());
+    drzdx.assign(nz * nplist(), 0.0);
 
     fdrzdx(drzdx.data(), ie, t, x.data(), unscaledParameters.data(),
            fixedParameters.data(), h.data());
@@ -1250,7 +1243,7 @@ void Model::addStateEventUpdate(AmiVector &x, const int ie, const realtype t,
                                 const AmiVector &xdot,
                                 const AmiVector &xdot_old) {
 
-    reset_storage(deltax, nx_solver);
+    deltax.assign(nx_solver, 0.0);
 
     // compute update
     fdeltax(deltax.data(), t, x.data(), unscaledParameters.data(),
@@ -1274,7 +1267,7 @@ void Model::addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
 
     for (int ip = 0; ip < nplist(); ip++) {
 
-        reset_storage(deltasx, nx_solver);
+        deltasx.assign(nx_solver, 0.0);
 
         // compute update
         fdeltasx(deltasx.data(), t, x_old.data(), unscaledParameters.data(),
@@ -1294,7 +1287,7 @@ void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
                                        const AmiVector &xdot,
                                        const AmiVector &xdot_old) {
 
-    reset_storage(deltasx, nx_solver);
+    deltasx.assign(nx_solver, 0.0);
 
     // compute update
     fdeltaxB(deltaxB.data(), t, x.data(), unscaledParameters.data(),
@@ -1316,7 +1309,7 @@ void Model::addAdjointQuadratureEventUpdate(
     AmiVector xQB, const int ie, const realtype t, const AmiVector &x,
     const AmiVector &xB, const AmiVector &xdot, const AmiVector &xdot_old) {
     for (int ip = 0; ip < nplist(); ip++) {
-        reset_storage(deltaqB, nJ);
+        deltaqB.assign(nJ, 0.0);
 
         fdeltaqB(deltaqB.data(), t, x.data(), unscaledParameters.data(),
                  fixedParameters.data(), h.data(), plist(ip), ie, xdot.data(),
@@ -1341,7 +1334,7 @@ void Model::fsigmay(const int it, const ExpData *edata) {
     if (!ny)
         return;
 
-    reset_storage(sigmay, nytrue);
+    sigmay.assign(nytrue, 0.0);
 
     fsigmay(sigmay.data(), edata->getTimepoint(it), unscaledParameters.data(),
             fixedParameters.data());
@@ -1373,7 +1366,7 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
     if (!ny)
         return;
 
-    reset_storage(dsigmaydp, ny * nplist());
+    dsigmaydp.assign(ny * nplist(), 0.0);
 
     for (int ip = 0; ip < nplist(); ip++)
         // get dsigmaydp slice (ny) for current timepoint and parameter
@@ -1410,7 +1403,7 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
     if (!nz)
         return;
 
-    reset_storage(sigmaz, nztrue);
+    sigmaz.assign(nztrue, 0.0);
 
     for (int iztrue = 0; iztrue < nztrue; iztrue++) {
         if (z2event.at(iztrue) - 1 == ie) {
@@ -1439,7 +1432,7 @@ void Model::getEventSigmaSensitivity(gsl::span<realtype> ssigmaz, const int ie,
 void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
                        const ExpData *edata) {
 
-    reset_storage(dsigmazdp, nz * nplist());
+    dsigmazdp.assign(nz * nplist(), 0.0);
 
     for (int ip = 0; ip < nplist(); ip++) {
         // get dsigmazdp slice (nz) for current event and parameter
@@ -1558,7 +1551,7 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData *edata) {
 
 void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData *edata) {
 
-    reset_storage(dJydsigma, nytrue * ny * nJ);
+    dJydsigma.assign(nytrue * ny * nJ, 0.0);
 
     fy(edata->getTimepoint(it), x);
     fsigmay(it, edata);
@@ -1579,7 +1572,7 @@ void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData *edata) {
 void Model::fdJzdz(const int ie, const int nroots, const realtype t,
                    const AmiVector &x, const ExpData *edata) {
 
-    reset_storage(dJzdz, nztrue * nz * nJ);
+    dJzdz.assign(nztrue * nz * nJ, 0.0);
 
     fz(ie, t, x);
     fsigmaz(ie, nroots, t, edata);
@@ -1600,7 +1593,7 @@ void Model::fdJzdz(const int ie, const int nroots, const realtype t,
 void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
                        const AmiVector &x, const ExpData *edata) {
 
-    reset_storage(dJzdsigma, nztrue * nz * nJ);
+    dJzdsigma.assign(nztrue * nz * nJ, 0.0);
 
     fz(ie, t, x);
     fsigmaz(ie, nroots, t, edata);
@@ -1622,7 +1615,7 @@ void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
 void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
                     const AmiVector &x, const ExpData *edata) {
 
-    reset_storage(dJrzdz, nztrue * nz * nJ);
+    dJrzdz.assign(nztrue * nz * nJ, 0.0);
 
     frz(ie, t, x);
     fsigmaz(ie, nroots, t, edata);
@@ -1643,7 +1636,7 @@ void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
 void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
                         const AmiVector &x, const ExpData *edata) {
 
-    reset_storage(dJrzdsigma, nztrue * nz * nJ);
+    dJrzdsigma.assign(nztrue * nz * nJ, 0.0);
 
     frz(ie, t, x);
     fsigmaz(ie, nroots, t, edata);
