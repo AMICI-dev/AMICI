@@ -1236,7 +1236,7 @@ void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
 
 void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
 
-    drzdx.assign(nz * nplist(), 0.0);
+    drzdp.assign(nz * nplist(), 0.0);
 
     for (int ip = 0; ip < nplist(); ip++) {
         fdrzdp(drzdp.data(), ie, t, x.data(), unscaledParameters.data(),
@@ -1250,7 +1250,7 @@ void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
 
 void Model::fdrzdx(const int ie, const realtype t, const AmiVector &x) {
 
-    drzdx.assign(nz * nplist(), 0.0);
+    drzdx.assign(nz * nx_solver, 0.0);
 
     fdrzdx(drzdx.data(), ie, t, x.data(), unscaledParameters.data(),
            fixedParameters.data(), h.data());
