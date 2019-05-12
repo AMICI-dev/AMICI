@@ -46,6 +46,17 @@ void Model::writeSensitivitySliceEvent(gsl::span<const realtype> slice,
             if (z2event.at(izt) - 1 == ie)
                 buffer.at(ip*nztrue + izt) = slice.at(ip*nztrue + izt);
 }
+    
+void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
+                                     std::vector<realtype> &sllh,
+                                     std::vector<realtype> &s2llh) {
+    checkLLHBufferSize(sllh, s2llh);
+    
+    amici_daxpy(nplist(), -1.0, dLLhdp.data(), nJ, sllh.data(), 1);
+    for (int iJ = 1; iJ < nJ; ++iJ)
+    amici_daxpy(nplist(), -1.0, &dLLhdp.at(iJ), nJ, &s2llh.at(iJ - 1),
+             nJ - 1);
+}
 
 Model::Model() : dxdotdp(0, 0), x_pos_tmp(0) {}
 
@@ -161,13 +172,9 @@ void Model::addPartialObservableObjectiveSensitivity(std::vector<realtype> &sllh
     if (!ny)
         return;
 
-    checkLLHBufferSize(sllh, s2llh);
-
     fdJydp(it, x, edata);
 
-    amici_daxpy(nplist(), -1.0, dJydp.data(), 1, sllh.data(), 1);
-    if (nJ > 1)
-        amici_daxpy(nplist(), -1.0, &dJydp[1], nJ, s2llh.data(), nJ - 1);
+    writeLLHSensitivitySlice(dJydp, sllh, s2llh);
 }
 
 void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
@@ -178,8 +185,6 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
 
     if (!ny)
         return;
-
-    checkLLHBufferSize(sllh, s2llh);
 
     fdJydx(it, x, edata);
     fdJydp(it, x, edata);
@@ -194,9 +199,7 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
                 dJydx.data(), nJ, this->sx.data(), nx_solver, 1.0, dJydp.data(),
                 nJ);
 
-    amici_daxpy(nplist(), -1.0, dJydp.data(), nJ, sllh.data(), 1);
-    for (int iJ = 1; iJ < nJ; ++iJ)
-        amici_daxpy(nplist(), -1.0, &dJydp.at(iJ), nJ, s2llh.data(), nJ - 1);
+    writeLLHSensitivitySlice(dJydp, sllh, s2llh);
 }
 
 void Model::fdJydp(const int it, const AmiVector x, const ExpData &edata) {
@@ -291,13 +294,9 @@ void Model::addPartialEventObjectiveSensitivity(std::vector<realtype> &sllh,
     if (!nz)
         return;
 
-    checkLLHBufferSize(sllh, s2llh);
-
     fdJzdp(ie, nroots, t, x, edata);
 
-    amici_daxpy(nplist(), -1.0, dJzdp.data(), 1, sllh.data(), 1);
-    if (nJ > 1)
-        amici_daxpy(nplist(), -1.0, &dJzdp[1], nJ, s2llh.data(), nJ - 1);
+    writeLLHSensitivitySlice(dJzdp, sllh, s2llh);
 }
 
 void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
@@ -309,8 +308,6 @@ void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
 
     if (!nz)
         return;
-
-    checkLLHBufferSize(sllh, s2llh);
 
     fdJzdx(ie, nroots, t, x, edata);
     fdJzdp(ie, nroots, t, x, edata);
@@ -332,9 +329,7 @@ void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
                 nx_solver, 1.0, dJzdp.data(), nJ);
 
     // sJy += multResult + dJydp
-    amici_daxpy(nplist(), -1.0, dJzdp.data(), 1, sllh.data(), 1);
-    if (nJ > 1)
-        amici_daxpy(nplist(), -1.0, &dJzdp[1], nJ, s2llh.data(), nJ - 1);
+    writeLLHSensitivitySlice(dJzdp, sllh, s2llh);
 }
 
 void Model::fdJzdp(const int ie, const int nroots, realtype t,

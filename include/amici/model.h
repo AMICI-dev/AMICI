@@ -1098,6 +1098,17 @@ class Model : public AbstractModel {
                                     gsl::span<realtype> buffer, const int ie);
     
     /**
+     * Seperates first and second order objective sensitivity information and
+     * writes them into the respective buffers
+     * @param dLLhdp data with mangled first and second order information
+     * @param sllh first order buffer
+     * @param s2llh second order buffer
+     */
+    void writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
+                                  std::vector<realtype> &sllh,
+                                  std::vector<realtype> &s2llh);
+    
+    /**
      * Verifies that the provided buffers have the expected size.
      * @param sllh first order buffer
      * @param s2llh second order buffer
