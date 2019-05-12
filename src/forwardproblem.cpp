@@ -135,6 +135,7 @@ void ForwardProblem::workForwardProblem() {
     }
 
     storeJacobianAndDerivativeInReturnData();
+    rdata->cpu_time = solver->getCpuTime();
 }
 
 
