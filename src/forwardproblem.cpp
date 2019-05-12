@@ -476,7 +476,8 @@ void ForwardProblem::handleDataPoint(int it) {
 
 void ForwardProblem::getDataOutput(int it) {
     model->getObservable(slice(rdata->y, it, rdata->ny), rdata->ts[it], x);
-    model->getObservableSigma(slice(rdata->sigmay, it, rdata->ny), it, edata);
+    model->getObservableSigma(slice(rdata->sigmay, it, rdata->nytrue), it,
+                              edata);
     if (edata) {
         model->addObservableObjective(rdata->llh, it, x, *edata);
         rdata->fres(it, edata);

@@ -99,9 +99,9 @@ void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
                            sllh.size(), nplist());
 
     
-    if (nJ > 1 && s2llh.size() != static_cast<unsigned>(nJ * nplist()))
+    if (s2llh.size() != static_cast<unsigned>((nJ - 1) * nplist()))
         throw AmiException("Incorrect s2llh buffer size! Was %u, expected %i.",
-                           s2llh.size(), nJ * nplist());
+                           s2llh.size(), (nJ - 1) * nplist());
 }
 
 void Model::fdJydy_colptrs(sunindextype * /*indexptrs*/, int /*index*/) {
