@@ -21,10 +21,30 @@ static void checkBufferSize(gsl::span<realtype> buffer,
                            buffer.size(), expected_size);
 }
 
-    static void writeSlice(gsl::span<const realtype> slice,
+static void writeSlice(gsl::span<const realtype> slice,
                        gsl::span<realtype> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
+}
+    
+void Model::writeSliceEvent(gsl::span<const realtype> slice,
+                            gsl::span<realtype> buffer, const int ie) {
+    checkBufferSize(buffer, slice.size());
+    checkBufferSize(buffer, z2event.size());
+    for (int izt = 0; izt < z2event.size(); ++izt)
+        if (z2event.at(izt) - 1 == ie)
+            buffer.at(izt) = slice.at(izt);
+}
+    
+void Model::writeSensitivitySliceEvent(gsl::span<const realtype> slice,
+                                       gsl::span<realtype> buffer,
+                                       const int ie) {
+    checkBufferSize(buffer, slice.size());
+    checkBufferSize(buffer, z2event.size() * nplist());
+    for (int ip = 0; ip < nplist(); ++ip)
+        for (int izt = 0; izt < z2event.size(); ++izt)
+            if (z2event.at(izt) - 1 == ie)
+                buffer.at(ip*nztrue + izt) = slice.at(ip*nztrue + izt);
 }
 
 Model::Model() : dxdotdp(0, 0), x_pos_tmp(0) {}
@@ -1153,7 +1173,7 @@ void Model::fdydx(const realtype t, const AmiVector &x) {
 void Model::getEvent(gsl::span<realtype> z, const int ie, const realtype t,
                      const AmiVector &x) {
     fz(ie, t, x);
-    writeSlice(this->z, z);
+    writeSliceEvent(this->z, z, ie);
 }
 
 void Model::fz(const int ie, const realtype t, const AmiVector &x) {
@@ -1168,7 +1188,7 @@ void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
                                 const realtype t, const AmiVector &x,
                                 const AmiVectorArray &sx) {
     for (int ip = 0; ip < nplist(); ip++) {
-        fsz(&sz.at(ip), ie, t, x.data(), unscaledParameters.data(),
+        fsz(&sz.at(ip*nz), ie, t, x.data(), unscaledParameters.data(),
             fixedParameters.data(), h.data(), sx.data(ip), plist(ip));
     }
 }
@@ -1176,7 +1196,7 @@ void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
 void Model::getEventRegularization(gsl::span<realtype> rz, const int ie,
                                    const realtype t, const AmiVector &x) {
     frz(ie, t, x);
-    writeSlice(this->rz, rz);
+    writeSliceEvent(this->rz, rz, ie);
 }
 
 void Model::frz(const int ie, const realtype t, const AmiVector &x) {
@@ -1193,7 +1213,7 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
                                               const AmiVector &x,
                                               const AmiVectorArray &sx) {
     for (int ip = 0; ip < nplist(); ip++) {
-        fsrz(&srz.at(ip), ie, t, x.data(), unscaledParameters.data(),
+        fsrz(&srz.at(ip*nz), ie, t, x.data(), unscaledParameters.data(),
              fixedParameters.data(), h.data(), sx.data(ip), plist(ip));
     }
 }
@@ -1406,7 +1426,7 @@ void Model::getEventSigma(gsl::span<realtype> sigmaz, const int ie,
                           const int nroots, const realtype t,
                           const ExpData *edata) {
     fsigmaz(ie, nroots, t, edata);
-    writeSlice(this->sigmaz, sigmaz);
+    writeSliceEvent(this->sigmaz, sigmaz, ie);
 }
 
 void Model::fsigmaz(const int ie, const int nroots, const realtype t,
@@ -1415,7 +1435,8 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
         return;
 
     sigmaz.assign(nztrue, 0.0);
-
+    fsigmaz(sigmaz.data(), t, unscaledParameters.data(), fixedParameters.data());
+    
     if (edata) {
         for (int iztrue = 0; iztrue < nztrue; iztrue++) {
             if (z2event.at(iztrue) - 1 == ie) {
@@ -1437,7 +1458,7 @@ void Model::getEventSigmaSensitivity(gsl::span<realtype> ssigmaz, const int ie,
                                      const int nroots, const realtype t,
                                      const ExpData *edata) {
     fdsigmazdp(ie, nroots, t, edata);
-    writeSlice(dsigmazdp, ssigmaz);
+    writeSensitivitySliceEvent(dsigmazdp, ssigmaz, ie);
 }
 
 void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,

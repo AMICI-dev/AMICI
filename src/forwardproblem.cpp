@@ -237,7 +237,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
 
     if (iroot < model->nMaxEvent() * model->ne) {
-        std::copy(rootsfound.begin(), rootsfound.end(), &rootidx[iroot * model->ne]);
+        std::copy(rootsfound.begin(), rootsfound.end(),
+                  &rootidx[iroot * model->ne]);
     }
 
     rvaltmp = rootvals;

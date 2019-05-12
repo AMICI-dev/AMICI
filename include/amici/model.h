@@ -1078,6 +1078,26 @@ class Model : public AbstractModel {
 
   protected:
     /**
+     * Writes part of a slice to a buffer according to indices specified in
+     * z2event
+     * @param slice source data slice
+     * @param buffer output data slice
+     * @param ie event index
+     */
+    void writeSliceEvent(gsl::span<const realtype> slice,
+                         gsl::span<realtype> buffer, const int ie);
+    
+    /**
+     * Writes part of a sensitivity slice to a buffer according to indices
+     * specified in z2event
+     * @param slice source data slice
+     * @param buffer output data slice
+     * @param ie event index
+     */
+    void writeSensitivitySliceEvent(gsl::span<const realtype> slice,
+                                    gsl::span<realtype> buffer, const int ie);
+    
+    /**
      * Verifies that the provided buffers have the expected size.
      * @param sllh first order buffer
      * @param s2llh second order buffer
