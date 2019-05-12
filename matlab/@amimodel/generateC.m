@@ -256,6 +256,7 @@ function generateCMakeFile(this)
     t = template();
     t.add('TPL_MODELNAME', this.modelname);
     t.add('TPL_SOURCES', sourceStr);
+    t.add('TPL_AMICI_VERSION', '');
     CMakeFileName = fullfile(this.wrap_path,'models',this.modelname,'CMakeLists.txt');
     CMakeTemplateFileName = fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'src' , 'CMakeLists.template.cmake');
     t.replace(CMakeTemplateFileName, CMakeFileName);
