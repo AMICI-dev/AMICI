@@ -391,7 +391,7 @@ void ForwardProblem::getEventOutput() {
         }
 
         /* get event output */
-        model->getEvent(slice(rdata->z, nroots.at(ie), rdata->nz), t, ie, x);
+        model->getEvent(slice(rdata->z, nroots.at(ie), rdata->nz), ie, t, x);
         /* if called from fillEvent at last timepoint,
          then also get the root function value */
         if (t == model->getTimepoint(model->nt() - 1))
@@ -449,7 +449,7 @@ void ForwardProblem::getEventSensisFSA(int ie) {
         model->getEventRegularizationSensitivity(slice(rdata->srz,
                                                        nroots.at(ie),
                                                        rdata->nz * rdata->nplist),
-                                                 nroots.at(ie), ie, t, x, sx);
+                                                 ie, nroots.at(ie), t, x, sx);
     } else {
         model->getEventSensitivity(slice(rdata->sz, nroots.at(ie),
                                          rdata->nz * rdata->nplist),

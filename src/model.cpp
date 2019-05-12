@@ -171,7 +171,7 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
-                dJydx.data(), nJ, this->sx.data(), nx_solver, 0.0, dJydp.data(),
+                dJydx.data(), nJ, this->sx.data(), nx_solver, 1.0, dJydp.data(),
                 nJ);
 
     // multResult    nJ        x nplist()
@@ -313,7 +313,7 @@ void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
-                &dJzdx.at(nroots * nx_solver * nJ), nJ, this->sx.data(),
+                dJzdx.data(), nJ, this->sx.data(),
                 nx_solver, 1.0, dJzdp.data(), nJ);
 
     // sJy += multResult + dJydp
@@ -331,11 +331,11 @@ void Model::fdJzdp(const int ie, const int nroots, realtype t,
 
     dJzdp.assign(nJ * nplist(), 0.0);
 
-    fdzdp(ie, t, x);
-    fdsigmazdp(ie, nroots, t, &edata);
-
     fdJzdz(ie, nroots, t, x, edata);
+    fdzdp(ie, t, x);
+    
     fdJzdsigma(ie, nroots, t, x, edata);
+    fdsigmazdp(ie, nroots, t, &edata);
 
     for (int izt = 0; izt < nztrue; ++izt) {
         if (!edata.isSetObservedEvents(nroots, izt))
@@ -402,6 +402,7 @@ void Model::fdJzdx(const int ie, const int nroots, const realtype t,
                         dJzdx.data(), nJ);
         } else {
             // rz
+            fdJrzdz(ie, nroots, t, x, edata);
             fdrzdx(ie, t, x);
             amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                         BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0,
@@ -1167,7 +1168,7 @@ void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
                                 const realtype t, const AmiVector &x,
                                 const AmiVectorArray &sx) {
     for (int ip = 0; ip < nplist(); ip++) {
-        fsz(sz.data(), ie, t, x.data(), unscaledParameters.data(),
+        fsz(&sz.at(ip), ie, t, x.data(), unscaledParameters.data(),
             fixedParameters.data(), h.data(), sx.data(ip), plist(ip));
     }
 }
@@ -1192,7 +1193,7 @@ void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
                                               const AmiVector &x,
                                               const AmiVectorArray &sx) {
     for (int ip = 0; ip < nplist(); ip++) {
-        fsrz(srz.data(), ie, t, x.data(), unscaledParameters.data(),
+        fsrz(&srz.at(ip), ie, t, x.data(), unscaledParameters.data(),
              fixedParameters.data(), h.data(), sx.data(ip), plist(ip));
     }
 }
