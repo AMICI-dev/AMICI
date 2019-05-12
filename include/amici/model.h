@@ -1216,7 +1216,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance
      * @param rdata pointer to return data instance
      */
-    void fdJydp(const int it, const AmiVector x, const ExpData &edata);
+    void fdJydp(const int it, const AmiVector &x, const ExpData &edata);
     
     /**
      * Sensitivity of time-resolved measurement negative log-likelihood Jy
@@ -1226,7 +1226,7 @@ class Model : public AbstractModel {
      * @param sx state variables
      * @param edata pointer to experimental data instance
      */
-    void fdJydx(const int it, const AmiVector x, const ExpData &edata);
+    void fdJydx(const int it, const AmiVector &x, const ExpData &edata);
     
     /**
      * Sensitivity of event-resolved measurement negative log-likelihood Jz

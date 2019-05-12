@@ -202,7 +202,7 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
     writeLLHSensitivitySlice(dJydp, sllh, s2llh);
 }
 
-void Model::fdJydp(const int it, const AmiVector x, const ExpData &edata) {
+void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
     // dJydy         nJ, nytrue x ny
     // dydp          nplist * ny
     // dJydp         nplist x nJ
@@ -248,7 +248,7 @@ void Model::getAdjointStateObservableUpdate(gsl::span<realtype> dJydx,
     writeSlice(this->dJydx, dJydx);
 }
 
-void Model::fdJydx(const int it, const AmiVector x, const ExpData &edata) {
+void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
 
     dJydx.assign(nJ * nx_solver, 0.0);
 
