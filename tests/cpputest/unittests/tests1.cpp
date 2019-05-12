@@ -119,7 +119,7 @@ TEST(model, testParameterScalingLengthMismatch)
 
 TEST(model, testSetTimepoints){
     CHECK_THROWS(AmiException,
-                 model.setTimepoints(std::vector<realtype>{ 0.0, 1.0, 0.5 }))
+                 model.setTimepoints(std::vector<realtype>{ 0.0, 1.0, 0.5 }));
 }
 
 TEST(model, testNameIdGetterSetter)
@@ -130,7 +130,7 @@ TEST(model, testNameIdGetterSetter)
     DOUBLES_EQUAL(
       model.setParametersByIdRegex("p[\\d]+", 5.0), p.size(), 1e-16);
     for (const auto& ip : model.getParameters())
-        DOUBLES_EQUAL(ip, 5.0, 1e-16)
+        DOUBLES_EQUAL(ip, 5.0, 1e-16);
     CHECK_THROWS(AmiException, model.setParametersByIdRegex("k[\\d]+", 5.0));
 
     model.setParameterByName("p0", 3.0);
@@ -139,7 +139,7 @@ TEST(model, testNameIdGetterSetter)
     DOUBLES_EQUAL(
       model.setParametersByNameRegex("p[\\d]+", 5.0), p.size(), 1e-16);
     for (const auto& ip : model.getParameters())
-        DOUBLES_EQUAL(ip, 5.0, 1e-16)
+        DOUBLES_EQUAL(ip, 5.0, 1e-16);
     CHECK_THROWS(AmiException, model.setParametersByNameRegex("k[\\d]+", 5.0));
 
     model.setFixedParameterById("k0", 3.0);
@@ -148,7 +148,7 @@ TEST(model, testNameIdGetterSetter)
     DOUBLES_EQUAL(
       model.setFixedParametersByIdRegex("k[\\d]+", 5.0), k.size(), 1e-16);
     for (const auto& ik : model.getFixedParameters())
-        DOUBLES_EQUAL(ik, 5.0, 1e-16)
+        DOUBLES_EQUAL(ik, 5.0, 1e-16);
     CHECK_THROWS(AmiException,
                  model.setFixedParametersByIdRegex("p[\\d]+", 5.0));
 
@@ -158,7 +158,7 @@ TEST(model, testNameIdGetterSetter)
     DOUBLES_EQUAL(
       model.setFixedParametersByNameRegex("k[\\d]+", 5.0), k.size(), 1e-16);
     for (const auto& ik : model.getFixedParameters())
-        DOUBLES_EQUAL(ik, 5.0, 1e-16)
+        DOUBLES_EQUAL(ik, 5.0, 1e-16);
     CHECK_THROWS(AmiException,
                  model.setFixedParametersByNameRegex("p[\\d]+", 5.0));
 }
@@ -322,26 +322,26 @@ TEST_GROUP(edata)
 TEST(edata, testConstructors1)
 {
     auto edata = ExpData();
-    CHECK_TRUE(edata.nytrue() == 0)
-    CHECK_TRUE(edata.nztrue() == 0)
-    CHECK_TRUE(edata.nmaxevent() == 0)
+    CHECK_TRUE(edata.nytrue() == 0);
+    CHECK_TRUE(edata.nztrue() == 0);
+    CHECK_TRUE(edata.nmaxevent() == 0);
 }
 TEST(edata, testConstructors2)
 {
     auto edata = ExpData(model->nytrue, model->nztrue, model->nMaxEvent());
-    CHECK_TRUE(edata.nytrue() == model->nytrue)
-    CHECK_TRUE(edata.nztrue() == model->nztrue)
-    CHECK_TRUE(edata.nmaxevent() == model->nMaxEvent())
+    CHECK_TRUE(edata.nytrue() == model->nytrue);
+    CHECK_TRUE(edata.nztrue() == model->nztrue);
+    CHECK_TRUE(edata.nmaxevent() == model->nMaxEvent());
 }
 
 TEST(edata, testConstructors3)
 {
     auto edata =
       ExpData(model->nytrue, model->nztrue, model->nMaxEvent(), timepoints);
-    CHECK_TRUE(edata.nytrue() == model->nytrue)
-    CHECK_TRUE(edata.nztrue() == model->nztrue)
-    CHECK_TRUE(edata.nmaxevent() == model->nMaxEvent())
-    CHECK_TRUE(edata.nt() == model->nt())
+    CHECK_TRUE(edata.nytrue() == model->nytrue);
+    CHECK_TRUE(edata.nztrue() == model->nztrue);
+    CHECK_TRUE(edata.nmaxevent() == model->nMaxEvent());
+    CHECK_TRUE(edata.nt() == model->nt());
     checkEqualArray(
       timepoints, edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
 }
@@ -361,10 +361,10 @@ TEST(edata, testConstructors4)
                          y_std,
                          z,
                          z_std);
-    CHECK_TRUE(edata.nytrue() == testModel.nytrue)
-    CHECK_TRUE(edata.nztrue() == testModel.nztrue)
-    CHECK_TRUE(edata.nmaxevent() == testModel.nMaxEvent())
-    CHECK_TRUE(edata.nt() == testModel.nt())
+    CHECK_TRUE(edata.nytrue() == testModel.nytrue);
+    CHECK_TRUE(edata.nztrue() == testModel.nztrue);
+    CHECK_TRUE(edata.nmaxevent() == testModel.nMaxEvent());
+    CHECK_TRUE(edata.nt() == testModel.nt());
     checkEqualArray(
       timepoints, edata.getTimepoints(), TEST_ATOL, TEST_RTOL, "ts");
     checkEqualArray(
@@ -383,10 +383,10 @@ TEST(edata, testConstructors4)
                     "observedEventsStdDev");
 
     auto edata_copy = ExpData(edata);
-    CHECK_TRUE(edata.nytrue() == edata_copy.nytrue())
-    CHECK_TRUE(edata.nztrue() == edata_copy.nztrue())
-    CHECK_TRUE(edata.nmaxevent() == edata_copy.nmaxevent())
-    CHECK_TRUE(edata.nt() == edata_copy.nt())
+    CHECK_TRUE(edata.nytrue() == edata_copy.nytrue());
+    CHECK_TRUE(edata.nztrue() == edata_copy.nztrue());
+    CHECK_TRUE(edata.nmaxevent() == edata_copy.nmaxevent());
+    CHECK_TRUE(edata.nt() == edata_copy.nt());
     checkEqualArray(edata_copy.getTimepoints(),
                     edata.getTimepoints(),
                     TEST_ATOL,
@@ -418,10 +418,10 @@ TEST(edata, testConstructors5)
 {
     testModel.setTimepoints(timepoints);
     auto edata = ExpData(testModel);
-    CHECK_TRUE(edata.nytrue() == testModel.nytrue)
-    CHECK_TRUE(edata.nztrue() == testModel.nztrue)
-    CHECK_TRUE(edata.nmaxevent() == testModel.nMaxEvent())
-    CHECK_TRUE(edata.nt() == testModel.nt())
+    CHECK_TRUE(edata.nytrue() == testModel.nytrue);
+    CHECK_TRUE(edata.nztrue() == testModel.nztrue);
+    CHECK_TRUE(edata.nmaxevent() == testModel.nMaxEvent());
+    CHECK_TRUE(edata.nt() == testModel.nt());
     checkEqualArray(testModel.getTimepoints(),
                     edata.getTimepoints(),
                     TEST_ATOL,
@@ -447,7 +447,7 @@ TEST(edata, testDimensionChecks)
                          z,
                          z_std,
                          z,
-                         z_std))
+                         z_std));
 
     CHECK_THROWS(AmiException,
                  ExpData(testModel.nytrue,
@@ -457,7 +457,7 @@ TEST(edata, testDimensionChecks)
                          z,
                          bad_std,
                          z,
-                         z_std))
+                         z_std));
 
     auto edata = ExpData(testModel);
 
@@ -466,24 +466,25 @@ TEST(edata, testDimensionChecks)
     std::vector<realtype> bad_z(nz * nmaxevent + 1, 0.0);
     std::vector<realtype> bad_z_std(nz * nmaxevent + 1, 0.1);
 
-    CHECK_THROWS(AmiException, edata.setObservedData(bad_y))
-    CHECK_THROWS(AmiException, edata.setObservedDataStdDev(bad_y_std))
-    CHECK_THROWS(AmiException, edata.setObservedEvents(bad_z))
-    CHECK_THROWS(AmiException, edata.setObservedEventsStdDev(bad_y_std))
+    CHECK_THROWS(AmiException, edata.setObservedData(bad_y));
+    CHECK_THROWS(AmiException, edata.setObservedDataStdDev(bad_y_std));
+    CHECK_THROWS(AmiException, edata.setObservedEvents(bad_z));
+    CHECK_THROWS(AmiException, edata.setObservedEventsStdDev(bad_y_std));
 
     std::vector<realtype> bad_single_y(edata.nt() + 1, 0.0);
     std::vector<realtype> bad_single_y_std(edata.nt() + 1, 0.1);
     std::vector<realtype> bad_single_z(edata.nmaxevent() + 1, 0.0);
     std::vector<realtype> bad_single_z_std(edata.nmaxevent() + 1, 0.1);
 
-    CHECK_THROWS(AmiException, edata.setObservedData(bad_single_y, 0))
-    CHECK_THROWS(AmiException, edata.setObservedDataStdDev(bad_single_y_std, 0))
-    CHECK_THROWS(AmiException, edata.setObservedEvents(bad_single_z, 0))
+    CHECK_THROWS(AmiException, edata.setObservedData(bad_single_y, 0));
     CHECK_THROWS(AmiException,
-                 edata.setObservedEventsStdDev(bad_single_y_std, 0))
+                 edata.setObservedDataStdDev(bad_single_y_std, 0));
+    CHECK_THROWS(AmiException, edata.setObservedEvents(bad_single_z, 0));
+    CHECK_THROWS(AmiException,
+                 edata.setObservedEventsStdDev(bad_single_y_std, 0));
 
     CHECK_THROWS(AmiException,
-                 edata.setTimepoints(std::vector<realtype>{ 0.0, 1.0, 0.5 }))
+                 edata.setTimepoints(std::vector<realtype>{ 0.0, 1.0, 0.5 }));
 }
 
 TEST(edata, testSettersGetters)
@@ -521,10 +522,10 @@ TEST(edata, testSettersGetters)
         edata.setObservedData(single_y, iy);
         edata.setObservedDataStdDev(single_y_std, iy);
     }
-    CHECK_THROWS(std::exception, edata.setObservedData(single_y, ny))
-    CHECK_THROWS(std::exception, edata.setObservedData(single_y, -1))
-    CHECK_THROWS(std::exception, edata.setObservedDataStdDev(single_y_std, ny))
-    CHECK_THROWS(std::exception, edata.setObservedDataStdDev(single_y_std, -1))
+    CHECK_THROWS(std::exception, edata.setObservedData(single_y, ny));
+    CHECK_THROWS(std::exception, edata.setObservedData(single_y, -1));
+    CHECK_THROWS(std::exception, edata.setObservedDataStdDev(single_y_std, ny));
+    CHECK_THROWS(std::exception, edata.setObservedDataStdDev(single_y_std, -1));
 
     std::vector<realtype> single_z(edata.nmaxevent(), 0.0);
     std::vector<realtype> single_z_std(edata.nmaxevent(), 0.1);
@@ -534,17 +535,17 @@ TEST(edata, testSettersGetters)
         edata.setObservedEventsStdDev(single_z_std, iz);
     }
 
-    CHECK_THROWS(std::exception, edata.setObservedEvents(single_z, nz))
-    CHECK_THROWS(std::exception, edata.setObservedEvents(single_z, -1))
+    CHECK_THROWS(std::exception, edata.setObservedEvents(single_z, nz));
+    CHECK_THROWS(std::exception, edata.setObservedEvents(single_z, -1));
     CHECK_THROWS(std::exception,
-                 edata.setObservedEventsStdDev(single_z_std, nz))
+                 edata.setObservedEventsStdDev(single_z_std, nz));
     CHECK_THROWS(std::exception,
-                 edata.setObservedEventsStdDev(single_z_std, -1))
+                 edata.setObservedEventsStdDev(single_z_std, -1));
 
-    CHECK_TRUE(edata.getObservedDataPtr(0))
-    CHECK_TRUE(edata.getObservedDataStdDevPtr(0))
-    CHECK_TRUE(edata.getObservedEventsPtr(0))
-    CHECK_TRUE(edata.getObservedEventsStdDevPtr(0))
+    CHECK_TRUE(edata.getObservedDataPtr(0));
+    CHECK_TRUE(edata.getObservedDataStdDevPtr(0));
+    CHECK_TRUE(edata.getObservedEventsPtr(0));
+    CHECK_TRUE(edata.getObservedEventsStdDevPtr(0));
 
     std::vector<realtype> empty(0, 0.0);
 
@@ -553,10 +554,10 @@ TEST(edata, testSettersGetters)
     edata.setObservedEvents(empty);
     edata.setObservedEventsStdDev(empty);
 
-    CHECK_TRUE(!edata.getObservedDataPtr(0))
-    CHECK_TRUE(!edata.getObservedDataStdDevPtr(0))
-    CHECK_TRUE(!edata.getObservedEventsPtr(0))
-    CHECK_TRUE(!edata.getObservedEventsStdDevPtr(0))
+    CHECK_TRUE(!edata.getObservedDataPtr(0));
+    CHECK_TRUE(!edata.getObservedDataStdDevPtr(0));
+    CHECK_TRUE(!edata.getObservedEventsPtr(0));
+    CHECK_TRUE(!edata.getObservedEventsStdDevPtr(0));
 
     checkEqualArray(
       edata.getObservedData(), empty, TEST_ATOL, TEST_RTOL, "ObservedData");
@@ -777,7 +778,7 @@ TEST(amivector, vector)
     AmiVector av(vec1);
     N_Vector nvec = av.getNVector();
     for (int i = 0; i < av.getLength(); ++i)
-        CHECK_EQUAL(av.at(i), NV_Ith_S(nvec, i))
+        CHECK_EQUAL(av.at(i), NV_Ith_S(nvec, i));
 }
 
 TEST(amivector, vectorArray)
