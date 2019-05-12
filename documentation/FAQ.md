@@ -8,7 +8,21 @@ __A__: Remove the corresponding model directory located in AMICI/models/*yourmod
 
 __Q__: It still does not compile.
 
+__A__: Remove the directory AMICI/models/`mexext` and compile again.
+
+---
+
+__Q__: It still does not compile.
+
 __A__: Make an [issue](https://github.com/ICB-DCM/AMICI/issues) and we will have a look.
+
+---
+
+__Q__: My Python-generated model does not compile from MATLAB.
+
+__A__: Try building any of the available examples before. If this succeeds, 
+retry building the original model. Some dependencies might not be built 
+correctly when using only the `compileMexFile.m` script. 
 
 ---
 

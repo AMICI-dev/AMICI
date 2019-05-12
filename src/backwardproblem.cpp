@@ -90,6 +90,7 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     computeLikelihoodSensitivities();
+    rdata->cpu_timeB = solver->getCpuTimeB();
 }
 
 

@@ -3,31 +3,31 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
 
     sundials_path = fullfile(dependencyPath,'sundials');
     sundials_ver = '4.0.2';
-    
+
     ssparse_path = fullfile(dependencyPath,'SuiteSparse');
     ssparse_ver = '4.5.3';
-    
+
     lapack_path = fullfile(dependencyPath,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
     lapack_ver = '3.5.0';
-   
-    
+
+
     version_file = fullfile(objectFolder, 'versions.txt');
     [del_sundials, del_ssparse, del_lapack] = checkVersions(version_file, sundials_ver, ssparse_ver, lapack_ver);
-    
+
     % assemble objectsstr
     objectsstr = '';
     objects_sundials = getObjectsSundials(o_suffix);
     for j=1:length(objects_sundials)
         objectsstr = strcat(objectsstr,' "',fullfile(objectFolder,objects_sundials{j}),'"');
     end
-    
+
     objects_ssparse = getObjectsSSparse(o_suffix);
     for j=1:length(objects_ssparse)
         objectsstr = strcat(objectsstr,' "',fullfile(objectFolder,objects_ssparse{j}),'"');
     end
 
     includesstr = getIncludeString(fullfile(fileparts(dependencyPath)), sundials_path, ssparse_path);
-    
+
     % collect files that need to be recompiled
     sources_sundials = getSourcesSundials();
     sourcesToCompile = '';
@@ -42,23 +42,23 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
             sourcesToCompile = [sourcesToCompile, ' ', fullfile(ssparse_path,sources_ssparse{j})];
         end
     end
-    
-    % sundials compatiable int type for suitesparse
+
+    % sundials compatible int type for suitesparse
     COPT = [COPT ' -DDLONG'];
-    
+
     % compile
     if(~strcmp(sourcesToCompile, ''))
         eval(['mex ' DEBUG ' ' COPT ' -c -outdir ' ...
             objectFolder ...
             includesstr ' ' sourcesToCompile ]);
     end
-    
-    % only write versions.txt if we are done compiling 
+
+    % only write versions.txt if we are done compiling
     fid = fopen(version_file,'w');
     fprintf(fid,[sundials_ver '\r']);
     fprintf(fid,[ssparse_ver '\r']);
     fprintf(fid,[lapack_ver '\r']);
-    fclose(fid); 
+    fclose(fid);
 end
 
 function includesstr = getIncludeString(amici_root_path, sundials_path, ssparse_path)
@@ -216,7 +216,7 @@ function sources_ssparse = getSourcesSSparse()
 end
 
 function objects_ssparse = getObjectsSSparse(o_suffix)
-    
+
     objects_ssparse = {
         'klu_analyze_given.o';
         'klu_analyze.o';
@@ -254,7 +254,7 @@ function objects_ssparse = getObjectsSSparse(o_suffix)
         'btf_strongcomp.o';
         'SuiteSparse_config.o';
         };
-    
+
     if(~strcmp(o_suffix, '.o'))
         objects_ssparse = strrep(objects_ssparse, '.o', o_suffix);
     end
@@ -321,7 +321,7 @@ function objects_sundials = getObjectsSundials(o_suffix)
         'cvodes_io.o';
         'cvodes_direct.o';
         };
-    
+
     if(~strcmp(o_suffix, '.o'))
         objects_sundials = strrep(objects_sundials, '.o', o_suffix);
     end
@@ -337,7 +337,7 @@ function result = isnewer(ver1str,ver2str)
     %
     % Return values:
     %  result: flag indicating whether ver1 ist newer than ver2 @type boolean
-    
+
     ver1Parts = getParts(ver1str);
     ver2Parts = getParts(ver2str);
     if ver2Parts(1) ~= ver1Parts(1)     % major version
@@ -349,7 +349,7 @@ function result = isnewer(ver1str,ver2str)
     else
         result = ver2Parts(4) < ver1Parts(4);
     end
-end 
+end
 
 function parts = getParts(V)
     % getParts takes an input version string and returns an array
@@ -360,7 +360,7 @@ function parts = getParts(V)
     %
     % Return values:
     %  parts: array containing the version numbers @type double
-    
+
     parts = sscanf(V, '%d.%d.%d.%d')';
     if length(parts) < 3
         parts(3) = 0; % zero-fills to 3 elements
@@ -368,4 +368,4 @@ function parts = getParts(V)
     if length(parts) < 4
         parts(4) = 0; % zero-fills to 3 elements
     end
-end   
+end
