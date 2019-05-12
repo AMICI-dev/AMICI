@@ -194,14 +194,9 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
                 dJydx.data(), nJ, this->sx.data(), nx_solver, 1.0, dJydp.data(),
                 nJ);
 
-    // multResult    nJ        x nplist()
-    // dJydp         nJ        x nplist()
-    // dJydxTmp      nJ        x nx_solver
-    // sx            nx_solver x nplist()
-
-    amici_daxpy(nplist(), -1.0, dJydp.data(), 1, sllh.data(), 1);
-    if (nJ > 1)
-        amici_daxpy(nplist(), -1.0, &dJydp[1], nJ, s2llh.data(), nJ - 1);
+    amici_daxpy(nplist(), -1.0, dJydp.data(), nJ, sllh.data(), 1);
+    for (int iJ = 1; iJ < nJ; ++iJ)
+        amici_daxpy(nplist(), -1.0, &dJydp.at(iJ), nJ, s2llh.data(), nJ - 1);
 }
 
 void Model::fdJydp(const int it, const AmiVector x, const ExpData &edata) {
@@ -1365,7 +1360,7 @@ void Model::fsigmay(const int it, const ExpData *edata) {
     if (!ny)
         return;
 
-    sigmay.assign(nytrue, 0.0);
+    sigmay.assign(ny, 0.0);
 
     fsigmay(sigmay.data(), getTimepoint(it), unscaledParameters.data(),
             fixedParameters.data());
@@ -1434,7 +1429,7 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
     if (!nz)
         return;
 
-    sigmaz.assign(nztrue, 0.0);
+    sigmaz.assign(nz, 0.0);
     fsigmaz(sigmaz.data(), t, unscaledParameters.data(), fixedParameters.data());
     
     if (edata) {
