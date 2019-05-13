@@ -26,36 +26,82 @@ static void writeSlice(gsl::span<const realtype> slice,
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
 }
-    
-void Model::writeSliceEvent(gsl::span<const realtype> slice,
-                            gsl::span<realtype> buffer, const int ie) {
-    checkBufferSize(buffer, slice.size());
-    checkBufferSize(buffer, z2event.size());
-    for (int izt = 0; izt < z2event.size(); ++izt)
-        if (z2event.at(izt) - 1 == ie)
-            buffer.at(izt) = slice.at(izt);
+
+/**
+ * @brief local helper function to get parameters
+ * @param ids vector of name/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param id name/id to look for in the vector
+ * @param variable_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ * @return value of the selected parameter
+ */
+static realtype getValueById(std::vector<std::string> const &ids,
+                             std::vector<realtype> const &values,
+                             std::string const &id, const char *variable_name,
+                             const char *id_name) {
+    auto it = std::find(ids.begin(), ids.end(), id);
+    if (it != ids.end())
+        return values.at(it - ids.begin());
+
+    throw AmiException("Could not find %s with specified %s", variable_name,
+                       id_name);
 }
-    
-void Model::writeSensitivitySliceEvent(gsl::span<const realtype> slice,
-                                       gsl::span<realtype> buffer,
-                                       const int ie) {
-    checkBufferSize(buffer, slice.size());
-    checkBufferSize(buffer, z2event.size() * nplist());
-    for (int ip = 0; ip < nplist(); ++ip)
-        for (int izt = 0; izt < z2event.size(); ++izt)
-            if (z2event.at(izt) - 1 == ie)
-                buffer.at(ip*nztrue + izt) = slice.at(ip*nztrue + izt);
+
+/**
+ * @brief local helper function to set parameters
+ * @param ids vector of names/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param value for the selected parameter
+ * @param id name/id to look for in the vector
+ * @param variable_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ */
+static void setValueById(std::vector<std::string> const &ids,
+                         std::vector<realtype> &values, realtype value,
+                         std::string const &id, const char *variable_name,
+                         const char *id_name) {
+    auto it = std::find(ids.begin(), ids.end(), id);
+    if (it != ids.end())
+        values.at(it - ids.begin()) = value;
+    else
+        throw AmiException("Could not find %s with specified %s", variable_name,
+                           id_name);
 }
-    
-void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
-                                     std::vector<realtype> &sllh,
-                                     std::vector<realtype> &s2llh) {
-    checkLLHBufferSize(sllh, s2llh);
-    
-    amici_daxpy(nplist(), -1.0, dLLhdp.data(), nJ, sllh.data(), 1);
-    for (int iJ = 1; iJ < nJ; ++iJ)
-    amici_daxpy(nplist(), -1.0, &dLLhdp.at(iJ), nJ, &s2llh.at(iJ - 1),
-             nJ - 1);
+
+/**
+ * @brief local helper function to set parameters via regex
+ * @param ids vector of names/ids of (fixed)Parameters
+ * @param values values of the (fixed)Parameters
+ * @param value for the selected parameter
+ * @param regex string according to which names/ids are to be matched
+ * @param variable_name string indicating what variable we are lookin at
+ * @param id_name string indicating whether name or id was specified
+ * @return number of matched names/ids
+ */
+static int setValueByIdRegex(std::vector<std::string> const &ids,
+                             std::vector<realtype> &values, realtype value,
+                             std::string const &regex,
+                             const char *variable_name, const char *id_name) {
+    try {
+        std::regex pattern(regex);
+        int n_found = 0;
+        for (const auto &id : ids) {
+            if (std::regex_match(id, pattern)) {
+                values.at(&id - &ids[0]) = value;
+                ++n_found;
+            }
+        }
+
+        if (n_found == 0)
+            throw AmiException("Could not find %s with specified %s",
+                               variable_name, id_name);
+
+        return n_found;
+    } catch (std::regex_error const &e) {
+        throw AmiException("Specified regex pattern could not be compiled: %s",
+                           e.what());
+    }
 }
 
 Model::Model() : dxdotdp(0, 0), x_pos_tmp(0) {}
@@ -73,16 +119,15 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       nxtrue_solver(nxtrue_solver), ny(ny), nytrue(nytrue), nz(nz),
       nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
       ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz), nJ(nJ), ubw(ubw),
-      lbw(lbw), o2mode(o2mode), z2event(std::move(z2event)),
-      idlist(std::move(idlist)), J(nx_solver, nx_solver, nnz, CSC_MAT),
+      lbw(lbw), o2mode(o2mode), idlist(std::move(idlist)),
+      J(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
-      dwdx(nw, nx_solver, ndwdx, CSC_MAT), M(nx_solver, nx_solver),
-      w(nw), dwdp(ndwdp), x_rdata(nx_rdata, 0.0),
-      sx_rdata(nx_rdata, 0.0), h(ne, 0.0), unscaledParameters(p),
-      originalParameters(p), fixedParameters(std::move(k)),
-      total_cl(nx_rdata - nx_solver),
-      stotal_cl((nx_rdata - nx_solver) * np()), plist_(plist),
-      stateIsNonNegative(nx_solver, false), x_pos_tmp(nx_solver),
+      dwdx(nw, nx_solver, ndwdx, CSC_MAT), M(nx_solver, nx_solver), w(nw),
+      dwdp(ndwdp), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
+      total_cl(nx_rdata - nx_solver), stotal_cl((nx_rdata - nx_solver) * np()),
+      x_pos_tmp(nx_solver), unscaledParameters(p), originalParameters(p),
+      fixedParameters(std::move(k)), z2event(std::move(z2event)), plist_(plist),
+      stateIsNonNegative(nx_solver, false),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
 
     // Can't use derivedClass::wasPythonGenerated() in ctor.
@@ -103,323 +148,27 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
     requireSensitivitiesForAllParameters();
 }
 
-void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
-                               std::vector<realtype> &s2llh) {
-    if (sllh.size() != static_cast<unsigned>(nplist()))
-        throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
-                           sllh.size(), nplist());
+bool operator==(const Model &a, const Model &b) {
+    if (typeid(a) != typeid(b))
+        return false;
 
-    
-    if (s2llh.size() != static_cast<unsigned>((nJ - 1) * nplist()))
-        throw AmiException("Incorrect s2llh buffer size! Was %u, expected %i.",
-                           s2llh.size(), (nJ - 1) * nplist());
-}
-
-void Model::fdJydy_colptrs(sunindextype * /*indexptrs*/, int /*index*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
-void Model::fdJydy_rowvals(sunindextype * /*indexptrs*/, int /*index*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
-void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
-                                     const AmiVector &x,
-                                     const AmiVectorArray &sx) {
-    if (!ny)
-        return;
-
-    fdydx(t, x);
-    fdydp(t, x);
-
-    this->sx.assign(nx_solver * nplist(), 0.0);
-    sx.flatten_to_vector(this->sx);
-
-    // compute sy = 1.0*dydx*sx + 1.0*sy
-    // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
-    //        M  K                 K  N                     M  N
-    //        lda                  ldb                      ldc
-    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                BLASTranspose::noTrans, ny, nplist(), nx_solver, 1.0,
-                dydx.data(), ny, this->sx.data(), nx_solver, 1.0, dydp.data(),
-                ny);
-
-    writeSlice(dydp, sy);
-
-    if (alwaysCheckFinite)
-        checkFinite(sy, "sy");
-}
-
-void Model::getUnobservedEventSensitivity(gsl::span<realtype> sz,
-                                          const int ie) {
-    checkBufferSize(sz, nz * nplist());
-
-    for (int iz = 0; iz < nz; ++iz)
-        if (z2event[iz] - 1 == ie)
-            for (int ip = 0; ip < nplist(); ++ip)
-                sz.at(ip * nz + iz) = 0.0;
-}
-
-void Model::addPartialObservableObjectiveSensitivity(std::vector<realtype> &sllh,
-                                                     std::vector<realtype> &s2llh,
-                                                     const int it,
-                                                     const AmiVector &x,
-                                                     const ExpData &edata) {
-    if (!ny)
-        return;
-
-    fdJydp(it, x, edata);
-
-    writeLLHSensitivitySlice(dJydp, sllh, s2llh);
-}
-
-void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
-                                              std::vector<realtype> &s2llh,
-                                              const int it, const AmiVector &x,
-                                              const AmiVectorArray &sx,
-                                              const ExpData &edata) {
-
-    if (!ny)
-        return;
-
-    fdJydx(it, x, edata);
-    fdJydp(it, x, edata);
-    // Compute dJydx*sx for current 'it'
-    // dJydx        rdata->nt x nJ        x nx_solver
-    // sx           rdata->nt x nx_solver x nplist()
-    sx.flatten_to_vector(this->sx);
-
-    // C := alpha*op(A)*op(B) + beta*C,
-    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
-                dJydx.data(), nJ, this->sx.data(), nx_solver, 1.0, dJydp.data(),
-                nJ);
-
-    writeLLHSensitivitySlice(dJydp, sllh, s2llh);
-}
-
-void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
-    // dJydy         nJ, nytrue x ny
-    // dydp          nplist * ny
-    // dJydp         nplist x nJ
-    // dJydsigma
-
-    dJydp.assign(nJ * nplist(), 0.0);
-    
-    fdJydy(it, x, edata);
-    fdydp(edata.getTimepoint(it), x);
-
-    fdJydsigma(it, x, edata);
-    fdsigmaydp(it, &edata);
-
-    for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (!edata.isSetObservedData(it, iyt))
-            continue;
-
-        if (wasPythonGenerated()) {
-            // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
-            for (int iplist = 0; iplist < nplist(); ++iplist) {
-                dJydy[iyt].multiply(
-                    gsl::span<realtype>(&dJydp.at(iplist * nJ), nJ),
-                    gsl::span<const realtype>(&dydp.at(iplist * ny), ny));
-            }
-        } else {
-            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nplist(), ny, 1.0,
-                        &dJydy_matlab.at(iyt * nJ * ny), nJ, dydp.data(), ny,
-                        1.0, dJydp.data(), nJ);
-        }
-        // dJydp = 1.0 * dJydp +  1.0 * dJydsigma * dsigmaydp
-        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                    BLASTranspose::noTrans, nJ, nplist(), ny, 1.0,
-                    &dJydsigma.at(iyt * nJ * ny), nJ, dsigmaydp.data(), ny, 1.0,
-                    dJydp.data(), nJ);
-    }
-}
-
-void Model::getAdjointStateObservableUpdate(gsl::span<realtype> dJydx,
-                                            const int it, const AmiVector &x,
-                                            const ExpData &edata) {
-    fdJydx(it, x, edata);
-    writeSlice(this->dJydx, dJydx);
-}
-
-void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
-
-    dJydx.assign(nJ * nx_solver, 0.0);
-
-    fdydx(edata.getTimepoint(it), x);
-    fdJydy(it, x, edata);
-
-    // dJydy: nJ, ny x nytrue
-    // dydx :     ny x nx_solver
-    // dJydx:     nJ x nx_solver x nt
-    for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (!edata.isSetObservedData(it, iyt))
-            continue;
-        // dJydy A[nyt,nJ,ny] * dydx B[ny,nx_solver] = dJydx C[it,nJ,nx_solver]
-        //         slice                                       slice
-        //          M  K            K  N                       M  N
-        //           lda             ldb                        ldc
-
-        if (wasPythonGenerated()) {
-            for (int ix = 0; ix < nx_solver; ++ix) {
-                dJydy[iyt].multiply(
-                    gsl::span<realtype>(&dJydx.at(ix * nJ), nJ),
-                    gsl::span<const realtype>(&dydx.at(ix * ny), ny));
-            }
-        } else {
-            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nx_solver, ny, 1.0,
-                        &dJydy_matlab.at(iyt * ny * nJ), nJ, dydx.data(), ny,
-                        1.0, dJydx.data(), nJ);
-        }
-    }
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(dJydx, "dJydx");
-    }
-}
-
-void Model::addPartialEventObjectiveSensitivity(std::vector<realtype> &sllh,
-                                                std::vector<realtype> &s2llh,
-                                                const int ie, const int nroots,
-                                                const realtype t,
-                                                const AmiVector &x,
-                                                const ExpData &edata) {
-    if (!nz)
-        return;
-
-    fdJzdp(ie, nroots, t, x, edata);
-
-    writeLLHSensitivitySlice(dJzdp, sllh, s2llh);
-}
-
-void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
-                                         std::vector<realtype> &s2llh,
-                                         const int ie, const int nroots,
-                                         const realtype t, const AmiVector &x,
-                                         const AmiVectorArray &sx,
-                                         const ExpData &edata) {
-
-    if (!nz)
-        return;
-
-    fdJzdx(ie, nroots, t, x, edata);
-    fdJzdp(ie, nroots, t, x, edata);
-
-    // sJz           nJ x nplist()
-    // dJzdp         nJ x nplist()
-    // dJzdx         nmaxevent x nJ        x nx_solver
-    // sx            rdata->nt x nx_solver x nplist()
-
-    // Compute dJzdx*sx for current 'ie'
-    // dJzdx        rdata->nt x nJ        x nx_solver
-    // sx           rdata->nt x nx_solver x nplist()
-    sx.flatten_to_vector(this->sx);
-
-    // C := alpha*op(A)*op(B) + beta*C,
-    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
-                dJzdx.data(), nJ, this->sx.data(),
-                nx_solver, 1.0, dJzdp.data(), nJ);
-
-    // sJy += multResult + dJydp
-    writeLLHSensitivitySlice(dJzdp, sllh, s2llh);
-}
-
-void Model::fdJzdp(const int ie, const int nroots, realtype t,
-                   const AmiVector &x, const ExpData &edata) {
-    // dJzdz         nJ x nz x nztrue
-    // dJzdsigma     nJ x nz x nztrue
-    // dzdp          nz x nplist()
-    // dJzdp         nJ x nplist()
-
-    dJzdp.assign(nJ * nplist(), 0.0);
-
-    fdJzdz(ie, nroots, t, x, edata);
-    fdzdp(ie, t, x);
-    
-    fdJzdsigma(ie, nroots, t, x, edata);
-    fdsigmazdp(ie, nroots, t, &edata);
-
-    for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata.isSetObservedEvents(nroots, izt))
-            continue;
-
-        if (t < edata.getTimepoint(edata.nt() - 1)) {
-            // with z
-            fdJzdz(ie, nroots, t, x, edata);
-            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
-                        &dJzdz.at(izt * nz * nJ), nJ, dzdp.data(), nz, 1.0,
-                        dJzdp.data(), nJ);
-        } else {
-            // with rz
-            fdJrzdz(ie, nroots, t, x, edata);
-            fdJrzdsigma(ie, nroots, t, x, edata);
-
-            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
-                        &dJrzdsigma.at(izt * nz * nJ), nJ, dsigmazdp.data(), nz,
-                        1.0, dJzdp.data(), nJ);
-
-            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
-                        &dJrzdz.at(izt * nz * nJ), nJ, dzdp.data(), nz, 1.0,
-                        dJzdp.data(), nJ);
-        }
-
-        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                    BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
-                    &dJzdsigma.at(izt * nz * nJ), nJ, dsigmazdp.data(), nz, 1.0,
-                    dJzdp.data(), nJ);
-    }
-}
-
-void Model::getAdjointStateEventUpdate(gsl::span<realtype> dJzdx, const int ie,
-                                       const int nroots, const realtype t,
-                                       const AmiVector &x,
-                                       const ExpData &edata) {
-    fdJzdx(ie, nroots, t, x, edata);
-    writeSlice(this->dJzdx, dJzdx);
-}
-
-void Model::fdJzdx(const int ie, const int nroots, const realtype t,
-                   const AmiVector &x, const ExpData &edata) {
-    // dJzdz         nJ x nz        x nztrue
-    // dzdx          nz x nx_solver
-    // dJzdx         nJ x nx_solver x nmaxevent
-
-    dJzdx.assign(nJ * nx_solver, 0.0);
-
-    fdJzdz(ie, nroots, t, x, edata);
-
-    for (int izt = 0; izt < nztrue; ++izt) {
-        if (!edata.isSetObservedEvents(nroots, izt))
-            continue;
-
-        if (t < edata.getTimepoint(edata.nt() - 1)) {
-            // z
-            fdzdx(ie, t, x);
-            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0,
-                        &dJzdz.at(izt * nz * nJ), nJ, dzdx.data(), nz, 1.0,
-                        dJzdx.data(), nJ);
-        } else {
-            // rz
-            fdJrzdz(ie, nroots, t, x, edata);
-            fdrzdx(ie, t, x);
-            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
-                        BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0,
-                        &dJrzdz.at(izt * nz * nJ), nJ, drzdx.data(), nz, 1.0,
-                        dJzdx.data(), nJ);
-        }
-    }
+    return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
+           (a.nx_solver == b.nx_solver) &&
+           (a.nxtrue_solver == b.nxtrue_solver) && (a.ny == b.ny) &&
+           (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
+           (a.ne == b.ne) && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) &&
+           (a.ndwdp == b.ndwdp) && (a.ndxdotdw == b.ndxdotdw) &&
+           (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw) &&
+           (a.lbw == b.lbw) && (a.o2mode == b.o2mode) &&
+           (a.z2event == b.z2event) && (a.idlist == b.idlist) && (a.h == b.h) &&
+           (a.unscaledParameters == b.unscaledParameters) &&
+           (a.originalParameters == b.originalParameters) &&
+           (a.fixedParameters == b.fixedParameters) && (a.plist_ == b.plist_) &&
+           (a.x0data == b.x0data) && (a.sx0data == b.sx0data) &&
+           (a.ts == b.ts) && (a.nmaxevent == b.nmaxevent) &&
+           (a.pscale == b.pscale) &&
+           (a.stateIsNonNegative == b.stateIsNonNegative) &&
+           (a.tstart == b.tstart);
 }
 
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
@@ -526,85 +275,12 @@ void Model::setParameterScale(std::vector<ParameterScaling> const &pscaleVec) {
     sx0data.clear();
 }
 
+const std::vector<realtype> &Model::getUnscaledParameters() const {
+    return unscaledParameters;
+}
+
 std::vector<realtype> const &Model::getParameters() const {
     return originalParameters;
-}
-
-/**
- * @brief local helper function to get parameters
- * @param ids vector of name/ids of (fixed)Parameters
- * @param values values of the (fixed)Parameters
- * @param id name/id to look for in the vector
- * @param variable_name string indicating what variable we are lookin at
- * @param id_name string indicating whether name or id was specified
- * @return value of the selected parameter
- */
-realtype getValueById(std::vector<std::string> const &ids,
-                      std::vector<realtype> const &values,
-                      std::string const &id, const char *variable_name,
-                      const char *id_name) {
-    auto it = std::find(ids.begin(), ids.end(), id);
-    if (it != ids.end())
-        return values.at(it - ids.begin());
-
-    throw AmiException("Could not find %s with specified %s", variable_name,
-                       id_name);
-}
-
-/**
- * @brief local helper function to set parameters
- * @param ids vector of names/ids of (fixed)Parameters
- * @param values values of the (fixed)Parameters
- * @param value for the selected parameter
- * @param id name/id to look for in the vector
- * @param variable_name string indicating what variable we are lookin at
- * @param id_name string indicating whether name or id was specified
- */
-void setValueById(std::vector<std::string> const &ids,
-                  std::vector<realtype> &values, realtype value,
-                  std::string const &id, const char *variable_name,
-                  const char *id_name) {
-    auto it = std::find(ids.begin(), ids.end(), id);
-    if (it != ids.end())
-        values.at(it - ids.begin()) = value;
-    else
-        throw AmiException("Could not find %s with specified %s", variable_name,
-                           id_name);
-}
-
-/**
- * @brief local helper function to set parameters via regex
- * @param ids vector of names/ids of (fixed)Parameters
- * @param values values of the (fixed)Parameters
- * @param value for the selected parameter
- * @param regex string according to which names/ids are to be matched
- * @param variable_name string indicating what variable we are lookin at
- * @param id_name string indicating whether name or id was specified
- * @return number of matched names/ids
- */
-int setValueByIdRegex(std::vector<std::string> const &ids,
-                      std::vector<realtype> &values, realtype value,
-                      std::string const &regex, const char *variable_name,
-                      const char *id_name) {
-    try {
-        std::regex pattern(regex);
-        int n_found = 0;
-        for (const auto &id : ids) {
-            if (std::regex_match(id, pattern)) {
-                values.at(&id - &ids[0]) = value;
-                ++n_found;
-            }
-        }
-
-        if (n_found == 0)
-            throw AmiException("Could not find %s with specified %s",
-                               variable_name, id_name);
-
-        return n_found;
-    } catch (std::regex_error const &e) {
-        throw AmiException("Specified regex pattern could not be compiled: %s",
-                           e.what());
-    }
 }
 
 realtype Model::getParameterById(std::string const &par_id) const {
@@ -676,101 +352,6 @@ int Model::setParametersByNameRegex(std::string const &par_name_regex,
     return n_found;
 }
 
-bool Model::hasStateIds() const {
-    return nx_rdata == 0 || !getStateIds().empty();
-}
-
-std::vector<std::string> Model::getStateIds() const {
-    return std::vector<std::string>();
-}
-
-bool Model::hasFixedParameterIds() const {
-    return nk() == 0 || !getFixedParameterIds().empty();
-}
-
-std::vector<std::string> Model::getFixedParameterIds() const {
-    return std::vector<std::string>();
-}
-
-bool Model::hasObservableIds() const {
-    return ny == 0 || !getObservableIds().empty();
-}
-
-std::vector<std::string> Model::getObservableIds() const {
-    return std::vector<std::string>();
-}
-
-void Model::setSteadyStateSensitivityMode(
-    const SteadyStateSensitivityMode mode) {
-    steadyStateSensitivityMode = mode;
-}
-
-SteadyStateSensitivityMode Model::getSteadyStateSensitivityMode() const {
-    return steadyStateSensitivityMode;
-}
-
-void Model::setReinitializeFixedParameterInitialStates(bool flag) {
-    if (flag && !isFixedParameterStateReinitializationAllowed())
-        throw AmiException(
-            "State reinitialization cannot be enabled for this model"
-            "as this feature was disabled at compile time. Most likely,"
-            " this was because some initial states depending on "
-            "fixedParameters also depended on parameters");
-    reinitializeFixedParameterInitialStates = flag;
-}
-
-bool Model::getReinitializeFixedParameterInitialStates() const {
-    return reinitializeFixedParameterInitialStates;
-}
-
-void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
-                     const realtype * /*tcl*/) {
-    if (nx_solver != nx_rdata)
-        throw AmiException(
-            "A model that has differing nx_solver and nx_rdata needs "
-            "to implement its own fx_rdata");
-    std::copy_n(x_solver, nx_solver, x_rdata);
-}
-
-void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
-                      const realtype *stcl, const int /*ip*/) {
-    fx_rdata(sx_rdata, sx_solver, stcl);
-}
-
-void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {
-    if (nx_solver != nx_rdata)
-        throw AmiException(
-            "A model that has differing nx_solver and nx_rdata needs "
-            "to implement its own fx_solver");
-    std::copy_n(x_rdata, nx_rdata, x_solver);
-}
-
-void Model::fsx_solver(realtype *sx_solver, const realtype *sx_rdata) {
-    /* for the moment we do not need an implementation of fsx_solver as
-     * we can simply reuse fx_solver and replace states by their
-     * sensitivities */
-    fx_solver(sx_solver, sx_rdata);
-}
-
-void Model::ftotal_cl(realtype * /*total_cl*/, const realtype * /*x_rdata*/) {
-    if (nx_solver != nx_rdata)
-        throw AmiException(
-            "A model that has differing nx_solver and nx_rdata needs "
-            "to implement its own ftotal_cl");
-}
-
-void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
-                       const int /*ip*/) {
-    /* for the moment we do not need an implementation of fstotal_cl as
-     * we can simply reuse ftotal_cl and replace states by their
-     * sensitivities */
-    ftotal_cl(stotal_cl, sx_rdata);
-}
-
-const std::vector<realtype> &Model::getUnscaledParameters() const {
-    return unscaledParameters;
-}
-
 const std::vector<realtype> &Model::getFixedParameters() const {
     return fixedParameters;
 }
@@ -839,7 +420,73 @@ int Model::setFixedParametersByNameRegex(std::string const &par_name_regex,
                              par_name_regex, "fixedParameters", "name");
 }
 
+bool Model::hasParameterNames() const {
+    return np() == 0 || !getParameterNames().empty();
+}
+
+std::vector<std::string> Model::getParameterNames() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasStateNames() const {
+    return nx_rdata == 0 || !getStateNames().empty();
+}
+
+std::vector<std::string> Model::getStateNames() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasFixedParameterNames() const {
+    return nk() == 0 || !getFixedParameterNames().empty();
+}
+
+std::vector<std::string> Model::getFixedParameterNames() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasObservableNames() const {
+    return ny == 0 || !getObservableNames().empty();
+}
+
+std::vector<std::string> Model::getObservableNames() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasParameterIds() const {
+    return np() == 0 || !getParameterIds().empty();
+}
+
+std::vector<std::string> Model::getParameterIds() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasStateIds() const {
+    return nx_rdata == 0 || !getStateIds().empty();
+}
+
+std::vector<std::string> Model::getStateIds() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasFixedParameterIds() const {
+    return nk() == 0 || !getFixedParameterIds().empty();
+}
+
+std::vector<std::string> Model::getFixedParameterIds() const {
+    return std::vector<std::string>();
+}
+
+bool Model::hasObservableIds() const {
+    return ny == 0 || !getObservableIds().empty();
+}
+
+std::vector<std::string> Model::getObservableIds() const {
+    return std::vector<std::string>();
+}
+
 std::vector<realtype> const &Model::getTimepoints() const { return ts; }
+
+double Model::getTimepoint(const int it) const { return ts.at(it); }
 
 void Model::setTimepoints(const std::vector<realtype> &ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
@@ -848,6 +495,10 @@ void Model::setTimepoints(const std::vector<realtype> &ts) {
                            " increasing!");
     this->ts = ts;
 }
+
+double Model::t0() const { return tstart; }
+
+void Model::setT0(double t0) { tstart = t0; }
 
 std::vector<bool> const &Model::getStateIsNonNegative() const {
     return stateIsNonNegative;
@@ -874,6 +525,8 @@ void Model::setAllStatesNonNegative() {
 }
 
 const std::vector<int> &Model::getParameterList() const { return plist_; }
+
+int Model::plist(int pos) const { return plist_.at(pos); }
 
 void Model::setParameterList(const std::vector<int> &plist) {
     int np = this->np(); // cannot capture 'this' in lambda expression
@@ -956,134 +609,285 @@ void Model::setUnscaledInitialStateSensitivities(
     sx0data = sx0;
 }
 
-double Model::t0() const { return tstart; }
-
-double Model::getTimepoint(const int it) const { return ts.at(it); }
-
-void Model::setT0(double t0) { tstart = t0; }
-
-int Model::plist(int pos) const { return plist_.at(pos); }
-
-bool Model::hasParameterNames() const {
-    return np() == 0 || !getParameterNames().empty();
+void Model::setSteadyStateSensitivityMode(
+    const SteadyStateSensitivityMode mode) {
+    steadyStateSensitivityMode = mode;
 }
 
-std::vector<std::string> Model::getParameterNames() const {
-    return std::vector<std::string>();
+SteadyStateSensitivityMode Model::getSteadyStateSensitivityMode() const {
+    return steadyStateSensitivityMode;
 }
 
-bool Model::hasStateNames() const {
-    return nx_rdata == 0 || !getStateNames().empty();
+void Model::setReinitializeFixedParameterInitialStates(bool flag) {
+    if (flag && !isFixedParameterStateReinitializationAllowed())
+        throw AmiException(
+            "State reinitialization cannot be enabled for this model"
+            "as this feature was disabled at compile time. Most likely,"
+            " this was because some initial states depending on "
+            "fixedParameters also depended on parameters");
+    reinitializeFixedParameterInitialStates = flag;
 }
 
-std::vector<std::string> Model::getStateNames() const {
-    return std::vector<std::string>();
+bool Model::getReinitializeFixedParameterInitialStates() const {
+    return reinitializeFixedParameterInitialStates;
 }
 
-bool Model::hasFixedParameterNames() const {
-    return nk() == 0 || !getFixedParameterNames().empty();
+void Model::requireSensitivitiesForAllParameters() {
+    plist_.resize(np());
+    std::iota(plist_.begin(), plist_.end(), 0);
+    initializeVectors();
 }
 
-std::vector<std::string> Model::getFixedParameterNames() const {
-    return std::vector<std::string>();
+void Model::getObservable(gsl::span<realtype> y, const realtype t,
+                          const AmiVector &x) {
+    fy(t, x);
+    writeSlice(this->y, y);
 }
 
-bool Model::hasObservableNames() const {
-    return ny == 0 || !getObservableNames().empty();
-}
+void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
+                                     const AmiVector &x,
+                                     const AmiVectorArray &sx) {
+    if (!ny)
+        return;
 
-std::vector<std::string> Model::getObservableNames() const {
-    return std::vector<std::string>();
-}
+    fdydx(t, x);
+    fdydp(t, x);
 
-bool Model::hasParameterIds() const {
-    return np() == 0 || !getParameterIds().empty();
-}
+    this->sx.assign(nx_solver * nplist(), 0.0);
+    sx.flatten_to_vector(this->sx);
 
-std::vector<std::string> Model::getParameterIds() const {
-    return std::vector<std::string>();
-}
+    // compute sy = 1.0*dydx*sx + 1.0*sy
+    // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
+    //        M  K                 K  N                     M  N
+    //        lda                  ldb                      ldc
+    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                BLASTranspose::noTrans, ny, nplist(), nx_solver, 1.0,
+                dydx.data(), ny, this->sx.data(), nx_solver, 1.0, dydp.data(),
+                ny);
 
-void Model::initializeVectors() {
-    dxdotdp = AmiVectorArray(nx_solver, nplist());
-    sx0data.clear();
-}
+    writeSlice(dydp, sy);
 
-void Model::fx_rdata(AmiVector &x_rdata, const AmiVector &x) {
-    fx_rdata(x_rdata.data(), x.data(), total_cl.data());
     if (alwaysCheckFinite)
-        checkFinite(x_rdata.getVector(), "x_rdata");
+        checkFinite(sy, "sy");
 }
 
-void Model::fx0(AmiVector &x) {
-    std::fill(x_rdata.begin(), x_rdata.end(), 0.0);
-    /* this function  also computes initial total abundances */
-    fx0(x_rdata.data(), tstart, unscaledParameters.data(),
-        fixedParameters.data());
-    fx_solver(x.data(), x_rdata.data());
-    ftotal_cl(total_cl.data(), x_rdata.data());
+void Model::getObservableSigma(gsl::span<realtype> sigmay, const int it,
+                               const ExpData *edata) {
+    fsigmay(it, edata);
+    writeSlice(this->sigmay, sigmay);
+}
 
-    if (alwaysCheckFinite) {
-        checkFinite(x_rdata, "x0 x_rdata");
-        checkFinite(x.getVector(), "x0 x");
+void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
+                                          const int it, const ExpData *edata) {
+    fdsigmaydp(it, edata);
+    writeSlice(dsigmaydp, ssigmay);
+}
+
+void Model::addObservableObjective(realtype &Jy, const int it,
+                                   const AmiVector &x, const ExpData &edata) {
+    fy(edata.getTimepoint(it), x);
+    fsigmay(it, &edata);
+
+    std::vector<realtype> nllh(nJ, 0.0);
+    for (int iyt = 0; iyt < nytrue; iyt++) {
+        if (edata.isSetObservedData(it, iyt)) {
+            std::fill(nllh.begin(), nllh.end(), 0.0);
+            fJy(nllh.data(), iyt, unscaledParameters.data(),
+                fixedParameters.data(), y.data(), sigmay.data(),
+                edata.getObservedDataPtr(it));
+            Jy -= nllh.at(0);
+        }
     }
 }
 
-void Model::fx0_fixedParameters(AmiVector &x) {
-    if (!getReinitializeFixedParameterInitialStates())
+void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
+                                              std::vector<realtype> &s2llh,
+                                              const int it, const AmiVector &x,
+                                              const AmiVectorArray &sx,
+                                              const ExpData &edata) {
+
+    if (!ny)
         return;
-    /* we transform to the unreduced states x_rdata and then apply
-     x0_fixedparameters to (i) enable updates to states that were removed from
-     conservation laws and (ii) be able to correctly compute total abundances
-     after updating the state variables */
-    fx_rdata(x_rdata.data(), x.data(), total_cl.data());
-    fx0_fixedParameters(x_rdata.data(), tstart, unscaledParameters.data(),
-                        fixedParameters.data());
-    fx_solver(x.data(), x_rdata.data());
-    /* update total abundances */
-    ftotal_cl(total_cl.data(), x_rdata.data());
+
+    fdJydx(it, x, edata);
+    fdJydp(it, x, edata);
+    // Compute dJydx*sx for current 'it'
+    // dJydx        rdata->nt x nJ        x nx_solver
+    // sx           rdata->nt x nx_solver x nplist()
+    sx.flatten_to_vector(this->sx);
+
+    // C := alpha*op(A)*op(B) + beta*C,
+    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
+                dJydx.data(), nJ, this->sx.data(), nx_solver, 1.0, dJydp.data(),
+                nJ);
+
+    writeLLHSensitivitySlice(dJydp, sllh, s2llh);
 }
 
-void Model::fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx) {
-    realtype *stcl = nullptr;
-    for (int ip = 0; ip < nplist(); ip++) {
-        if (ncl() > 0)
-            stcl = &stotal_cl.at(plist(ip) * ncl());
-        fsx_rdata(sx_rdata.data(ip), sx.data(ip), stcl, ip);
-    }
-}
-
-void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
-    /* this function  also computes initial total abundance sensitivities */
-    realtype *stcl = nullptr;
-    for (int ip = 0; ip < nplist(); ip++) {
-        if (ncl() > 0)
-            stcl = &stotal_cl.at(plist(ip) * ncl());
-        std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
-        fsx0(sx_rdata.data(), tstart, x.data(), unscaledParameters.data(),
-             fixedParameters.data(), plist(ip));
-        fsx_solver(sx.data(ip), sx_rdata.data());
-        fstotal_cl(stcl, sx_rdata.data(), plist(ip));
-    }
-}
-
-void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
-    if (!getReinitializeFixedParameterInitialStates())
+void Model::addPartialObservableObjectiveSensitivity(
+    std::vector<realtype> &sllh, std::vector<realtype> &s2llh, const int it,
+    const AmiVector &x, const ExpData &edata) {
+    if (!ny)
         return;
-    realtype *stcl = nullptr;
+
+    fdJydp(it, x, edata);
+
+    writeLLHSensitivitySlice(dJydp, sllh, s2llh);
+}
+
+void Model::getAdjointStateObservableUpdate(gsl::span<realtype> dJydx,
+                                            const int it, const AmiVector &x,
+                                            const ExpData &edata) {
+    fdJydx(it, x, edata);
+    writeSlice(this->dJydx, dJydx);
+}
+
+void Model::getEvent(gsl::span<realtype> z, const int ie, const realtype t,
+                     const AmiVector &x) {
+    fz(ie, t, x);
+    writeSliceEvent(this->z, z, ie);
+}
+
+void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
+                                const realtype t, const AmiVector &x,
+                                const AmiVectorArray &sx) {
     for (int ip = 0; ip < nplist(); ip++) {
-        if (ncl() > 0)
-            stcl = &stotal_cl.at(plist(ip) * ncl());
-        fsx_rdata(sx_rdata.data(), sx.data(ip), stcl, plist(ip));
-        fsx0_fixedParameters(sx_rdata.data(), tstart, x.data(),
-                             unscaledParameters.data(), fixedParameters.data(),
-                             plist(ip));
-        fsx_solver(sx.data(ip), sx_rdata.data());
-        fstotal_cl(stcl, sx_rdata.data(), plist(ip));
+        fsz(&sz.at(ip * nz), ie, t, x.data(), unscaledParameters.data(),
+            fixedParameters.data(), h.data(), sx.data(ip), plist(ip));
     }
 }
 
-void Model::fsdx0() {}
+void Model::getUnobservedEventSensitivity(gsl::span<realtype> sz,
+                                          const int ie) {
+    checkBufferSize(sz, nz * nplist());
+
+    for (int iz = 0; iz < nz; ++iz)
+        if (z2event[iz] - 1 == ie)
+            for (int ip = 0; ip < nplist(); ++ip)
+                sz.at(ip * nz + iz) = 0.0;
+}
+
+void Model::getEventRegularization(gsl::span<realtype> rz, const int ie,
+                                   const realtype t, const AmiVector &x) {
+    frz(ie, t, x);
+    writeSliceEvent(this->rz, rz, ie);
+}
+
+void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
+                                              const int ie, const realtype t,
+                                              const AmiVector &x,
+                                              const AmiVectorArray &sx) {
+    for (int ip = 0; ip < nplist(); ip++) {
+        fsrz(&srz.at(ip * nz), ie, t, x.data(), unscaledParameters.data(),
+             fixedParameters.data(), h.data(), sx.data(ip), plist(ip));
+    }
+}
+
+void Model::getEventSigma(gsl::span<realtype> sigmaz, const int ie,
+                          const int nroots, const realtype t,
+                          const ExpData *edata) {
+    fsigmaz(ie, nroots, t, edata);
+    writeSliceEvent(this->sigmaz, sigmaz, ie);
+}
+
+void Model::getEventSigmaSensitivity(gsl::span<realtype> ssigmaz, const int ie,
+                                     const int nroots, const realtype t,
+                                     const ExpData *edata) {
+    fdsigmazdp(ie, nroots, t, edata);
+    writeSensitivitySliceEvent(dsigmazdp, ssigmaz, ie);
+}
+
+void Model::addEventObjective(realtype &Jz, const int ie, const int nroots,
+                              const realtype t, const AmiVector &x,
+                              const ExpData &edata) {
+    fz(ie, t, x);
+    fsigmaz(ie, nroots, t, &edata);
+
+    std::vector<realtype> nllh(nJ, 0.0);
+    for (int iztrue = 0; iztrue < nztrue; iztrue++) {
+        if (edata.isSetObservedEvents(nroots, iztrue)) {
+            std::fill(nllh.begin(), nllh.end(), 0.0);
+            fJz(nllh.data(), iztrue, unscaledParameters.data(),
+                fixedParameters.data(), z.data(), sigmaz.data(),
+                edata.getObservedEventsPtr(nroots));
+            Jz -= nllh.at(0);
+        }
+    }
+}
+
+void Model::addEventObjectiveRegularization(realtype &Jrz, const int ie,
+                                            const int nroots, const realtype t,
+                                            const AmiVector &x,
+                                            const ExpData &edata) {
+    frz(ie, t, x);
+    fsigmaz(ie, nroots, t, &edata);
+
+    std::vector<realtype> nllh(nJ, 0.0);
+    for (int iztrue = 0; iztrue < nztrue; iztrue++) {
+        if (edata.isSetObservedEvents(nroots, iztrue)) {
+            std::fill(nllh.begin(), nllh.end(), 0.0);
+            fJrz(nllh.data(), iztrue, unscaledParameters.data(),
+                 fixedParameters.data(), rz.data(), sigmaz.data());
+            Jrz -= nllh.at(0);
+        }
+    }
+}
+
+void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
+                                         std::vector<realtype> &s2llh,
+                                         const int ie, const int nroots,
+                                         const realtype t, const AmiVector &x,
+                                         const AmiVectorArray &sx,
+                                         const ExpData &edata) {
+
+    if (!nz)
+        return;
+
+    fdJzdx(ie, nroots, t, x, edata);
+    fdJzdp(ie, nroots, t, x, edata);
+
+    // sJz           nJ x nplist()
+    // dJzdp         nJ x nplist()
+    // dJzdx         nmaxevent x nJ        x nx_solver
+    // sx            rdata->nt x nx_solver x nplist()
+
+    // Compute dJzdx*sx for current 'ie'
+    // dJzdx        rdata->nt x nJ        x nx_solver
+    // sx           rdata->nt x nx_solver x nplist()
+    sx.flatten_to_vector(this->sx);
+
+    // C := alpha*op(A)*op(B) + beta*C,
+    amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
+                dJzdx.data(), nJ, this->sx.data(), nx_solver, 1.0, dJzdp.data(),
+                nJ);
+
+    // sJy += multResult + dJydp
+    writeLLHSensitivitySlice(dJzdp, sllh, s2llh);
+}
+
+void Model::getAdjointStateEventUpdate(gsl::span<realtype> dJzdx, const int ie,
+                                       const int nroots, const realtype t,
+                                       const AmiVector &x,
+                                       const ExpData &edata) {
+    fdJzdx(ie, nroots, t, x, edata);
+    writeSlice(this->dJzdx, dJzdx);
+}
+
+void Model::addPartialEventObjectiveSensitivity(std::vector<realtype> &sllh,
+                                                std::vector<realtype> &s2llh,
+                                                const int ie, const int nroots,
+                                                const realtype t,
+                                                const AmiVector &x,
+                                                const ExpData &edata) {
+    if (!nz)
+        return;
+
+    fdJzdp(ie, nroots, t, x, edata);
+
+    writeLLHSensitivitySlice(dJzdp, sllh, s2llh);
+}
 
 void Model::getEventTimeSensitivity(std::vector<realtype> &stau,
                                     const realtype t, const int ie,
@@ -1095,168 +899,6 @@ void Model::getEventTimeSensitivity(std::vector<realtype> &stau,
     for (int ip = 0; ip < nplist(); ip++) {
         fstau(&stau.at(ip), t, x.data(), unscaledParameters.data(),
               fixedParameters.data(), h.data(), sx.data(ip), plist(ip), ie);
-    }
-}
-
-void Model::getObservable(gsl::span<realtype> y, const realtype t,
-                          const AmiVector &x) {
-    fy(t, x);
-    writeSlice(this->y, y);
-}
-
-void Model::fy(const realtype t, const AmiVector &x) {
-    if (!ny)
-        return;
-    
-    y.assign(ny, 0.0);
-    
-    fw(t, x.data());
-    fy(y.data(), t, x.data(), unscaledParameters.data(), fixedParameters.data(),
-       h.data(), w.data());
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(gsl::make_span(y.data(), ny), "y");
-    }
-}
-
-void Model::fdydp(const realtype t, const AmiVector &x) {
-    if (!ny)
-        return;
-
-    dydp.assign(ny * nplist(), 0.0);
-
-    fw(t, x.data());
-    fdwdp(t, x.data());
-
-    // if dwdp is not dense, fdydp will expect the full sparse array
-    realtype *dwdp_tmp = dwdp.data();
-    for (int ip = 0; ip < nplist(); ip++) {
-        // get dydp slice (ny) for current time and parameter
-        if (wasPythonGenerated() && nw)
-            dwdp_tmp = &dwdp.at(nw * ip);
-
-        fdydp(&dydp.at(ip * ny), t, x.data(), unscaledParameters.data(),
-              fixedParameters.data(), h.data(), plist(ip), w.data(), dwdp_tmp);
-    }
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(dydp, "dydp");
-    }
-}
-
-void Model::fdydx(const realtype t, const AmiVector &x) {
-    if (!ny)
-        return;
-
-    dydx.assign(ny * nx_solver, 0.0);
-
-    fw(t, x.data());
-    fdwdx(t, x.data());
-    fdydx(dydx.data(), t, x.data(), unscaledParameters.data(),
-          fixedParameters.data(), h.data(), w.data(), dwdx.data());
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(dydx, "dydx");
-    }
-}
-
-void Model::getEvent(gsl::span<realtype> z, const int ie, const realtype t,
-                     const AmiVector &x) {
-    fz(ie, t, x);
-    writeSliceEvent(this->z, z, ie);
-}
-
-void Model::fz(const int ie, const realtype t, const AmiVector &x) {
-
-    z.assign(nz, 0.0);
-
-    fz(z.data(), ie, t, x.data(), unscaledParameters.data(),
-       fixedParameters.data(), h.data());
-}
-
-void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
-                                const realtype t, const AmiVector &x,
-                                const AmiVectorArray &sx) {
-    for (int ip = 0; ip < nplist(); ip++) {
-        fsz(&sz.at(ip*nz), ie, t, x.data(), unscaledParameters.data(),
-            fixedParameters.data(), h.data(), sx.data(ip), plist(ip));
-    }
-}
-
-void Model::getEventRegularization(gsl::span<realtype> rz, const int ie,
-                                   const realtype t, const AmiVector &x) {
-    frz(ie, t, x);
-    writeSliceEvent(this->rz, rz, ie);
-}
-
-void Model::frz(const int ie, const realtype t, const AmiVector &x) {
-
-    rz.assign(nz, 0.0);
-
-    frz(rz.data(), ie, t, x.data(), unscaledParameters.data(),
-        fixedParameters.data(), h.data());
-}
-
-void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
-                                              const int ie, const int nroots,
-                                              const realtype t,
-                                              const AmiVector &x,
-                                              const AmiVectorArray &sx) {
-    for (int ip = 0; ip < nplist(); ip++) {
-        fsrz(&srz.at(ip*nz), ie, t, x.data(), unscaledParameters.data(),
-             fixedParameters.data(), h.data(), sx.data(ip), plist(ip));
-    }
-}
-
-void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
-
-    dzdp.assign(nz * nplist(), 0.0);
-
-    for (int ip = 0; ip < nplist(); ip++) {
-        fdzdp(dzdp.data(), ie, t, x.data(), unscaledParameters.data(),
-              fixedParameters.data(), h.data(), plist(ip));
-    }
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(dzdp, "dzdp");
-    }
-}
-
-void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
-
-    dzdx.assign(nz * nx_solver, 0.0);
-
-    fdzdx(dzdx.data(), ie, t, x.data(), unscaledParameters.data(),
-          fixedParameters.data(), h.data());
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(dzdx, "dzdx");
-    }
-}
-
-void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
-
-    drzdp.assign(nz * nplist(), 0.0);
-
-    for (int ip = 0; ip < nplist(); ip++) {
-        fdrzdp(drzdp.data(), ie, t, x.data(), unscaledParameters.data(),
-               fixedParameters.data(), h.data(), plist(ip));
-    }
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(drzdp, "drzdp");
-    }
-}
-
-void Model::fdrzdx(const int ie, const realtype t, const AmiVector &x) {
-
-    drzdx.assign(nz * nx_solver, 0.0);
-
-    fdrzdx(drzdx.data(), ie, t, x.data(), unscaledParameters.data(),
-           fixedParameters.data(), h.data());
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(drzdx, "drzdx");
     }
 }
 
@@ -1345,10 +987,213 @@ void Model::addAdjointQuadratureEventUpdate(
     }
 }
 
-void Model::getObservableSigma(gsl::span<realtype> sigmay, const int it,
-                               const ExpData *edata) {
-    fsigmay(it, edata);
-    writeSlice(this->sigmay, sigmay);
+void Model::updateHeaviside(const std::vector<int> &rootsfound) {
+    for (int ie = 0; ie < ne; ie++) {
+        h.at(ie) += rootsfound.at(ie);
+    }
+}
+
+void Model::updateHeavisideB(const int *rootsfound) {
+    for (int ie = 0; ie < ne; ie++) {
+        h.at(ie) -= rootsfound[ie];
+    }
+}
+
+int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
+    auto result = amici::checkFinite(array, fun);
+
+    if (result != AMICI_SUCCESS) {
+        amici::checkFinite(fixedParameters, "k");
+        amici::checkFinite(unscaledParameters, "p");
+        amici::checkFinite(w, "w");
+    }
+
+    return result;
+}
+
+void Model::setAlwaysCheckFinite(bool alwaysCheck) {
+    alwaysCheckFinite = alwaysCheck;
+}
+
+bool Model::getAlwaysCheckFinite() const { return alwaysCheckFinite; }
+
+void Model::fx0(AmiVector &x) {
+    std::fill(x_rdata.begin(), x_rdata.end(), 0.0);
+    /* this function  also computes initial total abundances */
+    fx0(x_rdata.data(), tstart, unscaledParameters.data(),
+        fixedParameters.data());
+    fx_solver(x.data(), x_rdata.data());
+    ftotal_cl(total_cl.data(), x_rdata.data());
+
+    if (alwaysCheckFinite) {
+        checkFinite(x_rdata, "x0 x_rdata");
+        checkFinite(x.getVector(), "x0 x");
+    }
+}
+
+void Model::fx0_fixedParameters(AmiVector &x) {
+    if (!getReinitializeFixedParameterInitialStates())
+        return;
+    /* we transform to the unreduced states x_rdata and then apply
+     x0_fixedparameters to (i) enable updates to states that were removed from
+     conservation laws and (ii) be able to correctly compute total abundances
+     after updating the state variables */
+    fx_rdata(x_rdata.data(), x.data(), total_cl.data());
+    fx0_fixedParameters(x_rdata.data(), tstart, unscaledParameters.data(),
+                        fixedParameters.data());
+    fx_solver(x.data(), x_rdata.data());
+    /* update total abundances */
+    ftotal_cl(total_cl.data(), x_rdata.data());
+}
+
+void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
+    /* this function  also computes initial total abundance sensitivities */
+    realtype *stcl = nullptr;
+    for (int ip = 0; ip < nplist(); ip++) {
+        if (ncl() > 0)
+            stcl = &stotal_cl.at(plist(ip) * ncl());
+        std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
+        fsx0(sx_rdata.data(), tstart, x.data(), unscaledParameters.data(),
+             fixedParameters.data(), plist(ip));
+        fsx_solver(sx.data(ip), sx_rdata.data());
+        fstotal_cl(stcl, sx_rdata.data(), plist(ip));
+    }
+}
+
+void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
+    if (!getReinitializeFixedParameterInitialStates())
+        return;
+    realtype *stcl = nullptr;
+    for (int ip = 0; ip < nplist(); ip++) {
+        if (ncl() > 0)
+            stcl = &stotal_cl.at(plist(ip) * ncl());
+        fsx_rdata(sx_rdata.data(), sx.data(ip), stcl, plist(ip));
+        fsx0_fixedParameters(sx_rdata.data(), tstart, x.data(),
+                             unscaledParameters.data(), fixedParameters.data(),
+                             plist(ip));
+        fsx_solver(sx.data(ip), sx_rdata.data());
+        fstotal_cl(stcl, sx_rdata.data(), plist(ip));
+    }
+}
+
+void Model::fsdx0() {}
+
+void Model::fx_rdata(AmiVector &x_rdata, const AmiVector &x) {
+    fx_rdata(x_rdata.data(), x.data(), total_cl.data());
+    if (alwaysCheckFinite)
+        checkFinite(x_rdata.getVector(), "x_rdata");
+}
+
+void Model::fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx) {
+    realtype *stcl = nullptr;
+    for (int ip = 0; ip < nplist(); ip++) {
+        if (ncl() > 0)
+            stcl = &stotal_cl.at(plist(ip) * ncl());
+        fsx_rdata(sx_rdata.data(ip), sx.data(ip), stcl, ip);
+    }
+}
+
+void Model::writeSliceEvent(gsl::span<const realtype> slice,
+                            gsl::span<realtype> buffer, const int ie) {
+    checkBufferSize(buffer, slice.size());
+    checkBufferSize(buffer, z2event.size());
+    for (int izt = 0; izt < z2event.size(); ++izt)
+        if (z2event.at(izt) - 1 == ie)
+            buffer.at(izt) = slice.at(izt);
+}
+
+void Model::writeSensitivitySliceEvent(gsl::span<const realtype> slice,
+                                       gsl::span<realtype> buffer,
+                                       const int ie) {
+    checkBufferSize(buffer, slice.size());
+    checkBufferSize(buffer, z2event.size() * nplist());
+    for (int ip = 0; ip < nplist(); ++ip)
+        for (int izt = 0; izt < z2event.size(); ++izt)
+            if (z2event.at(izt) - 1 == ie)
+                buffer.at(ip * nztrue + izt) = slice.at(ip * nztrue + izt);
+}
+
+void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
+                                     std::vector<realtype> &sllh,
+                                     std::vector<realtype> &s2llh) {
+    checkLLHBufferSize(sllh, s2llh);
+
+    amici_daxpy(nplist(), -1.0, dLLhdp.data(), nJ, sllh.data(), 1);
+    for (int iJ = 1; iJ < nJ; ++iJ)
+        amici_daxpy(nplist(), -1.0, &dLLhdp.at(iJ), nJ, &s2llh.at(iJ - 1),
+                    nJ - 1);
+}
+
+void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
+                               std::vector<realtype> &s2llh) {
+    if (sllh.size() != static_cast<unsigned>(nplist()))
+        throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
+                           sllh.size(), nplist());
+
+    if (s2llh.size() != static_cast<unsigned>((nJ - 1) * nplist()))
+        throw AmiException("Incorrect s2llh buffer size! Was %u, expected %i.",
+                           s2llh.size(), (nJ - 1) * nplist());
+}
+
+void Model::initializeVectors() {
+    dxdotdp = AmiVectorArray(nx_solver, nplist());
+    sx0data.clear();
+}
+
+void Model::fy(const realtype t, const AmiVector &x) {
+    if (!ny)
+        return;
+
+    y.assign(ny, 0.0);
+
+    fw(t, x.data());
+    fy(y.data(), t, x.data(), unscaledParameters.data(), fixedParameters.data(),
+       h.data(), w.data());
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(gsl::make_span(y.data(), ny), "y");
+    }
+}
+
+void Model::fdydp(const realtype t, const AmiVector &x) {
+    if (!ny)
+        return;
+
+    dydp.assign(ny * nplist(), 0.0);
+
+    fw(t, x.data());
+    fdwdp(t, x.data());
+
+    // if dwdp is not dense, fdydp will expect the full sparse array
+    realtype *dwdp_tmp = dwdp.data();
+    for (int ip = 0; ip < nplist(); ip++) {
+        // get dydp slice (ny) for current time and parameter
+        if (wasPythonGenerated() && nw)
+            dwdp_tmp = &dwdp.at(nw * ip);
+
+        fdydp(&dydp.at(ip * ny), t, x.data(), unscaledParameters.data(),
+              fixedParameters.data(), h.data(), plist(ip), w.data(), dwdp_tmp);
+    }
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(dydp, "dydp");
+    }
+}
+
+void Model::fdydx(const realtype t, const AmiVector &x) {
+    if (!ny)
+        return;
+
+    dydx.assign(ny * nx_solver, 0.0);
+
+    fw(t, x.data());
+    fdwdx(t, x.data());
+    fdydx(dydx.data(), t, x.data(), unscaledParameters.data(),
+          fixedParameters.data(), h.data(), w.data(), dwdx.data());
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(dydx, "dydx");
+    }
 }
 
 void Model::fsigmay(const int it, const ExpData *edata) {
@@ -1375,12 +1220,6 @@ void Model::fsigmay(const int it, const ExpData *edata) {
         if (edata && edata->isSetObservedData(it, iyt))
             checkSigmaPositivity(sigmay[iyt], "sigmay");
     }
-}
-
-void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
-                                          const int it, const ExpData *edata) {
-    fdsigmaydp(it, edata);
-    writeSlice(dsigmaydp, ssigmay);
 }
 
 void Model::fdsigmaydp(const int it, const ExpData *edata) {
@@ -1412,124 +1251,16 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
     }
 }
 
-void Model::getEventSigma(gsl::span<realtype> sigmaz, const int ie,
-                          const int nroots, const realtype t,
-                          const ExpData *edata) {
-    fsigmaz(ie, nroots, t, edata);
-    writeSliceEvent(this->sigmaz, sigmaz, ie);
+void Model::fdJydy_colptrs(sunindextype * /*indexptrs*/, int /*index*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
 }
 
-void Model::fsigmaz(const int ie, const int nroots, const realtype t,
-                    const ExpData *edata) {
-    if (!nz)
-        return;
-
-    sigmaz.assign(nz, 0.0);
-    fsigmaz(sigmaz.data(), t, unscaledParameters.data(), fixedParameters.data());
-    
-    if (edata) {
-        for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-            if (z2event.at(iztrue) - 1 == ie) {
-                if (edata->isSetObservedEventsStdDev(nroots, iztrue)) {
-                    auto sigmaz_edata =
-                        edata->getObservedEventsStdDevPtr(nroots);
-                    sigmaz.at(iztrue) = sigmaz_edata[iztrue];
-                }
-            }
-        }
-    }
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(sigmaz, "sigmaz");
-    }
-}
-
-void Model::getEventSigmaSensitivity(gsl::span<realtype> ssigmaz, const int ie,
-                                     const int nroots, const realtype t,
-                                     const ExpData *edata) {
-    fdsigmazdp(ie, nroots, t, edata);
-    writeSensitivitySliceEvent(dsigmazdp, ssigmaz, ie);
-}
-
-void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
-                       const ExpData *edata) {
-
-    dsigmazdp.assign(nz * nplist(), 0.0);
-
-    for (int ip = 0; ip < nplist(); ip++) {
-        // get dsigmazdp slice (nz) for current event and parameter
-        fdsigmazdp(&dsigmazdp.at(ip * nz), t, unscaledParameters.data(),
-                   fixedParameters.data(), plist(ip));
-    }
-
-    // sigmas in edata override model-sigma -> for those sigmas, set dsigmazdp
-    // to zero
-    if (edata) {
-        for (int iz = 0; iz < nztrue; iz++) {
-            if (z2event.at(iz) - 1 == ie &&
-                !edata->isSetObservedEventsStdDev(nroots, iz)) {
-                for (int ip = 0; ip < nplist(); ip++)
-                    dsigmazdp.at(iz + nz * ip) = 0;
-            }
-        }
-    }
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(dsigmazdp, "dsigmazdp");
-    }
-}
-
-void Model::addObservableObjective(realtype &Jy, const int it,
-                                   const AmiVector &x, const ExpData &edata) {
-    fy(edata.getTimepoint(it), x);
-    fsigmay(it, &edata);
-
-    std::vector<realtype> nllh(nJ, 0.0);
-    for (int iyt = 0; iyt < nytrue; iyt++) {
-        if (edata.isSetObservedData(it, iyt)) {
-            std::fill(nllh.begin(), nllh.end(), 0.0);
-            fJy(nllh.data(), iyt, unscaledParameters.data(),
-                fixedParameters.data(), y.data(), sigmay.data(),
-                edata.getObservedDataPtr(it));
-            Jy -= nllh.at(0);
-        }
-    }
-}
-
-void Model::addEventObjective(realtype &Jz, const int ie, const int nroots,
-                              const realtype t, const AmiVector &x,
-                              const ExpData &edata) {
-    fz(ie, t, x);
-    fsigmaz(ie, nroots, t, &edata);
-
-    std::vector<realtype> nllh(nJ, 0.0);
-    for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.isSetObservedEvents(nroots, iztrue)) {
-            std::fill(nllh.begin(), nllh.end(), 0.0);
-            fJz(nllh.data(), iztrue, unscaledParameters.data(),
-                fixedParameters.data(), z.data(), sigmaz.data(),
-                edata.getObservedEventsPtr(nroots));
-            Jz -= nllh.at(0);
-        }
-    }
-}
-
-void Model::addEventObjectiveRegularization(realtype &Jrz, const int ie,
-                                            const int nroots, const realtype t,
-                                            const AmiVector &x,
-                                            const ExpData &edata) {
-    frz(ie, t, x);
-    fsigmaz(ie, nroots, t, &edata);
-
-    std::vector<realtype> nllh(nJ, 0.0);
-    for (int iztrue = 0; iztrue < nztrue; iztrue++) {
-        if (edata.isSetObservedEvents(nroots, iztrue)) {
-            std::fill(nllh.begin(), nllh.end(), 0.0);
-            fJrz(nllh.data(), iztrue, unscaledParameters.data(),
-                 fixedParameters.data(), rz.data(), sigmaz.data());
-            Jrz -= nllh.at(0);
-        }
-    }
+void Model::fdJydy_rowvals(sunindextype * /*indexptrs*/, int /*index*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
 }
 
 void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
@@ -1591,6 +1322,204 @@ void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData &edata) {
     }
 }
 
+void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
+    // dJydy         nJ, nytrue x ny
+    // dydp          nplist * ny
+    // dJydp         nplist x nJ
+    // dJydsigma
+
+    dJydp.assign(nJ * nplist(), 0.0);
+
+    fdJydy(it, x, edata);
+    fdydp(edata.getTimepoint(it), x);
+
+    fdJydsigma(it, x, edata);
+    fdsigmaydp(it, &edata);
+
+    for (int iyt = 0; iyt < nytrue; ++iyt) {
+        if (!edata.isSetObservedData(it, iyt))
+            continue;
+
+        if (wasPythonGenerated()) {
+            // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
+            for (int iplist = 0; iplist < nplist(); ++iplist) {
+                dJydy[iyt].multiply(
+                    gsl::span<realtype>(&dJydp.at(iplist * nJ), nJ),
+                    gsl::span<const realtype>(&dydp.at(iplist * ny), ny));
+            }
+        } else {
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nplist(), ny, 1.0,
+                        &dJydy_matlab.at(iyt * nJ * ny), nJ, dydp.data(), ny,
+                        1.0, dJydp.data(), nJ);
+        }
+        // dJydp = 1.0 * dJydp +  1.0 * dJydsigma * dsigmaydp
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    BLASTranspose::noTrans, nJ, nplist(), ny, 1.0,
+                    &dJydsigma.at(iyt * nJ * ny), nJ, dsigmaydp.data(), ny, 1.0,
+                    dJydp.data(), nJ);
+    }
+}
+
+void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
+
+    dJydx.assign(nJ * nx_solver, 0.0);
+
+    fdydx(edata.getTimepoint(it), x);
+    fdJydy(it, x, edata);
+
+    // dJydy: nJ, ny x nytrue
+    // dydx :     ny x nx_solver
+    // dJydx:     nJ x nx_solver x nt
+    for (int iyt = 0; iyt < nytrue; ++iyt) {
+        if (!edata.isSetObservedData(it, iyt))
+            continue;
+        // dJydy A[nyt,nJ,ny] * dydx B[ny,nx_solver] = dJydx C[it,nJ,nx_solver]
+        //         slice                                       slice
+        //          M  K            K  N                       M  N
+        //           lda             ldb                        ldc
+
+        if (wasPythonGenerated()) {
+            for (int ix = 0; ix < nx_solver; ++ix) {
+                dJydy[iyt].multiply(
+                    gsl::span<realtype>(&dJydx.at(ix * nJ), nJ),
+                    gsl::span<const realtype>(&dydx.at(ix * ny), ny));
+            }
+        } else {
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nx_solver, ny, 1.0,
+                        &dJydy_matlab.at(iyt * ny * nJ), nJ, dydx.data(), ny,
+                        1.0, dJydx.data(), nJ);
+        }
+    }
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(dJydx, "dJydx");
+    }
+}
+
+void Model::fz(const int ie, const realtype t, const AmiVector &x) {
+
+    z.assign(nz, 0.0);
+
+    fz(z.data(), ie, t, x.data(), unscaledParameters.data(),
+       fixedParameters.data(), h.data());
+}
+
+void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
+
+    dzdp.assign(nz * nplist(), 0.0);
+
+    for (int ip = 0; ip < nplist(); ip++) {
+        fdzdp(dzdp.data(), ie, t, x.data(), unscaledParameters.data(),
+              fixedParameters.data(), h.data(), plist(ip));
+    }
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(dzdp, "dzdp");
+    }
+}
+
+void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
+
+    dzdx.assign(nz * nx_solver, 0.0);
+
+    fdzdx(dzdx.data(), ie, t, x.data(), unscaledParameters.data(),
+          fixedParameters.data(), h.data());
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(dzdx, "dzdx");
+    }
+}
+
+void Model::frz(const int ie, const realtype t, const AmiVector &x) {
+
+    rz.assign(nz, 0.0);
+
+    frz(rz.data(), ie, t, x.data(), unscaledParameters.data(),
+        fixedParameters.data(), h.data());
+}
+
+void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
+
+    drzdp.assign(nz * nplist(), 0.0);
+
+    for (int ip = 0; ip < nplist(); ip++) {
+        fdrzdp(drzdp.data(), ie, t, x.data(), unscaledParameters.data(),
+               fixedParameters.data(), h.data(), plist(ip));
+    }
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(drzdp, "drzdp");
+    }
+}
+
+void Model::fdrzdx(const int ie, const realtype t, const AmiVector &x) {
+
+    drzdx.assign(nz * nx_solver, 0.0);
+
+    fdrzdx(drzdx.data(), ie, t, x.data(), unscaledParameters.data(),
+           fixedParameters.data(), h.data());
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(drzdx, "drzdx");
+    }
+}
+
+void Model::fsigmaz(const int ie, const int nroots, const realtype t,
+                    const ExpData *edata) {
+    if (!nz)
+        return;
+
+    sigmaz.assign(nz, 0.0);
+    fsigmaz(sigmaz.data(), t, unscaledParameters.data(),
+            fixedParameters.data());
+
+    if (edata) {
+        for (int iztrue = 0; iztrue < nztrue; iztrue++) {
+            if (z2event.at(iztrue) - 1 == ie) {
+                if (edata->isSetObservedEventsStdDev(nroots, iztrue)) {
+                    auto sigmaz_edata =
+                        edata->getObservedEventsStdDevPtr(nroots);
+                    sigmaz.at(iztrue) = sigmaz_edata[iztrue];
+                }
+            }
+        }
+    }
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(sigmaz, "sigmaz");
+    }
+}
+
+void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
+                       const ExpData *edata) {
+
+    dsigmazdp.assign(nz * nplist(), 0.0);
+
+    for (int ip = 0; ip < nplist(); ip++) {
+        // get dsigmazdp slice (nz) for current event and parameter
+        fdsigmazdp(&dsigmazdp.at(ip * nz), t, unscaledParameters.data(),
+                   fixedParameters.data(), plist(ip));
+    }
+
+    // sigmas in edata override model-sigma -> for those sigmas, set dsigmazdp
+    // to zero
+    if (edata) {
+        for (int iz = 0; iz < nztrue; iz++) {
+            if (z2event.at(iz) - 1 == ie &&
+                !edata->isSetObservedEventsStdDev(nroots, iz)) {
+                for (int ip = 0; ip < nplist(); ip++)
+                    dsigmazdp.at(iz + nz * ip) = 0;
+            }
+        }
+    }
+
+    if (alwaysCheckFinite) {
+        amici::checkFinite(dsigmazdp, "dsigmazdp");
+    }
+}
+
 void Model::fdJzdz(const int ie, const int nroots, const realtype t,
                    const AmiVector &x, const ExpData &edata) {
 
@@ -1631,6 +1560,88 @@ void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
 
     if (alwaysCheckFinite) {
         amici::checkFinite(dJzdsigma, "dJzdsigma");
+    }
+}
+
+void Model::fdJzdp(const int ie, const int nroots, realtype t,
+                   const AmiVector &x, const ExpData &edata) {
+    // dJzdz         nJ x nz x nztrue
+    // dJzdsigma     nJ x nz x nztrue
+    // dzdp          nz x nplist()
+    // dJzdp         nJ x nplist()
+
+    dJzdp.assign(nJ * nplist(), 0.0);
+
+    fdJzdz(ie, nroots, t, x, edata);
+    fdzdp(ie, t, x);
+
+    fdJzdsigma(ie, nroots, t, x, edata);
+    fdsigmazdp(ie, nroots, t, &edata);
+
+    for (int izt = 0; izt < nztrue; ++izt) {
+        if (!edata.isSetObservedEvents(nroots, izt))
+            continue;
+
+        if (t < edata.getTimepoint(edata.nt() - 1)) {
+            // with z
+            fdJzdz(ie, nroots, t, x, edata);
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
+                        &dJzdz.at(izt * nz * nJ), nJ, dzdp.data(), nz, 1.0,
+                        dJzdp.data(), nJ);
+        } else {
+            // with rz
+            fdJrzdz(ie, nroots, t, x, edata);
+            fdJrzdsigma(ie, nroots, t, x, edata);
+
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
+                        &dJrzdsigma.at(izt * nz * nJ), nJ, dsigmazdp.data(), nz,
+                        1.0, dJzdp.data(), nJ);
+
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
+                        &dJrzdz.at(izt * nz * nJ), nJ, dzdp.data(), nz, 1.0,
+                        dJzdp.data(), nJ);
+        }
+
+        amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    BLASTranspose::noTrans, nJ, nplist(), nz, 1.0,
+                    &dJzdsigma.at(izt * nz * nJ), nJ, dsigmazdp.data(), nz, 1.0,
+                    dJzdp.data(), nJ);
+    }
+}
+
+void Model::fdJzdx(const int ie, const int nroots, const realtype t,
+                   const AmiVector &x, const ExpData &edata) {
+    // dJzdz         nJ x nz        x nztrue
+    // dzdx          nz x nx_solver
+    // dJzdx         nJ x nx_solver x nmaxevent
+
+    dJzdx.assign(nJ * nx_solver, 0.0);
+
+    fdJzdz(ie, nroots, t, x, edata);
+
+    for (int izt = 0; izt < nztrue; ++izt) {
+        if (!edata.isSetObservedEvents(nroots, izt))
+            continue;
+
+        if (t < edata.getTimepoint(edata.nt() - 1)) {
+            // z
+            fdzdx(ie, t, x);
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0,
+                        &dJzdz.at(izt * nz * nJ), nJ, dzdx.data(), nz, 1.0,
+                        dJzdx.data(), nJ);
+        } else {
+            // rz
+            fdJrzdz(ie, nroots, t, x, edata);
+            fdrzdx(ie, t, x);
+            amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
+                        BLASTranspose::noTrans, nJ, nx_solver, nz, 1.0,
+                        &dJrzdz.at(izt * nz * nJ), nJ, drzdx.data(), nz, 1.0,
+                        dJzdx.data(), nJ);
+        }
     }
 }
 
@@ -1728,63 +1739,48 @@ void Model::fdwdx(const realtype t, const realtype *x) {
     }
 }
 
-void Model::updateHeaviside(const std::vector<int> &rootsfound) {
-    for (int ie = 0; ie < ne; ie++) {
-        h.at(ie) += rootsfound.at(ie);
-    }
+void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
+                     const realtype * /*tcl*/) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+            "A model that has differing nx_solver and nx_rdata needs "
+            "to implement its own fx_rdata");
+    std::copy_n(x_solver, nx_solver, x_rdata);
 }
 
-void Model::updateHeavisideB(const int *rootsfound) {
-    for (int ie = 0; ie < ne; ie++) {
-        h.at(ie) -= rootsfound[ie];
-    }
+void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
+                      const realtype *stcl, const int /*ip*/) {
+    fx_rdata(sx_rdata, sx_solver, stcl);
 }
 
-void Model::setAlwaysCheckFinite(bool alwaysCheck) {
-    alwaysCheckFinite = alwaysCheck;
+void Model::fx_solver(realtype *x_solver, const realtype *x_rdata) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+            "A model that has differing nx_solver and nx_rdata needs "
+            "to implement its own fx_solver");
+    std::copy_n(x_rdata, nx_rdata, x_solver);
 }
 
-bool Model::getAlwaysCheckFinite() const { return alwaysCheckFinite; }
-
-int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
-    auto result = amici::checkFinite(array, fun);
-
-    if (result != AMICI_SUCCESS) {
-        amici::checkFinite(fixedParameters, "k");
-        amici::checkFinite(unscaledParameters, "p");
-        amici::checkFinite(w, "w");
-    }
-
-    return result;
+void Model::fsx_solver(realtype *sx_solver, const realtype *sx_rdata) {
+    /* for the moment we do not need an implementation of fsx_solver as
+     * we can simply reuse fx_solver and replace states by their
+     * sensitivities */
+    fx_solver(sx_solver, sx_rdata);
 }
 
-void Model::requireSensitivitiesForAllParameters() {
-    plist_.resize(np());
-    std::iota(plist_.begin(), plist_.end(), 0);
-    initializeVectors();
+void Model::ftotal_cl(realtype * /*total_cl*/, const realtype * /*x_rdata*/) {
+    if (nx_solver != nx_rdata)
+        throw AmiException(
+            "A model that has differing nx_solver and nx_rdata needs "
+            "to implement its own ftotal_cl");
 }
 
-bool operator==(const Model &a, const Model &b) {
-    if (typeid(a) != typeid(b))
-        return false;
-
-    return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
-           (a.nx_solver == b.nx_solver) &&
-           (a.nxtrue_solver == b.nxtrue_solver) && (a.ny == b.ny) &&
-           (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
-           (a.ne == b.ne) && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) &&
-           (a.ndwdp == b.ndwdp) && (a.ndxdotdw == b.ndxdotdw) &&
-           (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw) &&
-           (a.lbw == b.lbw) && (a.o2mode == b.o2mode) &&
-           (a.z2event == b.z2event) && (a.idlist == b.idlist) && (a.h == b.h) &&
-           (a.unscaledParameters == b.unscaledParameters) &&
-           (a.originalParameters == b.originalParameters) &&
-           (a.fixedParameters == b.fixedParameters) && (a.plist_ == b.plist_) &&
-           (a.x0data == b.x0data) && (a.sx0data == b.sx0data) &&
-           (a.ts == b.ts) && (a.nmaxevent == b.nmaxevent) &&
-           (a.pscale == b.pscale) &&
-           (a.stateIsNonNegative == b.stateIsNonNegative) &&
-           (a.tstart == b.tstart);
+void Model::fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
+                       const int /*ip*/) {
+    /* for the moment we do not need an implementation of fstotal_cl as
+     * we can simply reuse ftotal_cl and replace states by their
+     * sensitivities */
+    ftotal_cl(stotal_cl, sx_rdata);
 }
 
 N_Vector Model::computeX_pos(const_N_Vector x) {

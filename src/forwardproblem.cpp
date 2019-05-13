@@ -451,7 +451,7 @@ void ForwardProblem::getEventSensisFSA(int ie) {
         model->getEventRegularizationSensitivity(slice(rdata->srz,
                                                        nroots.at(ie),
                                                        rdata->nz * rdata->nplist),
-                                                 ie, nroots.at(ie), t, x, sx);
+                                                 ie, t, x, sx);
     } else {
         model->getEventSensitivity(slice(rdata->sz, nroots.at(ie),
                                          rdata->nz * rdata->nplist),
