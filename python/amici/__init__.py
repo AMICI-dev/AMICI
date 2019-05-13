@@ -103,6 +103,7 @@ try:
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
     from .ode_export import ODEModel, ODEExporter
     from .pysb_import import pysb2amici, ODEModel_from_pysb_importer
+    from python.amici.txt_ode_import import import_from_txt
 except ImportError:
     pass
 

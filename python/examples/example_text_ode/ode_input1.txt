@@ -1,0 +1,40 @@
+time:
+t seconds
+
+constants:
+c1 =1
+Shalve =0.1
+
+parameters:
+Vh = 0.1
+h = 0.1
+Vmm=0.1 
+Km = 0.1
+v1 = 0.1
+k4 = 0.1
+
+species:
+S1 =0.1 mol
+S2 = 1
+S3= 1
+
+functions:
+hill(V, s, Shalve, h)= V * (s/Shalve)^h / (1 + (s/Shalve)^h )
+
+MM(V, s, Km)= V*s / (Km + s)
+
+odes:
+d/dt(S1) = v19 - MM(S1, Vmm, Km)*c1^2
+d/dt(S2) = MM(S1, Vmm, Km) - hill(S2, Shalve, Vh, h)
+d/dt(S3) = hill(S2, Shalve, Vh, h) - k4*S3 + log10(c1)
+
+
+observables:
+
+
+noise:
+
+
+events:
+
+

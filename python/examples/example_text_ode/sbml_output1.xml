@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">
+  <model>
+    <listOfFunctionDefinitions>
+      <functionDefinition id="hill">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <divide/>
+            <apply>
+              <times/>
+              <ci> V </ci>
+              <apply>
+                <power/>
+                <apply>
+                  <divide/>
+                  <ci> s </ci>
+                  <ci> Shalve </ci>
+                </apply>
+                <ci> h </ci>
+              </apply>
+            </apply>
+            <apply>
+              <plus/>
+              <cn type="integer"> 1 </cn>
+              <apply>
+                <power/>
+                <apply>
+                  <divide/>
+                  <ci> s </ci>
+                  <ci> Shalve </ci>
+                </apply>
+                <ci> h </ci>
+              </apply>
+            </apply>
+          </apply>
+        </math>
+      </functionDefinition>
+      <functionDefinition id="MM">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <divide/>
+            <apply>
+              <times/>
+              <ci> V </ci>
+              <ci> s </ci>
+            </apply>
+            <apply>
+              <plus/>
+              <ci> Km </ci>
+              <ci> s </ci>
+            </apply>
+          </apply>
+        </math>
+      </functionDefinition>
+    </listOfFunctionDefinitions>
+    <listOfSpecies>
+      <species id="S1" initialAmount="0.1" substanceUnits="mol"/>
+      <species id="S2" initialAmount="1" substanceUnits="mole"/>
+      <species id="S3" initialAmount="1" substanceUnits="mole"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="c1" name="c1" value="1" units="dimensionless" constant="true"/>
+      <parameter id="Shalve" name="Shalve" value="0.1" units="dimensionless" constant="true"/>
+      <parameter id="Vh" name="Vh" value="0.1" units="dimensionless" constant="false"/>
+      <parameter id="h" name="h" value="0.1" units="dimensionless" constant="false"/>
+      <parameter id="Vmm" name="Vmm" value="0.1" units="dimensionless" constant="false"/>
+      <parameter id="Km" name="Km" value="0.1" units="dimensionless" constant="false"/>
+      <parameter id="v1" name="v1" value="0.1" units="dimensionless" constant="false"/>
+      <parameter id="k4" name="k4" value="0.1" units="dimensionless" constant="false"/>
+    </listOfParameters>
+    <listOfRules>
+      <rateRule>
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <minus/>
+            <ci> v19 </ci>
+            <apply>
+              <times/>
+              <apply>
+                <ci> MM </ci>
+                <ci> S1 </ci>
+                <ci> Vmm </ci>
+                <ci> Km </ci>
+              </apply>
+              <apply>
+                <power/>
+                <ci> c1 </ci>
+                <cn type="integer"> 2 </cn>
+              </apply>
+            </apply>
+          </apply>
+        </math>
+      </rateRule>
+      <rateRule>
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <minus/>
+            <apply>
+              <ci> MM </ci>
+              <ci> S1 </ci>
+              <ci> Vmm </ci>
+              <ci> Km </ci>
+            </apply>
+            <apply>
+              <ci> hill </ci>
+              <ci> S2 </ci>
+              <ci> Shalve </ci>
+              <ci> Vh </ci>
+              <ci> h </ci>
+            </apply>
+          </apply>
+        </math>
+      </rateRule>
+      <rateRule>
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <apply>
+              <minus/>
+              <apply>
+                <ci> hill </ci>
+                <ci> S2 </ci>
+                <ci> Shalve </ci>
+                <ci> Vh </ci>
+                <ci> h </ci>
+              </apply>
+              <apply>
+                <times/>
+                <ci> k4 </ci>
+                <ci> S3 </ci>
+              </apply>
+            </apply>
+            <apply>
+              <log/>
+              <logbase>
+                <cn type="integer"> 10 </cn>
+              </logbase>
+              <ci> c1 </ci>
+            </apply>
+          </apply>
+        </math>
+      </rateRule>
+    </listOfRules>
+  </model>
+</sbml>
