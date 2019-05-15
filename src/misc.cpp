@@ -23,7 +23,10 @@ gsl::span<realtype> slice(std::vector<realtype> &data, const int index,
                           const unsigned size) {
     if ((index + 1) * size > data.size())
         throw std::out_of_range("requested slice is out of data range");
-    return gsl::make_span(&data.at(index*size), size);
+    if (size > 0)
+        return gsl::make_span(&data.at(index*size), size);
+    else
+        return gsl::make_span(static_cast<realtype*>(nullptr), 0);
 }
 
 double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)

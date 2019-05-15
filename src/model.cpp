@@ -1266,13 +1266,13 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
 void Model::fdJydy_colptrs(sunindextype * /*indexptrs*/, int /*index*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
-                       __func__); // not implemented
+                       __func__);
 }
 
 void Model::fdJydy_rowvals(sunindextype * /*indexptrs*/, int /*index*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
-                       __func__); // not implemented
+                       __func__);
 }
 
 void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
@@ -1716,11 +1716,11 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         realtype *stcl = nullptr;
 
         // avoid bad memory access when slicing
-        if (nw == 0)
+        if (!nw)
             return;
 
         for (int ip = 0; ip < nplist(); ++ip) {
-            if (ncl() > 0)
+            if (ncl())
                 stcl = &stotal_cl.at(plist(ip) * ncl());
             fdwdp(&dwdp.at(nw * ip), t, x, unscaledParameters.data(),
                   fixedParameters.data(), h.data(), w.data(), total_cl.data(),
