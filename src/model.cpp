@@ -14,6 +14,12 @@
 
 namespace amici {
 
+/**
+ * @brief local helper to check whether the provided buffer has the expected
+ * size
+ * @param buffer buffer to which values are to be written
+ * @param expected_size expected size of the buffer
+ */
 static void checkBufferSize(gsl::span<realtype> buffer,
                             unsigned expected_size) {
     if (buffer.size() != expected_size)
@@ -21,6 +27,11 @@ static void checkBufferSize(gsl::span<realtype> buffer,
                            buffer.size(), expected_size);
 }
 
+/**
+ * @brief local helper function to write computed slice to provided buffer
+ * @param slice computed value
+ * @param buffer buffer to which values are to be written
+ */
 static void writeSlice(gsl::span<const realtype> slice,
                        gsl::span<realtype> buffer) {
     checkBufferSize(buffer, slice.size());
@@ -124,8 +135,9 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
       dwdx(nw, nx_solver, ndwdx, CSC_MAT), M(nx_solver, nx_solver), w(nw),
       dwdp(ndwdp), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
-      total_cl(nx_rdata - nx_solver), stotal_cl((nx_rdata - nx_solver) * np()),
-      x_pos_tmp(nx_solver), unscaledParameters(p), originalParameters(p),
+      total_cl(nx_rdata - nx_solver),
+      stotal_cl((nx_rdata - nx_solver) * p.size()), x_pos_tmp(nx_solver),
+      unscaledParameters(p), originalParameters(p),
       fixedParameters(std::move(k)), z2event(std::move(z2event)), plist_(plist),
       stateIsNonNegative(nx_solver, false),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
@@ -1097,7 +1109,7 @@ void Model::writeSliceEvent(gsl::span<const realtype> slice,
                             gsl::span<realtype> buffer, const int ie) {
     checkBufferSize(buffer, slice.size());
     checkBufferSize(buffer, z2event.size());
-    for (int izt = 0; izt < z2event.size(); ++izt)
+    for (unsigned izt = 0; izt < z2event.size(); ++izt)
         if (z2event.at(izt) - 1 == ie)
             buffer.at(izt) = slice.at(izt);
 }
@@ -1108,7 +1120,7 @@ void Model::writeSensitivitySliceEvent(gsl::span<const realtype> slice,
     checkBufferSize(buffer, slice.size());
     checkBufferSize(buffer, z2event.size() * nplist());
     for (int ip = 0; ip < nplist(); ++ip)
-        for (int izt = 0; izt < z2event.size(); ++izt)
+        for (unsigned izt = 0; izt < z2event.size(); ++izt)
             if (z2event.at(izt) - 1 == ie)
                 buffer.at(ip * nztrue + izt) = slice.at(ip * nztrue + izt);
 }

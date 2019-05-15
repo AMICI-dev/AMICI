@@ -481,7 +481,7 @@ void ForwardProblem::getDataOutput(int it) {
                               edata);
     if (edata) {
         model->addObservableObjective(rdata->llh, it, x, *edata);
-        rdata->fres(it, edata);
+        rdata->fres(it, *edata);
         rdata->fchi2(it);
     }
 
@@ -520,7 +520,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
     if (edata) {
         model->addObservableObjectiveSensitivity(rdata->sllh, rdata->s2llh,
                                                  it, x, sx, *edata);
-        rdata->fsres(it, edata);
+        rdata->fsres(it, *edata);
         rdata->fFIM(it);
     }
 }

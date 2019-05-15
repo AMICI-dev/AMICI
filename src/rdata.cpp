@@ -316,15 +316,15 @@ void ReturnData::initializeObjectiveFunction()
     std::fill(s2llh.begin(),s2llh.end(), 0.0);
 }
 
-void ReturnData::fres(const int it, const ExpData *edata) {
-    if (!edata || res.empty())
+void ReturnData::fres(const int it, const ExpData &edata) {
+    if ( res.empty())
         return;
     
-    auto observedData = edata->getObservedDataPtr(it);
+    auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt_true = iy + it * edata->nytrue();
+        int iyt_true = iy + it * edata.nytrue();
         int iyt = iy + it * ny;
-        if (!edata->isSetObservedData(it, iy))
+        if (!edata.isSetObservedData(it, iy))
             continue;
         res.at(iyt_true) =
         (y.at(iyt) - observedData[iy]) / sigmay.at(iyt);
@@ -341,14 +341,14 @@ void ReturnData::fchi2(const int it) {
     }
 }
 
-void ReturnData::fsres(const int it, const ExpData *edata) {
-    if (!edata || sres.empty())
+void ReturnData::fsres(const int it, const ExpData &edata) {
+    if (sres.empty())
         return;
     
     for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt_true = iy + it * edata->nytrue();
+        int iyt_true = iy + it * edata.nytrue();
         int iyt = iy + it * ny;
-        if (!edata->isSetObservedData(it, iy))
+        if (!edata.isSetObservedData(it, iy))
             continue;
         for (int ip = 0; ip < nplist; ++ip) {
             sres.at(iyt_true * nplist + ip) =

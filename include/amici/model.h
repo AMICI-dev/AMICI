@@ -653,7 +653,6 @@ class Model : public AbstractModel {
      * @brief Time-resolved observable standard deviations
      * @param sigmay buffer (dimension: ny)
      * @param it timepoint index
-     * @param x state variables
      * @param edata pointer to experimental data instance (optional,
      * pass nullptr to ignore)
      */
@@ -665,7 +664,6 @@ class Model : public AbstractModel {
      * total derivative (can be used with both adjoint and forward sensitivity)
      * @param ssigmay buffer (dimension: ny x nplist, row-major)
      * @param it timepoint index
-     * @param x state variables
      * @param edata pointer to experimental data instance (optional,
      * pass nullptr to ignore)
      */
@@ -820,7 +818,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Event-resolved observable negative log-likelihood,
-     * @param Jz buffer (dimension: 1)
+     * @param Jrz buffer (dimension: 1)
      * @param ie event index
      * @param nroots event occurence
      * @param t timepoint
@@ -829,7 +827,7 @@ class Model : public AbstractModel {
      */
     void addEventObjectiveRegularization(realtype &Jrz, const int ie,
                                          const int nroots, const realtype t,
-                                         const AmiVector &rz,
+                                         const AmiVector &x,
                                          const ExpData &edata);
 
     /**
@@ -875,6 +873,7 @@ class Model : public AbstractModel {
      * @param dJzdx buffer (dimension: nJ x nx_solver, row-major)
      * @param ie event index
      * @param nroots event occurence
+     * @param t timepoint
      * @param x state variables
      * @param edata experimental data instance
      */
@@ -911,10 +910,10 @@ class Model : public AbstractModel {
      * @param sx current state sensitivity (will be overwritten)
      * @param ie event index
      * @param t current timepoint
-     * @param x current state
+     * @param x_old current state
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
-     * @param stau, timepoint sensitivity, to be computed with
+     * @param stau timepoint sensitivity, to be computed with
      * Model::getEventTimeSensitivity
      */
     void addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
@@ -1230,43 +1229,41 @@ class Model : public AbstractModel {
      * @brief Partial derivative of time-resolved measurement negative
      * log-likelihood Jy
      * @param it timepoint index
-     * @param rdata pointer to return data instance
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
-    void fdJydy(int it, const AmiVector &y, const ExpData &edata);
+    void fdJydy(int it, const AmiVector &x, const ExpData &edata);
 
     /**
      * @brief Sensitivity of time-resolved measurement negative log-likelihood
      * Jy w.r.t. standard deviation sigma
      * @param it timepoint index
-     * @param rdata pointer to return data instance
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
-    void fdJydsigma(int it, const AmiVector &y, const ExpData &edata);
+    void fdJydsigma(int it, const AmiVector &x, const ExpData &edata);
 
     /**
      * @brief Compute sensitivity of time-resolved measurement negative
      * log-likelihood Jy w.r.t. parameters for the given timepoint. Add result
      * to respective fields in rdata.
      * @param it timepoint index
+     * @param x state variables
      * @param edata pointer to experimental data instance
-     * @param rdata pointer to return data instance
      */
     void fdJydp(const int it, const AmiVector &x, const ExpData &edata);
 
     /**
      * @brief Sensitivity of time-resolved measurement negative log-likelihood
      * Jy w.r.t. state variables
-     * @param dJydx vector with values of state derivative of Jy
      * @param it timepoint index
-     * @param sx state variables
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
     void fdJydx(const int it, const AmiVector &x, const ExpData &edata);
 
     /**
      * @brief Event-resolved output
-     * @param nroots number of events for event index
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1275,8 +1272,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Partial derivative of event-resolved output z w.r.t. to model
-     * parameters
-     * p
+     * parameters p
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1295,7 +1291,6 @@ class Model : public AbstractModel {
     /**
      * @brief Event root function of events (equal to froot but does not include
      * non-output events)
-     * @param nroots number of events for event index
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1322,9 +1317,9 @@ class Model : public AbstractModel {
 
     /**
      * @brief Standard deviation of events
-     * @param t current timepoint
      * @param ie event index
      * @param nroots event index
+     * @param t current timepoint
      * @param edata pointer to experimental data instance
      */
     void fsigmaz(const int ie, const int nroots, const realtype t,
@@ -1352,8 +1347,10 @@ class Model : public AbstractModel {
 
     /**
      * @brief Partial derivative of event measurement negative log-likelihood Jz
+     * @param ie event index
      * @param nroots event index
-     * @param rdata pointer to return data instance
+     * @param t current timepoint
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
     void fdJzdz(const int ie, const int nroots, const realtype t,
@@ -1362,8 +1359,10 @@ class Model : public AbstractModel {
     /**
      * @brief Sensitivity of event measurement negative log-likelihood Jz
      * w.r.t. standard deviation sigmaz
+     * @param ie event index
      * @param nroots event index
-     * @param rdata pointer to return data instance
+     * @param t current timepoint
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
     void fdJzdsigma(const int ie, const int nroots, const realtype t,
@@ -1372,8 +1371,10 @@ class Model : public AbstractModel {
     /**
      * @brief Sensitivity of event-resolved measurement negative log-likelihood
      * Jz w.r.t. parameters
+     * @param ie event index
      * @param nroots event index
      * @param t current timepoint
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
     void fdJzdp(const int ie, const int nroots, realtype t, const AmiVector &x,
@@ -1382,8 +1383,10 @@ class Model : public AbstractModel {
     /**
      * @brief Sensitivity of event-resolved measurement negative log-likelihood
      * Jz w.r.t. state variables
+     * @param ie event index
      * @param nroots event index
      * @param t current timepoint
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
     void fdJzdx(const int ie, const int nroots, realtype t, const AmiVector &x,
@@ -1392,7 +1395,7 @@ class Model : public AbstractModel {
     /**
      * @brief Regularization of negative log-likelihood with roots of
      * event-resolved measurements rz
-     * @param Jz variable to which regularization will be added
+     * @param Jrz variable to which regularization will be added
      * @param nroots event index
      * @param rz regularization variable
      * @param edata pointer to experimental data instance
@@ -1402,8 +1405,10 @@ class Model : public AbstractModel {
 
     /**
      * @brief Partial derivative of event measurement negative log-likelihood Jz
+     * @param ie event index
      * @param nroots event index
-     * @param rdata pointer to return data instance
+     * @param t current timepoint
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
     void fdJrzdz(const int ie, const int nroots, const realtype t,
@@ -1412,8 +1417,10 @@ class Model : public AbstractModel {
     /**
      * @brief Sensitivity of event measurement negative log-likelihood Jz
      * w.r.t. standard deviation sigmaz
+     * @param ie event index
      * @param nroots event index
-     * @param rdata pointer to return data instance
+     * @param t current timepoint
+     * @param x state variables
      * @param edata pointer to experimental data instance
      */
     void fdJrzdsigma(const int ie, const int nroots, const realtype t,

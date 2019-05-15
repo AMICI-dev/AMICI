@@ -109,30 +109,26 @@ class ReturnData {
     /**
      * Residual function
      * @param it time index
-     * @param rdata ReturnData instance to which result will be written
      * @param edata ExpData instance containing observable data
      */
-    void fres(int it, const ExpData *edata);
+    void fres(int it, const ExpData &edata);
     
     /**
      * Chi-squared function
      * @param it time index
-     * @param rdata ReturnData instance to which result will be written
      */
     void fchi2(int it);
     
     /**
      * Residual sensitivity function
      * @param it time index
-     * @param rdata ReturnData instance to which result will be written
      * @param edata ExpData instance containing observable data
      */
-    void fsres(int it, const ExpData *edata);
+    void fsres(int it, const ExpData &edata);
     
     /**
      * Fisher information matrix function
      * @param it time index
-     * @param rdata ReturnData instance to which result will be written
      */
     void fFIM(int it);
 
