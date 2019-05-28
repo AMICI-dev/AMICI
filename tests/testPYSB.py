@@ -93,7 +93,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
             if field not in ['ptr', 't_steadystate', 'numsteps',
                              'newton_numsteps', 'numrhsevals',
                              'numerrtestfails', 'order', 'J', 'xdot',
-                             'wrms_steadystate', ]:
+                             'wrms_steadystate', 'newton_cpu_time',
+                             'cpu_time', 'cpu_timeB', ]:
                 with self.subTest(field=field):
                     if rdata_pysb[field] is None:
                         self.assertIsNone(
