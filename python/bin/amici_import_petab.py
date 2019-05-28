@@ -246,9 +246,10 @@ def main():
         parameter_file=args.parameter_file_name)
     petab.lint_problem(pp)
 
-    import_model(args.sbml_file_name,
-                 args.condition_file_name,
-                 args.measurement_file_name,
+    import_model(model_name=args.model_name,
+                 sbml_file=args.sbml_file_name,
+                 condition_file=args.condition_file_name,
+                 measurement_file=args.measurement_file_name,
                  model_output_dir=args.model_output_dir,
                  compile=args.compile,
                  verbose=True)
