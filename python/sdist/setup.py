@@ -139,7 +139,7 @@ def main():
 
     # Readme as long package description to go on PyPi
     # (https://pypi.org/project/amici/)
-    with open("README.md", "r") as fh:
+    with open("README.md", "r", encoding="utf-8") as fh:
         long_description = fh.read()
 
     # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
