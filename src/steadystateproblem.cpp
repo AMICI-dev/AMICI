@@ -61,7 +61,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
             if (it < 1) /* No previous time point computed, set t = t0 */
                 t = model->t0();
             else /* Carry on simulating from last point */
-                t = model->t(it - 1);
+                t = model->getTimepoint(it - 1);
             if (it < 0) {
                 /* Preequilibration? -> Create a new CVode object for sim */
                 auto newtonSimSolver =

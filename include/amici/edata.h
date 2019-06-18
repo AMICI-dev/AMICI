@@ -2,6 +2,7 @@
 #define AMICI_EDATA_H
 
 #include "amici/defines.h"
+#include "amici/vector.h"
 
 #include <vector>
 

@@ -203,14 +203,6 @@ class ForwardProblem {
     void getEventOutput();
 
     /**
-     * @brief Preprocess the provided experimental data to compute
-     * event sensitivities via adjoint or forward methods later on
-     *
-     * @param ie index of current event
-     */
-    void prepEventSensis(int ie);
-
-    /**
      * @brief Extracts event information for forward sensitivity analysis
      *
      * @param ie index of event type
@@ -230,14 +222,6 @@ class ForwardProblem {
      * @param it index of current timepoint
      */
     void getDataOutput(int it);
-
-    /**
-     * @brief Preprocesses the provided experimental data to compute
-     * sensitivities via adjoint or forward methods later on
-     *
-     * @param it index of current timepoint
-     */
-    void prepDataSensis(int it);
 
     /**
      * @brief Extracts data information for forward sensitivity analysis
@@ -352,6 +336,9 @@ class ForwardProblem {
     /** differential sensitivity state vector array
      * (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sdx;
+    
+    /** sensitivity of the event timepoint (dimension: nplist) */
+    std::vector<realtype> stau;
 
     /** storage for last found root */
     realtype tlastroot = 0.0;
