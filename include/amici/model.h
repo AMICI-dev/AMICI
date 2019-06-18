@@ -1571,7 +1571,7 @@ class Model : public AbstractModel {
      */
     mutable std::vector<realtype> dJzdsigma;
 
-    /** event ouput derivative of event likelihood at final timepoint
+    /** event output derivative of event likelihood at final timepoint
      * (dimension nJ x nz x nztrue, row-major)
      */
     mutable std::vector<realtype> dJrzdz;
