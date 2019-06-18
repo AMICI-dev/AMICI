@@ -309,9 +309,6 @@ function generateMatlabWrapper(nx, ny, np, nk, nz, o2flag, amimodelo2, wrapperFi
     fprintf(fid,['if(~all(tout==sort(tout)))\n']);
     fprintf(fid,['    error(''Provided time vector is not monotonically increasing!'');\n']);
     fprintf(fid,['end\n']);
-    fprintf(fid,['if(not(length(tout)==length(unique(tout))))\n']);
-    fprintf(fid,['    error(''Provided time vector has non-unique entries!!'');\n']);
-    fprintf(fid,['end\n']);
     fprintf(fid,['if(max(options_ami.sens_ind)>' num2str(np) ')\n']);
     fprintf(fid,['    error(''Sensitivity index exceeds parameter dimension!'')\n']);
     fprintf(fid,['end\n']);
