@@ -1117,7 +1117,7 @@ class Model : public AbstractModel {
     /** flag array for DAE equations */
     std::vector<realtype> idlist;
 
-    /** tempory storage of dxdotdp data across functions (dimension: nplist x
+    /** temporary storage of dxdotdp data across functions (dimension: nplist x
      * nx_solver, row-major) */
     AmiVectorArray dxdotdp;
 
