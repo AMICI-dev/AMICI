@@ -487,6 +487,11 @@ void ForwardProblem::getDataOutput(int it) {
 
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
         model->nplist() > 0) {
+        
+        model->getObservableSigmaSensitivity(slice(rdata->ssigmay, it,
+                                                   model->nplist() * model->ny),
+                                             it, edata);
+        
         if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
             getDataSensisFSA(it);
         } else {
@@ -514,9 +519,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
     model->getObservableSensitivity(slice(rdata->sy, it,
                                           model->nplist() * model->ny),
                                     t, x, sx);
-    model->getObservableSigmaSensitivity(slice(rdata->ssigmay, it,
-                                               model->nplist() * model->ny),
-                                         it, edata);
+    
     if (edata) {
         model->addObservableObjectiveSensitivity(rdata->sllh, rdata->s2llh,
                                                  it, x, sx, *edata);

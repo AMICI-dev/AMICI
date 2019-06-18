@@ -1222,15 +1222,18 @@ void Model::fsigmay(const int it, const ExpData *edata) {
         /* extract the value for the standard deviation from ExpData,
          * if the data value is NaN, use the parameter value */
         for (int iytrue = 0; iytrue < nytrue; iytrue++) {
-            if (edata->isSetObservedDataStdDev(it, iytrue)) {
+            if (edata->isSetObservedDataStdDev(it, iytrue))
                 sigmay.at(iytrue) = sigmay_edata[iytrue];
-            }
+            
+            /* TODO: when moving second order code to cpp, verify
+             * that this is actually what we want
+             */
+            for (int iJ = 1; iJ < nJ; iJ++)
+                sigmay.at(iytrue + iJ*nytrue) = 0;
+            
+            if (edata->isSetObservedData(it, iytrue))
+                checkSigmaPositivity(sigmay[iytrue], "sigmay");
         }
-    }
-
-    for (int iyt = 0; iyt < nytrue; ++iyt) {
-        if (edata && edata->isSetObservedData(it, iyt))
-            checkSigmaPositivity(sigmay[iyt], "sigmay");
     }
 }
 
@@ -1495,12 +1498,17 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
                         edata->getObservedEventsStdDevPtr(nroots);
                     sigmaz.at(iztrue) = sigmaz_edata[iztrue];
                 }
+                
+                /* TODO: when moving second order code to cpp, verify
+                 * that this is actually what we want
+                 */
+                for (int iJ = 1; iJ < nJ; iJ++)
+                    sigmaz.at(iztrue + iJ*nztrue) = 0;
+                
+                if (edata->isSetObservedEvents(nroots, iztrue))
+                    checkSigmaPositivity(sigmaz[iztrue], "sigmaz");
             }
         }
-    }
-
-    if (alwaysCheckFinite) {
-        amici::checkFinite(sigmaz, "sigmaz");
     }
 }
 
