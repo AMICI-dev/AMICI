@@ -76,6 +76,7 @@ matrix:
             - doxygen
             - ragel
             - graphviz
+            update: true
       before_install:
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
