@@ -101,15 +101,15 @@ void BackwardProblem::handleEventB(const int iroot) {
             continue;
         }
 
-        model->fdeltaqB(ie, t, x_disc[iroot], xB, xdot_disc[iroot],
-                        xdot_old_disc[iroot]);
-        model->fdeltaxB(ie, t, x_disc[iroot], xB, xdot_disc[iroot],
-                        xdot_old_disc[iroot]);
+        model->addAdjointQuadratureEventUpdate(xQB, ie, t, x_disc[iroot], xB,
+                                               xdot_disc[iroot],
+                                               xdot_old_disc[iroot]);
+        model->addAdjointStateEventUpdate(xB, ie, t, x_disc[iroot],
+                                          xdot_disc[iroot],
+                                          xdot_old_disc[iroot]);
 
         for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
             for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                xB[ix + iJ * model->nxtrue_solver] +=
-                        model->deltaxB[ix + iJ * model->nxtrue_solver];
                 if (model->nz > 0) {
                     xB[ix + iJ * model->nxtrue_solver] +=
                             dJzdx[iJ + ( ix + nroots[ie] * model->nx_solver ) * model->nJ];
@@ -117,12 +117,7 @@ void BackwardProblem::handleEventB(const int iroot) {
             }
         }
 
-        for (int iJ = 0; iJ < model->nJ; ++iJ) {
-            for (int ip = 0; ip < model->nplist(); ++ip) {
-                xQB[ip + iJ * model->nplist()] +=
-                        model->deltaqB[ip + iJ * model->nplist()];
-            }
-        }
+
 
         nroots[ie]--;
     }

@@ -9,6 +9,7 @@ namespace amici {
 class Model;
 class ReturnData;
 class Solver;
+class ExpData;
 }
 
 namespace boost {
@@ -104,6 +105,32 @@ class ReturnData {
      */
     void
     applyChainRuleFactorToSimulationResults(const Model *model);
+    
+    /**
+     * Residual function
+     * @param it time index
+     * @param edata ExpData instance containing observable data
+     */
+    void fres(int it, const ExpData &edata);
+    
+    /**
+     * Chi-squared function
+     * @param it time index
+     */
+    void fchi2(int it);
+    
+    /**
+     * Residual sensitivity function
+     * @param it time index
+     * @param edata ExpData instance containing observable data
+     */
+    void fsres(int it, const ExpData &edata);
+    
+    /**
+     * Fisher information matrix function
+     * @param it time index
+     */
+    void fFIM(int it);
 
     /** timepoints (dimension: nt) */
     std::vector<realtype> ts;

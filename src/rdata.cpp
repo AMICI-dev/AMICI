@@ -2,6 +2,7 @@
 
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/edata.h"
 #include "amici/symbolic_functions.h"
 #include "amici/solver.h"
 #include "amici/exception.h"
@@ -314,5 +315,63 @@ void ReturnData::initializeObjectiveFunction()
     std::fill(sllh.begin(),sllh.end(), 0.0);
     std::fill(s2llh.begin(),s2llh.end(), 0.0);
 }
+
+void ReturnData::fres(const int it, const ExpData &edata) {
+    if ( res.empty())
+        return;
+    
+    auto observedData = edata.getObservedDataPtr(it);
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * edata.nytrue();
+        int iyt = iy + it * ny;
+        if (!edata.isSetObservedData(it, iy))
+            continue;
+        res.at(iyt_true) =
+        (y.at(iyt) - observedData[iy]) / sigmay.at(iyt);
+    }
+}
+
+void ReturnData::fchi2(const int it) {
+    if (res.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * nytrue;
+        chi2 += pow(res.at(iyt_true), 2);
+    }
+}
+
+void ReturnData::fsres(const int it, const ExpData &edata) {
+    if (sres.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * edata.nytrue();
+        int iyt = iy + it * ny;
+        if (!edata.isSetObservedData(it, iy))
+            continue;
+        for (int ip = 0; ip < nplist; ++ip) {
+            sres.at(iyt_true * nplist + ip) =
+            sy.at(iy + ny * (ip + it * nplist)) /
+            sigmay.at(iyt);
+        }
+    }
+}
+
+void ReturnData::fFIM(const int it) {
+    if (sres.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * nytrue;
+        for (int ip = 0; ip < nplist; ++ip) {
+            for (int jp = 0; jp < nplist; ++jp) {
+                FIM.at(ip + nplist * jp) += sres.at(iyt_true * nplist + ip) *
+                    sres.at(iyt_true * nplist + jp);
+            }
+        }
+    }
+}
+    
 
 } // namespace amici

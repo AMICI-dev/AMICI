@@ -477,7 +477,8 @@ TEST(edata, testDimensionChecks)
     std::vector<realtype> bad_single_z_std(edata.nmaxevent() + 1, 0.1);
 
     CHECK_THROWS(AmiException, edata.setObservedData(bad_single_y, 0));
-    CHECK_THROWS(AmiException, edata.setObservedDataStdDev(bad_single_y_std, 0));
+    CHECK_THROWS(AmiException,
+                 edata.setObservedDataStdDev(bad_single_y_std, 0));
     CHECK_THROWS(AmiException, edata.setObservedEvents(bad_single_z, 0));
     CHECK_THROWS(AmiException,
                  edata.setObservedEventsStdDev(bad_single_y_std, 0));

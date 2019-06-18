@@ -129,7 +129,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     setSuppressAlg(true);
     /* calculate consistent DAE initial conditions (no effect for ODE) */
     if (model->nt() > 1)
-        calcIC(model->t(1));
+        calcIC(model->getTimepoint(1));
 }
 
 void Solver::setupB(int *which, const realtype tf, Model *model,
