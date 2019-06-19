@@ -252,6 +252,10 @@ algorithm, Timothy A. Davis, John R. Gilbert, Stefan I. Larimore,
 Esmond G. Ng _ACM Transactions on Mathematical Software_, Vol 30,
 Issue 3, 2004, pp 377 - 380. [PDF](http://dl.acm.org/authorize?734450)
 
+#### libsbml
+
+To import Systems Biology Markup Language ([SBML](http://sbml.org/))
+models, AMICI relies on the Python or MATLAB SBML library.
 
 #### Math Kernel Library (MKL)
 
@@ -295,7 +299,9 @@ or
 
     apt-get install swig3.0
 
-We note here that some linux package managers may provide swig executables as `swig3.0`, but installation as `swig` is required. This can be fixed using, e.g., symbolic links:
+We note here that some linux package managers may provide swig
+executables as `swig3.0`, but installation as `swig` is required. This
+can be fixed using, e.g., symbolic links:
 
     mkdir -p ~/bin/ && ln -s $(which swig3.0) ~/bin/swig && export PATH=~/bin/:$PATH
 
@@ -308,7 +314,7 @@ models. Currently MATLAB R2018a or newer is not supported (see
 [https://github.com/ICB-DCM/AMICI/issues/307](https://github.com/ICB-DCM/AMICI/issues/307)).
 
 The Symbolic Toolbox requirement can be circumvented by performing model
-import using the Python interface. The generated executables can then be used from
+import using the Python interface. The result code can then be used from
 Matlab. 
 
 
