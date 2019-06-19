@@ -308,7 +308,7 @@ models. Currently MATLAB R2018a or newer is not supported (see
 [https://github.com/ICB-DCM/AMICI/issues/307](https://github.com/ICB-DCM/AMICI/issues/307)).
 
 The Symbolic Toolbox requirement can be circumvented by performing model
-import using the Python interface. The result code can then be used from
+import using the Python interface. The generated executables can then be used from
 Matlab. 
 
 
