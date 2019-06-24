@@ -362,14 +362,15 @@ class SbmlImporter:
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
 
-        if all(self.speciesHasOnlySubstanceUnits):
-            warnings.warn('SBML file declares no concentrations, but only '
-                          'substance units. Using amounts instea of '
-                          'concentrations.')
-            concentrations = amounts.copy()
+#        if all(self.speciesHasOnlySubstanceUnits):
+#            warnings.warn('SBML file declares no concentrations, but only '
+ #                         'substance units. Using amounts instea of '
+ ##                         'concentrations.')
+ #           concentrations = amounts.copy()
 
         def getSpeciesInitial(index, conc):
-            if not math.isnan(conc):
+            if not self.speciesHasOnlySubstanceUnits[index] \
+                    or not math.isnan(conc):
                 return sp.sympify(conc)
             if not math.isnan(amounts[index]):
                 return \
