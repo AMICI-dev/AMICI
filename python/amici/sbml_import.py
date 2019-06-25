@@ -363,9 +363,11 @@ class SbmlImporter:
         amounts = [spec.getInitialAmount() for spec in species]
 
         def getSpeciesInitial(index, conc):
-            if not math.isnan(conc):
+            if not (self.speciesHasOnlySubstanceUnits[index] or math.isnan(
+                    conc) or species[index].isSetInitialConcentration()):
                 return sp.sympify(conc)
-            if not math.isnan(amounts[index]):
+            if species[index].isSetInitialAmount() and not math.isnan(
+                    amounts[index]):
                 return \
                     sp.sympify(amounts[index]) / self.speciesCompartment[index]
             return self.symbols['species']['identifier'][index]

@@ -170,6 +170,19 @@ and subsequently provide the generated struct to `amiwrap(...)`, instead of prov
 
 In a similar fashion, the user could also generate multiple models and pass them directly to `amiwrap(...)` without generating respective model definition scripts.
 
+
+### Compiling a Python-generated model
+
+Due to better performance or to avoid the Symbolic Toolbox requirement,
+it might be desirable to import a model in Python and compile the
+resulting code into a mex file. For Python model import, consult the
+respective section of the Python documentation. Once the imported
+succeeded, there will be a `compileMexFile.m` script inside the newly
+created model directory which can be invoked to compile the mex file.
+This mex file and `simulate_*.m` can be used as if fully created by
+matlab.
+
+
 ## Model Simulation
 
 After the call to `amiwrap(...)` two files will be placed in the specified directory. One is a _modelname_.mex and the other is simulate_ _modelname_.m. The mex file should never be called directly. Instead the MATLAB script, which acts as a wrapper around the .mex simulation file should be used.
