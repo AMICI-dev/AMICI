@@ -101,6 +101,27 @@ installation is done completely anew.
 
 Now, you are ready to use AMICI in the virtual environment.
 
+#### Anaconda on Mac
+
+If the above installation does not work for you, try installing AMICI
+via:
+
+    CFLAGS="-stdlib=libc++" CC=clang CXX=clang pip3 install --verbose amici
+
+This will use the `clang` compiler.
+
+You will have to pass the same options when compiling any model later
+on. This can be done by inserting the following code before calling
+`sbml2amici`:
+    
+    import os
+    os.environ['CC'] = 'clang'
+    os.environ['CXX'] = 'clang'
+    os.environ['CFLAGS'] = '-stdlib=libc++'
+
+(For further discussion see https://github.com/ICB-DCM/AMICI/issues/357)
+
+
 ### Windows
 
 To install AMICI on Windows using python, you can proceed as follows:
