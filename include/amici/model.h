@@ -8,6 +8,7 @@
 
 #include <memory>
 #include <vector>
+#include <map>
 
 namespace amici {
 
@@ -292,6 +293,16 @@ class Model : public AbstractModel {
      * @param p vector of parameters
      */
     void setParameters(std::vector<realtype> const &p);
+
+    /**
+     * @brief Sets model parameters according to the parameter IDs and mapped
+     * values.
+     * @param p map of parameters IDs and values
+     * @param Ignore errors such as parameter IDs in p which are not model
+     * parameters
+     */
+    void setParameters(std::map<std::string, realtype> const &p,
+                       bool ignoreErrors = false);
 
     /**
      * @brief Set value of first model parameter with the specified id
