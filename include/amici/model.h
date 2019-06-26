@@ -298,8 +298,8 @@ class Model : public AbstractModel {
      * @brief Sets model parameters according to the parameter IDs and mapped
      * values.
      * @param p map of parameters IDs and values
-     * @param Ignore errors such as parameter IDs in p which are not model
-     * parameters
+     * @param ignoreErrors Ignore errors such as parameter IDs in p which are
+     * not model parameters
      */
     void setParameterById(std::map<std::string, realtype> const &p,
                        bool ignoreErrors = false);
@@ -331,8 +331,8 @@ class Model : public AbstractModel {
      * @brief Sets model parameters according to the parameter name and mapped
      * values.
      * @param p map of parameters names and values
-     * @param Ignore errors such as parameter names in p which are not model
-     * parameters
+     * @param ignoreErrors Ignore errors such as parameter names in p which are
+     * not model parameters
      */
     void setParameterByName(std::map<std::string, realtype> const &p,
                        bool ignoreErrors = false);
