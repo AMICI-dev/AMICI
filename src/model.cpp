@@ -320,8 +320,8 @@ void Model::setParameters(const std::vector<realtype> &p) {
     unscaleParameters(originalParameters, pscale, unscaledParameters);
 }
 
-void Model::setParameters(const std::map<std::string, realtype> &p,
-                          bool ignoreErrors)
+void Model::setParameterById(const std::map<std::string, realtype> &p,
+                             bool ignoreErrors)
 {
     for (auto& kv : p) {
         try {
@@ -362,6 +362,19 @@ void Model::setParameterByName(std::string const &par_name, realtype value) {
     setValueById(getParameterNames(), originalParameters, value, par_name,
                  "parameter", "name");
     unscaleParameters(originalParameters, pscale, unscaledParameters);
+}
+
+void Model::setParameterByName(const std::map<std::string, realtype> &p,
+                               bool ignoreErrors)
+{
+    for (auto& kv : p) {
+        try {
+            setParameterByName(kv.first, kv.second);
+        } catch (AmiException&) {
+            if(!ignoreErrors)
+                throw;
+        }
+    }
 }
 
 int Model::setParametersByNameRegex(std::string const &par_name_regex,
