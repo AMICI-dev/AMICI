@@ -320,6 +320,19 @@ void Model::setParameters(const std::vector<realtype> &p) {
     unscaleParameters(originalParameters, pscale, unscaledParameters);
 }
 
+void Model::setParameterById(const std::map<std::string, realtype> &p,
+                             bool ignoreErrors)
+{
+    for (auto& kv : p) {
+        try {
+            setParameterById(kv.first, kv.second);
+        } catch (AmiException&) {
+            if(!ignoreErrors)
+                throw;
+        }
+    }
+}
+
 void Model::setParameterById(std::string const &par_id, realtype value) {
     if (!hasParameterIds())
         throw AmiException(
@@ -349,6 +362,19 @@ void Model::setParameterByName(std::string const &par_name, realtype value) {
     setValueById(getParameterNames(), originalParameters, value, par_name,
                  "parameter", "name");
     unscaleParameters(originalParameters, pscale, unscaledParameters);
+}
+
+void Model::setParameterByName(const std::map<std::string, realtype> &p,
+                               bool ignoreErrors)
+{
+    for (auto& kv : p) {
+        try {
+            setParameterByName(kv.first, kv.second);
+        } catch (AmiException&) {
+            if(!ignoreErrors)
+                throw;
+        }
+    }
 }
 
 int Model::setParametersByNameRegex(std::string const &par_name_regex,
@@ -1224,13 +1250,13 @@ void Model::fsigmay(const int it, const ExpData *edata) {
         for (int iytrue = 0; iytrue < nytrue; iytrue++) {
             if (edata->isSetObservedDataStdDev(it, iytrue))
                 sigmay.at(iytrue) = sigmay_edata[iytrue];
-            
+
             /* TODO: when moving second order code to cpp, verify
              * that this is actually what we want
              */
             for (int iJ = 1; iJ < nJ; iJ++)
                 sigmay.at(iytrue + iJ*nytrue) = 0;
-            
+
             if (edata->isSetObservedData(it, iytrue))
                 checkSigmaPositivity(sigmay[iytrue], "sigmay");
         }
@@ -1498,13 +1524,13 @@ void Model::fsigmaz(const int ie, const int nroots, const realtype t,
                         edata->getObservedEventsStdDevPtr(nroots);
                     sigmaz.at(iztrue) = sigmaz_edata[iztrue];
                 }
-                
+
                 /* TODO: when moving second order code to cpp, verify
                  * that this is actually what we want
                  */
                 for (int iJ = 1; iJ < nJ; iJ++)
                     sigmaz.at(iztrue + iJ*nztrue) = 0;
-                
+
                 if (edata->isSetObservedEvents(nroots, iztrue))
                     checkSigmaPositivity(sigmaz[iztrue], "sigmaz");
             }
