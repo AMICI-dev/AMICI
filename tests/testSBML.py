@@ -84,9 +84,16 @@ class TestAmiciSBMLModel(unittest.TestCase):
         """
         Test SBML import and simulation from AMICI python interface
         """
-        def assert_fun(x):
-            return self.assertTrue(x)
 
+        model_module = self.test_steadystate_import()
+
+        self.steadystate_simulation(model_module=model_module)
+
+        # Run some additional tests which need a working Model,
+        # but don't need precomputed expectations.
+        test_set_parameters_by_dict(model_module)
+
+    def test_steadystate_import(self):
         sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python',
                                 'examples', 'example_steadystate',
                                 'model_steadystate_scaled.xml')
@@ -95,8 +102,8 @@ class TestAmiciSBMLModel(unittest.TestCase):
         observables = amici.assignmentRules2observables(
             sbmlImporter.sbml,
             filter_function=lambda variable:
-                variable.getId().startswith('observable_') and
-                not variable.getId().endswith('_sigma')
+            variable.getId().startswith('observable_') and
+            not variable.getId().endswith('_sigma')
         )
 
         outdir = 'test_model_steadystate_scaled'
@@ -105,12 +112,18 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                 observables=observables,
                                 constantParameters=['k0'],
                                 sigmas={'observable_x1withsigma':
-                                        'observable_x1withsigma_sigma'})
+                                            'observable_x1withsigma_sigma'})
 
         sys.path.insert(0, outdir)
-        import test_model_steadystate_scaled as modelModule
+        import test_model_steadystate_scaled as model_module
 
-        model = modelModule.getModel()
+        return model_module
+
+    def steadystate_simulation(self, model_module):
+        def assert_fun(x):
+            return self.assertTrue(x)
+
+        model = model_module.getModel()
         model.setTimepoints(np.linspace(0, 60, 60))
         solver = model.getSolver()
         solver.setSensitivityOrder(amici.SensitivityOrder_first)
@@ -174,6 +187,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
         solver.setAbsoluteTolerance(1e-12)
         check_derivatives(model, solver, edata[0], assert_fun, atol=1e-3,
                           rtol=1e-3, epsilon=1e-4)
+
 
     def test_likelihoods(self):
         """
@@ -252,6 +266,32 @@ class TestAmiciSBMLModel(unittest.TestCase):
         self.assertTrue(np.isfinite(rdata['llh']))
         self.assertTrue(np.all(np.isfinite(rdata['sllh'])))
         self.assertTrue(np.any(rdata['sllh']))
+
+
+def test_set_parameters_by_dict(model_module):
+    """Test setting parameter via id/name => value dicts"""
+
+    model = model_module.getModel()
+    old_parameter_values = model.getParameters()
+    parameter_ids = model.getParameterIds()
+    change_par_id = parameter_ids[-1]
+    new_par_val = 0.1234
+    old_par_val = model.getParameterById(change_par_id)
+
+    assert model.getParameterById(change_par_id) != new_par_val
+    model.setParameterById({change_par_id: new_par_val})
+    assert model.getParameterById(change_par_id) == new_par_val
+    # reset and check we are back to original
+    model.setParameterById(change_par_id, old_par_val)
+    assert model.getParameters() == old_parameter_values
+
+    # Same for by-name
+    parameter_names = model.getParameterNames()
+    change_par_name = parameter_names[-1]
+    model.setParameterByName({change_par_name: new_par_val})
+    assert model.getParameterByName(change_par_name) == new_par_val
+    model.setParameterByName(change_par_name, old_par_val)
+    assert model.getParameters() == old_parameter_values
 
 
 if __name__ == '__main__':
