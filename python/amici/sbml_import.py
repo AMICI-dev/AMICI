@@ -389,7 +389,7 @@ class SbmlImporter:
 
         def getSpeciesInitial(index, conc):
             if not (self.speciesHasOnlySubstanceUnits[index] or math.isnan(
-                    conc) or species[index].isSetInitialConcentration()):
+                    conc) or not species[index].isSetInitialConcentration()):
                 return sp.sympify(conc)
             if species[index].isSetInitialAmount() and not math.isnan(
                     amounts[index]):
