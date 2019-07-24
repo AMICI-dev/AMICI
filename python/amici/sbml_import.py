@@ -75,6 +75,9 @@ class SbmlImporter:
 
         fluxVector: reaction kinetic laws @type sympy.Matrix
 
+        local_symbols: model symbols for sympy to consider during sympification
+        see `locals`argument in `sympy.sympify` @type dict
+
     """
 
     def __init__(
@@ -124,6 +127,8 @@ class SbmlImporter:
         # Long and short names for model components
         self.symbols = dict()
         self.reset_symbols()
+
+        self.local_symbols = {}
 
     def process_document(self):
         """Validate and simplify document.
@@ -273,6 +278,7 @@ class SbmlImporter:
             constantParameters = []
 
         self.checkSupport()
+        self._gather_locals()
         self.processParameters(constantParameters)
         self.processSpecies()
         self.processReactions()
@@ -320,6 +326,25 @@ class SbmlImporter:
             raise SBMLException('Non-unity stoichiometry is'
                                 ' currently not supported!')
 
+    def _gather_locals(self):
+        """Populate self.local_symbols with all model entities.
+
+        This is later used during sympifications to avoid sympy builtins
+        shadowing model entities.
+
+        Arguments:
+
+        Returns:
+
+        Raises:
+
+        """
+        for s in self.sbml.getListOfSpecies():
+            self.local_symbols[s.getId()] = sp.Symbol(s.getId())
+
+        for p in self.sbml.getListOfParameters():
+            self.local_symbols[p.getId()] = sp.Symbol(p.getId())
+
     def processSpecies(self):
         """Get species information from SBML model.
 
@@ -363,9 +388,11 @@ class SbmlImporter:
         amounts = [spec.getInitialAmount() for spec in species]
 
         def getSpeciesInitial(index, conc):
-            if not math.isnan(conc):
+            if not (self.speciesHasOnlySubstanceUnits[index] or math.isnan(
+                    conc) or not species[index].isSetInitialConcentration()):
                 return sp.sympify(conc)
-            if not math.isnan(amounts[index]):
+            if species[index].isSetInitialAmount() and not math.isnan(
+                    amounts[index]):
                 return \
                     sp.sympify(amounts[index]) / self.speciesCompartment[index]
             return self.symbols['species']['identifier'][index]
@@ -382,7 +409,8 @@ class SbmlImporter:
                         initial_assignment.getId()
                     )
                 symMath = sp.sympify(
-                    sbml.formulaToL3String(initial_assignment.getMath())
+                    sbml.formulaToL3String(initial_assignment.getMath()),
+                    locals=self.local_symbols
                 )
                 if symMath is not None:
                     symMath = _parse_special_functions(symMath)
@@ -527,7 +555,8 @@ class SbmlImporter:
                         initial_assignment.getId()
                     )
                 self.compartmentVolume[index] = sp.sympify(
-                    sbml.formulaToL3String(initial_assignment.getMath())
+                    sbml.formulaToL3String(initial_assignment.getMath()),
+                    locals=self.local_symbols
                 )
 
         for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
@@ -568,7 +597,8 @@ class SbmlImporter:
             assignment = self.sbml.getInitialAssignment(
                 element_id
             )
-            sym = sp.sympify(sbml.formulaToL3String(assignment.getMath()))
+            sym = sp.sympify(sbml.formulaToL3String(assignment.getMath()),
+                             locals=self.local_symbols)
             # this is an initial assignment so we need to use
             # initial conditions
             if sym is not None:
@@ -629,7 +659,7 @@ class SbmlImporter:
             # symbol
             math = sbml.formulaToL3String(reaction.getKineticLaw().getMath())
             try:
-                symMath = sp.sympify(math)
+                symMath = sp.sympify(math, locals=self.local_symbols)
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
@@ -641,7 +671,8 @@ class SbmlImporter:
                 for element in elements:
                     if element.isSetId() & element.isSetStoichiometry():
                         symMath = symMath.subs(
-                            sp.sympify(element.getId()),
+                            sp.sympify(element.getId(),
+                                       locals=self.local_symbols),
                             sp.sympify(element.getStoichiometry())
                         )
 
@@ -667,7 +698,7 @@ class SbmlImporter:
         """
         rules = self.sbml.getListOfRules()
 
-        rulevars = getRuleVars(rules)
+        rulevars = getRuleVars(rules, local_symbols=self.local_symbols)
         fluxvars = self.fluxVector.free_symbols
         specvars = self.symbols['species']['identifier'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
@@ -682,9 +713,11 @@ class SbmlImporter:
         for rule in rules:
             if rule.getFormula() == '':
                 continue
-            variable = sp.sympify(rule.getVariable())
+            variable = sp.sympify(rule.getVariable(),
+                                  locals=self.local_symbols)
             # avoid incorrect parsing of pow(x, -1) in symengine
-            formula = sp.sympify(sbml.formulaToL3String(rule.getMath()))
+            formula = sp.sympify(sbml.formulaToL3String(rule.getMath()),
+                                 locals=self.local_symbols)
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
 
@@ -719,7 +752,8 @@ class SbmlImporter:
             if variable in rulevars:
                 for nested_rule in rules:
                     nested_formula = sp.sympify(
-                        sbml.formulaToL3String(nested_rule.getMath()))
+                        sbml.formulaToL3String(nested_rule.getMath()),
+                        locals=self.local_symbols)
                     nested_formula = \
                         nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
@@ -731,7 +765,7 @@ class SbmlImporter:
         # rules
         for variable in assignments.keys():
             self.replaceInAllExpressions(
-                sp.sympify(variable),
+                sp.sympify(variable, locals=self.local_symbols),
                 assignments[variable]
             )
 
@@ -839,7 +873,8 @@ class SbmlImporter:
                     observables[observable]['formula'] = repl
 
             observableValues = sp.Matrix([
-                sp.sympify(observables[observable]['formula'])
+                sp.sympify(observables[observable]['formula'],
+                           locals=self.local_symbols)
                 for observable in observables
             ])
             observableNames = [
@@ -992,11 +1027,12 @@ class SbmlImporter:
                 )
 
 
-def getRuleVars(rules):
+def getRuleVars(rules, local_symbols=None):
     """Extract free symbols in SBML rule formulas.
 
     Arguments:
         rules: sbml definitions of rules @type list
+        local_symbols: locals to pass to sympy.sympify
 
     Returns:
     Tuple of free symbolic variables in the formulas all provided rules
@@ -1005,8 +1041,9 @@ def getRuleVars(rules):
 
     """
     return sp.Matrix(
-        [sp.sympify(sbml.formulaToL3String(rule.getMath())) for rule in rules
-         if rule.getFormula() != '']
+        [sp.sympify(sbml.formulaToL3String(rule.getMath()),
+                    locals=local_symbols)
+         for rule in rules if rule.getFormula() != '']
     ).free_symbols
 
 

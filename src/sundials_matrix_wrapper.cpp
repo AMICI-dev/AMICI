@@ -88,6 +88,8 @@ SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept {
 }
 
 SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
+    if(&other == this)
+        return *this;
     return *this = SUNMatrixWrapper(other);
 }
 
@@ -151,8 +153,7 @@ sunindextype *SUNMatrixWrapper::indexptrs() const {
 int SUNMatrixWrapper::sparsetype() const {
     if (SUNMatGetID(matrix) == SUNMATRIX_SPARSE)
         return SM_SPARSETYPE_S(matrix);
-    else
-        throw std::domain_error("Function only available for sparse matrices");
+    throw std::domain_error("Function only available for sparse matrices");
 }
 
 void SUNMatrixWrapper::reset() {
@@ -160,7 +161,7 @@ void SUNMatrixWrapper::reset() {
         SUNMatZero(matrix);
 }
 
-void SUNMatrixWrapper::multiply(N_Vector c, const N_Vector b) const {
+void SUNMatrixWrapper::multiply(N_Vector c, const_N_Vector b) const {
     multiply(gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),
              gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)));
 }

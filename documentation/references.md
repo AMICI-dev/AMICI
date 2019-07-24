@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 27.
+List of publications using AMICI. Total number is 28.
 
 <h1 id="section" class="unnumbered">2019</h1>
 <div id="refs" class="references">
@@ -9,6 +9,9 @@ List of publications using AMICI. Total number is 27.
 </div>
 <div id="ref-GreggSar2019">
 <p>Gregg, Robert W, Saumendra N Sarkar, and Jason E Shoemaker. 2019. “Mathematical Modeling of the cGAS Pathway Reveals Robustness of Dna Sensing to Trex1 Feedback.” <em>Journal of Theoretical Biology</em> 462 (February): 148–57. <a href="https://doi.org/10.1016/j.jtbi.2018.11.001" class="uri">https://doi.org/10.1016/j.jtbi.2018.11.001</a>.</p>
+</div>
+<div id="ref-10.1007/978-3-030-18174-1_14">
+<p>Nousiainen, Kari, Jukka Intosalmi, and Harri Lähdesmäki. 2019. “A Mathematical Model for Enhancer Activation Kinetics During Cell Differentiation.” In <em>Algorithms for Computational Biology</em>, edited by Ian Holmes, Carlos Martín-Vide, and Miguel A. Vega-Rodríguez, 191–202. Cham: Springer International Publishing.</p>
 </div>
 <div id="ref-PittBan2019">
 <p>Pitt, Jake Alan, and Julio R Banga. 2019. “Parameter Estimation in Models of Biological Oscillators: An Automated Regularised Estimation Approach.” <em>BMC Bioinformatics</em> 20 (1): 82. <a href="https://doi.org/10.1186/s12859-019-2630-y" class="uri">https://doi.org/10.1186/s12859-019-2630-y</a>.</p>

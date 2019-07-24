@@ -48,7 +48,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     checkEqualArray(r.sigmay, s.sigmay, 1e-16, 1e-16, "sigmay");
     checkEqualArray(r.sy, s.sy, 1e-16, 1e-16, "sy");
     checkEqualArray(r.ssigmay, s.ssigmay, 1e-16, 1e-16, "ssigmay");
-
+    
     CHECK_TRUE(r.numsteps == s.numsteps);
     CHECK_TRUE(r.numstepsB == s.numstepsB);
     CHECK_TRUE(r.numrhsevals == s.numrhsevals);
@@ -58,6 +58,9 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.numnonlinsolvconvfails == s.numnonlinsolvconvfails);
     CHECK_TRUE(r.numnonlinsolvconvfailsB == s.numnonlinsolvconvfailsB);
     CHECK_TRUE(r.order == s.order);
+    CHECK_TRUE(r.cpu_time == s.cpu_time);
+    CHECK_TRUE(r.cpu_timeB == s.cpu_timeB);
+    CHECK_TRUE(r.newton_cpu_time == s.newton_cpu_time);
 
     CHECK_TRUE(r.newton_status == s.newton_status);
     CHECK_TRUE(r.newton_numsteps == s.newton_numsteps);
@@ -158,7 +161,7 @@ TEST(dataSerialization, testString) {
                                             std::vector<realtype>(nx,0.0),
                                             std::vector<int>(nz,0));
 
-    amici::ReturnData r(solver, &m);
+    amici::ReturnData r(solver, m);
 
     std::string serialized = amici::serializeToString(r);
 
@@ -182,7 +185,3 @@ TEST(dataSerialization, testStdVec) {
 
     CHECK_TRUE(solver == v);
 }
-
-
-
-

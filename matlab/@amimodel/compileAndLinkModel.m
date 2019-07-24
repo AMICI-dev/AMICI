@@ -61,8 +61,9 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     %% Third party libraries
     dependencyPath = fullfile(amiciRootPath, 'ThirdParty');
+    gslPath = fullfile(dependencyPath, 'gsl');
     [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, objectFolder, objectFileSuffix, COPT, DEBUG);
-    includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"', ' -I"', dependencyPath, '/gsl/"');
+    includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"', ' -I"', gslPath, '"');
 
     %% Recompile AMICI base files if necessary
     [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT);
@@ -179,12 +180,13 @@ function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, object
     % generate hash for file and append debug string if we have an md5
     % file, check this hash against the contained hash
     cppsrc = {'amici', 'symbolic_functions','spline', ...
-        'edata','rdata', ...
+        'edata','rdata', 'exception', ...
         'interface_matlab', 'misc', ...
         'solver', 'solver_cvodes', 'solver_idas', ...
         'model', 'model_ode', 'model_dae', 'returndata_matlab', ...
         'forwardproblem', 'steadystateproblem', 'backwardproblem', 'newton_solver', ...
-        'abstract_model', 'sundials_matrix_wrapper', 'sundials_linsol_wrapper'
+        'abstract_model', 'sundials_matrix_wrapper', 'sundials_linsol_wrapper', ...
+        'vector'
     };
     % to be safe, recompile everything if headers have changed. otherwise
     % would need to check the full include hierarchy

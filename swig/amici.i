@@ -30,6 +30,7 @@ import_array();
 %template(IntVector) std::vector<int>;
 %template(BoolVector) std::vector<bool>;
 %template(StringVector) std::vector<std::string>;
+%template(StringDoubleMap) std::map<std::string, double>;
 
 // Let numpy access std::vector
 %{

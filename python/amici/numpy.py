@@ -154,12 +154,12 @@ class ReturnDataView(SwigPtrView):
         'ts', 'x', 'x0', 'x_ss', 'sx', 'sx0', 'sx_ss', 'y', 'sigmay',
         'sy', 'ssigmay', 'z', 'rz', 'sigmaz', 'sz', 'srz',
         'ssigmaz', 'sllh', 's2llh', 'J', 'xdot', 'status', 'llh',
-        'chi2', 'res', 'sres', 'FIM', 'wrms_steadystate',
-        't_steadystate', 'newton_numlinsteps', 'newton_numsteps',
+        'chi2', 'res', 'sres', 'FIM', 'wrms_steadystate', 't_steadystate',
+        'newton_numlinsteps', 'newton_numsteps', 'newton_cpu_time',
         'numsteps', 'numrhsevals', 'numerrtestfails',
-        'numnonlinsolvconvfails', 'order', 'numstepsB',
-        'numrhsevalsB', 'numerrtestfailsB',
-        'numnonlinsolvconvfailsB'
+        'numnonlinsolvconvfails', 'order', 'cpu_time',
+        'numstepsB','numrhsevalsB', 'numerrtestfailsB',
+        'numnonlinsolvconvfailsB', 'cpu_timeB'
     ]
 
     def __init__(self, rdata):

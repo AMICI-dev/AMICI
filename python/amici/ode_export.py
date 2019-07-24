@@ -2451,7 +2451,8 @@ class ODEExporter:
                            + '_rowvals.cpp ')
 
         templateData = {'MODELNAME': self.modelName,
-                        'SOURCES': '\n'.join(sources)}
+                        'SOURCES': '\n'.join(sources),
+                        'AMICI_VERSION': __version__}
         applyTemplate(
             MODEL_CMAKE_TEMPLATE_FILE,
             os.path.join(self.modelPath, 'CMakeLists.txt'),
@@ -2495,7 +2496,8 @@ class ODEExporter:
                         'PACKAGE_VERSION': '0.1.0'}
         applyTemplate(os.path.join(amiciModulePath, 'setup.template.py'),
                       os.path.join(self.modelPath, 'setup.py'), templateData)
-
+        applyTemplate(os.path.join(amiciModulePath, 'MANIFEST.template.in'),
+                      os.path.join(self.modelPath, 'MANIFEST.in'), {})
         # write __init__.py for the model module
         if not os.path.exists(os.path.join(self.modelPath, self.modelName)):
             os.makedirs(os.path.join(self.modelPath, self.modelName))

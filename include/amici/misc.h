@@ -8,53 +8,46 @@
 #include <vector>
 #include <memory>
 
+#include <gsl/gsl-lite.hpp>
+
 namespace amici {
+    
+/**
+ * @brief creates a slice from existing data
+ *
+ * @param data to be sliced
+ * @param index slice index
+ * @param size slice size
+ * @return span of the slice
+ */
+ 
+ gsl::span<realtype> slice(std::vector<realtype> &data, const int index,
+                           const unsigned size);
 
-/** Checks the values in an array for NaNs and Infs
+/**
+ * @brief Checks the values in an array for NaNs and Infs
  *
  * @param array array
  * @param fun name of calling function
  * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
  */
-int checkFinite(std::vector <realtype> const& array, const char* fun);
-
-/** Checks the values in an array for NaNs and Infs
- *
- * @param N number of elements in array
- * @param array array
- * @param fun name of calling function
- * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
- */
-int checkFinite(const int N, const realtype *array, const char* fun);
+int checkFinite(gsl::span<const realtype> array, const char* fun);
 
 
 /**
   * @brief Remove parameter scaling according to the parameter scaling in pscale
   *
+  * All vectors must be of same length.
+  *
   * @param bufferScaled scaled parameters
   * @param pscale parameter scaling
-  * @param n number of elements in bufferScaled, pscale and bufferUnscaled
   * @param bufferUnscaled unscaled parameters are written to the array
   *
   * @return status flag indicating success of execution @type int
   */
-void unscaleParameters(const double *bufferScaled,
-                       const ParameterScaling *pscale,
-                       int n,
-                       double *bufferUnscaled);
-
-/**
-  * @brief Remove parameter scaling according to the parameter scaling in pscale.
-  *
-  * All vectors must be of same length
-  *
-  * @param bufferScaled scaled parameters
-  * @param pscale parameter scaling
-  * @param bufferUnscaled unscaled parameters are written to the array
-  */
-void unscaleParameters(std::vector<double> const& bufferScaled,
-                       std::vector<ParameterScaling> const& pscale,
-                       std::vector<double> & bufferUnscaled);
+void unscaleParameters(gsl::span<const realtype> bufferScaled,
+                       gsl::span<const ParameterScaling> pscale,
+                       gsl::span<realtype> bufferUnscaled);
 
 /**
   * @brief Remove parameter scaling according to `scaling`
@@ -82,9 +75,17 @@ double getScaledParameter(double unscaledParameter, ParameterScaling scaling);
  * @param pscale parameter scaling
  * @param bufferScaled destination
  */
-void scaleParameters(const std::vector<double> &bufferUnscaled,
-                     const std::vector<ParameterScaling> &pscale,
-                     std::vector<double> &bufferScaled);
+void scaleParameters(gsl::span<const realtype> bufferUnscaled,
+                     gsl::span<const ParameterScaling> pscale,
+                     gsl::span<realtype> bufferScaled);
+
+/**
+ * @brief Returns the current backtrace as std::string
+ * @param maxFrames Number of frames to include
+ * @return Backtrace
+ */
+std::string backtraceString(int maxFrames);
+
 
 } // namespace amici
 

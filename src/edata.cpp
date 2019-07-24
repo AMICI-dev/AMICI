@@ -11,8 +11,6 @@
 
 namespace amici {
 
-ExpData::ExpData() : nytrue_(0), nztrue_(0), nmaxevent_(0) {}
-
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
     : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent)
 {
@@ -344,12 +342,12 @@ void ConditionContext::applyCondition(const ExpData *edata)
 {
     if(!edata)
         return;
-    
+
     // this needs to go first, otherwise nplist will not have the right
     // dimension for all other fields that depend on Model::nplist
     if(!edata->plist.empty())
         model->setParameterList(edata->plist);
-    
+
     // this needs to go second as setParameterScale will reset sx0
     if(!edata->pscale.empty()) {
         if(edata->pscale.size() != (unsigned) model->np())
@@ -357,9 +355,9 @@ void ConditionContext::applyCondition(const ExpData *edata)
                                " match ExpData (%zd).",
                                model->np(), edata->pscale.size());
         model->setParameterScale(edata->pscale);
-        
+
     }
-    
+
     if(!edata->x0.empty()) {
         if(edata->x0.size() != (unsigned) model->nx_rdata)
             throw AmiException("Number of initial conditions (%d) in model does"
@@ -367,7 +365,7 @@ void ConditionContext::applyCondition(const ExpData *edata)
                                model->nx_rdata, edata->x0.size());
         model->setInitialStates(edata->x0);
     }
-    
+
     if(!edata->sx0.empty()) {
         if(edata->sx0.size() != (unsigned) model->nx_rdata * model->nplist())
             throw AmiException("Number of initial conditions sensitivities (%d)"
@@ -376,7 +374,7 @@ void ConditionContext::applyCondition(const ExpData *edata)
                                edata->sx0.size());
         model->setInitialStateSensitivities(edata->sx0);
     }
-    
+
     if(!edata->parameters.empty()) {
         if(edata->parameters.size() != (unsigned) model->np())
             throw AmiException("Number of parameters (%d) in model does not"
@@ -384,7 +382,7 @@ void ConditionContext::applyCondition(const ExpData *edata)
                                model->np(), edata->parameters.size());
         model->setParameters(edata->parameters);
     }
-    
+
     if(!edata->fixedParameters.empty()) {
         // fixed parameter in model are superseded by those provided in edata
         if(edata->fixedParameters.size() != (unsigned) model->nk())
@@ -411,7 +409,7 @@ void ConditionContext::restore()
     model->setParameters(originalParameters);
     model->setFixedParameters(originalFixedParameters);
     model->setTimepoints(originalTimepoints);
-    
+
 }
 
 

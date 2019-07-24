@@ -17,6 +17,17 @@ Online documentation is available as [github-pages](http://icb-dcm.github.io/AMI
 
 [Full list](documentation/references.md)
 
+## Interfaces & workflow
+
+The AMICI workflow starts with importing a model from either
+[SBML](http://sbml.org/) (Matlab, Python) or a Matlab definition of the
+model (Matlab-only). From this input, all equations for model simulation
+are derived symbolically and C++ code is generated. This code is then
+compiled into a C++ library, a Python module, or a Matab mex file and 
+is then used for model simulation. 
+
+![AMICI workflow](documentation/gfx/amici_workflow.png)
+
 ## Current build status
 
 [![PyPI version](https://badge.fury.io/py/amici.svg)](https://badge.fury.io/py/amici)

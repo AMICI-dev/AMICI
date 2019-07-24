@@ -55,6 +55,7 @@ matrix:
             - hdf5
             - swig
             - gcc
+          update: true
       before_install:
         - travis_wait brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
@@ -76,6 +77,7 @@ matrix:
             - doxygen
             - ragel
             - graphviz
+          update: true
       before_install:
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
@@ -113,7 +115,7 @@ script:
     - if [[ "$CI_MODE" == "test" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests ./tests/testCMakeCompilation.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cmake ./tests/testCMakeCompilation.sh; fi
     - if [[ "$CI_MODE" == "deploy" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
