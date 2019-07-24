@@ -9,7 +9,7 @@ matrix:
   fast_finish: true
   include:
     - os: linux
-      dist: xenial
+      dist: bionic
       language: python
       python: 3.7
       compiler: gcc
@@ -44,7 +44,7 @@ matrix:
           tags: true
 
     - os: osx
-      osx_image: xcode10.1
+      osx_image: xcode11
       language: minimal
       compiler: clang
       env:
@@ -64,7 +64,7 @@ matrix:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
 
     - os: osx
-      osx_image: xcode10.1
+      osx_image: xcode11
       language: minimal
       compiler: clang
       env:
