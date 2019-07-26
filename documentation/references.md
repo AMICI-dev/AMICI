@@ -7,6 +7,9 @@ List of publications using AMICI. Total number is 32.
 <div id="ref-DharmarajanKal2019">
 <p>Dharmarajan, Lekshmi, Hans-Michael Kaltenbach, Fabian Rudolf, and Joerg Stelling. 2019. “A Simple and Flexible Computational Framework for Inferring Sources of Heterogeneity from Single-Cell Dynamics.” <em>Cell Systems</em> 8 (1): 15–26.e11. <a href="https://doi.org/10.1016/j.cels.2018.12.007">https://doi.org/10.1016/j.cels.2018.12.007</a>.</p>
 </div>
+<div id="ref-FischerFie2017">
+<p>Fischer, David S., Anna K. Fiedler, Eric Kernfeld, Ryan M. J. Genga, Aimée Bastidas-Ponce, Mostafa Bakhti, Heiko Lickert, Jan Hasenauer, Rene Maehr, and Fabian J. Theis. 2019. “Article | Published: 01 April 2019 Inferring Population Dynamics from Single-Cell Rna-Sequencing Time Series Data.” <em>Nature Biotechnology</em> 37: 461–68. <a href="https://doi.org/10.1038/s41587-019-0088-0">https://doi.org/10.1038/s41587-019-0088-0</a>.</p>
+</div>
 <div id="ref-GreggSar2019">
 <p>Gregg, Robert W, Saumendra N Sarkar, and Jason E Shoemaker. 2019. “Mathematical Modeling of the cGAS Pathway Reveals Robustness of Dna Sensing to Trex1 Feedback.” <em>Journal of Theoretical Biology</em> 462 (February): 148–57. <a href="https://doi.org/10.1016/j.jtbi.2018.11.001">https://doi.org/10.1016/j.jtbi.2018.11.001</a>.</p>
 </div>
@@ -66,9 +69,6 @@ List of publications using AMICI. Total number is 32.
 <div id="refs" class="references" role="doc-bibliography">
 <div id="ref-BallnusHug2017">
 <p>Ballnus, B., S. Hug, K. Hatz, L. Görlitz, J. Hasenauer, and F. J. Theis. 2017. “Comprehensive Benchmarking of Markov Chain Monte Carlo Methods for Dynamical Systems.” <em>BMC Syst. Biol.</em> 11 (63). <a href="https://doi.org/10.1186/s12918-017-0433-1">https://doi.org/10.1186/s12918-017-0433-1</a>.</p>
-</div>
-<div id="ref-FischerFie2017">
-<p>Fischer, David S., Anna K. Fiedler, Eric Kernfeld, Ryan M. J. Genga, Jan Hasenauer, Rene Maehr, and Fabian J. Theis. 2017. “Beyond Pseudotime: Following T-Cell Maturation in Single-Cell RNAseq Time Series.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/219188">https://doi.org/10.1101/219188</a>.</p>
 </div>
 <div id="ref-FroehlichKes2017">
 <p>Fröhlich, Fabian, Thomas Kessler, Daniel Weindl, Alexey Shadrin, Leonard Schmiester, Hendrik Hache, Artur Muradyan, et al. 2017. “Efficient Parameterization of Large-Scale Mechanistic Models Enables Drug Response Prediction for Cancer Cell Lines.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/174094">https://doi.org/10.1101/174094</a>.</p>
