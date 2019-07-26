@@ -47,6 +47,8 @@ You can now import it as python module:
 
     import amici
 
+For cases where this installation fails, check below for special setups
+and custom installations.
 For Python-AMICI usage see 
 [https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md](https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md).
 
@@ -180,6 +182,21 @@ Possible sources of errors:
   AMICI module itself).
   [DependencyWalker](http://www.dependencywalker.com/) will show you
   which ones.
+
+### Custom installation
+
+AMICI Python package installation can be customized using a number of
+environment variables:
+
+|Variable | Purpose | Example |
+|---|---|---|
+|`CC`| Setting the C(++) compiler | `CC=/usr/bin/g++`| 
+|`CFLAGS`| Extra compiler flags used in every compiler call | | 
+|`BLAS_CFLAGS`| Compiler flags for, e.g. BLAS include directories | | 
+|`BLAS_LIBS`| Flags for linking BLAS | | 
+|`ENABLE_GCOV_COVERAGE`| Set to build AMICI to provide code coverage information | `ENABLE_GCOV_COVERAGE=TRUE`| 
+|`ENABLE_AMICI_DEBUGGING`| Set to build AMICI with debugging symbols | `ENABLE_AMICI_DEBUGGING=TRUE`| 
+|`AMICI_PARALLEL_COMPILE`| Set to the number of parallel processes to be used for C(++) file compilation (defaults to 1)| `AMICI_PARALLEL_COMPILE=4`|
 
 
 <a name="matlab"></a>
