@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Create AMICI publication list by year"""
+"""Create AMICI publication list by year
+    For macOS with clang: download and install biblib-simple to avoid compiler issues
+    Requires pandoc"""
 
 import biblib.bib
 import biblib.messages
@@ -52,7 +54,7 @@ def main():
     num_total = sum(map(len, by_year.values()))
     with open(outfile, 'w') as f:
         f.write('# References\n\n')
-        f.write('List of peer-reviewed publications using AMICI. '
+        f.write('List of publications using AMICI. '
                 f'Total number is {num_total}.\n\n')
         for year in reversed(sorted(by_year.keys())):
             cur_bib = get_sub_bibliography(year, by_year)
