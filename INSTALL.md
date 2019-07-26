@@ -219,6 +219,11 @@ To use AMICI from C++, run the
 
 script to compile AMICI library.
 
+**NOTE**: On some systems, the CMake executable may be named something
+other than `cmake`. In this case, set the `CMAKE` environment variable
+to the correct name (e.g. `export CMAKE=cmake3`, in case you have CMake
+available as `cmake3`).
+
 The static library file can then be linked from
 
     ./build/libamici.a
