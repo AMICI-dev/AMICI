@@ -35,15 +35,7 @@ def getBlasConfig():
                   'extra_link_args': []
                   }
 
-    if platform.system() in ['Linux', 'Darwin']:
-        blaspkgcfg['libraries'] = ['cblas']
-
-    if pkgconfig:
-        if pkgconfig.exists('cblas'):
-            blaspkgcfg = pkgconfig.parse('cblas')
-            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
-            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
-
+    # Check environment variables
     if 'BLAS_CFLAGS' in os.environ:
         blaspkgcfg['extra_compile_args'].extend(
             shlex.split(os.environ['BLAS_CFLAGS'])
@@ -53,6 +45,20 @@ def getBlasConfig():
         blaspkgcfg['extra_link_args'].extend(
             shlex.split(os.environ['BLAS_LIBS'])
         )
+
+    if 'BLAS_CFLAGS' in os.environ or 'BLAS_LIBS' in os.environ:
+        # If options have been provided by the user, we don't try to detect
+        # anything by ourselves
+        return blaspkgcfg
+
+    # Try pkgconfig
+    if pkgconfig:
+        if pkgconfig.exists('cblas'):
+            blaspkgcfg = pkgconfig.parse('cblas')
+            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
+            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
+
+            return blaspkgcfg
 
     return blaspkgcfg
 
