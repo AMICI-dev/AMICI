@@ -1,13 +1,5 @@
-%% This BibTeX bibliography file was created using BibDesk.
-%% http://bibdesk.sourceforge.net/
+% Encoding: UTF-8
 
-%% Created for Paul Stapor at 2019-07-26 12:14:33 +0200 
-
-
-%% Saved with string encoding Unicode (UTF-8) 
-
-
-@comment{jabref-meta: databaseType:bibtex;}
 
 
 
@@ -121,21 +113,22 @@ Supplementary information: Supplementary data are available at Bioinformatics on
 	Year = {2016},
 	Bdsk-Url-1 = {https://doi.org/10.1186/s12918-016-0319-7}}
 
-@article{FischerFie2017,
-	Abstract = {Cellular development has traditionally been described as a series of transitions between discrete cell states, such as the sequence of double negative, double positive and single positive stages in T-cell development. Recent advances in single cell transcriptomics suggest an alternative description of development, in which cells follow continuous transcriptomic trajectories. A cell{\textquoteright}s state along such a trajectory can be captured with pseudotemporal ordering, which however is not able to predict development of the system in real time. We present pseudodynamics, a mathematical framework that integrates time-series and genetic knock-out information with such transcriptome-based descriptions in order to describe and analyze the real-time evolution of the system. Pseudodynamics models the distribution of a cell population across a continuous cell state coordinate over time based on a stochastic differential equation along developmental trajectories and random switching between trajectories in branching regions. To illustrate feasibility, we use pseudodynamics to estimate cell-state-dependent growth and differentiation of thymic T-cell development. The model approximates a developmental potential function (Waddington{\textquoteright}s landscape) and suggests that thymic T-cell development is biphasic and not strictly deterministic before beta-selection. Pseudodynamics generalizes classical discrete population models to continuous states and thus opens possibilities such as probabilistic model selection to single cell genomics.},
-	Author = {Fischer, David S. and Fiedler, Anna K. and Kernfeld, Eric and Genga, Ryan M. J. and Bastidas-Ponce, Aim\'ee and Bakhti, Mostafa and Lickert, Heiko and Hasenauer, Jan and Maehr, Rene and Theis, Fabian J.},
-	Date-Added = {2019-03-19 23:04:09 +0100},
-	Date-Modified = {2019-07-26 12:14:33 +0200},
-	Doi = {10.1038/s41587-019-0088-0},
-	Journal = {Nature Biotechnology},
-	Keywords = {pseudo time; single-cell RNA-seq; PDE},
-	Pages = {461--468},
-	Title = {Article | Published: 01 April 2019 Inferring population dynamics from single-cell RNA-sequencing time series data},
-	Url = {https://www.nature.com/articles/s41587-019-0088-0},
-	Volume = {37},
-	Year = {2019},
-	Bdsk-Url-1 = {https://www.biorxiv.org/content/early/2017/11/14/219188},
-	Bdsk-Url-2 = {https://doi.org/10.1101/219188}}
+@Article{FischerFie2017,
+  author        = {Fischer, David S. and Fiedler, Anna K. and Kernfeld, Eric and Genga, Ryan M. J. and Bastidas-Ponce, Aim\'ee and Bakhti, Mostafa and Lickert, Heiko and Hasenauer, Jan and Maehr, Rene and Theis, Fabian J.},
+  title         = {Inferring population dynamics from single-cell RNA-sequencing time series data},
+  journal       = {Nature Biotechnology},
+  year          = {2019},
+  volume        = {37},
+  pages         = {461--468},
+  abstract      = {Cellular development has traditionally been described as a series of transitions between discrete cell states, such as the sequence of double negative, double positive and single positive stages in T-cell development. Recent advances in single cell transcriptomics suggest an alternative description of development, in which cells follow continuous transcriptomic trajectories. A cell{\textquoteright}s state along such a trajectory can be captured with pseudotemporal ordering, which however is not able to predict development of the system in real time. We present pseudodynamics, a mathematical framework that integrates time-series and genetic knock-out information with such transcriptome-based descriptions in order to describe and analyze the real-time evolution of the system. Pseudodynamics models the distribution of a cell population across a continuous cell state coordinate over time based on a stochastic differential equation along developmental trajectories and random switching between trajectories in branching regions. To illustrate feasibility, we use pseudodynamics to estimate cell-state-dependent growth and differentiation of thymic T-cell development. The model approximates a developmental potential function (Waddington{\textquoteright}s landscape) and suggests that thymic T-cell development is biphasic and not strictly deterministic before beta-selection. Pseudodynamics generalizes classical discrete population models to continuous states and thus opens possibilities such as probabilistic model selection to single cell genomics.},
+  bdsk-url-1    = {https://www.biorxiv.org/content/early/2017/11/14/219188},
+  bdsk-url-2    = {https://doi.org/10.1101/219188},
+  date-added    = {2019-03-19 23:04:09 +0100},
+  date-modified = {2019-07-26 12:14:33 +0200},
+  doi           = {10.1038/s41587-019-0088-0},
+  keywords      = {pseudo time; single-cell RNA-seq; PDE},
+  url           = {https://www.nature.com/articles/s41587-019-0088-0},
+}
 
 @article{FroehlichKal2017,
 	Author = {Fr\"ohlich, F. and Kaltenbacher, B. and Theis, F. J. and Hasenauer, J.},
@@ -391,22 +384,6 @@ Supplementary information: Supplementary data are available at Bioinformatics on
 	Year = {2019},
 	Bdsk-Url-1 = {https://doi.org/10.1016/j.cels.2018.12.007}}
 
-@article{SchmiesterSch2019,
-	Abstract = {Motivation: Mechanistic models of biochemical reaction networks facilitate the quantitative understanding of biological processes and the integration of heterogeneous datasets. However, some biological processes require the consideration of comprehensive reaction networks and therefore large-scale models. Parameter estimation for such models poses great challenges, in particular when the data are on a relative scale. Results: Here, we propose a novel hierarchical approach combining (i) the efficient analytic evaluation of optimal scaling, offset, and error model parameters with (ii) the scalable evaluation of objective function gradients using adjoint sensitivity analysis. We evaluate the properties of the methods by parameterizing a pan-cancer ordinary differential equation model (\&gt;1000 state variables, \&gt;4000 parameters) using relative protein, phospho-protein and viability measurements. The hierarchical formulation improves optimizer performance considerably. Furthermore, we show that this approach allows estimating error model parameters with negligible computational overhead when no experimental estimates are available, providing an unbiased way to weight heterogeneous data. Overall, our hierarchical formulation is applicable to a wide range of models, and allows for the efficient parameterization of large-scale models based on heterogeneous relative measurements.},
-	Author = {Schmiester, Leonard and Schaelte, Yannik and Froehlich, Fabian and Hasenauer, Jan and Weindl, Daniel},
-	Date-Modified = {2019-07-26 09:05:47 +0200},
-	Doi = {10.1101/579045},
-	Elocation-Id = {579045},
-	Eprint = {https://www.biorxiv.org/content/early/2019/03/16/579045.full.pdf},
-	Journal = {accepted for publication in Bioinformatics},
-	Keywords = {large-scale, parameter estimation, scaling, hierarchical optimization, adjoint sensitivity},
-	Publisher = {Cold Spring Harbor Laboratory},
-	Title = {Efficient parameterization of large-scale dynamic models based on relative measurements},
-	Url = {https://www.biorxiv.org/content/early/2019/03/16/579045},
-	Year = {2019},
-	Bdsk-Url-1 = {https://www.biorxiv.org/content/early/2019/03/16/579045},
-	Bdsk-Url-2 = {https://doi.org/10.1101/579045}}
-
 @article{GreggSar2019,
 	__Markedentry = {[dweindl:]},
 	Abstract = {Cyclic GMP-AMP synthase (cGAS) has recently been identified as the primary protein that detects cytosolic double stranded DNA to invoke a type I interferon response. The cGAS pathway is vital in the recognition of DNA encoded viruses as well as self-DNA leaked from the nucleus of damaged cells. Currently, the dynamics regulating the cGAS pathway are poorly understood; limiting our knowledge of how DNA-induced immune responses are regulated. Using systems biology approaches, we formulated a mathematical model to describe the dynamics of this pathway and examine the resulting system-level emergent properties. Unknown model parameters were fit to data compiled from literature using a Parallel Tempering Markov Chain Monte Carlo (PT-MCMC) approach, resulting in an ensemble of parameterized models. A local sensitivity analysis demonstrated that parameter sensitivity trends across model ensembles were independent of the select parameterization. An in-silico knock-down of TREX1 found that the interferon response is highly robust, showing that complete inhibition is necessary to induce chemical conditions consistent with chronic inflammation. Lastly, we demonstrate that the model recapitulates interferon expression data resulting from small molecule inhibition of cGAS. Overall, the importance of this model is exhibited in its capacity to identify sensitive components of the cGAS pathway, generate testable hypotheses, and confirm experimental observations.},
@@ -475,14 +452,30 @@ Supplementary information: Supplementary data are available at Bioinformatics on
 	Bdsk-Url-1 = {http://www.sciencedirect.com/science/article/pii/S0022247X18304414},
 	Bdsk-Url-2 = {https://doi.org/10.1016/j.jmaa.2018.05.048}}
 
-@inproceedings{10.1007/978-3-030-18174-1_14,
-	Abstract = {Cell differentiation and development are for a great part steered by cell type specific enhancers. Transcription factor (TF) binding to an enhancer together with DNA looping result in transcription initiation. In addition to binding motifs for TFs, enhancer regions typically contain specific histone modifications. This information has been used to detect enhancer regions and classify them into different subgroups. However, it is poorly understood how TF binding and histone modifications are causally connected and what kind of molecular dynamics steer the activation process.},
-	Address = {Cham},
-	Author = {Nousiainen, Kari and Intosalmi, Jukka and L{\"a}hdesm{\"a}ki, Harri},
-	Booktitle = {Algorithms for Computational Biology},
-	Editor = {Holmes, Ian and Mart{\'\i}n-Vide, Carlos and Vega-Rodr{\'\i}guez, Miguel A.},
-	Isbn = {978-3-030-18174-1},
-	Pages = {191--202},
-	Publisher = {Springer International Publishing},
-	Title = {A Mathematical Model for Enhancer Activation Kinetics During Cell Differentiation},
-	Year = {2019}}
+@InProceedings{NousiainenInt2019,
+  author    = {Nousiainen, Kari and Intosalmi, Jukka and L{\"a}hdesm{\"a}ki, Harri},
+  title     = {A Mathematical Model for Enhancer Activation Kinetics During Cell Differentiation},
+  booktitle = {Algorithms for Computational Biology},
+  year      = {2019},
+  editor    = {Holmes, Ian and Mart{\'\i}n-Vide, Carlos and Vega-Rodr{\'\i}guez, Miguel A.},
+  pages     = {191--202},
+  address   = {Cham},
+  publisher = {Springer International Publishing},
+  abstract  = {Cell differentiation and development are for a great part steered by cell type specific enhancers. Transcription factor (TF) binding to an enhancer together with DNA looping result in transcription initiation. In addition to binding motifs for TFs, enhancer regions typically contain specific histone modifications. This information has been used to detect enhancer regions and classify them into different subgroups. However, it is poorly understood how TF binding and histone modifications are causally connected and what kind of molecular dynamics steer the activation process.},
+  isbn      = {978-3-030-18174-1},
+}
+
+@Article{SchmiesterSch2019,
+  author   = {Schmiester, Leonard and Schälte, Yannik and Fröhlich, Fabian and Hasenauer, Jan and Weindl, Daniel},
+  title    = {{Efficient parameterization of large-scale dynamic models based on relative measurements}},
+  journal  = {Bioinformatics},
+  year     = {2019},
+  month    = {07},
+  issn     = {1367-4803},
+  abstract = {{Mechanistic models of biochemical reaction networks facilitate the quantitative understanding of biological processes and the integration of heterogeneous datasets. However, some biological processes require the consideration of comprehensive reaction networks and therefore large-scale models. Parameter estimation for such models poses great challenges, in particular when the data are on a relative scale.Here, we propose a novel hierarchical approach combining (i) the efficient analytic evaluation of optimal scaling, offset, and error model parameters with (ii) the scalable evaluation of objective function gradients using adjoint sensitivity analysis. We evaluate the properties of the methods by parameterizing a pan-cancer ordinary differential equation model (\\&gt;1000 state variables, \\&gt;4000 parameters) using relative protein, phospho-protein and viability measurements. The hierarchical formulation improves optimizer performance considerably. Furthermore, we show that this approach allows estimating error model parameters with negligible computational overhead when no experimental estimates are available, providing an unbiased way to weight heterogeneous data. Overall, our hierarchical formulation is applicable to a wide range of models, and allows for the efficient parameterization of large-scale models based on heterogeneous relative measurements.Supplementary information are available at Bioinformatics online. Supplementary code and data are available online at http://doi.org/10.5281/zenodo.3254429 and http://doi.org/10.5281/zenodo.3254441.}},
+  doi      = {10.1093/bioinformatics/btz581},
+  eprint   = {http://oup.prod.sis.lan/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btz581/29004243/btz581.pdf},
+  url      = {https://doi.org/10.1093/bioinformatics/btz581},
+}
+
+@Comment{jabref-meta: databaseType:bibtex;}
