@@ -1,23 +1,38 @@
 # References
 
-List of publications using AMICI. Total number is 28.
+List of publications using AMICI. Total number is 32.
 
 <h1 id="section" class="unnumbered">2019</h1>
 <div id="refs" class="references">
 <div id="ref-DharmarajanKal2019">
 <p>Dharmarajan, Lekshmi, Hans-Michael Kaltenbach, Fabian Rudolf, and Joerg Stelling. 2019. “A Simple and Flexible Computational Framework for Inferring Sources of Heterogeneity from Single-Cell Dynamics.” <em>Cell Systems</em> 8 (1). Elsevier: 15–26.e11. <a href="https://doi.org/10.1016/j.cels.2018.12.007" class="uri">https://doi.org/10.1016/j.cels.2018.12.007</a>.</p>
 </div>
+<div id="ref-FischerFie2017">
+<p>Fischer, David S., Anna K. Fiedler, Eric Kernfeld, Ryan M. J. Genga, Aimée Bastidas-Ponce, Mostafa Bakhti, Heiko Lickert, Jan Hasenauer, Rene Maehr, and Fabian J. Theis. 2019. “Inferring Population Dynamics from Single-Cell Rna-Sequencing Time Series Data.” <em>Nature Biotechnology</em> 37: 461–68. <a href="https://doi.org/10.1038/s41587-019-0088-0" class="uri">https://doi.org/10.1038/s41587-019-0088-0</a>.</p>
+</div>
 <div id="ref-GreggSar2019">
 <p>Gregg, Robert W, Saumendra N Sarkar, and Jason E Shoemaker. 2019. “Mathematical Modeling of the cGAS Pathway Reveals Robustness of Dna Sensing to Trex1 Feedback.” <em>Journal of Theoretical Biology</em> 462 (February): 148–57. <a href="https://doi.org/10.1016/j.jtbi.2018.11.001" class="uri">https://doi.org/10.1016/j.jtbi.2018.11.001</a>.</p>
 </div>
-<div id="ref-10.1007/978-3-030-18174-1_14">
+<div id="ref-KapferSta2019">
+<p>Kapfer, Eva-Maria, Paul Stapor, and Jan Hasenauer. 2019. “Challenges in the Calibration of Large-Scale Ordinary Differential Equation Models.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
+</div>
+<div id="ref-LinesPas2019">
+<p>Lines, Glenn Terje, Lukasz Paszkowski, Leonard Schmiester, Daniel Weindl, Paul Stapor, and Jan Hasenauer. 2019. “Efficient Computation of Steady States in Large-Scale Ode Models of Biochemical Reaction Networks.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
+</div>
+<div id="ref-NousiainenInt2019">
 <p>Nousiainen, Kari, Jukka Intosalmi, and Harri Lähdesmäki. 2019. “A Mathematical Model for Enhancer Activation Kinetics During Cell Differentiation.” In <em>Algorithms for Computational Biology</em>, edited by Ian Holmes, Carlos Martín-Vide, and Miguel A. Vega-Rodríguez, 191–202. Cham: Springer International Publishing.</p>
 </div>
 <div id="ref-PittBan2019">
 <p>Pitt, Jake Alan, and Julio R Banga. 2019. “Parameter Estimation in Models of Biological Oscillators: An Automated Regularised Estimation Approach.” <em>BMC Bioinformatics</em> 20 (1): 82. <a href="https://doi.org/10.1186/s12859-019-2630-y" class="uri">https://doi.org/10.1186/s12859-019-2630-y</a>.</p>
 </div>
 <div id="ref-SchmiesterSch2019">
-<p>Schmiester, Leonard, Yannik Schaelte, Fabian Froehlich, Jan Hasenauer, and Daniel Weindl. 2019. “Efficient Parameterization of Large-Scale Dynamic Models Based on Relative Measurements.” <em>bioRxiv</em>. Cold Spring Harbor Laboratory. <a href="https://doi.org/10.1101/579045" class="uri">https://doi.org/10.1101/579045</a>.</p>
+<p>Schmiester, Leonard, Yannik Schälte, Fabian Fröhlich, Jan Hasenauer, and Daniel Weindl. 2019. “Efficient parameterization of large-scale dynamic models based on relative measurements.” <em>Bioinformatics</em>, July. <a href="https://doi.org/10.1093/bioinformatics/btz581" class="uri">https://doi.org/10.1093/bioinformatics/btz581</a>.</p>
+</div>
+<div id="ref-VillaverdeRai2019">
+<p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2019. “A Comparison of Methods for Quantifying Prediction Uncertainty in Systems Biology.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
+</div>
+<div id="ref-WangSta2019">
+<p>Wang, Dantong, Paul Stapor, and Jan Hasenauer. 2019. “Dirac Mixture Distributions for the Approximation of Mixed Effects Models.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
 </div>
 </div>
 <h1 id="section" class="unnumbered">2018</h1>
@@ -41,7 +56,7 @@ List of publications using AMICI. Total number is 28.
 <p>Loos, Carolin, Katharina Moeller, Fabian Fröhlich, Tim Hucho, and Jan Hasenauer. 2018. “A Hierarchical, Data-Driven Approach to Modeling Single-Cell Populations Predicts Latent Causes of Cell-to-Cell Variability.” <em>Cell Systems</em> 6 (5). Elsevier: 593–603. <a href="https://doi.org/10.1016/j.cels.2018.04.008" class="uri">https://doi.org/10.1016/j.cels.2018.04.008</a>.</p>
 </div>
 <div id="ref-SchaelteSta2018">
-<p>Schälte, Y., P. Stapor, and J. Hasenauer. 2018. “Evaluation of Derivative-Free Optimizers for Parameter Estimation in Systems Biology.” <em>To Appear in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
+<p>Schälte, Y., P. Stapor, and J. Hasenauer. 2018. “Evaluation of Derivative-Free Optimizers for Parameter Estimation in Systems Biology.” <em>FAC-PapersOnLine</em> 51 (19): 98–101.</p>
 </div>
 <div id="ref-StaporFro2018">
 <p>Stapor, Paul, Fabian Fröhlich, and Jan Hasenauer. 2018. “Optimization and Profile Calculation of ODE Models Using Second Order Adjoint Sensitivity Analysis.” <em>Bioinformatics</em> 34 (13). Oxford University Press: i151–i159.</p>
@@ -54,9 +69,6 @@ List of publications using AMICI. Total number is 28.
 <div id="refs" class="references">
 <div id="ref-BallnusHug2017">
 <p>Ballnus, B., S. Hug, K. Hatz, L. Görlitz, J. Hasenauer, and F. J. Theis. 2017. “Comprehensive Benchmarking of Markov Chain Monte Carlo Methods for Dynamical Systems.” <em>BMC Syst. Biol.</em> 11 (63). <a href="https://doi.org/10.1186/s12918-017-0433-1" class="uri">https://doi.org/10.1186/s12918-017-0433-1</a>.</p>
-</div>
-<div id="ref-FischerFie2017">
-<p>Fischer, David S., Anna K. Fiedler, Eric Kernfeld, Ryan M. J. Genga, Jan Hasenauer, Rene Maehr, and Fabian J. Theis. 2017. “Beyond Pseudotime: Following T-Cell Maturation in Single-Cell RNAseq Time Series.” <em>bioRxiv</em>. Cold Spring Harbor Laboratory. <a href="https://doi.org/10.1101/219188" class="uri">https://doi.org/10.1101/219188</a>.</p>
 </div>
 <div id="ref-FroehlichKes2017">
 <p>Fröhlich, Fabian, Thomas Kessler, Daniel Weindl, Alexey Shadrin, Leonard Schmiester, Hendrik Hache, Artur Muradyan, et al. 2017. “Efficient Parameterization of Large-Scale Mechanistic Models Enables Drug Response Prediction for Cancer Cell Lines.” <em>bioRxiv</em>. Cold Spring Harbor Labs Journals. <a href="https://doi.org/10.1101/174094" class="uri">https://doi.org/10.1101/174094</a>.</p>
