@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Create AMICI publication list by year"""
+"""Create AMICI publication list by year
+    For macOS with clang: download and install biblib-simple to avoid compiler issues
+    Requires pandoc"""
 
 import biblib.bib
 import biblib.messages
