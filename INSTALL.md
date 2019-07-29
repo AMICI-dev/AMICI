@@ -333,8 +333,9 @@ or
 #### SWIG
 
 The python interface requires [SWIG](http://www.swig.org), which has to
-be installed by the user. Swig can be installed using package managers
-such as [brew](https://brew.sh) or [apt](https://wiki.debian.org/Apt):
+be installed by the user. As root user, SWIG can be installed using
+package managers such as [brew](https://brew.sh) or
+[apt](https://wiki.debian.org/Apt):
 
     brew install swig
 
@@ -342,12 +343,23 @@ or
 
     apt-get install swig3.0
 
+Or by non-root users, using `scripts/downloadAndBuildSwig.sh` from the
+AMICI repository (not included in the PyPI package). The binary
+directory has to be added to the `PATH` environment variable, or `SWIG`
+has to be set as described in the following section.
+
+
+##### Using a non-default SWIG executable
+
 We note here that some linux package managers may provide swig
 executables as `swig3.0`, but installation as `swig` is required. This
-can be fixed using, e.g., symbolic links:
+can be fixed as root user using, e.g., symbolic links:
 
     mkdir -p ~/bin/ && ln -s $(which swig3.0) ~/bin/swig && export PATH=~/bin/:$PATH
 
+Non-root users can set the `SWIG` environment variable to the full
+path of the desired SWIG executable. This variable has be set during
+AMICI package installation as well as during model compilation.
 
 ### Matlab
 
