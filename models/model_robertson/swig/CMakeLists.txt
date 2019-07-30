@@ -7,6 +7,10 @@ if(POLICY CMP0074)
   # Use package_ROOT environment variables
   cmake_policy(SET CMP0074 NEW)
 endif(POLICY CMP0074)
+if(POLICY CMP0086)
+  cmake_policy(SET CMP0086 NEW)
+endif(POLICY CMP0086)
+
 
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
