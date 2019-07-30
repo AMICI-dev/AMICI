@@ -111,6 +111,13 @@ def getHdf5Config():
         '/usr/local/Cellar/hdf5/1.10.2_1/lib'  # travis macOS
     ]
 
+    # Check for Environment Modules variables
+    if 'HDF5_BASE' in os.environ:
+        hdf5_include_dir_hints.insert(
+            0, os.path.join(os.environ['HDF5_BASE'], 'include'))
+        hdf5_library_dir_hints.insert(
+            0, os.path.join(os.environ['HDF5_BASE'], 'lib'))
+
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
             os.path.join(hdf5_include_dir_hint, 'hdf5.h'))
@@ -129,6 +136,7 @@ def getHdf5Config():
                 h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
                 break
         if hdf5_library_dir_found:
+            # break to not override hdf5_library_dir_found
             break
     h5pkgcfg['found'] = hdf5_include_dir_found and hdf5_library_dir_found
 
