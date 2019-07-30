@@ -40,7 +40,10 @@ def swig_works(swig):
     """Test if `swig` looks like a working SWIG executable."""
 
     try:
-        result = subprocess.run([swig, '-version'], capture_output=True)
+        # For python3.6 compatibility no `capture_output=True`
+        result = subprocess.run([swig, '-version'],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
     except FileNotFoundError:
         return False
 
