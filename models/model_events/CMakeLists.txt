@@ -23,7 +23,8 @@ foreach(FLAG ${MY_CXX_FLAGS})
     endif()
 endforeach(FLAG)
 
-find_package(Amici HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+find_package(Amici  HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
