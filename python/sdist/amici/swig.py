@@ -44,7 +44,7 @@ def swig_works(swig):
         result = subprocess.run([swig, '-version'],
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
-    except FileNotFoundError:
+    except (FileNotFoundError, PermissionError):
         return False
 
     return result.returncode == 0
