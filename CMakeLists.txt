@@ -91,7 +91,7 @@ add_definitions(-DAMICI_BLAS_${BLAS})
 if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
     if(DEFINED ENV{MKLROOT})
         # This is set by Environment Modules
-        message("Using MKL_INCDIR and MKL_LIB from environment module")
+        message(VERBOSE "Using MKL_INCDIR and MKL_LIB from environment module")
         set(BLAS "MKL" CACHE STRING "BLAS library to use" FORCE)
         set(BLAS_INCLUDE_DIRS "$ENV{MKL_INCDIR}" CACHE STRING "" FORCE)
         set(BLAS_LIBRARIES "$ENV{MKL_LIB}" CACHE STRING "" FORCE)
