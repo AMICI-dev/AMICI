@@ -96,13 +96,14 @@ def getHdf5Config():
     hdf5_include_dir_hints = [
         '/usr/include/hdf5/serial',
         '/usr/local/include',
-        '/usr/include',  # travis ubuntu xenial
+        '/usr/include',  # travis ubuntu xenial, centos
         '/usr/local/Cellar/hdf5/1.10.2_1/include'  # travis macOS
     ]
     hdf5_library_dir_hints = [
         '/usr/lib/x86_64-linux-gnu/',  # travis ubuntu xenial
         '/usr/lib/x86_64-linux-gnu/hdf5/serial',
         '/usr/local/lib',
+        '/usr/lib64/', # CentOS
         '/usr/local/Cellar/hdf5/1.10.2_1/lib'  # travis macOS
     ]
 
@@ -115,12 +116,14 @@ def getHdf5Config():
             break
 
     for hdf5_library_dir_hint in hdf5_library_dir_hints:
-        hdf5_library_dir_found = os.path.isfile(
-            os.path.join(hdf5_library_dir_hint, 'libhdf5.a'))
-        if hdf5_library_dir_found:
-            print('libhdf5.a found in %s' % hdf5_library_dir_hint)
-            h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
-            break
+        # check for static or shared library
+        for lib_filename in ['libhdf5.a', 'libhdf5.so']:
+            hdf5_library_dir_found = os.path.isfile(
+                os.path.join(hdf5_library_dir_hint, lib_filename))
+            if hdf5_library_dir_found:
+                print(f'{lib_filename} found in {hdf5_library_dir_hint}')
+                h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
+                break
     h5pkgcfg['found'] = hdf5_include_dir_found and hdf5_library_dir_found
 
     return h5pkgcfg
