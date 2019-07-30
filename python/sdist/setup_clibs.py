@@ -218,7 +218,8 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
                          'amici/ThirdParty/sundials/src',
                          'amici/ThirdParty/gsl/',
                          ],
-        'cflags': ['-std=c++11', *extra_compiler_flags]
+        'cflags': ['-std=c++11', *extra_compiler_flags],
+        'define_macros': [],
     })
 
     if h5pkgcfg and 'include_dirs' in h5pkgcfg:
