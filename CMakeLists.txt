@@ -87,7 +87,6 @@ set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 # The latter is not supported via CMake yet.
 set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
 set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL" "ACCELERATE")
-add_definitions(-DAMICI_BLAS_${BLAS})
 if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
     if(DEFINED ENV{MKLROOT})
         # This is set by Environment Modules
@@ -103,6 +102,7 @@ else()
     set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
     set(BLAS_LIBRARIES -lcblas CACHE STRING "")
 endif()
+add_definitions(-DAMICI_BLAS_${BLAS})
 
 # Add target to create version file
 add_custom_target(
