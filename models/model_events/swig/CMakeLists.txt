@@ -18,6 +18,7 @@ include(${SWIG_USE_FILE})
 if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
     find_package(PythonLibs REQUIRED)
     include_directories(${PYTHON_INCLUDE_DIRS})
+    set(Python3_LIBRARIES ${PYTHON_LIBRARIES})
 else()
     find_package (Python3 COMPONENTS Development)
     include_directories(${Python3_INCLUDE_DIRS})
@@ -31,11 +32,14 @@ set_source_files_properties(${PROJECT_NAME}.i PROPERTIES CPLUSPLUS ON)
 get_target_property(AMICI_INCLUDE_DIRS Upstream::amici INTERFACE_INCLUDE_DIRECTORIES)
 include_directories(${AMICI_INCLUDE_DIRS} ..)
 
-swig_add_library(${PROJECT_NAME} TYPE MODULE LANGUAGE python SOURCES ${PROJECT_NAME}.i)
+swig_add_library(${PROJECT_NAME}
+    TYPE MODULE
+    LANGUAGE python
+    SOURCES ${PROJECT_NAME}.i)
 
 swig_link_libraries(${PROJECT_NAME}
-    ${PYTHON_LIBRARIES}
-        model)
+    ${Python3_LIBRARIES}
+    model)
 
 # configure module setup script
 set(SETUP_PY_IN ${Amici_DIR}/model_setup.template.py)

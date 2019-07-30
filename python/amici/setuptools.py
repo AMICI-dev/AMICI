@@ -52,6 +52,13 @@ def getBlasConfig():
         # anything by ourselves
         return blaspkgcfg
 
+    # Try environment modules
+    # MKL
+    if 'MKLROOT' in os.environ:
+
+        return blaspkgcfg
+
+
     # Try pkgconfig
     if pkgconfig:
         if pkgconfig.exists('cblas'):
