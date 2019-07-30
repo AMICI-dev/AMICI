@@ -9,6 +9,10 @@ endif(POLICY CMP0065)
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif(POLICY CMP0077)
+if(POLICY CMP0074)
+  # Use package_ROOT environment variables
+  cmake_policy(SET CMP0074 NEW)
+endif(POLICY CMP0074)
 
 project(amici)
 
