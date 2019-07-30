@@ -66,6 +66,7 @@ def main():
     amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
     amici_module_linker_flags.extend(
         '-l%s' % l for l in blaspkgcfg['libraries'])
+    define_macros.extend(blaspkgcfg['define_macros'])
 
     h5pkgcfg = getHdf5Config()
 
@@ -80,6 +81,7 @@ def main():
         extension_sources = [
             'amici/amici_wrap.cxx',  # swig interface
         ]
+        define_macros.extend(h5pkgcfg['define_macros'])
     else:
         print("HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
         extension_sources = [

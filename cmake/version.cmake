@@ -6,7 +6,11 @@ if(Git_FOUND)
         )
 endif()
 
+# get project root directory
+get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_PARENT_LIST_FILE} DIRECTORY)
+get_filename_component(CMAKE_PARENT_LIST_DIR ${CMAKE_PARENT_LIST_DIR} DIRECTORY)
+
 execute_process(COMMAND sh -c "cat version.txt | tr -d '\n'"
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY "${CMAKE_PARENT_LIST_DIR}"
     OUTPUT_VARIABLE PROJECT_VERSION
     )
