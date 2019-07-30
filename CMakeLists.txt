@@ -48,7 +48,7 @@ set(SUITESPARSE_LIBRARIES
     ${SUITESPARSE_DIR}/SuiteSparse_config/libsuitesparseconfig${CMAKE_STATIC_LIBRARY_SUFFIX}
     )
 
-set(SUNDIALS_LIB_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/lib")
+set(SUNDIALS_LIB_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/sundials/build/${CMAKE_INSTALL_LIBDIR}")
 set(SUNDIALS_LIBRARIES
     ${SUNDIALS_LIB_DIR}/libsundials_nvecserial${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${SUNDIALS_LIB_DIR}/libsundials_sunlinsolband${CMAKE_STATIC_LIBRARY_SUFFIX}
