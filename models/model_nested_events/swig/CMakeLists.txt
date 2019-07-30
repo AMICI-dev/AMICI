@@ -3,6 +3,10 @@ cmake_minimum_required(VERSION 3.8) # swig_add_library
 if(POLICY CMP0078)
   cmake_policy(SET CMP0078 OLD)
 endif(POLICY CMP0078)
+if(POLICY CMP0074)
+  # Use package_ROOT environment variables
+  cmake_policy(SET CMP0074 NEW)
+endif(POLICY CMP0074)
 
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
