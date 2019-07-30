@@ -36,6 +36,7 @@ foreach(FLAG ${MY_CXX_FLAGS})
 endforeach(FLAG)
 
 # find dependencies
+include(GNUInstallDirs)
 find_package(HDF5 COMPONENTS C HL CXX REQUIRED)
 set(HDF5_LIBRARIES ${HDF5_HL_LIBRARIES} ${HDF5_C_LIBRARIES} ${HDF5_CXX_LIBRARIES})
 set(SUITESPARSE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/SuiteSparse/")
@@ -178,7 +179,6 @@ set(AUTHORS "Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor")
 set(AUTHOR_EMAIL "fabian.froehlich@helmholtz-muenchen.de")
 
 # <Export cmake configuration>
-include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
     ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
