@@ -107,7 +107,7 @@ def getHdf5Config():
         '/usr/lib/x86_64-linux-gnu/',  # travis ubuntu xenial
         '/usr/lib/x86_64-linux-gnu/hdf5/serial',
         '/usr/local/lib',
-        '/usr/lib64/', # CentOS
+        '/usr/lib64/',  # CentOS
         '/usr/local/Cellar/hdf5/1.10.2_1/lib'  # travis macOS
     ]
 
@@ -128,6 +128,8 @@ def getHdf5Config():
                 print(f'{lib_filename} found in {hdf5_library_dir_hint}')
                 h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
                 break
+        if hdf5_library_dir_found:
+            break
     h5pkgcfg['found'] = hdf5_include_dir_found and hdf5_library_dir_found
 
     return h5pkgcfg
