@@ -61,6 +61,9 @@ def getBlasConfig():
 
             return blaspkgcfg
 
+    # If none of the previous worked, fall back to libcblas in default paths
+    blaspkgcfg['libraries'] = ['cblas']
+
     return blaspkgcfg
 
 
