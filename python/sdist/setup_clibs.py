@@ -219,20 +219,20 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
                          'amici/ThirdParty/gsl/',
                          ],
         'cflags': ['-std=c++11', *extra_compiler_flags],
-        'define_macros': [],
+        'macros': [],
     })
 
     if h5pkgcfg and 'include_dirs' in h5pkgcfg:
         libamici[1]['include_dirs'].extend(h5pkgcfg['include_dirs'])
 
     if h5pkgcfg and 'define_macros' in h5pkgcfg:
-        libamici[1]['define_macros'].extend(h5pkgcfg['define_macros'])
+        libamici[1]['macros'].extend(h5pkgcfg['define_macros'])
 
     if blaspkgcfg and 'include_dirs' in blaspkgcfg:
         libamici[1]['include_dirs'].extend(blaspkgcfg['include_dirs'])
 
     if blaspkgcfg and 'define_macros' in blaspkgcfg:
-        libamici[1]['define_macros'].extend(blaspkgcfg['define_macros'])
+        libamici[1]['macros'].extend(blaspkgcfg['define_macros'])
 
     if blaspkgcfg and 'extra_compile_args' in blaspkgcfg:
         libamici[1]['cflags'].extend(blaspkgcfg['extra_compile_args'])
