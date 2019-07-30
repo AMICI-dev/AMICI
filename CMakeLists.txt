@@ -9,6 +9,10 @@ endif(POLICY CMP0065)
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif(POLICY CMP0077)
+if(POLICY CMP0074)
+  # Use package_ROOT environment variables
+  cmake_policy(SET CMP0074 NEW)
+endif(POLICY CMP0074)
 
 project(amici)
 
@@ -84,14 +88,22 @@ set(GSL_LITE_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/ThirdParty/gsl")
 # The latter is not supported via CMake yet.
 set(BLAS "CBLAS" CACHE STRING "BLAS library to use")
 set_property(CACHE BLAS PROPERTY STRINGS "CBLAS" "MKL" "ACCELERATE")
-add_definitions(-DAMICI_BLAS_${BLAS})
-if(${BLAS} STREQUAL "MKL")
-    set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
-    set(BLAS_LIBRARIES -lmkl CACHE STRING "")
+if(${BLAS} STREQUAL "MKL" OR DEFINED ENV{MKLROOT})
+    if(DEFINED ENV{MKLROOT})
+        # This is set by Environment Modules
+        message(STATUS "Using MKL_INCDIR and MKL_LIB from environment module")
+        set(BLAS "MKL" CACHE STRING "BLAS library to use" FORCE)
+        set(BLAS_INCLUDE_DIRS "$ENV{MKL_INCDIR}" CACHE STRING "" FORCE)
+        set(BLAS_LIBRARIES "$ENV{MKL_LIB}" CACHE STRING "" FORCE)
+    else()
+        set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
+        set(BLAS_LIBRARIES -lmkl CACHE STRING "")
+    endif()
 else()
     set(BLAS_INCLUDE_DIRS "" CACHE STRING "")
     set(BLAS_LIBRARIES -lcblas CACHE STRING "")
 endif()
+add_definitions(-DAMICI_BLAS_${BLAS})
 
 # Add target to create version file
 add_custom_target(

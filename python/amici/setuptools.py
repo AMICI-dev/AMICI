@@ -52,6 +52,21 @@ def getBlasConfig():
         # anything by ourselves
         return blaspkgcfg
 
+    # Try environment modules
+    # MKL
+    if 'MKLROOT' in os.environ:
+        if 'MKL_INC' in os.environ:
+            blaspkgcfg['extra_compile_args'].extend(
+                shlex.split(os.environ['MKL_INC'])
+            )
+        if 'MKL_LIB' in os.environ:
+            blaspkgcfg['extra_link_args'].extend(
+                shlex.split(os.environ['MKL_LIB'])
+            )
+        blaspkgcfg['define_macros'].append(('AMICI_BLAS_MKL', None),)
+        return blaspkgcfg
+
+
     # Try pkgconfig
     if pkgconfig:
         if pkgconfig.exists('cblas'):
