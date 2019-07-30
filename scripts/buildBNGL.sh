@@ -12,7 +12,7 @@ cd ${AMICI_PATH}/ThirdParty
 
 if [ ! -d "BioNetGen-2.3.2" ]; then
     if [ ! -e "bionetgen.tar.gz" ]; then
-        if [[ "$OSTYPE" == "linux-gnu" ]]; then
+        if [[ "$OSTYPE" == "linux-gnu" || "$OSTYPE" == "linux" ]]; then
             wget -q -O bionetgen.tar.gz https://bintray.com/jczech/bionetgen/download_file?file_path=BioNetGen-2.3.2-linux.tar.gz
         elif [[ "$OSTYPE" == "darwin"* ]]; then
             wget -q -O bionetgen.tar.gz https://bintray.com/jczech/bionetgen/download_file?file_path=BioNetGen-2.3.2-osx.tar.gz
