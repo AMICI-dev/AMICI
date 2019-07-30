@@ -20,7 +20,7 @@ rm -rf ${AMICI_PATH}/python/sdist/build/
 
 
 # test install from setup.py
-python3 -m venv ${AMICI_PATH}/build/venv --clear
+python3 -m venv ${AMICI_PATH}/build/venv --without-pip --clear
 source ${AMICI_PATH}/build/venv/bin/activate
 # install wheel separately to prevent build_wheel fail in next step
 pip3 install --upgrade wheel
