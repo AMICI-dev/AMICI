@@ -160,3 +160,4 @@ ThirdParty/SuiteSparse/lib/*
 ThirdParty/SuiteSparse/share/*
 ThirdParty/SuperLU_MT_3.1/
 ThirdParty/superlu_mt_3.1.tar.gz
+ThirdParty/swig-*
