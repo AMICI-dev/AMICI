@@ -7,6 +7,9 @@ set -e
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
+CMAKE=${CMAKE:-cmake}
+MAKE=${MAKE:-make}
+
 # Cpputest
 mkdir -p ${AMICI_PATH}/ThirdParty
 cd ${AMICI_PATH}/ThirdParty
@@ -23,6 +26,6 @@ fi
 cd cpputest-master
 mkdir -p build
 cd build
-cmake -DTESTS=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DC++11=ON -DMEMORY_LEAK_DETECTION=OFF ..
-make -j4
+${CMAKE} -DTESTS=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DC++11=ON -DMEMORY_LEAK_DETECTION=OFF ..
+${MAKE} -j4
 

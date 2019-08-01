@@ -3,9 +3,10 @@
 import os
 import platform
 import shlex
-import sys
 import subprocess
 import shutil
+
+from .swig import find_swig
 
 try:
     import pkgconfig # optional
@@ -35,15 +36,7 @@ def getBlasConfig():
                   'extra_link_args': []
                   }
 
-    if platform.system() in ['Linux', 'Darwin']:
-        blaspkgcfg['libraries'] = ['cblas']
-
-    if pkgconfig:
-        if pkgconfig.exists('cblas'):
-            blaspkgcfg = pkgconfig.parse('cblas')
-            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
-            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
-
+    # Check environment variables
     if 'BLAS_CFLAGS' in os.environ:
         blaspkgcfg['extra_compile_args'].extend(
             shlex.split(os.environ['BLAS_CFLAGS'])
@@ -53,6 +46,38 @@ def getBlasConfig():
         blaspkgcfg['extra_link_args'].extend(
             shlex.split(os.environ['BLAS_LIBS'])
         )
+
+    if 'BLAS_CFLAGS' in os.environ or 'BLAS_LIBS' in os.environ:
+        # If options have been provided by the user, we don't try to detect
+        # anything by ourselves
+        return blaspkgcfg
+
+    # Try environment modules
+    # MKL
+    if 'MKLROOT' in os.environ:
+        if 'MKL_INC' in os.environ:
+            blaspkgcfg['extra_compile_args'].extend(
+                shlex.split(os.environ['MKL_INC'])
+            )
+        if 'MKL_LIB' in os.environ:
+            blaspkgcfg['extra_link_args'].extend(
+                shlex.split(os.environ['MKL_LIB'])
+            )
+        blaspkgcfg['define_macros'].append(('AMICI_BLAS_MKL', None),)
+        return blaspkgcfg
+
+
+    # Try pkgconfig
+    if pkgconfig:
+        if pkgconfig.exists('cblas'):
+            blaspkgcfg = pkgconfig.parse('cblas')
+            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
+            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
+
+            return blaspkgcfg
+
+    # If none of the previous worked, fall back to libcblas in default paths
+    blaspkgcfg['libraries'] = ['cblas']
 
     return blaspkgcfg
 
@@ -90,15 +115,23 @@ def getHdf5Config():
     hdf5_include_dir_hints = [
         '/usr/include/hdf5/serial',
         '/usr/local/include',
-        '/usr/include',  # travis ubuntu xenial
+        '/usr/include',  # travis ubuntu xenial, centos
         '/usr/local/Cellar/hdf5/1.10.2_1/include'  # travis macOS
     ]
     hdf5_library_dir_hints = [
         '/usr/lib/x86_64-linux-gnu/',  # travis ubuntu xenial
         '/usr/lib/x86_64-linux-gnu/hdf5/serial',
         '/usr/local/lib',
+        '/usr/lib64/',  # CentOS
         '/usr/local/Cellar/hdf5/1.10.2_1/lib'  # travis macOS
     ]
+
+    # Check for Environment Modules variables
+    if 'HDF5_BASE' in os.environ:
+        hdf5_include_dir_hints.insert(
+            0, os.path.join(os.environ['HDF5_BASE'], 'include'))
+        hdf5_library_dir_hints.insert(
+            0, os.path.join(os.environ['HDF5_BASE'], 'lib'))
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
@@ -109,11 +142,16 @@ def getHdf5Config():
             break
 
     for hdf5_library_dir_hint in hdf5_library_dir_hints:
-        hdf5_library_dir_found = os.path.isfile(
-            os.path.join(hdf5_library_dir_hint, 'libhdf5.a'))
+        # check for static or shared library
+        for lib_filename in ['libhdf5.a', 'libhdf5.so']:
+            hdf5_library_dir_found = os.path.isfile(
+                os.path.join(hdf5_library_dir_hint, lib_filename))
+            if hdf5_library_dir_found:
+                print(f'{lib_filename} found in {hdf5_library_dir_hint}')
+                h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
+                break
         if hdf5_library_dir_found:
-            print('libhdf5.a found in %s' % hdf5_library_dir_hint)
-            h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
+            # break to not override hdf5_library_dir_found
             break
     h5pkgcfg['found'] = hdf5_include_dir_found and hdf5_library_dir_found
 
@@ -165,7 +203,7 @@ def generateSwigInterfaceFiles():
     """Compile the swig python interface to amici
     """
     swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
-    swig_cmd = findSwig()
+    swig_cmd = find_swig()
     sp = subprocess.run([swig_cmd,
                          '-c++',
                          '-python',
@@ -185,14 +223,3 @@ def generateSwigInterfaceFiles():
                          '-o', 'amici/amici_wrap.cxx',
                          'amici/swig/amici.i'])
     assert (sp.returncode == 0)
-
-
-def findSwig():
-    """Get name of SWIG executable
-
-    We need version 3.0.
-    Probably we should try some default paths and names, but this should do the trick for now.
-    Debian/Ubuntu systems have swig3.0 ('swig' is older versions), OSX has swig 3.0 as 'swig'."""
-    if sys.platform != 'linux':
-        return 'swig'
-    return 'swig3.0'

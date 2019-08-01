@@ -11,7 +11,7 @@ switch (ip) {
   case 2: {
               switch(ie) { 
               case 0: {
-  deltaqB[ip+0] = xB[0];
+  deltaqB[0] = xB[0];
 
               } break;
 
@@ -22,7 +22,7 @@ switch (ip) {
   case 3: {
               switch(ie) { 
               case 0: {
-  deltaqB[ip+0] = -xB[1];
+  deltaqB[0] = -xB[1];
 
               } break;
 
