@@ -25,10 +25,10 @@ parameters that should be considered constants can be specified in a list of str
 
 ### Observables
 
-assignment rules that should be considered as observables can extracted using the `amici.assignmentRules2observables` function
+Assignment rules that should be considered as observables can extracted using the `amici.assignmentRules2observables` function.
 
-    observables = amici.assignmentRules2observables(sbml, filter_function=lambda variableId: 
-                                                    variableId.startswith('observable_') and not variableId.endswith('_sigma'))
+    observables = amici.assignmentRules2observables(sbml, filter_function=lambda variable: 
+                                                    variable.getId().startswith('observable_') and not variable.getId().endswith('_sigma'))
 
 ### Standard Deviations
 
