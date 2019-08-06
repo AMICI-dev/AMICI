@@ -52,6 +52,7 @@ def swig_works(swig, verbose = True):
     if verbose:
         if result.returncode == 0:
             print(f'Testing SWIG executable {swig}... SUCCEEDED.')
+            print(result.stdout.decode('utf-8'))
         else:
             print(f'Testing SWIG executable {swig}... FAILED.')
 
