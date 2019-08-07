@@ -122,6 +122,8 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
 )
 {
     std::vector<std::unique_ptr<ReturnData> > results(edatas.size());
+    // is set to true if one simulation fails and we should skip the rest.
+    // shared across threads.
     bool failed = false;
 
 #if defined(_OPENMP)
@@ -137,12 +139,11 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
             ConditionContext conditionContext(myModel.get(), edatas[i]);
             results[i] =
                 std::unique_ptr<ReturnData>(new ReturnData(solver, model));
+        } else {
+            results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
         }
 
-        results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
-
-        if (results[i]->status < 0 && failfast)
-            failed = true;
+        failed |= failfast && results[i]->status < 0;
     }
 
     return results;

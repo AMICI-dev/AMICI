@@ -630,13 +630,13 @@ class Solver {
      * @return t
      */
     realtype gett() const;
-    
+
     /**
      * @brief Reads out the cpu time needed for forward solve
      * @return cpu_time
      */
     realtype getCpuTime() const;
-    
+
     /**
      * @brief Reads out the cpu time needed for bavkward solve
      * @return cpu_timeB
@@ -1424,10 +1424,10 @@ class Solver {
 
     /** relative tolerances for steadystate computation */
     realtype ss_rtol_sensi = NAN;
-    
+
     /** CPU time, forward solve */
     mutable realtype cpu_time = 0.0;
-    
+
     /** CPU time, backward solve */
     mutable realtype cpu_timeB = 0.0;
 
@@ -1455,7 +1455,7 @@ class Solver {
     mutable std::vector<bool> initializedQB{false};
 
     /** number of checkpoints in the forward problem */
-    mutable int ncheckPtr;
+    mutable int ncheckPtr = 0;
 };
 
 bool operator==(const Solver &a, const Solver &b);
