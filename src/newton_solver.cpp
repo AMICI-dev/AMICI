@@ -254,7 +254,6 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv.getNVector(), 1.0, xdot.getNVector(), ns_r.getNVector());
     N_VDiv(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
-    double res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
     ns_rt = ns_r;
 
     for (int i_linstep = 0; i_linstep < maxlinsteps;
@@ -296,7 +295,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
 
         // Compute the (unscaled) residual
         N_VProd(ns_r.getNVector(), ns_Jdiag.getNVector(), ns_r.getNVector());
-        res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
+        double res = sqrt(N_VDotProd(ns_r.getNVector(), ns_r.getNVector()));
 
         // Test convergence
         if (res < atol) {

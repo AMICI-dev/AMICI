@@ -82,7 +82,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other) {
     update_ptrs();
 }
 
-SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept {
+SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) {
     std::swap(matrix, other.matrix);
     update_ptrs();
 }
@@ -94,7 +94,7 @@ SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
 }
 
 SUNMatrixWrapper &SUNMatrixWrapper::
-operator=(SUNMatrixWrapper &&other) noexcept {
+operator=(SUNMatrixWrapper &&other) {
     std::swap(matrix, other.matrix);
     update_ptrs();
     return *this;

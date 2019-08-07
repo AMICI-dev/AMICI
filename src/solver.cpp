@@ -14,36 +14,20 @@ namespace amici {
 
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
-Solver::Solver(const Solver &other) : Solver() {
-    t = nan("");
-    ncheckPtr = 0;
-    sensi = other.sensi;
-    atol = other.atol;
-    rtol = other.rtol;
-    atol_fsa = other.atol_fsa;
-    rtol_fsa = other.rtol_fsa;
-    atolB = other.atolB;
-    rtolB = other.rtolB;
-    quad_atol = other.quad_atol;
-    quad_rtol = other.quad_rtol;
-    ss_atol = other.ss_atol;
-    ss_rtol = other.ss_rtol;
-    ss_atol_sensi = other.ss_atol_sensi;
-    ss_rtol_sensi = other.ss_rtol_sensi;
-    maxsteps = other.maxsteps;
-    maxstepsB = other.maxstepsB;
-    newton_maxsteps = other.newton_maxsteps;
-    newton_maxlinsteps = other.newton_maxlinsteps;
-    newton_preeq = other.newton_preeq;
-    ism = other.ism;
-    sensi_meth = other.sensi_meth;
-    linsol = other.linsol;
-    interpType = other.interpType;
-    lmm = other.lmm;
-    iter = other.iter;
-    stldet = other.stldet;
-    ordering = other.ordering;
-}
+Solver::Solver(const Solver &other)
+    : ism(other.ism), lmm(other.lmm), iter(other.iter),
+      interpType(other.interpType), maxsteps(other.maxsteps), t(nan("")),
+      sensi_meth(other.sensi_meth), stldet(other.stldet),
+      ordering(other.ordering), newton_maxsteps(other.newton_maxsteps),
+      newton_maxlinsteps(other.newton_maxlinsteps),
+      newton_preeq(other.newton_preeq), linsol(other.linsol),
+      atol(other.atol), rtol(other.rtol), atol_fsa(other.atol_fsa),
+      rtol_fsa(other.rtol_fsa), atolB(other.atolB), rtolB(other.rtolB),
+      quad_atol(other.quad_atol), quad_rtol(other.quad_rtol),
+      ss_atol(other.ss_atol), ss_rtol(other.ss_rtol),
+      ss_atol_sensi(other.ss_atol_sensi), ss_rtol_sensi(other.ss_rtol_sensi),
+      maxstepsB(other.maxstepsB), sensi(other.sensi)
+{}
 
 int Solver::run(const realtype tout) const {
     setStopTime(tout);

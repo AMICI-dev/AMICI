@@ -76,7 +76,7 @@ class SUNMatrixWrapper {
      * @brief Move constructor
      * @param other
      */
-    SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept;
+    SUNMatrixWrapper(SUNMatrixWrapper &&other);
 
     /**
      * @brief Copy assignment
@@ -90,7 +90,7 @@ class SUNMatrixWrapper {
      * @param other
      * @return
      */
-    SUNMatrixWrapper &operator=(SUNMatrixWrapper &&other) noexcept;
+    SUNMatrixWrapper &operator=(SUNMatrixWrapper &&other);
 
     /**
      * @brief Access raw data

@@ -380,8 +380,8 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPBCGS(N_Vector x, int pretype = PREC_NONE,
-                    int maxl = SUNSPBCGS_MAXL_DEFAULT);
+    explicit SUNLinSolSPBCGS(N_Vector x, int pretype = PREC_NONE,
+                             int maxl = SUNSPBCGS_MAXL_DEFAULT);
 
     /**
      * @brief SUNLinSolSPBCGS
@@ -390,8 +390,8 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPBCGS(AmiVector const &x, int pretype = PREC_NONE,
-                    int maxl = SUNSPBCGS_MAXL_DEFAULT);
+    explicit SUNLinSolSPBCGS(AmiVector const &x, int pretype = PREC_NONE,
+                             int maxl = SUNSPBCGS_MAXL_DEFAULT);
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -523,8 +523,8 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPGMR(AmiVector const &x, int pretype = PREC_NONE,
-                   int maxl = SUNSPGMR_MAXL_DEFAULT);
+    explicit SUNLinSolSPGMR(AmiVector const &x, int pretype = PREC_NONE,
+                            int maxl = SUNSPGMR_MAXL_DEFAULT);
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -590,8 +590,8 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPTFQMR(N_Vector x, int pretype = PREC_NONE,
-                     int maxl = SUNSPTFQMR_MAXL_DEFAULT);
+    explicit SUNLinSolSPTFQMR(N_Vector x, int pretype = PREC_NONE,
+                              int maxl = SUNSPTFQMR_MAXL_DEFAULT);
 
     /**
      * @brief Create SPTFQMR solver
@@ -600,8 +600,8 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPTFQMR(AmiVector const &x, int pretype = PREC_NONE,
-                     int maxl = SUNSPTFQMR_MAXL_DEFAULT);
+    explicit SUNLinSolSPTFQMR(AmiVector const &x, int pretype = PREC_NONE,
+                              int maxl = SUNSPTFQMR_MAXL_DEFAULT);
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -837,7 +837,7 @@ class SUNNonLinSolFixedPoint : public SUNNonLinSolWrapper {
      * @param x template for cloning vectors needed within the solver.
      * @param m number of acceleration vectors to use
      */
-    SUNNonLinSolFixedPoint(const_N_Vector x, int m = 0);
+    explicit SUNNonLinSolFixedPoint(const_N_Vector x, int m = 0);
 
     /**
      * @brief Create fixed-point solver for use with sensitivity analysis
