@@ -126,7 +126,8 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                             edatas = [edata.get(), edata.get()]
 
                         rdatas = amici.runAmiciSimulations(
-                            self.model, self.solver, edatas, num_threads=2
+                            self.model, self.solver, edatas, num_threads=2,
+                            failfast=False
                         )
                         verify_simulation_results(
                             rdatas[0],

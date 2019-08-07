@@ -498,7 +498,7 @@ class ConditionContext {
      * @param model
      * @param edata
      */
-    ConditionContext(Model *model, const ExpData *edata = nullptr);
+    explicit ConditionContext(Model *model, const ExpData *edata = nullptr);
 
     ~ConditionContext();
 
