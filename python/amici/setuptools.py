@@ -203,23 +203,31 @@ def generateSwigInterfaceFiles():
     """Compile the swig python interface to amici
     """
     swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
-    swig_cmd = find_swig()
-    sp = subprocess.run([swig_cmd,
-                         '-c++',
-                         '-python',
-                         '-Iamici/swig', '-Iamici/include',
-                         '-DAMICI_SWIG_WITHOUT_HDF5',
-                         '-outdir', swig_outdir,
-                         '-o', 'amici/amici_wrap_without_hdf5.cxx',
-                         'amici/swig/amici.i'])
+    swig_exe = find_swig()
+
+    # Swig AMICI interface without HDF5 dependency
+    swig_cmd = [swig_exe,
+                '-c++',
+                '-python',
+                '-Iamici/swig', '-Iamici/include',
+                '-DAMICI_SWIG_WITHOUT_HDF5',
+                '-outdir', swig_outdir,
+                '-o', 'amici/amici_wrap_without_hdf5.cxx',
+                'amici/swig/amici.i']
+    print(f"Running SWIG: {' '.join(swig_cmd)}")
+    sp = subprocess.run(swig_cmd)
     assert (sp.returncode == 0)
     shutil.move(os.path.join(swig_outdir, 'amici.py'),
                 os.path.join(swig_outdir, 'amici_without_hdf5.py'))
-    sp = subprocess.run([swig_cmd,
-                         '-c++',
-                         '-python',
-                         '-Iamici/swig', '-Iamici/include',
-                         '-outdir', swig_outdir,
-                         '-o', 'amici/amici_wrap.cxx',
-                         'amici/swig/amici.i'])
+
+    # Swig AMICI interface with HDF5 dependency
+    swig_cmd = [swig_exe,
+                '-c++',
+                '-python',
+                '-Iamici/swig', '-Iamici/include',
+                '-outdir', swig_outdir,
+                '-o', 'amici/amici_wrap.cxx',
+                'amici/swig/amici.i']
+    print(f"Running SWIG: {' '.join(swig_cmd)}")
+    sp = subprocess.run(swig_cmd)
     assert (sp.returncode == 0)
