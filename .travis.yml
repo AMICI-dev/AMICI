@@ -23,7 +23,6 @@ matrix:
             - libboost-serialization-dev
             - swig3.0
             - g++-5
-            - cppcheck
             - libc6-dbg
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
@@ -55,6 +54,7 @@ matrix:
             - hdf5
             - swig
             - gcc
+            - cppcheck
           update: true
       before_install:
         - travis_wait brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
@@ -117,7 +117,7 @@ script:
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cmake ./tests/testCMakeCompilation.sh; fi
     - if [[ "$CI_MODE" == "deploy" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then $FOLD sbmltestsuite ./scripts/run-SBMLTestsuite.sh; fi
