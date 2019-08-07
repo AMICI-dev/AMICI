@@ -124,7 +124,7 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
     std::vector<std::unique_ptr<ReturnData> > results(edatas.size());
     // is set to true if one simulation fails and we should skip the rest.
     // shared across threads.
-    bool failed = false;
+    bool skipThrough = false;
 
 #if defined(_OPENMP)
     #pragma omp parallel for num_threads(num_threads)
@@ -135,7 +135,7 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
 
         /* if we fail we need to write empty return datas for the python
          interface */
-        if (failed) {
+        if (skipThrough) {
             ConditionContext conditionContext(myModel.get(), edatas[i]);
             results[i] =
                 std::unique_ptr<ReturnData>(new ReturnData(solver, model));
@@ -143,7 +143,7 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
             results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
         }
 
-        failed |= failfast && results[i]->status < 0;
+        skipThrough |= failfast && results[i]->status < 0;
     }
 
     return results;
