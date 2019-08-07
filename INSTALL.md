@@ -47,6 +47,8 @@ You can now import it as python module:
 
     import amici
 
+For cases where this installation fails, check below for special setups
+and custom installations.
 For Python-AMICI usage see 
 [https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md](https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md).
 
@@ -181,6 +183,21 @@ Possible sources of errors:
   [DependencyWalker](http://www.dependencywalker.com/) will show you
   which ones.
 
+### Custom installation
+
+AMICI Python package installation can be customized using a number of
+environment variables:
+
+|Variable | Purpose | Example |
+|---|---|---|
+|`CC`| Setting the C(++) compiler | `CC=/usr/bin/g++`| 
+|`CFLAGS`| Extra compiler flags used in every compiler call | | 
+|`BLAS_CFLAGS`| Compiler flags for, e.g. BLAS include directories | | 
+|`BLAS_LIBS`| Flags for linking BLAS | | 
+|`ENABLE_GCOV_COVERAGE`| Set to build AMICI to provide code coverage information | `ENABLE_GCOV_COVERAGE=TRUE`| 
+|`ENABLE_AMICI_DEBUGGING`| Set to build AMICI with debugging symbols | `ENABLE_AMICI_DEBUGGING=TRUE`| 
+|`AMICI_PARALLEL_COMPILE`| Set to the number of parallel processes to be used for C(++) file compilation (defaults to 1)| `AMICI_PARALLEL_COMPILE=4`|
+
 
 <a name="matlab"></a>
 ## MATLAB
@@ -218,6 +235,11 @@ To use AMICI from C++, run the
     ./scripts/buildAmici.sh
 
 script to compile AMICI library.
+
+**NOTE**: On some systems, the CMake executable may be named something
+other than `cmake`. In this case, set the `CMAKE` environment variable
+to the correct name (e.g. `export CMAKE=cmake3`, in case you have CMake
+available as `cmake3`).
 
 The static library file can then be linked from
 
@@ -311,8 +333,9 @@ or
 #### SWIG
 
 The python interface requires [SWIG](http://www.swig.org), which has to
-be installed by the user. Swig can be installed using package managers
-such as [brew](https://brew.sh) or [apt](https://wiki.debian.org/Apt):
+be installed by the user. As root user, SWIG can be installed using
+package managers such as [brew](https://brew.sh) or
+[apt](https://wiki.debian.org/Apt):
 
     brew install swig
 
@@ -320,12 +343,23 @@ or
 
     apt-get install swig3.0
 
+Or by non-root users, using `scripts/downloadAndBuildSwig.sh` from the
+AMICI repository (not included in the PyPI package). The binary
+directory has to be added to the `PATH` environment variable, or `SWIG`
+has to be set as described in the following section.
+
+
+##### Using a non-default SWIG executable
+
 We note here that some linux package managers may provide swig
 executables as `swig3.0`, but installation as `swig` is required. This
-can be fixed using, e.g., symbolic links:
+can be fixed as root user using, e.g., symbolic links:
 
     mkdir -p ~/bin/ && ln -s $(which swig3.0) ~/bin/swig && export PATH=~/bin/:$PATH
 
+Non-root users can set the `SWIG` environment variable to the full
+path of the desired SWIG executable. This variable has be set during
+AMICI package installation as well as during model compilation.
 
 ### Matlab
 

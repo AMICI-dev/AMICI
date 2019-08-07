@@ -38,10 +38,10 @@ class AmiVector {
         : vec(static_cast<decltype(vec)::size_type>(length), 0.0),
           nvec(N_VMake_Serial(length, vec.data())) {}
 
-    /** Copies data from std::vector and constructs an nvec that points to the
+    /** Moves data from std::vector and constructs an nvec that points to the
      * data
      * @brief constructor from std::vector,
-     * @param rvec vector from which the data will be copied
+     * @param rvec vector from which the data will be moved
      * @return new AmiVector instance
      */
     explicit AmiVector(std::vector<realtype> rvec)
