@@ -98,6 +98,7 @@ class SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      * @param b
      * @param tol Tolerance (weighted 2-norm), iterative solvers only
+     * @raturn error flag
      */
     int Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol) const;
 
@@ -785,7 +786,6 @@ class SUNNonLinSolWrapper {
   protected:
     /**
      * @brief initialize
-     * @return
      */
     void initialize();
 
