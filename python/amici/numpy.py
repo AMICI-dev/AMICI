@@ -83,8 +83,6 @@ class SwigPtrView(collections.abc.Mapping):
         Arguments:
             swigptr: pointer to the C++ object
 
-        Returns:
-            SwigPtrView instance @type SwigPtrView
         """
         self._swigptr = swigptr
         self._cache = dict()
@@ -168,8 +166,6 @@ class ReturnDataView(SwigPtrView):
         Arguments:
             rdata: pointer to the ReturnData instance
 
-        Returns:
-            ReturnDataView instance @type ReturnDataView
         """
         if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
             raise TypeError(f'Unsupported pointer {type(rdata)}, must be'
@@ -254,8 +250,6 @@ class ExpDataView(SwigPtrView):
         Arguments:
             edata: pointer to the ExpData instance
 
-        Returns:
-            ExpDataView instance @type ExpDataView
         """
         if not isinstance(edata, (ExpDataPtr, ExpData)):
             raise TypeError(f'Unsupported pointer {type(edata)}, must be'

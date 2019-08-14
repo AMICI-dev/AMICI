@@ -82,7 +82,6 @@ class SUNLinSolWrapper {
      * @brief Performs any linear solver setup needed, based on an updated
      * system matrix A.
      * @param A
-     * @return
      */
     void setup(SUNMatrix A) const;
 
@@ -90,7 +89,6 @@ class SUNLinSolWrapper {
      * @brief Performs any linear solver setup needed, based on an updated
      * system matrix A.
      * @param A
-     * @return
      */
     void setup(const SUNMatrixWrapper& A) const;
 
@@ -100,13 +98,12 @@ class SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      * @param b
      * @param tol Tolerance (weighted 2-norm), iterative solvers only
-     * @return
      */
     int Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol) const;
 
     /**
      * @brief Returns the last error flag encountered within the linear solver
-     * @return
+     * @return error flag
      */
     long int getLastFlag() const;
 
@@ -114,13 +111,13 @@ class SUNLinSolWrapper {
      * @brief Returns the integer and real workspace sizes for the linear solver
      * @param lenrwLS output argument for size of real workspace
      * @param leniwLS output argument for size of interger workspace
-     * @return
+     * @return workspace size
      */
     int space(long int *lenrwLS, long int *leniwLS) const;
 
     /**
      * @brief Get the matrix A (matrix solvers only).
-     * @return
+     * @return A
      */
     virtual SUNMatrix getMatrix() const;
 
@@ -128,7 +125,7 @@ class SUNLinSolWrapper {
     /**
      * @brief Performs linear solver initialization (assumes that all
      * solver-specific options have been set).
-     * @return
+     * @return error code
      */
     int initialize();
 
