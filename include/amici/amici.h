@@ -19,7 +19,6 @@ namespace amici {
  * @param[in] identifier error identifier @type char
  * @param[in] format string with error message printf-style format
  * @param ... arguments to be formatted
- * @return void
  */
 void
 printErrMsgIdAndTxt(const char* identifier, const char* format, ...);
@@ -31,7 +30,6 @@ printErrMsgIdAndTxt(const char* identifier, const char* format, ...);
  * @param[in] identifier warning identifier @type char
  * @param[in] format string with error message printf-style format
  * @param ... arguments to be formatted
- * @return void
  */
 void
 printWarnMsgIdAndTxt(const char* identifier, const char* format, ...);

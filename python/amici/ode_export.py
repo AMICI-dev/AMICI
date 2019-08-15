@@ -288,9 +288,6 @@ class ModelQuantity:
 
             value: either formula, numeric value or initial value
 
-        Returns:
-        ModelQuantity instance
-
         Raises:
         TypeError:
             is thrown if input types do not match documented types
@@ -391,9 +388,6 @@ class State(ModelQuantity):
 
             dt: time derivative @type symengine.Basic
 
-        Returns:
-        ModelQuantity instance
-
         Raises:
         TypeError:
             is thrown if input types do not match documented types
@@ -474,9 +468,6 @@ class ConservationLaw(ModelQuantity):
 
             value: formula (sum of states) @type symengine.Basic
 
-        Returns:
-        ModelQuantity instance
-
         Raises:
         TypeError:
             is thrown if input types do not match documented types
@@ -499,9 +490,6 @@ class Observable(ModelQuantity):
             unique) @type str
 
             value: formula @type symengine.Basic
-
-        Returns:
-        ModelQuantity instance
 
         Raises:
         TypeError:
@@ -526,9 +514,6 @@ class SigmaY(ModelQuantity):
             be unique) @type str
 
             value: formula @type symengine.Basic
-
-        Returns:
-        ModelQuantity instance
 
         Raises:
         TypeError:
@@ -555,9 +540,6 @@ class Expression(ModelQuantity):
 
             value: formula @type symengine.Basic
 
-        Returns:
-        ModelQuantity instance
-
         Raises:
         TypeError:
             is thrown if input types do not match documented types
@@ -582,9 +564,6 @@ class Parameter(ModelQuantity):
 
             value: numeric value @type float
 
-        Returns:
-        ModelQuantity instance
-
         Raises:
         TypeError:
             is thrown if input types do not match documented types
@@ -608,9 +587,6 @@ class Constant(ModelQuantity):
              @type str
 
             value: numeric value @type float
-
-        Returns:
-        ModelQuantity instance
 
         Raises:
         TypeError:
@@ -638,9 +614,6 @@ class LogLikelihood(ModelQuantity):
              unique) @type str
 
             value: formula @type symengine.Basic
-
-        Returns:
-        ModelQuantity instance
 
         Raises:
         TypeError:
@@ -745,9 +718,6 @@ class ODEModel:
         """Create a new ODEModel instance.
 
         Arguments:
-
-        Returns:
-        New ODEModel instance
 
         Raises:
 
@@ -1859,7 +1829,6 @@ class ODEExporter:
             python extension @type str
 
             allow_reinit_fixpar_initcond: see ODEExporter
-        Returns:
 
         Raises:
 

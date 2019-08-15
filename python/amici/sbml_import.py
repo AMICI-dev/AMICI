@@ -100,10 +100,6 @@ class SbmlImporter:
             from_file: Whether `sbml_source` is a file name (True, default), or an
             sbml string (False). @type bool
 
-        Returns:
-
-            SbmlImporter instance with attached SBML document
-
         Raises:
 
         """

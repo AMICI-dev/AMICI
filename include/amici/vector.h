@@ -21,7 +21,6 @@ class AmiVector {
   public:
     /**
      * @brief Default constructor
-     * @return new empty AmiVectorArray instance
      */
     AmiVector() = default;
 
@@ -32,7 +31,6 @@ class AmiVector {
      * when calling N_VDestroy_Serial
      * @brief emmpty constructor
      * @param length number of elements in vector
-     * @return new AmiVector instance
      */
     explicit AmiVector(const long int length)
         : vec(static_cast<decltype(vec)::size_type>(length), 0.0),
@@ -42,7 +40,6 @@ class AmiVector {
      * data
      * @brief constructor from std::vector,
      * @param rvec vector from which the data will be moved
-     * @return new AmiVector instance
      */
     explicit AmiVector(std::vector<realtype> rvec)
         : vec(std::move(rvec)),
@@ -169,7 +166,6 @@ class AmiVectorArray {
   public:
     /**
      * @brief Default constructor
-     * @return new empty AmiVectorArray instance
      */
     AmiVectorArray() = default;
 
@@ -182,9 +178,14 @@ class AmiVectorArray {
      * @brief empty constructor
      * @param length_inner length of vectors
      * @param length_outer number of vectors
-     * @return New AmiVectorArray instance
      */
     AmiVectorArray(long int length_inner, long int length_outer);
+    
+    /**
+     * @brief copy constructor
+     * @param vaold object to copy from
+     */
+    AmiVectorArray(const AmiVectorArray &vaold);
 
     /**
      * @brief copy assignment operator
@@ -192,13 +193,6 @@ class AmiVectorArray {
      * @return left hand side
      */
     AmiVectorArray &operator=(AmiVectorArray const &other);
-
-    /**
-     * @brief copy constructor
-     * @param vaold object to copy from
-     * @return new AmiVectorArray instance
-     */
-    AmiVectorArray(const AmiVectorArray &vaold);
 
     /**
      * @brief accessor to data of AmiVector elements
