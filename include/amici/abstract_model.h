@@ -102,7 +102,6 @@ class AbstractModel {
      * @param cj scaling factor (inverse of timestep, DAE only)
      * @param x state
      * @param dx time derivative of state (DAE only)
-     * @return flag indicating successful evaluation
      */
     virtual void fJDiag(const realtype t, AmiVector &Jdiag,
                         realtype cj, const AmiVector &x,
@@ -113,7 +112,6 @@ class AbstractModel {
      * @param t time
      * @param x state
      * @param dx time derivative of state (DAE only)
-     * @return flag indicating successful evaluation
      */
     virtual void fdxdotdp(const realtype t, const AmiVector &x,
                           const AmiVector &dx) = 0;

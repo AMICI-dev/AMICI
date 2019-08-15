@@ -1458,8 +1458,6 @@ class Model : public AbstractModel {
      * @brief Recurring terms in xdot, parameter derivative
      * @param t timepoint
      * @param x array with the states
-     * @return flag indicating whether dwdp will be returned in dense storage
-     * dense: true, sparse: false
      */
     void fdwdp(realtype t, const realtype *x);
 
