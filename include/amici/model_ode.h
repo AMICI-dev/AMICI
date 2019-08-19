@@ -143,7 +143,6 @@ class Model_ODE : public Model {
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
      * @param dx Vector with the derivative states
-     * @return status flag indicating successful execution
      **/
     void fJDiag(realtype t, AmiVector &JDiag, realtype cj, const AmiVector &x,
                 const AmiVector &dx) override;

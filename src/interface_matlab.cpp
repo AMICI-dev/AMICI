@@ -82,7 +82,6 @@ char amici_blasCBlasTransToBlasTrans(BLASTranspose trans) {
  * @param beta      coefficient beta
  * @param C         matrix C
  * @param ldc       leading dimension of C (m or n)
- * @return void
  */
 void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
                  BLASTranspose TransB, const int M, const int N,
@@ -123,7 +122,6 @@ void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
  * @param beta      coefficient beta
  * @param Y         vector Y
  * @param incY      increment for entries of Y
- * @return void
  */
 void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
                  const int M, const int N, const double alpha, const double *A,
@@ -521,7 +519,6 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
  * @param plhs pointer to the array of output arguments
  * @param nrhs number of input arguments of the matlab call
  * @param prhs pointer to the array of input arguments
- * @return void
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // use matlab error reporting
