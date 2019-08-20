@@ -51,7 +51,7 @@ are derived symbolically and C++ code is generated. This code is then
 compiled into a C++ library, a Python module, or a Matlab `.mex` file and
 is then used for model simulation.
 
-![AMICI workflow](documentation/gfx/amici_workflow.png)
+![AMICI workflow](https://raw.githubusercontent.com/ICB-DCM/AMICI/master/documentation/gfx/amici_workflow.png)
 
 ## Getting started
 
@@ -83,18 +83,14 @@ get back to you quickly.
 **Citeable DOI for the latest AMICI release:**
 [![DOI](https://zenodo.org/badge/43677177.svg)](https://zenodo.org/badge/latestdoi/43677177)
 
-There is a list of [publications using AMICI ](documentation/references.md)
-AMICI available. If you used AMICI in your work, we are happy to include
+There is a list of [publications using AMICI](documentation/references.md).
+If you used AMICI in your work, we are happy to include
 your project, please let us know via a Github issue.
 
 When using AMICI in your project, please cite
-* [Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017).
-  Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.
-  Plos Computational Biology, 13(1), e1005331. doi: 10.1371/journal.pcbi.1005331](https://doi.org/10.1371/journal.pcbi.1005331)
+* [Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017). Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.   Plos Computational Biology, 13(1), e1005331. doi: 10.1371/journal.pcbi.1005331](https://doi.org/10.1371/journal.pcbi.1005331)
 and/or
-* [Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017).
-  Parameter estimation for dynamical systems with discrete events and logical
-   operations. Bioinformatics, 33(7), 1049-1056. doi: 10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
+* [Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017). Parameter estimation for dynamical systems with discrete events and logical operations. Bioinformatics, 33(7), 1049-1056. doi: 10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
 
 
 ## Status of SBML support in Python-AMICI
@@ -127,7 +123,11 @@ However, the following features are unlikely to be supported:
 
 ## Current build status
 
-[![PyPI version](https://badge.fury.io/py/amici.svg)](https://badge.fury.io/py/amici)
-[![Build Status](https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master)](https://travis-ci.com/ICB-DCM/AMICI)
-[![CodeCov](https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg)](https://codecov.io/gh/ICB-DCM/AMICI)
-[![Codacy](https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6)](https://www.codacy.com/app/FFroehlich/AMICI?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=ICB-DCM/AMICI&amp;utm_campaign=Badge_Grade)
+<a href="https://badge.fury.io/py/amici" alt="PyPI version">
+  <img src="https://badge.fury.io/py/amici.svg"></a>
+<a href="https://travis-ci.com/ICB-DCM/AMICI" alt="Build Status">
+  <img src="https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master"></a>
+<a href="https://codecov.io/gh/ICB-DCM/AMICI" alt="CodeCov">
+  <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
+<a href="https://www.codacy.com/app/FFroehlich/AMICI" alt="Codacy">
+  <img src="https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6"></a>
