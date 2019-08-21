@@ -65,6 +65,8 @@ def main():
         f.write('# References\n\n')
         f.write('List of publications using AMICI. '
                 f'Total number is {num_total}.\n\n')
+        f.write('If you applied AMICI in your work and your publication is '
+                'missing, please let us know via a new Github issue.\n\n')
 
         for year in reversed(sorted(by_year.keys())):
             cur_bib = get_sub_bibliography(year, by_year, bibfile)
