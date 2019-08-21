@@ -1786,6 +1786,9 @@ INPUT            += "_SourceDir_/documentation/PYTHON.md"
 INPUT            += "_SourceDir_/documentation/MATLAB.md"
 INPUT            += "_SourceDir_/documentation/CPP.md"
 INPUT            += "_SourceDir_/documentation/FAQ.md"
+INPUT            += "_SourceDir_/documentation/development.md"
+INPUT            += "_SourceDir_/documentation/CI.md"
+INPUT            += "_SourceDir_/documentation/README.md"
 INPUT            += "_SourceDir_"
 
 # doxygen bothers to look at .m files at all
