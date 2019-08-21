@@ -46,14 +46,26 @@ Out-of-source documentation files should be written in Markdown and
 created within `documentation/`.
 Graphics for documentation are kept in `documentation/gfx/`.
 
-Note that there are some incompatibilities of Github Markdown and Doxygen
-Markdown. Ideally documentation should be written in a format compatible with
-both.
-This affects for example images links which currently cause trouble in Doxygen.
+Some guidelines:
 
-Where possible, relative links are preferred over absolute links. However,
-they should work with both Github and Doxygen and ideally with local files
-for offline use.
+* Note that there are some incompatibilities of Github Markdown and Doxygen
+  Markdown. Ideally documentation should be written in a format compatible with
+  both.
+  This affects for example images links which currently cause trouble in
+  Doxygen.
+
+* Where possible, relative links are preferred over absolute links. However,
+  they should work with both Github and Doxygen and ideally with local files
+  for offline use.
+
+* Please stick to the limit of 80 characters per line for readability of raw
+  Markdown files where possible. 
+  
+  However, note that some Markdown interpreters can handle line breaks within
+  links and headings, whereas others cannot. Here, compatibility is preferred
+  over linebreaks. 
+  
+* Avoid trailing whitespace
 
 
 ## Maintaining the list of publications
