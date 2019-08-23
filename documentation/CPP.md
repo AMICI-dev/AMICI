@@ -100,7 +100,8 @@ For running simulations for multiple experimental conditions
 (multiple `amici::ExpData` instances), `amici::runAmiciSimulations(...)`
 provides an alternative entry point. If AMICI (and your application)
 have been compiled with OpenMP support (see installation guide), this allows
-for running those simulations in parallel.  
+for running those simulations in parallel.
+
 
 ## Parameter estimation for AMICI models in high-performance computing environments
 

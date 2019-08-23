@@ -13,8 +13,8 @@ into `master` as new releases. For release versioning we are trying to follow
 and are automatically deployed to
 [Zenodo](https://zenodo.org/record/3362453#.XVwJ9vyxVMA) for archiving and to
 obtain a digital object identifier (DOI) to make them citable.
-Furthermore, our [CI pipeline](CI.md) will automatically create and deploy a
-new release on [PyPI](https://pypi.org/project/amici/).
+Furthermore, our [CI pipeline](documentation/CI.md) will automatically create
+and deploy a new release on [PyPI](https://pypi.org/project/amici/).
 
 We try to keep a clean git history. Therefore, feature pull requests are
 squash-merged to `develop`. Merging of release branches to master is done via
@@ -52,7 +52,7 @@ described below:
   (our CI pipeline will do this for you)
 
 * When adding new functionality, please also provide test cases
-  (see `tests/cpputest/` and [CI.md](CI.md))
+  (see `tests/cpputest/` and [documentation/CI.md](documentation/CI.md))
 
 * Write meaningful commit messages
 
