@@ -8,6 +8,7 @@ import re
 import math
 import itertools as itt
 import warnings
+from typing import Dict, Union
 from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
 
@@ -82,9 +83,9 @@ class SbmlImporter:
 
     def __init__(
             self,
-            sbml_source,
-            show_sbml_warnings = False,
-            from_file = True):
+            sbml_source: Union[str, 'libsbml.Model'],
+            show_sbml_warnings: bool = False,
+            from_file: bool = True):
         """Create a new Model instance.
 
         Arguments:
@@ -92,13 +93,13 @@ class SbmlImporter:
             sbml_source: Either a path to SBML file where the model is
                 specified, or a model string as created by
                 sbml.sbmlWriter().writeSBMLToString() or an instance of
-                libsbml.Model. @type str
+                libsbml.Model.
 
             show_sbml_warnings: Indicates whether libSBML warnings should be
-            displayed (default = True). @type bool
+            displayed (default = True).
 
             from_file: Whether `sbml_source` is a file name (True, default), or an
-            sbml string (False). @type bool
+            sbml string (False).
 
         Raises:
 
@@ -170,9 +171,9 @@ class SbmlImporter:
         self.symbols = default_symbols
 
     def sbml2amici(self,
-                   modelName,
-                   output_dir = None,
-                   observables = None,
+                   modelName: str,
+                   output_dir: str = None,
+                   observables: Dict = None,
                    constantParameters = None,
                    sigmas = None,
                    noise_distributions = None,
