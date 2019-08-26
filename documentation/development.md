@@ -3,6 +3,7 @@
 This document contains information for AMICI developers, not too relevant to
 regular users.
 
+
 ## Branches / releases
 
 AMICI roughly follows the
@@ -20,6 +21,7 @@ We try to keep a clean git history. Therefore, feature pull requests are
 squash-merged to `develop`. Merging of release branches to master is done via
 merge commits.   
 
+
 ## When starting to work on some issue
 
 When starting to work on some Github issue, please assign yourself to let other
@@ -28,6 +30,7 @@ respective issue is not completely clear, it is generally a good idea to ask
 for clarification before starting to work on it.
 
 If you want to work on something new, please create a Github issue first.
+
 
 ## Code contributions
 
@@ -75,6 +78,7 @@ described below:
 
 ### Style guide
 
+
 #### General
 
 * All files and functions should come with file-level and function-level
@@ -92,8 +96,13 @@ described below:
   [PEP8](https://www.python.org/dev/peps/pep-0008/). Although this is not the
   case for all existing code, any new contributions should do so. 
 
-* We would like to use typehints, but this currently interferes with doxygen
-  documentation (https://github.com/ICB-DCM/AMICI/issues/613).
+* We use Python [type hints](https://docs.python.org/3/library/typing.html)
+  for all functions. In Python code type hints should be used instead of
+  doxygen `@type`. (All legacy `@type` attributes are to be removed.)
+  
+  Forward-references are not supported in current TravisCI doxygen version
+  1.8.16, but only in 1.8.17. Therefore, they should not be used for the
+  time being.
 
 
 #### C++
