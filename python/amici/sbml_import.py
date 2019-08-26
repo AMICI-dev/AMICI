@@ -83,7 +83,7 @@ class SbmlImporter:
 
     def __init__(
             self,
-            sbml_source: Union[str, sbml.Model],
+            sbml_source,
             show_sbml_warnings: bool = False,
             from_file: bool = True):
         """Create a new Model instance.
