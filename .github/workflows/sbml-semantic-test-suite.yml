@@ -1,6 +1,10 @@
 name: SBML semantic test suite
 on: [push]
 
+#on:
+#  schedule: 
+#    - cron: "0 0 * * 0"
+
 jobs:
   build:
 
@@ -11,7 +15,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: apt
-      run: sudo apt-get install libhdf5-serial-dev swig3.0 libatlas-base-dev
+      run: sudo apt-get install libhdf5-serial-dev swig3.0 libatlas-base-dev && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
     - name: ./scripts/installAmiciSource.sh
       run: ./scripts/installAmiciSource.sh
     - name: ./scripts/run-SBMLTestsuite.sh
