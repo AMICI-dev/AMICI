@@ -83,7 +83,7 @@ class SbmlImporter:
 
     def __init__(
             self,
-            sbml_source,
+            sbml_source: Union[str, sbml.Model],
             show_sbml_warnings: bool = False,
             from_file: bool = True):
         """Create a new Model instance.
@@ -93,7 +93,7 @@ class SbmlImporter:
             sbml_source: Either a path to SBML file where the model is
                 specified, or a model string as created by
                 sbml.sbmlWriter().writeSBMLToString() or an instance of
-                libsbml.Model.
+                `libsbml.Model`.
 
             show_sbml_warnings: Indicates whether libSBML warnings should be
             displayed (default = True).
