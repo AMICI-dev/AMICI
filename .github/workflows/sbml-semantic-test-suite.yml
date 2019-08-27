@@ -11,7 +11,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: apt
-      run: sudo apt-get install libhdf5-serial-dev swig3.0
+      run: sudo apt-get install libhdf5-serial-dev swig3.0 libatlas-base-dev
     - name: ./scripts/installAmiciSource.sh
       run: ./scripts/installAmiciSource.sh
     - name: ./scripts/run-SBMLTestsuite.sh
