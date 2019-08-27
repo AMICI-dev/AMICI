@@ -99,10 +99,25 @@ described below:
 * We use Python [type hints](https://docs.python.org/3/library/typing.html)
   for all functions. In Python code type hints should be used instead of
   doxygen `@type`. (All legacy `@type` attributes are to be removed.)
+    
+  For function docstrings, follow this format:
   
-  Forward-references are not supported in current TravisCI doxygen version
-  1.8.16, but only in 1.8.17. Therefore, they should not be used for the
-  time being.
+  ```
+  """One-line description.
+  
+  Possible a more detailed description
+
+  Arguments:
+      Argument1: This needs to start on the same line, otherwise the current
+          doxygen filter will fail.    
+
+      Returns:
+          Return value
+
+      Raises:
+          SomeError in case of some error.
+  """
+  ```
 
 
 #### C++
