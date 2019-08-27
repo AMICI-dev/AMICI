@@ -1,0 +1,20 @@
+name: SBML semantic test suite
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: ./scripts/buildSuiteSparse.sh
+      run: ./scripts/buildSuiteSparse.sh
+    - name: ./scripts/buildSundials.sh
+      run: ./scripts/buildSundials.sh
+    - name: ./scripts/buildAmici.sh
+      run: ./scripts/buildAmici.sh
+    - name: ./scripts/installAmiciSource.sh
+      run: ./scripts/installAmiciSource.sh
+    - name: ./scripts/run-SBMLTestsuite.sh
+      run: ./scripts/run-SBMLTestsuite.sh
