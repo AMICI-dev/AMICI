@@ -78,7 +78,6 @@ class Solver {
      * @brief runs a backward simulation until the specified timepoint
      *
      * @param tout next timepooint
-     * @return status flag
      */
     void runB(realtype tout) const;
 
@@ -1217,7 +1216,6 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      * @param ami_mem pointer to the forward solver memory instance
-     * @return pointer to the backward solver memory instance
      */
     virtual void *getAdjBmem(void *ami_mem, int which) const = 0;
 

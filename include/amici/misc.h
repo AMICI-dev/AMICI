@@ -42,8 +42,6 @@ int checkFinite(gsl::span<const realtype> array, const char* fun);
   * @param bufferScaled scaled parameters
   * @param pscale parameter scaling
   * @param bufferUnscaled unscaled parameters are written to the array
-  *
-  * @return status flag indicating success of execution @type int
   */
 void unscaleParameters(gsl::span<const realtype> bufferScaled,
                        gsl::span<const ParameterScaling> pscale,
