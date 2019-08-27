@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-""" @package amici.sbml_import The python sbml import module for python
-"""
+"""@package amici.sbml_import The SBML import module for Python."""
 
 import sympy as sp
 import libsbml as sbml
@@ -8,15 +6,16 @@ import re
 import math
 import itertools as itt
 import warnings
-from typing import Dict, Union
-from sympy.logic.boolalg import BooleanTrue as spTrue
-from sympy.logic.boolalg import BooleanFalse as spFalse
+from typing import Dict, Union, List, Callable, Any, Iterable
+
 
 from .ode_export import ODEExporter, ODEModel
 from . import has_clibs
 
+
 class SBMLException(Exception):
     pass
+
 
 ## default dict for symbols
 default_symbols = {
@@ -95,11 +94,10 @@ class SbmlImporter:
                 sbml.sbmlWriter().writeSBMLToString() or an instance of
                 `libsbml.Model`.
 
-            show_sbml_warnings: Indicates whether libSBML warnings should be
-            displayed (default = True).
+            show_sbml_warnings: Indicates whether libSBML warnings should be displayed.
 
-            from_file: Whether `sbml_source` is a file name (True, default), or an
-            sbml string (False).
+            from_file: Whether `sbml_source` is a file name (True, default), or
+                an SBML string
 
         Raises:
 
@@ -173,50 +171,49 @@ class SbmlImporter:
     def sbml2amici(self,
                    modelName: str,
                    output_dir: str = None,
-                   observables: Dict = None,
-                   constantParameters = None,
-                   sigmas = None,
-                   noise_distributions = None,
-                   verbose = False,
-                   assume_pow_positivity = False,
-                   compiler = None,
-                   allow_reinit_fixpar_initcond = True,
-                   compile = True
+                   observables: Dict[str, Dict[str, str]] = None,
+                   constantParameters: List[str] = None,
+                   sigmas: Dict[str, Union[str, float]] = None,
+                   noise_distributions: Dict[str, str] = None,
+                   verbose: bool = False,
+                   assume_pow_positivity: bool = False,
+                   compiler: str = None,
+                   allow_reinit_fixpar_initcond: bool = True,
+                   compile: bool = True
                    ):
         """Generate AMICI C++ files for the model provided to the constructor.
 
         Arguments:
-            modelName: name of the model/model directory @type str
+            modelName: name of the model/model directory
 
-            output_dir: see sbml_import.setPaths() @type str
+            output_dir: see sbml_import.setPaths()
 
             observables: dictionary( observableId:{'name':observableName
                 (optional), 'formula':formulaString)}) to be added to the model
-                @type dict
 
             constantParameters: list of SBML Ids identifying constant parameters
-                @type list
 
-            sigmas: dictionary(observableId: sigma value or (existing) parameter name)
-                @type dict
+            sigmas: dictionary(observableId:
+                    sigma value or (existing) parameter name)
 
-            noise_distributions: dictionary(observableId: noise type). If nothing is passed
+
+            noise_distributions: dictionary(observableId: noise type).
+                If nothing is passed
                 for some observable id, a normal model is assumed as default.
-                @type dict
 
-            verbose: more verbose output if True @type bool
+            verbose: more verbose output if True
 
-            assume_pow_positivity: if set to true, a special pow function is
+            assume_pow_positivity: if set to True, a special pow function is
                 used to avoid problems with state variables that may become
-                negative due to numerical errors @type bool
+                negative due to numerical errors
 
             compiler: distutils/setuptools compiler selection to build the
-                python extension @type str
+                python extension
 
-            allow_reinit_fixpar_initcond: see ode_export.ODEExporter @type bool
+            allow_reinit_fixpar_initcond: see ode_export.ODEExporter
 
-            compile: If True, compile the generated Python package, if False, just
-                generate code. @type bool
+            compile: If True, compile the generated Python package,
+                if False, just generate code.
 
         Returns:
 
@@ -258,12 +255,11 @@ class SbmlImporter:
                               'Generated model code, but unable to compile.')
             exporter.compileModel()
 
-    def processSBML(self, constantParameters=None):
+    def processSBML(self, constantParameters: List[str] = None):
         """Read parameters, species, reactions, and so on from SBML model
 
         Arguments:
             constantParameters: SBML Ids identifying constant parameters
-            @type list
 
         Returns:
 
@@ -444,15 +440,11 @@ class SbmlImporter:
              for specie in species
         ])
 
-
-
-
-    def processParameters(self, constantParameters=None):
+    def processParameters(self, constantParameters: List[str] = None):
         """Get parameter information from SBML model.
 
         Arguments:
             constantParameters: SBML Ids identifying constant parameters
-            @type list
 
         Returns:
 
@@ -487,8 +479,6 @@ class SbmlImporter:
                        in self.sbml.getListOfParameters()
                        if parameter.getId() not in constantParameters
                        and parameter.getId() not in rulevars]
-
-
 
         loop_settings = {
             'parameter': {
@@ -560,7 +550,6 @@ class SbmlImporter:
             self.replaceInAllExpressions(
                comp, vol
             )
-
 
     def processReactions(self):
         """Get reactions from SBML model.
@@ -803,20 +792,22 @@ class SbmlImporter:
 
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
 
-    def processObservables(self, observables, sigmas, noise_distributions):
+    def processObservables(self, observables: Dict[str, Dict[str, str]],
+                           sigmas: Dict[str, Union[str, float]],
+                           noise_distributions: Dict[str, str]):
         """Perform symbolic computations required for objective function
         evaluation.
 
         Arguments:
             observables: dictionary(observableId: {'name':observableName
-            (optional), 'formula':formulaString)}) to be added to the model
-            @type dict
+                (optional), 'formula':formulaString)})
+                to be added to the model
 
             sigmas: dictionary(observableId: sigma value or (existing)
-            parameter name) @type dict
+                parameter name)
 
             noise_distributions: dictionary(observableId: noise type)
-            See `sbml2amici`. @type dict
+                See `sbml2amici`.
 
         Returns:
 
@@ -945,13 +936,13 @@ class SbmlImporter:
         self.symbols['llhy']['name'] = l2s(llhYSyms)
         self.symbols['llhy']['identifier'] = llhYSyms
 
-    def replaceInAllExpressions(self, old, new):
+    def replaceInAllExpressions(self, old: sp.Symbol, new: sp.Symbol):
         """Replace 'old' by 'new' in all symbolic expressions.
 
         Arguments:
-            old: symbolic variables to be replaced @type symengine.Symbol
+            old: symbolic variables to be replaced
 
-            new: replacement symbolic variables @type symengine.Symbol
+            new: replacement symbolic variables
 
 
         Returns:
@@ -1221,7 +1212,7 @@ def _parse_special_functions(sym):
     return sym
 
 
-def grouper(iterable, n, fillvalue=None):
+def grouper(iterable: Iterable, n: int, fillvalue: Any = None):
     """Collect data into fixed-length chunks or blocks
 
     E.g. grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
@@ -1274,7 +1265,8 @@ def assignmentRules2observables(sbml_model,
     return observables
 
 
-def noise_distribution_to_cost_function(noise_distribution):
+def noise_distribution_to_cost_function(
+        noise_distribution: str) -> Callable[[str], str]:
     """
     Parse cost string to a cost function definition amici can work with.
 
