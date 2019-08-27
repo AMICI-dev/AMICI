@@ -8,6 +8,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+    - name: apt
+      run: apt install libhdf5-serial-dev
     - name: ./scripts/buildSuiteSparse.sh
       run: ./scripts/buildSuiteSparse.sh
     - name: ./scripts/buildSundials.sh
