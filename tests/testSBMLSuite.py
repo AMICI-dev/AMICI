@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Run SBML Test Suite and verify simulation results [https://github.com/sbmlteam/sbml-test-suite/releases]"""
+"""
+Run SBML Test Suite and verify simulation results
+[https://github.com/sbmlteam/sbml-test-suite/releases]
+"""
 import os
 import sys
 import importlib
@@ -167,7 +170,7 @@ def find_model_file(current_test_path, testId):
     # fallback l2v5
     if not os.path.isfile(sbmlFile):
         sbmlFile = os.path.join(current_test_path, testId + '-sbml-l2v5.xml')
-        
+
     return sbmlFile
 
 
@@ -192,5 +195,5 @@ def get_test_str(test_id):
 if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestAmiciSBMLTestSuite())
-    unittest.main()
+    unittest.main(buffer=False)
 
