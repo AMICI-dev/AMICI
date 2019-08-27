@@ -8,8 +8,10 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
     - name: apt
-      run: sudo apt-get install libhdf5-serial-dev
+      run: sudo apt-get install libhdf5-serial-dev swig3.0
     - name: ./scripts/buildSuiteSparse.sh
       run: ./scripts/buildSuiteSparse.sh
     - name: ./scripts/buildSundials.sh
