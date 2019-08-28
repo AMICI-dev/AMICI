@@ -19,4 +19,4 @@ jobs:
     - name: ./scripts/installAmiciSource.sh
       run: AMICI_PARALLEL_COMPILE=4 ./scripts/installAmiciSource.sh
     - name: ./scripts/run-SBMLTestsuite.sh
-      run: AMICI_PARALLEL_COMPILE=4 ./scripts/run-SBMLTestsuite.sh 1-100
+      run: AMICI_PARALLEL_COMPILE=4 ./scripts/run-SBMLTestsuite.sh 1-500
