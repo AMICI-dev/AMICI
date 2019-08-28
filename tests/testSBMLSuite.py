@@ -2,7 +2,14 @@
 """
 Run SBML Test Suite and verify simulation results
 [https://github.com/sbmlteam/sbml-test-suite/releases]
+
+Usage:
+    testSBMLSuite.py SELECTION
+        SELECTION can be e.g.: `1`, `1,3`, or `-3,4,6-7` to select specific
+        test cases or 1-1780 to run all.
 """
+
+import re
 import os
 import sys
 import importlib
@@ -11,6 +18,7 @@ import sympy as sp
 import amici
 import unittest
 import copy
+from typing import List
 
 # directory with sbml semantic test cases
 test_path = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
@@ -18,6 +26,8 @@ test_path = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
 
 
 class TestAmiciSBMLTestSuite(unittest.TestCase):
+    SBML_TEST_IDS = range(1, 1781)
+
     def setUp(self):
         self.resetdir = os.getcwd()
         self.default_path = copy.copy(sys.path)
@@ -30,7 +40,7 @@ class TestAmiciSBMLTestSuite(unittest.TestCase):
         self.test_sbml_testsuite()
 
     def test_sbml_testsuite(self):
-        for testId in range(1, 1781):
+        for testId in self.SBML_TEST_IDS:
             if testId != 1395:  # we skip this test due to NaNs in the
                 # jacobian
                 with self.subTest(testId=testId):
@@ -192,8 +202,31 @@ def get_test_str(test_id):
     return test_str
 
 
+def parse_selection(selection_str: str) -> List[int]:
+    """
+    Parse comma-separated list of integer ranges, return selected indices as
+    integer list
+
+    Valid input e.g.: 1 1,3 -3,4,6-7
+    """
+    indices = []
+    for group in selection_str.split(','):
+        if not re.match(r'^(?:-?\d+)|(?:\d+(?:-\d+))$', group):
+            print("Invalid selection", group)
+            sys.exit()
+        spl = group.split('-')
+        if len(spl) == 1:
+            indices.append(int(spl[0]))
+        elif len(spl) == 2:
+            begin = int(spl[0]) if spl[0] else 0
+            end = int(spl[1])
+            indices.extend(range(begin, end + 1))
+    return indices
+
+
 if __name__ == '__main__':
+    TestAmiciSBMLTestSuite.SBML_TEST_IDS = parse_selection(sys.argv.pop())
+
     suite = unittest.TestSuite()
     suite.addTest(TestAmiciSBMLTestSuite())
     unittest.main(buffer=False)
-

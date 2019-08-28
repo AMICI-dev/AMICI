@@ -10,6 +10,11 @@ if [ ! -d "tests/sbml-test-suite" ]; then
 fi
 
 source build/venv/bin/activate
-python ./tests/testSBMLSuite.py
+if [[ -z "$*" ]]; then
+  args="1-1780" # run all tests
+else
+  args="$@" # use user selection
+fi
+python ./tests/testSBMLSuite.py "${args}"
 ret=$?
 if [[ $ret != 0 ]]; then exit $ret; fi
