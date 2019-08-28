@@ -2,14 +2,14 @@ name: SBML semantic test suite
 on: [push]
 
 #on:
-#  schedule: 
+#  schedule:
 #    - cron: "0 0 * * 0"
 
 jobs:
   build:
 
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v1
       with:
@@ -19,4 +19,4 @@ jobs:
     - name: ./scripts/installAmiciSource.sh
       run: AMICI_PARALLEL_COMPILE=4 ./scripts/installAmiciSource.sh
     - name: ./scripts/run-SBMLTestsuite.sh
-      run: AMICI_PARALLEL_COMPILE=4 ./scripts/run-SBMLTestsuite.sh
+      run: AMICI_PARALLEL_COMPILE=4 ./scripts/run-SBMLTestsuite.sh 1-100
