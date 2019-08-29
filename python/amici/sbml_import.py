@@ -8,11 +8,10 @@ import re
 import math
 import itertools as itt
 import warnings
-from sympy.logic.boolalg import BooleanTrue as spTrue
-from sympy.logic.boolalg import BooleanFalse as spFalse
 
 from .ode_export import ODEExporter, ODEModel
 from . import has_clibs
+
 
 class SBMLException(Exception):
     pass
@@ -1206,6 +1205,10 @@ def _parse_special_functions(sym):
 
         Raises:
     """
+
+    # Replace boolean constants by numbers so they can be differentiated
+    sym = sym.subs([(True, 1.0), (False, 0.0)])
+
     args = tuple(_parse_special_functions(arg) for arg in sym._args)
 
     # Do we have piecewise expressions?
