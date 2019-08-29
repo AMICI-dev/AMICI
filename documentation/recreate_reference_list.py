@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-"""Create AMICI publication list by year
-    For macOS with clang: download and install biblib-simple to avoid compiler issues
-    Requires pandoc"""
+"""
+Create AMICI publication list by year
+
+For macOS with clang: download and install biblib-simple to avoid compiler
+issues
+
+Requires pandoc
+"""
 
 import biblib.bib
 import biblib.messages
 import biblib.algo
+import os
 import sys
 import subprocess
 
@@ -30,25 +36,28 @@ def get_keys_by_year(bibfile):
     return by_year
 
 
-def get_sub_bibliography(year, by_year):
+def get_sub_bibliography(year, by_year, bibfile):
     """Get HTML bibliography for the given year"""
 
     entries = ','.join(['@' + x for x in by_year[year]])
     input = '---\n' \
-            'bibliography: amici_refs.bib\n' \
-        f'nocite: "{entries}"\n...\n' \
-        f'# {year}'
+            f'bibliography: {bibfile}\n' \
+            f'nocite: "{entries}"\n...\n' \
+            f'# {year}'
 
     out = subprocess.run(['pandoc', '--filter=pandoc-citeproc',
                           '-f', 'markdown'],
                          input=input, capture_output=True,
                          encoding='utf-8')
+    if out.returncode != 0:
+        raise AssertionError(out.stderr)
     return out.stdout
 
 
 def main():
-    bibfile = 'amici_refs.bib'
-    outfile = 'references.md'
+    script_path = os.path.dirname(os.path.realpath(__file__))
+    bibfile = os.path.join(script_path, 'amici_refs.bib')
+    outfile = os.path.join(script_path, 'references.md')
 
     by_year = get_keys_by_year(bibfile)
     num_total = sum(map(len, by_year.values()))
@@ -56,8 +65,11 @@ def main():
         f.write('# References\n\n')
         f.write('List of publications using AMICI. '
                 f'Total number is {num_total}.\n\n')
+        f.write('If you applied AMICI in your work and your publication is '
+                'missing, please let us know via a new Github issue.\n\n')
+
         for year in reversed(sorted(by_year.keys())):
-            cur_bib = get_sub_bibliography(year, by_year)
+            cur_bib = get_sub_bibliography(year, by_year, bibfile)
             f.write(cur_bib)
 
 
