@@ -42,8 +42,8 @@ EXPECTED_TO_WORK = {
     *list(range(1018, 1027)), *list(range(1030, 1039)),
     *list(range(1055, 1071)), *list(range(1077, 1083)),
     *list(range(1096, 1103)), 1104, 1107, *list(range(1109, 1112)), 1225, 1232,
-    1245, 1246, 1307, 1341, 1342, *list(range(1420, 1435)), 1436, 1438, 1440,
-    1442, 1465, 1552, 1554, 1555, 1557, 1574, *list(range(1631, 1641)),
+    1245, 1246, 1288, 1307, 1341, 1342, *list(range(1420, 1435)), 1436, 1438,
+    1440, 1442, 1465, 1552, 1554, 1555, 1557, 1574, *list(range(1631, 1641)),
     *list(range(1645, 1651)), 1722, *list(range(1724, 1727)),
     *list(range(1730, 1736)), *list(range(1739, 1742)), 1744, 1746, 1748, 1750,
     1752, 1753, 1760, 1762, 1764, 1767, 1773, 1774
@@ -255,6 +255,7 @@ def parse_selection(selection_str: str) -> List[int]:
 
 def print_stats():
     """Print test statistics"""
+
     percent_passed = (len(TestAmiciSBMLTestSuite.SBML_TESTS_PASSED)
                      / len(TestAmiciSBMLTestSuite.SBML_TEST_IDS))
     known_to_fail = TestAmiciSBMLTestSuite.SBML_TEST_IDS - EXPECTED_TO_WORK
@@ -270,14 +271,17 @@ def print_stats():
           f'({percent_passed}% of tests run)')
 
     if unexpectedly_failed:
+        print()
         print('ERROR:', len(unexpectedly_failed),
               'tests failed which were expected to work:', unexpectedly_failed)
 
     if unexpectedly_succeeded:
+        print()
         print('Congratulations:', len(unexpectedly_succeeded),
               'tests passed which did not pass before:',
               unexpectedly_succeeded)
-        print(f'Please update {__file__}.EXPECTED_TO_WORK accordingly.')
+        print('This tests still fails until you update '
+              f' {__file__}.EXPECTED_TO_WORK accordingly.')
 
 
 def get_return_code() -> int:
@@ -292,8 +296,10 @@ def get_return_code() -> int:
     failed = (TestAmiciSBMLTestSuite.SBML_TEST_IDS
               - TestAmiciSBMLTestSuite.SBML_TESTS_PASSED)
     unexpectedly_failed = failed - known_to_fail
+    unexpectedly_succeeded = (TestAmiciSBMLTestSuite.SBML_TESTS_PASSED
+                              - EXPECTED_TO_WORK)
 
-    return len(unexpectedly_failed)
+    return len(unexpectedly_failed) + len(unexpectedly_succeeded)
 
 
 if __name__ == '__main__':
