@@ -12,6 +12,8 @@ import warnings
 from .ode_export import ODEExporter, ODEModel
 from . import has_clibs
 
+from sympy.logic.boolalg import BooleanTrue as spTrue
+from sympy.logic.boolalg import BooleanFalse as spFalse
 
 class SBMLException(Exception):
     pass
@@ -1194,24 +1196,20 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
             _check_unsupported_functions(fun, expression_type)
 
 
-def _parse_special_functions(sym):
+def _parse_special_functions(sym, toplevel=True):
     """Recursively checks the symbolic expression for functions which have be
     to parsed in a special way, such as piecewise functions
 
         Arguments:
             sym: symbolic expressions @type sympy.Basic
-
+            toplevel: as this is called recursively,
+                are we in the top level expression?
         Returns:
 
         Raises:
     """
+    args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
 
-    # Replace boolean constants by numbers so they can be differentiated
-    sym = sym.subs([(True, 1.0), (False, 0.0)])
-
-    args = tuple(_parse_special_functions(arg) for arg in sym._args)
-
-    # Do we have piecewise expressions?
     if sym.__class__.__name__ == 'abs':
         return sp.Abs(sym._args[0])
     elif sym.__class__.__name__ == 'xor':
@@ -1221,6 +1219,14 @@ def _parse_special_functions(sym):
         return sp.Piecewise(*grouper(args, 2, True))
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
+    elif toplevel:
+        # Replace boolean constants by numbers so they can be differentiated
+        #  must not replace in Piecewise function. Therefore, we only replace
+        #  it the complete expression consists only of a Boolean value.
+        if isinstance(sym, spTrue):
+            sym = sp.Float(1.0)
+        elif isinstance(sym, spFalse):
+            sym = sp.Float(0.0)
 
     return sym
 
