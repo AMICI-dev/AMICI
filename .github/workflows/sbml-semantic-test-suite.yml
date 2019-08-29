@@ -1,9 +1,9 @@
 name: SBML semantic test suite
-on: [push]
-
-#on:
-#  schedule:
-#    - cron: "0 0 * * 0"
+on: [push, pull_request]
+  branches:
+    - master
+    - develop
+    - test_action
 
 jobs:
   build:
