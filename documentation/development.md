@@ -68,10 +68,11 @@ described below:
 
   * If you made changes to the Python or C++ code,
     run `make python-tests` in `build`
-  
+
 * When all tests are passing and you think your code is ready to merge,
-  request a code review
-  
+  request a code review 
+  (see also our [code review guideline](documentation/code_review_guide.md))
+
 * Wait for feedback. If you do not receive feedback to your pull request within
   a week, please give us a friendly reminder.
 
