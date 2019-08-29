@@ -1214,6 +1214,8 @@ def _parse_special_functions(sym):
     # Do we have piecewise expressions?
     if sym.__class__.__name__ == 'abs':
         return sp.Abs(sym._args[0])
+    elif sym.__class__.__name__ == 'xor':
+        return sp.Xor(*sym.args)
     elif sym.__class__.__name__ == 'piecewise':
         # how many condition-expression pairs will we have?
         return sp.Piecewise(*grouper(args, 2, True))
