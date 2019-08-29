@@ -71,7 +71,7 @@ models at once is not possible.
 
 The complete AMICI API is available through `amici/amici.h`; this is the only
 header file that needs to be included for basic usage.
-Additionally, `amici/hdf5.h` maybe be helpful. This file provides some
+Additionally, `amici/hdf5.h` may be helpful. This file provides some
 functions for reading and writing [HDF5](https://support.hdfgroup.org/) files). 
 All functions are declared within the `amici` namespace.
 
