@@ -2,6 +2,8 @@
 
 List of publications using AMICI. Total number is 32.
 
+If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
+
 <h1 id="section" class="unnumbered">2019</h1>
 <div id="refs" class="references">
 <div id="ref-DharmarajanKal2019">
