@@ -10,9 +10,12 @@ import petab
 import os
 import time
 import argparse
-import numpy as np
+import math
+import logging
 from colorama import init as init_colorama
 from colorama import Fore
+
+logger = logging.getLogger(__name__)
 
 
 def parse_cli_args():
@@ -73,26 +76,35 @@ def parse_cli_args():
 
 
 def show_model_info(sbml_model):
-    """Print some model quantities"""
+    """Log some model quantities"""
 
-    print('Species: ', len(sbml_model.getListOfSpecies()))
-    print('Global parameters: ', len(sbml_model.getListOfParameters()))
-    print('Reactions: ', len(sbml_model.getListOfReactions()))
+    logger.log(logging.INFO, f'Species: {len(sbml_model.getListOfSpecies())}')
+    logger.log(logging.INFO, 'Global parameters: '
+               + str(len(sbml_model.getListOfParameters())))
+    logger.log(logging.INFO,
+               f'Reactions: {len(sbml_model.getListOfReactions())}')
 
 
 def get_fixed_parameters(condition_file_name, sbml_model,
-                         constant_species_to_parameters=True):
+                         const_species_to_parameters=False):
     """Determine, set and return fixed model parameters
 
     Parameters specified in `condition_file_name` are turned into constants.
     Only global SBML parameters are considered. Local parameters are ignored.
 
-    Species which are marked constant within the SBML model will be turned
-    into constant parameters *within* the given `sbml_model`.
+    Arguments:
+        condition_file_name:
+            PEtab condition table
+        sbml_model:
+            libsbml.Model instance
+        const_species_to_parameters:
+            If `True`, species which are marked constant within the SBML model
+            will be turned into constant parameters *within* the given
+            `sbml_model`.
     """
 
     condition_df = petab.get_condition_df(condition_file_name)
-    print(f'Condition table: {condition_df.shape}')
+    logger.log(logging.INFO, f'Condition table: {condition_df.shape}')
 
     # column names are model parameter names that should be made constant
     # except for any overridden parameters
@@ -110,15 +122,15 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     # must be unique
     assert(len(fixed_parameters) == len(set(fixed_parameters)))
 
-    if constant_species_to_parameters:
+    if const_species_to_parameters:
         # Turn species which are marked constant in the SBML model into
         # parameters
-        constant_species = \
-            petab.constant_species_to_parameters(sbml_model)
+        constant_species = constant_species_to_parameters(sbml_model)
 
-        print("Constant species converted to parameters",
-              len(constant_species))
-        print("Non-constant species", len(sbml_model.getListOfSpecies()))
+        logger.log(logging.INFO, "Constant species converted to parameters "
+                   + str(len(constant_species)))
+        logger.log(logging.INFO, "Non-constant species "
+                   + str(len(sbml_model.getListOfSpecies())))
 
     # ... and append them to the list of fixed_parameters
     for species in constant_species:
@@ -131,11 +143,72 @@ def get_fixed_parameters(condition_file_name, sbml_model,
         # check global parameters
         if not sbml_model.getParameter(fixed_parameter) \
                 and not sbml_model.getSpecies(fixed_parameter):
-            print(f"{Fore.YELLOW}Parameter or species '{fixed_parameter}' "
-                  "provided in condition table but not present in model.")
+            logger.log(logging.warning,
+                       f"{Fore.YELLOW}Parameter or species '{fixed_parameter}'"
+                       " provided in condition table but not present in"
+                       " model.")
             fixed_parameters.remove(fixed_parameter)
 
     return fixed_parameters
+
+
+def constant_species_to_parameters(sbml_model):
+    """Convert constant species in the SBML model to constant parameters.
+
+    This can be used e.g. for setting up models with condition-specific
+    constant species for PEtab, since there it is not possible to specify
+    constant species in the condition table.
+
+    Arguments:
+        sbml_model: libsbml model instance
+
+    Returns:
+        List of IDs of SBML species that have been turned into constants
+
+    Raises:
+
+    """
+    transformables = []
+    for species in sbml_model.getListOfSpecies():
+        if not species.getConstant() and not species.getBoundaryCondition():
+            continue
+
+        if species.getHasOnlySubstanceUnits():
+            logger.warning(
+                f"Ignoring {species.getId()} which has only substance units."
+                " Conversion not yet implemented.")
+            continue
+
+        if math.isnan(species.getInitialConcentration()):
+            logger.warning(
+                f"Ignoring {species.getId()} which has no initial "
+                "concentration. Amount conversion not yet implemented.")
+            continue
+
+        transformables.append(species.getId())
+
+    # Must not remove species while iterating over getListOfSpecies()
+    for speciesId in transformables:
+        species = sbml_model.removeSpecies(speciesId)
+        par = sbml_model.createParameter()
+        par.setId(species.getId())
+        par.setName(species.getName())
+        par.setConstant(True)
+        par.setValue(species.getInitialConcentration())
+        par.setUnits(species.getUnits())
+
+    # Remove from reactants and products
+    for reaction in sbml_model.getListOfReactions():
+        for speciesId in transformables:
+            # loop, since removeX only removes one instance
+            while reaction.removeReactant(speciesId):
+                pass
+            while reaction.removeProduct(speciesId):
+                pass
+            while reaction.removeModifier(speciesId):
+                pass
+
+    return transformables
 
 
 def import_model(sbml_file: str,
@@ -155,10 +228,12 @@ def import_model(sbml_file: str,
         model_output_dir = os.path.join(os.getcwd(), model_name)
 
     if verbose:
-        print(f"{Fore.GREEN}Importing model '{sbml_file}' using fixed "
-              f"parameters file '{condition_file}'")
-        print(f"{Fore.GREEN}Model name is '{model_name}' Writing model code "
-              f"to '{model_output_dir}'")
+        logger.log(logging.INFO,
+                   f"{Fore.GREEN}Importing model '{sbml_file}' "
+                   f"using fixed parameters file '{condition_file}'")
+        logger.log(logging.INFO,
+                   f"{Fore.GREEN}Model name is '{model_name}' "
+                   f"Writing model code to '{model_output_dir}'")
 
     sbml_importer = amici.SbmlImporter(sbml_file)
     sbml_model = sbml_importer.sbml
@@ -181,8 +256,8 @@ def import_model(sbml_file: str,
         sigmas[observable_id] = str(repl)
 
     if verbose:
-        print('Observables', len(observables))
-        print('Sigmas', len(sigmas))
+        logger.log(logging.INFO, f'Observables {len(observables)}')
+        logger.log(logging.INFO, f'Sigmas {len(sigmas)}')
 
     if not len(sigmas) == len(observables):
         raise AssertionError(
@@ -192,9 +267,11 @@ def import_model(sbml_file: str,
     fixed_parameters = get_fixed_parameters(condition_file, sbml_model)
 
     if verbose:
-        print("Overall fixed parameters", len(fixed_parameters))
-        print("Non-constant global parameters",
-              len(sbml_model.getListOfParameters()) - len(fixed_parameters))
+        logger.log(logging.INFO,
+                   f"Overall fixed parameters {len(fixed_parameters)}")
+        logger.log(logging.INFO, "Non-constant global parameters "
+                   + str(len(sbml_model.getListOfParameters())
+                         - len(fixed_parameters)))
 
     # Create Python module from SBML model
     start = time.time()
@@ -210,8 +287,8 @@ def import_model(sbml_file: str,
     end = time. time()
 
     if verbose:
-        print(f"{Fore.GREEN}Model imported successfully in "
-              f"{round(end - start, 2)}s")
+        logger.log(logging.INFO, f"{Fore.GREEN}Model imported successfully in "
+                                 f"{round(end - start, 2)}s")
 
 
 def petab_noise_distributions_to_amici(noise_distributions):
