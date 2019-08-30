@@ -648,6 +648,8 @@ class SbmlImporter:
                 # We try to make a sympy formla from the string
                 symMath = sp.sympify(_parse_logical_operators(math),
                                      locals=self.local_symbols)
+            except SBMLException as SBMLEx:
+                raise SBMLEx
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
@@ -1209,6 +1211,9 @@ def _parse_special_functions(sym):
     elif sym.__class__.__name__ == 'piecewise':
         # how many condition-expression pairs will we have?
         return sp.Piecewise(*grouper(args, 2, True))
+    elif sym.__class__.__name__ == 'Xor':
+        # how many condition-expression pairs will we have?
+        return sp.Piecewise(*grouper(args, 2, True))
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
 
@@ -1227,6 +1232,9 @@ def _parse_logical_operators(math_str):
 
         Raises:
     """
+    if ' xor(' in math_str or  'Xor(' in math_str:
+        raise SBMLException('Logical statements including Xor() are '
+                            'currently not supprted.')
 
     return (math_str.replace('&&', '&')).replace('||', '|')
 
