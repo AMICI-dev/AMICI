@@ -402,7 +402,7 @@ class SbmlImporter:
                 index = species_ids.index(
                         initial_assignment.getId()
                     )
-                symMath = sp.sympify(_parse_logical_operators_in_math_string(
+                symMath = sp.sympify(_parse_logical_operators(
                     sbml.formulaToL3String(initial_assignment.getMath())),
                     locals=self.local_symbols
                 )
@@ -648,6 +648,8 @@ class SbmlImporter:
             try:
                 symMath = sp.sympify(_parse_logical_operators(math),
                                      locals=self.local_symbols)
+            except SBMLException as Ex:
+                raise Ex
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
