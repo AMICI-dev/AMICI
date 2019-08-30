@@ -8,9 +8,9 @@
       <species id="__s0" name="PROT(kin=None, drug=None, phospho=&apos;u&apos;)" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
       <species id="__s1" name="DRUG(bound=None)" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
       <species id="__s2" name="KIN(bound=None)" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
-      <species id="__s3" name="DRUG(bound=1) ._br_PROT(kin=None, drug=1, phospho=&apos;u&apos;)" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
-      <species id="__s4" name="KIN(bound=1) ._br_PROT(kin=1, drug=None, phospho=&apos;u&apos;)" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
-      <species id="__s5" name="PROT(kin=None, drug=None, phospho=&apos;p&apos;)" compartment="default" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+      <species id="__s3" name="DRUG(bound=1) ._br_PROT(kin=None, drug=1, phospho=&apos;u&apos;)" compartment="default" initialAmount="0" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+      <species id="__s4" name="KIN(bound=1) ._br_PROT(kin=1, drug=None, phospho=&apos;u&apos;)" compartment="default" initialAmount="0" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
+      <species id="__s5" name="PROT(kin=None, drug=None, phospho=&apos;p&apos;)" compartment="default" initialAmount="0" hasOnlySubstanceUnits="true" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
       <parameter id="initProt" name="initProt" constant="false"/>

@@ -40,6 +40,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
         constant_parameters = ['DRUG_0', 'KIN_0']
 
         # -------------- PYSB -----------------
+
         pysb.SelfExporter.cleanup()  # reset pysb
         pysb.SelfExporter.do_export = True
 
@@ -53,16 +54,18 @@ class TestAmiciPYSBModel(unittest.TestCase):
             model_module = importlib.import_module('createModelPresimulation')
         model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
+        outdir_pysb = model.name
         amici.pysb2amici(model,
-                         model.name,
+                         outdir_pysb,
                          verbose=False,
                          observables=['pPROT_obs'],
                          constant_parameters=constant_parameters)
-        sys.path.insert(0, model.name)
-        import test_model_presimulation_pysb as modelModulePYSB
+        sys.path.insert(0, outdir_pysb)
+        modelModulePYSB = importlib.import_module(outdir_pysb)
         model_pysb = modelModulePYSB.getModel()
 
         edata = get_data(model_pysb)
+
         rdata_pysb = get_results(model_pysb, edata)
 
         # -------------- SBML -----------------
@@ -77,17 +80,45 @@ class TestAmiciPYSBModel(unittest.TestCase):
             sbmlImporter.sbml,  # the libsbml model object
             filter_function=lambda variable: variable.getName() == 'pPROT_obs'
         )
-        outdir = 'test_model_presimulation_sbml'
+        outdir_sbml = 'test_model_presimulation_sbml'
         sbmlImporter.sbml2amici('test_model_presimulation_sbml',
-                                outdir,
+                                outdir_sbml,
                                 verbose=False,
                                 observables=observables,
                                 constantParameters=constant_parameters)
-        sys.path.insert(0, outdir)
-        import test_model_presimulation_sbml as modelModuleSBML
+        sys.path.insert(0, outdir_sbml)
+        modelModuleSBML = importlib.import_module(outdir_sbml)
         model_sbml = modelModuleSBML.getModel()
 
         rdata_sbml = get_results(model_sbml, edata)
+
+        # check if preequilibration fixed parameters are correctly applied:
+        for rdata, model in zip([rdata_sbml, rdata_pysb],
+                                [model_sbml, model_pysb]):
+            # check equilibrium fixed parameters
+            with self.subTest(fixed_pars='preequilibration'):
+                self.assertTrue(np.isclose(
+                    [
+                        sum(rdata["x_ss"][[1, 3]]),
+                        sum(rdata["x_ss"][[2, 4]])
+                    ],
+                    edata.fixedParametersPreequilibration,
+                    atol=1e-6, rtol=1e-6
+                ).all())
+                # check equilibrium initial parameters
+                self.assertTrue(np.isclose(
+                    sum(rdata["x_ss"][[0, 3, 4, 5]]),
+                    model.getParameterByName('PROT_0'),
+                    atol=1e-6, rtol=1e-6
+                ))
+            with self.subTest(fixed_pars='simulation'):
+                # check reinitialization with fixed parameter after
+                # presimulation
+                self.assertTrue(np.isclose(
+                    [rdata["x0"][1], rdata["x0"][2]],
+                    edata.fixedParameters,
+                    atol=1e-6, rtol=1e-6
+                ).all())
 
         for field in rdata_pysb:
             if field not in ['ptr', 't_steadystate', 'numsteps',
@@ -218,9 +249,8 @@ def get_data(model):
 
     rdata = amici.runAmiciSimulation(model, solver)
     edata = amici.ExpData(rdata, 0.1, 0.0)
-    edata.fixedParametersPreequilibration = [3, 0]
     edata.fixedParameters = [10, 2]
-    edata.fixedParametersPresimulation = [10, 2]
+    edata.fixedParametersPresimulation = [3, 2]
     edata.fixedParametersPreequilibration = [3, 0]
     return edata
 

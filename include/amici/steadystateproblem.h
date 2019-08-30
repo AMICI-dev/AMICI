@@ -103,8 +103,9 @@ class SteadystateProblem {
     /**
      * @brief constructor
      * @param solver pointer to Solver instance
+     * @param x0 initial state
      */
-    explicit SteadystateProblem(const Solver *solver);
+    explicit SteadystateProblem(const Solver *solver, const AmiVector &x0);
     
     /**
      * @brief routine that writes solutions of steadystate problem to target
