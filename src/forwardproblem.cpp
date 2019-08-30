@@ -226,7 +226,7 @@ void ForwardProblem::handlePresimulation()
     updateAndReinitStatesAndSensitivities(false);
 
     solver->run(model->t0());
-
+    solver->writeSolution(&t, x, dx, sx);
     if(overrideFixedParameters) {
         model->setFixedParameters(originalFixedParameters);
     }
