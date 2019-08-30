@@ -16,34 +16,41 @@ class ReturnDataMatlab;
 
 /**
  * @brief setModelData sets data from the matlab call to the model object
- * @param[in] prhs: pointer to the array of input arguments @type mxArray
- * @param[in] nrhs: number of elements in prhs
- * @param[in,out] model: model to update
+ * @param prhs: pointer to the array of input arguments @type mxArray
+ * @param nrhs: number of elements in prhs
+ * @param model: model to update
  */
 void setModelData(const mxArray *prhs[], int nrhs, Model& model);
 
 /**
- * @brief setSolverOptions solver options from the matlab call to a solver object
- * @param[in] prhs: pointer to the array of input arguments @type mxArray
- * @param[in] nrhs: number of elements in prhs
- * @param[in,out] solver: solver to update
+ * @brief setSolverOptions solver options from the matlab call to a solver
+ * object
+ * @param prhs: pointer to the array of input arguments @type mxArray
+ * @param nrhs: number of elements in prhs
+ * @param solver: solver to update
  */
 void setSolverOptions(const mxArray *prhs[], int nrhs, Solver& solver);
 
 /**
- * setupReturnData initialises the return data struct
- * @param[in] plhs user input @type mxArray
- * @param[in] nlhs number of elements in plhs @type mxArray
+ * @brief setupReturnData initialises the return data struct
+ * @param plhs user input @type mxArray
+ * @param nlhs number of elements in plhs @type mxArray
  * @return rdata: return data struct @type *ReturnData
  */
 ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs);
 
-/**
- * expDataFromMatlabCall initialises the experimental data struct
- * @param[in] prhs user input @type *mxArray
- * @return edata: experimental data struct @type *ExpData
+    
+/*!
+ * @brief expDataFromMatlabCall parses the experimental data from the matlab
+ * call and writes it to an ExpData class object
+ *
+ * @param prhs pointer to the array of input arguments
+ * @param model pointer to the model object, this is necessary to perform
+ * dimension checks @type *mxArray
+ * @return edata pointer to experimental data object @type *ExpData
  */
-std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[], const Model &model);
+std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
+                                               const Model &model);
 
 void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
                  const int M, const int N, const double alpha, const double *A,
