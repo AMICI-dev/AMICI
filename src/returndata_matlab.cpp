@@ -5,24 +5,11 @@
 namespace amici {
 
 mxArray *getReturnDataMatlabFromAmiciCall(ReturnData const *rdata) {
-    /**
-      * @brief generates matlab mxArray from a ReturnData object
-      * @param rdata ReturnDataObject
-      * @return rdatamatlab ReturnDataObject stored as matlab compatible data
-      */
-    
     mxArray *matlabSolutionStruct = initMatlabReturnFields(rdata);
     return matlabSolutionStruct;
 }
 
 mxArray *initMatlabReturnFields(ReturnData const *rdata) {
-    /**
-     * @brief allocates and initialises solution mxArray with the corresponding fields
-     *
-     * @param rdata ReturnDataObject
-     *
-     * @return Solution mxArray
-     */
     const int numFields = 22;
     const char *field_names_sol[numFields] = {"status",
                                               "llh",
@@ -114,13 +101,6 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
 }
 
 mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
-    /**
-     * @brief allocates and initialises diagnosis mxArray with the corresponding fields
-     *
-     * @param rdata ReturnDataObject
-     *
-     * @return Diagnosis mxArray
-     */
     const int numFields = 17;
     const char *field_names_sol[numFields] = {"xdot",
                                               "J",
@@ -180,13 +160,6 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
 template<typename T>
 void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
                        T fieldData) {
-    /**
-     * @brief initialise vector and attach to the field
-     * @param matlabStruct pointer of the field to which the vector will be
-     * attached
-     * @param fieldName Name of the field to which the vector will be attached
-     * @param fieldData Data wich will be stored in the field
-     */
     
     std::vector<mwSize> dim = {(mwSize)(1), (mwSize)(1)};
     
@@ -198,14 +171,6 @@ void writeMatlabField0(mxArray *matlabStruct, const char *fieldName,
 template<typename T>
 void writeMatlabField1(mxArray *matlabStruct, const char *fieldName,
                        std::vector<T> const& fieldData, int dim0) {
-    /**
-     * @brief initialise vector and attach to the field
-     * @param matlabStruct pointer of the field to which the vector will be
-     * attached
-     * @param fieldName Name of the field to which the vector will be attached
-     * @param fieldData Data wich will be stored in the field
-     * @param dim0 Number of elements in the vector
-     */
     if(fieldData.size() != dim0)
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
     
@@ -221,15 +186,6 @@ template<typename T>
 void writeMatlabField2(mxArray *matlabStruct, const char *fieldName,
                       std::vector<T> const& fieldData, int dim0, int dim1,
                       std::vector<int> perm) {
-    /**
-     * @brief initialise matrix, attach to the field and write data
-     * @param matlabStruct Pointer to the matlab structure
-     * @param fieldName Name of the field to which the tensor will be attached
-     * @param fieldData Data wich will be stored in the field
-     * @param dim0 Number of rows in the tensor
-     * @param dim1 Number of columns in the tensor
-     * @param perm reordering of dimensions (i.e., transposition)
-     */
     if(fieldData.size() != dim0*dim1)
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
     
@@ -254,16 +210,6 @@ template<typename T>
 void writeMatlabField3(mxArray *matlabStruct, const char *fieldName,
                       std::vector<T> const& fieldData, int dim0, int dim1,
                       int dim2, std::vector<int> perm) {
-    /**
-     * @brief initialise 3D tensor, attach to the field and write data
-     * @param matlabStruct Pointer to the matlab structure
-     * @param fieldName Name of the field to which the tensor will be attached
-     * @param fieldData Data wich will be stored in the field
-     * @param dim0 number of rows in the tensor
-     * @param dim1 number of columns in the tensor
-     * @param dim2 number of elements in the third dimension of the tensor
-     * @param perm reordering of dimensions
-     */
     if(fieldData.size() != dim0*dim1*dim2)
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results",fieldName);
     
@@ -290,17 +236,6 @@ template<typename T>
 void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
                       std::vector<T> const& fieldData, int dim0, int dim1,
                       int dim2, int dim3, std::vector<int> perm) {
-    /**
-     * @brief initialise 4D tensor, attach to the field and write data
-     * @param matlabStruct Pointer to the matlab structure
-     * @param fieldName Name of the field to which the tensor will be attached
-     * @param fieldData Data wich will be stored in the field
-     * @param dim0 number of rows in the tensor
-     * @param dim1 number of columns in the tensor
-     * @param dim2 number of elements in the third dimension of the tensor
-     * @param dim3 number of elements in the fourth dimension of the tensor
-     * @param perm reordering of dimensions
-     */
     if(fieldData.size() != dim0*dim1*dim2*dim3)
         throw AmiException("Dimension mismatch when writing rdata->%s to matlab results!",fieldName);
     
@@ -326,14 +261,6 @@ void writeMatlabField4(mxArray *matlabStruct, const char *fieldName,
 }
 
 double *initAndAttachArray(mxArray *matlabStruct, const char *fieldName, std::vector<mwSize> dim) {
-    /**
-     * @brief initialises the field fieldName in matlabStruct with dimension dim
-     * @param matlabStruct Pointer to the matlab structure
-     * @param fieldName Name of the field to which the tensor will be attached
-     * @param dim vector of field dimensions
-     *
-     * @return Pointer to field data
-     */
     if(!mxIsStruct(matlabStruct))
         throw AmiException("Passing non-struct mxArray to initAndAttachArray!",fieldName);
     
@@ -347,11 +274,6 @@ double *initAndAttachArray(mxArray *matlabStruct, const char *fieldName, std::ve
 }
 
 void checkFieldNames(const char **fieldNames,const int fieldCount) {
-    /**
-     * @brief checks whether fieldNames was properly allocated
-     * @param fieldNames array of field names
-     * @param fieldCount expected number of fields in fieldNames
-     */
     for (int ifield = 0; ifield<fieldCount; ifield++) {
         if(!fieldNames[ifield])
             throw AmiException("Incorrect field name allocation, number of fields is smaller than fieldCount!");
@@ -361,14 +283,6 @@ void checkFieldNames(const char **fieldNames,const int fieldCount) {
 template<typename T>
 std::vector<T> reorder(std::vector<T> const& input,
                        std::vector<int> const& order) {
-    /**
-     * @brief template function that reorders elements in a std::vector
-     *
-     * @param input unordered vector
-     * @param order dimension permutation
-     *
-     * @return Reordered vector
-     */
     if(order.size() != input.size())
         throw AmiException("Input dimension mismatch!");
     std::vector<T> reordered;
