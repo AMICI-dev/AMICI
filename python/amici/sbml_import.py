@@ -8,11 +8,10 @@ import itertools as itt
 import warnings
 from typing import Dict, Union, List, Callable, Any, Iterable
 
+
 from .ode_export import ODEExporter, ODEModel
 from . import has_clibs
 
-from sympy.logic.boolalg import BooleanTrue as spTrue
-from sympy.logic.boolalg import BooleanFalse as spFalse
 
 class SBMLException(Exception):
     pass
@@ -402,8 +401,8 @@ class SbmlImporter:
                 index = species_ids.index(
                         initial_assignment.getId()
                     )
-                symMath = sp.sympify(
-                    sbml.formulaToL3String(initial_assignment.getMath()),
+                symMath = sp.sympify(_parse_logical_operators_in_math_string(
+                    sbml.formulaToL3String(initial_assignment.getMath())),
                     locals=self.local_symbols
                 )
                 if symMath is not None:
@@ -646,7 +645,9 @@ class SbmlImporter:
             # symbol
             math = sbml.formulaToL3String(reaction.getKineticLaw().getMath())
             try:
-                symMath = sp.sympify(math, locals=self.local_symbols)
+                # We try to make a sympy formla from the string
+                symMath = sp.sympify(_parse_logical_operators(math),
+                                     locals=self.local_symbols)
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
@@ -703,8 +704,9 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
             # avoid incorrect parsing of pow(x, -1) in symengine
-            formula = sp.sympify(sbml.formulaToL3String(rule.getMath()),
-                                 locals=self.local_symbols)
+            formula = sp.sympify(_parse_logical_operators(
+                sbml.formulaToL3String(rule.getMath())),
+                locals=self.local_symbols)
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
 
@@ -1188,39 +1190,45 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
             _check_unsupported_functions(fun, expression_type)
 
 
-def _parse_special_functions(sym, toplevel=True):
+def _parse_special_functions(sym):
     """Recursively checks the symbolic expression for functions which have be
     to parsed in a special way, such as piecewise functions
 
         Arguments:
             sym: symbolic expressions @type sympy.Basic
-            toplevel: as this is called recursively,
-                are we in the top level expression?
+
         Returns:
 
         Raises:
     """
-    args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
+    args = tuple(_parse_special_functions(arg) for arg in sym._args)
 
+    # Do we have piecewise expressions?
     if sym.__class__.__name__ == 'abs':
         return sp.Abs(sym._args[0])
-    elif sym.__class__.__name__ == 'xor':
-        return sp.Xor(*sym.args)
     elif sym.__class__.__name__ == 'piecewise':
         # how many condition-expression pairs will we have?
         return sp.Piecewise(*grouper(args, 2, True))
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
-    elif toplevel:
-        # Replace boolean constants by numbers so they can be differentiated
-        #  must not replace in Piecewise function. Therefore, we only replace
-        #  it the complete expression consists only of a Boolean value.
-        if isinstance(sym, spTrue):
-            sym = sp.Float(1.0)
-        elif isinstance(sym, spFalse):
-            sym = sp.Float(0.0)
 
     return sym
+
+
+def _parse_logical_operators(math_str):
+    """Parses a math string in order to replace logical operators by a form
+    parsable for sympy
+
+        Arguments:
+            math_str: str with mathematical expression
+
+        Returns:
+            math_str: parsed math_str
+
+        Raises:
+    """
+
+    return (math_str.replace('&&', '&')).replace('||', '|')
 
 
 def grouper(iterable: Iterable, n: int, fillvalue: Any = None):
