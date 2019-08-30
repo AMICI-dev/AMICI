@@ -176,8 +176,8 @@ set_target_properties(matlabInterface
 find_package(Matlab)
 if (${Matlab_FOUND})
     # In case we can find Matlab, use the respective include directories
-    # for better IDE integration (set MATLABROOT environment variable to
-    # find Matlab)
+    # for better IDE integration (set Matlab_ROOT_DIR cmake variable
+    # if CMake cannot find your Matlab installation)
     set_property(TARGET matlabInterface APPEND
         PROPERTY INCLUDE_DIRECTORIES "${Matlab_INCLUDE_DIRS}")
 endif()
