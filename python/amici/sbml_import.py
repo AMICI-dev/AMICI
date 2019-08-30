@@ -402,8 +402,8 @@ class SbmlImporter:
                 index = species_ids.index(
                         initial_assignment.getId()
                     )
-                symMath = sp.sympify(
-                    sbml.formulaToL3String(initial_assignment.getMath()),
+                symMath = sp.sympify(_parse_logical_operators(
+                    sbml.formulaToL3String(initial_assignment.getMath())),
                     locals=self.local_symbols
                 )
                 if symMath is not None:
@@ -646,7 +646,10 @@ class SbmlImporter:
             # symbol
             math = sbml.formulaToL3String(reaction.getKineticLaw().getMath())
             try:
-                symMath = sp.sympify(math, locals=self.local_symbols)
+                symMath = sp.sympify(_parse_logical_operators(math),
+                                     locals=self.local_symbols)
+            except SBMLException as Ex:
+                raise Ex
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
@@ -703,8 +706,9 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
             # avoid incorrect parsing of pow(x, -1) in symengine
-            formula = sp.sympify(sbml.formulaToL3String(rule.getMath()),
-                                 locals=self.local_symbols)
+            formula = sp.sympify(_parse_logical_operators(
+                sbml.formulaToL3String(rule.getMath()),
+                locals=self.local_symbols))
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
 
@@ -1221,6 +1225,26 @@ def _parse_special_functions(sym, toplevel=True):
             sym = sp.Float(0.0)
 
     return sym
+
+
+def _parse_logical_operators(math_str):
+    """Parses a math string in order to replace logical operators by a form
+    parsable for sympy
+
+        Arguments:
+            math_str: str with mathematical expression
+
+        Returns:
+            math_str: parsed math_str
+
+        Raises:
+    """
+
+    if ' xor(' in math_str or ' Xor(' in math_str:
+        raise SBMLException('Xor is currently not supported als logical '
+                            'operation.')
+
+    return (math_str.replace('&&', '&')).replace('||', '|')
 
 
 def grouper(iterable: Iterable, n: int, fillvalue: Any = None):
