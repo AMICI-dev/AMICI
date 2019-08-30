@@ -15,6 +15,6 @@ if [[ -z "$*" ]]; then
 else
   args="$@" # use user selection
 fi
-python ./tests/testSBMLSuite.py "${args}"
+python3 ./tests/testSBMLSuite.py "${args}"
 ret=$?
 if [[ $ret != 0 ]]; then exit $ret; fi
