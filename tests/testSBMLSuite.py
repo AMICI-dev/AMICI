@@ -13,17 +13,22 @@ import re
 import os
 import sys
 import importlib
-import numpy as np
-import sympy as sp
-import amici
 import unittest
 import copy
+import shutil
 from typing import List
+
+import amici
+import numpy as np
+import sympy as sp
+import pandas as pd
+
 
 # directory with sbml semantic test cases
 test_path = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
                          'semantic')
-
+upload_result_path = os.path.join(os.path.dirname(__file__),
+                                  'amici-semantic-results')
 
 ALL_TESTS = set(range(1, 1781))
 
@@ -112,8 +117,26 @@ class TestAmiciSBMLTestSuite(unittest.TestCase):
             )
             print(f'TestCase {test_id} passed.')
 
+            write_result_file(simulated_x, model, test_id)
+
         except amici.sbml_import.SBMLException as err:
             print(f'TestCase {test_id} was skipped: {err}')
+
+def write_result_file(simulated_x: np.array,
+                      model: amici.Model,
+                      test_id: str):
+    """
+    Create test result file for upload to
+    http://sbml.org/Facilities/Database/Submission/Create
+
+    Requires csv file with test ID in name and content of [time, Species, ...]
+    """
+    filename = os.path.join(upload_result_path, f'{test_id}.csv')
+
+    df = pd.DataFrame(simulated_x)
+    df.columns = model.getStateIds()
+    df.insert(0, 'time', model.getTimepoints())
+    df.to_csv(filename, index=False)
 
 
 def get_amount_and_variables(current_test_path, test_id):
@@ -228,6 +251,11 @@ def parse_selection(selection_str: str) -> List[int]:
 
 
 if __name__ == '__main__':
+    # ensure directory for test results is empty
+    if os.path.exists(upload_result_path):
+        shutil.rmtree(upload_result_path)
+    os.mkdir(upload_result_path)
+
     TestAmiciSBMLTestSuite.SBML_TEST_IDS = set(parse_selection(sys.argv.pop()))
 
     suite = unittest.TestSuite()
