@@ -105,7 +105,7 @@ void ForwardProblem::workForwardProblem() {
             // Solve for nextTimepoint
             while (t < nextTimepoint) {
                 if (std::isinf(nextTimepoint)) {
-                    SteadystateProblem sstate = SteadystateProblem(solver);
+                    SteadystateProblem sstate = SteadystateProblem(solver, x);
                     sstate.workSteadyStateProblem(rdata, solver, model, it);
                     sstate.writeSolution(&t, x, sx);
                 } else {
@@ -140,29 +140,35 @@ void ForwardProblem::workForwardProblem() {
     rdata->cpu_time = solver->getCpuTime();
 }
 
-
-void ForwardProblem::handlePreequilibration()
-{
+void ForwardProblem::handlePreequilibration() {
     // Are there dedicated condition preequilibration parameters provided?
-    bool overrideFixedParameters = edata && !edata->fixedParametersPreequilibration.empty();
+    bool overrideFixedParameters =
+        edata && !edata->fixedParametersPreequilibration.empty();
 
-    std::vector<realtype> originalFixedParameters; // to restore after pre-equilibration
+    std::vector<realtype>
+        originalFixedParameters; // to restore after pre-equilibration
 
-    if(overrideFixedParameters) {
-        if(edata->fixedParametersPreequilibration.size() != (unsigned) model->nk())
-            throw AmiException("Number of fixed parameters (%d) in model does not match preequilibration parameters in ExpData (%zd).",
-                               model->nk(), edata->fixedParametersPreequilibration.size());
+    if (overrideFixedParameters) {
+        if (edata->fixedParametersPreequilibration.size() !=
+            (unsigned)model->nk())
+            throw AmiException(
+                "Number of fixed parameters (%d) in model does not match "
+                "preequilibration parameters in ExpData (%zd).",
+                model->nk(), edata->fixedParametersPreequilibration.size());
         originalFixedParameters = model->getFixedParameters();
         model->setFixedParameters(edata->fixedParametersPreequilibration);
+        model->initialize(x, dx, sx, sdx,
+                          solver->getSensitivityOrder() >=
+                              SensitivityOrder::first);
     }
 
     // pre-equilibrate
-    SteadystateProblem sstate = SteadystateProblem(solver);
+    SteadystateProblem sstate = SteadystateProblem(solver, x);
 
     sstate.workSteadyStateProblem(rdata, solver, model, -1);
     sstate.writeSolution(&t, x, sx);
 
-    if(overrideFixedParameters) {
+    if (overrideFixedParameters) {
         // Restore
         model->setFixedParameters(originalFixedParameters);
     }
@@ -220,7 +226,7 @@ void ForwardProblem::handlePresimulation()
     updateAndReinitStatesAndSensitivities(false);
 
     solver->run(model->t0());
-
+    solver->writeSolution(&t, x, dx, sx);
     if(overrideFixedParameters) {
         model->setFixedParameters(originalFixedParameters);
     }
@@ -487,11 +493,11 @@ void ForwardProblem::getDataOutput(int it) {
 
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
         model->nplist() > 0) {
-        
+
         model->getObservableSigmaSensitivity(slice(rdata->ssigmay, it,
                                                    model->nplist() * model->ny),
                                              it, edata);
-        
+
         if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
             getDataSensisFSA(it);
         } else {
@@ -519,7 +525,7 @@ void ForwardProblem::getDataSensisFSA(int it) {
     model->getObservableSensitivity(slice(rdata->sy, it,
                                           model->nplist() * model->ny),
                                     t, x, sx);
-    
+
     if (edata) {
         model->addObservableObjectiveSensitivity(rdata->sllh, rdata->s2llh,
                                                  it, x, sx, *edata);

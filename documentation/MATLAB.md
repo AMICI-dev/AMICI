@@ -183,6 +183,32 @@ This mex file and `simulate_*.m` can be used as if fully created by
 matlab.
 
 
+#### Using Python-AMICI model import from Matlab
+
+With recent matlab versions it is possible to use the AMICI python package
+from within Matlab. This not quite comfortable yet, but it is possible.
+
+Here for proof of concept:
+
+* Install the python package as described in the documentation
+* Ensure `pyversion` shows the correct python version (3.6 or 3.7)
+* Then, from within the AMICI `matlab/` directory:
+    
+    ```
+    sbml_importer = py.amici.SbmlImporter('../python/examples/example_steadystate/model_steadystate_scaled.xml')
+    sbml_importer.sbml2amici('steadystate', 'steadystate_example_from_python')
+    model = py.steadystate.getModel()
+    solver = model.getSolver()
+    model.setTimepoints(linspace(0, 50, 51))
+    rdata = py.amici.runAmiciSimulation(model, solver)
+    result = struct(py.dict(rdata.items()))
+    t = double(py.array.array('d', result.ts))
+    x = double(py.array.array('d', result.x.flatten()))
+    x = reshape(x, flip(double(py.array.array('d', result.x.shape))))
+    plot(t, x)
+    ```
+
+
 ## Model Simulation
 
 After the call to `amiwrap(...)` two files will be placed in the specified directory. One is a _modelname_.mex and the other is simulate_ _modelname_.m. The mex file should never be called directly. Instead the MATLAB script, which acts as a wrapper around the .mex simulation file should be used.

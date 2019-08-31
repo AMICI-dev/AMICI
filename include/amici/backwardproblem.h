@@ -25,7 +25,6 @@ class BackwardProblem {
     /**
      * @brief Construct backward problem from forward problem
      * @param fwd pointer to corresponding forward problem
-     * @return new BackwardProblem instance
      */
     explicit BackwardProblem(const ForwardProblem *fwd);
 

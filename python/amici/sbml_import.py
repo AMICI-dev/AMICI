@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-""" @package amici.sbml_import The python sbml import module for python
-"""
+"""@package amici.sbml_import The SBML import module for Python."""
 
 import sympy as sp
 import libsbml as sbml
@@ -8,14 +6,17 @@ import re
 import math
 import itertools as itt
 import warnings
-from sympy.logic.boolalg import BooleanTrue as spTrue
-from sympy.logic.boolalg import BooleanFalse as spFalse
+from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel
 from . import has_clibs
 
+from sympy.logic.boolalg import BooleanTrue as spTrue
+from sympy.logic.boolalg import BooleanFalse as spFalse
+
 class SBMLException(Exception):
     pass
+
 
 ## default dict for symbols
 default_symbols = {
@@ -82,9 +83,9 @@ class SbmlImporter:
 
     def __init__(
             self,
-            sbml_source,
-            show_sbml_warnings = False,
-            from_file = True):
+            sbml_source: Union[str, sbml.Model],
+            show_sbml_warnings: bool = False,
+            from_file: bool = True):
         """Create a new Model instance.
 
         Arguments:
@@ -92,17 +93,12 @@ class SbmlImporter:
             sbml_source: Either a path to SBML file where the model is
                 specified, or a model string as created by
                 sbml.sbmlWriter().writeSBMLToString() or an instance of
-                libsbml.Model. @type str
+                `libsbml.Model`.
 
-            show_sbml_warnings: Indicates whether libSBML warnings should be
-            displayed (default = True). @type bool
+            show_sbml_warnings: Indicates whether libSBML warnings should be displayed.
 
-            from_file: Whether `sbml_source` is a file name (True, default), or an
-            sbml string (False). @type bool
-
-        Returns:
-
-            SbmlImporter instance with attached SBML document
+            from_file: Whether `sbml_source` is a file name (True, default), or
+                an SBML string
 
         Raises:
 
@@ -174,52 +170,59 @@ class SbmlImporter:
         self.symbols = default_symbols
 
     def sbml2amici(self,
-                   modelName,
-                   output_dir = None,
-                   observables = None,
-                   constantParameters = None,
-                   sigmas = None,
-                   noise_distributions = None,
-                   verbose = False,
-                   assume_pow_positivity = False,
-                   compiler = None,
-                   allow_reinit_fixpar_initcond = True,
-                   compile = True
-                   ):
+                   modelName: str,
+                   output_dir: str = None,
+                   observables: Dict[str, Dict[str, str]] = None,
+                   constantParameters: List[str] = None,
+                   sigmas: Dict[str, Union[str, float]] = None,
+                   noise_distributions: Dict[str, str] = None,
+                   verbose: bool = False,
+                   assume_pow_positivity: bool = False,
+                   compiler: str = None,
+                   allow_reinit_fixpar_initcond: bool = True,
+                   compile: bool = True
+                   ) -> None:
         """Generate AMICI C++ files for the model provided to the constructor.
 
-        Arguments:
-            modelName: name of the model/model directory @type str
+        The resulting model can be imported as a regular Python module (if
+        `compile=True`), or used from Matlab or C++ as described in the
+        documentation of the respective AMICI interface.
 
-            output_dir: see sbml_import.setPaths() @type str
+        Note that this generates model ODEs for changes in concentrations, not
+        amounts. The simulation results obtained from the model will be
+        concentrations, independently of the SBML `hasOnlySubstanceUnits`
+        attribute.
+
+        Arguments:
+            modelName: name of the model/model directory
+
+            output_dir: see sbml_import.setPaths()
 
             observables: dictionary( observableId:{'name':observableName
                 (optional), 'formula':formulaString)}) to be added to the model
-                @type dict
 
             constantParameters: list of SBML Ids identifying constant parameters
-                @type list
 
-            sigmas: dictionary(observableId: sigma value or (existing) parameter name)
-                @type dict
+            sigmas: dictionary(observableId:
+                    sigma value or (existing) parameter name)
 
-            noise_distributions: dictionary(observableId: noise type). If nothing is passed
+            noise_distributions: dictionary(observableId: noise type).
+                If nothing is passed
                 for some observable id, a normal model is assumed as default.
-                @type dict
 
-            verbose: more verbose output if True @type bool
+            verbose: more verbose output if True
 
-            assume_pow_positivity: if set to true, a special pow function is
+            assume_pow_positivity: if set to True, a special pow function is
                 used to avoid problems with state variables that may become
-                negative due to numerical errors @type bool
+                negative due to numerical errors
 
             compiler: distutils/setuptools compiler selection to build the
-                python extension @type str
+                python extension
 
-            allow_reinit_fixpar_initcond: see ode_export.ODEExporter @type bool
+            allow_reinit_fixpar_initcond: see ode_export.ODEExporter
 
-            compile: If True, compile the generated Python package, if False, just
-                generate code. @type bool
+            compile: If True, compile the generated Python package,
+                if False, just generate code.
 
         Returns:
 
@@ -261,12 +264,11 @@ class SbmlImporter:
                               'Generated model code, but unable to compile.')
             exporter.compileModel()
 
-    def processSBML(self, constantParameters=None):
+    def processSBML(self, constantParameters: List[str] = None):
         """Read parameters, species, reactions, and so on from SBML model
 
         Arguments:
             constantParameters: SBML Ids identifying constant parameters
-            @type list
 
         Returns:
 
@@ -387,19 +389,29 @@ class SbmlImporter:
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
 
-        def getSpeciesInitial(index, conc):
-            if not (self.speciesHasOnlySubstanceUnits[index] or math.isnan(
-                    conc) or not species[index].isSetInitialConcentration()):
-                return sp.sympify(conc)
-            if species[index].isSetInitialAmount() and not math.isnan(
-                    amounts[index]):
-                return \
-                    sp.sympify(amounts[index]) / self.speciesCompartment[index]
+        def get_species_initial(index, conc):
+            # We always simulate concentrations!
+            if self.speciesHasOnlySubstanceUnits[index]:
+                if species[index].isSetInitialAmount() \
+                        and not math.isnan(amounts[index]):
+                    return sp.sympify(amounts[index]) \
+                           / self.speciesCompartment[index]
+                if species[index].isSetInitialConcentration():
+                    return sp.sympify(conc)
+            else:
+                if species[index].isSetInitialConcentration():
+                    return sp.sympify(conc)
+
+                if species[index].isSetInitialAmount() \
+                        and not math.isnan(amounts[index]):
+                    return sp.sympify(amounts[index]) \
+                           / self.speciesCompartment[index]
+
             return self.symbols['species']['identifier'][index]
 
-        speciesInitial = sp.Matrix(
-            [getSpeciesInitial(index, conc)
-            for index, conc in enumerate(concentrations)]
+        species_initial = sp.Matrix(
+            [get_species_initial(index, conc)
+             for index, conc in enumerate(concentrations)]
         )
 
         species_ids = [spec.getId() for spec in self.sbml.getListOfSpecies()]
@@ -408,32 +420,32 @@ class SbmlImporter:
                 index = species_ids.index(
                         initial_assignment.getId()
                     )
-                symMath = sp.sympify(
-                    sbml.formulaToL3String(initial_assignment.getMath()),
+                symMath = sp.sympify(_parse_logical_operators(
+                    sbml.formulaToL3String(initial_assignment.getMath())),
                     locals=self.local_symbols
                 )
                 if symMath is not None:
                     symMath = _parse_special_functions(symMath)
                     _check_unsupported_functions(symMath, 'InitialAssignment')
-                    speciesInitial[index] = symMath
+                    species_initial[index] = symMath
 
         for ix, (symbol, init) in enumerate(zip(
-                    self.symbols['species']['identifier'], speciesInitial
+                    self.symbols['species']['identifier'], species_initial
         )):
             if symbol == init:
-                speciesInitial[ix] = sp.sympify(0.0)
+                species_initial[ix] = sp.sympify(0.0)
 
         # flatten initSpecies
-        while any([species in speciesInitial.free_symbols
+        while any([species in species_initial.free_symbols
                    for species in self.symbols['species']['identifier']]):
-            speciesInitial = speciesInitial.subs([
+            species_initial = species_initial.subs([
                 (symbol, init)
                 for symbol, init in zip(
-                    self.symbols['species']['identifier'], speciesInitial
+                    self.symbols['species']['identifier'], species_initial
                 )
             ])
 
-        self.symbols['species']['value'] = speciesInitial
+        self.symbols['species']['value'] = species_initial
 
         if self.sbml.isSetConversionFactor():
             conversion_factor = sp.Symbol(self.sbml.getConversionFactor())
@@ -447,15 +459,11 @@ class SbmlImporter:
              for specie in species
         ])
 
-
-
-
-    def processParameters(self, constantParameters=None):
+    def processParameters(self, constantParameters: List[str] = None):
         """Get parameter information from SBML model.
 
         Arguments:
             constantParameters: SBML Ids identifying constant parameters
-            @type list
 
         Returns:
 
@@ -490,8 +498,6 @@ class SbmlImporter:
                        in self.sbml.getListOfParameters()
                        if parameter.getId() not in constantParameters
                        and parameter.getId() not in rulevars]
-
-
 
         loop_settings = {
             'parameter': {
@@ -563,7 +569,6 @@ class SbmlImporter:
             self.replaceInAllExpressions(
                comp, vol
             )
-
 
     def processReactions(self):
         """Get reactions from SBML model.
@@ -659,7 +664,10 @@ class SbmlImporter:
             # symbol
             math = sbml.formulaToL3String(reaction.getKineticLaw().getMath())
             try:
-                symMath = sp.sympify(math, locals=self.local_symbols)
+                symMath = sp.sympify(_parse_logical_operators(math),
+                                     locals=self.local_symbols)
+            except SBMLException as Ex:
+                raise Ex
             except:
                 raise SBMLException(f'Kinetic law "{math}" contains an '
                                     'unsupported expression!')
@@ -716,8 +724,9 @@ class SbmlImporter:
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
             # avoid incorrect parsing of pow(x, -1) in symengine
-            formula = sp.sympify(sbml.formulaToL3String(rule.getMath()),
-                                 locals=self.local_symbols)
+            formula = sp.sympify(_parse_logical_operators(
+                sbml.formulaToL3String(rule.getMath())),
+                locals=self.local_symbols)
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
 
@@ -806,20 +815,22 @@ class SbmlImporter:
 
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
 
-    def processObservables(self, observables, sigmas, noise_distributions):
+    def processObservables(self, observables: Dict[str, Dict[str, str]],
+                           sigmas: Dict[str, Union[str, float]],
+                           noise_distributions: Dict[str, str]):
         """Perform symbolic computations required for objective function
         evaluation.
 
         Arguments:
             observables: dictionary(observableId: {'name':observableName
-            (optional), 'formula':formulaString)}) to be added to the model
-            @type dict
+                (optional), 'formula':formulaString)})
+                to be added to the model
 
             sigmas: dictionary(observableId: sigma value or (existing)
-            parameter name) @type dict
+                parameter name)
 
             noise_distributions: dictionary(observableId: noise type)
-            See `sbml2amici`. @type dict
+                See `sbml2amici`.
 
         Returns:
 
@@ -948,13 +959,13 @@ class SbmlImporter:
         self.symbols['llhy']['name'] = l2s(llhYSyms)
         self.symbols['llhy']['identifier'] = llhYSyms
 
-    def replaceInAllExpressions(self, old, new):
+    def replaceInAllExpressions(self, old: sp.Symbol, new: sp.Symbol):
         """Replace 'old' by 'new' in all symbolic expressions.
 
         Arguments:
-            old: symbolic variables to be replaced @type symengine.Symbol
+            old: symbolic variables to be replaced
 
-            new: replacement symbolic variables @type symengine.Symbol
+            new: replacement symbolic variables
 
 
         Returns:
@@ -1199,32 +1210,64 @@ def _check_unsupported_functions(sym, expression_type, full_sym=None):
             _check_unsupported_functions(fun, expression_type)
 
 
-def _parse_special_functions(sym):
+def _parse_special_functions(sym, toplevel=True):
     """Recursively checks the symbolic expression for functions which have be
     to parsed in a special way, such as piecewise functions
 
         Arguments:
             sym: symbolic expressions @type sympy.Basic
-
+            toplevel: as this is called recursively,
+                are we in the top level expression?
         Returns:
 
         Raises:
     """
-    args = tuple(_parse_special_functions(arg) for arg in sym._args)
+    args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
 
-    # Do we have piecewise expressions?
     if sym.__class__.__name__ == 'abs':
         return sp.Abs(sym._args[0])
+    elif sym.__class__.__name__ == 'xor':
+        return sp.Xor(*sym.args)
     elif sym.__class__.__name__ == 'piecewise':
         # how many condition-expression pairs will we have?
         return sp.Piecewise(*grouper(args, 2, True))
     elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
         sym._args = args
+    elif toplevel:
+        # Replace boolean constants by numbers so they can be differentiated
+        #  must not replace in Piecewise function. Therefore, we only replace
+        #  it the complete expression consists only of a Boolean value.
+        if isinstance(sym, spTrue):
+            sym = sp.Float(1.0)
+        elif isinstance(sym, spFalse):
+            sym = sp.Float(0.0)
 
     return sym
 
 
-def grouper(iterable, n, fillvalue=None):
+def _parse_logical_operators(math_str: str) -> str:
+    """Parses a math string in order to replace logical operators by a form
+    parsable for sympy
+
+        Arguments:
+            math_str: str with mathematical expression
+
+        Returns:
+            math_str: parsed math_str
+
+        Raises:
+    """
+    if math_str is None:
+        return None
+
+    if ' xor(' in math_str or ' Xor(' in math_str:
+        raise SBMLException('Xor is currently not supported as logical '
+                            'operation.')
+
+    return (math_str.replace('&&', '&')).replace('||', '|')
+
+
+def grouper(iterable: Iterable, n: int, fillvalue: Any = None):
     """Collect data into fixed-length chunks or blocks
 
     E.g. grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
@@ -1277,7 +1320,8 @@ def assignmentRules2observables(sbml_model,
     return observables
 
 
-def noise_distribution_to_cost_function(noise_distribution):
+def noise_distribution_to_cost_function(
+        noise_distribution: str) -> Callable[[str], str]:
     """
     Parse cost string to a cost function definition amici can work with.
 

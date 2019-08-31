@@ -167,7 +167,22 @@ target_link_libraries(${PROJECT_NAME}
     )
 
 # Create targets to make the sources show up in IDEs for convenience
-add_custom_target(matlabInterface SOURCES src/interface_matlab.cpp src/returndata_matlab.cpp)
+
+# For matlab interface
+add_custom_target(matlabInterface
+    SOURCES src/interface_matlab.cpp src/returndata_matlab.cpp)
+set_target_properties(matlabInterface
+    PROPERTIES INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/")
+find_package(Matlab)
+if (${Matlab_FOUND})
+    # In case we can find Matlab, use the respective include directories
+    # for better IDE integration (set Matlab_ROOT_DIR cmake variable
+    # if CMake cannot find your Matlab installation)
+    set_property(TARGET matlabInterface APPEND
+        PROPERTY INCLUDE_DIRECTORIES "${Matlab_INCLUDE_DIRS}")
+endif()
+
+# For template files
 add_custom_target(
     fileTemplates
     SOURCES
