@@ -381,20 +381,29 @@ class SbmlImporter:
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
 
-        def getSpeciesInitial(index, conc):
-            if self.speciesHasOnlySubstanceUnits[index] and \
-                    not math.isnan(conc) and \
-                    species[index].isSetInitialConcentration():
-                return sp.sympify(conc)
-            if species[index].isSetInitialAmount() and not math.isnan(
-                    amounts[index]):
-                return \
-                    sp.sympify(amounts[index]) / self.speciesCompartment[index]
+        def get_species_initial(index, conc):
+            # We always simulate concentrations!
+            if self.speciesHasOnlySubstanceUnits[index]:
+                if species[index].isSetInitialAmount() \
+                        and not math.isnan(amounts[index]):
+                    return sp.sympify(amounts[index]) \
+                           / self.speciesCompartment[index]
+                if species[index].isSetInitialConcentration():
+                    return sp.sympify(conc)
+            else:
+                if species[index].isSetInitialConcentration():
+                    return sp.sympify(conc)
+
+                if species[index].isSetInitialAmount() \
+                        and not math.isnan(amounts[index]):
+                    return sp.sympify(amounts[index]) \
+                           / self.speciesCompartment[index]
+
             return self.symbols['species']['identifier'][index]
 
-        speciesInitial = sp.Matrix(
-            [getSpeciesInitial(index, conc)
-            for index, conc in enumerate(concentrations)]
+        species_initial = sp.Matrix(
+            [get_species_initial(index, conc)
+             for index, conc in enumerate(concentrations)]
         )
 
         species_ids = [spec.getId() for spec in self.sbml.getListOfSpecies()]
@@ -410,25 +419,25 @@ class SbmlImporter:
                 if symMath is not None:
                     symMath = _parse_special_functions(symMath)
                     _check_unsupported_functions(symMath, 'InitialAssignment')
-                    speciesInitial[index] = symMath
+                    species_initial[index] = symMath
 
         for ix, (symbol, init) in enumerate(zip(
-                    self.symbols['species']['identifier'], speciesInitial
+                    self.symbols['species']['identifier'], species_initial
         )):
             if symbol == init:
-                speciesInitial[ix] = sp.sympify(0.0)
+                species_initial[ix] = sp.sympify(0.0)
 
         # flatten initSpecies
-        while any([species in speciesInitial.free_symbols
+        while any([species in species_initial.free_symbols
                    for species in self.symbols['species']['identifier']]):
-            speciesInitial = speciesInitial.subs([
+            species_initial = species_initial.subs([
                 (symbol, init)
                 for symbol, init in zip(
-                    self.symbols['species']['identifier'], speciesInitial
+                    self.symbols['species']['identifier'], species_initial
                 )
             ])
 
-        self.symbols['species']['value'] = speciesInitial
+        self.symbols['species']['value'] = species_initial
 
         if self.sbml.isSetConversionFactor():
             conversion_factor = sp.Symbol(self.sbml.getConversionFactor())
