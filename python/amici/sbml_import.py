@@ -708,8 +708,8 @@ class SbmlImporter:
                                   locals=self.local_symbols)
             # avoid incorrect parsing of pow(x, -1) in symengine
             formula = sp.sympify(_parse_logical_operators(
-                sbml.formulaToL3String(rule.getMath()),
-                locals=self.local_symbols))
+                sbml.formulaToL3String(rule.getMath())),
+                locals=self.local_symbols)
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
 
@@ -1242,7 +1242,7 @@ def _parse_logical_operators(math_str):
     """
 
     if ' xor(' in math_str or ' Xor(' in math_str:
-        raise SBMLException('Xor is currently not supported als logical '
+        raise SBMLException('Xor is currently not supported as logical '
                             'operation.')
 
     return (math_str.replace('&&', '&')).replace('||', '|')
