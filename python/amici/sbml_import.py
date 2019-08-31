@@ -1228,7 +1228,7 @@ def _parse_special_functions(sym, toplevel=True):
     return sym
 
 
-def _parse_logical_operators(math_str):
+def _parse_logical_operators(math_str: str) -> str:
     """Parses a math string in order to replace logical operators by a form
     parsable for sympy
 
@@ -1240,6 +1240,8 @@ def _parse_logical_operators(math_str):
 
         Raises:
     """
+    if math_str is None:
+        return None
 
     if ' xor(' in math_str or ' Xor(' in math_str:
         raise SBMLException('Xor is currently not supported as logical '
