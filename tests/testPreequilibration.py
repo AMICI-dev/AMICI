@@ -38,27 +38,51 @@ class TestAmiciPreequilibration(unittest.TestCase):
 
         model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
+        outdir = model.name
         amici.pysb2amici(model,
-                         model.name,
+                         outdir,
                          verbose=False,
                          observables=['pPROT_obs'],
                          constant_parameters=['DRUG_0', 'KIN_0'])
-        sys.path.insert(0, model.name)
-        import test_model_presimulation_pysb as modelModulePYSB
+        sys.path.insert(0, outdir)
+        modelModulePYSB = importlib.import_module(outdir)
 
         self.model = modelModulePYSB.getModel()
+        self.model.setReinitializeFixedParameterInitialStates(True)
 
         self.solver = self.model.getSolver()
         self.solver.setSensitivityOrder(amici.SensitivityOrder_first)
         self.solver.setSensitivityMethod(amici.SensitivityMethod_forward)
 
         self.edata = get_data(self.model)
-        self.edata.fixedParametersPresimulation = ()
+        self.edata.t_presim = 2
+        self.edata.fixedParameters = [10, 2]
+        self.edata.fixedParametersPresimulation = [3, 2]
+        self.edata.fixedParametersPreequilibration = [3, 0]
+        self.edata.setTimepoints([1, 5])
 
         self.edata_preeq = amici.ExpData(self.edata)
-        self.edata_preeq.setTimepoints([0])
+        self.edata_preeq.t_presim = 0
+        self.edata_preeq.setTimepoints([np.infty])
+        self.edata_preeq.fixedParameters = \
+            self.edata.fixedParametersPreequilibration
+        self.edata_preeq.fixedParametersPresimulation = ()
+        self.edata_preeq.fixedParametersPreequilibration = ()
+
+        self.edata_presim = amici.ExpData(self.edata)
+        self.edata_presim.t_presim = 0
+        self.edata_presim.setTimepoints([self.edata.t_presim])
+        self.edata_presim.fixedParameters = \
+            self.edata.fixedParametersPresimulation
+        self.edata_presim.fixedParametersPresimulation = ()
+        self.edata_presim.fixedParametersPreequilibration = ()
 
         self.edata_sim = amici.ExpData(self.edata)
+        self.edata_sim.t_presim = 0
+        self.edata_sim.setTimepoints(self.edata.getTimepoints())
+        self.edata_sim.fixedParameters = \
+            self.edata.fixedParameters
+        self.edata_sim.fixedParametersPresimulation = ()
         self.edata_sim.fixedParametersPreequilibration = ()
 
         self.pscales = [
@@ -105,10 +129,31 @@ class TestAmiciPreequilibration(unittest.TestCase):
                 self.model, self.solver, self.edata_preeq
             )
 
-            # manual reinitialization + simulation
-            self.model.setInitialStates(rdata_preeq['x0'])
+            # manual reinitialization + presimulation
+            x0 = rdata_preeq['x'][0, :]
+            x0[1] = self.edata_presim.fixedParameters[0]
+            x0[2] = self.edata_presim.fixedParameters[1]
+            sx0 = rdata_preeq['sx'][0, :, :]
+            sx0[:, 1] = 0
+            sx0[:, 2] = 0
+            self.model.setInitialStates(x0)
             self.model.setInitialStateSensitivities(
-                rdata_preeq['sx0'].flatten()
+                sx0.flatten()
+            )
+            rdata_presim = amici.runAmiciSimulation(
+                self.model, self.solver, self.edata_presim
+            )
+
+            # manual reinitialization + simulation
+            x0 = rdata_presim['x'][0, :]
+            x0[1] = self.edata_sim.fixedParameters[0]
+            x0[2] = self.edata_sim.fixedParameters[1]
+            sx0 = rdata_presim['sx'][0, :, :]
+            sx0[:, 1] = 0
+            sx0[:, 2] = 0
+            self.model.setInitialStates(x0)
+            self.model.setInitialStateSensitivities(
+                sx0.flatten()
             )
             rdata_sim = amici.runAmiciSimulation(
                 self.model, self.solver, self.edata_sim
@@ -117,11 +162,6 @@ class TestAmiciPreequilibration(unittest.TestCase):
             for variable in ['x', 'sx']:
                 with self.subTest(pscale=pscale, plist=plist,
                                   variable=variable):
-                    self.assertTrue(np.isclose(
-                        rdata_auto[variable][0, :],
-                        rdata_preeq[variable][0, :],
-                        1e-6, 1e-6
-                    ).all())
                     self.assertTrue(np.isclose(
                         rdata_auto[variable],
                         rdata_sim[variable],
