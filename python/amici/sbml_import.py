@@ -181,8 +181,17 @@ class SbmlImporter:
                    compiler: str = None,
                    allow_reinit_fixpar_initcond: bool = True,
                    compile: bool = True
-                   ):
+                   ) -> None:
         """Generate AMICI C++ files for the model provided to the constructor.
+
+        The resulting model can be imported as a regular Python module (if
+        `compile=True`), or used from Matlab or C++ as described in the
+        documentation of the respective AMICI interface.
+
+        Note that this generates model ODEs for changes in concentrations, not
+        amounts. The simulation results obtained from the model will be
+        concentrations, independently of the SBML `hasOnlySubstanceUnits`
+        attribute.
 
         Arguments:
             modelName: name of the model/model directory
@@ -196,7 +205,6 @@ class SbmlImporter:
 
             sigmas: dictionary(observableId:
                     sigma value or (existing) parameter name)
-
 
             noise_distributions: dictionary(observableId: noise type).
                 If nothing is passed
