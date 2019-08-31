@@ -13,7 +13,6 @@ fi
 cd ${AMICI_PATH}/tests
 source ${AMICI_PATH}/build/venv/bin/activate
 pip install scipy h5py
-pip install -U git+https://github.com/pysb/pysb
 python testModels.py
 python testSBML.py
 python testPYSB.py
