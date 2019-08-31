@@ -249,6 +249,7 @@ def get_data(model):
 
     rdata = amici.runAmiciSimulation(model, solver)
     edata = amici.ExpData(rdata, 0.1, 0.0)
+    edata.t_presim = 2
     edata.fixedParameters = [10, 2]
     edata.fixedParametersPresimulation = [3, 2]
     edata.fixedParametersPreequilibration = [3, 0]
