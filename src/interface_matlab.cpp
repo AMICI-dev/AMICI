@@ -2,8 +2,8 @@
  * @file   interface_matlab.cpp
  * @brief  core routines for mex interface
  *
- * This file defines the fuction mexFunction which is executed upon calling the
- * mex file from matlab
+ * This file defines the function `mexFunction` which is executed upon calling
+ * the `.mex` file from Matlab.
  */
 
 #include "amici/interface_matlab.h"
@@ -23,7 +23,7 @@ namespace amici {
     int dbl2int(const double x);
 
 /**
- * @brief The mexFunctionArguments enum takes care of the ordering of mex file
+ * @brief The mexRhsArguments enum takes care of the ordering of mex file
  * arguments (indexing in prhs)
  */
 enum mexRhsArguments {
@@ -41,8 +41,7 @@ enum mexRhsArguments {
 
 
 /*!
- * amici_blasCBlasTransToBlasTrans translates AMICI_BLAS_TRANSPOSE values to
- * CBlas readable strings
+ * Translates AMICI_BLAS_TRANSPOSE values to CBLAS readable strings
  *
  * @param trans       flag indicating transposition and complex conjugation
  *
