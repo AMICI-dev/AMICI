@@ -524,7 +524,7 @@ class Model : public AbstractModel {
      * @param it time index
      * @return t timepoint
      */
-    realtype getTimepoint(const int it) const;
+    realtype getTimepoint(int it) const;
 
     /**
      * @brief Set the timepoint vector

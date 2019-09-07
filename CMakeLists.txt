@@ -194,6 +194,8 @@ add_custom_target(
     swig/CMakeLists_model.cmake
     swig/modelname.template.i
     )
+set_target_properties(fileTemplates
+    PROPERTIES INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/")
 
 
 if($ENV{ENABLE_GCOV_COVERAGE})
