@@ -19,7 +19,7 @@ and deploy a new release on [PyPI](https://pypi.org/project/amici/).
 
 We try to keep a clean git history. Therefore, feature pull requests are
 squash-merged to `develop`. Merging of release branches to master is done via
-merge commits.   
+merge commits.
 
 
 ## When starting to work on some issue
@@ -126,6 +126,9 @@ described below:
 * We follow C++11
 
 * We want to maintain compatibility with g++, clang and the Intel C++ compiler 
+
+* For code formatting, we use the settings from `.clang-format` in the root
+  directory
 
 * *Details to be defined*
 
