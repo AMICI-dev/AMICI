@@ -479,7 +479,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     std::unique_ptr<amici::ExpData> edata;
     if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
         try {
-            edata = std::move(amici::expDataFromMatlabCall(prhs, *model));
+            edata = amici::expDataFromMatlabCall(prhs, *model);
         } catch (amici::AmiException const& ex) {
             amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
