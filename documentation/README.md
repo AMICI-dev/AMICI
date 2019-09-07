@@ -33,11 +33,8 @@ This is configured in `matlab/mtoc/config`.
 
 ## Python documentation
 
-Python documentation is processed by doxygen using the script and filters
-in `scripts/`.
-
-**NOTE:** Unfortunately, the current doxygen Python filter is unable to deal
-with Python type hints (https://github.com/ICB-DCM/AMICI/issues/613).
+Python documentation is processed by doxygen and doxypypy using the script and
+filters in `scripts/`.
 
 
 ## Out-of-source documentation
@@ -60,7 +57,7 @@ Some guidelines:
 
 * Please stick to the limit of 80 characters per line for readability of raw
   Markdown files where possible. 
-  
+
   However, note that some Markdown interpreters can handle line breaks within
   links and headings, whereas others cannot. Here, compatibility is preferred
   over linebreaks. 
