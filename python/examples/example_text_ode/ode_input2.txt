@@ -1,0 +1,35 @@
+time:
+t seconds
+
+constants:
+c1 =1
+Shalve =0.1
+
+parameters:
+Vh = 0.1
+h = 0.1
+Vmm=0.1 
+Km = 0.1
+v1 = 0.1
+k4 = 0.1
+obs_scaling = 0.3
+
+species:
+S1 =0.1 mole
+S2 = 1
+S3= 1
+
+
+odes:
+d/dt(S1) = v1 - Vmm*S1 / (Km + S1)*c1^2
+d/dt(S2) = Vmm*S1 / (Km + S1) - Vh * (S2/Shalve)^h / (1 + (S2/Shalve)^h )
+d/dt(S3) = Vh * (S2/Shalve)^h / (1 + (S2/Shalve)^h ) - k4*S3 + log10(c1)
+
+
+observables:
+y1 = obs_scaling *(S1 + S2)
+y2 = S2
+y3 = S3
+
+
+
