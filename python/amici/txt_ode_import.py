@@ -40,7 +40,7 @@ def parse_equations(line: str) -> (str, str, str):
     Returns:
         id: str, the variable id.
         arguments: str, the value of the variable.
-        unit: str, the units for the variable's value.
+        formula: str, the formula for the right hand side.
     """
 
     try:
@@ -49,7 +49,31 @@ def parse_equations(line: str) -> (str, str, str):
         raise Exception('Error in parsing: line \n' + line + '\n is not correctly formated! \n'
                         'Make sure it has the format <function name> ( <arguments> ) = <formula>')
 
+    print(arguments)
+
     return id, arguments, formula
+
+
+def parse_observable(line: str) -> (str, str):
+    """
+    Parses an observable with the form <observable name> = <equation> and returns the observable name as id
+    and the formula as name.
+
+    Args:
+        line: a line of text from the file containing the ODEs.
+
+    Returns:
+        id: str, the observable id.
+        formula: str, the formula for the observable.
+    """
+
+    try:
+        id, formula = re.findall('(\S+)=(\S+)', line.replace(' ', ''))[0]
+    except IndexError:
+        raise Exception('Error in parsing line \n' + line + '\n is not correctly formated! \n'
+                        'Make sure it has the format <observable name> = <formula>')
+
+    return id, formula
 
 
 def create_species(model, id: str, initial_amount: str, substance_units: str):
@@ -70,6 +94,10 @@ def create_species(model, id: str, initial_amount: str, substance_units: str):
     s = model.createSpecies()
     s.setId(id)
     s.setInitialAmount(float(initial_amount))
+    s.setConstant(False)
+    s.setBoundaryCondition(False)
+    s.setHasOnlySubstanceUnits(False)
+    s.setCompartment('Compartment')
 
     substance_units = substance_units if substance_units else 'mole'  # if not specified set units to mole
     s.setSubstanceUnits(substance_units)
@@ -147,11 +175,34 @@ def create_rate_rule(model, id: str, species: str, formula: str):
     """
 
     r = model.createRateRule()
-    r.setMetaId('d/' + id + '_'+species)
+    r.setId('d/' + id + '_'+species)
+    r.setVariable(species)
     math_ast = parseL3Formula(formula)
     r.setMath(math_ast)
 
     return r
+
+
+def create_observable(model, id: str, formula: str):
+    """
+    Creates an patameter with the name observalble_[Id] and an assignment rule, that assigns the parameter to
+    the equation given in formula.
+
+    Args:
+        model: SBML model to which the rate rule will be added.
+        id: str, the id of the observable
+        formula: str: contains the equation for the observable
+    """
+
+    obs_param = model.createParameter()
+    obs_param.setId('observable_' + id)
+    obs_param.setName(id)
+    obs_param.setConstant(False)
+    obs_param.setUnits('dimensionless')
+
+    obs_assignment_rule = model.createAssignmentRule()
+    obs_assignment_rule.setVariable('observable_' + id)
+    obs_assignment_rule.setMath(parseL3Formula(formula))
 
 
 def read_time_block(model, line: str):
@@ -160,6 +211,7 @@ def read_time_block(model, line: str):
     If time units are not given they're set to seconds.
 
     Args:
+        model: SBML model to which the rate rule will be added.
         model: the SBML model
         line: a line in the time block in the ODE text file.
 
@@ -197,7 +249,7 @@ def read_constants_block(model, line: str):
         create_parameter(model, id, True, value, unit)
 
 
-def read_parameters_block(model, line:str ):
+def read_parameters_block(model, line: str):
     """
     Reads and processes lines in the parameters block in the ODE text file.
     In particular, it reads the parameters and adds them to the given SBML file.
@@ -274,9 +326,16 @@ def read_odes_block(model, line: str):
         create_rate_rule(model, id, arguments, formula)
 
 
-# TODO read_observables_block
 def read_observables_block(model, line):
-    warnings.warn('Observables not supported yet')
+    """
+    ToDo
+    :param model:
+    :param line:
+    :return:
+    """
+    if line.strip() != '':
+        id, formula = parse_observable(line)
+        create_observable(model, id, formula)
 
 
 # TODO read_noise_block
@@ -303,6 +362,9 @@ def parse_txt(text_file: str) -> str:
 
     document = SBMLDocument(3, 1)
     model = document.createModel()
+    c = model.createCompartment()
+    c.setId('Compartment')
+    c.setConstant(True)
 
     function_dict = {'time': read_time_block,
                      'constants': read_constants_block,

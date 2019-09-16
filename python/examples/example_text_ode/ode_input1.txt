@@ -12,25 +12,28 @@ Vmm=0.1
 Km = 0.1
 v1 = 0.1
 k4 = 0.1
+obs_scaling = 0.3
 
 species:
-S1 =0.1 mol
+S1 =0.1 mole
 S2 = 1
 S3= 1
 
 functions:
-hill(V, s, Shalve, h)= V * (s/Shalve)^h / (1 + (s/Shalve)^h )
+hill(s, Shalve, V, h)= V * (s/Shalve)^h / (1 + (s/Shalve)^h )
 
-MM(V, s, Km)= V*s / (Km + s)
+MM(s, V, Km)= V*s / (Km + s)
 
 odes:
-d/dt(S1) = v19 - MM(S1, Vmm, Km)*c1^2
+d/dt(S1) = v1 - MM(S1, Vmm, Km)*c1^2
 d/dt(S2) = MM(S1, Vmm, Km) - hill(S2, Shalve, Vh, h)
 d/dt(S3) = hill(S2, Shalve, Vh, h) - k4*S3 + log10(c1)
 
 
 observables:
-
+y1 = obs_scaling *(S1 + S2)
+y2 = S2
+y3 = S3
 
 noise:
 
