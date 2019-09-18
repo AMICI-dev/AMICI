@@ -59,9 +59,9 @@ except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
 
 # determine package installation path, or, if used directly from git
 # repository, get repository root
-if os.path.exists(os.path.join(os.path.dirname(__file__), '..', '..', '.git')):
-    amici_path = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), '..', '..'))
+basedir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+if os.path.exists(os.path.join(basedir, '.git')):
+    amici_path = os.path.abspath(basedir)
 else:
     amici_path = os.path.dirname(__file__)
 
@@ -74,11 +74,12 @@ with open(os.path.join(amici_path, 'version.txt')) as f:
     __version__ = f.read().strip()
 
 # get commit hash from file
+basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
 _commitfile = next(
     (
         file for file in [
-            os.path.join(amici_path, '..', '..', '..', '.git', 'FETCH_HEAD'),
-            os.path.join(amici_path, '..', '..', '..', '.git', 'ORIG_HEAD'),
+            os.path.join(basedir, '.git', 'FETCH_HEAD'),
+            os.path.join(basedir, '.git', 'ORIG_HEAD'),
         ]
         if os.path.isfile(file)
     ),
