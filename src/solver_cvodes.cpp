@@ -65,7 +65,7 @@ static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                    N_Vector tmp2B, N_Vector tmp3B);
 
 static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data)
-__attribute__((unused));
+[[gnu::unused]];
 
 static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
                N_Vector xdot, void *user_data, N_Vector tmp);
