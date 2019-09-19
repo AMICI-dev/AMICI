@@ -22,6 +22,9 @@ mv cppcheck_tmp.txt cppcheck.txt
 grep -v "'AmiVectorArray' does not have a operator=" cppcheck.txt > cppcheck_tmp.txt
 mv cppcheck_tmp.txt cppcheck.txt
 
+grep -v "Obsolete function 'alloca' called." cppcheck.txt > cppcheck_tmp.txt
+mv cppcheck_tmp.txt cppcheck.txt
+
 grep -v "Member variable 'ExpData::nytrue_' is not initialized in the constructor" cppcheck.txt > cppcheck_tmp.txt
 mv cppcheck_tmp.txt cppcheck.txt
 
