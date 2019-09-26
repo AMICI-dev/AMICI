@@ -36,11 +36,16 @@ matrix:
         - cd $BASE_DIR
       deploy:
         skip_cleanup: true
-        provider: script
-        script: scripts/deployPyPi.sh
-        on:
-          branch: master
-          tags: true
+        - provider: script
+          script: scripts/deployPyPi.sh
+          on:
+            branch: master
+            tags: true
+        - provider: s3
+          edge: true
+          bucket: amici-artifacts
+          region: eu-central-1
+    
 
     - os: osx
       osx_image: xcode11
