@@ -64,9 +64,6 @@ static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                    SUNMatrix JB, void *user_data, N_Vector tmp1B,
                    N_Vector tmp2B, N_Vector tmp3B);
 
-static int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data)
-[[gnu::unused]];
-
 static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
                N_Vector xdot, void *user_data, N_Vector tmp);
 
@@ -837,19 +834,6 @@ int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                          SUNMatrix JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
     return fJB(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
-}
-
-/**
- * @brief Diagonalized Jacobian (for preconditioning)
- * @param t timepoint
- * @param JDiag Vector to which the Jacobian diagonal will be written
- * @param x Vector with the states
- * @param user_data object with user input @type Model_ODE
- **/
-int fJDiag(realtype t, N_Vector JDiag, N_Vector x, void *user_data) {
-    auto model = static_cast<Model_ODE *>(user_data);
-    model->fJDiag(t, JDiag, x);
-    return model->checkFinite(gsl::make_span(JDiag), "Jacobian");
 }
 
 /**
