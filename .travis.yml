@@ -24,6 +24,9 @@ matrix:
             - swig3.0
             - g++-5
             - libc6-dbg
+        artifacts:
+          s3_region: eu-central-1
+          debug: true
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
         - CI_MODE=test
