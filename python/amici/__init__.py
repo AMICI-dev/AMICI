@@ -32,6 +32,38 @@ import re
 import sys
 from contextlib import suppress
 
+
+def _get_amici_path():
+    """
+    Determine package installation path, or, if used directly from git
+    repository, get repository root
+    """
+    basedir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    if os.path.exists(os.path.join(basedir, '.git')):
+        return os.path.abspath(basedir)
+    return os.path.dirname(__file__)
+
+
+def _get_commit_hash():
+    """Get commit hash from file"""
+    basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
+    commitfile = next(
+        (
+            file for file in [
+                os.path.join(basedir, '.git', 'FETCH_HEAD'),
+                os.path.join(basedir, '.git', 'ORIG_HEAD'),
+            ]
+            if os.path.isfile(file)
+        ),
+        None
+    )
+
+    if commitfile:
+        with open(commitfile) as f:
+            return str(re.search(r'^([\w]*)', f.read().strip()).group())
+    return 'unknown'
+
+
 # redirect C/C++ stdout to python stdout if python stdout is redirected,
 # e.g. in ipython notebook
 capture_cstdout = suppress
@@ -57,14 +89,8 @@ except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     except (ImportError, ModuleNotFoundError, AttributeError):
         pass
 
-# determine package installation path, or, if used directly from git
-# repository, get repository root
-basedir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-if os.path.exists(os.path.join(basedir, '.git')):
-    amici_path = os.path.abspath(basedir)
-else:
-    amici_path = os.path.dirname(__file__)
-
+# Initialize AMICI paths
+amici_path = _get_amici_path()
 amiciSwigPath = os.path.join(amici_path, 'swig')
 amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
@@ -73,25 +99,7 @@ amiciModulePath = os.path.dirname(__file__)
 with open(os.path.join(amici_path, 'version.txt')) as f:
     __version__ = f.read().strip()
 
-# get commit hash from file
-basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
-_commitfile = next(
-    (
-        file for file in [
-            os.path.join(basedir, '.git', 'FETCH_HEAD'),
-            os.path.join(basedir, '.git', 'ORIG_HEAD'),
-        ]
-        if os.path.isfile(file)
-    ),
-    None
-)
-
-if _commitfile:
-    with open(_commitfile) as f:
-        __commit__ = str(re.search(r'^([\w]*)', f.read().strip()).group())
-else:
-    __commit__ = 'unknown'
-
+__commit__ = _get_commit_hash()
 
 try:
     # These module require the swig interface and other dependencies which will
