@@ -12,6 +12,7 @@ import time
 import argparse
 import math
 import logging
+from typing import List
 from colorama import init as init_colorama
 from colorama import Fore
 
@@ -121,7 +122,7 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     # must be unique
     assert(len(fixed_parameters) == len(set(fixed_parameters)))
 
-    # States occurring as columns names of the condition table need to be
+    # States occurring as column names of the condition table need to be
     #  converted to parameters
     species_to_convert = [x for x in fixed_parameters
                           if sbml_model.getSpecies(x)]
@@ -159,13 +160,13 @@ def get_fixed_parameters(condition_file_name, sbml_model,
 
 
 def species_to_parameters(species_ids: list[str],
-                          sbml_model: 'libsbml.Model') -> None:
+                          sbml_model: 'libsbml.Model') -> List[str]:
     """Turn a SBML species into parameters and replace species references
     inside the model instance.
 
     Arguments:
-        species_ids: List of SBML species ID to convert to parameter and ID
-            of the resulting parameter
+        species_ids: List of SBML species ID to convert to parameters with the
+            same ID as the replaced species.
         sbml_model: SBML model to modify
 
     Returns:
@@ -214,7 +215,8 @@ def species_to_parameters(species_ids: list[str],
     return transformables
 
 
-def constant_species_to_parameters(sbml_model: 'libsbml.Model'):
+def constant_species_to_parameters(sbml_model: 'libsbml.Model'
+                                   ) -> List[str]:
     """Convert constant species in the SBML model to constant parameters.
 
     This can be used e.g. for setting up models with condition-specific
@@ -281,7 +283,8 @@ def import_model(sbml_file: str,
     # Replace observables in assignment
     import sympy as sp
     for observable_id, formula in sigmas.items():
-        repl = sp.sympify(formula).subs(observable_id, observables[observable_id]['formula'])
+        repl = sp.sympify(formula).subs(observable_id,
+                                        observables[observable_id]['formula'])
         sigmas[observable_id] = str(repl)
 
     if verbose:
