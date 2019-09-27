@@ -118,10 +118,16 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     # remove overridden parameters
     fixed_parameters = [p for p in fixed_parameters
                         if condition_df[p].dtype != 'O']
-
     # must be unique
     assert(len(fixed_parameters) == len(set(fixed_parameters)))
 
+    # States occurring as columns names of the condition table need to be
+    #  converted to parameters
+    species_to_convert = [x for x in fixed_parameters
+                          if sbml_model.getSpecies(x)]
+    species_to_parameters(species_to_convert, sbml_model)
+
+    # Others are optional
     if const_species_to_parameters:
         # Turn species which are marked constant in the SBML model into
         # parameters
@@ -132,10 +138,10 @@ def get_fixed_parameters(condition_file_name, sbml_model,
         logger.log(logging.INFO, "Non-constant species "
                    + str(len(sbml_model.getListOfSpecies())))
 
-    # ... and append them to the list of fixed_parameters
-    for species in constant_species:
-        if species not in fixed_parameters:
-            fixed_parameters.append(species)
+        # ... and append them to the list of fixed_parameters
+        for species in constant_species:
+            if species not in fixed_parameters:
+                fixed_parameters.append(species)
 
     # Ensure mentioned parameters exist in the model. Remove additional ones
     # from list
@@ -152,7 +158,63 @@ def get_fixed_parameters(condition_file_name, sbml_model,
     return fixed_parameters
 
 
-def constant_species_to_parameters(sbml_model):
+def species_to_parameters(species_ids: list[str],
+                          sbml_model: 'libsbml.Model') -> None:
+    """Turn a SBML species into parameters and replace species references
+    inside the model instance.
+
+    Arguments:
+        species_ids: List of SBML species ID to convert to parameter and ID
+            of the resulting parameter
+        sbml_model: SBML model to modify
+
+    Returns:
+        List of IDs of species which have been converted to parameters
+    """
+    transformables = []
+
+    for species_id in species_ids:
+        species = sbml_model.getSpecies(species_id)
+
+        if species.getHasOnlySubstanceUnits():
+            logger.warning(
+                f"Ignoring {species.getId()} which has only substance units."
+                " Conversion not yet implemented.")
+            return
+
+        if math.isnan(species.getInitialConcentration()):
+            logger.warning(
+                f"Ignoring {species.getId()} which has no initial "
+                "concentration. Amount conversion not yet implemented.")
+            return
+
+        transformables.append(species_id)
+
+    # Must not remove species while iterating over getListOfSpecies()
+    for species_id in transformables:
+        species = sbml_model.removeSpecies(species_id)
+        par = sbml_model.createParameter()
+        par.setId(species.getId())
+        par.setName(species.getName())
+        par.setConstant(True)
+        par.setValue(species.getInitialConcentration())
+        par.setUnits(species.getUnits())
+
+    # Remove from reactants and products
+    for reaction in sbml_model.getListOfReactions():
+        for species_id in transformables:
+            # loop, since removeX only removes one instance
+            while reaction.removeReactant(species_id):
+                pass
+            while reaction.removeProduct(species_id):
+                pass
+            while reaction.removeModifier(species_id):
+                pass
+
+    return transformables
+
+
+def constant_species_to_parameters(sbml_model: 'libsbml.Model'):
     """Convert constant species in the SBML model to constant parameters.
 
     This can be used e.g. for setting up models with condition-specific
@@ -173,42 +235,9 @@ def constant_species_to_parameters(sbml_model):
         if not species.getConstant() and not species.getBoundaryCondition():
             continue
 
-        if species.getHasOnlySubstanceUnits():
-            logger.warning(
-                f"Ignoring {species.getId()} which has only substance units."
-                " Conversion not yet implemented.")
-            continue
-
-        if math.isnan(species.getInitialConcentration()):
-            logger.warning(
-                f"Ignoring {species.getId()} which has no initial "
-                "concentration. Amount conversion not yet implemented.")
-            continue
-
         transformables.append(species.getId())
 
-    # Must not remove species while iterating over getListOfSpecies()
-    for speciesId in transformables:
-        species = sbml_model.removeSpecies(speciesId)
-        par = sbml_model.createParameter()
-        par.setId(species.getId())
-        par.setName(species.getName())
-        par.setConstant(True)
-        par.setValue(species.getInitialConcentration())
-        par.setUnits(species.getUnits())
-
-    # Remove from reactants and products
-    for reaction in sbml_model.getListOfReactions():
-        for speciesId in transformables:
-            # loop, since removeX only removes one instance
-            while reaction.removeReactant(speciesId):
-                pass
-            while reaction.removeProduct(speciesId):
-                pass
-            while reaction.removeModifier(speciesId):
-                pass
-
-    return transformables
+    return species_to_parameters(transformables, sbml_model)
 
 
 def import_model(sbml_file: str,
