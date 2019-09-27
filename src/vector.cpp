@@ -1,5 +1,7 @@
 #include "amici/vector.h"
 
+#include <functional>
+
 namespace amici {
 
 AmiVector &AmiVector::operator=(AmiVector const &other) {
