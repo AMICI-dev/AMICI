@@ -217,7 +217,7 @@ void Model::initializeStates(AmiVector &x) {
 }
 
 void Model::initializeStateSensitivities(AmiVectorArray &sx,
-                                         const AmiVector &x) {
+                                         AmiVector const &x) {
     if (sx0data.empty()) {
         fsx0(sx, x);
     } else {
@@ -235,7 +235,7 @@ void Model::initializeStateSensitivities(AmiVectorArray &sx,
     }
 }
 
-void Model::initHeaviside(const AmiVector &x, const AmiVector &dx) {
+void Model::initHeaviside(AmiVector const &x, AmiVector const &dx) {
     std::vector<realtype> rootvals(ne, 0.0);
     froot(tstart, x, dx, rootvals);
     for (int ie = 0; ie < ne; ie++) {
