@@ -7,7 +7,8 @@ AMICI provides a multi-language (Python, C++, Matlab) interface for the
 [IDAS](https://computing.llnl.gov/projects/sundials/idas)
 (for algebraic differential equations). AMICI allows the user to read
 differential equation models specified as [SBML](http://sbml.org/)
-and automatically compiles such models as `.mex` simulation files
+or [PySB](http://pysb.org/)
+and automatically compiles such models into `.mex` simulation files
 (Matlab), C++ executables or Python modules.
 
 In contrast to the (no longer maintained)
@@ -17,7 +18,7 @@ C++ code, which allows for a significantly faster simulation.
 
 Beyond forward integration, the compiled simulation file also allows for
 forward sensitivity analysis, steady state sensitivity analysis and
-adjoint sensitivity analysis for likelihood based output functions.
+adjoint sensitivity analysis for likelihood-based output functions.
 
 The interface was designed to provide routines for efficient gradient
 computation in parameter estimation of biochemical reaction models but
@@ -28,6 +29,7 @@ constrained optimization problems.
 ## Features
 
 * SBML import (see details below)
+* PySB import
 * Generation of C++ code for model simulation and sensitivity
   computation
 * Access to and high customizability of CVODES and IDAS solver
@@ -40,7 +42,7 @@ constrained optimization problems.
 * Pre-equilibration and pre-simulation conditions
 * Support for
   [discrete events and logical operations](https://academic.oup.com/bioinformatics/article/33/7/1049/2769435)
-
+  (Matlab-only)
 
 ## Interfaces & workflow
 
@@ -55,21 +57,21 @@ is then used for model simulation.
 
 ## Getting started
 
-AMICI installation instructions are provided
-[here](http://icb-dcm.github.io/AMICI/md__i_n_s_t_a_l_l.html).
+The AMICI source code is available at https://github.com/ICB-DCM/AMICI/.
+To install AMICI, first read the
+[installation instructions](http://icb-dcm.github.io/AMICI/md__i_n_s_t_a_l_l.html).
 
-To get you started with Python-AMICI the best way might be this
+To get you started with Python-AMICI, the best way might be checking out this
 [Jupyter notebook](https://github.com/ICB-DCM/AMICI/blob/master/python/examples/example_steadystate/ExampleSteadystate.ipynb).
 
-For Matlab, various examples are available
-[here](https://github.com/ICB-DCM/AMICI/tree/master/matlab/examples).
-
+To get started with Matlab-AMICI, various examples are available
+in [matlab/examples/](https://github.com/ICB-DCM/AMICI/tree/master/matlab/examples).
 
 Comprehensive documentation on installation and usage of AMICI is available
 online at [http://icb-dcm.github.io/AMICI/](http://icb-dcm.github.io/AMICI/).
 
-Any contributions to AMICI are welcome, read more contributing
-[here](http://icb-dcm.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g.html).
+Any [contributions](http://icb-dcm.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g.html)
+to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 
 ### Getting help
@@ -88,18 +90,25 @@ If you used AMICI in your work, we are happy to include
 your project, please let us know via a Github issue.
 
 When using AMICI in your project, please cite
-* [Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017). Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.   Plos Computational Biology, 13(1), e1005331. doi: 10.1371/journal.pcbi.1005331](https://doi.org/10.1371/journal.pcbi.1005331)
+* Fröhlich, F., Kaltenbacher, B., Theis, F. J., & Hasenauer, J. (2017).
+  Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.
+  Plos Computational Biology, 13(1), e1005331.
+  doi:[10.1371/journal.pcbi.1005331](https://doi.org/10.1371/journal.pcbi.1005331)
 and/or
-* [Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017). Parameter estimation for dynamical systems with discrete events and logical operations. Bioinformatics, 33(7), 1049-1056. doi: 10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
+* Fröhlich, F., Theis, F. J., Rädler, J. O., & Hasenauer, J. (2017).
+  Parameter estimation for dynamical systems with discrete events and logical
+  operations. Bioinformatics, 33(7), 1049-1056.
+  doi:[10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
 
 
 ## Status of SBML support in Python-AMICI
 
-Python-AMICI currently passes 494 out of the 1780 (~28%) test cases from
+Python-AMICI currently passes 500 out of the 1780 (~28%) test cases from
 the semantic
-[SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/).
+[SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
+([current status](https://github.com/ICB-DCM/AMICI/actions)).
 
-In additional, we currently plan to add support for the following features
+In addition, we currently plan to add support for the following features
 (see corresponding issues for details and progress):
 
 - Events (currently Matlab-only)
@@ -108,7 +117,6 @@ In additional, we currently plan to add support for the following features
 - Species assignment rules
 - Compartment assignment rules
 - Models without species
-- Logical operators
 
 contributions are welcome.
 

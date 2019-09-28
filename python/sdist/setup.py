@@ -163,7 +163,7 @@ def main():
             'develop': my_develop,
         },
         version=__version__,
-        description='Advanced multi-language Interface to CVODES and IDAS (%s)',
+        description='Advanced multi-language Interface to CVODES and IDAS',
         long_description=long_description,
         long_description_content_type="text/markdown",
         url='https://github.com/ICB-DCM/AMICI',
