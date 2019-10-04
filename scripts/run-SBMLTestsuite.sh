@@ -10,11 +10,12 @@ if [ ! -d "tests/sbml-test-suite" ]; then
 fi
 
 source build/venv/bin/activate
+pip show pytest-xdist > /dev/null 2>&1 || pip install pytest-xdist
+
 if [[ -z "$*" ]]; then
   args="1-1780" # run all tests
 else
   args="$@" # use user selection
 fi
-python ./tests/testSBMLSuite.py "${args}"
-ret=$?
-if [[ $ret != 0 ]]; then exit $ret; fi
+
+pytest ./tests/testSBMLSuite.py --cases="${args}" -s

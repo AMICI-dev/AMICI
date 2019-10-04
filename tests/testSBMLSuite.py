@@ -9,14 +9,12 @@ Usage:
         test cases or 1-1780 to run all.
 """
 
-import re
 import os
 import sys
 import importlib
-import unittest
+import pytest
 import copy
 import shutil
-from typing import List
 
 import amici
 import numpy as np
@@ -25,113 +23,112 @@ import pandas as pd
 
 
 # directory with sbml semantic test cases
-test_path = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
+TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
                          'semantic')
-upload_result_path = os.path.join(os.path.dirname(__file__),
-                                  'amici-semantic-results')
-
-ALL_TESTS = set(range(1, 1781))
 
 
-class TestAmiciSBMLTestSuite(unittest.TestCase):
-    SBML_TEST_IDS = ALL_TESTS
+@pytest.fixture(scope="session")
+def result_path():
+    # ensure directory for test results is empty
+    upload_result_path = os.path.join(os.path.dirname(__file__),
+                                      'amici-semantic-results')
+    if os.path.exists(upload_result_path):
+        shutil.rmtree(upload_result_path)
+    os.mkdir(upload_result_path)
+    return upload_result_path
 
-    def setUp(self):
-        self.resetdir = os.getcwd()
-        self.default_path = copy.copy(sys.path)
 
-    def tearDown(self):
-        os.chdir(self.resetdir)
-        sys.path = self.default_path
+@pytest.fixture(scope="function")
+def sbml_test_dir():
+    old_cwd = os.getcwd()
+    old_path = copy.copy(sys.path)
 
-    def runTest(self):
-        self.test_sbml_testsuite()
+    yield
 
-    def test_sbml_testsuite(self):
-        for testId in self.SBML_TEST_IDS:
-            if testId != 1395:  # we skip this test due to NaNs in the
-                # jacobian
-                with self.subTest(testId=testId):
-                    self.run_sbml_testsuite_case(get_test_str(testId))
+    os.chdir(old_cwd)
+    sys.path = old_path
 
-    def run_sbml_testsuite_case(self, test_id):
-        try:
-            current_test_path = os.path.join(test_path, test_id)
 
-            # results
-            results_file = os.path.join(current_test_path,
-                                        test_id + '-results.csv')
-            results = np.genfromtxt(results_file, delimiter=',')
+def test_sbml_testsuite_case(test_id, result_path):
+    test_id = get_test_str(test_id)
 
-            model, solver, wrapper = compile_model(current_test_path, test_id)
-            atol, rtol = apply_settings(current_test_path, test_id, solver,
-                                        model)
+    try:
+        current_test_path = os.path.join(TEST_PATH, test_id)
 
-            rdata = amici.runAmiciSimulation(model, solver)
+        # results
+        results_file = os.path.join(current_test_path,
+                                    test_id + '-results.csv')
+        results = np.genfromtxt(results_file, delimiter=',')
 
-            amount_species, variables_species = get_amount_and_variables(
-                current_test_path, test_id
-            )
+        model, solver, wrapper = compile_model(current_test_path, test_id)
+        atol, rtol = apply_settings(current_test_path, test_id, solver,
+                                    model)
 
-            simulated_x = rdata['x']
-            test_x = results[1:, [
-                                     1 + wrapper.speciesIndex[variable]
-                                     for variable in variables_species
-                                     if variable in wrapper.speciesIndex.keys()
-                                 ]]
+        rdata = amici.runAmiciSimulation(model, solver)
 
-            for species in amount_species:
-                if not species == '':
-                    symvolume = wrapper.speciesCompartment[
-                        wrapper.speciesIndex[species]
-                    ]
-                    volume = symvolume.subs({
-                        comp: vol
-                        for comp, vol in zip(
-                            wrapper.compartmentSymbols,
-                            wrapper.compartmentVolume
-                        )
-                    })
-                    volume = volume.subs({
-                        sp.Symbol(name): value
-                        for name, value in zip(
-                            model.getParameterIds(),
-                            model.getParameters()
-                        )
-                    })
+        amount_species, variables_species = get_amount_and_variables(
+            current_test_path, test_id
+        )
 
-                    # required for 525-527, 530 as k is renamed to amici_k
-                    volume = volume.subs({
-                        sp.Symbol(name): value
-                        for name, value in zip(
-                        model.getParameterNames(),
+        simulated_x = rdata['x']
+        test_x = results[1:, [
+                                 1 + wrapper.speciesIndex[variable]
+                                 for variable in variables_species
+                                 if variable in wrapper.speciesIndex.keys()
+                             ]]
+
+        for species in amount_species:
+            if not species == '':
+                symvolume = wrapper.speciesCompartment[
+                    wrapper.speciesIndex[species]
+                ]
+                volume = symvolume.subs({
+                    comp: vol
+                    for comp, vol in zip(
+                        wrapper.compartmentSymbols,
+                        wrapper.compartmentVolume
+                    )
+                })
+                volume = volume.subs({
+                    sp.Symbol(name): value
+                    for name, value in zip(
+                        model.getParameterIds(),
                         model.getParameters()
                     )
-                    })
+                })
 
-                    simulated_x[:, wrapper.speciesIndex[species]] = \
-                        simulated_x[:, wrapper.speciesIndex[species]] * volume
+                # required for 525-527, 530 as k is renamed to amici_k
+                volume = volume.subs({
+                    sp.Symbol(name): value
+                    for name, value in zip(
+                    model.getParameterNames(),
+                    model.getParameters()
+                )
+                })
 
-            self.assertTrue(
-                np.isclose(simulated_x, test_x, atol, rtol).all()
-            )
-            print(f'TestCase {test_id} passed.')
+                simulated_x[:, wrapper.speciesIndex[species]] = \
+                    simulated_x[:, wrapper.speciesIndex[species]] * volume
 
-            write_result_file(simulated_x, model, test_id)
+        assert np.isclose(simulated_x, test_x, atol, rtol).all()
 
-        except amici.sbml_import.SBMLException as err:
-            print(f'TestCase {test_id} was skipped: {err}')
+        print(f'TestCase {test_id} passed.')
+
+        write_result_file(simulated_x, model, test_id, result_path)
+
+    except amici.sbml_import.SBMLException as err:
+        print(f'TestCase {test_id} was skipped: {err}')
+
 
 def write_result_file(simulated_x: np.array,
                       model: amici.Model,
-                      test_id: str):
+                      test_id: str, result_path: str):
     """
     Create test result file for upload to
     http://sbml.org/Facilities/Database/Submission/Create
 
     Requires csv file with test ID in name and content of [time, Species, ...]
     """
-    filename = os.path.join(upload_result_path, f'{test_id}.csv')
+    filename = os.path.join(result_path, f'{test_id}.csv')
 
     df = pd.DataFrame(simulated_x)
     df.columns = model.getStateIds()
@@ -227,37 +224,3 @@ def get_test_str(test_id):
     test_str = '0'*(5-len(test_str)) + test_str
     return test_str
 
-
-def parse_selection(selection_str: str) -> List[int]:
-    """
-    Parse comma-separated list of integer ranges, return selected indices as
-    integer list
-
-    Valid input e.g.: 1 1,3 -3,4,6-7
-    """
-    indices = []
-    for group in selection_str.split(','):
-        if not re.match(r'^(?:-?\d+)|(?:\d+(?:-\d+))$', group):
-            print("Invalid selection", group)
-            sys.exit()
-        spl = group.split('-')
-        if len(spl) == 1:
-            indices.append(int(spl[0]))
-        elif len(spl) == 2:
-            begin = int(spl[0]) if spl[0] else 0
-            end = int(spl[1])
-            indices.extend(range(begin, end + 1))
-    return indices
-
-
-if __name__ == '__main__':
-    # ensure directory for test results is empty
-    if os.path.exists(upload_result_path):
-        shutil.rmtree(upload_result_path)
-    os.mkdir(upload_result_path)
-
-    TestAmiciSBMLTestSuite.SBML_TEST_IDS = set(parse_selection(sys.argv.pop()))
-
-    suite = unittest.TestSuite()
-    suite.addTest(TestAmiciSBMLTestSuite())
-    unittest.main()
