@@ -578,7 +578,18 @@ void Model::setParameterList(const std::vector<int> &plist) {
     initializeVectors();
 }
 
-std::vector<realtype> const &Model::getInitialStates() const { return x0data; }
+std::vector<realtype> Model::getInitialStates() {
+    if(!x0data.empty()) {
+        return x0data;
+    }
+
+    // Not set explicitly on this instance, so we compute it, but don't
+    // save it, as this would have to be invalidated upon changing
+    // parameters etc.
+    std::vector<realtype> x0(nx_rdata, 0.0);
+    fx0(x0.data(), tstart, unscaledParameters.data(), fixedParameters.data());
+    return x0;
+}
 
 void Model::setInitialStates(const std::vector<realtype> &x0) {
     if (x0.size() != (unsigned)nx_rdata && !x0.empty())

@@ -588,7 +588,7 @@ class Model : public AbstractModel {
      * @brief Get the initial states
      * @return initial state vector
      */
-    std::vector<realtype> const &getInitialStates() const;
+    std::vector<realtype> getInitialStates();
 
     /**
      * @brief Set the initial states
@@ -1046,7 +1046,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Sets only those initial states sensitivities that are affected
-     *from fx0 fixedParmeters
+     * from fx0 fixedParmeters
      * @param sx pointer to state sensitivity variables
      * @param x pointer to state variables
      **/
