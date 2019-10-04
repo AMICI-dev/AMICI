@@ -73,7 +73,7 @@ void ForwardProblem::workForwardProblem() {
     }
 
     /* if preequilibration is necessary, start Newton solver */
-    if (solver->getNewtonPreequilibration() || (edata && !edata->fixedParametersPreequilibration.empty())) {
+    if (solver->getPreequilibration() || (edata && !edata->fixedParametersPreequilibration.empty())) {
         handlePreequilibration();
     } else {
         model->fx_rdata(x_rdata, x);

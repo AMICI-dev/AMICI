@@ -624,7 +624,7 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
     }
 
     if(attributeExists(file, datasetPath, "newton_preeq")) {
-        solver.setNewtonPreequilibration(
+        solver.setPreequilibration(
                     getIntScalarAttribute(file, datasetPath, "newton_preeq"));
     }
 

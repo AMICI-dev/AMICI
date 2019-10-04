@@ -20,7 +20,7 @@ Solver::Solver(const Solver &other)
       sensi_meth(other.sensi_meth), stldet(other.stldet),
       ordering(other.ordering), newton_maxsteps(other.newton_maxsteps),
       newton_maxlinsteps(other.newton_maxlinsteps),
-      newton_preeq(other.newton_preeq), linsol(other.linsol),
+      requires_preequilibration(other.requires_preequilibration), linsol(other.linsol),
       atol(other.atol), rtol(other.rtol), atol_fsa(other.atol_fsa),
       rtol_fsa(other.rtol_fsa), atolB(other.atolB), rtolB(other.rtolB),
       quad_atol(other.quad_atol), quad_rtol(other.quad_rtol),
@@ -378,7 +378,7 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.ordering == b.ordering) &&
            (a.newton_maxsteps == b.newton_maxsteps) &&
            (a.newton_maxlinsteps == b.newton_maxlinsteps) &&
-           (a.newton_preeq == b.newton_preeq) && (a.ism == b.ism) &&
+           (a.requires_preequilibration == b.requires_preequilibration) && (a.ism == b.ism) &&
            (a.linsol == b.linsol) && (a.atol == b.atol) && (a.rtol == b.rtol) &&
            (a.maxsteps == b.maxsteps) && (a.maxstepsB == b.maxstepsB) &&
            (a.quad_atol == b.quad_atol) && (a.quad_rtol == b.quad_rtol) &&
@@ -479,10 +479,10 @@ void Solver::setNewtonMaxSteps(const int newton_maxsteps) {
     this->newton_maxsteps = newton_maxsteps;
 }
 
-bool Solver::getNewtonPreequilibration() const { return newton_preeq; }
+bool Solver::getPreequilibration() const { return requires_preequilibration; }
 
-void Solver::setNewtonPreequilibration(const bool newton_preeq) {
-    this->newton_preeq = newton_preeq;
+void Solver::setPreequilibration(const bool require_preequilibration) {
+    this->requires_preequilibration = require_preequilibration;
 }
 
 int Solver::getNewtonMaxLinearSteps() const { return newton_maxlinsteps; }
