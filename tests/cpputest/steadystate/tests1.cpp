@@ -112,6 +112,10 @@ TEST(groupSteadystate, testInitialStatesNonEmpty) {
     CHECK_FALSE(model->getInitialStates().empty());
 }
 
+TEST(groupSteadystate, testInitialStateSensitivitiesNonEmpty) {
+    auto model = getModel();
+    CHECK_FALSE(model->getInitialStateSensitivities().empty());
+}
 
 TEST(groupSteadystate, testSimulation) {
     amici::simulateVerifyWrite("/model_steadystate/nosensi/",

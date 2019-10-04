@@ -596,9 +596,10 @@ std::vector<realtype> Model::getInitialStates() {
         return x0data;
     }
 
-    // Not set explicitly on this instance, so we compute it, but don't
-    // save it, as this would have to be invalidated upon changing
-    // parameters etc.
+    /* Initial states have not been set explicitly on this instance, so we
+     * compute it, but don't save it, as this would have to be invalidated upon
+     * changing parameters etc.
+     */
     std::vector<realtype> x0(nx_rdata, 0.0);
     fx0(x0.data(), tstart, unscaledParameters.data(), fixedParameters.data());
     return x0;
@@ -617,8 +618,28 @@ void Model::setInitialStates(const std::vector<realtype> &x0) {
     x0data = x0;
 }
 
-const std::vector<realtype> &Model::getInitialStateSensitivities() const {
-    return sx0data;
+bool Model::hasCustomInitialStates() const
+{
+    return !x0data.empty();
+}
+
+std::vector<realtype> Model::getInitialStateSensitivities() {
+    if(!sx0data.empty()) {
+        return sx0data;
+    }
+
+    /* Initial state sensitivities have not been set explicitly on this
+     * instance, so we compute it, but don't save it, as this would have to be
+     * invalidated upon changing parameters etc.
+     */
+    std::vector<realtype> sx0(nx_rdata * nplist(), 0.0);
+    auto x0 = getInitialStates();
+    for (int ip = 0; ip < nplist(); ip++) {
+        fsx0(sx0.data(), tstart, x0.data(), unscaledParameters.data(),
+             fixedParameters.data(), plist(ip));
+    }
+    return sx0;
+
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
@@ -655,6 +676,11 @@ void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
         }
     }
     setUnscaledInitialStateSensitivities(sx0_rdata);
+}
+
+bool Model::hasCustomInitialStateSensitivities() const
+{
+    return !sx0data.empty();
 }
 
 void Model::setUnscaledInitialStateSensitivities(
