@@ -90,12 +90,23 @@ static void setValueById(std::vector<std::string> const &ids,
  * @param id_name string indicating whether name or id was specified
  * @return number of matched names/ids
  */
+
 static int setValueByIdRegex(std::vector<std::string> const &ids,
                              std::vector<realtype> &values, realtype value,
                              std::string const &regex,
                              const char *variable_name, const char *id_name) {
     try {
+        /* For unknown reasons, the Intel compiler fails to compile patterns
+         * such as p[\d]+, which work with g++ and clang.
+         * Using std::regex_constants::extended fixes Intel issues, but g++
+         * seems to not match the pattern correctly.
+         * This is the best solution I was able to come up with...
+         */
+#ifdef __INTEL_COMPILER
+        std::regex pattern(regex, std::regex_constants::extended);
+#else
         std::regex pattern(regex);
+#endif
         int n_found = 0;
         for (const auto &id : ids) {
             if (std::regex_match(id, pattern)) {
@@ -105,13 +116,15 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
         }
 
         if (n_found == 0)
-            throw AmiException("Could not find %s with specified %s",
-                               variable_name, id_name);
+            throw AmiException("Could not find %s with specified %s (%s)",
+                               variable_name, id_name, regex.c_str());
 
         return n_found;
     } catch (std::regex_error const &e) {
-        throw AmiException("Specified regex pattern could not be compiled: %s",
-                           e.what());
+        auto err_string = regexErrorToString(e.code());
+        throw AmiException("Specified regex pattern %s could not be compiled:"
+                           " %s (%s)", regex.c_str(), e.what(),
+                           err_string.c_str());
     }
 }
 
