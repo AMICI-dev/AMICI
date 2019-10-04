@@ -90,6 +90,7 @@ static void setValueById(std::vector<std::string> const &ids,
  * @param id_name string indicating whether name or id was specified
  * @return number of matched names/ids
  */
+
 static int setValueByIdRegex(std::vector<std::string> const &ids,
                              std::vector<realtype> &values, realtype value,
                              std::string const &regex,
@@ -105,13 +106,15 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
         }
 
         if (n_found == 0)
-            throw AmiException("Could not find %s with specified %s",
-                               variable_name, id_name);
+            throw AmiException("Could not find %s with specified %s (%s)",
+                               variable_name, id_name, regex.c_str());
 
         return n_found;
     } catch (std::regex_error const &e) {
-        throw AmiException("Specified regex pattern could not be compiled: %s",
-                           e.what());
+        auto err_string = regexErrorToString(e.code());
+        throw AmiException("Specified regex pattern %s could not be compiled:"
+                           " %s (%s)", regex.c_str(), e.what(),
+                           err_string.c_str());
     }
 }
 
