@@ -1,4 +1,5 @@
 """Pytest configuration for SBML test suite"""
+
 from typing import List
 import re
 import sys
@@ -27,18 +28,25 @@ def parse_selection(selection_str: str) -> List[int]:
 
 
 def pytest_addoption(parser):
+    """Add pytest CLI options"""
     parser.addoption("--cases", help="Test cases to run")
 
 
 def pytest_generate_tests(metafunc):
+    """Parameterize tests"""
+
+    # Run for all SBML semantic test suite cases
     if "test_id" in metafunc.fixturenames:
-        print(metafunc.config)
+        # Get CLI option
         cases = metafunc.config.getoption("cases")
         if cases:
+            # Run selected tests
             test_ids = set(parse_selection(cases))
         else:
+            # Run all tests
             test_ids = set(range(1, 1781))
-        # we skip this test due to NaNs in the jacobian
+
+        # We skip this test due to NaNs in the jacobian
         test_ids -= {1395}
 
         metafunc.parametrize("test_id", test_ids)
