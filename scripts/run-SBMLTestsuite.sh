@@ -18,4 +18,4 @@ else
   args="$@" # use user selection
 fi
 
-pytest ./tests/testSBMLSuite.py --cases="${args}" -s
+pytest ./tests/testSBMLSuite.py --cases="${args}" -s -n auto
