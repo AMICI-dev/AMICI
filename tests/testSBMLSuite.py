@@ -14,7 +14,6 @@ import sys
 import importlib
 import pytest
 import copy
-import shutil
 
 import amici
 import numpy as np
@@ -88,12 +87,21 @@ def verify_results(settings, rdata, results, wrapper,
     amount_species, variables_species = get_amount_and_variables(settings)
 
     simulated_x = rdata['x']
-    test_x = results[1:, [
+    expected_x = results[1:, [
                              1 + wrapper.speciesIndex[variable]
                              for variable in variables_species
                              if variable in wrapper.speciesIndex.keys()
                          ]]
 
+    concentrations_to_amounts(amount_species, wrapper, model, simulated_x)
+
+    assert np.isclose(simulated_x, expected_x, atol, rtol).all()
+
+    return simulated_x
+
+
+def concentrations_to_amounts(amount_species, wrapper, model, simulated_x):
+    """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
         if not species == '':
             symvolume = wrapper.speciesCompartment[
@@ -126,9 +134,6 @@ def verify_results(settings, rdata, results, wrapper,
             simulated_x[:, wrapper.speciesIndex[species]] = \
                 simulated_x[:, wrapper.speciesIndex[species]] * volume
 
-    assert np.isclose(simulated_x, test_x, atol, rtol).all()
-
-    return simulated_x
 
 def write_result_file(simulated_x: np.array,
                       model: amici.Model,
@@ -150,10 +155,13 @@ def write_result_file(simulated_x: np.array,
 def get_amount_and_variables(settings):
     """Read amount and species from settings file"""
 
+    # species for which results are expected as amounts
     amount_species = settings['amount'] \
         .replace(' ', '') \
         .replace('\n', '') \
         .split(',')
+
+    # IDs of all variables for which results are expected/provided
     variables_species = settings['variables'] \
         .replace(' ', '') \
         .replace('\n', '') \
