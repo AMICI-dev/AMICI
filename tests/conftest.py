@@ -36,17 +36,17 @@ def pytest_generate_tests(metafunc):
     """Parameterize tests"""
 
     # Run for all SBML semantic test suite cases
-    if "test_id" in metafunc.fixturenames:
+    if "test_number" in metafunc.fixturenames:
         # Get CLI option
         cases = metafunc.config.getoption("cases")
         if cases:
             # Run selected tests
-            test_ids = set(parse_selection(cases))
+            test_numbers = set(parse_selection(cases))
         else:
             # Run all tests
-            test_ids = set(range(1, 1781))
+            test_numbers = set(range(1, 1781))
 
-        # We skip this test due to NaNs in the jacobian
-        test_ids -= {1395}
+        # We skip this test due to NaNs in the Jacobian
+        test_numbers -= {1395}
 
-        metafunc.parametrize("test_id", test_ids)
+        metafunc.parametrize("test_number", test_numbers)

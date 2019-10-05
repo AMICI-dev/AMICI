@@ -40,17 +40,20 @@ def result_path():
 
 @pytest.fixture(scope="function")
 def sbml_test_dir():
+    # setup
     old_cwd = os.getcwd()
     old_path = copy.copy(sys.path)
 
     yield
 
+    # teardown
     os.chdir(old_cwd)
     sys.path = old_path
 
 
-def test_sbml_testsuite_case(test_id, result_path):
-    test_id = get_test_str(test_id)
+def test_sbml_testsuite_case(test_number, result_path):
+
+    test_id = format_test_id(test_number)
 
     try:
         current_test_path = os.path.join(TEST_PATH, test_id)
@@ -192,22 +195,22 @@ def compile_model(path, test_id):
     return model, solver, wrapper
 
 
-def find_model_file(current_test_path, testId):
+def find_model_file(current_test_path: str, test_id: str):
     """Find model file for the given test (guess filename extension)"""
-    sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v2.xml')
+    sbml_file = os.path.join(current_test_path, test_id + '-sbml-l3v2.xml')
 
     # fallback l3v1
-    if not os.path.isfile(sbmlFile):
-        sbmlFile = os.path.join(current_test_path, testId + '-sbml-l3v1.xml')
+    if not os.path.isfile(sbml_file):
+        sbml_file = os.path.join(current_test_path, test_id + '-sbml-l3v1.xml')
 
     # fallback l2v5
-    if not os.path.isfile(sbmlFile):
-        sbmlFile = os.path.join(current_test_path, testId + '-sbml-l2v5.xml')
+    if not os.path.isfile(sbml_file):
+        sbml_file = os.path.join(current_test_path, test_id + '-sbml-l2v5.xml')
 
-    return sbmlFile
+    return sbml_file
 
 
-def read_settings_file(current_test_path, test_id):
+def read_settings_file(current_test_path: str, test_id: str):
     """Read settings for the given test"""
     settings_file = os.path.join(current_test_path, test_id + '-settings.txt')
     settings = {}
@@ -219,7 +222,8 @@ def read_settings_file(current_test_path, test_id):
     return settings
 
 
-def get_test_str(test_id):
+def format_test_id(test_id) -> str:
+    """Format numeric to 0-padded string"""
     test_str = str(test_id)
     test_str = '0'*(5-len(test_str)) + test_str
     return test_str
