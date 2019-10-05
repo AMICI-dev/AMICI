@@ -32,9 +32,6 @@ def result_path():
     # ensure directory for test results is empty
     upload_result_path = os.path.join(os.path.dirname(__file__),
                                       'amici-semantic-results')
-    if os.path.exists(upload_result_path):
-        shutil.rmtree(upload_result_path)
-    os.mkdir(upload_result_path)
     return upload_result_path
 
 
@@ -58,69 +55,80 @@ def test_sbml_testsuite_case(test_number, result_path):
     try:
         current_test_path = os.path.join(TEST_PATH, test_id)
 
-        # results
+        # parse expected results
         results_file = os.path.join(current_test_path,
                                     test_id + '-results.csv')
         results = np.genfromtxt(results_file, delimiter=',')
 
+        # setup model
         model, solver, wrapper = compile_model(current_test_path, test_id)
-        atol, rtol = apply_settings(current_test_path, test_id, solver,
-                                    model)
+        settings = read_settings_file(current_test_path, test_id)
 
+        atol, rtol = apply_settings(settings, solver, model)
+
+        # simulate model
         rdata = amici.runAmiciSimulation(model, solver)
 
-        amount_species, variables_species = get_amount_and_variables(
-            current_test_path, test_id
-        )
-
-        simulated_x = rdata['x']
-        test_x = results[1:, [
-                                 1 + wrapper.speciesIndex[variable]
-                                 for variable in variables_species
-                                 if variable in wrapper.speciesIndex.keys()
-                             ]]
-
-        for species in amount_species:
-            if not species == '':
-                symvolume = wrapper.speciesCompartment[
-                    wrapper.speciesIndex[species]
-                ]
-                volume = symvolume.subs({
-                    comp: vol
-                    for comp, vol in zip(
-                        wrapper.compartmentSymbols,
-                        wrapper.compartmentVolume
-                    )
-                })
-                volume = volume.subs({
-                    sp.Symbol(name): value
-                    for name, value in zip(
-                        model.getParameterIds(),
-                        model.getParameters()
-                    )
-                })
-
-                # required for 525-527, 530 as k is renamed to amici_k
-                volume = volume.subs({
-                    sp.Symbol(name): value
-                    for name, value in zip(
-                    model.getParameterNames(),
-                    model.getParameters()
-                )
-                })
-
-                simulated_x[:, wrapper.speciesIndex[species]] = \
-                    simulated_x[:, wrapper.speciesIndex[species]] * volume
-
-        assert np.isclose(simulated_x, test_x, atol, rtol).all()
+        # verify
+        simulated_x = verify_results(settings, rdata, results, wrapper,
+                                     model, atol, rtol)
 
         print(f'TestCase {test_id} passed.')
 
+        # record results
         write_result_file(simulated_x, model, test_id, result_path)
 
     except amici.sbml_import.SBMLException as err:
         print(f'TestCase {test_id} was skipped: {err}')
 
+
+def verify_results(settings, rdata, results, wrapper,
+                   model, atol, rtol):
+    """Verify test results"""
+    amount_species, variables_species = get_amount_and_variables(settings)
+
+    simulated_x = rdata['x']
+    test_x = results[1:, [
+                             1 + wrapper.speciesIndex[variable]
+                             for variable in variables_species
+                             if variable in wrapper.speciesIndex.keys()
+                         ]]
+
+    for species in amount_species:
+        if not species == '':
+            symvolume = wrapper.speciesCompartment[
+                wrapper.speciesIndex[species]
+            ]
+            volume = symvolume.subs({
+                comp: vol
+                for comp, vol in zip(
+                    wrapper.compartmentSymbols,
+                    wrapper.compartmentVolume
+                )
+            })
+            volume = volume.subs({
+                sp.Symbol(name): value
+                for name, value in zip(
+                    model.getParameterIds(),
+                    model.getParameters()
+                )
+            })
+
+            # required for 525-527, 530 as k is renamed to amici_k
+            volume = volume.subs({
+                sp.Symbol(name): value
+                for name, value in zip(
+                    model.getParameterNames(),
+                    model.getParameters()
+                )
+            })
+
+            simulated_x[:, wrapper.speciesIndex[species]] = \
+                simulated_x[:, wrapper.speciesIndex[species]] * volume
+
+    assert np.isclose(simulated_x, test_x, atol, rtol).all()
+
+    return simulated_x
 
 def write_result_file(simulated_x: np.array,
                       model: amici.Model,
@@ -139,8 +147,8 @@ def write_result_file(simulated_x: np.array,
     df.to_csv(filename, index=False)
 
 
-def get_amount_and_variables(current_test_path, test_id):
-    settings = read_settings_file(current_test_path, test_id)
+def get_amount_and_variables(settings):
+    """Read amount and species from settings file"""
 
     amount_species = settings['amount'] \
         .replace(' ', '') \
@@ -154,8 +162,8 @@ def get_amount_and_variables(current_test_path, test_id):
     return amount_species, variables_species
 
 
-def apply_settings(current_test_path, test_id, solver, model):
-    settings = read_settings_file(current_test_path, test_id)
+def apply_settings(settings, solver, model):
+    """Apply model and solver settings as specified in the test case"""
 
     ts = np.linspace(float(settings['start']),
                      float(settings['start'])
@@ -173,6 +181,7 @@ def apply_settings(current_test_path, test_id, solver, model):
 
 
 def compile_model(path, test_id):
+    """Import the given test model to AMICI"""
     sbml_file = find_model_file(path, test_id)
 
     wrapper = amici.SbmlImporter(sbml_file)
@@ -197,6 +206,7 @@ def compile_model(path, test_id):
 
 def find_model_file(current_test_path: str, test_id: str):
     """Find model file for the given test (guess filename extension)"""
+
     sbml_file = os.path.join(current_test_path, test_id + '-sbml-l3v2.xml')
 
     # fallback l3v1

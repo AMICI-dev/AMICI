@@ -18,4 +18,11 @@ else
   args="$@" # use user selection
 fi
 
+# delete old result directory and recreate
+RESULT_DIR=tests/amici-semantic-results
+if [[ -d "${RESULT_DIR}" ]]; then
+  rm -rf "${RESULT_DIR}"
+fi
+mkdir "${RESULT_DIR}"
+
 pytest ./tests/testSBMLSuite.py --cases="${args}" -s -n auto
