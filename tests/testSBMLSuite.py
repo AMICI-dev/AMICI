@@ -34,7 +34,7 @@ def result_path():
     return upload_result_path
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function", autouse=True)
 def sbml_test_dir():
     # setup
     old_cwd = os.getcwd()
@@ -86,6 +86,7 @@ def verify_results(settings, rdata, results, wrapper,
     """Verify test results"""
     amount_species, variables_species = get_amount_and_variables(settings)
 
+    # verify states
     simulated_x = rdata['x']
     expected_x = results[1:, [
                              1 + wrapper.speciesIndex[variable]
@@ -96,6 +97,8 @@ def verify_results(settings, rdata, results, wrapper,
     concentrations_to_amounts(amount_species, wrapper, model, simulated_x)
 
     assert np.isclose(simulated_x, expected_x, atol, rtol).all()
+
+    # TODO: verify compartment volumes and parameters
 
     return simulated_x
 
@@ -144,6 +147,8 @@ def write_result_file(simulated_x: np.array,
 
     Requires csv file with test ID in name and content of [time, Species, ...]
     """
+    # TODO: only states are reported here, not compartments or parameters
+
     filename = os.path.join(result_path, f'{test_id}.csv')
 
     df = pd.DataFrame(simulated_x)
