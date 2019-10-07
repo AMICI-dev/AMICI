@@ -109,15 +109,12 @@ class TestAmiciMisc(unittest.TestCase):
                                  observables=None)
 
     def test_constant_species_to_parameters(self):
-        # test function from bin/amici_import_petab which is not really
-        # a package module
-        sys.path.append(os.path.join(
-            os.path.abspath(os.path.split(__file__)[0]),
-            '..', 'python', 'sdist', 'bin'))
+        """test conversion from species to constant parameters"""
+
         try:
             # skip that if PEtab is not installed which causes the import
             # to fail
-            from amici_import_petab import constant_species_to_parameters
+            from amici.petab_import import constant_species_to_parameters
         except ModuleNotFoundError:
             return
 
