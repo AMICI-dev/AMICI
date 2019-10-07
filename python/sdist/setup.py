@@ -187,7 +187,7 @@ def main():
         setup_requires=['setuptools>=40.6.3'],
         python_requires='>=3.6',
         extras_require={
-            'petab': ['petab>=0.0.0a14']
+            'petab': ['petab>=0.0.0a14','colorama']
         },
         package_data={
             'amici': ['amici/include/amici/*',
