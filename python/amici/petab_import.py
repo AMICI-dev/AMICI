@@ -8,17 +8,18 @@ import os
 import time
 import math
 import logging
-from typing import List
+from typing import List, Dict
 
 import petab
 from colorama import Fore
 from colorama import init as init_colorama
 
+
 logger = logging.getLogger(__name__)
 
 
-def get_fixed_parameters(condition_file_name, sbml_model,
-                         const_species_to_parameters=False):
+def get_fixed_parameters(condition_file_name: str, sbml_model: 'libsbml.Model',
+                         const_species_to_parameters: bool = False):
     """Determine, set and return fixed model parameters
 
     Parameters specified in `condition_file_name` are turned into constants.
@@ -256,7 +257,7 @@ def import_model(sbml_file: str,
                                  f"{round(end - start, 2)}s")
 
 
-def petab_noise_distributions_to_amici(noise_distributions):
+def petab_noise_distributions_to_amici(noise_distributions: Dict) -> Dict:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
@@ -275,7 +276,7 @@ def petab_noise_distributions_to_amici(noise_distributions):
     return amici_distrs
 
 
-def show_model_info(sbml_model):
+def show_model_info(sbml_model: 'libsbml.Model'):
     """Log some model quantities"""
 
     logger.log(logging.INFO, f'Species: {len(sbml_model.getListOfSpecies())}')
