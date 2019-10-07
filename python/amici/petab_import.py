@@ -9,6 +9,7 @@ import time
 import math
 import logging
 from typing import List, Dict
+import pandas as pd
 
 import petab
 from colorama import Fore
@@ -18,9 +19,8 @@ from colorama import init as init_colorama
 logger = logging.getLogger(__name__)
 
 
-def get_fixed_parameters(condition_file_name: str,
+def get_fixed_parameters(condition_df: pd.DataFrame,
                          sbml_model: 'libsbml.Model',
-                         condition_df=None,
                          const_species_to_parameters: bool = False):
     """Determine, set and return fixed model parameters
 
@@ -28,27 +28,15 @@ def get_fixed_parameters(condition_file_name: str,
     Only global SBML parameters are considered. Local parameters are ignored.
 
     Arguments:
-        condition_file_name:
-            PEtab condition table
+        condition_df:
+            PEtab condition table as pandas.dataframe
         sbml_model:
             libsbml.Model instance
-        condition_df:
-            pandas.dataframe, can be passed instead of condition_file_name
         const_species_to_parameters:
             If `True`, species which are marked constant within the SBML model
             will be turned into constant parameters *within* the given
             `sbml_model`.
     """
-
-
-    if condition_df is None:
-        condition_df = petab.get_condition_df(condition_file_name)
-    else:
-        if condition_file_name != '':
-            logger.log(logging.warning,
-                       f"{Fore.YELLOW}Provided a condition dataframe and a "
-                       f"condition file. Using the condition dataframe.")
-    logger.log(logging.INFO, f'Condition table: {condition_df.shape}')
 
     # column names are model parameter names that should be made constant
     # except for any overridden parameters
@@ -241,7 +229,10 @@ def import_model(sbml_file: str,
             f'Number of provided observables ({len(observables)}) and sigmas '
             f'({len(sigmas)}) do not match.')
 
-    fixed_parameters = get_fixed_parameters(condition_file, sbml_model)
+    # get the condition dataframe before parsing fixed parameters
+    condition_df = petab.get_condition_df(condition_file)
+    logger.log(logging.INFO, f'Condition table: {condition_df.shape}')
+    fixed_parameters = get_fixed_parameters(condition_df, sbml_model)
 
     if verbose:
         logger.log(logging.INFO,
