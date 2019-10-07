@@ -117,7 +117,7 @@ class TestAmiciMisc(unittest.TestCase):
         try:
             # skip that if PEtab is not installed which causes the import
             # to fail
-            from amici_import_petab import constant_species_to_parameters
+            from amici.petab_import import constant_species_to_parameters
         except ModuleNotFoundError:
             return
 
