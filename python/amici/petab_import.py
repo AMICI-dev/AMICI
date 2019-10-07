@@ -18,7 +18,9 @@ from colorama import init as init_colorama
 logger = logging.getLogger(__name__)
 
 
-def get_fixed_parameters(condition_file_name: str, sbml_model: 'libsbml.Model',
+def get_fixed_parameters(condition_file_name: str,
+                         sbml_model: 'libsbml.Model',
+                         condition_df=None,
                          const_species_to_parameters: bool = False):
     """Determine, set and return fixed model parameters
 
@@ -30,13 +32,22 @@ def get_fixed_parameters(condition_file_name: str, sbml_model: 'libsbml.Model',
             PEtab condition table
         sbml_model:
             libsbml.Model instance
+        condition_df:
+            pandas.dataframe, can be passed instead of condition_file_name
         const_species_to_parameters:
             If `True`, species which are marked constant within the SBML model
             will be turned into constant parameters *within* the given
             `sbml_model`.
     """
 
-    condition_df = petab.get_condition_df(condition_file_name)
+
+    if condition_df is None:
+        condition_df = petab.get_condition_df(condition_file_name)
+    else:
+        if condition_file_name != '':
+            logger.log(logging.warning,
+                       f"{Fore.YELLOW}Provided a condition dataframe and a "
+                       f"condition file. Using the condition dataframe.")
     logger.log(logging.INFO, f'Condition table: {condition_df.shape}')
 
     # column names are model parameter names that should be made constant
