@@ -181,8 +181,9 @@ std::string regexErrorToString(std::regex_constants::error_type err_type)
         return "error_complexity";
     case std::regex_constants::error_stack:
         return "error_stack";
+    default:
+        return "unknown error";
     }
-    return "unknown error";
 }
 
 } // namespace amici
