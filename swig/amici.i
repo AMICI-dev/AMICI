@@ -86,6 +86,8 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %}
 
 // Add necessary symbols to generated header
+%ignore printErrMsgIdAndTxt;
+%ignore printWarnMsgIdAndTxt;
 %{
 #include "amici/amici.h"
 using namespace amici;
