@@ -1464,8 +1464,7 @@ bool operator==(const Solver &a, const Solver &b);
  *
  * @param error_code error identifier
  * @param module name of the module in which the error occured
- * @param function name of the function in which the error occured @type
- * char
+ * @param function name of the function in which the error occured
  * @param msg error message
  * @param eh_data unused input
  */
