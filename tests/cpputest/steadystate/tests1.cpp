@@ -107,6 +107,16 @@ TEST(groupSteadystate, testRethrow) {
     CHECK_THROWS(amici::IntegrationFailure, runAmiciSimulation(*solver, nullptr, *model, true));
 }
 
+TEST(groupSteadystate, testInitialStatesNonEmpty) {
+    auto model = getModel();
+    CHECK_FALSE(model->getInitialStates().empty());
+}
+
+TEST(groupSteadystate, testInitialStateSensitivitiesNonEmpty) {
+    auto model = getModel();
+    CHECK_FALSE(model->getInitialStateSensitivities().empty());
+}
+
 TEST(groupSteadystate, testSimulation) {
     amici::simulateVerifyWrite("/model_steadystate/nosensi/",
                                100*TEST_ATOL, 100*TEST_RTOL);
