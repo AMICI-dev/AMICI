@@ -182,11 +182,13 @@ def main():
                           'python-libsbml',
                           'h5py',
                           'pandas',
-                          'pkgconfig'],
+                          'pkgconfig',
+                          'wurlitzer'],
         setup_requires=['setuptools>=40.6.3'],
         python_requires='>=3.6',
-        extras_require={'wurlitzer': ['wurlitzer'],
-                        'petab': ['petab>=0.0.0a14']},
+        extras_require={
+            'petab': ['petab>=0.0.0a14','colorama']
+        },
         package_data={
             'amici': ['amici/include/amici/*',
                       'src/*template*',

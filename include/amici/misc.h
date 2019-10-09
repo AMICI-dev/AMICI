@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
+#include <regex>
 
 #include <gsl/gsl-lite.hpp>
 
@@ -84,6 +85,12 @@ void scaleParameters(gsl::span<const realtype> bufferUnscaled,
  */
 std::string backtraceString(int maxFrames);
 
+/**
+ * @brief Convert std::regex_constants::error_type to string
+ * @param err_type error type
+ * @return Error type as string
+ */
+std::string regexErrorToString(std::regex_constants::error_type err_type);
 
 } // namespace amici
 

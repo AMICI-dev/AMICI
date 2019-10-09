@@ -1,16 +1,17 @@
 """Helper functions for AMICI core and module package preparation"""
 
 import os
-import platform
+import sys
 import shlex
 import subprocess
 import shutil
 
-from .swig import find_swig
+from .swig import find_swig, get_swig_version
 
 try:
     import pkgconfig # optional
-    # pkgconfig python module might be installed without pkg-config binary being available
+    # pkgconfig python module might be installed without pkg-config binary
+    # being available
     pkgconfig.exists('somePackageName')
 except (ModuleNotFoundError, EnvironmentError):
     pkgconfig = None
@@ -204,6 +205,7 @@ def generateSwigInterfaceFiles():
     """
     swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
     swig_exe = find_swig()
+    swig_version = get_swig_version(swig_exe)
 
     # Swig AMICI interface without HDF5 dependency
     swig_cmd = [swig_exe,
@@ -214,9 +216,17 @@ def generateSwigInterfaceFiles():
                 '-outdir', swig_outdir,
                 '-o', 'amici/amici_wrap_without_hdf5.cxx',
                 'amici/swig/amici.i']
+
+    # Do we have -doxygen?
+    if swig_version >= (4, 0, 0):
+        swig_cmd.insert(1, '-doxygen')
+
     print(f"Running SWIG: {' '.join(swig_cmd)}")
-    sp = subprocess.run(swig_cmd)
-    assert (sp.returncode == 0)
+    sp = subprocess.run(swig_cmd, stdout=subprocess.PIPE,
+                        stderr=sys.stdout.buffer)
+    if not sp.returncode == 0:
+        raise AssertionError('Swigging AMICI failed:\n'
+                             + sp.stdout.decode('utf-8'))
     shutil.move(os.path.join(swig_outdir, 'amici.py'),
                 os.path.join(swig_outdir, 'amici_without_hdf5.py'))
 
@@ -228,6 +238,11 @@ def generateSwigInterfaceFiles():
                 '-outdir', swig_outdir,
                 '-o', 'amici/amici_wrap.cxx',
                 'amici/swig/amici.i']
+    if swig_version >= (4, 0, 0):
+        swig_cmd.insert(1, '-doxygen')
     print(f"Running SWIG: {' '.join(swig_cmd)}")
-    sp = subprocess.run(swig_cmd)
-    assert (sp.returncode == 0)
+    sp = subprocess.run(swig_cmd, stdout=subprocess.PIPE,
+                        stderr=sys.stdout.buffer)
+    if not sp.returncode == 0:
+        raise AssertionError('Swigging AMICI failed:\n'
+                             + sp.stdout.decode('utf-8'))

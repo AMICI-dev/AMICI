@@ -13,22 +13,22 @@
 namespace amici {
 
 /*!
- * @brief printErrMsgIdAndTxt prints a specified error message associated to the
- * specified identifier
+ * @brief Prints a specified error message associated to the specified
+ * identifier
  *
- * @param[in] identifier error identifier @type char
- * @param[in] format string with error message printf-style format
+ * @param identifier error identifier
+ * @param format string with error message printf-style format
  * @param ... arguments to be formatted
  */
 void
 printErrMsgIdAndTxt(const char* identifier, const char* format, ...);
 
 /*!
- * @brief printErrMsgIdAndTxt prints a specified warning message associated to
- * the specified identifier
+ * @brief Prints a specified warning message associated to the specified
+ * identifier
  *
- * @param[in] identifier warning identifier @type char
- * @param[in] format string with error message printf-style format
+ * @param identifier warning identifier
+ * @param format string with error message printf-style format
  * @param ... arguments to be formatted
  */
 void

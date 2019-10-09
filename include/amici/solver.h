@@ -194,16 +194,16 @@ class Solver {
     void setNewtonMaxSteps(int newton_maxsteps);
 
     /**
-     * @brief Get if preequilibration of model via Newton solver is enabled
+     * @brief Get if model preequilibration is enabled
      * @return
      */
-    bool getNewtonPreequilibration() const;
+    bool getPreequilibration() const;
 
     /**
-     * @brief Enable/disable preequilibration of model via Newton solver
-     * @param newton_preeq
+     * @brief Enable/disable model preequilibration
+     * @param require_preequilibration
      */
-    void setNewtonPreequilibration(bool newton_preeq);
+    void setPreequilibration(bool require_preequilibration);
 
     /**
      * @brief Get maximum number of allowed linear steps per Newton step for
@@ -1381,8 +1381,8 @@ class Solver {
      * computation */
     long int newton_maxlinsteps = 0;
 
-    /** Preequilibration of model via Newton solver? */
-    bool newton_preeq = false;
+    /** Enable model preequilibration */
+    bool requires_preequilibration = false;
 
     /** linear solver specification */
     LinearSolver linsol = LinearSolver::KLU;
@@ -1464,8 +1464,7 @@ bool operator==(const Solver &a, const Solver &b);
  *
  * @param error_code error identifier
  * @param module name of the module in which the error occured
- * @param function name of the function in which the error occured @type
- * char
+ * @param function name of the function in which the error occured
  * @param msg error message
  * @param eh_data unused input
  */

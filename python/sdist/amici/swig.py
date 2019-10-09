@@ -1,18 +1,20 @@
 """Functions for downloading/building/finding SWIG"""
 
-import sys
+from typing import Tuple
 import os
 import subprocess
+import re
 
 
-def find_swig():
-    """Get name of SWIG executable
+def find_swig() -> str:
+    """Get name and version of SWIG executable
 
     We need version >=3.0. Probably we should try some default paths and names,
     but this should do the trick for now.
 
     Debian/Ubuntu systems have swig3.0 ('swig' is older versions),
-    OSX has swig 3.0 as 'swig'."""
+    OSX has swig 3.0 as 'swig'.
+    """
 
     candidates = ['swig4.0', 'swig3.0', 'swig']
     # Environment variable has priority
@@ -36,7 +38,7 @@ def find_swig():
                        "executable.")
 
 
-def swig_works(swig, verbose = True):
+def swig_works(swig: str, verbose: bool = True) -> bool:
     """Test if `swig` looks like a working SWIG executable."""
 
     try:
@@ -52,8 +54,24 @@ def swig_works(swig, verbose = True):
     if verbose:
         if result.returncode == 0:
             print(f'Testing SWIG executable {swig}... SUCCEEDED.')
-            print(result.stdout.decode('utf-8'))
         else:
             print(f'Testing SWIG executable {swig}... FAILED.')
 
     return result.returncode == 0
+
+
+def get_swig_version(swig_exe: str) -> Tuple:
+    """Determine version of the given SWIG executable
+
+    Returns:
+        Version tuple
+    """
+    result = subprocess.run([swig_exe, '-version'],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    assert result.returncode == 0
+
+    version = re.sub(r'(?s).*Version\s+([\S]+).*', r'\1',
+                     result.stdout.decode('utf-8'))
+
+    return tuple(int(x) for x in version.split('.'))

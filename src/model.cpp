@@ -90,12 +90,23 @@ static void setValueById(std::vector<std::string> const &ids,
  * @param id_name string indicating whether name or id was specified
  * @return number of matched names/ids
  */
+
 static int setValueByIdRegex(std::vector<std::string> const &ids,
                              std::vector<realtype> &values, realtype value,
                              std::string const &regex,
                              const char *variable_name, const char *id_name) {
     try {
+        /* For unknown reasons, the Intel compiler fails to compile patterns
+         * such as p[\d]+, which work with g++ and clang.
+         * Using std::regex_constants::extended fixes Intel issues, but g++
+         * seems to not match the pattern correctly.
+         * This is the best solution I was able to come up with...
+         */
+#ifdef __INTEL_COMPILER
+        std::regex pattern(regex, std::regex_constants::extended);
+#else
         std::regex pattern(regex);
+#endif
         int n_found = 0;
         for (const auto &id : ids) {
             if (std::regex_match(id, pattern)) {
@@ -105,13 +116,15 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
         }
 
         if (n_found == 0)
-            throw AmiException("Could not find %s with specified %s",
-                               variable_name, id_name);
+            throw AmiException("Could not find %s with specified %s (%s)",
+                               variable_name, id_name, regex.c_str());
 
         return n_found;
     } catch (std::regex_error const &e) {
-        throw AmiException("Specified regex pattern could not be compiled: %s",
-                           e.what());
+        auto err_string = regexErrorToString(e.code());
+        throw AmiException("Specified regex pattern %s could not be compiled:"
+                           " %s (%s)", regex.c_str(), e.what(),
+                           err_string.c_str());
     }
 }
 
@@ -578,7 +591,19 @@ void Model::setParameterList(const std::vector<int> &plist) {
     initializeVectors();
 }
 
-std::vector<realtype> const &Model::getInitialStates() const { return x0data; }
+std::vector<realtype> Model::getInitialStates() {
+    if(!x0data.empty()) {
+        return x0data;
+    }
+
+    /* Initial states have not been set explicitly on this instance, so we
+     * compute it, but don't save it, as this would have to be invalidated upon
+     * changing parameters etc.
+     */
+    std::vector<realtype> x0(nx_rdata, 0.0);
+    fx0(x0.data(), tstart, unscaledParameters.data(), fixedParameters.data());
+    return x0;
+}
 
 void Model::setInitialStates(const std::vector<realtype> &x0) {
     if (x0.size() != (unsigned)nx_rdata && !x0.empty())
@@ -593,8 +618,28 @@ void Model::setInitialStates(const std::vector<realtype> &x0) {
     x0data = x0;
 }
 
-const std::vector<realtype> &Model::getInitialStateSensitivities() const {
-    return sx0data;
+bool Model::hasCustomInitialStates() const
+{
+    return !x0data.empty();
+}
+
+std::vector<realtype> Model::getInitialStateSensitivities() {
+    if(!sx0data.empty()) {
+        return sx0data;
+    }
+
+    /* Initial state sensitivities have not been set explicitly on this
+     * instance, so we compute it, but don't save it, as this would have to be
+     * invalidated upon changing parameters etc.
+     */
+    std::vector<realtype> sx0(nx_rdata * nplist(), 0.0);
+    auto x0 = getInitialStates();
+    for (int ip = 0; ip < nplist(); ip++) {
+        fsx0(sx0.data(), tstart, x0.data(), unscaledParameters.data(),
+             fixedParameters.data(), plist(ip));
+    }
+    return sx0;
+
 }
 
 void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
@@ -631,6 +676,11 @@ void Model::setInitialStateSensitivities(const std::vector<realtype> &sx0) {
         }
     }
     setUnscaledInitialStateSensitivities(sx0_rdata);
+}
+
+bool Model::hasCustomInitialStateSensitivities() const
+{
+    return !sx0data.empty();
 }
 
 void Model::setUnscaledInitialStateSensitivities(

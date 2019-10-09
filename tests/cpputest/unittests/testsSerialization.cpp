@@ -97,7 +97,7 @@ TEST_GROUP(dataSerialization){
         solver.setMaxStepsBackwardProblem(1e6);
         solver.setNewtonMaxSteps(1e6);
         solver.setNewtonMaxLinearSteps(1e6);
-        solver.setNewtonPreequilibration(true);
+        solver.setPreequilibration(true);
         solver.setStateOrdering(static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD));
         solver.setInterpolationType(amici::InterpolationType::polynomial);
         solver.setStabilityLimitFlag(0);

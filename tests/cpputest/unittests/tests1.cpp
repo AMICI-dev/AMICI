@@ -715,8 +715,8 @@ testSolverGetterSetters(CVodeSolver solver,
     CHECK_EQUAL(static_cast<int>(solver.getLinearMultistepMethod()),
                 static_cast<int>(lmm));
 
-    solver.setNewtonPreequilibration(true);
-    CHECK_EQUAL(solver.getNewtonPreequilibration(), true);
+    solver.setPreequilibration(true);
+    CHECK_EQUAL(solver.getPreequilibration(), true);
 
     solver.setStabilityLimitFlag(true);
     CHECK_EQUAL(solver.getStabilityLimitFlag(), true);

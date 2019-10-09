@@ -322,14 +322,18 @@ int ExpData::nmaxevent() const
 
 ConditionContext::ConditionContext(Model *model, const ExpData *edata)
     : model(model),
-      originalx0(model->getInitialStates()),
-      originalsx0(model->getInitialStateSensitivities()),
       originalParameters(model->getParameters()),
       originalFixedParameters(model->getFixedParameters()),
       originalTimepoints(model->getTimepoints()),
       originalParameterList(model->getParameterList()),
       originalScaling(model->getParameterScale())
 {
+    if(model->hasCustomInitialStates())
+        originalx0 = model->getInitialStates();
+
+    if(model->hasCustomInitialStateSensitivities())
+        originalsx0 = model->getInitialStateSensitivities();
+
     applyCondition(edata);
 }
 
@@ -404,12 +408,16 @@ void ConditionContext::restore()
     model->setParameterList(originalParameterList);
     // parameter scale has to be set before initial state sensitivities
     model->setParameterScale(originalScaling);
-    model->setInitialStates(originalx0);
-    model->setUnscaledInitialStateSensitivities(originalsx0);
+
+    if(!originalx0.empty())
+        model->setInitialStates(originalx0);
+
+    if(!originalsx0.empty())
+        model->setUnscaledInitialStateSensitivities(originalsx0);
+
     model->setParameters(originalParameters);
     model->setFixedParameters(originalFixedParameters);
     model->setTimepoints(originalTimepoints);
-
 }
 
 
