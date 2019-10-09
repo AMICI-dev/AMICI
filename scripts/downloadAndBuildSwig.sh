@@ -5,9 +5,9 @@ set -e
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
-SWIG_URL='http://prdownloads.sourceforge.net/swig/swig-4.0.0.tar.gz'
-SWIG_ARCHIVE='swig-4.0.0.tar.gz'
-SWIG_DIR='swig-4.0.0'
+SWIG_URL='http://prdownloads.sourceforge.net/swig/swig-4.0.1.tar.gz'
+SWIG_ARCHIVE='swig-4.0.1.tar.gz'
+SWIG_DIR='swig-4.0.1'
 PREFIX=${AMICI_PATH}/ThirdParty/${SWIG_DIR}/install
 SWIG_BIN_DIR=${PREFIX}/bin
 

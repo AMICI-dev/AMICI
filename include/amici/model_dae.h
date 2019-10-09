@@ -147,7 +147,7 @@ class Model_DAE : public Model {
              realtype cj) override;
 
     /** Matrix vector product of J with a vector v (for iterative solvers)
-     * @param t timepoint @type realtype
+     * @param t timepoint
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
      * @param dx Vector with the derivative states
