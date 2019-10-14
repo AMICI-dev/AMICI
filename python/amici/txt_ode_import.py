@@ -2,6 +2,27 @@ import sys
 from libsbml import parseL3Formula, SBMLDocument, writeSBMLToString
 import re
 import warnings
+# from . import SbmlImporter
+
+
+def parse_time(line:str) -> (str, str):
+    """
+    Parses the time block with the form <time_variable> [<time_unit>].
+
+    Args:
+        line: a line of text from the file containing the ODEs.
+
+    Returns:
+        time_var: str, the time variable.
+        time_unit: str, time unit. Optional
+    """
+    try:
+        time_var, time_unit = re.findall('(\S+)\s*(\S*)', line)[0]
+    except IndexError:
+        raise Exception('Error in parsing: line \n' + line + '\n is not correctly formated! \n'
+                        'Make sure it has the format <time_variable> [<time_unit>]')
+
+    return time_var, time_unit
 
 
 def parse_vars_and_values(line: str) -> (str, str, str):
@@ -49,12 +70,10 @@ def parse_equations(line: str) -> (str, str, str):
         raise Exception('Error in parsing: line \n' + line + '\n is not correctly formated! \n'
                         'Make sure it has the format <function name> ( <arguments> ) = <formula>')
 
-    print(arguments)
-
     return id, arguments, formula
 
 
-def parse_observable(line: str) -> (str, str):
+def parse_assignments_and_observable(line: str) -> (str, str):
     """
     Parses an observable with the form <observable name> = <equation> and returns the observable name as id
     and the formula as name.
@@ -76,7 +95,33 @@ def parse_observable(line: str) -> (str, str):
     return id, formula
 
 
-def create_species(model, id: str, initial_amount: str, substance_units: str):
+def create_time(model, time_var: str, time_unit: str = None):
+    """
+    Creates the time variable,  add assignment to 'time'
+
+    Args:
+        model: the SBML model to which the species will be added.
+        time_var: str, the time variable
+        time_unit: str, the time unit
+    """
+    if time_unit is not None:
+
+        time_unitdef = create_unit_definition(model, time_unit)
+        model.setTimeUnits(time_unitdef)
+
+    if time_var is not 'time':
+
+        time_parameter = model.createParameter()
+        time_parameter.setId(time_var)
+        time_parameter.setName(time_var)
+        time_parameter.setConstant(False)
+
+        time_assignment = model.createAssignmentRule()
+        time_assignment.setVariable(time_var)
+        time_assignment.setMath(parseL3Formula('time'))
+
+
+def create_species(model, id: str, initial_amount: str, unit_name: str):
     """
     Creates a species and adds it to the given SBML model.
 
@@ -84,7 +129,7 @@ def create_species(model, id: str, initial_amount: str, substance_units: str):
         model: the SBML model to which the species will be added.
         id: the species ID
         initial_amount: the species initial amount
-        substance_units: the units of the species amount
+        unit_name: the units of the species amount
 
     Returns:
         s: the SBML species
@@ -99,13 +144,17 @@ def create_species(model, id: str, initial_amount: str, substance_units: str):
     s.setHasOnlySubstanceUnits(False)
     s.setCompartment('Compartment')
 
-    substance_units = substance_units if substance_units else 'mole'  # if not specified set units to mole
-    s.setSubstanceUnits(substance_units)
+    if unit_name:
+        unitId = create_unit_definition(model, unit_name)
+        s.setUnits(unitId)
+
+    else:
+        s.setSubstanceUnits('dimensionless')
 
     return s
 
 
-def create_parameter(model, id: str, constant: bool, value: str, units: str):
+def create_parameter(model, id: str, constant: bool, value: str, unit_name: str):
     """
     Creates a parameter or constant and adds it to the given SBML model.
     The difference between parameter and constant is only whether the parameter is set as constant or not. If it is
@@ -117,7 +166,7 @@ def create_parameter(model, id: str, constant: bool, value: str, units: str):
         id: the parameter/constant ID
         constant: whether the parameter is actually a constant or not.
         value: the parameter or constant value
-        units: the units of the parameter or constant
+        unit_name: the units of the parameter or constant
 
     Returns:
         k: the SBML parameter or constant
@@ -130,8 +179,11 @@ def create_parameter(model, id: str, constant: bool, value: str, units: str):
     k.setConstant(constant)
     k.setValue(float(value))
 
-    units = units if units else 'dimensionless'  # if not specified set units to dimensionless
-    k.setUnits(units)
+    if unit_name:
+        unitId = create_unit_definition(model, unit_name)
+        k.setUnits(unitId)
+    else:
+        k.setUnits('dimensionless')
 
     return k
 
@@ -143,7 +195,7 @@ def create_functions(model, id: str, arguments: str, formula: str):
     Args:
         model: SBML model to which the function will be added.
         id: the function id/name
-        arguments: the arguments of the function
+        arguments: the arguments of the function (species AND parameters)
         formula: the formula of the function
 
     Returns:
@@ -153,8 +205,8 @@ def create_functions(model, id: str, arguments: str, formula: str):
 
     f = model.createFunctionDefinition()
     f.setId(id)
-    math_ast = parseL3Formula(formula)
-    f.setMath(math_ast)
+    math = parseL3Formula('lambda(' + arguments + ', ' + formula + ')')
+    f.setMath(math)
 
     return f
 
@@ -181,6 +233,27 @@ def create_rate_rule(model, id: str, species: str, formula: str):
     r.setMath(math_ast)
 
     return r
+
+
+def create_assignment(model, id: str, formula: str):
+    """
+    Creates an  assignment rule, that assigns id to formula.
+
+    Args:
+        model: SBML model to which the assignment rule will be added.
+        id: str, the id of the assignment rule
+        formula: str: contains the equation for the assignment rule
+    """
+
+    assignment_parameter = model.createParameter()
+    assignment_parameter.setId(id)
+    assignment_parameter.setName(id)
+    assignment_parameter.setConstant(False)
+    assignment_parameter.setUnits('dimensionless')
+
+    assignment_rule = model.createAssignmentRule()
+    assignment_rule.setVariable(id)
+    assignment_rule.setMath(parseL3Formula(formula))
 
 
 def create_observable(model, id: str, formula: str):
@@ -212,7 +285,6 @@ def read_time_block(model, line: str):
 
     Args:
         model: SBML model to which the rate rule will be added.
-        model: the SBML model
         line: a line in the time block in the ODE text file.
 
     Returns:
@@ -220,14 +292,8 @@ def read_time_block(model, line: str):
     """
 
     if line.strip() != '':
-        try:
-            time_var, time_unit = re.findall('(\S+)\s*(\S*)', line)[0]
-            return time_var, time_unit
-        except IndexError:
-            raise('Error in parsing: line \n' + line + '\n is not correctly formated! \n'
-                        'Make sure it has the format <time_variable> [<unit>] (where unit is optional)')
-        time_unit = time_unit if time_unit else "seconds"
-        model.setTimeUnits(time_unit)
+        time_var, time_unit = parse_time(line)
+        create_time(model, time_var, time_unit)
 
 
 def read_constants_block(model, line: str):
@@ -265,7 +331,7 @@ def read_parameters_block(model, line: str):
 
     if line.strip() != '':
         id, value, unit = parse_vars_and_values(line)
-        create_parameter(model, id, False, value, unit)
+        create_parameter(model, id, True, value, unit)
 
 
 def read_species_block(model, line: str):
@@ -286,6 +352,13 @@ def read_species_block(model, line: str):
     if line.strip() != '':
         id, inital_amount, unit = parse_vars_and_values(line)
         create_species(model, id, inital_amount, unit)
+
+
+def read_assignments_block(model, line: str):
+
+    if line.strip() != '':
+        id, formula = parse_assignments_and_observable(line)
+        create_assignment(model, id, formula)
 
 
 def read_functions_block(model, line: str):
@@ -328,17 +401,21 @@ def read_odes_block(model, line: str):
 
 def read_observables_block(model, line):
     """
-    ToDo
-    :param model:
-    :param line:
-    :return:
+    Reads an processes the lines in the observables-block in the ODE text file.
+    In particular it generates the Observables in the SBML file.
+
+    Args:
+        model: SBML model (libsbml)
+        line: a line containing an observable definition.
+
+    Returns:
+        None
     """
     if line.strip() != '':
-        id, formula = parse_observable(line)
+        id, formula = parse_assignments_and_observable(line)
         create_observable(model, id, formula)
 
 
-# TODO read_noise_block
 def read_noise_block(model, line):
     warnings.warn('Noise not supported yet')
 
@@ -346,6 +423,74 @@ def read_noise_block(model, line):
 # TODO read_events_block
 def read_events_block(model, line):
     warnings.warn('Events not supported yet')
+
+
+def create_unit_definition(model, unit_name: str)->str:
+    """
+    Checks, if unit with name unit_name exists, creates one if necessary and returns it`s Id
+
+    Args:
+        model: libsbml model
+        unit_name: Unit Name(string)
+        obj: libsbml object, which gets the unit assigned (parameter, species, ...)
+
+    Retruns:
+        unitId: str
+    """
+
+    predefined_units = {'ampere',
+                        'avogadro',
+                        'gram',
+                        'katal',
+                        'metre',
+                        'second',
+                        'watt',
+                        'becquerel',
+                        'gray',
+                        'kelvin',
+                        'mole',
+                        'siemens',
+                        'weber',
+                        'candela',
+                        'henry',
+                        'kilogram',
+                        'newton',
+                        'sievert',
+                        'coulomb',
+                        'hertz',
+                        'litre',
+                        'ohm',
+                        'steradian',
+                        'dimensionless',
+                        'item',
+                        'lumen',
+                        'pascal',
+                        'tesla',
+                        'farad',
+                        'joule',
+                        'lux',
+                        'radian',
+                        'volt'}
+
+    if unit_name in predefined_units:
+        return unit_name
+
+    unit = None
+
+    for u in model.getListOfUnitDefinitions():
+        if u.getName() == unit_name:
+            unit = u
+            break
+
+    if not unit:
+
+        unit = model.createUnitDefinition()
+        unit.setName(unit_name)
+
+        unit_name = unit_name.replace('*', '_mult_').replace('/', '_div_').replace('^', '_pow_')
+        unit.setId(unit_name)
+
+    return unit.getId()
 
 
 def parse_txt(text_file: str) -> str:
@@ -370,6 +515,7 @@ def parse_txt(text_file: str) -> str:
                      'constants': read_constants_block,
                      'parameters': read_parameters_block,
                      'species': read_species_block,
+                     'assignments': read_assignments_block,
                      'functions': read_functions_block,
                      'odes': read_odes_block,
                      'observables': read_observables_block,
@@ -393,29 +539,33 @@ def parse_txt(text_file: str) -> str:
     return sbml_string
 
 
-# TODO reimport_from_SBML
-def reimport_from_SBML(sbml_file):
-    pass
-
-
-def import_from_txt(text_file: str, sbml_file: str):
+def txt2amici(model_name: str, text_file_dir: str, amici_output_dir: str = None, sbml_output_dir: str = None):
     """
     Takes in a text file with the specification of ODEs, parses it, converts it into the SBML format, and reimports
     the SBML file, so that it can be used with AMICI.
 
     Args:
-        text_file : path to the text file with the ODEs specification
-        sbml_file: path to the SBML file to be written out
+        model_name: model_name
+        text_file_dir : path to the text file with the ODEs specification
+        amici_output_dir: path where the C++ files are written to
+        sbml_output_dir: path to the SBML file to be written out
 
     Returns:
 
     """
 
-    sbml_as_string = parse_txt(text_file)
+    if not sbml_output_dir:
+        sbml_output_dir = model_name + '.xml'
 
-    with open(sbml_file, 'w') as f_out:
+    sbml_as_string = parse_txt(text_file_dir)
+
+    # write sbml file
+    with open(sbml_output_dir, 'w') as f_out:
         f_out.write(sbml_as_string)
 
-    reimport_from_SBML(sbml_file)
+    # reimport files
+    sbml_importer = SbmlImporter(sbml_output_dir)
+    sbml_importer.sbml2amici(model_name,
+                             amici_output_dir)
 
 

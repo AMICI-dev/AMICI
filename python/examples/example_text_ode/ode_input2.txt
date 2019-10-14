@@ -19,11 +19,13 @@ S1 =0.1 mole
 S2 = 1
 S3= 1
 
+assignments:
+Hill = Vh * (S2/Shalve)^h / (1 + (S2/Shalve)^h )
 
 odes:
 d/dt(S1) = v1 - Vmm*S1 / (Km + S1)*c1^2
-d/dt(S2) = Vmm*S1 / (Km + S1) - Vh * (S2/Shalve)^h / (1 + (S2/Shalve)^h )
-d/dt(S3) = Vh * (S2/Shalve)^h / (1 + (S2/Shalve)^h ) - k4*S3 + log10(c1)
+d/dt(S2) = Vmm*S1 / (Km + S1) - hill
+d/dt(S3) = hill - k4*S3 + log10(c1)
 
 
 observables:

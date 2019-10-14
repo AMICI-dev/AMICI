@@ -37,6 +37,7 @@ y3 = S3
 
 noise:
 
+y1: sigma = sigma_var + 3
 
 events:
 

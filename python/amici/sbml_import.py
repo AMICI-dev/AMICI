@@ -406,9 +406,6 @@ class SbmlImporter:
              for specie in species
         ])
 
-
-
-
     def processParameters(self, constantParameters=None):
         """Get parameter information from SBML model.
 
@@ -522,6 +519,29 @@ class SbmlImporter:
                comp, vol
             )
 
+    def processRateRules(self):
+        """Adapt SBML model to cover Rate Rules as well.
+
+        Arguments:
+
+        Returns:
+
+        Raises:
+
+        """
+
+        for rule in self.sbml.getModel().getListOfRules():
+            if rule.isRate():
+
+                # set constant input reactions with kinetic law
+                # equal to the right hand site of the Rate Rule
+                r = self.sbml.createReaction()
+                r.setId('d_dt_' + rule.getVariable())
+                r.setName('d_dt_' + rule.getVariable())
+                r.createProduct().setSpecies(rule.getVariable())
+
+                k = r.createKineticLaw()
+                k.setMath(rule.getMath())
 
     def processReactions(self):
         """Get reactions from SBML model.
