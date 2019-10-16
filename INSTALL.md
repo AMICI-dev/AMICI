@@ -308,6 +308,10 @@ implementations such as Accelerate, Intel MKL, cblas, openblas, atlas.
 The matlab interface uses the MATLAB MKL, which requires no separate
 installation.
 
+On Ubuntu, this requirement can be satisfied with
+
+    apt install libatlas-base-dev
+
 #### C++ compiler
 
 All AMICI installations require a C++11-compatible C++ compiler.
