@@ -16,7 +16,7 @@ namespace amici {
  * @brief Prints a specified error message associated with the specified
  * identifier
  *
- * @param identifier error identifier
+ * @param id error identifier
  * @param message error message
  */
 void
@@ -26,7 +26,7 @@ printErrMsgIdAndTxt(std::string const& id, std::string const& message);
  * @brief Prints a specified warning message associated with the specified
  * identifier
  *
- * @param identifier warning identifier
+ * @param id warning identifier
  * @param message warning message
  */
 void

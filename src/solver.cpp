@@ -1039,7 +1039,7 @@ void wrapErrHandlerFn(int error_code, const char *module,
     if(!eh_data) {
         throw std::runtime_error("eh_data unset");
     }
-    auto solver = static_cast<Solver*>(eh_data);
+    auto solver = static_cast<Solver const*>(eh_data);
     solver->app->warning(buffid, buffer);
 }
 

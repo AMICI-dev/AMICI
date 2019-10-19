@@ -35,6 +35,10 @@ static_assert(std::is_same<amici::realtype, realtype>::value,
 
 namespace amici {
 
+/** AMICI default application context, kept around for convenience for using
+  * amici::runAmiciSimulation or instantiating Solver and Model without special
+  * needs.
+  */
 AmiciApplication defaultContext = AmiciApplication();
 
 std::unique_ptr<ReturnData>
