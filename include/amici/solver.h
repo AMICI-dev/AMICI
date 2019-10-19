@@ -5,6 +5,7 @@
 #include "amici/sundials_linsol_wrapper.h"
 #include "amici/symbolic_functions.h"
 #include "amici/vector.h"
+#include "amici/amici.h"
 
 #include <functional>
 #include <memory>
@@ -16,6 +17,9 @@ class ForwardProblem;
 class BackwardProblem;
 class Model;
 class Solver;
+class AmiciApplication;
+
+extern AmiciApplication defaultContext;
 } // namespace amici
 
 // for serialization friend in Solver
@@ -43,6 +47,12 @@ namespace amici {
 class Solver {
   public:
     Solver() = default;
+
+    /**
+     * @brief Constructor
+     * @param app AMICI application context
+     */
+    Solver(AmiciApplication *app);
 
     /**
      * @brief Solver copy constructor
@@ -677,6 +687,9 @@ class Solver {
      * @return
      */
     friend bool operator==(const Solver &a, const Solver &b);
+
+    /** AMICI context */
+    AmiciApplication *app = &defaultContext;
 
   protected:
     /**
@@ -1460,13 +1473,13 @@ bool operator==(const Solver &a, const Solver &b);
 
 /**
  * @brief Extracts diagnosis information from solver memory block and
- * writes them into the return data object for the backward problem
+ * passes them to the specified output function
  *
  * @param error_code error identifier
  * @param module name of the module in which the error occured
  * @param function name of the function in which the error occured
  * @param msg error message
- * @param eh_data unused input
+ * @param eh_data amici::Solver as void*
  */
 void wrapErrHandlerFn(int error_code, const char *module,
                       const char *function, char *msg, void *eh_data);

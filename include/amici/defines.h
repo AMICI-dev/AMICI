@@ -2,6 +2,7 @@
 #define AMICI_DEFINES_H
 
 #include <cmath>
+#include <functional>
 
 namespace amici {
 
@@ -149,12 +150,10 @@ enum class NewtonStatus {
 };
 
 /**
- * @brief msgIdAndTxtFp
- * @param identifier string with error message identifier
- * @param format string with error message printf-style format
- * @param ... arguments to be formatted
+ * Type for function to process warnings or error messages.
  */
-using msgIdAndTxtFp = void (*)(const char *, const char *, ...);
+using outputFunctionType = std::function<void(std::string const& identifier,
+                                              std::string const& message)>;
 
 // clang-format on
 
