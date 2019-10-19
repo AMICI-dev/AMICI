@@ -825,7 +825,8 @@ class ODEModel:
         self._eqs['dxdotdw'] = si.stoichiometricMatrix
         self._eqs['w'] = si.fluxVector
         self._syms['w'] = sp.Matrix(
-            [sp.Symbol(f'flux_r{idx}') for idx in range(len(si.fluxVector))]
+            [sp.Symbol(f'flux_r{idx}', real=True)
+             for idx in range(len(si.fluxVector))]
         )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
         if len(si.stoichiometricMatrix):
@@ -1160,12 +1161,12 @@ class ODEModel:
                 for comp in getattr(self, component)
             ])
             self._strippedsyms[name] = sp.Matrix([
-                sp.Symbol(comp.get_name())
+                sp.Symbol(comp.get_name(), real=True)
                 for comp in getattr(self, component)
             ])
             if name == 'y':
                 self._syms['my'] = sp.Matrix([
-                    sp.Symbol(f'm{strip_pysb(comp.get_id())}')
+                    sp.Symbol(f'm{strip_pysb(comp.get_id())}', real=True)
                     for comp in getattr(self, component)
                 ])
             return
@@ -1178,7 +1179,7 @@ class ODEModel:
             return
         elif name == 'dtcldp':
             self._syms[name] = sp.Matrix([
-                sp.Symbol(f's{strip_pysb(tcl.get_id())}')
+                sp.Symbol(f's{strip_pysb(tcl.get_id())}', real=True)
                 for tcl in self._conservationlaws
             ])
             return
@@ -1193,7 +1194,7 @@ class ODEModel:
             length = len(self.eq(name))
 
         self._syms[name] = sp.Matrix([
-            sp.Symbol(f'{name}{i}') for i in range(length)
+            sp.Symbol(f'{name}{i}', real=True) for i in range(length)
         ])
 
     def generateBasicVariables(self):
@@ -1509,7 +1510,7 @@ class ODEModel:
 
         if min(eq.shape) and min(sym_var.shape) \
                 and eq.is_zero is not True and sym_var.is_zero is not True:
-            self._eqs[name] = eq.jacobian(sym_var)
+            self._eqs[name] = sp.simplify(eq.jacobian(sym_var))
         else:
             self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
@@ -1556,7 +1557,7 @@ class ODEModel:
             if dydx_name is None:
                 dydx_name = f'd{eq}d{chainvar}'
             if dxdz_name is None:
-                dxdz_name =  f'd{chainvar}d{var}'
+                dxdz_name = f'd{chainvar}d{var}'
 
             dydx = self.sym_or_eq(name, dydx_name)
             dxdz = self.sym_or_eq(name, dxdz_name)
@@ -1799,7 +1800,7 @@ class ODEExporter:
         modelSwigPath: path to the generated swig files @type str
 
         allow_reinit_fixpar_initcond: indicates whether reinitialization of
-        initial states depending on fixedParmeters is allowed for this model
+        initial states depending on fixedParameters is allowed for this model
         @type bool
     """
 
@@ -2628,7 +2629,7 @@ def strip_pysb(symbol):
     # this ensures that the pysb type specific __repr__ is used when converting
     # to string
     if pysb and isinstance(symbol, pysb.Component):
-        return sp.Symbol(symbol.name)
+        return sp.Symbol(symbol.name, real=True)
     else:
         # in this case we will use sympy specific transform anyways
         return symbol
@@ -2834,7 +2835,7 @@ def csc_matrix(matrix, name, base_index=0):
         for row in range(0, matrix.rows):
             if not (matrix[row, col] == 0):
                 symbolName = f'{name}{symbol_name_idx}'
-                sparseMatrix[row, col] = sp.Symbol(symbolName)
+                sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
                 symbolList.append(symbolName)
                 sparseList.append(matrix[row, col])
                 symbolRowVals.append(row)
