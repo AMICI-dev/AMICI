@@ -20,6 +20,8 @@ except ImportError:
 
 from string import Template
 import sympy.printing.ccode as ccode
+from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.matrices.dense import MutableDenseMatrix
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__
@@ -712,12 +714,15 @@ class ODEModel:
         derivative from a partial derivative call to enforce a partial
         derivative in the next recursion. prevents infinite recursion
 
+        _simplify: if set to true, symbolic derivative expressions will be
+        simplified. NOTE: This does currently not work with PySB symbols.
     """
 
-    def __init__(self):
+    def __init__(self, simplify: bool = False):
         """Create a new ODEModel instance.
 
         Arguments:
+            simplify: see ODEModel._simplify
 
         Raises:
 
@@ -804,6 +809,7 @@ class ODEModel:
         }
 
         self._lock_total_derivative = False
+        self._simplify: bool = simplify
 
     def import_from_sbml_importer(self, si):
         """Imports a model specification from a amici.SBMLImporter instance.
@@ -1383,6 +1389,10 @@ class ODEModel:
 
             for index, formula in enumerate(self.eq('x0_fixedParameters')):
                 if formula == 0 or formula == 0.0:
+                    # sp.simplify returns ImmutableDenseMatrix, if we need to
+                    # change them, they need to be made mutable
+                    if isinstance(self._eqs[name], ImmutableDenseMatrix):
+                        self._eqs[name] = MutableDenseMatrix(self._eqs[name])
                     self._eqs[name][index, :] = \
                         sp.zeros(1, self._eqs[name].shape[1])
 
@@ -1429,6 +1439,9 @@ class ODEModel:
             # a total derivative
             if not self._lock_total_derivative:
                 self._eqs[name] = self._eqs[name].transpose()
+
+        if self._simplify:
+            self._eqs[name] = sp.simplify(self._eqs[name])
 
     def symNames(self):
         """Returns a list of names of generated symbolic variables
@@ -1510,7 +1523,7 @@ class ODEModel:
 
         if min(eq.shape) and min(sym_var.shape) \
                 and eq.is_zero is not True and sym_var.is_zero is not True:
-            self._eqs[name] = sp.simplify(eq.jacobian(sym_var))
+            self._eqs[name] = eq.jacobian(sym_var)
         else:
             self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
 
