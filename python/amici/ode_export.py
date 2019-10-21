@@ -809,7 +809,7 @@ class ODEModel:
         }
 
         self._lock_total_derivative = False
-        self._simplify: bool = simplify
+        self._simplify = simplify
 
     def import_from_sbml_importer(self, si):
         """Imports a model specification from a amici.SBMLImporter instance.
