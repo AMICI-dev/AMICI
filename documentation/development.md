@@ -98,10 +98,8 @@ described below:
   case for all existing code, any new contributions should do so. 
 
 * We use Python [type hints](https://docs.python.org/3/library/typing.html)
-  for all functions (but not for class attributes, since they are not supported
-  by the current Python doxygen filter). In Python code type hints should be
-  used instead of doxygen `@type`. (All legacy `@type` attributes are to be
-  removed.)
+  for all functions. In Python code type hints should be used instead of
+  doxygen `@type`. (All legacy `@type` attributes are to be removed.)
     
   For function docstrings, follow this format:
   
