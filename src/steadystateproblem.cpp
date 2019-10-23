@@ -211,8 +211,11 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
               gamma = fmin(1.0, 2.0 * gamma);
             }
         } else {
-            /* Reduce dampening factor */
+            /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
+            if (gamma < 1e-6)
+              throw AmiException("Newton solver failed: a damping factor became too small");
+
             /* No new linear solve, only try new dampening */
             compNewStep = FALSE;
         }
