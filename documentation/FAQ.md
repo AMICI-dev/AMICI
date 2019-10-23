@@ -42,3 +42,17 @@ __Q__: The simulation/sensitivities I get are incorrect.
 
 __A__: There are some known issues, especially with adjoint sensitivities, events and DAEs. If your particular problem is not featured in the [issues](https://github.com/ICB-DCM/AMICI/issues) list, please add it!
 
+---
+
+__Q__: I am trying to install the AMICI Python package, but installation fails
+with something like
+
+    amici/src/cblas.cpp:16:13: fatal error: cblas.h: No such file or directory
+    #include <cblas.h>
+             ^~~~~~~~~
+    compilation terminated.
+    error: command 'x86_64-linux-gnu-gcc' failed with exit status 1
+
+__A__: You will have to install a CBLAS-compatible BLAS library and/or set
+`BLAS_CFLAGS` as described in the [installation guide](INSTALL.md).
+
