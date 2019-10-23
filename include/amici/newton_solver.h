@@ -46,6 +46,7 @@ class NewtonSolver {
      * @param maxsteps maximum number of allowed Newton steps for steady state computation
      * @param atol absolute tolerance
      * @param rtol relative tolerance
+     * @param dampingFactorMode to switch on/off a use of a damping factor
      * @return solver NewtonSolver according to the specified linsolType
      */
     static std::unique_ptr<NewtonSolver> getSolver(realtype *t, AmiVector *x,
@@ -54,7 +55,8 @@ class NewtonSolver {
                                                    ReturnData *rdata,
                                                    int maxlinsteps,
                                                    int maxsteps,
-                                                   double atol, double rtol);
+                                                   double atol, double rtol,
+                                                   NewtonDampingFactorMode dampingFactorMode);
 
     /**
      * Computes the solution of one Newton iteration
@@ -103,6 +105,8 @@ class NewtonSolver {
     double atol = 1e-16;
     /** relative tolerance */
     double rtol = 1e-8;
+    /** damping factor flag */
+    NewtonDampingFactorMode dampingFactorMode = NewtonDampingFactorMode::on;
 
   protected:
     /** time variable */

@@ -218,6 +218,18 @@ class Solver {
      * @param newton_maxlinsteps
      */
     void setNewtonMaxLinearSteps(int newton_maxlinsteps);
+    
+    /**
+     * @brief Get a state of the damping factor used in the Newton solver
+     * @return
+     */
+    NewtonDampingFactorMode getNewtonDampingFactorMode() const;
+    
+    /**
+     * @brief Turn on/off a damping factor in the Newton method
+     * @param damping factor state
+     */ 
+    void setNewtonDampingFactorMode(NewtonDampingFactorMode dampingFactorMode);
 
     /**
      * @brief Get sensitvity order
@@ -1380,6 +1392,9 @@ class Solver {
     /** maximum number of allowed linear steps per Newton step for steady state
      * computation */
     long int newton_maxlinsteps = 0;
+    
+    /** Damping factor state used int the Newton method */
+    NewtonDampingFactorMode newton_damping_factor_mode = NewtonDampingFactorMode::on;
 
     /** Enable model preequilibration */
     bool requires_preequilibration = false;

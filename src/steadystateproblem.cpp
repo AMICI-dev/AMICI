@@ -48,7 +48,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     auto newtonSolver = NewtonSolver::getSolver(
         &t, &x, solver->getLinearSolver(), model, rdata,
         solver->getNewtonMaxLinearSteps(), solver->getNewtonMaxSteps(),
-        solver->getAbsoluteTolerance(), solver->getRelativeTolerance());
+        solver->getAbsoluteTolerance(), solver->getRelativeTolerance(),
+        solver->getNewtonDampingFactorMode());
 
     auto newton_status = NewtonStatus::failed;
     try {
@@ -206,11 +207,11 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
             /* Check residuals vs tolerances */
             converged = wrms < RCONST(1.0);
 
-            if (!converged) {
+            if (!converged && newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
               /* increase dampening factor (superfluous, if converged) */
               gamma = fmin(1.0, 2.0 * gamma);
             }
-        } else {
+        } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
             if (gamma < 1e-6)
