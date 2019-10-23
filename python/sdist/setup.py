@@ -19,6 +19,7 @@ import sys
 import sysconfig
 import subprocess
 import setup_clibs # Must run from within containing directory
+import distutils.ccompiler
 from custom_commands import (my_install, my_build_clib, my_develop,
                              my_install_lib, my_build_ext, my_sdist)
 
@@ -113,6 +114,16 @@ def main():
         extra_compiler_flags=cxx_flags + ['-DDLONG']
     )
 
+    compiler_name = distutils.ccompiler.get_default_compiler()
+    if compiler_name == 'mingw32':
+        newFlag = '-std=c++11'
+    elif compiler_name == 'unix':
+        newFlag = '-std=c++11'
+    elif compiler_name == 'msvc':
+        newFlag = '-std:latest'
+    else:
+        newFlag = '-std=c++11'
+
     # Build shared object
     amici_module = Extension(
         name='amici._amici',
@@ -135,7 +146,7 @@ def main():
             *blaspkgcfg['library_dirs'],
             'amici/libs',  # clib target directory
         ],
-        extra_compile_args=['-std=c++11', *cxx_flags],
+        extra_compile_args=[newFlag, *cxx_flags],
         extra_link_args=amici_module_linker_flags
     )
 
