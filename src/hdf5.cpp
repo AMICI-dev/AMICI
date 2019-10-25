@@ -628,6 +628,12 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                     getIntScalarAttribute(file, datasetPath, "newton_preeq"));
     }
 
+    if(attributeExists(file, datasetPath, "newton_damping_factor_mode")) {
+        solver.setNewtonDampingFactorMode(
+                    static_cast<NewtonDampingFactorMode>(
+                        getIntScalarAttribute(file, datasetPath, "newton_damping_factor_mode")));
+    }
+
     if(attributeExists(file, datasetPath, "newton_maxlinsteps")) {
         solver.setNewtonMaxLinearSteps(
                     getIntScalarAttribute(file, datasetPath,
