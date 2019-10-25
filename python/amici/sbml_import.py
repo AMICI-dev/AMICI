@@ -244,7 +244,7 @@ class SbmlImporter:
         self.reset_symbols()
         self.processSBML(constantParameters)
         self.processObservables(observables, sigmas, noise_distributions)
-        ode_model = ODEModel(simplify=True)
+        ode_model = ODEModel()
         ode_model.import_from_sbml_importer(self)
         exporter = ODEExporter(
             ode_model,
@@ -342,10 +342,10 @@ class SbmlImporter:
 
         """
         for s in self.sbml.getListOfSpecies():
-            self.local_symbols[s.getId()] = sp.Symbol(s.getId(), real=True)
+            self.local_symbols[s.getId()] = sp.Symbol(s.getId())
 
         for p in self.sbml.getListOfParameters():
-            self.local_symbols[p.getId()] = sp.Symbol(p.getId(), real=True)
+            self.local_symbols[p.getId()] = sp.Symbol(p.getId())
 
     def processSpecies(self):
         """Get species information from SBML model.
@@ -365,12 +365,12 @@ class SbmlImporter:
         }
 
         self.symbols['species']['identifier'] = sp.Matrix(
-            [sp.Symbol(spec.getId(), real=True) for spec in species]
+            [sp.Symbol(spec.getId()) for spec in species]
         )
         self.symbols['species']['name'] = [spec.getName() for spec in species]
 
         self.speciesCompartment = sp.Matrix(
-            [sp.Symbol(spec.getCompartment(), real=True) for spec in species]
+            [sp.Symbol(spec.getCompartment()) for spec in species]
         )
 
         self.constantSpecies = [species_element.getId()
@@ -448,8 +448,7 @@ class SbmlImporter:
         self.symbols['species']['value'] = species_initial
 
         if self.sbml.isSetConversionFactor():
-            conversion_factor = sp.Symbol(self.sbml.getConversionFactor(),
-                                          real=True)
+            conversion_factor = sp.Symbol(self.sbml.getConversionFactor())
         else:
             conversion_factor = 1.0
 
@@ -517,7 +516,7 @@ class SbmlImporter:
             settings = loop_settings[partype]
 
             self.symbols[partype]['identifier'] = sp.Matrix(
-                [sp.Symbol(par.getId(), real=True) for par in settings['var']]
+                [sp.Symbol(par.getId()) for par in settings['var']]
             )
             self.symbols[partype]['name'] = [
                 par.getName() for par in settings['var']
@@ -548,7 +547,7 @@ class SbmlImporter:
         """
         compartments = self.sbml.getListOfCompartments()
         self.compartmentSymbols = sp.Matrix(
-            [sp.Symbol(comp.getId(), real=True) for comp in compartments]
+            [sp.Symbol(comp.getId()) for comp in compartments]
         )
         self.compartmentVolume = sp.Matrix(
             [sp.sympify(comp.getVolume()) if comp.isSetVolume()
@@ -621,7 +620,7 @@ class SbmlImporter:
                     if symMath is None:
                         symMath = sp.sympify(element.getStoichiometry())
                 elif element.getId() in rulevars:
-                    return sp.Symbol(element.getId(), real=True)
+                    return sp.Symbol(element.getId())
                 else:
                     # dont put the symbol if it wont get replaced by a
                     # rule
@@ -713,8 +712,7 @@ class SbmlImporter:
         volumevars = self.compartmentVolume.free_symbols
         compartmentvars = self.compartmentSymbols.free_symbols
         parametervars = sp.Matrix([
-            sp.Symbol(par.getId(), real=True)
-            for par in self.sbml.getListOfParameters()
+            sp.Symbol(par.getId()) for par in self.sbml.getListOfParameters()
         ])
         stoichvars = self.stoichiometricMatrix.free_symbols
 
@@ -812,8 +810,8 @@ class SbmlImporter:
         Raises:
 
         """
-        sbmlTimeSymbol = sp.Symbol('time', real=True)
-        amiciTimeSymbol = sp.Symbol('t', real=True)
+        sbmlTimeSymbol = sp.Symbol('time')
+        amiciTimeSymbol = sp.Symbol('t')
 
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
 
@@ -905,13 +903,11 @@ class SbmlImporter:
                 f'x{index}' for index in range(len(speciesSyms))
             ]
             observableSyms = sp.Matrix(
-                [sp.symbols(f'y{index}', real=True)
-                 for index in range(len(speciesSyms))]
+                [sp.symbols(f'y{index}', real=True) for index in range(len(speciesSyms))]
             )
 
         sigmaYSyms = sp.Matrix(
-            [sp.symbols(f'sigma{symbol}', real=True)
-             for symbol in observableSyms]
+            [sp.symbols(f'sigma{symbol}', real=True) for symbol in observableSyms]
         )
         sigmaYValues = sp.Matrix(
             [1.0] * len(observableSyms)
@@ -946,7 +942,7 @@ class SbmlImporter:
         llhYValues = sp.Matrix(llhYValues)
 
         llhYSyms = sp.Matrix(
-            [sp.Symbol(f'J{symbol}', real=True) for symbol in observableSyms]
+            [sp.Symbol(f'J{symbol}') for symbol in observableSyms]
         )
 
         # set symbols
@@ -1006,8 +1002,8 @@ class SbmlImporter:
         """
         reservedSymbols = ['k','p','y','w']
         for str in reservedSymbols:
-            old_symbol = sp.Symbol(str, real=True)
-            new_symbol = sp.Symbol('amici_' + str, real=True)
+            old_symbol = sp.Symbol(str)
+            new_symbol = sp.Symbol('amici_' + str)
             self.replaceInAllExpressions(old_symbol, new_symbol)
             for symbol in self.symbols.keys():
                 if 'identifier' in self.symbols[symbol].keys():
@@ -1026,7 +1022,7 @@ class SbmlImporter:
 
         """
         constants = [
-            (sp.Symbol('avogadro', real=True), sp.Symbol('6.02214179e23')),
+            (sp.Symbol('avogadro'), sp.Symbol('6.02214179e23')),
         ]
         for constant, value in constants:
             # do not replace if any symbol is shadowing default definition

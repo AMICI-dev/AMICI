@@ -170,28 +170,31 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c, gsl::span<const realtype>
     if (!matrix)
         return;
 
-    if (static_cast<sunindextype>(c.size()) != rows())
+    sunindextype nrows = rows();
+    sunindextype ncols = columns();
+
+    if (static_cast<sunindextype>(c.size()) != nrows)
         throw std::invalid_argument("Dimension mismatch between number of rows "
-                                    "in A (" + std::to_string(rows()) + ") and "
+                                    "in A (" + std::to_string(nrows) + ") and "
                                     "elements in c (" + std::to_string(c.size())
                                     + ")");
 
-    if (static_cast<sunindextype>(b.size()) != columns())
+    if (static_cast<sunindextype>(b.size()) != ncols)
         throw std::invalid_argument("Dimension mismatch between number of cols "
-                                    "in A (" + std::to_string(columns())
+                                    "in A (" + std::to_string(ncols)
                                     + ") and elements in b ("
                                     + std::to_string(b.size()) + ")");
 
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
-        amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans, rows(),
-                    columns(), 1.0, data(), rows(), b.data(), 1, 1.0, c.data(), 1);
+        amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans, nrows,
+                    ncols, 1.0, data(), nrows, b.data(), 1, 1.0, c.data(), 1);
         break;
     case SUNMATRIX_SPARSE:
 
         switch (sparsetype()) {
         case CSC_MAT:
-            for (sunindextype i = 0; i < columns(); ++i) {
+            for (sunindextype i = 0; i < ncols; ++i) {
                 for (sunindextype k = indexptrs_ptr[i]; k < indexptrs_ptr[i + 1];
                      ++k) {
                     c[indexvals_ptr[k]] += data_ptr[k] * b[i];
@@ -199,7 +202,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c, gsl::span<const realtype>
             }
             break;
         case CSR_MAT:
-            for (sunindextype i = 0; i < rows(); ++i) {
+            for (sunindextype i = 0; i < nrows; ++i) {
                 for (sunindextype k = indexptrs_ptr[i]; k < indexptrs_ptr[i + 1];
                      ++k) {
                     c[i] += data_ptr[k] * b[indexvals_ptr[k]];
