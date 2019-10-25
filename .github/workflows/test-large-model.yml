@@ -23,7 +23,7 @@ jobs:
       run: sudo apt-get install -y swig3.0 libatlas-base-dev && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
     - run: pip3 install --upgrade --user wheel && pip3 install --upgrade --user setuptools
     # install AMICI
-    - run: AMICI_PARALLEL_COMPILE=2 pip3 install -e python/sdist && export PATH=${HOME}/.local/bin/:${PATH}
+    - run: AMICI_PARALLEL_COMPILE=2 pip3 install --user -e python/sdist && export PATH=${HOME}/.local/bin/:${PATH}
     # retrieve test model
     - run: git clone --depth 1 https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT
     # import test model
