@@ -16,7 +16,7 @@
 #include <cvodes/cvodes.h>
 
 namespace amici {
-    
+
 SteadystateProblem::SteadystateProblem(const Solver *solver,
                                        const AmiVector &x0):
     t(solver->gett()), delta(solver->nx()), ewt(solver->nx()),
@@ -208,9 +208,17 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
             /* Check residuals vs tolerances */
             converged = wrms < RCONST(1.0);
 
-            if (!converged && newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
-              /* increase dampening factor (superfluous, if converged) */
-              gamma = fmin(1.0, 2.0 * gamma);
+            if (converged) {
+                /* Ensure positivity of the found state */
+                for (ix = 0; ix < model->nx_solver; ix++) {
+                    if (x[ix] < 0.0) {
+                        x[ix] = 0.0;
+                        converged = FALSE;
+                    }
+                }
+            } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
+                /* increase dampening factor (superfluous, if converged) */
+                gamma = fmin(1.0, 2.0 * gamma);
             }
         } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
             /* Reduce dampening factor and raise an error when becomes too small */
@@ -322,7 +330,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
     return newton_solver;
 }
-    
+
 void SteadystateProblem::writeSolution(realtype *t, AmiVector &x,
                                        AmiVectorArray &sx) const {
     *t = this->t;
