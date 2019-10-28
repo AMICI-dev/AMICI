@@ -209,12 +209,19 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
             converged = wrms < RCONST(1.0);
 
             if (converged) {
-                /* Ensure positivity of the found state */
+                /* Ensure positivity of the found state and recheck if
+                   the convergence still holds */
+                bool recheck_convergence = false;
                 for (ix = 0; ix < model->nx_solver; ix++) {
                     if (x[ix] < 0.0) {
                         x[ix] = 0.0;
-                        converged = FALSE;
+                        recheck_convergence = true;
                     }
+                }
+                if (recheck_convergence) {
+                  model->fxdot(t, x, dx, xdot);
+                  wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol);
+                  converged = wrms < RCONST(1.0);
                 }
             } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
                 /* increase dampening factor (superfluous, if converged) */
