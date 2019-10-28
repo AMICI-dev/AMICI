@@ -636,7 +636,7 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
 
     if(attributeExists(file, datasetPath, "newton_damping_factor_lower_bound")) {
         solver.setNewtonDampingFactorLowerBound(
-                    getDoubleScalarAttribute(file, datasetPath, "newton_damping_factor_lower_bound")));
+                    getDoubleScalarAttribute(file, datasetPath, "newton_damping_factor_lower_bound"));
     }
 
     if(attributeExists(file, datasetPath, "newton_maxlinsteps")) {
