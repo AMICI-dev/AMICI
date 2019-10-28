@@ -1,23 +1,43 @@
 #ifndef amici_h
 #define amici_h
 
-#include "amici/model.h"
-#include "amici/solver.h"
-#include "amici/exception.h"
-#include "amici/defines.h"
-#include "amici/rdata.h"
-#include "amici/edata.h"
-#include "amici/symbolic_functions.h"
 #include "amici/cblas.h"
+#include "amici/defines.h"
+#include "amici/edata.h"
+#include "amici/exception.h"
+#include "amici/model.h"
+#include "amici/rdata.h"
+#include "amici/solver.h"
+#include "amici/symbolic_functions.h"
 
 namespace amici {
 
-void printErrMsgIdAndTxt(const char *identifier, const char *format, ...);
+/*!
+ * @brief Prints a specified error message associated to the specified
+ * identifier
+ *
+ * @param identifier error identifier
+ * @param format string with error message printf-style format
+ * @param ... arguments to be formatted
+ */
+void
+printErrMsgIdAndTxt(const char* identifier, const char* format, ...);
 
-void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...);
+/*!
+ * @brief Prints a specified warning message associated to the specified
+ * identifier
+ *
+ * @param identifier warning identifier
+ * @param format string with error message printf-style format
+ * @param ... arguments to be formatted
+ */
+void
+printWarnMsgIdAndTxt(const char* identifier, const char* format, ...);
 
-// function pointers to process errors / warnings
+/** errMsgIdAndTxt is a function pointer for printErrMsgIdAndTxt  */
 extern msgIdAndTxtFp errMsgIdAndTxt;
+
+/** warnMsgIdAndTxt is a function pointer for printWarnMsgIdAndTxt  */
 extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 /*!
@@ -30,10 +50,15 @@ extern msgIdAndTxtFp warnMsgIdAndTxt;
  * @param rethrow rethrow integration exceptions?
  * @return rdata pointer to return data object
  */
-std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *edata, Model &model, bool rethrow=false);
+std::unique_ptr<ReturnData>
+runAmiciSimulation(Solver& solver,
+                   const ExpData* edata,
+                   Model& model,
+                   bool rethrow = false);
 
 /*!
- * runAmiciSimulations does the same as runAmiciSimulation, but for multiple ExpData instances.
+ * runAmiciSimulations does the same as runAmiciSimulation, but for multiple
+ * ExpData instances.
  *
  * @param solver Solver instance
  * @param edatas experimental data objects
@@ -42,11 +67,12 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
  * @param num_threads number of threads for parallel execution
  * @return vector of pointers to return data objects
  */
-std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(Solver const& solver,
-                                                             const std::vector<ExpData *> &edatas,
-                                                             Model const& model,
-                                                             const bool failfast,
-                                                             int num_threads);
+std::vector<std::unique_ptr<ReturnData>>
+runAmiciSimulations(Solver const& solver,
+                    const std::vector<ExpData*>& edatas,
+                    Model const& model,
+                    bool failfast,
+                    int num_threads);
 
 } // namespace amici
 

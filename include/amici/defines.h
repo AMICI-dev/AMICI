@@ -1,5 +1,6 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
+
 #include <cmath>
 
 namespace amici {
@@ -48,8 +49,9 @@ constexpr double pi = 3.14159265358979323846;
 #define TRUE 1
 #endif
 
-/** defines variable type for simulation variables (determines numerical accuracy) */
-typedef double realtype;
+/** defines variable type for simulation variables
+ * (determines numerical accuracy) */
+using realtype = double;
 
 /** BLAS Matrix Layout, affects dgemm and gemv calls */
 enum class BLASLayout{
@@ -102,7 +104,8 @@ enum class LinearSolver {
     SPGMR       = 6,
     SPBCG       = 7,
     SPTFQMR     = 8,
-    KLU         = 9
+    KLU         = 9,
+    SuperLUMT   = 10,
 };
 
 /** CVODES/IDAS forward sensitivity computation method */
@@ -131,20 +134,13 @@ enum class NonlinearSolverIteration {
     newton = 2
 };
 
-/** KLU state reordering */
-enum class StateOrdering {
-    AMD,
-    COLAMD,
-    natural
-};
-
 /** Sensitivity computation mode in steadyStateProblem */
 enum class SteadyStateSensitivityMode {
     newtonOnly,
     simulationFSA
 };
 
-/** State in which the steady state computionat finished */
+/** State in which the steady state computation finished */
 enum class NewtonStatus {
     failed=-1,
     newt=1,
@@ -158,7 +154,7 @@ enum class NewtonStatus {
  * @param format string with error message printf-style format
  * @param ... arguments to be formatted
  */
-typedef void (*msgIdAndTxtFp)(const char *identifier, const char *format, ...);
+using msgIdAndTxtFp = void (*)(const char *, const char *, ...);
 
 // clang-format on
 

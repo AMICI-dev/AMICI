@@ -3,7 +3,7 @@ import numpy as np
 import math
 import copy
 
-from .numpy import edataToNumPyArrays
+from .numpy import ExpDataView
 import amici
 from amici import ExpData
 
@@ -37,7 +37,7 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
 
     # append all converted edatas
     for edata in edata_list:
-        npdata = edataToNumPyArrays(edata)
+        npdata = ExpDataView(edata)
         for i_time, timepoint in enumerate(edata.getTimepoints()):
             datadict = {
                 'time': timepoint,
@@ -417,7 +417,7 @@ def _get_specialized_fixed_parameters(
     cond = copy.deepcopy(condition)
     for field in overwrite:
         cond[field] = overwrite[field]
-    return [cond[name] for name in _get_names_or_ids(
+    return [float(cond[name]) for name in _get_names_or_ids(
         model, 'FixedParameter', by_id=by_id)]
 
 
@@ -447,7 +447,7 @@ def constructEdataFromDataFrame(df, model, condition, by_id=False):
 
     # timepoints
     df = df.sort_values(by='time', ascending=True)
-    edata.setTimepoints(df['time'].values)
+    edata.setTimepoints(df['time'].values.astype(float))
 
     # get fixed parameters from condition
     overwrite_preeq = {}
@@ -488,16 +488,16 @@ def constructEdataFromDataFrame(df, model, condition, by_id=False):
 
     # fill in presimulation time
     if 't_presim' in condition.keys():
-        edata.t_presim = condition['t_presim']
+        edata.t_presim = float(condition['t_presim'])
 
     # fill in data and stds
     for obs_index, obs in enumerate(
             _get_names_or_ids(model, 'Observable', by_id=by_id)):
         if obs in df.keys():
-            edata.setObservedData(df[obs].values, obs_index)
+            edata.setObservedData(df[obs].values.astype(float), obs_index)
         if obs + '_std' in df.keys():
             edata.setObservedDataStdDev(
-                df[obs + '_std'].values, obs_index
+                df[obs + '_std'].values.astype(float), obs_index
             )
 
     return edata

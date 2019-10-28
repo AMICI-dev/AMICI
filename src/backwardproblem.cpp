@@ -12,6 +12,10 @@
 namespace amici {
 
 BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
+    model(fwd->model),
+    rdata(fwd->rdata),
+    solver(fwd->solver),
+    t(fwd->getTime()),
     llhS0(static_cast<decltype(llhS0)::size_type>(fwd->model->nJ * fwd->model->nplist()), 0.0),
     xB(fwd->model->nx_solver),
     dxB(fwd->model->nx_solver),
@@ -19,33 +23,32 @@ BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
     x_disc(fwd->getStatesAtDiscontinuities()),
     xdot_disc(fwd->getRHSAtDiscontinuities()),
     xdot_old_disc(fwd->getRHSBeforeDiscontinuities()),
-    sx(fwd->getStateSensitivity()),
+    sx0(fwd->getStateSensitivity()),
     nroots(fwd->getNumberOfRoots()),
     discs(fwd->getDiscontinuities()),
     irdiscs(fwd->getDiscontinuities()),
+    iroot(fwd->getRootCounter()),
     rootidx(fwd->getRootIndexes()),
     dJydx(fwd->getDJydx()),
-    dJzdx(fwd->getDJzdx())
-    {
-        t = fwd->getTime();
-        model = fwd->model;
-        solver = fwd->solver;
-        rdata = fwd->rdata;
-        iroot = fwd->getRootCounter();
-    }
+    dJzdx(fwd->getDJzdx()) {}
 
 
 void BackwardProblem::workBackwardProblem() {
 
 
-    if (model->nx_solver <= 0 || solver->getSensitivityOrder() < SensitivityOrder::first ||
-        solver->getSensitivityMethod() != SensitivityMethod::adjoint || model->nplist() == 0) {
+    if (model->nx_solver <= 0 ||
+        solver->getSensitivityOrder() < SensitivityOrder::first ||
+        solver->getSensitivityMethod() != SensitivityMethod::adjoint ||
+        model->nplist() == 0) {
         return;
     }
-
-    solver->setupB(this, model);
-
-    int it = rdata->nt - 2;
+    
+    int it = rdata->nt - 1;
+    model->initializeB(xB, dxB, xQB);
+    handleDataPointB(it);
+    solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
+    
+    --it;
     --iroot;
 
     while (it >= 0 || iroot >= 0) {
@@ -54,9 +57,8 @@ void BackwardProblem::workBackwardProblem() {
         double tnext = getTnext(discs, iroot, it);
 
         if (tnext < t) {
-            solver->solveB(tnext, AMICI_NORMAL);
-            solver->getB(which, &t, &xB, &dxB);
-            solver->getQuadB(which, &t, &xQB);
+            solver->runB(tnext);
+            solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
             solver->getDiagnosisB(it, rdata, this->which);
         }
 
@@ -75,26 +77,20 @@ void BackwardProblem::workBackwardProblem() {
         }
 
         /* reinit states */
-        solver->reInitB(which, t, &xB, &dxB);
-        solver->quadReInitB(which, &xQB);
-        solver->calcICB(which, t, &xB, &dxB);
-        
-        /* if we have to integrate further we need to postprocess for step size
-         computation */
-        if (t > model->t0())
-            solver->reInitPostProcessB(which, &t, &xB, &dxB, model->t0());
+        solver->reInitB(which, t, xB, dxB);
+        solver->quadReInitB(which, xQB);
     }
 
     /* we still need to integrate from first datapoint to tstart */
     if (t > model->t0()) {
         /* solve for backward problems */
-        solver->solveB(model->t0(), AMICI_NORMAL);
-        solver->getQuadB(which, &(t), &xQB);
-        solver->getB(which, &(t), &xB, &dxB);
+        solver->runB(model->t0());
+        solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
         solver->getDiagnosisB(0, rdata, this->which);
     }
 
     computeLikelihoodSensitivities();
+    rdata->cpu_timeB = solver->getCpuTimeB();
 }
 
 
@@ -105,13 +101,15 @@ void BackwardProblem::handleEventB(const int iroot) {
             continue;
         }
 
-        model->fdeltaqB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
-        model->fdeltaxB(ie, t, &x_disc[iroot],&xB,&xdot_disc[iroot], &xdot_old_disc[iroot]);
+        model->addAdjointQuadratureEventUpdate(xQB, ie, t, x_disc[iroot], xB,
+                                               xdot_disc[iroot],
+                                               xdot_old_disc[iroot]);
+        model->addAdjointStateEventUpdate(xB, ie, t, x_disc[iroot],
+                                          xdot_disc[iroot],
+                                          xdot_old_disc[iroot]);
 
         for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
             for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                xB[ix + iJ * model->nxtrue_solver] +=
-                        model->deltaxB[ix + iJ * model->nxtrue_solver];
                 if (model->nz > 0) {
                     xB[ix + iJ * model->nxtrue_solver] +=
                             dJzdx[iJ + ( ix + nroots[ie] * model->nx_solver ) * model->nJ];
@@ -119,12 +117,7 @@ void BackwardProblem::handleEventB(const int iroot) {
             }
         }
 
-        for (int iJ = 0; iJ < model->nJ; ++iJ) {
-            for (int ip = 0; ip < model->nplist(); ++ip) {
-                xQB[ip + iJ * model->nplist()] +=
-                        model->deltaqB[ip + iJ * model->nplist()];
-            }
-        }
+
 
         nroots[ie]--;
     }
@@ -141,7 +134,6 @@ void BackwardProblem::handleDataPointB(const int it) {
                 dJydx[iJ + ( ix + it * model->nx_solver ) * model->nJ];
     }
 }
-
 
 realtype BackwardProblem::getTnext(std::vector<realtype> const& troot,
                                    const int iroot, const int it) {
@@ -161,7 +153,7 @@ void BackwardProblem::computeLikelihoodSensitivities()
             for (int ip = 0; ip < model->nplist(); ++ip) {
                 llhS0[ip] = 0.0;
                 for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
-                    llhS0[ip] += xB[ix] * sx.at(ix,ip);
+                    llhS0[ip] += xB[ix] * sx0.at(ix,ip);
                 }
             }
         } else {
@@ -169,8 +161,8 @@ void BackwardProblem::computeLikelihoodSensitivities()
                 llhS0[ip + iJ * model->nplist()] = 0.0;
                 for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
                     llhS0[ip + iJ * model->nplist()] +=
-                        xB[ix + iJ * model->nxtrue_solver] * sx.at(ix,ip)+
-                        xB[ix] * sx.at(ix + iJ * model->nxtrue_solver,ip);
+                        xB[ix + iJ * model->nxtrue_solver] * sx0.at(ix,ip)+
+                        xB[ix] * sx0.at(ix + iJ * model->nxtrue_solver,ip);
                 }
             }
         }

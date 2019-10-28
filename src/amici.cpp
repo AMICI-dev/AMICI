@@ -32,11 +32,10 @@ static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
 static_assert(std::is_same<amici::realtype, realtype>::value,
               "Definition of realtype does not match");
 
+
 namespace amici {
 
-/** errMsgIdAndTxt is a function pointer for printErrMsgIdAndTxt  */
 msgIdAndTxtFp errMsgIdAndTxt = &printErrMsgIdAndTxt;
-/** warnMsgIdAndTxt is a function pointer for printWarnMsgIdAndTxt  */
 msgIdAndTxtFp warnMsgIdAndTxt = &printWarnMsgIdAndTxt;
 
 
@@ -48,7 +47,7 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     ConditionContext conditionContext(&model, edata);
 
     try{
-        rdata = std::unique_ptr<ReturnData>(new ReturnData(solver,&model));
+        rdata = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
 
         if (model.nx_solver <= 0) {
             return rdata;
@@ -87,15 +86,6 @@ std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver, const ExpData *ed
     return rdata;
 }
 
-/*!
- * printErrMsgIdAndTxt prints a specified error message associated to the
- * specified identifier
- *
- * @param[in] identifier error identifier @type char
- * @param[in] format string with error message printf-style format
- * @param ... arguments to be formatted
- * @return void
- */
 void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) {
     if(identifier && *identifier != '\0')
         fprintf(stderr, "[Error] %s: ", identifier);
@@ -108,15 +98,6 @@ void printErrMsgIdAndTxt(const char *identifier, const char *format, ...) {
     fprintf(stderr, "\n");
 }
 
-/*!
- * printErrMsgIdAndTxt prints a specified warning message associated to the
- * specified identifier
- *
- * @param[in] identifier warning identifier @type char
- * @param[in] format string with error message printf-style format
- * @param ... arguments to be formatted
- * @return void
- */
 void printWarnMsgIdAndTxt(const char *identifier, const char *format, ...) {
     if(identifier && *identifier != '\0')
         printf("[Warning] %s: ", identifier);
@@ -141,7 +122,9 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
 )
 {
     std::vector<std::unique_ptr<ReturnData> > results(edatas.size());
-    bool failed = false;
+    // is set to true if one simulation fails and we should skip the rest.
+    // shared across threads.
+    bool skipThrough = false;
 
 #if defined(_OPENMP)
     #pragma omp parallel for num_threads(num_threads)
@@ -152,16 +135,15 @@ std::vector<std::unique_ptr<ReturnData> > runAmiciSimulations(const Solver &solv
 
         /* if we fail we need to write empty return datas for the python
          interface */
-        if (failed) {
+        if (skipThrough) {
             ConditionContext conditionContext(myModel.get(), edatas[i]);
             results[i] =
-                std::unique_ptr<ReturnData>(new ReturnData(solver, &model));
+                std::unique_ptr<ReturnData>(new ReturnData(solver, model));
+        } else {
+            results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
         }
 
-        results[i] = runAmiciSimulation(*mySolver, edatas[i], *myModel);
-
-        if (results[i]->status < 0 && failfast)
-            failed = true;
+        skipThrough |= failfast && results[i]->status < 0;
     }
 
     return results;

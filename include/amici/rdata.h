@@ -9,17 +9,19 @@ namespace amici {
 class Model;
 class ReturnData;
 class Solver;
+class ExpData;
 }
 
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::ReturnData &u, const unsigned int version);
+void serialize(Archive &ar, amici::ReturnData &u, unsigned int version);
 }}
 
 namespace amici {
 
-/** @brief Stores all data to be returned by amici::runAmiciSimulation.
+/**
+ * @brief Stores all data to be returned by amici::runAmiciSimulation.
  *
  * NOTE: multidimensional arrays are stored in row-major order
  * (FORTRAN-style)
@@ -29,7 +31,7 @@ class ReturnData {
     /**
      * @brief default constructor
      */
-    ReturnData();
+    ReturnData() = default;
 
     /**
      * @brief ReturnData
@@ -64,11 +66,11 @@ class ReturnData {
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
-     * @param solver solver
-     * @param model pointer to model specification object
+     * @param solver solver instance
+     * @param model model instance
      * bool
      */
-    ReturnData(Solver const& solver, const Model *model);
+    ReturnData(Solver const& solver, const Model &model);
 
     ~ReturnData() = default;
 
@@ -82,7 +84,7 @@ class ReturnData {
      * sensitivities to NaN (typically after integration failure)
      * @param t time of integration failure
      */
-    void invalidate(const realtype t);
+    void invalidate(realtype t);
 
     /**
      * @brief Set likelihood and chi2 to NaN
@@ -103,9 +105,35 @@ class ReturnData {
      */
     void
     applyChainRuleFactorToSimulationResults(const Model *model);
+    
+    /**
+     * Residual function
+     * @param it time index
+     * @param edata ExpData instance containing observable data
+     */
+    void fres(int it, const ExpData &edata);
+    
+    /**
+     * Chi-squared function
+     * @param it time index
+     */
+    void fchi2(int it);
+    
+    /**
+     * Residual sensitivity function
+     * @param it time index
+     * @param edata ExpData instance containing observable data
+     */
+    void fsres(int it, const ExpData &edata);
+    
+    /**
+     * Fisher information matrix function
+     * @param it time index
+     */
+    void fFIM(int it);
 
     /** timepoints (dimension: nt) */
-    const std::vector<realtype> ts;
+    std::vector<realtype> ts;
 
     /** time derivative (dimension: nx) */
     std::vector<realtype> xdot;
@@ -201,10 +229,16 @@ class ReturnData {
     /** employed order forward problem (dimension: nt) */
     std::vector<int> order;
 
+    /** computation time of forward solve [ms] */
+    double cpu_time = 0.0;
+
+    /** computation time of backward solve [ms] */
+    double cpu_timeB = 0.0;
+
     /** flag indicating success of Newton solver */
     int newton_status = 0;
 
-    /** computation time of the Newton solver [s] */
+    /** computation time of the Newton solver [ms] */
     double newton_cpu_time = 0.0;
 
     /** number of Newton steps for steady state problem
@@ -256,44 +290,61 @@ class ReturnData {
     int status = 0;
 
     /** total number of model parameters */
-    const int np;
+    int np{0};
+
     /** number of fixed parameters */
-    const int nk;
+    int nk{0};
+
     /** number of states */
-    const int nx;
+    int nx{0};
+
     /** number of states with conservation laws applied */
-    const int nx_solver;
+    int nx_solver{0};
+
     /** number of states in the unaugmented system */
-    const int nxtrue;
+    int nxtrue{0};
+
     /** number of observables */
-    const int ny;
+    int ny{0};
+
     /** number of observables in the unaugmented system */
-    const int nytrue;
+    int nytrue{0};
+
     /** number of event outputs */
-    const int nz;
+    int nz{0};
+
     /** number of event outputs in the unaugmented system */
-    const int nztrue;
+    int nztrue{0};
+
     /** number of events */
-    const int ne;
+    int ne{0};
+
     /** dimension of the augmented objective function for 2nd order ASA */
-    const int nJ;
+    int nJ{0};
 
     /** number of parameter for which sensitivities were requested */
-    const int nplist;
+    int nplist{0};
+
     /** maximal number of occuring events (for every event type) */
-    const int nmaxevent;
+    int nmaxevent{0};
+
     /** number of considered timepoints */
-    const int nt;
+    int nt{0};
+
     /** maximal number of newton iterations for steady state calculation */
-    const int newton_maxsteps;
+    int newton_maxsteps{0};
+
     /** scaling of parameterization (lin,log,log10) */
     std::vector<ParameterScaling> pscale;
+
     /** flag indicating whether second order sensitivities were requested */
-    const SecondOrderMode o2mode;
+    SecondOrderMode o2mode{SecondOrderMode::none};
+
     /** sensitivity order */
-    const SensitivityOrder sensi;
+    SensitivityOrder sensi{SensitivityOrder::none};
+
     /** sensitivity method */
-    const SensitivityMethod sensi_meth;
+    SensitivityMethod sensi_meth{SensitivityMethod::none};
 
     /**
      * @brief Serialize ReturnData (see boost::serialization::serialize)
@@ -302,7 +353,8 @@ class ReturnData {
      * @param version Version number
      */
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, ReturnData &r, const unsigned int version);
+    friend void boost::serialization::serialize(Archive &ar, ReturnData &r,
+                                                unsigned int version);
 };
 
 } // namespace amici

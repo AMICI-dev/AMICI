@@ -32,6 +32,38 @@ import re
 import sys
 from contextlib import suppress
 
+
+def _get_amici_path():
+    """
+    Determine package installation path, or, if used directly from git
+    repository, get repository root
+    """
+    basedir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    if os.path.exists(os.path.join(basedir, '.git')):
+        return os.path.abspath(basedir)
+    return os.path.dirname(__file__)
+
+
+def _get_commit_hash():
+    """Get commit hash from file"""
+    basedir = os.path.dirname(os.path.dirname(os.path.dirname(amici_path)))
+    commitfile = next(
+        (
+            file for file in [
+                os.path.join(basedir, '.git', 'FETCH_HEAD'),
+                os.path.join(basedir, '.git', 'ORIG_HEAD'),
+            ]
+            if os.path.isfile(file)
+        ),
+        None
+    )
+
+    if commitfile:
+        with open(commitfile) as f:
+            return str(re.search(r'^([\w]*)', f.read().strip()).group())
+    return 'unknown'
+
+
 # redirect C/C++ stdout to python stdout if python stdout is redirected,
 # e.g. in ipython notebook
 capture_cstdout = suppress
@@ -57,14 +89,8 @@ except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     except (ImportError, ModuleNotFoundError, AttributeError):
         pass
 
-# determine package installation path, or, if used directly from git
-# repository, get repository root
-if os.path.exists(os.path.join(os.path.dirname(__file__), '..', '..', '.git')):
-    amici_path = os.path.abspath(os.path.join(
-        os.path.dirname(__file__), '..', '..'))
-else:
-    amici_path = os.path.dirname(__file__)
-
+# Initialize AMICI paths
+amici_path = _get_amici_path()
 amiciSwigPath = os.path.join(amici_path, 'swig')
 amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
@@ -73,31 +99,14 @@ amiciModulePath = os.path.dirname(__file__)
 with open(os.path.join(amici_path, 'version.txt')) as f:
     __version__ = f.read().strip()
 
-# get commit hash from file
-_commitfile = next(
-    (
-        file for file in [
-            os.path.join(amici_path, '..', '..', '..', '.git', 'FETCH_HEAD'),
-            os.path.join(amici_path, '..', '..', '..', '.git', 'ORIG_HEAD'),
-        ]
-        if os.path.isfile(file)
-    ),
-    None
-)
-
-if _commitfile:
-    with open(_commitfile) as f:
-        __commit__ = str(re.search(r'^([\w]*)', f.read().strip()).group())
-else:
-    __commit__ = 'unknown'
-
+__commit__ = _get_commit_hash()
 
 try:
     # These module require the swig interface and other dependencies which will
     # be installed if the the AMICI package was properly installed. If not,
     # AMICI was probably imported from setup.py and we don't need those.
     from .sbml_import import SbmlImporter, assignmentRules2observables
-    from .numpy import rdataToNumPyArrays, edataToNumPyArrays
+    from .numpy import ReturnDataView, ExpDataView
     from .pandas import getEdataFromDataFrame, \
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
@@ -127,7 +136,7 @@ def runAmiciSimulation(model, solver, edata=None):
 
     with capture_cstdout():
         rdata = amici.runAmiciSimulation(solver.get(), edata, model.get())
-    return rdataToNumPyArrays(rdata)
+    return numpy.ReturnDataView(rdata)
 
 
 def ExpData(*args):
@@ -142,8 +151,7 @@ def ExpData(*args):
     Raises:
 
     """
-    if isinstance(args[0], dict):
-        # rdata dict created by rdataToNumPyArrays
+    if isinstance(args[0], ReturnDataView):
         return amici.ExpData(args[0]['ptr'].get(), *args[1:])
     elif isinstance(args[0], ExpDataPtr):
         # the *args[:1] should be empty, but by the time you read this,
@@ -179,4 +187,4 @@ def runAmiciSimulations(model, solver, edata_list, failfast=True,
                                                    model.get(),
                                                    failfast,
                                                    num_threads)
-    return [numpy.rdataToNumPyArrays(r) for r in rdata_ptr_list]
+    return [numpy.ReturnDataView(r) for r in rdata_ptr_list]

@@ -54,7 +54,7 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.ss_rtol_sensi;
     ar &u.maxsteps;
     ar &u.maxstepsB;
-    ar &u.newton_preeq;
+    ar &u.requires_preequilibration;
     ar &u.newton_maxsteps;
     ar &u.newton_maxlinsteps;
     ar &u.ism;
@@ -65,6 +65,8 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.iter;
     ar &u.stldet;
     ar &u.ordering;
+    ar &u.cpu_time;
+    ar &u.cpu_timeB;
 }
 
 
@@ -75,26 +77,26 @@ void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version) {
 
 template <class Archive>
 void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
-    ar &const_cast<int &>(u.nx_rdata);
-    ar &const_cast<int &>(u.nxtrue_rdata);
-    ar &const_cast<int &>(u.nx_solver);
-    ar &const_cast<int &>(u.nxtrue_solver);
-    ar &const_cast<int &>(u.ny);
-    ar &const_cast<int &>(u.nytrue);
-    ar &const_cast<int &>(u.nz);
-    ar &const_cast<int &>(u.nztrue);
-    ar &const_cast<int &>(u.ne);
-    ar &const_cast<int &>(u.nw);
-    ar &const_cast<int &>(u.ndwdx);
-    ar &const_cast<int &>(u.ndwdp);
-    ar &const_cast<int &>(u.ndxdotdw);
-    ar &const_cast<int &>(u.nnz);
-    ar &const_cast<int &>(u.nJ);
-    ar &const_cast<int &>(u.ubw);
-    ar &const_cast<int &>(u.lbw);
-    ar &const_cast<amici::SecondOrderMode &>(u.o2mode);
-    ar &const_cast<std::vector<int> &>(u.z2event);
-    ar &const_cast<std::vector<realtype> &>(u.idlist);
+    ar &u.nx_rdata;
+    ar &u.nxtrue_rdata;
+    ar &u.nx_solver;
+    ar &u.nxtrue_solver;
+    ar &u.ny;
+    ar &u.nytrue;
+    ar &u.nz;
+    ar &u.nztrue;
+    ar &u.ne;
+    ar &u.nw;
+    ar &u.ndwdx;
+    ar &u.ndwdp;
+    ar &u.ndxdotdw;
+    ar &u.nnz;
+    ar &u.nJ;
+    ar &u.ubw;
+    ar &u.lbw;
+    ar &u.o2mode;
+    ar &u.z2event;
+    ar &u.idlist;
     ar &u.h;
     ar &u.unscaledParameters;
     ar &u.originalParameters;
@@ -112,28 +114,27 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
 
 template <class Archive>
 void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
-
-    ar &const_cast<int &>(r.np);
-    ar &const_cast<int &>(r.nk);
-    ar &const_cast<int &>(r.nx);
-    ar &const_cast<int &>(r.nx_solver);
-    ar &const_cast<int &>(r.nxtrue);
-    ar &const_cast<int &>(r.ny);
-    ar &const_cast<int &>(r.nytrue);
-    ar &const_cast<int &>(r.nz);
-    ar &const_cast<int &>(r.nztrue);
-    ar &const_cast<int &>(r.ne);
-    ar &const_cast<int &>(r.nJ);
-    ar &const_cast<int &>(r.nplist);
-    ar &const_cast<int &>(r.nmaxevent);
-    ar &const_cast<int &>(r.nt);
-    ar &const_cast<int &>(r.newton_maxsteps);
+    ar &r.np;
+    ar &r.nk;
+    ar &r.nx;
+    ar &r.nx_solver;
+    ar &r.nxtrue;
+    ar &r.ny;
+    ar &r.nytrue;
+    ar &r.nz;
+    ar &r.nztrue;
+    ar &r.ne;
+    ar &r.nJ;
+    ar &r.nplist;
+    ar &r.nmaxevent;
+    ar &r.nt;
+    ar &r.newton_maxsteps;
     ar &r.pscale;
-    ar &const_cast<amici::SecondOrderMode &>(r.o2mode);
-    ar &const_cast<amici::SensitivityOrder &>(r.sensi);
-    ar &const_cast<amici::SensitivityMethod &>(r.sensi_meth);
+    ar &r.o2mode;
+    ar &r.sensi;
+    ar &r.sensi_meth;
 
-    ar &const_cast<std::vector<realtype> &>(r.ts);
+    ar &r.ts;
     ar &r.xdot;
     ar &r.J;
     ar &r.z & r.sigmaz;
@@ -155,6 +156,9 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.numnonlinsolvconvfails;
     ar &r.numnonlinsolvconvfailsB;
     ar &r.order;
+    ar &r.cpu_time;
+    ar &r.cpu_timeB;
+    ar &r.newton_cpu_time;
 
     ar &r.newton_status;
     ar &r.newton_cpu_time;
@@ -252,7 +256,7 @@ std::string serializeToString(T const& data) {
             ::boost::iostreams::back_insert_device<std::string>>
             s(inserter);
         ::boost::archive::binary_oarchive oar(s);
-    
+
         oar << data;
         s.flush();
 
@@ -280,9 +284,9 @@ std::vector<char> serializeToStdVec(T const& data) {
 
         oar << data;
         s.flush();
-        
+
         std::vector<char> buf(serialized.begin(), serialized.end());
-        
+
         return buf;
     } catch(::boost::archive::archive_exception const& e) {
         throw AmiException("Serialization to StdVec failed: %s", e.what());
@@ -305,7 +309,7 @@ T deserializeFromString(std::string const& serialized) {
             device);
         ::boost::archive::binary_iarchive iar(s);
         T deserialized;
-    
+
         iar >> deserialized;
 
         return deserialized;

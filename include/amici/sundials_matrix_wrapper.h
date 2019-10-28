@@ -5,9 +5,11 @@
 #include <sunmatrix/sunmatrix_dense.h>  // SUNMatrix_Dense
 #include <sunmatrix/sunmatrix_sparse.h> // SUNMatrix_Sparse
 
-#include <nvector/nvector_serial.h>
+#include <gsl/gsl-lite.hpp>
 
 #include <vector>
+
+#include "amici/vector.h"
 
 namespace amici {
 
@@ -74,7 +76,7 @@ class SUNMatrixWrapper {
      * @brief Move constructor
      * @param other
      */
-    SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept;
+    SUNMatrixWrapper(SUNMatrixWrapper &&other);
 
     /**
      * @brief Copy assignment
@@ -88,7 +90,7 @@ class SUNMatrixWrapper {
      * @param other
      * @return
      */
-    SUNMatrixWrapper &operator=(SUNMatrixWrapper &&other) noexcept;
+    SUNMatrixWrapper &operator=(SUNMatrixWrapper &&other);
 
     /**
      * @brief Access raw data
@@ -131,36 +133,34 @@ class SUNMatrixWrapper {
      * @return index array
      */
     int sparsetype() const;
-    
+
     /**
      * @brief reset data to zeroes
      */
     void reset();
 
     /**
-     * @brief std::vector interface for multiply
-     * @param c output vector, may already contain values
-     * @param b multiplication vector
-     */
-    void multiply(std::vector<realtype> &c, const std::vector<realtype> &b) const;
-
-    /**
      * @brief N_Vector interface for multiply
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(N_Vector c, const N_Vector b) const;
+    void multiply(N_Vector c, const_N_Vector b) const;
 
     /**
      * @brief Perform matrix vector multiplication c += A*b
      * @param c output vector, may already contain values
      * @param b multiplication vector
      */
-    void multiply(realtype *c, const realtype *b) const;
+    void multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const;
+
+    /**
+     * @brief Set to 0.0
+     */
+    void zero();
 
   private:
     void update_ptrs();
-    
+
     SUNMatrix matrix = nullptr;
     realtype *data_ptr = nullptr;
     sunindextype *indexptrs_ptr = nullptr;
@@ -168,5 +168,24 @@ class SUNMatrixWrapper {
 };
 
 } // namespace amici
+
+namespace gsl {
+/**
+ * @brief Create span from SUNMatrix
+ * @param nv
+ * @return
+ */
+inline span<realtype> make_span(SUNMatrix m)
+{
+    switch (SUNMatGetID(m)) {
+    case SUNMATRIX_DENSE:
+        return span<realtype>(SM_DATA_D(m), SM_LDATA_D(m));
+    case SUNMATRIX_SPARSE:
+        return span<realtype>(SM_DATA_S(m), SM_NNZ_S(m));
+    default:
+        throw amici::AmiException("Unimplemented SUNMatrix type for make_span");
+    }
+}
+} // namespace gsl
 
 #endif // AMICI_SUNDIALS_MATRIX_WRAPPER_H

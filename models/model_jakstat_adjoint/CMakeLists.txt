@@ -1,11 +1,17 @@
-project(model_jakstat_adjoint)
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 cmake_minimum_required(VERSION 2.8)
+
+if(POLICY CMP0060)
+  cmake_policy(SET CMP0060 NEW)
+endif(POLICY CMP0060)
+if(POLICY CMP0065)
+  cmake_policy(SET CMP0065 NEW)
+endif(POLICY CMP0065)
+
+project(model_jakstat_adjoint)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(CheckCXXCompilerFlag)
 set(MY_CXX_FLAGS -Wall -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable)
@@ -17,7 +23,8 @@ foreach(FLAG ${MY_CXX_FLAGS})
     endif()
 endforeach(FLAG)
 
-find_package(Amici HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+find_package(Amici  HINTS ${CMAKE_CURRENT_LIST_DIR}/../../build)
+message(STATUS "Found AMICI ${Amici_DIR}")
 
 set(MODEL_DIR ${CMAKE_CURRENT_LIST_DIR})
 
@@ -49,7 +56,7 @@ add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
 add_library(model ALIAS ${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-    
+
 target_link_libraries(${PROJECT_NAME}
     PUBLIC Upstream::amici
 )
@@ -57,11 +64,11 @@ target_link_libraries(${PROJECT_NAME}
 set(SRC_LIST_EXE main.cpp)
 
 add_executable(simulate_${PROJECT_NAME} ${SRC_LIST_EXE})
-    
+
 target_link_libraries(simulate_${PROJECT_NAME} ${PROJECT_NAME})
 
 if($ENV{ENABLE_GCOV_COVERAGE})
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 --coverage")
 endif()
 
 ## SWIG

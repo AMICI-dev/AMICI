@@ -25,10 +25,10 @@ parameters that should be considered constants can be specified in a list of str
 
 ### Observables
 
-assignment rules that should be considered as observables can extracted using the `amici.assignmentRules2observables` function
+Assignment rules that should be considered as observables can extracted using the `amici.assignmentRules2observables` function.
 
-    observables = amici.assignmentRules2observables(sbml, filter=lambda variableId: 
-                                                    variableId.startswith('observable_') and not variableId.endswith('_sigma'))
+    observables = amici.assignmentRules2observables(sbml, filter_function=lambda variable: 
+                                                    variable.getId().startswith('observable_') and not variable.getId().endswith('_sigma'))
 
 ### Standard Deviations
 
@@ -44,7 +44,7 @@ to compile the sbml as python module, the user has to call the method `amici.sbm
     sbmlImporter.sbml2amici('test', 'test', 
                             observables=observables,
                             constantParameters=constantParameters,
-                            sigmas=sigma)
+                            sigmas=sigmas)
 
 Note: To build AMICI with OpenMP support, which allows to parallelize model simulations of multiple
 experimental conditions, set the environment variables `AMICI_CXXFLAGS` and `AMICI_LDFLAGS` to the

@@ -108,7 +108,7 @@ def check_close(result, expected, assert_fun, atol, rtol, field, ip=None):
             index_str = f'at index ip={ip} '
             check_type = 'FD check '
         print(f'{check_type} failed for {field} {index_str}for '
-              f'{close.sum()} indices:')
+              f'{close.size - close.sum()} indices:')
         adev = np.abs(result - expected)
         rdev = np.abs((result - expected)/(expected + atol))
         print(f'max(adev): {adev.max()}, max(rdev): {rdev.max()}')

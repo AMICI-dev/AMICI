@@ -10,13 +10,14 @@ namespace amici {
 
 SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
     : matrix(SUNSparseMatrix(M, N, NNZ, sparsetype)) {
+
     if (sparsetype != CSC_MAT && sparsetype != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT");
 
     if (NNZ && !matrix)
         throw std::bad_alloc();
-    
+
     update_ptrs();
 }
 
@@ -24,7 +25,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int N)
     : matrix(SUNDenseMatrix(M, N)) {
     if (M && N && !matrix)
         throw std::bad_alloc();
-        
+
     update_ptrs();
 }
 
@@ -32,7 +33,7 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int ubw, int lbw)
     : matrix(SUNBandMatrix(M, ubw, lbw)) {
     if (M && !matrix)
         throw std::bad_alloc();
-    
+
     update_ptrs();
 }
 
@@ -81,17 +82,19 @@ SUNMatrixWrapper::SUNMatrixWrapper(const SUNMatrixWrapper &other) {
     update_ptrs();
 }
 
-SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) noexcept {
+SUNMatrixWrapper::SUNMatrixWrapper(SUNMatrixWrapper &&other) {
     std::swap(matrix, other.matrix);
     update_ptrs();
 }
 
 SUNMatrixWrapper &SUNMatrixWrapper::operator=(const SUNMatrixWrapper &other) {
+    if(&other == this)
+        return *this;
     return *this = SUNMatrixWrapper(other);
 }
 
 SUNMatrixWrapper &SUNMatrixWrapper::
-operator=(SUNMatrixWrapper &&other) noexcept {
+operator=(SUNMatrixWrapper &&other) {
     std::swap(matrix, other.matrix);
     update_ptrs();
     return *this;
@@ -150,8 +153,7 @@ sunindextype *SUNMatrixWrapper::indexptrs() const {
 int SUNMatrixWrapper::sparsetype() const {
     if (SUNMatGetID(matrix) == SUNMATRIX_SPARSE)
         return SM_SPARSETYPE_S(matrix);
-    else
-        throw std::domain_error("Function only available for sparse matrices");
+    throw std::domain_error("Function only available for sparse matrices");
 }
 
 void SUNMatrixWrapper::reset() {
@@ -159,45 +161,40 @@ void SUNMatrixWrapper::reset() {
         SUNMatZero(matrix);
 }
 
-void SUNMatrixWrapper::multiply(std::vector<realtype> &c,
-                                const std::vector<realtype> &b) const {
-    if (static_cast<sunindextype>(c.size()) != rows())
-        throw std::invalid_argument("Dimension mismatch between number of rows"
-                                    "in A and elements in c");
-
-    if (static_cast<sunindextype>(b.size()) != columns())
-        throw std::invalid_argument("Dimension mismatch between number of cols"
-                                    "in A and elements in b");
-
-    multiply(c.data(), b.data());
+void SUNMatrixWrapper::multiply(N_Vector c, const_N_Vector b) const {
+    multiply(gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),
+             gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)));
 }
 
-void SUNMatrixWrapper::multiply(N_Vector c, const N_Vector b) const {
-    if (NV_LENGTH_S(c) != rows())
-        throw std::invalid_argument("Dimension mismatch between number of rows"
-                                    "in A and elements in c");
-
-    if (NV_LENGTH_S(b) != columns())
-        throw std::invalid_argument("Dimension mismatch between number of cols"
-                                    "in A and elements in b");
-
-    multiply(NV_DATA_S(c), NV_DATA_S(b));
-}
-
-void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
+void SUNMatrixWrapper::multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const {
     if (!matrix)
         return;
 
+    sunindextype nrows = rows();
+    sunindextype ncols = columns();
+
+    if (static_cast<sunindextype>(c.size()) != nrows)
+        throw std::invalid_argument("Dimension mismatch between number of rows "
+                                    "in A (" + std::to_string(nrows) + ") and "
+                                    "elements in c (" + std::to_string(c.size())
+                                    + ")");
+
+    if (static_cast<sunindextype>(b.size()) != ncols)
+        throw std::invalid_argument("Dimension mismatch between number of cols "
+                                    "in A (" + std::to_string(ncols)
+                                    + ") and elements in b ("
+                                    + std::to_string(b.size()) + ")");
+
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
-        amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans, rows(),
-                    columns(), 1.0, data(), rows(), b, 1, 1.0, c, 1);
+        amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans, nrows,
+                    ncols, 1.0, data(), nrows, b.data(), 1, 1.0, c.data(), 1);
         break;
     case SUNMATRIX_SPARSE:
 
         switch (sparsetype()) {
         case CSC_MAT:
-            for (sunindextype i = 0; i < columns(); ++i) {
+            for (sunindextype i = 0; i < ncols; ++i) {
                 for (sunindextype k = indexptrs_ptr[i]; k < indexptrs_ptr[i + 1];
                      ++k) {
                     c[indexvals_ptr[k]] += data_ptr[k] * b[i];
@@ -205,7 +202,7 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
             }
             break;
         case CSR_MAT:
-            for (sunindextype i = 0; i < rows(); ++i) {
+            for (sunindextype i = 0; i < nrows; ++i) {
                 for (sunindextype k = indexptrs_ptr[i]; k < indexptrs_ptr[i + 1];
                      ++k) {
                     c[i] += data_ptr[k] * b[indexvals_ptr[k]];
@@ -222,10 +219,17 @@ void SUNMatrixWrapper::multiply(realtype *c, const realtype *b) const {
     }
 }
 
+void SUNMatrixWrapper::zero()
+{
+    if(int res = SUNMatZero(matrix))
+        throw std::runtime_error("SUNMatrixWrapper::zero() failed with "
+                                 + std::to_string(res));
+}
+
 void SUNMatrixWrapper::update_ptrs() {
     if(!matrix)
         return;
-    
+
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
         if (columns() > 0 && rows() > 0)

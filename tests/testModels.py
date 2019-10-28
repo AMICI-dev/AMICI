@@ -78,10 +78,12 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     rdata = amici.runAmiciSimulation(self.model, self.solver,
                                                      edata)
 
+                    check_derivative_opts = dict()
+
                     if model_name == 'model_nested_events':
-                        rtol = 1e-2
-                    else:
-                        rtol = 1e-4
+                        check_derivative_opts['rtol'] = 1e-2
+                    elif model_name == 'model_events':
+                        check_derivative_opts['atol'] = 1e-3
 
                     if edata \
                             and self.solver.getSensitivityMethod() \
@@ -90,25 +92,32 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                             and not model_name.startswith('model_neuron') \
                             and not case.endswith('byhandpreeq'):
                         check_derivatives(self.model, self.solver, edata,
-                                          assert_fun, rtol=rtol)
+                                          assert_fun, **check_derivative_opts)
 
-                    if model_name == 'model_neuron_o2':
-                        verify_simulation_results(
-                            rdata, expected_results[subTest][case]['results'],
-                            assert_fun,
-                            atol=1e-5, rtol=1e-3
-                        )
-                    else:
-                        verify_simulation_results(
-                            rdata, expected_results[subTest][case]['results'],
-                            assert_fun,
-                        )
+                    verify_simulation_opts = dict()
+
+                    if model_name.startswith('model_neuron'):
+                        verify_simulation_opts['atol'] = 1e-5
+                        verify_simulation_opts['rtol'] = 1e-2
+          
+                    if model_name.startswith('model_robertson') and \
+                            case == 'sensiforwardSPBCG':
+                        verify_simulation_opts['atol'] = 1e-3
+                        verify_simulation_opts['rtol'] = 1e-3
+                  
+                    verify_simulation_results(
+                        rdata, expected_results[subTest][case]['results'],
+                        assert_fun, **verify_simulation_opts
+                    )
 
                     if model_name == 'model_steadystate' and \
                             case == 'sensiforwarderrorint':
                         edata = amici.amici.ExpData(self.model.get())
 
-                    if edata and model_name != 'model_neuron_o2':
+                    if edata and model_name != 'model_neuron_o2' and not (
+                        model_name == 'model_robertson' and
+                        case == 'sensiforwardSPBCG'
+                    ):
                         # Test runAmiciSimulations: ensure running twice
                         # with same ExpData yields same results
                         if isinstance(edata, amici.amici.ExpData):
@@ -117,17 +126,18 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                             edatas = [edata.get(), edata.get()]
 
                         rdatas = amici.runAmiciSimulations(
-                            self.model, self.solver, edatas, num_threads=2
+                            self.model, self.solver, edatas, num_threads=2,
+                            failfast=False
                         )
                         verify_simulation_results(
                             rdatas[0],
                             expected_results[subTest][case]['results'],
-                            assert_fun,
+                            assert_fun, **verify_simulation_opts
                         )
                         verify_simulation_results(
                             rdatas[1],
                             expected_results[subTest][case]['results'],
-                            assert_fun,
+                            assert_fun, **verify_simulation_opts
                         )
 
                     self.assertRaises(
@@ -159,7 +169,7 @@ def verify_simulation_results(rdata, expected_results, assert_fun,
             for subfield in ['J', 'xdot']:
                 check_results(rdata, subfield,
                               expected_results[field][subfield][()],
-                              assert_fun, 0, 2)
+                              assert_fun, 1e-8, 1e-8)
         else:
             if field == 's2llh':
                 check_results(rdata, field, expected_results[field][()],

@@ -63,8 +63,10 @@ def main():
     define_macros = []
 
     blaspkgcfg = getBlasConfig()
+    amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
     amici_module_linker_flags.extend(
         '-l%s' % l for l in blaspkgcfg['libraries'])
+    define_macros.extend(blaspkgcfg['define_macros'])
 
     h5pkgcfg = getHdf5Config()
 
@@ -79,6 +81,7 @@ def main():
         extension_sources = [
             'amici/amici_wrap.cxx',  # swig interface
         ]
+        define_macros.extend(h5pkgcfg['define_macros'])
     else:
         print("HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
         extension_sources = [
@@ -115,6 +118,7 @@ def main():
         name='amici._amici',
         sources=extension_sources,
         include_dirs=['amici/include',
+                      'amici/ThirdParty/gsl/',
                       *libsundials[1]['include_dirs'],
                       *libsuitesparse[1]['include_dirs'],
                       *h5pkgcfg['include_dirs'],
@@ -137,7 +141,7 @@ def main():
 
     # Readme as long package description to go on PyPi
     # (https://pypi.org/project/amici/)
-    with open("README.md", "r") as fh:
+    with open("README.md", "r", encoding="utf-8") as fh:
         long_description = fh.read()
 
     # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
@@ -159,7 +163,7 @@ def main():
             'develop': my_develop,
         },
         version=__version__,
-        description='Advanced multi-language Interface to CVODES and IDAS (%s)',
+        description='Advanced multi-language Interface to CVODES and IDAS',
         long_description=long_description,
         long_description_content_type="text/markdown",
         url='https://github.com/ICB-DCM/AMICI',
@@ -178,9 +182,13 @@ def main():
                           'python-libsbml',
                           'h5py',
                           'pandas',
-                          'setuptools>=40.6.3'],
+                          'pkgconfig',
+                          'wurlitzer'],
+        setup_requires=['setuptools>=40.6.3'],
         python_requires='>=3.6',
-        extras_require={'wurlitzer': ['wurlitzer']},
+        extras_require={
+            'petab': ['petab>=0.0.0a14','colorama']
+        },
         package_data={
             'amici': ['amici/include/amici/*',
                       'src/*template*',

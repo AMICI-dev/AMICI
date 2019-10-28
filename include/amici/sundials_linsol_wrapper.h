@@ -5,6 +5,7 @@
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
+#include <sundials/sundials_config.h>
 #include <sunlinsol/sunlinsol_band.h>
 #include <sunlinsol/sunlinsol_dense.h>
 #include <sunlinsol/sunlinsol_klu.h>
@@ -13,7 +14,9 @@
 #include <sunlinsol/sunlinsol_spfgmr.h>
 #include <sunlinsol/sunlinsol_spgmr.h>
 #include <sunlinsol/sunlinsol_sptfqmr.h>
-
+#ifdef SUNDIALS_SUPERLUMT
+#include <sunlinsol/sunlinsol_superlumt.h>
+#endif
 #include <sunnonlinsol/sunnonlinsol_fixedpoint.h>
 #include <sunnonlinsol/sunnonlinsol_newton.h>
 
@@ -79,7 +82,6 @@ class SUNLinSolWrapper {
      * @brief Performs any linear solver setup needed, based on an updated
      * system matrix A.
      * @param A
-     * @return
      */
     void setup(SUNMatrix A) const;
 
@@ -87,7 +89,6 @@ class SUNLinSolWrapper {
      * @brief Performs any linear solver setup needed, based on an updated
      * system matrix A.
      * @param A
-     * @return
      */
     void setup(const SUNMatrixWrapper& A) const;
 
@@ -97,13 +98,13 @@ class SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      * @param b
      * @param tol Tolerance (weighted 2-norm), iterative solvers only
-     * @return
+     * @return error flag
      */
     int Solve(SUNMatrix A, N_Vector x, N_Vector b, realtype tol) const;
 
     /**
      * @brief Returns the last error flag encountered within the linear solver
-     * @return
+     * @return error flag
      */
     long int getLastFlag() const;
 
@@ -111,13 +112,13 @@ class SUNLinSolWrapper {
      * @brief Returns the integer and real workspace sizes for the linear solver
      * @param lenrwLS output argument for size of real workspace
      * @param leniwLS output argument for size of interger workspace
-     * @return
+     * @return workspace size
      */
     int space(long int *lenrwLS, long int *leniwLS) const;
 
     /**
      * @brief Get the matrix A (matrix solvers only).
-     * @return
+     * @return A
      */
     virtual SUNMatrix getMatrix() const;
 
@@ -125,7 +126,7 @@ class SUNLinSolWrapper {
     /**
      * @brief Performs linear solver initialization (assumes that all
      * solver-specific options have been set).
-     * @return
+     * @return error code
      */
     int initialize();
 
@@ -187,6 +188,13 @@ class SUNLinSolDense : public SUNLinSolWrapper {
  */
 class SUNLinSolKLU : public SUNLinSolWrapper {
   public:
+    /** KLU state reordering (different from SuperLUMT ordering!) */
+    enum class StateOrdering {
+        AMD,
+        COLAMD,
+        natural
+    };
+
     /**
      * @brief Create KLU solver with given matrix
      * @param x A template for cloning vectors needed within the solver.
@@ -228,6 +236,68 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
     SUNMatrixWrapper A;
 };
 
+#ifdef SUNDIALS_SUPERLUMT
+/**
+ * @brief SUNDIALS SuperLUMT sparse direct solver.
+ */
+class SUNLinSolSuperLUMT  : public SUNLinSolWrapper {
+  public:
+    /** SuperLUMT ordering (different from KLU ordering!) */
+    enum class StateOrdering {
+        natural,
+        minDegATA,
+        minDegATPlusA,
+        COLAMD,
+    };
+
+    /**
+     * @brief Create SuperLUMT solver with given matrix
+     * @param x A template for cloning vectors needed within the solver.
+     * @param A sparse matrix
+     * @param numThreads Number of threads to be used by SuperLUMT
+     */
+    SUNLinSolSuperLUMT(N_Vector x, SUNMatrix A, int numThreads);
+
+    /**
+     * @brief Create SuperLUMT solver and matrix to operate on
+     *
+     * Will set number of threads according to environment variable
+     * AMICI_SUPERLUMT_NUM_THREADS. Will default to 1 thread if unset.
+     *
+     * @param x A template for cloning vectors needed within the solver.
+     * @param nnz Number of non-zeros in matrix A
+     * @param sparsetype Sparse matrix type (CSC_MAT, CSR_MAT)
+     * @param ordering
+     */
+    SUNLinSolSuperLUMT(AmiVector const &x, int nnz, int sparsetype,
+                       StateOrdering ordering);
+
+    /**
+     * @brief Create SuperLUMT solver and matrix to operate on
+     * @param x A template for cloning vectors needed within the solver.
+     * @param nnz Number of non-zeros in matrix A
+     * @param sparsetype Sparse matrix type (CSC_MAT, CSR_MAT)
+     * @param ordering
+     * @param numThreads Number of threads to be used by SuperLUMT
+     */
+    SUNLinSolSuperLUMT(AmiVector const &x, int nnz, int sparsetype,
+                       StateOrdering ordering, int numThreads);
+
+    SUNMatrix getMatrix() const override;
+
+    /**
+     * @brief Sets the ordering used by SuperLUMT for reducing fill in the
+     * linear solve.
+     * @param ordering
+     */
+    void setOrdering(StateOrdering ordering);
+
+  private:
+    /** Sparse matrix A for solver, only if created by here. */
+    SUNMatrixWrapper A;
+};
+
+#endif
 
 /**
  * @brief SUNDIALS scaled preconditioned CG (Conjugate Gradient method) (PCG)
@@ -308,7 +378,8 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPBCGS(N_Vector x, int pretype, int maxl);
+    explicit SUNLinSolSPBCGS(N_Vector x, int pretype = PREC_NONE,
+                             int maxl = SUNSPBCGS_MAXL_DEFAULT);
 
     /**
      * @brief SUNLinSolSPBCGS
@@ -317,7 +388,8 @@ class SUNLinSolSPBCGS : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPBCGS(AmiVector const &x, int pretype, int maxl);
+    explicit SUNLinSolSPBCGS(AmiVector const &x, int pretype = PREC_NONE,
+                             int maxl = SUNSPBCGS_MAXL_DEFAULT);
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -449,7 +521,8 @@ class SUNLinSolSPGMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPGMR(AmiVector const &x, int pretype, int maxl);
+    explicit SUNLinSolSPGMR(AmiVector const &x, int pretype = PREC_NONE,
+                            int maxl = SUNSPGMR_MAXL_DEFAULT);
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -515,7 +588,8 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPTFQMR(N_Vector x, int pretype, int maxl);
+    explicit SUNLinSolSPTFQMR(N_Vector x, int pretype = PREC_NONE,
+                              int maxl = SUNSPTFQMR_MAXL_DEFAULT);
 
     /**
      * @brief Create SPTFQMR solver
@@ -524,7 +598,8 @@ class SUNLinSolSPTFQMR : public SUNLinSolWrapper {
      * PREC_BOTH)
      * @param maxl Maximum number of solver iterations
      */
-    SUNLinSolSPTFQMR(AmiVector const &x, int pretype, int maxl);
+    explicit SUNLinSolSPTFQMR(AmiVector const &x, int pretype = PREC_NONE,
+                              int maxl = SUNSPTFQMR_MAXL_DEFAULT);
 
     /**
      * @brief Sets the function pointer for ATimes
@@ -711,7 +786,6 @@ class SUNNonLinSolWrapper {
   protected:
     /**
      * @brief initialize
-     * @return
      */
     void initialize();
 
@@ -760,7 +834,7 @@ class SUNNonLinSolFixedPoint : public SUNNonLinSolWrapper {
      * @param x template for cloning vectors needed within the solver.
      * @param m number of acceleration vectors to use
      */
-    SUNNonLinSolFixedPoint(const N_Vector x, int m = 0);
+    explicit SUNNonLinSolFixedPoint(const_N_Vector x, int m = 0);
 
     /**
      * @brief Create fixed-point solver for use with sensitivity analysis
@@ -771,7 +845,7 @@ class SUNNonLinSolFixedPoint : public SUNNonLinSolWrapper {
      * @param x template for cloning vectors needed within the solver.
      * @param m number of acceleration vectors to use
      */
-    SUNNonLinSolFixedPoint(int count, const N_Vector x, int m = 0);
+    SUNNonLinSolFixedPoint(int count, const_N_Vector x, int m = 0);
 
     /**
      * @brief Get function to evaluate the fixed point function G(y) = y

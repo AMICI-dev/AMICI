@@ -2,6 +2,7 @@
 
 #include "amici/misc.h"
 #include "amici/model.h"
+#include "amici/edata.h"
 #include "amici/symbolic_functions.h"
 #include "amici/solver.h"
 #include "amici/exception.h"
@@ -10,19 +11,13 @@
 
 namespace amici {
 
-ReturnData::ReturnData()
-    : np(0), nk(0), nx(0), nx_solver(0), nxtrue(0), ny(0), nytrue(0), nz(0), nztrue(0), ne(0),
-      nJ(0), nplist(0), nmaxevent(0), nt(0), newton_maxsteps(0),
-    pscale(std::vector<ParameterScaling>(0, ParameterScaling::none)), o2mode(SecondOrderMode::none),
-      sensi(SensitivityOrder::none), sensi_meth(SensitivityMethod::none) {}
-
-ReturnData::ReturnData(Solver const& solver, const Model *model)
-    : ReturnData(model->getTimepoints(), model->np(), model->nk(),
-                 model->nx_rdata, model->nx_solver, model->nxtrue_rdata,
-                 model->ny, model->nytrue, model->nz, model->nztrue, model->ne, model->nJ,
-                 model->nplist(), model->nMaxEvent(), model->nt(),
-                 solver.getNewtonMaxSteps(), model->getParameterScale(),
-                 model->o2mode, solver.getSensitivityOrder(),
+ReturnData::ReturnData(Solver const& solver, const Model &model)
+    : ReturnData(model.getTimepoints(), model.np(), model.nk(),
+                 model.nx_rdata, model.nx_solver, model.nxtrue_rdata,
+                 model.ny, model.nytrue, model.nz, model.nztrue, model.ne, model.nJ,
+                 model.nplist(), model.nMaxEvent(), model.nt(),
+                 solver.getNewtonMaxSteps(), model.getParameterScale(),
+                 model.o2mode, solver.getSensitivityOrder(),
                  static_cast<SensitivityMethod>(solver.getSensitivityMethod())) {
 }
 
@@ -320,5 +315,63 @@ void ReturnData::initializeObjectiveFunction()
     std::fill(sllh.begin(),sllh.end(), 0.0);
     std::fill(s2llh.begin(),s2llh.end(), 0.0);
 }
+
+void ReturnData::fres(const int it, const ExpData &edata) {
+    if ( res.empty())
+        return;
+    
+    auto observedData = edata.getObservedDataPtr(it);
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * edata.nytrue();
+        int iyt = iy + it * ny;
+        if (!edata.isSetObservedData(it, iy))
+            continue;
+        res.at(iyt_true) =
+        (y.at(iyt) - observedData[iy]) / sigmay.at(iyt);
+    }
+}
+
+void ReturnData::fchi2(const int it) {
+    if (res.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * nytrue;
+        chi2 += pow(res.at(iyt_true), 2);
+    }
+}
+
+void ReturnData::fsres(const int it, const ExpData &edata) {
+    if (sres.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * edata.nytrue();
+        int iyt = iy + it * ny;
+        if (!edata.isSetObservedData(it, iy))
+            continue;
+        for (int ip = 0; ip < nplist; ++ip) {
+            sres.at(iyt_true * nplist + ip) =
+            sy.at(iy + ny * (ip + it * nplist)) /
+            sigmay.at(iyt);
+        }
+    }
+}
+
+void ReturnData::fFIM(const int it) {
+    if (sres.empty())
+        return;
+    
+    for (int iy = 0; iy < nytrue; ++iy) {
+        int iyt_true = iy + it * nytrue;
+        for (int ip = 0; ip < nplist; ++ip) {
+            for (int jp = 0; jp < nplist; ++jp) {
+                FIM.at(ip + nplist * jp) += sres.at(iyt_true * nplist + ip) *
+                    sres.at(iyt_true * nplist + jp);
+            }
+        }
+    }
+}
+    
 
 } // namespace amici

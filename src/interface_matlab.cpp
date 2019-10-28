@@ -2,8 +2,8 @@
  * @file   interface_matlab.cpp
  * @brief  core routines for mex interface
  *
- * This file defines the fuction mexFunction which is executed upon calling the
- * mex file from matlab
+ * This file defines the function `mexFunction` which is executed upon calling
+ * the `.mex` file from Matlab.
  */
 
 #include "amici/interface_matlab.h"
@@ -23,7 +23,7 @@ namespace amici {
     int dbl2int(const double x);
 
 /**
- * @brief The mexFunctionArguments enum takes care of the ordering of mex file
+ * @brief The mexRhsArguments enum takes care of the ordering of mex file
  * arguments (indexing in prhs)
  */
 enum mexRhsArguments {
@@ -41,8 +41,7 @@ enum mexRhsArguments {
 
 
 /*!
- * amici_blasCBlasTransToBlasTrans translates AMICI_BLAS_TRANSPOSE values to
- * CBlas readable strings
+ * Translates AMICI_BLAS_TRANSPOSE values to CBLAS readable strings
  *
  * @param trans       flag indicating transposition and complex conjugation
  *
@@ -58,31 +57,9 @@ char amici_blasCBlasTransToBlasTrans(BLASTranspose trans) {
     case BLASTranspose::conjTrans:
         return 'C';
     }
+    throw std::invalid_argument("Invalid argument to amici_blasCBlasTransToBlasTrans");
 }
 
-/*!
- * amici_dgemm provides an interface to the CBlas matrix matrix multiplication
- * routine dgemm. This routines computes
- * C = alpha*A*B + beta*C with A: [MxK] B:[KxN] C:[MxN]
- *
- * @param layout    memory layout.
- * @param TransA    flag indicating whether A should be transposed before
- * multiplication
- * @param TransB    flag indicating whether B should be transposed before
- * multiplication
- * @param M         number of rows in A/C
- * @param N         number of columns in B/C
- * @param K         number of rows in B, number of columns in A
- * @param alpha     coefficient alpha
- * @param A         matrix A
- * @param lda       leading dimension of A (m or k)
- * @param B         matrix B
- * @param ldb       leading dimension of B (k or n)
- * @param beta      coefficient beta
- * @param C         matrix C
- * @param ldc       leading dimension of C (m or n)
- * @return void
- */
 void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
                  BLASTranspose TransB, const int M, const int N,
                  const int K, const double alpha, const double *A,
@@ -104,26 +81,6 @@ void amici_dgemm(BLASLayout layout, BLASTranspose TransA,
                            &alpha, A, &lda_, B, &ldb_, &beta, C, &ldc_);
 }
 
-/*!
- * amici_dgemm provides an interface to the CBlas matrix vector multiplication
- * routine dgemv. This routines computes
- * y = alpha*A*x + beta*y with A: [MxN] x:[Nx1] y:[Mx1]
- *
- * @param layout    always needs to be AMICI_BLAS_ColMajor.
- * @param TransA    flag indicating whether A should be transposed before
- * multiplication
- * @param M         number of rows in A
- * @param N         number of columns in A
- * @param alpha     coefficient alpha
- * @param A         matrix A
- * @param lda       leading dimension of A (m or n)
- * @param X         vector X
- * @param incX      increment for entries of X
- * @param beta      coefficient beta
- * @param Y         vector Y
- * @param incY      increment for entries of Y
- * @return void
- */
 void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
                  const int M, const int N, const double alpha, const double *A,
                  const int lda, const double *X, const int incX,
@@ -140,15 +97,6 @@ void amici_dgemv(BLASLayout layout, BLASTranspose TransA,
     FORTRAN_WRAPPER(dgemv)(&transA, &M_, &N_, &alpha, A, &lda_, X, &incX_, &beta, Y, &incY_);
 }
 
-/**
- * @brief Compute y = a*x + y
- * @param n number of elements in y
- * @param alpha scalar coefficient of x
- * @param x vector of length n*incx
- * @param incx x stride
- * @param y vector of length n*incy
- * @param incy y stride
- */
 void amici_daxpy(int n, double alpha, const double *x, const int incx, double *y, int incy) {
 
     const ptrdiff_t n_ = n;
@@ -167,15 +115,6 @@ std::vector<realtype> mxArrayToVector(const mxArray *array, int length) {
     return {mxGetPr(array), mxGetPr(array) + length};
 }
 
-/*!
- * expDataFromMatlabCall parses the experimental data from the matlab call and
- * writes it to an ExpData class object
- *
- * @param prhs pointer to the array of input arguments
- * @param model pointer to the model object, this is necessary to perform
- * dimension checks
- * @return edata pointer to experimental data object
- */
 std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
                                Model const &model) {
     if (!mxGetPr(prhs[RHS_DATA]))
@@ -365,7 +304,7 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")) {
-            solver.setStateOrdering(static_cast<StateOrdering>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")))));
+            solver.setStateOrdering(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering"))));
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "stldet")) {
@@ -373,7 +312,7 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq")) {
-            solver.setNewtonPreequilibration(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq"))));
+            solver.setPreequilibration(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_preeq"))));
         }
 
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "newton_maxsteps")) {
@@ -520,7 +459,6 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
  * @param plhs pointer to the array of output arguments
  * @param nrhs number of input arguments of the matlab call
  * @param prhs pointer to the array of input arguments
- * @return void
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // use matlab error reporting
@@ -541,7 +479,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     std::unique_ptr<amici::ExpData> edata;
     if (nrhs > amici::RHS_DATA && mxGetPr(prhs[amici::RHS_DATA])) {
         try {
-            edata = std::move(amici::expDataFromMatlabCall(prhs, *model));
+            edata = amici::expDataFromMatlabCall(prhs, *model);
         } catch (amici::AmiException const& ex) {
             amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
@@ -555,5 +493,3 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     plhs[0] = getReturnDataMatlabFromAmiciCall(rdata.get());
 
 }
-
-

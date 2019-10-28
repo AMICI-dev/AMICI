@@ -203,7 +203,9 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
 
     libamici = ('amici', {
         'sources': getAmiciBaseSources(
-            withHDF5=(h5pkgcfg and 'include_dirs' in h5pkgcfg and h5pkgcfg['include_dirs'])
+            withHDF5=(h5pkgcfg
+                      and 'include_dirs' in h5pkgcfg
+                      and h5pkgcfg['include_dirs'])
             ),
         'include_dirs': ['amici/include',
                          'amici/ThirdParty/SuiteSparse/KLU/Include/',
@@ -213,16 +215,24 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
                          'amici/ThirdParty/SuiteSparse/SuiteSparse_config/',
                          'amici/ThirdParty/SuiteSparse/include',
                          'amici/ThirdParty/sundials/include',
-                         'amici/ThirdParty/sundials/src'
+                         'amici/ThirdParty/sundials/src',
+                         'amici/ThirdParty/gsl/',
                          ],
-        'cflags': ['-std=c++11', *extra_compiler_flags]
+        'cflags': ['-std=c++11', *extra_compiler_flags],
+        'macros': [],
     })
 
     if h5pkgcfg and 'include_dirs' in h5pkgcfg:
         libamici[1]['include_dirs'].extend(h5pkgcfg['include_dirs'])
 
+    if h5pkgcfg and 'define_macros' in h5pkgcfg:
+        libamici[1]['macros'].extend(h5pkgcfg['define_macros'])
+
     if blaspkgcfg and 'include_dirs' in blaspkgcfg:
         libamici[1]['include_dirs'].extend(blaspkgcfg['include_dirs'])
+
+    if blaspkgcfg and 'define_macros' in blaspkgcfg:
+        libamici[1]['macros'].extend(blaspkgcfg['define_macros'])
 
     if blaspkgcfg and 'extra_compile_args' in blaspkgcfg:
         libamici[1]['cflags'].extend(blaspkgcfg['extra_compile_args'])

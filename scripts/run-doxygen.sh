@@ -64,15 +64,15 @@ rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
 cd ${AMICI_PATH}/doc/latex
 
-make 
+make
 cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 # suppress doxygen warnings about status badges
 grep -v "warning: Unexpected html tag <img> found within <a href=...> context" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
-# suppress doxygen warnings about multiple param sections
-grep -v "iple @param documentation sections" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+# suppress doxygen warning about unresolved external links (problem unclear)
+grep -v "warning: unable to resolve reference to \`https" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
 # check if warnings log was created

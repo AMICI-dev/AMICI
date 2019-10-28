@@ -32,9 +32,9 @@ TEST(groupSteadystate, testModelFromHDF5) {
 
     amici::checkEqualArray(kExp, model->getFixedParameters(), TEST_ATOL, TEST_RTOL, "k");
     CHECK_EQUAL(51, model->nt());
-    CHECK_EQUAL(0.0, model->t(0));
-    CHECK_EQUAL(100.0, model->t(model->nt() - 2));
-    CHECK_EQUAL(INFINITY, model->t(model->nt() - 1));
+    CHECK_EQUAL(0.0, model->getTimepoint(0));
+    CHECK_EQUAL(100.0, model->getTimepoint(model->nt() - 2));
+    CHECK_EQUAL(INFINITY, model->getTimepoint(model->nt() - 1));
 
     for(int i = 0; i < model->np(); ++i) {
         CHECK_EQUAL(pExp[i], model->getUnscaledParameters()[i]);
@@ -107,8 +107,19 @@ TEST(groupSteadystate, testRethrow) {
     CHECK_THROWS(amici::IntegrationFailure, runAmiciSimulation(*solver, nullptr, *model, true));
 }
 
+TEST(groupSteadystate, testInitialStatesNonEmpty) {
+    auto model = getModel();
+    CHECK_FALSE(model->getInitialStates().empty());
+}
+
+TEST(groupSteadystate, testInitialStateSensitivitiesNonEmpty) {
+    auto model = getModel();
+    CHECK_FALSE(model->getInitialStateSensitivities().empty());
+}
+
 TEST(groupSteadystate, testSimulation) {
-    amici::simulateVerifyWrite("/model_steadystate/nosensi/");
+    amici::simulateVerifyWrite("/model_steadystate/nosensi/",
+                               100*TEST_ATOL, 100*TEST_RTOL);
 }
 
 TEST(groupSteadystate, testSensitivityForward) {

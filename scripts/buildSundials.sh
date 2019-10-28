@@ -10,10 +10,22 @@ AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 SUITESPARSE_ROOT="${AMICI_PATH}/ThirdParty/SuiteSparse"
 SUNDIALS_BUILD_PATH="${AMICI_PATH}/ThirdParty/sundials/build/"
 
+CMAKE=${CMAKE:-cmake}
+MAKE=${MAKE:-make}
+
+# enable SuperLUMT support if library exists
+SuperLUMT=""
+if [[ -f ${AMICI_PATH}/ThirdParty/SuperLU_MT_3.1/lib/libsuperlu_mt_PTHREAD.a ]]
+then
+    SuperLUMT="-DSUPERLUMT_ENABLE=ON -DBLAS_ENABLE=ON \
+         -DSUPERLUMT_INCLUDE_DIR=${AMICI_PATH}/ThirdParty/SuperLU_MT_3.1/SRC/ \
+         -DSUPERLUMT_LIBRARY_DIR=${AMICI_PATH}/ThirdParty/SuperLU_MT_3.1/lib/"
+fi
+
 mkdir -p ${SUNDIALS_BUILD_PATH}
 cd ${SUNDIALS_BUILD_PATH}
 
-cmake -DCMAKE_INSTALL_PREFIX="${SUNDIALS_BUILD_PATH}" \
+${CMAKE} -DCMAKE_INSTALL_PREFIX="${SUNDIALS_BUILD_PATH}" \
 -DCMAKE_BUILD_TYPE=Debug \
 -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 -DBUILD_ARKODE=OFF \
@@ -27,7 +39,8 @@ cmake -DCMAKE_INSTALL_PREFIX="${SUNDIALS_BUILD_PATH}" \
 -DKLU_ENABLE=ON \
 -DKLU_LIBRARY_DIR="${SUITESPARSE_ROOT}/lib" \
 -DKLU_INCLUDE_DIR="${SUITESPARSE_ROOT}/include" \
+${SuperLUMT} \
 ..
 
-make
-make install
+${MAKE}
+${MAKE} install

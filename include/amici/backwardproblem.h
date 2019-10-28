@@ -25,7 +25,6 @@ class BackwardProblem {
     /**
      * @brief Construct backward problem from forward problem
      * @param fwd pointer to corresponding forward problem
-     * @return new BackwardProblem instance
      */
     explicit BackwardProblem(const ForwardProblem *fwd);
 
@@ -62,28 +61,6 @@ class BackwardProblem {
         return &which;
     }
 
-    /** accessor for pointer to xB
-     * @return &xB
-     */
-    AmiVector *getxBptr() {
-        return &xB;
-    }
-
-    /**
-     * @brief accessor for pointer to xQB
-     * @return &xQB
-     */
-    AmiVector *getxQBptr() {
-        return &xQB;
-    }
-
-    /** accessor for pointer to dxB
-     * @return &dxB
-     */
-    AmiVector *getdxBptr() {
-        return &dxB;
-    }
-
     /**
      * @brief Accessor for dJydx
      * @return dJydx
@@ -107,7 +84,7 @@ class BackwardProblem {
      *
      * @param it index of data point @type int
      */
-    void handleDataPointB(const int it);
+    void handleDataPointB(int it);
 
 
     /**
@@ -122,7 +99,7 @@ class BackwardProblem {
      * @param model pointer to model specification object @type Model
      * @return tnext next timepoint @type realtype
      */
-    realtype getTnext(std::vector<realtype> const& troot, const int iroot, const int it);
+    realtype getTnext(std::vector<realtype> const& troot, int iroot, int it);
 
     /**
      * @brief Compute likelihood sensitivities.
@@ -150,7 +127,7 @@ class BackwardProblem {
     /** array of old differential state vectors at discontinuities*/
     const AmiVectorArray xdot_old_disc;
     /** sensitivity state vector array */
-    AmiVectorArray sx;
+    AmiVectorArray sx0;
     /** array of number of found roots for a certain event type */
     std::vector<int> nroots;
     /** array containing the time-points of discontinuities*/

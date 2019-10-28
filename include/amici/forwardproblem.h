@@ -163,10 +163,13 @@ class ForwardProblem {
 
     /** pointer to model instance */
     Model *model;
+
     /** pointer to return data instance */
     ReturnData *rdata;
+
     /** pointer to solver instance */
     Solver *solver;
+
     /** pointer to experimental data instance */
     const ExpData *edata;
 
@@ -178,7 +181,7 @@ class ForwardProblem {
 
     void updateAndReinitStatesAndSensitivities(bool isSteadystate);
 
-    void handlePresimulation(int *ncheck);
+    void handlePresimulation();
 
     /**
      * @brief Execute everything necessary for the handling of events
@@ -186,7 +189,7 @@ class ForwardProblem {
      * @param tlastroot pointer to the timepoint of the last event
      */
 
-    void handleEvent(realtype *tlastroot,const bool seflag);
+    void handleEvent(realtype *tlastroot,bool seflag);
 
     /**
      * @brief Evaluates the Jacobian and differential equation right hand side,
@@ -198,14 +201,6 @@ class ForwardProblem {
      * @brief Extract output information for events
      */
     void getEventOutput();
-
-    /**
-     * @brief Preprocess the provided experimental data to compute
-     * event sensitivities via adjoint or forward methods later on
-     *
-     * @param ie index of current event
-     */
-    void prepEventSensis(int ie);
 
     /**
      * @brief Extracts event information for forward sensitivity analysis
@@ -229,14 +224,6 @@ class ForwardProblem {
     void getDataOutput(int it);
 
     /**
-     * @brief Preprocesses the provided experimental data to compute
-     * sensitivities via adjoint or forward methods later on
-     *
-     * @param it index of current timepoint
-     */
-    void prepDataSensis(int it);
-
-    /**
      * @brief Extracts data information for forward sensitivity analysis
      *
      * @param it index of current timepoint
@@ -258,11 +245,14 @@ class ForwardProblem {
     /** array of index which root has been found
      * (dimension: ne * ne * nmaxevent, ordering = ?) */
     std::vector<int> rootidx;
+
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
     std::vector<int> nroots;
+
     /** array of values of the root function (dimension: ne) */
     std::vector<realtype> rootvals;
+
     /** temporary rootval storage to check crossing in secondary event
      * (dimension: ne) */
     std::vector<realtype> rvaltmp;
@@ -270,6 +260,7 @@ class ForwardProblem {
     /** array containing the time-points of discontinuities
      * (dimension: nmaxevent x ne, ordering = ?) */
     std::vector<realtype> discs;
+
     /** array containing the index of discontinuities
      * (dimension: nmaxevent x ne, ordering = ?) */
     std::vector<realtype> irdiscs;
@@ -281,9 +272,11 @@ class ForwardProblem {
     /** array of state vectors at discontinuities
      * (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray x_disc;
+
     /** array of differential state vectors at discontinuities
      * (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray xdot_disc;
+
     /** array of old differential state vectors at discontinuities
      * (dimension nx x nMaxEvent * ne, ordering =?) */
     AmiVectorArray xdot_old_disc;
@@ -291,6 +284,7 @@ class ForwardProblem {
     /** state derivative of data likelihood
      * (dimension nJ x nx x nt, ordering =?) */
     std::vector<realtype> dJydx;
+
     /** state derivative of event likelihood
      * (dimension nJ x nx x nMaxEvent, ordering =?) */
     std::vector<realtype> dJzdx;
@@ -312,30 +306,39 @@ class ForwardProblem {
 
     /** state vector (dimension: nx_solver) */
     AmiVector x;
+
     /** state vector, including states eliminated from conservation laws
      * (dimension: nx) */
     AmiVector x_rdata;
+
     /** old state vector (dimension: nx_solver) */
     AmiVector x_old;
+
     /** differential state vector (dimension: nx_solver) */
     AmiVector dx;
+
     /** old differential state vector (dimension: nx_solver) */
     AmiVector dx_old;
+
     /** time derivative state vector (dimension: nx_solver) */
     AmiVector xdot;
+
     /** old time derivative state vector (dimension: nx_solver) */
     AmiVector xdot_old;
 
-
-
     /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sx;
+
     /** full sensitivity state vector array, including states eliminated from
      * conservation laws (dimension: nx x nplist, row-major) */
     AmiVectorArray sx_rdata;
+
     /** differential sensitivity state vector array
      * (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sdx;
+    
+    /** sensitivity of the event timepoint (dimension: nplist) */
+    std::vector<realtype> stau;
 
     /** storage for last found root */
     realtype tlastroot = 0.0;

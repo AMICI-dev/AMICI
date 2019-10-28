@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run jupyter notebooks as given on command line, show output only on error. 
+# Run jupyter notebooks as given on command line, show output only on error.
 # If a directory is provided, run all contained notebooks non-recursively.
 set -x
 set -e
@@ -26,7 +26,7 @@ if [ $# -eq 0 ]; then
 fi
 
 source ${AMICI_PATH}/build/venv/bin/activate
-pip3 show ipython || (pip3 install --upgrade jupyter && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
+pip3 show ipython || (pip3 install --upgrade jupyter jupyter_contrib_nbextensions && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
 
 for arg in "$@"; do
     if [ -d $arg ]; then

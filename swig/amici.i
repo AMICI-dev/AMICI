@@ -30,6 +30,7 @@ import_array();
 %template(IntVector) std::vector<int>;
 %template(BoolVector) std::vector<bool>;
 %template(StringVector) std::vector<std::string>;
+%template(StringDoubleMap) std::map<std::string, double>;
 
 // Let numpy access std::vector
 %{
@@ -85,6 +86,9 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %}
 
 // Add necessary symbols to generated header
+// Ignore due to https://github.com/swig/swig/issues/1643
+%ignore printErrMsgIdAndTxt;
+%ignore printWarnMsgIdAndTxt;
 %{
 #include "amici/amici.h"
 using namespace amici;
