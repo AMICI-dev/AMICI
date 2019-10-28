@@ -232,6 +232,18 @@ class Solver {
     void setNewtonDampingFactorMode(NewtonDampingFactorMode dampingFactorMode);
 
     /**
+     * @brief Get a lower bound of the damping factor used in the Newton solver
+     * @return
+     */
+    double getNewtonDampingFactorLowerBound() const;
+
+    /**
+     * @brief Set a lower bound of the damping factor in the Newton solver
+     * @param damping factor state
+     */
+    void setNewtonDampingFactorLowerBound(double dampingFactorLowerBound);
+
+    /**
      * @brief Get sensitvity order
      * @return sensitivity order
      */
@@ -1395,6 +1407,9 @@ class Solver {
     
     /** Damping factor state used int the Newton method */
     NewtonDampingFactorMode newton_damping_factor_mode = NewtonDampingFactorMode::on;
+
+    /** Lower bound of the damping factor. */
+    double newton_damping_factor_lower_bound = 1e-6;
 
     /** Enable model preequilibration */
     bool requires_preequilibration = false;

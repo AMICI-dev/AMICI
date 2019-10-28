@@ -501,6 +501,12 @@ void Solver::setNewtonDampingFactorMode(NewtonDampingFactorMode dampingFactorMod
   this->newton_damping_factor_mode = dampingFactorMode;
 }
 
+double Solver::getNewtonDampingFactorLowerBound() const { return newton_damping_factor_lower_bound; }
+
+void Solver::setNewtonDampingFactorLowerBound(double dampingFactorLowerBound) {
+  this->newton_damping_factor_lower_bound = dampingFactorLowerBound;
+}
+
 SensitivityOrder Solver::getSensitivityOrder() const { return sensi; }
 
 void Solver::setSensitivityOrder(const SensitivityOrder sensi) {

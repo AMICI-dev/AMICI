@@ -49,7 +49,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         &t, &x, solver->getLinearSolver(), model, rdata,
         solver->getNewtonMaxLinearSteps(), solver->getNewtonMaxSteps(),
         solver->getAbsoluteTolerance(), solver->getRelativeTolerance(),
-        solver->getNewtonDampingFactorMode());
+        solver->getNewtonDampingFactorMode(),
+        solver->getNewtonDampingFactorLowerBound());
 
     auto newton_status = NewtonStatus::failed;
     try {
@@ -214,8 +215,8 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
         } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
-            if (gamma < 1e-6)
-              throw AmiException("Newton solver failed: a damping factor became too small");
+            if (gamma < newtonSolver->dampingFactorLowerBound)
+              throw AmiException("Newton solver failed: a damping factor reached its lower bound");
 
             /* No new linear solve, only try new dampening */
             compNewStep = FALSE;
