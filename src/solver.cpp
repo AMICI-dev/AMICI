@@ -21,6 +21,7 @@ Solver::Solver(const Solver &other)
       ordering(other.ordering), newton_maxsteps(other.newton_maxsteps),
       newton_maxlinsteps(other.newton_maxlinsteps),
       newton_damping_factor_mode(other.newton_damping_factor_mode),
+      newton_damping_factor_lower_bound(other.newton_damping_factor_lower_bound),
       requires_preequilibration(other.requires_preequilibration), linsol(other.linsol),
       atol(other.atol), rtol(other.rtol), atol_fsa(other.atol_fsa),
       rtol_fsa(other.rtol_fsa), atolB(other.atolB), rtolB(other.rtolB),
