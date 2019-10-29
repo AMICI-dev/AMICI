@@ -381,6 +381,7 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.newton_maxsteps == b.newton_maxsteps) &&
            (a.newton_maxlinsteps == b.newton_maxlinsteps) &&
            (a.newton_damping_factor_mode == b.newton_damping_factor_mode) &&
+           (a.newton_damping_factor_lower_bound == b.newton_damping_factor_lower_bound) &&
            (a.requires_preequilibration == b.requires_preequilibration) && (a.ism == b.ism) &&
            (a.linsol == b.linsol) && (a.atol == b.atol) && (a.rtol == b.rtol) &&
            (a.maxsteps == b.maxsteps) && (a.maxstepsB == b.maxstepsB) &&
