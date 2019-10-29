@@ -1409,7 +1409,7 @@ class Solver {
     NewtonDampingFactorMode newton_damping_factor_mode = NewtonDampingFactorMode::on;
 
     /** Lower bound of the damping factor. */
-    double newton_damping_factor_lower_bound = 1e-6;
+    double newton_damping_factor_lower_bound = 1e-8;
 
     /** Enable model preequilibration */
     bool requires_preequilibration = false;
