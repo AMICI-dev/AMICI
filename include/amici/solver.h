@@ -218,17 +218,17 @@ class Solver {
      * @param newton_maxlinsteps
      */
     void setNewtonMaxLinearSteps(int newton_maxlinsteps);
-    
+
     /**
      * @brief Get a state of the damping factor used in the Newton solver
      * @return
      */
     NewtonDampingFactorMode getNewtonDampingFactorMode() const;
-    
+
     /**
      * @brief Turn on/off a damping factor in the Newton method
-     * @param damping factor state
-     */ 
+     * @param dampingFactorMode
+     */
     void setNewtonDampingFactorMode(NewtonDampingFactorMode dampingFactorMode);
 
     /**
@@ -239,7 +239,7 @@ class Solver {
 
     /**
      * @brief Set a lower bound of the damping factor in the Newton solver
-     * @param damping factor state
+     * @param dampingFactorLowerBound
      */
     void setNewtonDampingFactorLowerBound(double dampingFactorLowerBound);
 
@@ -1404,7 +1404,7 @@ class Solver {
     /** maximum number of allowed linear steps per Newton step for steady state
      * computation */
     long int newton_maxlinsteps = 0;
-    
+
     /** Damping factor state used int the Newton method */
     NewtonDampingFactorMode newton_damping_factor_mode = NewtonDampingFactorMode::on;
 
