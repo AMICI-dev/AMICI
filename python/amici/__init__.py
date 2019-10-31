@@ -157,6 +157,8 @@ def ExpData(*args):
         # the constructor signature may have changed and you are glad this
         # wrapper did not break.
         return amici.ExpData(args[0].get(), *args[:1])
+    elif isinstance(args[0], ModelPtr):
+        return amici.ExpData(args[0].get())
     else:
         return amici.ExpData(*args)
 
