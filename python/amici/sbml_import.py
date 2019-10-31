@@ -347,6 +347,9 @@ class SbmlImporter:
         for p in self.sbml.getListOfParameters():
             self.local_symbols[p.getId()] = sp.Symbol(p.getId(), real=True)
 
+        for c in self.sbml.getListOfCompartments():
+            self.local_symbols[c.getId()] = sp.Symbol(c.getId(), real=True)
+
     def processSpecies(self):
         """Get species information from SBML model.
 
