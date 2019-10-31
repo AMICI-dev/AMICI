@@ -20,12 +20,42 @@ jobs:
         fetch-depth: 1
     # install dependencies
     - name: apt
-      run: sudo apt-get install -y swig3.0 libatlas-base-dev && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-    - run: pip3 install --upgrade --user wheel && pip3 install --upgrade --user setuptools
+      run: |
+        sudo apt-get install -y swig3.0 libatlas-base-dev \
+        && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+    - run: |
+        pip3 install --upgrade --user wheel \
+        && pip3 install --upgrade --user setuptools
+    - run: pip3 install petab shyaml
     # install AMICI
-    - run: AMICI_PARALLEL_COMPILE=2 pip3 install --user -e python/sdist && export PATH=${HOME}/.local/bin/:${PATH}
+    - run: |
+        PATH=${HOME}/.local/bin/:${PATH} && cd python/sdist \
+        && ../../tests/performance/check_time.sh create_sdist \
+          /usr/bin/python3 setup.py sdist
+    - run: |
+        PATH=${HOME}/.local/bin/:${PATH} \
+        && AMICI_PARALLEL_COMPILE=2 tests/performance/check_time.sh \
+          install_sdist pip3 install \
+          $(ls -t python/sdist/dist/amici-*.tar.gz | head -1) \
+        && export PATH=${HOME}/.local/bin/:${PATH}
     # retrieve test model
     - run: git clone --depth 1 https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT
     # import test model
-    - run: cd CS_Signalling_ERBB_RAS_AKT && ./generate_amici_model.sh
-    # TODO: run simulation
+    - run: |
+        export PATH=${HOME}/.local/bin/:${PATH} \
+        && cd CS_Signalling_ERBB_RAS_AKT \
+        && ../tests/performance/check_time.sh \
+        petab_import amici_import_petab.py -v \
+          -s 'PEtab/CS_Signalling_ERBB_RAS_AKT_petab.xml' \
+          -c 'PEtab/conditions_petab.tsv' \
+          -m 'PEtab/measurements_petab.tsv' \
+          -p 'PEtab/parameters_petab.tsv' --no-compile
+    # install model package
+    - run: |
+        PATH=${HOME}/.local/bin/:${PATH} \
+        && tests/performance/check_time.sh install_model \
+          python3 CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT/setup.py install
+    # run simulation
+    - run: |
+        PATH=${HOME}/.local/bin/:${PATH} \
+        && tests/performance/check_time.sh simulate tests/performance/test.py

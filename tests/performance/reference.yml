@@ -1,0 +1,6 @@
+# Reference wall times with some buffer
+create_sdist: 25
+install_sdist: 120
+petab_import: 1500
+install_model: 999
+simulate: 999
