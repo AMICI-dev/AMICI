@@ -65,7 +65,6 @@ jobs:
         PATH=${HOME}/.local/bin/:${PATH} \
           && tests/performance/check_time.sh install_model \
             python3 CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab/setup.py install --user
-    - run: pip3 show -f CS_Signalling_ERBB_RAS_AKT_petab && ls -lR /home/runner/.local/lib/python3.6/site-packages/CS_Signalling*
 
     # run simulations
     - name: forward_simulation
