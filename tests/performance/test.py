@@ -29,6 +29,12 @@ def main():
         print("Unknown argument:", arg)
         sys.exit(1)
     rdata = amici.runAmiciSimulation(model, solver, edata)
+
+    diagnostics = ['numsteps', 'numstepsB', 'numrhsevals', 'numrhsevalsB',
+                   'numerrtestfails', 'numerrtestfailsB',
+                   'numnonlinsolvconvfails', 'numnonlinsolvconvfailsB']
+    for d in diagnostics:
+        print(d, rdata[d])
     assert rdata['status'] == amici.AMICI_SUCCESS
 
 
