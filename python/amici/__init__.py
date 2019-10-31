@@ -152,13 +152,11 @@ def ExpData(*args):
     """
     if isinstance(args[0], ReturnDataView):
         return amici.ExpData(args[0]['ptr'].get(), *args[1:])
-    elif isinstance(args[0], ExpDataPtr):
+    elif isinstance(args[0], (ExpDataPtr, ModelPtr)):
         # the *args[:1] should be empty, but by the time you read this,
         # the constructor signature may have changed and you are glad this
         # wrapper did not break.
         return amici.ExpData(args[0].get(), *args[:1])
-    elif isinstance(args[0], ModelPtr):
-        return amici.ExpData(args[0].get())
     else:
         return amici.ExpData(*args)
 
