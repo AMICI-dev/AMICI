@@ -28,7 +28,8 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model,
 
 std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
         realtype *t, AmiVector *x, LinearSolver linsolType, Model *model,
-        ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol) {
+        ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol,
+        NewtonDampingFactorMode dampingFactorMode, double dampingFactorLowerBound) {
 
     std::unique_ptr<NewtonSolver> solver;
 
@@ -76,6 +77,8 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
     solver->rtol = rtol;
     solver->maxlinsteps = maxlinsteps;
     solver->maxsteps = maxsteps;
+    solver->dampingFactorMode = dampingFactorMode;
+    solver->dampingFactorLowerBound = dampingFactorLowerBound;
 
     return solver;
 }
