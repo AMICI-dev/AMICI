@@ -350,6 +350,9 @@ class SbmlImporter:
         for c in self.sbml.getListOfCompartments():
             self.local_symbols[c.getId()] = sp.Symbol(c.getId(), real=True)
 
+        # SBML time symbol
+        self.local_symbols['time'] = sp.Symbol('time', real=True)
+
     def processSpecies(self):
         """Get species information from SBML model.
 
@@ -1029,7 +1032,7 @@ class SbmlImporter:
 
         """
         constants = [
-            (sp.Symbol('avogadro', real=True), sp.Symbol('6.02214179e23')),
+            (sp.Symbol('avogadro'), sp.Symbol('6.02214179e23')),
         ]
         for constant, value in constants:
             # do not replace if any symbol is shadowing default definition
