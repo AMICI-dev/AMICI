@@ -118,8 +118,7 @@ functions = {
         'signature':
             '(realtype *dwdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl, const realtype *dtcldp, '
-            'const int ip)',
+            'const realtype *w, const realtype *tcl, const realtype *dtcldp)',
         'sparse':
             True,
         'assume_pow_positivity':

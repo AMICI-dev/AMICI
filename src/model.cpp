@@ -1254,10 +1254,12 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     fdwdp(t, x.data());
 
     // if dwdp is not dense, fdydp will expect the full sparse array
+    /* CHANE_TO_SPARSE --> Whatever the upper comment means, it should be phrased more understandably... ;) */
     realtype *dwdp_tmp = dwdp.data();
     for (int ip = 0; ip < nplist(); ip++) {
         // get dydp slice (ny) for current time and parameter
         if (wasPythonGenerated() && nw)
+            /* CHANE_TO_SPARSE --> This must be changed, as dwdp can not be queried in this way anymore when made sparse */
             dwdp_tmp = &dwdp.at(nw * ip);
 
         fdydp(&dydp.at(ip * ny), t, x.data(), unscaledParameters.data(),
@@ -1796,7 +1798,7 @@ void Model::fw(const realtype t, const realtype *x) {
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
-    std::fill(dwdp.begin(), dwdp.end(), 0.0);
+    dwdx.reset();
     if (wasPythonGenerated()) {
         realtype *stcl = nullptr;
 
@@ -1804,20 +1806,25 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         if (!nw)
             return;
 
-        for (int ip = 0; ip < nplist(); ++ip) {
-            if (ncl())
-                stcl = &stotal_cl.at(plist(ip) * ncl());
-            fdwdp(&dwdp.at(nw * ip), t, x, unscaledParameters.data(),
-                  fixedParameters.data(), h.data(), w.data(), total_cl.data(),
-                  stcl, plist_[ip]);
-        }
+        if (ncl())
+            stcl = &stotal_cl.at(plist(ip) * ncl());
+        /* CHANGE_TO_SPARSE --> This one should already be fine, hopefully... */
+        fdwdx(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
+              h.data(), w.data(), total_cl.data(), stcl);
+        fdwdp_colptrs(dwdp.indexptrs());
+        fdwdp_rowvals(dwdp.indexptrs());
+        
     } else {
         // matlab generated
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
               fixedParameters.data(), h.data(), w.data(), total_cl.data(),
               stotal_cl.data());
+        /* CHANGE_TO_SPARSE --> Well, good question how this one is actually affected... */
     }
-
+    
+    fdwdp_colptrs(dwdp.indexptrs());
+    fdwdp_rowvals(dwdp.indexptrs());
+    
     if (alwaysCheckFinite) {
         amici::checkFinite(dwdp, "dwdp");
     }
