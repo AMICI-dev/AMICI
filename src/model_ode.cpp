@@ -319,7 +319,7 @@ void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     N_VConst(0.0, qBdot);
     fdxdotdp(t, x);
-    /* CHANGE_TO_SPARSE --> This loop seems to be the major time-killer. Need to change that. */
+    /* CHANGE_TO_SPARSE --> This loop needs to be changed... */
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ix = 0; ix < nxtrue_solver; ix++)
             NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
