@@ -102,6 +102,9 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     if (wasPythonGenerated()) {
         // python generated
         fdxdotdw(t, x);
+        /* CHANGE_TO_SPARSE --> This part here is seemingly the worst part.
+         Here, we eill need the mapping of nplist to the sparse indices in dxdotdp,
+         which are affected by specific p's */
         for (int ip = 0; ip < nplist(); ip++) {
             N_VConst(0.0, dxdotdp.getNVector(ip));
             fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
@@ -316,6 +319,7 @@ void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     N_VConst(0.0, qBdot);
     fdxdotdp(t, x);
+    /* CHANGE_TO_SPARSE --> This loop seems to be the major time-killer. Need to change that. */
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ix = 0; ix < nxtrue_solver; ix++)
             NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
