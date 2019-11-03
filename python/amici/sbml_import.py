@@ -350,6 +350,10 @@ class SbmlImporter:
         for c in self.sbml.getListOfCompartments():
             self.local_symbols[c.getId()] = sp.Symbol(c.getId(), real=True)
 
+        for r in self.sbml.getListOfRules():
+            self.local_symbols[r.getVariable()] = sp.Symbol(r.getVariable(),
+                                                            real=True)
+
         # SBML time symbol
         self.local_symbols['time'] = sp.Symbol('time', real=True)
 
