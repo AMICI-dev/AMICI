@@ -354,8 +354,9 @@ class SbmlImporter:
             self.local_symbols[r.getVariable()] = sp.Symbol(r.getVariable(),
                                                             real=True)
 
-        # SBML time symbol
+        # SBML time symbol + constants
         self.local_symbols['time'] = sp.Symbol('time', real=True)
+        self.local_symbols['avogadro'] = sp.Symbol('avogadro', real=True)
 
     def processSpecies(self):
         """Get species information from SBML model.
