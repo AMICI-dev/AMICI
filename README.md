@@ -128,6 +128,8 @@ However, the following features are unlikely to be supported:
 - initial assignments for parameters
 - `delay()` due to missing SUNDIALS solver support
 
+In addition to SBML, we also plan to implement support for the Simulation Experiment Description Markup Language (SED-ML).
+
 
 ## Current build status
 
