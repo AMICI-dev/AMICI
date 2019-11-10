@@ -1,0 +1,75 @@
+name: Performance test
+on:
+  push:
+    branches:
+      - develop
+      - master
+      - feature_846_large_model
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 20
+
+    # install dependencies
+    - name: apt
+      run: |
+        sudo apt-get install -y swig3.0 libatlas-base-dev \
+          && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+    - name: pip
+      run: |
+        pip3 install --upgrade --user wheel \
+          && pip3 install --upgrade --user setuptools
+    - run: pip3 install petab shyaml
+    - run: |
+        echo ::add-path::${HOME}/.local/bin/
+        echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
+    # install AMICI
+    - name: Create AMICI sdist
+      run: |
+        cd python/sdist \
+          && check_time.sh create_sdist /usr/bin/python3 setup.py sdist
+    - name: Install AMICI sdist
+      run: |
+        AMICI_PARALLEL_COMPILE=2 check_time.sh \
+            install_sdist pip3 install -v --user \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+
+    # retrieve test model
+    - run: git clone --depth 1 https://github.com/ICB-DCM/CS_Signalling_ERBB_RAS_AKT
+
+    # import test model
+    - name: Import test model
+      run: |
+        cd CS_Signalling_ERBB_RAS_AKT \
+          && check_time.sh \
+          petab_import amici_import_petab.py -v \
+            -s 'PEtab/CS_Signalling_ERBB_RAS_AKT_petab.xml' \
+            -c 'PEtab/conditions_petab.tsv' \
+            -m 'PEtab/measurements_petab.tsv' \
+            -p 'PEtab/parameters_petab.tsv' --no-compile
+
+    # install model package
+    - name: Install test model
+      run: |
+        check_time.sh install_model \
+          python3 CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab/setup.py install --user
+
+    # run simulations
+    - name: forward_simulation
+      run: |
+        check_time.sh forward_simulation tests/performance/test.py forward_simulation
+    - name: forward_sensitivities
+      run: |
+        check_time.sh forward_sensitivities tests/performance/test.py forward_sensitivities
+    - name: adjoint_sensitivities
+      run: |
+        check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities
