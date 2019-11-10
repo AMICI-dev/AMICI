@@ -24,7 +24,7 @@ TIME=$(tail -n1 "$LOG")
 # Read reference
 REF_TIME=$(shyaml get-value $REF < $REFERENCE_FILE)
 
-if [[ $TIME > $REF_TIME ]]; then
+if (( TIME > REF_TIME )); then
   echo "TOO LONG: $TIME > $REF_TIME"
   exit 1
 else
