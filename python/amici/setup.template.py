@@ -3,7 +3,6 @@
 from setuptools import find_packages
 from distutils.core import setup, Extension
 from distutils import sysconfig
-import distutils.ccompile
 import os
 from amici import amici_path, hdf5_enabled
 
@@ -33,17 +32,7 @@ def getAmiciLibs():
             #'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
             ]
 
-compiler_name = distutils.ccompiler.get_default_compiler()
-if compiler_name == 'mingw32':
-    newFlag = '-std=c++11'
-elif compiler_name == 'unix':
-    newFlag = '-std=c++11'
-elif compiler_name == 'msvc':
-    newFlag = '-std:latest'
-else:
-    newFlag = '-std=c++11'
-
-cxx_flags = [newFlag]
+cxx_flags = ['-std=c++11']
 linker_flags = []
 
 addCoverageFlagsIfRequired(cxx_flags, linker_flags)

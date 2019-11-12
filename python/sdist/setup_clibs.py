@@ -7,7 +7,6 @@ however we want to keep the static libs to avoid recompilation for AMICI-generat
 import os
 import glob
 import re
-import distutils.ccompiler
 
 def getSundialsSources():
     """Get list of Sundials source files"""
@@ -150,16 +149,6 @@ def getLibSundials(extra_compiler_flags=None):
     if extra_compiler_flags is None:
         extra_compiler_flags = []
 
-    compiler_name = distutils.ccompiler.get_default_compiler()
-    if compiler_name == 'mingw32':
-        newFlag = '-Wno-misleading-indentation'
-    elif compiler_name == 'unix':
-        newFlag = '-Wno-misleading-indentation'
-    elif compiler_name == 'msvc':
-        newFlag = ''
-    else:
-        newFlag = '-Wno-misleading-indentation'
-
     libsundials = ('sundials', {
         'sources': getSundialsSources(),
         'include_dirs': ['amici/ThirdParty/sundials/include',
@@ -170,7 +159,7 @@ def getLibSundials(extra_compiler_flags=None):
                          'amici/ThirdParty/SuiteSparse/BTF/Include/',
                          'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
                          'amici/ThirdParty/SuiteSparse/include'],
-        'cflags': [newFlag, *extra_compiler_flags]
+        'cflags': ['-Wno-misleading-indentation', *extra_compiler_flags]
     })
     return libsundials
 
@@ -211,16 +200,6 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
     if extra_compiler_flags is None:
         extra_compiler_flags = []
 
-    compiler_name = distutils.ccompiler.get_default_compiler()
-    if compiler_name == 'mingw32':
-        newFlag = '-std=c++11'
-    elif compiler_name == 'unix':
-        newFlag = '-std=c++11'
-    elif compiler_name == 'msvc':
-        newFlag = '-std:latest'
-    else:
-        newFlag = '-std=c++11'
-
     libamici = ('amici', {
         'sources': getAmiciBaseSources(
             withHDF5=(h5pkgcfg
@@ -238,7 +217,7 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
                          'amici/ThirdParty/sundials/src',
                          'amici/ThirdParty/gsl/',
                          ],
-        'cflags': [newFlag, *extra_compiler_flags],
+        'cflags': ['-std=c++11', *extra_compiler_flags],
         'macros': [],
     })
 
