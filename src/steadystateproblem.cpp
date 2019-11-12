@@ -16,7 +16,7 @@
 #include <cvodes/cvodes.h>
 
 namespace amici {
-    
+
 SteadystateProblem::SteadystateProblem(const Solver *solver,
                                        const AmiVector &x0):
     t(solver->gett()), delta(solver->nx()), ewt(solver->nx()),
@@ -48,7 +48,9 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     auto newtonSolver = NewtonSolver::getSolver(
         &t, &x, solver->getLinearSolver(), model, rdata,
         solver->getNewtonMaxLinearSteps(), solver->getNewtonMaxSteps(),
-        solver->getAbsoluteTolerance(), solver->getRelativeTolerance());
+        solver->getAbsoluteTolerance(), solver->getRelativeTolerance(),
+        solver->getNewtonDampingFactorMode(),
+        solver->getNewtonDampingFactorLowerBound());
 
     auto newton_status = NewtonStatus::failed;
     try {
@@ -207,20 +209,30 @@ void SteadystateProblem::applyNewtonsMethod(ReturnData *rdata, Model *model,
             converged = wrms < RCONST(1.0);
 
             if (converged) {
-                /* Ensure positivity of the found state */
+                /* Ensure positivity of the found state and recheck if
+                   the convergence still holds */
+                bool recheck_convergence = false;
                 for (ix = 0; ix < model->nx_solver; ix++) {
                     if (x[ix] < 0.0) {
                         x[ix] = 0.0;
-                        converged = FALSE;
+                        recheck_convergence = true;
                     }
                 }
-            } else {
+                if (recheck_convergence) {
+                  model->fxdot(t, x, dx, xdot);
+                  wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol);
+                  converged = wrms < RCONST(1.0);
+                }
+            } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
                 /* increase dampening factor (superfluous, if converged) */
                 gamma = fmin(1.0, 2.0 * gamma);
             }
-        } else {
-            /* Reduce dampening factor */
+        } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
+            /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
+            if (gamma < newtonSolver->dampingFactorLowerBound)
+              throw AmiException("Newton solver failed: a damping factor reached its lower bound");
+
             /* No new linear solve, only try new dampening */
             compNewStep = FALSE;
         }
@@ -325,7 +337,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
     return newton_solver;
 }
-    
+
 void SteadystateProblem::writeSolution(realtype *t, AmiVector &x,
                                        AmiVectorArray &sx) const {
     *t = this->t;

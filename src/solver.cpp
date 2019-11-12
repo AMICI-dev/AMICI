@@ -20,6 +20,8 @@ Solver::Solver(const Solver &other)
       sensi_meth(other.sensi_meth), stldet(other.stldet),
       ordering(other.ordering), newton_maxsteps(other.newton_maxsteps),
       newton_maxlinsteps(other.newton_maxlinsteps),
+      newton_damping_factor_mode(other.newton_damping_factor_mode),
+      newton_damping_factor_lower_bound(other.newton_damping_factor_lower_bound),
       requires_preequilibration(other.requires_preequilibration), linsol(other.linsol),
       atol(other.atol), rtol(other.rtol), atol_fsa(other.atol_fsa),
       rtol_fsa(other.rtol_fsa), atolB(other.atolB), rtolB(other.rtolB),
@@ -378,6 +380,8 @@ bool operator==(const Solver &a, const Solver &b) {
            (a.ordering == b.ordering) &&
            (a.newton_maxsteps == b.newton_maxsteps) &&
            (a.newton_maxlinsteps == b.newton_maxlinsteps) &&
+           (a.newton_damping_factor_mode == b.newton_damping_factor_mode) &&
+           (a.newton_damping_factor_lower_bound == b.newton_damping_factor_lower_bound) &&
            (a.requires_preequilibration == b.requires_preequilibration) && (a.ism == b.ism) &&
            (a.linsol == b.linsol) && (a.atol == b.atol) && (a.rtol == b.rtol) &&
            (a.maxsteps == b.maxsteps) && (a.maxstepsB == b.maxstepsB) &&
@@ -491,6 +495,18 @@ void Solver::setNewtonMaxLinearSteps(const int newton_maxlinsteps) {
     if (newton_maxlinsteps < 0)
         throw AmiException("newton_maxlinsteps must be a non-negative number");
     this->newton_maxlinsteps = newton_maxlinsteps;
+}
+
+NewtonDampingFactorMode Solver::getNewtonDampingFactorMode() const { return newton_damping_factor_mode; }
+
+void Solver::setNewtonDampingFactorMode(NewtonDampingFactorMode dampingFactorMode) {
+  this->newton_damping_factor_mode = dampingFactorMode;
+}
+
+double Solver::getNewtonDampingFactorLowerBound() const { return newton_damping_factor_lower_bound; }
+
+void Solver::setNewtonDampingFactorLowerBound(double dampingFactorLowerBound) {
+  this->newton_damping_factor_lower_bound = dampingFactorLowerBound;
 }
 
 SensitivityOrder Solver::getSensitivityOrder() const { return sensi; }
