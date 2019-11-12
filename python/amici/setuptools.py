@@ -207,6 +207,8 @@ def generateSwigInterfaceFiles():
     swig_exe = find_swig()
     swig_version = get_swig_version(swig_exe)
 
+    print(f"Found SWIG version {swig_version}")
+
     # Swig AMICI interface without HDF5 dependency
     swig_cmd = [swig_exe,
                 '-c++',

@@ -118,7 +118,7 @@ def concentrations_to_amounts(amount_species, wrapper, model, simulated_x):
                 )
             })
             volume = volume.subs({
-                sp.Symbol(name): value
+                sp.Symbol(name, real=True): value
                 for name, value in zip(
                     model.getParameterIds(),
                     model.getParameters()
@@ -127,7 +127,7 @@ def concentrations_to_amounts(amount_species, wrapper, model, simulated_x):
 
             # required for 525-527, 530 as k is renamed to amici_k
             volume = volume.subs({
-                sp.Symbol(name): value
+                sp.Symbol(name, real=True): value
                 for name, value in zip(
                     model.getParameterNames(),
                     model.getParameters()

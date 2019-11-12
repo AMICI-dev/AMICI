@@ -22,7 +22,6 @@ matrix:
             - libatlas-base-dev
             - lcov
             - libboost-serialization-dev
-            - swig3.0
             - g++-5
             - libc6-dbg
       env:
@@ -114,7 +113,8 @@ matrix:
 
 install:
     - export BASE_DIR=`pwd`
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir -p ~/bin/ && ln -s /usr/bin/swig3.0 ~/bin/swig && export PATH=~/bin/:$PATH; fi # Python distutils only looks for `swig` and does not find `swig3.0`
+    # Build swig4.0 (not yet available with apt) to include pydoc in source distribution for pypi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/downloadAndBuildSwig.sh && export PATH=${BASE_DIR}/ThirdParty/swig-4.0.1/install/bin:${PATH}; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PYTHON_EXECUTABLE=$(which python3); fi # cmake wont be able to find python3 on its own ...
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi

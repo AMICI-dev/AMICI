@@ -11,6 +11,6 @@ if 'TPL_AMICI_VERSION' != amici.__version__:
                        'model version or regenerate the model with the AMICI '
                        'currently in your path.')
 
-from TPL_MODELNAME.TPL_MODELNAME import *
+from TPL_MODELNAME._TPL_MODELNAME import *
 
 __version__ = 'TPL_PACKAGE_VERSION'

@@ -148,6 +148,12 @@ enum class NewtonStatus {
     newt_sim_newt=3,
 };
 
+/** Damping factor flag for the Newton method */
+enum class NewtonDampingFactorMode {
+    off = 0,
+    on = 1
+};
+
 /**
  * @brief msgIdAndTxtFp
  * @param identifier string with error message identifier

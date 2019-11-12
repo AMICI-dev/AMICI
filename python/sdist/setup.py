@@ -188,7 +188,13 @@ def main():
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
-        scripts=['bin/amici_import_petab.py'],
+        entry_points={
+            'console_scripts': [
+                'amici_import_petab = amici.petab_import:main',
+                # for backwards compatibility
+                'amici_import_petab.py = amici.petab_import:main'
+            ]
+        },
         install_requires=['sympy',
                           'python-libsbml',
                           'h5py',
