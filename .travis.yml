@@ -2,6 +2,7 @@ branches:
   only:
     - master
     - develop
+    - feature_msvc
     # Version tags
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
@@ -91,7 +92,25 @@ matrix:
         keep-history: false
         verbose: true
         on:
-          branch: master
+          branch: master 
+
+    - os: windows
+      language: python
+      python: 3.7
+      compiler: msvc
+      env:
+        - CI_MODE=test
+      addons:
+        homebrew:
+          packages:
+            - hdf5
+            - swig
+          update: true
+      before_install:
+        - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
+        - pip3 install --user -U numpy
+      after_success:
+        - cd $BASE_DIR # cd to base dir for correct relative path in deploy
 
 install:
     - export BASE_DIR=`pwd`
