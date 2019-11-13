@@ -115,7 +115,6 @@ matrix:
         # language python currently not supported on Windows
         - choco install python3 --params "/InstallDir:C:\\Python"
         - choco install swig
-        - choco install windows-sdk-10.0
         - export PATH="/c/Python:/c/Python/Scripts:/c/Users/travis/AppData/Roaming/Python/Python38/Scripts:$PATH"
         - pip3 install --user -U numpy
       after_success:
