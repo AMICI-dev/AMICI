@@ -95,24 +95,14 @@ matrix:
 
     - os: windows
       # language python currently not supported on Windows
-      # https://github.com/WeblateOrg/translation-finder/blob/master/.travis.yml#L20-L26
-      # language: python
-      # python: 3.7
       language: cpp
       compiler: msvc
       git:
         clone: false
       env:
         - CI_MODE=test
-      addons:
-        homebrew:
-          packages:
-            - hdf5
-            - swig
-          update: true
       before_install:
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-        # language python currently not supported on Windows
         - choco install python3 --params "/InstallDir:C:\\Python"
         - choco install swig
         - export PATH="/c/Python:/c/Python/Scripts:/c/Users/travis/AppData/Roaming/Python/Python38/Scripts:$PATH"
