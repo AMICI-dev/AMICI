@@ -91,13 +91,14 @@ matrix:
         keep-history: false
         verbose: true
         on:
-          branch: master 
+          branch: master
 
     - os: windows
       # language python currently not supported on Windows
       # https://github.com/WeblateOrg/translation-finder/blob/master/.travis.yml#L20-L26
       # language: python
       # python: 3.7
+      language: cpp
       compiler: msvc
       env:
         - CI_MODE=test
