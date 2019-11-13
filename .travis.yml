@@ -136,7 +136,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
     # Enable Windows developer mode to support symlinks
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install --user -U pip; fi
+    #- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install --user -U pip; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" -Name AllowDevelopmentWithoutDevLicense -Value 1  -PropertyType DWord; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; fi
