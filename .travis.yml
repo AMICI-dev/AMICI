@@ -123,8 +123,8 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/downloadAndBuildSwig.sh && export PATH=${BASE_DIR}/ThirdParty/swig-4.0.1/install/bin:${PATH}; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PYTHON_EXECUTABLE=$(which python3); fi # cmake wont be able to find python3 on its own ...
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
-    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
-    - if [[ "$CI_MODE" == "deploy" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "deploy" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
@@ -133,7 +133,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
     # Enable Windows developer mode to support symlinks
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"; git rm --cached -r . && git reset && git checkout .; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1; git rm --cached -r . && git reset && git checkout .; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && ls -lR && which python && python setup.py sdist; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1); fi
 
