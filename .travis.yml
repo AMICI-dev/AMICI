@@ -114,7 +114,7 @@ matrix:
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
         # language python currently not supported on Windows
         - choco install python3 --params "/InstallDir:C:\\Python"
-        - export PATH="/c/Python:/c/Python/Scripts:$PATH"
+        - export PATH="/c/Python:/c/Python/Scripts:/c/Users/travis/AppData/Roaming/Python/Python38/Scripts:$PATH"
         - pip3 install --user -U numpy
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
@@ -135,7 +135,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
     # Enable Windows developer mode to support symlinks
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install -U pip; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install --user -U pip; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command New-ItemProperty -Path "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" -Name AllowDevelopmentWithoutDevLicense -Value 1  -PropertyType REG_DWORD; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then git clone -c core.symlinks=true -b $TRAVIS_COMMIT https://github.com/ICB-DCM/AMICI.git && cd AMICI; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && ls -lR && which python && python setup.py sdist; fi
