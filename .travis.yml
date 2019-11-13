@@ -141,7 +141,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout $TRAVIS_COMMIT; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
-     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && ls -lR && python setup.py sdist; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && ls -lR && python setup.py sdist; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t build/python/amici-*.tar.gz | head -1); fi
 
 script:
