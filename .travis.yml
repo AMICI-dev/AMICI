@@ -100,6 +100,8 @@ matrix:
       # python: 3.7
       language: cpp
       compiler: msvc
+      git:
+        clone: false
       env:
         - CI_MODE=test
       addons:
@@ -133,7 +135,8 @@ install:
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
     # Enable Windows developer mode to support symlinks
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1; git rm --cached -r . && git reset && git checkout .; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v AllowDevelopmentWithoutDevLicense /d 1; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then git clone -c core.symlinks=true -b $TRAVIS_COMMIT https://github.com/ICB-DCM/AMICI.git && cd AMICI; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && ls -lR && which python && python setup.py sdist; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1); fi
 
