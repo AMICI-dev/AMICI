@@ -125,13 +125,15 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
     - if [[ "$CI_MODE" == "deploy" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildBNGL.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildAmici.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/buildBNGL.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/buildAmici.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" != "windows" ]] && [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python3 setup.py sdist; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t ${AMICI_PATH}/build/python/amici-*.tar.gz | head -1); fi
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
