@@ -94,7 +94,9 @@ matrix:
           branch: master 
 
     - os: windows
-      language: python
+      # language python currently not supported on Windows
+      # https://github.com/WeblateOrg/translation-finder/blob/master/.travis.yml#L20-L26
+      # language: python
       python: 3.7
       compiler: msvc
       env:
@@ -107,6 +109,9 @@ matrix:
           update: true
       before_install:
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
+        # language python currently not supported on Windows
+        - choco install python3 --params "/InstallDir:C:\\Python"
+        - export PATH="/c/Python:/c/Python/Scripts:$PATH"
         - pip3 install --user -U numpy
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
