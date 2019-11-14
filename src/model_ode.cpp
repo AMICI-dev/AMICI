@@ -1,3 +1,4 @@
+#include <amici/sundials_matrix_wrapper.h>
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
 
@@ -113,7 +114,8 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
             if (nw > 0)
                 dxdotdw.multiply(
                     gsl::span<realtype>(dxdotdp.data(ip), nx_solver),
-                    gsl::span<const realtype>(&dwdp.at(nw * ip), nw));
+                    gsl::span<realtype>(&dwdp.data()[(dwdp.indexptrs())[ip]], nw)
+                                 );
         }
     } else {
         // matlab generated

@@ -127,6 +127,8 @@ class Model : public AbstractModel {
     using AbstractModel::fdsigmaydp;
     using AbstractModel::fdsigmazdp;
     using AbstractModel::fdwdp;
+    using AbstractModel::fdwdp_colptrs;
+    using AbstractModel::fdwdp_rowvals;
     using AbstractModel::fdwdx;
     using AbstractModel::fdwdx_colptrs;
     using AbstractModel::fdwdx_rowvals;
@@ -1554,6 +1556,9 @@ class Model : public AbstractModel {
     /** Sparse dxdotdw temporary storage (dimension: ndxdotdw) */
     mutable SUNMatrixWrapper dxdotdw;
 
+    /** Sparse dwdp temporary storage (dimension: ndwdp) */
+    mutable SUNMatrixWrapper dwdp;
+    
     /** Sparse dwdx temporary storage (dimension: ndwdx) */
     mutable SUNMatrixWrapper dwdx;
 
@@ -1654,11 +1659,6 @@ class Model : public AbstractModel {
 
     /** tempory storage of w data across functions (dimension: nw) */
     mutable std::vector<realtype> w;
-
-    /** tempory storage of sparse/dense dwdp data across functions
-     * (dimension: ndwdp)
-     */
-    mutable std::vector<realtype> dwdp;
 
     /** tempory storage for flattened sx,
      * (dimension: nx_solver x nplist, row-major)

@@ -147,7 +147,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       J(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
       dwdx(nw, nx_solver, ndwdx, CSC_MAT), M(nx_solver, nx_solver), w(nw),
-      dwdp(ndwdp), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
+      dwdp(nw, p.size(), ndwdp, CSC_MAT), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
       total_cl(nx_rdata - nx_solver),
       stotal_cl((nx_rdata - nx_solver) * p.size()), x_pos_tmp(nx_solver),
       unscaledParameters(p), originalParameters(p),
@@ -1260,7 +1260,8 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
         // get dydp slice (ny) for current time and parameter
         if (wasPythonGenerated() && nw)
             /* CHANE_TO_SPARSE --> This must be changed, as dwdp can not be queried in this way anymore when made sparse */
-            dwdp_tmp = &dwdp.at(nw * ip);
+            dwdp_tmp = &dwdp.data()[(dwdp.indexptrs())[ip]];
+            // dwdp_tmp = &dwdp.at(nw * ip);
 
         fdydp(&dydp.at(ip * ny), t, x.data(), unscaledParameters.data(),
               fixedParameters.data(), h.data(), plist(ip), w.data(), dwdp_tmp);
@@ -1807,9 +1808,11 @@ void Model::fdwdp(const realtype t, const realtype *x) {
             return;
 
         if (ncl())
-            stcl = &stotal_cl.at(plist(ip) * ncl());
+            for (int ip = 0; ip < nplist(); ip++)
+                stcl = &stotal_cl.at(plist(ip) * ncl());
+        
         /* CHANGE_TO_SPARSE --> This one should already be fine, hopefully... */
-        fdwdx(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
+        fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
               h.data(), w.data(), total_cl.data(), stcl);
         fdwdp_colptrs(dwdp.indexptrs());
         fdwdp_rowvals(dwdp.indexptrs());
@@ -1822,11 +1825,8 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         /* CHANGE_TO_SPARSE --> Well, good question how this one is actually affected... */
     }
     
-    fdwdp_colptrs(dwdp.indexptrs());
-    fdwdp_rowvals(dwdp.indexptrs());
-    
     if (alwaysCheckFinite) {
-        amici::checkFinite(dwdp, "dwdp");
+        amici::checkFinite(gsl::make_span(dwdp.get()), "dwdp");
     }
 }
 
