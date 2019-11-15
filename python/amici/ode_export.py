@@ -149,8 +149,6 @@ functions = {
             '(realtype *dxdotdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const int ip, const realtype *w)',
-        'sparse':
-            True,
         'assume_pow_positivity':
             True,
     },

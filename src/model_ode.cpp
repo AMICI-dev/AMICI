@@ -102,20 +102,24 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     fdwdp(t, N_VGetArrayPointer(x));
     if (wasPythonGenerated()) {
         // python generated
+        /* Compute dxdotdw, initialize dxdotdp memory with 0.0,
+           add derivatives wrt p not captured in dxdotdw
+         */
         fdxdotdw(t, x);
-        /* CHANGE_TO_SPARSE --> This part here is seemingly the worst part.
-         Here, we eill need the mapping of nplist to the sparse indices in dxdotdp,
-         which are affected by specific p's */
         for (int ip = 0; ip < nplist(); ip++) {
             N_VConst(0.0, dxdotdp.getNVector(ip));
             fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
                      unscaledParameters.data(), fixedParameters.data(),
                      h.data(), plist_[ip], w.data());
-            if (nw > 0)
-                dxdotdw.multiply(
-                    gsl::span<realtype>(dxdotdp.data(ip), nx_solver),
-                    gsl::span<realtype>(&dwdp.data()[(dwdp.indexptrs())[ip]], nw)
-                                 );
+        }
+        /* Sparse matrix multiplication dxdotdp += dxdotdw * dwdp */
+        if (nw > 0) {
+            gsl::span<int>(nplist()) tmp_plist;
+            for (int ip = 0; ip < tmp_plist.size(); ip++)
+                tmp_plist[ip] = ip;
+            
+            dxdotdw.sparse_multiply(dxdotdp, dwdp, tmp_plist, plist_);
+            
         }
     } else {
         // matlab generated

@@ -1799,7 +1799,7 @@ void Model::fw(const realtype t, const realtype *x) {
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
-    dwdx.reset();
+    dwdp.reset();
     if (wasPythonGenerated()) {
         realtype *stcl = nullptr;
 

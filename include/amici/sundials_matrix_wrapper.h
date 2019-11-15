@@ -154,6 +154,20 @@ class SUNMatrixWrapper {
     void multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const;
 
     /**
+     * @brief Perform matrix vector multiplication
+              C[:, colsC] += A * B[:, colsB]
+              for columns in colsB sparse B
+     * @param C output matrix, may already contain values
+     * @param B multiplication matrix
+     * @param colsC multiplication matrix
+     * @param colsB multiplication matrix
+     */
+    void sparse_multiply(AmiVectorArray C,
+                         SUNMatrix B,
+                         gsl::span<int> colsC,
+                         gsl::span<int> colsB) const;
+    
+    /**
      * @brief Set to 0.0
      */
     void zero();
