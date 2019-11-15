@@ -163,7 +163,7 @@ class SUNMatrixWrapper {
      * @param colsB multiplication matrix
      */
     void sparse_multiply(AmiVectorArray C,
-                         SUNMatrix B,
+                         SUNMatrixWrapper B,
                          gsl::span<int> colsC,
                          gsl::span<int> colsB) const;
     

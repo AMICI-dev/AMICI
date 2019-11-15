@@ -220,7 +220,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c, gsl::span<const realtype>
 }
 
 void SUNMatrixWrapper::sparse_multiply(AmiVectorArray C,
-                                       SUNMatrix B,
+                                       SUNMatrixWrapper B,
                                        gsl::span<int> colsC,
                                        gsl::span<int> colsB) const {
     if (!matrix)
@@ -237,7 +237,7 @@ void SUNMatrixWrapper::sparse_multiply(AmiVectorArray C,
                                     "columns in C (" + std::to_string(nrows) +
                                     ") and number of columns in B("
                                     "in A (" + std::to_string(nrows) + ") and "
-                                    + std::to_string(nrows) + ")";);
+                                    + std::to_string(nrows) + ")");
 
     if (static_cast<sunindextype>(NV_LENGTH_S(C.getNVector(0))) != nrows)
         throw std::invalid_argument("Dimension mismatch between number of rows "
@@ -249,7 +249,7 @@ void SUNMatrixWrapper::sparse_multiply(AmiVectorArray C,
         throw std::invalid_argument("Dimension mismatch between number of cols "
                                     "in A (" + std::to_string(ncols)
                                     + ") and number of rows in B ("
-                                    + std::to_string(static_cast<int>B.rows()) + ")");
+                                    + std::to_string((int)B.rows()) + ")");
     
     if (SUNMatGetID(matrix) != SUNMATRIX_SPARSE)
         throw std::invalid_argument("Matrix A not sparse in sparse_multiply");
@@ -264,10 +264,12 @@ void SUNMatrixWrapper::sparse_multiply(AmiVectorArray C,
         throw std::invalid_argument("Matrix B not of type CSC_MAT");
 
     /* Carry out acutal multiplication */
-    for (icol == 0; icol < colsB.size(); ++icol)
-        for(k = B.indexptrs_ptr[colsB[iCol]]; k < B.indexptrs_ptr[colsB[iCol] + 1]; ++k)
-            for(l = indexptrs_ptr[k]; l < B.indexptrs_ptr[k + 1]; ++l)
-                C.at[l, colsC[icol]] += data_ptr[l] * B.data_ptr[k];
+    for (int icol = 0; icol < (int)colsB.size(); ++icol)
+        for(sunindextype k = B.indexptrs_ptr[colsB[icol]];
+            k < B.indexptrs_ptr[colsB[icol] + 1]; ++k)
+            for(sunindextype l = indexptrs_ptr[k];
+                l < B.indexptrs_ptr[k + 1]; ++l)
+                C.at(l, colsC[icol]) += data_ptr[l] * B.data_ptr[k];
 
 }
     
