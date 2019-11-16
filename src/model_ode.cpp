@@ -99,8 +99,6 @@ void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
 
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     auto x_pos = computeX_pos(x);
-    std::vector<int> tmp_plist;
-    tmp_plist.resize(plist_.size());
 
     fdwdp(t, N_VGetArrayPointer(x));
     if (wasPythonGenerated()) {
@@ -116,12 +114,8 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
                      h.data(), plist_[ip], w.data());
         }
         /* Sparse matrix multiplication dxdotdp += dxdotdw * dwdp */
-        if (nw > 0) {
-            for (int ip = 0; ip < (int)tmp_plist.size(); ip++)
-                tmp_plist[ip] = ip;
-            
-            dxdotdw.sparse_multiply(dxdotdp, dwdp, tmp_plist, plist_);
-        }
+        if (nw > 0)
+            dxdotdw.sparse_multiply(dxdotdp, dwdp, plist_);
     } else {
         // matlab generated
         for (int ip = 0; ip < nplist(); ip++) {
