@@ -259,7 +259,7 @@ void SUNMatrixWrapper::sparse_multiply(AmiVectorArray C,
     for (int icol = 0; icol < (int)colsB.size(); ++icol)
         for(sunindextype k = B.indexptrs_ptr[colsB[icol]]; k < B.indexptrs_ptr[colsB[icol] + 1]; ++k)
             for(sunindextype l = indexptrs_ptr[k]; l < B.indexptrs_ptr[k + 1]; ++l)
-                C.at(l, icol) += data_ptr[l] * B.data_ptr[k];
+                C.data(icol)[l] += data_ptr[l] * B.data_ptr[k];
 
 }
     
