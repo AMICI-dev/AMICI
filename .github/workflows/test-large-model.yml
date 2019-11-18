@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - feature_846_large_model
+      - feature_sparse_quadratures
   pull_request:
     branches:
       - master
