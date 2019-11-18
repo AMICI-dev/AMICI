@@ -132,6 +132,8 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]] && [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
+    # checking to see why link.exe is not found (job 3244.4)
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then dir "C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64"; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t dist/amici-*.tar.gz | head -1); fi
 
 script:
