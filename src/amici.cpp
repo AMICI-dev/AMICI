@@ -202,7 +202,7 @@ AmiciApplication::warningF(const char* identifier, const char* format, ...)
     va_start(argptr, format);
     auto str = printfToString(format, argptr);
     va_end(argptr);
-    warning(identifier, format);
+    warning(identifier, str);
 }
 
 void
@@ -212,7 +212,7 @@ AmiciApplication::errorF(const char* identifier, const char* format, ...)
     va_start(argptr, format);
     auto str = printfToString(format, argptr);
     va_end(argptr);
-    error(identifier, format);
+    error(identifier, str);
 }
 
 int
