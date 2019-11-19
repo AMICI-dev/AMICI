@@ -122,6 +122,7 @@ class SwigPtrView(collections.abc.Mapping):
         """Faster implementation of __contains__ that avoids copy of the field
 
         Arguments:
+            item: item to check for
 
         Returns:
             whether item is available as key @type bool
@@ -132,6 +133,7 @@ class SwigPtrView(collections.abc.Mapping):
         """Create a deep copy
 
         Arguments:
+            memo: dict with id-to-object mapping
 
         Returns:
             SwigPtrView deep copy @type SwigPtrView
@@ -222,7 +224,7 @@ class ReturnDataView(SwigPtrView):
         """Custom getitem implementation shim to map `t` to `ts`
 
         Arguments:
-            item field/attribute key
+            item: field/attribute key
 
         Returns:
             self[item] @type numpy.array/float
