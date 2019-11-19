@@ -149,6 +149,12 @@ enum class NewtonStatus {
     newt_sim_newt=3,
 };
 
+/** Damping factor flag for the Newton method */
+enum class NewtonDampingFactorMode {
+    off = 0,
+    on = 1
+};
+
 /**
  * Type for function to process warnings or error messages.
  */
