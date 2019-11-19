@@ -38,13 +38,14 @@ printWarnMsgIdAndTxt(std::string const& id, std::string const& message);
  * This class is used to provide separate AMICI contexts, for example, for use
  * in multi-threaded applications where different threads want to use AMICI with
  * different settings, such custom logging functions.
+ *
+ * NOTE: For this moment, the context object needs to be set manually to any
+ * Model and Solver object. If not set, they will use the default output
+ * channel.
  */
 class AmiciApplication
 {
   public:
-    // TODO: err / warn functions
-    // problem: need to be available when calling getSolver on Model
-    // Model comes from somewhere else
     AmiciApplication() = default;
 
     /**
