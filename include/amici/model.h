@@ -15,6 +15,9 @@ namespace amici {
 class ExpData;
 class Model;
 class Solver;
+class AmiciApplication;
+
+extern AmiciApplication defaultContext;
 
 } // namespace amici
 
@@ -1153,6 +1156,9 @@ class Model : public AbstractModel {
     /** temporary storage of dxdotdp data across functions (dimension: nplist x
      * nx_solver, row-major) */
     AmiVectorArray dxdotdp;
+
+    /** AMICI context */
+    AmiciApplication *app = &defaultContext;
 
   protected:
     /**

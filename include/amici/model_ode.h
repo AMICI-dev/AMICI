@@ -14,7 +14,6 @@
 #include <vector>
 
 namespace amici {
-extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 class CVodeSolver;
 

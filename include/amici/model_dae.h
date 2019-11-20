@@ -13,7 +13,6 @@
 #include <vector>
 
 namespace amici {
-extern msgIdAndTxtFp warnMsgIdAndTxt;
 
 class ExpData;
 class IDASolver;
