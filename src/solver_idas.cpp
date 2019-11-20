@@ -244,7 +244,9 @@ void IDASolver::getRootInfo(int *rootsfound) const {
 
 void IDASolver::setErrHandlerFn() const {
     int status =
-        IDASetErrHandlerFn(solverMemory.get(), wrapErrHandlerFn, nullptr);
+        IDASetErrHandlerFn(solverMemory.get(), wrapErrHandlerFn,
+                           reinterpret_cast<void*>(
+                               const_cast<IDASolver*>(this)));
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASetErrHandlerFn");
 }
@@ -267,9 +269,10 @@ void IDASolver::setMaxNumSteps(const long int mxsteps) const {
         throw IDAException(status, "IDASetMaxNumSteps");
 }
 
-void IDASolver::setStabLimDet(const int stldet) const {}
+void IDASolver::setStabLimDet(const int /*stldet*/) const {}
 
-void IDASolver::setStabLimDetB(const int which, const int stldet) const {}
+void IDASolver::setStabLimDetB(const int /*which*/,
+                               const int /*stldet*/) const {}
 
 void IDASolver::setId(const Model *model) const {
 
@@ -511,7 +514,7 @@ void IDASolver::allocateSolverB(int *which) const {
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) =
         std::unique_ptr<void, std::function<void(void *)>>(
-            getAdjBmem(solverMemory.get(), *which), [](void *ptr) {});
+            getAdjBmem(solverMemory.get(), *which), [](void */*ptr*/) {});
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDACreateB");
 }
@@ -938,7 +941,7 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
                      void *user_data) {
     auto model = static_cast<Model_DAE *>(user_data);
 
-    if (t > 1e200 && !amici::checkFinite(gsl::make_span(x), "fxdot")) {
+    if (t > 1e200 && !model->app->checkFinite(gsl::make_span(x), "fxdot")) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
            to fxdot from which we typically cannot recover. To save time
            on normal execution, we do not always want to check finiteness

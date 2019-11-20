@@ -307,7 +307,9 @@ void CVodeSolver::setNonLinearSolverB(const int which) const {
 
 void CVodeSolver::setErrHandlerFn() const {
     int status =
-        CVodeSetErrHandlerFn(solverMemory.get(), wrapErrHandlerFn, nullptr);
+        CVodeSetErrHandlerFn(solverMemory.get(), wrapErrHandlerFn,
+                             reinterpret_cast<void*>(
+                                 const_cast<CVodeSolver*>(this)));
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetErrHandlerFn");
 }
@@ -342,9 +344,9 @@ void CVodeSolver::setStabLimDetB(const int which, const int stldet) const {
         throw CvodeException(status, "CVodeSetStabLimDetB");
 }
 
-void CVodeSolver::setId(const Model *model) const {}
+void CVodeSolver::setId(const Model */*model*/) const {}
 
-void CVodeSolver::setSuppressAlg(const bool flag) const {}
+void CVodeSolver::setSuppressAlg(const bool /*flag*/) const {}
 
 void CVodeSolver::resetState(void *ami_mem, const_N_Vector y0) const {
 
@@ -570,7 +572,7 @@ void CVodeSolver::allocateSolverB(int *which) const {
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) =
         std::unique_ptr<void, std::function<void(void *)>>(
-            getAdjBmem(solverMemory.get(), *which), [](void *ptr) {});
+            getAdjBmem(solverMemory.get(), *which), [](void */*ptr*/) {});
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeCreateB");
 }
@@ -686,9 +688,9 @@ void *CVodeSolver::getAdjBmem(void *ami_mem, int which) const {
     return CVodeGetAdjCVodeBmem(ami_mem, which);
 }
 
-void CVodeSolver::calcIC(const realtype tout1) const {};
+void CVodeSolver::calcIC(const realtype /*tout1*/) const {};
 
-void CVodeSolver::calcICB(const int which, const realtype tout1) const {};
+void CVodeSolver::calcICB(const int /*which*/, const realtype /*tout1*/) const {};
 
 void CVodeSolver::setStopTime(const realtype tstop) const {
     int status = CVodeSetStopTime(solverMemory.get(), tstop);
@@ -903,7 +905,7 @@ int froot(realtype t, N_Vector x, realtype *root,
 int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
 
-    if (t > 1e200 && !amici::checkFinite(gsl::make_span(x), "fxdot")) {
+    if (t > 1e200 && !model->checkFinite(gsl::make_span(x), "fxdot")) {
         /* when t is large (typically ~1e300), CVODES may pass all NaN x
            to fxdot from which we typically cannot recover. To save time
            on normal execution, we do not always want to check finiteness

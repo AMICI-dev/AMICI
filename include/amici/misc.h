@@ -25,14 +25,6 @@ namespace amici {
  gsl::span<realtype> slice(std::vector<realtype> &data, int index,
                            unsigned size);
 
-/**
- * @brief Checks the values in an array for NaNs and Infs
- *
- * @param array array
- * @param fun name of calling function
- * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
- */
-int checkFinite(gsl::span<const realtype> array, const char* fun);
 
 
 /**
@@ -91,6 +83,15 @@ std::string backtraceString(int maxFrames);
  * @return Error type as string
  */
 std::string regexErrorToString(std::regex_constants::error_type err_type);
+
+/**
+ * @brief Format printf-style arguments to std::string
+ * @param fmt Format string
+ * @param ap Argument list pointer
+ * @return Formatted String
+ */
+std::string printfToString(const char *fmt, va_list ap);
+
 
 } // namespace amici
 
