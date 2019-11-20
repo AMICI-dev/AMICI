@@ -10,8 +10,7 @@
 #include "wrapfunctions.h"  /* model-provided functions */
 
 /* This is a scaffold for a stand-alone AMICI simulation executable
- * demonstrating
- * use of the AMICI C++ API.
+ * demonstrating the use of the AMICI C++ API.
  *
  * This program reads AMICI options from an HDF5 file, prints some results
  * and writes additional results to an HDF5 file. The name of the HDF5 file

@@ -15,9 +15,6 @@
 
 namespace amici {
 
-extern msgIdAndTxtFp warnMsgIdAndTxt;
-
-
 ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
                                Model *model, Solver *solver)
     : model(model),
@@ -310,7 +307,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         discs[iroot] = t;
         ++iroot;
     } else {
-        warnMsgIdAndTxt("AMICI:mex:TOO_MUCH_EVENT",
+        solver->app->warning(
+                    "AMICI:mex:TOO_MUCH_EVENT",
                         "Event was recorded but not reported as the number of "
                         "occured events exceeded (nmaxevents)*(number of "
                         "events in model definition)!");
