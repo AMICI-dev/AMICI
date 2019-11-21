@@ -322,14 +322,16 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     fdxdotdp(t, x);
     /* CHANGE_TO_SPARSE --> This loop needs to be changed... */
     for (int ip = 0; ip < nplist(); ip++) {
+        auto cur_dxdotdp = dxdotdp[ip];
         for (int ix = 0; ix < nxtrue_solver; ix++)
-            NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * dxdotdp.data(ip)[ix];
+            NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * cur_dxdotdp[ix];
         // second order part
         for (int iJ = 1; iJ < nJ; iJ++)
+            auto cur_dxdotdp_2ndorder = dxdotdp[ix + iJ * nxtrue_solver];
             for (int ix = 0; ix < nxtrue_solver; ix++)
                 NV_Ith_S(qBdot, ip * nJ + iJ) -=
-                    NV_Ith_S(xB, ix) * dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
-                    NV_Ith_S(xB, ix + iJ * nxtrue_solver) * dxdotdp.at(ix, ip);
+                    NV_Ith_S(xB, ix) * cur_dxdotdp_2ndorder[ip] +
+                    NV_Ith_S(xB, ix + iJ * nxtrue_solver) * cur_dxdotdp[ix];
     }
 }
 

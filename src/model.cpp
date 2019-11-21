@@ -1806,10 +1806,6 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         // avoid bad memory access when slicing
         if (!nw)
             return;
-
-        if (ncl())
-            for (int ip = 0; ip < nplist(); ip++)
-                stcl = &stotal_cl.at(plist(ip) * ncl());
         
         /* CHANGE_TO_SPARSE --> This one should already be fine, hopefully... */
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
