@@ -87,8 +87,8 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 
 // Add necessary symbols to generated header
 // Ignore due to https://github.com/swig/swig/issues/1643
-%ignore printErrMsgIdAndTxt;
-%ignore printWarnMsgIdAndTxt;
+%ignore amici::AmiciApplication::warningF;
+%ignore amici::AmiciApplication::errorF;
 %{
 #include "amici/amici.h"
 using namespace amici;

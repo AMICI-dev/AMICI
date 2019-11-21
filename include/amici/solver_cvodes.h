@@ -26,8 +26,6 @@ namespace amici {
 
 class CVodeSolver : public Solver {
   public:
-    CVodeSolver() = default;
-
     ~CVodeSolver() override = default;
 
     /**

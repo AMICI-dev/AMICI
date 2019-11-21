@@ -20,6 +20,8 @@ except ImportError:
 
 from string import Template
 import sympy.printing.ccode as ccode
+from sympy.matrices.immutable import ImmutableDenseMatrix
+from sympy.matrices.dense import MutableDenseMatrix
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__
@@ -715,12 +717,15 @@ class ODEModel:
         derivative from a partial derivative call to enforce a partial
         derivative in the next recursion. prevents infinite recursion
 
+        _simplify: if set to true, symbolic derivative expressions will be
+        simplified. NOTE: This does currently not work with PySB symbols.
     """
 
-    def __init__(self):
+    def __init__(self, simplify: bool = False):
         """Create a new ODEModel instance.
 
         Arguments:
+            simplify: see ODEModel._simplify
 
         Raises:
 
@@ -807,6 +812,7 @@ class ODEModel:
         }
 
         self._lock_total_derivative = False
+        self._simplify = simplify
 
     def import_from_sbml_importer(self, si):
         """Imports a model specification from a amici.SBMLImporter instance.
@@ -828,7 +834,8 @@ class ODEModel:
         self._eqs['dxdotdw'] = si.stoichiometricMatrix
         self._eqs['w'] = si.fluxVector
         self._syms['w'] = sp.Matrix(
-            [sp.Symbol(f'flux_r{idx}') for idx in range(len(si.fluxVector))]
+            [sp.Symbol(f'flux_r{idx}', real=True)
+             for idx in range(len(si.fluxVector))]
         )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometricMatrix.shape[0])
         if len(si.stoichiometricMatrix):
@@ -1163,12 +1170,12 @@ class ODEModel:
                 for comp in getattr(self, component)
             ])
             self._strippedsyms[name] = sp.Matrix([
-                sp.Symbol(comp.get_name())
+                sp.Symbol(comp.get_name(), real=True)
                 for comp in getattr(self, component)
             ])
             if name == 'y':
                 self._syms['my'] = sp.Matrix([
-                    sp.Symbol(f'm{strip_pysb(comp.get_id())}')
+                    sp.Symbol(f'm{strip_pysb(comp.get_id())}', real=True)
                     for comp in getattr(self, component)
                 ])
             return
@@ -1181,7 +1188,7 @@ class ODEModel:
             return
         elif name == 'dtcldp':
             self._syms[name] = sp.Matrix([
-                sp.Symbol(f's{strip_pysb(tcl.get_id())}')
+                sp.Symbol(f's{strip_pysb(tcl.get_id())}', real=True)
                 for tcl in self._conservationlaws
             ])
             return
@@ -1196,7 +1203,7 @@ class ODEModel:
             length = len(self.eq(name))
 
         self._syms[name] = sp.Matrix([
-            sp.Symbol(f'{name}{i}') for i in range(length)
+            sp.Symbol(f'{name}{i}', real=True) for i in range(length)
         ])
 
     def generateBasicVariables(self):
@@ -1385,6 +1392,10 @@ class ODEModel:
 
             for index, formula in enumerate(self.eq('x0_fixedParameters')):
                 if formula == 0 or formula == 0.0:
+                    # sp.simplify returns ImmutableDenseMatrix, if we need to
+                    # change them, they need to be made mutable
+                    if isinstance(self._eqs[name], ImmutableDenseMatrix):
+                        self._eqs[name] = MutableDenseMatrix(self._eqs[name])
                     self._eqs[name][index, :] = \
                         sp.zeros(1, self._eqs[name].shape[1])
 
@@ -1431,6 +1442,9 @@ class ODEModel:
             # a total derivative
             if not self._lock_total_derivative:
                 self._eqs[name] = self._eqs[name].transpose()
+
+        if self._simplify:
+            self._eqs[name] = sp.simplify(self._eqs[name])
 
     def symNames(self):
         """Returns a list of names of generated symbolic variables
@@ -1559,7 +1573,7 @@ class ODEModel:
             if dydx_name is None:
                 dydx_name = f'd{eq}d{chainvar}'
             if dxdz_name is None:
-                dxdz_name =  f'd{chainvar}d{var}'
+                dxdz_name = f'd{chainvar}d{var}'
 
             dydx = self.sym_or_eq(name, dydx_name)
             dxdz = self.sym_or_eq(name, dxdz_name)
@@ -1802,7 +1816,7 @@ class ODEExporter:
         modelSwigPath: path to the generated swig files @type str
 
         allow_reinit_fixpar_initcond: indicates whether reinitialization of
-        initial states depending on fixedParmeters is allowed for this model
+        initial states depending on fixedParameters is allowed for this model
         @type bool
     """
 
@@ -2632,7 +2646,7 @@ def strip_pysb(symbol):
     # this ensures that the pysb type specific __repr__ is used when converting
     # to string
     if pysb and isinstance(symbol, pysb.Component):
-        return sp.Symbol(symbol.name)
+        return sp.Symbol(symbol.name, real=True)
     else:
         # in this case we will use sympy specific transform anyways
         return symbol
@@ -2838,7 +2852,7 @@ def csc_matrix(matrix, name, base_index=0):
         for row in range(0, matrix.rows):
             if not (matrix[row, col] == 0):
                 symbolName = f'{name}{symbol_name_idx}'
-                sparseMatrix[row, col] = sp.Symbol(symbolName)
+                sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
                 symbolList.append(symbolName)
                 sparseList.append(matrix[row, col])
                 symbolRowVals.append(row)
