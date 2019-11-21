@@ -103,7 +103,7 @@ matrix:
         - CI_MODE=test
       before_install:
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-        - choco install python3 --params "/InstallDir:C:\\Python"
+        - choco install python3 --version=3.7.5 --params "/InstallDir:C:\\Python"
         - choco install swig
         - export PATH="/c/Python:/c/Python/Scripts:/c/Users/travis/AppData/Roaming/Python/Python38/Scripts:$PATH"
         - pip3 install --user -U numpy
