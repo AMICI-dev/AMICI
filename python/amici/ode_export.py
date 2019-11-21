@@ -149,6 +149,8 @@ functions = {
             '(realtype *dxdotdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const int ip, const realtype *w)',
+        'sparse':
+            True,
         'assume_pow_positivity':
             True,
     },
@@ -2297,6 +2299,7 @@ class ODEExporter:
             'NDWDP': str(len(self.model.sparsesym('dwdp'))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
+            'NDXDOTDP': str(len(self.model.sparsesym('dxdotdp'))),
             'NDJYDY': 'std::vector<int>{%s}'
                       % ','.join(str(len(x))
                                  for x in self.model.sparsesym('dJydy')),
