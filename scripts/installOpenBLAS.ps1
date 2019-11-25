@@ -1,3 +1,4 @@
+Write-Host 'script installOpenBLAS.ps1 started'
 New-Item -Path 'C:\BLAS' -ItemType Directory -Force
 # New-Item -Path 'C:\BLAS\OpenBLAS-0.3.6-x64' -ItemType Directory -Force
 Set-Location 'C:\BLAS'
@@ -10,3 +11,4 @@ $webclient.DownloadFile($uri,"$output")
 Expand-Archive -Path 'C:\BLAS\OpenBLAS-0.3.6-x64.zip' -DestinationPath 'C:\BLAS\OpenBLAS-0.3.6-x64' -Force
 New-Item -Path Env:BLAS_LIBS -Value "/LIBPATH:C:\BLAS\OpenBLAS-0.3.6-x64\lib" -Force
 New-Item -Path Env:BLAS_CFLAGS -Value "/IC:\BLAS\OpenBLAS-0.3.6-x64\include" -Force
+Write-Host 'script installOpenBLAS.ps1 completed'
