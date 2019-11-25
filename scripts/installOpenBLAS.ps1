@@ -1,7 +1,7 @@
 Write-Host 'script installOpenBLAS.ps1 started'
 New-Item -Path 'C:\BLAS' -ItemType Directory -Force
 # New-Item -Path 'C:\BLAS\OpenBLAS-0.3.6-x64' -ItemType Directory -Force
-Set-Location 'C:\BLAS'
+# Set-Location 'C:\BLAS'
 # Copy-Item -Path "$BASE_DIR\ThirdParty\BLAS\OpenBLAS-0.3.6-x64.zip" -Destination "C:\BLAS" -Force
 $uri = 'https://sourceforge.net/projects/openblas/files/v0.3.6/OpenBLAS-0.3.6-x64.zip/download'
 $output = 'C:\BLAS\OpenBLAS-0.3.6-x64.zip'
