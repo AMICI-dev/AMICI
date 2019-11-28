@@ -577,10 +577,7 @@ class SbmlImporter:
                     locals=self.local_symbols
                 )
 
-        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
-            self.replaceInAllExpressions(
-               comp, vol
-            )
+
 
     def processReactions(self):
         """Get reactions from SBML model.
@@ -789,6 +786,10 @@ class SbmlImporter:
             self.replaceInAllExpressions(
                 sp.sympify(variable, locals=self.local_symbols),
                 assignments[variable]
+            )
+        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
+            self.replaceInAllExpressions(
+               comp, vol
             )
 
     def processVolumeConversion(self):
