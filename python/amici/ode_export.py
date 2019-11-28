@@ -156,6 +156,16 @@ functions = {
         'assume_pow_positivity':
             True,
     },
+    'dxdotdp_implicit': {
+        'signature':
+            '(realtype *dxdotdp_implicit, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const int ip, const realtype *w)',
+        'sparse':
+            True,
+        'assume_pow_positivity':
+            True,
+    },
     'dydx': {
         'signature':
             '(realtype *dydx, const realtype t, const realtype *x, '
@@ -809,6 +819,10 @@ class ODEModel:
                 'x': 'JB',
                 'y': 'xB',
             },
+            'dxdotdp_implicit': {
+                'x': 'dxdotdw',
+                'y': 'dwdp',
+            },
         }
 
         self._lock_total_derivative = False
@@ -1283,14 +1297,20 @@ class ODEModel:
             base_index = 0
             for iy in range(self.ny()):
                 symbolColPtrs, symbolRowVals, sparseList, symbolList, \
-                sparseMatrix = csc_matrix(matrix[iy, :], name,
-                                          base_index=base_index)
+                    sparseMatrix = csc_matrix(matrix[iy, :], name,
+                                              base_index=base_index)
                 base_index += len(symbolList)
                 self._colptrs[name].append(symbolColPtrs)
                 self._rowvals[name].append(symbolRowVals)
                 self._sparseeqs[name].append(sparseList)
                 self._sparsesyms[name].append(symbolList)
                 self._syms[name].append(sparseMatrix)
+        elif name == 'dxdotdp_implicit':
+            # Only sparsity pattern is needed
+            symbolColPtrs, symbolRowVals, _, _, _ = csc_matrix(matrix, name)
+
+            self._colptrs[name] = symbolColPtrs
+            self._rowvals[name] = symbolRowVals
         else:
             symbolColPtrs, symbolRowVals, sparseList, symbolList, \
                 sparseMatrix = csc_matrix(matrix, name)
@@ -1925,7 +1945,8 @@ class ODEExporter:
 
         """
         for function in self.functions.keys():
-            self._writeFunctionFile(function)
+            if function != 'dxdotdp_implicit':
+                self._writeFunctionFile(function)
             if function in sparse_functions:
                 self._write_function_index(function, 'colptrs')
                 self._write_function_index(function, 'rowvals')
@@ -2314,6 +2335,7 @@ class ODEExporter:
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP': str(len(self.model.sparsesym('dxdotdp'))),
+            'NDXDOTDP_IMP': str(len(self.model.sparsesym('dxdotdp_implicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
                       % ','.join(str(len(x))
                                  for x in self.model.sparsesym('dJydy')),
@@ -2350,7 +2372,7 @@ class ODEExporter:
 
         for fun in [
             'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'dxdotdp', 'JSparse', 'JSparseB', 'dJydy'
+            'dxdotdp', 'dxdotdp_implicit', 'JSparse', 'JSparseB', 'dJydy'
         ]:
             tplData[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.modelName)

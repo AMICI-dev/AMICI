@@ -1156,9 +1156,13 @@ class Model : public AbstractModel {
     std::vector<realtype> idlist;
 
     /** temporary storage of dxdotdp data across functions (dimension: nplist x
-     * nx_solver, row-major) */
-    AmiVectorArray dxdotdp;
-
+     * nx_solver, nnz: ndxdotdp, type CSC_MAT) */
+    mutable SUNMatrixWrapper dxdotdp;
+    
+    /** temporary storage of dxdotdp_implicit data across functions
+     (dimension: nplist x * nx_solver, nnz: to be computed, type CSC_MAT) */
+    mutable SUNMatrixWrapper dxdotdp_implicit;
+    
     /** AMICI context */
     AmiciApplication *app = &defaultContext;
 

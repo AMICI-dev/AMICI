@@ -108,7 +108,8 @@ class AbstractModel {
                         const AmiVector &dx) = 0;
 
     /**
-     * @brief Parameter derivative of residual function
+     * @brief Model specific sparse implementation of
+              explicit parameter derivative of right hand side
      * @param t time
      * @param x state
      * @param dx time derivative of state (DAE only)
@@ -116,6 +117,30 @@ class AbstractModel {
     virtual void fdxdotdp(const realtype t, const AmiVector &x,
                           const AmiVector &dx) = 0;
 
+    /**
+     * @brief Model specific implementation for implicit version of dxdotdp, column pointers
+     * @param indexptrs column pointers
+     **/
+    virtual void fdxdotdp_implicit_colptrs(sunindextype *indexptrs);
+    
+    /**
+     * @brief Model specific implementation for implicit version of dxdotdp, row values
+     * @param indexvals row values
+     **/
+    virtual void fdxdotdp_implicit_rowvals(sunindextype *indexvals);
+
+    /**
+     * @brief Model specific implementation for dxdotdp, column pointers
+     * @param indexptrs column pointers
+     **/
+    virtual void fdxdotdp_colptrs(sunindextype *indexptrs);
+    
+    /**
+     * @brief Model specific implementation for dxdotdp, row values
+     * @param indexvals row values
+     **/
+    virtual void fdxdotdp_rowvals(sunindextype *indexvals);
+    
     /**
      * @brief Jacobian multiply function
      * @param t time
