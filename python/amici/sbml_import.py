@@ -910,11 +910,13 @@ class SbmlImporter:
             observableSyms = sp.Matrix([
                 sp.symbols(obs, real=True) for obs in observables.keys()
             ])
+            observable_ids = observables.keys()
         else:
             observableValues = speciesSyms
-            observableNames = [
+            observable_ids = [
                 f'x{index}' for index in range(len(speciesSyms))
             ]
+            observableNames = observable_ids[:]
             observableSyms = sp.Matrix(
                 [sp.symbols(f'y{index}', real=True)
                  for index in range(len(speciesSyms))]
@@ -942,7 +944,7 @@ class SbmlImporter:
 
         # set cost functions
         llhYStrings = []
-        for y_name in observableNames:
+        for y_name in observable_ids:
             llhYStrings.append(noise_distribution_to_cost_function(
                 noise_distributions.get(y_name, 'normal')))
 
