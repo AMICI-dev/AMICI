@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 32.
+List of publications using AMICI. Total number is 34.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -24,11 +24,17 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="ref-NousiainenInt2019">
 <p>Nousiainen, Kari, Jukka Intosalmi, and Harri Lähdesmäki. 2019. “A Mathematical Model for Enhancer Activation Kinetics During Cell Differentiation.” In <em>Algorithms for Computational Biology</em>, edited by Ian Holmes, Carlos Martín-Vide, and Miguel A. Vega-Rodríguez, 191–202. Cham: Springer International Publishing.</p>
 </div>
+<div id="ref-PedretscherKal2019">
+<p>Pedretscher, B., B. Kaltenbacher, and O. Pfeiler. 2019. “Parameter Identification and Uncertainty Quantification in Stochastic State Space Models and Its Application to Texture Analysis.” <em>Applied Numerical Mathematics</em> 146: 38–54. <a href="https://doi.org/https://doi.org/10.1016/j.apnum.2019.06.020" class="uri">https://doi.org/https://doi.org/10.1016/j.apnum.2019.06.020</a>.</p>
+</div>
 <div id="ref-PittBan2019">
 <p>Pitt, Jake Alan, and Julio R Banga. 2019. “Parameter Estimation in Models of Biological Oscillators: An Automated Regularised Estimation Approach.” <em>BMC Bioinformatics</em> 20 (1): 82. <a href="https://doi.org/10.1186/s12859-019-2630-y" class="uri">https://doi.org/10.1186/s12859-019-2630-y</a>.</p>
 </div>
 <div id="ref-SchmiesterSch2019">
 <p>Schmiester, Leonard, Yannik Schälte, Fabian Fröhlich, Jan Hasenauer, and Daniel Weindl. 2019. “Efficient parameterization of large-scale dynamic models based on relative measurements.” <em>Bioinformatics</em>, July. <a href="https://doi.org/10.1093/bioinformatics/btz581" class="uri">https://doi.org/10.1093/bioinformatics/btz581</a>.</p>
+</div>
+<div id="ref-SchmiesterWei2019">
+<p>Schmiester, Leonard, Daniel Weindl, and Jan Hasenauer. 2019. “Statistical Inference of Mechanistic Models from Qualitative Data Using an Efficient Optimal Scaling Approach.” <em>bioRxiv</em>. Cold Spring Harbor Laboratory. <a href="https://doi.org/10.1101/848648" class="uri">https://doi.org/10.1101/848648</a>.</p>
 </div>
 <div id="ref-VillaverdeRai2019">
 <p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2019. “A Comparison of Methods for Quantifying Prediction Uncertainty in Systems Biology.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
@@ -44,6 +50,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-BastCal2018">
 <p>Bast, Lisa, Filippo Calzolari, Michael Strasser, Jan Hasenauer, Fabian J. Theis, Jovica Ninkovic, and Carsten Marr. 2018. “Subtle Changes in Clonal Dynamics Underlie the Age-Related Decline in Neurogenesis.” <em>Cell Reports</em>.</p>
+</div>
+<div id="ref-FroehlichKes2018">
+<p>Fröhlich, Fabian, Thomas Kessler, Daniel Weindl, Alexey Shadrin, Leonard Schmiester, Hendrik Hache, Artur Muradyan, et al. 2018. “Efficient Parameter Estimation Enables the Prediction of Drug Response Using a Mechanistic Pan-Cancer Pathway Model.” <em>Cell Systems</em> 7 (6). Elsevier: 567–579.e6. <a href="https://doi.org/10.1016/j.cels.2018.10.013" class="uri">https://doi.org/10.1016/j.cels.2018.10.013</a>.</p>
 </div>
 <div id="ref-FroehlichRei2018">
 <p>Fröhlich, Fabian, Anita Reiser, Laura Fink, Daniel Woschée, Thomas Ligon, Fabian Joachim Theis, Joachim Oskar Rädler, and Jan Hasenauer. 2018. “Multi-Experiment Nonlinear Mixed Effect Modeling of Single-Cell Translation Kinetics After Transfection.” <em>Npj Systems Biology and Applications</em> 5 (1): 1. <a href="https://doi.org/10.1038/s41540-018-0079-7" class="uri">https://doi.org/10.1038/s41540-018-0079-7</a>.</p>
@@ -71,9 +80,6 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="refs" class="references">
 <div id="ref-BallnusHug2017">
 <p>Ballnus, B., S. Hug, K. Hatz, L. Görlitz, J. Hasenauer, and F. J. Theis. 2017. “Comprehensive Benchmarking of Markov Chain Monte Carlo Methods for Dynamical Systems.” <em>BMC Syst. Biol.</em> 11 (63). <a href="https://doi.org/10.1186/s12918-017-0433-1" class="uri">https://doi.org/10.1186/s12918-017-0433-1</a>.</p>
-</div>
-<div id="ref-FroehlichKes2017">
-<p>Fröhlich, Fabian, Thomas Kessler, Daniel Weindl, Alexey Shadrin, Leonard Schmiester, Hendrik Hache, Artur Muradyan, et al. 2017. “Efficient Parameterization of Large-Scale Mechanistic Models Enables Drug Response Prediction for Cancer Cell Lines.” <em>bioRxiv</em>. Cold Spring Harbor Labs Journals. <a href="https://doi.org/10.1101/174094" class="uri">https://doi.org/10.1101/174094</a>.</p>
 </div>
 <div id="ref-FroehlichKal2017">
 <p>Fröhlich, F., B. Kaltenbacher, F. J. Theis, and J. Hasenauer. 2017. “Scalable Parameter Estimation for Genome-Scale Biochemical Reaction Networks.” <em>PLoS Comput. Biol.</em> 13 (1): e1005331. <a href="https://doi.org/10.1371/journal.pcbi.1005331" class="uri">https://doi.org/10.1371/journal.pcbi.1005331</a>.</p>
