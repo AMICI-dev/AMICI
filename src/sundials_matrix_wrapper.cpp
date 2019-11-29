@@ -219,7 +219,43 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c, gsl::span<const realtype>
     }
 }
 
-void SUNMatrixWrapper::sparse_multiply(AmiVectorArray C,
+void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
+                                gsl::span<const realtype> b,
+                                gsl::span<int> cols) const {
+    if (!matrix)
+        return;
+    
+    sunindextype nrows = rows();
+    sunindextype ncols = columns();
+    
+    if (static_cast<sunindextype>(c.size()) != nrows)
+        throw std::invalid_argument("Dimension mismatch between number of rows "
+                                    "in A (" + std::to_string(nrows) + ") and "
+                                    "elements in c (" + std::to_string(c.size())
+                                    + ")");
+    
+    if (static_cast<sunindextype>(b.size()) != ncols)
+        throw std::invalid_argument("Dimension mismatch between number of cols "
+                                    "in A (" + std::to_string(ncols)
+                                    + ") and elements in b ("
+                                    + std::to_string(b.size()) + ")");
+    
+    if (SUNMatGetID(matrix) != SUNMATRIX_SPARSE)
+        throw std::invalid_argument("Reordered multiply only implemented for "
+                                    "sparse matrices, but A is not sparse");
+    
+    if (sparsetype() != CSC_MAT)
+        throw std::invalid_argument("Reordered multiply only implemented for "
+                                    "matrix type CSC, but A is not of type CSC");
+    
+    /* Carry out actual multiplication */
+    for (sunindextype i = 0; i < ncols; ++i)
+        for (sunindextype k = indexptrs_ptr[cols[i]]; k < indexptrs_ptr[cols[i] + 1]; ++k)
+            c[indexvals_ptr[k]] += data_ptr[k] * b[i];
+}
+
+    
+void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper C,
                                        SUNMatrixWrapper B,
                                        gsl::span<int> colsB) const {
     if (!matrix)
@@ -230,18 +266,6 @@ void SUNMatrixWrapper::sparse_multiply(AmiVectorArray C,
     
     sunindextype nrows = rows();
     sunindextype ncols = columns();
-
-    if (static_cast<sunindextype>(NV_LENGTH_S(C.getNVector(0))) != nrows)
-        throw std::invalid_argument("Dimension mismatch between number of rows "
-                                    "in A (" + std::to_string(nrows) + ") and "
-                                    "number of rows in C (" + std::to_string(NV_LENGTH_S(C.getNVector(0)))
-                                    + ")");
-
-    if (B.rows() != ncols)
-        throw std::invalid_argument("Dimension mismatch between number of cols "
-                                    "in A (" + std::to_string(ncols)
-                                    + ") and number of rows in B ("
-                                    + std::to_string((int)B.rows()) + ")");
     
     if (SUNMatGetID(matrix) != SUNMATRIX_SPARSE)
         throw std::invalid_argument("Matrix A not sparse in sparse_multiply");
@@ -255,11 +279,36 @@ void SUNMatrixWrapper::sparse_multiply(AmiVectorArray C,
     if (B.sparsetype() != CSC_MAT)
         throw std::invalid_argument("Matrix B not of type CSC_MAT");
 
+    if (SUNMatGetID(C.matrix) != SUNMATRIX_SPARSE)
+        throw std::invalid_argument("Matrix C not sparse in sparse_multiply");
+    
+    if (C.sparsetype() != CSC_MAT)
+        throw std::invalid_argument("Matrix C not of type CSC_MAT");
+    
+    if (C.rows != nrows)
+        throw std::invalid_argument("Dimension mismatch between number of rows "
+                                    "in A (" + std::to_string(nrows) + ") and "
+                                    "number of rows in C ("
+                                    + std::to_string((int)C.rows()) + ")");
+    
+    if (B.rows() != ncols)
+        throw std::invalid_argument("Dimension mismatch between number of rows "
+                                    "in A (" + std::to_string(ncols)
+                                    + ") and number of cols in B ("
+                                    + std::to_string((int)B.rows()) + ")");
+    
+    if (C.cols() != static_cast<sunindextype>(colsB.size()))
+        throw std::invalid_argument("Dimension mismatch between number of cols "
+                                    "in C (" + std::to_string(ncols)
+                                    + ") and number of rows to be used in B ("
+                                    + std::to_string((int)colsB.size()) + ")");
+    
     /* Carry out actual multiplication */
+    unsigned int idata = 0;
     for (int icol = 0; icol < (int)colsB.size(); ++icol)
         for(sunindextype k = B.indexptrs_ptr[colsB[icol]]; k < B.indexptrs_ptr[colsB[icol] + 1]; ++k)
             for(sunindextype l = indexptrs_ptr[k]; l < B.indexptrs_ptr[k + 1]; ++l)
-                C.data(icol)[l] += data_ptr[l] * B.data_ptr[k];
+                C.data_ptr[idata++] += data_ptr[l] * B.data_ptr[k];
 
 }
     

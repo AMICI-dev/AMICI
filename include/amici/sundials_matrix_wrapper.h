@@ -154,14 +154,24 @@ class SUNMatrixWrapper {
     void multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const;
 
     /**
-     * @brief Perform matrix vector multiplication
+     * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     * @param cols int vector for column reordering
+     */
+    void multiply(gsl::span<realtype> c,
+                  gsl::span<const realtype> b,
+                  gsl::span<int> cols) const;
+    
+    /**
+     * @brief Perform matrix matrix multiplication
               C[:, :] += A * B[:, colsB]
               for columns in colsB sparse B
      * @param C output matrix, may already contain values
      * @param B multiplication matrix
-     * @param colsB multiplication matrix
+     * @param colsB int vector for column reordering
      */
-    void sparse_multiply(AmiVectorArray C,
+    void sparse_multiply(SUNMatrixWrapper C,
                          SUNMatrixWrapper B,
                          gsl::span<int> colsB) const;
     

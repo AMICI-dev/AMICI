@@ -1160,7 +1160,7 @@ class Model : public AbstractModel {
     mutable SUNMatrixWrapper dxdotdp;
     
     /** temporary storage of dxdotdp_implicit data across functions
-     (dimension: nplist x * nx_solver, nnz: to be computed, type CSC_MAT) */
+     (dimension: nplist x * nx_solver, nnz: ndxdotdp_imp, type CSC_MAT) */
     mutable SUNMatrixWrapper dxdotdp_implicit;
     
     /** AMICI context */

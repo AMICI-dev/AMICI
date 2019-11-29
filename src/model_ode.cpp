@@ -98,11 +98,16 @@ void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
 }
 
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
-    dxdotdp.reset();
     fdwdp(t, N_VGetArrayPointer(x));
     
     if (wasPythonGenerated()) {
         // python generated
+        dxdotdp.reset();
+        for (int ip = 0; ip < nplist(); ip++)
+            fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
+                     unscaledParameters.data(), fixedParameters.data(),
+                     h.data(), plist_[ip], w.data());
+        
         if (nw > 0)
             /* Sparse matrix multiplication dxdotdp += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
@@ -313,30 +318,28 @@ void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     /* initialize with zeros */
     N_VConst(0.0, qBdot);
-    
-    /* call sparse matrix functions */
     fdxdotdp(t, x);
-    fdxdotdp_implicit(t, x);
     
-    /* call multiplication */
-    dxdotdp.multiply(qBdot, xB);
-    dxdotdp_implicit.multiply(qBdot, xB);
-    
-    /* Second order code will need to be changed... :/
-    CHANGE_TO_SPARSE --> This loop needs to be changed...
-    for (int ip = 0; ip < nplist(); ip++) {
-        auto cur_dxdotdp = dxdotdp[ip];
-        for (int ix = 0; ix < nxtrue_solver; ix++)
-            NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * cur_dxdotdp[ix];
-        // second order part
-        for (int iJ = 1; iJ < nJ; iJ++)
-            auto cur_dxdotdp_2ndorder = dxdotdp[ix + iJ * nxtrue_solver];
+    if (wasPythonGenerated()) {
+        /* call sparse matrix functions */
+        fdxdotdp(t, x);
+        fdxdotdp_implicit(t, x);
+        /* call multiplication */
+        dxdotdp.multiply(qBdot, xB, plist_);
+        dxdotdp_implicit.multiply(qBdot, xB, plist_);
+    } else {
+        /* was matlab generated */
+        for (int ip = 0; ip < nplist(); ip++) {
             for (int ix = 0; ix < nxtrue_solver; ix++)
-                NV_Ith_S(qBdot, ip * nJ + iJ) -=
-                    NV_Ith_S(xB, ix) * cur_dxdotdp_2ndorder[ip] +
-                    NV_Ith_S(xB, ix + iJ * nxtrue_solver) * cur_dxdotdp[ix];
+                NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
+            // second order part
+            for (int iJ = 1; iJ < nJ; iJ++)
+                for (int ix = 0; ix < nxtrue_solver; ix++)
+                    NV_Ith_S(qBdot, ip * nJ + iJ) -=
+                    NV_Ith_S(xB, ix) * dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
+                    NV_Ith_S(xB, ix + iJ * nxtrue_solver) * dxdotdp.at(ix, ip);
+        }
     }
-    */
 }
 
 void Model_ODE::fsxdot(const realtype t, const AmiVector &x,

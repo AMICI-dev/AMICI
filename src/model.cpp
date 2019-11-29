@@ -1799,8 +1799,8 @@ void Model::fw(const realtype t, const realtype *x) {
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
-    dwdp.reset();
     if (wasPythonGenerated()) {
+        dwdp.reset();
         realtype *stcl = nullptr;
 
         // avoid bad memory access when slicing
