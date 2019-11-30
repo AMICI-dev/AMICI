@@ -139,6 +139,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command Get-ChildItem ./scripts; fi
     # end of temporary test code
     - if [[ "$TRAVIS:OS:NAME" == "windows" ]]; then powershell "-Command $VerbosePreference='Continue'"; fi
+    - if [[ "$TRAVIS:OS:NAME" == "windows" ]]; then powershell "-Command $VerbosePreference"; fi
     # - if [[ "$TRAVIS:OS:NAME" == "windows" ]]; then powershell ./scripts/installOpenBLAS.ps1; fi
     - if [[ "$TRAVIS:OS:NAME" == "windows" ]]; then powershell "-File C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1"; fi
     - if [[ "$TRAVIS:OS:NAME" == "windows" ]]; then powershell "-Command $VerbosePreference='SilentlyContinue'"; fi
