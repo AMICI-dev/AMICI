@@ -1,6 +1,6 @@
 # References
 
-List of publications using AMICI. Total number is 34.
+List of publications using AMICI. Total number is 35.
 
 If you applied AMICI in your work and your publication is missing, please let us know via a new Github issue.
 
@@ -35,6 +35,9 @@ If you applied AMICI in your work and your publication is missing, please let us
 </div>
 <div id="ref-SchmiesterWei2019">
 <p>Schmiester, Leonard, Daniel Weindl, and Jan Hasenauer. 2019. “Statistical Inference of Mechanistic Models from Qualitative Data Using an Efficient Optimal Scaling Approach.” <em>bioRxiv</em>. Cold Spring Harbor Laboratory. <a href="https://doi.org/10.1101/848648" class="uri">https://doi.org/10.1101/848648</a>.</p>
+</div>
+<div id="ref-StaporSch2019">
+<p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Bodo Lange, Daniel Weindl, and Jan Hasenauer. 2019. “Mini-Batch Optimization Enables Training of Ode Models on Large-Scale Datasets.” <em>bioRxiv</em>. Cold Spring Harbor Laboratory. <a href="https://doi.org/10.1101/859884" class="uri">https://doi.org/10.1101/859884</a>.</p>
 </div>
 <div id="ref-VillaverdeRai2019">
 <p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2019. “A Comparison of Methods for Quantifying Prediction Uncertainty in Systems Biology.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
