@@ -58,12 +58,12 @@ For Python-AMICI usage see
 To install development versions which have not been released to pypi yet,
 you can install AMICI with pip directly from GitHub using:
 
-    pip3 install -e git+https://github.com/ICB-DCM/AMICI@develop#egg=amici\&subdirectory=python/sdist
+    pip3 install -e https://github.com/icb-dcm/amici/archive/develop.zip#egg=amici\&subdirectory=python/sdist
 
 Replace `develop` by the branch or commit you want to install.
 
-Note that this probably not work on Windows which does not support symlink
-by default
+Note that this will probably not work on Windows which does not support
+symlinks by default
 (https://stackoverflow.com/questions/5917249/git-symlinks-in-windows/49913019#49913019).
 
 ### Light installation 
