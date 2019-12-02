@@ -134,23 +134,20 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const int nxtrue_solver, const int ny, const int nytrue,
              const int nz, const int nztrue, const int ne, const int nJ,
              const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
-             const int ndxdotdp, const int ndxdotdp_implicit,
+             const int ndxdotdp_explicit, const int ndxdotdp_implicit,
              std::vector<int> ndJydy, const int nnz, const int ubw,
              const int lbw, SecondOrderMode o2mode,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
-             std::vector<int> z2event)
+             std::vector<int> z2event, bool pythonGenerated)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), ny(ny), nytrue(nytrue), nz(nz),
       nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
-      ndxdotdw(ndxdotdw), ndxdotdp(ndxdotdp), ndxdotdp_implicit(ndxdotdp_implicit),
-      ndJydy(std::move(ndJydy)), nnz(nnz), nJ(nJ), ubw(ubw),
-      lbw(lbw), o2mode(o2mode), idlist(std::move(idlist)),
+      ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz), nJ(nJ), ubw(ubw),
+      lbw(lbw), pythonGenerated(pythonGenerated), o2mode(o2mode), idlist(std::move(idlist)),
       J(nx_solver, nx_solver, nnz, CSC_MAT),
       dwdx(nw, nx_solver, ndwdx, CSC_MAT), M(nx_solver, nx_solver), w(nw),
       dwdp(nw, p.size(), ndwdp, CSC_MAT), dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
-      dxdotdp(nx_solver, p.size(), ndxdotdp, CSC_MAT),
-      dxdotdp_implicit(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT),
       x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
       total_cl(nx_rdata - nx_solver),
       stotal_cl((nx_rdata - nx_solver) * p.size()), x_pos_tmp(nx_solver),
@@ -159,21 +156,26 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       stateIsNonNegative(nx_solver, false),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
 
-    // Can't use derivedClass::wasPythonGenerated() in ctor.
-    // Guess we are using Python if ndJydy is not empty
-    if (!this->ndJydy.empty()) {
+   /* If Matlab wrapped: dxdotdp is a full AmiVector,
+      if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices */
+    if (pythonGenerated) {
+        dxdotdp_explicit(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
+        dxdotdp_implicit(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
+        
+        // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
             throw std::runtime_error(
-                "Number of elements in ndJydy is not equal "
-                " nytrue.");
-
+                                     "Number of elements in ndJydy is not equal "
+                                     " nytrue.");
+        
         for (int iytrue = 0; iytrue < nytrue; ++iytrue)
             dJydy.emplace_back(
-                SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
+                               SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
     } else {
+        dxdotdp = AmiVectorArray(nx_solver, nplist());
         dJydy_matlab = std::vector<realtype>(nJ * nytrue * ny, 0.0);
     }
-
+          
     requireSensitivitiesForAllParameters();
 }
 
@@ -181,14 +183,18 @@ bool operator==(const Model &a, const Model &b) {
     if (typeid(a) != typeid(b))
         return false;
 
+    bool bool_dxdotdp = true;
+    if (pythonGenerated) {
+        bool_dxdotdp = (a.ndxdotdp_explicit == b.ndxdotdp_explicit) &&
+            (a.ndxdotdp_implicit == b.ndxdotdp_implicit);
+    }
+    
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
            (a.nx_solver == b.nx_solver) &&
            (a.nxtrue_solver == b.nxtrue_solver) && (a.ny == b.ny) &&
            (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
            (a.ne == b.ne) && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) &&
            (a.ndwdp == b.ndwdp) && (a.ndxdotdw == b.ndxdotdw) &&
-           (a.ndxdotdp == b.ndxdotdp) &&
-           (a.ndxdotdp_implicit == b.ndxdotdp_implicit) &&
            (a.nnz == b.nnz) && (a.nJ == b.nJ) && (a.ubw == b.ubw) &&
            (a.lbw == b.lbw) && (a.o2mode == b.o2mode) &&
            (a.z2event == b.z2event) && (a.idlist == b.idlist) && (a.h == b.h) &&
@@ -199,7 +205,7 @@ bool operator==(const Model &a, const Model &b) {
            (a.ts == b.ts) && (a.nmaxevent == b.nmaxevent) &&
            (a.pscale == b.pscale) &&
            (a.stateIsNonNegative == b.stateIsNonNegative) &&
-           (a.tstart == b.tstart);
+           (a.tstart == b.tstart) && bool_dxdotdp;
 }
 
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
@@ -1827,7 +1833,7 @@ void Model::fdwdp(const realtype t, const realtype *x) {
     }
     
     if (alwaysCheckFinite) {
-        app->checkFinite(dwdp.get(), "dwdp");
+        app->checkFinite(gsl::make_span(dwdp.get()), "dwdp");
     }
 }
 

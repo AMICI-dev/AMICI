@@ -412,7 +412,7 @@ class Model_ODE : public Model {
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w) = 0;
 
-    /** model specific implementation of fdxdotdp, with w chainrule
+    /** model specific implementation of fdxdotdp, with w chainrule (Matlab only)
      * @param dxdotdp partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -428,8 +428,8 @@ class Model_ODE : public Model {
                           const realtype *h, int ip, const realtype *w,
                           const realtype *dwdp);
 
-    /** model specific implementation of fdxdotdp, without w chainrule
-     * @param dxdotdp partial derivative xdot wrt p
+    /** model specific implementation of fdxdotdp_explicit, without w chainrule (Python only)
+     * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
      * @param p parameter vector
@@ -438,9 +438,10 @@ class Model_ODE : public Model {
      * @param ip parameter index
      * @param w vector with helper variables
      */
-    virtual void fdxdotdp(realtype *dxdotdp, realtype t, const realtype *x,
-                          const realtype *p, const realtype *k,
-                          const realtype *h, int ip, const realtype *w);
+    virtual void fdxdotdp_explicit(realtype *dxdotdp_explicit, realtype t,
+                                   const realtype *x, const realtype *p,
+                                   const realtype *k,vconst realtype *h,
+                                   int ip, const realtype *w);
 
     /** model specific implementation of fdxdotdw, data part
      * @param dxdotdw partial derivative xdot wrt w

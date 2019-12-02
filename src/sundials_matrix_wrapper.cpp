@@ -256,12 +256,8 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
 
     
 void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper C,
-                                       SUNMatrixWrapper B,
-                                       gsl::span<int> colsB) const {
+                                       SUNMatrixWrapper B) const {
     if (!matrix)
-        return;
-    
-    if (colsB.size() < 1)
         return;
     
     sunindextype nrows = rows();
@@ -297,16 +293,10 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper C,
                                     + ") and number of cols in B ("
                                     + std::to_string((int)B.rows()) + ")");
     
-    if (C.cols() != static_cast<sunindextype>(colsB.size()))
-        throw std::invalid_argument("Dimension mismatch between number of cols "
-                                    "in C (" + std::to_string(ncols)
-                                    + ") and number of rows to be used in B ("
-                                    + std::to_string((int)colsB.size()) + ")");
-    
     /* Carry out actual multiplication */
     unsigned int idata = 0;
-    for (int icol = 0; icol < (int)colsB.size(); ++icol)
-        for(sunindextype k = B.indexptrs_ptr[colsB[icol]]; k < B.indexptrs_ptr[colsB[icol] + 1]; ++k)
+    for (int icol = 0; icol < (int)(C.cols()).size(); ++icol)
+        for(sunindextype k = B.indexptrs_ptr[icol]; k < B.indexptrs_ptr[icol + 1]; ++k)
             for(sunindextype l = indexptrs_ptr[k]; l < B.indexptrs_ptr[k + 1]; ++l)
                 C.data_ptr[idata++] += data_ptr[l] * B.data_ptr[k];
 

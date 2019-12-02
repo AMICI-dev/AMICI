@@ -165,15 +165,13 @@ class SUNMatrixWrapper {
     
     /**
      * @brief Perform matrix matrix multiplication
-              C[:, :] += A * B[:, colsB]
-              for columns in colsB sparse B
+              C[:, :] += A * B
+              for sparse A, B, C
      * @param C output matrix, may already contain values
      * @param B multiplication matrix
-     * @param colsB int vector for column reordering
      */
     void sparse_multiply(SUNMatrixWrapper C,
-                         SUNMatrixWrapper B,
-                         gsl::span<int> colsB) const;
+                         SUNMatrixWrapper B) const;
     
     /**
      * @brief Set to 0.0

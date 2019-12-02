@@ -146,10 +146,11 @@ functions = {
         'assume_pow_positivity':
             True,
     },
-    'dxdotdp': {
+    'dxdotdp_explicit': {
         'signature':
-            '(realtype *dxdotdp, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
+            '(realtype *dxdotdp_explicit, const realtype t, '
+            'const realtype *x, const realtype *p, '
+            'const realtype *k, const realtype *h, '
             'const int ip, const realtype *w)',
         'sparse':
             True,
@@ -2334,7 +2335,8 @@ class ODEExporter:
             'NDWDP': str(len(self.model.sparsesym('dwdp'))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
-            'NDXDOTDP': str(len(self.model.sparsesym('dxdotdp'))),
+            'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
+                'dxdotdp_explicit'))),
             'NDXDOTDP_IMPLICIT': str(len(self.model.sparsesym(
                 'dxdotdp_implicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
@@ -2373,7 +2375,8 @@ class ODEExporter:
 
         for fun in [
             'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'dxdotdp', 'dxdotdp_implicit', 'JSparse', 'JSparseB', 'dJydy'
+            'dxdotdp_explicit', 'dxdotdp_implicit', 'JSparse', 'JSparseB',
+            'dJydy'
         ]:
             tplData[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.modelName)

@@ -121,13 +121,13 @@ class AbstractModel {
      * @brief Model specific implementation for dxdotdp, column pointers
      * @param indexptrs column pointers
      **/
-    virtual void fdxdotdp_colptrs(sunindextype *indexptrs);
+    virtual void fdxdotdp_explicit_colptrs(sunindextype *indexptrs);
     
     /**
      * @brief Model specific implementation for dxdotdp, row values
      * @param indexvals row values
      **/
-    virtual void fdxdotdp_rowvals(sunindextype *indexvals);
+    virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
     
     /**
      * @brief Model specific implementation for implicit version of dxdotdp, column pointers

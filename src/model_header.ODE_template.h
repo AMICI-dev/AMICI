@@ -54,9 +54,9 @@ TPL_DWDX_ROWVALS_DEF
 TPL_DXDOTDW_DEF
 TPL_DXDOTDW_COLPTRS_DEF
 TPL_DXDOTDW_ROWVALS_DEF
-TPL_DXDOTDP_DEF
-TPL_DXDOTDP_COLPTRS_DEF
-TPL_DXDOTDP_ROWVALS_DEF
+TPL_DXDOTDP_EXPLICIT_DEF
+TPL_DXDOTDP_EXPLICIT_COLPTRS_DEF
+TPL_DXDOTDP_EXPLICIT_ROWVALS_DEF
 TPL_DXDOTDP_IMPLICIT_COLPTRS_DEF
 TPL_DXDOTDP_IMPLICIT_ROWVALS_DEF
 extern void dydx_TPL_MODELNAME(realtype *dydx, const realtype t,
@@ -121,6 +121,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_NDWDX,                                   // ndwdx
               TPL_NDWDP,                                   // ndwdp
               TPL_NDXDOTDW,                                // ndxdotdw
+              TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
+              TPL_NDXDOTDP_IMPLICIT,                       // ndxdotdp_implicit
               TPL_NDJYDY,                                  // ndjydy
               TPL_NNZ,                                     // nnz
               TPL_UBW,                                     // ubw
@@ -130,7 +132,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
               std::vector<int>{},                          // plist
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
-              std::vector<int>{}                           // z2event
+              std::vector<int>{},                          // z2event
+              true                                         // pythonGenerated
           ) {}
 
     /**
@@ -463,11 +466,11 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
 
     TPL_DXDOTDW_ROWVALS_IMPL
 
-    TPL_DXDOTDP_IMPL
+    TPL_DXDOTDP_EXPLICIT_IMPL
     
-    TPL_DXDOTDP_COLPTRS_IMPL
+    TPL_DXDOTDP_EXPLICIT_COLPTRS_IMPL
     
-    TPL_DXDOTDP_ROWVALS_IMPL
+    TPL_DXDOTDP_EXPLICIT_ROWVALS_IMPL
 
     TPL_DXDOTDP_IMPLICIT_COLPTRS_IMPL
     
@@ -818,10 +821,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      */
     virtual const std::string getAmiciCommit() const override {
         return "TPL_AMICI_COMMIT_STRING";
-    }
-
-    virtual bool wasPythonGenerated() const override {
-        return true;
     }
 };
 

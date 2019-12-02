@@ -60,8 +60,6 @@ class Model : public AbstractModel {
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
      * @param ndxdotdw number of nonzero elements in the w derivative of xdot
-     * @param ndxdotdp number of nonzero elements in the p derivative of xdot
-     * @param ndxdotdp_implicit number of nonzero elements in dxdotdw * dwdp
      * @param ndJydy number of nonzero elements in the y derivative of dJy
      * (dimension nytrue)
      * @param nnz number of nonzero elements in Jacobian
@@ -76,12 +74,12 @@ class Model : public AbstractModel {
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int ny, int nytrue, int nz, int nztrue, int ne, int nJ, int nw,
-          int ndwdx, int ndwdp, int ndxdotdw, int ndxdotdp, int
-          ndxdotdp_implicit, std::vector<int> ndJydy, int nnz,
-          int ubw, int lbw, amici::SecondOrderMode o2mode,
+          int ndwdx, int ndwdp, int ndxdotdw, int ndxdotdp_explicit,
+          int ndxdotdp_implicit, std::vector<int> ndJydy,
+          int nnz, int ubw, int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
-          std::vector<int> z2event);
+          std::vector<int> z2event, bool pythonGenerated=false);
 
     /** destructor */
     ~Model() override = default;
@@ -139,8 +137,8 @@ class Model : public AbstractModel {
     using AbstractModel::fdwdx_colptrs;
     using AbstractModel::fdwdx_rowvals;
     using AbstractModel::fdxdotdp;
-    using AbstractModel::fdxdotdp_colptrs;
-    using AbstractModel::fdxdotdp_rowvals;
+    using AbstractModel::fdxdotdp_explicit_colptrs;
+    using AbstractModel::fdxdotdp_explicit_rowvals;
     using AbstractModel::fdxdotdp_implicit_colptrs;
     using AbstractModel::fdxdotdp_implicit_rowvals;
     using AbstractModel::fdydp;
@@ -1141,6 +1139,12 @@ class Model : public AbstractModel {
     /** number of nonzero entries in dxdotdw */
     int ndxdotdw{0};
 
+    /** number of nonzero entries in ndxdotdp_explicit */
+    int ndxdotdp_explicit{0};
+    
+    /** number of nonzero entries in ndxdotdp_implicit */
+    int ndxdotdp_implicit{0};
+    
     /** number of nonzero entries in dJydy */
     std::vector<int> ndJydy;
 
@@ -1155,6 +1159,9 @@ class Model : public AbstractModel {
 
     /** lower bandwith of the jacobian */
     int lbw{0};
+    
+    /* did we use Matlab or python for model generation */
+    bool pythonGenerated;
 
     /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
      * directional or full second order derivative will be computed */
@@ -1163,13 +1170,17 @@ class Model : public AbstractModel {
     /** flag array for DAE equations */
     std::vector<realtype> idlist;
 
-    /** temporary storage of dxdotdp data across functions (dimension: nplist x
-     * nx_solver, nnz: ndxdotdp, type CSC_MAT) */
-    mutable SUNMatrixWrapper dxdotdp;
+    /** temporary storage of dxdotdp data across functions, Python only
+     (dimension: nplist x nx_solver, nnz: ndxdotdp_explicit, type CSC_MAT) */
+    mutable SUNMatrixWrapper dxdotdp_explicit;
     
-    /** temporary storage of dxdotdp_implicit data across functions
+    /** temporary storage of dxdotdp_implicit data across functions, Python only
      (dimension: nplist x * nx_solver, nnz: ndxdotdp_implicit, type CSC_MAT) */
     mutable SUNMatrixWrapper dxdotdp_implicit;
+    
+    /** temporary storage of dxdotdp data across functions, Matlab only
+     (dimension: nplist x nx_solver, row-major) */
+    AmiVectorArray dxdotdp;
     
     /** AMICI context */
     AmiciApplication *app = &defaultContext;
@@ -1272,7 +1283,7 @@ class Model : public AbstractModel {
     virtual void fdJydy_colptrs(sunindextype *indexptrs, int index);
 
     /**
-     * @brief Model specific implementation of fdxdotdw row vals
+     * @brief Model specific implementation of fdJydy row vals
      * @param indexptrs row val pointers
      * @param index ytrue index
      */

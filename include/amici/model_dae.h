@@ -63,7 +63,7 @@ class Model_DAE : public Model {
               const int nxtrue_solver, const int ny, const int nytrue,
               const int nz, const int nztrue, const int ne, const int nJ,
               const int nw, const int ndwdx, const int ndwdp,
-              const int ndxdotdw, const int ndxdotdp,
+              const int ndxdotdw, const int ndxdotdp_explicit,
               const int ndxdotdp_implicit,
               std::vector<int> ndJydy, const int nnz,
               const int ubw, const int lbw, const SecondOrderMode o2mode,
@@ -72,7 +72,7 @@ class Model_DAE : public Model {
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event)
         : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
-                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, ndxdotdp,
+                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, ndxdotdp_explicit,
                 ndxdotdp_implicit, std::move(ndJydy), nnz, ubw, lbw, o2mode,
                 p, k, plist, idlist, z2event) {}
 

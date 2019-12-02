@@ -102,27 +102,25 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     
     if (wasPythonGenerated()) {
         // python generated
-        dxdotdp.reset();
+        dxdotdp_explicit.reset();
         for (int ip = 0; ip < nplist(); ip++)
-            /* This implementation does not make sense any more, as
-               dxdotdp.data(ip) does no longer make sense this way.
-               However, I' not sure how this has to be changed...
-             
-            fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
-                     unscaledParameters.data(), fixedParameters.data(),
-                     h.data(), plist_[ip], w.data());
-             */
-        
-        fdxdotdp_colptrs(dxdotdw.indexptrs());
-        fdxdotdp_rowvals(dxdotdw.indexvals());
+            /* The creation of the according file has to be changed */
+            fdxdotdp_explicit(dxdotdp_explicit.data(),
+                              t, N_VGetArrayPointer(x_pos),
+                              unscaledParameters.data(),
+                              fixedParameters.data(),
+                              h.data(), plist_[ip], w.data());
+
+        fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
+        fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
         
         if (nw > 0) {
             /* Sparse matrix multiplication
                dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
             dxdotdw.sparse_multiply(dxdotdp_implicit, dwdp);
-            fdxdotdp_implicit_colptrs(dxdotdw.indexptrs());
-            fdxdotdp_implicit_rowvals(dxdotdw.indexvals());
+            fdxdotdp_implicit_colptrs(fdxdotdp_implicit.indexptrs());
+            fdxdotdp_implicit_rowvals(fdxdotdp_implicit.indexvals());
         }
         
     } else {
@@ -247,10 +245,10 @@ void Model_ODE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
-                         const realtype * /*x*/, const realtype * /*p*/,
-                         const realtype * /*k*/, const realtype * /*h*/,
-                         const int /*ip*/, const realtype * /*w*/) {
+void Model_ODE::fdxdotdp_explicit(realtype * /*dxdotdp_explicit*/, const realtype /*t*/,
+                                  const realtype * /*x*/, const realtype * /*p*/,
+                                  const realtype * /*k*/, const realtype * /*h*/,
+                                  const int /*ip*/, const realtype * /*w*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
@@ -335,7 +333,7 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     
     if (wasPythonGenerated()) {
         /* call multiplication */
-        dxdotdp.multiply(qBdot, xB, plist_);
+        dxdotdp_explicit.multiply(qBdot, xB, plist_);
         dxdotdp_implicit.multiply(qBdot, xB, plist_);
     } else {
         /* was matlab generated */
@@ -370,16 +368,16 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         fdxdotdp(t, x);
         fJSparse(t, x, J.get());
     }
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         /* copy dxdotdp and the implicit version over */
         // initialize
         N_VConst(0.0, sxdot);
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
         
         // copy explicit version
-        auto col = dxdotdp.indexptrs_ptr;
+        auto col = dxdotdp_explicit.indexptrs_ptr;
         for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
-            sxdot_tmp[i] += dxdotdp.data_ptr[i];
+            sxdot_tmp[i] += dxdotdp_explicit.data_ptr[i];
             
         // copy implicit version
         col = dxdotdp_implicit.indexptrs_ptr;
