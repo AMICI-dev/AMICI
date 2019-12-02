@@ -60,6 +60,8 @@ class Model : public AbstractModel {
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
      * @param ndxdotdw number of nonzero elements in the w derivative of xdot
+     * @param ndxdotdp number of nonzero elements in the p derivative of xdot
+     * @param ndxdotdp_implicit number of nonzero elements in dxdotdw * dwdp
      * @param ndJydy number of nonzero elements in the y derivative of dJy
      * (dimension nytrue)
      * @param nnz number of nonzero elements in Jacobian
@@ -1166,7 +1168,7 @@ class Model : public AbstractModel {
     mutable SUNMatrixWrapper dxdotdp;
     
     /** temporary storage of dxdotdp_implicit data across functions
-     (dimension: nplist x * nx_solver, nnz: ndxdotdp_imp, type CSC_MAT) */
+     (dimension: nplist x * nx_solver, nnz: ndxdotdp_implicit, type CSC_MAT) */
     mutable SUNMatrixWrapper dxdotdp_implicit;
     
     /** AMICI context */

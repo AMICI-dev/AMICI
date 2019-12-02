@@ -104,15 +104,27 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         // python generated
         dxdotdp.reset();
         for (int ip = 0; ip < nplist(); ip++)
+            /* This implementation does not make sense any more, as
+               dxdotdp.data(ip) does no longer make sense this way.
+               However, I' not sure how this has to be changed...
+             
             fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
                      unscaledParameters.data(), fixedParameters.data(),
                      h.data(), plist_[ip], w.data());
+             */
         
-        if (nw > 0)
+        fdxdotdp_colptrs(dxdotdw.indexptrs());
+        fdxdotdp_rowvals(dxdotdw.indexvals());
+        
+        if (nw > 0) {
             /* Sparse matrix multiplication
                dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
             dxdotdw.sparse_multiply(dxdotdp_implicit, dwdp);
+            fdxdotdp_implicit_colptrs(dxdotdw.indexptrs());
+            fdxdotdp_implicit_rowvals(dxdotdw.indexvals());
+        }
+        
     } else {
         // matlab generated
         auto x_pos = computeX_pos(x);
@@ -322,9 +334,6 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     fdxdotdp(t, x);
     
     if (wasPythonGenerated()) {
-        /* call sparse matrix functions */
-        fdxdotdp(t, x);
-        fdxdotdp_implicit(t, x);
         /* call multiplication */
         dxdotdp.multiply(qBdot, xB, plist_);
         dxdotdp_implicit.multiply(qBdot, xB, plist_);
@@ -352,13 +361,35 @@ void Model_ODE::fsxdot(const realtype t, const AmiVector &x,
 
 void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
                        N_Vector sxdot) {
+    
+    /* sxdot is just the total derivative d(xdot)dp,
+       so we just call dxdotdp and copy the stuff over */
     if (ip == 0) {
         // we only need to call this for the first parameter index will be
         // the same for all remaining
         fdxdotdp(t, x);
         fJSparse(t, x, J.get());
     }
-    N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
+    if (wasPythonGenerated()) {
+        /* copy dxdotdp and the implicit version over */
+        // initialize
+        N_VConst(0.0, sxdot);
+        realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
+        
+        // copy explicit version
+        auto col = dxdotdp.indexptrs_ptr;
+        for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
+            sxdot_tmp[i] += dxdotdp.data_ptr[i];
+            
+        // copy implicit version
+        col = dxdotdp_implicit.indexptrs_ptr;
+        for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
+            sxdot_tmp[i] += dxdotdp_implicit.data_ptr[i];
+        
+    } else {
+        /* copy dxdotdp over */
+        N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
+    }
     J.multiply(sxdot, sx);
 }
 

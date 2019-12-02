@@ -63,16 +63,18 @@ class Model_DAE : public Model {
               const int nxtrue_solver, const int ny, const int nytrue,
               const int nz, const int nztrue, const int ne, const int nJ,
               const int nw, const int ndwdx, const int ndwdp,
-              const int ndxdotdw, std::vector<int> ndJydy, const int nnz,
+              const int ndxdotdw, const int ndxdotdp,
+              const int ndxdotdp_implicit,
+              std::vector<int> ndJydy, const int nnz,
               const int ubw, const int lbw, const SecondOrderMode o2mode,
               std::vector<realtype> const &p, std::vector<realtype> const &k,
               std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event)
         : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
-                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw,
-                std::move(ndJydy), nnz, ubw, lbw, o2mode, p, k, plist, idlist,
-                z2event) {}
+                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, ndxdotdp,
+                ndxdotdp_implicit, std::move(ndJydy), nnz, ubw, lbw, o2mode,
+                p, k, plist, idlist, z2event) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;
