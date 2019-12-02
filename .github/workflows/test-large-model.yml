@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - feature_846_large_model
+      - fix_862_powsimp
   pull_request:
     branches:
       - master
