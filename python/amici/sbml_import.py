@@ -244,7 +244,7 @@ class SbmlImporter:
         self.reset_symbols()
         self.processSBML(constantParameters)
         self.processObservables(observables, sigmas, noise_distributions)
-        ode_model = ODEModel(simplify=True)
+        ode_model = ODEModel(simplify=sp.powsimp)
         ode_model.import_from_sbml_importer(self)
         exporter = ODEExporter(
             ode_model,
