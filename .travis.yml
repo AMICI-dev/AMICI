@@ -2,6 +2,8 @@ branches:
   only:
     - master
     - develop
+    # Release branches, otherwise they cannot be merged into protected master
+    - /^release.*/
     # Version tags
     - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
 
