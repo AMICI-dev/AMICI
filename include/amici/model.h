@@ -74,7 +74,8 @@ class Model : public AbstractModel {
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int ny, int nytrue, int nz, int nztrue, int ne, int nJ, int nw,
-          int ndwdx, int ndwdp, int ndxdotdw, std::vector<int> ndJydy, int nnz,
+          int ndwdx, int ndwdp, int ndxdotdw, int ndxdotdp, int
+          ndxdotdp_implicit, std::vector<int> ndJydy, int nnz,
           int ubw, int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
@@ -135,6 +136,11 @@ class Model : public AbstractModel {
     using AbstractModel::fdwdx;
     using AbstractModel::fdwdx_colptrs;
     using AbstractModel::fdwdx_rowvals;
+    using AbstractModel::fdxdotdp;
+    using AbstractModel::fdxdotdp_colptrs;
+    using AbstractModel::fdxdotdp_rowvals;
+    using AbstractModel::fdxdotdp_implicit_colptrs;
+    using AbstractModel::fdxdotdp_implicit_rowvals;
     using AbstractModel::fdydp;
     using AbstractModel::fdydx;
     using AbstractModel::fdzdp;

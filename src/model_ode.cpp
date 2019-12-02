@@ -109,9 +109,10 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
                      h.data(), plist_[ip], w.data());
         
         if (nw > 0)
-            /* Sparse matrix multiplication dxdotdp += dxdotdw * dwdp */
+            /* Sparse matrix multiplication
+               dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
-            dxdotdw.sparse_multiply(dxdotdp_implicit, dwdp, plist_);
+            dxdotdw.sparse_multiply(dxdotdp_implicit, dwdp);
     } else {
         // matlab generated
         auto x_pos = computeX_pos(x);
