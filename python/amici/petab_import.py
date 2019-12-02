@@ -82,7 +82,7 @@ def get_fixed_parameters(condition_df: pd.DataFrame,
         # check global parameters
         if not sbml_model.getParameter(fixed_parameter) \
                 and not sbml_model.getSpecies(fixed_parameter):
-            logger.log(logging.warning,
+            logger.log(logging.WARN,
                        f"{Fore.YELLOW}Parameter or species '{fixed_parameter}'"
                        " provided in condition table but not present in"
                        " model.")

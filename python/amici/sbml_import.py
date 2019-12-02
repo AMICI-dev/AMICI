@@ -244,7 +244,7 @@ class SbmlImporter:
         self.reset_symbols()
         self.processSBML(constantParameters)
         self.processObservables(observables, sigmas, noise_distributions)
-        ode_model = ODEModel(simplify=True)
+        ode_model = ODEModel(simplify=sp.powsimp)
         ode_model.import_from_sbml_importer(self)
         exporter = ODEExporter(
             ode_model,
@@ -577,10 +577,7 @@ class SbmlImporter:
                     locals=self.local_symbols
                 )
 
-        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
-            self.replaceInAllExpressions(
-               comp, vol
-            )
+
 
     def processReactions(self):
         """Get reactions from SBML model.
@@ -790,6 +787,10 @@ class SbmlImporter:
                 sp.sympify(variable, locals=self.local_symbols),
                 assignments[variable]
             )
+        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
+            self.replaceInAllExpressions(
+               comp, vol
+            )
 
     def processVolumeConversion(self):
         """Convert equations from amount to volume.
@@ -910,11 +911,13 @@ class SbmlImporter:
             observableSyms = sp.Matrix([
                 sp.symbols(obs, real=True) for obs in observables.keys()
             ])
+            observable_ids = observables.keys()
         else:
             observableValues = speciesSyms
-            observableNames = [
+            observable_ids = [
                 f'x{index}' for index in range(len(speciesSyms))
             ]
+            observableNames = observable_ids[:]
             observableSyms = sp.Matrix(
                 [sp.symbols(f'y{index}', real=True)
                  for index in range(len(speciesSyms))]
@@ -942,7 +945,7 @@ class SbmlImporter:
 
         # set cost functions
         llhYStrings = []
-        for y_name in observableNames:
+        for y_name in observable_ids:
             llhYStrings.append(noise_distribution_to_cost_function(
                 noise_distributions.get(y_name, 'normal')))
 

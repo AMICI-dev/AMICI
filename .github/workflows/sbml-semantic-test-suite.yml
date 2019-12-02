@@ -4,7 +4,6 @@ on:
     branches:
       - develop
       - master
-      - fix_simplify
   pull_request:
     branches:
       - master
