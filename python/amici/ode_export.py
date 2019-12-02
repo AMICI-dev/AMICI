@@ -18,7 +18,7 @@ except ImportError:
     pysb = None
 
 
-from typing import Callable
+from typing import Callable, Optional
 from string import Template
 import sympy.printing.ccode as ccode
 from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -715,12 +715,13 @@ class ODEModel:
         derivative from a partial derivative call to enforce a partial
         derivative in the next recursion. prevents infinite recursion
 
-        _simplify: if set, this function will be used to simplify symbolic
-         derivative expressions.
+        _simplify: If not None, this function will be used to simplify symbolic
+         derivative expressions. Receives sympy expressions as only argument.
+         To apply multiple simplifications, wrap them in a lambda expression.
          NOTE: This does currently not work with PySB symbols.
     """
 
-    def __init__(self, simplify: Callable = sp.powsimp):
+    def __init__(self, simplify: Optional[Callable] = sp.powsimp):
         """Create a new ODEModel instance.
 
         Arguments:
