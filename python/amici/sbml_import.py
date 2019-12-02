@@ -141,7 +141,7 @@ class SbmlImporter:
         # might lead to undefined results
         self.sbml_doc.validateSBML()
         checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
-        
+
         flatten_sbml(self.sbml_doc)
 
         # apply several model simplifications that make our life substantially
