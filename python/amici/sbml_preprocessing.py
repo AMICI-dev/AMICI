@@ -32,7 +32,7 @@ def process_rate_rules(sbml_doc: libsbml.SBMLDocument):
     # loop backwards over rules, so that one can delete rules inside the loop!
     for i in range(sbml_doc.getModel().num_rules - 1, -1, -1):
 
-        rule = sbml_doc.getModel().getListOfRules()[i]
+        rule = sbml_doc.getModel().getRule(i)
 
         rule_variable = sbml_doc.getModel().getElementBySId(rule.getVariable())
 
