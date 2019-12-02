@@ -462,17 +462,31 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
  */
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     // use matlab error reporting
-    amici::warnMsgIdAndTxt = &mexWarnMsgIdAndTxt;
-    amici::errMsgIdAndTxt = &mexErrMsgIdAndTxt;
+    amici::AmiciApplication amiciApp;
+    amiciApp.warning = [](
+            std::string const& identifier,
+            std::string const& message){
+        mexWarnMsgIdAndTxt(identifier.c_str(), message.c_str());
+    };
+    amiciApp.error = [](
+            std::string const& identifier,
+            std::string const& message){
+        mexErrMsgIdAndTxt(identifier.c_str(), message.c_str());
+    };
 
     if (nlhs != 1) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup","Incorrect number of output arguments (must be 1)!");
+        amiciApp.errorF("AMICI:mex:setup",
+                        "Incorrect number of output arguments (must be 1)!");
     } else if(nrhs < amici::RHS_NUMARGS_REQUIRED) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup", "Incorrect number of input arguments (must be at least 7)!");
+        amiciApp.errorF("AMICI:mex:setup",
+                        "Incorrect number of input arguments (must be at least 7)!");
     };
 
     auto model = getModel();
+    model->app = &amiciApp;
+
     auto solver = model->getSolver();
+    solver->app = &amiciApp;
     setModelData(prhs, nrhs, *model);
     setSolverOptions(prhs, nrhs, *solver);
 
@@ -481,11 +495,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
         try {
             edata = amici::expDataFromMatlabCall(prhs, *model);
         } catch (amici::AmiException const& ex) {
-            amici::errMsgIdAndTxt("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
+            amiciApp.errorF("AMICI:mex:setup","Failed to read experimental data:\n%s",ex.what());
         }
     } else if (solver->getSensitivityOrder() >= amici::SensitivityOrder::first &&
                solver->getSensitivityMethod() == amici::SensitivityMethod::adjoint) {
-        amici::errMsgIdAndTxt("AMICI:mex:setup","No data provided!");
+        amiciApp.errorF("AMICI:mex:setup","No data provided!");
     }
 
     /* ensures that plhs[0] is available */

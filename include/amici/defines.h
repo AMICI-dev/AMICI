@@ -2,6 +2,7 @@
 #define AMICI_DEFINES_H
 
 #include <cmath>
+#include <functional>
 
 namespace amici {
 
@@ -148,13 +149,17 @@ enum class NewtonStatus {
     newt_sim_newt=3,
 };
 
+/** Damping factor flag for the Newton method */
+enum class NewtonDampingFactorMode {
+    off = 0,
+    on = 1
+};
+
 /**
- * @brief msgIdAndTxtFp
- * @param identifier string with error message identifier
- * @param format string with error message printf-style format
- * @param ... arguments to be formatted
+ * Type for function to process warnings or error messages.
  */
-using msgIdAndTxtFp = void (*)(const char *, const char *, ...);
+using outputFunctionType = std::function<void(std::string const& identifier,
+                                              std::string const& message)>;
 
 // clang-format on
 
