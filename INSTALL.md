@@ -52,6 +52,20 @@ and custom installations.
 For Python-AMICI usage see 
 [https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md](https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md).
 
+
+### Installation of development versions
+
+To install development versions which have not been released to pypi yet,
+you can install AMICI with pip directly from GitHub using:
+
+    pip3 install -e https://github.com/icb-dcm/amici/archive/develop.zip#egg=amici\&subdirectory=python/sdist
+
+Replace `develop` by the branch or commit you want to install.
+
+Note that this will probably not work on Windows which does not support
+symlinks by default
+(https://stackoverflow.com/questions/5917249/git-symlinks-in-windows/49913019#49913019).
+
 ### Light installation 
 
 In case you only want to use the AMICI Python package for generating model code
