@@ -8,6 +8,7 @@ import itertools as itt
 import warnings
 from typing import Dict, Union, List, Callable, Any, Iterable
 
+from .sbml_preprocessing import flatten_sbml
 from .ode_export import ODEExporter, ODEModel
 from . import has_clibs
 
@@ -140,6 +141,8 @@ class SbmlImporter:
         # might lead to undefined results
         self.sbml_doc.validateSBML()
         checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
+        
+        flatten_sbml(self.sbml_doc)
 
         # apply several model simplifications that make our life substantially
         # easier
@@ -311,11 +314,6 @@ class SbmlImporter:
 
         if len(self.sbml.getListOfEvents()) > 0:
             raise SBMLException('Events are currently not supported!')
-
-        if any([not(rule.isAssignment())
-                for rule in self.sbml.getListOfRules()]):
-            raise SBMLException('Algebraic and rate '
-                                'rules are currently not supported!')
 
         if any([reaction.getFast()
                 for reaction in self.sbml.getListOfReactions()]):
@@ -746,10 +744,6 @@ class SbmlImporter:
             if variable in stoichvars:
                 self.stoichiometricMatrix = \
                     self.stoichiometricMatrix.subs(variable, formula)
-
-            if variable in specvars:
-                raise SBMLException('Species assignment rules are currently'
-                                    ' not supported!')
 
             if variable in compartmentvars:
                 raise SBMLException('Compartment assignment rules are'
