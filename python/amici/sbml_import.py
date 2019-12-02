@@ -718,7 +718,6 @@ class SbmlImporter:
 
         rulevars = getRuleVars(rules, local_symbols=self.local_symbols)
         fluxvars = self.fluxVector.free_symbols
-        specvars = self.symbols['species']['identifier'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
         compartmentvars = self.compartmentSymbols.free_symbols
         parametervars = sp.Matrix([
