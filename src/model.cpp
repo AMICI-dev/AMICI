@@ -146,8 +146,8 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz), nJ(nJ), ubw(ubw),
       lbw(lbw), pythonGenerated(pythonGenerated), o2mode(o2mode), idlist(std::move(idlist)),
       J(nx_solver, nx_solver, nnz, CSC_MAT),
-      dwdx(nw, nx_solver, ndwdx, CSC_MAT), M(nx_solver, nx_solver), w(nw),
-      dwdp(nw, p.size(), ndwdp, CSC_MAT), dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
+      dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT), dwdx(nw, nx_solver, ndwdx, CSC_MAT),
+      dwdp(nw, p.size(), ndwdp, CSC_MAT), M(nx_solver, nx_solver), w(nw),
       x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
       total_cl(nx_rdata - nx_solver),
       stotal_cl((nx_rdata - nx_solver) * p.size()), x_pos_tmp(nx_solver),
@@ -159,8 +159,8 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
    /* If Matlab wrapped: dxdotdp is a full AmiVector,
       if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices */
     if (pythonGenerated) {
-        dxdotdp_explicit(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
-        dxdotdp_implicit(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
+        dxdotdp_explicit.matrix = SUNSparseMatrix(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
+        dxdotdp_implicit.matrix = SUNSparseMatrix(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
         
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
@@ -184,10 +184,11 @@ bool operator==(const Model &a, const Model &b) {
         return false;
 
     bool bool_dxdotdp = true;
-    if (pythonGenerated) {
+    if (a.pythonGenerated && b.pythonGenerated)
         bool_dxdotdp = (a.ndxdotdp_explicit == b.ndxdotdp_explicit) &&
             (a.ndxdotdp_implicit == b.ndxdotdp_implicit);
-    }
+    if (a.pythonGenerated != b.pythonGenerated)
+        bool_dxdotdp = false;
     
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
            (a.nx_solver == b.nx_solver) &&

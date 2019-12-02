@@ -440,7 +440,7 @@ class Model_ODE : public Model {
      */
     virtual void fdxdotdp_explicit(realtype *dxdotdp_explicit, realtype t,
                                    const realtype *x, const realtype *p,
-                                   const realtype *k,vconst realtype *h,
+                                   const realtype *k, const realtype *h,
                                    int ip, const realtype *w);
 
     /** model specific implementation of fdxdotdw, data part

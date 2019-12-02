@@ -153,6 +153,17 @@ class SUNMatrixWrapper {
      */
     void multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const;
 
+    
+    /**
+     * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     * @param cols int vector for column reordering
+     */
+    void multiply(N_Vector c,
+                  const N_Vector b,
+                  std::vector<int> cols) const;
+    
     /**
      * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
      * @param c output vector, may already contain values
@@ -161,7 +172,7 @@ class SUNMatrixWrapper {
      */
     void multiply(gsl::span<realtype> c,
                   gsl::span<const realtype> b,
-                  gsl::span<int> cols) const;
+                  std::vector<int> cols) const;
     
     /**
      * @brief Perform matrix matrix multiplication
@@ -177,11 +188,12 @@ class SUNMatrixWrapper {
      * @brief Set to 0.0
      */
     void zero();
+    
+    SUNMatrix matrix = nullptr;
 
   private:
     void update_ptrs();
 
-    SUNMatrix matrix = nullptr;
     realtype *data_ptr = nullptr;
     sunindextype *indexptrs_ptr = nullptr;
     sunindextype *indexvals_ptr = nullptr;

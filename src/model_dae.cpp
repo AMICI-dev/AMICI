@@ -281,14 +281,14 @@ void Model_DAE::fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx,
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
         
         // copy explicit version
-        auto col = dxdotdp_explicit.indexptrs_ptr;
+        auto col = dxdotdp_explicit.indexptrs();
         for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
-            sxdot_tmp[i] += dxdotdp_explicit.data_ptr[i];
+            sxdot_tmp[i] += (dxdotdp_explicit.data())[i];
         
         // copy implicit version
-        col = dxdotdp_implicit.indexptrs_ptr;
+        col = dxdotdp_implicit.indexptrs();
         for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
-            sxdot_tmp[i] += dxdotdp_implicit.data_ptr[i];
+            sxdot_tmp[i] += (dxdotdp_implicit.data())[i];
         
     } else {
         /* copy dxdotdp over */
