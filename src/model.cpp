@@ -1269,7 +1269,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     realtype *dwdp_tmp = dwdp.data();
     for (int ip = 0; ip < nplist(); ip++) {
         // get dydp slice (ny) for current time and parameter
-        if (wasPythonGenerated() && nw)
+        if (pythonGenerated && nw)
             /* CHANE_TO_SPARSE --> This must be changed, as dwdp can not be queried in this way anymore when made sparse */
             dwdp_tmp = &dwdp.data()[(dwdp.indexptrs())[ip]];
             // dwdp_tmp = &dwdp.at(nw * ip);
@@ -1374,7 +1374,7 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
     fy(edata.getTimepoint(it), x);
     fsigmay(it, &edata);
 
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         for (int iyt = 0; iyt < nytrue; iyt++) {
             dJydy[iyt].zero();
             fdJydy_colptrs(dJydy[iyt].indexptrs(), iyt);
@@ -1446,7 +1446,7 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
         if (!edata.isSetObservedData(it, iyt))
             continue;
 
-        if (wasPythonGenerated()) {
+        if (pythonGenerated) {
             // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
             for (int iplist = 0; iplist < nplist(); ++iplist) {
                 dJydy[iyt].multiply(
@@ -1485,7 +1485,7 @@ void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
         //          M  K            K  N                       M  N
         //           lda             ldb                        ldc
 
-        if (wasPythonGenerated()) {
+        if (pythonGenerated) {
             for (int ix = 0; ix < nx_solver; ++ix) {
                 dJydy[iyt].multiply(
                     gsl::span<realtype>(&dJydx.at(ix * nJ), nJ),
@@ -1810,7 +1810,7 @@ void Model::fw(const realtype t, const realtype *x) {
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         dwdp.reset();
         realtype *stcl = nullptr;
 

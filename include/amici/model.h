@@ -1042,12 +1042,6 @@ class Model : public AbstractModel {
     bool getAlwaysCheckFinite() const;
 
     /**
-     * @brief check whether the model was generated from python
-     * @return that
-     */
-    virtual bool wasPythonGenerated() const { return false; }
-
-    /**
      * @brief Initial states
      * @param x pointer to state variables
      */
@@ -1606,7 +1600,7 @@ class Model : public AbstractModel {
     mutable std::vector<SUNMatrixWrapper> dJydy;
 
     /** observable derivative of data likelihood,
-     * only used if wasPythonGenerated()==false
+     * only used if pythonGenerated==false
      * (dimension nJ x ny x nytrue, row-major)
      */
     mutable std::vector<realtype> dJydy_matlab;

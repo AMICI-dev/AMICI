@@ -105,7 +105,7 @@ void Model_DAE::fdxdotdp(const realtype t, const N_Vector x,
                          const N_Vector dx) {
     auto x_pos = computeX_pos(x);
     
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         // python generated
         dxdotdp_explicit.reset();
         /* This implementation does not make sense any more, as

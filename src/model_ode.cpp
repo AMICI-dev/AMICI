@@ -28,7 +28,7 @@ void Model_ODE::fJSparse(realtype t, N_Vector x, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointer(x_pos));
     SUNMatZero(J);
-    if (wasPythonGenerated()) {
+    if (pythonGenerate) {
         fJSparse(SM_DATA_S(J), t, N_VGetArrayPointer(x_pos),
                  unscaledParameters.data(), fixedParameters.data(), h.data(),
                  w.data(), dwdx.data());
@@ -100,7 +100,7 @@ void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     fdwdp(t, N_VGetArrayPointer(x));
     
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         // python generated
         dxdotdp_explicit.reset();
         for (int ip = 0; ip < nplist(); ip++)
@@ -290,7 +290,7 @@ void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB,
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointer(x_pos));
     SUNMatZero(JB);
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         fJSparseB(SM_DATA_S(JB), t, N_VGetArrayPointer(x_pos),
                   unscaledParameters.data(), fixedParameters.data(), h.data(),
                   N_VGetArrayPointer(xB), w.data(), dwdx.data());
@@ -331,7 +331,7 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     N_VConst(0.0, qBdot);
     fdxdotdp(t, x);
     
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         /* call multiplication */
         dxdotdp_explicit.multiply(qBdot, xB, plist_);
         dxdotdp_implicit.multiply(qBdot, xB, plist_);
