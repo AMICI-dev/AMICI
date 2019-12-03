@@ -106,30 +106,8 @@ void Model_DAE::fdxdotdp(const realtype t, const N_Vector x,
     auto x_pos = computeX_pos(x);
     
     if (pythonGenerated) {
-        // python generated
-        dxdotdp_explicit.reset();
-        /* This implementation does not make sense any more, as
-         dxdotdp.data(ip) does no longer make sense this way.
-         However, I' not sure how this has to be changed...
-         */
-        for (int ip = 0; ip < nplist(); ip++)
-            fdxdotdp(dxdotdp_explicit.data(), t, N_VGetArrayPointer(x_pos),
-                     unscaledParameters.data(), fixedParameters.data(),
-                     h.data(), plist_[ip], N_VGetArrayPointer(dx),
-                     w.data(), dwdp.data());
-        
-        fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
-        fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
-        
-        if (nw > 0) {
-            /* Sparse matrix multiplication
-             dxdotdp_implicit += dxdotdw * dwdp */
-            dxdotdp_implicit.reset();
-            dxdotdw.sparse_multiply(dxdotdp_implicit, dwdp);
-            fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
-            fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
-        }
-        
+        // python generated, not yet implemented for DAEs
+        throw AmiException("Wrapping of DAEs is not yet implemented from Python");
     } else {
         // matlab generated
         fdwdp(t, N_VGetArrayPointer(x_pos)); // Why is it x_pos here and x ind model_ode.cpp?
@@ -275,21 +253,8 @@ void Model_DAE::fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx,
     }
     
     if (pythonGenerated) {
-        /* copy dxdotdp and the implicit version over */
-        // initialize
-        N_VConst(0.0, sxdot);
-        realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
-        
-        // copy explicit version
-        auto col = dxdotdp_explicit.indexptrs();
-        for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
-            sxdot_tmp[i] += (dxdotdp_explicit.data())[i];
-        
-        // copy implicit version
-        col = dxdotdp_implicit.indexptrs();
-        for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
-            sxdot_tmp[i] += (dxdotdp_implicit.data())[i];
-        
+        // python generated, not yet implemented for DAEs
+        throw AmiException("Wrapping of DAEs is not yet implemented from Python");
     } else {
         /* copy dxdotdp over */
         N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);

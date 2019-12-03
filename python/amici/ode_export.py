@@ -1052,7 +1052,7 @@ class ODEModel:
         Raises:
 
         """
-        if name not in sparse_functions:
+        if name not in sparse_functions and name != 'dxdotdp':
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparsesyms:
             self._generateSparseSymbol(name)
@@ -1089,7 +1089,7 @@ class ODEModel:
         Raises:
 
         """
-        if name not in sparse_functions:
+        if name not in sparse_functions and name != 'dxdotdp':
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generateSparseSymbol(name)
@@ -1108,7 +1108,7 @@ class ODEModel:
         Raises:
 
         """
-        if name not in sparse_functions:
+        if name not in sparse_functions and name != 'dxdotdp':
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generateSparseSymbol(name)
@@ -1127,7 +1127,7 @@ class ODEModel:
         Raises:
 
         """
-        if name not in sparse_functions:
+        if name not in sparse_functions and name != 'dxdotdp':
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generateSparseSymbol(name)
@@ -1306,12 +1306,6 @@ class ODEModel:
                 self._sparseeqs[name].append(sparseList)
                 self._sparsesyms[name].append(symbolList)
                 self._syms[name].append(sparseMatrix)
-        elif name == 'dxdotdp_implicit':
-            # Only sparsity pattern is needed
-            symbolColPtrs, symbolRowVals, _, _, _ = csc_matrix(matrix, name)
-
-            self._colptrs[name] = symbolColPtrs
-            self._rowvals[name] = symbolRowVals
         else:
             symbolColPtrs, symbolRowVals, sparseList, symbolList, \
                 sparseMatrix = csc_matrix(matrix, name)
@@ -2106,7 +2100,10 @@ class ODEExporter:
         # need in subsequent steps
         if 'sparse' in self.functions[function] and \
                 self.functions[function]['sparse']:
-            symbol = self.model.sparseeq(function)
+            if function == 'dxdotdp_explicit':
+                symbol = self.model.sparseeq('dxdotdp')
+            else:
+                symbol = self.model.sparseeq(function)
         elif not self.allow_reinit_fixpar_initcond \
                 and function == 'sx0_fixedParameters':
             # Not required. Will create empty function body.
@@ -2176,9 +2173,15 @@ class ODEExporter:
         """
 
         if indextype == 'colptrs':
-            values = self.model.colptrs(function)
+            if function == 'dxdotdp_explicit':
+                values = self.model.colptrs('dxdotdp')
+            else:
+                values = self.model.colptrs(function)
         elif indextype == 'rowvals':
-            values = self.model.rowvals(function)
+            if function == 'dxdotdp_explicit':
+                values = self.model.rowvals('dxdotdp')
+            else:
+                values = self.model.rowvals(function)
         else:
             raise ValueError('Invalid value for type, must be colptr or '
                              'rowval')
@@ -2336,7 +2339,7 @@ class ODEExporter:
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
-                'dxdotdp_explicit'))),
+                'dxdotdp'))),
             'NDXDOTDP_IMPLICIT': str(len(self.model.sparsesym(
                 'dxdotdp_implicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
@@ -2452,6 +2455,9 @@ class ODEExporter:
         Raises:
 
         """
+        # remove key for dxdotdp_implicit from list, as not needed
+        del self.functions['dxdotdp_implicit']
+
         sources = [self.modelName + '_' + function + '.cpp '
                    for function in self.functions.keys()
                    if self.functions[function]['body'] is not None]

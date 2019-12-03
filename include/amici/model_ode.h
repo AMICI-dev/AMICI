@@ -48,7 +48,7 @@ class Model_ODE : public Model {
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
      * @param ndxdotdw number of nonzero elements dxdotdw
-     * @param ndxdotdp number of nonzero elements dxdotdp
+     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
      * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      * @param ndJydy number of nonzero elements dJydy
      * @param nnz number of nonzero elements in Jacobian
@@ -65,17 +65,17 @@ class Model_ODE : public Model {
               const int nxtrue_solver, const int ny, const int nytrue,
               const int nz, const int nztrue, const int ne, const int nJ,
               const int nw, const int ndwdx, const int ndwdp,
-              const int ndxdotdw, const int ndxdotdp,
+              const int ndxdotdw, const int ndxdotdp_explicit,
               const int ndxdotdp_implicit, std::vector<int> ndJydy,
               const int nnz, const int ubw, const int lbw,
               const SecondOrderMode o2mode, std::vector<realtype> const &p,
               std::vector<realtype> const &k, std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
-              std::vector<int> const &z2event)
+              std::vector<int> const &z2event, bool pythonGenerated)
         : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
-                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, ndxdotdp,
+                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, ndxdotdp_explicit,
                 ndxdotdp_implicit, std::move(ndJydy), nnz, ubw, lbw, o2mode,
-                p, k, plist, idlist, z2event) {}
+                p, k, plist, idlist, z2event, pythonGenerated) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;
@@ -443,6 +443,26 @@ class Model_ODE : public Model {
                                    const realtype *k, const realtype *h,
                                    int ip, const realtype *w);
 
+    /** model specific implementation of fdxdotdp_explicit, colptrs part
+     * @param indexptrs column pointers
+     */
+    virtual void fdxdotdp_explicit_colptrs(sunindextype *indexptrs);
+    
+    /** model specific implementation of fdxdotdp_explicit, rowvals part
+     * @param indexvals row values
+     */
+    virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
+    
+    /** model specific implementation of fdxdotdp_implicit, colptrs part
+     * @param indexptrs column pointers
+     */
+    virtual void fdxdotdp_implicit_colptrs(sunindextype *indexptrs);
+    
+    /** model specific implementation of fdxdotdp_implicit, rowvals part
+     * @param indexvals row values
+     */
+    virtual void fdxdotdp_implicit_rowvals(sunindextype *indexvals);
+    
     /** model specific implementation of fdxdotdw, data part
      * @param dxdotdw partial derivative xdot wrt w
      * @param t timepoint
@@ -461,10 +481,11 @@ class Model_ODE : public Model {
      */
     virtual void fdxdotdw_colptrs(sunindextype *indexptrs);
 
-    /** model specific implementation of fdxdotdw, colptrs part
+    /** model specific implementation of fdxdotdw, rowvals part
      * @param indexvals row values
      */
     virtual void fdxdotdw_rowvals(sunindextype *indexvals);
+    
 };
 
 } // namespace amici

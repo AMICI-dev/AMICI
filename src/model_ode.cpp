@@ -253,6 +253,30 @@ void Model_ODE::fdxdotdp_explicit(realtype * /*dxdotdp_explicit*/, const realtyp
                        __func__); // not implemented
 }
 
+void Model_ODE::fdxdotdp_explicit_colptrs(sunindextype * /*indexptrs*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_ODE::fdxdotdp_explicit_rowvals(sunindextype * /*indexvals*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+ 
+void Model_ODE::fdxdotdp_implicit_colptrs(sunindextype * /*indexptrs*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_ODE::fdxdotdp_implicit_rowvals(sunindextype * /*indexvals*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+    
 void Model_ODE::fdxdotdw(realtype * /*dxdotdw*/, const realtype /*t*/,
                          const realtype * /*x*/, const realtype * /*p*/,
                          const realtype * /*k*/, const realtype * /*h*/,
