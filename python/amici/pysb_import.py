@@ -115,7 +115,7 @@ def ODEModel_from_pysb_importer(model, constants=None,
 
     """
 
-    ODE = ODEModel()
+    ODE = ODEModel(simplify=None)
 
     if not pysb_available:
         raise ImportError(
