@@ -928,7 +928,7 @@ class SbmlImporter:
         # set user-provided sigmas
         for iy, obsName in enumerate(observables):
             if obsName in sigmas:
-                sigmaYValues[iy] = sigmas[obsName]
+                sigmaYValues[iy] = sp.Symbol(sigmas[obsName], real=True)
 
         measurementYSyms = sp.Matrix(
             [sp.symbols(f'm{symbol}', real=True) for symbol in observableSyms]
