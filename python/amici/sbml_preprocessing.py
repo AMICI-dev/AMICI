@@ -3,7 +3,7 @@ import libsbml
 
 def flatten_sbml(sbml: libsbml.Model):
     """Reformulate parts of the SBML, in order to allow
-        import ofy somye SBML features.
+        import of some SBML features.
 
     Arguments:
         sbml: Instance of libsbml.Model`.
@@ -74,29 +74,33 @@ def process_species_assignment_rules(sbml: libsbml.Model):
     Raises:
     """
 
+    # store the species ids to remove them as modifiers later...
+    assignment_rule_species_ids = set()
+
     # loop backwards over rules, so that one can delete rules inside the loop!
     for i in range(sbml.num_rules - 1, -1, -1):
 
-        rule = sbml.getListOfRules()[i]
+        rule = sbml.getRule(i)
 
         rule_variable = sbml.getElementBySId(rule.getVariable())
 
         if rule.isAssignment() and isinstance(rule_variable, libsbml.Species):
-
+            
+            assignment_rule_species_ids.add(rule_variable.getId())
+            
             p = sbml.createParameter()
             p.setId(rule_variable.getId())
             p.setName(rule_variable.getName())
             p.setUnits(rule_variable.getUnits())
             p.setConstant(False)
 
-            # remove modifier, if species is modifier of a reaction
-
-            for reaction in sbml.getListOfReactions():
-                modifier_list = reaction.getListOfModifiers()
-                for modifier in modifier_list:
-                    if rule_variable.getId() == modifier.getSpecies():
-                        modifier.removeFromParentAndDelete()
-
             # delete species and rule
             rule_variable.removeFromParentAndDelete()
-            # rule.removeFromParentAndDelete()
+            rule.removeFromParentAndDelete()
+
+    # remove modifier, if a species with an assignment rule was modifier
+    for reaction in sbml.getListOfReactions():
+        
+        for modifier in reaction.getListOfModifiers():
+            if modifier.getSpecies() in assignment_rule_species_ids:
+                modifier.removeFromParentAndDelete()

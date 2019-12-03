@@ -15,6 +15,7 @@ from . import has_clibs
 from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
 
+
 class SBMLException(Exception):
     pass
 
