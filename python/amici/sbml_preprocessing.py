@@ -2,8 +2,8 @@ import libsbml
 
 
 def flatten_sbml(sbml: libsbml.Model):
-    """Reformulate parts of the SBML, in order to allow import of some
-    SBML features.
+    """Reformulate parts of the SBML, in order to allow
+        import ofy somye SBML features.
 
     Arguments:
         sbml: Instance of libsbml.Model`.
