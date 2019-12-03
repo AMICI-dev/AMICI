@@ -118,31 +118,6 @@ class AbstractModel {
                           const AmiVector &dx) = 0;
 
     /**
-     * @brief Model specific implementation for explicit version of dxdotdp, column pointers
-     * @param indexptrs column pointers
-     **/
-//    virtual void fdxdotdp_explicit_colptrs(sunindextype *indexptrs);
-    
-    /**
-     * @brief Model specific implementation for explicit version of dxdotdp, row values
-     * @param indexvals row values
-     **/
-//    virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
-    
-    /**
-     * @brief Model specific implementation for implicit version of dxdotdp, column pointers
-     * @param indexptrs column pointers
-     **/
-//    virtual void fdxdotdp_implicit_colptrs(sunindextype *indexptrs);
-    
-    /**
-     * @brief Model specific implementation for implicit version of dxdotdp, row values
-     * @param indexvals row values
-     **/
-//    virtual void fdxdotdp_implicit_rowvals(sunindextype *indexvals);
-    
-    
-    /**
      * @brief Jacobian multiply function
      * @param t time
      * @param x state

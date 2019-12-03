@@ -5,6 +5,7 @@
 #include <new> // bad_alloc
 #include <utility>
 #include <stdexcept> // invalid_argument and domain_error
+#include <iostream>
 
 namespace amici {
 
@@ -221,32 +222,48 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c, gsl::span<const realtype>
 
 void SUNMatrixWrapper::multiply(N_Vector c,
                                 const_N_Vector b,
-                                std::vector<int> cols) const {
+                                std::vector<int> cols,
+                                bool transpose) const {
     multiply(gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),
              gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)),
-             cols);
+             cols, transpose);
 }
     
 void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
                                 gsl::span<const realtype> b,
-                                std::vector<int> cols) const {
+                                std::vector<int> cols,
+                                bool transpose) const {
     if (!matrix)
         return;
     
     sunindextype nrows = rows();
     sunindextype ncols = columns();
     
-    if (static_cast<sunindextype>(c.size()) != nrows)
-        throw std::invalid_argument("Dimension mismatch between number of rows "
-                                    "in A (" + std::to_string(nrows) + ") and "
-                                    "elements in c (" + std::to_string(c.size())
-                                    + ")");
-    
-    if (static_cast<sunindextype>(b.size()) != ncols)
-        throw std::invalid_argument("Dimension mismatch between number of cols "
-                                    "in A (" + std::to_string(ncols)
-                                    + ") and elements in b ("
-                                    + std::to_string(b.size()) + ")");
+    if (transpose) {
+        if (static_cast<sunindextype>(c.size()) != cols.size())
+            throw std::invalid_argument("Dimension mismatch between number of cols "
+                                        "in index vector cols (" + std::to_string(ncols)
+                                        + ") and elements in c (" + std::to_string(c.size())
+                                        + " ), when using transposed A");
+        
+        if (static_cast<sunindextype>(b.size()) != nrows)
+            throw std::invalid_argument("Dimension mismatch between number of rows "
+                                        "in A (" + std::to_string(nrows) + ") and "
+                                        "elements in b (" + std::to_string(b.size())
+                                        + "), when using transposed A");
+    } else {
+        if (static_cast<sunindextype>(c.size()) != nrows)
+            throw std::invalid_argument("Dimension mismatch between number of rows "
+                                        "in A (" + std::to_string(nrows) + ") and "
+                                        "elements in c (" + std::to_string(c.size())
+                                        + ")");
+        
+        if (static_cast<sunindextype>(b.size()) != ncols)
+            throw std::invalid_argument("Dimension mismatch between number of cols "
+                                        "in A (" + std::to_string(ncols)
+                                        + ") and elements in b ("
+                                        + std::to_string(b.size()) + ")");
+    }
     
     if (SUNMatGetID(matrix) != SUNMATRIX_SPARSE)
         throw std::invalid_argument("Reordered multiply only implemented for "
@@ -257,9 +274,16 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
                                     "matrix type CSC, but A is not of type CSC");
     
     /* Carry out actual multiplication */
-    for (sunindextype i = 0; i < ncols; ++i)
-        for (sunindextype k = indexptrs_ptr[cols[i]]; k < indexptrs_ptr[cols[i] + 1]; ++k)
-            c[indexvals_ptr[k]] += data_ptr[k] * b[i];
+    if (transpose) {
+        std::cout << "Before multiplication... Now it will crash!" << std::endl;
+        for (int i = 0; i < (int)cols.size(); ++i)
+            for (sunindextype k = indexptrs_ptr[cols[i]]; k < indexptrs_ptr[cols[i] + 1]; ++k)
+                c[i] += data_ptr[k] * b[indexvals_ptr[k]];
+    } else {
+        for (sunindextype i = 0; i < ncols; ++i)
+            for (sunindextype k = indexptrs_ptr[cols[i]]; k < indexptrs_ptr[cols[i] + 1]; ++k)
+                c[indexvals_ptr[k]] += data_ptr[k] * b[i];
+    }
 }
 
     

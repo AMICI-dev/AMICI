@@ -159,20 +159,24 @@ class SUNMatrixWrapper {
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param cols int vector for column reordering
+     * @param tranpose bool transpose A before multiplication
      */
     void multiply(N_Vector c,
                   const N_Vector b,
-                  std::vector<int> cols) const;
+                  std::vector<int> cols,
+                  bool transpose) const;
     
     /**
      * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param cols int vector for column reordering
+     * @param tranpose bool transpose A before multiplication
      */
     void multiply(gsl::span<realtype> c,
                   gsl::span<const realtype> b,
-                  std::vector<int> cols) const;
+                  std::vector<int> cols,
+                  bool transpose) const;
     
     /**
      * @brief Perform matrix matrix multiplication

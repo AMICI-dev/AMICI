@@ -1,6 +1,7 @@
 #include <amici/sundials_matrix_wrapper.h>
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
+#include <iostream>
 
 namespace amici {
 
@@ -98,6 +99,7 @@ void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
 }
 
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
+    std::cout << "Worked until call to fdxdotdp!" << std::endl;
     fdwdp(t, N_VGetArrayPointer(x));
     auto x_pos = computeX_pos(x);
     
@@ -112,16 +114,20 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
                               fixedParameters.data(),
                               h.data(), plist_[ip], w.data());
 
-        fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
-        fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
+        if (ndxdotdp_explicit > 0) {
+            fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
+            fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
+        }
         
         if (nw > 0) {
             /* Sparse matrix multiplication
                dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
             dxdotdw.sparse_multiply(dxdotdp_implicit, dwdp);
-            fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
-            fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
+            if (ndxdotdp_implicit > 0) {
+                fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
+                fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
+            }
         }
         
     } else {
@@ -351,13 +357,20 @@ void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
 
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     /* initialize with zeros */
+    std::cout << "Worked until call to fqBdot!" << std::endl;
     N_VConst(0.0, qBdot);
     fdxdotdp(t, x);
+    std::cout << "Worked until after call of fdxdotdp!" << std::endl;
     
     if (pythonGenerated) {
         /* call multiplication */
-        dxdotdp_explicit.multiply(qBdot, xB, plist_);
-        dxdotdp_implicit.multiply(qBdot, xB, plist_);
+        std::cout << "Worked until call of dxdotdp_explicit.multiply!" << std::endl;
+        if (ndxdotdp_explicit > 0)
+            dxdotdp_explicit.multiply(qBdot, xB, plist_, true);
+        std::cout << "Worked until between the two multiplies!" << std::endl;
+        if (ndxdotdp_implicit > 0)
+            dxdotdp_implicit.multiply(qBdot, xB, plist_, true);
+        std::cout << "Worked until after call of dxdotdp_implicit.multiply!" << std::endl;
     } else {
         /* was matlab generated */
         for (int ip = 0; ip < nplist(); ip++) {
@@ -398,14 +411,18 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
         
         // copy explicit version
-        auto col = dxdotdp_explicit.indexptrs();
-        for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
-            sxdot_tmp[i] += (dxdotdp_explicit.data())[i];
+        if (ndxdotdp_explicit > 0) {
+            auto col_exp = dxdotdp_explicit.indexptrs();
+            for (sunindextype i = col_exp[ip]; i <  col_exp[ip + 1]; ++i)
+                sxdot_tmp[i] += (dxdotdp_explicit.data())[i];
+        }
             
         // copy implicit version
-        col = dxdotdp_implicit.indexptrs();
-        for (sunindextype i = col[ip]; i <  col[ip + 1]; ++i)
-            sxdot_tmp[i] += (dxdotdp_implicit.data())[i];
+        if (ndxdotdp_implicit > 0) {
+            auto col_imp = dxdotdp_implicit.indexptrs();
+            for (sunindextype i = col_imp[ip]; i <  col_imp[ip + 1]; ++i)
+                sxdot_tmp[i] += (dxdotdp_implicit.data())[i];
+        }
         
     } else {
         /* copy dxdotdp over */
