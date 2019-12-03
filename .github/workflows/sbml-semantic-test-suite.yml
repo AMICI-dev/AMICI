@@ -5,6 +5,7 @@ on:
       - develop
       - master
       - feature_rule_import
+
   pull_request:
     branches:
       - master

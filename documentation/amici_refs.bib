@@ -145,21 +145,6 @@ Supplementary information: Supplementary data are available at Bioinformatics on
 	Year = {2017},
 	Bdsk-Url-1 = {https://doi.org/10.1371/journal.pcbi.1005331}}
 
-@article{FroehlichKes2017,
-	Author = {Fr\"ohlich, Fabian and Kessler, Thomas and Weindl, Daniel and Shadrin, Alexey and Schmiester, Leonard and Hache, Hendrik and Muradyan, Artur and Schuette, Moritz and Lim, Ji-Hyun and Heinig, Matthias and Theis, Fabian and Lehrach, Hans and Wierling, Christoph and Lange, Bodo and Hasenauer, Jan},
-	Date-Added = {2019-03-19 23:04:09 +0100},
-	Date-Modified = {2019-03-19 23:04:09 +0100},
-	Doi = {10.1101/174094},
-	Eprint = {http://www.biorxiv.org/content/early/2017/08/09/174094.full.pdf},
-	Journal = {bioRxiv},
-	Keywords = {drug response; cancer; adjoint sensitivity; ccle},
-	Publisher = {Cold Spring Harbor Labs Journals},
-	Title = {Efficient parameterization of large-scale mechanistic models enables drug response prediction for cancer cell lines},
-	Url = {http://www.biorxiv.org/content/early/2017/08/09/174094},
-	Year = {2017},
-	Bdsk-Url-1 = {http://www.biorxiv.org/content/early/2017/08/09/174094},
-	Bdsk-Url-2 = {https://doi.org/10.1101/174094}}
-
 @article{FroehlichRei2018,
 	Abstract = {Single-cell time-lapse studies have advanced the quantitative understanding of cellular pathways and their inherent cell-to-cell variability. However, parameters retrieved from individual experiments are model dependent and their estimation is limited, if based on solely one kind of experiment. Hence, methods to integrate data collected under different conditions are expected to improve model validation and information content. Here we present a multi-experiment nonlinear mixed effect modeling approach for mechanistic pathway models, which allows the integration of multiple single-cell perturbation experiments. We apply this approach to the translation of green fluorescent protein after transfection using a massively parallel read-out of micropatterned single-cell arrays. We demonstrate that the integration of data from perturbation experiments allows the robust reconstruction of cell-to-cell variability, i.e., parameter densities, while each individual experiment provides insufficient information. Indeed, we show that the integration of the datasets on the population level also improves the estimates for individual cells by breaking symmetries, although each of them is only measured in one experiment. Moreover, we confirmed that the suggested approach is robust with respect to batch effects across experimental replicates and can provide mechanistic insights into the nature of batch effects. We anticipate that the proposed multi-experiment nonlinear mixed effect modeling approach will serve as a basis for the analysis of cellular heterogeneity in single-cell dynamics.},
 	Author = {Fr{\"o}hlich, Fabian and Reiser, Anita and Fink, Laura and Wosch{\'e}e, Daniel and Ligon, Thomas and Theis, Fabian Joachim and R{\"a}dler, Joachim Oskar and Hasenauer, Jan},
@@ -476,6 +461,63 @@ Supplementary information: Supplementary data are available at Bioinformatics on
   doi      = {10.1093/bioinformatics/btz581},
   eprint   = {http://oup.prod.sis.lan/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btz581/29004243/btz581.pdf},
   url      = {https://doi.org/10.1093/bioinformatics/btz581},
+}
+
+@Article{SchmiesterWei2019,
+  author       = {Schmiester, Leonard and Weindl, Daniel and Hasenauer, Jan},
+  title        = {Statistical inference of mechanistic models from qualitative data using an efficient optimal scaling approach},
+  journal      = {bioRxiv},
+  year         = {2019},
+  abstract     = {Quantitative dynamical models facilitate the understanding of biological processes and the prediction of their dynamics. These models usually comprise unknown parameters, which have to be inferred from experimental data. For quantitative experimental data, there are several methods and software tools available. However, for qualitative data the available approaches are limited and computationally demanding.Here, we consider the optimal scaling method which has been developed in statistics for categorical data and has been applied to dynamical systems. This approach turns qualitative variables into quantitative ones, accounting for constraints on their relation. We derive a reduced formulation for the optimization problem defining the optimal scaling. The reduced formulation possesses the same optimal points as the established formulation but requires less degrees of freedom. Parameter estimation for dynamical models of cellular pathways revealed that the reduced formulation improves the robustness and convergence of optimizers. This resulted in substantially reduced computation times.We implemented the proposed approach in the open-source Python Parameter EStimation TOolbox (pyPESTO) to facilitate reuse and extension. The proposed approach enables efficient parameterization of quantitative dynamical models using qualitative data.},
+  doi          = {10.1101/848648},
+  elocation-id = {848648},
+  eprint       = {https://www.biorxiv.org/content/early/2019/11/20/848648.full.pdf},
+  publisher    = {Cold Spring Harbor Laboratory},
+  url          = {https://www.biorxiv.org/content/early/2019/11/20/848648},
+}
+
+@Article{PedretscherKal2019,
+  author   = {B. Pedretscher and B. Kaltenbacher and O. Pfeiler},
+  title    = {Parameter identification and uncertainty quantification in stochastic state space models and its application to texture analysis},
+  journal  = {Applied Numerical Mathematics},
+  year     = {2019},
+  volume   = {146},
+  pages    = {38 - 54},
+  issn     = {0168-9274},
+  abstract = {In this paper, a computational framework, which enables efficient and robust parameter identification, as well as uncertainty quantification in state space models based on Itô stochastic processes, is presented. For optimization, a Maximum Likelihood approach based on the system's corresponding Fokker-Planck equation is followed. Gradient information is included by means of an adjoint approach, which is based on the Lagrangian of the optimization problem. To quantify the uncertainty of the Maximum-A-Posteriori estimates of the model parameters, a Bayesian inference approach based on Markov Chain Monte Carlo simulations, as well as profile likelihoods are implemented and compared in terms of runtime and accuracy. The framework is applied to experimental electron backscatter diffraction data of a fatigued metal film, where the aim is to develop a model, which consistently and physically meaningfully captures the metal's microstructural changes that are caused by external loading.},
+  doi      = {https://doi.org/10.1016/j.apnum.2019.06.020},
+  keywords = {Stochastic state space model, Parameter identification, Uncertainty quantification, Profile likelihood, Adjoint approach, Fokker-Planck equation, Thermo-mechanical fatigue, Texture analysis},
+  url      = {http://www.sciencedirect.com/science/article/pii/S0168927419301722},
+}
+
+@Article{FroehlichKes2018,
+  author    = {Fröhlich, Fabian and Kessler, Thomas and Weindl, Daniel and Shadrin, Alexey and Schmiester, Leonard and Hache, Hendrik and Muradyan, Artur and Schütte, Moritz and Lim, Ji-Hyun and Heinig, Matthias and Theis, Fabian J. and Lehrach, Hans and Wierling, Christoph and Lange, Bodo and Hasenauer, Jan},
+  title     = {Efficient Parameter Estimation Enables the Prediction of Drug Response Using a Mechanistic Pan-Cancer Pathway Model},
+  journal   = {Cell Systems},
+  year      = {2018},
+  volume    = {7},
+  number    = {6},
+  pages     = {567--579.e6},
+  issn      = {2405-4712},
+  abstract  = {Mechanistic models are essential to deepen the understanding of complex diseases at the molecular level. Nowadays, high-throughput molecular and phenotypic characterizations are possible, but the integration of such data with prior knowledge on signaling pathways is limited by the availability of scalable computational methods. Here, we present a computational framework for the parameterization of large-scale mechanistic models and its application to the prediction of drug response of cancer cell lines from exome and transcriptome sequencing data. This framework is over 104 times faster than state-of-the-art methods, which enables modeling at previously infeasible scales. By applying the framework to a model describing major cancer-associated pathways (>1,200 species and >2,600 reactions), we could predict the effect of drug combinations from single drug data. This is the first integration of high-throughput datasets using large-scale mechanistic models. We anticipate this to be the starting point for development of more comprehensive models allowing a deeper mechanistic insight.
+Mechanistic models are essential to deepen the understanding of complex diseases at the molecular level. Nowadays, high-throughput molecular and phenotypic characterizations are possible, but the integration of such data with prior knowledge on signaling pathways is limited by the availability of scalable computational methods. Here, we present a computational framework for the parameterization of large-scale mechanistic models and its application to the prediction of drug response of cancer cell lines from exome and transcriptome sequencing data. This framework is over 104 times faster than state-of-the-art methods, which enables modeling at previously infeasible scales. By applying the framework to a model describing major cancer-associated pathways (>1,200 species and >2,600 reactions), we could predict the effect of drug combinations from single drug data. This is the first integration of high-throughput datasets using large-scale mechanistic models. We anticipate this to be the starting point for development of more comprehensive models allowing a deeper mechanistic insight.},
+  comment   = {doi: 10.1016/j.cels.2018.10.013},
+  doi       = {10.1016/j.cels.2018.10.013},
+  publisher = {Elsevier},
+  url       = {https://doi.org/10.1016/j.cels.2018.10.013},
+}
+
+@Article{StaporSch2019,
+  author       = {Stapor, Paul and Schmiester, Leonard and Wierling, Christoph and Lange, Bodo and Weindl, Daniel and Hasenauer, Jan},
+  title        = {Mini-batch optimization enables training of ODE models on large-scale datasets},
+  journal      = {bioRxiv},
+  year         = {2019},
+  abstract     = {Quantitative dynamical models are widely used to study cellular signal processing. A critical step in modeling is the estimation of unknown model parameters from experimental data. As model sizes and datasets are steadily growing, established parameter optimization approaches for mechanistic models become computationally extremely challenging. However, mini-batch optimization methods, as employed in deep learning, have better scaling properties. In this work, we adapt, apply, and benchmark mini-batch optimization for ordinary differential equation (ODE) models thereby establishing a direct link between dynamic modeling and machine learning. On our main application example, a large-scale model of cancer signaling, we benchmark mini-batch optimization against established methods, achieving better optimization results and reducing computation by more than an order of magnitude. We expect that our work will serve as a first step towards mini-batch optimization tailored to ODE models and enable modeling of even larger and more complex systems than what is currently possible.},
+  doi          = {10.1101/859884},
+  elocation-id = {859884},
+  eprint       = {https://www.biorxiv.org/content/early/2019/11/30/859884.full.pdf},
+  publisher    = {Cold Spring Harbor Laboratory},
+  url          = {https://www.biorxiv.org/content/early/2019/11/30/859884},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}

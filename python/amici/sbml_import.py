@@ -248,7 +248,7 @@ class SbmlImporter:
         self.reset_symbols()
         self.processSBML(constantParameters)
         self.processObservables(observables, sigmas, noise_distributions)
-        ode_model = ODEModel(simplify=True)
+        ode_model = ODEModel(simplify=sp.powsimp)
         ode_model.import_from_sbml_importer(self)
         exporter = ODEExporter(
             ode_model,
@@ -576,10 +576,7 @@ class SbmlImporter:
                     locals=self.local_symbols
                 )
 
-        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
-            self.replaceInAllExpressions(
-               comp, vol
-            )
+
 
     def processReactions(self):
         """Get reactions from SBML model.
@@ -783,6 +780,10 @@ class SbmlImporter:
             self.replaceInAllExpressions(
                 sp.sympify(variable, locals=self.local_symbols),
                 assignments[variable]
+            )
+        for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
+            self.replaceInAllExpressions(
+               comp, vol
             )
 
     def processVolumeConversion(self):
