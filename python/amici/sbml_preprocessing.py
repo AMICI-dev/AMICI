@@ -17,7 +17,7 @@ def flatten_sbml(sbml: libsbml.Model):
     process_species_assignment_rules(sbml)
 
 
-def process_rate_rules(sbml: libsbml.SBMLDocument):
+def process_rate_rules(sbml: libsbml.Model):
     """ Reformulate rate rules by an reaction of the form
      R: -> X with rate f(x).
 
@@ -100,7 +100,7 @@ def process_species_assignment_rules(sbml: libsbml.Model):
 
     # remove modifier, if a species with an assignment rule was modifier
     for reaction in sbml.getListOfReactions():
-        
+
         for modifier in reaction.getListOfModifiers():
             if modifier.getSpecies() in assignment_rule_species_ids:
                 modifier.removeFromParentAndDelete()
