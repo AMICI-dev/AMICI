@@ -229,13 +229,6 @@ class Model_ODE : public Model {
     void fdxdotdp(realtype t, const N_Vector x);
 
     void fdxdotdp(realtype t, const AmiVector &x, const AmiVector &dx) override;
-    
-    /** Implicit sensitivity of dx/dt wrt model parameters p via w
-     * @param t timepoint
-     * @param x Vector with the states
-     * @return status flag indicating successful execution
-     */
-    void fdxdotdp_implicit(realtype t, const N_Vector x);
 
     void fsxdot(realtype t, const AmiVector &x, const AmiVector &dx, int ip,
                 const AmiVector &sx, const AmiVector &sdx,
