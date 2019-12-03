@@ -1,7 +1,6 @@
 #include <amici/sundials_matrix_wrapper.h>
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
-#include <iostream>
 
 namespace amici {
 
@@ -99,7 +98,6 @@ void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
 }
 
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
-    std::cout << "Worked until call to fdxdotdp!" << std::endl;
     fdwdp(t, N_VGetArrayPointer(x));
     auto x_pos = computeX_pos(x);
     
@@ -357,20 +355,15 @@ void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
 
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     /* initialize with zeros */
-    std::cout << "Worked until call to fqBdot!" << std::endl;
     N_VConst(0.0, qBdot);
     fdxdotdp(t, x);
-    std::cout << "Worked until after call of fdxdotdp!" << std::endl;
     
     if (pythonGenerated) {
         /* call multiplication */
-        std::cout << "Worked until call of dxdotdp_explicit.multiply!" << std::endl;
         if (ndxdotdp_explicit > 0)
             dxdotdp_explicit.multiply(qBdot, xB, plist_, true);
-        std::cout << "Worked until between the two multiplies!" << std::endl;
         if (ndxdotdp_implicit > 0)
             dxdotdp_implicit.multiply(qBdot, xB, plist_, true);
-        std::cout << "Worked until after call of dxdotdp_implicit.multiply!" << std::endl;
     } else {
         /* was matlab generated */
         for (int ip = 0; ip < nplist(); ip++) {

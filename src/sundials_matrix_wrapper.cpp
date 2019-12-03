@@ -5,7 +5,6 @@
 #include <new> // bad_alloc
 #include <utility>
 #include <stdexcept> // invalid_argument and domain_error
-#include <iostream>
 
 namespace amici {
 
@@ -275,7 +274,6 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     
     /* Carry out actual multiplication */
     if (transpose) {
-        std::cout << "Before multiplication... Now it will crash!" << std::endl;
         for (int i = 0; i < (int)cols.size(); ++i)
             for (sunindextype k = indexptrs_ptr[cols[i]]; k < indexptrs_ptr[cols[i] + 1]; ++k)
                 c[i] += data_ptr[k] * b[indexvals_ptr[k]];
