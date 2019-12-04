@@ -11,7 +11,6 @@
 #include <regex>
 #include <typeinfo>
 #include <utility>
-#include <iostream>
 
 namespace amici {
 
@@ -1259,7 +1258,6 @@ void Model::fy(const realtype t, const AmiVector &x) {
 }
 
 void Model::fdydp(const realtype t, const AmiVector &x) {
-    std::cout << "before fdydp" << std::endl;
     if (!ny)
         return;
 
@@ -1285,7 +1283,6 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     if (alwaysCheckFinite) {
         app->checkFinite(dydp, "dydp");
     }
-    std::cout << "after fdydp" << std::endl;
 }
 
 void Model::fdydx(const realtype t, const AmiVector &x) {

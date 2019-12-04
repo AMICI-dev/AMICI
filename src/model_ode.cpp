@@ -1,7 +1,6 @@
 #include <amici/sundials_matrix_wrapper.h>
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
-#include <iostream>
 
 namespace amici {
 
@@ -102,11 +101,8 @@ void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
 
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     auto x_pos = computeX_pos(x);
-    std::cout << "before fdwdp" << std::endl;
     fdwdp(t, N_VGetArrayPointer(x_pos));
-    std::cout << "after fdwdp, before fdxdotdw" << std::endl;
     fdxdotdw(t, x_pos);
-    std::cout << "after fdxdotdw" << std::endl;
     
     if (pythonGenerated) {
         // python generated
@@ -130,10 +126,7 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
             dxdotdp_implicit.reset();
             fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
             fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
-
-            std::cout << "before sparse_multiply " << std::endl;
             dxdotdw.sparse_multiply(&dxdotdp_implicit, &dwdp);
-            std::cout << "after sparse_multiply " << std::endl;
         }
         
     } else {
@@ -364,7 +357,6 @@ void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     /* initialize with zeros */
     N_VConst(0.0, qBdot);
-    std::cout << "WTF???" << std::endl;
     fdxdotdp(t, x);
     
     if (pythonGenerated) {
@@ -404,11 +396,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
     if (ip == 0) {
         // we only need to call this for the first parameter index will be
         // the same for all remaining
-        std::cout << "before fdxdotdp" << std::endl;
         fdxdotdp(t, x);
-        for (int j = 0; j < 23; j++)
-            std::cout << std::to_string((dxdotdp_implicit.data())[j]) << std::endl;
-        std::cout << "after fdxdotdp" << std::endl;
         fJSparse(t, x, J.get());
     }
     if (pythonGenerated) {
@@ -429,13 +417,8 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
             auto col_imp = dxdotdp_implicit.indexptrs();
             auto row_imp = dxdotdp_implicit.indexvals();
             auto data_ptr = dxdotdp_implicit.data();
-            std::cout << "before data copy" << std::endl;
-            for (sunindextype i = col_imp[ip]; i < col_imp[ip + 1]; ++i) {
+            for (sunindextype i = col_imp[ip]; i < col_imp[ip + 1]; ++i)
                 sxdot_tmp[row_imp[i]] += data_ptr[i];
-                std::cout << "index: " << std::to_string(i) << ", parameter: " << std::to_string(ip) << std::endl;
-            }
-            
-            std::cout << "after data copy" << std::endl;
         }
         
     } else {
@@ -443,7 +426,6 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
     }
     J.multiply(sxdot, sx);
-    std::cout << "after fsxdot" << std::endl;
 }
 
 } // namespace amici

@@ -5,7 +5,6 @@
 #include <new> // bad_alloc
 #include <utility>
 #include <stdexcept> // invalid_argument and domain_error
-#include <iostream>
 
 namespace amici {
 
@@ -345,30 +344,21 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     sunindextype iC_data;
     
     iC_data = 0;
-    std::cout << "before MM " << std::endl;
     for (iC_col = 0; iC_col < C->columns(); ++iC_col) {
         for(iC_row = C->indexptrs_ptr[iC_col]; iC_row < C->indexptrs_ptr[iC_col + 1]; ++iC_row) {
             // Current entry in C: (C.indexvals[iC_row], iC_col)
             for(iB_row = B->indexptrs_ptr[iC_col]; iB_row < B->indexptrs_ptr[iC_col + 1]; ++iB_row) {
                 // Loop over column iC_col in B
                 iA_col = B->indexvals_ptr[iB_row];
-                for (iA_row = indexptrs_ptr[iA_col]; iA_row < indexptrs_ptr[iA_col + 1]; ++iA_row) {
+                for (iA_row = indexptrs_ptr[iA_col]; iA_row < indexptrs_ptr[iA_col + 1]; ++iA_row)
                     // loop over entries in column col_in_A
-                    if (indexvals_ptr[iA_row] == C->indexvals_ptr[iC_row]) {
-                        // if two entries match together
+                    // if two entries match together, carry out multiplication
+                    if (indexvals_ptr[iA_row] == C->indexvals_ptr[iC_row])
                         C->data_ptr[iC_data] += data_ptr[iA_row] * B->data_ptr[iB_row];
-                        std::cout << "index: " << std::to_string(iC_data)
-                                  << ", content A: " << std::to_string(data_ptr[iA_row])
-                                  << ", content B: " << std::to_string(B->data_ptr[iB_row])
-                                  << std::endl;
-                    }
-                }
             }
-            std::cout << std::to_string(C->data_ptr[iC_data]) << std::endl;
             iC_data++;
         }
     }
-    std::cout << "after MM " << std::endl;
 }
     
 void SUNMatrixWrapper::zero()
