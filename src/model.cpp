@@ -11,6 +11,7 @@
 #include <regex>
 #include <typeinfo>
 #include <utility>
+#include <iostream>
 
 namespace amici {
 
@@ -160,8 +161,8 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
    /* If Matlab wrapped: dxdotdp is a full AmiVector,
       if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices */
     if (pythonGenerated) {
-        dxdotdp_explicit.matrix = SUNSparseMatrix(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
-        dxdotdp_implicit.matrix = SUNSparseMatrix(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
+        dxdotdp_explicit = SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
+        dxdotdp_implicit = SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
         
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
@@ -1258,6 +1259,7 @@ void Model::fy(const realtype t, const AmiVector &x) {
 }
 
 void Model::fdydp(const realtype t, const AmiVector &x) {
+    std::cout << "before fdydp" << std::endl;
     if (!ny)
         return;
 
@@ -1283,6 +1285,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     if (alwaysCheckFinite) {
         app->checkFinite(dydp, "dydp");
     }
+    std::cout << "after fdydp" << std::endl;
 }
 
 void Model::fdydx(const realtype t, const AmiVector &x) {
@@ -1821,10 +1824,10 @@ void Model::fdwdp(const realtype t, const realtype *x) {
             return;
         
         /* CHANGE_TO_SPARSE --> This one should already be fine, hopefully... */
+        fdwdp_colptrs(dwdp.indexptrs());
+        fdwdp_rowvals(dwdp.indexvals());
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
               h.data(), w.data(), total_cl.data(), stcl);
-        fdwdp_colptrs(dwdp.indexptrs());
-        fdwdp_rowvals(dwdp.indexptrs());
         
     } else {
         // matlab generated
@@ -1845,7 +1848,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
     fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
           h.data(), w.data(), total_cl.data());
     fdwdx_colptrs(dwdx.indexptrs());
-    fdwdx_rowvals(dwdx.indexptrs());
+    fdwdx_rowvals(dwdx.indexvals());
 
     if (alwaysCheckFinite) {
         app->checkFinite(gsl::make_span(dwdx.get()), "dwdx");

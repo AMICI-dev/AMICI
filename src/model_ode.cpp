@@ -1,6 +1,7 @@
 #include <amici/sundials_matrix_wrapper.h>
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
+#include <iostream>
 
 namespace amici {
 
@@ -90,42 +91,49 @@ void Model_ODE::fJDiag(const realtype t, AmiVector &JDiag,
 void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
     dxdotdw.reset();
     auto x_pos = computeX_pos(x);
-    fdxdotdw(dxdotdw.data(), t, N_VGetArrayPointer(x_pos),
-             unscaledParameters.data(), fixedParameters.data(), h.data(),
-             w.data());
-    fdxdotdw_colptrs(dxdotdw.indexptrs());
-    fdxdotdw_rowvals(dxdotdw.indexvals());
+    if (nw > 0) {
+        fdxdotdw_colptrs(dxdotdw.indexptrs());
+        fdxdotdw_rowvals(dxdotdw.indexvals());
+        fdxdotdw(dxdotdw.data(), t, N_VGetArrayPointer(x_pos),
+                 unscaledParameters.data(), fixedParameters.data(), h.data(),
+                 w.data());
+    }
 }
 
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
-    fdwdp(t, N_VGetArrayPointer(x));
     auto x_pos = computeX_pos(x);
+    std::cout << "before fdwdp" << std::endl;
+    fdwdp(t, N_VGetArrayPointer(x_pos));
+    std::cout << "after fdwdp, before fdxdotdw" << std::endl;
+    fdxdotdw(t, x_pos);
+    std::cout << "after fdxdotdw" << std::endl;
     
     if (pythonGenerated) {
         // python generated
-        dxdotdp_explicit.reset();
-        for (int ip = 0; ip < nplist(); ip++)
-            /* The creation of the according file has to be changed */
-            fdxdotdp_explicit(dxdotdp_explicit.data(),
-                              t, N_VGetArrayPointer(x_pos),
-                              unscaledParameters.data(),
-                              fixedParameters.data(),
-                              h.data(), plist_[ip], w.data());
-
         if (ndxdotdp_explicit > 0) {
+            dxdotdp_explicit.reset();
             fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
             fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
+            
+            for (int ip = 0; ip < nplist(); ip++)
+                /* The creation of the according file has to be changed */
+                fdxdotdp_explicit(dxdotdp_explicit.data(),
+                                  t, N_VGetArrayPointer(x_pos),
+                                  unscaledParameters.data(),
+                                  fixedParameters.data(),
+                                  h.data(), plist_[ip], w.data());
         }
         
-        if (nw > 0) {
+        if (nw > 0 && ndxdotdp_implicit > 0) {
             /* Sparse matrix multiplication
                dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
-            dxdotdw.sparse_multiply(dxdotdp_implicit, dwdp);
-            if (ndxdotdp_implicit > 0) {
-                fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
-                fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
-            }
+            fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
+            fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
+
+            std::cout << "before sparse_multiply " << std::endl;
+            dxdotdw.sparse_multiply(&dxdotdp_implicit, &dwdp);
+            std::cout << "after sparse_multiply " << std::endl;
         }
         
     } else {
@@ -356,6 +364,7 @@ void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     /* initialize with zeros */
     N_VConst(0.0, qBdot);
+    std::cout << "WTF???" << std::endl;
     fdxdotdp(t, x);
     
     if (pythonGenerated) {
@@ -364,6 +373,7 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
             dxdotdp_explicit.multiply(qBdot, xB, plist_, true);
         if (ndxdotdp_implicit > 0)
             dxdotdp_implicit.multiply(qBdot, xB, plist_, true);
+        N_VScale(-1.0, qBdot, qBdot);
     } else {
         /* was matlab generated */
         for (int ip = 0; ip < nplist(); ip++) {
@@ -394,7 +404,11 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
     if (ip == 0) {
         // we only need to call this for the first parameter index will be
         // the same for all remaining
+        std::cout << "before fdxdotdp" << std::endl;
         fdxdotdp(t, x);
+        for (int j = 0; j < 23; j++)
+            std::cout << std::to_string((dxdotdp_implicit.data())[j]) << std::endl;
+        std::cout << "after fdxdotdp" << std::endl;
         fJSparse(t, x, J.get());
     }
     if (pythonGenerated) {
@@ -413,8 +427,15 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         // copy implicit version
         if (ndxdotdp_implicit > 0) {
             auto col_imp = dxdotdp_implicit.indexptrs();
-            for (sunindextype i = col_imp[ip]; i <  col_imp[ip + 1]; ++i)
-                sxdot_tmp[i] += (dxdotdp_implicit.data())[i];
+            auto row_imp = dxdotdp_implicit.indexvals();
+            auto data_ptr = dxdotdp_implicit.data();
+            std::cout << "before data copy" << std::endl;
+            for (sunindextype i = col_imp[ip]; i < col_imp[ip + 1]; ++i) {
+                sxdot_tmp[row_imp[i]] += data_ptr[i];
+                std::cout << "index: " << std::to_string(i) << ", parameter: " << std::to_string(ip) << std::endl;
+            }
+            
+            std::cout << "after data copy" << std::endl;
         }
         
     } else {
@@ -422,6 +443,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
     }
     J.multiply(sxdot, sx);
+    std::cout << "after fsxdot" << std::endl;
 }
 
 } // namespace amici

@@ -117,6 +117,12 @@ class SUNMatrixWrapper {
     sunindextype columns() const;
 
     /**
+     * @brief Get the number of non-zero elements (sparse matrices only)
+     * @return number
+     */
+    sunindextype nonzeros() const;
+    
+    /**
      * @brief Get the index values of a sparse matrix
      * @return index array
      */
@@ -185,8 +191,8 @@ class SUNMatrixWrapper {
      * @param C output matrix, may already contain values
      * @param B multiplication matrix
      */
-    void sparse_multiply(SUNMatrixWrapper C,
-                         SUNMatrixWrapper B) const;
+    void sparse_multiply(SUNMatrixWrapper *C,
+                         SUNMatrixWrapper *B) const;
     
     /**
      * @brief Set to 0.0

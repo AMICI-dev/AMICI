@@ -59,6 +59,7 @@ TPL_DXDOTDP_EXPLICIT_COLPTRS_DEF
 TPL_DXDOTDP_EXPLICIT_ROWVALS_DEF
 TPL_DXDOTDP_IMPLICIT_COLPTRS_DEF
 TPL_DXDOTDP_IMPLICIT_ROWVALS_DEF
+
 extern void dydx_TPL_MODELNAME(realtype *dydx, const realtype t,
                                const realtype *x, const realtype *p,
                                const realtype *k, const realtype *h,
@@ -453,9 +454,17 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DJYDY_ROWVALS_IMPL
 
     TPL_DWDP_IMPL
+    
+    TPL_DWDP_COLPTRS_IMPL
+    
+    TPL_DWDP_ROWVALS_IMPL
 
     TPL_DWDX_IMPL
 
+    TPL_DWDX_COLPTRS_IMPL
+    
+    TPL_DWDX_ROWVALS_IMPL
+    
     TPL_DXDOTDW_IMPL
     
     TPL_DXDOTDW_COLPTRS_IMPL

@@ -5,6 +5,7 @@
 #include <new> // bad_alloc
 #include <utility>
 #include <stdexcept> // invalid_argument and domain_error
+#include <iostream>
 
 namespace amici {
 
@@ -141,6 +142,18 @@ sunindextype SUNMatrixWrapper::columns() const {
         throw std::domain_error("Invalid SUNMatrix type.");
     }
 }
+    
+sunindextype SUNMatrixWrapper::nonzeros() const {
+    if (!matrix)
+        return 0;
+    
+    switch (SUNMatGetID(matrix)) {
+        case SUNMATRIX_SPARSE:
+            return SM_NNZ_S(matrix);
+        default:
+            throw std::domain_error("Non-zeros property only available for sparse matrices");
+    }
+}
 
 sunindextype *SUNMatrixWrapper::indexvals() const {
     return indexvals_ptr;
@@ -239,7 +252,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     sunindextype ncols = columns();
     
     if (transpose) {
-        if (static_cast<sunindextype>(c.size()) != cols.size())
+        if (c.size() != cols.size())
             throw std::invalid_argument("Dimension mismatch between number of cols "
                                         "in index vector cols (" + std::to_string(ncols)
                                         + ") and elements in c (" + std::to_string(c.size())
@@ -285,8 +298,8 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
 }
 
     
-void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper C,
-                                       SUNMatrixWrapper B) const {
+void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
+                                       SUNMatrixWrapper *B) const {
     if (!matrix)
         return;
     
@@ -299,37 +312,63 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper C,
     if (sparsetype() != CSC_MAT)
         throw std::invalid_argument("Matrix A not of type CSC_MAT");
 
-    if (SUNMatGetID(B.matrix) != SUNMATRIX_SPARSE)
+    if (SUNMatGetID(B->matrix) != SUNMATRIX_SPARSE)
         throw std::invalid_argument("Matrix B not sparse in sparse_multiply");
     
-    if (B.sparsetype() != CSC_MAT)
+    if (B->sparsetype() != CSC_MAT)
         throw std::invalid_argument("Matrix B not of type CSC_MAT");
 
-    if (SUNMatGetID(C.matrix) != SUNMATRIX_SPARSE)
+    if (SUNMatGetID(C->matrix) != SUNMATRIX_SPARSE)
         throw std::invalid_argument("Matrix C not sparse in sparse_multiply");
     
-    if (C.sparsetype() != CSC_MAT)
+    if (C->sparsetype() != CSC_MAT)
         throw std::invalid_argument("Matrix C not of type CSC_MAT");
     
-    if (C.rows() != nrows)
+    if (C->rows() != nrows)
         throw std::invalid_argument("Dimension mismatch between number of rows "
                                     "in A (" + std::to_string(nrows) + ") and "
                                     "number of rows in C ("
-                                    + std::to_string((int)C.rows()) + ")");
+                                    + std::to_string((int)C->rows()) + ")");
     
-    if (B.rows() != ncols)
+    if (B->rows() != ncols)
         throw std::invalid_argument("Dimension mismatch between number of rows "
                                     "in A (" + std::to_string(ncols)
                                     + ") and number of cols in B ("
-                                    + std::to_string((int)B.rows()) + ")");
+                                    + std::to_string((int)B->rows()) + ")");
     
     /* Carry out actual multiplication */
-    unsigned int idata = 0;
-    for (int icol = 0; icol < (int)C.columns(); ++icol)
-        for(sunindextype k = B.indexptrs_ptr[icol]; k < B.indexptrs_ptr[icol + 1]; ++k)
-            for(sunindextype l = indexptrs_ptr[k]; l < B.indexptrs_ptr[k + 1]; ++l)
-                C.data_ptr[idata++] += data_ptr[l] * B.data_ptr[k];
-
+    sunindextype iC_col;
+    sunindextype iC_row;
+    sunindextype iB_row;
+    sunindextype iA_col;
+    sunindextype iA_row;
+    sunindextype iC_data;
+    
+    iC_data = 0;
+    std::cout << "before MM " << std::endl;
+    for (iC_col = 0; iC_col < C->columns(); ++iC_col) {
+        for(iC_row = C->indexptrs_ptr[iC_col]; iC_row < C->indexptrs_ptr[iC_col + 1]; ++iC_row) {
+            // Current entry in C: (C.indexvals[iC_row], iC_col)
+            for(iB_row = B->indexptrs_ptr[iC_col]; iB_row < B->indexptrs_ptr[iC_col + 1]; ++iB_row) {
+                // Loop over column iC_col in B
+                iA_col = B->indexvals_ptr[iB_row];
+                for (iA_row = indexptrs_ptr[iA_col]; iA_row < indexptrs_ptr[iA_col + 1]; ++iA_row) {
+                    // loop over entries in column col_in_A
+                    if (indexvals_ptr[iA_row] == C->indexvals_ptr[iC_row]) {
+                        // if two entries match together
+                        C->data_ptr[iC_data] += data_ptr[iA_row] * B->data_ptr[iB_row];
+                        std::cout << "index: " << std::to_string(iC_data)
+                                  << ", content A: " << std::to_string(data_ptr[iA_row])
+                                  << ", content B: " << std::to_string(B->data_ptr[iB_row])
+                                  << std::endl;
+                    }
+                }
+            }
+            std::cout << std::to_string(C->data_ptr[iC_data]) << std::endl;
+            iC_data++;
+        }
+    }
+    std::cout << "after MM " << std::endl;
 }
     
 void SUNMatrixWrapper::zero()
