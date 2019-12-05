@@ -5,4 +5,4 @@ petab_import: 1800 # ^= 30'
 install_model: 400
 forward_simulation: 2
 forward_sensitivities: 6
-adjoint_sensitivities: 120 # TODO reduce when #849 fixed
+adjoint_sensitivities: 4
