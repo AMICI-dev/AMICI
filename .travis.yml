@@ -147,10 +147,10 @@ install:
     # - if [[ "$TRAVIS:OS:NAME" == "windows" ]]; then powershell "-Command $VerbosePreference='SilentlyContinue'"; fi
     # check results of openBLAS installation
     # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell "-Command if (Test-Path C:\BLAS) {Get-ChildItem C:\BLAS -Recurse}"; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command New-Item -Path Env:BLAS_TestW -Value TestWindows -Force; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_TESTL = "TestLinux"; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command New-Item -Path Env:BLAS_TESTW -Value TestWindows -Force; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_TESTL=TestLinux; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command Get-Item -Path Env:BLAS_*; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $BLAS_*; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $BLAS_LIBS $BLAS_CFLAGS $BLAS_TESTL $BLAS_TESTW; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t dist/amici-*.tar.gz | head -1); fi
 
