@@ -74,3 +74,9 @@ jobs:
     - name: adjoint_sensitivities
       run: |
         check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities
+    - name: forward_simulation_non_optimal_parameters
+      run: |
+        check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters
+    - name: adjoint_sensitivities_non_optimal_parameters
+      run: |
+        check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters
