@@ -1262,23 +1262,18 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
         return;
 
     dydp.assign(ny * nplist(), 0.0);
-
     fw(t, x.data());
     fdwdp(t, x.data());
 
-    // if dwdp is not dense, fdydp will expect the full sparse array
-    /* CHANE_TO_SPARSE --> Whatever the upper comment means, it should be phrased more understandably... ;) */
+    /* dwdp is sparse. To deal with reordering in plist,
+       fdydp expects the whole matrix of dwdp by taking the pointer to
+       the memory block containing the data within dwdp */
     realtype *dwdp_tmp = dwdp.data();
-    for (int ip = 0; ip < nplist(); ip++) {
-        // get dydp slice (ny) for current time and parameter
-        if (pythonGenerated && nw)
-            /* CHANE_TO_SPARSE --> This must be changed, as dwdp can not be queried in this way anymore when made sparse */
-            dwdp_tmp = &dwdp.data()[(dwdp.indexptrs())[ip]];
-            // dwdp_tmp = &dwdp.at(nw * ip);
-
+    
+    /* get dydp slice (ny) for current time and parameter */
+    for (int ip = 0; ip < nplist(); ip++)
         fdydp(&dydp.at(ip * ny), t, x.data(), unscaledParameters.data(),
               fixedParameters.data(), h.data(), plist(ip), w.data(), dwdp_tmp);
-    }
 
     if (alwaysCheckFinite) {
         app->checkFinite(dydp, "dydp");
