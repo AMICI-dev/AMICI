@@ -103,32 +103,23 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     auto x_pos = computeX_pos(x);
     fdwdp(t, N_VGetArrayPointer(x_pos));
     fdxdotdw(t, x_pos);
-    
+
     if (pythonGenerated) {
         // python generated
         if (ndxdotdp_explicit > 0) {
             dxdotdp_explicit.reset();
-            fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
-            fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
-            
-            for (int ip = 0; ip < nplist(); ip++)
-                /* The creation of the according file has to be changed */
-                fdxdotdp_explicit(dxdotdp_explicit.data(),
-                                  t, N_VGetArrayPointer(x_pos),
-                                  unscaledParameters.data(),
-                                  fixedParameters.data(),
-                                  h.data(), plist_[ip], w.data());
+            fdxdotdp_explicit(dxdotdp_explicit.data(),
+                              t, N_VGetArrayPointer(x_pos),
+                              unscaledParameters.data(),
+                              fixedParameters.data(),
+                              h.data(), w.data());
         }
-        
         if (nw > 0 && ndxdotdp_implicit > 0) {
             /* Sparse matrix multiplication
                dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
-            fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
-            fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
             dxdotdw.sparse_multiply(&dxdotdp_implicit, &dwdp);
         }
-        
     } else {
         // matlab generated
         for (int ip = 0; ip < nplist(); ip++) {

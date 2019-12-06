@@ -163,6 +163,20 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         dxdotdp_explicit = SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
         dxdotdp_implicit = SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
         
+        /* Call indexing for sparse variables. Needs to be done only once */
+        fdwdp_colptrs(dwdp.indexptrs());
+        fdwdp_rowvals(dwdp.indexvals());
+        fdwdx_colptrs(dwdx.indexptrs());
+        fdwdx_rowvals(dwdx.indexvals());
+        if (ndxdotdp_explicit > 0) {
+            fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
+            fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
+        }
+        if (ndxdotdp_implicit > 0) {
+            fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
+            fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
+        }
+
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
             throw std::runtime_error(
@@ -1816,8 +1830,6 @@ void Model::fdwdp(const realtype t, const realtype *x) {
             return;
         
         /* CHANGE_TO_SPARSE --> This one should already be fine, hopefully... */
-        fdwdp_colptrs(dwdp.indexptrs());
-        fdwdp_rowvals(dwdp.indexvals());
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
               h.data(), w.data(), total_cl.data(), stcl);
         
@@ -1828,7 +1840,7 @@ void Model::fdwdp(const realtype t, const realtype *x) {
               stotal_cl.data());
         /* CHANGE_TO_SPARSE --> Well, good question how this one is actually affected... */
     }
-    
+
     if (alwaysCheckFinite) {
         app->checkFinite(gsl::make_span(dwdp.get()), "dwdp");
     }
@@ -1839,8 +1851,6 @@ void Model::fdwdx(const realtype t, const realtype *x) {
     dwdx.reset();
     fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
           h.data(), w.data(), total_cl.data());
-    fdwdx_colptrs(dwdx.indexptrs());
-    fdwdx_rowvals(dwdx.indexvals());
 
     if (alwaysCheckFinite) {
         app->checkFinite(gsl::make_span(dwdx.get()), "dwdx");
