@@ -3,7 +3,7 @@ import libsbml
 
 def flatten_sbml(sbml: libsbml.Model):
     """Reformulate parts of the SBML, in order to allow
-        import of some SBML features.
+        the import of some SBML features.
 
     Arguments:
         sbml: Instance of libsbml.Model`.
@@ -87,7 +87,7 @@ def process_species_assignment_rules(sbml: libsbml.Model):
         if rule.isAssignment() and isinstance(rule_variable, libsbml.Species):
             
             assignment_rule_species_ids.add(rule_variable.getId())
-            
+
             p = sbml.createParameter()
             p.setId(rule_variable.getId())
             p.setName(rule_variable.getName())
