@@ -13,5 +13,5 @@ example_dirac_adjoint_hessVecProd
 example_jakstat_adjoint_hvp
 example_robertson
 example_neuron
-example_dae_events
+example_calvetti
 path(oldpath);

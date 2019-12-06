@@ -1039,7 +1039,7 @@ void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
                                        const AmiVector &xdot,
                                        const AmiVector &xdot_old) {
 
-    deltasx.assign(nx_solver, 0.0);
+    deltaxB.assign(nx_solver, 0.0);
 
     // compute update
     fdeltaxB(deltaxB.data(), t, x.data(), unscaledParameters.data(),
