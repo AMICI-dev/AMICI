@@ -1055,7 +1055,7 @@ class ODEModel:
         Raises:
 
         """
-        if name not in sparse_functions and name != 'dxdotdp':
+        if name not in sparse_functions:
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparsesyms:
             self._generateSparseSymbol(name)
@@ -1092,7 +1092,7 @@ class ODEModel:
         Raises:
 
         """
-        if name not in sparse_functions and name != 'dxdotdp':
+        if name not in sparse_functions:
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generateSparseSymbol(name)
@@ -1111,7 +1111,7 @@ class ODEModel:
         Raises:
 
         """
-        if name not in sparse_functions and name != 'dxdotdp':
+        if name not in sparse_functions:
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generateSparseSymbol(name)
@@ -1130,7 +1130,7 @@ class ODEModel:
         Raises:
 
         """
-        if name not in sparse_functions and name != 'dxdotdp':
+        if name not in sparse_functions:
             raise Exception(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generateSparseSymbol(name)
