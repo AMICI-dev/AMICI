@@ -107,9 +107,9 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     if (pythonGenerated) {
         // python generated
         if (ndxdotdp_explicit > 0) {
+            dxdotdp_explicit.reset();
             fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
             fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
-            dxdotdp_explicit.reset();
             fdxdotdp_explicit(dxdotdp_explicit.data(),
                               t, N_VGetArrayPointer(x_pos),
                               unscaledParameters.data(),
@@ -119,9 +119,9 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         if (nw > 0 && ndxdotdp_implicit > 0) {
             /* Sparse matrix multiplication
                dxdotdp_implicit += dxdotdw * dwdp */
+            dxdotdp_implicit.reset();
             fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
             fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
-            dxdotdp_implicit.reset();
             dxdotdw.sparse_multiply(&dxdotdp_implicit, &dwdp);
         }
     } else {
