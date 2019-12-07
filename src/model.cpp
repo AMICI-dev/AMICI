@@ -138,7 +138,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const int lbw, SecondOrderMode o2mode,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
-             std::vector<int> z2event, bool pythonGenerated=false,
+             std::vector<int> z2event, const bool pythonGenerated=false,
              const int ndxdotdp_explicit=0, const int ndxdotdp_implicit=0)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), ny(ny), nytrue(nytrue), nz(nz),
@@ -169,14 +169,6 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         fdwdp_rowvals(dwdp.indexvals());
         fdwdx_colptrs(dwdx.indexptrs());
         fdwdx_rowvals(dwdx.indexvals());
-        if (ndxdotdp_explicit > 0) {
-            fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
-            fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
-        }
-        if (ndxdotdp_implicit > 0) {
-            fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
-            fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
-        }
 
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())

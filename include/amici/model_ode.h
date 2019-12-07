@@ -48,8 +48,6 @@ class Model_ODE : public Model {
      * @param ndwdp number of nonzero elements in the p derivative of the
      * repeating elements
      * @param ndxdotdw number of nonzero elements dxdotdw
-     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
-     * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      * @param ndJydy number of nonzero elements dJydy
      * @param nnz number of nonzero elements in Jacobian
      * @param ubw upper matrix bandwidth in the Jacobian
@@ -60,6 +58,9 @@ class Model_ODE : public Model {
      * @param plist indexes wrt to which sensitivities are to be computed
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
+     * @param pythonGenerated flag indicating matlab or python wrapping
+     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model_ODE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
               const int nxtrue_solver, const int ny, const int nytrue,
@@ -70,12 +71,25 @@ class Model_ODE : public Model {
               const SecondOrderMode o2mode, std::vector<realtype> const &p,
               std::vector<realtype> const &k, std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
-              std::vector<int> const &z2event, bool pythonGenerated=false,
+              std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0, const int ndxdotdp_implicit=0)
         : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
                 nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
                 nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
-                pythonGenerated=false, ndxdotdp_explicit=0, ndxdotdp_implicit=0) {}
+                pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {
+            
+            /* Call pointers for model_ode-specific sparse variables.
+               Needed only once in the beginning of ODE integration
+             */
+            if (ndxdotdp_explicit > 0) {
+                fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
+                fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
+            }
+            if (ndxdotdp_implicit > 0) {
+                fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
+                fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
+            }
+        }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;
@@ -428,13 +442,12 @@ class Model_ODE : public Model {
      * @param p parameter vector
      * @param k constants vector
      * @param h heavyside vector
-     * @param ip parameter index
      * @param w vector with helper variables
      */
     virtual void fdxdotdp_explicit(realtype *dxdotdp_explicit, realtype t,
                                    const realtype *x, const realtype *p,
                                    const realtype *k, const realtype *h,
-                                   int ip, const realtype *w);
+                                   const realtype *w);
 
     /** model specific implementation of fdxdotdp_explicit, colptrs part
      * @param indexptrs column pointers

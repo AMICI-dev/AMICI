@@ -58,6 +58,9 @@ class Model_DAE : public Model {
      * @param plist indexes wrt to which sensitivities are to be computed
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
+     * @param pythonGenerated flag indicating matlab or python wrapping
+     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model_DAE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
               const int nxtrue_solver, const int ny, const int nytrue,
@@ -67,13 +70,12 @@ class Model_DAE : public Model {
               const int lbw, const SecondOrderMode o2mode,
               std::vector<realtype> const &p, std::vector<realtype> const &k,
               std::vector<int> const &plist, std::vector<realtype> const &idlist,
-              std::vector<int> const &z2event, bool pythonGenerated=false,
+              std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0, const int ndxdotdp_implicit=0)
         : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
-                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, ndxdotdp_explicit,
-                ndxdotdp_implicit, std::move(ndJydy), nnz, ubw, lbw, o2mode,
-                p, k, plist, idlist, z2event, pythonGenerated, ndxdotdp_explicit,
-                ndxdotdp_implicit) {}
+                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
+                nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
+                pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;

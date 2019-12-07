@@ -71,6 +71,9 @@ class Model : public AbstractModel {
      * @param plist indexes wrt to which sensitivities are to be computed
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
+     * @param pythonGenerated flag indicating matlab or python wrapping
+     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int ny, int nytrue, int nz, int nztrue, int ne, int nJ, int nw,
@@ -78,8 +81,8 @@ class Model : public AbstractModel {
           int nnz, int ubw, int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
-          std::vector<int> z2event, bool pythonGenerated=false,
-          int ndxdotdp_explicit=0, int ndxdotdp_implicit=0);
+          std::vector<int> z2event, bool pythonGenerated,
+          int ndxdotdp_explicit, int ndxdotdp_implicit);
 
     /** destructor */
     ~Model() override = default;

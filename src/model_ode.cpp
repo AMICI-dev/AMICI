@@ -243,7 +243,7 @@ void Model_ODE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
 void Model_ODE::fdxdotdp_explicit(realtype * /*dxdotdp_explicit*/, const realtype /*t*/,
                                   const realtype * /*x*/, const realtype * /*p*/,
                                   const realtype * /*k*/, const realtype * /*h*/,
-                                  const int /*ip*/, const realtype * /*w*/) {
+                                  const realtype * /*w*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
