@@ -74,12 +74,12 @@ class Model : public AbstractModel {
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int ny, int nytrue, int nz, int nztrue, int ne, int nJ, int nw,
-          int ndwdx, int ndwdp, int ndxdotdw, int ndxdotdp_explicit,
-          int ndxdotdp_implicit, std::vector<int> ndJydy,
+          int ndwdx, int ndwdp, int ndxdotdw, std::vector<int> ndJydy,
           int nnz, int ubw, int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
-          std::vector<int> z2event, bool pythonGenerated=false);
+          std::vector<int> z2event, bool pythonGenerated=false,
+          int ndxdotdp_explicit=0, int ndxdotdp_implicit=0);
 
     /** destructor */
     ~Model() override = default;
@@ -1127,12 +1127,6 @@ class Model : public AbstractModel {
 
     /** number of nonzero entries in dxdotdw */
     int ndxdotdw{0};
-
-    /** number of nonzero entries in ndxdotdp_explicit */
-    int ndxdotdp_explicit{0};
-    
-    /** number of nonzero entries in ndxdotdp_implicit */
-    int ndxdotdp_implicit{0};
     
     /** number of nonzero entries in dJydy */
     std::vector<int> ndJydy;
@@ -1152,6 +1146,12 @@ class Model : public AbstractModel {
     /* did we use Matlab or python for model generation */
     bool pythonGenerated;
 
+    /** number of nonzero entries in ndxdotdp_explicit */
+    int ndxdotdp_explicit{0};
+    
+    /** number of nonzero entries in ndxdotdp_implicit */
+    int ndxdotdp_implicit{0};
+    
     /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
      * directional or full second order derivative will be computed */
     SecondOrderMode o2mode{SecondOrderMode::none};
