@@ -138,8 +138,8 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const int lbw, SecondOrderMode o2mode,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
-             std::vector<int> z2event, const bool pythonGenerated=false,
-             const int ndxdotdp_explicit=0, const int ndxdotdp_implicit=0)
+             std::vector<int> z2event, const bool pythonGenerated,
+             const int ndxdotdp_explicit, const int ndxdotdp_implicit)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), ny(ny), nytrue(nytrue), nz(nz),
       nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
@@ -163,12 +163,6 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
     if (pythonGenerated) {
         dxdotdp_explicit = SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
         dxdotdp_implicit = SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
-        
-        /* Call indexing for sparse variables. Needs to be done only once */
-        fdwdp_colptrs(dwdp.indexptrs());
-        fdwdp_rowvals(dwdp.indexvals());
-        fdwdx_colptrs(dwdx.indexptrs());
-        fdwdx_rowvals(dwdx.indexvals());
 
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
@@ -177,8 +171,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
                                      " nytrue.");
         
         for (int iytrue = 0; iytrue < nytrue; ++iytrue)
-            dJydy.emplace_back(
-                               SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
+            dJydy.emplace_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
     } else {
         dxdotdp = AmiVectorArray(nx_solver, nplist());
         dJydy_matlab = std::vector<realtype>(nJ * nytrue * ny, 0.0);
@@ -1822,7 +1815,8 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         if (!nw)
             return;
         
-        /* CHANGE_TO_SPARSE --> This one should already be fine, hopefully... */
+        fdwdp_colptrs(dwdp.indexptrs());
+        fdwdp_rowvals(dwdp.indexvals());
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
               h.data(), w.data(), total_cl.data(), stcl);
         
@@ -1842,6 +1836,9 @@ void Model::fdwdp(const realtype t, const realtype *x) {
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t, x);
     dwdx.reset();
+    
+    fdwdx_colptrs(dwdx.indexptrs());
+    fdwdx_rowvals(dwdx.indexvals());
     fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
           h.data(), w.data(), total_cl.data());
 

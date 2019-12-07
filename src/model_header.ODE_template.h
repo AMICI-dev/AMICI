@@ -122,8 +122,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_NDWDX,                                   // ndwdx
               TPL_NDWDP,                                   // ndwdp
               TPL_NDXDOTDW,                                // ndxdotdw
-              TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
-              TPL_NDXDOTDP_IMPLICIT,                       // ndxdotdp_implicit
               TPL_NDJYDY,                                  // ndjydy
               TPL_NNZ,                                     // nnz
               TPL_UBW,                                     // ubw
@@ -134,7 +132,9 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               std::vector<int>{},                          // plist
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
               std::vector<int>{},                          // z2event
-              true                                         // pythonGenerated
+              true,                                        // pythonGenerated
+              TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
+              TPL_NDXDOTDP_IMPLICIT                        // ndxdotdp_implicit
           ) {}
 
     /**

@@ -81,8 +81,8 @@ class Model : public AbstractModel {
           int nnz, int ubw, int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
-          std::vector<int> z2event, bool pythonGenerated,
-          int ndxdotdp_explicit, int ndxdotdp_implicit);
+          std::vector<int> z2event, bool pythonGenerated=false,
+          int ndxdotdp_explicit=0, int ndxdotdp_implicit=0);
 
     /** destructor */
     ~Model() override = default;

@@ -107,6 +107,8 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     if (pythonGenerated) {
         // python generated
         if (ndxdotdp_explicit > 0) {
+            fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
+            fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
             dxdotdp_explicit.reset();
             fdxdotdp_explicit(dxdotdp_explicit.data(),
                               t, N_VGetArrayPointer(x_pos),
@@ -117,6 +119,8 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         if (nw > 0 && ndxdotdp_implicit > 0) {
             /* Sparse matrix multiplication
                dxdotdp_implicit += dxdotdw * dwdp */
+            fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
+            fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
             dxdotdp_implicit.reset();
             dxdotdw.sparse_multiply(&dxdotdp_implicit, &dwdp);
         }
@@ -399,17 +403,19 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         // copy explicit version
         if (ndxdotdp_explicit > 0) {
             auto col_exp = dxdotdp_explicit.indexptrs();
-            for (sunindextype i = col_exp[ip]; i <  col_exp[ip + 1]; ++i)
-                sxdot_tmp[i] += (dxdotdp_explicit.data())[i];
+            auto row_exp = dxdotdp_explicit.indexvals();
+            auto data_exp_ptr = dxdotdp_explicit.data();
+            for (sunindextype i = col_exp[ip]; i < col_exp[ip + 1]; ++i)
+                sxdot_tmp[row_exp[i]] += data_exp_ptr[i];
         }
             
         // copy implicit version
         if (ndxdotdp_implicit > 0) {
             auto col_imp = dxdotdp_implicit.indexptrs();
             auto row_imp = dxdotdp_implicit.indexvals();
-            auto data_ptr = dxdotdp_implicit.data();
+            auto data_imp_ptr = dxdotdp_implicit.data();
             for (sunindextype i = col_imp[ip]; i < col_imp[ip + 1]; ++i)
-                sxdot_tmp[row_imp[i]] += data_ptr[i];
+                sxdot_tmp[row_imp[i]] += data_imp_ptr[i];
         }
         
     } else {

@@ -1449,6 +1449,10 @@ class ODEModel:
             # force symbols
             self._eqs[name] = self.sym(name)
 
+        elif name == 'dxdotdp_explicit':
+            # force symbols
+            self._derivative('xdot', 'p', name=name)
+
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
 
@@ -2103,10 +2107,7 @@ class ODEExporter:
         # need in subsequent steps
         if 'sparse' in self.functions[function] and \
                 self.functions[function]['sparse']:
-            if function == 'dxdotdp_explicit':
-                symbol = self.model.sparseeq('dxdotdp')
-            else:
-                symbol = self.model.sparseeq(function)
+            symbol = self.model.sparseeq(function)
         elif not self.allow_reinit_fixpar_initcond \
                 and function == 'sx0_fixedParameters':
             # Not required. Will create empty function body.
@@ -2176,15 +2177,9 @@ class ODEExporter:
         """
 
         if indextype == 'colptrs':
-            if function == 'dxdotdp_explicit':
-                values = self.model.colptrs('dxdotdp')
-            else:
-                values = self.model.colptrs(function)
+            values = self.model.colptrs(function)
         elif indextype == 'rowvals':
-            if function == 'dxdotdp_explicit':
-                values = self.model.rowvals('dxdotdp')
-            else:
-                values = self.model.rowvals(function)
+            values = self.model.rowvals(function)
         else:
             raise ValueError('Invalid value for type, must be colptr or '
                              'rowval')

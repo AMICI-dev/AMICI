@@ -76,20 +76,7 @@ class Model_ODE : public Model {
         : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
                 nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
                 nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
-                pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {
-            
-            /* Call pointers for model_ode-specific sparse variables.
-               Needed only once in the beginning of ODE integration
-             */
-            if (ndxdotdp_explicit > 0) {
-                fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
-                fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
-            }
-            if (ndxdotdp_implicit > 0) {
-                fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
-                fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
-            }
-        }
+                pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;
