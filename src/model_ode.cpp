@@ -88,9 +88,9 @@ void Model_ODE::fJDiag(const realtype t, AmiVector &JDiag,
 }
 
 void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
-    dxdotdw.reset();
-    auto x_pos = computeX_pos(x);
     if (nw > 0) {
+        auto x_pos = computeX_pos(x);
+        dxdotdw.reset();
         fdxdotdw_colptrs(dxdotdw.indexptrs());
         fdxdotdw_rowvals(dxdotdw.indexvals());
         fdxdotdw(dxdotdw.data(), t, N_VGetArrayPointer(x_pos),

@@ -96,13 +96,29 @@ void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta) {
 
 void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     prepareLinearSystem(0, -1);
-
     model->fdxdotdp(*t, *x, dx);
-    for (int ip = 0; ip < model->nplist(); ip++) {
 
-        for (int ix = 0; ix < model->nx_solver; ix++) {
-            sx.at(ix,ip) = -model->dxdotdp.at(ix, ip);
+    for (int ip = 0; ip < model->nplist(); ip++) {
+        N_VConst(0.0, sx.getNVector(ip));
+        
+        // copy explicit version
+        if (model->ndxdotdp_explicit > 0) {
+            auto col = model->dxdotdp_explicit.indexptrs();
+            auto row = model->dxdotdp_explicit.indexvals();
+            auto data_ptr = model->dxdotdp_explicit.data();
+            for (sunindextype iCol = (int)col[ip]; iCol < col[ip + 1]; ++iCol)
+                sx.at(row[iCol], ip) -= data_ptr[iCol];
         }
+        
+        // copy implicit version
+        if (model->ndxdotdp_implicit > 0) {
+            auto col = model->dxdotdp_implicit.indexptrs();
+            auto row = model->dxdotdp_implicit.indexvals();
+            auto data_ptr = model->dxdotdp_implicit.data();
+            for (sunindextype iCol = (int)col[ip]; iCol < col[ip + 1]; ++iCol)
+                sx.at(row[iCol], ip) -= data_ptr[iCol];
+        }
+
         solveLinearSystem(sx[ip]);
     }
 }
