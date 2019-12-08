@@ -166,14 +166,12 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
 
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
-            throw std::runtime_error(
-                                     "Number of elements in ndJydy is not equal "
+            throw std::runtime_error("Number of elements in ndJydy is not equal "
                                      " nytrue.");
         
         for (int iytrue = 0; iytrue < nytrue; ++iytrue)
             dJydy.emplace_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
     } else {
-        dxdotdp = AmiVectorArray(nx_solver, nplist());
         dJydy_matlab = std::vector<realtype>(nJ * nytrue * ny, 0.0);
     }
           
@@ -1240,6 +1238,8 @@ void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
 
 void Model::initializeVectors() {
     sx0data.clear();
+    if (!pythonGenerated)
+        dxdotdp = AmiVectorArray(nx_solver, nplist());
 }
 
 void Model::fy(const realtype t, const AmiVector &x) {

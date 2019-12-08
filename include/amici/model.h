@@ -1146,7 +1146,7 @@ class Model : public AbstractModel {
     /** lower bandwith of the jacobian */
     int lbw{0};
     
-    /* did we use Matlab or python for model generation */
+    /* flag indicating Matlab or python based model generation */
     bool pythonGenerated;
 
     /** number of nonzero entries in ndxdotdp_explicit */
@@ -1593,7 +1593,7 @@ class Model : public AbstractModel {
     mutable std::vector<realtype> mz;
 
     /** Sparse observable derivative of data likelihood,
-     * only used if wasPythonGenerated()==true
+     * only used if pythonGenerated==true
      * (dimension nytrue, nJ x ny, row-major) */
     mutable std::vector<SUNMatrixWrapper> dJydy;
 

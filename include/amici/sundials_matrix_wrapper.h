@@ -165,7 +165,7 @@ class SUNMatrixWrapper {
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param cols int vector for column reordering
-     * @param tranpose bool transpose A before multiplication
+     * @param transpose bool transpose A before multiplication
      */
     void multiply(N_Vector c,
                   const N_Vector b,
@@ -177,7 +177,7 @@ class SUNMatrixWrapper {
      * @param c output vector, may already contain values
      * @param b multiplication vector
      * @param cols int vector for column reordering
-     * @param tranpose bool transpose A before multiplication
+     * @param transpose bool transpose A before multiplication
      */
     void multiply(gsl::span<realtype> c,
                   gsl::span<const realtype> b,

@@ -232,7 +232,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c, gsl::span<const realtype>
 }
 
 void SUNMatrixWrapper::multiply(N_Vector c,
-                                const_N_Vector b,
+                                const N_Vector b,
                                 std::vector<int> cols,
                                 bool transpose) const {
     multiply(gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),
