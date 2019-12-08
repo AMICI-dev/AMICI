@@ -2337,7 +2337,7 @@ class ODEExporter:
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
             'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
-                'dxdotdp'))),
+                'dxdotdp_explicit'))),
             'NDXDOTDP_IMPLICIT': str(len(self.model.sparsesym(
                 'dxdotdp_implicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
