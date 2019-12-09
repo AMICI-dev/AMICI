@@ -98,7 +98,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     prepareLinearSystem(0, -1);
     model->fdxdotdp(*t, *x, dx);
 
-    if (pythonGenerated) {
+    if (model->pythonGenerated) {
         for (int ip = 0; ip < model->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
             
