@@ -2883,20 +2883,23 @@ def csc_matrix(matrix, name, base_index=0):
     symbolColPtrs = []
     symbolRowVals = []
 
-    if matrix.rows:  # if we dont have any rows, dont set rowvals
-        for col in range(0, matrix.cols):
-            symbolColPtrs.append(idx)
-            for row in range(0, matrix.rows):
-                if not (matrix[row, col] == 0):
-                    symbolName = f'{name}{symbol_name_idx}'
-                    sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
-                    symbolList.append(symbolName)
-                    sparseList.append(matrix[row, col])
-                    symbolRowVals.append(row)
-                    idx += 1
-                    symbol_name_idx += 1
-
+    for col in range(0, matrix.cols):
         symbolColPtrs.append(idx)
+        for row in range(0, matrix.rows):
+            if not (matrix[row, col] == 0):
+                symbolName = f'{name}{symbol_name_idx}'
+                sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
+                symbolList.append(symbolName)
+                sparseList.append(matrix[row, col])
+                symbolRowVals.append(row)
+                idx += 1
+                symbol_name_idx += 1
+
+    if idx == 0:
+        symbolColPtrs = []  # avoid bad memory access for empty matrices
+    else:
+        symbolColPtrs.append(idx)
+
     sparseList = sp.Matrix(sparseList)
 
     return symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix
