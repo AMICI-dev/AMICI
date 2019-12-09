@@ -2433,9 +2433,7 @@ class ODEExporter:
 
         sources = [self.modelName + '_' + function + '.cpp '
                    for function in self.functions.keys()
-                   if self.functions[function]['body'] is not None
-                   and 'dont_generate_code' not in
-                   self.functions[function].get('flags', [])]
+                   if self.functions[function].get('body', None) is not None]
 
         # add extra source files for sparse matrices
         for function in sparse_functions:
