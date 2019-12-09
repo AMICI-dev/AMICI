@@ -58,44 +58,35 @@ functions = {
             '(realtype *J, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'JB': {
         'signature':
             '(realtype *JB, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *xB, const realtype *w, const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'JDiag': {
         'signature':
             '(realtype *JDiag, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'JSparse': {
         'signature':
             '(realtype *JSparse, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *dwdx)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'JSparseB': {
         'signature':
             '(realtype *JSparseB, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *xB, const realtype *w, const realtype *dwdx)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'Jy': {
         'signature':
@@ -114,38 +105,28 @@ functions = {
             '(realtype *dJydy, const int iy, const realtype *p, '
             'const realtype *k, const realtype *y, '
             'const realtype *sigmay, const realtype *my)',
-        'sparse':
-            True,
+        'flags': ['sparse']
     },
     'dwdp': {
         'signature':
             '(realtype *dwdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *tcl, const realtype *dtcldp)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'dwdx': {
         'signature':
             '(realtype *dwdx, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *tcl)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'dxdotdw': {
         'signature':
             '(realtype *dxdotdw, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'dxdotdp_explicit': {
         'signature':
@@ -153,20 +134,14 @@ functions = {
             'const realtype *x, const realtype *p, '
             'const realtype *k, const realtype *h, '
             'const realtype *w)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse', 'dont_generate_code']
     },
     'dxdotdp_implicit': {
         'signature':
             '(realtype *dxdotdp_implicit, const realtype t, '
             'const realtype *x, const realtype *p, const realtype *k, '
             'const realtype *h, const int ip, const realtype *w)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'dydx': {
         'signature':
@@ -195,8 +170,7 @@ functions = {
             '(realtype *w, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, '
             'const realtype *h, const realtype *tcl)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'x0': {
         'signature':
@@ -224,8 +198,7 @@ functions = {
             '(realtype *xdot, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'y': {
         'signature':
@@ -250,8 +223,7 @@ functions = {
 ## list of sparse functions
 sparse_functions = [
     function for function in functions
-    if 'sparse' in functions[function]
-    and functions[function]['sparse']
+    if 'sparse' in functions[function].get('flags', [])
 ]
 ## list of sensitivity functions
 sensi_functions = [
@@ -1952,7 +1924,8 @@ class ODEExporter:
 
         """
         for function in self.functions.keys():
-            if function != 'dxdotdp_implicit':
+            if 'dont_generate_code' not in \
+                    self.functions[function].get('flags', []):
                 self._writeFunctionFile(function)
             if function in sparse_functions:
                 self._write_function_index(function, 'colptrs')
@@ -2148,9 +2121,8 @@ class ODEExporter:
 
         # function body
         body = self._getFunctionBody(function, symbol)
-        if self.assume_pow_positivity \
-                and 'assume_pow_positivity' in self.functions[function].keys()\
-                and self.functions[function]['assume_pow_positivity']:
+        if self.assume_pow_positivity and 'assume_pow_positivity' \
+                in self.functions[function].get('flags', []):
             body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
             # execute this twice to catch cases where the ending ( would be the
@@ -2458,12 +2430,12 @@ class ODEExporter:
         Raises:
 
         """
-        # remove key for dxdotdp_implicit from list, as not needed
-        del self.functions['dxdotdp_implicit']
 
         sources = [self.modelName + '_' + function + '.cpp '
                    for function in self.functions.keys()
-                   if self.functions[function]['body'] is not None]
+                   if self.functions[function]['body'] is not None
+                   and 'dont_generate_code' not in
+                   self.functions[function].get('flags', [])]
 
         # add extra source files for sparse matrices
         for function in sparse_functions:
