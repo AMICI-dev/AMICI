@@ -1206,7 +1206,12 @@ class ODEModel:
             return
         elif name == 'dtcldp':
             self._syms[name] = sp.Matrix([
-                sp.Symbol(f's{strip_pysb(tcl.get_id())}', real=True)
+                [
+                    sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
+                              f'{strip_pysb(par.get_id())}',
+                              real=True)
+                    for par in self._parameters
+                ]
                 for tcl in self._conservationlaws
             ])
             return

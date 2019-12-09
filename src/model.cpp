@@ -1809,7 +1809,6 @@ void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
     if (pythonGenerated) {
         dwdp.reset();
-        realtype *stcl = nullptr;
 
         // avoid bad memory access when slicing
         if (!nw)
@@ -1818,14 +1817,13 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         fdwdp_colptrs(dwdp.indexptrs());
         fdwdp_rowvals(dwdp.indexvals());
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
-              h.data(), w.data(), total_cl.data(), stcl);
+              h.data(), w.data(), total_cl.data(), stotal_cl.data());
         
     } else {
         // matlab generated
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
               fixedParameters.data(), h.data(), w.data(), total_cl.data(),
               stotal_cl.data());
-        /* CHANGE_TO_SPARSE --> Well, good question how this one is actually affected... */
     }
 
     if (alwaysCheckFinite) {
