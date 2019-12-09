@@ -2083,8 +2083,7 @@ class ODEExporter:
 
         # first generate the equations to make sure we have everything we
         # need in subsequent steps
-        if 'sparse' in self.functions[function] and \
-                self.functions[function]['sparse']:
+        if function in sparse_functions:
             symbol = self.model.sparseeq(function)
         elif not self.allow_reinit_fixpar_initcond \
                 and function == 'sx0_fixedParameters':
