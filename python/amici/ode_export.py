@@ -134,14 +134,14 @@ functions = {
             'const realtype *x, const realtype *p, '
             'const realtype *k, const realtype *h, '
             'const realtype *w)',
-        'flags': ['assume_pow_positivity', 'sparse', 'dont_generate_code']
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'dxdotdp_implicit': {
         'signature':
             '(realtype *dxdotdp_implicit, const realtype t, '
             'const realtype *x, const realtype *p, const realtype *k, '
             'const realtype *h, const int ip, const realtype *w)',
-        'flags': ['assume_pow_positivity', 'sparse']
+        'flags': ['assume_pow_positivity', 'sparse', 'dont_generate_code']
     },
     'dydx': {
         'signature':
