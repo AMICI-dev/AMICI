@@ -405,7 +405,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
             auto col_exp = dxdotdp_explicit.indexptrs();
             auto row_exp = dxdotdp_explicit.indexvals();
             auto data_exp_ptr = dxdotdp_explicit.data();
-            for (sunindextype i = col_exp[ip]; i < col_exp[ip + 1]; ++i)
+            for (sunindextype i = col_exp[plist(ip)]; i < col_exp[plist(ip) + 1]; ++i)
                 sxdot_tmp[row_exp[i]] += data_exp_ptr[i];
         }
             
@@ -414,7 +414,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
             auto col_imp = dxdotdp_implicit.indexptrs();
             auto row_imp = dxdotdp_implicit.indexvals();
             auto data_imp_ptr = dxdotdp_implicit.data();
-            for (sunindextype i = col_imp[ip]; i < col_imp[ip + 1]; ++i)
+            for (sunindextype i = col_imp[plist(ip)]; i < col_imp[plist(ip) + 1]; ++i)
                 sxdot_tmp[row_imp[i]] += data_imp_ptr[i];
         }
         
