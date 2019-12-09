@@ -106,7 +106,8 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
             auto col = model->dxdotdp_explicit.indexptrs();
             auto row = model->dxdotdp_explicit.indexvals();
             auto data_ptr = model->dxdotdp_explicit.data();
-            for (sunindextype iCol = (int)col[ip]; iCol < col[ip + 1]; ++iCol)
+            for (sunindextype iCol = col[model->plist(ip)];
+                 iCol < col[model->plist(ip) + 1]; ++iCol)
                 sx.at(row[iCol], ip) -= data_ptr[iCol];
         }
         
@@ -115,7 +116,8 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
             auto col = model->dxdotdp_implicit.indexptrs();
             auto row = model->dxdotdp_implicit.indexvals();
             auto data_ptr = model->dxdotdp_implicit.data();
-            for (sunindextype iCol = (int)col[ip]; iCol < col[ip + 1]; ++iCol)
+            for (sunindextype iCol = col[model->plist(ip)];
+                 iCol < col[model->plist(ip) + 1]; ++iCol)
                 sx.at(row[iCol], ip) -= data_ptr[iCol];
         }
 
