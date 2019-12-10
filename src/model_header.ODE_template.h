@@ -46,13 +46,20 @@ TPL_DJYDY_DEF
 TPL_DJYDY_COLPTRS_DEF
 TPL_DJYDY_ROWVALS_DEF
 TPL_DWDP_DEF
+TPL_DWDP_COLPTRS_DEF
+TPL_DWDP_ROWVALS_DEF
 TPL_DWDX_DEF
 TPL_DWDX_COLPTRS_DEF
 TPL_DWDX_ROWVALS_DEF
 TPL_DXDOTDW_DEF
 TPL_DXDOTDW_COLPTRS_DEF
 TPL_DXDOTDW_ROWVALS_DEF
-TPL_DXDOTDP_DEF
+TPL_DXDOTDP_EXPLICIT_DEF
+TPL_DXDOTDP_EXPLICIT_COLPTRS_DEF
+TPL_DXDOTDP_EXPLICIT_ROWVALS_DEF
+TPL_DXDOTDP_IMPLICIT_COLPTRS_DEF
+TPL_DXDOTDP_IMPLICIT_ROWVALS_DEF
+
 extern void dydx_TPL_MODELNAME(realtype *dydx, const realtype t,
                                const realtype *x, const realtype *p,
                                const realtype *k, const realtype *h,
@@ -124,7 +131,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               std::vector<realtype>{TPL_FIXED_PARAMETERS}, // fixedParameters
               std::vector<int>{},                          // plist
               std::vector<realtype>(TPL_NX_SOLVER, 0.0),   // idlist
-              std::vector<int>{}                           // z2event
+              std::vector<int>{},                          // z2event
+              true,                                        // pythonGenerated
+              TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
+              TPL_NDXDOTDP_IMPLICIT                        // ndxdotdp_implicit
           ) {}
 
     /**
@@ -444,17 +454,31 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DJYDY_ROWVALS_IMPL
 
     TPL_DWDP_IMPL
+    
+    TPL_DWDP_COLPTRS_IMPL
+    
+    TPL_DWDP_ROWVALS_IMPL
 
     TPL_DWDX_IMPL
 
+    TPL_DWDX_COLPTRS_IMPL
+    
+    TPL_DWDX_ROWVALS_IMPL
+    
     TPL_DXDOTDW_IMPL
-
     TPL_DXDOTDW_COLPTRS_IMPL
-
     TPL_DXDOTDW_ROWVALS_IMPL
 
-    TPL_DXDOTDP_IMPL
+    TPL_DXDOTDP_EXPLICIT_IMPL
+    
+    TPL_DXDOTDP_EXPLICIT_COLPTRS_IMPL
+    
+    TPL_DXDOTDP_EXPLICIT_ROWVALS_IMPL
 
+    TPL_DXDOTDP_IMPLICIT_COLPTRS_IMPL
+    
+    TPL_DXDOTDP_IMPLICIT_ROWVALS_IMPL
+    
     /** model specific implementation of fdydx
      * @param dydx partial derivative of observables y w.r.t. model states x
      * @param t current time
@@ -800,10 +824,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      */
     virtual const std::string getAmiciCommit() const override {
         return "TPL_AMICI_COMMIT_STRING";
-    }
-
-    virtual bool wasPythonGenerated() const override {
-        return true;
     }
 };
 
