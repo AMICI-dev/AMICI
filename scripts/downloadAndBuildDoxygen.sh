@@ -5,12 +5,13 @@ set -e
 SCRIPT_PATH=$(dirname "$BASH_SOURCE")
 AMICI_PATH=$(cd "$SCRIPT_PATH"/.. && pwd)
 
+DOXYGEN_DIR="${AMICI_PATH}"/ThirdParty/doxygen
 cd "${AMICI_PATH}"/ThirdParty
-if [[ ! -d ${SWIG_DIR} ]]; then
-  git clone --depth 1 https://github.com/doxygen/doxygen.git
+if [[ ! -d ${DOXYGEN_DIR} ]]; then
+  git clone --depth 1 https://github.com/doxygen/doxygen.git "${DOXYGEN_DIR}"
 fi
 
-cd doxygen
+cd "${DOXYGEN_DIR}"
 mkdir -p build
 cd build
 cmake -G "Unix Makefiles" ..
