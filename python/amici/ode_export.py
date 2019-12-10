@@ -3,6 +3,7 @@
 #!/usr/bin/env python3
 
 import sympy as sp
+import numpy as np
 import re
 import shutil
 import subprocess
@@ -141,7 +142,7 @@ functions = {
             '(realtype *dxdotdp_implicit, const realtype t, '
             'const realtype *x, const realtype *p, const realtype *k, '
             'const realtype *h, const int ip, const realtype *w)',
-        'flags': ['assume_pow_positivity', 'sparse', 'dont_generate_code']
+        'flags': ['assume_pow_positivity', 'sparse', 'dont_generate_body']
     },
     'dydx': {
         'signature':
@@ -224,6 +225,11 @@ functions = {
 sparse_functions = [
     function for function in functions
     if 'sparse' in functions[function].get('flags', [])
+]
+## list of nobody functions
+nobody_functions = [
+    function for function in functions
+    if 'dont_generate_body' in functions[function].get('flags', [])
 ]
 ## list of sensitivity functions
 sensi_functions = [
@@ -1288,7 +1294,9 @@ class ODEModel:
                 self._syms[name].append(sparseMatrix)
         else:
             symbolColPtrs, symbolRowVals, sparseList, symbolList, \
-                sparseMatrix = csc_matrix(matrix, name)
+                sparseMatrix = csc_matrix(
+                    matrix, name, pattern_only=name in nobody_functions
+                )
 
             self._colptrs[name] = symbolColPtrs
             self._rowvals[name] = symbolRowVals
@@ -1647,11 +1655,23 @@ class ODEModel:
         else:
             xx = variables[x]
 
-        if xx.is_zero is not True and variables[y].is_zero is not True \
-                and len(xx) and len(variables[y]):
-            self._eqs[name] = sign * xx * variables[y]
-        else:
+        if not len(xx) or not len(variables[y]) or xx.is_zero is True or \
+                variables[y].is_zero is True:
             self._eqs[name] = sp.zeros(len(xx), len(variables[y]))
+        elif name in nobody_functions:
+            # if we dont have to generate explicit expressions we can just
+            # multiply the individual sparsity patterns to avoid putatively
+            # expensive symbolic multiplications
+            self._eqs[name] = np.matmul(
+                np.asarray(xx.applyfunc(
+                    lambda z: int(not z.is_zero)
+                )),
+                np.asarray(variables[y].applyfunc(
+                    lambda z: int(not z.is_zero)
+                ))
+            )
+        else:
+            self._eqs[name] = sign * xx * variables[y]
 
     def _equationFromComponent(self, name, component):
         """Generates the formulas of a symbolic variable from the attributes
@@ -1924,7 +1944,7 @@ class ODEExporter:
 
         """
         for function in self.functions.keys():
-            if 'dont_generate_code' not in \
+            if 'dont_generate_body' not in \
                     self.functions[function].get('flags', []):
                 self._writeFunctionFile(function)
             if function in sparse_functions:
@@ -2829,7 +2849,7 @@ def getSwitchStatement(condition, cases,
     return lines
 
 
-def csc_matrix(matrix, name, base_index=0):
+def csc_matrix(matrix, name, base_index=0, pattern_only=False):
     """Generates the sparse symbolic identifiers, symbolic identifiers,
     sparse matrix, column pointers and row values for a symbolic
     variable
@@ -2846,29 +2866,37 @@ def csc_matrix(matrix, name, base_index=0):
     """
     idx = 0
     symbol_name_idx = base_index
-    sparseMatrix = sp.zeros(matrix.rows, matrix.cols)
+    if not pattern_only:
+        sparseMatrix = sp.zeros(matrix.rows, matrix.cols)
     symbolList = []
     sparseList = []
     symbolColPtrs = []
     symbolRowVals = []
 
-    for col in range(0, matrix.cols):
+    nrows, ncols = matrix.shape
+
+    for col in range(0, ncols):
         symbolColPtrs.append(idx)
-        for row in range(0, matrix.rows):
+        for row in range(0, nrows):
             if not (matrix[row, col] == 0):
-                symbolName = f'{name}{symbol_name_idx}'
-                sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
-                symbolList.append(symbolName)
-                sparseList.append(matrix[row, col])
+                if not pattern_only:
+                    symbolName = f'{name}{symbol_name_idx}'
+                    symbol_name_idx += 1
+
+                    sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
+                    symbolList.append(symbolName)
+                    sparseList.append(matrix[row, col])
                 symbolRowVals.append(row)
                 idx += 1
-                symbol_name_idx += 1
 
     if idx == 0:
         symbolColPtrs = []  # avoid bad memory access for empty matrices
     else:
         symbolColPtrs.append(idx)
 
-    sparseList = sp.Matrix(sparseList)
+    if not pattern_only:
+        sparseList = sp.Matrix(sparseList)
+    else:
+        sparseMatrix = None
 
     return symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix
