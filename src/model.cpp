@@ -1273,7 +1273,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     /* get dydp slice (ny) for current time and parameter */
     for (int ip = 0; ip < nplist(); ip++)
         fdydp(&dydp.at(ip * ny), t, x.data(), unscaledParameters.data(),
-              fixedParameters.data(), h.data(), plist(ip), w.data(), dwdp_tmp);
+              fixedParameters.data(), h.data(), plist(ip), w.data(), dwdp.data());
 
     if (alwaysCheckFinite) {
         app->checkFinite(dydp, "dydp");
