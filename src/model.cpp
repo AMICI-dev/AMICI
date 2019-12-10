@@ -174,7 +174,6 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
     } else {
         dJydy_matlab = std::vector<realtype>(nJ * nytrue * ny, 0.0);
     }
-          
     requireSensitivitiesForAllParameters();
 }
 
