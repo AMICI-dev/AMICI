@@ -1130,7 +1130,6 @@ class Model : public AbstractModel {
 
     /** number of nonzero entries in dxdotdw */
     int ndxdotdw{0};
-    
     /** number of nonzero entries in dJydy */
     std::vector<int> ndJydy;
 
