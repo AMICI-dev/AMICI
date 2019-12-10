@@ -1662,14 +1662,8 @@ class ODEModel:
             # if we dont have to generate explicit expressions we can just
             # multiply the individual sparsity patterns to avoid putatively
             # expensive symbolic multiplications
-            self._eqs[name] = np.matmul(
-                np.asarray(xx.applyfunc(
-                    lambda z: int(not z.is_zero)
-                )),
-                np.asarray(variables[y].applyfunc(
-                    lambda z: int(not z.is_zero)
-                ))
-            )
+            self._eqs[name] = xx * np.asarray(variables[y].applyfunc(
+                              lambda z: int(not z.is_zero) ))
         else:
             self._eqs[name] = sign * xx * variables[y]
 
