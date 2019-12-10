@@ -235,6 +235,12 @@ def _process_pysb_expressions(model, ODE, observables, sigmas):
 
     """
     for exp in model.expressions:
+        ODE.add_component(
+            Expression(
+                exp,
+                f'{exp.name}',
+                exp.expand_expr(expand_observables=True))
+        )
         if exp.name in observables:
             # here we do not define a new Expression from the
             # pysb.Expression but define an observable, so we do not need
@@ -244,7 +250,8 @@ def _process_pysb_expressions(model, ODE, observables, sigmas):
                 Observable(
                     y,
                     f'{exp.name}',
-                    exp.expand_expr(expand_observables=False))
+                    exp
+                )
             )
 
             sigma_name, sigma_value = _get_sigma_name_and_value(
@@ -273,16 +280,6 @@ def _process_pysb_expressions(model, ODE, observables, sigmas):
         elif exp.name in sigmas.values():
             # do nothing
             pass
-        else:
-            # here we do define a new Expression from the pysb.Expression
-            # so we do need to expand observables as these would otherwise
-            # lead to dependencies between different Expressions
-            ODE.add_component(
-                Expression(
-                    exp,
-                    f'{exp.name}',
-                    exp.expand_expr(expand_observables=True))
-            )
 
 
 def _get_sigma_name_and_value(model, name, sigmas):
