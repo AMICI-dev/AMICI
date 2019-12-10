@@ -1172,7 +1172,6 @@ class Model : public AbstractModel {
     /** temporary storage of dxdotdp data across functions, Matlab only
      (dimension: nplist x nx_solver, row-major) */
     AmiVectorArray dxdotdp;
-    
     /** AMICI context */
     AmiciApplication *app = &defaultContext;
 
