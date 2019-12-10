@@ -3,7 +3,6 @@
 #!/usr/bin/env python3
 
 import sympy as sp
-import numpy as np
 import re
 import shutil
 import subprocess
