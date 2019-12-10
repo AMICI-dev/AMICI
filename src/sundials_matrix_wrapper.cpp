@@ -340,28 +340,22 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
                                     + std::to_string((int)B->rows()) + ")");
 
     /* Carry out actual multiplication */
-    sunindextype iC_col;
-    sunindextype iC_row;
-    sunindextype iB_row;
-    sunindextype iA_col;
-    sunindextype iA_row;
-    sunindextype iC_data;
-
-    iC_data = 0;
-    for (iC_col = 0; iC_col < C->columns(); ++iC_col) {
-        for(iC_row = C->indexptrs_ptr[iC_col];
+    sunindextype iC_data = 0;
+    for (sunindextype iC_col = 0; iC_col < C->columns(); ++iC_col) {
+        for(sunindextype iC_row = C->indexptrs_ptr[iC_col];
             iC_row < C->indexptrs_ptr[iC_col + 1]; ++iC_row) {
             // Current entry in C: (C.indexvals[iC_row], iC_col)
-            for(iB_row = B->indexptrs_ptr[iC_col];
+            for(sunindextype iB_row = B->indexptrs_ptr[iC_col];
                 iB_row < B->indexptrs_ptr[iC_col + 1]; ++iB_row) {
                 // Loop over column iC_col in B
-                iA_col = B->indexvals_ptr[iB_row];
-                for (iA_row = indexptrs_ptr[iA_col];
+                sunindextype iA_col = B->indexvals_ptr[iB_row];
+                for (sunindextype iA_row = indexptrs_ptr[iA_col];
                      iA_row < indexptrs_ptr[iA_col + 1]; ++iA_row)
                     // loop over entries in column col_in_A
                     // if two entries match together, carry out multiplication
                     if (indexvals_ptr[iA_row] == C->indexvals_ptr[iC_row])
-                        C->data_ptr[iC_data] += data_ptr[iA_row] * B->data_ptr[iB_row];
+                        C->data_ptr[iC_data] +=
+                            data_ptr[iA_row] * B->data_ptr[iB_row];
             }
             iC_data++;
         }
@@ -396,7 +390,7 @@ void SUNMatrixWrapper::update_ptrs() {
             data_ptr = SM_DATA_B(matrix);
         break;
     case SUNMATRIX_CUSTOM:
-        throw std::domain_error("Amici currently does not support"
+        throw std::domain_error("Amici currently does not support "
                                 "custom matrix types.");
     }
 }
