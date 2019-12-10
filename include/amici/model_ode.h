@@ -406,7 +406,7 @@ class Model_ODE : public Model {
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w) = 0;
 
-    /** model specific implementation of fdxdotdp, with w chainrule (Matlab only)
+    /** model specific implementation of fdxdotdp, with w chainrule (Matlab)
      * @param dxdotdp partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -422,7 +422,7 @@ class Model_ODE : public Model {
                           const realtype *h, int ip, const realtype *w,
                           const realtype *dwdp);
 
-    /** model specific implementation of fdxdotdp_explicit, without w chainrule (Python only)
+    /** model specific implementation of fdxdotdp_explicit, no w chainrule (Py)
      * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -440,22 +440,22 @@ class Model_ODE : public Model {
      * @param indexptrs column pointers
      */
     virtual void fdxdotdp_explicit_colptrs(sunindextype *indexptrs);
-    
+
     /** model specific implementation of fdxdotdp_explicit, rowvals part
      * @param indexvals row values
      */
     virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
-    
+
     /** model specific implementation of fdxdotdp_implicit, colptrs part
      * @param indexptrs column pointers
      */
     virtual void fdxdotdp_implicit_colptrs(sunindextype *indexptrs);
-    
+
     /** model specific implementation of fdxdotdp_implicit, rowvals part
      * @param indexvals row values
      */
     virtual void fdxdotdp_implicit_rowvals(sunindextype *indexvals);
-    
+
     /** model specific implementation of fdxdotdw, data part
      * @param dxdotdw partial derivative xdot wrt w
      * @param t timepoint
@@ -478,9 +478,7 @@ class Model_ODE : public Model {
      * @param indexvals row values
      */
     virtual void fdxdotdw_rowvals(sunindextype *indexvals);
-    
 };
-
 } // namespace amici
 
 #endif // MODEL_H

@@ -1146,7 +1146,7 @@ class Model : public AbstractModel {
     /** lower bandwith of the jacobian */
     int lbw{0};
     
-    /* flag indicating Matlab or python based model generation */
+    /** flag indicating Matlab or python based model generation */
     bool pythonGenerated;
 
     /** number of nonzero entries in ndxdotdp_explicit */

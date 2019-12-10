@@ -118,7 +118,7 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
         }
         if (nw > 0 && ndxdotdp_implicit > 0) {
             /* Sparse matrix multiplication
-               dxdotdp_implicit += dxdotdw * dwdp */
+             dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdp_implicit.reset();
             fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
             fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
@@ -264,7 +264,7 @@ void Model_ODE::fdxdotdp_explicit_rowvals(sunindextype * /*indexvals*/) {
                        "is not implemented for this model!",
                        __func__); // not implemented
 }
- 
+
 void Model_ODE::fdxdotdp_implicit_colptrs(sunindextype * /*indexptrs*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
@@ -276,7 +276,7 @@ void Model_ODE::fdxdotdp_implicit_rowvals(sunindextype * /*indexvals*/) {
                        "is not implemented for this model!",
                        __func__); // not implemented
 }
-    
+
 void Model_ODE::fdxdotdw(realtype * /*dxdotdw*/, const realtype /*t*/,
                          const realtype * /*x*/, const realtype * /*p*/,
                          const realtype * /*k*/, const realtype * /*h*/,
@@ -353,7 +353,7 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     /* initialize with zeros */
     N_VConst(0.0, qBdot);
     fdxdotdp(t, x);
-    
+
     if (pythonGenerated) {
         /* call multiplication */
         if (ndxdotdp_explicit > 0)
@@ -385,9 +385,9 @@ void Model_ODE::fsxdot(const realtype t, const AmiVector &x,
 
 void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
                        N_Vector sxdot) {
-    
+
     /* sxdot is just the total derivative d(xdot)dp,
-       so we just call dxdotdp and copy the stuff over */
+     so we just call dxdotdp and copy the stuff over */
     if (ip == 0) {
         // we only need to call this for the first parameter index will be
         // the same for all remaining
@@ -399,7 +399,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         // initialize
         N_VConst(0.0, sxdot);
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
-        
+
         // copy explicit version
         if (ndxdotdp_explicit > 0) {
             auto col_exp = dxdotdp_explicit.indexptrs();
@@ -408,7 +408,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
             for (sunindextype i = col_exp[plist(ip)]; i < col_exp[plist(ip) + 1]; ++i)
                 sxdot_tmp[row_exp[i]] += data_exp_ptr[i];
         }
-            
+
         // copy implicit version
         if (ndxdotdp_implicit > 0) {
             auto col_imp = dxdotdp_implicit.indexptrs();
@@ -417,7 +417,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
             for (sunindextype i = col_imp[plist(ip)]; i < col_imp[plist(ip) + 1]; ++i)
                 sxdot_tmp[row_imp[i]] += data_imp_ptr[i];
         }
-        
+
     } else {
         /* copy dxdotdp over */
         N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);

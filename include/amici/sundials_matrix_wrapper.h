@@ -121,7 +121,7 @@ class SUNMatrixWrapper {
      * @return number
      */
     sunindextype nonzeros() const;
-    
+
     /**
      * @brief Get the index values of a sparse matrix
      * @return index array
@@ -159,7 +159,6 @@ class SUNMatrixWrapper {
      */
     void multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const;
 
-    
     /**
      * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
      * @param c output vector, may already contain values
@@ -169,9 +168,9 @@ class SUNMatrixWrapper {
      */
     void multiply(N_Vector c,
                   const N_Vector b,
-                  std::vector<int> cols,
+                  gsl::span <const int> cols,
                   bool transpose) const;
-    
+
     /**
      * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
      * @param c output vector, may already contain values
@@ -181,9 +180,9 @@ class SUNMatrixWrapper {
      */
     void multiply(gsl::span<realtype> c,
                   gsl::span<const realtype> b,
-                  std::vector<int> cols,
+                  gsl::span <const int> cols,
                   bool transpose) const;
-    
+
     /**
      * @brief Perform matrix matrix multiplication
               C[:, :] += A * B
@@ -193,12 +192,15 @@ class SUNMatrixWrapper {
      */
     void sparse_multiply(SUNMatrixWrapper *C,
                          SUNMatrixWrapper *B) const;
-    
+
     /**
      * @brief Set to 0.0
      */
     void zero();
-    
+
+    /**
+     * @brief CSC matrix to which all methods are applied
+     */
     SUNMatrix matrix = nullptr;
 
   private:
