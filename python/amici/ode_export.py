@@ -2866,28 +2866,28 @@ def csc_matrix(matrix, name, base_index=0, pattern_only=False):
     """
     idx = 0
     symbol_name_idx = base_index
+
+    nrows, ncols = matrix.shape
+
     if not pattern_only:
-        sparseMatrix = sp.zeros(matrix.rows, matrix.cols)
+        sparseMatrix = sp.zeros(nrows, ncols)
     symbolList = []
     sparseList = []
     symbolColPtrs = []
     symbolRowVals = []
 
-    nrows, ncols = matrix.shape
-
     for col in range(0, ncols):
         symbolColPtrs.append(idx)
         for row in range(0, nrows):
             if not (matrix[row, col] == 0):
-                if not pattern_only:
-                    symbolName = f'{name}{symbol_name_idx}'
-                    symbol_name_idx += 1
-
-                    sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
-                    symbolList.append(symbolName)
-                    sparseList.append(matrix[row, col])
                 symbolRowVals.append(row)
                 idx += 1
+                symbolName = f'{name}{symbol_name_idx}'
+                symbolList.append(symbolName)
+                symbol_name_idx += 1
+                if not pattern_only:
+                    sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
+                    sparseList.append(matrix[row, col])
 
     if idx == 0:
         symbolColPtrs = []  # avoid bad memory access for empty matrices
