@@ -2858,6 +2858,7 @@ def csc_matrix(matrix, name, base_index=0, pattern_only=False):
         matrix: dense matrix to be sparsified @type sp.Matrix
         name: name of the symbolic variable @type str
         base_index: index for first symbol name, defaults to 0
+        pattern_only: flag for computing sparsity pattern without whole matrix
 
     Returns:
         symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix
