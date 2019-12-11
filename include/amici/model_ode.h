@@ -58,21 +58,25 @@ class Model_ODE : public Model {
      * @param plist indexes wrt to which sensitivities are to be computed
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
+     * @param pythonGenerated flag indicating matlab or python wrapping
+     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model_ODE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
               const int nxtrue_solver, const int ny, const int nytrue,
               const int nz, const int nztrue, const int ne, const int nJ,
               const int nw, const int ndwdx, const int ndwdp,
-              const int ndxdotdw, std::vector<int> ndJydy, const int nnz,
-              const int ubw, const int lbw, const SecondOrderMode o2mode,
-              std::vector<realtype> const &p, std::vector<realtype> const &k,
-              std::vector<int> const &plist,
+              const int ndxdotdw, std::vector<int> ndJydy,
+              const int nnz, const int ubw, const int lbw,
+              const SecondOrderMode o2mode, std::vector<realtype> const &p,
+              std::vector<realtype> const &k, std::vector<int> const &plist,
               std::vector<realtype> const &idlist,
-              std::vector<int> const &z2event)
+              std::vector<int> const &z2event, const bool pythonGenerated=false,
+              const int ndxdotdp_explicit=0, const int ndxdotdp_implicit=0)
         : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
-                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw,
-                std::move(ndJydy), nnz, ubw, lbw, o2mode, p, k, plist, idlist,
-                z2event) {}
+                nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
+                nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
+                pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;
@@ -218,7 +222,7 @@ class Model_ODE : public Model {
      */
     void fdxdotdw(realtype t, const N_Vector x);
 
-    /** Sensitivity of dx/dt wrt model parameters p
+    /** Explicit sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states
      * @return status flag indicating successful execution
@@ -402,7 +406,7 @@ class Model_ODE : public Model {
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w) = 0;
 
-    /** model specific implementation of fdxdotdp, with w chainrule
+    /** model specific implementation of fdxdotdp, with w chainrule (Matlab)
      * @param dxdotdp partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -418,19 +422,39 @@ class Model_ODE : public Model {
                           const realtype *h, int ip, const realtype *w,
                           const realtype *dwdp);
 
-    /** model specific implementation of fdxdotdp, without w chainrule
-     * @param dxdotdp partial derivative xdot wrt p
+    /** model specific implementation of fdxdotdp_explicit, no w chainrule (Py)
+     * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
      * @param h heavyside vector
-     * @param ip parameter index
      * @param w vector with helper variables
      */
-    virtual void fdxdotdp(realtype *dxdotdp, realtype t, const realtype *x,
-                          const realtype *p, const realtype *k,
-                          const realtype *h, int ip, const realtype *w);
+    virtual void fdxdotdp_explicit(realtype *dxdotdp_explicit, realtype t,
+                                   const realtype *x, const realtype *p,
+                                   const realtype *k, const realtype *h,
+                                   const realtype *w);
+
+    /** model specific implementation of fdxdotdp_explicit, colptrs part
+     * @param indexptrs column pointers
+     */
+    virtual void fdxdotdp_explicit_colptrs(sunindextype *indexptrs);
+
+    /** model specific implementation of fdxdotdp_explicit, rowvals part
+     * @param indexvals row values
+     */
+    virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
+
+    /** model specific implementation of fdxdotdp_implicit, colptrs part
+     * @param indexptrs column pointers
+     */
+    virtual void fdxdotdp_implicit_colptrs(sunindextype *indexptrs);
+
+    /** model specific implementation of fdxdotdp_implicit, rowvals part
+     * @param indexvals row values
+     */
+    virtual void fdxdotdp_implicit_rowvals(sunindextype *indexvals);
 
     /** model specific implementation of fdxdotdw, data part
      * @param dxdotdw partial derivative xdot wrt w
@@ -450,12 +474,11 @@ class Model_ODE : public Model {
      */
     virtual void fdxdotdw_colptrs(sunindextype *indexptrs);
 
-    /** model specific implementation of fdxdotdw, colptrs part
+    /** model specific implementation of fdxdotdw, rowvals part
      * @param indexvals row values
      */
     virtual void fdxdotdw_rowvals(sunindextype *indexvals);
 };
-
 } // namespace amici
 
 #endif // MODEL_H
