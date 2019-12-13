@@ -64,8 +64,6 @@ def check_derivatives(model, solver, edata, assert_fun,
         rtol: relative tolerance
         epsilon: finite difference step-size
     """
-    from scipy.optimize import check_grad
-
     p = np.array(model.getParameters())
 
     rdata = runAmiciSimulation(model, solver, edata)

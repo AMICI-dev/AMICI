@@ -56,7 +56,7 @@ class TestAmiciMisc(unittest.TestCase):
         symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix = \
             amici.ode_export.csc_matrix(matrix, 'a')
         print(symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix)
-        assert symbolColPtrs == [0]
+        assert symbolColPtrs == []
         assert symbolRowVals == []
         assert sparseList == sp.Matrix(0, 0, [])
         assert symbolList == []

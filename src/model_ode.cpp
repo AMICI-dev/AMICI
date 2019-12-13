@@ -1,3 +1,4 @@
+#include <amici/sundials_matrix_wrapper.h>
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
 
@@ -27,7 +28,7 @@ void Model_ODE::fJSparse(realtype t, N_Vector x, SUNMatrix J) {
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointer(x_pos));
     SUNMatZero(J);
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         fJSparse(SM_DATA_S(J), t, N_VGetArrayPointer(x_pos),
                  unscaledParameters.data(), fixedParameters.data(), h.data(),
                  w.data(), dwdx.data());
@@ -87,30 +88,41 @@ void Model_ODE::fJDiag(const realtype t, AmiVector &JDiag,
 }
 
 void Model_ODE::fdxdotdw(const realtype t, const N_Vector x) {
-    dxdotdw.reset();
-    auto x_pos = computeX_pos(x);
-    fdxdotdw(dxdotdw.data(), t, N_VGetArrayPointer(x_pos),
-             unscaledParameters.data(), fixedParameters.data(), h.data(),
-             w.data());
-    fdxdotdw_colptrs(dxdotdw.indexptrs());
-    fdxdotdw_rowvals(dxdotdw.indexvals());
+    if (nw > 0 && ndxdotdw > 0) {
+        auto x_pos = computeX_pos(x);
+        dxdotdw.reset();
+        fdxdotdw_colptrs(dxdotdw.indexptrs());
+        fdxdotdw_rowvals(dxdotdw.indexvals());
+        fdxdotdw(dxdotdw.data(), t, N_VGetArrayPointer(x_pos),
+                 unscaledParameters.data(), fixedParameters.data(), h.data(),
+                 w.data());
+    }
 }
 
 void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     auto x_pos = computeX_pos(x);
-    fdwdp(t, N_VGetArrayPointer(x));
-    if (wasPythonGenerated()) {
+    fdwdp(t, N_VGetArrayPointer(x_pos));
+    fdxdotdw(t, x_pos);
+
+    if (pythonGenerated) {
         // python generated
-        fdxdotdw(t, x);
-        for (int ip = 0; ip < nplist(); ip++) {
-            N_VConst(0.0, dxdotdp.getNVector(ip));
-            fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
-                     unscaledParameters.data(), fixedParameters.data(),
-                     h.data(), plist_[ip], w.data());
-            if (nw > 0)
-                dxdotdw.multiply(
-                    gsl::span<realtype>(dxdotdp.data(ip), nx_solver),
-                    gsl::span<const realtype>(&dwdp.at(nw * ip), nw));
+        if (ndxdotdp_explicit > 0) {
+            dxdotdp_explicit.reset();
+            fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
+            fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
+            fdxdotdp_explicit(dxdotdp_explicit.data(),
+                              t, N_VGetArrayPointer(x_pos),
+                              unscaledParameters.data(),
+                              fixedParameters.data(),
+                              h.data(), w.data());
+        }
+        if (nw > 0 && ndxdotdp_implicit > 0) {
+            /* Sparse matrix multiplication
+             dxdotdp_implicit += dxdotdw * dwdp */
+            dxdotdp_implicit.reset();
+            fdxdotdp_implicit_colptrs(dxdotdp_implicit.indexptrs());
+            fdxdotdp_implicit_rowvals(dxdotdp_implicit.indexvals());
+            dxdotdw.sparse_multiply(&dxdotdp_implicit, &dwdp);
         }
     } else {
         // matlab generated
@@ -232,10 +244,34 @@ void Model_ODE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
-                         const realtype * /*x*/, const realtype * /*p*/,
-                         const realtype * /*k*/, const realtype * /*h*/,
-                         const int /*ip*/, const realtype * /*w*/) {
+void Model_ODE::fdxdotdp_explicit(realtype * /*dxdotdp_explicit*/, const realtype /*t*/,
+                                  const realtype * /*x*/, const realtype * /*p*/,
+                                  const realtype * /*k*/, const realtype * /*h*/,
+                                  const realtype * /*w*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_ODE::fdxdotdp_explicit_colptrs(sunindextype * /*indexptrs*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_ODE::fdxdotdp_explicit_rowvals(sunindextype * /*indexvals*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_ODE::fdxdotdp_implicit_colptrs(sunindextype * /*indexptrs*/) {
+    throw AmiException("Requested functionality is not supported as %s "
+                       "is not implemented for this model!",
+                       __func__); // not implemented
+}
+
+void Model_ODE::fdxdotdp_implicit_rowvals(sunindextype * /*indexvals*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__); // not implemented
@@ -277,7 +313,7 @@ void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB,
     auto x_pos = computeX_pos(x);
     fdwdx(t, N_VGetArrayPointer(x_pos));
     SUNMatZero(JB);
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         fJSparseB(SM_DATA_S(JB), t, N_VGetArrayPointer(x_pos),
                   unscaledParameters.data(), fixedParameters.data(), h.data(),
                   N_VGetArrayPointer(xB), w.data(), dwdx.data());
@@ -314,17 +350,29 @@ void Model_ODE::fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot) {
 }
 
 void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
+    /* initialize with zeros */
     N_VConst(0.0, qBdot);
     fdxdotdp(t, x);
-    for (int ip = 0; ip < nplist(); ip++) {
-        for (int ix = 0; ix < nxtrue_solver; ix++)
-            NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
-        // second order part
-        for (int iJ = 1; iJ < nJ; iJ++)
+
+    if (pythonGenerated) {
+        /* call multiplication */
+        if (ndxdotdp_explicit > 0)
+            dxdotdp_explicit.multiply(qBdot, xB, plist_, true);
+        if (ndxdotdp_implicit > 0)
+            dxdotdp_implicit.multiply(qBdot, xB, plist_, true);
+        N_VScale(-1.0, qBdot, qBdot);
+    } else {
+        /* was matlab generated */
+        for (int ip = 0; ip < nplist(); ip++) {
             for (int ix = 0; ix < nxtrue_solver; ix++)
-                NV_Ith_S(qBdot, ip * nJ + iJ) -=
+                NV_Ith_S(qBdot, ip * nJ) -= NV_Ith_S(xB, ix) * dxdotdp.at(ix, ip);
+            // second order part
+            for (int iJ = 1; iJ < nJ; iJ++)
+                for (int ix = 0; ix < nxtrue_solver; ix++)
+                    NV_Ith_S(qBdot, ip * nJ + iJ) -=
                     NV_Ith_S(xB, ix) * dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
                     NV_Ith_S(xB, ix + iJ * nxtrue_solver) * dxdotdp.at(ix, ip);
+        }
     }
 }
 
@@ -337,13 +385,43 @@ void Model_ODE::fsxdot(const realtype t, const AmiVector &x,
 
 void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
                        N_Vector sxdot) {
+
+    /* sxdot is just the total derivative d(xdot)dp,
+     so we just call dxdotdp and copy the stuff over */
     if (ip == 0) {
         // we only need to call this for the first parameter index will be
         // the same for all remaining
         fdxdotdp(t, x);
         fJSparse(t, x, J.get());
     }
-    N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
+    if (pythonGenerated) {
+        /* copy dxdotdp and the implicit version over */
+        // initialize
+        N_VConst(0.0, sxdot);
+        realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
+
+        // copy explicit version
+        if (ndxdotdp_explicit > 0) {
+            auto col_exp = dxdotdp_explicit.indexptrs();
+            auto row_exp = dxdotdp_explicit.indexvals();
+            auto data_exp_ptr = dxdotdp_explicit.data();
+            for (sunindextype i = col_exp[plist(ip)]; i < col_exp[plist(ip) + 1]; ++i)
+                sxdot_tmp[row_exp[i]] += data_exp_ptr[i];
+        }
+
+        // copy implicit version
+        if (ndxdotdp_implicit > 0) {
+            auto col_imp = dxdotdp_implicit.indexptrs();
+            auto row_imp = dxdotdp_implicit.indexvals();
+            auto data_imp_ptr = dxdotdp_implicit.data();
+            for (sunindextype i = col_imp[plist(ip)]; i < col_imp[plist(ip) + 1]; ++i)
+                sxdot_tmp[row_imp[i]] += data_imp_ptr[i];
+        }
+
+    } else {
+        /* copy dxdotdp over */
+        N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
+    }
     J.multiply(sxdot, sx);
 }
 

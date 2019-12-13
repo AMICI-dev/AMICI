@@ -58,44 +58,35 @@ functions = {
             '(realtype *J, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'JB': {
         'signature':
             '(realtype *JB, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *xB, const realtype *w, const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'JDiag': {
         'signature':
             '(realtype *JDiag, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *dwdx)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'JSparse': {
         'signature':
             '(realtype *JSparse, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *dwdx)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'JSparseB': {
         'signature':
             '(realtype *JSparseB, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *xB, const realtype *w, const realtype *dwdx)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'Jy': {
         'signature':
@@ -114,45 +105,43 @@ functions = {
             '(realtype *dJydy, const int iy, const realtype *p, '
             'const realtype *k, const realtype *y, '
             'const realtype *sigmay, const realtype *my)',
-        'sparse':
-            True,
+        'flags': ['sparse']
     },
     'dwdp': {
         'signature':
             '(realtype *dwdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl, const realtype *dtcldp, '
-            'const int ip)',
-        'assume_pow_positivity':
-            True,
+            'const realtype *w, const realtype *tcl, const realtype *dtcldp)',
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'dwdx': {
         'signature':
             '(realtype *dwdx, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *tcl)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
     'dxdotdw': {
         'signature':
             '(realtype *dxdotdw, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w)',
-        'sparse':
-            True,
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity', 'sparse']
     },
-    'dxdotdp': {
+    'dxdotdp_explicit': {
         'signature':
-            '(realtype *dxdotdp, const realtype t, const realtype *x, '
-            'const realtype *p, const realtype *k, const realtype *h, '
-            'const int ip, const realtype *w)',
-        'assume_pow_positivity':
-            True,
+            '(realtype *dxdotdp_explicit, const realtype t, '
+            'const realtype *x, const realtype *p, '
+            'const realtype *k, const realtype *h, '
+            'const realtype *w)',
+        'flags': ['assume_pow_positivity', 'sparse']
+    },
+    'dxdotdp_implicit': {
+        'signature':
+            '(realtype *dxdotdp_implicit, const realtype t, '
+            'const realtype *x, const realtype *p, const realtype *k, '
+            'const realtype *h, const int ip, const realtype *w)',
+        'flags': ['assume_pow_positivity', 'sparse', 'dont_generate_body']
     },
     'dydx': {
         'signature':
@@ -181,8 +170,7 @@ functions = {
             '(realtype *w, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, '
             'const realtype *h, const realtype *tcl)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'x0': {
         'signature':
@@ -210,8 +198,7 @@ functions = {
             '(realtype *xdot, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w)',
-        'assume_pow_positivity':
-            True,
+        'flags': ['assume_pow_positivity']
     },
     'y': {
         'signature':
@@ -236,8 +223,12 @@ functions = {
 ## list of sparse functions
 sparse_functions = [
     function for function in functions
-    if 'sparse' in functions[function]
-    and functions[function]['sparse']
+    if 'sparse' in functions[function].get('flags', [])
+]
+## list of nobody functions
+nobody_functions = [
+    function for function in functions
+    if 'dont_generate_body' in functions[function].get('flags', [])
 ]
 ## list of sensitivity functions
 sensi_functions = [
@@ -809,6 +800,10 @@ class ODEModel:
                 'x': 'JB',
                 'y': 'xB',
             },
+            'dxdotdp_implicit': {
+                'x': 'dxdotdw',
+                'y': 'dwdp',
+            },
         }
 
         self._lock_total_derivative = False
@@ -1188,7 +1183,12 @@ class ODEModel:
             return
         elif name == 'dtcldp':
             self._syms[name] = sp.Matrix([
-                sp.Symbol(f's{strip_pysb(tcl.get_id())}', real=True)
+                [
+                    sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
+                              f'{strip_pysb(par.get_id())}',
+                              real=True)
+                    for par in self._parameters
+                ]
                 for tcl in self._conservationlaws
             ])
             return
@@ -1283,8 +1283,8 @@ class ODEModel:
             base_index = 0
             for iy in range(self.ny()):
                 symbolColPtrs, symbolRowVals, sparseList, symbolList, \
-                sparseMatrix = csc_matrix(matrix[iy, :], name,
-                                          base_index=base_index)
+                    sparseMatrix = csc_matrix(matrix[iy, :], name,
+                                              base_index=base_index)
                 base_index += len(symbolList)
                 self._colptrs[name].append(symbolColPtrs)
                 self._rowvals[name].append(symbolRowVals)
@@ -1293,7 +1293,9 @@ class ODEModel:
                 self._syms[name].append(sparseMatrix)
         else:
             symbolColPtrs, symbolRowVals, sparseList, symbolList, \
-                sparseMatrix = csc_matrix(matrix, name)
+                sparseMatrix = csc_matrix(
+                    matrix, name, pattern_only=name in nobody_functions
+                )
 
             self._colptrs[name] = symbolColPtrs
             self._rowvals[name] = symbolRowVals
@@ -1430,6 +1432,10 @@ class ODEModel:
         elif name == 'dtcldp':
             # force symbols
             self._eqs[name] = self.sym(name)
+
+        elif name == 'dxdotdp_explicit':
+            # force symbols
+            self._derivative('xdot', 'p', name=name)
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
@@ -1648,11 +1654,11 @@ class ODEModel:
         else:
             xx = variables[x]
 
-        if xx.is_zero is not True and variables[y].is_zero is not True \
-                and len(xx) and len(variables[y]):
-            self._eqs[name] = sign * xx * variables[y]
-        else:
+        if not len(xx) or not len(variables[y]) or xx.is_zero is True or \
+                variables[y].is_zero is True:
             self._eqs[name] = sp.zeros(len(xx), len(variables[y]))
+        else:
+            self._eqs[name] = sign * xx * variables[y]
 
     def _equationFromComponent(self, name, component):
         """Generates the formulas of a symbolic variable from the attributes
@@ -1925,7 +1931,9 @@ class ODEExporter:
 
         """
         for function in self.functions.keys():
-            self._writeFunctionFile(function)
+            if 'dont_generate_body' not in \
+                    self.functions[function].get('flags', []):
+                self._writeFunctionFile(function)
             if function in sparse_functions:
                 self._write_function_index(function, 'colptrs')
                 self._write_function_index(function, 'rowvals')
@@ -2082,8 +2090,7 @@ class ODEExporter:
 
         # first generate the equations to make sure we have everything we
         # need in subsequent steps
-        if 'sparse' in self.functions[function] and \
-                self.functions[function]['sparse']:
+        if function in sparse_functions:
             symbol = self.model.sparseeq(function)
         elif not self.allow_reinit_fixpar_initcond \
                 and function == 'sx0_fixedParameters':
@@ -2120,9 +2127,8 @@ class ODEExporter:
 
         # function body
         body = self._getFunctionBody(function, symbol)
-        if self.assume_pow_positivity \
-                and 'assume_pow_positivity' in self.functions[function].keys()\
-                and self.functions[function]['assume_pow_positivity']:
+        if self.assume_pow_positivity and 'assume_pow_positivity' \
+                in self.functions[function].get('flags', []):
             body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
                     for line in body]
             # execute this twice to catch cases where the ending ( would be the
@@ -2310,9 +2316,13 @@ class ODEExporter:
             'NEVENT': '0',
             'NOBJECTIVE': '1',
             'NW': str(len(self.model.sym('w'))),
-            'NDWDP': str(len(self.model.eq('dwdp'))),
+            'NDWDP': str(len(self.model.sparsesym('dwdp'))),
             'NDWDX': str(len(self.model.sparsesym('dwdx'))),
             'NDXDOTDW': str(len(self.model.sparsesym('dxdotdw'))),
+            'NDXDOTDP_EXPLICIT': str(len(self.model.sparsesym(
+                'dxdotdp_explicit'))),
+            'NDXDOTDP_IMPLICIT': str(len(self.model.sparsesym(
+                'dxdotdp_implicit'))),
             'NDJYDY': 'std::vector<int>{%s}'
                       % ','.join(str(len(x))
                                  for x in self.model.sparsesym('dJydy')),
@@ -2349,7 +2359,8 @@ class ODEExporter:
 
         for fun in [
             'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
-            'dxdotdp', 'JSparse', 'JSparseB', 'dJydy'
+            'dxdotdp_explicit', 'dxdotdp_implicit', 'JSparse', 'JSparseB',
+            'dJydy'
         ]:
             tplData[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.modelName)
@@ -2425,9 +2436,10 @@ class ODEExporter:
         Raises:
 
         """
+
         sources = [self.modelName + '_' + function + '.cpp '
                    for function in self.functions.keys()
-                   if self.functions[function]['body'] is not None]
+                   if self.functions[function].get('body', None) is not None]
 
         # add extra source files for sparse matrices
         for function in sparse_functions:
@@ -2824,7 +2836,7 @@ def getSwitchStatement(condition, cases,
     return lines
 
 
-def csc_matrix(matrix, name, base_index=0):
+def csc_matrix(matrix, name, base_index=0, pattern_only=False):
     """Generates the sparse symbolic identifiers, symbolic identifiers,
     sparse matrix, column pointers and row values for a symbolic
     variable
@@ -2833,6 +2845,7 @@ def csc_matrix(matrix, name, base_index=0):
         matrix: dense matrix to be sparsified @type sp.Matrix
         name: name of the symbolic variable @type str
         base_index: index for first symbol name, defaults to 0
+        pattern_only: flag for computing sparsity pattern without whole matrix
 
     Returns:
         symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix
@@ -2841,24 +2854,37 @@ def csc_matrix(matrix, name, base_index=0):
     """
     idx = 0
     symbol_name_idx = base_index
-    sparseMatrix = sp.zeros(matrix.rows, matrix.cols)
+
+    nrows, ncols = matrix.shape
+
+    if not pattern_only:
+        sparseMatrix = sp.zeros(nrows, ncols)
     symbolList = []
     sparseList = []
     symbolColPtrs = []
     symbolRowVals = []
-    for col in range(0, matrix.cols):
+
+    for col in range(0, ncols):
         symbolColPtrs.append(idx)
-        for row in range(0, matrix.rows):
+        for row in range(0, nrows):
             if not (matrix[row, col] == 0):
-                symbolName = f'{name}{symbol_name_idx}'
-                sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
-                symbolList.append(symbolName)
-                sparseList.append(matrix[row, col])
                 symbolRowVals.append(row)
                 idx += 1
+                symbolName = f'{name}{symbol_name_idx}'
+                symbolList.append(symbolName)
                 symbol_name_idx += 1
+                if not pattern_only:
+                    sparseMatrix[row, col] = sp.Symbol(symbolName, real=True)
+                    sparseList.append(matrix[row, col])
 
-    symbolColPtrs.append(idx)
-    sparseList = sp.Matrix(sparseList)
+    if idx == 0:
+        symbolColPtrs = []  # avoid bad memory access for empty matrices
+    else:
+        symbolColPtrs.append(idx)
+
+    if not pattern_only:
+        sparseList = sp.Matrix(sparseList)
+    else:
+        sparseMatrix = None
 
     return symbolColPtrs, symbolRowVals, sparseList, symbolList, sparseMatrix

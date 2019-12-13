@@ -291,6 +291,10 @@ void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                           const realtype *tcl, const realtype *stcl) {
 }
 
+void AbstractModel::fdwdp_colptrs(sunindextype *indexptrs) {}
+
+void AbstractModel::fdwdp_rowvals(sunindextype *indexvals) {}
+
 void AbstractModel::fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
                           const realtype *h, const realtype *w,
