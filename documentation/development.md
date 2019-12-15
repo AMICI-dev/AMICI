@@ -60,6 +60,7 @@ described below:
 * Write meaningful commit messages
 
 * Run all tests to ensure nothing was broken
+  ([more details](documentation/CI.md))
 
   * Run `scripts/buildAll.sh && scripts/run-cpputest.sh`.
   

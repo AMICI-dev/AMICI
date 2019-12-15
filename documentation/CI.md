@@ -26,6 +26,27 @@ To run Python tests, run `../scripts/run-python-tests.sh` from anywhere
 (assumes build directory is `build/`) or run `make python-tests` in your build
 directory.
 
+### SBML Test Suite
+
+We test Python-AMICI SBML support using the test cases from the semantic
+[SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/). When making
+changes to the model import functions, make sure to run these tests.
+
+To run the SBML Test Suite test cases, the easiest way is:
+
+1. Running `scripts/installAmiciSource.sh` which
+   creates a virtual Python environment and performs a development installation
+   of AMICI from the current repository. (This needs to be run only once or
+   after AMICI model generation or C++ changes).
+
+2. Running `scripts/run-SBMLTestsuite.sh`. This will download the test cases
+   if necessary and run them all. A subset of test cases can be selected with
+   an optional argument (e.g. `scripts/run-SBMLTestsuite.sh 1,3-6,8`, to run
+   cases 1, 3, 4, 5, 6 and 8).
+
+   Once the test cases are available locally, for debugging it might be easier
+   to directly use `pytest` with `tests/testSBMLSuite.py`.
+
 
 ## Matlab tests (not included in CI pipeline)
 
