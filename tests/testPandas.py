@@ -10,6 +10,8 @@ import copy
 import numpy as np
 import itertools
 
+from petab.sbml import assignment_rules_to_dict
+
 
 class TestAmiciPandasImportExport(unittest.TestCase):
     """
@@ -31,9 +33,10 @@ class TestAmiciPandasImportExport(unittest.TestCase):
 
         constantParameters = ['DRUG_0', 'KIN_0']
 
-        observables = amici.assignmentRules2observables(
+        observables = assignment_rules_to_dict(
             sbmlImporter.sbml,  # the libsbml model object
-            filter_function=lambda variable: variable.getName() == 'pPROT'
+            filter_function=lambda variable: variable.getName() == 'pPROT',
+            remove=True
         )
         outdir = 'test_model_presimulation'
         sbmlImporter.sbml2amici('test_model_presimulation',

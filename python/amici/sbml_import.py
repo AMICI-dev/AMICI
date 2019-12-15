@@ -1302,42 +1302,6 @@ def grouper(iterable: Iterable, n: int, fillvalue: Any = None):
     return itt.zip_longest(*args, fillvalue=fillvalue)
 
 
-def assignmentRules2observables(sbml_model,
-                                filter_function=lambda *_: True):
-    """Turn assignment rules into observables.
-    Arguments:
-    sbml_model: an sbml Model instance
-    filter_function: callback function taking assignment variable as input
-    and returning True/False to indicate if the respective rule should be
-    turned into an observable
-    Returns:
-    A dictionary(observableId:{
-        'name': observableName,
-        'formula': formulaString
-    })
-    Raises:
-    """
-    warnings.warn("This function will be removed in future releases. "
-                  "This functionality is now included in "
-                  "https://github.com/ICB-DCM/PEtab .", DeprecationWarning)
-    observables = {}
-    for p in sbml_model.getListOfParameters():
-        parameter_id = p.getId()
-        if filter_function(p):
-            observables[parameter_id] = {
-                'name': p.getName(),
-                'formula': sbml_model.getAssignmentRuleByVariable(
-                    parameter_id
-                ).getFormula()
-            }
-
-    for parameter_id in observables:
-        sbml_model.removeRuleByVariable(parameter_id)
-        sbml_model.removeParameter(parameter_id)
-
-    return observables
-
-
 def noise_distribution_to_cost_function(
         noise_distribution: str) -> Callable[[str], str]:
     """

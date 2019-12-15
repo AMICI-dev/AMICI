@@ -9,8 +9,10 @@ import importlib
 import copy
 import numpy as np
 from pysb.simulator import ScipyOdeSimulator
+from petab.sbml import assignment_rules_to_dict
 
 import pysb.examples
+
 
 class TestAmiciPYSBModel(unittest.TestCase):
     '''
@@ -76,9 +78,10 @@ class TestAmiciPYSBModel(unittest.TestCase):
 
         sbmlImporter = amici.SbmlImporter(sbmlFile)
 
-        observables = amici.assignmentRules2observables(
+        observables = assignment_rules_to_dict(
             sbmlImporter.sbml,  # the libsbml model object
-            filter_function=lambda variable: variable.getName() == 'pPROT_obs'
+            filter_function=lambda variable: variable.getName() == 'pPROT_obs',
+            remove=True
         )
         outdir_sbml = 'test_model_presimulation_sbml'
         sbmlImporter.sbml2amici('test_model_presimulation_sbml',

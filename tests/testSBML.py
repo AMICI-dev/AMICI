@@ -9,6 +9,7 @@ import os
 import copy
 import numpy as np
 from testModels import check_derivatives
+from petab.sbml import assignment_rules_to_dict
 
 
 class TestAmiciSBMLModel(unittest.TestCase):
@@ -45,9 +46,10 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
         constantParameters = ['DRUG_0', 'KIN_0']
 
-        observables = amici.assignmentRules2observables(
+        observables = assignment_rules_to_dict(
             sbmlImporter.sbml,  # the libsbml model object
-            filter_function=lambda variable: variable.getName() == 'pPROT_obs'
+            filter_function=lambda variable: variable.getName() == 'pPROT_obs',
+            remove=True
         )
         outdir = 'test_model_presimulation'
         sbmlImporter.sbml2amici('test_model_presimulation',
@@ -99,11 +101,12 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                 'model_steadystate_scaled.xml')
         sbmlImporter = amici.SbmlImporter(sbmlFile)
 
-        observables = amici.assignmentRules2observables(
+        observables = assignment_rules_to_dict(
             sbmlImporter.sbml,
             filter_function=lambda variable:
-            variable.getId().startswith('observable_') and
-            not variable.getId().endswith('_sigma')
+                variable.getId().startswith('observable_') and
+                not variable.getId().endswith('_sigma'),
+            remove=True
         )
 
         outdir = 'test_model_steadystate_scaled'
@@ -201,11 +204,12 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                 'model_steadystate_scaled.xml')
         sbmlImporter = amici.SbmlImporter(sbmlFile)
 
-        observables = amici.assignmentRules2observables(
+        observables = assignment_rules_to_dict(
             sbmlImporter.sbml,
             filter_function=lambda variable:
                 variable.getId().startswith('observable_') and
-                not variable.getId().endswith('_sigma')
+                not variable.getId().endswith('_sigma'),
+            remove=True
         )
 
         # assign different noise models

@@ -105,7 +105,7 @@ try:
     # These module require the swig interface and other dependencies which will
     # be installed if the the AMICI package was properly installed. If not,
     # AMICI was probably imported from setup.py and we don't need those.
-    from .sbml_import import SbmlImporter, assignmentRules2observables
+    from .sbml_import import SbmlImporter
     from .numpy import ReturnDataView, ExpDataView
     from .pandas import getEdataFromDataFrame, \
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
