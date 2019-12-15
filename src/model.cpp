@@ -138,16 +138,19 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const int lbw, SecondOrderMode o2mode,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
-             std::vector<int> z2event)
+             std::vector<int> z2event, const bool pythonGenerated,
+             const int ndxdotdp_explicit, const int ndxdotdp_implicit)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), ny(ny), nytrue(nytrue), nz(nz),
       nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
-      ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz), nJ(nJ), ubw(ubw),
-      lbw(lbw), o2mode(o2mode), idlist(std::move(idlist)),
+      ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)),
+      nnz(nnz), nJ(nJ), ubw(ubw), lbw(lbw), pythonGenerated(pythonGenerated),
+      ndxdotdp_explicit(ndxdotdp_explicit), ndxdotdp_implicit(ndxdotdp_implicit),
+      o2mode(o2mode), idlist(std::move(idlist)),
       J(nx_solver, nx_solver, nnz, CSC_MAT),
-      dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
+      dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT), dwdp(nw, p.size(), ndwdp, CSC_MAT),
       dwdx(nw, nx_solver, ndwdx, CSC_MAT), M(nx_solver, nx_solver), w(nw),
-      dwdp(ndwdp), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
+      x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0), h(ne, 0.0),
       total_cl(nx_rdata - nx_solver),
       stotal_cl((nx_rdata - nx_solver) * p.size()), x_pos_tmp(nx_solver),
       unscaledParameters(p), originalParameters(p),
@@ -155,21 +158,22 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       stateIsNonNegative(nx_solver, false),
       pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
 
-    // Can't use derivedClass::wasPythonGenerated() in ctor.
-    // Guess we are using Python if ndJydy is not empty
-    if (!this->ndJydy.empty()) {
-        if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
-            throw std::runtime_error(
-                "Number of elements in ndJydy is not equal "
-                " nytrue.");
+   /* If Matlab wrapped: dxdotdp is a full AmiVector,
+      if Python wrapped: dxdotdp_explicit and dxdotdp_implicit are CSC matrices */
+    if (pythonGenerated) {
+        dxdotdp_explicit = SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
+        dxdotdp_implicit = SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
 
+        // also dJydy depends on the way of wrapping
+        if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
+            throw std::runtime_error("Number of elements in ndJydy is not equal "
+                                     " nytrue.");
+        
         for (int iytrue = 0; iytrue < nytrue; ++iytrue)
-            dJydy.emplace_back(
-                SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
+            dJydy.emplace_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
     } else {
         dJydy_matlab = std::vector<realtype>(nJ * nytrue * ny, 0.0);
     }
-
     requireSensitivitiesForAllParameters();
 }
 
@@ -177,6 +181,13 @@ bool operator==(const Model &a, const Model &b) {
     if (typeid(a) != typeid(b))
         return false;
 
+    bool bool_dxdotdp = true;
+    if (a.pythonGenerated && b.pythonGenerated)
+        bool_dxdotdp = (a.ndxdotdp_explicit == b.ndxdotdp_explicit) &&
+            (a.ndxdotdp_implicit == b.ndxdotdp_implicit);
+    if (a.pythonGenerated != b.pythonGenerated)
+        bool_dxdotdp = false;
+    
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
            (a.nx_solver == b.nx_solver) &&
            (a.nxtrue_solver == b.nxtrue_solver) && (a.ny == b.ny) &&
@@ -193,7 +204,7 @@ bool operator==(const Model &a, const Model &b) {
            (a.ts == b.ts) && (a.nmaxevent == b.nmaxevent) &&
            (a.pscale == b.pscale) &&
            (a.stateIsNonNegative == b.stateIsNonNegative) &&
-           (a.tstart == b.tstart);
+           (a.tstart == b.tstart) && bool_dxdotdp;
 }
 
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
@@ -1039,7 +1050,7 @@ void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
                                        const AmiVector &xdot,
                                        const AmiVector &xdot_old) {
 
-    deltasx.assign(nx_solver, 0.0);
+    deltaxB.assign(nx_solver, 0.0);
 
     // compute update
     fdeltaxB(deltaxB.data(), t, x.data(), unscaledParameters.data(),
@@ -1225,8 +1236,9 @@ void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
 }
 
 void Model::initializeVectors() {
-    dxdotdp = AmiVectorArray(nx_solver, nplist());
     sx0data.clear();
+    if (!pythonGenerated)
+        dxdotdp = AmiVectorArray(nx_solver, nplist());
 }
 
 void Model::fy(const realtype t, const AmiVector &x) {
@@ -1249,20 +1261,14 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
         return;
 
     dydp.assign(ny * nplist(), 0.0);
-
     fw(t, x.data());
     fdwdp(t, x.data());
-
-    // if dwdp is not dense, fdydp will expect the full sparse array
-    realtype *dwdp_tmp = dwdp.data();
-    for (int ip = 0; ip < nplist(); ip++) {
-        // get dydp slice (ny) for current time and parameter
-        if (wasPythonGenerated() && nw)
-            dwdp_tmp = &dwdp.at(nw * ip);
-
+    
+    /* get dydp slice (ny) for current time and parameter */
+    for (int ip = 0; ip < nplist(); ip++)
         fdydp(&dydp.at(ip * ny), t, x.data(), unscaledParameters.data(),
-              fixedParameters.data(), h.data(), plist(ip), w.data(), dwdp_tmp);
-    }
+              fixedParameters.data(), h.data(), plist(ip), w.data(),
+              dwdp.data());
 
     if (alwaysCheckFinite) {
         app->checkFinite(dydp, "dydp");
@@ -1360,7 +1366,7 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
     fy(edata.getTimepoint(it), x);
     fsigmay(it, &edata);
 
-    if (wasPythonGenerated()) {
+    if (pythonGenerated) {
         for (int iyt = 0; iyt < nytrue; iyt++) {
             dJydy[iyt].zero();
             fdJydy_colptrs(dJydy[iyt].indexptrs(), iyt);
@@ -1432,7 +1438,7 @@ void Model::fdJydp(const int it, const AmiVector &x, const ExpData &edata) {
         if (!edata.isSetObservedData(it, iyt))
             continue;
 
-        if (wasPythonGenerated()) {
+        if (pythonGenerated) {
             // dJydp = 1.0 * dJydp +  1.0 * dJydy * dydp
             for (int iplist = 0; iplist < nplist(); ++iplist) {
                 dJydy[iyt].multiply(
@@ -1471,7 +1477,7 @@ void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
         //          M  K            K  N                       M  N
         //           lda             ldb                        ldc
 
-        if (wasPythonGenerated()) {
+        if (pythonGenerated) {
             for (int ix = 0; ix < nx_solver; ++ix) {
                 dJydy[iyt].multiply(
                     gsl::span<realtype>(&dJydx.at(ix * nJ), nJ),
@@ -1796,21 +1802,18 @@ void Model::fw(const realtype t, const realtype *x) {
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
-    std::fill(dwdp.begin(), dwdp.end(), 0.0);
-    if (wasPythonGenerated()) {
-        realtype *stcl = nullptr;
+    if (pythonGenerated) {
+        dwdp.reset();
 
         // avoid bad memory access when slicing
         if (!nw)
             return;
-
-        for (int ip = 0; ip < nplist(); ++ip) {
-            if (ncl())
-                stcl = &stotal_cl.at(plist(ip) * ncl());
-            fdwdp(&dwdp.at(nw * ip), t, x, unscaledParameters.data(),
-                  fixedParameters.data(), h.data(), w.data(), total_cl.data(),
-                  stcl, plist_[ip]);
-        }
+        
+        fdwdp_colptrs(dwdp.indexptrs());
+        fdwdp_rowvals(dwdp.indexvals());
+        fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
+              h.data(), w.data(), total_cl.data(), stotal_cl.data());
+        
     } else {
         // matlab generated
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
@@ -1819,17 +1822,18 @@ void Model::fdwdp(const realtype t, const realtype *x) {
     }
 
     if (alwaysCheckFinite) {
-        app->checkFinite(dwdp, "dwdp");
+        app->checkFinite(gsl::make_span(dwdp.get()), "dwdp");
     }
 }
 
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t, x);
     dwdx.reset();
+    
+    fdwdx_colptrs(dwdx.indexptrs());
+    fdwdx_rowvals(dwdx.indexvals());
     fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
           h.data(), w.data(), total_cl.data());
-    fdwdx_colptrs(dwdx.indexptrs());
-    fdwdx_rowvals(dwdx.indexptrs());
 
     if (alwaysCheckFinite) {
         app->checkFinite(gsl::make_span(dwdx.get()), "dwdx");

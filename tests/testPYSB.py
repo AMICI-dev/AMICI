@@ -93,10 +93,12 @@ class TestAmiciPYSBModel(unittest.TestCase):
         rdata_sbml = get_results(model_sbml, edata)
 
         # check if preequilibration fixed parameters are correctly applied:
-        for rdata, model in zip([rdata_sbml, rdata_pysb],
-                                [model_sbml, model_pysb]):
+        for rdata, model, importer in zip([rdata_sbml, rdata_pysb],
+                                          [model_sbml, model_pysb],
+                                          ['sbml', 'pysb']):
             # check equilibrium fixed parameters
-            with self.subTest(fixed_pars='preequilibration'):
+            with self.subTest(fixed_pars='preequilibration',
+                              importer=importer):
                 self.assertTrue(np.isclose(
                     [
                         sum(rdata["x_ss"][[1, 3]]),
@@ -111,7 +113,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
                     model.getParameterByName('PROT_0'),
                     atol=1e-6, rtol=1e-6
                 ))
-            with self.subTest(fixed_pars='simulation'):
+            with self.subTest(fixed_pars='presimulation',
+                              importer=importer):
                 # check reinitialization with fixed parameter after
                 # presimulation
                 self.assertTrue(np.isclose(

@@ -34,14 +34,14 @@ void Model_DAE::fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
              fixedParameters.data(), h.data(), cj, N_VGetArrayPointer(dx),
              w.data(), dwdx.data());
 }
-    
+
 void Model_DAE::fJSparseB(SUNMatrixContent_Sparse   /*JSparseB*/,
-                       const realtype  /*t*/, const realtype * /*x*/,
-                       const double * /*p*/, const double * /*k*/,
-                       const realtype * /*h*/, const realtype   /*cj*/,
-                       const realtype * /*xB*/, const realtype * /*dx*/,
-                       const realtype * /*dxB*/, const realtype * /*w*/,
-                       const realtype * /*dwdx*/) {
+                          const realtype  /*t*/, const realtype * /*x*/,
+                          const double * /*p*/, const double * /*k*/,
+                          const realtype * /*h*/, const realtype   /*cj*/,
+                          const realtype * /*xB*/, const realtype * /*dx*/,
+                          const realtype * /*dxB*/, const realtype * /*w*/,
+                          const realtype * /*dwdx*/) {
     throw AmiException("Requested functionality is not supported as %s "
                        "is not implemented for this model!",
                        __func__);
@@ -104,12 +104,20 @@ void Model_DAE::fJDiag(const realtype t, AmiVector &JDiag,
 void Model_DAE::fdxdotdp(const realtype t, const N_Vector x,
                          const N_Vector dx) {
     auto x_pos = computeX_pos(x);
-    fdwdp(t, N_VGetArrayPointer(x_pos));
-    for (int ip = 0; ip < nplist(); ip++) {
-        N_VConst(0.0, dxdotdp.getNVector(ip));
-        fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
-                 unscaledParameters.data(), fixedParameters.data(), h.data(),
-                 plist_[ip], N_VGetArrayPointer(dx), w.data(), dwdp.data());
+
+    if (pythonGenerated) {
+        // python generated, not yet implemented for DAEs
+        throw AmiException("Wrapping of DAEs is not yet implemented from Python");
+    } else {
+        // matlab generated
+        fdwdp(t, N_VGetArrayPointer(x_pos)); // Why is it x_pos here and x ind model_ode.cpp?
+
+        for (int ip = 0; ip < nplist(); ip++) {
+            N_VConst(0.0, dxdotdp.getNVector(ip));
+            fdxdotdp(dxdotdp.data(ip), t, N_VGetArrayPointer(x_pos),
+                     unscaledParameters.data(), fixedParameters.data(), h.data(),
+                     plist_[ip], N_VGetArrayPointer(dx), w.data(), dwdp.data());
+        }
     }
 }
 
@@ -243,7 +251,15 @@ void Model_DAE::fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx,
         fdxdotdp(t, x, dx);
         fJSparse(t, 0.0, x, dx, J.get());
     }
-    N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
+
+    if (pythonGenerated) {
+        // python generated, not yet implemented for DAEs
+        throw AmiException("Wrapping of DAEs is not yet implemented from Python");
+    } else {
+        /* copy dxdotdp over */
+        N_VScale(1.0, dxdotdp.getNVector(ip), sxdot);
+    }
+
     J.multiply(sxdot, sx);
     N_VScale(-1.0, sdx, sdx);
     M.multiply(sxdot, sdx);
