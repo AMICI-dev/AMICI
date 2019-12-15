@@ -11,6 +11,8 @@ import sympy as sp
 import libsbml
 from tempfile import TemporaryDirectory
 
+from amici.petab_import import constant_species_to_parameters
+
 
 class TestAmiciMisc(unittest.TestCase):
     """TestCase class various AMICI Python interface functions"""
@@ -110,13 +112,6 @@ class TestAmiciMisc(unittest.TestCase):
 
     def test_constant_species_to_parameters(self):
         """test conversion from species to constant parameters"""
-
-        try:
-            # skip that if PEtab is not installed which causes the import
-            # to fail
-            from amici.petab_import import constant_species_to_parameters
-        except ModuleNotFoundError:
-            return
 
         document = libsbml.SBMLDocument(3, 1)
         model = document.createModel()
