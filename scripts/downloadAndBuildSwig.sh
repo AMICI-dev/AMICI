@@ -32,5 +32,5 @@ echo "SWIG installation successful"
 echo
 echo "To use this version of SWIG, add directory ${SWIG_BIN_DIR} to your PATH,"
 echo "e.g. adding the following line to your .bashrc:"
-echo "    export PATH=\$PATH:${SWIG_BIN_DIR}"
+echo "    export PATH=${SWIG_BIN_DIR}:\$PATH"
 echo "================"
