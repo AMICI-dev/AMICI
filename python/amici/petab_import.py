@@ -123,13 +123,13 @@ def species_to_parameters(species_ids: List[str],
             logger.warning(
                 f"Ignoring {species.getId()} which has only substance units."
                 " Conversion not yet implemented.")
-            return
+            continue
 
         if math.isnan(species.getInitialConcentration()):
             logger.warning(
                 f"Ignoring {species.getId()} which has no initial "
                 "concentration. Amount conversion not yet implemented.")
-            return
+            continue
 
         transformables.append(species_id)
 
