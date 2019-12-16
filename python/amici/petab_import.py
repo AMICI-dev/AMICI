@@ -59,7 +59,9 @@ def get_fixed_parameters(
         fixed_parameters = [p for p in fixed_parameters
                             if condition_df[p].dtype != 'O']
         # must be unique
-        assert(len(fixed_parameters) == len(set(fixed_parameters)))
+        if len(fixed_parameters) != len(set(fixed_parameters)):
+            raise AssertionError(
+                'len(fixed_parameters) != len(set(fixed_parameters))')
     else:
         fixed_parameters = []
 
