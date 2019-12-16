@@ -42,7 +42,7 @@ def get_fixed_parameters(
             `sbml_model`.
 
     Returns:
-        List of IDs of parameter which are to be considered constant
+        List of IDs of parameters which are to be considered constant.
     """
 
     # column names are model parameter names that should be made constant
@@ -195,14 +195,14 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     Arguments:
         sbml_model:
-            PEtab SBML model. If `libsbml.Model` is passed, this will be
+            PEtab SBML model. If a `libsbml.Model` is passed, this will be
             modified inplace.
         condition_table:
             PEtab condition table. If provided, parameters from there will be
-            turned into AMICI constant parameters (i.e. parameter w.r.t. which
+            turned into AMICI constant parameters (i.e. parameters w.r.t. which
             no sensitivities will be computed).
         measurement_table:
-            PEtab measurement table
+            PEtab measurement table.
         model_name:
             Name of the generated model. If model file name was provided,
             this defaults to the file name without extension, otherwise
@@ -211,9 +211,9 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
             Directory to write the model code to. Will be created if doesn't
             exist. Defaults to current directory.
         verbose:
-            Print/log extra information
+            Print/log extra information.
         allow_reinit_fixpar_initcond:
-            see amici.ode_export.ODEExporter
+            See amici.ode_export.ODEExporter
         **kwargs:
             Additional keyword arguments to be passed to
             ``amici.sbml_importer.sbml2amici``.
@@ -260,7 +260,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
     else:
         noise_distrs = {}  # use default
 
-    # Replace observablesIds occurring in error model definition
+    # Replace observableIds occurring in error model definition
     import sympy as sp
     for observable_id, formula in sigmas.items():
         repl = sp.sympify(formula).subs(
