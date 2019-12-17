@@ -4,6 +4,7 @@ problem"""
 import numbers
 import numpy as np
 import pandas as pd
+import copy
 
 from typing import List, Sequence
 import amici
@@ -13,7 +14,7 @@ import petab
 def edatas_from_petab(
         model: amici.Model, measurement_df: pd.DataFrame,
         condition_df: pd.DataFrame,
-        simulation_conditions=None) -> List[amici.ExpData()]:
+        simulation_conditions=None) -> List[amici.ExpData]:
     """
     Create list of amici.ExpData objects for PEtab problem.
 
@@ -167,3 +168,70 @@ def _fixed_parameters_to_edata(
         edata.fixedParametersPreequilibration = \
             fixed_preequilibration_parameter_vals.astype(float) \
                                                  .flatten()
+
+
+def rdatas_to_measurement_df(
+        rdatas: List[amici.ReturnData], model: amici.Model,
+        measurement_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Create a measurement dataframe in the PEtab format from the passed
+    `rdatas` and own information.
+
+    Parameters:
+        rdatas:
+            A list of rdatas with the ordering of
+            `petab.get_simulation_conditions`
+        model:
+            AMICI model used to generate `rdatas`
+        measurement_df:
+            PEtab measurement table used to generate `rdatas`
+
+    Returns:
+        A dataframe built from the rdatas in the format of `measurement_df`
+    """
+
+    # initialize dataframe
+    df = pd.DataFrame(columns=list(measurement_df.columns))
+
+    # get simulation conditions
+    simulation_conditions = petab.get_simulation_conditions(
+        measurement_df)
+
+    # get observable ids
+    observable_ids = model.getObservableIds()
+
+    # iterate over conditions
+    for data_idx, condition in simulation_conditions.iterrows():
+        # current rdata
+        rdata = rdatas[data_idx]
+        # current simulation matrix
+        y = rdata['y']
+        # time array used in rdata
+        t = list(rdata['t'])
+
+        # extract rows for condition
+        cur_measurement_df = petab.get_rows_for_condition(
+            measurement_df, condition)
+
+        # iterate over entries for the given condition
+        # note: this way we only generate a dataframe entry for every
+        # row that existed in the original dataframe. if we want to
+        # e.g. have also timepoints non-existent in the original file,
+        # we need to instead iterate over the rdata['y'] entries
+        for _, row in cur_measurement_df.iterrows():
+            # copy row
+            row_sim = copy.deepcopy(row)
+
+            # extract simulated measurement value
+            timepoint_idx = t.index(row.time)
+            observable_idx = observable_ids.index(
+                "observable_" + row.observableId)
+            measurement_sim = y[timepoint_idx, observable_idx]
+
+            # change measurement entry
+            row_sim.measurement = measurement_sim
+
+            # append to dataframe
+            df = df.append(row_sim, ignore_index=True)
+
+    return df
