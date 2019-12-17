@@ -20,11 +20,11 @@ def edatas_from_petab(
 
     Arguments:
         model:
-            AMICI model
+            AMICI model.
         measurement_df:
-            PEtab measurement table
+            PEtab measurement table.
         condition_df:
-            PEtab condition table
+            PEtab condition table.
         simulation_conditions:
             Result of petab.get_simulation_conditions. Can be provided to save
             time if this has be obtained before.
@@ -127,20 +127,17 @@ def _fixed_parameters_to_edata(
         edata: amici.ExpData, condition_df: pd.DataFrame,
         fixed_parameter_ids: Sequence[str], condition) -> None:
     """
-    Set fixed parameters for a given simulation condition to the corresponding
-    ExpData.
+    Apply fixed parameters for a given simulation condition to the
+    corresponding ExpData.
 
     Parameters:
         edata:
-            Current edata.
-
+            ExpData to set fixed parameters on.
         condition_df:
             The conditions table.
-
         fixed_parameter_ids:
             Ids of parameters that are to be considered constant (in correct
             AMICI order).
-
         condition:
             The current condition, as created by
             petab.get_simulation_conditions.
@@ -179,14 +176,14 @@ def rdatas_to_measurement_df(
     Parameters:
         rdatas:
             A list of rdatas with the ordering of
-            `petab.get_simulation_conditions`
+            `petab.get_simulation_conditions`.
         model:
-            AMICI model used to generate `rdatas`
+            AMICI model used to generate `rdatas`.
         measurement_df:
-            PEtab measurement table used to generate `rdatas`
+            PEtab measurement table used to generate `rdatas`.
 
     Returns:
-        A dataframe built from the rdatas in the format of `measurement_df`
+        A dataframe built from the rdatas in the format of `measurement_df`.
     """
 
     # initialize dataframe
