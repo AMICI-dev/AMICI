@@ -197,8 +197,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     Arguments:
         sbml_model:
-            PEtab SBML model. If a `libsbml.Model` is passed, this will be
-            modified inplace.
+            PEtab SBML model. If a `libsbml.Model` is passed.
         condition_table:
             PEtab condition table. If provided, parameters from there will be
             turned into AMICI constant parameters (i.e. parameters w.r.t. which
@@ -226,6 +225,10 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     if verbose:
         logger.log(logging.INFO, f"{Fore.GREEN}Importing model ...")
+
+    # Create a copy, because it will be modified by SbmlImporter
+    sbml_doc = sbml_model.getSBMLDocument().clone()
+    sbml_model = sbml_doc.getModel()
 
     sbml_importer = amici.SbmlImporter(sbml_model)
 
