@@ -159,9 +159,8 @@ def _fixed_parameters_to_edata(
         float).flatten()
 
     # same for preequilibration if necessary
-    if all(('preequilibrationConditionId' in condition,
-            condition.preequilibrationConditionId,
-            'preequilibrationConditionId' in condition_df)):
+    if ('preequilibrationConditionId' in condition
+           and condition.preequilibrationConditionId):
         fixed_preequilibration_parameter_vals = condition_df.loc[
             condition_df.conditionId == condition.preequilibrationConditionId,
             fixed_parameter_ids].values
