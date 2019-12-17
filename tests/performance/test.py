@@ -25,6 +25,16 @@ def main():
     elif arg == 'adjoint_sensitivities':
         solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
         solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    elif arg == 'forward_simulation_non_optimal_parameters':
+        tmpPar = model.getParameters()
+        model.setParameters([0.1 for iPar in tmpPar])
+        solver.setSensitivityMethod(amici.SensitivityMethod_none)
+        solver.setSensitivityOrder(amici.SensitivityOrder_none)
+    elif arg == 'adjoint_sensitivities_non_optimal_parameters':
+        tmpPar = model.getParameters()
+        model.setParameters([0.1 for iPar in tmpPar])
+        solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
+        solver.setSensitivityOrder(amici.SensitivityOrder_first)
     else:
         print("Unknown argument:", arg)
         sys.exit(1)

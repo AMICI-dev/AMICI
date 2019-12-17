@@ -108,7 +108,8 @@ class AbstractModel {
                         const AmiVector &dx) = 0;
 
     /**
-     * @brief Parameter derivative of residual function
+     * @brief Model specific sparse implementation of
+              explicit parameter derivative of right hand side
      * @param t time
      * @param x state
      * @param dx time derivative of state (DAE only)
@@ -668,6 +669,18 @@ class AbstractModel {
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
                        const realtype *stcl);
+    
+    /**
+     * @brief Model specific implementation for dwdp, column pointers
+     * @param indexptrs column pointers
+     **/
+    virtual void fdwdp_colptrs(sunindextype *indexptrs);
+    
+    /**
+     * @brief Model specific implementation for dwdp, row values
+     * @param indexvals row values
+     **/
+    virtual void fdwdp_rowvals(sunindextype *indexvals);
 
     /**
      * @brief Model specific sensitivity implementation of dwdp

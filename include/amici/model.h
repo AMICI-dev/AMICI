@@ -71,14 +71,18 @@ class Model : public AbstractModel {
      * @param plist indexes wrt to which sensitivities are to be computed
      * @param idlist indexes indicating algebraic components (DAE only)
      * @param z2event mapping of event outputs to events
+     * @param pythonGenerated flag indicating matlab or python wrapping
+     * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
+     * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int ny, int nytrue, int nz, int nztrue, int ne, int nJ, int nw,
-          int ndwdx, int ndwdp, int ndxdotdw, std::vector<int> ndJydy, int nnz,
-          int ubw, int lbw, amici::SecondOrderMode o2mode,
+          int ndwdx, int ndwdp, int ndxdotdw, std::vector<int> ndJydy,
+          int nnz, int ubw, int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
-          std::vector<int> z2event);
+          std::vector<int> z2event, bool pythonGenerated=false,
+          int ndxdotdp_explicit=0, int ndxdotdp_implicit=0);
 
     /** destructor */
     ~Model() override = default;
@@ -130,6 +134,8 @@ class Model : public AbstractModel {
     using AbstractModel::fdsigmaydp;
     using AbstractModel::fdsigmazdp;
     using AbstractModel::fdwdp;
+    using AbstractModel::fdwdp_colptrs;
+    using AbstractModel::fdwdp_rowvals;
     using AbstractModel::fdwdx;
     using AbstractModel::fdwdx_colptrs;
     using AbstractModel::fdwdx_rowvals;
@@ -1034,12 +1040,6 @@ class Model : public AbstractModel {
     bool getAlwaysCheckFinite() const;
 
     /**
-     * @brief check whether the model was generated from python
-     * @return that
-     */
-    virtual bool wasPythonGenerated() const { return false; }
-
-    /**
      * @brief Initial states
      * @param x pointer to state variables
      */
@@ -1130,7 +1130,6 @@ class Model : public AbstractModel {
 
     /** number of nonzero entries in dxdotdw */
     int ndxdotdw{0};
-
     /** number of nonzero entries in dJydy */
     std::vector<int> ndJydy;
 
@@ -1145,7 +1144,16 @@ class Model : public AbstractModel {
 
     /** lower bandwith of the jacobian */
     int lbw{0};
+    
+    /** flag indicating Matlab or python based model generation */
+    bool pythonGenerated;
 
+    /** number of nonzero entries in ndxdotdp_explicit */
+    int ndxdotdp_explicit{0};
+    
+    /** number of nonzero entries in ndxdotdp_implicit */
+    int ndxdotdp_implicit{0};
+    
     /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
      * directional or full second order derivative will be computed */
     SecondOrderMode o2mode{SecondOrderMode::none};
@@ -1153,10 +1161,17 @@ class Model : public AbstractModel {
     /** flag array for DAE equations */
     std::vector<realtype> idlist;
 
-    /** temporary storage of dxdotdp data across functions (dimension: nplist x
-     * nx_solver, row-major) */
+    /** temporary storage of dxdotdp data across functions, Python only
+     (dimension: nplist x nx_solver, nnz: ndxdotdp_explicit, type CSC_MAT) */
+    mutable SUNMatrixWrapper dxdotdp_explicit;
+    
+    /** temporary storage of dxdotdp_implicit data across functions, Python only
+     (dimension: nplist x * nx_solver, nnz: ndxdotdp_implicit, type CSC_MAT) */
+    mutable SUNMatrixWrapper dxdotdp_implicit;
+    
+    /** temporary storage of dxdotdp data across functions, Matlab only
+     (dimension: nplist x nx_solver, row-major) */
     AmiVectorArray dxdotdp;
-
     /** AMICI context */
     AmiciApplication *app = &defaultContext;
 
@@ -1258,7 +1273,7 @@ class Model : public AbstractModel {
     virtual void fdJydy_colptrs(sunindextype *indexptrs, int index);
 
     /**
-     * @brief Model specific implementation of fdxdotdw row vals
+     * @brief Model specific implementation of fdJydy row vals
      * @param indexptrs row val pointers
      * @param index ytrue index
      */
@@ -1560,6 +1575,9 @@ class Model : public AbstractModel {
     /** Sparse dxdotdw temporary storage (dimension: ndxdotdw) */
     mutable SUNMatrixWrapper dxdotdw;
 
+    /** Sparse dwdp temporary storage (dimension: ndwdp) */
+    mutable SUNMatrixWrapper dwdp;
+    
     /** Sparse dwdx temporary storage (dimension: ndwdx) */
     mutable SUNMatrixWrapper dwdx;
 
@@ -1573,12 +1591,12 @@ class Model : public AbstractModel {
     mutable std::vector<realtype> mz;
 
     /** Sparse observable derivative of data likelihood,
-     * only used if wasPythonGenerated()==true
+     * only used if pythonGenerated==true
      * (dimension nytrue, nJ x ny, row-major) */
     mutable std::vector<SUNMatrixWrapper> dJydy;
 
     /** observable derivative of data likelihood,
-     * only used if wasPythonGenerated()==false
+     * only used if pythonGenerated==false
      * (dimension nJ x ny x nytrue, row-major)
      */
     mutable std::vector<realtype> dJydy_matlab;
@@ -1660,11 +1678,6 @@ class Model : public AbstractModel {
 
     /** tempory storage of w data across functions (dimension: nw) */
     mutable std::vector<realtype> w;
-
-    /** tempory storage of sparse/dense dwdp data across functions
-     * (dimension: ndwdp)
-     */
-    mutable std::vector<realtype> dwdp;
 
     /** tempory storage for flattened sx,
      * (dimension: nx_solver x nplist, row-major)

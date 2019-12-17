@@ -117,6 +117,12 @@ class SUNMatrixWrapper {
     sunindextype columns() const;
 
     /**
+     * @brief Get the number of non-zero elements (sparse matrices only)
+     * @return number
+     */
+    sunindextype nonzeros() const;
+
+    /**
      * @brief Get the index values of a sparse matrix
      * @return index array
      */
@@ -154,14 +160,52 @@ class SUNMatrixWrapper {
     void multiply(gsl::span<realtype> c, gsl::span<const realtype> b) const;
 
     /**
+     * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     * @param cols int vector for column reordering
+     * @param transpose bool transpose A before multiplication
+     */
+    void multiply(N_Vector c,
+                  const N_Vector b,
+                  gsl::span <const int> cols,
+                  bool transpose) const;
+
+    /**
+     * @brief Perform reordered matrix vector multiplication c += A[:,cols]*b
+     * @param c output vector, may already contain values
+     * @param b multiplication vector
+     * @param cols int vector for column reordering
+     * @param transpose bool transpose A before multiplication
+     */
+    void multiply(gsl::span<realtype> c,
+                  gsl::span<const realtype> b,
+                  gsl::span <const int> cols,
+                  bool transpose) const;
+
+    /**
+     * @brief Perform matrix matrix multiplication
+              C[:, :] += A * B
+              for sparse A, B, C
+     * @param C output matrix, may already contain values
+     * @param B multiplication matrix
+     */
+    void sparse_multiply(SUNMatrixWrapper *C,
+                         SUNMatrixWrapper *B) const;
+
+    /**
      * @brief Set to 0.0
      */
     void zero();
 
+    /**
+     * @brief CSC matrix to which all methods are applied
+     */
+    SUNMatrix matrix = nullptr;
+
   private:
     void update_ptrs();
 
-    SUNMatrix matrix = nullptr;
     realtype *data_ptr = nullptr;
     sunindextype *indexptrs_ptr = nullptr;
     sunindextype *indexvals_ptr = nullptr;
