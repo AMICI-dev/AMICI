@@ -197,7 +197,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     Arguments:
         sbml_model:
-            PEtab SBML model. If a `libsbml.Model` is passed.
+            PEtab SBML model or SBML file name.
         condition_table:
             PEtab condition table. If provided, parameters from there will be
             turned into AMICI constant parameters (i.e. parameters w.r.t. which
