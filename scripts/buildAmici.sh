@@ -13,7 +13,7 @@ mkdir -p ${AMICI_PATH}/build
 cd ${AMICI_PATH}/build
 CPPUTEST_BUILD_DIR=${AMICI_PATH}/ThirdParty/cpputest-master/build/
 CppUTest_DIR=${CPPUTEST_BUILD_DIR} \
-  ${CMAKE} -DCMAKE_BUILD_TYPE=Debug -DPython_EXECUTABLE=$(which python3) ..
+  ${CMAKE} -DCMAKE_BUILD_TYPE=Debug -DPython3_EXECUTABLE=$(which python3) ..
 ${MAKE}
 
 ${MAKE} python-sdist
