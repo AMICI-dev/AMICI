@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+"""Test SWIG interface using python/examples/test_model_presimulation_pysb
+
+Test getters, setters, etc.
+"""
+
 import sys
 import amici
 import unittest
@@ -10,12 +15,9 @@ import importlib
 import copy
 
 class TestAmiciCPP(unittest.TestCase):
-    '''
+    """
     TestCase class for testing cpp API through swig
-    '''
-
-    expectedResultsFile = os.path.join(os.path.dirname(__file__),
-                                       'cpputest', 'expectedResults.h5')
+    """
 
     def setUp(self):
         self.resetdir = os.getcwd()
