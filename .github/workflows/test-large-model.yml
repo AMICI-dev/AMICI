@@ -53,6 +53,7 @@ jobs:
         cd CS_Signalling_ERBB_RAS_AKT \
           && check_time.sh \
           petab_import amici_import_petab.py -v \
+            -n 'CS_Signalling_ERBB_RAS_AKT_petab' \
             -s 'PEtab/CS_Signalling_ERBB_RAS_AKT_petab.xml' \
             -c 'PEtab/conditions_petab.tsv' \
             -m 'PEtab/measurements_petab.tsv' \
