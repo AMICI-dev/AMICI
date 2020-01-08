@@ -58,7 +58,7 @@ For Python-AMICI usage see
 To install development versions which have not been released to pypi yet,
 you can install AMICI with pip directly from GitHub using:
 
-    pip3 install -e https://github.com/icb-dcm/amici/archive/develop.zip#egg=amici\&subdirectory=python/sdist
+    pip3 install -e git+https://github.com/icb-dcm/amici.git@develop#egg=amici\&subdirectory=python/sdist
 
 Replace `develop` by the branch or commit you want to install.
 
