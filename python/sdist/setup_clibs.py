@@ -159,7 +159,7 @@ def getLibSundials(extra_compiler_flags=None):
                          'amici/ThirdParty/SuiteSparse/BTF/Include/',
                          'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
                          'amici/ThirdParty/SuiteSparse/include'],
-        'cflags': ['-Wno-misleading-indentation', *extra_compiler_flags]
+        #'cflags': ['-Wno-misleading-indentation', *extra_compiler_flags]
     })
     return libsundials
 
@@ -182,7 +182,7 @@ def getLibSuiteSparse(extra_compiler_flags=None):
                          'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
                          'amici/ThirdParty/SuiteSparse/include'
                          ],
-        'cflags': ['-Wno-unused-but-set-variable', *extra_compiler_flags]
+        #'cflags': ['-Wno-unused-but-set-variable', *extra_compiler_flags]
 
     })
     return libsuitesparse
