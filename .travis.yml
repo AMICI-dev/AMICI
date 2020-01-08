@@ -59,6 +59,7 @@ matrix:
           update: true
       before_install:
         - travis_wait brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
+        - brew link --overwrite python # https://github.com/ICB-DCM/AMICI/issues/894
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
         - pip3 install --user -U numpy
       after_success:
@@ -82,6 +83,7 @@ matrix:
       before_install:
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
+        - brew link --overwrite python # https://github.com/ICB-DCM/AMICI/issues/894
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
       deploy:
