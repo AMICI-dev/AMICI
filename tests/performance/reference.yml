@@ -1,8 +1,10 @@
 # Reference wall times (seconds) with some buffer
 create_sdist: 25
-install_sdist: 120
-petab_import: 1680 # ^= 28'
+install_sdist: 140
+petab_import: 1920 # ^= 32'
 install_model: 400
 forward_simulation: 2
 forward_sensitivities: 6
-adjoint_sensitivities: 120 # TODO reduce when #849 fixed
+adjoint_sensitivities: 4
+forward_simulation_non_optimal_parameters: 2
+adjoint_sensitivities_non_optimal_parameters: 5

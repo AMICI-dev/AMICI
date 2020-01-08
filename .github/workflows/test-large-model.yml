@@ -4,7 +4,8 @@ on:
     branches:
       - develop
       - master
-      - fix_862_powsimp
+      - feature_sparse_quadratures
+
   pull_request:
     branches:
       - master
@@ -52,6 +53,7 @@ jobs:
         cd CS_Signalling_ERBB_RAS_AKT \
           && check_time.sh \
           petab_import amici_import_petab.py -v \
+            -n 'CS_Signalling_ERBB_RAS_AKT_petab' \
             -s 'PEtab/CS_Signalling_ERBB_RAS_AKT_petab.xml' \
             -c 'PEtab/conditions_petab.tsv' \
             -m 'PEtab/measurements_petab.tsv' \
@@ -73,3 +75,9 @@ jobs:
     - name: adjoint_sensitivities
       run: |
         check_time.sh adjoint_sensitivities tests/performance/test.py adjoint_sensitivities
+    - name: forward_simulation_non_optimal_parameters
+      run: |
+        check_time.sh forward_simulation_non_optimal_parameters tests/performance/test.py forward_simulation_non_optimal_parameters
+    - name: adjoint_sensitivities_non_optimal_parameters
+      run: |
+        check_time.sh adjoint_sensitivities_non_optimal_parameters tests/performance/test.py adjoint_sensitivities_non_optimal_parameters

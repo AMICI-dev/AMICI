@@ -379,7 +379,7 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
 }
 
 void ForwardProblem::getEventOutput() {
-    if (t == model->getTimepoint(edata->nt() - 1)) {
+    if (t == model->getTimepoint(model->nt() - 1)) {
         // call from fillEvent at last timepoint
         model->froot(t, x, dx, rootvals);
     }
