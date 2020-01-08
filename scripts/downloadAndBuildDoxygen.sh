@@ -8,7 +8,11 @@ AMICI_PATH=$(cd "$SCRIPT_PATH"/.. && pwd)
 DOXYGEN_DIR="${AMICI_PATH}"/ThirdParty/doxygen
 cd "${AMICI_PATH}"/ThirdParty
 if [[ ! -d ${DOXYGEN_DIR} ]]; then
-  git clone --depth 1 https://github.com/doxygen/doxygen.git "${DOXYGEN_DIR}"
+  # git clone --depth 1 https://github.com/doxygen/doxygen.git "${DOXYGEN_DIR}"
+  # https://github.com/doxygen/doxygen/pull/7483
+  git clone https://github.com/doxygen/doxygen.git "${DOXYGEN_DIR}"
+  git fetch origin pull/7483/head:fix_warnings
+  git checkout https://github.com/doxygen/doxygen/pull/7483
 fi
 
 cd "${DOXYGEN_DIR}"
