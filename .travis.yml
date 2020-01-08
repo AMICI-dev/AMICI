@@ -150,8 +150,11 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_TESTL=TestLinux; fi
     # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS=/LIBPATH:${BASE_DIR}/ThirdParty/openBLAS/OpenBLAS-0.3.6-x64/lib; fi
     # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_CFLAGS=/IC:${BASE_DIR}/ThirdParty/openBLAS/OpenBLAS-0.3.6-x64/include; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\Users\\travis\\build\\ThirdParty\\openBLAS\\OpenBLAS-0.3.6-x64\\lib'; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_CFLAGS='/IC:\\Users\\travis\\build\\ThirdParty\\openBLAS\\OpenBLAS-0.3.6-x64\\include'; fi
+    # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\Users\\travis\\build\\ThirdParty\\openBLAS\\OpenBLAS-0.3.6-x64\\lib'; fi
+    # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_CFLAGS='/IC:\\Users\\travis\\build\\ThirdParty\\openBLAS\\OpenBLAS-0.3.6-x64\\include'; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='-LIBPATH:amici/ThirdParty/openBLAS/OpenBLAS-0.3.6-x64/lib'; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_CFLAGS='-Iamici/ThirdParty/openBLAS/OpenBLAS-0.3.6-x64/include'; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command Get-ChildItem amici/Thirdparty/openBLAS/OpenBLAS-0.3.6-x64/include; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command Get-Item -Path Env:BLAS_*; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $BLAS_LIBS $BLAS_CFLAGS $BLAS_TESTL $BLAS_TESTW; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
