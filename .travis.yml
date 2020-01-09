@@ -149,8 +149,8 @@ script:
     - if [[ "$CI_DOC" != "TRUE" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
     - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$CI_VALGRIND" == "TRUE" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
     - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$CI_VALGRIND" != "TRUE" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
-    - if [[ "$CI_CMAKE == "TRUE" ]]; then $FOLD cmake ./tests/testCMakeCompilation.sh; fi
-    - if [[ "$CI_CPPCHECK == "TRUE" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
+    - if [[ "$CI_CMAKE" == "TRUE" ]]; then $FOLD cmake ./tests/testCMakeCompilation.sh; fi
+    - if [[ "$CI_CPPCHECK" == "TRUE" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" == "TRUE" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" != "TRUE" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
