@@ -68,7 +68,6 @@ matrix:
             - libc6-dbg
       env:
         - CI_PYTHON=TRUE
-        - CI_ARCHIVE=TRUE
 
     - os: osx
       osx_image: xcode11
