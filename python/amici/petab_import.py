@@ -3,16 +3,16 @@ Import a model in the PEtab (https://github.com/ICB-DCM/PEtab/) format into
 AMICI
 """
 
-import amici
+import argparse
+import logging
+import math
 import os
 import time
-import math
-import logging
 from typing import List, Dict, Union, Optional
-import pandas as pd
-import argparse
 
+import amici
 import libsbml
+import pandas as pd
 import petab
 from colorama import Fore
 from colorama import init as init_colorama
@@ -197,8 +197,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     Arguments:
         sbml_model:
-            PEtab SBML model. If a `libsbml.Model` is passed, this will be
-            modified inplace.
+            PEtab SBML model or SBML file name.
         condition_table:
             PEtab condition table. If provided, parameters from there will be
             turned into AMICI constant parameters (i.e. parameters w.r.t. which
@@ -226,6 +225,10 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     if verbose:
         logger.log(logging.INFO, f"{Fore.GREEN}Importing model ...")
+
+    # Create a copy, because it will be modified by SbmlImporter
+    sbml_doc = sbml_model.getSBMLDocument().clone()
+    sbml_model = sbml_doc.getModel()
 
     sbml_importer = amici.SbmlImporter(sbml_model)
 
@@ -381,8 +384,12 @@ def parse_cli_args():
     parser.add_argument('-p', '--parameters', dest='parameter_file_name',
                         help='Parameter table')
 
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-y', '--yaml', dest='yaml_file_name',
+                       help='PEtab YAML problem filename')
+
     # or with model name, following default naming
-    parser.add_argument('-n', '--model-name', dest='model_name',
+    group.add_argument('-n', '--model-name', dest='model_name',
                         help='Model name where all files are in the working '
                         'directory and follow PEtab naming convention. '
                         'Specifying -[smcp] will override defaults')
@@ -403,12 +410,11 @@ def parse_cli_args():
             args.parameter_file_name = petab.get_default_parameter_file_name(
                 args.model_name)
 
-    if not args.model_name and \
-            (not args.sbml_file_name
-             or not args.condition_file_name
-             or not args.measurement_file_name):
-        parser.error('When not specifying a model name, sbml, '
-                     'condition and measurement file must be specified')
+    if not args.model_name and not args.yaml_file_name \
+            and not all((args.sbml_file_name, args.condition_file_name,
+                         args.measurement_file_name)):
+        parser.error('When not specifying a model name or YAML file, then '
+                     'SBML, condition and measurement file must be specified')
 
     return args
 
@@ -420,12 +426,16 @@ def main():
     """
     args = parse_cli_args()
 
+    if args.yaml_file_name:
+        pp = petab.Problem.from_yaml(args.yaml_file_name)
+    else:
+        pp = petab.Problem.from_files(
+            sbml_file=args.sbml_file_name,
+            condition_file=args.condition_file_name,
+            measurement_file=args.measurement_file_name,
+            parameter_file=args.parameter_file_name)
+
     # First check for valid PEtab
-    pp = petab.Problem.from_files(
-        sbml_file=args.sbml_file_name,
-        condition_file=args.condition_file_name,
-        measurement_file=args.measurement_file_name,
-        parameter_file=args.parameter_file_name)
     petab.lint_problem(pp)
 
     import_model(model_name=args.model_name,
