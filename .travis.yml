@@ -30,6 +30,7 @@ matrix:
         - CI_CPPUTEST=TRUE
         - CI_VALGRIND=TRUE
         - CI_PYTHON=TRUE
+        - CI_ARCHIVE=TRUE
       before_install:
         - ./scripts/buildValgrind.sh
       after_script:
@@ -60,6 +61,7 @@ matrix:
             - libc6-dbg
       env:
         - CI_PYTHON=TRUE
+        - CI_ARCHIVE=TRUE
 
     - os: osx
       osx_image: xcode11
@@ -68,6 +70,7 @@ matrix:
       env:
         - CI_CPPUTEST=TRUE
         - CI_CMAKE=TRUE
+        - CI_ARCHIVE=TRUE
         - CI_CPPCHECK=TRUE
         - CI_PYTHON=TRUE
       addons:
@@ -126,11 +129,11 @@ install:
     - if [[ "$CI_DOC" == "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSundials.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildCpputest.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildBNGL.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildAmici.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
+    - if [[ "$CI_CPPUTEST" == "TRUE" ]]; then ./scripts/buildCpputest.sh; fi
+    - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/buildBNGL.sh; fi
+    - if [[ "$CI_CPPUTEST" == "TRUE" ]]; then ./scripts/buildAmici.sh; fi
+    - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
+    - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
