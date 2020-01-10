@@ -107,7 +107,8 @@ matrix:
           casks:
             - mactex
           packages:
-            - doxygen
+            # - doxygen # disabled because current 1.8.16 does not work with recent ghostscript
+            - bison # doxygen build
             - ragel
             - graphviz
           update: true
@@ -134,6 +135,7 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_DOC" != "TRUE" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
     - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_DOC" != "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
+    - if [[ "$CI_DOC" == "TRUE" ]]; then export PATH="/usr/local/opt/bison/bin:$PATH"; LDFLAGS="-L/usr/local/opt/bison/lib" scripts/downloadAndBuildDoxygen.sh; fi
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSundials.sh; fi
     - if [[ "$CI_DOC" != "TRUE" ]];; then ./scripts/buildCpputest.sh; fi
