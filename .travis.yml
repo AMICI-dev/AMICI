@@ -138,7 +138,7 @@ install:
     - if [[ "$CI_DOC" == "TRUE" ]]; then export PATH="/usr/local/opt/bison/bin:$PATH"; LDFLAGS="-L/usr/local/opt/bison/lib" scripts/downloadAndBuildDoxygen.sh; fi
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSundials.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]];; then ./scripts/buildCpputest.sh; fi
+    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildCpputest.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/buildBNGL.sh; fi
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildAmici.sh; fi
     - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
