@@ -1660,11 +1660,13 @@ class ODEModel:
         else:
             xx = variables[x]
 
-        if not len(xx) or not len(variables[y]) or xx.is_zero is True or \
-                variables[y].is_zero is True:
-            self._eqs[name] = sp.zeros(len(xx), len(variables[y]))
+        yy = variables[y]
+
+        if not xx.shape[0] or not yy.shape[1] or xx.is_zero is True or \
+                yy.is_zero is True:
+            self._eqs[name] = sp.zeros(xx.shape[0], yy.shape[1])
         else:
-            self._eqs[name] = sign * xx * variables[y]
+            self._eqs[name] = sign * xx * yy
 
     def _equationFromComponent(self, name, component):
         """Generates the formulas of a symbolic variable from the attributes
