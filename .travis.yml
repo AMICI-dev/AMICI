@@ -136,9 +136,9 @@ install:
     - if [[ "$CI_DOC" == "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSuiteSparse.sh; fi
     - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSundials.sh; fi
-    - if [[ "$CI_CPPUTEST" == "TRUE" ]]; then ./scripts/buildCpputest.sh; fi
+    - if [[ "$CI_DOC" != "TRUE" ]];; then ./scripts/buildCpputest.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/buildBNGL.sh; fi
-    - if [[ "$CI_CPPUTEST" == "TRUE" ]]; then ./scripts/buildAmici.sh; fi
+    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildAmici.sh; fi
     - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
 
