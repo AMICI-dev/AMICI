@@ -10,6 +10,7 @@ import sys
 import os
 import copy
 import numbers
+import logging
 import itertools
 try:
     import pysb
@@ -27,6 +28,7 @@ from sympy.matrices.dense import MutableDenseMatrix
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__
 )
+from .logging import get_logger, log_execution_time
 
 ## Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -241,6 +243,10 @@ multiobs_functions = [
     function for function in functions
     if 'const int iy' in functions[function]['signature']
 ]
+
+## python log manager
+logger = get_logger(__name__, logging.ERROR)
+
 
 
 def var_in_function_signature(name, varname):
@@ -1842,7 +1848,8 @@ class ODEExporter:
 
             outdir: see sbml_import.setPaths() @type str
 
-            verbose: more verbose output if True @type bool
+            verbose: verbosity level for logging, True/False default to
+            logging.Error/logging.DEBUG
 
             assume_pow_positivity: if set to true, a special pow function is
             used to avoid problems with state variables that may become
@@ -1856,6 +1863,7 @@ class ODEExporter:
         Raises:
 
         """
+        logger.setLevel(verbose)
 
         self.outdir = outdir
         self.verbose = verbose
@@ -1878,6 +1886,7 @@ class ODEExporter:
 
         self.allow_reinit_fixpar_initcond = allow_reinit_fixpar_initcond
 
+    @log_execution_time('generating cpp code', logger)
     def generateModelCode(self):
         """Generates the native C++ code for the loaded model and a Matlab
         script that can be run to compile a mex file from the C++ code
@@ -1893,6 +1902,7 @@ class ODEExporter:
         self._generateCCode()
         self._generateMCode()
 
+    @log_execution_time('compiling cpp code', logger)
     def compileModel(self):
         """Compiles the generated code it into a simulatable module
 
@@ -1903,7 +1913,8 @@ class ODEExporter:
         Raises:
 
         """
-        self._compileCCode(compiler=self.compiler, verbose=self.verbose)
+        self._compileCCode(compiler=self.compiler,
+                           verbose=self.verbose)
 
     def _prepareModelFolder(self):
         """Remove all files from the model folder.
@@ -1933,7 +1944,8 @@ class ODEExporter:
         for function in self.functions.keys():
             if 'dont_generate_body' not in \
                     self.functions[function].get('flags', []):
-                self._writeFunctionFile(function)
+                dec = log_execution_time(f' writing {function}.cpp', logger)
+                dec(self._writeFunctionFile(function))
             if function in sparse_functions:
                 self._write_function_index(function, 'colptrs')
                 self._write_function_index(function, 'rowvals')

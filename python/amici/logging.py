@@ -5,7 +5,8 @@ import socket
 import amici
 import os
 import warnings
-import pysb
+import time
+import functools
 
 SECONDS_IN_HOUR = 3600
 LOG_LEVEL_ENV_VAR = 'AMICI_LOG'
@@ -133,3 +134,18 @@ def get_logger(logger_name=BASE_LOGGER_NAME, log_level=None, **kwargs):
             logger.setLevel(log_level)
 
     return logger
+
+
+def log_execution_time(description, logger):
+    def decorator_timer(func):
+        @functools.wraps(func)
+        def wrapper_timer(*args, **kwargs):
+            logger.info(f'Started {description}')
+            tstart = time.process_time()
+            rval = func(*args, **kwargs)
+            tend = time.process_time()
+            logger.info(f'Finished {description} after'
+                         f'({tend - tstart}s')
+            return rval
+        return wrapper_timer
+    return decorator_timer
