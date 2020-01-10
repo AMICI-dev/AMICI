@@ -37,9 +37,9 @@ matrix:
         # cpputest coverage cpp
         - lcov --compat-libtool --no-external --directory ${BASE_DIR}/build/CMakeFiles/amici.dir/src --base-directory ${BASE_DIR} --capture --output-file coverage_cpp.info
         # py coverage cpp
-        - ls ${BASE_DIR}/python/sdist
-        - ls ${BASE_DIR}/python/sdist/temp.linux-x86_64-3.8/amici/src
-        - lcov --compat-libtool --no-external --directory ${BASE_DIR}/python/sdist/temp.linux-x86_64-3.8/amici/src --base-directory ${BASE_DIR} --capture --output-file coverage_py.info
+        - ls ${BASE_DIR}/python/sdist/build
+        - ls ${BASE_DIR}/python/sdist/build/temp.linux-x86_64-3.8/amici/src
+        - lcov --compat-libtool --no-external --directory ${BASE_DIR}/python/sdist/build/temp.linux-x86_64-3.8/amici/src --base-directory ${BASE_DIR} --capture --output-file coverage_py.info
         - lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         # py coverage py
