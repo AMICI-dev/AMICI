@@ -27,17 +27,18 @@ matrix:
             - libc6-dbg
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
+        - CI_BUILD=TRUE
         - CI_CPPUTEST=TRUE
-        - CI_VALGRIND=TRUE
         - CI_PYTHON=TRUE
         - CI_ARCHIVE=TRUE
+        - CI_NOTEBOOK=TRUE
       before_install:
         - ./scripts/buildValgrind.sh
       after_script:
         # cpputest coverage cpp
         - lcov --compat-libtool --no-external --directory ${BASE_DIR}/build/CMakeFiles/amici.dir/src --base-directory ${BASE_DIR} --capture --output-file coverage_cpp.info
         # py coverage cpp
-        - lcov --compat-libtool --no-external --directory ${BASE_DIR}/python/sdist/build/temp.linux-x86_64-3.8/amici/src --base-directory ${BASE_DIR} --capture --output-file coverage_py.info
+        - lcov --compat-libtool --no-external --directory ${BASE_DIR}/python/sdist/build/temp.linux-x86_64-${TRAVIS_PYTHON_VERSION}/amici/src --base-directory ${BASE_DIR} --capture --output-file coverage_py.info
         - lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
         # py coverage py
@@ -66,18 +67,22 @@ matrix:
             - g++-5
             - libc6-dbg
       env:
+        - CI_BUILD=TRUE
         - CI_PYTHON=TRUE
+        - CI_NOTEBOOK=TRUE
 
     - os: osx
       osx_image: xcode11
       language: minimal
       compiler: clang
       env:
+        - CI_BUILD=TRUE
         - CI_CPPUTEST=TRUE
         - CI_CMAKE=TRUE
         - CI_ARCHIVE=TRUE
         - CI_CPPCHECK=TRUE
         - CI_PYTHON=TRUE
+        - CI_NOTEBOOK=TRUE
       addons:
         homebrew:
           packages:
@@ -130,15 +135,15 @@ install:
     - export BASE_DIR=`pwd`
     # Build swig4.0 (not yet available with apt) to include pydoc in source distribution for pypi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/downloadAndBuildSwig.sh && export PATH=${BASE_DIR}/ThirdParty/swig-4.0.1/install/bin:${PATH}; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_DOC" != "TRUE" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
-    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_DOC" != "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
     - if [[ "$CI_DOC" == "TRUE" ]]; then export PATH="/usr/local/opt/bison/bin:$PATH"; LDFLAGS="-L/usr/local/opt/bison/lib" scripts/downloadAndBuildDoxygen.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSuiteSparse.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildSundials.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildCpputest.sh; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildSuiteSparse.sh; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildSundials.sh; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildCpputest.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/buildBNGL.sh; fi
-    - if [[ "$CI_DOC" != "TRUE" ]]; then ./scripts/buildAmici.sh; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildAmici.sh; fi
     - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
 
@@ -146,14 +151,14 @@ script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-    - if [[ "$CI_DOC" != "TRUE" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
-    - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$CI_VALGRIND" == "TRUE" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
-    - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$CI_VALGRIND" != "TRUE" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$CI_CPPCHECK" == "TRUE" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
+    - if [[ "$CI_NOTEBOOK" == "TRUE" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" == "TRUE" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" != "TRUE" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
     # needs to be run after python tests
     - if [[ "$CI_CMAKE" == "TRUE" ]]; then $FOLD cmake ./tests/testCMakeCompilation.sh; fi
+    - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
+    - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
 
 after_failure:
