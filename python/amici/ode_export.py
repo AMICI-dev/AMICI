@@ -1916,7 +1916,7 @@ class ODEExporter:
 
         """
         self._compileCCode(compiler=self.compiler,
-                           verbose=self.verbose)
+                           verbose=self.verbose <= logging.DEBUG)
 
     def _prepareModelFolder(self):
         """Remove all files from the model folder.
@@ -1946,8 +1946,8 @@ class ODEExporter:
         for function in self.functions.keys():
             if 'dont_generate_body' not in \
                     self.functions[function].get('flags', []):
-                dec = log_execution_time(f' writing {function}.cpp', logger)
-                dec(self._writeFunctionFile(function))
+                dec = log_execution_time(f'writing {function}.cpp', logger)
+                dec(self._writeFunctionFile)(function)
             if function in sparse_functions:
                 self._write_function_index(function, 'colptrs')
                 self._write_function_index(function, 'rowvals')

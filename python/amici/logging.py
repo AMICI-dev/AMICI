@@ -138,12 +138,11 @@ def log_execution_time(description, logger):
     def decorator_timer(func):
         @functools.wraps(func)
         def wrapper_timer(*args, **kwargs):
-            logger.info(f'Started {description}')
-            tstart = time.process_time()
+            tstart = time.perf_counter()
             rval = func(*args, **kwargs)
-            tend = time.process_time()
-            logger.info(f'Finished {description} after'
-                         f'({tend - tstart}s')
+            tend = time.perf_counter()
+            logger.info(f'Finished {description} ({(tend - tstart):.2E}s '
+                        f'elapsed)')
             return rval
         return wrapper_timer
     return decorator_timer
