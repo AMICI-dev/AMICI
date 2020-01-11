@@ -141,8 +141,9 @@ def log_execution_time(description, logger):
             tstart = time.perf_counter()
             rval = func(*args, **kwargs)
             tend = time.perf_counter()
-            logger.info(f'Finished {description} ({(tend - tstart):.2E}s '
-                        f'elapsed)')
+            spacers = ' ' * max(55 - len(description) - len(logger.name), 0)
+            logger.info(f'Finished {description}{spacers}'
+                        f'({(tend - tstart):.2E}s)')
             return rval
         return wrapper_timer
     return decorator_timer
