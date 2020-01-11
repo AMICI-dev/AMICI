@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import logging
 import platform
 import socket
@@ -8,7 +7,6 @@ import warnings
 import time
 import functools
 
-SECONDS_IN_HOUR = 3600
 LOG_LEVEL_ENV_VAR = 'AMICI_LOG'
 BASE_LOGGER_NAME = 'amici'
 NAMED_LOG_LEVELS = {'NOTSET': logging.NOTSET,
