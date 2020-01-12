@@ -88,6 +88,10 @@ class my_build_clib(build_clib):
 
         build_clib.build_libraries(self, libraries)
 
+        # print('In custom_commands.my_build_clib')
+        # print(distutils.ccompiler.CCompiler.compiler_type)
+        # print(distutils.ccompiler.compiler_class)
+        # print(distutils.ccompiler.compiler_class.get("compiler_type"))
 
 class my_develop(develop):
     """Custom develop to build clibs"""
