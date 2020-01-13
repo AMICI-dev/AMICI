@@ -139,11 +139,11 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command Write-Output $BASE_DIR; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command Get-ChildItem ./scripts; fi
     # end of temporary test code
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell "-Command $VerbosePreference='Continue'"; fi # set verbose mode
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell $VerbosePreference; fi # display it
+    # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell "-Command $VerbosePreference='Continue'"; fi # set verbose mode
+    # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell $VerbosePreference; fi # display it
     # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell ./scripts/installOpenBLAS.ps1; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell.exe -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell "-Command $VerbosePreference='SilentlyContinue'"; fi
+    # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell "-Command $VerbosePreference='SilentlyContinue'"; fi
     # check results of openBLAS installation
     # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell "-Command if (Test-Path C:\BLAS) {Get-ChildItem C:\BLAS -Recurse}"; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command New-Item -Path Env:BLAS_TESTW -Value TestWindows -Force;export BLAS_TESTW; fi
