@@ -702,8 +702,8 @@ class ODEModel:
         computed for an equation, key defines the name and values should be
         arguments for ODEModel.multiplication() @type dict
 
-        _lock_total_derivative: set this to true when computing a total
-        derivative from a partial derivative call to enforce a partial
+        _lock_total_derivative: add chainvariables to this set when computing
+        tota derivative from a partial derivative call to enforce a partial
         derivative in the next recursion. prevents infinite recursion
 
         _simplify: If not None, this function will be used to simplify symbolic
@@ -806,7 +806,7 @@ class ODEModel:
             },
         }
 
-        self._lock_total_derivative = False
+        self._lock_total_derivative = set()
         self._simplify = simplify
 
     def import_from_sbml_importer(self, si):
@@ -1322,9 +1322,11 @@ class ODEModel:
         elif name in self._total_derivative_prototypes:
             args = self._total_derivative_prototypes[name]
             args['name'] = name
-            self._lock_total_derivative = True
+            for cv in args['chainvars']:
+                self._lock_total_derivative.add(cv)
             self._total_derivative(**args)
-            self._lock_total_derivative = False
+            for cv in args['chainvars']:
+                self._lock_total_derivative.remove(cv)
 
         elif name in self._multiplication_prototypes:
             args = self._multiplication_prototypes[name]
@@ -1446,7 +1448,7 @@ class ODEModel:
         if name in ['Jy', 'dydx']:
             # do not transpose if we compute the partial derivative as part of
             # a total derivative
-            if not self._lock_total_derivative:
+            if not len(self._lock_total_derivative):
                 self._eqs[name] = self._eqs[name].transpose()
 
         if self._simplify:
@@ -1494,7 +1496,7 @@ class ODEModel:
         }
         for cv in ['w', 'tcl']:
             if var_in_function_signature(eq, cv) \
-                    and not self._lock_total_derivative \
+                    and cv not in self._lock_total_derivative \
                     and var is not cv \
                     and min(self.sym(cv).shape) \
                     and (
@@ -1504,9 +1506,11 @@ class ODEModel:
                 chainvars.append(cv)
 
         if len(chainvars):
-            self._lock_total_derivative = True
+            for cv in chainvars:
+                self._lock_total_derivative.add(cv)
             self._total_derivative(name, eq, chainvars, var)
-            self._lock_total_derivative = False
+            for cv in chainvars:
+                self._lock_total_derivative.remove(cv)
             return
 
         # this is the basic requirement check
