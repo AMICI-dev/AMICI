@@ -1165,7 +1165,7 @@ class ODEModel:
                 for comp in getattr(self, component)
             ])
             self._strippedsyms[name] = sp.Matrix([
-                sp.Symbol(comp.get_name(), real=True)
+                sp.Symbol(comp.get_name())
                 for comp in getattr(self, component)
             ])
             if name == 'y':
