@@ -9,6 +9,7 @@ import functools
 
 LOG_LEVEL_ENV_VAR = 'AMICI_LOG'
 BASE_LOGGER_NAME = 'amici'
+# Supported values for LOG_LEVEL_ENV_VAR
 NAMED_LOG_LEVELS = {'NOTSET': logging.NOTSET,
                     'DEBUG': logging.DEBUG,
                     'INFO': logging.INFO,
