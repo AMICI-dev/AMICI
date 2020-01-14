@@ -34,7 +34,7 @@ def _setup_logger(level=logging.WARNING, console_output=True,
         capture_warnings: Capture warnings from Python's warnings module
             if True (default)
     Returns:
-        A logging.Logger object for PySB logging. Note that other PySB modules
+        A logging.Logger object for AMICI logging. Note that other AMICI modules
         should use a logger specific to their namespace instead by calling
         :func:`get_logger`.
 
