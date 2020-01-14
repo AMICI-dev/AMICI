@@ -8,6 +8,7 @@ import platform
 import importlib
 import copy
 import numpy as np
+import logging
 from pysb.simulator import ScipyOdeSimulator
 
 import pysb.examples
@@ -207,7 +208,8 @@ class TestAmiciPYSBModel(unittest.TestCase):
                         Exception,
                         amici.pysb2amici,
                         *[pysb_model, outdir],
-                        **{'verbose': False, 'compute_conservation_laws': True}
+                        **{'verbose': logging.INFO,
+                           'compute_conservation_laws': True}
                     )
                     compute_conservation_laws = False
                 else:
@@ -216,7 +218,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                 amici.pysb2amici(
                     pysb_model,
                     outdir,
-                    verbose=False,
+                    verbose=logging.INFO,
                     compute_conservation_laws=compute_conservation_laws
                 )
                 sys.path.insert(0, outdir)
