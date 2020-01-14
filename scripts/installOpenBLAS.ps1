@@ -1,4 +1,5 @@
 Write-Host 'script installOpenBLAS.ps1 started'
+$VerbosePreference = "Continue" # display verbose messages
 New-Item -Path 'C:\BLAS' -ItemType Directory -Force # create directory
 # Set-Location 'C:\BLAS'
 # Copy-Item -Path "$BASE_DIR\ThirdParty\BLAS\OpenBLAS-0.3.6-x64.zip" -Destination "C:\BLAS" -Force
@@ -12,4 +13,5 @@ New-Item -Path Env:BLAS_LIBS -Value "/LIBPATH:C:\BLAS\OpenBLAS-0.3.6-x64\lib lib
 New-Item -Path Env:BLAS_CFLAGS -Value "/IC:\BLAS\OpenBLAS-0.3.6-x64\include" -Force # create environment variable
 Get-ChildItem 'C:\BLAS\OpenBLAS-0.3.6-x64' -Recurse # check for files
 Get-Item -Path Env:BLAS_* # check environment variables
+$VerbosePreference = "SilentlyContinue" # don't display verbose messages
 Write-Host 'script installOpenBLAS.ps1 completed'
