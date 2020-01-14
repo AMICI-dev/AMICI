@@ -93,6 +93,7 @@ def get_logger(logger_name=BASE_LOGGER_NAME, log_level=None, **kwargs):
     If the AMICI base logger has already been set up, this method will
     return it or any of its descendant loggers without overriding the
     settings - i.e. any values supplied as kwargs will be ignored.
+
     Parameters:
 
         logger_name : Get a logger for a specific namespace, typically __name__
