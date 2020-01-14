@@ -3,6 +3,9 @@ from .ode_export import (
     Expression, LogLikelihood
 )
 
+import logging
+from .logging import get_logger, log_execution_time
+
 import sympy as sp
 import numpy as np
 import itertools
@@ -14,6 +17,10 @@ try:
     import pysb.pattern
 except ImportError:
     pysb_available = False
+
+
+## python log manager
+logger = get_logger(__name__, logging.ERROR)
 
 
 def pysb2amici(model,
@@ -43,7 +50,8 @@ def pysb2amici(model,
         constantParameters: list of pysb.Parameter names that should be
         interpreted as constantParameters
 
-        verbose: more verbose output if True @type bool
+        verbose: verbosity level for logging, True/False default to
+        logging.Error/logging.DEBUG
 
         assume_pow_positivity: if set to true, a special pow function is
         used to avoid problems with state variables that may become
@@ -70,6 +78,8 @@ def pysb2amici(model,
 
     if sigmas is None:
         sigmas = {}
+
+    logger.setLevel(verbose)
 
     ode_model = ODEModel_from_pysb_importer(
         model, constants=constant_parameters, observables=observables,
@@ -145,6 +155,7 @@ def ODEModel_from_pysb_importer(model, constants=None,
     return ODE
 
 
+@log_execution_time('processing PySB species', logger)
 def _process_pysb_species(model, ODE):
     """Converts pysb Species into States and adds them to the ODEModel
     instance
@@ -181,8 +192,10 @@ def _process_pysb_species(model, ODE):
                 xdot[ix]
             )
         )
+    logger.debug(f'Finished Processing PySB species ')
 
 
+@log_execution_time('processing PySB parameters', logger)
 def _process_pysb_parameters(model, ODE, constants):
     """Converts pysb parameters into Parameters or Constants and adds them to
     the ODEModel instance
@@ -212,6 +225,7 @@ def _process_pysb_parameters(model, ODE, constants):
         )
 
 
+@log_execution_time('processing PySB observables', logger)
 def _process_pysb_expressions(model, ODE, observables, sigmas):
     """Converts pysb expressions into Observables (with corresponding
     standard deviation SigmaY and LogLikelihood) or Expressions and adds them
@@ -317,6 +331,7 @@ def _get_sigma_name_and_value(model, name, sigmas):
     return sigma_name, sigma_value
 
 
+@log_execution_time('processing PySB observables', logger)
 def _process_pysb_observables(model, ODE):
     """Converts pysb observables into Expressions and adds them to the ODEModel
     instance
@@ -346,6 +361,7 @@ def _process_pysb_observables(model, ODE):
             )
 
 
+@log_execution_time('computing PySB conservation laws', logger)
 def _process_pysb_conservation_laws(model, ODE):
     """Removes species according to conservation laws to ensure that the
     jacobian has full rank
@@ -937,6 +953,7 @@ def _flatten_conservation_laws(conservation_laws):
                     cl['state_expr'] = cl['state_expr'].subs(valid_subs)
                     conservation_law_subs = \
                         _get_conservation_law_subs(conservation_laws)
+
 
 def _select_valid_cls(subs, state):
     """ Subselect substitutions such that we do not end up with conservation
