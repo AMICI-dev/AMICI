@@ -99,7 +99,7 @@ setup(
     packages=find_packages(),
     install_requires=['amici==TPL_AMICI_VERSION'],
     extras_require={'wurlitzer': ['wurlitzer']},
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     package_data={
     },
     zip_safe = False,
