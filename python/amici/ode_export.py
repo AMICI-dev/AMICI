@@ -806,7 +806,7 @@ class ODEModel:
             },
         }
 
-        self._lock_total_derivative = set()
+        self._lock_total_derivative = list()
         self._simplify = simplify
 
     def import_from_sbml_importer(self, si):
@@ -1322,8 +1322,7 @@ class ODEModel:
         elif name in self._total_derivative_prototypes:
             args = self._total_derivative_prototypes[name]
             args['name'] = name
-            for cv in args['chainvars']:
-                self._lock_total_derivative.add(cv)
+            self._lock_total_derivative += args['chainvars']
             self._total_derivative(**args)
             for cv in args['chainvars']:
                 self._lock_total_derivative.remove(cv)
@@ -1506,8 +1505,7 @@ class ODEModel:
                 chainvars.append(cv)
 
         if len(chainvars):
-            for cv in chainvars:
-                self._lock_total_derivative.add(cv)
+            self._lock_total_derivative += chainvars
             self._total_derivative(name, eq, chainvars, var)
             for cv in chainvars:
                 self._lock_total_derivative.remove(cv)
