@@ -4,6 +4,7 @@
 Generate coverage reports for the testModels and testSBML scripts
 exported format is cobertura xml
 """
+
 import coverage
 # only consider amici module and ignore the swig generated amici.py
 cov = coverage.Coverage(

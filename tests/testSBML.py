@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Various test cases for the AMICI Python interface"""
+
 import sys
 import amici
 import unittest
@@ -11,11 +13,9 @@ from testModels import check_derivatives
 
 class TestAmiciSBMLModel(unittest.TestCase):
     """
-    TestCase class for testing SBML import and simulation from AMICI python interface
+    TestCase class for testing SBML import and simulation from AMICI python
+    interface
     """
-
-    expectedResultsFile = os.path.join(os.path.dirname(__file__),
-                                       'cpputest', 'expectedResults.h5')
 
     def setUp(self):
         self.default_path = copy.copy(sys.path)

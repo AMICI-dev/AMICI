@@ -1253,6 +1253,8 @@ class Solver {
      *
      * @param which identifier of the backwards problem
      * @param ami_mem pointer to the forward solver memory instance
+     * @return A (void *) pointer to the CVODES memory allocated for the
+     * backward problem.
      */
     virtual void *getAdjBmem(void *ami_mem, int which) const = 0;
 

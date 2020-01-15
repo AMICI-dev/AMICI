@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - feature_sparse_quadratures
+      - fix_896_perftestfiles
 
   pull_request:
     branches:
@@ -53,10 +53,11 @@ jobs:
         cd CS_Signalling_ERBB_RAS_AKT \
           && check_time.sh \
           petab_import amici_import_petab.py -v \
-            -s 'PEtab/CS_Signalling_ERBB_RAS_AKT_petab.xml' \
-            -c 'PEtab/conditions_petab.tsv' \
-            -m 'PEtab/measurements_petab.tsv' \
-            -p 'PEtab/parameters_petab.tsv' --no-compile
+            -n 'CS_Signalling_ERBB_RAS_AKT_petab' \
+            -s 'FroehlichKes2018/PEtab/CS_Signalling_ERBB_RAS_AKT_petab.xml' \
+            -c 'FroehlichKes2018/PEtab/conditions_petab.tsv' \
+            -m 'FroehlichKes2018/PEtab/measurements_petab.tsv' \
+            -p 'FroehlichKes2018/PEtab/parameters_petab.tsv' --no-compile
 
     # install model package
     - name: Install test model

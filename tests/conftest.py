@@ -10,7 +10,7 @@ def parse_selection(selection_str: str) -> List[int]:
     Parse comma-separated list of integer ranges, return selected indices as
     integer list
 
-    Valid input e.g.: 1 1,3 -3,4,6-7
+    Valid input e.g.: "1", "1,3", "-3,4,6-7"
     """
     indices = []
     for group in selection_str.split(','):
