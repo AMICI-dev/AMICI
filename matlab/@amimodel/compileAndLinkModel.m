@@ -63,7 +63,10 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     dependencyPath = fullfile(amiciRootPath, 'ThirdParty');
     gslPath = fullfile(dependencyPath, 'gsl');
     [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, objectFolder, objectFileSuffix, COPT, DEBUG);
-    includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"', ' -I"', gslPath, '"');
+    includesstr = strcat(includesstr, ' -I"', gslPath, '"');
+    if (~isempty(modelSourceFolder))
+        includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
+    end
 
     %% Recompile AMICI base files if necessary
     [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT);
