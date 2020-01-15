@@ -63,7 +63,10 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     dependencyPath = fullfile(amiciRootPath, 'ThirdParty');
     gslPath = fullfile(dependencyPath, 'gsl');
     [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, objectFolder, objectFileSuffix, COPT, DEBUG);
-    includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"', ' -I"', gslPath, '"');
+    includesstr = strcat(includesstr, ' -I"', gslPath, '"');
+    if (~isempty(modelSourceFolder))
+        includesstr = strcat(includesstr,' -I"', modelSourceFolder, '"');
+    end
 
     %% Recompile AMICI base files if necessary
     [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT);
@@ -121,11 +124,11 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     if(numel(funsForRecompile))
         fprintf('ffuns | ');
 
-        sources = cellfun(@(x) fullfile(modelSourceFolder,[modelname '_' x '.cpp']),funsForRecompile,'UniformOutput',false);
+        sources = cellfun(@(x) ['"' fullfile(modelSourceFolder,[modelname '_' x '.cpp']) '"'],funsForRecompile,'UniformOutput',false);
         sources = strjoin(sources,' ');
 
         eval(['mex ' DEBUG COPT ...
-            ' -c -outdir ' modelObjectFolder ' ' ...
+            ' -c -outdir "' modelObjectFolder '" ' ...
             sources ' ' ...
             includesstr ]);
         cellfun(@(x) updateFileHashSource(modelSourceFolder, modelObjectFolder, [modelname '_' x]),funsForRecompile,'UniformOutput',false);
@@ -143,8 +146,8 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     % compile the wrapfunctions object
     fprintf('wrapfunctions | ');
     eval(['mex ' DEBUG COPT ...
-        ' -c -outdir ' modelObjectFolder ' ' ...
-        fullfile(modelSourceFolder,'wrapfunctions.cpp') ' ' ...
+        ' -c -outdir "' modelObjectFolder '" "' ...
+        fullfile(modelSourceFolder,'wrapfunctions.cpp') '" ' ...
         includesstr]);
     objectsstr = [objectsstr, ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '"'];
 
@@ -173,7 +176,7 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
 
     mexFilename = fullfile(modelSourceFolder,['ami_' modelname]);
     eval(['mex ' DEBUG ' ' COPT ' ' CLIBS ...
-        ' -output ' mexFilename ' ' objectsstr])
+        ' -output "' mexFilename '" ' objectsstr])
 end
 
 function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, objectFileSuffix, includesstr, DEBUG, COPT)
@@ -203,7 +206,7 @@ function [objectStrAmici] = compileAmiciBase(amiciRootPath, objectFolder, object
             baseFilename = fullfile(amiciSourcePath, sourcesForRecompile{j});
             sourceStr  = [sourceStr, ' "', baseFilename, '.cpp"'];
         end
-        eval(['mex ' DEBUG COPT ' -c -outdir ' objectFolder ...
+        eval(['mex ' DEBUG COPT ' -c -outdir "' objectFolder '" ' ...
             includesstr ' ' sourceStr]);
         cellfun(@(x) updateFileHashSource(amiciSourcePath, objectFolder, x), sourcesForRecompile);
         updateHeaderFileHashes(amiciIncludePath, objectFolder);
