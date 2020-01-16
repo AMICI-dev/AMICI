@@ -21,7 +21,7 @@ except ImportError:
 
 from typing import Callable, Optional
 from string import Template
-import sympy.printing.ccode as ccode
+import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 
@@ -2564,7 +2564,7 @@ class ODEExporter:
 
         """
         try:
-            ret = ccode(math)
+            ret = cxxcode(math, standard='c++11')
             ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
             return ret
         except:
