@@ -3,6 +3,9 @@ $VerbosePreference = "Continue" # display verbose messages
 New-Item -Path 'C:\BLAS' -ItemType Directory -Force # create directory
 # Set-Location 'C:\BLAS'
 # Copy-Item -Path "$BASE_DIR\ThirdParty\BLAS\OpenBLAS-0.3.6-x64.zip" -Destination "C:\BLAS" -Force
+# Enforce stronger cryptography
+# [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 $uri = 'https://sourceforge.net/projects/openblas/files/v0.3.6/OpenBLAS-0.3.6-x64.zip/download'
 $output = 'C:\BLAS\OpenBLAS-0.3.6-x64.zip'
 # Invoke-WebRequest $uri -OutFile $output
