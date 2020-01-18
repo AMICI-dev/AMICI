@@ -182,6 +182,14 @@ void Model_DAE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
                        __func__);
 }
 
+void Model_DAE::fJB(const realtype t, realtype cj, const AmiVector &x,
+                     const AmiVector &dx, const AmiVector &xB,
+                     const AmiVector &dxB, const AmiVector & /*xBdot*/,
+                     SUNMatrix JB) {
+    fJB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(), dx.getNVector(), JB);
+}
+
+
 void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                     N_Vector xB, N_Vector dxB, SUNMatrix JB) {
     auto x_pos = computeX_pos(x);
@@ -190,6 +198,13 @@ void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
     fJB(SM_DATA_D(JB), t, N_VGetArrayPointer(x_pos), unscaledParameters.data(),
         fixedParameters.data(), h.data(), cj, N_VGetArrayPointer(xB),
         N_VGetArrayPointer(dx), N_VGetArrayPointer(dxB), w.data(), dwdx.data());
+}
+
+void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                          const AmiVector &dx, const AmiVector &xB,
+                          const AmiVector &dxB, const AmiVector & /*xBdot*/,
+                          SUNMatrix JB) {
+    fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(), dxB.getNVector(), JB);
 }
 
 void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,

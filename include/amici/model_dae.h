@@ -92,6 +92,10 @@ class Model_DAE : public Model {
     void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot,
             SUNMatrix J);
 
+    void fJB(const realtype t, realtype cj, const AmiVector &x,
+             const AmiVector &dx, const AmiVector &xB, const AmiVector &dxB,
+             const AmiVector &xBdot, SUNMatrix JB) override;
+
     /**
      * @brief Jacobian of xBdot with respect to adjoint state xB
      * @param t timepoint
@@ -102,7 +106,6 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param JB Matrix to which the Jacobian will be written
      **/
-
     void fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB,
              N_Vector dxB, SUNMatrix JB);
 
@@ -120,6 +123,11 @@ class Model_DAE : public Model {
      */
     void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
                   SUNMatrix J);
+
+    void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                   const AmiVector &dx, const AmiVector &xB,
+                   const AmiVector &dxB, const AmiVector &xBdot,
+                   SUNMatrix JB) override;
 
     /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
      * @param t timepoint

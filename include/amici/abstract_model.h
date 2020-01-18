@@ -83,6 +83,22 @@ class AbstractModel {
                     SUNMatrix J) = 0;
 
     /**
+     * @brief Dense Jacobian function
+     * @param t time
+     * @param cj scaling factor (inverse of timestep, DAE only)
+     * @param x state
+     * @param dx time derivative of state (DAE only)
+     * @param xB Vector with the adjoint states
+     * @param dxB Vector with the adjoint derivative states
+     * @param xBdot Vector with the adjoint right hand side (unused)
+     * @param JB dense matrix to which values of the jacobian will be written
+     */
+    virtual void fJB(const realtype t, realtype cj, const AmiVector &x,
+                     const AmiVector &dx, const AmiVector &xB,
+                     const AmiVector &dxB, const AmiVector &xBdot,
+                     SUNMatrix JB) = 0;
+
+    /**
      * @brief Sparse Jacobian function
      * @param t time
      * @param cj scaling factor (inverse of timestep, DAE only)
@@ -94,6 +110,22 @@ class AbstractModel {
     virtual void fJSparse(const realtype t, realtype cj,
                           const AmiVector &x, const AmiVector &dx,
                           const AmiVector &xdot, SUNMatrix J) = 0;
+
+    /**
+     * @brief Dense Jacobian function
+     * @param t time
+     * @param cj scaling factor (inverse of timestep, DAE only)
+     * @param x state
+     * @param dx time derivative of state (DAE only)
+     * @param xB Vector with the adjoint states
+     * @param dxB Vector with the adjoint derivative states
+     * @param xBdot Vector with the adjoint right hand side (unused)
+     * @param JB dense matrix to which values of the jacobian will be written
+     */
+    virtual void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                           const AmiVector &dx, const AmiVector &xB,
+                           const AmiVector &dxB, const AmiVector &xBdot,
+                           SUNMatrix JB) = 0;
 
     /**
      * @brief Diagonal Jacobian function
@@ -669,13 +701,13 @@ class AbstractModel {
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
                        const realtype *stcl);
-    
+
     /**
      * @brief Model specific implementation for dwdp, column pointers
      * @param indexptrs column pointers
      **/
     virtual void fdwdp_colptrs(sunindextype *indexptrs);
-    
+
     /**
      * @brief Model specific implementation for dwdp, row values
      * @param indexvals row values
