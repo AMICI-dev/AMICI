@@ -19,6 +19,7 @@ namespace amici {
 NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model,
                            ReturnData *rdata)
     : model(model), rdata(rdata), xdot(model->nx_solver), dx(model->nx_solver)
+    , xB(model->nx_solver), dxB(model->nx_solver)
     {
     this->t = t;
     this->x = x;
@@ -133,6 +134,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
         }
     }
 }
+
 /* ------------------------------------------------------------------------- */
 /* - Dense linear solver --------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
@@ -157,6 +159,16 @@ void NewtonSolverDense::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_Dense");
 }
+
+/* ------------------------------------------------------------------------- */
+
+void NewtonSolverDense::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
+    model->fJB(*t, 0.0, *x, dx, xB, dxB, xdot, Jtmp.get());
+    int status = SUNLinSolSetup_Dense(linsol, Jtmp.get());
+    if(status != AMICI_SUCCESS)
+        throw NewtonFailure(status, "SUNLinSolSetup_Dense");
+}
+
 
 /* ------------------------------------------------------------------------- */
 
@@ -198,6 +210,16 @@ NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model,
 void NewtonSolverSparse::prepareLinearSystem(int  /*ntry*/, int  /*nnewt*/) {
     /* Get sparse Jacobian */
     model->fJSparse(*t, 0.0, *x, dx, xdot, Jtmp.get());
+    int status = SUNLinSolSetup_KLU(linsol, Jtmp.get());
+    if(status != AMICI_SUCCESS)
+        throw NewtonFailure(status, "SUNLinSolSetup_KLU");
+}
+
+/* ------------------------------------------------------------------------- */
+
+void NewtonSolverSparse::prepareLinearSystemB(int  /*ntry*/, int  /*nnewt*/) {
+    /* Get sparse Jacobian */
+    model->fJSparseB(*t, 0.0, *x, dx, xB, dxB, xdot, Jtmp.get());
     int status = SUNLinSolSetup_KLU(linsol, Jtmp.get());
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolSetup_KLU");
@@ -249,11 +271,19 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
 
 /* ------------------------------------------------------------------------- */
 
+void NewtonSolverIterative::prepareLinearSystemB(int ntry, int nnewt) {
+    throw AmiException("Linear solver SPBCG does not support computation of "
+                       "the linear system for the JB Jacobian.");
+}
+
+/* ------------------------------------------------------------------------- */
+
 void NewtonSolverIterative::solveLinearSystem(AmiVector &rhs) {
     linsolveSPBCG(newton_try, i_newton, rhs);
     rhs.minus();
 }
 
+/* ------------------------------------------------------------------------- */
 
 void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
                                           AmiVector &ns_delta) {
