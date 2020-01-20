@@ -254,7 +254,7 @@ NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x,
     ns_h(model->nx_solver), ns_t(model->nx_solver), ns_s(model->nx_solver),
     ns_r(model->nx_solver), ns_rt(model->nx_solver), ns_v(model->nx_solver),
     ns_Jv(model->nx_solver), ns_tmp(model->nx_solver),
-    ns_Jdiag(model->nx_solver)
+    ns_Jdiag(model->nx_solver), ns_J(model->nx_solver, model->nx_solver)
     {
 }
 
@@ -267,6 +267,17 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
         throw AmiException("Linear solver SPBCG does not support sensitivity "
                            "computation for steady state problems.");
     }
+
+    // Get the Jacobian and its diagonal for preconditioning
+    model->fJ(*t, 0.0, *x, dx, xdot, ns_J.get());
+    model->fJDiag(*t, ns_Jdiag, 0.0, *x, dx);
+
+    // Ensure positivity of entries in ns_Jdiag
+    ns_p.set(1.0);
+    N_VAbs(ns_Jdiag.getNVector(), ns_Jdiag.getNVector());
+    N_VCompare(1e-15, ns_Jdiag.getNVector(), ns_tmp.getNVector());
+    N_VLinearSum(-1.0, ns_tmp.getNVector(), 1.0, ns_p.getNVector(), ns_tmp.getNVector());
+    N_VLinearSum(1.0, ns_Jdiag.getNVector(), 1.0, ns_tmp.getNVector(), ns_Jdiag.getNVector());
 }
 
 /* ------------------------------------------------------------------------- */
@@ -290,16 +301,6 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
     xdot = ns_delta;
     xdot.minus();
 
-    // Get the diagonal of the Jacobian for preconditioning
-    model->fJDiag(*t, ns_Jdiag, 0.0, *x, dx);
-
-    // Ensure positivity of entries in ns_Jdiag
-    ns_p.set(1.0);
-    N_VAbs(ns_Jdiag.getNVector(), ns_Jdiag.getNVector());
-    N_VCompare(1e-15, ns_Jdiag.getNVector(), ns_tmp.getNVector());
-    N_VLinearSum(-1.0, ns_tmp.getNVector(), 1.0, ns_p.getNVector(), ns_tmp.getNVector());
-    N_VLinearSum(1.0, ns_Jdiag.getNVector(), 1.0, ns_tmp.getNVector(), ns_Jdiag.getNVector());
-
     // Initialize for linear solve
     ns_p.reset();
     ns_v.reset();
@@ -310,7 +311,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
     double alpha = 1.0;
 
     // can be set to 0 at the moment
-    model->fJv(*t, *x, dx, xdot, ns_delta, ns_Jv, 0.0);
+    ns_J.multiply(ns_Jv.getNVector(), ns_delta.getNVector());
 
     // ns_r = xdot - ns_Jv;
     N_VLinearSum(-1.0, ns_Jv.getNVector(), 1.0, xdot.getNVector(), ns_r.getNVector());
@@ -329,7 +330,8 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
         N_VLinearSum(1.0, ns_r.getNVector(), beta, ns_p.getNVector(), ns_p.getNVector());
 
         // ns_v = J * ns_p
-        model->fJv(*t, *x, dx, xdot, ns_p, ns_v, 0.0);
+        ns_v.reset();
+        ns_J.multiply(ns_v.getNVector(), ns_p.getNVector());
         N_VDiv(ns_v.getNVector(), ns_Jdiag.getNVector(), ns_v.getNVector());
 
         // Compute factor
@@ -342,7 +344,8 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
         N_VLinearSum(1.0, ns_r.getNVector(), -alpha, ns_v.getNVector(), ns_s.getNVector());
 
         // ns_t = J * ns_s
-        model->fJv(*t, *x, dx, xdot, ns_s, ns_t, 0.0);
+        ns_t.reset();
+        ns_J.multiply(ns_t.getNVector(), ns_s.getNVector());
         N_VDiv(ns_t.getNVector(), ns_Jdiag.getNVector(), ns_t.getNVector());
 
         // Compute factor

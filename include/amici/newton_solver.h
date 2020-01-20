@@ -340,6 +340,8 @@ class NewtonSolverIterative : public NewtonSolver {
     AmiVector ns_tmp;
     /** ???  */
     AmiVector ns_Jdiag;
+    /** temporary storage of Jacobian */
+    SUNMatrixWrapper ns_J;
 };
 
 
