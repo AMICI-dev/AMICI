@@ -283,8 +283,27 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
 /* ------------------------------------------------------------------------- */
 
 void NewtonSolverIterative::prepareLinearSystemB(int ntry, int nnewt) {
-    throw AmiException("Linear solver SPBCG does not support computation of "
-                       "the linear system for the JB Jacobian.");
+    newton_try = ntry;
+    i_newton = nnewt;
+    if (nnewt == -1) {
+        throw AmiException("Linear solver SPBCG does not support sensitivity "
+                           "computation for steady state problems.");
+    }
+
+    // Get the Jacobian and its diagonal for preconditioning
+    model->fJB(*t, 0.0, *x, dx, xB, dxB, xdot, ns_J.get());
+
+    // Get the diagonal and ensure negativity of entries is ns_J. Note that diag(JB) = -diag(J).
+    model->fJDiag(*t, ns_Jdiag, 0.0, *x, dx);
+
+    ns_p.set(1.0);
+    N_VAbs(ns_Jdiag.getNVector(), ns_Jdiag.getNVector());
+    N_VCompare(1e-15, ns_Jdiag.getNVector(), ns_tmp.getNVector());
+    N_VLinearSum(-1.0, ns_tmp.getNVector(), 1.0, ns_p.getNVector(), ns_tmp.getNVector());
+    N_VLinearSum(1.0, ns_Jdiag.getNVector(), 1.0, ns_tmp.getNVector(), ns_Jdiag.getNVector());
+
+    std::transform(ns_Jdiag.data(), ns_Jdiag.data()+ns_Jdiag.getLength(),
+                   ns_Jdiag.data(), std::negate<realtype>());
 }
 
 /* ------------------------------------------------------------------------- */
