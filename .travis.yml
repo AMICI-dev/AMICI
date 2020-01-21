@@ -176,10 +176,10 @@ install:
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS; fi
     # check results of openBLAS installation
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command Get-ChildItem 'C:\\BLAS\\OpenBLAS-0.3.6-x64'; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $BLAS_LIBS $BLAS_CFLAGS $BLAS_TESTL $BLAS_TESTW; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $BLAS_LIBS $BLAS_CFLAGS; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib libopenblas.lib'; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-0.3.6-x64\\include'; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $BLAS_LIBS $BLAS_CFLAGS $BLAS_TESTL $BLAS_TESTW; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $BLAS_LIBS $BLAS_CFLAGS; fi
     # end of all code to install BLAS and test results
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t dist/amici-*.tar.gz | head -1); fi
