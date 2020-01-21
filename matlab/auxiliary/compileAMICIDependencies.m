@@ -33,13 +33,13 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
     sourcesToCompile = '';
     for j=1:length(sources_sundials)
         if(del_sundials || ~exist(fullfile(objectFolder,objects_sundials{j}), 'file'))
-            sourcesToCompile = [sourcesToCompile, ' ', fullfile(sundials_path,sources_sundials{j})];
+            sourcesToCompile = [sourcesToCompile, ' "', fullfile(sundials_path,sources_sundials{j}), '"'];
         end
     end
     sources_ssparse = getSourcesSSparse();
     for j=1:length(sources_ssparse)
         if(del_ssparse || ~exist(fullfile(objectFolder,objects_ssparse{j}), 'file'))
-            sourcesToCompile = [sourcesToCompile, ' ', fullfile(ssparse_path,sources_ssparse{j})];
+            sourcesToCompile = [sourcesToCompile, ' "', fullfile(ssparse_path,sources_ssparse{j}), '"'];
         end
     end
 
@@ -48,8 +48,8 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
 
     % compile
     if(~strcmp(sourcesToCompile, ''))
-        eval(['mex ' DEBUG ' ' COPT ' -c -outdir ' ...
-            objectFolder ...
+        eval(['mex ' DEBUG ' ' COPT ' -c -outdir "' ...
+            objectFolder '" ' ...
             includesstr ' ' sourcesToCompile ]);
     end
 

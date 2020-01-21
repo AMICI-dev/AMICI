@@ -6,9 +6,11 @@ import re
 import math
 import itertools as itt
 import warnings
+import logging
 from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel
+from .logging import get_logger, log_execution_time
 from . import has_clibs
 
 from sympy.logic.boolalg import BooleanTrue as spTrue
@@ -29,6 +31,10 @@ default_symbols = {
     'my': {},
     'llhy': {},
 }
+
+
+## python log manager
+logger = get_logger(__name__, logging.ERROR)
 
 
 class SbmlImporter:
@@ -176,7 +182,7 @@ class SbmlImporter:
                    constantParameters: List[str] = None,
                    sigmas: Dict[str, Union[str, float]] = None,
                    noise_distributions: Dict[str, str] = None,
-                   verbose: bool = False,
+                   verbose: Union[int, bool] = logging.ERROR,
                    assume_pow_positivity: bool = False,
                    compiler: str = None,
                    allow_reinit_fixpar_initcond: bool = True,
@@ -210,7 +216,8 @@ class SbmlImporter:
                 If nothing is passed
                 for some observable id, a normal model is assumed as default.
 
-            verbose: more verbose output if True
+            verbose: verbosity level for logging, True/False default to
+                logging.Error/logging.DEBUG
 
             assume_pow_positivity: if set to True, a special pow function is
                 used to avoid problems with state variables that may become
@@ -240,6 +247,8 @@ class SbmlImporter:
 
         if noise_distributions is None:
             noise_distributions = {}
+
+        logger.setLevel(verbose)
 
         self.reset_symbols()
         self.processSBML(constantParameters)
@@ -358,6 +367,7 @@ class SbmlImporter:
         self.local_symbols['time'] = sp.Symbol('time', real=True)
         self.local_symbols['avogadro'] = sp.Symbol('avogadro', real=True)
 
+    @log_execution_time('processing SBML species', logger)
     def processSpecies(self):
         """Get species information from SBML model.
 
@@ -471,6 +481,7 @@ class SbmlImporter:
              for specie in species
         ])
 
+    @log_execution_time('processing SBML parameters', logger)
     def processParameters(self, constantParameters: List[str] = None):
         """Get parameter information from SBML model.
 
@@ -546,6 +557,7 @@ class SbmlImporter:
                 }
             )
 
+    @log_execution_time('processing SBML compartments', logger)
     def processCompartments(self):
         """Get compartment information, stoichiometric matrix and fluxes from
         SBML model.
@@ -577,8 +589,7 @@ class SbmlImporter:
                     locals=self.local_symbols
                 )
 
-
-
+    @log_execution_time('processing SBML reactions', logger)
     def processReactions(self):
         """Get reactions from SBML model.
 
@@ -703,6 +714,7 @@ class SbmlImporter:
                     ' not supported!'
                 )
 
+    @log_execution_time('processing SBML rules', logger)
     def processRules(self):
         """Process Rules defined in the SBML model.
 
@@ -829,6 +841,7 @@ class SbmlImporter:
 
         self.replaceInAllExpressions(sbmlTimeSymbol, amiciTimeSymbol)
 
+    @log_execution_time('processing SBML observables', logger)
     def processObservables(self, observables: Dict[str, Dict[str, str]],
                            sigmas: Dict[str, Union[str, float]],
                            noise_distributions: Dict[str, str]):
@@ -890,7 +903,7 @@ class SbmlImporter:
                 )
                 repl = replaceLogAB(observables[observable]['formula'])
                 if repl != observables[observable]['formula']:
-                    print(
+                    warnings.warn(
                         f'Replaced "{observables[observable]["formula"]}" by '
                         f'"{repl}", assuming first argument to log() was the '
                         f'basis.'
@@ -1006,7 +1019,6 @@ class SbmlImporter:
             if symbol in self.symbols:
                 self.symbols[symbol]['value'] = \
                     self.symbols[symbol]['value'].subs(old, new)
-
 
     def cleanReservedSymbols(self):
         """Remove all reserved symbols from self.symbols
@@ -1165,10 +1177,9 @@ def checkLibSBMLErrors(sbml_doc, show_warnings=False):
             if error.getSeverity() >= sbml.LIBSBML_SEV_ERROR \
                     or (show_warnings and
                         error.getSeverity() >= sbml.LIBSBML_SEV_WARNING):
-                category = error.getCategoryAsString()
-                severity = error.getSeverityAsString()
-                error_message = error.getMessage()
-                print(f'libSBML {severity} ({category}): {error_message}')
+                logger.error(f'libSBML {error.getCategoryAsString()} '
+                             f'({error.getSeverityAsString()}):'
+                             f' {error.getMessage()}')
 
     if num_error + num_fatal:
         raise SBMLException(
