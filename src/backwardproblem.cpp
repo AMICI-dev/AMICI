@@ -6,6 +6,7 @@
 #include "amici/edata.h"
 #include "amici/rdata.h"
 #include "amici/forwardproblem.h"
+#include "amici/newton_solver.h"
 
 #include <cstring>
 
@@ -42,51 +43,60 @@ void BackwardProblem::workBackwardProblem() {
         model->nplist() == 0) {
         return;
     }
-    
+
     int it = rdata->nt - 1;
     model->initializeB(xB, dxB, xQB);
     handleDataPointB(it);
-    solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
-    
-    --it;
-    --iroot;
 
-    while (it >= 0 || iroot >= 0) {
-
-        /* check if next timepoint is a discontinuity or a data-point */
-        double tnext = getTnext(discs, iroot, it);
-
-        if (tnext < t) {
-            solver->runB(tnext);
-            solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
-            solver->getDiagnosisB(it, rdata, this->which);
-        }
-
-        /* handle discontinuity */
-        if (model->ne > 0 && rdata->nmaxevent > 0 && iroot >= 0) {
-            if (tnext == discs.at(iroot)) {
-                handleEventB(iroot);
-                --iroot;
-            }
-        }
-
-        /* handle data-point */
-        if (tnext == rdata->ts[it]) {
-            handleDataPointB(it);
-            it--;
-        }
-
-        /* reinit states */
-        solver->reInitB(which, t, xB, dxB);
-        solver->quadReInitB(which, xQB);
+    if (std::isinf(model->getTimepoint(it)))
+    {
+      computeIntegralForSteadyState();
+      xB.reset();
     }
+    else
+    {
+      solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
 
-    /* we still need to integrate from first datapoint to tstart */
-    if (t > model->t0()) {
-        /* solve for backward problems */
-        solver->runB(model->t0());
-        solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
-        solver->getDiagnosisB(0, rdata, this->which);
+      --it;
+      --iroot;
+
+      while (it >= 0 || iroot >= 0) {
+
+          /* check if next timepoint is a discontinuity or a data-point */
+          double tnext = getTnext(discs, iroot, it);
+
+          if (tnext < t) {
+              solver->runB(tnext);
+              solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
+              solver->getDiagnosisB(it, rdata, this->which);
+          }
+
+          /* handle discontinuity */
+          if (model->ne > 0 && rdata->nmaxevent > 0 && iroot >= 0) {
+              if (tnext == discs.at(iroot)) {
+                  handleEventB(iroot);
+                  --iroot;
+              }
+          }
+
+          /* handle data-point */
+          if (tnext == rdata->ts[it]) {
+              handleDataPointB(it);
+              it--;
+          }
+
+          /* reinit states */
+          solver->reInitB(which, t, xB, dxB);
+          solver->quadReInitB(which, xQB);
+      }
+
+      /* we still need to integrate from first datapoint to tstart */
+      if (t > model->t0()) {
+          /* solve for backward problems */
+          solver->runB(model->t0());
+          solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
+          solver->getDiagnosisB(0, rdata, this->which);
+      }
     }
 
     computeLikelihoodSensitivities();
@@ -145,6 +155,52 @@ realtype BackwardProblem::getTnext(std::vector<realtype> const& troot,
     return rdata->ts[it];
 }
 
+void BackwardProblem::computeIntegralForSteadyState()
+{
+    amici::AmiVector x_steadystate{rdata->x};
+    realtype T = std::numeric_limits<realtype>::infinity();
+
+    // Compute the linear system JB*v = dJydy
+    auto newtonSolver = NewtonSolver::getSolver(
+        &T, &x_steadystate, solver->getLinearSolver(), model, rdata,
+        solver->getNewtonMaxLinearSteps(), solver->getNewtonMaxSteps(),
+        solver->getAbsoluteTolerance(), solver->getRelativeTolerance(),
+        solver->getNewtonDampingFactorMode(),
+        solver->getNewtonDampingFactorLowerBound());
+
+    newtonSolver->prepareLinearSystemB(0, -1);
+    newtonSolver->solveLinearSystem(xB);
+
+    // Compute the inner product v*dxotdp
+    if (model->pythonGenerated)
+    {
+        for (int ip=0; ip<model->nplist(); ++ip)
+        {
+            if (model->ndxdotdp_explicit > 0) {
+                auto col = model->dxdotdp_explicit.indexptrs();
+                auto row = model->dxdotdp_explicit.indexvals();
+                auto data_ptr = model->dxdotdp_explicit.data();
+                for (sunindextype iCol = col[model->plist(ip)];
+                     iCol < col[model->plist(ip) + 1]; ++iCol)
+                    xQB[ip] += xB[row[iCol]] * data_ptr[iCol];
+            }
+
+            if (model->ndxdotdp_implicit > 0) {
+                auto col = model->dxdotdp_implicit.indexptrs();
+                auto row = model->dxdotdp_implicit.indexvals();
+                auto data_ptr = model->dxdotdp_implicit.data();
+                for (sunindextype iCol = col[model->plist(ip)];
+                     iCol < col[model->plist(ip) + 1]; ++iCol)
+                    xQB[ip] += xB[row[iCol]] * data_ptr[iCol];
+            }
+        }
+    }
+    else
+    {
+      for (int ip=0; ip<model->nplist(); ++ip)
+        xQB[ip] = N_VDotProd(xB.getNVector(), model->dxdotdp.getNVector(ip));
+    }
+}
 
 void BackwardProblem::computeLikelihoodSensitivities()
 {
