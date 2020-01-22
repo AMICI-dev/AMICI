@@ -1352,53 +1352,54 @@ def assignmentRules2observables(sbml_model,
 def noise_distribution_to_cost_function(
         noise_distribution: str) -> Callable[[str], str]:
     """
-    Parse cost string to a cost function definition amici can work with.
+    Parse noise distribution string to a cost function definition amici can
+    work with.
 
     Arguments:
 
     noise_distribution: A code specifying a noise model. Can be any of
     [normal, log-normal, log10-normal, laplace, log-laplace, log10-laplace].
-    @type str
 
     Returns:
 
     A function that takes a strSymbol and then creates a cost function string
-    from it, which can be sympified.
+    (negative log-likelihood) from it, which can be sympified.
 
     Raises:
+        ValueError: in case of invalid ``noise_distribution``
     """
     if noise_distribution in ['normal', 'lin-normal']:
-        llhYString = lambda strSymbol: \
-            f'0.5*log(2*pi*sigma{strSymbol}**2) ' \
-            f'+ 0.5*(({strSymbol} - m{strSymbol}) ' \
-            f'/ sigma{strSymbol})**2'
+        nllh_y_string = lambda str_symbol: \
+            f'0.5*log(2*pi*sigma{str_symbol}**2) ' \
+            f'+ 0.5*(({str_symbol} - m{str_symbol}) ' \
+            f'/ sigma{str_symbol})**2'
     elif noise_distribution == 'log-normal':
-        llhYString = lambda strSymbol: \
-            f'0.5*log(2*pi*sigma{strSymbol}**2*m{strSymbol}**2) ' \
-            f'+ 0.5*((log({strSymbol}) - log(m{strSymbol})) ' \
-            f'/ sigma{strSymbol})**2'
+        nllh_y_string = lambda str_symbol: \
+            f'0.5*log(2*pi*sigma{str_symbol}**2*m{str_symbol}**2) ' \
+            f'+ 0.5*((log({str_symbol}) - log(m{str_symbol})) ' \
+            f'/ sigma{str_symbol})**2'
     elif noise_distribution == 'log10-normal':
-        llhYString = lambda strSymbol: \
-            f'0.5*log(2*pi*sigma{strSymbol}**2*m{strSymbol}**2) ' \
-            f'+ 0.5*((log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
-            f'/ sigma{strSymbol})**2'
+        nllh_y_string = lambda str_symbol: \
+            f'0.5*log(2*pi*sigma{str_symbol}**2*m{str_symbol}**2) ' \
+            f'+ 0.5*((log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
+            f'/ sigma{str_symbol})**2'
     elif noise_distribution in ['laplace', 'lin-laplace']:
-        llhYString = lambda strSymbol: \
-            f'log(2*sigma{strSymbol}) ' \
-            f'+ Abs({strSymbol} - m{strSymbol}) ' \
-            f'/ sigma{strSymbol}'
+        nllh_y_string = lambda str_symbol: \
+            f'log(2*sigma{str_symbol}) ' \
+            f'+ Abs({str_symbol} - m{str_symbol}) ' \
+            f'/ sigma{str_symbol}'
     elif noise_distribution == 'log-laplace':
-        llhYString = lambda strSymbol: \
-            f'log(2*sigma{strSymbol}*m{strSymbol}) ' \
-            f'+ Abs(log({strSymbol}) - log(m{strSymbol})) ' \
-            f'/ sigma{strSymbol}'
+        nllh_y_string = lambda str_symbol: \
+            f'log(2*sigma{str_symbol}*m{str_symbol}) ' \
+            f'+ Abs(log({str_symbol}) - log(m{str_symbol})) ' \
+            f'/ sigma{str_symbol}'
     elif noise_distribution == 'log10-laplace':
-        llhYString = lambda strSymbol: \
-            f'log(2*sigma{strSymbol}*m{strSymbol}) ' \
-            f'+ Abs(log({strSymbol}, 10) - log(m{strSymbol}, 10)) ' \
-            f'/ sigma{strSymbol}'
+        nllh_y_string = lambda str_symbol: \
+            f'log(2*sigma{str_symbol}*m{str_symbol}) ' \
+            f'+ Abs(log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
+            f'/ sigma{str_symbol}'
     else:
         raise ValueError(
-            f"Cost type {cost_code} not reconized.")
+            f"Cost type {noise_distribution} not recognized.")
 
-    return llhYString
+    return nllh_y_string
