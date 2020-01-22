@@ -635,7 +635,7 @@ symbol_to_type = {
 
 
 class ODEModel:
-    """An ODEModel defines an Ordinay Differential Equation as set of
+    """An ODEModel defines an Ordinary Differential Equation as set of
     ModelQuantities. This class provides general purpose interfaces to
     compute arbitrary symbolic derivatives that are necessary for model
     simulation or sensitivity computation
