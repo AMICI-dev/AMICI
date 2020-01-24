@@ -154,6 +154,7 @@ AMICI_guide.pdf
 ThirdParty/bionetgen.tar.gz
 ThirdParty/BioNetGen-*
 ThirdParty/cpputest-master*
+ThirdParty/doxygen/*
 ThirdParty/mtocpp-master*
 ThirdParty/sundials/build/*
 ThirdParty/SuiteSparse/lib/*
@@ -161,3 +162,5 @@ ThirdParty/SuiteSparse/share/*
 ThirdParty/SuperLU_MT_3.1/
 ThirdParty/superlu_mt_3.1.tar.gz
 ThirdParty/swig-*
+
+_untracked/
