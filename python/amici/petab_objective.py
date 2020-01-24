@@ -125,6 +125,8 @@ def edatas_from_petab(
 
     fixed_parameter_ids = model.getFixedParameterIds()
 
+    logger.debug(f"Problem parameters: {problem_parameters}")
+
     edatas = []
     for (_, condition), cur_parameter_mapping, cur_parameter_scale_mapping \
             in zip(simulation_conditions.iterrows(),
@@ -206,16 +208,23 @@ def get_edata_for_condition(
     condition_scale_map_preeq, condition_scale_map_sim = \
         parameter_scale_mapping
 
+    logger.debug(f"PEtab mapping: {parameter_mapping}")
+
     # petab parameter mapping may contain parameter_ids as values, these *must*
     # be replaced
+
     def _get_par(model_par, value):
         """Replace parameter IDs in mapping dicts by values from
         problem_parameters where necessary"""
         if isinstance(value, str):
+            # condition table override
+            # TODO: needs to be handled after all other parameters from
+            #  problem_parameters have been set
             return problem_parameters[value]
         if  model_par in problem_parameters:
+            # user-provided
             return problem_parameters[model_par]
-        return model_par
+        return value
 
     condition_map_sim = {key: _get_par(key, val)
                          for key, val in condition_map_sim.items()}
@@ -257,10 +266,21 @@ def get_edata_for_condition(
         key: val for (key, val) in condition_scale_map_sim.items()
         if key in fixed_par_ids}
 
+    logger.debug("Fixed parameters preequilibration: "
+                 f"{condition_map_preeq_fix}")
+    logger.debug("Fixed parameters simulation: "
+                 f"{condition_map_sim_fix}")
+    logger.debug("Variable parameters preequilibration: "
+                 f"{condition_map_preeq_var}")
+    logger.debug("Variable parameters simulation: "
+                 f"{condition_map_sim_var}")
+
     petab.merge_preeq_and_sim_pars_condition(
         condition_map_preeq_var, condition_map_sim_var,
         condition_scale_map_preeq_var, condition_scale_map_sim_var,
         condition)
+
+    logger.debug(f"Merged: {condition_map_sim_var}")
 
     # variable parameters default to those set on the model, and are
     # overwritten by those specified in problem_parameters
@@ -289,9 +309,10 @@ def get_edata_for_condition(
 
     ##########################################################################
     # fixed parameters preequilibration
-    fixed_pars_preeq = [condition_map_preeq_fix[par_id]
-                      for par_id in amici_model.getFixedParameterIds()]
-    edata.fixedParameters = fixed_pars_preeq
+    if condition_map_preeq:
+        fixed_pars_preeq = [condition_map_preeq_fix[par_id]
+                          for par_id in amici_model.getFixedParameterIds()]
+        edata.fixedParametersPreequilibration = fixed_pars_preeq
 
     ##########################################################################
     # fixed parameters simulation

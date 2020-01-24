@@ -52,12 +52,16 @@ def get_fixed_parameters(
     # constant.
     # (Could potentially still be made constant, but leaving them might
     # increase model reusability)
+
+    # handle parameters in condition table
     if condition_df is not None:
         fixed_parameters = list(condition_df.columns)
+        # get rid of conditionName column
         try:
             fixed_parameters.remove(CONDITION_NAME)
         except ValueError:
             pass
+
         # remove overridden parameters (`object`-type columns)
         fixed_parameters = [p for p in fixed_parameters
                             if condition_df[p].dtype != 'O'
@@ -96,8 +100,30 @@ def get_fixed_parameters(
                            " model. Ignoring.")
             fixed_parameters.remove(fixed_parameter)
 
-    # TODO: handle species and compartment condition columns
-    #  need to handle initial assignment if assigned parameters are overridden
+    if condition_df is None:
+        return fixed_parameter
+
+    # initial concentrations for species or initial compartment sizes in
+    # condition table will need to be turned into fixed parameters
+
+    # if there is no initial assignment for that species, we'd need
+    # to create one. to avoid any naming collision right away, we don't allow
+    # that for now
+
+    # we can't handle them yet
+    compartments = [col for col in condition_df
+               if sbml_model.getCompartment(col) is not None]
+    if compartments:
+        raise NotImplementedError("Can't handle initial compartment sizes "
+                                  "for this moment. Consider creating an "
+                                  f"initial assignment for {compartments}")
+
+    species = [col for col in condition_df
+               if sbml_model.getSpecies(col) is not None]
+    if species:
+        raise NotImplementedError("Can't handle species in condition table."
+                                  "Consider creating an initial assignment for"
+                                  f" {species}")
 
     return fixed_parameters
 
@@ -269,8 +295,8 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
             observable_id, observables[observable_id]['formula'])
         sigmas[observable_id] = str(repl)
 
-    logger.info(f'Observables {len(observables)}')
-    logger.info(f'Sigmas {len(sigmas)}')
+    logger.info(f'Observables: {len(observables)}')
+    logger.info(f'Sigmas: {len(sigmas)}')
 
     if not len(sigmas) == len(observables):
         raise AssertionError(
@@ -291,8 +317,8 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
                                             condition_df=condition_df)
 
     logger.debug(f"Fixed parameters are {fixed_parameters}")
-    logger.info(f"Overall fixed parameters {len(fixed_parameters)}")
-    logger.info("Non-constant global parameters "
+    logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
+    logger.info("Non-constant global parameters: "
                 + str(len(sbml_model.getListOfParameters())
                       - len(fixed_parameters)))
 
