@@ -96,6 +96,9 @@ def get_fixed_parameters(
                            " model. Ignoring.")
             fixed_parameters.remove(fixed_parameter)
 
+    # TODO: handle species and compartment condition columns
+    #  need to handle initial assignment if assigned parameters are overridden
+
     return fixed_parameters
 
 
