@@ -59,19 +59,48 @@ Zheng_PNAS2012"
 
 set -e
 
+[[ -n "${BENCHMARK_COLLECTION}" ]] && model_dir="${BENCHMARK_COLLECTION}"
+
+function show_help() {
+  echo "-h: this help; -n: dry run, print commands; -b path_to_models_dir"
+}
+
+OPTIND=1
+while getopts "h?nb:" opt; do
+    case "$opt" in
+    h|\?)
+        show_help
+        exit 0
+        ;;
+    n)  dry_run=1
+        ;;
+    b)  model_dir=$OPTARG
+        ;;
+    esac
+done
+
 script_path=$(dirname "$BASH_SOURCE")
 script_path=$(cd "$script_path" && pwd)
 
 for model in $models; do
+    yaml="${model_dir}"/"${model}"/"${model}".yaml
+    amici_model_dir=test_bmc/"${model}"
+    mkdir -p "$amici_model_dir"
+    cmd_import="amici_import_petab --verbose -y "${yaml}" -o "${amici_model_dir}" -n "${model}""
+    cmd_run=""$script_path"/test_petab_model.py --verbose -y "${yaml}" -d "${amici_model_dir}" -m "${model}" -c"
+
     printf '=%.0s' {1..40}
     printf "   %s   " "${model}"
     printf '=%.0s' {1..40}
     echo
-    yaml="${BENCHMARK_COLLECTION}"/"${model}"/"${model}".yaml
-    amici_model_dir=test_bmc/"${model}"
-    mkdir -p "$amici_model_dir"
-    amici_import_petab --verbose -y "${yaml}" -o "${amici_model_dir}" -n "${model}"
-    "$script_path"/test_petab_model.py --verbose -y "${yaml}" -d "${amici_model_dir}" -m "${model}" -c
+
+    if [[ -z "$dry_run" ]]; then
+      $cmd_import && $cmd_run
+    else
+      echo "$cmd_import"
+      echo "$cmd_run"
+    fi
+
     printf '=%.0s' {1..100}
     echo
     echo
