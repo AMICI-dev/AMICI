@@ -10,13 +10,14 @@ import amici
 import numpy as np
 import pandas as pd
 import petab
-from amici.logging import get_logger
+from amici.logging import get_logger, log_execution_time
 from petab.C import *
 
 
 logger = get_logger(__name__)
 
 
+@log_execution_time('Simulating PEtab model', logger)
 def simulate_petab(petab_problem: petab.Problem,
                    amici_model: amici.Model,
                    solver: Optional[amici.Solver] = None,
@@ -229,7 +230,9 @@ def get_edata_for_condition(
                              "scales do not match.")
     if len(condition_map_preeq) \
             and len(condition_map_preeq) != len(condition_map_sim):
-        raise AssertionError("Number of parameters for preequilbration"
+        logger.debug(f"Preequilibration parameter map: {condition_map_preeq}")
+        logger.debug(f"Simulation parameter map: {condition_map_sim}")
+        raise AssertionError("Number of parameters for preequilbration "
                              "and simulation do not match.")
 
     # PEtab parameter mapping may contain parameter_ids as values, these *must*
@@ -500,8 +503,7 @@ def _get_measurements_and_sigmas(
         # iterate over measurements
         for _, measurement in df_for_time.iterrows():
             # extract observable index
-            observable_ix = observable_ids.index(
-                f'observable_{measurement[OBSERVABLE_ID]}')
+            observable_ix = observable_ids.index(measurement[OBSERVABLE_ID])
 
             # update time index for observable
             if observable_ix in time_ix_for_obs_ix:
@@ -568,8 +570,7 @@ def rdatas_to_measurement_df(
 
             # extract simulated measurement value
             timepoint_idx = t.index(row[TIME])
-            observable_idx = observable_ids.index(
-                "observable_" + row[OBSERVABLE_ID])
+            observable_idx = observable_ids.index(row[OBSERVABLE_ID])
             measurement_sim = y[timepoint_idx, observable_idx]
 
             # change measurement entry

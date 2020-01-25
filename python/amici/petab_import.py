@@ -7,17 +7,15 @@ import argparse
 import logging
 import math
 import os
-import time
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Tuple
 
 import amici
 import libsbml
 import pandas as pd
 import petab
 import sympy as sp
-from amici.logging import get_logger
-from petab import (OBSERVABLE_TRANSFORMATION, NOISE_DISTRIBUTION,
-                   CONDITION_NAME, OBSERVABLE_ID)
+from amici.logging import get_logger, log_execution_time
+from petab.C import *
 
 
 logger = get_logger(__name__, logging.WARNING)
@@ -61,6 +59,8 @@ def get_fixed_parameters(
             fixed_parameters.remove(CONDITION_NAME)
         except ValueError:
             pass
+
+        logger.debug(f'Condition table: {condition_df.shape}')
 
         # remove overridden parameters (`object`-type columns)
         fixed_parameters = [p for p in fixed_parameters
@@ -112,7 +112,7 @@ def get_fixed_parameters(
 
     # we can't handle them yet
     compartments = [col for col in condition_df
-               if sbml_model.getCompartment(col) is not None]
+                    if sbml_model.getCompartment(col) is not None]
     if compartments:
         raise NotImplementedError("Can't handle initial compartment sizes "
                                   "at the moment. Consider creating an "
@@ -210,9 +210,10 @@ def constant_species_to_parameters(sbml_model: 'libsbml.Model') -> List[str]:
     return species_to_parameters(transformables, sbml_model)
 
 
+@log_execution_time('Importing PEtab model', logger)
 def import_model(sbml_model: Union[str, 'libsbml.Model'],
                  condition_table: Optional[Union[str, pd.DataFrame]] = None,
-                 measurement_table: Optional[Union[str, pd.DataFrame]] = None,
+                 observable_table: Optional[Union[str, pd.DataFrame]] = None,
                  model_name: Optional[str] = None,
                  model_output_dir: Optional[str] = None,
                  verbose: bool = True,
@@ -227,8 +228,8 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
             PEtab condition table. If provided, parameters from there will be
             turned into AMICI constant parameters (i.e. parameters w.r.t. which
             no sensitivities will be computed).
-        measurement_table:
-            PEtab measurement table.
+        observable_table:
+            PEtab observable table.
         model_name:
             Name of the generated model. If model file name was provided,
             this defaults to the file name without extension, otherwise
@@ -250,11 +251,14 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     logger.info(f"Importing model ...")
 
-    # Create a copy, because it will be modified by SbmlImporter
-    sbml_doc = sbml_model.getSBMLDocument().clone()
-    sbml_model = sbml_doc.getModel()
+    # Get PEtab tables
+    observable_df = petab.get_observable_df(observable_table)
+    # to determine fixed parameters
+    condition_df = petab.get_condition_df(condition_table)
 
-    sbml_importer = amici.SbmlImporter(sbml_model)
+    if observable_df is None:
+        raise NotImplementedError("PEtab import without observables table "
+                                  "is currently not supported.")
 
     # Model name from SBML ID or filename
     if model_name is None:
@@ -266,34 +270,28 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
     if model_output_dir is None:
         model_output_dir = os.path.join(os.getcwd(), model_name)
 
-    sbml_model = sbml_importer.sbml
-
     logger.info(f"Model name is '{model_name}'. "
                 f"Writing model code to '{model_output_dir}'.")
+
+    # Load model
+    if isinstance(sbml_model, str):
+        # from file
+        sbml_reader = libsbml.SBMLReader()
+        sbml_doc = sbml_reader.readSBMLFromFile(sbml_model)
+        sbml_model = sbml_doc.getModel()
+    else:
+        # Create a copy, because it will be modified by SbmlImporter
+        sbml_doc = sbml_model.getSBMLDocument().clone()
+        sbml_model = sbml_doc.getModel()
+
     show_model_info(sbml_model)
 
-    # Read PEtab observables and sigmas
-    observables = petab.get_observables(sbml_model, remove=True)
-    sigmas = petab.get_sigmas(sbml_model, remove=True)
+    sbml_importer = amici.SbmlImporter(sbml_model)
+    sbml_model = sbml_importer.sbml
 
-    # Read PEtab error model
-    if measurement_table is not None:
-        if isinstance(measurement_table, str):
-            measurement_df = petab.get_measurement_df(measurement_table)
-        else:
-            measurement_df = measurement_table
-
-        noise_distrs = petab_noise_distributions_to_amici(
-            petab.get_noise_distributions(measurement_df))
-    else:
-        # use default
-        noise_distrs = {}
-
-    # Replace observableIds occurring in error model definition
-    for observable_id, formula in sigmas.items():
-        repl = sp.sympify(formula).subs(
-            observable_id, observables[observable_id]['formula'])
-        sigmas[observable_id] = str(repl)
+    if observable_df is not None:
+        observables, noise_distrs, sigmas = \
+            get_observation_model(observable_df)
 
     logger.info(f'Observables: {len(observables)}')
     logger.info(f'Sigmas: {len(sigmas)}')
@@ -303,27 +301,33 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
             f'Number of provided observables ({len(observables)}) and sigmas '
             f'({len(sigmas)}) do not match.')
 
-    if condition_table is not None:
-        # get the condition dataframe before parsing fixed parameters
-        if isinstance(condition_table, str):
-            condition_df = petab.get_condition_df(condition_table)
-        else:
-            condition_df = condition_table
-        logger.debug(f'Condition table: {condition_df.shape}')
-    else:
-        condition_df = None
+    # TODO: adding extra output parameters is currently not supported,
+    #  so we add any output parameters to the SBML model.
+    #  this should be changed to something more elegant
+    # <BeginWorkAround>
+    formulas = {val['formula'] for val in observables.values()}
+    formulas |= set(sigmas.values())
+    output_parameters = set()
+    for formula in formulas:
+        for free_sym in sp.sympify(formula).free_symbols:
+            sym = str(free_sym)
+            if sbml_model.getElementBySId(sym) is None:
+                output_parameters.add(sym)
+    logger.debug(f"Adding output parameters to model: {output_parameters}")
+    for par in output_parameters:
+        petab.add_global_parameter(sbml_model, par)
+    # <EndWorkAround>
 
     fixed_parameters = get_fixed_parameters(sbml_model=sbml_model,
                                             condition_df=condition_df)
 
     logger.debug(f"Fixed parameters are {fixed_parameters}")
     logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
-    logger.info("Non-constant global parameters: "
+    logger.info("Variable parameters: "
                 + str(len(sbml_model.getListOfParameters())
                       - len(fixed_parameters)))
 
     # Create Python module from SBML model
-    start = time.time()
     sbml_importer.sbml2amici(
         modelName=model_name,
         output_dir=model_output_dir,
@@ -334,33 +338,70 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         noise_distributions=noise_distrs,
         verbose=verbose,
         **kwargs)
-    end = time. time()
-
-    logger.info(f"Model imported successfully in {round(end - start, 2)}s")
 
 
-def petab_noise_distributions_to_amici(noise_distributions: Dict) -> Dict:
+def get_observation_model(observable_df: pd.DataFrame
+                          ) -> Tuple[Dict[str, Dict[str, str]],
+                                     Dict[str, str],
+                                     Dict[str, Union[str, float]]]:
+    """
+    Get observables, sigmas, and noise distributions from PEtab observation
+    table in a format suitable for `sbml2amici`.
+
+    Arguments:
+        observable_df: PEtab observables table
+
+    Returns:
+        Tuple of dicts with observables, noise distributions, and sigmas.
+    """
+
+    if observable_df is None:
+        return {}, {}, {}
+
+    observables = {}
+    sigmas = {}
+
+    for _, observable in observable_df.iterrows():
+        oid = observable.name
+        name = observable.get(OBSERVABLE_NAME, "")
+        formula_obs = observable[OBSERVABLE_FORMULA]
+        formula_noise = observable[NOISE_FORMULA]
+        observables[oid] = {'name': name, 'formula': formula_obs}
+        sigmas[oid] = formula_noise
+
+    # Replace observableIds occurring in error model definition
+    for observable_id, formula in sigmas.items():
+        repl = sp.sympify(formula).subs(
+            observable_id, observables[observable_id]['formula'])
+        sigmas[observable_id] = str(repl)
+
+    noise_distrs = petab_noise_distributions_to_amici(observable_df)
+
+    return observables, noise_distrs, sigmas
+
+
+def petab_noise_distributions_to_amici(observable_df: pd.DataFrame) -> Dict:
     """
     Map from the petab to the amici format of noise distribution
     identifiers.
 
     Arguments:
-        noise_distributions: as obtained from `petab.get_noise_distributions`
+        observable_df: PEtab observable table
 
     Returns:
         Dictionary of observable_id => AMICI noise-distributions
     """
     amici_distrs = {}
-    for id_, val in noise_distributions.items():
+    for _, observable in observable_df.iterrows():
         amici_val = ''
 
-        if val[OBSERVABLE_TRANSFORMATION]:
-            amici_val += val[OBSERVABLE_TRANSFORMATION] + '-'
+        if observable[OBSERVABLE_TRANSFORMATION]:
+            amici_val += observable[OBSERVABLE_TRANSFORMATION] + '-'
 
-        if val[NOISE_DISTRIBUTION]:
-            amici_val += val[NOISE_DISTRIBUTION]
+        if observable[NOISE_DISTRIBUTION]:
+            amici_val += observable[NOISE_DISTRIBUTION]
 
-        amici_distrs[id_] = amici_val
+        amici_distrs[observable.name] = amici_val
 
     return amici_distrs
 
@@ -415,6 +456,8 @@ def parse_cli_args():
                         help='Conditions table')
     parser.add_argument('-p', '--parameters', dest='parameter_file_name',
                         help='Parameter table')
+    parser.add_argument('-b', '--observables', dest='observable_file_name',
+                        help='Observable table')
 
     parser.add_argument('-y', '--yaml', dest='yaml_file_name',
                        help='PEtab YAML problem filename')
@@ -427,9 +470,9 @@ def parse_cli_args():
 
     if not args.yaml_file_name \
             and not all((args.sbml_file_name, args.condition_file_name,
-                         args.measurement_file_name)):
+                         args.observable_file_name)):
         parser.error('When not specifying a model name or YAML file, then '
-                     'SBML, condition and measurement file must be specified')
+                     'SBML, condition and observable file must be specified')
 
     return args
 
@@ -448,7 +491,8 @@ def main():
             sbml_file=args.sbml_file_name,
             condition_file=args.condition_file_name,
             measurement_file=args.measurement_file_name,
-            parameter_file=args.parameter_file_name)
+            parameter_file=args.parameter_file_name,
+            observable_files=args.observable_file_name)
 
     # First check for valid PEtab
     petab.lint_problem(pp)
@@ -456,7 +500,7 @@ def main():
     import_model(model_name=args.model_name,
                  sbml_model=pp.sbml_model,
                  condition_table=pp.condition_df,
-                 measurement_table=pp.measurement_df,
+                 observable_table=pp.observable_df,
                  model_output_dir=args.model_output_dir,
                  compile=args.compile,
                  verbose=args.verbose)

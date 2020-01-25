@@ -18,6 +18,7 @@ from petab.visualize import plot_petab_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
 
+
 def parse_cli_args():
     """Parse command line arguments
 
