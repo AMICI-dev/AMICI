@@ -47,7 +47,7 @@ def get_fixed_parameters(
         List of IDs of parameters which are to be considered constant.
     """
 
-    # Column names are model parameter IDs, compartment IDs or speciesIDs.
+    # Column names are model parameter IDs, compartment IDs or species IDs.
     # Thereof, all parameters except for any overridden ones should be made
     # constant.
     # (Could potentially still be made constant, but leaving them might
