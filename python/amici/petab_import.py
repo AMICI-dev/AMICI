@@ -79,7 +79,7 @@ def get_fixed_parameters(
         # parameters
         constant_species = constant_species_to_parameters(sbml_model)
 
-        logger.info("Constant species converted to parameters "
+        logger.info("Constant species converted to parameters: "
                     + str(len(constant_species)))
         logger.info("Non-constant species "
                     + str(len(sbml_model.getListOfSpecies())))
