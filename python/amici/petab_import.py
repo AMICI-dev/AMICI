@@ -101,7 +101,7 @@ def get_fixed_parameters(
             fixed_parameters.remove(fixed_parameter)
 
     if condition_df is None:
-        return fixed_parameter
+        return fixed_parameters
 
     # initial concentrations for species or initial compartment sizes in
     # condition table will need to be turned into fixed parameters
