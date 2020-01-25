@@ -269,7 +269,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
     sbml_model = sbml_importer.sbml
 
     logger.info(f"Model name is '{model_name}'. "
-                f"Writing model code to '{model_output_dir}'")
+                f"Writing model code to '{model_output_dir}'.")
     show_model_info(sbml_model)
 
     # Read PEtab observables and sigmas
