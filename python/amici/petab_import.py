@@ -115,7 +115,7 @@ def get_fixed_parameters(
                if sbml_model.getCompartment(col) is not None]
     if compartments:
         raise NotImplementedError("Can't handle initial compartment sizes "
-                                  "for this moment. Consider creating an "
+                                  "at the moment. Consider creating an "
                                   f"initial assignment for {compartments}")
 
     species = [col for col in condition_df
