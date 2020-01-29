@@ -16,8 +16,10 @@ from setuptools import find_packages, setup, Extension
 
 import os
 import sys
+import string
 import sysconfig
 import subprocess
+from distutils.ccompiler import new_compiler
 import setup_clibs # Must run from within containing directory
 from custom_commands import (my_install, my_build_clib, my_develop,
                              my_install_lib, my_build_ext, my_sdist)
@@ -113,6 +115,71 @@ def main():
         extra_compiler_flags=cxx_flags + ['-DDLONG']
     )
 
+    # Readme as long package description to go on PyPi
+    # (https://pypi.org/project/amici/)
+    with open("README.md", "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+
+    # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
+    # C++ to fix warnings.
+    cfg_vars = sysconfig.get_config_vars()
+    for key, value in cfg_vars.items():
+        if type(value) == str:
+            cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
+
+    # start of modify compiler options if compiler=msvc
+    compiler = None
+    # check for --compiler argument
+    args = str(sys.argv)
+    indStart = args.find('--compiler=')
+    if indStart != -1:
+        indStart = indStart + len('--compiler=')
+        rem = args[indStart:]
+        indEnd = len(rem) # in case no punctuation before the end
+        for index in range(len(rem)):
+            if rem[index] in string.punctuation:
+                indEnd = index
+                break
+        compiler = rem[0:indEnd]
+    compiler = new_compiler(compiler=compiler,
+                            dry_run=1,
+                            force=0)
+    if compiler.compiler_type == 'msvc':
+        for index in range(len(libamici[1]['cflags'])-1,-1,-1):
+            if libamici[1]['cflags'][index] == '-Wno-misleading-indentation':
+                libamici[1]['cflags'][index] = ''
+            if libamici[1]['cflags'][index] == '-Wno-unused-but-set-variable':
+                libamici[1]['cflags'][index] = ''
+            if libamici[1]['cflags'][index] == '-std=c++11':
+                libamici[1]['cflags'][index] = '/std:c++17'
+        for index in range(len(libamici[1]['cflags'])-1,-1,-1):
+            if libamici[1]['cflags'][index] == '':
+                del libamici[1]['cflags'][index]
+        for index in range(len(libsundials[1]['cflags'])-1,-1,-1):
+            if libsundials[1]['cflags'][index] == '-Wno-misleading-indentation':
+                libsundials[1]['cflags'][index] = ''
+            if libsundials[1]['cflags'][index] == '-Wno-unused-but-set-variable':
+                libsundials[1]['cflags'][index] = ''
+            if libsundials[1]['cflags'][index] == '-std=c++11':
+                libsundials[1]['cflags'][index] = '/std:c++17'
+        for index in range(len(libsundials[1]['cflags'])-1,-1,-1):
+            if libsundials[1]['cflags'][index] == '':
+                del libsundials[1]['cflags'][index]
+        for index in range(len(libsuitesparse[1]['cflags'])-1,-1,-1):
+            if libsuitesparse[1]['cflags'][index] == '-Wno-misleading-indentation':
+                libsuitesparse[1]['cflags'][index] = ''
+            if libsuitesparse[1]['cflags'][index] == '-Wno-unused-but-set-variable':
+                libsuitesparse[1]['cflags'][index] = ''
+            if libsuitesparse[1]['cflags'][index] == '-std=c++11':
+                libsuitesparse[1]['cflags'][index] = '/std:c++17'
+        for index in range(len(libsuitesparse[1]['cflags'])-1,-1,-1):
+            if libsuitesparse[1]['cflags'][index] == '':
+                del libsuitesparse[1]['cflags'][index]
+        extraCompileArgs=['/std:c++17', *cxx_flags]
+    else:
+        extraCompileArgs=['-std=c++11', *cxx_flags]
+    # end of modify compiler options
+
     # Build shared object
     amici_module = Extension(
         name='amici._amici',
@@ -135,21 +202,9 @@ def main():
             *blaspkgcfg['library_dirs'],
             'amici/libs',  # clib target directory
         ],
-        extra_compile_args=['-std=c++11', *cxx_flags],
+        extra_compile_args=extraCompileArgs,
         extra_link_args=amici_module_linker_flags
     )
-
-    # Readme as long package description to go on PyPi
-    # (https://pypi.org/project/amici/)
-    with open("README.md", "r", encoding="utf-8") as fh:
-        long_description = fh.read()
-
-    # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
-    # C++ to fix warnings.
-    cfg_vars = sysconfig.get_config_vars()
-    for key, value in cfg_vars.items():
-        if type(value) == str:
-            cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
 
     # Install
     setup(
