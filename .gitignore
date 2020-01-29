@@ -131,6 +131,7 @@ tests/sbml-test-suite/
 tests/sedml-test-suite/
 */sbml-semantic-test-cases/*
 tests/SBMLTestModels/
+tests/benchmark-models/test_bmc
 /python/test/amici-SBMLTest*/
 
 python/examples/example_steadystate/model_steadystate_scaled/*
