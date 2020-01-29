@@ -1351,8 +1351,7 @@ def assignmentRules2observables(sbml_model,
 
 def noise_distribution_to_cost_function(
         noise_distribution: str) -> Callable[[str], str]:
-    """
-    Parse noise distribution string to a cost function definition amici can
+    """Parse noise distribution string to a cost function definition amici can
     work with.
 
     Arguments:
