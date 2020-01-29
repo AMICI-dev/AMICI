@@ -4,7 +4,8 @@ function as defined by a PEtab problem"""
 import copy
 import logging
 import numbers
-from typing import List, Sequence, Optional, Dict, Tuple, Union, Any
+from typing import (List, Sequence, Optional, Dict, Tuple, Union, Any,
+                    Collection, Iterator)
 
 import amici
 import numpy as np
@@ -154,6 +155,19 @@ def edatas_from_petab(
     return edatas
 
 
+def subset_dict(full: Dict[Any, Any],
+                *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
+    """Get subset of dictionary based on provides keys
+
+    Arguments:
+        full: Dictionary to subset
+        *args: Collections of keys to be contained in the different subsets
+    """
+
+    for keys in args:
+        yield {key: val for (key, val) in full.items() if key in keys}
+
+
 def get_edata_for_condition(
         condition: Dict,
         problem_parameters: Dict[str, numbers.Number],
@@ -264,33 +278,17 @@ def get_edata_for_condition(
     variable_par_ids = amici_model.getParameterIds()
     fixed_par_ids = amici_model.getFixedParameterIds()
 
-    condition_map_preeq_var = {
-        key: val for (key, val) in condition_map_preeq.items()
-        if key in variable_par_ids}
-    condition_map_preeq_fix = {
-        key: val for (key, val) in condition_map_preeq.items()
-        if key in fixed_par_ids}
+    condition_map_preeq_var, condition_map_preeq_fix = \
+        subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
 
-    condition_scale_map_preeq_var = {
-        key: val for (key, val) in condition_scale_map_preeq.items()
-        if key in variable_par_ids}
-    condition_scale_map_preeq_fix = {
-        key: val for (key, val) in condition_scale_map_preeq.items()
-        if key in fixed_par_ids}
+    condition_scale_map_preeq_var, condition_scale_map_preeq_fix = \
+        subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
 
-    condition_map_sim_var = {
-        key: val for (key, val) in condition_map_sim.items()
-        if key in variable_par_ids}
-    condition_map_sim_fix = {
-        key: val for (key, val) in condition_map_sim.items()
-        if key in fixed_par_ids}
+    condition_map_sim_var, condition_map_sim_fix = \
+        subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
 
-    condition_scale_map_sim_var = {
-        key: val for (key, val) in condition_scale_map_sim.items()
-        if key in variable_par_ids}
-    condition_scale_map_sim_fix = {
-        key: val for (key, val) in condition_scale_map_sim.items()
-        if key in fixed_par_ids}
+    condition_scale_map_sim_var, condition_scale_map_sim_fix = \
+        subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
 
     logger.debug("Fixed parameters preequilibration: "
                  f"{condition_map_preeq_fix}")
