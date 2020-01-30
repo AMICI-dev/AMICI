@@ -34,6 +34,7 @@ class my_install(install):
         install.finalize_options(self)
 
     def run(self):
+        generateSwigInterfaceFiles()
         install.run(self)
 
 
@@ -74,6 +75,15 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
 
 class my_build_clib(build_clib):
     """Custom build_clib"""
+
+    def run(self):
+        # Always force recompilation. The way setuptools/distutils check for
+        # whether sources require recompilation is not reliable and may lead
+        # to crashes or wrong results. We rather compile once too often...
+        self.force = True
+
+        build_clib.run(self)
+
 
     def build_libraries(self, libraries):
         no_clibs = self.get_finalized_command('develop').no_clibs
@@ -180,6 +190,11 @@ class my_build_ext(build_ext):
 
                 copyfile(libfilenames[0],
                          os.path.join(target_dir, os.path.basename(libfilenames[0])))
+
+        # Always force recompilation. The way setuptools/distutils check for
+        # whether sources require recompilation is not reliable and may lead
+        # to crashes or wrong results. We rather compile once too often...
+        self.force = True
 
         # Continue with the actual extension building
         build_ext.run(self)
