@@ -395,12 +395,17 @@ def petab_noise_distributions_to_amici(observable_df: pd.DataFrame) -> Dict:
     for _, observable in observable_df.iterrows():
         amici_val = ''
 
-        if observable[OBSERVABLE_TRANSFORMATION]:
+        if OBSERVABLE_TRANSFORMATION in observable \
+                and isinstance(observable[OBSERVABLE_TRANSFORMATION], str) \
+                and observable[OBSERVABLE_TRANSFORMATION]:
             amici_val += observable[OBSERVABLE_TRANSFORMATION] + '-'
 
-        if observable[NOISE_DISTRIBUTION]:
+        if NOISE_DISTRIBUTION in observable \
+                and isinstance(observable[NOISE_DISTRIBUTION], str) \
+                and observable[NOISE_DISTRIBUTION]:
             amici_val += observable[NOISE_DISTRIBUTION]
-
+        else:
+            amici_val += 'normal'
         amici_distrs[observable.name] = amici_val
 
     return amici_distrs
