@@ -48,7 +48,7 @@ void BackwardProblem::workBackwardProblem() {
     model->initializeB(xB, dxB, xQB);
     handleDataPointB(it);
 
-    if (std::isinf(model->getTimepoint(it)))
+    if (std::isinf(model->getTimepoint(it)) && solver->getNewtonSolverBackward())
     {
       computeIntegralForSteadyState();
       xB.reset();
