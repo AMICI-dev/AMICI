@@ -52,9 +52,12 @@ void BackwardProblem::workBackwardProblem() {
     {
       computeIntegralForSteadyState();
       xB.reset();
+      --it;
     }
-    else
+
+    if (it>=0 && model->getTimepoint(it) > model->t0())
     {
+
       solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
 
       --it;
