@@ -174,26 +174,11 @@ void BackwardProblem::computeIntegralForSteadyState()
     // Compute the inner product v*dxotdp
     if (model->pythonGenerated)
     {
-        for (int ip=0; ip<model->nplist(); ++ip)
-        {
-            if (model->ndxdotdp_explicit > 0) {
-                auto col = model->dxdotdp_explicit.indexptrs();
-                auto row = model->dxdotdp_explicit.indexvals();
-                auto data_ptr = model->dxdotdp_explicit.data();
-                for (sunindextype iCol = col[model->plist(ip)];
-                     iCol < col[model->plist(ip) + 1]; ++iCol)
-                    xQB[ip] += xB[row[iCol]] * data_ptr[iCol];
-            }
-
-            if (model->ndxdotdp_implicit > 0) {
-                auto col = model->dxdotdp_implicit.indexptrs();
-                auto row = model->dxdotdp_implicit.indexvals();
-                auto data_ptr = model->dxdotdp_implicit.data();
-                for (sunindextype iCol = col[model->plist(ip)];
-                     iCol < col[model->plist(ip) + 1]; ++iCol)
-                    xQB[ip] += xB[row[iCol]] * data_ptr[iCol];
-            }
-        }
+        const auto& plist = model->getParameterList();
+        if (model->ndxdotdp_explicit > 0)
+            model->dxdotdp_explicit.multiply(xQB.getNVector(), xB.getNVector(), plist, false);
+        if (model->ndxdotdp_implicit > 0)
+            model->dxdotdp_implicit.multiply(xQB.getNVector(), xB.getNVector(), plist, false);
     }
     else
     {
