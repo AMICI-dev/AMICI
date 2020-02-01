@@ -6,7 +6,8 @@
 #include "amici/edata.h"
 #include "amici/rdata.h"
 #include "amici/forwardproblem.h"
-#include "amici/newton_solver.h"
+#include "amici/steadystateproblem.h"
+#include "amici/misc.h"
 
 #include <cstring>
 
@@ -16,6 +17,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
     model(fwd->model),
     rdata(fwd->rdata),
     solver(fwd->solver),
+    edata(fwd->edata),
     t(fwd->getTime()),
     llhS0(static_cast<decltype(llhS0)::size_type>(fwd->model->nJ * fwd->model->nplist()), 0.0),
     xB(fwd->model->nx_solver),
@@ -46,18 +48,18 @@ void BackwardProblem::workBackwardProblem() {
 
     int it = rdata->nt - 1;
     model->initializeB(xB, dxB, xQB);
-    handleDataPointB(it);
 
     if (std::isinf(model->getTimepoint(it)) && solver->getNewtonSolverBackward())
     {
-      computeIntegralForSteadyState();
-      xB.reset();
-      --it;
+        SteadystateProblem sstate(solver, AmiVector(slice(rdata->x, it, rdata->nx)));
+        sstate.workSteadyStateBackwardProblem(rdata, solver, edata, model);
+        sstate.writeSolutionBackward(xQB);
+        --it;
     }
 
     if (it>=0 && model->getTimepoint(it) > model->t0())
     {
-
+      handleDataPointB(it);
       solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
 
       --it;
@@ -156,38 +158,6 @@ realtype BackwardProblem::getTnext(std::vector<realtype> const& troot,
     }
 
     return rdata->ts[it];
-}
-
-void BackwardProblem::computeIntegralForSteadyState()
-{
-    amici::AmiVector x_steadystate{rdata->x};
-    realtype T = std::numeric_limits<realtype>::infinity();
-
-    // Compute the linear system JB*v = dJydy
-    auto newtonSolver = NewtonSolver::getSolver(
-        &T, &x_steadystate, solver->getLinearSolver(), model, rdata,
-        solver->getNewtonMaxLinearSteps(), solver->getNewtonMaxSteps(),
-        solver->getAbsoluteTolerance(), solver->getRelativeTolerance(),
-        solver->getNewtonDampingFactorMode(),
-        solver->getNewtonDampingFactorLowerBound());
-
-    newtonSolver->prepareLinearSystemB(0, -1);
-    newtonSolver->solveLinearSystem(xB);
-
-    // Compute the inner product v*dxotdp
-    if (model->pythonGenerated)
-    {
-        const auto& plist = model->getParameterList();
-        if (model->ndxdotdp_explicit > 0)
-            model->dxdotdp_explicit.multiply(xQB.getNVector(), xB.getNVector(), plist, false);
-        if (model->ndxdotdp_implicit > 0)
-            model->dxdotdp_implicit.multiply(xQB.getNVector(), xB.getNVector(), plist, false);
-    }
-    else
-    {
-      for (int ip=0; ip<model->nplist(); ++ip)
-        xQB[ip] = N_VDotProd(xB.getNVector(), model->dxdotdp.getNVector(ip));
-    }
 }
 
 void BackwardProblem::computeLikelihoodSensitivities()

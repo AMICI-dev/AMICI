@@ -13,6 +13,7 @@
 
 namespace amici {
 
+class ExpData;
 class ReturnData;
 class Solver;
 class Model;
@@ -26,6 +27,9 @@ class SteadystateProblem {
   public:
     void workSteadyStateProblem(ReturnData *rdata, Solver *solver,
                                       Model *model, int it);
+
+    void workSteadyStateBackwardProblem(ReturnData *rdata, Solver *solver,
+                                        const ExpData *edata, Model *model);
 
     /**
      * Computes the weighted root mean square of xdot
@@ -115,7 +119,12 @@ class SteadystateProblem {
      * @param sx steadystate state sensitivity
      */
     void writeSolution(realtype *t, AmiVector &x, AmiVectorArray &sx) const;
-    
+
+    /**
+     * @brief routine that writes computed quadrature state vector
+     * @param xQB quadrature state vector
+     */
+    void writeSolutionBackward(AmiVector &xQB) const;
 
   private:
     /** time variable for simulation steadystate finding */
@@ -142,6 +151,8 @@ class SteadystateProblem {
     AmiVectorArray sx;
     /** state differential sensitivities */
     AmiVectorArray sdx;
+    /** quadrature state vector */
+    AmiVector xQB;
 
     /** weighted root-mean-square error */
     realtype wrms = NAN;

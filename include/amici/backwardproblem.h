@@ -102,13 +102,6 @@ class BackwardProblem {
     realtype getTnext(std::vector<realtype> const& troot, int iroot, int it);
 
     /**
-     * @brief Computes the adjoint part of the gradient by solving a linear system.
-     *
-     * Valid only if the computed solution is a steady-state.
-     */
-    void computeIntegralForSteadyState();
-
-    /**
      * @brief Compute likelihood sensitivities.
      */
     void computeLikelihoodSensitivities();
@@ -116,6 +109,7 @@ class BackwardProblem {
     Model *model;
     ReturnData *rdata;
     Solver *solver;
+    const ExpData *edata;
 
     /** current time */
     realtype t;

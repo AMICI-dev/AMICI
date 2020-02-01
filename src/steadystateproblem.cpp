@@ -23,7 +23,7 @@ SteadystateProblem::SteadystateProblem(const Solver *solver,
     rel_x_newton(solver->nx()), x_newton(solver->nx()), x(x0),
     x_old(solver->nx()), dx(solver->nx()), xdot(solver->nx()),
     xdot_old(solver->nx()), sx(solver->getStateSensitivity(solver->gett())),
-    sdx(solver->nx(), solver->nplist()) {}
+    sdx(solver->nx(), solver->nplist()), xQB(solver->nquad()) {}
 
 void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                                                Solver *solver, Model *model,
@@ -103,6 +103,49 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     writeNewtonOutput(rdata, model, newton_status, run_time, it);
+}
+
+void SteadystateProblem::workSteadyStateBackwardProblem(ReturnData *rdata, Solver *solver,
+                                                        const ExpData *edata, Model *model)
+{
+    realtype T = std::numeric_limits<realtype>::infinity();
+
+    // Compute the linear system JB*v = dJydy
+    auto newtonSolver = NewtonSolver::getSolver(
+        &T, &x, solver->getLinearSolver(), model, rdata,
+        solver->getNewtonMaxLinearSteps(), solver->getNewtonMaxSteps(),
+        solver->getAbsoluteTolerance(), solver->getRelativeTolerance(),
+        solver->getNewtonDampingFactorMode(),
+        solver->getNewtonDampingFactorLowerBound());
+
+    // Construct the right hand size
+    // FIXME: Could be simplified? What is the order on dJydx?
+    std::vector<realtype> dJydx(model->nJ * model->nx_solver, 0.0);
+    model->getAdjointStateObservableUpdate(dJydx, rdata->nt-1, x, *edata);
+
+    amici::AmiVector rhs(model->nx_solver);
+    for (int ix = 0; ix < model->nxtrue_solver; ix++) {
+        for (int iJ = 0; iJ < model->nJ; iJ++)
+            rhs[ix + iJ * model->nxtrue_solver] = dJydx[iJ + ix * model->nJ];
+    }
+
+    newtonSolver->prepareLinearSystemB(0, -1);
+    newtonSolver->solveLinearSystem(rhs);
+
+    // Compute the inner product v*dxotdp
+    if (model->pythonGenerated)
+    {
+        const auto& plist = model->getParameterList();
+        if (model->ndxdotdp_explicit > 0)
+            model->dxdotdp_explicit.multiply(xQB.getNVector(), rhs.getNVector(), plist, false);
+        if (model->ndxdotdp_implicit > 0)
+            model->dxdotdp_implicit.multiply(xQB.getNVector(), rhs.getNVector(), plist, false);
+    }
+    else
+    {
+      for (int ip=0; ip<model->nplist(); ++ip)
+        xQB[ip] = N_VDotProd(rhs.getNVector(), model->dxdotdp.getNVector(ip));
+    }
 }
 
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
@@ -343,6 +386,10 @@ void SteadystateProblem::writeSolution(realtype *t, AmiVector &x,
     *t = this->t;
     x.copy(this->x);
     sx.copy(this->sx);
+}
+
+void SteadystateProblem::writeSolutionBackward(AmiVector &xQB) const {
+    xQB.copy(this->xQB);
 }
 
 } // namespace amici
