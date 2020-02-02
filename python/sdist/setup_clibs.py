@@ -159,7 +159,9 @@ def getLibSundials(extra_compiler_flags=None):
                          'amici/ThirdParty/SuiteSparse/BTF/Include/',
                          'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
                          'amici/ThirdParty/SuiteSparse/include'],
-        'cflags': ['-Wno-misleading-indentation', *extra_compiler_flags]
+        'cflags': [*extra_compiler_flags],
+        'cflags_mingw32': ['-Wno-misleading-indentation'],
+        'cflags_unix': ['-Wno-misleading-indentation']
     })
     return libsundials
 
@@ -182,7 +184,9 @@ def getLibSuiteSparse(extra_compiler_flags=None):
                          'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
                          'amici/ThirdParty/SuiteSparse/include'
                          ],
-        'cflags': ['-Wno-unused-but-set-variable', *extra_compiler_flags]
+        'cflags': [*extra_compiler_flags],
+        'cflags_mingw32': ['-Wno-unused-but-set-variable'],
+        'cflags_unix': ['-Wno-unused-but-set-variable']
     })
     return libsuitesparse
 
@@ -216,7 +220,10 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
                          'amici/ThirdParty/sundials/src',
                          'amici/ThirdParty/gsl/',
                          ],
-        'cflags': ['-std=c++11', *extra_compiler_flags],
+        'cflags': [*extra_compiler_flags],
+        'cflags_mingw32': ['-std=c++11'],
+        'cflags_unix': ['-std=c++11'],
+        'cflags_msvc': ['/std:c++17'],
         'macros': [],
     })
 

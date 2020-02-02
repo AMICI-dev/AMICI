@@ -86,7 +86,19 @@ class my_build_clib(build_clib):
         import distutils.ccompiler
         distutils.ccompiler.CCompiler.compile = compile_parallel
 
+        # start new code
+        compilerType = self.compiler.compiler_type
+        for lib in libraries:
+            try: lib[1]['cflags'] = lib[1]['cflags'] + lib[1]['cflags_'+compilerType]
+            except KeyError: None
+            print('***** ', lib[0], 'cflags: ', lib[1]['cflags'])
+        # end new code
+
+        print('***** my_build_clib, before calling build_clib.build_libraries')
+        print('****', self.compiler, self.compiler.compiler_type)
         build_clib.build_libraries(self, libraries)
+        print('***** my_build_clib, after calling build_clib.build_libraries')
+        print('****', self.compiler, self.compiler.compiler_type)
 
         # print('In custom_commands.my_build_clib')
         # print(distutils.ccompiler.CCompiler.compiler_type)
@@ -142,6 +154,25 @@ class my_install_lib(install_lib):
 
 class my_build_ext(build_ext):
     """Custom build_ext to allow keeping otherwise temporary static libs"""
+
+    def build_extension(self, ext):
+        # do replacements here
+        compilerType = self.compiler.compiler_type
+        # this requires more work
+        #try: ext.extra_compile_args = ext.extra_compile_args, ext.(extra_compile_args_+compilerType)]
+        #except KeyError: None
+        if compilerType == 'msvc':
+            ECA = ext.extra_compile_args
+            for index in range(len(ECA)):
+                ECA[index] = ECA[index].replace('-std=c++11', '/std:c++17')
+            ext.extra_compile_args = ECA
+        print ('***** Extension extra_compile_args', ext.extra_compile_args)
+
+        print('***** my_build_ext, before calling build_ext.build_extension')
+        print('****', self.compiler, self.compiler.compiler_type)
+        build_ext.build_extension(self, ext)
+        print('***** my_build_ext, after calling build_ext.build_extension')
+        print('****', self.compiler, self.compiler.compiler_type)
 
     def run(self):
         """Copy the generated clibs to the extensions folder to be included in the wheel
