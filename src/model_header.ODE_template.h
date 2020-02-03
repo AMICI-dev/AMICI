@@ -735,7 +735,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_TOTAL_CL_IMPL
     
     std::string getName() const override {
-        return "TPL_MODELNAME"
+        return "TPL_MODELNAME";
     }
 
     /**
