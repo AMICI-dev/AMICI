@@ -89,21 +89,13 @@ class my_build_clib(build_clib):
         # start new code
         compilerType = self.compiler.compiler_type
         for lib in libraries:
-            try: lib[1]['cflags'] = lib[1]['cflags'] + lib[1]['cflags_'+compilerType]
+            try:
+               lib[1]['cflags'] = lib[1]['cflags'] + lib[1]['cflags_'+compilerType]
             except KeyError: None
-            print('***** ', lib[0], 'cflags: ', lib[1]['cflags'])
+            print('***** ', lib[0], 'cflags: ', lib[1]['cflags']) # ubiquitinated
         # end new code
 
-        print('***** my_build_clib, before calling build_clib.build_libraries')
-        print('****', self.compiler, self.compiler.compiler_type)
         build_clib.build_libraries(self, libraries)
-        print('***** my_build_clib, after calling build_clib.build_libraries')
-        print('****', self.compiler, self.compiler.compiler_type)
-
-        # print('In custom_commands.my_build_clib')
-        # print(distutils.ccompiler.CCompiler.compiler_type)
-        # print(distutils.ccompiler.compiler_class)
-        # print(distutils.ccompiler.compiler_class.get("compiler_type"))
 
 class my_develop(develop):
     """Custom develop to build clibs"""
@@ -158,7 +150,7 @@ class my_build_ext(build_ext):
     def build_extension(self, ext):
         # do replacements here
         compilerType = self.compiler.compiler_type
-        # this requires more work
+        # this requires more work, or maybe deletation of the commented code
         #try: ext.extra_compile_args = ext.extra_compile_args, ext.(extra_compile_args_+compilerType)]
         #except KeyError: None
         if compilerType == 'msvc':
@@ -166,13 +158,9 @@ class my_build_ext(build_ext):
             for index in range(len(ECA)):
                 ECA[index] = ECA[index].replace('-std=c++11', '/std:c++17')
             ext.extra_compile_args = ECA
-        print ('***** Extension extra_compile_args', ext.extra_compile_args)
+        print ('***** Extension extra_compile_args', ext.extra_compile_args) # ubiquitinated
 
-        print('***** my_build_ext, before calling build_ext.build_extension')
-        print('****', self.compiler, self.compiler.compiler_type)
         build_ext.build_extension(self, ext)
-        print('***** my_build_ext, after calling build_ext.build_extension')
-        print('****', self.compiler, self.compiler.compiler_type)
 
     def run(self):
         """Copy the generated clibs to the extensions folder to be included in the wheel
