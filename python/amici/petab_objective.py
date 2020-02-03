@@ -310,7 +310,7 @@ def get_edata_for_condition(
     if scaled_parameters:
         # For dynamic parameters we could also change ExpData.pscale, but since
         # we need to do it for fixed parameters anyways, we just do it for all
-        # and set pscale to linear. we can skip preequlibration parameters,
+        # and set pscale to linear. we can skip preequilibration parameters,
         # because they are identical with simulation parameters, and only the
         # latter are used from here on
         unscale_parameters_dict(condition_map_preeq_fix,
