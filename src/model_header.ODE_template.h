@@ -733,6 +733,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_X_SOLVER_IMPL
 
     TPL_TOTAL_CL_IMPL
+    
+    std::string getName() const override {
+        return "TPL_MODELNAME";
+    }
 
     /**
      * @brief Get names of the model parameters

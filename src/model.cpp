@@ -483,6 +483,10 @@ int Model::setFixedParametersByNameRegex(std::string const &par_name_regex,
                              par_name_regex, "fixedParameters", "name");
 }
 
+std::string Model::getName() const {
+    return "";
+}
+
 bool Model::hasParameterNames() const {
     return np() == 0 || !getParameterNames().empty();
 }
