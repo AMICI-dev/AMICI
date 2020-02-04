@@ -149,10 +149,10 @@ def main():
             *blaspkgcfg['library_dirs'],
             'amici/libs',  # clib target directory
         ],
-        extra_compile_args=['-std=c++11', *cxx_flags],
-        extra_compile_args_mingw32=['-std=c++11'],
-        extra_compile_args_unix=['-std=c++11'],
-        extra_compile_args_msvc=['/std:c++17'],
+        extra_compile_args=['-std=c++14', *cxx_flags],
+        extra_compile_args_mingw32=['-std=c++14'],
+        extra_compile_args_unix=['-std=c++14'],
+        extra_compile_args_msvc=['/std:c++14'],
         extra_link_args=amici_module_linker_flags
     )
 

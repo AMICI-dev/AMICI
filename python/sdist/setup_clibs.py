@@ -221,9 +221,9 @@ def getLibAmici(extra_compiler_flags=None, h5pkgcfg=None, blaspkgcfg=None):
                          'amici/ThirdParty/gsl/',
                          ],
         'cflags': [*extra_compiler_flags],
-        'cflags_mingw32': ['-std=c++11'],
-        'cflags_unix': ['-std=c++11'],
-        'cflags_msvc': ['/std:c++17'],
+        'cflags_mingw32': ['-std=c++14'],
+        'cflags_unix': ['-std=c++14'],
+        'cflags_msvc': ['/std:c++14'],
         'macros': [],
     })
 

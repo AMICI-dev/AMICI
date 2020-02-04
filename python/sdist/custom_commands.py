@@ -92,7 +92,6 @@ class my_build_clib(build_clib):
             try:
                lib[1]['cflags'] = lib[1]['cflags'] + lib[1]['cflags_'+compilerType]
             except KeyError: None
-            print('***** ', lib[0], 'cflags: ', lib[1]['cflags']) # ubiquitinated
         # end new code
 
         build_clib.build_libraries(self, libraries)
@@ -156,9 +155,8 @@ class my_build_ext(build_ext):
         if compilerType == 'msvc':
             ECA = ext.extra_compile_args
             for index in range(len(ECA)):
-                ECA[index] = ECA[index].replace('-std=c++11', '/std:c++17')
+                ECA[index] = ECA[index].replace('-std=c++14', '/std:c++14')
             ext.extra_compile_args = ECA
-        print ('***** Extension extra_compile_args', ext.extra_compile_args) # ubiquitinated
 
         build_ext.build_extension(self, ext)
 
