@@ -419,6 +419,13 @@ class Model : public AbstractModel {
                                       realtype value);
 
     /**
+     * @brief Returns the model name
+     * @return model name
+     */
+    virtual std::string getName() const;
+    
+    
+    /**
      * @brief Reports whether the model has parameter names set.
      * Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether parameter names were set
