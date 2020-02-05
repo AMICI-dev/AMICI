@@ -96,4 +96,3 @@ std::string printfToString(const char *fmt, va_list ap);
 } // namespace amici
 
 #endif // AMICI_MISC_H
-
