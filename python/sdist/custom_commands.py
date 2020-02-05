@@ -251,11 +251,12 @@ class my_sdist(sdist):
 
         """
         with open("amici/git_version.txt", "w") as f:
-            sp = subprocess.run(['git', 'describe',
-                                 '--abbrev=4', '--dirty=-dirty',
-                                 '--always', '--tags'],
-                                 stdout=f)
-        assert(sp.returncode == 0)
+            try:
+                cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
+                       '--always', '--tags']
+                subprocess.run(cmd, stdout=f)
+            except Exception as e:
+                print(e)
 
 
 def set_compiler_specific_library_options(
