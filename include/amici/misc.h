@@ -95,16 +95,5 @@ std::string printfToString(const char *fmt, va_list ap);
 
 } // namespace amici
 
-#ifndef __cpp_lib_make_unique
-// custom make_unique while we are still using c++11
-namespace std {
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args)
-{
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-}
-#endif
-
 #endif // AMICI_MISC_H
 
