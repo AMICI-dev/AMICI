@@ -82,9 +82,9 @@ def main():
     model_module = importlib.import_module(args.model_name)
     amici_model = model_module.getModel()
 
-    llh, rdatas = simulate_petab(petab_problem=problem,
-                                 amici_model=amici_model,
-                                 log_level=logging.DEBUG)
+    llh, sllh, rdatas = simulate_petab(
+        petab_problem=problem, amici_model=amici_model,
+        log_level=logging.DEBUG)
 
     # create simulation PEtab table
     sim_df = rdatas_to_measurement_df(rdatas=rdatas, model=amici_model,

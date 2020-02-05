@@ -24,7 +24,7 @@ def simulate_petab(petab_problem: petab.Problem,
                    solver: Optional[amici.Solver] = None,
                    problem_parameters: Optional[Dict[str, float]] = None,
                    log_level: int = logging.WARNING
-                   ) -> Tuple[float, List[amici.ReturnData]]:
+                   ) -> Tuple[float, Dict[str, float], List[amici.ReturnData]]:
     """Simulate PEtab model
 
     Arguments:
@@ -62,6 +62,9 @@ def simulate_petab(petab_problem: petab.Problem,
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
+    sllh = aggregate_sllh(amici_model=amici_model,
+                          petab_problem=petab_problem,
+                          rdatas=rdatas)
 
     # log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -70,7 +73,7 @@ def simulate_petab(petab_problem: petab.Problem,
         logger.debug(f"Condition: {sim_cond.iloc[i, :].values}, status: "
                      f"{rdata['status']}, llh: {rdata['llh']}")
 
-    return llh, rdatas
+    return llh, sllh, rdatas
 
 
 def edatas_from_petab(
@@ -429,10 +432,8 @@ def unscale_parameters_dict(
     if not value_dict.keys() == petab_scale_dict.keys():
         raise AssertionError("Keys don't match.")
 
-    print(value_dict)
     for key, value in value_dict.items():
         value_dict[key] = unscale_parameter(value, petab_scale_dict[key])
-    print(value_dict)
 
 
 def _get_timepoints_with_replicates(
@@ -578,3 +579,44 @@ def rdatas_to_measurement_df(
             df = df.append(row_sim, ignore_index=True)
 
     return df
+
+
+def aggregate_sllh(
+        amici_model: amici.Model,
+        rdatas: Sequence[amici.ReturnDataView],
+        petab_problem: Optional[petab.Problem] = None,
+        parameter_mapping: Optional[List[petab.ParMappingDictTuple]] = None
+) -> Dict[str, float]:
+    """Aggregate likelihood gradient for all conditions, according to PEtab
+    parameter mapping.
+
+    Arguments:
+        amici_model: AMICI model from which ``rdatas`` were obtained
+        rdatas: Simulation results
+        petab_problem: PEtab problem for parameter mapping. Optional/ignored if
+            ``parameter_mapping`` is provided.
+        parameter_mapping: PEtab parameter mapping to condition-specific
+            simulation parameters.
+    """
+
+    if parameter_mapping is None:
+        if petab_problem is None:
+            raise ValueError("Either petab_problem or parameter_mapping"
+                             "has to be provided.")
+        parameter_mapping = \
+            petab_problem.get_optimization_to_simulation_parameter_mapping(
+                warn_unmapped=False)
+        # TODO: merge preeq and sim
+
+    sllh = {}
+    model_par_ids = amici_model.getParameterIds()
+    for (_, par_map_sim), rdata in zip(parameter_mapping, rdatas):
+        for model_par_id, problem_par_id in par_map_sim.items():
+            if isinstance(problem_par_id, str):
+                model_par_idx  = model_par_ids.index(model_par_id)
+                cur_par_sllh = rdata['sllh'][model_par_idx]
+                try:
+                    sllh[problem_par_id] += cur_par_sllh
+                except KeyError:
+                    sllh[problem_par_id] = cur_par_sllh
+    return sllh
