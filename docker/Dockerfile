@@ -1,16 +1,21 @@
 FROM alpine
 
-RUN apk add blas-dev \
+RUN apk add --update-cache --no-cache \
+    blas-dev \
     g++ \
+    libgcc \
+    libquadmath \
     musl-dev \
     py3-numpy \
     python3 \
     python3-dev \
     swig
-
+RUN echo "http://dl-8.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && apk add py3-pandas py3-matplotlib py3-scipy
+#RUN addgroup user && useradd --no-log-init -g user user
+#USER user
 COPY amici.tar.gz /tmp
 
-RUN pip3 install -U --upgrade pip \
+RUN pip3 install -U --upgrade pip wheel \
     && mkdir -p /tmp/amici/ \
     && cd /tmp/amici \
     && tar -xzf ../amici.tar.gz \

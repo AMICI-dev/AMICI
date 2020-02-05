@@ -11,3 +11,4 @@ cd docker && docker build -t $USER/amici:latest .
 
 ## Use image
 
+TODO: start Jupyter + example notebooks
