@@ -19,23 +19,43 @@ logger = get_logger(__name__)
 
 
 @log_execution_time('Simulating PEtab model', logger)
-def simulate_petab(petab_problem: petab.Problem,
-                   amici_model: amici.Model,
-                   solver: Optional[amici.Solver] = None,
-                   problem_parameters: Optional[Dict[str, float]] = None,
-                   log_level: int = logging.WARNING
-                   ) -> Tuple[float, Dict[str, float], List[amici.ReturnData]]:
+def simulate_petab(
+        petab_problem: petab.Problem,
+        amici_model: amici.Model,
+        solver: Optional[amici.Solver] = None,
+        problem_parameters: Optional[Dict[str, float]] = None,
+        simulation_conditions: Union[pd.DataFrame, Dict] = None,
+        parameter_mapping: List[petab.ParMappingDictTuple] = None,
+        parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
+        scaled_parameters: Optional[bool] = False,
+        log_level: int = logging.WARNING
+) -> Tuple[float, Dict[str, float], List[amici.ReturnData]]:
     """Simulate PEtab model
 
     Arguments:
-        petab_problem: PEtab problem to work on
-        amici_model: AMICI Model assumed to be compatible with
-            ``petab_problem``
-        solver: An AMICI solver. Will use default options if None.
-        problem_parameters: Run simulation with these parameters. If None,
+        petab_problem:
+            PEtab problem to work on.
+        amici_model:
+            AMICI Model assumed to be compatible with ``petab_problem``.
+        solver:
+            An AMICI solver. Will use default options if None.
+        problem_parameters:
+            Run simulation with these parameters. If None,
             PEtab `nominalValues` will be used). To be provided as dict,
             mapping PEtab problem parameters to SBML IDs.
-        log_level: Log level, see `logging` module
+        simulation_conditions:
+            Result of petab.get_simulation_conditions. Can be provided to save
+            time if this has be obtained before.
+        parameter_mapping:
+            Optional precomputed PEtab parameter mapping for efficiency.
+        parameter_scale_mapping:
+            Optional precomputed PEtab parameter scale mapping for efficiency.
+        scaled_parameters:
+            If True, problem_parameters are assumed to be on the scale provided
+            in the PEtab parameter table and will be unscaled. If False, they
+            are assumed to be in linear scale.
+        log_level:
+            Log level, see `logging` module.
     Returns:
         Tuple of cost function value and a list of `ReturnData`s, corresponding
         to the different simulation conditions. For ordering of simulation
@@ -53,9 +73,14 @@ def simulate_petab(petab_problem: petab.Problem,
                               petab_problem.parameter_df.itertuples()}
 
     # Generate ExpData with all condition-specific information
-    edatas = edatas_from_petab(model=amici_model,
-                               petab_problem=petab_problem,
-                               problem_parameters=problem_parameters)
+    edatas = edatas_from_petab(
+        model=amici_model,
+        petab_problem=petab_problem,
+        problem_parameters=problem_parameters,
+        simulation_conditions=simulation_conditions,
+        parameter_mapping=parameter_mapping,
+        parameter_scale_mapping=parameter_scale_mapping,
+        scaled_parameters=scaled_parameters)
 
     # Simulate
     rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
