@@ -796,7 +796,7 @@ class SbmlImporter:
         # rules
         for variable in assignments.keys():
             self.replaceInAllExpressions(
-                sp.sympify(variable, locals=self.local_symbols),
+                sp.Symbol(variable, real=True),
                 assignments[variable]
             )
         for comp, vol in zip(self.compartmentSymbols, self.compartmentVolume):
@@ -910,9 +910,19 @@ class SbmlImporter:
                     )
                     observables[observable]['formula'] = repl
 
+            def replace_assignments(formula):
+                """Replace assignment rules in observables"""
+                formula = sp.sympify(formula, locals=self.local_symbols)
+                for s in formula.free_symbols:
+                    r = self.sbml.getAssignmentRuleByVariable(str(s))
+                    if r is not None:
+                        formula = formula.replace(s, sp.sympify(
+                            sbml.formulaToL3String(r.getMath()),
+                             locals=self.local_symbols))
+                return formula
+
             observableValues = sp.Matrix([
-                sp.sympify(observables[observable]['formula'],
-                           locals=self.local_symbols)
+                replace_assignments(observables[observable]['formula'])
                 for observable in observables
             ])
             observableNames = [
