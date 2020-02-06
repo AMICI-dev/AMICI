@@ -15,6 +15,14 @@ from amici.logging import get_logger, log_execution_time
 from petab.C import *
 
 
+LLH = 'llh'
+SLLH = 'sllh'
+FIM = 'fim'
+S2LLH = 's2llh'
+RES = 'res'
+SRES = 'sres'
+RDATAS = 'rdatas'
+
 logger = get_logger(__name__)
 
 
@@ -28,6 +36,7 @@ def simulate_petab(
         parameter_mapping: List[petab.ParMappingDictTuple] = None,
         parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
         scaled_parameters: Optional[bool] = False,
+        sensi_order: Optional[int] = 1,
         log_level: int = logging.WARNING
 ) -> Tuple[float, Dict[str, float], List[amici.ReturnData]]:
     """Simulate PEtab model
@@ -54,6 +63,8 @@ def simulate_petab(
             If True, problem_parameters are assumed to be on the scale provided
             in the PEtab parameter table and will be unscaled. If False, they
             are assumed to be in linear scale.
+        sensi_order:
+            Maximum sensitivity order to compute.
         log_level:
             Log level, see `logging` module.
     Returns:
@@ -67,10 +78,17 @@ def simulate_petab(
     if solver is None:
         solver = amici_model.getSolver()
 
+    # Get parameters
     if problem_parameters is None:
         # Use PEtab nominal values as default
         problem_parameters = {t.Index: getattr(t, NOMINAL_VALUE) for t in
                               petab_problem.parameter_df.itertuples()}
+
+    # Get parameter mapping
+    if parameter_mapping is None:
+        parameter_mapping = \
+            petab_problem.get_optimization_to_simulation_parameter_mapping(
+                warn_unmapped=False)
 
     # Generate ExpData with all condition-specific information
     edatas = edatas_from_petab(
@@ -82,14 +100,25 @@ def simulate_petab(
         parameter_scale_mapping=parameter_scale_mapping,
         scaled_parameters=scaled_parameters)
 
+    # Set sensitivity order
+    solver.setSensitivityOrder(sensi_order)
+
     # Simulate
     rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
-    sllh = aggregate_sllh(amici_model=amici_model,
-                          petab_problem=petab_problem,
-                          rdatas=rdatas)
+    # Compute total sllh
+    sllh = aggregate_sllh(amici_model=amici_model, rdatas=rdatas,
+                          parameter_mapping=parameter_mapping)
+    # Compute total fim
+    fim = None
+    # Compute total s2llh
+    s2llh = None
+    # Compute total res
+    res = None
+    # Compute total sres
+    sres = None
 
     # log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -98,7 +127,15 @@ def simulate_petab(
         logger.debug(f"Condition: {sim_cond.iloc[i, :].values}, status: "
                      f"{rdata['status']}, llh: {rdata['llh']}")
 
-    return llh, sllh, rdatas
+    return {
+        LLH: llh,
+        SLLH: sllh,
+        FIM: fim,
+        S2LLH: s2llh,
+        RES: res,
+        SRES: sres,
+        RDATAS: rdatas
+    }
 
 
 def edatas_from_petab(
@@ -155,11 +192,8 @@ def edatas_from_petab(
 
     if parameter_scale_mapping is None:
         parameter_scale_mapping = \
-            petab.get_optimization_to_simulation_scale_mapping(
-                mapping_par_opt_to_par_sim=parameter_mapping,
-                parameter_df=petab_problem.parameter_df,
-                measurement_df=petab_problem.measurement_df
-            )
+            petab_problem.get_optimization_to_simulation_scale_mapping(
+                mapping_par_opt_to_par_sim=parameter_mapping)
 
     observable_ids = model.getObservableIds()
 
@@ -609,30 +643,20 @@ def rdatas_to_measurement_df(
 def aggregate_sllh(
         amici_model: amici.Model,
         rdatas: Sequence[amici.ReturnDataView],
-        petab_problem: Optional[petab.Problem] = None,
-        parameter_mapping: Optional[List[petab.ParMappingDictTuple]] = None
+        parameter_mapping: Optional[List[petab.ParMappingDictTuple]],
 ) -> Dict[str, float]:
     """Aggregate likelihood gradient for all conditions, according to PEtab
     parameter mapping.
 
     Arguments:
-        amici_model: AMICI model from which ``rdatas`` were obtained
-        rdatas: Simulation results
-        petab_problem: PEtab problem for parameter mapping. Optional/ignored if
-            ``parameter_mapping`` is provided.
-        parameter_mapping: PEtab parameter mapping to condition-specific
+        amici_model:
+            AMICI model from which ``rdatas`` were obtained.
+        rdatas:
+            Simulation results.
+        parameter_mapping:
+            PEtab parameter mapping to condition-specific
             simulation parameters.
     """
-
-    if parameter_mapping is None:
-        if petab_problem is None:
-            raise ValueError("Either petab_problem or parameter_mapping"
-                             "has to be provided.")
-        parameter_mapping = \
-            petab_problem.get_optimization_to_simulation_parameter_mapping(
-                warn_unmapped=False)
-        # TODO: merge preeq and sim
-
     sllh = {}
     model_par_ids = amici_model.getParameterIds()
     for (_, par_map_sim), rdata in zip(parameter_mapping, rdatas):
