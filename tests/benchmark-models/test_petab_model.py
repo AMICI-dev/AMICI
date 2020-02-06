@@ -13,7 +13,8 @@ import sys
 import petab
 import yaml
 from amici.logging import get_logger
-from amici.petab_objective import simulate_petab, rdatas_to_measurement_df
+from amici.petab_objective import (simulate_petab, rdatas_to_measurement_df,
+                                   LLH, RDATAS)
 from petab.visualize import plot_petab_problem
 
 logger = get_logger(f"amici.{__name__}", logging.WARNING)
@@ -63,7 +64,6 @@ def parse_cli_args():
 def main():
     """Simulate the model specified on the command line"""
 
-
     args = parse_cli_args()
 
     if args.verbose:
@@ -82,9 +82,11 @@ def main():
     model_module = importlib.import_module(args.model_name)
     amici_model = model_module.getModel()
 
-    llh, sllh, rdatas = simulate_petab(
+    res = simulate_petab(
         petab_problem=problem, amici_model=amici_model,
         log_level=logging.DEBUG)
+    rdatas = res[RDATAS]
+    llh = res[LLH]
 
     # create simulation PEtab table
     sim_df = rdatas_to_measurement_df(rdatas=rdatas, model=amici_model,

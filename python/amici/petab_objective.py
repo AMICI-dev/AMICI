@@ -644,7 +644,7 @@ def aggregate_sllh(
         amici_model: amici.Model,
         rdatas: Sequence[amici.ReturnDataView],
         parameter_mapping: Optional[List[petab.ParMappingDictTuple]],
-) -> Dict[str, float]:
+) -> Union[None, Dict[str, float]]:
     """Aggregate likelihood gradient for all conditions, according to PEtab
     parameter mapping.
 
@@ -660,6 +660,9 @@ def aggregate_sllh(
     sllh = {}
     model_par_ids = amici_model.getParameterIds()
     for (_, par_map_sim), rdata in zip(parameter_mapping, rdatas):
+        if rdata['status'] != amici.AMICI_SUCCESS or 'sllh' not in rdata:
+            return None
+
         for model_par_id, problem_par_id in par_map_sim.items():
             if isinstance(problem_par_id, str):
                 model_par_idx  = model_par_ids.index(model_par_id)
