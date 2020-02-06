@@ -10,7 +10,7 @@ RUN apk add --update-cache --no-cache \
     python3 \
     python3-dev \
     swig
-RUN echo "http://dl-8.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && apk add py3-pandas py3-matplotlib py3-scipy
+RUN echo "http://dl-8.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && apk add py3-pandas py3-matplotlib py3-scipy py3-h5py
 #RUN addgroup user && useradd --no-log-init -g user user
 #USER user
 COPY amici.tar.gz /tmp
