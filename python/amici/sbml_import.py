@@ -315,7 +315,7 @@ class SbmlImporter:
                                 'are currently not supported!')
 
         if hasattr(self.sbml, 'all_elements_from_plugins') \
-                and len(self.sbml.all_elements_from_plugins) > 0:
+                and self.sbml.all_elements_from_plugins.getSize() > 0:
             raise SBMLException('SBML extensions are currently not supported!')
 
         if len(self.sbml.getListOfEvents()) > 0:
