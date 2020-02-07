@@ -196,24 +196,27 @@ def import_petab_problem(
         **kwargs):
     """
     Import model from petab problem.
-    Parameters
-    ----------
-    petab_problem:
-        A petab problem containing all relevant information on the model.
-    folder:
-        Directory to write the model code to. Will be created if doesn't
-        exist. Defaults to current directory.
-    model_name:
-        Name of the generated model. If model file name was provided,
-        this defaults to the file name without extension, otherwise
-        the SBML model ID will be used.
-    force_compile:
-        Whether to compile the model even if the target folder is not empty,
-        or the model exists already.
+
+    Arguments:
+        petab_problem:
+            A petab problem containing all relevant information on the model.
+        folder:
+            Directory to write the model code to. Will be created if doesn't
+            exist. Defaults to current directory.
+        model_name:
+            Name of the generated model. If model file name was provided,
+            this defaults to the file name without extension, otherwise
+            the SBML model ID will be used.
+        force_compile:
+            Whether to compile the model even if the target folder is not
+            empty, or the model exists already.
+        **kwargs:
+            Additional keyword arguments to be passed to
+            ``amici.sbml_importer.sbml2amici``.
+
     Returns
-    -------
-    model:
-        The imported model.
+        model:
+            The imported model.
     """
     # generate folder and model name if necessary
     if folder is None:
