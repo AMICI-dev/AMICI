@@ -8,6 +8,9 @@ import logging
 import math
 import os
 import time
+import sys
+import shutil
+import importlib
 from typing import List, Dict, Union, Optional
 
 import amici
@@ -183,6 +186,126 @@ def constant_species_to_parameters(sbml_model: 'libsbml.Model') -> List[str]:
         transformables.append(species.getId())
 
     return species_to_parameters(transformables, sbml_model)
+
+
+def import_petab_problem(
+        petab_problem: petab.Problem,
+        folder: str = None,
+        model_name: str = None,
+        force_compile: bool = False,
+        **kwargs):
+    """
+    Import model from petab problem.
+    Parameters
+    ----------
+    petab_problem:
+        A petab problem containing all relevant information on the model.
+    folder:
+        Directory to write the model code to. Will be created if doesn't
+        exist. Defaults to current directory.
+    model_name:
+        Name of the generated model. If model file name was provided,
+        this defaults to the file name without extension, otherwise
+        the SBML model ID will be used.
+    force_compile:
+        Whether to compile the model even if the target folder is not empty,
+        or the model exists already.
+    Returns
+    -------
+    model:
+        The imported model.
+    """
+    # generate folder and model name if necessary
+    if folder is None:
+        folder = _create_folder_name(petab_problem.sbml_model)
+    if model_name is None:
+        model_name = _create_model_name(folder)
+
+    # create folder
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    # add to path
+    if folder not in sys.path:
+        sys.path.insert(0, folder)
+
+    # check if compilation necessary
+    if not _can_import_model(model_name) or force_compile:
+        # check if folder exists
+        if os.listdir(folder) and not force_compile:
+            raise ValueError(
+                f"Cannot compile to {folder}: not empty. Please assign a "
+                "different target or set `force_compile`.")
+
+        # remove folder if exists
+        if os.path.exists(folder):
+            shutil.rmtree(folder)
+
+        logger.info(f"Compiling model {model_name} to {folder}.")
+
+        # compile the model
+        import_model(sbml_model=petab_problem.sbml_model,
+                     condition_table=petab_problem.condition_df,
+                     observable_table=petab_problem.observable_df,
+                     model_name=model_name,
+                     model_output_dir=folder,
+                     **kwargs)
+
+    # load moduule
+    model_module = importlib.import_module(model_name)
+
+    # import model
+    model = model_module.getModel()
+
+    logger.info(f"Successfully loaded model {model_name} from {folder}.")
+
+    return model
+
+
+def _create_folder_name(sbml_model: 'libsbml.Model'):
+    """
+    Find a folder for storing the compiled amici model.
+    If possible, use the sbml model id, otherwise create a random folder.
+    The folder will be located in the `amici_models` subfolder of the current
+    folder.
+    """
+    BASE_DIR = os.path.abspath("amici_models")
+
+    # create base directory
+    if not os.path.exists(BASE_DIR):
+        os.makedirs(BASE_DIR)
+
+    # try sbml model id
+    sbml_model_id = sbml_model.getId()
+    if sbml_model_id:
+        folder = os.path.join(BASE_DIR, sbml_model_id)
+    else:
+        # create random folder name
+        folder = tempfile.mkdtemp(dir=BASE_DIR)
+
+    return folder
+
+
+def _create_model_name(folder: str):
+    """
+    Create a name for the model.
+    Just re-use the last part of the folder.
+    """
+    return os.path.split(os.path.normpath(folder))[-1]
+
+
+def _can_import_model(model_name: str):
+    """
+    Check whether a module of that name can already be imported.
+    """
+    # try to import (in particular checks version)
+    try:
+        importlib.import_module(model_name)
+    except ModuleNotFoundError:
+        return False
+
+    # no need to (re-)compile
+    return True
 
 
 def import_model(sbml_model: Union[str, 'libsbml.Model'],
