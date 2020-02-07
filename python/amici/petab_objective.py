@@ -660,7 +660,9 @@ def aggregate_sllh(
     sllh = {}
     model_par_ids = amici_model.getParameterIds()
     for (_, par_map_sim), rdata in zip(parameter_mapping, rdatas):
-        if rdata['status'] != amici.AMICI_SUCCESS or 'sllh' not in rdata:
+        if rdata['status'] != amici.AMICI_SUCCESS \
+                or 'sllh' not in rdata\
+                or rdata['sllh'] is None:
             return None
 
         for model_par_id, problem_par_id in par_map_sim.items():
