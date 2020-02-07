@@ -190,17 +190,17 @@ def constant_species_to_parameters(sbml_model: 'libsbml.Model') -> List[str]:
 
 def import_petab_problem(
         petab_problem: petab.Problem,
-        folder: str = None,
+        model_output_dir: str = None,
         model_name: str = None,
         force_compile: bool = False,
-        **kwargs):
+        **kwargs) -> amici.Model:
     """
     Import model from petab problem.
 
     Arguments:
         petab_problem:
             A petab problem containing all relevant information on the model.
-        folder:
+        model_output_dir:
             Directory to write the model code to. Will be created if doesn't
             exist. Defaults to current directory.
         model_name:
@@ -219,39 +219,39 @@ def import_petab_problem(
             The imported model.
     """
     # generate folder and model name if necessary
-    if folder is None:
-        folder = _create_folder_name(petab_problem.sbml_model)
+    if model_output_dir is None:
+        model_output_dir = _create_model_output_dir_name(petab_problem.sbml_model)
     if model_name is None:
-        model_name = _create_model_name(folder)
+        model_name = _create_model_name(model_output_dir)
 
     # create folder
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    if not os.path.exists(model_output_dir):
+        os.makedirs(model_output_dir)
 
     # add to path
-    if folder not in sys.path:
-        sys.path.insert(0, folder)
+    if model_output_dir not in sys.path:
+        sys.path.insert(0, model_output_dir)
 
     # check if compilation necessary
     if not _can_import_model(model_name) or force_compile:
         # check if folder exists
-        if os.listdir(folder) and not force_compile:
+        if os.listdir(model_output_dir) and not force_compile:
             raise ValueError(
-                f"Cannot compile to {folder}: not empty. Please assign a "
+                f"Cannot compile to {model_output_dir}: not empty. Please assign a "
                 "different target or set `force_compile`.")
 
         # remove folder if exists
-        if os.path.exists(folder):
-            shutil.rmtree(folder)
+        if os.path.exists(model_output_dir):
+            shutil.rmtree(model_output_dir)
 
-        logger.info(f"Compiling model {model_name} to {folder}.")
+        logger.info(f"Compiling model {model_name} to {model_output_dir}.")
 
         # compile the model
         import_model(sbml_model=petab_problem.sbml_model,
                      condition_table=petab_problem.condition_df,
                      observable_table=petab_problem.observable_df,
                      model_name=model_name,
-                     model_output_dir=folder,
+                     model_output_dir=model_output_dir,
                      **kwargs)
 
     # load moduule
@@ -260,12 +260,12 @@ def import_petab_problem(
     # import model
     model = model_module.getModel()
 
-    logger.info(f"Successfully loaded model {model_name} from {folder}.")
+    logger.info(f"Successfully loaded model {model_name} from {model_output_dir}.")
 
     return model
 
 
-def _create_folder_name(sbml_model: 'libsbml.Model'):
+def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> str:
     """
     Find a folder for storing the compiled amici model.
     If possible, use the sbml model id, otherwise create a random folder.
@@ -281,15 +281,15 @@ def _create_folder_name(sbml_model: 'libsbml.Model'):
     # try sbml model id
     sbml_model_id = sbml_model.getId()
     if sbml_model_id:
-        folder = os.path.join(BASE_DIR, sbml_model_id)
+        model_output_dir = os.path.join(BASE_DIR, sbml_model_id)
     else:
         # create random folder name
-        folder = tempfile.mkdtemp(dir=BASE_DIR)
+        model_output_dir = tempfile.mkdtemp(dir=BASE_DIR)
 
-    return folder
+    return model_output_dir
 
 
-def _create_model_name(folder: str):
+def _create_model_name(folder: str) -> str:
     """
     Create a name for the model.
     Just re-use the last part of the folder.
@@ -297,7 +297,7 @@ def _create_model_name(folder: str):
     return os.path.split(os.path.normpath(folder))[-1]
 
 
-def _can_import_model(model_name: str):
+def _can_import_model(model_name: str) -> bool:
     """
     Check whether a module of that name can already be imported.
     """
