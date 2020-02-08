@@ -138,6 +138,7 @@ matrix:
       git:
         # clone after enabled symlinks below
         clone: false
+      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
       before_install:
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
         # allow PowerShell to run scripts

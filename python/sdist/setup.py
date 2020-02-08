@@ -149,12 +149,14 @@ def main():
             *blaspkgcfg['library_dirs'],
             'amici/libs',  # clib target directory
         ],
-        extra_compile_args=['-std=c++14', *cxx_flags],
-        extra_compile_args_mingw32=['-std=c++14'],
-        extra_compile_args_unix=['-std=c++14'],
-        extra_compile_args_msvc=['/std:c++14'],
+        extra_compile_args=cxx_flags,
         extra_link_args=amici_module_linker_flags
     )
+    # Monkey-patch extension (see
+    # `custom_commands.set_compiler_specific_extension_options`)
+    amici_module.extra_compile_args_mingw32 = ['-std=c++14']
+    amici_module.extra_compile_args_unix = ['-std=c++14']
+    amici_module.extra_compile_args_msvc = ['/std:c++14']
 
     # Install
     setup(
