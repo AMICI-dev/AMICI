@@ -139,11 +139,12 @@ matrix:
         clone: false
       before_install:
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-        - choco install python --version 3.8.0
+        # stick to python 3.7 until there is a 3.8 wheel for windows
+        # as installation from sdist fails because of reasons...
+        - choco install python --version 3.7.5
         - choco install swig
         - python -m pip install --upgrade pip
         - pip install --user -U numpy
-      env: PATH=/c/Python38:/c/Python38/Scripts:$PATH
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
 
