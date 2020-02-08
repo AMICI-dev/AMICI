@@ -36,7 +36,6 @@ def simulate_petab(
         parameter_mapping: List[petab.ParMappingDictTuple] = None,
         parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
         scaled_parameters: Optional[bool] = False,
-        sensi_order: Optional[int] = 1,
         log_level: int = logging.WARNING
 ) -> Dict[str, Any]:
     """Simulate PEtab model
@@ -63,8 +62,6 @@ def simulate_petab(
             If True, problem_parameters are assumed to be on the scale provided
             in the PEtab parameter table and will be unscaled. If False, they
             are assumed to be in linear scale.
-        sensi_order:
-            Maximum sensitivity order to compute.
         log_level:
             Log level, see `logging` module.
     Returns:
@@ -99,9 +96,6 @@ def simulate_petab(
         parameter_mapping=parameter_mapping,
         parameter_scale_mapping=parameter_scale_mapping,
         scaled_parameters=scaled_parameters)
-
-    # Set sensitivity order
-    solver.setSensitivityOrder(sensi_order)
 
     # Simulate
     rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
