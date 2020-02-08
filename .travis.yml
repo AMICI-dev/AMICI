@@ -136,17 +136,26 @@ matrix:
       language: cpp
       compiler: msvc
       git:
+        # clone after enabled symlinks below
         clone: false
       before_install:
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
+        # allow PowerShell to run scripts
+        - powershell -Command Set-ExecutionPolicy Unrestricted -Force
+        # Enable Windows developer mode to support symlinks
+        - powershell -Command New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" -Name AllowDevelopmentWithoutDevLicense -Value 1  -PropertyType DWord
         # stick to python 3.7 until there is a 3.8 wheel for windows
         # as installation from sdist fails because of reasons...
         - choco install python --version 3.7.5
         - choco install swig
         - python -m pip install --upgrade pip
         - pip install --user -U numpy
-      after_success:
-        - cd $BASE_DIR # cd to base dir for correct relative path in deploy
+        - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
+        - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
+        # run BLAS installation script
+        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS; fi
+        # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
+        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib libopenblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-0.3.6-x64\\include'; fi
 
 install:
     - export BASE_DIR=`pwd`
@@ -163,21 +172,6 @@ install:
     - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildAmici.sh; fi
     - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
-    #- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install --user -U pip; fi
-    # allow PowerShell to run scripts
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command Set-ExecutionPolicy Unrestricted -Force; fi
-    # Enable Windows developer mode to support symlinks
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -Command New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" -Name AllowDevelopmentWithoutDevLicense -Value 1  -PropertyType DWord; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip -v install python-libsbml; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]] && [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
-    # run BLAS installation script
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS; fi
-    # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib libopenblas.lib'; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-0.3.6-x64\\include'; fi
-    # end of all code to install BLAS and test results
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t dist/amici-*.tar.gz | head -1); fi
 
