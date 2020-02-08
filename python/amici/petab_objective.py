@@ -38,7 +38,7 @@ def simulate_petab(
         scaled_parameters: Optional[bool] = False,
         sensi_order: Optional[int] = 1,
         log_level: int = logging.WARNING
-) -> Tuple[float, Dict[str, float], List[amici.ReturnData]]:
+) -> Dict[str, Any]:
     """Simulate PEtab model
 
     Arguments:
@@ -231,7 +231,7 @@ def subset_dict(full: Dict[Any, Any],
 
 
 def get_edata_for_condition(
-        condition: Dict,
+        condition: Union[Dict, pd.Series],
         problem_parameters: Dict[str, numbers.Number],
         amici_model: amici.Model,
         petab_problem: petab.Problem,
