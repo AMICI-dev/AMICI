@@ -14,6 +14,7 @@ from setuptools.command.develop import develop
 from setuptools.command.install import install
 from setuptools.command.install_lib import install_lib
 from setuptools.command.sdist import sdist
+from distutils import log
 
 # typehints
 Library = Tuple[str, Dict[str, List[str]]]
@@ -286,8 +287,8 @@ def set_compiler_specific_library_options(
         for field in ['cflags', 'sources', 'macros']:
             try:
                 lib[1][field] += lib[1][f'{field}_{compiler_type}']
-                print(f"Changed {field} for {lib[0]} with {compiler_type} "
-                      f"to {lib[1][field]}")
+                log.info(f"Changed {field} for {lib[0]} with {compiler_type} "
+                         f"to {lib[1][field]}")
             except KeyError:
                 # No compiler-specific options set
                 pass
@@ -310,7 +311,7 @@ def set_compiler_specific_extension_options(
             new_value = getattr(ext, attr) + \
                 getattr(ext, f'{attr}_{compiler_type}')
             setattr(ext, attr, new_value)
-            print(f"Changed {attr} for {compiler_type} to {new_value}")
+            log.info(f"Changed {attr} for {compiler_type} to {new_value}")
         except AttributeError:
             # No compiler-specific options set
             pass

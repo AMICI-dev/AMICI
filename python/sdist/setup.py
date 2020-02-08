@@ -16,10 +16,8 @@ from setuptools import find_packages, setup, Extension
 
 import os
 import sys
-import string
 import sysconfig
 import subprocess
-from distutils.ccompiler import new_compiler
 import setup_clibs # Must run from within containing directory
 from custom_commands import (my_install, my_build_clib, my_develop,
                              my_install_lib, my_build_ext, my_sdist)
