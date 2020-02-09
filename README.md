@@ -1,4 +1,4 @@
-# <img src="./documentation/gfx/logo.png" height="50"> AMICI - Advanced Multilanguage Interface for CVODES and IDAS 
+# <img src="./documentation/gfx/logo_text.png" height="25"> Advanced Multilanguage Interface for CVODES and IDAS 
 
 ## About 
 
