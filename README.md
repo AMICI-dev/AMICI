@@ -1,6 +1,6 @@
-<img src="./documentation/gfx/banner.png" width="200" align="right">
+<img src="./documentation/gfx/banner.png" width="150" align="right">
 
-# <img src="./documentation/gfx/logo.png" height="35"> Advanced Multilanguage Interface for CVODES and IDAS 
+# Advanced Multilanguage Interface for CVODES and IDAS 
 
 ## About 
 
