@@ -1,4 +1,4 @@
-# <img src="./documentation/gfx/logo.png" height="25" align="left"> Advanced Multilanguage Interface for CVODES and IDAS 
+# <img src="./documentation/gfx/logo.png" height="35" align="left"> Advanced Multilanguage Interface for CVODES and IDAS 
 
 ## About 
 
