@@ -65,9 +65,15 @@ def simulate_petab(
         log_level:
             Log level, see `logging` module.
     Returns:
-        Tuple of cost function value and a list of `ReturnData`s, corresponding
-        to the different simulation conditions. For ordering of simulation
-        conditions, see
+        Dictionary of
+
+        * cost function value (LLH),
+        * const function sensitivity w.r.t. parameters (SLLH),
+          (**NOTE**: Sensitivities are computed for the non-scaled parameters)
+        * list of `ReturnData`s (RDATAS),
+
+        corresponding to the different simulation conditions.
+        For ordering of simulation conditions, see
         `petab.Problem.get_simulation_conditions_from_measurement_df`.
     """
     logger.setLevel(log_level)
@@ -105,14 +111,16 @@ def simulate_petab(
     # Compute total sllh
     sllh = aggregate_sllh(amici_model=amici_model, rdatas=rdatas,
                           parameter_mapping=parameter_mapping)
-    # Compute total fim
-    fim = None
-    # Compute total s2llh
-    s2llh = None
-    # Compute total res
-    res = None
-    # Compute total sres
-    sres = None
+
+    # TODO: implement me
+    # # Compute total fim
+    # fim = None
+    # # Compute total s2llh
+    # s2llh = None
+    # # Compute total res
+    # res = None
+    # # Compute total sres
+    # sres = None
 
     # log results
     sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
@@ -124,10 +132,10 @@ def simulate_petab(
     return {
         LLH: llh,
         SLLH: sllh,
-        FIM: fim,
-        S2LLH: s2llh,
-        RES: res,
-        SRES: sres,
+        # FIM: fim,
+        # S2LLH: s2llh,
+        # RES: res,
+        # SRES: sres,
         RDATAS: rdatas
     }
 
