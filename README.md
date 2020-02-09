@@ -103,6 +103,11 @@ and/or
   Parameter estimation for dynamical systems with discrete events and logical
   operations. Bioinformatics, 33(7), 1049-1056.
   doi:[10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
+  
+  When presenting work that employs amici, feel free to use one of the icons in 
+  `./documenation/gfx`, which are available under a [CC0](documentation/gfx/LICENSE.md) license
+  
+  <img src="./documentation/gfx/logo_text.png" width="100" align="right">
 
 
 ## Status of SBML support in Python-AMICI
