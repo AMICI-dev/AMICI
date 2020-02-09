@@ -1,0 +1,54 @@
+name: Benchmark collection
+on:
+  push:
+    branches:
+      - develop
+      - master
+      - dw_misc
+
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 20
+
+    # install dependencies
+    - name: apt
+      run: |
+        sudo apt-get install -y swig3.0 libatlas-base-dev \
+          && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+    - name: pip
+      run: |
+        pip3 install --upgrade --user wheel \
+          && pip3 install --upgrade --user setuptools
+    - run: pip3 install shyaml petab>=0.1.1
+    - run: |
+        echo ::add-path::${HOME}/.local/bin/
+        echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
+    # install AMICI
+    - name: Create AMICI sdist
+      run: |
+        cd python/sdist \
+          && check_time.sh create_sdist /usr/bin/python3 setup.py sdist
+    - name: Install AMICI sdist
+      run: |
+        AMICI_PARALLEL_COMPILE=2 check_time.sh \
+            install_sdist pip3 install -v --user \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
+
+    # retrieve test models
+    - name: Download and test benchmark collection
+      # TODO do something more efficient than cloning this big repo
+      run: |
+        git clone --depth 1 https://github.com/LeonardSchmiester/Benchmark-Models.git \
+          && cd Benchmark-Models && git checkout hackathon && cd .. \
+          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models/hackathon_contributions_new_data_format/" \
+          && tests/benchmark-models/test_benchmark_collection.sh
