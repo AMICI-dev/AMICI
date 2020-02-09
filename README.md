@@ -104,7 +104,7 @@ and/or
   operations. Bioinformatics, 33(7), 1049-1056.
   doi:[10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
   
-When presenting work that employs amici, feel free to use one of the icons in 
+When presenting work that employs AMICI, feel free to use one of the icons in 
 [documentation/gfx/](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx), which are available under a [CC0](documentation/gfx/LICENSE.md) license:
 
 <p align="center">
