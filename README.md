@@ -107,9 +107,9 @@ and/or
   When presenting work that employs amici, feel free to use one of the icons in 
   `./documenation/gfx`, which are available under a [CC0](documentation/gfx/LICENSE.md) license
   
-  <p align="center">
+  <div align="center">
   <img src="./documentation/gfx/logo_text.png" width="75" align="right">
-  </p>
+  </div>
 
 ## Status of SBML support in Python-AMICI
 
