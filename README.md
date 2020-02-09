@@ -1,6 +1,6 @@
 # AMICI - Advanced Multilanguage Interface for CVODES and IDAS
 
-![AMICI banner](https://raw.githubusercontent.com/ICB-DCM/AMICI/develop/documentation/gfx/banner.png)
+![AMICI banner](https://raw.githubusercontent.com/ICB-DCM/AMICI/develop/documentation/gfx/banner.png =250x)
 
 ## About
 
