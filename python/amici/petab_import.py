@@ -11,6 +11,7 @@ from typing import List, Dict, Union, Optional, Tuple
 
 import amici
 import libsbml
+import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
@@ -119,11 +120,12 @@ def get_fixed_parameters(
                                   f"initial assignment for {compartments}")
 
     species = [col for col in condition_df
-               if sbml_model.getSpecies(col) is not None]
+               if not np.issubdtype(condition_df[col].dtype, np.number)
+               and sbml_model.getSpecies(col) is not None]
     if species:
-        raise NotImplementedError("Can't handle species in condition table."
-                                  "Consider creating an initial assignment for"
-                                  f" {species}")
+        raise NotImplementedError(
+            "Can't handle parameterized initial concentrations in condition "
+            f"table. Consider creating an initial assignment for {species}")
 
     return fixed_parameters
 
