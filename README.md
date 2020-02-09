@@ -1,6 +1,8 @@
-# AMICI - Advanced Multilanguage Interface for CVODES and IDAS <img src="./documentation/gfx/banner.png" width="300">
+# <img src="./documentation/gfx/logo.png" height="50"> AMICI - Advanced Multilanguage Interface for CVODES and IDAS 
 
 ## About 
+
+<img src="./documentation/gfx/banner.png" width="300" align="right">
 
 AMICI provides a multi-language (Python, C++, Matlab) interface for the
 [SUNDIALS](https://computing.llnl.gov/projects/sundials/) solvers
