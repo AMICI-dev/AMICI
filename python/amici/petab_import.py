@@ -280,7 +280,7 @@ def import_petab_problem(
                      model_output_dir=model_output_dir,
                      **kwargs)
 
-    # load moduule
+    # load module
     model_module = importlib.import_module(model_name)
 
     # import model
