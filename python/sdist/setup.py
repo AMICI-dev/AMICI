@@ -113,6 +113,18 @@ def main():
         extra_compiler_flags=cxx_flags + ['-DDLONG']
     )
 
+    # Readme as long package description to go on PyPi
+    # (https://pypi.org/project/amici/)
+    with open("README.md", "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+
+    # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
+    # C++ to fix warnings.
+    cfg_vars = sysconfig.get_config_vars()
+    for key, value in cfg_vars.items():
+        if type(value) == str:
+            cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
+
     # Build shared object
     amici_module = Extension(
         name='amici._amici',
@@ -135,21 +147,14 @@ def main():
             *blaspkgcfg['library_dirs'],
             'amici/libs',  # clib target directory
         ],
-        extra_compile_args=['-std=c++11', *cxx_flags],
+        extra_compile_args=cxx_flags,
         extra_link_args=amici_module_linker_flags
     )
-
-    # Readme as long package description to go on PyPi
-    # (https://pypi.org/project/amici/)
-    with open("README.md", "r", encoding="utf-8") as fh:
-        long_description = fh.read()
-
-    # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
-    # C++ to fix warnings.
-    cfg_vars = sysconfig.get_config_vars()
-    for key, value in cfg_vars.items():
-        if type(value) == str:
-            cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
+    # Monkey-patch extension (see
+    # `custom_commands.set_compiler_specific_extension_options`)
+    amici_module.extra_compile_args_mingw32 = ['-std=c++14']
+    amici_module.extra_compile_args_unix = ['-std=c++14']
+    amici_module.extra_compile_args_msvc = ['/std:c++14']
 
     # Install
     setup(
