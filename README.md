@@ -1,8 +1,8 @@
+<img src="./documentation/gfx/banner.png" width="200" align="right">
+
 # <img src="./documentation/gfx/logo.png" height="35"> Advanced Multilanguage Interface for CVODES and IDAS 
 
 ## About 
-
-<img src="./documentation/gfx/banner.png" width="200" align="right">
 
 AMICI provides a multi-language (Python, C++, Matlab) interface for the
 [SUNDIALS](https://computing.llnl.gov/projects/sundials/) solvers
@@ -107,8 +107,9 @@ and/or
   When presenting work that employs amici, feel free to use one of the icons in 
   `./documenation/gfx`, which are available under a [CC0](documentation/gfx/LICENSE.md) license
   
-  <img src="./documentation/gfx/logo_text.png" width="100" align="right">
-
+  <p align="center">
+  <img src="./documentation/gfx/logo_text.png" width="75" align="right">
+  </p>
 
 ## Status of SBML support in Python-AMICI
 
