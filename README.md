@@ -105,7 +105,7 @@ and/or
   doi:[10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
   
 When presenting work that employs amici, feel free to use one of the icons in 
-`./documenation/gfx`, which are available under a [CC0](documentation/gfx/LICENSE.md) license:
+[documentation/gfx/](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx), which are available under a [CC0](documentation/gfx/LICENSE.md) license:
 
 <p align="center">
   <img src="./documentation/gfx/logo_text.png" height="75">
