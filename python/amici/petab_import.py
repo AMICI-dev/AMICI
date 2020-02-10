@@ -7,6 +7,10 @@ import argparse
 import logging
 import math
 import os
+import time
+import sys
+import shutil
+import importlib
 from typing import List, Dict, Union, Optional, Tuple
 
 import amici
@@ -210,6 +214,129 @@ def constant_species_to_parameters(sbml_model: 'libsbml.Model') -> List[str]:
         transformables.append(species.getId())
 
     return species_to_parameters(transformables, sbml_model)
+
+
+def import_petab_problem(
+        petab_problem: petab.Problem,
+        model_output_dir: str = None,
+        model_name: str = None,
+        force_compile: bool = False,
+        **kwargs) -> amici.Model:
+    """
+    Import model from petab problem.
+
+    Arguments:
+        petab_problem:
+            A petab problem containing all relevant information on the model.
+        model_output_dir:
+            Directory to write the model code to. Will be created if doesn't
+            exist. Defaults to current directory.
+        model_name:
+            Name of the generated model. If model file name was provided,
+            this defaults to the file name without extension, otherwise
+            the SBML model ID will be used.
+        force_compile:
+            Whether to compile the model even if the target folder is not
+            empty, or the model exists already.
+        **kwargs:
+            Additional keyword arguments to be passed to
+            ``amici.sbml_importer.sbml2amici``.
+
+    Returns
+        model:
+            The imported model.
+    """
+    # generate folder and model name if necessary
+    if model_output_dir is None:
+        model_output_dir = _create_model_output_dir_name(petab_problem.sbml_model)
+    if model_name is None:
+        model_name = _create_model_name(model_output_dir)
+
+    # create folder
+    if not os.path.exists(model_output_dir):
+        os.makedirs(model_output_dir)
+
+    # add to path
+    if model_output_dir not in sys.path:
+        sys.path.insert(0, model_output_dir)
+
+    # check if compilation necessary
+    if not _can_import_model(model_name) or force_compile:
+        # check if folder exists
+        if os.listdir(model_output_dir) and not force_compile:
+            raise ValueError(
+                f"Cannot compile to {model_output_dir}: not empty. Please assign a "
+                "different target or set `force_compile`.")
+
+        # remove folder if exists
+        if os.path.exists(model_output_dir):
+            shutil.rmtree(model_output_dir)
+
+        logger.info(f"Compiling model {model_name} to {model_output_dir}.")
+
+        # compile the model
+        import_model(sbml_model=petab_problem.sbml_model,
+                     condition_table=petab_problem.condition_df,
+                     observable_table=petab_problem.observable_df,
+                     model_name=model_name,
+                     model_output_dir=model_output_dir,
+                     **kwargs)
+
+    # load module
+    model_module = importlib.import_module(model_name)
+
+    # import model
+    model = model_module.getModel()
+
+    logger.info(f"Successfully loaded model {model_name} from {model_output_dir}.")
+
+    return model
+
+
+def _create_model_output_dir_name(sbml_model: 'libsbml.Model') -> str:
+    """
+    Find a folder for storing the compiled amici model.
+    If possible, use the sbml model id, otherwise create a random folder.
+    The folder will be located in the `amici_models` subfolder of the current
+    folder.
+    """
+    BASE_DIR = os.path.abspath("amici_models")
+
+    # create base directory
+    if not os.path.exists(BASE_DIR):
+        os.makedirs(BASE_DIR)
+
+    # try sbml model id
+    sbml_model_id = sbml_model.getId()
+    if sbml_model_id:
+        model_output_dir = os.path.join(BASE_DIR, sbml_model_id)
+    else:
+        # create random folder name
+        model_output_dir = tempfile.mkdtemp(dir=BASE_DIR)
+
+    return model_output_dir
+
+
+def _create_model_name(folder: str) -> str:
+    """
+    Create a name for the model.
+    Just re-use the last part of the folder.
+    """
+    return os.path.split(os.path.normpath(folder))[-1]
+
+
+def _can_import_model(model_name: str) -> bool:
+    """
+    Check whether a module of that name can already be imported.
+    """
+    # try to import (in particular checks version)
+    try:
+        importlib.import_module(model_name)
+    except ModuleNotFoundError:
+        return False
+
+    # no need to (re-)compile
+    return True
 
 
 @log_execution_time('Importing PEtab model', logger)
