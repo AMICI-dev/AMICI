@@ -8,6 +8,7 @@ from typing import (List, Sequence, Optional, Dict, Tuple, Union, Any,
                     Collection, Iterator)
 
 import amici
+import libsbml
 import numpy as np
 import pandas as pd
 import petab
@@ -86,6 +87,18 @@ def simulate_petab(
         # Use PEtab nominal values as default
         problem_parameters = {t.Index: getattr(t, NOMINAL_VALUE) for t in
                               petab_problem.parameter_df.itertuples()}
+
+    # Because AMICI globalizes all local parameters during model import,
+    # we need to do that here as well to prevent parameter mapping errors
+    # (PEtab does currently not care about SBML LocalParameters)
+    if petab_problem.sbml_document:
+        converter_config = libsbml.SBMLLocalParameterConverter()\
+            .getDefaultProperties()
+        petab_problem.sbml_document.convert(converter_config)
+    else:
+        logger.debug("No petab_problem.sbml_document is set. Cannot convert "
+                     "SBML LocalParameters. If the model contains "
+                     "LocalParameters, parameter mapping will fail.")
 
     # Get parameter mapping
     if parameter_mapping is None:
