@@ -10,11 +10,12 @@ import math
 import os
 import shutil
 import sys
-from numbers import Number
+import tempfile
 from typing import List, Dict, Union, Optional, Tuple
 
 import amici
 import libsbml
+import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
@@ -122,7 +123,7 @@ def get_fixed_parameters(
                                   f"initial assignment for {compartments}")
 
     species = [col for col in condition_df
-               if not issubclass(condition_df[col].dtype, Number)
+               if not np.issubdtype(condition_df[col].dtype, np.number)
                and sbml_model.getSpecies(col) is not None]
     if species:
         raise NotImplementedError(
