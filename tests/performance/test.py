@@ -15,6 +15,7 @@ def main():
     edata = amici.ExpData(model)
     edata.setTimepoints([1e8])
     edata.setObservedData([1.0])
+    edata.setObservedDataStdDev([1.0])
 
     if arg == 'forward_simulation':
         solver.setSensitivityMethod(amici.SensitivityMethod_none)
