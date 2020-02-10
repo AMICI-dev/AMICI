@@ -2,7 +2,7 @@
 create_sdist: 25
 install_sdist: 140
 petab_import: 2500
-install_model: 445
+install_model: 470
 forward_simulation: 2
 forward_sensitivities: 35
 adjoint_sensitivities: 4
