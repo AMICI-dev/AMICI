@@ -4,7 +4,6 @@ on:
     branches:
       - develop
       - master
-      - dw_misc
 
   pull_request:
     branches:
