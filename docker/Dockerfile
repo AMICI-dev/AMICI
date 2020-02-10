@@ -1,18 +1,15 @@
-FROM alpine
+FROM ubuntu:19.10
 
-RUN apk add --update-cache --no-cache \
-    blas-dev \
+RUN apt update \
+    && apt-get install -y \
     g++ \
-    libgcc \
-    libquadmath \
-    musl-dev \
-    py3-numpy \
+    libatlas-base-dev \
     python3 \
     python3-dev \
-    swig
-RUN echo "http://dl-8.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && apk add py3-pandas py3-matplotlib py3-scipy py3-h5py
-#RUN addgroup user && useradd --no-log-init -g user user
-#USER user
+    python3-pip \
+    swig \
+    && ln -sf /usr/bin/swig3.0 /usr/bin/swig
+
 COPY amici.tar.gz /tmp
 
 RUN pip3 install -U --upgrade pip wheel \
