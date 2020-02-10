@@ -21,7 +21,7 @@ def main():
         solver.setSensitivityMethod(amici.SensitivityMethod_none)
         solver.setSensitivityOrder(amici.SensitivityOrder_none)
     elif arg == 'forward_sensitivities':
-        edata = None
+        model.setParameterList(list(range(100)))
         solver.setSensitivityMethod(amici.SensitivityMethod_forward)
         solver.setSensitivityOrder(amici.SensitivityOrder_first)
     elif arg == 'adjoint_sensitivities':

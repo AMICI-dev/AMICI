@@ -4,7 +4,7 @@ install_sdist: 140
 petab_import: 2400
 install_model: 445
 forward_simulation: 2
-forward_sensitivities: 6
+forward_sensitivities: 20
 adjoint_sensitivities: 4
 forward_simulation_non_optimal_parameters: 2
 adjoint_sensitivities_non_optimal_parameters: 5
