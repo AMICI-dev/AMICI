@@ -436,9 +436,9 @@ def get_edata_for_condition(
 
         edata.x0 = x0
 
-    # TODO: implement: In case of parametric overrides, they would have be
-    #  handled as fixed model parameters below. These cases are filtered out
-    #  at import stage.
+    # TODO: depends on #924: In case of parametric overrides, they would have
+    #  to be handled as fixed model parameters below. These cases are filtered
+    #  out at import stage.
 
     ##########################################################################
     # fixed parameters preequilibration
