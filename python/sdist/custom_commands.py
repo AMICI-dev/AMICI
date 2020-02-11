@@ -2,18 +2,22 @@
 
 import glob
 import os
-import sys
 import subprocess
+import sys
 from shutil import copyfile
-
-from setuptools.command.build_ext import build_ext
-from setuptools.command.sdist import sdist
-from setuptools.command.install_lib import install_lib
-from setuptools.command.develop import develop
-from setuptools.command.install import install
-from setuptools.command.build_clib import build_clib
+from typing import Dict, List, Tuple
 
 from amici.setuptools import generateSwigInterfaceFiles
+from setuptools.command.build_clib import build_clib
+from setuptools.command.build_ext import build_ext
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+from setuptools.command.install_lib import install_lib
+from setuptools.command.sdist import sdist
+from distutils import log
+
+# typehints
+Library = Tuple[str, Dict[str, List[str]]]
 
 
 class my_install(install):
@@ -34,12 +38,13 @@ class my_install(install):
         install.finalize_options(self)
 
     def run(self):
+        generateSwigInterfaceFiles()
         install.run(self)
 
 
 def compile_parallel(self, sources, output_dir=None, macros=None,
-            include_dirs=None, debug=0, extra_preargs=None,
-            extra_postargs=None, depends=None):
+                     include_dirs=None, debug=0, extra_preargs=None,
+                     extra_postargs=None, depends=None):
     """Parallelized version of distutils.ccompiler.compile"""
     macros, objects, extra_postargs, pp_opts, build = \
         self._setup_compile(output_dir, macros, include_dirs, sources,
@@ -75,7 +80,15 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
 class my_build_clib(build_clib):
     """Custom build_clib"""
 
-    def build_libraries(self, libraries):
+    def run(self):
+        # Always force recompilation. The way setuptools/distutils check for
+        # whether sources require recompilation is not reliable and may lead
+        # to crashes or wrong results. We rather compile once too often...
+        self.force = True
+
+        build_clib.run(self)
+
+    def build_libraries(self, libraries: List[Library]):
         no_clibs = self.get_finalized_command('develop').no_clibs
         no_clibs |= self.get_finalized_command('install').no_clibs
 
@@ -85,6 +98,10 @@ class my_build_clib(build_clib):
         # Override for parallel compilation
         import distutils.ccompiler
         distutils.ccompiler.CCompiler.compile = compile_parallel
+
+        # Work-around for compiler-specific build options
+        set_compiler_specific_library_options(
+            libraries, self.compiler.compiler_type)
 
         build_clib.build_libraries(self, libraries)
 
@@ -131,7 +148,6 @@ class my_install_lib(install_lib):
                     subprocess.run(['dsymutil',os.path.join(search_dir,file),
                                     '-o',os.path.join(search_dir,file + '.dSYM')])
 
-
         # Continue with the actual installation
         install_lib.run(self)
 
@@ -139,8 +155,15 @@ class my_install_lib(install_lib):
 class my_build_ext(build_ext):
     """Custom build_ext to allow keeping otherwise temporary static libs"""
 
+    def build_extension(self, ext):
+        # Work-around for compiler-specific build options
+        set_compiler_specific_extension_options(ext, self.compiler.compiler_type)
+
+        build_ext.build_extension(self, ext)
+
     def run(self):
-        """Copy the generated clibs to the extensions folder to be included in the wheel
+        """Copy the generated clibs to the extensions folder to be included in
+        the wheel
 
         Returns:
 
@@ -158,7 +181,6 @@ class my_build_ext(build_ext):
                 # get the previously built static libraries
                 build_clib = self.get_finalized_command('build_clib')
                 libraries = build_clib.get_library_names() or []
-                library_dirs = build_clib.build_clib
 
             # Module build directory where we want to copy the generated libs
             # to
@@ -179,7 +201,13 @@ class my_build_ext(build_ext):
                     "Found unexpected number of files: " % libfilenames
 
                 copyfile(libfilenames[0],
-                         os.path.join(target_dir, os.path.basename(libfilenames[0])))
+                         os.path.join(target_dir,
+                                      os.path.basename(libfilenames[0])))
+
+        # Always force recompilation. The way setuptools/distutils check for
+        # whether sources require recompilation is not reliable and may lead
+        # to crashes or wrong results. We rather compile once too often...
+        self.force = True
 
         # Continue with the actual extension building
         build_ext.run(self)
@@ -228,3 +256,62 @@ class my_sdist(sdist):
                                  '--always', '--tags'],
                                  stdout=f)
         assert(sp.returncode == 0)
+
+
+def set_compiler_specific_library_options(
+        libraries: List[Library],
+        compiler_type: str) -> None:
+    """Set compiler-specific library options.
+
+    C/C++-libraries for setuptools/distutils are provided as dict containing
+    entries for 'sources', 'macros', 'cflags', etc.
+    As we don't know the compiler type at the stage of calling
+    ``setuptools.setup`` and as there is no other apparent way to set
+    compiler-specific options, we elsewhere extend the dict with additional
+    fields ${original_field}_${compiler_class}, and add the additional
+    compiler-specific options here, at a stage when the compiler has been
+    determined by distutils.
+
+    Arguments:
+        libraries:
+            List of libraries as passed as ``libraries`` argument to
+            ``setuptools.setup`` and ``setuptools.build_ext.build_extension``.
+            This is modified in place.
+        compiler_type:
+            Compiler type, as defined in
+            ``distutils.ccompiler.compiler.compiler_class``, (e.g. 'unix',
+            'msvc', 'mingw32').
+    """
+
+    for lib in libraries:
+        for field in ['cflags', 'sources', 'macros']:
+            try:
+                lib[1][field] += lib[1][f'{field}_{compiler_type}']
+                log.info(f"Changed {field} for {lib[0]} with {compiler_type} "
+                         f"to {lib[1][field]}")
+            except KeyError:
+                # No compiler-specific options set
+                pass
+
+
+def set_compiler_specific_extension_options(
+        ext: 'setuptools.Extension',
+        compiler_type: str) -> None:
+    """Set compiler-specific extension build options.
+
+    Same game as in ``set_compiler_specific_library_options``, except that
+    here we look for compiler-specific class attributes.
+
+    Arguments:
+        ext: setuptools/distutils extension object
+        compiler_type: Compiler type
+    """
+    for attr in ['extra_compile_args', 'extra_link_args']:
+        try:
+            new_value = getattr(ext, attr) + \
+                getattr(ext, f'{attr}_{compiler_type}')
+            setattr(ext, attr, new_value)
+            log.info(f"Changed {attr} for {compiler_type} to {new_value}")
+        except AttributeError:
+            # No compiler-specific options set
+            pass

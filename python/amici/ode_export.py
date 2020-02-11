@@ -21,7 +21,7 @@ except ImportError:
 
 from typing import Callable, Optional
 from string import Template
-import sympy.printing.ccode as ccode
+import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 
@@ -635,7 +635,7 @@ symbol_to_type = {
 
 
 class ODEModel:
-    """An ODEModel defines an Ordinay Differential Equation as set of
+    """An ODEModel defines an Ordinary Differential Equation as set of
     ModelQuantities. This class provides general purpose interfaces to
     compute arbitrary symbolic derivatives that are necessary for model
     simulation or sensitivity computation
@@ -2564,7 +2564,7 @@ class ODEExporter:
 
         """
         try:
-            ret = ccode(math)
+            ret = cxxcode(math, standard='c++11')
             ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
             return ret
         except:
