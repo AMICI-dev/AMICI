@@ -1,4 +1,4 @@
-<img src="./documentation/gfx/banner.png" height="60" align="left">
+<img src="https://raw.githubusercontent.com/ICB-DCM/AMICI/master/documentation/gfx/banner.png" height="60" align="left">
 
 ## Advanced Multilanguage Interface for CVODES and IDAS
 
@@ -105,10 +105,10 @@ and/or
   doi:[10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
   
 When presenting work that employs AMICI, feel free to use one of the icons in 
-[documentation/gfx/](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx), which are available under a [CC0](documentation/gfx/LICENSE.md) license:
+[documentation/gfx/](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx), which are available under a [CC0](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx/LICENSE.md) license:
 
 <p align="center">
-  <img src="./documentation/gfx/logo_text.png" height="75">
+  <img src="https://raw.githubusercontent.com/ICB-DCM/AMICI/master/documentation/gfx/logo_text.png" height="75">
 </p>
 
 ## Status of SBML support in Python-AMICI
