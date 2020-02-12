@@ -1,173 +1,630 @@
-"""Functionality related to evaluating the objective function for a PEtab
-problem"""
+"""Functionality related to running simulations or evaluating the objective
+function as defined by a PEtab problem"""
 
+import copy
+import logging
 import numbers
+from typing import (List, Sequence, Optional, Dict, Tuple, Union, Any,
+                    Collection, Iterator)
+
+import amici
+import libsbml
 import numpy as np
 import pandas as pd
-import copy
-
-from typing import List, Sequence
-import amici
 import petab
+from amici.logging import get_logger, log_execution_time
+from petab.C import *
+
+
+LLH = 'llh'
+SLLH = 'sllh'
+FIM = 'fim'
+S2LLH = 's2llh'
+RES = 'res'
+SRES = 'sres'
+RDATAS = 'rdatas'
+
+logger = get_logger(__name__)
+
+
+@log_execution_time('Simulating PEtab model', logger)
+def simulate_petab(
+        petab_problem: petab.Problem,
+        amici_model: amici.Model,
+        solver: Optional[amici.Solver] = None,
+        problem_parameters: Optional[Dict[str, float]] = None,
+        simulation_conditions: Union[pd.DataFrame, Dict] = None,
+        parameter_mapping: List[petab.ParMappingDictTuple] = None,
+        parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
+        scaled_parameters: Optional[bool] = False,
+        log_level: int = logging.WARNING
+) -> Dict[str, Any]:
+    """Simulate PEtab model
+
+    Arguments:
+        petab_problem:
+            PEtab problem to work on.
+        amici_model:
+            AMICI Model assumed to be compatible with ``petab_problem``.
+        solver:
+            An AMICI solver. Will use default options if None.
+        problem_parameters:
+            Run simulation with these parameters. If None,
+            PEtab `nominalValues` will be used). To be provided as dict,
+            mapping PEtab problem parameters to SBML IDs.
+        simulation_conditions:
+            Result of petab.get_simulation_conditions. Can be provided to save
+            time if this has be obtained before.
+        parameter_mapping:
+            Optional precomputed PEtab parameter mapping for efficiency.
+        parameter_scale_mapping:
+            Optional precomputed PEtab parameter scale mapping for efficiency.
+        scaled_parameters:
+            If True, problem_parameters are assumed to be on the scale provided
+            in the PEtab parameter table and will be unscaled. If False, they
+            are assumed to be in linear scale.
+        log_level:
+            Log level, see `logging` module.
+    Returns:
+        Dictionary of
+
+        * cost function value (LLH),
+        * const function sensitivity w.r.t. parameters (SLLH),
+          (**NOTE**: Sensitivities are computed for the non-scaled parameters)
+        * list of `ReturnData`s (RDATAS),
+
+        corresponding to the different simulation conditions.
+        For ordering of simulation conditions, see
+        `petab.Problem.get_simulation_conditions_from_measurement_df`.
+    """
+    logger.setLevel(log_level)
+
+    if solver is None:
+        solver = amici_model.getSolver()
+
+    # Get parameters
+    if problem_parameters is None:
+        # Use PEtab nominal values as default
+        problem_parameters = {t.Index: getattr(t, NOMINAL_VALUE) for t in
+                              petab_problem.parameter_df.itertuples()}
+
+    # Because AMICI globalizes all local parameters during model import,
+    # we need to do that here as well to prevent parameter mapping errors
+    # (PEtab does currently not care about SBML LocalParameters)
+    if petab_problem.sbml_document:
+        converter_config = libsbml.SBMLLocalParameterConverter()\
+            .getDefaultProperties()
+        petab_problem.sbml_document.convert(converter_config)
+    else:
+        logger.debug("No petab_problem.sbml_document is set. Cannot convert "
+                     "SBML LocalParameters. If the model contains "
+                     "LocalParameters, parameter mapping will fail.")
+
+    # Get parameter mapping
+    if parameter_mapping is None:
+        parameter_mapping = \
+            petab_problem.get_optimization_to_simulation_parameter_mapping(
+                warn_unmapped=False)
+
+    # Generate ExpData with all condition-specific information
+    edatas = edatas_from_petab(
+        model=amici_model,
+        petab_problem=petab_problem,
+        problem_parameters=problem_parameters,
+        simulation_conditions=simulation_conditions,
+        parameter_mapping=parameter_mapping,
+        parameter_scale_mapping=parameter_scale_mapping,
+        scaled_parameters=scaled_parameters)
+
+    # Simulate
+    rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
+
+    # Compute total llh
+    llh = sum(rdata['llh'] for rdata in rdatas)
+    # Compute total sllh
+    sllh = aggregate_sllh(amici_model=amici_model, rdatas=rdatas,
+                          parameter_mapping=parameter_mapping)
+
+    # TODO: implement me
+    # # Compute total fim
+    # fim = None
+    # # Compute total s2llh
+    # s2llh = None
+    # # Compute total res
+    # res = None
+    # # Compute total sres
+    # sres = None
+
+    # log results
+    sim_cond = petab_problem.get_simulation_conditions_from_measurement_df()
+
+    for i, rdata in enumerate(rdatas):
+        logger.debug(f"Condition: {sim_cond.iloc[i, :].values}, status: "
+                     f"{rdata['status']}, llh: {rdata['llh']}")
+
+    return {
+        LLH: llh,
+        SLLH: sllh,
+        # FIM: fim,
+        # S2LLH: s2llh,
+        # RES: res,
+        # SRES: sres,
+        RDATAS: rdatas
+    }
 
 
 def edatas_from_petab(
-        model: amici.Model, measurement_df: pd.DataFrame,
-        condition_df: pd.DataFrame,
-        simulation_conditions=None) -> List[amici.ExpData]:
+        model: amici.Model,
+        petab_problem: petab.Problem,
+        problem_parameters: Dict[str, numbers.Number],
+        simulation_conditions: Union[pd.DataFrame, Dict] = None,
+        parameter_mapping: List[petab.ParMappingDictTuple] = None,
+        parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
+        scaled_parameters: Optional[bool] = False
+) -> List[amici.ExpData]:
     """
-    Create list of amici.ExpData objects for PEtab problem.
+    Create list of ``amici.ExpData`` objects for PEtab problem.
+
+    Sets timepoints, fixed parameters (including preequilibration),
+    non-fixed parameters, and observed data and sigmas.
 
     Arguments:
         model:
             AMICI model.
-        measurement_df:
-            PEtab measurement table.
-        condition_df:
-            PEtab condition table.
+        petab_problem:
+            PEtab problem
+        problem_parameters:
+            Dictionary mapping parameter names of the PEtab problem to
+            parameter values
         simulation_conditions:
             Result of petab.get_simulation_conditions. Can be provided to save
             time if this has be obtained before.
+        parameter_mapping:
+            Optional precomputed PEtab parameter mapping for efficiency.
+        parameter_scale_mapping:
+            Optional precomputed PEtab parameter scale mapping for efficiency.
+        scaled_parameters:
+            If True, problem_parameters are assumed to be on the scale provided
+            in the PEtab parameter table and will be unscaled. If False, they
+            are assumed to be in linear scale.
 
     Returns:
-        List with one ExpData per simulation condition.
+        List with one ``ExpData`` per simulation condition.
     """
-
-    condition_df = condition_df.reset_index()
 
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
-    # Can be improved by checking for identical condition vectors.
+    # Can be optimized by checking for identical condition vectors.
     if simulation_conditions is None:
-        simulation_conditions = petab.get_simulation_conditions(
-            measurement_df)
+        simulation_conditions = \
+            petab_problem.get_simulation_conditions_from_measurement_df()
+
+    # Get parameter mapping if not user-provided
+    if parameter_mapping is None:
+        parameter_mapping = \
+            petab_problem.get_optimization_to_simulation_parameter_mapping(
+                warn_unmapped=False)
+
+    if parameter_scale_mapping is None:
+        parameter_scale_mapping = \
+            petab_problem.get_optimization_to_simulation_scale_mapping(
+                mapping_par_opt_to_par_sim=parameter_mapping)
 
     observable_ids = model.getObservableIds()
 
-    fixed_parameter_ids = model.getFixedParameterIds()
+    logger.debug(f"Problem parameters: {problem_parameters}")
 
     edatas = []
-    for _, condition in simulation_conditions.iterrows():
-        # amici.ExpData for each simulation
-
-        # extract rows for condition
-        df_for_condition = petab.get_rows_for_condition(
-            measurement_df, condition)
-
-        # make list of all timepoints for which measurements exist
-        timepoints = sorted(
-            df_for_condition.time.unique().astype(float))
-
-        # init edata object
-        edata = amici.ExpData(model)
-
-        # find replicate numbers of time points
-        timepoints_w_reps = []
-        for time in timepoints:
-            # subselect for time
-            df_for_time = df_for_condition[df_for_condition.time == time]
-            # rep number is maximum over rep numbers for observables
-            n_reps = max(df_for_time.groupby(
-                ['observableId', 'time']).size())
-            # append time point n_rep times
-            timepoints_w_reps.extend([time] * n_reps)
-
-        # set time points in edata
-        edata.setTimepoints(timepoints_w_reps)
-
-        # handle fixed parameters
-        _fixed_parameters_to_edata(edata, condition_df,
-                                   fixed_parameter_ids, condition)
-
-        # prepare measurement matrix
-        y = np.full(shape=(edata.nt(), edata.nytrue()), fill_value=np.nan)
-        # prepare sigma matrix
-        sigma_y = y.copy()
-
-        # add measurements and sigmas
-        # iterate over time points
-        for time in timepoints:
-            # subselect for time
-            df_for_time = df_for_condition[df_for_condition.time == time]
-            time_ix_0 = timepoints_w_reps.index(time)
-
-            # remember used time indices for each observable
-            time_ix_for_obs_ix = {}
-
-            # iterate over measurements
-            for _, measurement in df_for_time.iterrows():
-                # extract observable index
-                observable_ix = observable_ids.index(
-                    f'observable_{measurement.observableId}')
-
-                # update time index for observable
-                if observable_ix in time_ix_for_obs_ix:
-                    time_ix_for_obs_ix[observable_ix] += 1
-                else:
-                    time_ix_for_obs_ix[observable_ix] = time_ix_0
-
-                # fill observable and possibly noise parameter
-                y[time_ix_for_obs_ix[observable_ix],
-                  observable_ix] = measurement.measurement
-                if isinstance(measurement.noiseParameters, numbers.Number):
-                    sigma_y[time_ix_for_obs_ix[observable_ix],
-                            observable_ix] = measurement.noiseParameters
-
-        # fill measurements and sigmas into edata
-        edata.setObservedData(y.flatten())
-        edata.setObservedDataStdDev(sigma_y.flatten())
-
-        # append edata to edatas list
+    for (_, condition), cur_parameter_mapping, cur_parameter_scale_mapping \
+            in zip(simulation_conditions.iterrows(),
+                   parameter_mapping, parameter_scale_mapping):
+        # Create amici.ExpData for each simulation
+        edata = get_edata_for_condition(
+            condition=condition, amici_model=model, petab_problem=petab_problem,
+            problem_parameters=problem_parameters,
+            observable_ids=observable_ids,
+            parameter_mapping=cur_parameter_mapping,
+            parameter_scale_mapping=cur_parameter_scale_mapping,
+            scaled_parameters=scaled_parameters
+        )
         edatas.append(edata)
 
     return edatas
 
 
-def _fixed_parameters_to_edata(
-        edata: amici.ExpData, condition_df: pd.DataFrame,
-        fixed_parameter_ids: Sequence[str], condition) -> None:
-    """
-    Apply fixed parameters for a given simulation condition to the
-    corresponding ExpData.
+def subset_dict(full: Dict[Any, Any],
+                *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
+    """Get subset of dictionary based on provides keys
 
-    Parameters:
-        edata:
-            ExpData to set fixed parameters on.
-        condition_df:
-            The conditions table.
-        fixed_parameter_ids:
-            Ids of parameters that are to be considered constant (in correct
-            AMICI order).
+    Arguments:
+        full: Dictionary to subset
+        *args: Collections of keys to be contained in the different subsets
+    """
+
+    for keys in args:
+        yield {key: val for (key, val) in full.items() if key in keys}
+
+
+def get_edata_for_condition(
+        condition: Union[Dict, pd.Series],
+        problem_parameters: Dict[str, numbers.Number],
+        amici_model: amici.Model,
+        petab_problem: petab.Problem,
+        observable_ids: List[str],
+        parameter_mapping: Optional[petab.ParMappingDictTuple] = None,
+        parameter_scale_mapping: Optional[petab.ScaleMappingDictTuple] = None,
+        scaled_parameters: Optional[bool] = False
+) -> amici.ExpData:
+    """Get ``amici.ExpData`` for the given PEtab condition
+
+    Sets timepoints, fixed parameters (including preequilibration),
+    variable parameters, and observed data and sigmas.
+
+    Arguments:
         condition:
-            The current condition, as created by
-            petab.get_simulation_conditions.
+            pandas.DataFrame row with preequilibrationConditionId and
+            simulationConditionId.
+        problem_parameters:
+            PEtab problem parameters as parameterId=>value dict. Only
+            parameters included here will be set. Remaining parameters will
+            be used currently set in `amici_model`.
+        amici_model:
+            AMICI model
+        petab_problem:
+            Underlying PEtab problem
+        observable_ids:
+            List of observable IDs
+        parameter_mapping:
+            PEtab parameter mapping for current condition
+        parameter_scale_mapping:
+            PEtab parameter scale mapping for current condition
+        scaled_parameters:
+            If True, problem_parameters are assumed to be on the scale provided
+            in the PEtab parameter table and will be unscaled. If False, they
+            are assumed to be in linear scale.
+
+    Returns:
+        ExpData instance
     """
 
-    if len(fixed_parameter_ids) == 0:
-        # nothing to be done
-        return
+    # extract measurement table rows for condition
+    measurement_df = petab.get_rows_for_condition(
+        measurement_df=petab_problem.measurement_df, condition=condition)
 
-    # find fixed parameter values
-    fixed_parameter_vals = condition_df.loc[
-        condition_df.conditionId == condition.simulationConditionId,
-        fixed_parameter_ids].values
-    # fill into edata
-    edata.fixedParameters = fixed_parameter_vals.astype(
-        float).flatten()
+    if amici_model.nytrue != len(observable_ids):
+        raise AssertionError("Number of AMICI model observables does not"
+                             "match number of PEtab observables.")
 
-    # same for preequilibration if necessary
-    if ('preequilibrationConditionId' in condition
-           and condition.preequilibrationConditionId):
-        fixed_preequilibration_parameter_vals = condition_df.loc[
-            condition_df.conditionId == condition.preequilibrationConditionId,
-            fixed_parameter_ids].values
-        edata.fixedParametersPreequilibration = \
-            fixed_preequilibration_parameter_vals.astype(float) \
-                                                 .flatten()
+    edata = amici.ExpData(amici_model)
+
+    ##########################################################################
+    # parameter mapping
+
+    # get mapping if required
+    if parameter_mapping is None:
+        # TODO petab.get_parameter_mapping_for_condition
+        raise NotImplementedError()
+
+    if parameter_scale_mapping is None:
+        # TODO petab.get_parameter_scale_mapping_for_condition
+        raise NotImplementedError()
+
+    condition_map_preeq, condition_map_sim = parameter_mapping
+    condition_scale_map_preeq, condition_scale_map_sim = \
+        parameter_scale_mapping
+
+    logger.debug(f"PEtab mapping: {parameter_mapping}")
+
+    if len(condition_map_preeq) != len(condition_scale_map_preeq) \
+            or len(condition_map_sim) != len(condition_scale_map_sim):
+        raise AssertionError("Number of parameters and number of parameter "
+                             "scales do not match.")
+    if len(condition_map_preeq) \
+            and len(condition_map_preeq) != len(condition_map_sim):
+        logger.debug(f"Preequilibration parameter map: {condition_map_preeq}")
+        logger.debug(f"Simulation parameter map: {condition_map_sim}")
+        raise AssertionError("Number of parameters for preequilbration "
+                             "and simulation do not match.")
+
+    # PEtab parameter mapping may contain parameter_ids as values, these *must*
+    # be replaced
+
+    def _get_par(model_par, value):
+        """Replace parameter IDs in mapping dicts by values from
+        problem_parameters where necessary"""
+        if isinstance(value, str):
+            # estimated parameter
+            # (condition table overrides have been handled by PEtab
+            # parameter mapping)
+            return problem_parameters[value]
+        if model_par in problem_parameters:
+            # user-provided
+            return problem_parameters[model_par]
+        # constant value
+        return value
+
+    condition_map_sim = {key: _get_par(key, val)
+                         for key, val in condition_map_sim.items()}
+    condition_map_preeq = {key: _get_par(key, val)
+                           for key, val in condition_map_preeq.items()}
+
+    # separate fixed and variable AMICI parameters, because we may have
+    # different fixed parameters for preeq and sim condition, but we cannot
+    # have different variable parameters. without splitting,
+    # merge_preeq_and_sim_pars_condition below may fail.
+    variable_par_ids = amici_model.getParameterIds()
+    fixed_par_ids = amici_model.getFixedParameterIds()
+
+    condition_map_preeq_var, condition_map_preeq_fix = \
+        subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
+
+    condition_scale_map_preeq_var, condition_scale_map_preeq_fix = \
+        subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
+
+    condition_map_sim_var, condition_map_sim_fix = \
+        subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
+
+    condition_scale_map_sim_var, condition_scale_map_sim_fix = \
+        subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
+
+    logger.debug("Fixed parameters preequilibration: "
+                 f"{condition_map_preeq_fix}")
+    logger.debug("Fixed parameters simulation: "
+                 f"{condition_map_sim_fix}")
+    logger.debug("Variable parameters preequilibration: "
+                 f"{condition_map_preeq_var}")
+    logger.debug("Variable parameters simulation: "
+                 f"{condition_map_sim_var}")
+
+    petab.merge_preeq_and_sim_pars_condition(
+        condition_map_preeq_var, condition_map_sim_var,
+        condition_scale_map_preeq_var, condition_scale_map_sim_var,
+        condition)
+
+    logger.debug(f"Merged: {condition_map_sim_var}")
+
+    # If necessary, bring parameters to linear scale
+    if scaled_parameters:
+        # For dynamic parameters we could also change ExpData.pscale, but since
+        # we need to do it for fixed parameters anyways, we just do it for all
+        # and set pscale to linear. we can skip preequilibration parameters,
+        # because they are identical with simulation parameters, and only the
+        # latter are used from here on
+        unscale_parameters_dict(condition_map_preeq_fix,
+                                condition_scale_map_preeq_fix)
+        unscale_parameters_dict(condition_map_sim_fix,
+                                condition_scale_map_sim_fix)
+        unscale_parameters_dict(condition_map_sim_var,
+                                condition_scale_map_sim_var)
+
+    ##########################################################################
+    # variable parameters and parameter scale
+
+    # parameter list from mapping dict
+    parameters = [condition_map_sim_var[par_id]
+                  for par_id in amici_model.getParameterIds()]
+
+    edata.parameters = parameters
+
+    edata.pscale = amici.parameterScalingFromIntVector(
+        [amici.ParameterScaling_none] * len(parameters))
+
+    ##########################################################################
+    # timepoints
+
+    # find replicate numbers of time points
+    timepoints_w_reps = _get_timepoints_with_replicates(
+        df_for_condition=measurement_df)
+
+    edata.setTimepoints(timepoints_w_reps)
+
+    ##########################################################################
+    # initial states
+    # Initial states have been set during model import based on the SBML model.
+    # If initial states were overwritten in the PEtab condition table, they are
+    # applied here. We never change amici_model.x0 here (and assume it contains
+    # the original values; we only change ExpData.x0.
+
+    species = [col for col in petab_problem.condition_df
+               if petab_problem.sbml_model.getSpecies(col) is not None]
+    if species:
+        x0 = amici_model.getInitialStates()
+        species_ids = amici_model.getStateIds()
+        for species_id in species:
+            if not np.issubdtype(petab_problem.condition_df[species_id].dtype,
+                                 np.number):
+                raise NotImplementedError(
+                    "Support for parametric overrides for initial states "
+                    "is not yet implemented.")
+
+            species_idx = species_ids.find(species_id)
+
+            if condition[PREEQUILIBRATION_CONDITION_ID]:
+                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
+            else:
+                condition_id = condition[SIMULATION_CONDITION_ID]
+
+            x0[species_idx] = petab_problem.condition_df.loc(condition_id,
+                                                             species_id)
+
+        edata.x0 = x0
+
+    # TODO: depends on #924: In case of parametric overrides, they would have
+    #  to be handled as fixed model parameters below. These cases are filtered
+    #  out at import stage.
+
+    ##########################################################################
+    # fixed parameters preequilibration
+    if condition_map_preeq:
+        fixed_pars_preeq = [condition_map_preeq_fix[par_id]
+                            for par_id in amici_model.getFixedParameterIds()]
+        edata.fixedParametersPreequilibration = fixed_pars_preeq
+
+    ##########################################################################
+    # fixed parameters simulation
+    fixed_pars_sim = [condition_map_sim_fix[par_id]
+                      for par_id in amici_model.getFixedParameterIds()]
+    edata.fixedParameters = fixed_pars_sim
+
+    ##########################################################################
+    # measurements and sigmas
+    y, sigma_y = _get_measurements_and_sigmas(
+        df_for_condition=measurement_df, timepoints_w_reps=timepoints_w_reps,
+        observable_ids=observable_ids)
+    edata.setObservedData(y.flatten())
+    edata.setObservedDataStdDev(sigma_y.flatten())
+
+    return edata
+
+
+def unscale_parameter(value: numbers.Number,
+                      petab_scale: str) -> numbers.Number:
+    """Parameter to linear scale
+
+    Arguments:
+        value:
+            Value to unscale
+        petab_scale:
+            Current scale of ``value``
+
+    Returns:
+        ``value`` on linear scale
+    """
+    if petab_scale == LIN:
+        return value
+    if petab_scale == LOG10:
+        return np.power(10, value)
+    if petab_scale == LOG:
+        return np.exp(value)
+    raise ValueError(f"Unknown parameter scale {petab_scale}. "
+                     f"Must be from {(LIN, LOG, LOG10)}")
+
+
+def unscale_parameters(values: Sequence[numbers.Number],
+                       petab_scales: Sequence[str]) -> List[numbers.Number]:
+    """Parameters to linear scale
+
+    Arguments:
+        values:
+            Values to unscale
+        petab_scales:
+            Current scales of ``values``
+
+    Returns:
+        List of ``values`` on linear scale
+    """
+    return [unscale_parameter(value, scale)
+            for value, scale in zip(values, petab_scales)]
+
+
+def unscale_parameters_dict(
+        value_dict: Dict[Any, numbers.Number],
+        petab_scale_dict: Dict[Any, str]) -> None:
+    """Parameters to linear scale
+
+    Bring values in ``value_dict`` from current scale provided in
+    ``petab_scale_dict`` to linear scale (in-place).
+    Both arguments are expected to have the same length and matching keys.
+
+    Arguments:
+        value_dict:
+            Values to unscale
+        petab_scale_dict:
+            Current scales of ``values``
+    """
+    if not value_dict.keys() == petab_scale_dict.keys():
+        raise AssertionError("Keys don't match.")
+
+    for key, value in value_dict.items():
+        value_dict[key] = unscale_parameter(value, petab_scale_dict[key])
+
+
+def _get_timepoints_with_replicates(
+        df_for_condition: pd.DataFrame) -> List[numbers.Number]:
+    """
+    Get list of timepoints including replicate measurements
+
+    Arguments:
+        df_for_condition:
+            PEtab measurement table subset for a single condition.
+
+    Returns:
+        Sorted list of timepoints, including multiple timepoints accounting
+        for replicate measurements.
+    """
+    # create sorted list of all timepoints for which measurements exist
+    timepoints = sorted(df_for_condition[TIME].unique().astype(float))
+
+    # find replicate numbers of time points
+    timepoints_w_reps = []
+    for time in timepoints:
+        # subselect for time
+        df_for_time = df_for_condition[df_for_condition.time == time]
+        # rep number is maximum over rep numbers for observables
+        n_reps = max(df_for_time.groupby(
+            [OBSERVABLE_ID, TIME]).size())
+        # append time point n_rep times
+        timepoints_w_reps.extend([time] * n_reps)
+
+    return timepoints_w_reps
+
+
+def _get_measurements_and_sigmas(
+        df_for_condition: pd.DataFrame,
+        timepoints_w_reps: Sequence[numbers.Number],
+        observable_ids: Sequence[str]) -> Tuple[np.array, np.array]:
+    """Get measurements and sigmas
+
+    Generate arrays with measurements and sigmas in AMICI format from a
+    PEtab measurement table subset for a single condition.
+
+    Arguments:
+        df_for_condition:
+            Subset of PEtab measurement table for one condition
+        timepoints_w_reps:
+            Timepoints for which there exist measurements, including replicates
+        observable_ids:
+            List of observable IDs for mapping IDs to indices.
+    """
+    # prepare measurement matrix
+    y = np.full(shape=(len(timepoints_w_reps), len(observable_ids)),
+                fill_value=np.nan)
+    # prepare sigma matrix
+    sigma_y = y.copy()
+
+    timepoints = sorted(df_for_condition[TIME].unique().astype(float))
+
+    for time in timepoints:
+        # subselect for time
+        df_for_time = df_for_condition[df_for_condition[TIME] == time]
+        time_ix_0 = timepoints_w_reps.index(time)
+
+        # remember used time indices for each observable
+        time_ix_for_obs_ix = {}
+
+        # iterate over measurements
+        for _, measurement in df_for_time.iterrows():
+            # extract observable index
+            observable_ix = observable_ids.index(measurement[OBSERVABLE_ID])
+
+            # update time index for observable
+            if observable_ix in time_ix_for_obs_ix:
+                time_ix_for_obs_ix[observable_ix] += 1
+            else:
+                time_ix_for_obs_ix[observable_ix] = time_ix_0
+
+            # fill observable and possibly noise parameter
+            y[time_ix_for_obs_ix[observable_ix],
+              observable_ix] = measurement[MEASUREMENT]
+            if isinstance(measurement[NOISE_PARAMETERS], numbers.Number):
+                sigma_y[time_ix_for_obs_ix[observable_ix],
+                        observable_ix] = measurement[NOISE_PARAMETERS]
+    return y, sigma_y
 
 
 def rdatas_to_measurement_df(
-        rdatas: List[amici.ReturnData], model: amici.Model,
+        rdatas: Sequence[amici.ReturnData],
+        model: amici.Model,
         measurement_df: pd.DataFrame) -> pd.DataFrame:
     """
     Create a measurement dataframe in the PEtab format from the passed
@@ -175,7 +632,7 @@ def rdatas_to_measurement_df(
 
     Parameters:
         rdatas:
-            A list of rdatas with the ordering of
+            A sequence of rdatas with the ordering of
             `petab.get_simulation_conditions`.
         model:
             AMICI model used to generate `rdatas`.
@@ -186,20 +643,15 @@ def rdatas_to_measurement_df(
         A dataframe built from the rdatas in the format of `measurement_df`.
     """
 
-    # initialize dataframe
     df = pd.DataFrame(columns=list(measurement_df.columns))
 
-    # get simulation conditions
     simulation_conditions = petab.get_simulation_conditions(
         measurement_df)
 
-    # get observable ids
     observable_ids = model.getObservableIds()
 
     # iterate over conditions
-    for data_idx, condition in simulation_conditions.iterrows():
-        # current rdata
-        rdata = rdatas[data_idx]
+    for (_, condition), rdata in zip(simulation_conditions.iterrows(), rdatas):
         # current simulation matrix
         y = rdata['y']
         # time array used in rdata
@@ -219,9 +671,8 @@ def rdatas_to_measurement_df(
             row_sim = copy.deepcopy(row)
 
             # extract simulated measurement value
-            timepoint_idx = t.index(row.time)
-            observable_idx = observable_ids.index(
-                "observable_" + row.observableId)
+            timepoint_idx = t.index(row[TIME])
+            observable_idx = observable_ids.index(row[OBSERVABLE_ID])
             measurement_sim = y[timepoint_idx, observable_idx]
 
             # change measurement entry
@@ -231,3 +682,39 @@ def rdatas_to_measurement_df(
             df = df.append(row_sim, ignore_index=True)
 
     return df
+
+
+def aggregate_sllh(
+        amici_model: amici.Model,
+        rdatas: Sequence[amici.ReturnDataView],
+        parameter_mapping: Optional[List[petab.ParMappingDictTuple]],
+) -> Union[None, Dict[str, float]]:
+    """Aggregate likelihood gradient for all conditions, according to PEtab
+    parameter mapping.
+
+    Arguments:
+        amici_model:
+            AMICI model from which ``rdatas`` were obtained.
+        rdatas:
+            Simulation results.
+        parameter_mapping:
+            PEtab parameter mapping to condition-specific
+            simulation parameters.
+    """
+    sllh = {}
+    model_par_ids = amici_model.getParameterIds()
+    for (_, par_map_sim), rdata in zip(parameter_mapping, rdatas):
+        if rdata['status'] != amici.AMICI_SUCCESS \
+                or 'sllh' not in rdata\
+                or rdata['sllh'] is None:
+            return None
+
+        for model_par_id, problem_par_id in par_map_sim.items():
+            if isinstance(problem_par_id, str):
+                model_par_idx  = model_par_ids.index(model_par_id)
+                cur_par_sllh = rdata['sllh'][model_par_idx]
+                try:
+                    sllh[problem_par_id] += cur_par_sllh
+                except KeyError:
+                    sllh[problem_par_id] = cur_par_sllh
+    return sllh
