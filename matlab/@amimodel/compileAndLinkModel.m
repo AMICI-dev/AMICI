@@ -32,9 +32,9 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     end
 
     % compile flags
-    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++0x'''];
+    COPT = ['COPTIMFLAGS=''' coptim ' -DNDEBUG'' CXXFLAGS=''$CXXFLAGS -std=c++14'''];
     if(debug)
-        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++0x -Wno-unused-function -Wno-unused-variable'' ';
+        DEBUG = ' -g CXXFLAGS=''$CXXFLAGS -Wall  -std=c++14 -Wno-unused-function -Wno-unused-variable'' ';
         COPT = ''; % no optimization with debug flags!
     else
         DEBUG = '';
