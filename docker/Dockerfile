@@ -12,6 +12,9 @@ RUN apt update \
 
 COPY amici.tar.gz /tmp
 
+ENV AMICI_CXXFLAGS -fopenmp
+ENV AMICI_LDFLAGS -fopenmp
+
 RUN pip3 install -U --upgrade pip wheel \
     && mkdir -p /tmp/amici/ \
     && cd /tmp/amici \
