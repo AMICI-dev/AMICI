@@ -1,4 +1,4 @@
-%module("threads=1") amici
+%module amici
 
 %include <exception.i>
 %exception {
