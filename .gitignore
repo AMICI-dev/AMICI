@@ -12,6 +12,7 @@ doc/*
 fonts/*
 images/*
 stylesheets/*
+documentation/_build/*
 
 sed-ml/*
 

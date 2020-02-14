@@ -29,6 +29,18 @@ computation in parameter estimation of biochemical reaction models but
 it is also applicable to a wider range of differential equation
 constrained optimization problems.
 
+## Current build status
+
+<a href="https://badge.fury.io/py/amici" alt="PyPI version">
+  <img src="https://badge.fury.io/py/amici.svg"></a>
+<a href="https://travis-ci.com/ICB-DCM/AMICI" alt="Build Status">
+  <img src="https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master"></a>
+<a href="https://codecov.io/gh/ICB-DCM/AMICI" alt="CodeCov">
+  <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
+<a href="https://www.codacy.com/app/FFroehlich/AMICI" alt="Codacy">
+  <img src="https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6"></a>
+<a href="https://zenodo.org/badge/latestdoi/43677177" alt="Codacy">
+  <img src="https://zenodo.org/badge/43677177.svg"></a>
 
 ## Features
 
@@ -139,15 +151,3 @@ However, the following features are unlikely to be supported:
 - `delay()` due to missing SUNDIALS solver support
 
 In addition to SBML, we also plan to implement support for the [Simulation Experiment Description Markup Language (SED-ML)](https://sed-ml.org/).
-
-
-## Current build status
-
-<a href="https://badge.fury.io/py/amici" alt="PyPI version">
-  <img src="https://badge.fury.io/py/amici.svg"></a>
-<a href="https://travis-ci.com/ICB-DCM/AMICI" alt="Build Status">
-  <img src="https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master"></a>
-<a href="https://codecov.io/gh/ICB-DCM/AMICI" alt="CodeCov">
-  <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
-<a href="https://www.codacy.com/app/FFroehlich/AMICI" alt="Codacy">
-  <img src="https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6"></a>

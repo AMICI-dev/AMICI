@@ -1,5 +1,3 @@
-"""@package amici.sbml_import The SBML import module for Python."""
-
 import sympy as sp
 import libsbml as sbml
 import re
@@ -38,52 +36,65 @@ logger = get_logger(__name__, logging.ERROR)
 
 
 class SbmlImporter:
-    """The SbmlImporter class generates AMICI C++ files for a model provided in
+    """
+    The SbmlImporter class generates AMICI C++ files for a model provided in
     the Systems Biology Markup Language (SBML).
 
     Attributes:
+    ----------
 
-        show_sbml_warnings: indicates whether libSBML warnings should be
-        displayed @type bool
+    show_sbml_warnings: bool
+        indicates whether libSBML warnings should be
+        displayed
 
-        symbols: dict carrying symbolic definitions @type dict
+    symbols: dict
+        dict carrying symbolic definitions
 
-        sbml_reader: the libSBML sbml reader [!not storing this will result
+    sbml_reader: 
+        the libSBML sbml reader [!not storing this will result
         in a segfault!]
 
-        sbml_doc: document carrying the sbml definition [!not storing this
+    sbml_doc: 
+        document carrying the sbml definition [!not storing this
         will result in a segfault!]
 
-        sbml: sbml definition [!not storing this will result in a segfault!]
+    sbml: 
+        sbml definition [!not storing this will result in a segfault!]
 
-        speciesIndex: maps species names to indices @type dict
+    speciesIndex: dict
+        maps species names to indices
 
-        speciesCompartment: compartment for each species @type
-        sympy.Matrix
+    speciesCompartment: sympy.Matrix
+        compartment for each species
 
-        constantSpecies: ids of species that are marked as constant @type list
+    constantSpecies: list[sting]
+        ids of species that are marked as constant
 
-        boundaryConditionSpecies: ids of species that are marked as boundary
-        condition @type list
+    boundaryConditionSpecies: list[string]
+        ids of species that are marked as boundary
+        condition
 
-        speciesHasOnlySubstanceUnits: flags indicating whether a species has
-        only substance units @type list
+    speciesHasOnlySubstanceUnits: list[bool]
+        flags indicating whether a species has only substance units
 
-        speciesConversionFactor: conversion factors for every species @type
-        sympy.Matrix
+    speciesConversionFactor: sympy.Matrix
+        conversion factors for every species
 
-        compartmentSymbols: compartment ids @type sympy.Matrix
+    compartmentSymbols: sympy.Matrix
+        compartment ids
 
-        compartmentVolume: numeric/symbolic compartment volumes @type
-        sympy.Matrix
+    compartmentVolume: sympy.Matrix
+        numeric/symbolic compartment volumes
 
-        stoichiometricMatrix: stoichiometric matrix of the model @type
-        sympy.Matrix
+    stoichiometricMatrix: sympy.Matrix
+        stoichiometric matrix of the model
 
-        fluxVector: reaction kinetic laws @type sympy.Matrix
+    fluxVector: sympy.Matrix
+        reaction kinetic laws
 
-        local_symbols: model symbols for sympy to consider during sympification
-        see `locals`argument in `sympy.sympify` @type dict
+    local_symbols: dict
+        model symbols for sympy to consider during sympification
+        see `locals`argument in `sympy.sympify`
 
     """
 
