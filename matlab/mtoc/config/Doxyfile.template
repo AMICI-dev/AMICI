@@ -1801,12 +1801,10 @@ FILE_PATTERNS     = *.m \
                     *.hh \
                     *.hpp \
                     *.dox \
-                    *.md \
-                    *.py \
+                    *.md 
 
 # the link between mtoc++ and doxygen (the `' separates the macros)
-FILTER_PATTERNS   = *.m="_MTOCFILTER_" \
-                    *.py=py_filter 
+FILTER_PATTERNS   = *.m="_MTOCFILTER_" 
 
 # latex styles inclusion file
 EXTRA_PACKAGES    = "_LatexExtras_"
