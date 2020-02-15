@@ -1,3 +1,11 @@
+"""
+sbml_import
+------------
+This function provides all necessary functionality to import a model specified
+in the System Biology Markup Language (SBML)
+"""
+
+
 import sympy as sp
 import libsbml as sbml
 import re
@@ -38,59 +46,56 @@ class SbmlImporter:
     Class to generate AMICI C++ files for a model provided in the Systems
     Biology Markup Language (SBML).
 
-    Attributes:
-    ----------
-
-    show_sbml_warnings: bool
+    :cvar show_sbml_warnings: bool
         indicates whether libSBML warnings should be
         displayed
 
-    symbols: dict
+    :cvar symbols: dict
         dict carrying symbolic definitions
 
-    sbml_reader: 
+    :cvar sbml_reader:
         the libSBML sbml reader [!not storing this will result
         in a segfault!]
 
-    sbml_doc: 
+    :cvar sbml_doc:
         document carrying the sbml definition [!not storing this
         will result in a segfault!]
 
-    sbml: 
+    :cvar sbml:
         sbml definition [!not storing this will result in a segfault!]
 
-    speciesIndex: dict
+    :cvar speciesIndex: dict
         maps species names to indices
 
-    speciesCompartment: sympy.Matrix
+    :cvar speciesCompartment: sympy.Matrix
         compartment for each species
 
-    constantSpecies: list[sting]
+    :cvar constantSpecies: list[sting]
         ids of species that are marked as constant
 
-    boundaryConditionSpecies: list[string]
+    :cvar boundaryConditionSpecies: list[string]
         ids of species that are marked as boundary
         condition
 
-    speciesHasOnlySubstanceUnits: list[bool]
+    :cvar speciesHasOnlySubstanceUnits: list[bool]
         flags indicating whether a species has only substance units
 
-    speciesConversionFactor: sympy.Matrix
+    :cvar speciesConversionFactor: sympy.Matrix
         conversion factors for every species
 
-    compartmentSymbols: sympy.Matrix
+    :cvar compartmentSymbols: sympy.Matrix
         compartment ids
 
-    compartmentVolume: sympy.Matrix
+    :cvar compartmentVolume: sympy.Matrix
         numeric/symbolic compartment volumes
 
-    stoichiometricMatrix: sympy.Matrix
+    :cvar stoichiometricMatrix: sympy.Matrix
         stoichiometric matrix of the model
 
-    fluxVector: sympy.Matrix
+    :cvar fluxVector: sympy.Matrix
         reaction kinetic laws
 
-    local_symbols: dict
+    :cvar local_symbols: dict
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
 
@@ -103,22 +108,17 @@ class SbmlImporter:
         """
         Create a new Model instance.
 
-        Arguments:
-        ----------
-        sbml_source:
+        :param sbml_source:
             Either a path to SBML file where the model is specified,
             or a model string as created by sbml.sbmlWriter(
             ).writeSBMLToString() or an instance of `libsbml.Model`.
 
-        show_sbml_warnings:
+        :param show_sbml_warnings:
             Indicates whether libSBML warnings should be displayed.
 
-        from_file:
+        :param from_file:
             Whether `sbml_source` is a file name (True, default), or an SBML
             string
-
-        Raises:
-
         """
         if isinstance(sbml_source, sbml.Model):
             self.sbml_doc = sbml_source.getSBMLDocument()
@@ -133,17 +133,17 @@ class SbmlImporter:
         self.show_sbml_warnings = show_sbml_warnings
 
         # process document
-        self.process_document()
+        self._process_document()
 
         self.sbml = self.sbml_doc.getModel()
 
         # Long and short names for model components
         self.symbols = dict()
-        self.reset_symbols()
+        self._reset_symbols()
 
         self.local_symbols = {}
 
-    def process_document(self) -> None:
+    def _process_document(self) -> None:
         """
         Validate and simplify document.
         """
@@ -168,7 +168,7 @@ class SbmlImporter:
         # check the error log just once after all conversion/validation calls.
         _check_lib_sbml_errors(self.sbml_doc, self.show_sbml_warnings)
 
-    def reset_symbols(self) -> None:
+    def _reset_symbols(self) -> None:
         """
         Reset the symbols attribute to default values
         """
@@ -198,47 +198,44 @@ class SbmlImporter:
         concentrations, independently of the SBML `hasOnlySubstanceUnits`
         attribute.
 
-        Arguments:
-        ----------
-        model_name:
+        :param model_name:
             name of the model/model directory
 
-        output_dir:
-            see sbml_import.setPaths()
+        :param output_dir:
+            see ODEExporter.setPaths()
 
-        observables:
+        :param observables:
             dictionary( observableId:{'name':observableName
             (optional), 'formula':formulaString)}) to be added to the model
 
-        constantParameters:
+        :param constant_parameters:
             list of SBML Ids identifying constant parameters
 
-        sigmas:
-            dictionary(observableId:
-                    sigma value or (existing) parameter name)
+        :param sigmas:
+            dictionary(observableId: sigma value or (existing) parameter name)
 
-        noise_distributions:
+        :param noise_distributions:
             dictionary(observableId: noise type).
-                If nothing is passed
-                for some observable id, a normal model is assumed as default.
+            If nothing is passed for some observable id, a normal model is
+            assumed as default.
 
-        verbose:
+        :param verbose:
             verbosity level for logging, True/False default to
-                logging.Error/logging.DEBUG
+            logging.Error/logging.DEBUG
 
-        assume_pow_positivity:
+        :param assume_pow_positivity:
             if set to True, a special pow function is
             used to avoid problems with state variables that may become
             negative due to numerical errors
 
-        compiler:
+        :param compiler:
             distutils/setuptools compiler selection to build the
             python extension
 
-        allow_reinit_fixpar_initcond:
+        :param allow_reinit_fixpar_initcond:
             see ode_export.ODEExporter
 
-        compile:
+        :param compile:
             If True, compile the generated Python package,
             if False, just generate code.
 
@@ -257,8 +254,8 @@ class SbmlImporter:
 
         logger.setLevel(verbose)
 
-        self.reset_symbols()
-        self.process_sbml(constant_parameters)
+        self._reset_symbols()
+        self._process_sbml(constant_parameters)
         self._process_observables(observables, sigmas, noise_distributions)
         ode_model = ODEModel(simplify=sp.powsimp)
         ode_model.import_from_sbml_importer(self)
@@ -280,13 +277,11 @@ class SbmlImporter:
                               'Generated model code, but unable to compile.')
             exporter.compileModel()
 
-    def process_sbml(self, constant_parameters: List[str] = None) -> None:
+    def _process_sbml(self, constant_parameters: List[str] = None) -> None:
         """
         Read parameters, species, reactions, and so on from SBML model
 
-        Arguments:
-        ----------
-        constantParameters:
+        :param constant_parameters:
             SBML Ids identifying constant parameters
         """
 
@@ -474,13 +469,8 @@ class SbmlImporter:
         """
         Get parameter information from SBML model.
 
-        Arguments:
-        ----------
-        constantParameters:
+        :param constant_parameters:
             SBML Ids identifying constant parameters
-
-        Raises:
-
         """
 
         if constant_parameters is None:
@@ -767,13 +757,13 @@ class SbmlImporter:
         # do this at the very end to ensure we have flattened all recursive
         # rules
         for variable in assignments.keys():
-            self.replace_in_all_expressions(
+            self._replace_in_all_expressions(
                 sp.Symbol(variable, real=True),
                 assignments[variable]
             )
         for comp, vol in zip(self.compartment_symbols,
                              self.compartment_volume):
-            self.replace_in_all_expressions(
+            self._replace_in_all_expressions(
                comp, vol
             )
 
@@ -801,7 +791,7 @@ class SbmlImporter:
         sbml_time_symbol = sp.Symbol('time', real=True)
         amici_time_symbol = sp.Symbol('t', real=True)
 
-        self.replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
+        self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
 
     @log_execution_time('processing SBML observables', logger)
     def _process_observables(self,
@@ -812,7 +802,7 @@ class SbmlImporter:
         Perform symbolic computations required for objective function
         evaluation.
 
-        Arguments:
+        Parameters
         -----
         observables:
             dictionary(observableId: {'name':observableName
@@ -967,18 +957,16 @@ class SbmlImporter:
         self.symbols['llhy']['name'] = l2s(llh_y_syms)
         self.symbols['llhy']['identifier'] = llh_y_syms
 
-    def replace_in_all_expressions(self,
-                                   old: sp.Symbol,
-                                   new: sp.Symbol) -> None:
+    def _replace_in_all_expressions(self,
+                                    old: sp.Symbol,
+                                    new: sp.Symbol) -> None:
         """
         Replace 'old' by 'new' in all symbolic expressions.
 
-        Arguments:
-        ----------
-        old:
+        :param old:
             symbolic variables to be replaced
 
-        new:
+        :param new:
             replacement symbolic variables
         """
         fields = [
@@ -1005,7 +993,7 @@ class SbmlImporter:
         for str in reservedSymbols:
             old_symbol = sp.Symbol(str, real=True)
             new_symbol = sp.Symbol('amici_' + str, real=True)
-            self.replace_in_all_expressions(old_symbol, new_symbol)
+            self._replace_in_all_expressions(old_symbol, new_symbol)
             for symbol in self.symbols.keys():
                 if 'identifier' in self.symbols[symbol].keys():
                     self.symbols[symbol]['identifier'] = \
@@ -1025,7 +1013,7 @@ class SbmlImporter:
             if not any([constant in self.symbols[symbol]['identifier']
                         for symbol in self.symbols.keys()
                         if 'identifier' in self.symbols[symbol].keys()]):
-                self.replace_in_all_expressions(constant, value)
+                self._replace_in_all_expressions(constant, value)
             else:
                 # yes sbml supports this but we wont. Are you really expecting
                 # to be saved if you are trying to shoot yourself in the foot?
@@ -1039,19 +1027,14 @@ def get_rule_vars(rules: List[sbml.Rule],
     """
     Extract free symbols in SBML rule formulas.
 
-    Arguments:
-    ----------
-    rules:
+    :param rules:
         sbml definitions of rules
 
-    local_symbols:
+    :param local_symbols:
         locals to pass to sympy.sympify
 
-    Returns:
-    Tuple of free symbolic variables in the formulas all provided rules
-
-    Raises:
-
+    :return:
+        Tuple of free symbolic variables in the formulas all provided rules
     """
     return sp.Matrix(
         [sp.sympify(sbml.formulaToL3String(rule.getMath()),
@@ -1068,14 +1051,11 @@ def replaceLogAB(x: str) -> str:
     circumvent the incompatible argument order between symengine (log(x,
     basis)) and libsbml (log(basis, x)).
 
-    Arguments:
-    ----------
-    x:
+    :param x:
         string to replace
 
-    Return:
-    ----------
-    string with replaced 'log's
+    :return:
+        string with replaced 'log's
     """
 
     match = re.search(r'(^|\W)log\(', x)
@@ -1116,14 +1096,10 @@ def l2s(inputs: List) -> List[str]:
     """
     Transforms a list into list of strings.
 
-    Arguments:
-    ----------
-    inputs: 
+    :param inputs:
         objects
 
-    Return:
-    ----------
-    list of str(object)
+    :return: list of str(object)
     """
     return [str(inp) for inp in inputs]
 
@@ -1133,12 +1109,10 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
     """
         Checks the error log in the current self.sbml_doc.
 
-    Arguments:
-    ----------
-    sbml_doc:
+    :param sbml_doc:
         SBML document
 
-    show_warnings:
+    :param show_warnings:
         display SBML warnings
     """
     num_warning = sbml_doc.getNumErrors(sbml.LIBSBML_SEV_WARNING)
@@ -1169,12 +1143,10 @@ def _check_unsupported_functions(sym: sp.Basic,
     Recursively checks the symbolic expression for unsupported symbolic
     functions
 
-    Arguments:
-    ----------
-    sym:
+    :param sym:
         symbolic expressions
 
-    expression_type:
+    :param expression_type:
         type of expression, only used when throwing errors
     """
     if full_sym is None:
@@ -1221,12 +1193,10 @@ def _parse_special_functions(sym: sp.Basic, toplevel: bool = True) -> sp.Basic:
     Recursively checks the symbolic expression for functions which have be
     to parsed in a special way, such as piecewise functions
 
-    Arguments:
-    ----------
-    sym: 
+    :param sym:
         symbolic expressions
 
-    toplevel:
+    :param toplevel:
         as this is called recursively, are we in the top level expression?
     """
     args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
@@ -1257,11 +1227,9 @@ def _parse_logical_operators(math_str: str) -> Union[str, None]:
     Parses a math string in order to replace logical operators by a form
     parsable for sympy
 
-    Arguments:
-    ----------
-    math_str:
+    :param math_str:
         str with mathematical expression
-    math_str:
+    :param math_str:
         parsed math_str
     """
     if math_str is None:
@@ -1279,22 +1247,18 @@ def grouper(iterable: Iterable, n: int,
     """
     Collect data into fixed-length chunks or blocks
 
-    E.g. grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
 
-    Arguments:
-    ----------
-    iterable:
+    :param iterable:
         any iterable
 
-    n:
+    :param n:
         chunk length
 
-    fillvalue:
+    :param fillvalue:
         padding for last chunk if length < n
 
-    Return:
-    ----------
-    itertools.zip_longest of requested chunks
+    :return: itertools.zip_longest of requested chunks
     """
     args = [iter(iterable)] * n
     return itt.zip_longest(*args, fillvalue=fillvalue)
@@ -1304,24 +1268,20 @@ def assignmentRules2observables(sbml_model,
                                 filter_function=lambda *_: True):
     """
     Turn assignment rules into observables.
-    
-    Arguments:
-    ----------
-    sbml_model: 
+
+    :param sbml_model:
         an sbml Model instance
 
-    filter_function: 
-        callback function taking assignment variable as input
-        and returning True/False to indicate if the respective rule should be
+    :param filter_function:
+        callback function taking assignment variable as input and returning
+        True/False to indicate if the respective rule should be
         turned into an observable
 
-    Return:
-    ----------
-    A dictionary(observableId:{
+    :return:
+        A dictionary(observableId:{
         'name': observableName,
         'formula': formulaString
-    })
-
+        })
     """
     warnings.warn("This function will be removed in future releases.",
                   DeprecationWarning)
@@ -1350,17 +1310,13 @@ def noise_distribution_to_cost_function(
     Parse noise distribution string to a cost function definition amici can
     work with.
 
-    Arguments:
-    ----------
-    noise_distribution:
-        An identifier specifying a noise model. Possible values are {'normal',
-        'log-normal', 'log10-normal', 'laplace', 'log-laplace',
-        'log10-laplace'}
+    :param noise_distribution: An identifier specifying a noise model.
+        Possible values are {'normal', 'log-normal', 'log10-normal', 'laplace',
+        'log-laplace', 'log10-laplace'}
 
-    Return:
-    ----------
-    A function that takes a strSymbol and then creates a cost function string
-    (negative log-likelihood) from it, which can be sympified.
+    :return: A function that takes a strSymbol and then creates a cost
+        function string (negative log-likelihood) from it, which can be
+        sympified.
     """
     if noise_distribution in ['normal', 'lin-normal']:
         def nllh_y_string(str_symbol):

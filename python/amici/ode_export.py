@@ -1805,7 +1805,6 @@ class ODEModel:
         return self._states[ix].get_dt() == 0.0
 
 
-
 class ODEExporter:
     """The ODEExporter class generates AMICI C++ files for ODE model as
     defined in symbolic expressions.
