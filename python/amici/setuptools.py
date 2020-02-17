@@ -134,6 +134,15 @@ def getHdf5Config():
         hdf5_library_dir_hints.insert(
             0, os.path.join(os.environ['HDF5_BASE'], 'lib'))
 
+    # special treatment for conda environments
+    # as the conda library dir is provided first, we should also check for
+    # conda header files first
+    if 'CONDA_DIR' in os.environ:
+        hdf5_include_dir_hints.insert(
+            0, os.path.join(os.environ['CONDA_DIR'], 'include'))
+        hdf5_library_dir_hints.insert(
+            0, os.path.join(os.environ['CONDA_DIR'], 'lib'))
+
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
             os.path.join(hdf5_include_dir_hint, 'hdf5.h'))
