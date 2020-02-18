@@ -1338,9 +1338,6 @@ def assignmentRules2observables(sbml_model,
     })
     Raises:
     """
-    warnings.warn("This function will be removed in future releases. "
-                  "This functionality is now included in "
-                  "https://github.com/ICB-DCM/PEtab .", DeprecationWarning)
     observables = {}
     for p in sbml_model.getListOfParameters():
         parameter_id = p.getId()

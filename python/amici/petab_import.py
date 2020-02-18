@@ -20,6 +20,7 @@ import pandas as pd
 import petab
 import sympy as sp
 from amici.logging import get_logger, log_execution_time
+from amici.sbml_import import assignmentRules2observables
 from petab.C import *
 
 logger = get_logger(__name__, logging.WARNING)
@@ -419,7 +420,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     if observable_df is not None:
         observables, noise_distrs, sigmas = \
-            get_observation_model(observable_df)
+            get_observation_model(sbml_model, observable_df)
 
     logger.info(f'Observables: {len(observables)}')
     logger.info(f'Sigmas: {len(sigmas)}')
@@ -468,15 +469,17 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         **kwargs)
 
 
-def get_observation_model(observable_df: pd.DataFrame
-                          ) -> Tuple[Dict[str, Dict[str, str]],
-                                     Dict[str, str],
-                                     Dict[str, Union[str, float]]]:
+def get_observation_model(
+        sbml_model: 'libsbml.Model', observable_df: pd.DataFrame
+) -> Tuple[Dict[str, Dict[str, str]],
+           Dict[str, str],
+           Dict[str, Union[str, float]]]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
     table in a format suitable for `sbml2amici`.
 
     Arguments:
+        sbml_model: SBML model
         observable_df: PEtab observables table
 
     Returns:
@@ -496,6 +499,17 @@ def get_observation_model(observable_df: pd.DataFrame
         formula_noise = observable[NOISE_FORMULA]
         observables[oid] = {'name': name, 'formula': formula_obs}
         sigmas[oid] = formula_noise
+
+    # replace parameterIds with their respective assignmentRules if applicable
+    sbml_observables = assignmentRules2observables(
+        sbml_model,
+        lambda x: x.getId() in [obs['formula']
+                                for obs in observables.values()]
+    )
+
+    for observable in observables.values():
+        observable['formula'] = sbml_observables.pop(observable['name'],
+                                                     observable['formula'])
 
     # Replace observableIds occurring in error model definition
     for observable_id, formula in sigmas.items():
