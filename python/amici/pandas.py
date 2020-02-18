@@ -1,33 +1,81 @@
+"""
+amici.pandas
+------------
+This modules contains convenience wrappers that allow for easy interconversion
+between C++ objects from amici.amici and pandas DataFrames
+"""
+
 import pandas as pd
 import numpy as np
 import math
 import copy
 
+from typing import List, Union
 from .numpy import ExpDataView
 import amici
 from amici import ExpData
 
+edata_or_edata_list = Union[
+    List[amici.ExpData], List[amici.ExpDataPtr],
+    amici.ExpData, amici.ExpDataPtr
+]
+rdata_or_rdata_list = Union[List[amici.ReturnData], amici.ReturnData]
 
-def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
-    """ Write Observables from experimental data as DataFrame.
 
-    Arguments:
-        model: Model instance.
-        edata_list: list of ExpData instances with experimental data.
-            May also be a single ExpData instance.
-        by_id: bool (optional, default = False)
-            If True, uses observable ids as identifiers in dataframe,
-            otherwise the possibly more descriptive observable names
-            are used.
+def _process_edata_list(
+        edata_list: edata_or_edata_list) -> List[amici.ExpData]:
+    """
+    Maps single instances of amici.ExpData to lists of amici.ExpData
+    :param edata_list:
+        list of instances or single instance
 
-    Returns:
-        pandas DataFrame with conditions and observables.
-
-    Raises:
-
+    :return:
+        list of instance(s)
     """
     if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
-        edata_list = [edata_list]
+        return [edata_list]
+    else:
+        return edata_list
+
+
+def _process_rdata_list(
+        rdata_list: rdata_or_rdata_list) -> List[amici.ReturnData]:
+    """
+    Maps single instances of amici.ReturnData to lists of amici.ReturnData
+    :param rdata_list:
+        list of instances or single instance
+
+    :return:
+        list of instance(s)
+    """
+    if isinstance(rdata_list, (amici.amici.ReturnData,
+                               amici.amici.ReturnDataPtr)):
+        return [rdata_list]
+    else:
+        return rdata_list
+
+
+def getDataObservablesAsDataFrame(model: amici.Model,
+                                  edata_list: edata_or_edata_list,
+                                  by_id: bool = False) -> pd.DataFrame:
+    """
+    Write Observables from experimental data as DataFrame.
+
+    :param model:
+        Model instance.
+    :param edata_list:
+        list of ExpData instances with experimental data.
+        May also be a single ExpData instance.
+    :param by_id:
+        If True, uses observable ids as column names in the generated
+        DataFrame, otherwise the possibly more descriptive observable names
+        are used.
+
+    :return:
+        pandas DataFrame with conditions/timepoints as rows and observables as
+        columns.
+    """
+    edata_list = _process_edata_list(edata_list)
 
     # list of all column names using either ids or names
     cols = _get_extended_observable_cols(model, by_id=by_id)
@@ -59,27 +107,31 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
 
 
 def getSimulationObservablesAsDataFrame(
-        model, edata_list, rdata_list, by_id=False):
-    """ Write Observables from simulation results as DataFrame.
-
-    Arguments:
-        model: Model instance.
-        edata_list: list of ExpData instances with experimental data.
-            May also be a single ExpData instance.
-        rdata_list: list of ReturnData instances corresponding to ExpData.
-            May also be a single ReturnData instance.
-        by_id: bool, optional (default = False)
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
-
-    Returns:
-        pandas DataFrame with conditions and observables.
-
-    Raises:
-
+        model: amici.Model,
+        edata_list: edata_or_edata_list,
+        rdata_list: rdata_or_rdata_list,
+        by_id: bool = False
+) -> pd.DataFrame:
     """
-    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
-        edata_list = [edata_list]
+    Write Observables from simulation results as DataFrame.
+
+    :param model:
+        Model instance.
+    :param edata_list:
+        list of ExpData instances with experimental data.
+        May also be a single ExpData instance.
+    :param rdata_list:
+        list of ReturnData instances corresponding to ExpData.
+        May also be a single ReturnData instance.
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return:
+        pandas DataFrame with conditions/timepoints as rows and state
+        variables as columns.
+    """
+    edata_list = _process_edata_list(edata_list)
     if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
         rdata_list = [rdata_list]
 
@@ -113,28 +165,26 @@ def getSimulationObservablesAsDataFrame(
 
 def getSimulationStatesAsDataFrame(
         model, edata_list, rdata_list, by_id=False):
-    """ Compute model residuals according to lists of ReturnData and ExpData.
-
-    Arguments:
-        model: Model instance.
-        edata_list: list of ExpData instances with experimental data.
-            May also be a single ExpData instance.
-        rdata_list: list of ReturnData instances corresponding to ExpData.
-            May also be a single ReturnData instance.
-        by_id: bool, optional (default = False)
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
-
-    Returns:
-        pandas DataFrame with conditions and observables.
-
-    Raises:
-
     """
-    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
-        edata_list = [edata_list]
-    if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
-        rdata_list = [rdata_list]
+    Compute model residuals according to lists of ReturnData and ExpData.
+
+    :param model:
+        Model instance.
+    :param edata_list:
+        list of ExpData instances with experimental data.
+        May also be a single ExpData instance.
+    :param rdata_list:
+        list of ReturnData instances corresponding to ExpData.
+        May also be a single ReturnData instance.
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return: pandas DataFrame with conditions/timpoints as rows and
+    observables as columns.
+    """
+    edata_list = _process_edata_list(edata_list)
+    rdata_list = _process_rdata_list(rdata_list)
 
     # get conditions and state column names by name or id
     cols = _get_state_cols(model, by_id=by_id)
@@ -182,10 +232,8 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
     Raises:
 
     """
-    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
-        edata_list = [edata_list]
-    if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
-        rdata_list = [rdata_list]
+    edata_list = _process_edata_list(edata_list)
+    rdata_list = _process_rdata_list(rdata_list)
 
     # create observable and simulation dataframes
     df_edata = getDataObservablesAsDataFrame(
