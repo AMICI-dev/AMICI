@@ -175,7 +175,7 @@ class SbmlImporter:
         self.symbols = default_symbols
 
     def sbml2amici(self,
-                   modelName: str,
+                   model_name: str = None,
                    output_dir: str = None,
                    observables: Dict[str, Dict[str, str]] = None,
                    constant_parameters: List[str] = None,
@@ -185,7 +185,8 @@ class SbmlImporter:
                    assume_pow_positivity: bool = False,
                    compiler: str = None,
                    allow_reinit_fixpar_initcond: bool = True,
-                   compile: bool = True) -> None:
+                   compile: bool = True,
+                   **kwargs) -> None:
         """
         Generate AMICI C++ files for the model provided to the constructor.
 
@@ -240,11 +241,23 @@ class SbmlImporter:
             if False, just generate code.
 
         """
+        logger.setLevel(verbose)
+
         if observables is None:
             observables = {}
 
         if constant_parameters is None:
-            constant_parameters = []
+            constant_parameters = kwargs.pop('constantParameters', [])
+            if constant_parameters is not []:
+                logger.warning('Use of `constant_parameters` as argument name '
+                               'is deprecated and will be removed in a future '
+                               'version. Please use `constant_parameters` as '
+                               'argument name.')
+        else:
+            if 'constantParameters' in kwargs:
+                raise ValueError('Cannot specify constant parameters using '
+                                 'both `constantParameters` and '
+                                 '`constant_parameters` as argument names.')
 
         if sigmas is None:
             sigmas = {}
@@ -252,7 +265,20 @@ class SbmlImporter:
         if noise_distributions is None:
             noise_distributions = {}
 
-        logger.setLevel(verbose)
+        if model_name is None:
+            model_name = kwargs.pop('modelName', None)
+            if model_name is None:
+                raise ValueError('Missing argument: `model_name`')
+            else:
+                logger.warning('Use of `modelName` as argument name is '
+                               'deprecated and will be removed in a future'
+                               ' version. Please use `model_name` as '
+                               'argument name.')
+        else:
+            if 'modelName' in kwargs:
+                raise ValueError('Cannot specify model name using both '
+                                 '`modelName` and `model_name` as argument '
+                                 'names.')
 
         self._reset_symbols()
         self._process_sbml(constant_parameters)
@@ -267,7 +293,7 @@ class SbmlImporter:
             compiler=compiler,
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond
         )
-        exporter.setName(modelName)
+        exporter.setName(model_name)
         exporter.setPaths(output_dir)
         exporter.generateModelCode()
 

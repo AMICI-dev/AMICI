@@ -2590,12 +2590,12 @@ class ODEExporter:
             if not os.path.exists(directory):
                 os.makedirs(directory)
 
-    def setName(self, modelName):
+    def setName(self, modelName: str):
         """Sets the model name
 
         Arguments:
             modelName: name of the model (must only contain valid filename
-            characters) @type str
+            characters)
 
         Returns:
 
