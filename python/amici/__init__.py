@@ -111,7 +111,6 @@ try:
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
     from .ode_export import ODEModel, ODEExporter
-    from .pysb_import import pysb2amici, ODEModel_from_pysb_importer
 except ImportError:
     pass
 

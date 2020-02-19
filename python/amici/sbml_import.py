@@ -1,7 +1,7 @@
 """
 sbml_import
 ------------
-This function provides all necessary functionality to import a model specified
+This module provides all necessary functionality to import a model specified
 in the System Biology Markup Language (SBML)
 """
 
@@ -279,6 +279,9 @@ class SbmlImporter:
                 raise ValueError('Cannot specify model name using both '
                                  '`modelName` and `model_name` as argument '
                                  'names.')
+
+        if len(kwargs):
+            raise ValueError(f'Unknown arguments {kwargs.keys()}.')
 
         self._reset_symbols()
         self._process_sbml(constant_parameters)
