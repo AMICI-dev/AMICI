@@ -104,7 +104,7 @@ def simulate_petab(
     if parameter_mapping is None:
         parameter_mapping = \
             petab_problem.get_optimization_to_simulation_parameter_mapping(
-                warn_unmapped=False, scaled_parameters=scaled_parameters)
+                warn_unmapped=False)
 
     # Generate ExpData with all condition-specific information
     edatas = edatas_from_petab(
@@ -203,7 +203,7 @@ def edatas_from_petab(
     if parameter_mapping is None:
         parameter_mapping = \
             petab_problem.get_optimization_to_simulation_parameter_mapping(
-                warn_unmapped=False, scaled_parameters=scaled_parameters)
+                warn_unmapped=False)
 
     if parameter_scale_mapping is None:
         parameter_scale_mapping = \
@@ -384,7 +384,7 @@ def get_edata_for_condition(
     logger.debug(f"Merged: {condition_map_sim_var}")
 
     # If necessary, scale parameters
-    if not scaled_parameters:
+    if scaled_parameters:
         # We scale all parameters to the scale they are estimated on, and pass
         # that information to amici via edata.{parameters,pscale}.
         # The scaling is necessary to obtain correct derivatives.
@@ -411,7 +411,8 @@ def get_edata_for_condition(
 
     edata.parameters = parameters
 
-    edata.pscale = amici.parameterScalingFromIntVector(scales)
+    edata.pscale = amici.parameterScalingFromIntVector([amici.ParameterScaling_none] * len(parameters))
+    #edata.pscale = amici.parameterScalingFromIntVector(scales)
 
     ##########################################################################
     # timepoints
@@ -507,9 +508,9 @@ def scale_parameter(value: numbers.Number,
     if petab_scale == LIN:
         return value
     if petab_scale == LOG10:
-        return np.log10(value)
+        return 10**(value)
     if petab_scale == LOG:
-        return np.log(value)
+        return np.exp(value)
     raise ValueError(f"Unknown parameter scale {petab_scale}. "
                      f"Must be from {(LIN, LOG, LOG10)}")
 
