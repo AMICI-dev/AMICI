@@ -104,7 +104,7 @@ def simulate_petab(
     if parameter_mapping is None:
         parameter_mapping = \
             petab_problem.get_optimization_to_simulation_parameter_mapping(
-                warn_unmapped=False)
+                warn_unmapped=False, scaled_parameters=scaled_parameters)
 
     # Generate ExpData with all condition-specific information
     edatas = edatas_from_petab(
@@ -203,7 +203,7 @@ def edatas_from_petab(
     if parameter_mapping is None:
         parameter_mapping = \
             petab_problem.get_optimization_to_simulation_parameter_mapping(
-                warn_unmapped=False)
+                warn_unmapped=False, scaled_parameters=scaled_parameters)
 
     if parameter_scale_mapping is None:
         parameter_scale_mapping = \
