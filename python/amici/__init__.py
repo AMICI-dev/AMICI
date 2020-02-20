@@ -82,6 +82,9 @@ try:
     from .amici import *
     hdf5_enabled = True
     has_clibs = True
+except ModuleNotFoundError:
+    # import from setuptools or installation with `--no-clibs`
+    pass
 except ImportError as e:
     # No such module exists or there are some dynamic linking problems
     if "cannot import name" in str(e):
@@ -91,6 +94,9 @@ except ImportError as e:
             from . import amici_without_hdf5 as amici
             from .amici_without_hdf5 import *
             has_clibs = True
+        except ModuleNotFoundError:
+            # import from setuptools or installation with `--no-clibs`
+            pass
         except ImportError as e:
             if "cannot import name" in str(e):
                 # No such module exists
