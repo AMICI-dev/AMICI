@@ -13,7 +13,7 @@ Boehm_JProteomeRes2014:
 
 Borghans_BiophysChem1997:
   llh: 175.90130682476047
-  note: benchmark collection reference value does not match, but model outputs do. due to D2D data normalization
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log10(sim)) / 2
 
 Brannmark_JBC2010:
   llh: 283.778227541074
