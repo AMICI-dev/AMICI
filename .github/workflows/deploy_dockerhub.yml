@@ -1,0 +1,18 @@
+# https://github.com/marketplace/actions/publish-docker
+name: Deploy to dockerhub
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - run: git archive -o docker/amici.tar.gz --format=tar.gz HEAD
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@2.8
+      with:
+        name: dweindl/amici
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        workdir: docker/
+        dockerfile: Dockerfile
+        tag_names: true
