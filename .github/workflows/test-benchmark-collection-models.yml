@@ -28,7 +28,7 @@ jobs:
       run: |
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
-    - run: pip3 install shyaml petab>=0.1.1
+    - run: pip3 install shyaml petab>=0.1.2
     - run: |
         echo ::add-path::${HOME}/.local/bin/
         echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
