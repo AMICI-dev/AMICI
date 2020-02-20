@@ -11,6 +11,7 @@ on:
 
 jobs:
   build:
+    name: Benchmark collection
 
     runs-on: ubuntu-latest
 

@@ -3,6 +3,7 @@ name: Deploy to dockerhub
 on: [push]
 jobs:
   build:
+    name: Deploy to dockerhub
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
