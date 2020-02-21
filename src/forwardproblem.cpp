@@ -308,7 +308,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
         ++iroot;
     } else {
         solver->app->warning(
-                    "AMICI:mex:TOO_MUCH_EVENT",
+                    "AMICI:TOO_MUCH_EVENT",
                         "Event was recorded but not reported as the number of "
                         "occured events exceeded (nmaxevents)*(number of "
                         "events in model definition)!");
