@@ -105,9 +105,9 @@ except (ImportError, AttributeError) as e:
                 # this probably means, the model was imported during setuptools
                 # `setup` or after an installation with `--no-clibs`.
                 pass
-        else:
-            # Probably some linking problem that we don't want to hide
-            raise e
+            else:
+                # Probably some linking problem that we don't want to hide
+                raise e
     else:
         # Probably some linking problem that we don't want to hide
         raise e
