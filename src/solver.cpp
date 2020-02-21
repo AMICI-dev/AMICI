@@ -1034,27 +1034,27 @@ void wrapErrHandlerFn(int error_code, const char *module,
             function, msg);
     switch (error_code) {
     case 99:
-        snprintf(buffid, BUF_SIZE, "AMICI:mex:%s:%s:WARNING", module, function);
+        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:WARNING", module, function);
         break;
 
     case -1:
-        snprintf(buffid, BUF_SIZE, "AMICI:mex:%s:%s:TOO_MUCH_WORK", module, function);
+        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:TOO_MUCH_WORK", module, function);
         break;
 
     case -2:
-        snprintf(buffid, BUF_SIZE, "AMICI:mex:%s:%s:TOO_MUCH_ACC", module, function);
+        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:TOO_MUCH_ACC", module, function);
         break;
 
     case -3:
-        snprintf(buffid, BUF_SIZE, "AMICI:mex:%s:%s:ERR_FAILURE", module, function);
+        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:ERR_FAILURE", module, function);
         break;
 
     case -4:
-        snprintf(buffid, BUF_SIZE, "AMICI:mex:%s:%s:CONV_FAILURE", module, function);
+        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:CONV_FAILURE", module, function);
         break;
 
     default:
-        snprintf(buffid, BUF_SIZE, "AMICI:mex:%s:%s:OTHER", module, function);
+        snprintf(buffid, BUF_SIZE, "AMICI:%s:%s:OTHER", module, function);
         break;
     }
 
