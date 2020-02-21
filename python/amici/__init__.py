@@ -77,17 +77,32 @@ hdf5_enabled = False
 has_clibs = False
 
 try:
+    # Try importing AMICI SWIG-interface with HDF5 enabled
     from . import amici
     from .amici import *
     hdf5_enabled = True
     has_clibs = True
-except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
-    try:
-        from . import amici_without_hdf5 as amici
-        from .amici_without_hdf5 import *
-        has_clibs = True
-    except (ImportError, ModuleNotFoundError, AttributeError):
-        pass
+except ImportError as e:
+    # No such module exists or there are some dynamic linking problems
+    if "cannot import name" in str(e):
+        # No such module exists,
+        # try importing AMICI SWIG-interface without HDF5
+        try:
+            from . import amici_without_hdf5 as amici
+            from .amici_without_hdf5 import *
+            has_clibs = True
+        except ImportError as e:
+            if "cannot import name" in str(e):
+                # No such module exists
+                # this probably means, the model was imported during setuptools
+                # `setup` or after an installation with `--no-clibs`.
+                pass
+        else:
+            # Probably some linking problem that we don't want to hide
+            raise e
+    else:
+        # Probably some linking problem that we don't want to hide
+        raise e
 
 # Initialize AMICI paths
 amici_path = _get_amici_path()
