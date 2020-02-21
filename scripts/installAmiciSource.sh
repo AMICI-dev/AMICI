@@ -30,5 +30,5 @@ fi
 # install wheel separately to prevent build_wheel fail in next step
 pip install --upgrade wheel
 pip install --upgrade pip setuptools pkgconfig scipy matplotlib pysb coverage
-pip install --verbose -e ${AMICI_PATH}/python/sdist[petab]
+pip install --verbose -e ${AMICI_PATH}/python/sdist
 deactivate
