@@ -284,9 +284,16 @@ def import_petab_problem(
                      model_name=model_name,
                      model_output_dir=model_output_dir,
                      **kwargs)
+        # ensure we will find the newly created module
+        importlib.invalidate_caches()
 
     # load module
-    model_module = importlib.import_module(model_name)
+    if model_name in sys.modules:
+        # reload, because may just have been created
+        importlib.reload(sys.modules[model_name])
+        model_module = sys.modules[model_name]
+    else:
+        model_module = importlib.import_module(model_name)
 
     # import model
     model = model_module.getModel()
