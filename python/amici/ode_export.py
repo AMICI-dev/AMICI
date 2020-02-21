@@ -15,7 +15,6 @@ import itertools
 try:
     import pysb
 except ImportError:
-    ## pysb import dummy
     pysb = None
 
 
@@ -30,16 +29,16 @@ from . import (
 )
 from .logging import get_logger, log_execution_time
 
-## Template for model simulation main.cpp file
+# Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
-## Template for model/swig/CMakeLists.txt
+# Template for model/swig/CMakeLists.txt
 SWIG_CMAKE_TEMPLATE_FILE = os.path.join(amiciSwigPath,
                                         'CMakeLists_model.cmake')
-## Template for model/CMakeLists.txt
+# Template for model/CMakeLists.txt
 MODEL_CMAKE_TEMPLATE_FILE = os.path.join(amiciSrcPath,
                                          'CMakeLists.template.cmake')
 
-## prototype for generated C++ functions, keys are the names of functions
+# prototype for generated C++ functions, keys are the names of functions
 #
 # signature: defines the argument part of the function signature,
 # input variables
@@ -222,29 +221,29 @@ functions = {
     },
 }
 
-## list of sparse functions
+# list of sparse functions
 sparse_functions = [
     function for function in functions
     if 'sparse' in functions[function].get('flags', [])
 ]
-## list of nobody functions
+# list of nobody functions
 nobody_functions = [
     function for function in functions
     if 'dont_generate_body' in functions[function].get('flags', [])
 ]
-## list of sensitivity functions
+# list of sensitivity functions
 sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
     and function is not 'sxdot'
 ]
-## list of multiobs functions
+# list of multiobs functions
 multiobs_functions = [
     function for function in functions
     if 'const int iy' in functions[function]['signature']
 ]
 
-## python log manager
+# python log manager
 logger = get_logger(__name__, logging.ERROR)
 
 
