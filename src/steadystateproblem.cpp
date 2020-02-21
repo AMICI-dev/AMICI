@@ -137,9 +137,9 @@ void SteadystateProblem::workSteadyStateBackwardProblem(ReturnData *rdata, Solve
     {
         const auto& plist = model->getParameterList();
         if (model->ndxdotdp_explicit > 0)
-            model->dxdotdp_explicit.multiply(xQB.getNVector(), rhs.getNVector(), plist, false);
+            model->dxdotdp_explicit.multiply(xQB.getNVector(), rhs.getNVector(), plist, true);
         if (model->ndxdotdp_implicit > 0)
-            model->dxdotdp_implicit.multiply(xQB.getNVector(), rhs.getNVector(), plist, false);
+            model->dxdotdp_implicit.multiply(xQB.getNVector(), rhs.getNVector(), plist, true);
     }
     else
     {
