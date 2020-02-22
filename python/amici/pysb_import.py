@@ -97,9 +97,9 @@ def pysb2amici(model: pysb.Model,
         compiler=compiler,
     )
     exporter.setName(model.name)
-    exporter.setPaths(output_dir)
-    exporter.generateModelCode()
-    exporter.compileModel()
+    exporter.set_paths(output_dir)
+    exporter.generate_model_code()
+    exporter.compile_model()
 
 
 def ode_model_from_pysb_importer(model: pysb.Model,
@@ -154,7 +154,7 @@ def ode_model_from_pysb_importer(model: pysb.Model,
     _process_pysb_expressions(model, ode, observables, sigmas)
     _process_pysb_observables(model, ode)
 
-    ode.generateBasicVariables()
+    ode.generate_basic_variables()
 
     return ode
 

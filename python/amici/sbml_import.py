@@ -297,14 +297,14 @@ class SbmlImporter:
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond
         )
         exporter.setName(model_name)
-        exporter.setPaths(output_dir)
-        exporter.generateModelCode()
+        exporter.set_paths(output_dir)
+        exporter.generate_model_code()
 
         if compile:
             if not has_clibs:
                 warnings.warn('AMICI C++ extensions have not been built. '
                               'Generated model code, but unable to compile.')
-            exporter.compileModel()
+            exporter.compile_model()
 
     def _process_sbml(self, constant_parameters: List[str] = None) -> None:
         """
