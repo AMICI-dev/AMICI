@@ -123,7 +123,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         rdata->status = ex.error_code;
         if (rethrow)
             throw;
-        warningF("AMICI:mex:simulation",
+        warningF("AMICI:simulation",
                  "AMICI forward simulation failed at t = %f:\n%s\n",
                  ex.time,
                  ex.what());
@@ -133,7 +133,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         if (rethrow)
             throw;
         warningF(
-          "AMICI:mex:simulation",
+          "AMICI:simulation",
           "AMICI backward simulation failed when trying to solve until t = %f"
           " (see message above):\n%s\n",
           ex.time,
@@ -143,7 +143,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         rdata->status = AMICI_ERROR;
         if (rethrow)
             throw;
-        warningF("AMICI:mex:simulation",
+        warningF("AMICI:simulation",
                  "AMICI simulation failed:\n%s\nError occured in:\n%s",
                  ex.what(),
                  ex.getBacktrace());

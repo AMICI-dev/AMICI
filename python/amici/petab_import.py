@@ -220,7 +220,7 @@ def import_petab_problem(
         model_output_dir: str = None,
         model_name: str = None,
         force_compile: bool = False,
-        **kwargs) -> amici.Model:
+        **kwargs) -> 'amici.Model':
     """
     Import model from petab problem.
 
