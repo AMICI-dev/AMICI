@@ -436,9 +436,10 @@ def get_edata_for_condition(
                 raise NotImplementedError(
                     "Support for parametric overrides for initial states "
                     "is not yet implemented.")
-
-            species_idx = species_ids.find(species_id)
-
+            try:
+                species_idx = species_ids.index(species_id)
+            except ValueError:
+                continue
             if condition[PREEQUILIBRATION_CONDITION_ID]:
                 condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
             else:
@@ -625,7 +626,8 @@ def _get_measurements_and_sigmas(
 def rdatas_to_measurement_df(
         rdatas: Sequence[amici.ReturnData],
         model: amici.Model,
-        measurement_df: pd.DataFrame) -> pd.DataFrame:
+        measurement_df: pd.DataFrame,
+        simulation: bool = False) -> pd.DataFrame:
     """
     Create a measurement dataframe in the PEtab format from the passed
     `rdatas` and own information.
@@ -638,9 +640,12 @@ def rdatas_to_measurement_df(
             AMICI model used to generate `rdatas`.
         measurement_df:
             PEtab measurement table used to generate `rdatas`.
+        simulation
+            Indicator to switch on return as `simulation_df`
 
     Returns:
-        A dataframe built from the rdatas in the format of `measurement_df`.
+        A dataframe built from the rdatas in the format of `measurement_df`
+        Optional in format of `simulation_df`.
     """
 
     df = pd.DataFrame(columns=list(measurement_df.columns))
@@ -676,11 +681,13 @@ def rdatas_to_measurement_df(
             measurement_sim = y[timepoint_idx, observable_idx]
 
             # change measurement entry
-            row_sim.measurement = measurement_sim
+            row_sim[MEASUREMENT] = measurement_sim
 
             # append to dataframe
             df = df.append(row_sim, ignore_index=True)
 
+            if simulation:
+                df = df.rename(columns={MEASUREMENT: SIMULATION})
     return df
 
 
