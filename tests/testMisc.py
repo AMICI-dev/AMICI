@@ -11,8 +11,6 @@ import sympy as sp
 import libsbml
 from tempfile import TemporaryDirectory
 
-from amici.petab_import import constant_species_to_parameters
-
 
 class TestAmiciMisc(unittest.TestCase):
     """TestCase class various AMICI Python interface functions"""
@@ -140,13 +138,18 @@ class TestAmiciMisc(unittest.TestCase):
             species_ref = r.createModifier()
             species_ref.setSpecies(name)
 
-        constant_species_to_parameters(model)
+        try:
+            from amici.petab_import import constant_species_to_parameters
 
-        assert len(list(model.getListOfParameters())) == 1
-        assert len(list(model.getListOfSpecies())) == 0
-        assert len(list(r.getListOfReactants())) == 0
-        assert len(list(r.getListOfProducts())) == 0
-        assert len(list(r.getListOfModifiers())) == 0
+            constant_species_to_parameters(model)
+
+            assert len(list(model.getListOfParameters())) == 1
+            assert len(list(model.getListOfSpecies())) == 0
+            assert len(list(r.getListOfReactants())) == 0
+            assert len(list(r.getListOfProducts())) == 0
+            assert len(list(r.getListOfModifiers())) == 0
+        except ModuleNotFoundError:
+            pass
 
     def test_hill_function_dwdx(self):
         """Kinetic laws with Hill functions, may lead to NaNs in the Jacobian

@@ -4,6 +4,7 @@
 #
 set -e
 
+# shellcheck disable=SC2128
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd "$SCRIPT_PATH"/.. && pwd)
 

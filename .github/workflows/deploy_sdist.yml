@@ -3,6 +3,7 @@ on: push
 
 jobs:
   build:
+    name: Deploy Python source distribution
 
     runs-on: ubuntu-latest
 
