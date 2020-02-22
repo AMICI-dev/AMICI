@@ -247,7 +247,11 @@ def import_petab_problem(
     """
     # generate folder and model name if necessary
     if model_output_dir is None:
-        model_output_dir = _create_model_output_dir_name(petab_problem.sbml_model)
+        model_output_dir = \
+            _create_model_output_dir_name(petab_problem.sbml_model)
+    else:
+        model_output_dir = os.path.abspath(model_output_dir)
+
     if model_name is None:
         model_name = _create_model_name(model_output_dir)
 
@@ -264,8 +268,8 @@ def import_petab_problem(
         # check if folder exists
         if os.listdir(model_output_dir) and not force_compile:
             raise ValueError(
-                f"Cannot compile to {model_output_dir}: not empty. Please assign a "
-                "different target or set `force_compile`.")
+                f"Cannot compile to {model_output_dir}: not empty. "
+                "Please assign a different target or set `force_compile`.")
 
         # remove folder if exists
         if os.path.exists(model_output_dir):
@@ -280,14 +284,22 @@ def import_petab_problem(
                      model_name=model_name,
                      model_output_dir=model_output_dir,
                      **kwargs)
+        # ensure we will find the newly created module
+        importlib.invalidate_caches()
 
     # load module
-    model_module = importlib.import_module(model_name)
+    if model_name in sys.modules:
+        # reload, because may just have been created
+        importlib.reload(sys.modules[model_name])
+        model_module = sys.modules[model_name]
+    else:
+        model_module = importlib.import_module(model_name)
 
     # import model
     model = model_module.getModel()
 
-    logger.info(f"Successfully loaded model {model_name} from {model_output_dir}.")
+    logger.info(f"Successfully loaded model {model_name} "
+                f"from {model_output_dir}.")
 
     return model
 
