@@ -1,4 +1,8 @@
-"""Helper functions for AMICI core and module package preparation"""
+"""
+setuptools
+----------
+Helper functions for AMICI core and module package preparation
+"""
 
 import os
 import sys
@@ -9,24 +13,22 @@ import shutil
 from .swig import find_swig, get_swig_version
 
 try:
-    import pkgconfig # optional
+    import pkgconfig  # optional
     # pkgconfig python module might be installed without pkg-config binary
     # being available
     pkgconfig.exists('somePackageName')
 except (ModuleNotFoundError, EnvironmentError):
     pkgconfig = None
 
+from typing import Dict, List, Union, Tuple, Any
 
-def getBlasConfig():
+
+def get_blas_config() -> Dict[str, List[Union[str, Tuple[str, Any]]]]:
     """
     Find CBLAS-compatible BLAS
 
-    Arguments:
-
-    Returns:
-
-    Raises:
-
+    :return:
+        blas related package information
     """
 
     blaspkgcfg = {'include_dirs': [],
@@ -67,7 +69,6 @@ def getBlasConfig():
         blaspkgcfg['define_macros'].append(('AMICI_BLAS_MKL', None),)
         return blaspkgcfg
 
-
     # Try pkgconfig
     if pkgconfig:
         if pkgconfig.exists('cblas'):
@@ -83,15 +84,12 @@ def getBlasConfig():
     return blaspkgcfg
 
 
-def getHdf5Config():
-    """Find HDF5 include dir and libs
+def get_hdf5_config() -> Dict[str, List[str]]:
+    """
+    Find HDF5 include dir and libs
 
-    Arguments:
-
-    Returns:
-
-    Raises:
-
+    :return:
+        hdf5 related package information
     """
     if pkgconfig:
         h5pkgcfg = {}
@@ -111,6 +109,8 @@ def getHdf5Config():
                 'libraries': [],
                 'define_macros': []
                 }
+    hdf5_include_dir_found = False
+    hdf5_library_dir_found = False
 
     # try for hdf5 in standard locations
     hdf5_include_dir_hints = [
@@ -168,17 +168,16 @@ def getHdf5Config():
     return h5pkgcfg
 
 
-def addCoverageFlagsIfRequired(cxx_flags, linker_flags):
-    """Add compiler and linker flags if gcov coverage requested
+def add_coverage_flags_if_required(cxx_flags: List[str],
+                                   linker_flags: List[str]) -> None:
+    """
+    Add compiler and linker flags if gcov coverage requested
 
-    Arguments:
-    cxx_flags: list of existing cxx flags
-    linker_flags: list of existing linker flags
+    :param cxx_flags:
+        list of existing cxx flags
 
-    Returns:
-
-    Raises:
-
+    :param linker_flags:
+        list of existing linker flags
     """
     if 'ENABLE_GCOV_COVERAGE' in os.environ and \
             os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
@@ -188,18 +187,17 @@ def addCoverageFlagsIfRequired(cxx_flags, linker_flags):
         linker_flags.extend(['--coverage','-g'])
 
 
-def addDebugFlagsIfRequired(cxx_flags, linker_flags):
-    """Add compiler and linker debug flags if requested
+def add_debug_flags_if_required(cxx_flags: List[str],
+                                linker_flags: List[str]) -> None:
+    """
+    Add compiler and linker debug flags if requested
 
     Arguments:
-    cxx_flags: list of existing cxx flags
-    linker_flags: list of existing linker flags
-    force: flag to force debug mode ignoring env settings
+    :param cxx_flags:
+        list of existing cxx flags
 
-    Returns:
-
-    Raises:
-
+    :param linker_flags:
+        list of existing linker flags
     """
     if 'ENABLE_AMICI_DEBUGGING' in os.environ \
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
@@ -209,8 +207,9 @@ def addDebugFlagsIfRequired(cxx_flags, linker_flags):
         linker_flags.extend(['-g'])
 
 
-def generateSwigInterfaceFiles():
-    """Compile the swig python interface to amici
+def generate_swig_interface_files() -> None:
+    """
+    Compile the swig python interface to amici
     """
     swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
     swig_exe = find_swig()

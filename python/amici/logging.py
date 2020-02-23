@@ -1,3 +1,9 @@
+"""
+logging
+-------
+This module provides custom logging functionality for other amici modules
+"""
+
 import logging
 import platform
 import socket
@@ -17,28 +23,34 @@ NAMED_LOG_LEVELS = {'NOTSET': logging.NOTSET,
                     'ERROR': logging.ERROR,
                     'CRITICAL': logging.CRITICAL}
 
+from typing import Optional, Callable
 
-def _setup_logger(level=logging.WARNING, console_output=True,
-                  file_output=False, capture_warnings=True):
-    """Set up a new logging.Logger for AMICI logging
-    Arguments:
 
-        level: Logging level, typically using a constant like logging.INFO or
-            logging.DEBUG
+def _setup_logger(level: Optional[int] = logging.WARNING,
+                  console_output: Optional[bool] = True,
+                  file_output: Optional[bool] = False,
+                  capture_warnings: Optional[bool] = True) -> logging.Logger:
+    """
+    Set up a new logging.Logger for AMICI logging
 
-        console_output: Set up a default console log handler if True (default)
+    :param level:
+        Logging level, typically using a constant like logging.INFO or
+        logging.DEBUG
 
-        file_output: Supply a filename to copy all log output to that file, or
-            set to False to disable (default)
+    :param console_output:
+        Set up a default console log handler if True (default)
 
-        capture_warnings: Capture warnings from Python's warnings module
-            if True (default)
-    Returns:
+    :param file_output:
+        Supply a filename to copy all log output to that file, or
+        set to False to disable (default)
+
+    :param capture_warnings:
+        Capture warnings from Python's warnings module if True (default)
+
+    :return:
         A logging.Logger object for AMICI logging. Note that other AMICI modules
         should use a logger specific to their namespace instead by calling
         :func:`get_logger`.
-
-    Raises:
     """
     log = logging.getLogger(BASE_LOGGER_NAME)
 
@@ -88,31 +100,39 @@ def _setup_logger(level=logging.WARNING, console_output=True,
     return log
 
 
-def get_logger(logger_name=BASE_LOGGER_NAME, log_level=None, **kwargs):
-    """ Returns (if extistant) or creates an AMICI logger
+def get_logger(logger_name: Optional[str] = BASE_LOGGER_NAME,
+               log_level: Optional[int] = None,
+               **kwargs) -> logging.Logger:
+    """
+    Returns (if extistant) or creates an AMICI logger
     If the AMICI base logger has already been set up, this method will
     return it or any of its descendant loggers without overriding the
     settings - i.e. any values supplied as kwargs will be ignored.
 
-    Parameters:
+    :param logger_name:
+        Get a logger for a specific namespace, typically __name__
+        for code outside of classes or self.__module__ inside a class
 
-        logger_name : Get a logger for a specific namespace, typically __name__
-            for code outside of classes or self.__module__ inside a class
+    :param log_level:
+        Override the default or preset log level for the requested logger.
+        None or False uses the default or preset value. True evaluates to
+        logging.DEBUG. Any integer is used directly.
 
-        log_level : Override the default or preset log level for the requested
-            logger. None or False uses the default or preset value. True
-            evaluates to logging.DEBUG. Any integer is used directly.
+    :param console_output:
+        Set up a default console log handler if True (default). Only used when
+        the AMICI logger hasn't been set up yet.
 
-        **kwargs : kwargs
-            Keyword arguments to supply to :func:`setup_logger`. Only used when
-            the AMICI logger hasn't been set up yet (i.e. there have been no
-            calls to this function or :func:`get_logger` directly).
+    :param file_output:
+        Supply a filename to copy all log output to that file, or set to
+        False to disable (default). Only used when the AMICI logger hasn't
+        been set up yet.
 
-    Returns:
+    :param capture_warnings:
+        Capture warnings from Python's warnings module if True (default).
+        Only used when the AMICI logger hasn't been set up yet..
+
+    :return:
         A logging.Logger object with the requested name
-
-    Raises:
-
     """
     if BASE_LOGGER_NAME not in logging.Logger.manager.loggerDict.keys():
         _setup_logger(**kwargs)
@@ -136,7 +156,17 @@ def get_logger(logger_name=BASE_LOGGER_NAME, log_level=None, **kwargs):
     return logger
 
 
-def log_execution_time(description, logger):
+def log_execution_time(description: str, logger: logging.Logger) -> Callable:
+    """
+    Parameterized function decorator that enables automatic execution time
+    tracking
+
+    :param description:
+        Description of what the decorated function does
+
+    :param logger:
+        Logger to which execution timing will be printed
+    """
     def decorator_timer(func):
         @functools.wraps(func)
         def wrapper_timer(*args, **kwargs):

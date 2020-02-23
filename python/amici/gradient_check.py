@@ -1,3 +1,10 @@
+"""
+gradient_check
+--------------
+This module provides functions to automatically check correctness of amici
+computed sensitivities using finite difference approximations
+"""
+
 from . import (runAmiciSimulation, SensitivityOrder_none,
                SensitivityMethod_forward, Model, Solver, ExpData, ReturnData)
 import numpy as np
