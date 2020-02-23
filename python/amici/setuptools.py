@@ -22,8 +22,10 @@ except (ModuleNotFoundError, EnvironmentError):
 
 from typing import Dict, List, Union, Tuple, Any
 
+PackageInfo = Dict[str, List[Union[str, Tuple[str, Any]]]]
 
-def get_blas_config() -> Dict[str, List[Union[str, Tuple[str, Any]]]]:
+
+def get_blas_config() -> PackageInfo:
     """
     Find CBLAS-compatible BLAS
 
@@ -84,7 +86,7 @@ def get_blas_config() -> Dict[str, List[Union[str, Tuple[str, Any]]]]:
     return blaspkgcfg
 
 
-def get_hdf5_config() -> Dict[str, List[str]]:
+def get_hdf5_config() -> PackageInfo:
     """
     Find HDF5 include dir and libs
 
