@@ -1,5 +1,5 @@
 """
-logging
+Logging
 -------
 This module provides custom logging functionality for other amici modules
 """

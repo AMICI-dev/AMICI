@@ -17,7 +17,10 @@ import sympy as sp
 import numpy as np
 import itertools
 
-from typing import List, Union, Dict, Tuple, Set, Iterable
+from typing import List, Union, Dict, Tuple, Set, Iterable, Any
+
+CL_Prototype = Dict[str, Dict[str, Any]]
+ConservationLaw = Dict[str, Union[str, sp.Basic]]
 
 import pysb.bng
 import pysb
@@ -30,7 +33,7 @@ def pysb2amici(model: pysb.Model,
                output_dir: str = None,
                observables: List[str] = None,
                constant_parameters: List[str] = None,
-               sigmas: Dict[str] = None,
+               sigmas: Dict[str, str] = None,
                verbose: Union[int, bool] = False,
                assume_pow_positivity: bool = False,
                compiler: str = None,
@@ -50,7 +53,7 @@ def pysb2amici(model: pysb.Model,
         list of pysb.Expressions names that should be mapped to observables
 
     :param sigmas:
-        list of pysb.Expressions names that should be mapped to sigmas
+        dict of pysb.Expressions names that should be mapped to sigmas
 
     :param constant_parameters:
         list of pysb.Parameter names that should be mapped as fixed parameter
@@ -105,7 +108,7 @@ def pysb2amici(model: pysb.Model,
 def ode_model_from_pysb_importer(model: pysb.Model,
                                  constant_parameters: List[str] = None,
                                  observables: List[str] = None,
-                                 sigmas: Dict[str] = None,
+                                 sigmas: Dict[str, str] = None,
                                  compute_conservation_laws=True) -> ODEModel:
     """
     Creates an ODEModel instance from a pysb.Model instance.
@@ -222,7 +225,7 @@ def _process_pysb_parameters(pysb_model: pysb.Model,
 def _process_pysb_expressions(pysb_model: pysb.Model,
                               ode_model: ODEModel,
                               observables: List[str],
-                              sigmas: Dict[str]) -> None:
+                              sigmas: Dict[str, str]) -> None:
     """
     Converts pysb expressions into Observables (with corresponding standard
     deviation SigmaY and LogLikelihood) or Expressions and adds them
@@ -289,9 +292,10 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
             pass
 
 
-def _get_sigma_name_and_value(pysb_model: pysb.Model,
-                              obs_name: str,
-                              sigmas: Dict[str]) -> Tuple[str, sp.Basic]:
+def _get_sigma_name_and_value(
+        pysb_model: pysb.Model,
+        obs_name: str,
+        sigmas: Dict[str, str]) -> Tuple[str, sp.Basic]:
     """
     Tries to extract standard deviation symbolic identifier and formula
     for a given observable name from the pysb model and if no specification is
@@ -414,7 +418,7 @@ def _compute_monomers_with_fixed_initial_conditions(
 
 def _generate_cl_prototypes(excluded_monomers: Iterable[str],
                             pysb_model: pysb.Model,
-                            ode_model: ODEModel) -> Dict[str, Dict[str]]:
+                            ode_model: ODEModel) -> CL_Prototype:
     """
     Constructs a dict that contains preprocessed information for the
     construction of conservation laws
@@ -442,7 +446,7 @@ def _generate_cl_prototypes(excluded_monomers: Iterable[str],
     return cl_prototypes
 
 
-def _compute_possible_indices(cl_prototypes: Dict[str, Dict[str]],
+def _compute_possible_indices(cl_prototypes: CL_Prototype,
                               pysb_model: pysb.Model,
                               ode_model: ODEModel,
                               excluded_monomers: Iterable[str]) -> None:
@@ -500,7 +504,7 @@ def _compute_possible_indices(cl_prototypes: Dict[str, Dict[str]],
                 cl_prototypes[monomer.name] = prototype
 
 
-def _compute_dependency_idx(cl_prototypes: Dict[str, Dict[str]]) -> None:
+def _compute_dependency_idx(cl_prototypes: CL_Prototype) -> None:
     """
     Compute connecting species, this allows us to efficiently compute
     whether the respective conservation law would induce a cyclic dependency.
@@ -541,7 +545,7 @@ def _compute_dependency_idx(cl_prototypes: Dict[str, Dict[str]]) -> None:
                 prototype_j['dependency_idx'][idx] |= {monomer_i}
 
 
-def _compute_target_index(cl_prototypes: Dict[str, Dict[str]],
+def _compute_target_index(cl_prototypes: CL_Prototype,
                           ode_model: ODEModel) -> None:
     """
     Computes the target index for every monomer
@@ -603,7 +607,7 @@ def _compute_target_index(cl_prototypes: Dict[str, Dict[str]],
         _greedy_target_index_update(cl_prototypes)
 
 
-def _cl_prototypes_are_valid(cl_prototypes: Dict[str, Dict[str]]) -> bool:
+def _cl_prototypes_are_valid(cl_prototypes: CL_Prototype) -> bool:
     """
     Checks consistency of cl_prototypes by asserting that target indices
     are unique and there are no cyclic dependencies
@@ -625,7 +629,7 @@ def _cl_prototypes_are_valid(cl_prototypes: Dict[str, Dict[str]]) -> bool:
     return True
 
 
-def _cl_has_cycle(monomer: str, cl_prototypes: Dict[str, Dict[str]]) -> bool:
+def _cl_has_cycle(monomer: str, cl_prototypes: CL_Prototype) -> bool:
     """
     Checks whether monomer has a conservation law that is part of a
     cyclic dependency
@@ -661,7 +665,7 @@ def _cl_has_cycle(monomer: str, cl_prototypes: Dict[str, Dict[str]]) -> bool:
 
 
 def _is_in_cycle(monomer: str,
-                 cl_prototypes: Dict[str, Dict[str]],
+                 cl_prototypes: CL_Prototype,
                  visited: List[str],
                  root: str) -> bool:
     """
@@ -712,7 +716,7 @@ def _is_in_cycle(monomer: str,
     )
 
 
-def _greedy_target_index_update(cl_prototypes: Dict[str, Dict[str]]) -> None:
+def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
     """
     Computes unique target indices for conservation laws from possible
     indices  such that expected fill in in symbolic derivatives is minimized
@@ -809,7 +813,7 @@ def _greedy_target_index_update(cl_prototypes: Dict[str, Dict[str]]) -> None:
 
 
 def _get_target_indices(
-        cl_prototypes: Dict[str, Dict[str]]) -> List[List[int]]:
+        cl_prototypes: CL_Prototype) -> List[List[int]]:
     """
     Computes the list target indices for the current
     conservation law prototype
@@ -826,9 +830,9 @@ def _get_target_indices(
 
 
 def _construct_conservation_from_prototypes(
-        cl_prototypes: Dict[str, Dict[str]],
+        cl_prototypes: CL_Prototype,
         pysb_model: pysb.Model
-) -> List[Dict[str]]:
+) -> List[ConservationLaw]:
     """
     Computes the algebraic expression for the total amount of a given
     monomer
@@ -883,7 +887,7 @@ def _construct_conservation_from_prototypes(
 
 def _add_conservation_for_constant_species(
         ode_model: ODEModel,
-        conservation_laws:  List[Dict[str]]
+        conservation_laws:  List[ConservationLaw]
 ) -> None:
     """
     Computes the algebraic expression for the total amount of a given
@@ -910,7 +914,8 @@ def _add_conservation_for_constant_species(
             })
 
 
-def _flatten_conservation_laws(conservation_laws:  List[Dict[str]]) -> None:
+def _flatten_conservation_laws(
+        conservation_laws:  List[ConservationLaw]) -> None:
     """
     Flatten the conservation laws such that the state_expr not longer
     depend on any states that are replaced by conservation laws
@@ -994,7 +999,7 @@ def _sub_matches_cl(subs: Iterable[Tuple[sp.Symbol, sp.Basic]],
 
 
 def _get_conservation_law_subs(
-        conservation_laws: List[Dict[str]]
+        conservation_laws: List[ConservationLaw]
 ) -> List[Tuple[sp.Symbol, sp.Basic]]:
     """
     Computes a list of (state, law) tuples for conservation laws that still
@@ -1015,7 +1020,7 @@ def _get_conservation_law_subs(
 
 
 def _conservation_law_variables(
-        conservation_laws: List[Dict[str]]) -> Set[sp.Symbol]:
+        conservation_laws: List[ConservationLaw]) -> Set[sp.Symbol]:
     """
     Construct the set of all free variables from a list of conservation laws
 

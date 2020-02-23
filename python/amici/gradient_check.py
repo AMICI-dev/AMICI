@@ -1,6 +1,6 @@
 """
-gradient_check
---------------
+Finite Difference Check
+-----------------------
 This module provides functions to automatically check correctness of amici
 computed sensitivities using finite difference approximations
 """

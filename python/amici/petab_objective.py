@@ -61,7 +61,7 @@ def simulate_petab(
         parameters to SBML IDs.
 
     :param simulation_conditions:
-        Result of petab.get_simulation_conditions. Can be provided to save
+        Result of `petab.get_simulation_conditions`. Can be provided to save
         time if this has be obtained before.
 
     :param parameter_mapping:
@@ -84,7 +84,7 @@ def simulate_petab(
         * cost function value (LLH),
         * const function sensitivity w.r.t. parameters (SLLH),
           (**NOTE**: Sensitivities are computed for the non-scaled parameters)
-        * list of `ReturnData`s (RDATAS),
+        * list of `ReturnData` (RDATAS),
 
         corresponding to the different simulation conditions.
         For ordering of simulation conditions, see

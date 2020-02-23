@@ -47,7 +47,8 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'nbsphinx',
-    'recommonmark'
+    'recommonmark',
+    'sphinx_autodoc_typehints',
 ]
 
 # Add any paths that contain templates here, relative to this directory.

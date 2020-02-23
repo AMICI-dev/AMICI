@@ -1,7 +1,8 @@
-""" @package amici
-The AMICI Python module (in doxygen this will also contain documentation about the C++ library)
-
-The AMICI Python module provides functionality for importing SBML models and turning them into C++ Python extensions.
+"""
+AMICI
+------
+The AMICI Python module provides functionality for importing SBML models and
+turning them into C++ Python extensions.
 
 Getting started:
 ```
@@ -15,16 +16,22 @@ import modelName
 help(modelName)
 ```
 
-Attributes:
-    amici_path: absolute root path of the amici repository
-    amiciSwigPath: absolute path of the amici swig directory
-    amiciSrcPath: absolute path of the amici source directory
-    amiciModulePath: absolute root path of the amici module
-    hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
-    has_clibs: boolean indicating if this is the full package with swig
-               interface or the raw package without
-    capture_cstdout: context to redirect C/C++ stdout to python stdout if
-        python stdout was redirected (doing nothing if not redirected).
+:var amici_path:
+    absolute root path of the amici repository
+:var amiciSwigPath:
+    absolute path of the amici swig directory
+:var amiciSrcPath:
+    absolute path of the amici source directory
+:var amiciModulePath:
+    absolute root path of the amici module
+:var hdf5_enabled:
+    boolean indicating if amici was compiled with hdf5 support
+:var has_clibs:
+    boolean indicating if this is the full package with swig interface or
+    the raw package without
+:var capture_cstdout:
+    context to redirect C/C++ stdout to python stdout if python stdout was
+    redirected (doing nothing if not redirected).
 """
 
 import os
@@ -124,7 +131,7 @@ with open(os.path.join(amici_path, 'version.txt')) as f:
 
 __commit__ = _get_commit_hash()
 
-try:
+if has_clibs:
     # These module require the swig interface and other dependencies which will
     # be installed if the the AMICI package was properly installed. If not,
     # AMICI was probably imported from setup.py and we don't need those.
@@ -134,8 +141,6 @@ try:
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
     from .ode_export import ODEModel, ODEExporter
-except ImportError:
-    pass
 
 
 def runAmiciSimulation(model, solver, edata=None):

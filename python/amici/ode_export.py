@@ -32,7 +32,6 @@ from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__
 )
 from .logging import get_logger, log_execution_time
-from .sbml_import import SbmlImporter
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -823,7 +822,7 @@ class ODEModel:
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
 
-    def import_from_sbml_importer(self, si: SbmlImporter) -> None:
+    def import_from_sbml_importer(self, si: 'SbmlImporter') -> None:
         """
         Imports a model specification from a amici.SBMLImporter instance.
 
@@ -1632,7 +1631,7 @@ class ODEModel:
 
         """
         self._eqs[name] = sp.Matrix(
-            [comp.get_value() for comp in getattr(self, component)]
+            [comp.get_val() for comp in getattr(self, component)]
         )
         # flatten conservation laws in expressions
         if name == 'w':
@@ -1668,7 +1667,7 @@ class ODEModel:
         else:
             raise Exception(f'No values for {name}')
 
-        self._vals[name] = [comp.get_value()
+        self._vals[name] = [comp.get_val()
                             for comp in getattr(self, component)]
 
     def _generate_name(self, name: str) -> None:
