@@ -1,5 +1,5 @@
 """
-sbml_import
+SBML Import
 ------------
 This module provides all necessary functionality to import a model specified
 in the System Biology Markup Language (SBML)
@@ -46,56 +46,56 @@ class SbmlImporter:
     Class to generate AMICI C++ files for a model provided in the Systems
     Biology Markup Language (SBML).
 
-    :cvar show_sbml_warnings: bool
+    :var show_sbml_warnings: bool
         indicates whether libSBML warnings should be
         displayed
 
-    :cvar symbols: dict
+    :var symbols: dict
         dict carrying symbolic definitions
 
-    :cvar sbml_reader:
+    :var sbml_reader:
         the libSBML sbml reader [!not storing this will result
         in a segfault!]
 
-    :cvar sbml_doc:
+    :var sbml_doc:
         document carrying the sbml definition [!not storing this
         will result in a segfault!]
 
-    :cvar sbml:
+    :var sbml:
         sbml definition [!not storing this will result in a segfault!]
 
-    :cvar speciesIndex: dict
+    :var species_index: dict
         maps species names to indices
 
-    :cvar speciesCompartment: sympy.Matrix
+    :var species_compartment: sympy.Matrix
         compartment for each species
 
-    :cvar constantSpecies: list[sting]
+    :var constant_cpecies: list[sting]
         ids of species that are marked as constant
 
-    :cvar boundaryConditionSpecies: list[string]
+    :var boundary_condition_species: list[string]
         ids of species that are marked as boundary
         condition
 
-    :cvar speciesHasOnlySubstanceUnits: list[bool]
+    :var species_has_only_substance_units: list[bool]
         flags indicating whether a species has only substance units
 
-    :cvar speciesConversionFactor: sympy.Matrix
+    :var species_conversion_factor: sympy.Matrix
         conversion factors for every species
 
-    :cvar compartmentSymbols: sympy.Matrix
+    :var compartment_symbols: sympy.Matrix
         compartment ids
 
-    :cvar compartmentVolume: sympy.Matrix
+    :var compartment_volume: sympy.Matrix
         numeric/symbolic compartment volumes
 
-    :cvar stoichiometricMatrix: sympy.Matrix
+    :var stoichiometric_matrix: sympy.Matrix
         stoichiometric matrix of the model
 
-    :cvar fluxVector: sympy.Matrix
+    :var flux_vector: sympy.Matrix
         reaction kinetic laws
 
-    :cvar local_symbols: dict
+    :var local_symbols: dict
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
 
@@ -296,7 +296,7 @@ class SbmlImporter:
             compiler=compiler,
             allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond
         )
-        exporter.setName(model_name)
+        exporter.set_name(model_name)
         exporter.set_paths(output_dir)
         exporter.generate_model_code()
 
@@ -682,7 +682,7 @@ class SbmlImporter:
             math = sbml.formulaToL3String(reaction.getKineticLaw().getMath())
             try:
                 sym_math = sp.sympify(_parse_logical_operators(math),
-                                     locals=self.local_symbols)
+                                      locals=self.local_symbols)
             except SBMLException as Ex:
                 raise Ex
             except:
@@ -757,7 +757,7 @@ class SbmlImporter:
 
             if variable in parametervars:
                 try:
-                    idx = self.parameter_index[str(variable)]
+                    idx = self.sbml.parameterIndex[str(variable)]
                     self.symbols['parameter']['value'][idx] \
                         = float(formula)
                 except:
@@ -831,18 +831,16 @@ class SbmlImporter:
         Perform symbolic computations required for objective function
         evaluation.
 
-        Parameters
-        -----
-        observables:
+        :param observables:
             dictionary(observableId: {'name':observableName
             (optional), 'formula':formulaString)})
             to be added to the model
 
-        sigmas:
+        :param sigmas:
             dictionary(observableId: sigma value or (existing)
             parameter name)
 
-        noise_distributions:
+        :param noise_distributions:
             dictionary(observableId: noise type)
             See `sbml2amici`.
         """
@@ -893,9 +891,15 @@ class SbmlImporter:
                     )
                     observables[observable]['formula'] = repl
 
-            def replace_assignments(formula):
+            def replace_assignments(formula: str) -> sp.Basic:
                 """
                 Replace assignment rules in observables
+
+                :param formula:
+                    algebraic formula of the observable
+
+                :return:
+                    observable formula with assignment rules replaced
                 """
                 formula = sp.sympify(formula, locals=self.local_symbols)
                 for s in formula.free_symbols:
@@ -1018,10 +1022,10 @@ class SbmlImporter:
         """
         Remove all reserved symbols from self.symbols
         """
-        reservedSymbols = ['k', 'p', 'y', 'w']
-        for str in reservedSymbols:
-            old_symbol = sp.Symbol(str, real=True)
-            new_symbol = sp.Symbol('amici_' + str, real=True)
+        reserved_symbols = ['k', 'p', 'y', 'w']
+        for sym in reserved_symbols:
+            old_symbol = sp.Symbol(sym, real=True)
+            new_symbol = sp.Symbol('amici_' + sym, real=True)
             self._replace_in_all_expressions(old_symbol, new_symbol)
             for symbol in self.symbols.keys():
                 if 'identifier' in self.symbols[symbol].keys():
@@ -1093,8 +1097,8 @@ def replaceLogAB(x: str) -> str:
 
     # index of 'l' of 'log'
     log_start = match.start() \
-            if match.end() - match.start() == 4 \
-            else match.start() + 1
+                if match.end() - match.start() == 4 \
+                else match.start() + 1
     level = 0  # parenthesis level
     pos_comma = -1  # position of comma in log(a,b)
     for i in range(log_start + 4, len(x)):

@@ -1,5 +1,5 @@
 """
-ode_export
+C++ Export
 ------------
 This module provides all necessary functionality specify an ODE model and
 generate executable C++ simulation code

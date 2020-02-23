@@ -1,6 +1,6 @@
 """
-amici.pandas
-------------
+Pandas Wrappers
+---------------
 This modules contains convenience wrappers that allow for easy interconversion
 between C++ objects from amici.amici and pandas DataFrames
 """
@@ -181,7 +181,7 @@ def getSimulationStatesAsDataFrame(
         descriptive names.
 
     :return: pandas DataFrame with conditions/timpoints as rows and
-    observables as columns.
+        observables as columns.
     """
     edata_list = _process_edata_list(edata_list)
     rdata_list = _process_rdata_list(rdata_list)
@@ -214,9 +214,8 @@ def getSimulationStatesAsDataFrame(
 
 
 def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
-    """ Convert a list of ExpData to pandas DataFrame.
-
-    Arguments:
+    """
+    Convert a list of ExpData to pandas DataFrame.
         model: Model instance.
         edata_list: list of ExpData instances with experimental data.
             May also be a single ExpData instance.
@@ -278,8 +277,6 @@ def _fill_conditions_dict(datadict, model, edata, by_id) -> dict:
     """
     Helper function that fills in condition parameters from model and
     edata.
-
-    Arguments:
         datadict: dictionary in which condition parameters will be inserted
             as key value pairs.
         model: Model instance.
@@ -319,8 +316,6 @@ def _fill_conditions_dict(datadict, model, edata, by_id) -> dict:
 
 def _get_extended_observable_cols(model, by_id) -> list:
     """ Construction helper for extended observable dataframe headers.
-
-    Arguments:
         model: Model instance.
         by_id: bool
             If True, ids are used as identifiers, otherwise the possibly more
@@ -346,10 +341,10 @@ def _get_extended_observable_cols(model, by_id) -> list:
 
 def _get_observable_cols(model, by_id):
     """ Construction helper for observable dataframe headers.
-
-    Arguments:
-        model: Model instance.
-        by_id: bool
+    :param model:
+        Model instance.
+    :param by_id:
+        bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
@@ -371,10 +366,10 @@ def _get_observable_cols(model, by_id):
 
 def _get_state_cols(model, by_id):
     """ Construction helper for state dataframe headers.
-
-    Arguments:
-        model: Model instance.
-        by_id: bool
+    :param model:
+        Model instance.
+    :param by_id:
+        bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
@@ -398,11 +393,12 @@ def _get_names_or_ids(model, variable, by_id):
     """
     Obtains a unique list of identifiers for the specified variable.
     First tries model.getVariableNames and then uses model.getVariableIds.
-
-    Arguments:
-        model: Model instance.
-        variable: variable name.
-        by_id: bool
+    :param model:
+        Model instance.
+    :param variable:
+        variable name.
+    :param by_id:
+        bool
             If True, ids are used as identifiers, otherwise first the possibly
             more descriptive names are used.
 
@@ -447,12 +443,14 @@ def _get_specialized_fixed_parameters(
     """
     Copies values in condition and overwrites them according to key
     value pairs specified in overwrite.
-
-    Arguments:
-        model: Model instance.
-        condition: dict/pd.Series containing FixedParameter values.
-        overwrite: dict specifying which values in condition are to be replaced.
-        by_id: bool
+    :param model:
+        Model instance.
+    :param condition:
+        dict/pd.Series containing FixedParameter values.
+    :param overwrite:
+        dict specifying which values in condition are to be replaced.
+    :param by_id:
+        bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
@@ -471,15 +469,17 @@ def _get_specialized_fixed_parameters(
 
 def constructEdataFromDataFrame(df, model, condition, by_id=False):
     """ Constructs an ExpData instance according to the provided Model and DataFrame.
-
-    Arguments:
-        df: pd.DataFrame with Observable Names/Ids as columns.
+    :param df:
+        pd.DataFrame with Observable Names/Ids as columns.
             Standard deviations may be specified by appending '_std' as suffix.
-        model: Model instance.
-        condition: pd.Series with FixedParameter Names/Ids as columns.
+    :param model:
+        Model instance.
+    :param condition:
+        pd.Series with FixedParameter Names/Ids as columns.
             Preequilibration conditions may be specified by appending '_preeq' as suffix.
             Presimulation conditions may be specified by appending '_presim' as suffix.
-        by_id: bool, optional (default = False)
+    :param by_id:
+        bool, optional (default = False)
             Indicate whether in the arguments, column headers are based on ids or names.
             This should correspond to the way `df` and `condition` was created in the
             first place.
@@ -553,15 +553,16 @@ def constructEdataFromDataFrame(df, model, condition, by_id=False):
 
 def getEdataFromDataFrame(model, df, by_id=False):
     """ Constructs a ExpData instance according to the provided Model and DataFrame.
-
-    Arguments:
-        df: pd.DataFrame with Observable Names/Ids, FixedParameter Names/Ids and time as columns.
+    :param df:
+        pd.DataFrame with Observable Names/Ids, FixedParameter Names/Ids and time as columns.
             Standard deviations may be specified by appending '_std' as suffix.
             Preequilibration fixedParameters may be specified by appending '_preeq' as suffix.
             Presimulation fixedParameters may be specified by appending '_presim' as suffix.
             Presimulation time may be specified as 't_presim' column.
-        model: Model instance.
-        by_id: bool, optional (default = False)
+    :param model:
+        Model instance.
+    :param by_id:
+        bool, optional (default = False)
             Whether the column names in `df` are based on ids or names,
             corresponding to how the dataframe was created in the first place.
 

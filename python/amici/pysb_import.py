@@ -1,5 +1,5 @@
 """
-pysb_import
+PySB Import
 ------------
 This module provides all necessary functionality to import a model specified
 in the PySB format
@@ -96,7 +96,7 @@ def pysb2amici(model: pysb.Model,
         assume_pow_positivity=assume_pow_positivity,
         compiler=compiler,
     )
-    exporter.setName(model.name)
+    exporter.set_name(model.name)
     exporter.set_paths(output_dir)
     exporter.generate_model_code()
     exporter.compile_model()
@@ -126,12 +126,8 @@ def ode_model_from_pysb_importer(model: pysb.Model,
     :param compute_conservation_laws:
         see amici.pysb_import.pysb2amici
 
-
-    Returns:
-    New ODEModel instance according to pysbModel
-
-    Raises:
-
+    :return:
+        New ODEModel instance according to pysbModel
     """
 
     ode = ODEModel(simplify=None)
@@ -244,7 +240,6 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
 
     :param ode_model:
         ODEModel instance
-
     """
     for exp in pysb_model.expressions:
         ode_model.add_component(
@@ -361,7 +356,7 @@ def _process_pysb_conservation_laws(pysb_model: pysb.Model,
     Removes species according to conservation laws to ensure that the
     jacobian has full rank
 
-    :param model:
+    :param pysb_model:
         pysb model
 
     :param ode_model:
@@ -392,7 +387,8 @@ def _process_pysb_conservation_laws(pysb_model: pysb.Model,
 
 def _compute_monomers_with_fixed_initial_conditions(
         pysb_model: pysb.Model) -> Set[str]:
-    """Computes the set of monomers in a model with species that have fixed
+    """
+    Computes the set of monomers in a model with species that have fixed
     initial conditions
 
     :param pysb_model: pysb model @type pysb.core.Model
@@ -471,7 +467,7 @@ def _compute_possible_indices(cl_prototypes: Dict[str, Dict[str]],
     for monomer in pysb_model.monomers:
         if monomer.name not in excluded_monomers:
             compartments = [
-                str(mp.compartment) # string based comparison as
+                str(mp.compartment)  # string based comparison as
                 # compartments are not hashable
                 for cp in pysb_model.species
                 for mp in cp.monomer_patterns
@@ -607,7 +603,7 @@ def _compute_target_index(cl_prototypes: Dict[str, Dict[str]],
         _greedy_target_index_update(cl_prototypes)
 
 
-def _cl_prototypes_are_valid(cl_prototypes: Dict[str, Dict[str]]) -> None:
+def _cl_prototypes_are_valid(cl_prototypes: Dict[str, Dict[str]]) -> bool:
     """
     Checks consistency of cl_prototypes by asserting that target indices
     are unique and there are no cyclic dependencies
@@ -1060,7 +1056,7 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
     ic_index = next(
         (
             ic
-            for ic, condition in enumerate(pysb_model.initial_conditions)
+            for ic, condition in enumerate(pysb_model.initials)
             if pysb.pattern.match_complex_pattern(condition[0],
                                                   specie, exact=True)
         ),
@@ -1107,7 +1103,7 @@ def _get_unconserved_monomers(rule: pysb.Rule,
     :param rule:
         the pysb rule
 
-    :param model:
+    :param pysb_model:
         pysb model
 
     :return:
@@ -1169,4 +1165,3 @@ def _get_changed_stoichiometries(
             changed_stoichiometries.add(monomer)
 
     return changed_stoichiometries
-

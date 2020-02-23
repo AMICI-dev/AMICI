@@ -1,5 +1,9 @@
-"""Functionality related to running simulations or evaluating the objective
-function as defined by a PEtab problem"""
+"""
+PEtab Objective
+---------------
+Functionality related to running simulations or evaluating the objective
+function as defined by a PEtab problem
+"""
 
 import copy
 import logging
@@ -39,33 +43,42 @@ def simulate_petab(
         scaled_parameters: Optional[bool] = False,
         log_level: int = logging.WARNING
 ) -> Dict[str, Any]:
-    """Simulate PEtab model
+    """
+    Simulate PEtab model
 
-    Arguments:
-        petab_problem:
-            PEtab problem to work on.
-        amici_model:
-            AMICI Model assumed to be compatible with ``petab_problem``.
-        solver:
-            An AMICI solver. Will use default options if None.
-        problem_parameters:
-            Run simulation with these parameters. If None,
-            PEtab `nominalValues` will be used). To be provided as dict,
-            mapping PEtab problem parameters to SBML IDs.
-        simulation_conditions:
-            Result of petab.get_simulation_conditions. Can be provided to save
-            time if this has be obtained before.
-        parameter_mapping:
-            Optional precomputed PEtab parameter mapping for efficiency.
-        parameter_scale_mapping:
-            Optional precomputed PEtab parameter scale mapping for efficiency.
-        scaled_parameters:
-            If True, problem_parameters are assumed to be on the scale provided
-            in the PEtab parameter table and will be unscaled. If False, they
-            are assumed to be in linear scale.
-        log_level:
-            Log level, see `logging` module.
-    Returns:
+    :param petab_problem:
+        PEtab problem to work on.
+
+    :param amici_model:
+        AMICI Model assumed to be compatible with ``petab_problem``.
+
+    :param solver:
+        An AMICI solver. Will use default options if None.
+
+    :param problem_parameters:
+        Run simulation with these parameters. If None, PEtab `nominalValues`
+        will be used). To be provided as dict,  mapping PEtab problem
+        parameters to SBML IDs.
+
+    :param simulation_conditions:
+        Result of petab.get_simulation_conditions. Can be provided to save
+        time if this has be obtained before.
+
+    :param parameter_mapping:
+        Optional precomputed PEtab parameter mapping for efficiency.
+
+    :param parameter_scale_mapping:
+        Optional precomputed PEtab parameter scale mapping for efficiency.
+
+    :param scaled_parameters:
+        If True, problem_parameters are assumed to be on the scale provided
+        in the PEtab parameter table and will be unscaled. If False, they
+        are assumed to be in linear scale.
+
+    :param log_level:
+        Log level, see `logging` module.
+
+    :return:
         Dictionary of
 
         * cost function value (LLH),
@@ -168,27 +181,32 @@ def edatas_from_petab(
     Sets timepoints, fixed parameters (including preequilibration),
     non-fixed parameters, and observed data and sigmas.
 
-    Arguments:
-        model:
-            AMICI model.
-        petab_problem:
-            PEtab problem
-        problem_parameters:
-            Dictionary mapping parameter names of the PEtab problem to
-            parameter values
-        simulation_conditions:
-            Result of petab.get_simulation_conditions. Can be provided to save
-            time if this has be obtained before.
-        parameter_mapping:
-            Optional precomputed PEtab parameter mapping for efficiency.
-        parameter_scale_mapping:
-            Optional precomputed PEtab parameter scale mapping for efficiency.
-        scaled_parameters:
-            If True, problem_parameters are assumed to be on the scale provided
-            in the PEtab parameter table and will be unscaled. If False, they
-            are assumed to be in linear scale.
+    :param model:
+        AMICI model.
 
-    Returns:
+    :param petab_problem:
+        PEtab problem
+
+    :param problem_parameters:
+        Dictionary mapping parameter names of the PEtab problem to
+        parameter values
+
+    :param simulation_conditions:
+        Result of petab.get_simulation_conditions. Can be provided to save
+        time if this has be obtained before.
+
+    :param parameter_mapping:
+        Optional precomputed PEtab parameter mapping for efficiency.
+
+    :param parameter_scale_mapping:
+        Optional precomputed PEtab parameter scale mapping for efficiency.
+
+    :param scaled_parameters:
+        If True, problem_parameters are assumed to be on the scale provided
+        in the PEtab parameter table and will be unscaled. If False,
+        they are assumed to be in linear scale.
+
+    :return:
         List with one ``ExpData`` per simulation condition.
     """
 
@@ -234,11 +252,16 @@ def edatas_from_petab(
 
 def subset_dict(full: Dict[Any, Any],
                 *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
-    """Get subset of dictionary based on provided keys
+    """
+    Get subset of dictionary based on provided keys
 
-    Arguments:
-        full: Dictionary to subset
-        *args: Collections of keys to be contained in the different subsets
+    :param full:
+        Dictionary to subset
+    :param args:
+        Collections of keys to be contained in the different subsets
+
+    :return:
+        subsetted dictionary
     """
 
     for keys in args:
@@ -260,30 +283,36 @@ def get_edata_for_condition(
     Sets timepoints, fixed parameters (including preequilibration),
     variable parameters, and observed data and sigmas.
 
-    Arguments:
-        condition:
-            pandas.DataFrame row with preequilibrationConditionId and
-            simulationConditionId.
-        problem_parameters:
-            PEtab problem parameters as parameterId=>value dict. Only
-            parameters included here will be set. Remaining parameters will
-            be used currently set in `amici_model`.
-        amici_model:
-            AMICI model
-        petab_problem:
-            Underlying PEtab problem
-        observable_ids:
-            List of observable IDs
-        parameter_mapping:
-            PEtab parameter mapping for current condition
-        parameter_scale_mapping:
-            PEtab parameter scale mapping for current condition
-        scaled_parameters:
-            If True, problem_parameters are assumed to be on the scale provided
-            in the PEtab parameter table and will be unscaled. If False, they
-            are assumed to be in linear scale.
+    :param condition:
+        pandas.DataFrame row with preequilibrationConditionId and
+        simulationConditionId.
 
-    Returns:
+    :param problem_parameters:
+        PEtab problem parameters as parameterId=>value dict. Only
+        parameters included here will be set. Remaining parameters will
+        be used currently set in `amici_model`.
+
+    :param amici_model:
+        AMICI model
+
+    :param petab_problem:
+        Underlying PEtab problem
+
+    :param observable_ids:
+        List of observable IDs
+
+    :param parameter_mapping:
+        PEtab parameter mapping for current condition
+
+    :param parameter_scale_mapping:
+        PEtab parameter scale mapping for current condition
+
+    :param scaled_parameters:
+        If True, problem_parameters are assumed to be on the scale provided
+        in the PEtab parameter table and will be unscaled. If False, they
+        are assumed to be in linear scale.
+
+    :return:
         ExpData instance
     """
 
@@ -495,13 +524,12 @@ def scale_parameter(value: numbers.Number,
                     petab_scale: str) -> numbers.Number:
     """Bring parameter from linear scale to target scale.
 
-    Arguments:
-        value:
-            Value to scale
-        petab_scale:
-            Target scale of ``value``
+    :param value:
+        Value to scale
+    :param petab_scale:
+        Target scale of ``value``
 
-    Returns:
+    :return:
         ``value`` on linear scale
     """
     if petab_scale == LIN:
@@ -517,17 +545,19 @@ def scale_parameter(value: numbers.Number,
 def scale_parameters_dict(
         value_dict: Dict[Any, numbers.Number],
         petab_scale_dict: Dict[Any, str]) -> None:
-    """Bring parameters from linear scale to target scale.
+    """
+    Bring parameters from linear scale to target scale.
 
     Bring values in ``value_dict`` from linear scale to the scale
     provided in ``petab_scale_dict`` (in-place).
     Both arguments are expected to have the same length and matching keys.
 
-    Arguments:
-        value_dict:
-            Values to scale
-        petab_scale_dict:
-            Target scales of ``values``
+    :param value_dict:
+        Values to scale
+
+    :param petab_scale_dict:
+        Target scales of ``values``
+
     """
     if not value_dict.keys() == petab_scale_dict.keys():
         raise AssertionError("Keys don't match.")
@@ -541,11 +571,10 @@ def _get_timepoints_with_replicates(
     """
     Get list of timepoints including replicate measurements
 
-    Arguments:
-        df_for_condition:
-            PEtab measurement table subset for a single condition.
+    :param df_for_condition:
+        PEtab measurement table subset for a single condition.
 
-    Returns:
+    :return:
         Sorted list of timepoints, including multiple timepoints accounting
         for replicate measurements.
     """
@@ -570,18 +599,23 @@ def _get_measurements_and_sigmas(
         df_for_condition: pd.DataFrame,
         timepoints_w_reps: Sequence[numbers.Number],
         observable_ids: Sequence[str]) -> Tuple[np.array, np.array]:
-    """Get measurements and sigmas
+    """
+    Get measurements and sigmas
 
     Generate arrays with measurements and sigmas in AMICI format from a
     PEtab measurement table subset for a single condition.
 
-    Arguments:
-        df_for_condition:
-            Subset of PEtab measurement table for one condition
-        timepoints_w_reps:
-            Timepoints for which there exist measurements, including replicates
-        observable_ids:
-            List of observable IDs for mapping IDs to indices.
+    :param df_for_condition:
+        Subset of PEtab measurement table for one condition
+
+    :param timepoints_w_reps:
+        Timepoints for which there exist measurements, including replicates
+
+    :param observable_ids:
+        List of observable IDs for mapping IDs to indices.
+
+    :return:
+        arrays for measurement and sigmas
     """
     # prepare measurement matrix
     y = np.full(shape=(len(timepoints_w_reps), len(observable_ids)),
@@ -627,16 +661,17 @@ def rdatas_to_measurement_df(
     Create a measurement dataframe in the PEtab format from the passed
     `rdatas` and own information.
 
-    Parameters:
-        rdatas:
-            A sequence of rdatas with the ordering of
-            `petab.get_simulation_conditions`.
-        model:
-            AMICI model used to generate `rdatas`.
-        measurement_df:
-            PEtab measurement table used to generate `rdatas`.
+    :param rdatas:
+        A sequence of rdatas with the ordering of
+        `petab.get_simulation_conditions`.
 
-    Returns:
+    :param model:
+        AMICI model used to generate `rdatas`.
+
+    :param measurement_df:
+        PEtab measurement table used to generate `rdatas`.
+
+    :return:
         A dataframe built from the rdatas in the format of `measurement_df`.
     """
 
@@ -686,16 +721,16 @@ def aggregate_sllh(
         rdatas: Sequence[amici.ReturnDataView],
         parameter_mapping: Optional[List[petab.ParMappingDictTuple]],
 ) -> Union[None, Dict[str, float]]:
-    """Aggregate likelihood gradient for all conditions, according to PEtab
+    """
+    Aggregate likelihood gradient for all conditions, according to PEtab
     parameter mapping.
 
-    Arguments:
-        amici_model:
-            AMICI model from which ``rdatas`` were obtained.
-        rdatas:
-            Simulation results.
-        parameter_mapping:
-            PEtab parameter mapping to condition-specific
+    :param amici_model:
+        AMICI model from which ``rdatas`` were obtained.
+    :param rdatas:
+        Simulation results.
+    :param parameter_mapping:
+        PEtab parameter mapping to condition-specific
             simulation parameters.
     """
     sllh = {}
