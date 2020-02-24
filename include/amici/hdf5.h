@@ -79,11 +79,11 @@ void readModelDataFromHDF5(H5::H5File const&file, Model& model,
 
 
 /**
-  * @brief Write ReturnData struct to HDF5 dataset
-  * @param rdata Data to write
-  * @param hdffile Filename of HDF5 file
-  * @param datasetPath Full dataset path inside the HDF5 file (will be created)
-  */
+ * @brief Write ReturnData struct to HDF5 dataset
+ * @param rdata Data to write
+ * @param hdffile Filename of HDF5 file
+ * @param datasetPath Full dataset path inside the HDF5 file (will be created)
+ */
 
 void writeReturnData(const ReturnData &rdata,
                      H5::H5File const& file,
@@ -108,11 +108,9 @@ void createGroup(const H5::H5File &file,
                  bool recursively = true);
 
 /**
- * @brief readSimulationExpData reads AMICI experimental data from
- * attributes in HDF5 file.
+ * @brief readSimulationExpData reads AMICI experimental data from attributes in HDF5 file.
  * @param hdf5Filename Name of HDF5 file
- * @param hdf5Root Path inside the HDF5 file to object having ExpData as
- * attributes
+ * @param hdf5Root Path inside the HDF5 file to object having ExpData as attributes
  * @param model The model for which data is to be read
  * @return
  */
@@ -122,12 +120,10 @@ std::unique_ptr<ExpData> readSimulationExpData(const std::string &hdf5Filename,
                                                const Model &model);
 
 /**
- * @brief writeSimulationExpData writes AMICI experimental data to
- * attributes in HDF5 file.
+ * @brief writeSimulationExpData writes AMICI experimental data to attributes in HDF5 file.
  * @param edata The experimental data which is to be written
  * @param hdf5Filename Name of HDF5 file
- * @param hdf5Root Path inside the HDF5 file to object having ExpData as
- * attributes
+ * @param hdf5Root Path inside the HDF5 file to object having ExpData as attributes
  */
 
 void writeSimulationExpData(const ExpData &edata,
@@ -135,8 +131,7 @@ void writeSimulationExpData(const ExpData &edata,
                             const std::string &hdf5Location);
 
 /**
- * @brief attributeExists Check whether an attribute with the given
- * name exists on the given dataset
+ * @brief attributeExists Check whether an attribute with the given name exists on the given dataset
  * @param fileId The HDF5 file object
  * @param datasetPath Dataset of which attributes should be checked
  * @param attributeName Name of the attribute of interest
@@ -197,8 +192,7 @@ std::vector<double> getDoubleDataset3D(const H5::H5File &file,
                                        hsize_t &m, hsize_t &n, hsize_t &o);
 
 /**
- * @brief Check if the given location (group, link or dataset) exists in the
- * given file
+ * @brief Check if the given location (group, link or dataset) exists in the given file
  * @param filename
  * @param location
  * @return

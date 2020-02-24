@@ -500,9 +500,7 @@ class Solver {
     /**
      * @brief Gets KLU / SuperLUMT state ordering mode
      *
-     * @return State-ordering as integer according to
-     * SUNLinSolKLU::StateOrdering or SUNLinSolSuperLUMT::StateOrdering
-     * (which differ).
+     * @return State-ordering as integer according to SUNLinSolKLU::StateOrdering or SUNLinSolSuperLUMT::StateOrdering (which differ).
      */
     int getStateOrdering() const;
 

@@ -64,11 +64,9 @@ class ReturnData {
             SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth);
 
     /**
-     * @brief constructor that uses information from model and solver to
-     * appropriately initialize fields
+     * @brief constructor that uses information from model and solver to appropriately initialize fields
      * @param solver solver instance
      * @param model model instance
-     * bool
      */
     ReturnData(Solver const& solver, const Model &model);
 
@@ -80,8 +78,7 @@ class ReturnData {
     void initializeObjectiveFunction();
 
     /**
-     * @brief Set likelihood, state variables, outputs and respective
-     * sensitivities to NaN (typically after integration failure)
+     * @brief Set likelihood, state variables, outputs and respective sensitivities to NaN (typically after integration failure)
      * @param t time of integration failure
      */
     void invalidate(realtype t);
@@ -99,35 +96,34 @@ class ReturnData {
     void invalidateSLLH();
 
     /**
-     * @brief applies the chain rule to account for parameter transformation
-     * in the sensitivities of simulation results
+     * @brief applies the chain rule to account for parameter transformation in the sensitivities of simulation results
      * @param model Model from which the ReturnData was obtained
      */
     void
     applyChainRuleFactorToSimulationResults(const Model *model);
-    
+
     /**
-     * Residual function
+     * @brief Residual function
      * @param it time index
      * @param edata ExpData instance containing observable data
      */
     void fres(int it, const ExpData &edata);
-    
+
     /**
-     * Chi-squared function
+     * @brief Chi-squared function
      * @param it time index
      */
     void fchi2(int it);
-    
+
     /**
-     * Residual sensitivity function
+     * @brief Residual sensitivity function
      * @param it time index
      * @param edata ExpData instance containing observable data
      */
     void fsres(int it, const ExpData &edata);
-    
+
     /**
-     * Fisher information matrix function
+     * @brief Fisher information matrix function
      * @param it time index
      */
     void fFIM(int it);
@@ -138,41 +134,34 @@ class ReturnData {
     /** time derivative (dimension: nx) */
     std::vector<realtype> xdot;
 
-    /** Jacobian of differential equation right hand side (dimension: nx x nx,
-     * row-major) */
+    /** Jacobian of differential equation right hand side (dimension: nx x nx, row-major) */
     std::vector<realtype> J;
 
     /** event output (dimension: nmaxevent x nz, row-major) */
     std::vector<realtype> z;
 
-    /** event output sigma standard deviation (dimension: nmaxevent x nz,
-     * row-major) */
+    /** event output sigma standard deviation (dimension: nmaxevent x nz, row-major) */
     std::vector<realtype> sigmaz;
 
-    /** parameter derivative of event output (dimension: nmaxevent x nz,
-     * row-major) */
+    /** parameter derivative of event output (dimension: nmaxevent x nz, row-major) */
     std::vector<realtype> sz;
 
-    /** parameter derivative of event output standard deviation (dimension:
-     * nmaxevent x nz, row-major)  */
+    /** parameter derivative of event output standard deviation (dimension: nmaxevent x nz, row-major)  */
     std::vector<realtype> ssigmaz;
 
     /** event trigger output (dimension: nmaxevent x nz, row-major)*/
     std::vector<realtype> rz;
 
-    /** parameter derivative of event trigger output (dimension: nmaxevent x nz
-     * x nplist, row-major) */
+    /** parameter derivative of event trigger output (dimension: nmaxevent x nz x nplist, row-major) */
     std::vector<realtype> srz;
 
-    /** second order parameter derivative of event trigger output (dimension:
-     * nmaxevent x nztrue x nplist x nplist, row-major) */
+    /** second order parameter derivative of event trigger output (dimension: nmaxevent x nztrue x nplist x nplist, row-major) */
     std::vector<realtype> s2rz;
 
     /** state (dimension: nt x nx, row-major) */
     std::vector<realtype> x;
 
-    /** parameter derivative of state (dimension: nt x nplist x nx,
-     * row-major) */
+    /** parameter derivative of state (dimension: nt x nplist x nx, row-major) */
     std::vector<realtype> sx;
 
     /** observable (dimension: nt x ny, row-major) */
@@ -181,23 +170,19 @@ class ReturnData {
     /** observable standard deviation (dimension: nt x ny, row-major) */
     std::vector<realtype> sigmay;
 
-    /** parameter derivative of observable (dimension: nt x nplist x ny,
-     * row-major) */
+    /** parameter derivative of observable (dimension: nt x nplist x ny, row-major) */
     std::vector<realtype> sy;
 
-    /** parameter derivative of observable standard deviation (dimension: nt x
-     * nplist x ny, row-major) */
+    /** parameter derivative of observable standard deviation (dimension: nt x nplist x ny, row-major) */
     std::vector<realtype> ssigmay;
 
     /** observable (dimension: nt*ny, row-major) */
     std::vector<realtype> res;
 
-    /** parameter derivative of residual (dimension: nt*ny x nplist,
-     * row-major) */
+    /** parameter derivative of residual (dimension: nt*ny x nplist, row-major) */
     std::vector<realtype> sres;
 
-    /** fisher information matrix (dimension: nplist x nplist,
-     * row-major) */
+    /** fisher information matrix (dimension: nplist x nplist, row-major) */
     std::vector<realtype> FIM;
 
     /** number of integration steps forward problem (dimension: nt) */
@@ -218,12 +203,10 @@ class ReturnData {
     /** number of error test failures backwad problem (dimension: nt) */
     std::vector<int> numerrtestfailsB;
 
-    /** number of linear solver convergence failures forward problem (dimension:
-     * nt) */
+    /** number of linear solver convergence failures forward problem (dimension: nt) */
     std::vector<int> numnonlinsolvconvfails;
 
-    /** number of linear solver convergence failures backwad problem (dimension:
-     * nt) */
+    /** number of linear solver convergence failures backwad problem (dimension: nt) */
     std::vector<int> numnonlinsolvconvfailsB;
 
     /** employed order forward problem (dimension: nt) */
@@ -282,8 +265,7 @@ class ReturnData {
     /** parameter derivative of loglikelihood (dimension: nplist) */
     std::vector<realtype> sllh;
 
-    /** second order parameter derivative of loglikelihood (dimension: (nJ-1) x
-     * nplist, row-major) */
+    /** second order parameter derivative of loglikelihood (dimension: (nJ-1) x nplist, row-major) */
     std::vector<realtype> s2llh;
 
     /** status code */

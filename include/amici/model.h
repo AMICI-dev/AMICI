@@ -6,9 +6,9 @@
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
 
+#include <map>
 #include <memory>
 #include <vector>
-#include <map>
 
 namespace amici {
 
@@ -32,9 +32,7 @@ void serialize(Archive &ar, amici::Model &u, unsigned int version);
 namespace amici {
 
 /**
- * @brief The Model class represents an AMICI ODE model.
- * The model can compute various model related quantities based
- * on symbolically generated code.
+ * @brief The Model class represents an AMICI ODE model. The model can compute various model related quantities based on symbolically generated code.
  */
 class Model : public AbstractModel {
   public:
@@ -46,8 +44,7 @@ class Model : public AbstractModel {
      * @param nx_rdata number of state variables
      * @param nxtrue_rdata number of state variables of the non-augmented model
      * @param nx_solver number of state variables with conservation laws applied
-     * @param nxtrue_solver number of state variables of the non-augmented model
-         with conservation laws applied
+     * @param nxtrue_solver number of state variables of the non-augmented model with conservation laws applied
      * @param ny number of observables
      * @param nytrue number of observables of the non-augmented model
      * @param nz number of event observables
@@ -55,13 +52,10 @@ class Model : public AbstractModel {
      * @param ne number of events
      * @param nJ number of objective functions
      * @param nw number of repeating elements
-     * @param ndwdx number of nonzero elements in the x derivative of the
-     * repeating elements
-     * @param ndwdp number of nonzero elements in the p derivative of the
-     * repeating elements
+     * @param ndwdx number of nonzero elements in the x derivative of the repeating elements
+     * @param ndwdp number of nonzero elements in the p derivative of the repeating elements
      * @param ndxdotdw number of nonzero elements in the w derivative of xdot
-     * @param ndJydy number of nonzero elements in the y derivative of dJy
-     * (dimension nytrue)
+     * @param ndJydy number of nonzero elements in the y derivative of dJy (dimension nytrue)
      * @param nnz number of nonzero elements in Jacobian
      * @param ubw upper matrix bandwidth in the Jacobian
      * @param lbw lower matrix bandwidth in the Jacobian
@@ -77,18 +71,18 @@ class Model : public AbstractModel {
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int ny, int nytrue, int nz, int nztrue, int ne, int nJ, int nw,
-          int ndwdx, int ndwdp, int ndxdotdw, std::vector<int> ndJydy,
-          int nnz, int ubw, int lbw, amici::SecondOrderMode o2mode,
+          int ndwdx, int ndwdp, int ndxdotdw, std::vector<int> ndJydy, int nnz,
+          int ubw, int lbw, amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
-          std::vector<int> z2event, bool pythonGenerated=false,
-          int ndxdotdp_explicit=0, int ndxdotdp_implicit=0);
+          std::vector<int> z2event, bool pythonGenerated = false,
+          int ndxdotdp_explicit = 0, int ndxdotdp_implicit = 0);
 
     /** destructor */
     ~Model() override = default;
 
     /**
-     * Copy assignment is disabled until const members are removed
+     * @brief Copy assignment is disabled until const members are removed
      * @param other object to copy from
      * @return
      */
@@ -161,20 +155,18 @@ class Model : public AbstractModel {
     using AbstractModel::fz;
 
     /**
-     * Initialization of model properties
+     * @brief Initialization of model properties
      * @param x pointer to state variables
      * @param dx pointer to time derivative of states (DAE only)
      * @param sx pointer to state variable sensititivies
-     * @param sdx pointer to time derivative of state sensitivities
-     * (DAE only)
-     * @param computeSensitivities flag indicating whether sensitivities
-     * are to be computed
+     * @param sdx pointer to time derivative of state sensitivities (DAE only)
+     * @param computeSensitivities flag indicating whether sensitivities are to be computed
      */
     void initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
                     AmiVectorArray &sdx, bool computeSensitivities);
 
     /**
-     * Initialization of model properties
+     * @brief Initialization of model properties
      * @param xB adjoint state variables
      * @param dxB time derivative of adjoint states (DAE only)
      * @param xQB adjoint quadratures
@@ -182,21 +174,20 @@ class Model : public AbstractModel {
     void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB);
 
     /**
-     * Initialization of initial states
+     * @brief Initialization of initial states
      * @param x pointer to state variables
      */
     void initializeStates(AmiVector &x);
 
     /**
-     * Initialization of initial state sensitivities
+     * @brief Initialization of initial state sensitivities
      * @param sx pointer to state variable sensititivies
      * @param x pointer to state variables
      */
     void initializeStateSensitivities(AmiVectorArray &sx, const AmiVector &x);
 
     /**
-     * Initialises the heaviside variables h at the intial time t0
-     * heaviside variables activate/deactivate on event occurences
+     * @brief Initialises the heaviside variables h at the intial time t0 heaviside variables activate/deactivate on event occurences
      * @param x pointer to state variables
      * @param dx pointer to time derivative of states (DAE only)
      */
@@ -257,22 +248,19 @@ class Model : public AbstractModel {
     std::vector<ParameterScaling> const &getParameterScale() const;
 
     /**
-     * @brief Set ParameterScale for each parameter, resets initial state
-     * sensitivities
+     * @brief Set ParameterScale for each parameter, resets initial state sensitivities
      * @param pscale scalar parameter scale for all parameters
      */
     void setParameterScale(ParameterScaling pscale);
 
     /**
-     * @brief Set ParameterScale for each parameter, resets initial state
-     * sensitivities
+     * @brief Set ParameterScale for each parameter, resets initial state sensitivities
      * @param pscaleVec vector of parameter scales
      */
     void setParameterScale(const std::vector<ParameterScaling> &pscaleVec);
 
     /**
-     * @brief Gets parameters with transformation according to ParameterScale
-     * applied
+     * @brief Gets parameters with transformation according to ParameterScale applied
      * @return unscaled parameters
      */
     std::vector<realtype> const &getUnscaledParameters() const;
@@ -304,14 +292,12 @@ class Model : public AbstractModel {
     void setParameters(std::vector<realtype> const &p);
 
     /**
-     * @brief Sets model parameters according to the parameter IDs and mapped
-     * values.
+     * @brief Sets model parameters according to the parameter IDs and mapped values.
      * @param p map of parameters IDs and values
-     * @param ignoreErrors Ignore errors such as parameter IDs in p which are
-     * not model parameters
+     * @param ignoreErrors Ignore errors such as parameter IDs in p which are not model parameters
      */
     void setParameterById(std::map<std::string, realtype> const &p,
-                       bool ignoreErrors = false);
+                          bool ignoreErrors = false);
 
     /**
      * @brief Set value of first model parameter with the specified id
@@ -321,8 +307,7 @@ class Model : public AbstractModel {
     void setParameterById(std::string const &par_id, realtype value);
 
     /**
-     * @brief Set all values of model parameters with ids matching the specified
-     * regex
+     * @brief Set all values of model parameters with ids matching the specified regex
      * @param par_id_regex parameter id regex
      * @param value parameter value
      * @return number of parameter ids that matched the regex
@@ -337,18 +322,15 @@ class Model : public AbstractModel {
     void setParameterByName(std::string const &par_name, realtype value);
 
     /**
-     * @brief Sets model parameters according to the parameter name and mapped
-     * values.
+     * @brief Sets model parameters according to the parameter name and mapped values.
      * @param p map of parameters names and values
-     * @param ignoreErrors Ignore errors such as parameter names in p which are
-     * not model parameters
+     * @param ignoreErrors Ignore errors such as parameter names in p which are not model parameters
      */
     void setParameterByName(std::map<std::string, realtype> const &p,
-                       bool ignoreErrors = false);
+                            bool ignoreErrors = false);
 
     /**
-     * @brief Set all values of all model parameters with names matching the
-     * specified regex
+     * @brief Set all values of all model parameters with names matching the specified regex
      * @param par_name_regex parameter name regex
      * @param value parameter value
      * @return number of fixed parameter names that matched the regex
@@ -370,9 +352,7 @@ class Model : public AbstractModel {
     realtype getFixedParameterById(std::string const &par_id) const;
 
     /**
-     * @brief Get value of fixed parameter with the specified name,
-     if multiple parameters have the same name,
-     the first parameter with matching name is returned
+     * @brief Get value of fixed parameter with the specified name, if multiple parameters have the same name, the first parameter with matching name is returned
      * @param par_name parameter name
      * @return parameter value
      */
@@ -392,8 +372,7 @@ class Model : public AbstractModel {
     void setFixedParameterById(std::string const &par_id, realtype value);
 
     /**
-     * @brief Set values of all fixed parameters with the id matching the
-     * specified regex
+     * @brief Set values of all fixed parameters with the id matching the specified regex
      * @param par_id_regex fixed parameter name regex
      * @param value fixed parameter value
      * @return number of fixed parameter ids that matched the regex
@@ -409,8 +388,7 @@ class Model : public AbstractModel {
     void setFixedParameterByName(std::string const &par_name, realtype value);
 
     /**
-     * @brief Set value of all fixed parameters with name matching the specified
-     * regex,
+     * @brief Set value of all fixed parameters with name matching the specified regex,
      * @param par_name_regex fixed parameter name regex
      * @param value fixed parameter value
      * @return number of fixed parameter names that matched the regex
@@ -423,11 +401,9 @@ class Model : public AbstractModel {
      * @return model name
      */
     virtual std::string getName() const;
-    
-    
+
     /**
-     * @brief Reports whether the model has parameter names set.
-     * Also returns true if the number of corresponding variables is just zero.
+     * @brief Reports whether the model has parameter names set. Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether parameter names were set
      */
     virtual bool hasParameterNames() const;
@@ -439,8 +415,7 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getParameterNames() const;
 
     /**
-     * @brief Reports whether the model has state names set.
-     * Also returns true if the number of corresponding variables is just zero.
+     * @brief Reports whether the model has state names set. Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether state names were set
      */
     virtual bool hasStateNames() const;
@@ -452,8 +427,7 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getStateNames() const;
 
     /**
-     * @brief Reports whether the model has fixed parameter names set.
-     * Also returns true if the number of corresponding variables is just zero.
+     * @brief Reports whether the model has fixed parameter names set. Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether fixed parameter names were set
      */
     virtual bool hasFixedParameterNames() const;
@@ -465,8 +439,7 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getFixedParameterNames() const;
 
     /**
-     * @brief Reports whether the model has observable names set.
-     * Also returns true if the number of corresponding variables is just zero.
+     * @brief Reports whether the model has observable names set. Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether observabke names were set
      */
     virtual bool hasObservableNames() const;
@@ -478,8 +451,7 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getObservableNames() const;
 
     /**
-     * @brief Reports whether the model has parameter ids set.
-     * Also returns true if the number of corresponding variables is just zero.
+     * @brief Reports whether the model has parameter ids set. Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether parameter ids were set
      */
     virtual bool hasParameterIds() const;
@@ -491,8 +463,7 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getParameterIds() const;
 
     /**
-     * @brief Reports whether the model has state ids set.
-     * Also returns true if the number of corresponding variables is just zero.
+     * @brief Reports whether the model has state ids set. Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether state ids were set
      */
     virtual bool hasStateIds() const;
@@ -504,8 +475,7 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getStateIds() const;
 
     /**
-     * @brief Reports whether the model has fixed parameter ids set.
-     * Also returns true if the number of corresponding variables is just zero.
+     * @brief Reports whether the model has fixed parameter ids set. Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether fixed parameter ids were set
      */
     virtual bool hasFixedParameterIds() const;
@@ -517,8 +487,7 @@ class Model : public AbstractModel {
     virtual std::vector<std::string> getFixedParameterIds() const;
 
     /**
-     * @brief Reports whether the model has observable ids set.
-     * Also returns true if the number of corresponding variables is just zero.
+     * @brief Reports whether the model has observable ids set. Also returns true if the number of corresponding variables is just zero.
      * @return boolean indicating whether observale ids were set
      */
     virtual bool hasObservableIds() const;
@@ -561,22 +530,19 @@ class Model : public AbstractModel {
     void setT0(double t0);
 
     /**
-     * @brief gets flags indicating whether states should be treated as
-     * non-negative
+     * @brief gets flags indicating whether states should be treated as non-negative
      * @return vector of flags
      */
     std::vector<bool> const &getStateIsNonNegative() const;
 
     /**
-     * @brief sets flags indicating whether states should be treated as
-     * non-negative
+     * @brief sets flags indicating whether states should be treated as non-negative
      * @param stateIsNonNegative vector of flags
      */
     void setStateIsNonNegative(std::vector<bool> const &stateIsNonNegative);
 
     /**
-     * @brief sets flags indicating that all states should be treated as
-     * non-negative
+     * @brief sets flags indicating that all states should be treated as non-negative
      */
     void setAllStatesNonNegative();
 
@@ -594,8 +560,7 @@ class Model : public AbstractModel {
     int plist(int pos) const;
 
     /**
-     * @brief Set the list of parameters for which sensitivities are
-     * computed, resets initial state sensitivities
+     * @brief Set the list of parameters for which sensitivities are computed, resets initial state sensitivities
      * @param plist list of parameter indices
      */
     void setParameterList(std::vector<int> const &plist);
@@ -626,8 +591,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Set the initial state sensitivities
-     * @param sx0 vector of initial state sensitivities with chainrule
-     * applied. This could be a slice of ReturnData::sx or ReturnData::sx0
+     * @param sx0 vector of initial state sensitivities with chainrule applied. This could be a slice of ReturnData::sx or ReturnData::sx0
      */
     void setInitialStateSensitivities(std::vector<realtype> const &sx0);
 
@@ -639,42 +603,36 @@ class Model : public AbstractModel {
 
     /**
      * @brief Set the initial state sensitivities
-     * @param sx0 vector of initial state sensitivities without chainrule
-     * applied. This could be the readin from a model.sx0data saved to hdf5.
+     * @param sx0 vector of initial state sensitivities without chainrule applied. This could be the readin from a model.sx0data saved to hdf5.
      */
     void setUnscaledInitialStateSensitivities(std::vector<realtype> const &sx0);
 
     /**
-     * @brief Sets the mode how sensitivities are computed in the steadystate
-     * simulation
+     * @brief Sets the mode how sensitivities are computed in the steadystate simulation
      * @param mode steadyStateSensitivityMode
      */
     void setSteadyStateSensitivityMode(SteadyStateSensitivityMode mode);
 
     /**
-     * @brief Gets the mode how sensitivities are computed in the steadystate
-     * simulation
+     * @brief Gets the mode how sensitivities are computed in the steadystate simulation
      * @return flag value
      */
     SteadyStateSensitivityMode getSteadyStateSensitivityMode() const;
 
     /**
-     * @brief Set whether initial states depending on fixedParmeters are to be
-     * reinitialized after preequilibration and presimulation
+     * @brief Set whether initial states depending on fixedParmeters are to be reinitialized after preequilibration and presimulation
      * @param flag true/false
      */
     void setReinitializeFixedParameterInitialStates(bool flag);
 
     /**
-     * @brief Get whether initial states depending on fixedParmeters are to be
-     * reinitialized after preequilibration and presimulation
+     * @brief Get whether initial states depending on fixedParmeters are to be reinitialized after preequilibration and presimulation
      * @return flag true/false
      */
     bool getReinitializeFixedParameterInitialStates() const;
 
     /**
-     * @brief Require computation of sensitivities for all parameters p
-     * [0..np[ in natural order, resets initial state sensitivities
+     * @brief Require computation of sensitivities for all parameters p [0..np[ in natural order, resets initial state sensitivities
      */
     void requireSensitivitiesForAllParameters();
 
@@ -688,8 +646,7 @@ class Model : public AbstractModel {
                        const AmiVector &x);
 
     /**
-     * @brief Sensitivity of time-resolved observables,
-     * total derivative sy = dydx * sx + dydp (only for forward sensitivities)
+     * @brief Sensitivity of time-resolved observables, total derivative sy = dydx * sx + dydp (only for forward sensitivities)
      * @param sy buffer (dimension: ny x nplist, row-major)
      * @param t timpoint
      * @param x state variables
@@ -702,19 +659,16 @@ class Model : public AbstractModel {
      * @brief Time-resolved observable standard deviations
      * @param sigmay buffer (dimension: ny)
      * @param it timepoint index
-     * @param edata pointer to experimental data instance (optional,
-     * pass nullptr to ignore)
+     * @param edata pointer to experimental data instance (optional, pass nullptr to ignore)
      */
     void getObservableSigma(gsl::span<realtype> sigmay, const int it,
                             const ExpData *edata);
 
     /**
-     * @brief Sensitivity of time-resolved observable standard deviation,
-     * total derivative (can be used with both adjoint and forward sensitivity)
+     * @brief Sensitivity of time-resolved observable standard deviation, total derivative (can be used with both adjoint and forward sensitivity)
      * @param ssigmay buffer (dimension: ny x nplist, row-major)
      * @param it timepoint index
-     * @param edata pointer to experimental data instance (optional,
-     * pass nullptr to ignore)
+     * @param edata pointer to experimental data instance (optional, pass nullptr to ignore)
      */
     void getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
                                        const int it, const ExpData *edata);
@@ -730,8 +684,7 @@ class Model : public AbstractModel {
                                 const ExpData &edata);
 
     /**
-     * @brief Sensitivity of time-resolved measurement negative log-likelihood
-     * Jy, total derivative (to be used with forward senstivities)
+     * @brief Sensitivity of time-resolved measurement negative log-likelihood Jy, total derivative (to be used with forward senstivities)
      * @param sllh first order buffer (dimension: nplist)
      * @param s2llh second order buffer (dimension: nJ-1 x nplist, row-major)
      * @param it timepoint index
@@ -746,8 +699,7 @@ class Model : public AbstractModel {
                                            const ExpData &edata);
 
     /**
-     * @brief Sensitivity of time-resolved measurement negative log-likelihood
-     * Jy, partial derivative (to be used with adjoint senstivities)
+     * @brief Sensitivity of time-resolved measurement negative log-likelihood Jy, partial derivative (to be used with adjoint senstivities)
      * @param sllh first order buffer (dimension: nplist)
      * @param s2llh second order buffer (dimension: nJ-1 x nplist, row-major)
      * @param it timepoint index
@@ -761,8 +713,7 @@ class Model : public AbstractModel {
                                                   const ExpData &edata);
 
     /**
-     * @brief State sensitivity of the negative loglikelihood Jy,
-     * partial derivative (to be used with adjoint senstivities)
+     * @brief State sensitivity of the negative loglikelihood Jy, partial derivative (to be used with adjoint senstivities)
      * @param dJydx buffer (dimension: nJ x nx_solver, row-major)
      * @param it timepoint index
      * @param x state variables
@@ -782,8 +733,7 @@ class Model : public AbstractModel {
     void getEvent(gsl::span<realtype> z, const int ie, const realtype t,
                   const AmiVector &x);
     /**
-     * @brief Sensitivities of event-resolved observables, total derivative,
-     * total derivative (only forward sensitivities)
+     * @brief Sensitivities of event-resolved observables, total derivative, total derivative (only forward sensitivities)
      * @param sz buffer (dimension: nz x nplist, row-major)
      * @param ie event index
      * @param t timepoint
@@ -795,8 +745,7 @@ class Model : public AbstractModel {
                              const AmiVectorArray &sx);
 
     /**
-     * @brief Sensitivity of z at final timepoint (ignores sensitivity of
-     * timepoint), total derivative
+     * @brief Sensitivity of z at final timepoint (ignores sensitivity of timepoint), total derivative
      * @param sz output buffer (dimension: nz x nplist, row-major)
      * @param ie event index
      */
@@ -813,8 +762,7 @@ class Model : public AbstractModel {
                                 const realtype t, const AmiVector &x);
 
     /**
-     * @brief Sensitivities of regularization for event-resolved observables,
-     * total derivative (only forward sensitivities)
+     * @brief Sensitivities of regularization for event-resolved observables, total derivative (only forward sensitivities)
      * @param srz buffer (dimension: nz x nplist, row-major)
      * @param ie event index
      * @param t timepoint
@@ -831,22 +779,19 @@ class Model : public AbstractModel {
      * @param ie event index
      * @param nroots event occurence
      * @param t timepoint
-     * @param edata pointer to experimental data instance (optional,
-     * pass nullptr to ignore)
+     * @param edata pointer to experimental data instance (optional, pass nullptr to ignore)
      */
     void getEventSigma(gsl::span<realtype> sigmaz, const int ie,
                        const int nroots, const realtype t,
                        const ExpData *edata);
 
     /**
-     * @brief Sensitivities of event-resolved observable standard deviations,
-     * total derivative (only forward sensitivities)
+     * @brief Sensitivities of event-resolved observable standard deviations, total derivative (only forward sensitivities)
      * @param ssigmaz buffer (dimension: nz x nplist, row-major)
      * @param ie event index
      * @param nroots event occurence
      * @param t timepoint
-     * @param edata pointer to experimental data instance (optional,
-     * pass nullptr to ignore)
+     * @param edata pointer to experimental data instance (optional, pass nullptr to ignore)
      */
     void getEventSigmaSensitivity(gsl::span<realtype> ssigmaz, const int ie,
                                   const int nroots, const realtype t,
@@ -880,8 +825,7 @@ class Model : public AbstractModel {
                                          const ExpData &edata);
 
     /**
-     * @brief Sensitivity of time-resolved measurement negative log-likelihood
-     * Jy, total derivative (to be used with forward senstivities)
+     * @brief Sensitivity of time-resolved measurement negative log-likelihood Jy, total derivative (to be used with forward senstivities)
      * @param sllh first order buffer (dimension: nplist)
      * @param s2llh second order buffer (dimension: nJ-1 x nplist, row-major)
      * @param ie event index
@@ -899,8 +843,7 @@ class Model : public AbstractModel {
                                       const ExpData &edata);
 
     /**
-     * @brief Sensitivity of time-resolved measurement negative log-likelihood
-     * Jy, partial derivative (to be used with adjoint senstivities)
+     * @brief Sensitivity of time-resolved measurement negative log-likelihood Jy, partial derivative (to be used with adjoint senstivities)
      * @param sllh first order buffer (dimension: nplist)
      * @param s2llh second order buffer (dimension: nJ-1 x nplist, row-major)
      * @param ie event index
@@ -917,8 +860,7 @@ class Model : public AbstractModel {
                                              const ExpData &edata);
 
     /**
-     * @brief State sensitivity of the negative loglikelihood Jz,
-     * partial derivative (to be used with adjoint senstivities)
+     * @brief State sensitivity of the negative loglikelihood Jz, partial derivative (to be used with adjoint senstivities)
      * @param dJzdx buffer (dimension: nJ x nx_solver, row-major)
      * @param ie event index
      * @param nroots event occurence
@@ -931,8 +873,7 @@ class Model : public AbstractModel {
                                     const AmiVector &x, const ExpData &edata);
 
     /**
-     * @brief Sensitivity of event timepoint, total derivative (only forward
-     * sensi)
+     * @brief Sensitivity of event timepoint, total derivative (only forward sensi)
      * @param stau current timepoint (dimension: nplist)
      * @param t timepoint
      * @param ie event index
@@ -962,8 +903,7 @@ class Model : public AbstractModel {
      * @param x_old current state
      * @param xdot current residual function values
      * @param xdot_old value of residual function before event
-     * @param stau timepoint sensitivity, to be computed with
-     * Model::getEventTimeSensitivity
+     * @param stau timepoint sensitivity, to be computed with Model::getEventTimeSensitivity
      */
     void addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
                                         const realtype t,
@@ -1005,43 +945,33 @@ class Model : public AbstractModel {
     /**
      * @brief Update the heaviside variables h on event occurences
      *
-     * @param rootsfound provides the direction of the zero-crossing, so adding
-     * it will give the right update to the heaviside variables (zero if no root
-     * was found)
+     * @param rootsfound provides the direction of the zero-crossing, so adding it will give the right update to the heaviside variables (zero if no root was found)
      */
     void updateHeaviside(const std::vector<int> &rootsfound);
 
     /**
-     * @brief Updates the heaviside variables h on event occurences in the
-     backward problem
-     * @param rootsfound provides the direction of the zero-crossing, so adding
-         it will give the right update to the heaviside variables (zero if no
-     root was found)
+     * @brief Updates the heaviside variables h on event occurences in the backward problem
+     * @param rootsfound provides the direction of the zero-crossing, so adding it will give the right update to the heaviside variables (zero if no root was found)
      */
     void updateHeavisideB(const int *rootsfound);
 
     /**
-     * @brief Check if the given array has only finite elements.
-     *
-     * If not try to give hints by which other fields this could be caused.
+     * @brief Check if the given array has only finite elements. If not try to give hints by which other fields this could be caused.
      *
      * @param array arrays of values
      * @param fun name of the fucntion that generated the values
-     * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,
-     * AMICI_SUCCESS otherwise
+     * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found, AMICI_SUCCESS otherwise
      */
     int checkFinite(gsl::span<const realtype> array, const char *fun) const;
 
     /**
-     * @brief Set if the result of every call to Model::f* should be checked
-     * for finiteness
+     * @brief Set if the result of every call to Model::f* should be checked for finiteness
      * @param alwaysCheck
      */
     void setAlwaysCheckFinite(bool alwaysCheck);
 
     /**
-     * @brief Get setting of whether the result of every call to Model::f*
-     * should be checked for finiteness
+     * @brief Get setting of whether the result of every call to Model::f* should be checked for finiteness
      * @return that
      */
     bool getAlwaysCheckFinite() const;
@@ -1053,8 +983,7 @@ class Model : public AbstractModel {
     void fx0(AmiVector &x);
 
     /**
-     * @brief Sets only those initial states that are specified via
-     * fixedParmeters
+     * @brief Sets only those initial states that are specified via fixedParmeters
      * @param x pointer to state variables
      */
     void fx0_fixedParameters(AmiVector &x);
@@ -1063,38 +992,33 @@ class Model : public AbstractModel {
      * @brief Initial value for initial state sensitivities
      * @param sx pointer to state sensitivity variables
      * @param x pointer to state variables
-     **/
+     */
     void fsx0(AmiVectorArray &sx, const AmiVector &x);
 
     /**
-     * @brief Sets only those initial states sensitivities that are affected
-     * from fx0 fixedParmeters
+     * @brief Sets only those initial states sensitivities that are affected from fx0 fixedParmeters
      * @param sx pointer to state sensitivity variables
      * @param x pointer to state variables
-     **/
+     */
     void fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x);
 
     /**
      * @brief Sensitivity of derivative initial states sensitivities sdx0 (only
      *  necessary for DAEs)
-     **/
+     */
     virtual void fsdx0();
 
     /**
      * @brief Expands conservation law for states
-     * @param x_rdata pointer to state variables with conservation laws
-     * expanded (stored in rdata)
-     * @param x_solver pointer to state variables with conservation laws
-     * applied (solver returns this)
+     * @param x_rdata pointer to state variables with conservation laws expanded (stored in rdata)
+     * @param x_solver pointer to state variables with conservation laws applied (solver returns this)
      */
     void fx_rdata(AmiVector &x_rdata, const AmiVector &x_solver);
 
     /**
      * @brief Expands conservation law for state sensitivities
-     * @param sx_rdata pointer to state variable sensitivities with
-     * conservation laws expanded (stored in rdata)
-     * @param sx_solver pointer to state variable sensitivities with
-     * conservation laws applied (solver returns this)
+     * @param sx_rdata pointer to state variable sensitivities with conservation laws expanded (stored in rdata)
+     * @param sx_solver pointer to state variable sensitivities with conservation laws applied (solver returns this)
      */
     void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver);
 
@@ -1107,8 +1031,7 @@ class Model : public AbstractModel {
     /** number of states with conservation laws applied */
     int nx_solver{0};
 
-    /** number of states in the unaugmented system with conservation laws
-     * applied */
+    /** number of states in the unaugmented system with conservation laws applied */
     int nxtrue_solver{0};
 
     /** number of observables */
@@ -1151,41 +1074,36 @@ class Model : public AbstractModel {
 
     /** lower bandwith of the jacobian */
     int lbw{0};
-    
+
     /** flag indicating Matlab or python based model generation */
     bool pythonGenerated;
 
     /** number of nonzero entries in ndxdotdp_explicit */
     int ndxdotdp_explicit{0};
-    
+
     /** number of nonzero entries in ndxdotdp_implicit */
     int ndxdotdp_implicit{0};
-    
-    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
-     * directional or full second order derivative will be computed */
+
+    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND directional or full second order derivative will be computed */
     SecondOrderMode o2mode{SecondOrderMode::none};
 
     /** flag array for DAE equations */
     std::vector<realtype> idlist;
 
-    /** temporary storage of dxdotdp data across functions, Python only
-     (dimension: nplist x nx_solver, nnz: ndxdotdp_explicit, type CSC_MAT) */
+    /** temporary storage of dxdotdp data across functions, Python only (dimension: nplist x nx_solver, nnz: ndxdotdp_explicit, type CSC_MAT) */
     mutable SUNMatrixWrapper dxdotdp_explicit;
-    
-    /** temporary storage of dxdotdp_implicit data across functions, Python only
-     (dimension: nplist x * nx_solver, nnz: ndxdotdp_implicit, type CSC_MAT) */
+
+    /** temporary storage of dxdotdp_implicit data across functions, Python only (dimension: nplist x * nx_solver, nnz: ndxdotdp_implicit, type CSC_MAT) */
     mutable SUNMatrixWrapper dxdotdp_implicit;
-    
-    /** temporary storage of dxdotdp data across functions, Matlab only
-     (dimension: nplist x nx_solver, row-major) */
+
+    /** temporary storage of dxdotdp data across functions, Matlab only (dimension: nplist x nx_solver, row-major) */
     AmiVectorArray dxdotdp;
     /** AMICI context */
     AmiciApplication *app = &defaultContext;
 
   protected:
     /**
-     * @brief Writes part of a slice to a buffer according to indices specified
-     * in z2event
+     * @brief Writes part of a slice to a buffer according to indices specified in z2event
      * @param slice source data slice
      * @param buffer output data slice
      * @param ie event index
@@ -1194,8 +1112,7 @@ class Model : public AbstractModel {
                          gsl::span<realtype> buffer, const int ie);
 
     /**
-     * @brief Writes part of a sensitivity slice to a buffer according to
-     * indices specified in z2event
+     * @brief Writes part of a sensitivity slice to a buffer according to indices specified in z2event
      * @param slice source data slice
      * @param buffer output data slice
      * @param ie event index
@@ -1204,8 +1121,7 @@ class Model : public AbstractModel {
                                     gsl::span<realtype> buffer, const int ie);
 
     /**
-     * @brief Seperates first and second order objective sensitivity information
-     * and writes them into the respective buffers
+     * @brief Seperates first and second order objective sensitivity information and writes them into the respective buffers
      * @param dLLhdp data with mangled first and second order information
      * @param sllh first order buffer
      * @param s2llh second order buffer
@@ -1256,8 +1172,7 @@ class Model : public AbstractModel {
     void fsigmay(int it, const ExpData *edata);
 
     /**
-     * @brief Partial derivative of standard deviation of measurements w.r.t.
-     * model
+     * @brief Partial derivative of standard deviation of measurements w.r.t. model
      * @param it timepoint index
      * @param edata pointer to ExpData data instance holding sigma values
      */
@@ -1287,8 +1202,7 @@ class Model : public AbstractModel {
     virtual void fdJydy_rowvals(sunindextype *indexptrs, int index);
 
     /**
-     * @brief Partial derivative of time-resolved measurement negative
-     * log-likelihood Jy
+     * @brief Partial derivative of time-resolved measurement negative log-likelihood Jy
      * @param it timepoint index
      * @param x state variables
      * @param edata pointer to experimental data instance
@@ -1296,8 +1210,7 @@ class Model : public AbstractModel {
     void fdJydy(int it, const AmiVector &x, const ExpData &edata);
 
     /**
-     * @brief Sensitivity of time-resolved measurement negative log-likelihood
-     * Jy w.r.t. standard deviation sigma
+     * @brief Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. standard deviation sigma
      * @param it timepoint index
      * @param x state variables
      * @param edata pointer to experimental data instance
@@ -1305,9 +1218,7 @@ class Model : public AbstractModel {
     void fdJydsigma(int it, const AmiVector &x, const ExpData &edata);
 
     /**
-     * @brief Compute sensitivity of time-resolved measurement negative
-     * log-likelihood Jy w.r.t. parameters for the given timepoint. Add result
-     * to respective fields in rdata.
+     * @brief Compute sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. parameters for the given timepoint. Add result to respective fields in rdata.
      * @param it timepoint index
      * @param x state variables
      * @param edata pointer to experimental data instance
@@ -1315,8 +1226,7 @@ class Model : public AbstractModel {
     void fdJydp(const int it, const AmiVector &x, const ExpData &edata);
 
     /**
-     * @brief Sensitivity of time-resolved measurement negative log-likelihood
-     * Jy w.r.t. state variables
+     * @brief Sensitivity of time-resolved measurement negative log-likelihood Jy w.r.t. state variables
      * @param it timepoint index
      * @param x state variables
      * @param edata pointer to experimental data instance
@@ -1332,8 +1242,7 @@ class Model : public AbstractModel {
     void fz(int ie, realtype t, const AmiVector &x);
 
     /**
-     * @brief Partial derivative of event-resolved output z w.r.t. to model
-     * parameters p
+     * @brief Partial derivative of event-resolved output z w.r.t. to model parameters p
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1341,8 +1250,7 @@ class Model : public AbstractModel {
     void fdzdp(int ie, realtype t, const AmiVector &x);
 
     /**
-     * @brief Partial derivative of event-resolved output z w.r.t. to model
-     * states x
+     * @brief Partial derivative of event-resolved output z w.r.t. to model states x
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1350,8 +1258,7 @@ class Model : public AbstractModel {
     void fdzdx(int ie, realtype t, const AmiVector &x);
 
     /**
-     * @brief Event root function of events (equal to froot but does not include
-     * non-output events)
+     * @brief Event root function of events (equal to froot but does not include non-output events)
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1359,8 +1266,7 @@ class Model : public AbstractModel {
     void frz(int ie, realtype t, const AmiVector &x);
 
     /**
-     * @brief Sensitivity of event-resolved root output w.r.t. to model
-     * parameters p
+     * @brief Sensitivity of event-resolved root output w.r.t. to model parameters p
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1368,8 +1274,7 @@ class Model : public AbstractModel {
     void fdrzdp(int ie, realtype t, const AmiVector &x);
 
     /**
-     * @brief Sensitivity of event-resolved measurements rz w.r.t. to model
-     * states x
+     * @brief Sensitivity of event-resolved measurements rz w.r.t. to model states x
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1387,8 +1292,7 @@ class Model : public AbstractModel {
                  const ExpData *edata);
 
     /**
-     * @brief Sensitivity of standard deviation of events measurements w.r.t.
-     * model parameters p
+     * @brief Sensitivity of standard deviation of events measurements w.r.t. model parameters p
      * @param ie event index
      * @param nroots event occurence
      * @param t current timepoint
@@ -1418,8 +1322,7 @@ class Model : public AbstractModel {
                 const AmiVector &x, const ExpData &edata);
 
     /**
-     * @brief Sensitivity of event measurement negative log-likelihood Jz
-     * w.r.t. standard deviation sigmaz
+     * @brief Sensitivity of event measurement negative log-likelihood Jz w.r.t. standard deviation sigmaz
      * @param ie event index
      * @param nroots event index
      * @param t current timepoint
@@ -1430,8 +1333,7 @@ class Model : public AbstractModel {
                     const AmiVector &x, const ExpData &edata);
 
     /**
-     * @brief Sensitivity of event-resolved measurement negative log-likelihood
-     * Jz w.r.t. parameters
+     * @brief Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. parameters
      * @param ie event index
      * @param nroots event index
      * @param t current timepoint
@@ -1442,8 +1344,7 @@ class Model : public AbstractModel {
                 const ExpData &edata);
 
     /**
-     * @brief Sensitivity of event-resolved measurement negative log-likelihood
-     * Jz w.r.t. state variables
+     * @brief Sensitivity of event-resolved measurement negative log-likelihood Jz w.r.t. state variables
      * @param ie event index
      * @param nroots event index
      * @param t current timepoint
@@ -1454,8 +1355,7 @@ class Model : public AbstractModel {
                 const ExpData &edata);
 
     /**
-     * @brief Regularization of negative log-likelihood with roots of
-     * event-resolved measurements rz
+     * @brief Regularization of negative log-likelihood with roots of event-resolved measurements rz
      * @param Jrz variable to which regularization will be added
      * @param nroots event index
      * @param rz regularization variable
@@ -1476,8 +1376,7 @@ class Model : public AbstractModel {
                  const AmiVector &x, const ExpData &edata);
 
     /**
-     * @brief Sensitivity of event measurement negative log-likelihood Jz
-     * w.r.t. standard deviation sigmaz
+     * @brief Sensitivity of event measurement negative log-likelihood Jz w.r.t. standard deviation sigmaz
      * @param ie event index
      * @param nroots event index
      * @param t current timepoint
@@ -1513,19 +1412,17 @@ class Model : public AbstractModel {
      * @param x_rdata state variables with conservation laws expanded
      * @param x_solver state variables with conservation laws applied
      * @param tcl total abundances for conservation laws
-     **/
+     */
     virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver,
                           const realtype *tcl);
 
     /**
      * @brief Model specific implementation of fsx_solver
-     * @param sx_rdata state sensitivity variables with conservation laws
-     * expanded
-     * @param sx_solver state sensitivity variables with conservation laws
-     * applied
+     * @param sx_rdata state sensitivity variables with conservation laws expanded
+     * @param sx_solver state sensitivity variables with conservation laws applied
      * @param stcl sensitivities of total abundances for conservation laws
      * @param ip sensitivity index
-     **/
+     */
     virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
                            const realtype *stcl, int ip);
 
@@ -1533,46 +1430,37 @@ class Model : public AbstractModel {
      * @brief Model specific implementation of fx_solver
      * @param x_solver state variables with conservation laws applied
      * @param x_rdata state variables with conservation laws expanded
-     **/
+     */
     virtual void fx_solver(realtype *x_solver, const realtype *x_rdata);
 
     /**
      * @brief Model specific implementation of fsx_solver
-     * @param sx_rdata state sensitivity variables with conservation laws
-     * expanded
-     * @param sx_solver state sensitivity variables with conservation laws
-     *applied
-     **/
+     * @param sx_rdata state sensitivity variables with conservation laws expanded
+     * @param sx_solver state sensitivity variables with conservation laws applied
+     */
     virtual void fsx_solver(realtype *sx_solver, const realtype *sx_rdata);
 
     /**
      * @brief Model specific implementation of ftotal_cl
      * @param total_cl total abundances of conservation laws
      * @param x_rdata state variables with conservation laws expanded
-     **/
+     */
     virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata);
 
     /**
      * @brief Model specific implementation of fstotal_cl
-     * @param stotal_cl sensitivites for the total abundances of
-     * conservation laws
-     * @param sx_rdata state sensitivity variables with conservation laws
-     * expanded
+     * @param stotal_cl sensitivites for the total abundances of conservation laws
+     * @param sx_rdata state sensitivity variables with conservation laws expanded
      * @param ip sensitivity index
-     **/
+     */
     virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
                             int ip);
 
     /**
-     * @brief Computes nonnegative state vector according to stateIsNonNegative
-     * if anyStateNonNegative is set to false, i.e., all entries in
-     * stateIsNonNegative are false, this function directly returns x, otherwise
-     * all entries of x are copied in to x_pos_tmp and negative values are
-     * replaced by 0 where applicable
+     * @brief Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to false, i.e., all entries in stateIsNonNegative are false, this function directly returns x, otherwise all entries of x are copied in to x_pos_tmp and negative values are replaced by 0 where applicable
      *
      * @param x state vector possibly containing negative values
-     * @return state vector with negative values replaced by 0 according to
-     * stateIsNonNegative
+     * @return state vector with negative values replaced by 0 according to stateIsNonNegative
      */
     N_Vector computeX_pos(const_N_Vector x);
 
@@ -1584,7 +1472,7 @@ class Model : public AbstractModel {
 
     /** Sparse dwdp temporary storage (dimension: ndwdp) */
     mutable SUNMatrixWrapper dwdp;
-    
+
     /** Sparse dwdx temporary storage (dimension: ndwdx) */
     mutable SUNMatrixWrapper dwdx;
 
@@ -1597,13 +1485,11 @@ class Model : public AbstractModel {
     /** current event measurement (dimension: nztrue) */
     mutable std::vector<realtype> mz;
 
-    /** Sparse observable derivative of data likelihood,
-     * only used if pythonGenerated==true
+    /** Sparse observable derivative of data likelihood, only used if pythonGenerated==true
      * (dimension nytrue, nJ x ny, row-major) */
     mutable std::vector<SUNMatrixWrapper> dJydy;
 
-    /** observable derivative of data likelihood,
-     * only used if pythonGenerated==false
+    /** observable derivative of data likelihood, only used if pythonGenerated==false
      * (dimension nJ x ny x nytrue, row-major)
      */
     mutable std::vector<realtype> dJydy_matlab;
@@ -1750,15 +1636,13 @@ class Model : public AbstractModel {
      (dimension: (nx_rdata-nx_solver) x np, row-major) */
     mutable std::vector<realtype> stotal_cl;
 
-    /** temporary storage of positified state variables according to
-     * stateIsNonNegative (dimension: nx_solver) */
+    /** temporary storage of positified state variables according to stateIsNonNegative (dimension: nx_solver) */
     mutable AmiVector x_pos_tmp;
 
     /** unscaled parameters (dimension: np) */
     std::vector<realtype> unscaledParameters;
 
-    /** orignal user-provided, possibly scaled parameter array (dimension: np)
-     */
+    /** orignal user-provided, possibly scaled parameter array (dimension: np) */
     std::vector<realtype> originalParameters;
 
     /** constants (dimension: nk) */
@@ -1768,7 +1652,8 @@ class Model : public AbstractModel {
     std::vector<int> z2event;
 
     /** indexes of parameters wrt to which sensitivities are computed
-     *  (dimension: nplist) */
+     *  (dimension: nplist)
+     */
     std::vector<int> plist_;
 
     /** state initialisation (size nx_solver) */
@@ -1780,8 +1665,7 @@ class Model : public AbstractModel {
     /** timepoints (size nt) */
     std::vector<realtype> ts;
 
-    /** vector of bools indicating whether state variables are to be assumed to
-     * be positive */
+    /** vector of bools indicating whether state variables are to be assumed to be positive */
     std::vector<bool> stateIsNonNegative;
 
     /** boolean indicating whether any entry in stateIsNonNegative is `true` */
@@ -1797,7 +1681,8 @@ class Model : public AbstractModel {
     double tstart = 0.0;
 
     /** flag indicating whether steadystate sensivities are to be computed
-     *  via FSA when steadyStateSimulation is used */
+     *  via FSA when steadyStateSimulation is used
+     */
     SteadyStateSensitivityMode steadyStateSensitivityMode =
         SteadyStateSensitivityMode::newtonOnly;
 
@@ -1806,8 +1691,7 @@ class Model : public AbstractModel {
      */
     bool reinitializeFixedParameterInitialStates = false;
 
-    /** Indicates whether the result of every call to Model::f* should be
-     * checked for finiteness */
+    /** Indicates whether the result of every call to Model::f* should be checked for finiteness */
     bool alwaysCheckFinite = false;
 };
 

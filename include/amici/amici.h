@@ -49,8 +49,7 @@ class AmiciApplication
     AmiciApplication() = default;
 
     /**
-     * Core integration routine. Initializes the solver and runs the forward
-     * and backward problem.
+     * @brief Core integration routine. Initializes the solver and runs the forward and backward problem.
      *
      * @param solver Solver instance
      * @param edata pointer to experimental data object
@@ -64,7 +63,7 @@ class AmiciApplication
                                                    bool rethrow = false);
 
     /**
-     * Same as runAmiciSimulation, but for multiple ExpData instances.
+     * @brief Same as runAmiciSimulation, but for multiple ExpData instances.
      *
      * @param solver Solver instance
      * @param edatas experimental data objects
@@ -113,9 +112,8 @@ class AmiciApplication
     int checkFinite(gsl::span<const realtype> array, const char* fun);
 };
 
-/*!
- * runAmiciSimulation is the core integration routine. It initializes the solver
- * and runs the forward and backward problem.
+/**
+ * @brief Core integration routine. Initializes the solver and runs the forward and backward problem.
  *
  * @param solver Solver instance
  * @param edata pointer to experimental data object
@@ -129,9 +127,8 @@ runAmiciSimulation(Solver& solver,
                    Model& model,
                    bool rethrow = false);
 
-/*!
- * runAmiciSimulations does the same as runAmiciSimulation, but for multiple
- * ExpData instances.
+/**
+ * @brief Same as runAmiciSimulation, but for multiple ExpData instances. When compiled with openMP support, this function runs multi-threaded.
  *
  * @param solver Solver instance
  * @param edatas experimental data objects

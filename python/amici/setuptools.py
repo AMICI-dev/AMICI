@@ -217,14 +217,20 @@ def generate_swig_interface_files() -> None:
     swig_exe = find_swig()
     swig_version = get_swig_version(swig_exe)
 
+    swig_args = [
+        '-c++',
+        '-python',
+        '-py3',
+        '-extranative',
+        '-threads',
+        '-Iamici/swig', '-Iamici/include',
+    ]
+
     print(f"Found SWIG version {swig_version}")
 
     # Swig AMICI interface without HDF5 dependency
     swig_cmd = [swig_exe,
-                '-c++',
-                '-python',
-                '-threads',
-                '-Iamici/swig', '-Iamici/include',
+                *swig_args,
                 '-DAMICI_SWIG_WITHOUT_HDF5',
                 '-outdir', swig_outdir,
                 '-o', 'amici/amici_wrap_without_hdf5.cxx',
@@ -245,10 +251,7 @@ def generate_swig_interface_files() -> None:
 
     # Swig AMICI interface with HDF5 dependency
     swig_cmd = [swig_exe,
-                '-c++',
-                '-python',
-                '-threads',
-                '-Iamici/swig', '-Iamici/include',
+                *swig_args,
                 '-outdir', swig_outdir,
                 '-o', 'amici/amici_wrap.cxx',
                 'amici/swig/amici.i']
