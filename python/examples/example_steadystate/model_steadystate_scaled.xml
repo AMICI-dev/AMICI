@@ -33,8 +33,8 @@
     </listOfCompartments>
     <listOfSpecies>
       <species id="x1" name="x1" compartment="c1" initialAmount="0.1" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="x2" name="x1" compartment="c1" initialAmount="0.4" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
-      <species id="x3" name="x1" compartment="c1" initialAmount="0.7" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="x2" name="x2" compartment="c1" initialAmount="0.4" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="x3" name="x3" compartment="c1" initialAmount="0.7" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
     </listOfSpecies>
     <listOfParameters>
       <parameter id="p1" name="p1" value="1" units="litre2_per_mole_per_second" constant="true"/>
