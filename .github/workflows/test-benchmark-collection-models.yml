@@ -51,9 +51,8 @@ jobs:
 
     # retrieve test models
     - name: Download and test benchmark collection
-      # TODO do something more efficient than cloning this big repo
       run: |
-        git clone --depth 1 https://github.com/LeonardSchmiester/Benchmark-Models.git \
-          && cd Benchmark-Models && git checkout hackathon && cd .. \
-          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models/hackathon_contributions_new_data_format/" \
+        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
+          && cd Benchmark-Models-PEtab && git checkout hackathon && cd .. \
+          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/" \
           && tests/benchmark-models/test_benchmark_collection.sh
