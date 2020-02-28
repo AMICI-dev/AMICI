@@ -34,7 +34,7 @@ def simulate_petab(
         solver: Optional[amici.Solver] = None,
         problem_parameters: Optional[Dict[str, float]] = None,
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
-        parameter_mapping: List[petab.ParMappingDictTuple] = None,
+        parameter_mapping: List[petab.ParMappingDictQuadruple] = None,
         scaled_parameters: Optional[bool] = False,
         log_level: int = logging.WARNING
 ) -> Dict[str, Any]:

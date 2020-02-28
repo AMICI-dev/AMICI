@@ -53,6 +53,5 @@ jobs:
     - name: Download and test benchmark collection
       run: |
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
-          && cd Benchmark-Models-PEtab && git checkout hackathon && cd .. \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/" \
           && tests/benchmark-models/test_benchmark_collection.sh
