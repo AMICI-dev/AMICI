@@ -14,7 +14,8 @@ Schwen_PONE2014
 Chen_MSB2009
 Fujita_SciSignal2010
 Sneyd_PNAS2002
-Zheng_PNAS2012"
+Zheng_PNAS2012
+Weber_BMC2015"
 
 # Not matching reference for unclear reasons
 # Lucarelli_CellSystems2018

@@ -34,8 +34,7 @@ def simulate_petab(
         solver: Optional[amici.Solver] = None,
         problem_parameters: Optional[Dict[str, float]] = None,
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
-        parameter_mapping: List[petab.ParMappingDictTuple] = None,
-        parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
+        parameter_mapping: List[petab.ParMappingDictQuadruple] = None,
         scaled_parameters: Optional[bool] = False,
         log_level: int = logging.WARNING
 ) -> Dict[str, Any]:
@@ -57,8 +56,6 @@ def simulate_petab(
             time if this has be obtained before.
         parameter_mapping:
             Optional precomputed PEtab parameter mapping for efficiency.
-        parameter_scale_mapping:
-            Optional precomputed PEtab parameter scale mapping for efficiency.
         scaled_parameters:
             If True, problem_parameters are assumed to be on the scale provided
             in the PEtab parameter table and will be unscaled. If False, they
@@ -113,7 +110,6 @@ def simulate_petab(
         problem_parameters=problem_parameters,
         simulation_conditions=simulation_conditions,
         parameter_mapping=parameter_mapping,
-        parameter_scale_mapping=parameter_scale_mapping,
         scaled_parameters=scaled_parameters)
 
     # Simulate
@@ -159,7 +155,6 @@ def edatas_from_petab(
         problem_parameters: Dict[str, numbers.Number],
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
         parameter_mapping: List[petab.ParMappingDictTuple] = None,
-        parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
         scaled_parameters: Optional[bool] = False
 ) -> List[amici.ExpData]:
     """
@@ -181,8 +176,6 @@ def edatas_from_petab(
             time if this has be obtained before.
         parameter_mapping:
             Optional precomputed PEtab parameter mapping for efficiency.
-        parameter_scale_mapping:
-            Optional precomputed PEtab parameter scale mapping for efficiency.
         scaled_parameters:
             If True, problem_parameters are assumed to be on the scale provided
             in the PEtab parameter table and will be unscaled. If False, they
@@ -199,32 +192,25 @@ def edatas_from_petab(
         simulation_conditions = \
             petab_problem.get_simulation_conditions_from_measurement_df()
 
-    # Get parameter mapping if not user-provided
+    # Get parameter mapping
     if parameter_mapping is None:
         parameter_mapping = \
             petab_problem.get_optimization_to_simulation_parameter_mapping(
                 warn_unmapped=False, scaled_parameters=scaled_parameters)
-
-    if parameter_scale_mapping is None:
-        parameter_scale_mapping = \
-            petab_problem.get_optimization_to_simulation_scale_mapping(
-                mapping_par_opt_to_par_sim=parameter_mapping)
 
     observable_ids = model.getObservableIds()
 
     logger.debug(f"Problem parameters: {problem_parameters}")
 
     edatas = []
-    for (_, condition), cur_parameter_mapping, cur_parameter_scale_mapping \
-            in zip(simulation_conditions.iterrows(),
-                   parameter_mapping, parameter_scale_mapping):
+    for (_, condition), cur_parameter_mapping \
+            in zip(simulation_conditions.iterrows(), parameter_mapping):
         # Create amici.ExpData for each simulation
         edata = get_edata_for_condition(
             condition=condition, amici_model=model, petab_problem=petab_problem,
             problem_parameters=problem_parameters,
             observable_ids=observable_ids,
             parameter_mapping=cur_parameter_mapping,
-            parameter_scale_mapping=cur_parameter_scale_mapping,
             scaled_parameters=scaled_parameters
         )
         edatas.append(edata)
@@ -252,7 +238,6 @@ def get_edata_for_condition(
         petab_problem: petab.Problem,
         observable_ids: List[str],
         parameter_mapping: Optional[petab.ParMappingDictTuple] = None,
-        parameter_scale_mapping: Optional[petab.ScaleMappingDictTuple] = None,
         scaled_parameters: Optional[bool] = False
 ) -> amici.ExpData:
     """Get ``amici.ExpData`` for the given PEtab condition
@@ -276,8 +261,6 @@ def get_edata_for_condition(
             List of observable IDs
         parameter_mapping:
             PEtab parameter mapping for current condition
-        parameter_scale_mapping:
-            PEtab parameter scale mapping for current condition
         scaled_parameters:
             If True, problem_parameters are assumed to be on the scale provided
             in the PEtab parameter table and will be unscaled. If False, they
@@ -305,13 +288,8 @@ def get_edata_for_condition(
         # TODO petab.get_parameter_mapping_for_condition
         raise NotImplementedError()
 
-    if parameter_scale_mapping is None:
-        # TODO petab.get_parameter_scale_mapping_for_condition
-        raise NotImplementedError()
-
-    condition_map_preeq, condition_map_sim = parameter_mapping
-    condition_scale_map_preeq, condition_scale_map_sim = \
-        parameter_scale_mapping
+    (condition_map_preeq, condition_map_sim, condition_scale_map_preeq,
+        condition_scale_map_sim) = parameter_mapping
 
     logger.debug(f"PEtab mapping: {parameter_mapping}")
 
@@ -614,7 +592,8 @@ def _get_measurements_and_sigmas(
             # fill observable and possibly noise parameter
             y[time_ix_for_obs_ix[observable_ix],
               observable_ix] = measurement[MEASUREMENT]
-            if isinstance(measurement[NOISE_PARAMETERS], numbers.Number):
+            if isinstance(measurement.get(NOISE_PARAMETERS, None),
+                    numbers.Number):
                 sigma_y[time_ix_for_obs_ix[observable_ix],
                         observable_ix] = measurement[NOISE_PARAMETERS]
     return y, sigma_y
@@ -707,7 +686,7 @@ def aggregate_sllh(
     """
     sllh = {}
     model_par_ids = amici_model.getParameterIds()
-    for (_, par_map_sim), rdata in zip(parameter_mapping, rdatas):
+    for (_, par_map_sim, _, _), rdata in zip(parameter_mapping, rdatas):
         if rdata['status'] != amici.AMICI_SUCCESS \
                 or 'sllh' not in rdata\
                 or rdata['sllh'] is None:
