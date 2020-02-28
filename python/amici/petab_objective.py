@@ -192,7 +192,7 @@ def edatas_from_petab(
         simulation_conditions = \
             petab_problem.get_simulation_conditions_from_measurement_df()
 
-    # Get parameter mapping (need to overwrite scale mapping too)
+    # Get parameter mapping
     if parameter_mapping is None:
         parameter_mapping = \
             petab_problem.get_optimization_to_simulation_parameter_mapping(
