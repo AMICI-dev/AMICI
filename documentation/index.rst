@@ -55,11 +55,13 @@ Welcome to AMICI's documentation!
    api_sbml_import
    api_pysb_import
    api_petab_import
+   api_ode_export
    api_petab_objective
    api_plotting
    api_pandas
    api_logging
    api_gradient_check
+
 
 .. toctree::
    :maxdepth: 2

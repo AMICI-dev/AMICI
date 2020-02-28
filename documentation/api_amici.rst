@@ -12,4 +12,5 @@ This module encompasses the complete public C++ API of AMICI, which was exposed 
                      createOrOpenForWriting, equals, printErrMsgIdAndTxt,
                      printWarnMsgAndTxt, wrapErrHandlerFn,
                      NonlinearSolverIteration_fixedpoint, AmiciApplication,
-                     ExpDataPtr, ModelPtr, SolverPtr
+                     ExpDataPtr, ModelPtr, SolverPtr, writeSimulationExpData,
+                     stdVec2ndarray

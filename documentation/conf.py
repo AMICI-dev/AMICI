@@ -14,6 +14,8 @@
 #
 import os
 import sys
+import re
+
 sys.path.insert(0, os.path.abspath('../python/sdist'))
 sys.path.insert(0, os.path.abspath('../'))
 
@@ -48,7 +50,7 @@ extensions = [
     'sphinx.ext.coverage',
     'nbsphinx',
     'recommonmark',
-    # 'sphinx_autodoc_typehints',
+    'sphinx_autodoc_typehints',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -168,3 +170,106 @@ texinfo_documents = [
      author, 'AMICI', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+# Custom processing routines for docstrings and signatures
+
+typemaps = {
+    'std::vector< amici::realtype,std::allocator< amici::realtype > >':
+        'DoubleVector',
+    'std::vector< double,std::allocator< double > >':
+        'DoubleVector',
+    'std::vector< int,std::allocator< int > >':
+        'IntVector',
+    'std::vector< amici::ParameterScaling,std::allocator< '
+    'amici::ParameterScaling >': 'ParameterScalingVector',
+    'std::vector< std::string,std::allocator< std::string > >':
+        'StringVector',
+    'std::vector< bool,std::allocator< bool > >':
+        'BoolVector',
+    'std::map< std::string,amici::realtype,std::less< std::string >,'
+    'std::allocator< std::pair< std::string const,amici::realtype > > >':
+        'StringDoubleMap',
+    'std::vector< amici::ExpData *,std::allocator< amici::ExpData * > >':
+        'ExpDataVector',
+    'std::vector< std::unique_ptr< amici::ReturnData >,std::allocator< '
+    'std::unique_ptr< amici::ReturnData > > >':
+        'Iterable[ReturnData]',
+    'std::unique_ptr< amici::ExpData >':
+        'ExpData',
+    'std::unique_ptr< amici::ReturnData >':
+        'ReturnData',
+    'std::unique_ptr< amici::Solver >':
+        'Solver',
+    'amici::realtype':
+        'float',
+}
+
+
+def process_docstring(app, what, name, obj, options, lines):
+    # only apply in the amici.amici module
+    if name.split('.')[1] != 'amici':
+        return
+
+    for i in range(len(lines)):
+        for old, new in typemaps.items():
+            lines[i] = lines[i].replace(old, new)
+
+
+def fix_typehints(sig: str) -> str:
+    # claeanup types
+    for old, new in typemaps.items():
+        sig = sig.replace(old, new)
+    sig = sig.replace('void', 'None')
+    sig = sig.replace('amici::realtype', 'float')
+    sig = sig.replace('std::string', 'str')
+    sig = sig.replace('double', 'float')
+    sig = sig.replace('long', 'int')
+    sig = sig.replace('char const *', 'str')
+    sig = sig.replace('amici::', '')
+    sig = sig.replace('sunindextype', 'int')
+
+    # enum classes
+    for ec in ['SteadyStateSensitivityMode', 'InternalSensitivityMethod',
+               'InterpolationType', 'LinearMultistepMethod', 'LinearSolver',
+               'NewtonDampingFactorMode', 'NonlinearSolverIteration',
+               'SensitivityMethod', 'SensitivityOrder']:
+        sig = sig.replace(ec, 'int')
+
+    # ??
+    sig = sig.replace(' > ', ' ')
+
+    # remove const
+    sig = sig.replace(' const ', ' ')
+    sig = re.sub(r' const$', r'', sig)
+
+    # remove pass by reference
+    sig = re.sub(r' &(,|\))', r'\1', sig)
+    sig = re.sub(r' &$', r'', sig)
+
+    # turn gsl_spans and pointers int Iterables
+    sig = re.sub(r'([\w\.]+) \*', r'Iterable[\1]', sig)
+    sig = re.sub(r'gsl::span< ([\w\.]+) >', r'Iterable[\1]', sig)
+    return sig
+
+
+def process_signature(app, what: str, name: str, obj, options, signature,
+                      return_annotation):
+
+    if signature is None:
+        return
+
+    # only apply in the amici.amici module
+    if name.split('.')[1] != 'amici':
+        return
+
+    signature = fix_typehints(signature)
+    if hasattr(obj, '__annotations__'):
+        for ann in obj.__annotations__:
+            obj.__annotations__[ann] = fix_typehints(obj.__annotations__[ann])
+
+    return signature, return_annotation
+
+
+def setup(app):
+    app.connect('autodoc-process-docstring', process_docstring)
+    app.connect('autodoc-process-signature', process_signature)

@@ -46,56 +46,56 @@ class SbmlImporter:
     Class to generate AMICI C++ files for a model provided in the Systems
     Biology Markup Language (SBML).
 
-    :var show_sbml_warnings: bool
+    :ivar show_sbml_warnings: bool
         indicates whether libSBML warnings should be
         displayed
 
-    :var symbols: dict
+    :ivar symbols: dict
         dict carrying symbolic definitions
 
-    :var sbml_reader:
+    :ivar sbml_reader:
         the libSBML sbml reader [!not storing this will result
         in a segfault!]
 
-    :var sbml_doc:
+    :ivar sbml_doc:
         document carrying the sbml definition [!not storing this
         will result in a segfault!]
 
-    :var sbml:
+    :ivar sbml:
         sbml definition [!not storing this will result in a segfault!]
 
-    :var species_index: dict
+    :ivar species_index: dict
         maps species names to indices
 
-    :var species_compartment: sympy.Matrix
+    :ivar species_compartment: sympy.Matrix
         compartment for each species
 
-    :var constant_cpecies: list[sting]
+    :ivar constant_cpecies: list[sting]
         ids of species that are marked as constant
 
-    :var boundary_condition_species: list[string]
+    :ivar boundary_condition_species: list[string]
         ids of species that are marked as boundary
         condition
 
-    :var species_has_only_substance_units: list[bool]
+    :ivar species_has_only_substance_units: list[bool]
         flags indicating whether a species has only substance units
 
-    :var species_conversion_factor: sympy.Matrix
+    :ivar species_conversion_factor: sympy.Matrix
         conversion factors for every species
 
-    :var compartment_symbols: sympy.Matrix
+    :ivar compartment_symbols: sympy.Matrix
         compartment ids
 
-    :var compartment_volume: sympy.Matrix
+    :ivar compartment_volume: sympy.Matrix
         numeric/symbolic compartment volumes
 
-    :var stoichiometric_matrix: sympy.Matrix
+    :ivar stoichiometric_matrix: sympy.Matrix
         stoichiometric matrix of the model
 
-    :var flux_vector: sympy.Matrix
+    :ivar flux_vector: sympy.Matrix
         reaction kinetic laws
 
-    :var local_symbols: dict
+    :ivar local_symbols: dict
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
 

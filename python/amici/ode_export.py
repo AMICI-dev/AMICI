@@ -2,7 +2,9 @@
 C++ Export
 ------------
 This module provides all necessary functionality specify an ODE model and
-generate executable C++ simulation code
+generate executable C++ simulation code. The user generally won't have to
+directly call any function from this module as this will be done by pysb2amici,
+sbml2amici and petab_import
 """
 
 import sympy as sp
@@ -352,7 +354,7 @@ class State(ModelQuantity):
     A State variable defines an entity that evolves with time according to
     the provided time derivative, abbreviated by `x`
 
-    :var conservation_law:
+    :ivar conservation_law:
         algebraic formula that allows computation of this
         species according to a conservation law
 
@@ -398,10 +400,6 @@ class State(ModelQuantity):
         :param law:
             linear sum of states that if added to this state remain
             constant over time
-
-        :return:
-        TypeError:
-            is thrown if law type does not match documented type
         """
         if not isinstance(law, sp.Basic):
             raise TypeError(f'conservation law must have type sympy.Basic, '
@@ -631,95 +629,95 @@ class ODEModel:
     symbolic derivatives that are necessary for model simulation or
     sensitivity computation
 
-    :var _states: List[State]
+    :ivar _states:
         list of state variables
 
-    :var _observables:
+    :ivar _observables:
         list of observables
 
-    :var _sigmays:
+    :ivar _sigmays:
         list of sigmays
 
-    :var _parameters:
+    :ivar _parameters:
         list of parameters
 
-    :var _loglikelihoods:
+    :ivar _loglikelihoods:
         list of loglikelihoods
 
-    :var _expressions:
+    :ivar _expressions:
         list of expressions instances
 
-    :var _conservationlaws:
+    :ivar _conservationlaws:
         list of conservation laws
 
-    :var _symboldim_funs:
+    :ivar _symboldim_funs:
         define functions that compute model dimensions, these
         are functions as the underlying symbolic expressions have not been
         populated at compile time
 
-    :var _eqs:
+    :ivar _eqs:
         carries symbolic formulas of the symbolic variables of the model
 
-    :var _sparseeqs:
+    :ivar _sparseeqs:
         carries linear list of all symbolic formulas for sparsified
         variables
 
-    :var _vals:
+    :ivar _vals:
         carries numeric values of symbolic identifiers of the symbolic
         variables of the model
 
-    :var _names:
+    :ivar _names:
         carries names of symbolic identifiers of the symbolic variables
         of the model
 
-    :var _syms:
+    :ivar _syms:
         carries symbolic identifiers of the symbolic variables of the
         model
 
-    :var _strippedsyms:
+    :ivar _strippedsyms:
         carries symbolic identifiers that were stripped of additional class
         information
 
-    :var _sparsesyms:
+    :ivar _sparsesyms:
         carries linear list of all symbolic identifiers for sparsified
         variables
 
-    :var _colptrs:
+    :ivar _colptrs:
         carries column pointers for sparsified variables. See
         SUNMatrixContent_Sparse definition in <sunmatrix/sunmatrix_sparse.h>
 
-    :var _rowvals:
+    :ivar _rowvals:
         carries row values for sparsified variables. See
         SUNMatrixContent_Sparse definition in <sunmatrix/sunmatrix_sparse.h>
 
-    :var _equation_prototype:
+    :ivar _equation_prototype:
         defines the attribute from which an equation should be generated via
         list comprehension (see ODEModel.generateEquation())
 
-    :var _variable_prototype:
+    :ivar _variable_prototype:
         defines the attribute from which a variable should be generated via
         list comprehension (see ODEModel.generateSymbol())
 
-    :var _value_prototype:
+    :ivar _value_prototype:
         defines the attribute from which a value should be generated via
         list comprehension (see ODEModel.generateValue())
 
-    :var _total_derivative_prototypes:
+    :ivar _total_derivative_prototypes:
         defines how a total derivative equation is computed for an equation,
         key defines the name and values should be arguments for
         ODEModel.totalDerivative()
 
-    :var _multiplication_prototypes:
+    :ivar _multiplication_prototypes:
         defines how a multiplication equation is computed for an equation,
         key defines the name and values should be
         arguments for ODEModel.multiplication()
 
-    :var _lock_total_derivative:
+    :ivar _lock_total_derivative:
         add chainvariables to this set when computing total derivative from
         a partial derivative call to enforce a partial derivative in the
         next recursion. prevents infinite recursion
 
-    :var _simplify:
+    :ivar _simplify:
         If not None, this function will be used to simplify symbolic
         derivative expressions. Receives sympy expressions as only argument.
         To apply multiple simplifications, wrap them in a lambda expression.
@@ -822,7 +820,8 @@ class ODEModel:
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
 
-    def import_from_sbml_importer(self, si: 'SbmlImporter') -> None:
+    def import_from_sbml_importer(self, si: 'SbmlImporter') -> \
+            None:
         """
         Imports a model specification from a amici.SBMLImporter instance.
 
@@ -1791,16 +1790,16 @@ class ODEExporter:
     The ODEExporter class generates AMICI C++ files for ODE model as
     defined in symbolic expressions.
 
-    :var model:
+    :ivar model:
         ODE definition
 
-    :var outdir:
+    :ivar outdir:
         see sbml_import.setPaths()
 
-    :var verbose:
+    :ivar verbose:
         more verbose output if True
 
-    :var assume_pow_positivity:
+    :ivar assume_pow_positivity:
         if set to true, a special pow function is
         used to avoid problems with state variables that may become negative
         due to numerical errors
@@ -1808,19 +1807,19 @@ class ODEExporter:
         compiler: distutils/setuptools compiler selection to build the
         python extension
 
-    :var functions:
+    :ivar functions:
         carries C++ function signatures and other specifications
 
-    :var model_name:
+    :ivar model_name:
         name of the model that will be used for compilation
 
-    :var model_path:
+    :ivar model_path:
         path to the generated model specific files
 
-    :var model_swig_path:
+    :ivar model_swig_path:
         path to the generated swig files
 
-    :var allow_reinit_fixpar_initcond:
+    :ivar allow_reinit_fixpar_initcond:
         indicates whether reinitialization of
         initial states depending on fixedParameters is allowed for this model
 
@@ -2495,7 +2494,7 @@ class TemplateAmici(Template):
     """
     Template format used in AMICI (see string.template for more details).
 
-    :var delimiter:
+    :ivar delimiter:
         delimiter that identifies template variables
 
     """
