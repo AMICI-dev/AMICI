@@ -75,8 +75,8 @@ Swameye_PNAS2003:
   note: unchecked
 
 Weber_BMC2015:
-  llh: 592.403584529373
-  note: unchecked
+  llh: -296.2017922646865
+  note: benchmark collection reference ignores factor -1/2
 
 Zheng_PNAS2012:
   llh: 278.33353271001477

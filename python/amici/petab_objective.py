@@ -591,7 +591,8 @@ def _get_measurements_and_sigmas(
             # fill observable and possibly noise parameter
             y[time_ix_for_obs_ix[observable_ix],
               observable_ix] = measurement[MEASUREMENT]
-            if isinstance(measurement[NOISE_PARAMETERS], numbers.Number):
+            if isinstance(measurement.get(NOISE_PARAMETERS, None),
+                    numbers.Number):
                 sigma_y[time_ix_for_obs_ix[observable_ix],
                         observable_ix] = measurement[NOISE_PARAMETERS]
     return y, sigma_y
