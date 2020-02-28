@@ -38,7 +38,7 @@ Fiedler_BMC2016:
   note: unchecked
 
 Fujita_SciSignal2010:
-  llh: -3975.060953726485
+  llh: 53.08749124997969
   note: benchmark collection reference value does not include condition data7..data12
 
 # Hass_PONE2017    None
