@@ -30,7 +30,7 @@ Crauste_CellSystems2017:
   note: benchmark collection only reports chi2 value, but llh value can be derived
 
 Elowitz_Nature2000:
-  llh: -4249.322017350108
+  llh: 111.57663643721794
   note: benchmark collection reference value does not match, but model outputs do. maybe due to D2D data normalization
 
 Fiedler_BMC2016:
