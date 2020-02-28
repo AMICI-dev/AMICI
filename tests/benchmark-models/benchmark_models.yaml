@@ -30,16 +30,15 @@ Crauste_CellSystems2017:
   note: benchmark collection only reports chi2 value, but llh value can be derived
 
 Elowitz_Nature2000:
-  llh: -4249.322017350108
-  note: benchmark collection reference value does not match, but model outputs do. maybe due to D2D data normalization
+  llh: 111.57663643721794
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log10(sim)) / 2
 
 Fiedler_BMC2016:
   llh: -117.16780323362
   note: unchecked
 
 Fujita_SciSignal2010:
-  llh: -3975.060953726485
-  note: benchmark collection reference value does not include condition data7..data12
+  llh: 53.08749124997969
 
 # Hass_PONE2017    None
 
