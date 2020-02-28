@@ -34,8 +34,7 @@ def simulate_petab(
         solver: Optional[amici.Solver] = None,
         problem_parameters: Optional[Dict[str, float]] = None,
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
-        parameter_mapping: List[petab.ParMappingDictTuple] = None,
-        parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
+        parameter_mapping: List[petab.ParMappingDictQuadruple] = None,
         scaled_parameters: Optional[bool] = False,
         log_level: int = logging.WARNING
 ) -> Dict[str, Any]:
@@ -57,8 +56,6 @@ def simulate_petab(
             time if this has be obtained before.
         parameter_mapping:
             Optional precomputed PEtab parameter mapping for efficiency.
-        parameter_scale_mapping:
-            Optional precomputed PEtab parameter scale mapping for efficiency.
         scaled_parameters:
             If True, problem_parameters are assumed to be on the scale provided
             in the PEtab parameter table and will be unscaled. If False, they
@@ -104,7 +101,7 @@ def simulate_petab(
     if parameter_mapping is None:
         parameter_mapping = \
             petab_problem.get_optimization_to_simulation_parameter_mapping(
-                warn_unmapped=False)
+                warn_unmapped=False, scaled_parameters=scaled_parameters)
 
     # Generate ExpData with all condition-specific information
     edatas = edatas_from_petab(
@@ -113,7 +110,6 @@ def simulate_petab(
         problem_parameters=problem_parameters,
         simulation_conditions=simulation_conditions,
         parameter_mapping=parameter_mapping,
-        parameter_scale_mapping=parameter_scale_mapping,
         scaled_parameters=scaled_parameters)
 
     # Simulate
@@ -159,7 +155,6 @@ def edatas_from_petab(
         problem_parameters: Dict[str, numbers.Number],
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
         parameter_mapping: List[petab.ParMappingDictTuple] = None,
-        parameter_scale_mapping: List[petab.ScaleMappingDictTuple] = None,
         scaled_parameters: Optional[bool] = False
 ) -> List[amici.ExpData]:
     """
@@ -181,8 +176,6 @@ def edatas_from_petab(
             time if this has be obtained before.
         parameter_mapping:
             Optional precomputed PEtab parameter mapping for efficiency.
-        parameter_scale_mapping:
-            Optional precomputed PEtab parameter scale mapping for efficiency.
         scaled_parameters:
             If True, problem_parameters are assumed to be on the scale provided
             in the PEtab parameter table and will be unscaled. If False, they
@@ -199,32 +192,25 @@ def edatas_from_petab(
         simulation_conditions = \
             petab_problem.get_simulation_conditions_from_measurement_df()
 
-    # Get parameter mapping if not user-provided
+    # Get parameter mapping
     if parameter_mapping is None:
         parameter_mapping = \
             petab_problem.get_optimization_to_simulation_parameter_mapping(
-                warn_unmapped=False)
-
-    if parameter_scale_mapping is None:
-        parameter_scale_mapping = \
-            petab_problem.get_optimization_to_simulation_scale_mapping(
-                mapping_par_opt_to_par_sim=parameter_mapping)
+                warn_unmapped=False, scaled_parameters=scaled_parameters)
 
     observable_ids = model.getObservableIds()
 
     logger.debug(f"Problem parameters: {problem_parameters}")
 
     edatas = []
-    for (_, condition), cur_parameter_mapping, cur_parameter_scale_mapping \
-            in zip(simulation_conditions.iterrows(),
-                   parameter_mapping, parameter_scale_mapping):
+    for (_, condition), cur_parameter_mapping \
+            in zip(simulation_conditions.iterrows(), parameter_mapping):
         # Create amici.ExpData for each simulation
         edata = get_edata_for_condition(
             condition=condition, amici_model=model, petab_problem=petab_problem,
             problem_parameters=problem_parameters,
             observable_ids=observable_ids,
             parameter_mapping=cur_parameter_mapping,
-            parameter_scale_mapping=cur_parameter_scale_mapping,
             scaled_parameters=scaled_parameters
         )
         edatas.append(edata)
@@ -234,7 +220,7 @@ def edatas_from_petab(
 
 def subset_dict(full: Dict[Any, Any],
                 *args: Collection[Any]) -> Iterator[Dict[Any, Any]]:
-    """Get subset of dictionary based on provides keys
+    """Get subset of dictionary based on provided keys
 
     Arguments:
         full: Dictionary to subset
@@ -252,7 +238,6 @@ def get_edata_for_condition(
         petab_problem: petab.Problem,
         observable_ids: List[str],
         parameter_mapping: Optional[petab.ParMappingDictTuple] = None,
-        parameter_scale_mapping: Optional[petab.ScaleMappingDictTuple] = None,
         scaled_parameters: Optional[bool] = False
 ) -> amici.ExpData:
     """Get ``amici.ExpData`` for the given PEtab condition
@@ -276,8 +261,6 @@ def get_edata_for_condition(
             List of observable IDs
         parameter_mapping:
             PEtab parameter mapping for current condition
-        parameter_scale_mapping:
-            PEtab parameter scale mapping for current condition
         scaled_parameters:
             If True, problem_parameters are assumed to be on the scale provided
             in the PEtab parameter table and will be unscaled. If False, they
@@ -305,13 +288,8 @@ def get_edata_for_condition(
         # TODO petab.get_parameter_mapping_for_condition
         raise NotImplementedError()
 
-    if parameter_scale_mapping is None:
-        # TODO petab.get_parameter_scale_mapping_for_condition
-        raise NotImplementedError()
-
-    condition_map_preeq, condition_map_sim = parameter_mapping
-    condition_scale_map_preeq, condition_scale_map_sim = \
-        parameter_scale_mapping
+    (condition_map_preeq, condition_map_sim, condition_scale_map_preeq,
+        condition_scale_map_sim) = parameter_mapping
 
     logger.debug(f"PEtab mapping: {parameter_mapping}")
 
@@ -383,19 +361,20 @@ def get_edata_for_condition(
 
     logger.debug(f"Merged: {condition_map_sim_var}")
 
-    # If necessary, bring parameters to linear scale
-    if scaled_parameters:
-        # For dynamic parameters we could also change ExpData.pscale, but since
-        # we need to do it for fixed parameters anyways, we just do it for all
-        # and set pscale to linear. we can skip preequilibration parameters,
-        # because they are identical with simulation parameters, and only the
-        # latter are used from here on
-        unscale_parameters_dict(condition_map_preeq_fix,
-                                condition_scale_map_preeq_fix)
-        unscale_parameters_dict(condition_map_sim_fix,
-                                condition_scale_map_sim_fix)
-        unscale_parameters_dict(condition_map_sim_var,
-                                condition_scale_map_sim_var)
+    # If necessary, scale parameters
+    if not scaled_parameters:
+        # We scale all parameters to the scale they are estimated on, and pass
+        # that information to amici via edata.{parameters,pscale}.
+        # The scaling is necessary to obtain correct derivatives.
+        scale_parameters_dict(condition_map_preeq_fix,
+                              condition_scale_map_preeq_fix)
+        scale_parameters_dict(condition_map_sim_fix,
+                              condition_scale_map_sim_fix)
+        scale_parameters_dict(condition_map_sim_var,
+                              condition_scale_map_sim_var)
+        # We can skip preequilibration parameters, because they are identical
+        # with simulation parameters, and only the latter are used from here
+        # on.
 
     ##########################################################################
     # variable parameters and parameter scale
@@ -404,10 +383,13 @@ def get_edata_for_condition(
     parameters = [condition_map_sim_var[par_id]
                   for par_id in amici_model.getParameterIds()]
 
+    # scales list from mapping dict
+    scales = [_to_amici_scale(condition_scale_map_sim_var[par_id])
+              for par_id in amici_model.getParameterIds()]
+
     edata.parameters = parameters
 
-    edata.pscale = amici.parameterScalingFromIntVector(
-        [amici.ParameterScaling_none] * len(parameters))
+    edata.pscale = amici.parameterScalingFromIntVector(scales)
 
     ##########################################################################
     # timepoints
@@ -477,15 +459,25 @@ def get_edata_for_condition(
     return edata
 
 
-def unscale_parameter(value: numbers.Number,
-                      petab_scale: str) -> numbers.Number:
-    """Parameter to linear scale
+def _to_amici_scale(petab_scale: str) -> int:
+    """Convert petab scale id to amici scale id."""
+    if petab_scale == LIN:
+        return amici.ParameterScaling_none
+    if petab_scale == LOG10:
+        return amici.ParameterScaling_log10
+    if petab_scale == LOG:
+        return amici.ParameterScaling_ln
+
+
+def scale_parameter(value: numbers.Number,
+                    petab_scale: str) -> numbers.Number:
+    """Bring parameter from linear scale to target scale.
 
     Arguments:
         value:
-            Value to unscale
+            Value to scale
         petab_scale:
-            Current scale of ``value``
+            Target scale of ``value``
 
     Returns:
         ``value`` on linear scale
@@ -493,50 +485,33 @@ def unscale_parameter(value: numbers.Number,
     if petab_scale == LIN:
         return value
     if petab_scale == LOG10:
-        return np.power(10, value)
+        return np.log10(value)
     if petab_scale == LOG:
-        return np.exp(value)
+        return np.log(value)
     raise ValueError(f"Unknown parameter scale {petab_scale}. "
                      f"Must be from {(LIN, LOG, LOG10)}")
 
 
-def unscale_parameters(values: Sequence[numbers.Number],
-                       petab_scales: Sequence[str]) -> List[numbers.Number]:
-    """Parameters to linear scale
-
-    Arguments:
-        values:
-            Values to unscale
-        petab_scales:
-            Current scales of ``values``
-
-    Returns:
-        List of ``values`` on linear scale
-    """
-    return [unscale_parameter(value, scale)
-            for value, scale in zip(values, petab_scales)]
-
-
-def unscale_parameters_dict(
+def scale_parameters_dict(
         value_dict: Dict[Any, numbers.Number],
         petab_scale_dict: Dict[Any, str]) -> None:
-    """Parameters to linear scale
+    """Bring parameters from linear scale to target scale.
 
-    Bring values in ``value_dict`` from current scale provided in
-    ``petab_scale_dict`` to linear scale (in-place).
+    Bring values in ``value_dict`` from linear scale to the scale
+    provided in ``petab_scale_dict`` (in-place).
     Both arguments are expected to have the same length and matching keys.
 
     Arguments:
         value_dict:
-            Values to unscale
+            Values to scale
         petab_scale_dict:
-            Current scales of ``values``
+            Target scales of ``values``
     """
     if not value_dict.keys() == petab_scale_dict.keys():
         raise AssertionError("Keys don't match.")
 
     for key, value in value_dict.items():
-        value_dict[key] = unscale_parameter(value, petab_scale_dict[key])
+        value_dict[key] = scale_parameter(value, petab_scale_dict[key])
 
 
 def _get_timepoints_with_replicates(
@@ -703,7 +678,7 @@ def aggregate_sllh(
     """
     sllh = {}
     model_par_ids = amici_model.getParameterIds()
-    for (_, par_map_sim), rdata in zip(parameter_mapping, rdatas):
+    for (_, par_map_sim, _, _), rdata in zip(parameter_mapping, rdatas):
         if rdata['status'] != amici.AMICI_SUCCESS \
                 or 'sllh' not in rdata\
                 or rdata['sllh'] is None:
