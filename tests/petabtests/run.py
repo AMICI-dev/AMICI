@@ -29,6 +29,7 @@ def run():
 
         # simulate
         ret = simulate_petab(problem, model)
+        print(ret['llh'])
 
 if __name__ == '__main__':
     run()
