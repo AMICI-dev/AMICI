@@ -6,5 +6,34 @@
 using namespace amici;
 %}
 
+%ignore addAdjointQuadratureEventUpdate;
+%ignore addAdjointStateEventUpdate;
+%ignore addEventObjective;
+%ignore addEventObjectiveRegularization;
+%ignore addEventObjectiveSensitivity;
+%ignore addObservableObjective;
+%ignore addObservableObjectiveSensitivity;
+%ignore addPartialEventObjectiveSensitivity;
+%ignore addPartialObservableObjectiveSensitivity;
+%ignore addStateEventUpdate;
+%ignore addStateSensitivityEventUpdate;
+%ignore fsx_rdata;
+%ignore fx_rdata;
+%ignore getAdjointStateEventUpdate;
+%ignore getEventTimeSensitivity;
+%ignore getAdjointStateObservableUpdate;
+%ignore getEvent;
+%ignore getEventRegularization;
+%ignore getEventRegularizationSensitivity;
+%ignore getEventSensitivity;
+%ignore getEventTimeSensitivity;
+%ignore getObservable;
+%ignore getObservableSensitivity;
+%ignore initHeaviside;
+%ignore initialize;
+%ignore initializeB;
+%ignore initializeStateSensitivities;
+%ignore initializeStates;
+
 // Process symbols in header
 %include "amici/model.h"
