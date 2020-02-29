@@ -6,6 +6,7 @@ import unittest
 import os
 import numpy as np
 import pysb
+from amici.pysb_import import pysb2amici
 import importlib
 import copy
 import itertools
@@ -39,11 +40,11 @@ class TestAmiciPreequilibration(unittest.TestCase):
         model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
         outdir = model.name
-        amici.pysb2amici(model,
-                         outdir,
-                         verbose=False,
-                         observables=['pPROT_obs'],
-                         constant_parameters=['DRUG_0', 'KIN_0'])
+        pysb2amici(model,
+                   outdir,
+                   verbose=False,
+                   observables=['pPROT_obs'],
+                   constant_parameters=['DRUG_0', 'KIN_0'])
         sys.path.insert(0, outdir)
         modelModulePYSB = importlib.import_module(outdir)
 
