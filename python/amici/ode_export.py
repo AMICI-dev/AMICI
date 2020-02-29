@@ -1,6 +1,6 @@
 """
 C++ Export
-------------
+----------
 This module provides all necessary functionality specify an ODE model and
 generate executable C++ simulation code. The user generally won't have to
 directly call any function from this module as this will be done by pysb2amici,
