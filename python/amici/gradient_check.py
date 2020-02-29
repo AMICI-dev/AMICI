@@ -24,7 +24,7 @@ def check_finite_difference(x0: Sequence[float],
                             rtol: Optional[float] = 1e-12,
                             epsilon: Optional[float] = 1e-4) -> None:
     """
-    Checks the computed sensitity based derivatives against a finite
+    Checks the computed sensitivity based derivatives against a finite
     difference approximation.
 
     :param x0:
@@ -257,4 +257,3 @@ def check_results(rdata: ReturnData,
         result = np.array(result)
 
     check_close(result, expected, assert_fun, atol, rtol, field)
-

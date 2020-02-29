@@ -169,7 +169,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'AMICI', 'AMICI Documentation',
-     author, 'AMICI', 'One line description of project.',
+     author, 'AMICI', 'Advanced Multilanguage Interface for CVODES and IDAS.',
      'Miscellaneous'),
 ]
 

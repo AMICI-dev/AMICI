@@ -1,6 +1,6 @@
 """
 AMICI
-------
+-----
 The AMICI Python module provides functionality for importing SBML models and
 turning them into C++ Python extensions.
 
