@@ -20,9 +20,9 @@ def check_finite_difference(x0: Sequence[float],
                             ip: int,
                             fields: List[str],
                             assert_fun: Callable,
-                            atol: Optional[float] = 1e-12,
-                            rtol: Optional[float] = 1e-12,
-                            epsilon: Optional[float] = 1e-4) -> None:
+                            atol: Optional[float] = 1e-4,
+                            rtol: Optional[float] = 1e-4,
+                            epsilon: Optional[float] = 1e-3) -> None:
     """
     Checks the computed sensitivity based derivatives against a finite
     difference approximation.
@@ -50,10 +50,10 @@ def check_finite_difference(x0: Sequence[float],
         passing of custom assert function from testing frameworks
 
     :param atol:
-        absolute integration tolerance
+        absolute tolerance for comparison
 
     :param rtol:
-        relative integration tolerance
+        relative tolerance for comparison
 
     :param epsilon:
         finite difference step-size
@@ -110,9 +110,9 @@ def check_derivatives(model: Model,
                       solver: Solver,
                       edata: ExpData,
                       assert_fun: Callable,
-                      atol: Optional[float] = 1e-12,
-                      rtol: Optional[float] = 1e-12,
-                      epsilon: Optional[float] = 1e-4) -> None:
+                      atol: Optional[float] = 1e-4,
+                      rtol: Optional[float] = 1e-4,
+                      epsilon: Optional[float] = 1e-3) -> None:
     """
     Finite differences check for likelihood gradient.
 
@@ -130,10 +130,10 @@ def check_derivatives(model: Model,
         passing of custom assert function from testing frameworks
 
     :param atol:
-        absolute integration tolerance
+        absolute tolerance for comparison
 
     :param rtol:
-        relative integration tolerance
+        relative tolerance for comparison
 
     :param epsilon:
         finite difference step-size
@@ -195,10 +195,10 @@ def check_close(result: np.array,
         passing of custom assert function from testing frameworks
 
     :param atol:
-        absolute integration tolerance
+        absolute tolerance for comparison
 
     :param rtol:
-        relative integration tolerance
+        relative tolerance for comparison
 
     :param ip:
         parameter index
@@ -246,10 +246,10 @@ def check_results(rdata: ReturnData,
         passing of custom assert function from testing frameworks
 
     :param atol:
-        absolute integration tolerance
+        absolute tolerance for comparison
 
     :param rtol:
-        relative integration tolerance
+        relative tolerance for comparison
     """
 
     result = rdata[field]
