@@ -6,6 +6,8 @@
 using namespace amici;
 %}
 
+// remove functions that use AmiVector(Array) since that class anyways cannot 
+// be exposed in swig
 %ignore addAdjointQuadratureEventUpdate;
 %ignore addAdjointStateEventUpdate;
 %ignore addEventObjective;

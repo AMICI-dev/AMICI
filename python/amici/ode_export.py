@@ -6,7 +6,6 @@ generate executable C++ simulation code. The user generally won't have to
 directly call any function from this module as this will be done by pysb2amici,
 sbml2amici and petab_import
 """
-
 import sympy as sp
 import re
 import shutil
@@ -23,7 +22,6 @@ try:
 except ImportError:
     pysb = None
 
-
 from typing import Callable, Optional, Union, List, Dict, Tuple, SupportsFloat
 from string import Template
 import sympy.printing.cxxcode as cxxcode
@@ -31,7 +29,8 @@ from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 
 from . import (
-    amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__
+    amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
+    sbml_import
 )
 from .logging import get_logger, log_execution_time
 
@@ -820,8 +819,8 @@ class ODEModel:
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
 
-    def import_from_sbml_importer(self, si: 'SbmlImporter') -> \
-            None:
+    def import_from_sbml_importer(self,
+                                  si: 'sbml_import.SbmlImporter') -> None:
         """
         Imports a model specification from a amici.SBMLImporter instance.
 

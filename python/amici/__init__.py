@@ -131,7 +131,7 @@ with open(os.path.join(amici_path, 'version.txt')) as f:
 
 __commit__ = _get_commit_hash()
 
-if has_clibs:
+try:
     # These module require the swig interface and other dependencies which will
     # be installed if the the AMICI package was properly installed. If not,
     # AMICI was probably imported from setup.py and we don't need those.
@@ -141,6 +141,13 @@ if has_clibs:
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
     from .ode_export import ODEModel, ODEExporter
+except (ModuleNotFoundError, ImportError) as e:
+    # import from setuptools or installation with `--no-clibs`
+    if has_clibs:
+        # cannot raise as we may also end up here when installing from an
+        # already installed in-source installation without all requirements
+        # installed (e.g. fresh virtualenv)
+        print(f'Suppressing error {str(e)}')
 
 
 def runAmiciSimulation(model, solver, edata=None):

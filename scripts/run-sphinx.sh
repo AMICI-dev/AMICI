@@ -15,4 +15,8 @@ sed -i -e -E $'s/([ ]+):(rtype|type|param|return)/\\\n\\1:\\2/g' $AMICI_FILE
 
 sphinx-build -b html . _build
 
+# cleanup
+rm ${AMICI_FILE}
+mv ${AMICI_FILE}-e ${AMICI_FILE}
+
 

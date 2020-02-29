@@ -8,6 +8,8 @@ using namespace amici;
 
 %rename(equals) operator==;
 
+// remove functions that use AmiVector(Array) since that class anyways cannot
+// be exposed in swig
 %ignore getAdjointDerivativeState;
 %ignore getAdjointQuadrature;
 %ignore getAdjointState;
