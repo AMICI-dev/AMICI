@@ -29,6 +29,7 @@ def run():
 
         # simulate
         ret = simulate_petab(problem, model)
+        print(ret['rdatas'][0]['y'])
         print(ret['llh'])
 
 if __name__ == '__main__':
