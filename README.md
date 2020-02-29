@@ -86,7 +86,8 @@ To get started with Matlab-AMICI, various examples are available
 in [matlab/examples/](https://github.com/ICB-DCM/AMICI/tree/master/matlab/examples).
 
 Comprehensive documentation on installation and usage of AMICI is available
-online at [http://icb-dcm.github.io/AMICI/](http://icb-dcm.github.io/AMICI/).
+online for the [python](https://amici.readthedocs.io/en/latest/) and 
+[MATLAB/C++](http://icb-dcm.github.io/AMICI/) interfaces.
 
 Any [contributions](http://icb-dcm.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g.html)
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
