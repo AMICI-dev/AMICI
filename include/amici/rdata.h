@@ -10,13 +10,14 @@ class Model;
 class ReturnData;
 class Solver;
 class ExpData;
-}
+} // namespace amici
 
 namespace boost {
 namespace serialization {
 template <class Archive>
 void serialize(Archive &ar, amici::ReturnData &u, unsigned int version);
-}}
+}
+} // namespace boost
 
 namespace amici {
 
@@ -56,19 +57,19 @@ class ReturnData {
      * @param sensi see amici::Solver::sensi
      * @param sensi_meth see amici::Solver::sensi_meth
      */
-    ReturnData(
-            std::vector<realtype> ts,
-            int np, int nk, int nx, int nx_solver, int nxtrue, int ny, int nytrue,
-            int nz, int nztrue, int ne, int nJ, int nplist, int nmaxevent,
-            int nt, int newton_maxsteps, std::vector<ParameterScaling> pscale,
-            SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth);
+    ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
+               int nxtrue, int ny, int nytrue, int nz, int nztrue, int ne,
+               int nJ, int nplist, int nmaxevent, int nt, int newton_maxsteps,
+               std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
+               SensitivityOrder sensi, SensitivityMethod sensi_meth);
 
     /**
-     * @brief constructor that uses information from model and solver to appropriately initialize fields
+     * @brief constructor that uses information from model and solver to
+     * appropriately initialize fields
      * @param solver solver instance
      * @param model model instance
      */
-    ReturnData(Solver const& solver, const Model &model);
+    ReturnData(Solver const &solver, const Model &model);
 
     ~ReturnData() = default;
 
@@ -78,7 +79,8 @@ class ReturnData {
     void initializeObjectiveFunction();
 
     /**
-     * @brief Set likelihood, state variables, outputs and respective sensitivities to NaN (typically after integration failure)
+     * @brief Set likelihood, state variables, outputs and respective
+     * sensitivities to NaN (typically after integration failure)
      * @param t time of integration failure
      */
     void invalidate(realtype t);
@@ -96,11 +98,11 @@ class ReturnData {
     void invalidateSLLH();
 
     /**
-     * @brief applies the chain rule to account for parameter transformation in the sensitivities of simulation results
+     * @brief applies the chain rule to account for parameter transformation in
+     * the sensitivities of simulation results
      * @param model Model from which the ReturnData was obtained
      */
-    void
-    applyChainRuleFactorToSimulationResults(const Model *model);
+    void applyChainRuleFactorToSimulationResults(const Model *model);
 
     /**
      * @brief Residual function
@@ -134,34 +136,41 @@ class ReturnData {
     /** time derivative (dimension: nx) */
     std::vector<realtype> xdot;
 
-    /** Jacobian of differential equation right hand side (dimension: nx x nx, row-major) */
+    /** Jacobian of differential equation right hand side (dimension: nx x nx,
+     * row-major) */
     std::vector<realtype> J;
 
     /** event output (dimension: nmaxevent x nz, row-major) */
     std::vector<realtype> z;
 
-    /** event output sigma standard deviation (dimension: nmaxevent x nz, row-major) */
+    /** event output sigma standard deviation (dimension: nmaxevent x nz,
+     * row-major) */
     std::vector<realtype> sigmaz;
 
-    /** parameter derivative of event output (dimension: nmaxevent x nz, row-major) */
+    /** parameter derivative of event output (dimension: nmaxevent x nz,
+     * row-major) */
     std::vector<realtype> sz;
 
-    /** parameter derivative of event output standard deviation (dimension: nmaxevent x nz, row-major)  */
+    /** parameter derivative of event output standard deviation (dimension:
+     * nmaxevent x nz, row-major)  */
     std::vector<realtype> ssigmaz;
 
     /** event trigger output (dimension: nmaxevent x nz, row-major)*/
     std::vector<realtype> rz;
 
-    /** parameter derivative of event trigger output (dimension: nmaxevent x nz x nplist, row-major) */
+    /** parameter derivative of event trigger output (dimension: nmaxevent x nz
+     * x nplist, row-major) */
     std::vector<realtype> srz;
 
-    /** second order parameter derivative of event trigger output (dimension: nmaxevent x nztrue x nplist x nplist, row-major) */
+    /** second order parameter derivative of event trigger output (dimension:
+     * nmaxevent x nztrue x nplist x nplist, row-major) */
     std::vector<realtype> s2rz;
 
     /** state (dimension: nt x nx, row-major) */
     std::vector<realtype> x;
 
-    /** parameter derivative of state (dimension: nt x nplist x nx, row-major) */
+    /** parameter derivative of state (dimension: nt x nplist x nx, row-major)
+     */
     std::vector<realtype> sx;
 
     /** observable (dimension: nt x ny, row-major) */
@@ -170,16 +179,19 @@ class ReturnData {
     /** observable standard deviation (dimension: nt x ny, row-major) */
     std::vector<realtype> sigmay;
 
-    /** parameter derivative of observable (dimension: nt x nplist x ny, row-major) */
+    /** parameter derivative of observable (dimension: nt x nplist x ny,
+     * row-major) */
     std::vector<realtype> sy;
 
-    /** parameter derivative of observable standard deviation (dimension: nt x nplist x ny, row-major) */
+    /** parameter derivative of observable standard deviation (dimension: nt x
+     * nplist x ny, row-major) */
     std::vector<realtype> ssigmay;
 
     /** observable (dimension: nt*ny, row-major) */
     std::vector<realtype> res;
 
-    /** parameter derivative of residual (dimension: nt*ny x nplist, row-major) */
+    /** parameter derivative of residual (dimension: nt*ny x nplist, row-major)
+     */
     std::vector<realtype> sres;
 
     /** fisher information matrix (dimension: nplist x nplist, row-major) */
@@ -203,10 +215,12 @@ class ReturnData {
     /** number of error test failures backwad problem (dimension: nt) */
     std::vector<int> numerrtestfailsB;
 
-    /** number of linear solver convergence failures forward problem (dimension: nt) */
+    /** number of linear solver convergence failures forward problem (dimension:
+     * nt) */
     std::vector<int> numnonlinsolvconvfails;
 
-    /** number of linear solver convergence failures backwad problem (dimension: nt) */
+    /** number of linear solver convergence failures backwad problem (dimension:
+     * nt) */
     std::vector<int> numnonlinsolvconvfailsB;
 
     /** employed order forward problem (dimension: nt) */
@@ -232,7 +246,8 @@ class ReturnData {
      will only be filled for iterative solvers (length = newton_maxsteps * 2) */
     std::vector<int> newton_numlinsteps;
 
-    /** time at which steadystate was reached in the simulation based approach */
+    /** time at which steadystate was reached in the simulation based approach
+     */
     realtype t_steadystate = NAN;
 
     /** weighted root-mean-square of the rhs when steadystate
@@ -243,7 +258,6 @@ class ReturnData {
      was reached*/
     realtype wrms_sensi_steadystate = NAN;
 
-
     /** initial state (dimension: nx) */
     std::vector<realtype> x0;
 
@@ -253,7 +267,8 @@ class ReturnData {
     /** initial sensitivities (dimension: nplist x nx, row-major) */
     std::vector<realtype> sx0;
 
-    /** preequilibration sensitivities found by Newton solver (dimension: nplist x nx, row-major) */
+    /** preequilibration sensitivities found by Newton solver (dimension: nplist
+     * x nx, row-major) */
     std::vector<realtype> sx_ss;
 
     /** loglikelihood value */
@@ -265,7 +280,8 @@ class ReturnData {
     /** parameter derivative of loglikelihood (dimension: nplist) */
     std::vector<realtype> sllh;
 
-    /** second order parameter derivative of loglikelihood (dimension: (nJ-1) x nplist, row-major) */
+    /** second order parameter derivative of loglikelihood (dimension: (nJ-1) x
+     * nplist, row-major) */
     std::vector<realtype> s2llh;
 
     /** status code */

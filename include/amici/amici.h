@@ -19,8 +19,7 @@ namespace amici {
  * @param id error identifier
  * @param message error message
  */
-void
-printErrMsgIdAndTxt(std::string const& id, std::string const& message);
+void printErrMsgIdAndTxt(std::string const &id, std::string const &message);
 
 /*!
  * @brief Prints a specified warning message associated with the specified
@@ -29,8 +28,7 @@ printErrMsgIdAndTxt(std::string const& id, std::string const& message);
  * @param id warning identifier
  * @param message warning message
  */
-void
-printWarnMsgIdAndTxt(std::string const& id, std::string const& message);
+void printWarnMsgIdAndTxt(std::string const &id, std::string const &message);
 
 /**
  * @brief Main class for making calls to AMICI.
@@ -43,13 +41,13 @@ printWarnMsgIdAndTxt(std::string const& id, std::string const& message);
  * Model and Solver object. If not set, they will use the default output
  * channel.
  */
-class AmiciApplication
-{
+class AmiciApplication {
   public:
     AmiciApplication() = default;
 
     /**
-     * @brief Core integration routine. Initializes the solver and runs the forward and backward problem.
+     * @brief Core integration routine. Initializes the solver and runs the
+     * forward and backward problem.
      *
      * @param solver Solver instance
      * @param edata pointer to experimental data object
@@ -57,9 +55,9 @@ class AmiciApplication
      * @param rethrow rethrow integration exceptions?
      * @return rdata pointer to return data object
      */
-    std::unique_ptr<ReturnData> runAmiciSimulation(Solver& solver,
-                                                   const ExpData* edata,
-                                                   Model& model,
+    std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver,
+                                                   const ExpData *edata,
+                                                   Model &model,
                                                    bool rethrow = false);
 
     /**
@@ -72,12 +70,10 @@ class AmiciApplication
      * @param num_threads number of threads for parallel execution
      * @return vector of pointers to return data objects
      */
-    std::vector<std::unique_ptr<ReturnData>> runAmiciSimulations(
-      Solver const& solver,
-      const std::vector<ExpData*>& edatas,
-      Model const& model,
-      bool failfast,
-      int num_threads);
+    std::vector<std::unique_ptr<ReturnData>>
+    runAmiciSimulations(Solver const &solver,
+                        const std::vector<ExpData *> &edatas,
+                        Model const &model, bool failfast, int num_threads);
 
     /** Function to process warnings */
     outputFunctionType warning = printWarnMsgIdAndTxt;
@@ -91,7 +87,7 @@ class AmiciApplication
      * @param format string with warning message printf-style format
      * @param ... arguments to be formatted
      */
-    void warningF(const char* identifier, const char* format, ...);
+    void warningF(const char *identifier, const char *format, ...);
 
     /**
      * @brief printf interface to error()
@@ -99,7 +95,7 @@ class AmiciApplication
      * @param format string with error message printf-style format
      * @param ... arguments to be formatted
      */
-    void errorF(const char* identifier, const char* format, ...);
+    void errorF(const char *identifier, const char *format, ...);
 
     /**
      * @brief Checks the values in an array for NaNs and Infs
@@ -109,11 +105,12 @@ class AmiciApplication
      * @return AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,
      * AMICI_SUCCESS otherwise
      */
-    int checkFinite(gsl::span<const realtype> array, const char* fun);
+    int checkFinite(gsl::span<const realtype> array, const char *fun);
 };
 
 /**
- * @brief Core integration routine. Initializes the solver and runs the forward and backward problem.
+ * @brief Core integration routine. Initializes the solver and runs the forward
+ * and backward problem.
  *
  * @param solver Solver instance
  * @param edata pointer to experimental data object
@@ -121,14 +118,14 @@ class AmiciApplication
  * @param rethrow rethrow integration exceptions?
  * @return rdata pointer to return data object
  */
-std::unique_ptr<ReturnData>
-runAmiciSimulation(Solver& solver,
-                   const ExpData* edata,
-                   Model& model,
-                   bool rethrow = false);
+std::unique_ptr<ReturnData> runAmiciSimulation(Solver &solver,
+                                               const ExpData *edata,
+                                               Model &model,
+                                               bool rethrow = false);
 
 /**
- * @brief Same as runAmiciSimulation, but for multiple ExpData instances. When compiled with openMP support, this function runs multi-threaded.
+ * @brief Same as runAmiciSimulation, but for multiple ExpData instances. When
+ * compiled with openMP support, this function runs multi-threaded.
  *
  * @param solver Solver instance
  * @param edatas experimental data objects
@@ -138,11 +135,8 @@ runAmiciSimulation(Solver& solver,
  * @return vector of pointers to return data objects
  */
 std::vector<std::unique_ptr<ReturnData>>
-runAmiciSimulations(Solver const& solver,
-                    const std::vector<ExpData*>& edatas,
-                    Model const& model,
-                    bool failfast,
-                    int num_threads);
+runAmiciSimulations(Solver const &solver, const std::vector<ExpData *> &edatas,
+                    Model const &model, bool failfast, int num_threads);
 
 } // namespace amici
 

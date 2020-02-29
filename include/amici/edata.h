@@ -49,7 +49,8 @@ class ExpData {
     ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts);
 
     /**
-     * @brief constructor that initializes timepoints and fixed parameters from vectors
+     * @brief constructor that initializes timepoints and fixed parameters from
+     * vectors
      *
      * @param nytrue               (dimension: scalar)
      * @param nztrue               (dimension: scalar)
@@ -86,7 +87,8 @@ class ExpData {
     explicit ExpData(const Model &model);
 
     /**
-     * @brief constructor that initializes with returnData, adds noise according to specified sigmas
+     * @brief constructor that initializes with returnData, adds noise according
+     * to specified sigmas
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y scalar standard deviations for all observables
@@ -95,7 +97,8 @@ class ExpData {
     ExpData(const ReturnData &rdata, realtype sigma_y, realtype sigma_z);
 
     /**
-     * @brief constructor that initializes with returnData, adds noise according to specified sigmas
+     * @brief constructor that initializes with returnData, adds noise according
+     * to specified sigmas
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y vector of standard deviations for observables
@@ -175,7 +178,8 @@ class ExpData {
     void setObservedData(const std::vector<realtype> &observedData, int iy);
 
     /**
-     * @brief get function that checks whether data at specified indices has been set
+     * @brief get function that checks whether data at specified indices has
+     * been set
      *
      * @param it time index
      * @param iy observable index
@@ -201,23 +205,28 @@ class ExpData {
     const realtype *getObservedDataPtr(int it) const;
 
     /**
-     * @brief set function that copies data from input to ExpData::observedDataStdDev
+     * @brief set function that copies data from input to
+     * ExpData::observedDataStdDev
      *
-     * @param observedDataStdDev standard deviation of observed data (dimension: nt x nytrue, row-major)
+     * @param observedDataStdDev standard deviation of observed data (dimension:
+     * nt x nytrue, row-major)
      */
     void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev);
 
     /**
-     * @brief set function that sets all ExpData::observedDataStdDev to the input value
+     * @brief set function that sets all ExpData::observedDataStdDev to the
+     * input value
      *
      * @param stdDev standard deviation (dimension: scalar)
      */
     void setObservedDataStdDev(realtype stdDev);
 
     /**
-     * @brief set function that copies standard deviation of observed data for specific observable
+     * @brief set function that copies standard deviation of observed data for
+     * specific observable
      *
-     * @param observedDataStdDev standard deviation of observed data (dimension: nt)
+     * @param observedDataStdDev standard deviation of observed data (dimension:
+     * nt)
      * @param iy observed data index
      */
     void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev,
@@ -233,7 +242,8 @@ class ExpData {
     void setObservedDataStdDev(realtype stdDev, int iy);
 
     /**
-     * @brief get function that checks whether standard deviation of data at specified indices has been set
+     * @brief get function that checks whether standard deviation of data at
+     * specified indices has been set
      *
      * @param it time index
      * @param iy observable index
@@ -242,14 +252,16 @@ class ExpData {
     bool isSetObservedDataStdDev(int it, int iy) const;
 
     /**
-     * @brief get function that copies data from ExpData::observedDataStdDev to output
+     * @brief get function that copies data from ExpData::observedDataStdDev to
+     * output
      *
      * @return standard deviation of observed data
      */
     std::vector<realtype> const &getObservedDataStdDev() const;
 
     /**
-     * @brief get function that returns a pointer to standard deviation of observed data at index
+     * @brief get function that returns a pointer to standard deviation of
+     * observed data at index
      *
      * @param it timepoint index
      * @return pointer to standard deviation of observed data at index
@@ -257,14 +269,17 @@ class ExpData {
     const realtype *getObservedDataStdDevPtr(int it) const;
 
     /**
-     * @brief set function that copies observed event data from input to ExpData::observedEvents
+     * @brief set function that copies observed event data from input to
+     * ExpData::observedEvents
      *
-     * @param observedEvents observed data (dimension: nmaxevent x nztrue, row-major)
+     * @param observedEvents observed data (dimension: nmaxevent x nztrue,
+     * row-major)
      */
     void setObservedEvents(const std::vector<realtype> &observedEvents);
 
     /**
-     * @brief set function that copies observed event data for specific event observable
+     * @brief set function that copies observed event data for specific event
+     * observable
      *
      * @param observedEvents observed data (dimension: nmaxevent)
      * @param iz observed event data index
@@ -538,7 +553,6 @@ class ConditionContext {
     std::vector<realtype> originalTimepoints;
     std::vector<int> originalParameterList;
     std::vector<amici::ParameterScaling> originalScaling;
-
 };
 
 } // namespace amici
