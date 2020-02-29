@@ -70,7 +70,7 @@ class SbmlImporter:
     :ivar species_compartment: sympy.Matrix
         compartment for each species
 
-    :ivar constant_cpecies: list[sting]
+    :ivar constant_species: list[sting]
         ids of species that are marked as constant
 
     :ivar boundary_condition_species: list[string]
@@ -249,7 +249,7 @@ class SbmlImporter:
         if constant_parameters is None:
             constant_parameters = kwargs.pop('constantParameters', [])
             if constant_parameters is not []:
-                logger.warning('Use of `constant_parameters` as argument name '
+                logger.warning('Use of `constantParameters` as argument name '
                                'is deprecated and will be removed in a future '
                                'version. Please use `constant_parameters` as '
                                'argument name.')

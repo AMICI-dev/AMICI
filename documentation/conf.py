@@ -15,6 +15,7 @@ import subprocess
 
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
+    print(os.getcwd())
     # build swig4.0
     subprocess.run('../scripts/downloadAndBuildSwigh.sh')
     # in source install
