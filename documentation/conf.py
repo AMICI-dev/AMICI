@@ -23,8 +23,8 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     subprocess.run([
         '/home/docs/checkouts/readthedocs.org/user_builds/amici/envs'
         '/readthedocs/bin/python',
-        '-m', f'pip install --verbose -e'
-              f' {os.path.join(amici_dir, "python", "sdist")}'
+        '-m', 'pip', f'install --verbose -e'
+                     f' {os.path.join(amici_dir, "python", "sdist")}'
     ])
 
 

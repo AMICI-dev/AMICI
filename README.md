@@ -39,8 +39,10 @@ constrained optimization problems.
   <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
 <a href="https://www.codacy.com/app/FFroehlich/AMICI" alt="Codacy">
   <img src="https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6"></a>
-<a href="https://zenodo.org/badge/latestdoi/43677177" alt="Codacy">
+<a href="https://zenodo.org/badge/latestdoi/43677177" alt="Zenodo">
   <img src="https://zenodo.org/badge/43677177.svg"></a>
+<a href="https://amici.readthedocs.io/en/latest/?badge=latest" alt="RTD">
+ <img src="https://readthedocs.org/projects/amici/badge/?version=latest"></a>
 
 ## Features
 
