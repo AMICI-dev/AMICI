@@ -11,7 +11,7 @@ import subprocess
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/stable/config
 
-# -- RTD custom build---------------------------------------------------------
+# -- RTD custom build --------------------------------------------------------
 
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
@@ -20,11 +20,11 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     subprocess.run(os.path.join(amici_dir, 'scripts',
                                 'downloadAndBuildSwig.sh'))
     # in source install
-    subprocess.run(
-        f'/home/docs/checkouts/readthedocs.org/user_builds/amici/envs'
-        f'/readthedocs/bin/python -m pip install -e '
-        f'{os.path.join(amici_dir, "python", "sdist")} '
-    )
+    subprocess.run([
+        '/home/docs/checkouts/readthedocs.org/user_builds/amici/envs'
+        '/readthedocs/bin/python',
+        '-m', f'pip install -e {os.path.join(amici_dir, "python", "sdist")}'
+    ])
 
 
 # -- Path setup --------------------------------------------------------------
