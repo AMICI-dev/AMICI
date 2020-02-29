@@ -15,11 +15,14 @@ import subprocess
 
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
-    print(os.getcwd())
+    amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # build swig4.0
-    subprocess.run('../scripts/downloadAndBuildSwigh.sh')
+    subprocess.run(os.path.join(amici_dir, 'scripts',
+                                'downloadAndBuildSwig.sh'))
     # in source install
-    subprocess.run('pip install -e ../python/sdist')
+    subprocess.run(
+        f'pip install -e {os.path.join(amici_dir, "python", "sdist")}'
+    )
 
 
 # -- Path setup --------------------------------------------------------------
