@@ -1,6 +1,6 @@
 """
 PEtab Import
----------------
+------------
 Import a model in the PEtab (https://github.com/ICB-DCM/PEtab/) format into
 AMICI.
 """
