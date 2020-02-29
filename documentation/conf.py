@@ -16,6 +16,8 @@ import os
 import sys
 import re
 
+from sphinx.transforms.post_transforms import ReferencesResolver
+
 sys.path.insert(0, os.path.abspath('../python/sdist'))
 sys.path.insert(0, os.path.abspath('../'))
 
@@ -270,6 +272,33 @@ def process_signature(app, what: str, name: str, obj, options, signature,
     return signature, return_annotation
 
 
+# this code fixes references in symlinked md files in documentation folder
+# link replacements must be in env.domains['std'].labels
+doclinks = {
+    'documentation/development': '/development.md',
+    'documentation/CI': '/ci.md',
+    'documentation/code_review_guide': '/code_review_guide.md',
+}
+
+
+def process_missing_ref(app, env, node, contnode):
+    if not any(link in node['reftarget'] for link in doclinks):
+        return  # speedup futile processing
+
+    for old, new in doclinks.items():
+        node['reftarget'] = node['reftarget'].replace(old, new)
+    contnode = node[0]
+    if 'refuri' in contnode:
+        for old, new in doclinks.items():
+            contnode['refuri'] = contnode['refuri'].replace(old, new)
+
+    refdoc = node.get('refdoc', env.docname)
+    resolver = ReferencesResolver(env.get_doctree(refdoc))
+    result = resolver.resolve_anyref(refdoc, node, contnode)
+    return result
+
+
 def setup(app):
     app.connect('autodoc-process-docstring', process_docstring)
     app.connect('autodoc-process-signature', process_signature)
+    app.connect('missing-reference', process_missing_ref)
