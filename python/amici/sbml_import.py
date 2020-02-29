@@ -1003,7 +1003,7 @@ class SbmlImporter:
             replacement symbolic variables
         """
         fields = [
-            'stoichiometricMatrix', 'fluxVector',
+            'stoichiometric_matrix', 'flux_vector',
         ]
         for field in fields:
             if field in dir(self):
