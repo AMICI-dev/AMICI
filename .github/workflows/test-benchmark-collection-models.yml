@@ -4,11 +4,11 @@ on:
     branches:
       - develop
       - master
-      - fix_ci
 
   pull_request:
     branches:
       - master
+      - develop
 
 jobs:
   build:
@@ -30,7 +30,7 @@ jobs:
       run: |
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
-    - run: pip3 install pytest shyaml petab>=0.1.2
+    - run: pip3 install pytest shyaml petab>=0.1.3
     - run: |
         echo ::add-path::${HOME}/.local/bin/
         echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
@@ -51,9 +51,7 @@ jobs:
 
     # retrieve test models
     - name: Download and test benchmark collection
-      # TODO do something more efficient than cloning this big repo
       run: |
-        git clone --depth 1 https://github.com/LeonardSchmiester/Benchmark-Models.git \
-          && cd Benchmark-Models && git checkout hackathon && cd .. \
-          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models/hackathon_contributions_new_data_format/" \
+        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
+          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
           && tests/benchmark-models/test_benchmark_collection.sh
