@@ -1103,8 +1103,10 @@ class Model : public AbstractModel {
     /** number of states with conservation laws applied */
     int nx_solver{0};
 
-    /** number of states in the unaugmented system with conservation laws
-     * applied */
+    /**
+     * number of states in the unaugmented system with conservation laws
+     * applied
+     */
     int nxtrue_solver{0};
 
     /** number of observables */
@@ -1157,24 +1159,31 @@ class Model : public AbstractModel {
     /** number of nonzero entries in ndxdotdp_implicit */
     int ndxdotdp_implicit{0};
 
-    /** flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
-     * directional or full second order derivative will be computed */
+    /**
+     * flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
+     * directional or full second order derivative will be computed
+     */
     SecondOrderMode o2mode{SecondOrderMode::none};
 
     /** flag array for DAE equations */
     std::vector<realtype> idlist;
 
-    /** temporary storage of dxdotdp data across functions, Python only
-     * (dimension: nplist x nx_solver, nnz: ndxdotdp_explicit, type CSC_MAT) */
+    /**
+     * temporary storage of dxdotdp data across functions, Python only
+     * (dimension: nplist x nx_solver, nnz: ndxdotdp_explicit, type CSC_MAT)
+     */
     mutable SUNMatrixWrapper dxdotdp_explicit;
 
-    /** temporary storage of dxdotdp_implicit data across functions, Python only
+    /**
+     * temporary storage of dxdotdp_implicit data across functions, Python only
      * (dimension: nplist x * nx_solver, nnz: ndxdotdp_implicit, type CSC_MAT)
      */
     mutable SUNMatrixWrapper dxdotdp_implicit;
 
-    /** temporary storage of dxdotdp data across functions, Matlab only
-     * (dimension: nplist x nx_solver, row-major) */
+    /**
+     * temporary storage of dxdotdp data across functions, Matlab only
+     * (dimension: nplist x nx_solver, row-major)
+     */
     AmiVectorArray dxdotdp;
     /** AMICI context */
     AmiciApplication *app = &defaultContext;
