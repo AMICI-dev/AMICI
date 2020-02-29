@@ -21,7 +21,9 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
                                 'downloadAndBuildSwig.sh'))
     # in source install
     subprocess.run(
-        f'pip install -e {os.path.join(amici_dir, "python", "sdist")}'
+        f'/home/docs/checkouts/readthedocs.org/user_builds/amici/envs'
+        f'/readthedocs/bin/python -m pip install -e '
+        f'{os.path.join(amici_dir, "python", "sdist")} '
     )
 
 
