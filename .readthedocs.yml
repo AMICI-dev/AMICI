@@ -22,7 +22,7 @@ python:
   version: 3.7
   install:
     - requirements: documentation/rtd_requirements.txt
-    - method: pip
+    - method: setuptools
       path: ./python/sdist
   system_packages: true
 
