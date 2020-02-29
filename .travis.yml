@@ -189,6 +189,7 @@ script:
     - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
     - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
+    - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD sphinx ./scripts/run-sphinx.sh; fi
 
 after_failure:
     - $FOLD ls -alR

@@ -241,7 +241,7 @@ def fix_typehints(sig: str) -> str:
     sig = sig.replace(' > ', ' ')
 
     # remove const
-    sig = sig.replace(' const ', ' ')
+    sig = sig.replace(' const ', r' ')
     sig = re.sub(r' const$', r'', sig)
 
     # remove pass by reference

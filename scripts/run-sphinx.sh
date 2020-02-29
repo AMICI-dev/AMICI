@@ -13,10 +13,13 @@ pip3 install sphinx nbsphinx recommonmark sphinx_rtd_theme petab sphinx-autodoc-
 AMICI_FILE=${AMICI_PATH}/python/sdist/amici/amici.py
 sed -i -e -E $'s/([ ]+):(rtype|type|param|return)/\\\n\\1:\\2/g' $AMICI_FILE
 
-sphinx-build -b html . _build
+sphinx-build -W -b html . _build
+ret=$?
 
 # cleanup
 rm ${AMICI_FILE}
 mv ${AMICI_FILE}-e ${AMICI_FILE}
+
+if [[ $ret != 0 ]]; then exit $ret; fi
 
 
