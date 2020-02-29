@@ -221,7 +221,6 @@ def generate_swig_interface_files() -> None:
         '-c++',
         '-python',
         '-py3',
-        '-extranative',
         '-threads',
         '-Iamici/swig', '-Iamici/include',
     ]

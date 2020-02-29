@@ -15,8 +15,8 @@ from .numpy import ExpDataView
 import amici
 
 ExpDatas = Union[
-    List[amici.ExpData], List[amici.ExpDataPtr],
-    amici.ExpData, amici.ExpDataPtr
+    List[amici.amici.ExpData], List[amici.ExpDataPtr],
+    amici.amici.ExpData, amici.ExpDataPtr
 ]
 ReturnDatas = Union[
     List[amici.ReturnDataView], amici.ReturnDataView
@@ -25,7 +25,7 @@ ReturnDatas = Union[
 AmiciModel = Union[amici.ModelPtr, amici.Model]
 
 
-def _process_edata_list(edata_list: ExpDatas) -> List[amici.ExpData]:
+def _process_edata_list(edata_list: ExpDatas) -> List[amici.amici.ExpData]:
     """
     Maps single instances of amici.ExpData to lists of amici.ExpData
 
@@ -35,7 +35,7 @@ def _process_edata_list(edata_list: ExpDatas) -> List[amici.ExpData]:
     :return:
         list of instance(s)
     """
-    if isinstance(edata_list, (amici.ExpData, amici.ExpDataPtr)):
+    if isinstance(edata_list, (amici.amici.ExpData, amici.ExpDataPtr)):
         return [edata_list]
     else:
         return edata_list
@@ -294,7 +294,7 @@ def getResidualsAsDataFrame(model: amici.Model,
 
 def _fill_conditions_dict(datadict: Dict[str, float],
                           model: AmiciModel,
-                          edata: amici.ExpData,
+                          edata: amici.amici.ExpData,
                           by_id: bool) -> Dict[str, float]:
     """
     Helper function that fills in condition parameters from model and
@@ -507,7 +507,7 @@ def constructEdataFromDataFrame(
         model: AmiciModel,
         condition: pd.Series,
         by_id: Optional[bool] = False
-) -> amici.ExpData:
+) -> amici.amici.ExpData:
     """
     Constructs an ExpData instance according to the provided Model
     and DataFrame.
@@ -534,7 +534,7 @@ def constructEdataFromDataFrame(
         ExpData instance.
     """
     # initialize edata
-    edata = ExpData(model.get())
+    edata = amici.ExpData(model.get())
 
     # timepoints
     df = df.sort_values(by='time', ascending=True)
@@ -599,7 +599,7 @@ def getEdataFromDataFrame(
         model: AmiciModel,
         df: pd.DataFrame,
         by_id: Optional[bool] = False
-) -> List[amici.ExpData]:
+) -> List[amici.amici.ExpData]:
     """
     Constructs a ExpData instance according to the provided Model and
     DataFrame.
