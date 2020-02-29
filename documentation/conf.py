@@ -1,3 +1,8 @@
+import os
+import sys
+import re
+import subprocess
+
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -6,15 +11,22 @@
 # full list see the documentation:
 # http://www.sphinx-doc.org/en/stable/config
 
+# -- RTD custom build---------------------------------------------------------
+
+# only execute those commands when running from RTD
+if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
+    # build swig4.0
+    subprocess.run('./scripts/downloadAndBuildSwigh.sh')
+    # in source install
+    subprocess.run('pip install -e ./python/sdist')
+
+
 # -- Path setup --------------------------------------------------------------
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-import re
 
 from sphinx.transforms.post_transforms import ReferencesResolver
 

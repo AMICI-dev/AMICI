@@ -22,8 +22,6 @@ python:
   version: 3.7
   install:
     - requirements: documentation/rtd_requirements.txt
-    - method: setuptools
-      path: ./python/sdist
   system_packages: true
 
 build:
