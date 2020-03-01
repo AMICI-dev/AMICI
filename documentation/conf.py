@@ -40,6 +40,12 @@ from sphinx.transforms.post_transforms import ReferencesResolver
 sys.path.insert(0, os.path.abspath('../python/sdist'))
 sys.path.insert(0, os.path.abspath('../'))
 
+# -- Mock out some problematic modules-------------------------------------
+
+# Note that for sub-modules, all parent modules must be listed explicitly.
+autodoc_mock_imports = ['_amici']
+for mod_name in autodoc_mock_imports:
+    sys.modules[mod_name] = mock.MagicMock()
 
 # -- Project information -----------------------------------------------------
 
@@ -49,19 +55,12 @@ author = 'The AMICI developers'
 
 import amici
 
-
 # The short X.Y version
 version = amici.__version__
 # The full version, including alpha/beta/rc tags
 release = version
 
-# -- Mock out some problematic modules-------------------------------------
-
-# Note that for sub-modules, all parent modules must be listed explicitly.
-MOCK_MODULES = ['_amici']
-for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = mock.MagicMock()
-
+del amici
 
 # -- General configuration ---------------------------------------------------
 
@@ -459,4 +458,4 @@ def setup(app):
     app.connect('autodoc-skip-member', skip_member)
     app.config.intersphinx_mapping = intersphinx_mapping
     app.config.autosummary_generate = True
-    app.config.autodoc_mock_imports = MOCK_MODULES
+    app.config.autodoc_mock_imports = autodoc_mock_imports
