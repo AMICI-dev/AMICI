@@ -26,3 +26,6 @@ python:
 
 build:
   image: latest
+
+sphinx:
+  fail_on_warning: True
