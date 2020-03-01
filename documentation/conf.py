@@ -2,7 +2,7 @@ import os
 import sys
 import re
 import subprocess
-
+import mock
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -54,6 +54,13 @@ import amici
 version = amici.__version__
 # The full version, including alpha/beta/rc tags
 release = version
+
+# -- Mock out some problematic modules-------------------------------------
+
+# Note that for sub-modules, all parent modules must be listed explicitly.
+MOCK_MODULES = ['_amici']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.MagicMock()
 
 
 # -- General configuration ---------------------------------------------------
