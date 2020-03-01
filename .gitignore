@@ -166,3 +166,5 @@ ThirdParty/superlu_mt_3.1.tar.gz
 ThirdParty/swig-*
 
 _untracked/
+
+documentation/generated/*

@@ -70,6 +70,7 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.autosummary',
     'nbsphinx',
     'recommonmark',
     'sphinx_autodoc_typehints',
@@ -238,7 +239,7 @@ typemaps = {
 
 def process_docstring(app, what, name, obj, options, lines):
     # only apply in the amici.amici module
-    if name.split('.')[1] != 'amici':
+    if len(name.split('.')) < 2 or name.split('.')[1] != 'amici':
         return
 
     # add linebreaks before argument/return defintions
@@ -280,9 +281,6 @@ def fix_typehints(sig: str) -> str:
                'SensitivityMethod', 'SensitivityOrder']:
         sig = sig.replace(ec, 'int')
 
-    # fix garbled output
-    sig = sig.replace(' > ', ' ')
-
     # remove const
     sig = sig.replace(' const ', r' ')
     sig = re.sub(r' const$', r'', sig)
@@ -294,6 +292,9 @@ def fix_typehints(sig: str) -> str:
     # turn gsl_spans and pointers int Iterables
     sig = re.sub(r'([\w\.]+) \*', r'Iterable[\1]', sig)
     sig = re.sub(r'gsl::span< ([\w\.]+) >', r'Iterable[\1]', sig)
+
+    # fix garbled output
+    sig = sig.replace(' >', '')
     return sig
 
 
@@ -341,8 +342,42 @@ def process_missing_ref(app, env, node, contnode):
     return result
 
 
+def skip_member(app, what, name, obj, skip, options):
+    ignored = ['AbstractModel', 'CVodeSolver', 'IDASolver', 'Model_ODE',
+               'Model_DAE', 'ConditionContext', 'checkSigmaPositivity',
+               'createGroup', 'createGroup', 'equals', 'printErrMsgIdAndTxt',
+               'printErrMsgIdAndTxt', 'wrapErrHandlerFn', 'wrapErrHandlerFn',
+               'printWarnMsgIdAndTxt',
+               'AmiciApplication', 'AmiciApplication', 'ModelPtr', 'SolverPtr',
+               'ReturnDataPr', 'writeSimulationExpData',
+               'writeSimulationExpData', 'writeReturnData',
+               'readSimulationExpData', 'readSolverSettingsFromHDF5',
+               'readModelDataFromHDF5', 'createOrOpenForWriting',
+               'writeReturnDataDiagnosis', 'attributeExists', 'locationExists',
+               'createAndWriteDouble1DDataset',
+               'createAndWriteDouble1DDataset',
+               'createAndWriteDouble2DDataset',
+               'createAndWriteDouble3DDataset',
+               'createAndWriteInt1DDataset', 'createAndWriteInt2DDataset',
+               'createAndWriteInt3DDataset', 'getDoubleDataset1D',
+               'getDoubleDataset2D', 'getDoubleDataset3D', 'getIntDataset1D',
+               'getIntScalarAttribute', 'getDoubleScalarAttribute',
+               'stdVec2ndarray', 'SwigPyIterator',
+               ]
+
+    if name in ignored:
+        return True
+
+    if name.startswith('__') and name != '__init__':
+        return True
+
+    return None
+
+
 def setup(app):
     app.connect('autodoc-process-docstring', process_docstring)
     app.connect('autodoc-process-signature', process_signature)
     app.connect('missing-reference', process_missing_ref)
+    app.connect('autodoc-skip-member', skip_member)
     app.config.intersphinx_mapping = intersphinx_mapping
+    app.config.autosummary_generate = True

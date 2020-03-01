@@ -51,16 +51,7 @@ Welcome to AMICI's documentation!
    :maxdepth: 2
    :caption: API reference
 
-   api_amici
-   api_sbml_import
-   api_pysb_import
-   api_petab_import
-   api_ode_export
-   api_petab_objective
-   api_plotting
-   api_pandas
-   api_logging
-   api_gradient_check
+   modules
 
 
 .. toctree::
