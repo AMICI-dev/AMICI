@@ -459,3 +459,4 @@ def setup(app):
     app.connect('autodoc-skip-member', skip_member)
     app.config.intersphinx_mapping = intersphinx_mapping
     app.config.autosummary_generate = True
+    app.config.autodoc_mock_imports = MOCK_MODULES
