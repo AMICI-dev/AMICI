@@ -233,7 +233,8 @@ def check_results(rdata: ReturnData,
     tolerances.
 
     :param rdata:
-        simulation results as returned by amici.runAmiciSimulation
+        simulation results as returned by
+        :meth:`amici.amici.runAmiciSimulation`
 
     :param field:
         name of the field to check

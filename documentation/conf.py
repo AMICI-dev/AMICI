@@ -69,10 +69,20 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.coverage',
+    'sphinx.ext.intersphinx',
     'nbsphinx',
     'recommonmark',
     'sphinx_autodoc_typehints',
 ]
+
+intersphinx_mapping = {
+    'pysb': ('https://pysb.readthedocs.io/en/stable/', None),
+    'petab': ('https://petab.readthedocs.io/en/stable/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None),
+    'numpy': ('https://numpy.org/devdocs/', None),
+    'sympy': ('https://docs.sympy.org/latest/', None),
+    'python': ('https://docs.python.org/3', None),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -231,13 +241,27 @@ def process_docstring(app, what, name, obj, options, lines):
     if name.split('.')[1] != 'amici':
         return
 
+    # add linebreaks before argument/return defintions
+    lines_clean = []
+
+    while len(lines):
+        line = lines.pop(0)
+
+        if re.match(r':(type|rtype|param|return)', line) and \
+                len(lines_clean) and lines_clean[-1] != '':
+            lines_clean.append('')
+
+        lines_clean.append(line)
+    lines.extend(lines_clean)
+
+    # fix types
     for i in range(len(lines)):
         for old, new in typemaps.items():
             lines[i] = lines[i].replace(old, new)
 
 
 def fix_typehints(sig: str) -> str:
-    # claeanup types
+    # cleanup types
     for old, new in typemaps.items():
         sig = sig.replace(old, new)
     sig = sig.replace('void', 'None')
@@ -256,7 +280,7 @@ def fix_typehints(sig: str) -> str:
                'SensitivityMethod', 'SensitivityOrder']:
         sig = sig.replace(ec, 'int')
 
-    # ??
+    # fix garbled output
     sig = sig.replace(' > ', ' ')
 
     # remove const
@@ -321,3 +345,4 @@ def setup(app):
     app.connect('autodoc-process-docstring', process_docstring)
     app.connect('autodoc-process-signature', process_signature)
     app.connect('missing-reference', process_missing_ref)
+    app.config.intersphinx_mapping = intersphinx_mapping

@@ -2,7 +2,7 @@
 PySB Import
 ------------
 This module provides all necessary functionality to import a model specified
-in the PySB format
+in the :class:`pysb.core.Model` format
 """
 
 from .ode_export import (
@@ -47,19 +47,21 @@ def pysb2amici(model: pysb.Model,
         generated module
 
     :param output_dir:
-        see sbml_import.setPaths()
+        see :meth:`amici.ode_export.ODEExporter.set_paths`
 
     :param observables:
-        list of pysb.Expressions names that should be mapped to observables
+        list of :class:`pysb.core.Expression` names that should be mapped to
+        observables
 
     :param sigmas:
-        dict of pysb.Expressions names that should be mapped to sigmas
+        dict of :class:`pysb.core.Expression` names that should be mapped to sigmas
 
     :param constant_parameters:
-        list of pysb.Parameter names that should be mapped as fixed parameter
+        list of :class:`pysb.core.Parameter` names that should be mapped as fixed
+        parameter
 
     :param verbose: verbosity level for logging, True/False default to
-        logging.Error/logging.DEBUG
+        :attr:`logging.ERROR`/:attr:`logging.DEBUG`
 
     :param assume_pow_positivity:
         if set to true, a special pow function is used to avoid problems
@@ -114,20 +116,20 @@ def ode_model_from_pysb_importer(model: pysb.Model,
     Creates an ODEModel instance from a pysb.Model instance.
 
     :param model:
-        see amici.pysb_import.pysb2amici
+        see :func:`amici.pysb_import.pysb2amici`
 
     :param constant_parameters:
-        see amici.pysb_import.pysb2amici
+        see :func:`amici.pysb_import.pysb2amici`
 
     :param observables:
-        see amici.pysb_import.pysb2amici
+        see :func:`amici.pysb_import.pysb2amici`
 
     :param sigmas:
         dict with names of observable Expressions as keys and names of sigma
         Expressions as value sigma
 
     :param compute_conservation_laws:
-        see amici.pysb_import.pysb2amici
+        see :func:`amici.pysb_import.pysb2amici`
 
     :return:
         New ODEModel instance according to pysbModel
@@ -331,8 +333,8 @@ def _get_sigma_name_and_value(
 def _process_pysb_observables(pysb_model: pysb.Model,
                               ode_model: ODEModel) -> None:
     """
-    Converts pysb observables into Expressions and adds them to the ODEModel
-    instance
+    Converts :class:`pysb.core.Observable` into
+    :class:`ODEModel.Expressions` and adds them to the ODEModel instance
 
     :param pysb_model:
         pysb model
@@ -395,7 +397,7 @@ def _compute_monomers_with_fixed_initial_conditions(
     Computes the set of monomers in a model with species that have fixed
     initial conditions
 
-    :param pysb_model: pysb model @type pysb.core.Model
+    :param pysb_model: pysb model
 
     :return:
         set of monomer names with fixed initial conditions
@@ -838,7 +840,7 @@ def _construct_conservation_from_prototypes(
     monomer
 
     :param cl_prototypes:
-        see return of _generate_cl_prototypes
+        see return of :func:`_generate_cl_prototypes`
 
     :param pysb_model:
         pysb model
@@ -897,7 +899,7 @@ def _add_conservation_for_constant_species(
         ODEModel isntance to which the conservation laws will be added
 
     :param conservation_laws:
-        see return of _construct_conservation_from_prototypes
+        see return of :func:`_construct_conservation_from_prototypes`
 
     """
 
@@ -921,7 +923,7 @@ def _flatten_conservation_laws(
     depend on any states that are replaced by conservation laws
 
     :param conservation_laws:
-        see return of _construct_conservation_from_prototypes
+        see return of :func:`_construct_conservation_from_prototypes`
     """
     conservation_law_subs = \
         _get_conservation_law_subs(conservation_laws)
@@ -1006,7 +1008,7 @@ def _get_conservation_law_subs(
     appear in other conservation laws
 
     :param conservation_laws:
-        see return o _flatten_conservation_laws
+        see return of :func:`_flatten_conservation_laws`
 
     :return:
         list of tuples containing substitution rules to be used with sympy
@@ -1040,7 +1042,8 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
                            pysb_model: pysb.Model,
                            ode_model: ODEModel) -> bool:
     """
-    Wrapper to interface ODE.state_has_fixed_parameter_initial_condition
+    Wrapper to interface
+    :meth:`ODEModel.state_has_fixed_parameter_initial_condition`
     from a pysb specie/model arguments
 
     :param specie:
@@ -1055,7 +1058,7 @@ def has_fixed_parameter_ic(specie: pysb.core.ComplexPattern,
     :return:
         False if the species does not have an initial condition at all.
         Otherwise the return value of
-        ODE.state_has_fixed_parameter_initial_condition
+        :meth:`ODEModel.state_has_fixed_parameter_initial_condition`
     """
     # ComplexPatterns are not hashable, so we have to compare by string
     ic_index = next(

@@ -19,13 +19,14 @@ def plotStateTrajectories(
     Plot state trajectories
 
     :param rdata:
-        AMICI simulation results as returned by amici.getSimulationResults()
+        AMICI simulation results as returned by
+        :func:`amici.amici.runAmiciSimulation`
 
     :param state_indices:
         Indices of states for which trajectories are to be plotted
 
     :param ax:
-        matplotlib.axes.Axes instance to plot into
+        matplotlib Axes instance to plot into
     
     :param model:
         amici model instance
@@ -58,13 +59,14 @@ def plotObservableTrajectories(
     Plot observable trajectories
 
     :param rdata:
-        AMICI simulation results as returned by amici.getSimulationResults()
+        AMICI simulation results as returned by
+        :func:`amici.amici.runAmiciSimulation`
 
     :param observable_indices:
         Indices of observables for which trajectories are to be plotted
 
     :param ax:
-        matplotlib.axes.Axes instance to plot into
+        matplotlib Axes instance to plot into
 
     :param model:
         amici model instance

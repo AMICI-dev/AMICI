@@ -2,7 +2,7 @@
 Pandas Wrappers
 ---------------
 This modules contains convenience wrappers that allow for easy interconversion
-between C++ objects from amici.amici and pandas DataFrames
+between C++ objects from :mod:`amici.amici` and pandas DataFrames
 """
 
 import pandas as pd
@@ -27,7 +27,8 @@ AmiciModel = Union[amici.ModelPtr, amici.Model]
 
 def _process_edata_list(edata_list: ExpDatas) -> List[amici.amici.ExpData]:
     """
-    Maps single instances of amici.ExpData to lists of amici.ExpData
+    Maps single instances of :class:`amici.amici.ExpData` to lists of
+    :class:`amici.amici.ExpData`
 
     :param edata_list:
         list of instances or single instance
@@ -43,7 +44,9 @@ def _process_edata_list(edata_list: ExpDatas) -> List[amici.amici.ExpData]:
 
 def _process_rdata_list(rdata_list: ReturnDatas) -> List[amici.ReturnDataView]:
     """
-    Maps single instances of amici.ReturnData to lists of amici.ReturnData
+    Maps single instances of :class:`amici.ReturnData` to lists of
+    :class:`amici.ReturnData`
+
     :param rdata_list:
         list of instances or single instance
 
@@ -605,7 +608,7 @@ def getEdataFromDataFrame(
     DataFrame.
 
     :param df:
-        pd.DataFrame with Observable Names/Ids, FixedParameter Names/Ids
+        dataframe with Observable Names/Ids, FixedParameter Names/Ids
         and time as columns. Standard deviations may be specified by
         appending '_std' as suffix. Preequilibration fixedParameters may be
         specified by appending '_preeq' as suffix. Presimulation

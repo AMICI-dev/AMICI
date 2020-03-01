@@ -3,8 +3,10 @@ C++ Export
 ----------
 This module provides all necessary functionality specify an ODE model and
 generate executable C++ simulation code. The user generally won't have to
-directly call any function from this module as this will be done by pysb2amici,
-sbml2amici and petab_import
+directly call any function from this module as this will be done by
+:func:`amici.pysb_import.pysb2amici`,
+:meth:`amici.sbml_import.SbmlImporter.sbml2amici` and
+:func:`amici.petab_import.import_model`
 """
 import sympy as sp
 import re
@@ -367,7 +369,8 @@ class State(ModelQuantity):
                  value: sp.Basic,
                  dt: sp.Basic):
         """
-        Create a new State instance. Extends ModelQuantity.__init__ by dt
+        Create a new State instance. Extends :meth:`ModelQuantity.__init__`
+        by dt
 
         :param identifier:
             unique identifier of the state
@@ -691,15 +694,15 @@ class ODEModel:
 
     :ivar _equation_prototype:
         defines the attribute from which an equation should be generated via
-        list comprehension (see ODEModel.generateEquation())
+        list comprehension (see :meth:`ODEModel._generate_equation`)
 
     :ivar _variable_prototype:
         defines the attribute from which a variable should be generated via
-        list comprehension (see ODEModel.generateSymbol())
+        list comprehension (see :meth:`ODEModel._generate_symbol`)
 
     :ivar _value_prototype:
         defines the attribute from which a value should be generated via
-        list comprehension (see ODEModel.generateValue())
+        list comprehension (see :meth:`ODEModel._generate_value`)
 
     :ivar _total_derivative_prototypes:
         defines how a total derivative equation is computed for an equation,
@@ -728,7 +731,7 @@ class ODEModel:
         Create a new ODEModel instance.
 
         :param simplify:
-            see ODEModel._simplify
+            see :meth:`ODEModel._simplify`
         """
         self._states: List[State] = []
         self._observables: List[Observable] = []
@@ -822,7 +825,9 @@ class ODEModel:
     def import_from_sbml_importer(self,
                                   si: 'sbml_import.SbmlImporter') -> None:
         """
-        Imports a model specification from a amici.SBMLImporter instance.
+        Imports a model specification from a
+        :class:`amici.sbml_import.SbmlImporter`
+        instance.
 
         :param si:
             imported SBML model
@@ -1793,7 +1798,7 @@ class ODEExporter:
         ODE definition
 
     :ivar outdir:
-        see sbml_import.setPaths()
+        see :meth:`amici.ode_export.ODEExporter.set_paths`
 
     :ivar verbose:
         more verbose output if True
@@ -1840,7 +1845,7 @@ class ODEExporter:
             ODE definition
 
         :param outdir:
-            see sbml_import.setPaths()
+            see :meth:`amici.ode_export.ODEExporter.set_paths`
 
         :param verbose:
             verbosity level for logging, True/False default to
@@ -1855,7 +1860,7 @@ class ODEExporter:
             python extension
 
         :param allow_reinit_fixpar_initcond:
-            see ODEExporter
+            see :class:`amici.ode_export.ODEExporter`
 
         """
         logger.setLevel(verbose)
@@ -2515,7 +2520,7 @@ def apply_template(source_file: str,
 
     :param template_data:
         template keywords to substitute (key is template
-        variable without TemplateAmici.delimiter)
+        variable without :attr:`TemplateAmici.delimiter`)
 
     """
     with open(source_file) as filein:
@@ -2527,13 +2532,13 @@ def apply_template(source_file: str,
 
 def strip_pysb(symbol: sp.Basic) -> sp.Basic:
     """
-    Strips pysb info from a pysb.Component object
+    Strips pysb info from a :class:`pysb.Component` object
 
     :param symbol:
         symbolic expression
 
     :return:
-        stripped sympy.Basic
+        stripped expression
 
     """
     # strip pysb type and transform into a flat sympy.Symbol.

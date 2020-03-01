@@ -1,8 +1,8 @@
 """
 PEtab Import
 ------------
-Import a model in the PEtab (https://github.com/ICB-DCM/PEtab/) format into
-AMICI.
+Import a model in the :mod:`petab` (https://github.com/ICB-DCM/PEtab/) format
+into AMICI.
 """
 
 import argparse
@@ -247,7 +247,7 @@ def import_petab_problem(
 
     :param kwargs:
         Additional keyword arguments to be passed to
-        ``amici.sbml_importer.sbml2amici``.
+        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
 
     :return:
         The imported model.
@@ -391,12 +391,14 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     :param verbose:
         Print/log extra information.
+
     :param allow_reinit_fixpar_initcond:
-        See amici.ode_export.ODEExporter. Must be enabled if initial states
-        are to be reset after preequilibration.
+        See :class:`amici.ode_export.ODEExporter`. Must be enabled if initial
+        states are to be reset after preequilibration.
+
     :param kwargs:
         Additional keyword arguments to be passed to
-        ``amici.sbml_importer.sbml2amici``.
+        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
     """
     if verbose:
         logger.setLevel(verbose)
@@ -498,7 +500,8 @@ def get_observation_model(observable_df: pd.DataFrame
                                      Dict[str, Union[str, float]]]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
-    table in a format suitable for `sbml2amici`.
+    table in a format suitable for
+    :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
 
     :param observable_df:
         PEtab observables table
@@ -590,7 +593,7 @@ def parse_cli_args():
     Parse command line arguments
 
     :return:
-        Parsed CLI arguments from ``argparse``.
+        Parsed CLI arguments from :mod:`argparse`.
     """
 
     parser = argparse.ArgumentParser(

@@ -203,7 +203,7 @@ class SbmlImporter:
             name of the model/model directory
 
         :param output_dir:
-            see ODEExporter.setPaths()
+            see :meth:`amici.ode_export.ODEExporter.set_paths`
 
         :param observables:
             dictionary( observableId:{'name':observableName
@@ -234,7 +234,7 @@ class SbmlImporter:
             python extension
 
         :param allow_reinit_fixpar_initcond:
-            see ode_export.ODEExporter
+            see :class:`amici.ode_export.ODEExporter`
 
         :param compile:
             If True, compile the generated Python package,
@@ -842,7 +842,7 @@ class SbmlImporter:
 
         :param noise_distributions:
             dictionary(observableId: noise type)
-            See `sbml2amici`.
+            See :func:`sbml2amici`.
         """
 
         if observables is None:

@@ -72,7 +72,7 @@ def simulate_petab(
         are assumed to be in linear scale.
 
     :param log_level:
-        Log level, see `logging` module.
+        Log level, see :mod:`amici.logging` module.
 
     :return:
         Dictionary of
@@ -84,7 +84,7 @@ def simulate_petab(
 
         corresponding to the different simulation conditions.
         For ordering of simulation conditions, see
-        `petab.Problem.get_simulation_conditions_from_measurement_df`.
+        :meth:`petab.Problem.get_simulation_conditions_from_measurement_df`.
     """
     logger.setLevel(log_level)
 
@@ -170,7 +170,7 @@ def edatas_from_petab(
         scaled_parameters: Optional[bool] = False
 ) -> List[amici.ExpData]:
     """
-    Create list of ``amici.ExpData`` objects for PEtab problem.
+    Create list of :class:`amici.amici.ExpData` objects for PEtab problem.
 
     Sets timepoints, fixed parameters (including preequilibration),
     non-fixed parameters, and observed data and sigmas.
@@ -198,7 +198,7 @@ def edatas_from_petab(
         they are assumed to be in linear scale.
 
     :return:
-        List with one ``ExpData`` per simulation condition.
+        List with one :class:`amici.amici.ExpData` per simulation condition.
     """
 
     # number of amici simulations will be number of unique
@@ -261,7 +261,7 @@ def get_edata_for_condition(
         parameter_mapping: Optional[petab.ParMappingDictTuple] = None,
         scaled_parameters: Optional[bool] = False
 ) -> amici.ExpData:
-    """Get ``amici.ExpData`` for the given PEtab condition
+    """Get :class:`amici.amici.ExpData` for the given PEtab condition
 
     Sets timepoints, fixed parameters (including preequilibration),
     variable parameters, and observed data and sigmas.
