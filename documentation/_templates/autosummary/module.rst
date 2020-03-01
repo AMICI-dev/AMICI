@@ -1,7 +1,5 @@
 {{ fullname | escape | underline }}
 
-.. rubric:: Description
-
 .. automodule:: {{ fullname }}
 
 .. currentmodule:: {{ fullname }}
@@ -18,12 +16,20 @@
 {% endif %}
 
 {% if functions %}
-.. rubric:: Functions
+.. rubric:: Functions Summary
 
 .. autosummary::
-    :toctree: .
     {% for function in functions %}
     {{ function }}
     {% endfor %}
+
+{% endif %}
+
+{% if functions %}
+.. rubric:: Functions
+
+{% for function in functions %}
+.. autofunction:: {{ function }}
+{% endfor %}
 
 {% endif %}
