@@ -222,7 +222,7 @@ typemaps = {
     'std::allocator< std::pair< std::string const,amici::realtype > > >':
         'StringDoubleMap',
     'std::vector< amici::ExpData *,std::allocator< amici::ExpData * > >':
-        'ExpDataVector',
+        'ExpDataPtrVector',
     'std::vector< std::unique_ptr< amici::ReturnData >,std::allocator< '
     'std::unique_ptr< amici::ReturnData > > >':
         'Iterable[ReturnData]',
@@ -236,10 +236,60 @@ typemaps = {
         'float',
 }
 
+vector_types = {
+    'IntVector': ':class:`int`',
+    'BoolVector': ':class:`bool`',
+    'DoubleVector': ':class:`float`',
+    'StringVector': ':class:`str`',
+    'ExpDataPtrVector': ':class:`amici.amici.ExpData`',
+}
+
 
 def process_docstring(app, what, name, obj, options, lines):
+
     # only apply in the amici.amici module
     if len(name.split('.')) < 2 or name.split('.')[1] != 'amici':
+        return
+
+    # add custom doc to swig generated classes
+    if len(name.split('.')) == 3 and name.split('.')[2] in \
+            ['IntVector', 'BoolVector', 'DoubleVector', 'StringVector',
+             'ExpDataPtrVector']:
+        cname = name.split('.')[2]
+        lines.append(
+            f'Swig-Generated class templating common python '
+            f'types including :class:`Iterable` '
+            f'[{vector_types[cname]}] '
+            f'and '
+            f':class:`numpy.array` [{vector_types[cname]}] to facilitate'
+            ' interfacing with C++ bindings.'
+        )
+        return
+
+    if name == 'amici.amici.StringDoubleMap':
+        lines.append(
+            'Swig-Generated class templating :class:`Dict` '
+            '[:class:`str`, :class:`float`] to  facilitate'
+            ' interfacing with C++ bindings.'
+        )
+        return
+
+    if name == 'amici.amici.ParameterScalingVector':
+        lines.append(
+            'Swig-Generated class, which ,in contrast to other Vector '
+            'classes, does not allow for simple interoperability with common '
+            'python types, but must be created using '
+            ':func:`amici.amici.parameterScalingFromIntVector`'
+        )
+        return
+
+    if len(name.split('.')) == 3 and name.split('.')[2] in \
+            ['ExpDataPtr', 'ReturnDataPtr', 'ModelPtr', 'SolverPtr']:
+        cname = name.split('.')[2]
+        lines.append(
+            f'Swig-Generated class that implements smart pointers to '
+            f'{cname.replace("Ptr","")} as objects.'
+        )
         return
 
     # add linebreaks before argument/return defintions
@@ -255,10 +305,20 @@ def process_docstring(app, what, name, obj, options, lines):
         lines_clean.append(line)
     lines.extend(lines_clean)
 
-    # fix types
     for i in range(len(lines)):
+        # fix types
         for old, new in typemaps.items():
             lines[i] = lines[i].replace(old, new)
+        lines[i] = re.sub(
+            r'amici::(Model|Solver|ExpData) ',
+            r':class:`amici\.amici\.\1\`',
+            lines[i]
+        )
+        lines[i] = re.sub(
+            r'amici::(runAmiciSimulation[s]?)',
+            r':func:`amici\.amici\.\1`',
+            lines[i]
+        )
 
 
 def fix_typehints(sig: str) -> str:
@@ -348,8 +408,7 @@ def skip_member(app, what, name, obj, skip, options):
                'createGroup', 'createGroup', 'equals', 'printErrMsgIdAndTxt',
                'printErrMsgIdAndTxt', 'wrapErrHandlerFn', 'wrapErrHandlerFn',
                'printWarnMsgIdAndTxt',
-               'AmiciApplication', 'AmiciApplication', 'ModelPtr', 'SolverPtr',
-               'ReturnDataPr', 'writeSimulationExpData',
+               'AmiciApplication', 'AmiciApplication',
                'writeSimulationExpData', 'writeReturnData',
                'readSimulationExpData', 'readSolverSettingsFromHDF5',
                'readModelDataFromHDF5', 'createOrOpenForWriting',
@@ -362,13 +421,25 @@ def skip_member(app, what, name, obj, skip, options):
                'createAndWriteInt3DDataset', 'getDoubleDataset1D',
                'getDoubleDataset2D', 'getDoubleDataset3D', 'getIntDataset1D',
                'getIntScalarAttribute', 'getDoubleScalarAttribute',
-               'stdVec2ndarray', 'SwigPyIterator',
+               'stdVec2ndarray', 'SwigPyIterator', 'thisown',
                ]
 
     if name in ignored:
         return True
 
-    if name.startswith('__') and name != '__init__':
+    if name.startswith('_') and name != '__init__':
+        return True
+
+    # igore various functions for std::vector<> types
+    if re.match(r'^<function [\w]+Vector\.', str(obj)):
+        return True
+
+    # igore various functions for smart pointer types
+    if re.match(r'^<function [\w]+Ptr\.', str(obj)):
+        return True
+
+    # igore various functions for StringDoubleMap
+    if str(obj).startswith('<function StringDoubleMap'):
         return True
 
     return None

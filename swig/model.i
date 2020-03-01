@@ -6,7 +6,7 @@
 using namespace amici;
 %}
 
-// remove functions that use AmiVector(Array) since that class anyways cannot 
+// remove functions that use AmiVector(Array) since that class anyways cannot
 // be exposed in swig
 %ignore addAdjointQuadratureEventUpdate;
 %ignore addAdjointStateEventUpdate;
@@ -36,6 +36,9 @@ using namespace amici;
 %ignore initializeB;
 %ignore initializeStateSensitivities;
 %ignore initializeStates;
+%ignore dxdotdp;
+%ignore dxdotdp_implicit;
+%ignore dxdotdp_explicit;
 
 // Process symbols in header
 %include "amici/model.h"
