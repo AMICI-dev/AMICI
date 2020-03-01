@@ -58,7 +58,7 @@ release = version
 # -- Mock out some problematic modules-------------------------------------
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
-MOCK_MODULES = ['_amici', 'amici.Model', 'amici.ReturnDataView']
+MOCK_MODULES = ['_amici']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()
 
