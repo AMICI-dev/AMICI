@@ -7,7 +7,7 @@ import sys
 from shutil import copyfile
 from typing import Dict, List, Tuple
 
-from amici.setuptools import generateSwigInterfaceFiles
+from amici.setuptools import generate_swig_interface_files
 from setuptools.command.build_clib import build_clib
 from setuptools.command.build_ext import build_ext
 from setuptools.command.develop import develop
@@ -38,7 +38,7 @@ class my_install(install):
         install.finalize_options(self)
 
     def run(self):
-        generateSwigInterfaceFiles()
+        generate_swig_interface_files()
         install.run(self)
 
 
@@ -125,7 +125,7 @@ class my_develop(develop):
 
     def run(self):
         if not self.no_clibs:
-            generateSwigInterfaceFiles()
+            generate_swig_interface_files()
             self.run_command('build')
 
         develop.run(self)
@@ -214,10 +214,13 @@ class my_build_ext(build_ext):
 
 
 class my_sdist(sdist):
-    """Custom sdist to run swig and add the interface files to the source distribution
+    """Custom sdist to run swig and add the interface files to the source
+    distribution
 
-    Could have relied on letting build_ext run swig. However, that would require any user having swig installed
-    during package installation. This way we can postpone that until the package is used to compile generated models.
+    Could have relied on letting build_ext run swig. However, that would
+    require any user having swig installed during package installation. This
+    way we can postpone that until the  package is used to compile generated
+    models.
     """
 
     def run(self):
@@ -239,13 +242,13 @@ class my_sdist(sdist):
 
         if not self.dry_run:  # --dry-run
             # We create two SWIG interfaces, one with HDF5 support, one without
-            generateSwigInterfaceFiles()
+            generate_swig_interface_files()
 
     def saveGitVersion(self):
         """Create file with extended version string
 
-        This requires git. We assume that whoever creates the sdist will work inside
-        a valid git repository.
+        This requires git. We assume that whoever creates the sdist will work
+        inside a valid git repository.
 
         Returns:
 

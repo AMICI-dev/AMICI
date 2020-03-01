@@ -1,0 +1,11 @@
+sphinx>=2.4.3
+mock
+setuptools
+pysb
+matplotlib
+pkgconfig
+nbsphinx
+recommonmark
+sphinx_rtd_theme
+petab
+sphinx-autodoc-typehints
