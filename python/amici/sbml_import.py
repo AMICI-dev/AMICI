@@ -8,7 +8,6 @@ import itertools as itt
 import warnings
 from typing import Dict, Union, List, Callable, Any, Iterable
 
-from .sbml_preprocessing import flatten_sbml
 from .ode_export import ODEExporter, ODEModel
 from . import has_clibs
 
@@ -143,7 +142,7 @@ class SbmlImporter:
         self.sbml_doc.validateSBML()
         checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
 
-        flatten_sbml(self.sbml_doc.getModel())
+        self.processRateRules()
 
         # apply several model simplifications that make our life substantially
         # easier
@@ -316,6 +315,10 @@ class SbmlImporter:
         if len(self.sbml.getListOfEvents()) > 0:
             raise SBMLException('Events are currently not supported!')
 
+        if any([rule.isAlgebraic()
+                for rule in self.sbml.getListOfRules()]):
+            raise SBMLException('Algebraic rules are currently not supported!')
+
         if any([reaction.getFast()
                 for reaction in self.sbml.getListOfReactions()]):
             raise SBMLException('Fast reactions are currently not supported!')
@@ -356,6 +359,55 @@ class SbmlImporter:
         # SBML time symbol + constants
         self.local_symbols['time'] = sp.Symbol('time', real=True)
         self.local_symbols['avogadro'] = sp.Symbol('avogadro', real=True)
+
+    def processRateRules(self):
+        """ Reformulate rate rules by an reaction of the form
+         R: -> X with rate f(x).
+
+        Arguments:
+
+        Returns:
+
+        Raises:
+        """
+
+        model = self.sbml_doc.getModel()
+
+        # loop backwards over rules => we can delete rules inside the loop
+        for i in range(model.num_rules - 1, -1, -1):
+
+            rule = model.getRule(i)
+            rule_variable = model.getElementBySId(rule.getVariable())
+
+            if isinstance(rule_variable, sbml.Compartment):
+                raise SBMLException('Compartment rate rules are '
+                                    'currently not supported!')
+
+            if rule.isRate() and isinstance(rule_variable, sbml.Species):
+
+                # create dummy reaction R: 0 -> X with rate f(X)
+                reaction = model.createReaction()
+                reaction.setId('d_dt_' + rule_variable.getId())
+                reaction.setName('d_dt_' + rule_variable.getName())
+                reaction.setReversible(False)
+                reaction.setFast(False)
+
+                product = reaction.createProduct()
+                product.setSpecies(rule.getVariable())
+                product.setConstant(False)
+
+                k = reaction.createKineticLaw()
+                k.setMath(rule.getMath())
+
+                # add modifiers
+                for species in model.getListOfSpecies():
+
+                    if species.getId() in k.getFormula():
+                        reaction.addModifier(
+                            model.getElementBySId(species.getId())
+                        )
+                # remove rule
+                rule.removeFromParentAndDelete()
 
     def processSpecies(self):
         """Get species information from SBML model.
@@ -576,8 +628,6 @@ class SbmlImporter:
                     locals=self.local_symbols
                 )
 
-
-
     def processReactions(self):
         """Get reactions from SBML model.
 
@@ -716,6 +766,7 @@ class SbmlImporter:
 
         rulevars = getRuleVars(rules, local_symbols=self.local_symbols)
         fluxvars = self.fluxVector.free_symbols
+        specvars = self.symbols['species']['identifier'].free_symbols
         volumevars = self.compartmentVolume.free_symbols
         compartmentvars = self.compartmentSymbols.free_symbols
         parametervars = sp.Matrix([
@@ -741,6 +792,10 @@ class SbmlImporter:
             if variable in stoichvars:
                 self.stoichiometricMatrix = \
                     self.stoichiometricMatrix.subs(variable, formula)
+
+            if variable in specvars:
+                raise SBMLException('Species assignment rules are currently'
+                                    ' not supported!')
 
             if variable in compartmentvars:
                 raise SBMLException('Compartment assignment rules are'
