@@ -18,7 +18,7 @@ logger.addHandler(stream_handler)
 
 def run_case(case):
     """Run a single PEtab test suite case"""
-    logger.info(f"Case {case}")
+    logger.debug(f"Case {case}")
 
     # load
     case_dir = os.path.join(petabtests.CASES_DIR, case)
@@ -45,7 +45,6 @@ def run_case(case):
         simulation_df = simulation_df.rename(
             columns={petab.MEASUREMENT: petab.SIMULATION})
         simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
-
         solution = petabtests.load_solution(case)
         gt_chi2 = solution[petabtests.CHI2]
         gt_llh = solution[petabtests.LLH]
@@ -59,18 +58,25 @@ def run_case(case):
         simulations_match = petabtests.evaluate_simulations(
             [simulation_df], gt_simulation_dfs, tol_simulations)
 
-        logger.info(
-            f"CHI2: simulated {chi2}, expected {gt_chi2}, match = {chi2s_match}")
-        logger.info(
-            f"LLH: simulated {llh}, expected {gt_llh}, match = {llhs_match}")
-        logger.info(f"Simulations: match = {simulations_match}")
+        logger.log(logging.DEBUG if chi2s_match else logging.ERROR,
+                   f"CHI2: simulated: {chi2}, expected: {gt_chi2},"
+                   f" match = {chi2s_match}")
+        logger.log(logging.DEBUG if simulations_match else logging.ERROR,
+                   f"LLH: simulated: {llh}, expected: {gt_llh}, "
+                   f"match = {llhs_match}")
+        logger.log(logging.DEBUG if simulations_match else logging.ERROR,
+                   f"Simulations: match = {simulations_match}")
     except Exception as e:
+        logger.error(f"Case {case} failed.")
         raise AssertionError(str(e))
 
     if not all([llhs_match, simulations_match]):
+        # chi2s_match ignored until fixed in amici
+        logger.error(f"Case {case} failed.")
         raise AssertionError(f"Case {case}: Test results do not match "
                              "expectations")
 
+    logger.info(f"Case {case} passed.")
 
 def run():
     """Run the full PEtab test suite"""
