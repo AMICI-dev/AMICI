@@ -11,20 +11,27 @@ namespace amici {
 class Model;
 class ReturnData;
 
-/** @brief ExpData carries all information about experimental or
- * condition-specific data */
+/**
+ * @brief ExpData carries all information about experimental or
+ * condition-specific data
+ */
 class ExpData {
 
   public:
-    /** @brief default constructor */
+    /**
+     * @brief default constructor
+     */
     ExpData() = default;
 
-    /** @brief Copy constructor, needs to be declared to be generated in
-     * swig*/
+    /**
+     * @brief Copy constructor, needs to be declared to be generated in
+     * swig
+     */
     ExpData(const ExpData &) = default;
 
     /**
      * @brief constructor that only initializes dimensions
+     *
      * @param nytrue
      * @param nztrue
      * @param nmaxevent
@@ -80,8 +87,8 @@ class ExpData {
     explicit ExpData(const Model &model);
 
     /**
-     * @brief constructor that initializes with returnData, adds noise
-     * according to specified sigmas
+     * @brief constructor that initializes with returnData, adds noise according
+     * to specified sigmas
      *
      * @param rdata return data pointer with stored simulation results
      * @param sigma_y scalar standard deviations for all observables
@@ -90,12 +97,12 @@ class ExpData {
     ExpData(const ReturnData &rdata, realtype sigma_y, realtype sigma_z);
 
     /**
-     * @brief constructor that initializes with returnData, adds noise
-     * according to specified sigmas
+     * @brief constructor that initializes with returnData, adds noise according
+     * to specified sigmas
      *
      * @param rdata return data pointer with stored simulation results
-     * @param sigma_y vector of standard deviations for observables (dimension:
-     * nytrue or nt x nytrue, row-major)
+     * @param sigma_y vector of standard deviations for observables
+     * (dimension: nytrue or nt x nytrue, row-major)
      * @param sigma_z vector of standard deviations for event observables
      * (dimension: nztrue or nmaxevent x nztrue, row-major)
      */
@@ -150,6 +157,7 @@ class ExpData {
      * @brief get function that returns timepoint at index
      *
      * @param it timepoint index
+     *
      * @return timepoint timepoint at index
      */
     realtype getTimepoint(int it) const;
@@ -175,6 +183,7 @@ class ExpData {
      *
      * @param it time index
      * @param iy observable index
+     *
      * @return boolean specifying if data was set
      */
     bool isSetObservedData(int it, int iy) const;
@@ -190,6 +199,7 @@ class ExpData {
      * @brief get function that returns a pointer to observed data at index
      *
      * @param it timepoint index
+     *
      * @return pointer to observed data at index (dimension: nytrue)
      */
     const realtype *getObservedDataPtr(int it) const;
@@ -298,6 +308,7 @@ class ExpData {
      * occurence
      *
      * @param ie event occurence
+     *
      * @return pointer to observed event data at ieth occurence
      */
     const realtype *getObservedEventsPtr(int ie) const;
@@ -363,6 +374,7 @@ class ExpData {
      * observed event data at ieth occurence
      *
      * @param ie event occurence
+     *
      * @return pointer to standard deviation of observed event data at ieth
      * occurence
      */
@@ -372,30 +384,39 @@ class ExpData {
      * @brief condition-specific fixed parameters of size Model::nk() or empty
      */
     std::vector<realtype> fixedParameters;
-    /** @brief condition-specific fixed parameters for pre-equilibration of size
+    /**
+     * @brief condition-specific fixed parameters for pre-equilibration of size
      * Model::nk() or empty. Overrides Solver::newton_preeq
      */
     std::vector<realtype> fixedParametersPreequilibration;
-    /** @brief condition-specific fixed parameters for pre-simulation of
+    /**
+     * @brief condition-specific fixed parameters for pre-simulation of
      * size Model::nk() or empty.
      */
     std::vector<realtype> fixedParametersPresimulation;
 
-    /** @brief condition-specific parameters of size Model::np() or empty */
+    /**
+     * @brief condition-specific parameters of size Model::np() or empty
+     */
     std::vector<realtype> parameters;
-    /** @brief condition-specific initial conditions of size Model::nx() or
+    /**
+     * @brief condition-specific initial conditions of size Model::nx() or
      * empty
      */
     std::vector<realtype> x0;
-    /** @brief condition-specific initial condition sensitivities of size
+    /**
+     * @brief condition-specific initial condition sensitivities of size
      * Model::nx() * Model::nplist(), Model::nx() * ExpDataplist.size(), if
      * ExpData::plist is not empty, or empty
      */
     std::vector<realtype> sx0;
-    /** @brief condition-specific parameter scales of size Model::np()
+    /**
+     * @brief condition-specific parameter scales of size Model::np()
      */
     std::vector<ParameterScaling> pscale;
-    /** @brief condition-specific parameter list */
+    /**
+     * @brief condition-specific parameter list
+     */
     std::vector<int> plist;
 
     /**
@@ -456,13 +477,18 @@ class ExpData {
 
     /** @brief observed data (dimension: nt x nytrue, row-major) */
     std::vector<realtype> observedData;
-    /** @brief standard deviation of observed data (dimension: nt x nytrue,
-     * row-major) */
+    /**
+     * @brief standard deviation of observed data (dimension: nt x nytrue,
+     * row-major)
+     */
     std::vector<realtype> observedDataStdDev;
 
-    /** @brief observed events (dimension: nmaxevents x nztrue, row-major) */
+    /**
+     * @brief observed events (dimension: nmaxevents x nztrue, row-major)
+     */
     std::vector<realtype> observedEvents;
-    /** @brief standard deviation of observed events/roots
+    /**
+     * @brief standard deviation of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)
      */
     std::vector<realtype> observedEventsStdDev;
@@ -527,7 +553,6 @@ class ConditionContext {
     std::vector<realtype> originalTimepoints;
     std::vector<int> originalParameterList;
     std::vector<amici::ParameterScaling> originalScaling;
-
 };
 
 } // namespace amici

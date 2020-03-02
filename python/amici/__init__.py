@@ -1,7 +1,8 @@
-""" @package amici
-The AMICI Python module (in doxygen this will also contain documentation about the C++ library)
-
-The AMICI Python module provides functionality for importing SBML models and turning them into C++ Python extensions.
+"""
+AMICI
+-----
+The AMICI Python module provides functionality for importing SBML models and
+turning them into C++ Python extensions.
 
 Getting started:
 ```
@@ -15,16 +16,22 @@ import modelName
 help(modelName)
 ```
 
-Attributes:
-    amici_path: absolute root path of the amici repository
-    amiciSwigPath: absolute path of the amici swig directory
-    amiciSrcPath: absolute path of the amici source directory
-    amiciModulePath: absolute root path of the amici module
-    hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
-    has_clibs: boolean indicating if this is the full package with swig
-               interface or the raw package without
-    capture_cstdout: context to redirect C/C++ stdout to python stdout if
-        python stdout was redirected (doing nothing if not redirected).
+:var amici_path:
+    absolute root path of the amici repository
+:var amiciSwigPath:
+    absolute path of the amici swig directory
+:var amiciSrcPath:
+    absolute path of the amici source directory
+:var amiciModulePath:
+    absolute root path of the amici module
+:var hdf5_enabled:
+    boolean indicating if amici was compiled with hdf5 support
+:var has_clibs:
+    boolean indicating if this is the full package with swig interface or
+    the raw package without
+:var capture_cstdout:
+    context to redirect C/C++ stdout to python stdout if python stdout was
+    redirected (doing nothing if not redirected).
 """
 
 import os
@@ -134,9 +141,13 @@ try:
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
     from .ode_export import ODEModel, ODEExporter
-    from .pysb_import import pysb2amici, ODEModel_from_pysb_importer
-except ImportError:
-    pass
+except (ModuleNotFoundError, ImportError) as e:
+    # import from setuptools or installation with `--no-clibs`
+    if has_clibs:
+        # cannot raise as we may also end up here when installing from an
+        # already installed in-source installation without all requirements
+        # installed (e.g. fresh virtualenv)
+        print(f'Suppressing error {str(e)}')
 
 
 def runAmiciSimulation(model, solver, edata=None):

@@ -1,6 +1,8 @@
 """
-Import a model in the PEtab (https://github.com/ICB-DCM/PEtab/) format into
-AMICI.
+PEtab Import
+------------
+Import a model in the :mod:`petab` (https://github.com/ICB-DCM/PEtab/) format
+into AMICI.
 """
 
 import argparse
@@ -29,23 +31,25 @@ def get_fixed_parameters(
         sbml_model: 'libsbml.Model',
         condition_df: Optional[pd.DataFrame] = None,
         const_species_to_parameters: bool = False) -> List[str]:
-    """Determine, set and return fixed model parameters
+    """
+    Determine, set and return fixed model parameters.
 
     Parameters specified in `condition_df` are turned into constants.
     Only global SBML parameters are considered. Local parameters are ignored.
 
-    Arguments:
-        condition_df:
-            PEtab condition table. If provided, the respective parameters
-            will be turned into AMICI constant parameters.
-        sbml_model:
-            libsbml.Model instance
-        const_species_to_parameters:
-            If `True`, species which are marked constant within the SBML model
-            will be turned into constant parameters *within* the given
-            `sbml_model`.
+    :param condition_df:
+        PEtab condition table. If provided, the respective parameters
+        will be turned into AMICI constant parameters.
 
-    Returns:
+    :param sbml_model:
+        libsbml.Model instance
+
+    :param const_species_to_parameters:
+        If `True`, species which are marked constant within the SBML model
+        will be turned into constant parameters *within* the given
+        `sbml_model`.
+
+    :return:
         List of IDs of parameters which are to be considered constant.
     """
 
@@ -135,15 +139,18 @@ def get_fixed_parameters(
 
 def species_to_parameters(species_ids: List[str],
                           sbml_model: 'libsbml.Model') -> List[str]:
-    """Turn a SBML species into parameters and replace species references
+    """
+    Turn a SBML species into parameters and replace species references
     inside the model instance.
 
-    Arguments:
-        species_ids: List of SBML species ID to convert to parameters with the
-            same ID as the replaced species.
-        sbml_model: SBML model to modify
+    :param species_ids:
+        List of SBML species ID to convert to parameters with the same ID as
+        the replaced species.
 
-    Returns:
+    :param sbml_model:
+        SBML model to modify
+
+    :return:
         List of IDs of species which have been converted to parameters
     """
     transformables = []
@@ -190,20 +197,18 @@ def species_to_parameters(species_ids: List[str],
 
 
 def constant_species_to_parameters(sbml_model: 'libsbml.Model') -> List[str]:
-    """Convert constant species in the SBML model to constant parameters.
+    """
+    Convert constant species in the SBML model to constant parameters.
 
     This can be used e.g. for setting up models with condition-specific
     constant species for PEtab, since there it is not possible to specify
     constant species in the condition table.
 
-    Arguments:
-        sbml_model: SBML Model
+    :param sbml_model:
+        SBML Model
 
-    Returns:
+    :return:
         List of IDs of SBML species that have been turned into constants
-
-    Raises:
-
     """
     transformables = []
     for species in sbml_model.getListOfSpecies():
@@ -224,30 +229,36 @@ def import_petab_problem(
     """
     Import model from petab problem.
 
-    Arguments:
-        petab_problem:
-            A petab problem containing all relevant information on the model.
-        model_output_dir:
-            Directory to write the model code to. Will be created if doesn't
-            exist. Defaults to current directory.
-        model_name:
-            Name of the generated model. If model file name was provided,
-            this defaults to the file name without extension, otherwise
-            the SBML model ID will be used.
-        force_compile:
-            Whether to compile the model even if the target folder is not
-            empty, or the model exists already.
-        **kwargs:
-            Additional keyword arguments to be passed to
-            ``amici.sbml_importer.sbml2amici``.
+    :param petab_problem:
+        A petab problem containing all relevant information on the model.
 
-    Returns
-        model:
-            The imported model.
+    :param model_output_dir:
+        Directory to write the model code to. Will be created if doesn't
+        exist. Defaults to current directory.
+
+    :param model_name:
+        Name of the generated model. If model file name was provided,
+        this defaults to the file name without extension, otherwise
+        the SBML model ID will be used.
+
+    :param force_compile:
+        Whether to compile the model even if the target folder is not empty,
+        or the model exists already.
+
+    :param kwargs:
+        Additional keyword arguments to be passed to
+        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
+
+    :return:
+        The imported model.
     """
     # generate folder and model name if necessary
     if model_output_dir is None:
-        model_output_dir = _create_model_output_dir_name(petab_problem.sbml_model)
+        model_output_dir = \
+            _create_model_output_dir_name(petab_problem.sbml_model)
+    else:
+        model_output_dir = os.path.abspath(model_output_dir)
+
     if model_name is None:
         model_name = _create_model_name(model_output_dir)
 
@@ -264,8 +275,8 @@ def import_petab_problem(
         # check if folder exists
         if os.listdir(model_output_dir) and not force_compile:
             raise ValueError(
-                f"Cannot compile to {model_output_dir}: not empty. Please assign a "
-                "different target or set `force_compile`.")
+                f"Cannot compile to {model_output_dir}: not empty. "
+                "Please assign a different target or set `force_compile`.")
 
         # remove folder if exists
         if os.path.exists(model_output_dir):
@@ -280,14 +291,22 @@ def import_petab_problem(
                      model_name=model_name,
                      model_output_dir=model_output_dir,
                      **kwargs)
+        # ensure we will find the newly created module
+        importlib.invalidate_caches()
 
     # load module
-    model_module = importlib.import_module(model_name)
+    if model_name in sys.modules:
+        # reload, because may just have been created
+        importlib.reload(sys.modules[model_name])
+        model_module = sys.modules[model_name]
+    else:
+        model_module = importlib.import_module(model_name)
 
     # import model
     model = model_module.getModel()
 
-    logger.info(f"Successfully loaded model {model_name} from {model_output_dir}.")
+    logger.info(f"Successfully loaded model {model_name} "
+                f"from {model_output_dir}.")
 
     return model
 
@@ -347,32 +366,39 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
                  verbose: bool = True,
                  allow_reinit_fixpar_initcond: bool = True,
                  **kwargs) -> None:
-    """Create AMICI model from PEtab problem
+    """
+    Create AMICI model from PEtab problem
 
-    Arguments:
-        sbml_model:
-            PEtab SBML model or SBML file name.
-        condition_table:
-            PEtab condition table. If provided, parameters from there will be
-            turned into AMICI constant parameters (i.e. parameters w.r.t. which
-            no sensitivities will be computed).
-        observable_table:
-            PEtab observable table.
-        model_name:
-            Name of the generated model. If model file name was provided,
-            this defaults to the file name without extension, otherwise
-            the SBML model ID will be used.
-        model_output_dir:
-            Directory to write the model code to. Will be created if doesn't
-            exist. Defaults to current directory.
-        verbose:
-            Print/log extra information.
-        allow_reinit_fixpar_initcond:
-            See amici.ode_export.ODEExporter. Must be enabled if initial
-            states are to be reset after preequilibration.
-        **kwargs:
-            Additional keyword arguments to be passed to
-            ``amici.sbml_importer.sbml2amici``.
+    :param sbml_model:
+        PEtab SBML model or SBML file name.
+
+    :param condition_table:
+        PEtab condition table. If provided, parameters from there will be
+        turned into AMICI constant parameters (i.e. parameters w.r.t. which
+        no sensitivities will be computed).
+
+    :param observable_table:
+        PEtab observable table.
+
+    :param model_name:
+        Name of the generated model. If model file name was provided,
+        this defaults to the file name without extension, otherwise
+        the SBML model ID will be used.
+
+    :param model_output_dir:
+        Directory to write the model code to. Will be created if doesn't
+        exist. Defaults to current directory.
+
+    :param verbose:
+        Print/log extra information.
+
+    :param allow_reinit_fixpar_initcond:
+        See :class:`amici.ode_export.ODEExporter`. Must be enabled if initial
+        states are to be reset after preequilibration.
+
+    :param kwargs:
+        Additional keyword arguments to be passed to
+        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
     """
     if verbose:
         logger.setLevel(verbose)
@@ -474,12 +500,13 @@ def get_observation_model(observable_df: pd.DataFrame
                                      Dict[str, Union[str, float]]]:
     """
     Get observables, sigmas, and noise distributions from PEtab observation
-    table in a format suitable for `sbml2amici`.
+    table in a format suitable for
+    :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
 
-    Arguments:
-        observable_df: PEtab observables table
+    :param observable_df:
+        PEtab observables table
 
-    Returns:
+    :return:
         Tuple of dicts with observables, noise distributions, and sigmas.
     """
 
@@ -513,10 +540,10 @@ def petab_noise_distributions_to_amici(observable_df: pd.DataFrame) -> Dict:
     Map from the petab to the amici format of noise distribution
     identifiers.
 
-    Arguments:
-        observable_df: PEtab observable table
+    :param observable_df:
+        PEtab observable table
 
-    Returns:
+    :return:
         Dictionary of observable_id => AMICI noise-distributions
     """
     amici_distrs = {}
@@ -562,10 +589,11 @@ def show_model_info(sbml_model: 'libsbml.Model'):
 
 
 def parse_cli_args():
-    """Parse command line arguments
+    """
+    Parse command line arguments
 
-    Returns:
-        Parsed CLI arguments from ``argparse``.
+    :return:
+        Parsed CLI arguments from :mod:`argparse`.
     """
 
     parser = argparse.ArgumentParser(

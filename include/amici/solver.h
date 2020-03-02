@@ -1,11 +1,11 @@
 #ifndef AMICI_SOLVER_H
 #define AMICI_SOLVER_H
 
+#include "amici/amici.h"
 #include "amici/defines.h"
 #include "amici/sundials_linsol_wrapper.h"
 #include "amici/symbolic_functions.h"
 #include "amici/vector.h"
-#include "amici/amici.h"
 
 #include <functional>
 #include <memory>
@@ -115,9 +115,8 @@ class Solver {
      * @param xQB0 initial adjoint quadratures
      */
 
-    void setupB(int *which, realtype tf, Model *model,
-                const AmiVector &xB0, const AmiVector &dxB0,
-                const AmiVector &xQB0) const;
+    void setupB(int *which, realtype tf, Model *model, const AmiVector &xB0,
+                const AmiVector &dxB0, const AmiVector &xQB0) const;
 
     /**
      * @brief Extracts diagnosis information from solver memory block and
@@ -514,8 +513,8 @@ class Solver {
      * @brief Gets KLU / SuperLUMT state ordering mode
      *
      * @return State-ordering as integer according to
-     * SUNLinSolKLU::StateOrdering or SUNLinSolSuperLUMT::StateOrdering
-     * (which differ).
+     * SUNLinSolKLU::StateOrdering or SUNLinSolSuperLUMT::StateOrdering (which
+     * differ).
      */
     int getStateOrdering() const;
 
@@ -621,8 +620,7 @@ class Solver {
      * @param t time
      * @return (interpolated) solution dxB
      */
-    const AmiVector &getAdjointDerivativeState(int which,
-                                               realtype t) const;
+    const AmiVector &getAdjointDerivativeState(int which, realtype t) const;
 
     /**
      * @brief Access adjoint quadrature solution at time t
@@ -660,8 +658,8 @@ class Solver {
      * @param yyB0 new adjoint state
      * @param ypB0 new adjoint derivative state
      */
-    virtual void reInitB(int which, realtype tB0,
-                         const AmiVector &yyB0, const AmiVector &ypB0) const = 0;
+    virtual void reInitB(int which, realtype tB0, const AmiVector &yyB0,
+                         const AmiVector &ypB0) const = 0;
 
     /**
      * @brief Reinitialize the adjoint states after an event occurence
@@ -755,8 +753,7 @@ class Solver {
      * checkpoints
      * @return status flag indicating success of execution
      */
-    virtual int solveF(realtype tout, int itask,
-                       int *ncheckPtr) const = 0;
+    virtual int solveF(realtype tout, int itask, int *ncheckPtr) const = 0;
 
     /**
      * @brief reInitPostProcessF postprocessing of the solver memory after a
@@ -903,8 +900,7 @@ class Solver {
      * @param rtol relative tolerances
      * @param atol absolute tolerances
      */
-    virtual void setSStolerances(double rtol,
-                                 double atol) const = 0;
+    virtual void setSStolerances(double rtol, double atol) const = 0;
 
     /**
      * @brief activates sets scalar relative and absolute tolerances for the
@@ -913,8 +909,7 @@ class Solver {
      * @param rtol relative tolerances
      * @param atol array of absolute tolerances for every sensitivy variable
      */
-    virtual void setSensSStolerances(double rtol,
-                                     const double *atol) const = 0;
+    virtual void setSensSStolerances(double rtol, const double *atol) const = 0;
 
     /**
      * SetSensErrCon specifies whether error control is also enforced for
@@ -1035,8 +1030,7 @@ class Solver {
      * @param k derivative order
      * @param which index of backward problem
      */
-    virtual void getDkyB(realtype t, int k,
-                         int which) const = 0;
+    virtual void getDkyB(realtype t, int k, int which) const = 0;
 
     /**
      * @brief interpolates the (derivative of the) solution at the requested
@@ -1055,8 +1049,7 @@ class Solver {
      * @param k derivative order
      * @param which index of backward problem
      */
-    virtual void getQuadDkyB(realtype t, int k,
-                             int which) const = 0;
+    virtual void getQuadDkyB(realtype t, int k, int which) const = 0;
 
     /**
      * @brief initializes the adjoint problem
@@ -1416,7 +1409,6 @@ class Solver {
     mutable bool forceReInitPostProcessB = false;
 
   private:
-
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth = SensitivityMethod::forward;
 
@@ -1437,7 +1429,8 @@ class Solver {
     long int newton_maxlinsteps = 0;
 
     /** Damping factor state used int the Newton method */
-    NewtonDampingFactorMode newton_damping_factor_mode = NewtonDampingFactorMode::on;
+    NewtonDampingFactorMode newton_damping_factor_mode =
+        NewtonDampingFactorMode::on;
 
     /** Lower bound of the damping factor. */
     double newton_damping_factor_lower_bound = 1e-8;
@@ -1529,8 +1522,8 @@ bool operator==(const Solver &a, const Solver &b);
  * @param msg error message
  * @param eh_data amici::Solver as void*
  */
-void wrapErrHandlerFn(int error_code, const char *module,
-                      const char *function, char *msg, void *eh_data);
+void wrapErrHandlerFn(int error_code, const char *module, const char *function,
+                      char *msg, void *eh_data);
 
 } // namespace amici
 
