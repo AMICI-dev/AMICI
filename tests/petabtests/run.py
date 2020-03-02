@@ -1,3 +1,4 @@
+"""Run PEtab test suite (https://github.com/PEtab-dev/petab_test_suite)"""
 import os
 import sys
 import logging
@@ -8,21 +9,23 @@ from amici.petab_objective import simulate_petab, rdatas_to_measurement_df
 import petab
 import petabtests
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler() 
-logger.addHandler(stream_handler) 
+stream_handler = logging.StreamHandler()
+logger.addHandler(stream_handler)
 
-def run():
-    n_success = 0
-    for case in petabtests.CASES_LIST:
-        logger.info(f"Case {case}")
 
-        # load
-        case_dir = os.path.join(petabtests.CASES_DIR, case)
+def run_case(case):
+    """Run a single PEtab test suite case"""
+    logger.info(f"Case {case}")
 
+    # load
+    case_dir = os.path.join(petabtests.CASES_DIR, case)
+
+    try:
         # import petab problem
-        yaml_file = os.path.join(case_dir, f'_{case}.yaml')
+        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
         problem = petab.Problem.from_yaml(yaml_file)
 
         # compile amici model
@@ -32,38 +35,60 @@ def run():
 
         # simulate
         chi2s_match = llhs_match = simulations_match = False
+        ret = simulate_petab(problem, model)
+
+        rdatas = ret['rdatas']
+        chi2 = None
+        llh = ret['llh']
+        simulation_df = rdatas_to_measurement_df(rdatas, model,
+                                                 problem.measurement_df)
+        simulation_df = simulation_df.rename(
+            columns={petab.MEASUREMENT: petab.SIMULATION})
+        simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
+
+        solution = petabtests.load_solution(case)
+        gt_chi2 = solution[petabtests.CHI2]
+        gt_llh = solution[petabtests.LLH]
+        gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
+        tol_chi2 = solution[petabtests.TOL_CHI2]
+        tol_llh = solution[petabtests.TOL_LLH]
+        tol_simulations = solution[petabtests.TOL_SIMULATIONS]
+
+        chi2s_match = petabtests.evaluate_chi2(chi2, solution, tol_chi2)
+        llhs_match = petabtests.evaluate_llh(llh, gt_llh, tol_llh)
+        simulations_match = petabtests.evaluate_simulations(
+            [simulation_df], gt_simulation_dfs, tol_simulations)
+
+        logger.info(
+            f"CHI2: simulated {chi2}, expected {gt_chi2}, match = {chi2s_match}")
+        logger.info(
+            f"LLH: simulated {llh}, expected {gt_llh}, match = {llhs_match}")
+        logger.info(f"Simulations: match = {simulations_match}")
+    except Exception as e:
+        raise AssertionError(str(e))
+
+    if not all([llhs_match, simulations_match]):
+        raise AssertionError(f"Case {case}: Test results do not match "
+                             "expectations")
+
+
+def run():
+    """Run the full PEtab test suite"""
+
+    n_success = 0
+
+    for case in petabtests.CASES_LIST:
         try:
-            ret = simulate_petab(problem, model)
-
-            rdatas = ret['rdatas']
-            chi2 = None
-            llh = ret['llh']
-            simulation_df = rdatas_to_measurement_df(rdatas, model, problem.measurement_df)
-            simulation_df = simulation_df.rename(columns={petab.MEASUREMENT: petab.SIMULATION})
-            simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
-
-            solution = petabtests.load_solution(case)
-            gt_chi2 = solution[petabtests.CHI2]
-            gt_llh = solution[petabtests.LLH]
-            gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
-            tol_chi2 = solution[petabtests.TOL_CHI2]
-            tol_llh = solution[petabtests.TOL_LLH]
-            tol_simulations = solution[petabtests.TOL_SIMULATIONS]
-            
-            chi2s_match = petabtests.evaluate_chi2(chi2, solution, tol_chi2)
-            llhs_match = petabtests.evaluate_llh(llh, gt_llh, tol_llh)
-            simulations_match = petabtests.evaluate_simulations(
-                [simulation_df], gt_simulation_dfs, tol_simulations)
-
-            logger.info(f"CHI2: simulated {chi2}, expected {gt_chi2}, match = {chi2s_match}")
-            logger.info(f"LLH: simulated {llh}, expected {gt_llh}, match = {llhs_match}")
-            logger.info(f"Simulations: match = {simulations_match}")
-        except:
-            pass
-
-        if all([llhs_match, simulations_match]):
+            run_case(case)
             n_success += 1
+        except AssertionError as e:
+            # run all despite failures
+            logger.error(e)
+
     logger.info(f"{n_success} / {len(petabtests.CASES_LIST)} successful")
+
+    if n_success != len(petabtests.CASES_LIST):
+        sys.exit(1)
 
 
 if __name__ == '__main__':
