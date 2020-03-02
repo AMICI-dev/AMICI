@@ -19,13 +19,16 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     # build swig4.0
     subprocess.run(os.path.join(amici_dir, 'scripts',
                                 'downloadAndBuildSwig.sh'))
+
+    # add swig to path
+    swig_dir = os.path.join(amici_dir, 'swig-4.0.1', 'install', 'bin')
+    os.environ['PATH'] = ':'.join([swig_dir, os.getenv('PATH')])
     # in source install, this fails to compile the c extensions but we don't
     # care since we replace it by a mock import later on
     subprocess.run([
         'python', '-m', 'pip', 'install', '--verbose', '-e',
         os.path.join(amici_dir, 'python', 'sdist')
     ])
-
 
 # -- Path setup --------------------------------------------------------------
 
@@ -257,9 +260,6 @@ def process_docstring(app, what, name, obj, options, lines):
     # only apply in the amici.amici module
     if len(name.split('.')) < 2 or name.split('.')[1] != 'amici':
         return
-
-    print(name)
-    print(lines)
 
     # add custom doc to swig generated classes
     if len(name.split('.')) == 3 and name.split('.')[2] in \
