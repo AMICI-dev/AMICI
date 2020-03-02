@@ -19,7 +19,8 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     # build swig4.0
     subprocess.run(os.path.join(amici_dir, 'scripts',
                                 'downloadAndBuildSwig.sh'))
-    # in source install
+    # in source install, this fails to compile the c extensions but we don't
+    # care since we replace it by a mock import later on
     subprocess.run([
         '/home/docs/checkouts/readthedocs.org/user_builds/amici/envs'
         '/readthedocs/bin/python',
@@ -43,9 +44,9 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Mock out some problematic modules-------------------------------------
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
-autodoc_mock_imports = ['_amici']
+autodoc_mock_imports = ['_amici', 'amici._amici']
 for mod_name in autodoc_mock_imports:
-    sys.modules[mod_name] = mock.MagicMock()
+    sys.modules[mod_name] = mock.Mock()
 
 # -- Project information -----------------------------------------------------
 
@@ -55,12 +56,16 @@ author = 'The AMICI developers'
 
 import amici
 
+print(amici.has_clibs)
+
 # The short X.Y version
 version = amici.__version__
 # The full version, including alpha/beta/rc tags
 release = version
 
 del amici
+
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -256,6 +261,9 @@ def process_docstring(app, what, name, obj, options, lines):
     # only apply in the amici.amici module
     if len(name.split('.')) < 2 or name.split('.')[1] != 'amici':
         return
+
+    print(name)
+    print(lines)
 
     # add custom doc to swig generated classes
     if len(name.split('.')) == 3 and name.split('.')[2] in \
