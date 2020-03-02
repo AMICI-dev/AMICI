@@ -258,6 +258,9 @@ def process_docstring(app, what, name, obj, options, lines):
     if len(name.split('.')) < 2 or name.split('.')[1] != 'amici':
         return
 
+    print(name)
+    print(lines)
+
     # add custom doc to swig generated classes
     if len(name.split('.')) == 3 and name.split('.')[2] in \
             ['IntVector', 'BoolVector', 'DoubleVector', 'StringVector',
