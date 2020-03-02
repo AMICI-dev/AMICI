@@ -24,7 +24,6 @@ python:
   version: 3.7
   install:
     - requirements: documentation/rtd_requirements.txt
-  system_packages: true
 
 build:
   image: latest
