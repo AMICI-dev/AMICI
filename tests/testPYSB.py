@@ -11,6 +11,8 @@ import numpy as np
 import logging
 from pysb.simulator import ScipyOdeSimulator
 
+from amici.pysb_import import pysb2amici
+
 import pysb.examples
 
 class TestAmiciPYSBModel(unittest.TestCase):
@@ -56,11 +58,9 @@ class TestAmiciPYSBModel(unittest.TestCase):
         model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
         outdir_pysb = model.name
-        amici.pysb2amici(model,
-                         outdir_pysb,
-                         verbose=False,
-                         observables=['pPROT_obs'],
-                         constant_parameters=constant_parameters)
+        pysb2amici(model, outdir_pysb, verbose=False,
+                   observables=['pPROT_obs'],
+                   constant_parameters=constant_parameters)
         sys.path.insert(0, outdir_pysb)
         modelModulePYSB = importlib.import_module(outdir_pysb)
         model_pysb = modelModulePYSB.getModel()
@@ -206,7 +206,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                 if pysb_model.name in ['move_connected_amici']:
                     self.assertRaises(
                         Exception,
-                        amici.pysb2amici,
+                        pysb2amici,
                         *[pysb_model, outdir],
                         **{'verbose': logging.INFO,
                            'compute_conservation_laws': True}
@@ -215,7 +215,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                 else:
                     compute_conservation_laws = True
 
-                amici.pysb2amici(
+                pysb2amici(
                     pysb_model,
                     outdir,
                     verbose=logging.INFO,

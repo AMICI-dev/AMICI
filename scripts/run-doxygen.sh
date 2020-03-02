@@ -18,11 +18,6 @@ if [ ! -d "mtocpp-master" ]; then
     fi
 fi
 
-# make py_filter available
-PATH=${AMICI_PATH}/scripts:$PATH
-
-echo $PATH
-
 cd ${AMICI_PATH}
 MTOC_CONFIG_PATH=${AMICI_PATH}/matlab/mtoc/config
 # generate filter
