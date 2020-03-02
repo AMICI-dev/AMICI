@@ -22,8 +22,9 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
 
     # add swig to path
     swig_dir = os.path.join(amici_dir, 'swig-4.0.1', 'install', 'bin')
-    os.environ['PATH'] = ':'.join([swig_dir, os.getenv('PATH')])
-    print(os.environ['PATH'])
+    os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
+    print(swig_dir)
+    print(os.listdir(swig_dir))
     # in source install, this fails to compile the c extensions but we don't
     # care since we replace it by a mock import later on
     subprocess.run([
