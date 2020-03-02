@@ -21,7 +21,8 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
                                 'downloadAndBuildSwig.sh'))
 
     # add swig to path
-    swig_dir = os.path.join(amici_dir, 'swig-4.0.1', 'install', 'bin')
+    swig_dir = os.path.join(amici_dir, 'ThirdParty', 'swig-4.0.1', 'install',
+                            'bin')
     os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
     print(swig_dir)
     print(os.listdir(swig_dir))
