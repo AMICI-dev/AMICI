@@ -22,9 +22,7 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     # in source install, this fails to compile the c extensions but we don't
     # care since we replace it by a mock import later on
     subprocess.run([
-        '/home/docs/checkouts/readthedocs.org/user_builds/amici/envs'
-        '/readthedocs/bin/python',
-        '-m', 'pip', 'install', '--verbose', '-e',
+        'python', '-m', 'pip', 'install', '--verbose', '-e',
         os.path.join(amici_dir, 'python', 'sdist')
     ])
 
@@ -55,8 +53,6 @@ copyright = '2020, The AMICI developers'
 author = 'The AMICI developers'
 
 import amici
-
-print(amici.has_clibs)
 
 # The short X.Y version
 version = amici.__version__
@@ -262,9 +258,6 @@ def process_docstring(app, what, name, obj, options, lines):
     if len(name.split('.')) < 2 or name.split('.')[1] != 'amici':
         return
 
-    print(name)
-    print(lines)
-
     # add custom doc to swig generated classes
     if len(name.split('.')) == 3 and name.split('.')[2] in \
             ['IntVector', 'BoolVector', 'DoubleVector', 'StringVector',
@@ -420,14 +413,11 @@ def skip_member(app, what, name, obj, skip, options):
     ignored = ['AbstractModel', 'CVodeSolver', 'IDASolver', 'Model_ODE',
                'Model_DAE', 'ConditionContext', 'checkSigmaPositivity',
                'createGroup', 'createGroup', 'equals', 'printErrMsgIdAndTxt',
-               'printErrMsgIdAndTxt', 'wrapErrHandlerFn', 'wrapErrHandlerFn',
-               'printWarnMsgIdAndTxt',
-               'AmiciApplication', 'AmiciApplication',
-               'writeSimulationExpData', 'writeReturnData',
+               'wrapErrHandlerFn', 'printWarnMsgIdAndTxt',
+               'AmiciApplication', 'writeSimulationExpData', 'writeReturnData',
                'readSimulationExpData', 'readSolverSettingsFromHDF5',
                'readModelDataFromHDF5', 'createOrOpenForWriting',
                'writeReturnDataDiagnosis', 'attributeExists', 'locationExists',
-               'createAndWriteDouble1DDataset',
                'createAndWriteDouble1DDataset',
                'createAndWriteDouble2DDataset',
                'createAndWriteDouble3DDataset',
@@ -435,8 +425,7 @@ def skip_member(app, what, name, obj, skip, options):
                'createAndWriteInt3DDataset', 'getDoubleDataset1D',
                'getDoubleDataset2D', 'getDoubleDataset3D', 'getIntDataset1D',
                'getIntScalarAttribute', 'getDoubleScalarAttribute',
-               'stdVec2ndarray', 'SwigPyIterator', 'thisown',
-               ]
+               'stdVec2ndarray', 'SwigPyIterator', 'thisown']
 
     if name in ignored:
         return True
