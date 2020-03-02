@@ -1,5 +1,5 @@
 sphinx>=2.4.3
-mock
+mock>=3.0.5
 setuptools
 pysb
 matplotlib
