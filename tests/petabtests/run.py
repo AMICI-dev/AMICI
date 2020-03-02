@@ -14,6 +14,7 @@ stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler) 
 
 def run():
+    n_success = 0
     for case in petabtests.CASES_LIST:
         logger.info(f"Case {case}")
 
@@ -30,31 +31,40 @@ def run():
             problem, model_output_dir=model_output_dir)
 
         # simulate
-        ret = simulate_petab(problem, model)
+        chi2s_match = llhs_match = simulations_match = False
+        try:
+            ret = simulate_petab(problem, model)
 
-        rdatas = ret['rdatas']
-        chi2 = None
-        llh = ret['llh']
-        simulation_df = rdatas_to_measurement_df(rdatas, model, problem.measurement_df)
-        simulation_df = simulation_df.rename(columns={petab.MEASUREMENT: petab.SIMULATION})
-        simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
+            rdatas = ret['rdatas']
+            chi2 = None
+            llh = ret['llh']
+            simulation_df = rdatas_to_measurement_df(rdatas, model, problem.measurement_df)
+            simulation_df = simulation_df.rename(columns={petab.MEASUREMENT: petab.SIMULATION})
+            simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
 
-        solution = petabtests.load_solution(case)
-        gt_chi2 = solution[petabtests.CHI2]
-        gt_llh = solution[petabtests.LLH]
-        gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
-        tol_chi2 = solution[petabtests.TOL_CHI2]
-        tol_llh = solution[petabtests.TOL_LLH]
-        tol_simulations = solution[petabtests.TOL_SIMULATIONS]
-        
-        chi2s_match = petabtests.evaluate_chi2(chi2, solution, tol_chi2)
-        llhs_match = petabtests.evaluate_llh(llh, gt_llh, tol_llh)
-        simulations_match = petabtests.evaluate_simulations(
-            [simulation_df], gt_simulation_dfs, tol_simulations)
+            solution = petabtests.load_solution(case)
+            gt_chi2 = solution[petabtests.CHI2]
+            gt_llh = solution[petabtests.LLH]
+            gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]
+            tol_chi2 = solution[petabtests.TOL_CHI2]
+            tol_llh = solution[petabtests.TOL_LLH]
+            tol_simulations = solution[petabtests.TOL_SIMULATIONS]
+            
+            chi2s_match = petabtests.evaluate_chi2(chi2, solution, tol_chi2)
+            llhs_match = petabtests.evaluate_llh(llh, gt_llh, tol_llh)
+            simulations_match = petabtests.evaluate_simulations(
+                [simulation_df], gt_simulation_dfs, tol_simulations)
 
-        logger.info(f"CHI2: simulated {chi2}, expected {gt_chi2}, match = {chi2s_match}")
-        logger.info(f"LLH: simulated {llh}, expected {gt_llh}, match = {llhs_match}")
-        logger.info(f"Simulations: match = {simulations_match}")
+            logger.info(f"CHI2: simulated {chi2}, expected {gt_chi2}, match = {chi2s_match}")
+            logger.info(f"LLH: simulated {llh}, expected {gt_llh}, match = {llhs_match}")
+            logger.info(f"Simulations: match = {simulations_match}")
+        except:
+            pass
+
+        if all([llhs_match, simulations_match]):
+            n_success += 1
+    logger.info(f"{n_success} / {len(petabtests.CASES_LIST)} successful")
+
 
 if __name__ == '__main__':
     run()
