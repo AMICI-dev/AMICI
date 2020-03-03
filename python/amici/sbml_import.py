@@ -539,14 +539,12 @@ class SbmlImporter:
             },
             'fixed_parameter': {
                 'var': fixed_parameters,
-                'name': 'fixedParameter'
+                'name': 'fixed_parameter'
             }
 
         }
 
-        for partype in loop_settings:
-            settings = loop_settings[partype]
-
+        for partype, settings in loop_settings.items():
             self.symbols[partype]['identifier'] = sp.Matrix(
                 [sp.Symbol(par.getId(), real=True) for par in settings['var']]
             )
@@ -558,7 +556,7 @@ class SbmlImporter:
             ]
             setattr(
                 self,
-                f'{settings["name"]}Index',
+                f'{settings["name"]}_index',
                 {
                     parameter_element.getId(): parameter_index
                     for parameter_index, parameter_element
@@ -654,7 +652,7 @@ class SbmlImporter:
             return specie in self.constant_species or \
                    specie in self.boundary_condition_species
 
-        for reactionIndex, reaction in enumerate(reactions):
+        for reaction_index, reaction in enumerate(reactions):
             for elementList, sign in [(reaction.getListOfReactants(), -1.0),
                                       (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
@@ -671,7 +669,7 @@ class SbmlImporter:
                             elements[index]['species']
                         ]
                         self.stoichiometric_matrix[specie_index,
-                                                   reactionIndex] += \
+                                                   reaction_index] += \
                             sign \
                             * elements[index]['stoichiometry'] \
                             * self.species_conversion_factor[specie_index] \
@@ -679,14 +677,14 @@ class SbmlImporter:
 
             # usage of formulaToL3String ensures that we get "time" as time
             # symbol
-            math = sbml.formulaToL3String(reaction.getKineticLaw().getMath())
+            kmath = sbml.formulaToL3String(reaction.getKineticLaw().getMath())
             try:
-                sym_math = sp.sympify(_parse_logical_operators(math),
+                sym_math = sp.sympify(_parse_logical_operators(kmath),
                                       locals=self.local_symbols)
             except SBMLException as Ex:
                 raise Ex
-            except:
-                raise SBMLException(f'Kinetic law "{math}" contains an '
+            except sp.SympifyError:
+                raise SBMLException(f'Kinetic law "{kmath}" contains an '
                                     'unsupported expression!')
             sym_math = _parse_special_functions(sym_math)
             _check_unsupported_functions(sym_math, 'KineticLaw')
@@ -701,10 +699,10 @@ class SbmlImporter:
                             sp.sympify(element.getStoichiometry())
                         )
 
-            self.flux_vector[reactionIndex] = sym_math
+            self.flux_vector[reaction_index] = sym_math
             if any([
                 str(symbol) in reaction_ids
-                for symbol in self.flux_vector[reactionIndex].free_symbols
+                for symbol in self.flux_vector[reaction_index].free_symbols
             ]):
                 raise SBMLException(
                     'Kinetic laws involving reaction ids are currently'
@@ -756,11 +754,11 @@ class SbmlImporter:
                                     ' currently not supported!')
 
             if variable in parametervars:
-                try:
-                    idx = self.sbml.parameterIndex[str(variable)]
+                if str(variable) in self.parameter_index:
+                    idx = self.parameter_index[str(variable)]
                     self.symbols['parameter']['value'][idx] \
                         = float(formula)
-                except:
+                else:
                     self.sbml.removeParameter(str(variable))
                     assignments[str(variable)] = formula
 
@@ -1096,9 +1094,8 @@ def replaceLogAB(x: str) -> str:
         return x
 
     # index of 'l' of 'log'
-    log_start = match.start() \
-                if match.end() - match.start() == 4 \
-                else match.start() + 1
+    log_start = match.start() if match.end() - match.start() == 4 \
+        else match.start() + 1
     level = 0  # parenthesis level
     pos_comma = -1  # position of comma in log(a,b)
     for i in range(log_start + 4, len(x)):
