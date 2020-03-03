@@ -89,9 +89,9 @@ def verify_results(settings, rdata, results, wrapper,
     # verify states
     simulated_x = rdata['x']
     expected_x = results[1:, [
-                             1 + wrapper.speciesIndex[variable]
+                             1 + wrapper.species_index[variable]
                              for variable in variables_species
-                             if variable in wrapper.speciesIndex.keys()
+                             if variable in wrapper.species_index.keys()
                          ]]
 
     concentrations_to_amounts(amount_species, wrapper, model, simulated_x)
@@ -107,14 +107,14 @@ def concentrations_to_amounts(amount_species, wrapper, model, simulated_x):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
         if not species == '':
-            symvolume = wrapper.speciesCompartment[
-                wrapper.speciesIndex[species]
+            symvolume = wrapper.species_compartment[
+                wrapper.species_index[species]
             ]
             volume = symvolume.subs({
                 comp: vol
                 for comp, vol in zip(
-                    wrapper.compartmentSymbols,
-                    wrapper.compartmentVolume
+                    wrapper.compartment_symbols,
+                    wrapper.compartment_volume
                 )
             })
             volume = volume.subs({
@@ -134,8 +134,8 @@ def concentrations_to_amounts(amount_species, wrapper, model, simulated_x):
                 )
             })
 
-            simulated_x[:, wrapper.speciesIndex[species]] = \
-                simulated_x[:, wrapper.speciesIndex[species]] * volume
+            simulated_x[:, wrapper.species_index[species]] = \
+                simulated_x[:, wrapper.species_index[species]] * volume
 
 
 def write_result_file(simulated_x: np.array,
