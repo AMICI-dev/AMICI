@@ -19,14 +19,17 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     # build swig4.0
     subprocess.run(os.path.join(amici_dir, 'scripts',
                                 'downloadAndBuildSwig.sh'))
-    # in source install
+
+    # add swig to path
+    swig_dir = os.path.join(amici_dir, 'ThirdParty', 'swig-4.0.1', 'install',
+                            'bin')
+    os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
+    # in source install, this fails to compile the c extensions but we don't
+    # care since we replace it by a mock import later on
     subprocess.run([
-        '/home/docs/checkouts/readthedocs.org/user_builds/amici/envs'
-        '/readthedocs/bin/python',
-        '-m', 'pip', 'install', '--verbose', '-e',
+        'python', '-m', 'pip', 'install', '--verbose', '-e',
         os.path.join(amici_dir, 'python', 'sdist')
     ])
-
 
 # -- Path setup --------------------------------------------------------------
 
@@ -43,9 +46,9 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Mock out some problematic modules-------------------------------------
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
-autodoc_mock_imports = ['_amici']
+autodoc_mock_imports = ['_amici', 'amici._amici']
 for mod_name in autodoc_mock_imports:
-    sys.modules[mod_name] = mock.MagicMock()
+    sys.modules[mod_name] = mock.Mock()
 
 # -- Project information -----------------------------------------------------
 
@@ -61,6 +64,8 @@ version = amici.__version__
 release = version
 
 del amici
+
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -412,14 +417,11 @@ def skip_member(app, what, name, obj, skip, options):
     ignored = ['AbstractModel', 'CVodeSolver', 'IDASolver', 'Model_ODE',
                'Model_DAE', 'ConditionContext', 'checkSigmaPositivity',
                'createGroup', 'createGroup', 'equals', 'printErrMsgIdAndTxt',
-               'printErrMsgIdAndTxt', 'wrapErrHandlerFn', 'wrapErrHandlerFn',
-               'printWarnMsgIdAndTxt',
-               'AmiciApplication', 'AmiciApplication',
-               'writeSimulationExpData', 'writeReturnData',
+               'wrapErrHandlerFn', 'printWarnMsgIdAndTxt',
+               'AmiciApplication', 'writeSimulationExpData', 'writeReturnData',
                'readSimulationExpData', 'readSolverSettingsFromHDF5',
                'readModelDataFromHDF5', 'createOrOpenForWriting',
                'writeReturnDataDiagnosis', 'attributeExists', 'locationExists',
-               'createAndWriteDouble1DDataset',
                'createAndWriteDouble1DDataset',
                'createAndWriteDouble2DDataset',
                'createAndWriteDouble3DDataset',
@@ -427,8 +429,7 @@ def skip_member(app, what, name, obj, skip, options):
                'createAndWriteInt3DDataset', 'getDoubleDataset1D',
                'getDoubleDataset2D', 'getDoubleDataset3D', 'getIntDataset1D',
                'getIntScalarAttribute', 'getDoubleScalarAttribute',
-               'stdVec2ndarray', 'SwigPyIterator', 'thisown',
-               ]
+               'stdVec2ndarray', 'SwigPyIterator', 'thisown']
 
     if name in ignored:
         return True
