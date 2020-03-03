@@ -14,6 +14,8 @@ import pysb
 import importlib
 import copy
 
+from amici.pysb_import import pysb2amici
+
 class TestAmiciCPP(unittest.TestCase):
     """
     TestCase class for testing cpp API through swig
@@ -36,11 +38,11 @@ class TestAmiciCPP(unittest.TestCase):
             model_module = importlib.import_module('createModelPresimulation')
         model = copy.deepcopy(model_module.model)
         model.name = 'test_model_presimulation_pysb'
-        amici.pysb2amici(model,
-                         model.name,
-                         verbose=False,
-                         observables=['pPROT_obs'],
-                         constant_parameters=['DRUG_0', 'KIN_0'])
+        pysb2amici(model,
+                   model.name,
+                   verbose=False,
+                   observables=['pPROT_obs'],
+                   constant_parameters=['DRUG_0', 'KIN_0'])
         sys.path.insert(0, model.name)
         import test_model_presimulation_pysb as modelModulePYSB
         self.model = modelModulePYSB.getModel()

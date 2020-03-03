@@ -6,48 +6,54 @@ from distutils import sysconfig
 import os
 from amici import amici_path, hdf5_enabled
 
-from amici.setuptools import (getBlasConfig,
-                              getHdf5Config,
-                              addCoverageFlagsIfRequired,
-                              addDebugFlagsIfRequired)
+from amici.setuptools import (get_blas_config,
+                              get_hdf5_config,
+                              add_coverage_flags_if_required,
+                              add_debug_flags_if_required)
+
+from typing import List
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-def getModelSources():
+
+def get_model_sources() -> List[str]:
     """Get list of source files for the amici base library"""
     import glob
-    modelSources = glob.glob('*.cpp')
+    model_sources = glob.glob('*.cpp')
     try:
-        modelSources.remove('main.cpp')
+        model_sources.remove('main.cpp')
     except ValueError:
         pass
-    return modelSources
+    return model_sources
 
 
-def getAmiciLibs():
-    """Get list of libraries for the amici base library"""
+def get_amici_libs() -> List[str]:
+    """
+    Get list of libraries for the amici base library
+    """
     return ['amici',
             'sundials', 'suitesparse'
-            #'sundials_nvecserial', 'sundials_cvodes', 'sundials_idas',
-            #'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
+            # 'sundials_nvecserial', 'sundials_cvodes', 'sundials_idas',
+            # 'klu', 'colamd', 'btf', 'amd', 'suitesparseconfig'
             ]
+
 
 cxx_flags = ['-std=c++11']
 linker_flags = []
 
-addCoverageFlagsIfRequired(cxx_flags, linker_flags)
-addDebugFlagsIfRequired(cxx_flags, linker_flags)
+add_coverage_flags_if_required(cxx_flags, linker_flags)
+add_debug_flags_if_required(cxx_flags, linker_flags)
 
-h5pkgcfg = getHdf5Config()
+h5pkgcfg = get_hdf5_config()
 
-blaspkgcfg = getBlasConfig()
+blaspkgcfg = get_blas_config()
 linker_flags.extend(blaspkgcfg.get('extra_link_args', []))
 
-libraries = [*getAmiciLibs(), *blaspkgcfg['libraries']]
+libraries = [*get_amici_libs(), *blaspkgcfg['libraries']]
 if hdf5_enabled:
     libraries.extend(['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'])
 
-sources = ['swig/TPL_MODELNAME.i', *getModelSources()]
+sources = ['swig/TPL_MODELNAME.i', *get_model_sources()]
 
 
 # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
@@ -74,7 +80,7 @@ model_module = Extension('TPL_MODELNAME._TPL_MODELNAME',
                                        *h5pkgcfg['include_dirs'],
                                        *blaspkgcfg['include_dirs']
                                        ],
-                         libraries = libraries,
+                         libraries=libraries,
                          library_dirs=[
                              *h5pkgcfg['library_dirs'],
                              *blaspkgcfg['library_dirs'],
@@ -94,7 +100,7 @@ setup(
     url='https://github.com/ICB-DCM/AMICI',
     author='model-author-todo',
     author_email='model-author-todo',
-    #license = 'BSD',
+    # license = 'BSD',
     ext_modules=[model_module],
     packages=find_packages(),
     install_requires=['amici==TPL_AMICI_VERSION'],
@@ -102,12 +108,12 @@ setup(
     python_requires='>=3.7',
     package_data={
     },
-    zip_safe = False,
+    zip_safe=False,
     include_package_data=True,
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Science/Research',
-        #'License :: OSI Approved :: BSD License',
+        # 'License :: OSI Approved :: BSD License',
         'Operating System :: POSIX :: Linux',
         'Operating System :: MacOS :: MacOS X',
         'Programming Language :: Python',

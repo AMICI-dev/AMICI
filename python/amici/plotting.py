@@ -1,20 +1,35 @@
-"""@package amici.plotting Plotting related functions"""
+"""
+Plotting
+--------
+Plotting related functions
+"""
+from . import ReturnDataView, Model
 
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from typing import Optional, Iterable
 
-def plotStateTrajectories(rdata, state_indices=None, ax = None, model = None):
-    """Plot state trajectories
+def plotStateTrajectories(
+        rdata: ReturnDataView,
+        state_indices: Optional[Iterable[int]] = None,
+        ax: Optional[Axes] = None,
+        model: Model = None
+) -> None:
+    """
+    Plot state trajectories
+
+    :param rdata:
+        AMICI simulation results as returned by
+        :func:`amici.amici.runAmiciSimulation`
+
+    :param state_indices:
+        Indices of states for which trajectories are to be plotted
+
+    :param ax:
+        matplotlib Axes instance to plot into
     
-    Arguments:
-    rdata: AMICI simulation results as returned by amici.getSimulationResults()
-    state_indices: Indices of states for which trajectories are to be plotted
-    ax: matplotlib.axes.Axes instance to plot into
-    model: Model instance
-    
-    Returns:
-
-    Raises:
-
+    :param model:
+        amici model instance
     """
     if not ax:
         fig, ax = plt.subplots()
@@ -34,19 +49,27 @@ def plotStateTrajectories(rdata, state_indices=None, ax = None, model = None):
         ax.set_title('State trajectories')
     
     
-def plotObservableTrajectories(rdata, observable_indices=None, ax = None, model = None):
-    """Plot observable trajectories
-    
-    Arguments:
-    rdata: AMICI simulation results as returned by amici.getSimulationResults()
-    observable_indices: Indices of observables for which trajectories are to be plotted
-    ax: matplotlib.axes.Axes instance to plot into
-    model: Model instance
+def plotObservableTrajectories(
+        rdata: ReturnDataView,
+        observable_indices: Optional[Iterable[int]] = None,
+        ax: Optional[Axes] = None,
+        model: Model = None
+) -> None:
+    """
+    Plot observable trajectories
 
-    Returns:
+    :param rdata:
+        AMICI simulation results as returned by
+        :func:`amici.amici.runAmiciSimulation`
 
-    Raises:
+    :param observable_indices:
+        Indices of observables for which trajectories are to be plotted
 
+    :param ax:
+        matplotlib Axes instance to plot into
+
+    :param model:
+        amici model instance
     """
     if not ax:
         fig, ax = plt.subplots()
