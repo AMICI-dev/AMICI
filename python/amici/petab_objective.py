@@ -124,8 +124,13 @@ def simulate_petab(
         parameter_mapping=parameter_mapping,
         scaled_parameters=scaled_parameters)
 
+    # TODO only required if we have preequilibration AND species or
+    #  compartments in condition table
+    amici_model.setReinitializeFixedParameterInitialStates(True)
+
     # Simulate
     rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
+    for rdata in rdatas: print(rdata['x'])
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
@@ -352,6 +357,67 @@ def get_edata_for_condition(
     condition_map_preeq = {key: _get_par(key, val)
                            for key, val in condition_map_preeq.items()}
 
+    ##########################################################################
+    # initial states
+    # Initial states have been set during model import based on the SBML model.
+    # If initial states were overwritten in the PEtab condition table, they are
+    # applied here.
+    # During model generation, parameter for initial concentrations and
+    # respective initial assignments have been created for the
+    # relevant species, here we add these parameters to the parameter mapping.
+    # In absence of preequilibration this could also be handled via
+    # ExpData.x0, but in the case of preequilibration this would not allow for
+    # resetting initial states.
+
+    species = [col for col in petab_problem.condition_df
+               if petab_problem.sbml_model.getSpecies(col) is not None]
+    if species:
+        '''
+        x0 = np.array(amici_model.getInitialStates())
+        species_ids = amici_model.getStateIds()
+        for species_id in species:
+            if not np.issubdtype(petab_problem.condition_df[species_id].dtype,
+                                 np.number):
+                raise NotImplementedError(
+                    "Support for parametric overrides for initial states "
+                    "is not yet implemented.")
+
+            species_idx = species_ids.index(species_id)
+
+            if condition[PREEQUILIBRATION_CONDITION_ID]:
+                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
+            else:
+                condition_id = condition[SIMULATION_CONDITION_ID]
+
+            x0[species_idx] = petab_problem.condition_df.loc[condition_id,
+                                                             species_id]
+        
+        edata.x0 = x0
+        '''
+        for species_id in species:
+            if not np.issubdtype(petab_problem.condition_df[species_id].dtype,
+                                 np.number):
+                # TODO: problem here is that we cannot estimate initial states
+                #  in combination with preequilibration
+                raise NotImplementedError(
+                    "Support for parametric overrides for initial states "
+                    "is not yet implemented.")
+
+            init_par_id = f'initial_{species_id}'
+            if PREEQUILIBRATION_CONDITION_ID in condition \
+                    and condition[PREEQUILIBRATION_CONDITION_ID]:
+                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
+                condition_map_preeq[init_par_id] = float(
+                    petab_problem.condition_df.loc[condition_id, species_id])
+                condition_scale_map_preeq[init_par_id] = petab.LIN
+
+            condition_id = condition[SIMULATION_CONDITION_ID]
+            condition_map_sim[init_par_id] = float(
+                petab_problem.condition_df.loc[condition_id, species_id])
+            condition_scale_map_sim[init_par_id] = petab.LIN
+
+    ##########################################################################
+
     # separate fixed and variable AMICI parameters, because we may have
     # different fixed parameters for preeq and sim condition, but we cannot
     # have different variable parameters. without splitting,
@@ -425,41 +491,6 @@ def get_edata_for_condition(
         df_for_condition=measurement_df)
 
     edata.setTimepoints(timepoints_w_reps)
-
-    ##########################################################################
-    # initial states
-    # Initial states have been set during model import based on the SBML model.
-    # If initial states were overwritten in the PEtab condition table, they are
-    # applied here. We never change amici_model.x0 here (and assume it contains
-    # the original values; we only change ExpData.x0.
-
-    species = [col for col in petab_problem.condition_df
-               if petab_problem.sbml_model.getSpecies(col) is not None]
-    if species:
-        x0 = amici_model.getInitialStates()
-        species_ids = amici_model.getStateIds()
-        for species_id in species:
-            if not np.issubdtype(petab_problem.condition_df[species_id].dtype,
-                                 np.number):
-                raise NotImplementedError(
-                    "Support for parametric overrides for initial states "
-                    "is not yet implemented.")
-
-            species_idx = species_ids.find(species_id)
-
-            if condition[PREEQUILIBRATION_CONDITION_ID]:
-                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
-            else:
-                condition_id = condition[SIMULATION_CONDITION_ID]
-
-            x0[species_idx] = petab_problem.condition_df.loc(condition_id,
-                                                             species_id)
-
-        edata.x0 = x0
-
-    # TODO: depends on #924: In case of parametric overrides, they would have
-    #  to be handled as fixed model parameters below. These cases are filtered
-    #  out at import stage.
 
     ##########################################################################
     # fixed parameters preequilibration

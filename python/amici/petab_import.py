@@ -472,8 +472,38 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         petab.add_global_parameter(sbml_model, par)
     # <EndWorkAround>
 
-    fixed_parameters = get_fixed_parameters(sbml_model=sbml_model,
-                                            condition_df=condition_df)
+    # TODO: to parameterize initial states or compartment sizes, we currently
+    #  need initial assignments. if they occur in the condition table, we
+    #  create a new parameter initial_${startOrCompartmentID}.
+    #  feels dirty and should be changed (see also #924)
+    # <BeginWorkAround>
+    initial_states = [col for col in condition_df
+                      if sbml_model.getSpecies(col) is not None]
+    initial_sizes = [col for col in condition_df
+                     if sbml_model.getCompartment(col) is not None]
+    fixed_parameters = []
+    for assignee_id in [*initial_sizes, *initial_states]:
+        init_par_id = f"initial_{assignee_id}"
+        if sbml_model.getElementBySId(init_par_id) is not None:
+            raise ValueError("Cannot create parameter for initial assignment "
+                             f"for {assignee_id} because an entity named "
+                             f"{init_par_id} exists already in the model.")
+        init_par = sbml_model.createParameter()
+        init_par.setId(init_par_id)
+        init_par.setName(init_par_id)
+        assignment = sbml_model.createInitialAssignment()
+        assignment.setSymbol(assignee_id)
+        math_ast = libsbml.parseL3Formula(init_par_id)
+        assignment.setMath(math_ast)
+
+        # Can only reset parameters after preequilibration if they are fixed.
+        # TODO: The current implementation does not support estimating
+        #  initial states parameterized via PEtab condition table
+        fixed_parameters.append(init_par_id)
+    # <EndWorkAround>
+
+    fixed_parameters.extend(
+        get_fixed_parameters(sbml_model=sbml_model, condition_df=condition_df))
 
     logger.debug(f"Fixed parameters are {fixed_parameters}")
     logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
