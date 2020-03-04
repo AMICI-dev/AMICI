@@ -16,7 +16,7 @@ stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
 
 
-def run_case(case):
+def test_case(case):
     """Run a single PEtab test suite case"""
     logger.debug(f"Case {case}")
 
@@ -85,7 +85,7 @@ def run():
 
     for case in petabtests.CASES_LIST:
         try:
-            run_case(case)
+            test_case(case)
             n_success += 1
         except AssertionError as e:
             # run all despite failures
