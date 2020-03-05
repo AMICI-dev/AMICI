@@ -16,9 +16,9 @@ import libsbml
 import numpy as np
 import pandas as pd
 import petab
-from amici.logging import get_logger, log_execution_time
+from .logging import get_logger, log_execution_time
 from petab.C import *
-
+from .petab_import import PREEQ_INDICATOR_ID
 
 LLH = 'llh'
 SLLH = 'sllh'
@@ -124,8 +124,8 @@ def simulate_petab(
         parameter_mapping=parameter_mapping,
         scaled_parameters=scaled_parameters)
 
-    # TODO only required if we have preequilibration AND species or
-    #  compartments in condition table
+    # only required if we have preequilibration AND species or
+    #  compartments in condition table, but shouldn't hurt to enable anyways.
     amici_model.setReinitializeFixedParameterInitialStates(True)
 
     # Simulate
@@ -205,7 +205,6 @@ def edatas_from_petab(
     :return:
         List with one :class:`amici.amici.ExpData` per simulation condition.
     """
-
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
     # Can be optimized by checking for identical condition vectors.
@@ -372,28 +371,16 @@ def get_edata_for_condition(
     species = [col for col in petab_problem.condition_df
                if petab_problem.sbml_model.getSpecies(col) is not None]
     if species:
-        '''
-        x0 = np.array(amici_model.getInitialStates())
-        species_ids = amici_model.getStateIds()
-        for species_id in species:
-            if not np.issubdtype(petab_problem.condition_df[species_id].dtype,
-                                 np.number):
-                raise NotImplementedError(
-                    "Support for parametric overrides for initial states "
-                    "is not yet implemented.")
+        # set indicator fixed parameter for preeq
+        # (we expect here, that this parameter was added during import and
+        # that is was not added by the user with a different meaning...)
+        if condition_map_preeq:
+            condition_map_preeq[PREEQ_INDICATOR_ID] = 1.0
+            condition_scale_map_preeq[PREEQ_INDICATOR_ID] = LIN
 
-            species_idx = species_ids.index(species_id)
+        condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
+        condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
 
-            if condition[PREEQUILIBRATION_CONDITION_ID]:
-                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
-            else:
-                condition_id = condition[SIMULATION_CONDITION_ID]
-
-            x0[species_idx] = petab_problem.condition_df.loc[condition_id,
-                                                             species_id]
-        
-        edata.x0 = x0
-        '''
         for species_id in species:
             if not np.issubdtype(petab_problem.condition_df[species_id].dtype,
                                  np.number):
@@ -402,19 +389,19 @@ def get_edata_for_condition(
                 raise NotImplementedError(
                     "Support for parametric overrides for initial states "
                     "is not yet implemented.")
+            for init_par_id in [f'initial_{species_id}_preeq',
+                                f'initial_{species_id}_sim']:
+                if PREEQUILIBRATION_CONDITION_ID in condition \
+                        and condition[PREEQUILIBRATION_CONDITION_ID]:
+                    condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
+                    condition_map_preeq[init_par_id] = float(
+                        petab_problem.condition_df.loc[condition_id, species_id])
+                    condition_scale_map_preeq[init_par_id] = petab.LIN
 
-            init_par_id = f'initial_{species_id}'
-            if PREEQUILIBRATION_CONDITION_ID in condition \
-                    and condition[PREEQUILIBRATION_CONDITION_ID]:
-                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
-                condition_map_preeq[init_par_id] = float(
+                condition_id = condition[SIMULATION_CONDITION_ID]
+                condition_map_sim[init_par_id] = float(
                     petab_problem.condition_df.loc[condition_id, species_id])
-                condition_scale_map_preeq[init_par_id] = petab.LIN
-
-            condition_id = condition[SIMULATION_CONDITION_ID]
-            condition_map_sim[init_par_id] = float(
-                petab_problem.condition_df.loc[condition_id, species_id])
-            condition_scale_map_sim[init_par_id] = petab.LIN
+                condition_scale_map_sim[init_par_id] = petab.LIN
 
     ##########################################################################
 

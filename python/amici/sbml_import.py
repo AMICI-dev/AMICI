@@ -1169,8 +1169,8 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
         )
 
 
-def _check_unsupported_functions(sym: sp.Basic, 
-                                 expression_type: str, 
+def _check_unsupported_functions(sym: sp.Basic,
+                                 expression_type: str,
                                  full_sym: sp.Basic = None):
     """
     Recursively checks the symbolic expression for unsupported symbolic
