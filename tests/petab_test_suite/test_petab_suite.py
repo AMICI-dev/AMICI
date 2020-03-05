@@ -81,8 +81,11 @@ def test_case(case):
 
     for edata in edatas_from_petab(model=model, petab_problem=problem,
                                    problem_parameters=problem_parameters):
+        # check_derivatives does currently not support parameters in ExpData
         model.setParameters(edata.parameters)
         model.setParameterScale(edata.pscale)
+        edata.parameters = []
+        edata.pscale = amici.parameterScalingFromIntVector([])
         check_derivatives(model, solver, edata, assertTrue)
 
     if not all([llhs_match, simulations_match]):
