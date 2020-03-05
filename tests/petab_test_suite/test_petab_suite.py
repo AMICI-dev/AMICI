@@ -57,7 +57,9 @@ def test_case(case):
     llhs_match = petabtests.evaluate_llh(llh, gt_llh, tol_llh)
     simulations_match = petabtests.evaluate_simulations(
         [simulation_df], gt_simulation_dfs, tol_simulations)
-
+    for edata in edatas_from_petab(model=model, petab_problem=petab_problem):
+        for ip in range(model.np):
+            amici.check_finite_difference(x0, model, solver, edata, ip, fields, assert_fun)
     logger.log(logging.DEBUG if chi2s_match else logging.ERROR,
                f"CHI2: simulated: {chi2}, expected: {gt_chi2},"
                f" match = {chi2s_match}")
