@@ -205,7 +205,6 @@ def check_close(result: np.array,
 
     """
     close = np.isclose(result, expected, atol=atol, rtol=rtol, equal_nan=True)
-
     if not close.all():
         if ip is None:
             index_str = ''

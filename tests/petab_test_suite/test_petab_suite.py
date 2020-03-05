@@ -4,11 +4,13 @@ import sys
 import logging
 
 import amici
+from amici.gradient_check import check_derivatives
 from amici.petab_import import import_petab_problem
-from amici.petab_objective import simulate_petab, rdatas_to_measurement_df
+from amici.petab_objective import (
+    simulate_petab, rdatas_to_measurement_df, edatas_from_petab)
+
 import petab
 import petabtests
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -57,9 +59,7 @@ def test_case(case):
     llhs_match = petabtests.evaluate_llh(llh, gt_llh, tol_llh)
     simulations_match = petabtests.evaluate_simulations(
         [simulation_df], gt_simulation_dfs, tol_simulations)
-    for edata in edatas_from_petab(model=model, petab_problem=petab_problem):
-        for ip in range(model.np):
-            amici.check_finite_difference(x0, model, solver, edata, ip, fields, assert_fun)
+
     logger.log(logging.DEBUG if chi2s_match else logging.ERROR,
                f"CHI2: simulated: {chi2}, expected: {gt_chi2},"
                f" match = {chi2s_match}")
@@ -68,6 +68,21 @@ def test_case(case):
                f"match = {llhs_match}")
     logger.log(logging.DEBUG if simulations_match else logging.ERROR,
                f"Simulations: match = {simulations_match}")
+
+    # finite difference check
+    problem_parameters = {t.Index: getattr(t, petab.NOMINAL_VALUE) for t in
+                          problem.parameter_df.itertuples()}
+    solver = model.getSolver()
+    solver.setSensitivityMethod(amici.SensitivityMethod_forward)
+    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+
+    def assertTrue(x):
+        assert x
+
+    for edata in edatas_from_petab(model=model, petab_problem=problem,
+                                   problem_parameters=problem_parameters):
+        model.setParameters(edata.parameters)
+        check_derivatives(model, solver, edata, assertTrue)
 
     if not all([llhs_match, simulations_match]):
         # chi2s_match ignored until fixed in amici
