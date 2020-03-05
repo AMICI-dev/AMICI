@@ -87,6 +87,7 @@ def run():
             n_success += 1
         except Exception as e:
             # run all despite failures
+            logger.error(f"Case {case} failed.")
             logger.error(e)
 
     logger.info(f"{n_success} / {len(petabtests.CASES_LIST)} successful")
