@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: Benchmark collection
+    name: PEtab testsuite
 
     runs-on: ubuntu-latest
 
