@@ -131,14 +131,6 @@ def get_fixed_parameters(
                                   "at the moment. Consider creating an "
                                   f"initial assignment for {compartments}")
 
-    species = [col for col in condition_df
-               if not np.issubdtype(condition_df[col].dtype, np.number)
-               and sbml_model.getSpecies(col) is not None]
-    if species:
-        raise NotImplementedError(
-            "Can't handle parameterized initial concentrations in condition "
-            f"table. Consider creating an initial assignment for {species}")
-
     return fixed_parameters
 
 

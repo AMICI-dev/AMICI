@@ -381,27 +381,56 @@ def get_edata_for_condition(
         condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
         condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
 
-        for species_id in species:
-            if not np.issubdtype(petab_problem.condition_df[species_id].dtype,
-                                 np.number):
-                # TODO: problem here is that we cannot estimate initial states
-                #  in combination with preequilibration
-                raise NotImplementedError(
-                    "Support for parametric overrides for initial states "
-                    "is not yet implemented.")
-            for init_par_id in [f'initial_{species_id}_preeq',
-                                f'initial_{species_id}_sim']:
-                if PREEQUILIBRATION_CONDITION_ID in condition \
-                        and condition[PREEQUILIBRATION_CONDITION_ID]:
-                    condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
-                    condition_map_preeq[init_par_id] = float(
-                        petab_problem.condition_df.loc[condition_id, species_id])
-                    condition_scale_map_preeq[init_par_id] = petab.LIN
+        def _set_initial_concentration(condition_id, species_id, init_par_id,
+                                      par_map, scale_map):
+            value = petab.to_float_if_float(
+                petab_problem.condition_df.loc[condition_id, species_id])
+            if isinstance(value, float):
+                # numeric initial state
+                par_map[init_par_id] = value
+                scale_map[init_par_id] = petab.LIN
+            else:
+                # parametric initial state
+                try:
+                    # try find in mapping
+                    par_map[init_par_id] = par_map[value]
+                    scale_map[init_par_id] = scale_map[value]
+                except KeyError:
+                    # otherwise look up in parameter table
+                    par_map[init_par_id] = problem_parameters[value]
+                    if (scaled_parameters == False
+                            or PARAMETER_SCALE
+                            not in petab_problem.parameter_df
+                            or not petab_problem.parameter_df.loc[
+                                value, PARAMETER_SCALE]):
+                        scale_map[init_par_id] = LIN
+                    else:
+                        scale_map[init_par_id] = \
+                            petab_problem.parameter_df.loc[
+                                value, PARAMETER_SCALE]
 
-                condition_id = condition[SIMULATION_CONDITION_ID]
-                condition_map_sim[init_par_id] = float(
-                    petab_problem.condition_df.loc[condition_id, species_id])
-                condition_scale_map_sim[init_par_id] = petab.LIN
+        for species_id in species:
+            # for preequilibration
+            init_par_id = f'initial_{species_id}_preeq'
+            if PREEQUILIBRATION_CONDITION_ID in condition \
+                    and condition[PREEQUILIBRATION_CONDITION_ID]:
+                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
+                _set_initial_concentration(
+                    condition_id, species_id, init_par_id, condition_map_preeq,
+                    condition_scale_map_preeq)
+            else:
+                # need to set dummy value for preeq parameter anyways, as it
+                #  expected below (set to 0, not nan, because will be
+                #  multiplied with indicator variable in initial assignment)
+                condition_map_sim[init_par_id] = 0.0
+                condition_scale_map_sim[init_par_id] = LIN
+
+            # for simulation
+            condition_id = condition[SIMULATION_CONDITION_ID]
+            init_par_id = f'initial_{species_id}_sim'
+            _set_initial_concentration(
+                condition_id, species_id, init_par_id, condition_map_sim,
+                condition_scale_map_sim)
 
     ##########################################################################
 
@@ -437,7 +466,6 @@ def get_edata_for_condition(
         condition_map_preeq_var, condition_map_sim_var,
         condition_scale_map_preeq_var, condition_scale_map_sim_var,
         condition)
-
     logger.debug(f"Merged: {condition_map_sim_var}")
 
     # If necessary, scale parameters
