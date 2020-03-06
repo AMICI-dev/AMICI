@@ -157,6 +157,7 @@ void ForwardProblem::handlePreequilibration() {
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                               SensitivityOrder::first);
+        updateAndReinitStatesAndSensitivities(false);
     }
 
     // pre-equilibrate
