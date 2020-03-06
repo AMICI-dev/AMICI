@@ -53,5 +53,5 @@ jobs:
     - name: Download and run petab test suite
       run: |
         git clone --depth 1 https://github.com/petab-dev/petab_test_suite \
-          && cd petab_test_suite; pip3 install -e .; cd .." \
+          && cd petab_test_suite; pip3 install -e .; cd .. \
           && python3 tests/petab_test_suite/run.py
