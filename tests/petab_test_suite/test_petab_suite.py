@@ -1,23 +1,24 @@
+#!/usr/bin/env python3
+
 """Run PEtab test suite (https://github.com/PEtab-dev/petab_test_suite)"""
+
+import logging
 import os
 import sys
-import logging
 
-from _pytest.outcomes import Skipped
-import pytest
 import amici
 import petab
 import petabtests
+import pytest
+from _pytest.outcomes import Skipped
 from amici.gradient_check import check_derivatives as amici_check_derivatives
+from amici.logging import get_logger, set_log_level
 from amici.petab_import import import_petab_problem
 from amici.petab_objective import (
     simulate_petab, rdatas_to_measurement_df, edatas_from_petab)
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler()
-logger.addHandler(stream_handler)
+logger = get_logger(__name__, logging.DEBUG)
+set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
 
 
 def test_case(case):
@@ -54,7 +55,7 @@ def _test_case(case):
 
     # simulate
     chi2s_match = llhs_match = simulations_match = False
-    ret = simulate_petab(problem, model)
+    ret = simulate_petab(problem, model, log_level=logging.DEBUG)
 
     rdatas = ret['rdatas']
     chi2 = None
@@ -86,7 +87,8 @@ def _test_case(case):
     logger.log(logging.DEBUG if simulations_match else logging.ERROR,
                f"Simulations: match = {simulations_match}")
 
-    check_derivatives(problem, model)
+    # FIXME
+    # check_derivatives(problem, model)
 
     if not all([llhs_match, simulations_match]):
         # chi2s_match ignored until fixed in amici
