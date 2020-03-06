@@ -4,7 +4,7 @@ import sys
 import logging
 
 import amici
-from amici.gradient_check import check_derivatives
+from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.petab_import import import_petab_problem
 from amici.petab_objective import (
     simulate_petab, rdatas_to_measurement_df, edatas_from_petab)
@@ -69,14 +69,32 @@ def test_case(case):
     logger.log(logging.DEBUG if simulations_match else logging.ERROR,
                f"Simulations: match = {simulations_match}")
 
-    # finite difference check
+    check_derivatives(problem, model)
+
+    if not all([llhs_match, simulations_match]):
+        # chi2s_match ignored until fixed in amici
+        logger.error(f"Case {case} failed.")
+        raise AssertionError(f"Case {case}: Test results do not match "
+                             "expectations")
+
+    logger.info(f"Case {case} passed.")
+
+
+def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
+    """Check derivatives using finite differences for all experimental
+    conditions
+
+    Arguments:
+        problem: PEtab problem
+        model: AMICI model matching ``problem``
+    """
     problem_parameters = {t.Index: getattr(t, petab.NOMINAL_VALUE) for t in
                           problem.parameter_df.itertuples()}
     solver = model.getSolver()
     solver.setSensitivityMethod(amici.SensitivityMethod_forward)
     solver.setSensitivityOrder(amici.SensitivityOrder_first)
 
-    def assertTrue(x):
+    def assert_true(x):
         assert x
 
     for edata in edatas_from_petab(model=model, petab_problem=problem,
@@ -86,15 +104,7 @@ def test_case(case):
         model.setParameterScale(edata.pscale)
         edata.parameters = []
         edata.pscale = amici.parameterScalingFromIntVector([])
-        check_derivatives(model, solver, edata, assertTrue)
-
-    if not all([llhs_match, simulations_match]):
-        # chi2s_match ignored until fixed in amici
-        logger.error(f"Case {case} failed.")
-        raise AssertionError(f"Case {case}: Test results do not match "
-                             "expectations")
-
-    logger.info(f"Case {case} passed.")
+        amici_check_derivatives(model, solver, edata, assert_true)
 
 
 def run():
