@@ -130,7 +130,6 @@ def simulate_petab(
 
     # Simulate
     rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
-    for rdata in rdatas: print(rdata['x'])
 
     # Compute total llh
     llh = sum(rdata['llh'] for rdata in rdatas)
