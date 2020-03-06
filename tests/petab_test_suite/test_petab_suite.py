@@ -88,7 +88,7 @@ def _test_case(case):
                f"Simulations: match = {simulations_match}")
 
     # FIXME
-    # check_derivatives(problem, model)
+    check_derivatives(problem, model)
 
     if not all([llhs_match, simulations_match]):
         # chi2s_match ignored until fixed in amici
