@@ -89,8 +89,8 @@ def _test_case(case):
                f"Simulations: match = {simulations_match}")
 
     # FIXME cases 7,10,14 fail
-    #  for case 7: -> #963; 10 + 14: to be investigated
-    if case not in ['0007', '0010', '0014']:
+    #  for case 7: -> #963; 10: to be investigated
+    if case not in ['0007', '0010']:
         check_derivatives(problem, model)
 
     if not all([llhs_match, simulations_match]):
