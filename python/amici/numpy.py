@@ -154,7 +154,7 @@ class ReturnDataView(SwigPtrView):
         'ts', 'x', 'x0', 'x_ss', 'sx', 'sx0', 'sx_ss', 'y', 'sigmay',
         'sy', 'ssigmay', 'z', 'rz', 'sigmaz', 'sz', 'srz',
         'ssigmaz', 'sllh', 's2llh', 'J', 'xdot', 'status', 'llh',
-        'chi2', 'res', 'sres', 'FIM', 'wrms_steadystate', 't_steadystate',
+        'chi2', 'res', 'sres', 'FIM', 'w', 'wrms_steadystate', 't_steadystate',
         'newton_numlinsteps', 'newton_numsteps', 'newton_cpu_time',
         'numsteps', 'numrhsevals', 'numerrtestfails',
         'numnonlinsolvconvfails', 'order', 'cpu_time',
@@ -205,6 +205,7 @@ class ReturnDataView(SwigPtrView):
 
             # diagnosis
             'J': [rdata.nx_solver, rdata.nx_solver],
+            'w': [rdata.nt, rdata.nw],
             'xdot': [rdata.nx_solver],
             'newton_numlinsteps': [rdata.newton_maxsteps, 2],
             'newton_numsteps': [1, 3],

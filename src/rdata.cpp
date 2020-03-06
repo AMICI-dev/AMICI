@@ -16,7 +16,7 @@ ReturnData::ReturnData(Solver const& solver, const Model &model)
                  model.nx_rdata, model.nx_solver, model.nxtrue_rdata,
                  model.ny, model.nytrue, model.nz, model.nztrue, model.ne, model.nJ,
                  model.nplist(), model.nMaxEvent(), model.nt(),
-                 solver.getNewtonMaxSteps(), model.getParameterScale(),
+                 solver.getNewtonMaxSteps(), model.nw, model.getParameterScale(),
                  model.o2mode, solver.getSensitivityOrder(),
                  static_cast<SensitivityMethod>(solver.getSensitivityMethod())) {
 }
@@ -26,12 +26,12 @@ ReturnData::ReturnData(
         std::vector<realtype> ts,
         int np, int nk, int nx, int nx_solver, int nxtrue, int ny, int nytrue,
         int nz, int nztrue, int ne, int nJ, int nplist, int nmaxevent,
-        int nt, int newton_maxsteps, std::vector<ParameterScaling> pscale,
+        int nt, int newton_maxsteps, int nw, std::vector<ParameterScaling> pscale,
         SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth)
     : ts(std::move(ts)), np(np), nk(nk), nx(nx), nx_solver(nx_solver), nxtrue(nxtrue),
       ny(ny), nytrue(nytrue), nz(nz),
       nztrue(nztrue), ne(ne), nJ(nJ),
-      nplist(nplist), nmaxevent(nmaxevent), nt(nt),
+      nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
       newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
       o2mode(o2mode), sensi(sensi),
       sensi_meth(sensi_meth)
@@ -48,6 +48,7 @@ ReturnData::ReturnData(
     x.resize(nt * nx, 0.0);
     y.resize(nt * ny, 0.0);
     sigmay.resize(nt * ny, 0.0);
+    w.resize(nt * nw, 0.0);
 
     newton_numsteps.resize(3, 0);
     newton_numlinsteps.resize(newton_maxsteps*2, 0);
@@ -117,6 +118,8 @@ void ReturnData::invalidate(const realtype t) {
             x.at(ix + nx * it) = getNaN();
         for (int iy = 0; iy < ny; iy++)
             y.at(iy + ny * it) = getNaN();
+        for (int iw = 0; iw < nw; iw++)
+            w.at(iw + nw * it) = getNaN();
     }
 
     if (!sx.empty()) {
@@ -319,7 +322,7 @@ void ReturnData::initializeObjectiveFunction()
 void ReturnData::fres(const int it, const ExpData &edata) {
     if ( res.empty())
         return;
-    
+
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * edata.nytrue();
@@ -334,7 +337,7 @@ void ReturnData::fres(const int it, const ExpData &edata) {
 void ReturnData::fchi2(const int it) {
     if (res.empty())
         return;
-    
+
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * nytrue;
         chi2 += pow(res.at(iyt_true), 2);
@@ -344,7 +347,7 @@ void ReturnData::fchi2(const int it) {
 void ReturnData::fsres(const int it, const ExpData &edata) {
     if (sres.empty())
         return;
-    
+
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * edata.nytrue();
         int iyt = iy + it * ny;
@@ -361,7 +364,7 @@ void ReturnData::fsres(const int it, const ExpData &edata) {
 void ReturnData::fFIM(const int it) {
     if (sres.empty())
         return;
-    
+
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt_true = iy + it * nytrue;
         for (int ip = 0; ip < nplist; ++ip) {
@@ -372,6 +375,6 @@ void ReturnData::fFIM(const int it) {
         }
     }
 }
-    
+
 
 } // namespace amici
