@@ -499,7 +499,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         # Can only reset parameters after preequilibration if they are fixed.
         fixed_parameters.append(PREEQ_INDICATOR_ID)
 
-    for assignee_id in [*initial_sizes, *initial_states]:
+    for assignee_id in initial_sizes + initial_states:
         init_par_id = f"initial_{assignee_id}"
         if sbml_model.getElementBySId(init_par_id) is not None:
             raise ValueError("Cannot create parameter for initial assignment "
