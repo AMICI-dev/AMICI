@@ -945,7 +945,8 @@ class SbmlImporter:
         # set user-provided sigmas
         for iy, obs_name in enumerate(observables):
             if obs_name in sigmas:
-                sigma_y_values[iy] = sp.Symbol(sigmas[obs_name], real=True)
+                sigma_y_values[iy] = sp.sympify(sigmas[obs_name],
+                                                locals=self.local_symbols)
 
         measurement_y_syms = sp.Matrix(
             [sp.symbols(f'm{symbol}', real=True) for symbol in observable_syms]
@@ -1166,8 +1167,8 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
         )
 
 
-def _check_unsupported_functions(sym: sp.Basic, 
-                                 expression_type: str, 
+def _check_unsupported_functions(sym: sp.Basic,
+                                 expression_type: str,
                                  full_sym: sp.Basic = None):
     """
     Recursively checks the symbolic expression for unsupported symbolic
