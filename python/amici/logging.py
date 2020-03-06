@@ -23,7 +23,7 @@ NAMED_LOG_LEVELS = {'NOTSET': logging.NOTSET,
                     'ERROR': logging.ERROR,
                     'CRITICAL': logging.CRITICAL}
 
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 
 
 def _setup_logger(level: Optional[int] = logging.WARNING,
@@ -100,6 +100,19 @@ def _setup_logger(level: Optional[int] = logging.WARNING,
     return log
 
 
+def set_log_level(logger: logging.Logger, log_level: Union[int, bool]) -> None:
+    if log_level is not None and log_level is not False:
+        if isinstance(log_level, bool):
+            log_level = logging.DEBUG
+        elif not isinstance(log_level, int):
+            raise ValueError('log_level must be a boolean, integer or None')
+
+        if logger.getEffectiveLevel() != log_level:
+            logger.debug('Changing log_level from %d to %d' % (
+                logger.getEffectiveLevel(), log_level))
+            logger.setLevel(log_level)
+
+
 def get_logger(logger_name: Optional[str] = BASE_LOGGER_NAME,
                log_level: Optional[int] = None,
                **kwargs) -> logging.Logger:
@@ -143,16 +156,7 @@ def get_logger(logger_name: Optional[str] = BASE_LOGGER_NAME,
 
     logger = logging.getLogger(logger_name)
 
-    if log_level is not None and log_level is not False:
-        if isinstance(log_level, bool):
-            log_level = logging.DEBUG
-        elif not isinstance(log_level, int):
-            raise ValueError('log_level must be a boolean, integer or None')
-
-        if logger.getEffectiveLevel() != log_level:
-            logger.debug('Changing log_level from %d to %d' % (
-                logger.getEffectiveLevel(), log_level))
-            logger.setLevel(log_level)
+    set_log_level(logger, log_level)
 
     return logger
 

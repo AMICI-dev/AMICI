@@ -1,4 +1,4 @@
-name: Benchmark collection
+name: PEtab testsuite
 on:
   push:
     branches:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: Benchmark collection
+    name: PEtab testsuite
 
     runs-on: ubuntu-latest
 
@@ -30,7 +30,7 @@ jobs:
       run: |
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
-    - run: pip3 install pytest shyaml petab>=0.1.3
+    - run: pip3 install pytest shyaml petab>=0.1.4
     - run: |
         echo ::add-path::${HOME}/.local/bin/
         echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
@@ -53,5 +53,5 @@ jobs:
     - name: Download and run petab test suite
       run: |
         git clone --depth 1 https://github.com/petab-dev/petab_test_suite \
-          && cd petab_test_suite; pip3 install -e .; cd .." \
-          && python3 tests/petab_test_suite/run.py
+          && cd petab_test_suite; pip3 install -e .; cd .. \
+          && pytest tests/petab_test_suite/

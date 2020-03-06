@@ -4,10 +4,12 @@ import sys
 import logging
 
 import amici
-from amici.petab_import import import_petab_problem
-from amici.petab_objective import simulate_petab, rdatas_to_measurement_df
 import petab
 import petabtests
+from amici.gradient_check import check_derivatives as amici_check_derivatives
+from amici.petab_import import import_petab_problem
+from amici.petab_objective import (
+    simulate_petab, rdatas_to_measurement_df, edatas_from_petab)
 
 
 logger = logging.getLogger(__name__)
@@ -67,6 +69,8 @@ def test_case(case):
     logger.log(logging.DEBUG if simulations_match else logging.ERROR,
                f"Simulations: match = {simulations_match}")
 
+    check_derivatives(problem, model)
+
     if not all([llhs_match, simulations_match]):
         # chi2s_match ignored until fixed in amici
         logger.error(f"Case {case} failed.")
@@ -74,6 +78,33 @@ def test_case(case):
                              "expectations")
 
     logger.info(f"Case {case} passed.")
+
+
+def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
+    """Check derivatives using finite differences for all experimental
+    conditions
+
+    Arguments:
+        problem: PEtab problem
+        model: AMICI model matching ``problem``
+    """
+    problem_parameters = {t.Index: getattr(t, petab.NOMINAL_VALUE) for t in
+                          problem.parameter_df.itertuples()}
+    solver = model.getSolver()
+    solver.setSensitivityMethod(amici.SensitivityMethod_forward)
+    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+
+    def assert_true(x):
+        assert x
+
+    for edata in edatas_from_petab(model=model, petab_problem=problem,
+                                   problem_parameters=problem_parameters):
+        # check_derivatives does currently not support parameters in ExpData
+        model.setParameters(edata.parameters)
+        model.setParameterScale(edata.pscale)
+        edata.parameters = []
+        edata.pscale = amici.parameterScalingFromIntVector([])
+        amici_check_derivatives(model, solver, edata, assert_true)
 
 
 def run():
@@ -87,6 +118,7 @@ def run():
             n_success += 1
         except Exception as e:
             # run all despite failures
+            logger.error(f"Case {case} failed.")
             logger.error(e)
 
     logger.info(f"{n_success} / {len(petabtests.CASES_LIST)} successful")
