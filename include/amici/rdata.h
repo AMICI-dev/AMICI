@@ -52,6 +52,7 @@ class ReturnData {
      * @param nmaxevent see amici::Model::nmaxevent
      * @param nt see amici::Model::nt
      * @param newton_maxsteps see amici::Solver::newton_maxsteps
+     * @param nw see amici::Model::nw
      * @param pscale see amici::Model::pscale
      * @param o2mode see amici::Model::o2mode
      * @param sensi see amici::Solver::sensi
@@ -60,6 +61,7 @@ class ReturnData {
     ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
                int nxtrue, int ny, int nytrue, int nz, int nztrue, int ne,
                int nJ, int nplist, int nmaxevent, int nt, int newton_maxsteps,
+               int nw,
                std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
                SensitivityOrder sensi, SensitivityMethod sensi_meth);
 
@@ -141,6 +143,13 @@ class ReturnData {
      * row-major)
      */
     std::vector<realtype> J;
+
+    /**
+     * w data from the model (recurring terms in xdot, for imported SBML models
+     * from python, this contains the flux vector)
+     * (dimensions: nt x nw, row major)
+     */
+    std::vector<realtype> w;
 
     /** event output (dimension: nmaxevent x nz, row-major) */
     std::vector<realtype> z;
@@ -361,6 +370,9 @@ class ReturnData {
 
     /** number of considered timepoints */
     int nt{0};
+
+    /** number of columns in w */
+    int nw{0};
 
     /** maximal number of newton iterations for steady state calculation */
     int newton_maxsteps{0};

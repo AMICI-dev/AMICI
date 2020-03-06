@@ -676,6 +676,14 @@ class Model : public AbstractModel {
     void requireSensitivitiesForAllParameters();
 
     /**
+     * @brief Time-resolved w,
+     * @param w buffer (dimension: nw)
+     * @param t current timepoint
+     * @param x current state
+     */
+    void getW(gsl::span<realtype> w, const realtype t, const AmiVector &x);
+
+    /**
      * @brief Time-resolved observables,
      * @param y buffer (dimension: ny)
      * @param t current timepoint

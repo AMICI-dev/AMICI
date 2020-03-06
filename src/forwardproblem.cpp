@@ -471,7 +471,8 @@ void ForwardProblem::getEventSensisFSA(int ie) {
 void ForwardProblem::handleDataPoint(int it) {
     model->fx_rdata(x_rdata, x);
     std::copy_n(x_rdata.data(), rdata->nx, &rdata->x.at(it * rdata->nx));
-
+    model->getW(slice(rdata->w, it, model->nw),
+                model->getTimepoint(it), x);
     if (model->getTimepoint(it) > model->t0()) {
         solver->getDiagnosis(it, rdata);
     }
