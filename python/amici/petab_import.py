@@ -483,10 +483,10 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     # Create Python module from SBML model
     sbml_importer.sbml2amici(
-        modelName=model_name,
+        model_name=model_name,
         output_dir=model_output_dir,
         observables=observables,
-        constantParameters=fixed_parameters,
+        constant_parameters=fixed_parameters,
         sigmas=sigmas,
         allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
         noise_distributions=noise_distrs,
