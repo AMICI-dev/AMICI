@@ -681,7 +681,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void getW(gsl::span<realtype> w, const realtype t, const AmiVector &x);
+    void getExpression(gsl::span<realtype> w, const realtype t, const AmiVector &x);
 
     /**
      * @brief Time-resolved observables,

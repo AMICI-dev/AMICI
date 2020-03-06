@@ -742,7 +742,7 @@ void Model::requireSensitivitiesForAllParameters() {
     initializeVectors();
 }
 
-void Model::getW(gsl::span<realtype> w, const realtype t, const AmiVector &x)
+void Model::getExpression(gsl::span<realtype> w, const realtype t, const AmiVector &x)
 {
     fw(t, x.data());
     writeSlice(this->w, w);
