@@ -373,7 +373,7 @@ def get_edata_for_condition(
     if species:
         # set indicator fixed parameter for preeq
         # (we expect here, that this parameter was added during import and
-        # that is was not added by the user with a different meaning...)
+        # that it was not added by the user with a different meaning...)
         if condition_map_preeq:
             condition_map_preeq[PREEQ_INDICATOR_ID] = 1.0
             condition_scale_map_preeq[PREEQ_INDICATOR_ID] = LIN
