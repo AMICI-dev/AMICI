@@ -34,7 +34,7 @@ from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
     sbml_import
 )
-from .logging import get_logger, log_execution_time
+from .logging import get_logger, log_execution_time, set_log_level
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -1863,10 +1863,10 @@ class ODEExporter:
             see :class:`amici.ode_export.ODEExporter`
 
         """
-        logger.setLevel(verbose)
+        set_log_level(logger, verbose)
 
         self.outdir: str = outdir
-        self.verbose: Union[int, bool] = verbose
+        self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
         self.assume_pow_positivity: bool = assume_pow_positivity
         self.compiler: str = compiler
 
@@ -1907,7 +1907,7 @@ class ODEExporter:
 
         """
         self._compile_c_code(compiler=self.compiler,
-                             verbose=self.verbose <= logging.DEBUG)
+                             verbose=self.verbose)
 
     def _prepare_model_folder(self) -> None:
         """
