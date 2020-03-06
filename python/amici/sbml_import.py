@@ -241,7 +241,7 @@ class SbmlImporter:
             if False, just generate code.
 
         """
-        set_log_level(verbose)
+        set_log_level(logger, verbose)
 
         if observables is None:
             observables = {}
