@@ -11,7 +11,7 @@ from .ode_export import (
 )
 
 import logging
-from .logging import get_logger, log_execution_time
+from .logging import get_logger, log_execution_time, set_log_level
 
 import sympy as sp
 import numpy as np
@@ -87,7 +87,7 @@ def pysb2amici(model: pysb.Model,
     if sigmas is None:
         sigmas = {}
 
-    logger.setLevel(verbose)
+    set_log_level(logger, verbose)
 
     ode_model = ode_model_from_pysb_importer(
         model, constant_parameters=constant_parameters,
