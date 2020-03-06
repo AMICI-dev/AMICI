@@ -70,7 +70,7 @@ def check_finite_difference(x0: Sequence[float],
     model.setParameters(p)
     model.setParameterList(plist)
     rdata = runAmiciSimulation(model, solver, edata)
-    assert rdata['status'] == AMICI_SUCCESS
+    assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     # finite difference
     solver.setSensitivityOrder(SensitivityOrder_none)
@@ -80,14 +80,14 @@ def check_finite_difference(x0: Sequence[float],
     p[ip] += epsilon/2
     model.setParameters(p)
     rdataf = runAmiciSimulation(model, solver, edata)
-    assert rdata['status'] == AMICI_SUCCESS
+    assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     # backward:
     p = copy.deepcopy(x0)
     p[ip] -= epsilon/2
     model.setParameters(p)
     rdatab = runAmiciSimulation(model, solver, edata)
-    assert rdata['status'] == AMICI_SUCCESS
+    assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     for field in fields:
         sensi_raw = rdata[f's{field}']
@@ -145,7 +145,7 @@ def check_derivatives(model: Model,
     p = np.array(model.getParameters())
 
     rdata = runAmiciSimulation(model, solver, edata)
-    assert rdata['status'] == AMICI_SUCCESS
+    assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     fields = ['llh']
 
