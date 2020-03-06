@@ -16,7 +16,7 @@ import logging
 from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel
-from .logging import get_logger, log_execution_time
+from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
 from sympy.logic.boolalg import BooleanTrue as spTrue
@@ -241,7 +241,7 @@ class SbmlImporter:
             if False, just generate code.
 
         """
-        logger.setLevel(verbose)
+        set_log_level(logger, verbose)
 
         if observables is None:
             observables = {}

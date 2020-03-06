@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
-from amici.logging import get_logger, log_execution_time
+from amici.logging import get_logger, log_execution_time, set_log_level
 from petab.C import *
 
 logger = get_logger(__name__, logging.WARNING)
@@ -363,7 +363,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
                  observable_table: Optional[Union[str, pd.DataFrame]] = None,
                  model_name: Optional[str] = None,
                  model_output_dir: Optional[str] = None,
-                 verbose: bool = True,
+                 verbose: Optional[Union[bool,int]] = True,
                  allow_reinit_fixpar_initcond: bool = True,
                  **kwargs) -> None:
     """
@@ -400,8 +400,8 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         Additional keyword arguments to be passed to
         :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
     """
-    if verbose:
-        logger.setLevel(verbose)
+
+    set_log_level(logger, verbose)
 
     logger.info(f"Importing model ...")
 
