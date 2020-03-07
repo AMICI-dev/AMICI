@@ -51,28 +51,27 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
 
 
 void ForwardProblem::workForwardProblem() {
-    bool computeSensitivities =
-        solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        model->nx_solver > 0;
-
-    model->initialize(x, dx, sx, sdx, computeSensitivities);
-    solver->setup(model->t0(), model, x, dx, sx, sdx);
-    // update x0 after computing consistence IC, only important for DAEs
-    x.copy(solver->getState(model->t0()));
-
-    model->fx_rdata(x_rdata, x);
-    if(solver->getSensitivityOrder() >= SensitivityOrder::first) {
-        model->fsx_rdata(sx_rdata, sx);
-    }
-
     if(edata){
         rdata->initializeObjectiveFunction();
     }
-
+    
+    if(model->nx_solver == 0){
+        return;
+    }
+    
     /* if preequilibration is necessary, start Newton solver */
-    if (solver->getPreequilibration() || (edata && !edata->fixedParametersPreequilibration.empty())) {
+    if (solver->getPreequilibration() ||
+        (edata && !edata->fixedParametersPreequilibration.empty())) {
         handlePreequilibration();
     } else {
+        model->initialize(x, dx, sx, sdx,
+                          solver->getSensitivityOrder() >=
+                          SensitivityOrder::first);
+        // handlePreequilibration will setup the solver on its own.
+        solver->setup(model->t0(), model, x, dx, sx, sdx);
+        // update x0 after computing consistence IC, only important for DAEs
+        x.copy(solver->getState(model->t0()));
+        
         model->fx_rdata(x_rdata, x);
         rdata->x0 = x_rdata.getVector();
         if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
@@ -94,11 +93,6 @@ void ForwardProblem::workForwardProblem() {
         auto nextTimepoint = model->getTimepoint(it);
 
         if (nextTimepoint > model->t0()) {
-            if (model->nx_solver == 0) {
-                t = nextTimepoint;
-                break;
-            }
-
             // Solve for nextTimepoint
             while (t < nextTimepoint) {
                 if (std::isinf(nextTimepoint)) {
@@ -156,8 +150,10 @@ void ForwardProblem::handlePreequilibration() {
         model->setFixedParameters(edata->fixedParametersPreequilibration);
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
-                              SensitivityOrder::first);
-        updateAndReinitStatesAndSensitivities(false);
+                          SensitivityOrder::first);
+        solver->setup(model->t0(), model, x, dx, sx, sdx);
+        // update x0 after computing consistence IC, only important for DAEs
+        x.copy(solver->getState(model->t0()));
     }
 
     // pre-equilibrate
