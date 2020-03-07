@@ -54,4 +54,4 @@ jobs:
       run: |
         git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
           && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
-          && tests/benchmark-models/test_benchmark_collection.sh
+          && AMICI_PARALLEL_COMPILE=2 tests/benchmark-models/test_benchmark_collection.sh
