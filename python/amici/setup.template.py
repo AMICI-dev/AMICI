@@ -1,16 +1,33 @@
 """AMICI model package setup"""
 
 import os
-from setuptools import find_packages, setup, Extension
 from typing import List
 
 from amici import amici_path, hdf5_enabled
-from amici.custom_commands import (my_install, my_build_clib, my_develop,
-                                   my_install_lib, my_build_ext, my_sdist)
+from amici.custom_commands import (set_compiler_specific_extension_options,
+                                   compile_parallel)
 from amici.setuptools import (get_blas_config,
                               get_hdf5_config,
                               add_coverage_flags_if_required,
                               add_debug_flags_if_required)
+from setuptools import find_packages, setup, Extension
+from setuptools.command.build_ext import build_ext
+
+
+class my_build_ext(build_ext):
+    """Custom build_ext"""
+
+    def build_extension(self, ext):
+        # Work-around for compiler-specific build options
+        set_compiler_specific_extension_options(
+            ext, self.compiler.compiler_type)
+
+        # Monkey-patch compiler instance method for parallel compilation
+        import distutils.ccompiler
+        self.compiler.compile = compile_parallel.__get__(
+            self.compiler, distutils.ccompiler.CCompiler)
+
+        build_ext.build_extension(self, ext)
 
 
 def get_model_sources() -> List[str]:
