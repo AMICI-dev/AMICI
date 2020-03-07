@@ -38,7 +38,8 @@ class my_install(install):
         install.finalize_options(self)
 
     def run(self):
-        generate_swig_interface_files()
+        if not self.no_clibs:
+            generate_swig_interface_files()
         install.run(self)
 
 
@@ -90,8 +91,10 @@ class my_build_clib(build_clib):
         build_clib.run(self)
 
     def build_libraries(self, libraries: List[Library]):
-        no_clibs = self.get_finalized_command('develop').no_clibs
-        no_clibs |= self.get_finalized_command('install').no_clibs
+        no_clibs = 'develop' in self.distribution.command_obj \
+                   and self.get_finalized_command('develop').no_clibs
+        no_clibs |= 'install' in self.distribution.command_obj \
+                    and self.get_finalized_command('install').no_clibs
 
         if no_clibs:
             return
@@ -175,41 +178,38 @@ class my_build_ext(build_ext):
         Returns:
 
         """
-        no_clibs = self.get_finalized_command('develop').no_clibs
-        no_clibs |= self.get_finalized_command('install').no_clibs
+        no_clibs = 'develop' in self.distribution.command_obj \
+                   and self.get_finalized_command('develop').no_clibs
+        no_clibs |= 'install' in self.distribution.command_obj \
+                    and self.get_finalized_command('install').no_clibs
 
         if no_clibs:
             return
 
-        if not self.dry_run:  # --dry-run
-            libraries = []
-            build_clib = ''
-            if self.distribution.has_c_libraries():
-                # get the previously built static libraries
-                build_clib = self.get_finalized_command('build_clib')
-                libraries = build_clib.get_library_names() or []
+        if not self.dry_run and self.distribution.has_c_libraries():
+            # get the previously built static libraries
+            build_clib = self.get_finalized_command('build_clib')
+            libraries = build_clib.get_library_names() or []
 
-            # Module build directory where we want to copy the generated libs
-            # to
+            # Module build directory where we want to copy the generated
+            # libs to
             if self.inplace == 0:
                 build_dir = self.build_lib
             else:
                 build_dir = os.getcwd()
-
             target_dir = os.path.join(build_dir, 'amici', 'libs')
             self.mkpath(target_dir)
 
             # Copy the generated libs
             for lib in libraries:
                 libfilenames = glob.glob(
-                    '%s%s*%s.*' % (build_clib.build_clib, os.sep, lib)
-                )
+                    f"{build_clib.build_clib}{os.sep}*{lib}.*")
                 assert len(libfilenames) == 1, \
                     "Found unexpected number of files: " % libfilenames
-
-                copyfile(libfilenames[0],
-                         os.path.join(target_dir,
-                                      os.path.basename(libfilenames[0])))
+                src = libfilenames[0]
+                dest = os.path.join(target_dir, os.path.basename(src))
+                log.info(f"copying {src} -> {dest}")
+                copyfile(src, dest)
 
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
