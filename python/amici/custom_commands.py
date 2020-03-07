@@ -130,7 +130,7 @@ class my_develop(develop):
     def run(self):
         if not self.no_clibs:
             generate_swig_interface_files()
-            self.run_command('build')
+            self.get_finalized_command('build_clib')
 
         develop.run(self)
 
