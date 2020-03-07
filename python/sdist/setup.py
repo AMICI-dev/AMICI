@@ -119,13 +119,6 @@ def main():
     with open("README.md", "r", encoding="utf-8") as fh:
         long_description = fh.read()
 
-    # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
-    # C++ to fix warnings.
-    cfg_vars = sysconfig.get_config_vars()
-    for key, value in cfg_vars.items():
-        if type(value) == str:
-            cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
-
     # Build shared object
     amici_module = Extension(
         name='amici._amici',
