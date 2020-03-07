@@ -174,7 +174,7 @@ install:
     - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t dist/amici-*.tar.gz | head -1); fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install -v $(ls -t dist/amici-*.tar.gz | head -1); fi
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
