@@ -31,6 +31,7 @@ using namespace amici;
 %ignore getEventTimeSensitivity;
 %ignore getObservable;
 %ignore getObservableSensitivity;
+%ignore getExpression;
 %ignore initHeaviside;
 %ignore initialize;
 %ignore initializeB;

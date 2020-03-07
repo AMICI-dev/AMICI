@@ -13,6 +13,8 @@ import os
 import shutil
 import sys
 import tempfile
+from _collections import OrderedDict
+from itertools import chain
 from typing import List, Dict, Union, Optional, Tuple
 
 import amici
@@ -21,7 +23,7 @@ import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
-from amici.logging import get_logger, log_execution_time
+from amici.logging import get_logger, log_execution_time, set_log_level
 from petab.C import *
 
 logger = get_logger(__name__, logging.WARNING)
@@ -363,7 +365,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
                  observable_table: Optional[Union[str, pd.DataFrame]] = None,
                  model_name: Optional[str] = None,
                  model_output_dir: Optional[str] = None,
-                 verbose: bool = True,
+                 verbose: Optional[Union[bool,int]] = True,
                  allow_reinit_fixpar_initcond: bool = True,
                  **kwargs) -> None:
     """
@@ -400,8 +402,8 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         Additional keyword arguments to be passed to
         :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
     """
-    if verbose:
-        logger.setLevel(verbose)
+
+    set_log_level(logger, verbose)
 
     logger.info(f"Importing model ...")
 
@@ -459,16 +461,19 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
     #  so we add any output parameters to the SBML model.
     #  this should be changed to something more elegant
     # <BeginWorkAround>
-    formulas = {val['formula'] for val in observables.values()}
-    formulas |= set(sigmas.values())
-    output_parameters = set()
+    formulas = chain((val['formula'] for val in observables.values()),
+                     sigmas.values())
+    output_parameters = OrderedDict()
     for formula in formulas:
-        for free_sym in sp.sympify(formula).free_symbols:
+        # we want reproducible parameter ordering upon repeated import
+        free_syms = sorted(sp.sympify(formula).free_symbols,
+                           key=lambda symbol: symbol.name)
+        for free_sym in free_syms:
             sym = str(free_sym)
             if sbml_model.getElementBySId(sym) is None:
-                output_parameters.add(sym)
+                output_parameters[sym] = None
     logger.debug(f"Adding output parameters to model: {output_parameters}")
-    for par in output_parameters:
+    for par in output_parameters.keys():
         petab.add_global_parameter(sbml_model, par)
     # <EndWorkAround>
 
@@ -483,10 +488,10 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     # Create Python module from SBML model
     sbml_importer.sbml2amici(
-        modelName=model_name,
+        model_name=model_name,
         output_dir=model_output_dir,
         observables=observables,
-        constantParameters=fixed_parameters,
+        constant_parameters=fixed_parameters,
         sigmas=sigmas,
         allow_reinit_fixpar_initcond=allow_reinit_fixpar_initcond,
         noise_distributions=noise_distrs,

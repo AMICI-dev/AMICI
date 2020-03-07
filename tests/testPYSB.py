@@ -129,7 +129,7 @@ class TestAmiciPYSBModel(unittest.TestCase):
                              'newton_numsteps', 'numrhsevals',
                              'numerrtestfails', 'order', 'J', 'xdot',
                              'wrms_steadystate', 'newton_cpu_time',
-                             'cpu_time', 'cpu_timeB', ]:
+                             'cpu_time', 'cpu_timeB', 'w']:
                 with self.subTest(field=field):
                     if rdata_pysb[field] is None:
                         self.assertIsNone(

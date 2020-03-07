@@ -34,7 +34,7 @@ from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
     sbml_import
 )
-from .logging import get_logger, log_execution_time
+from .logging import get_logger, log_execution_time, set_log_level
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -943,7 +943,7 @@ class ODEModel:
     def ncl(self) -> int:
         """
         Number of conservation laws.
-        
+
         :return:
             number of conservation laws
         """
@@ -1026,7 +1026,7 @@ class ODEModel:
         Returns (and constructs if necessary) the formulas for a symbolic
         entity.
 
-        :param name: 
+        :param name:
             name of the symbolic variable
 
         :return:
@@ -1863,10 +1863,10 @@ class ODEExporter:
             see :class:`amici.ode_export.ODEExporter`
 
         """
-        logger.setLevel(verbose)
+        set_log_level(logger, verbose)
 
         self.outdir: str = outdir
-        self.verbose: Union[int, bool] = verbose
+        self.verbose: bool = logger.getEffectiveLevel() <= logging.DEBUG
         self.assume_pow_positivity: bool = assume_pow_positivity
         self.compiler: str = compiler
 
@@ -1907,7 +1907,7 @@ class ODEExporter:
 
         """
         self._compile_c_code(compiler=self.compiler,
-                             verbose=self.verbose <= logging.DEBUG)
+                             verbose=self.verbose)
 
     def _prepare_model_folder(self) -> None:
         """
@@ -2469,10 +2469,16 @@ class ODEExporter:
         Sets the model name
 
         :param model_name:
-            name of the model (must only contain valid filename
-            characters)
+            name of the model (may only contain upper and lower case letters,
+            digits and underscores, and must not start with a digit)
 
         """
+        if not is_valid_identifier(model_name):
+            raise ValueError(
+                f"'{model_name}' is not a valid model name. "
+                "Model name may only contain upper and lower case letters, "
+                "digits and underscores, and must not start with a digit.")
+
         self.model_name = model_name
 
 
@@ -2803,3 +2809,20 @@ def csc_matrix(matrix: sp.Matrix,
 
     return symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
         sparse_matrix
+
+
+def is_valid_identifier(x: str) -> bool:
+    """Check whether `x` is a valid identifier
+
+    Check whether `x` is a valid identifier for conditions, parameters,
+    observables... . Identifiers may only contain upper and lower case letters,
+    digits and underscores, and must not start with a digit.
+
+    Arguments:
+        x: string to check
+
+    Returns:
+        ``True`` if valid, ``False`` otherwise
+    """
+
+    return re.match(r'^[a-zA-Z_]\w*$', x) is not None
