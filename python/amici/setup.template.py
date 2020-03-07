@@ -1,17 +1,16 @@
 """AMICI model package setup"""
 
-from setuptools import find_packages
-from distutils.core import setup, Extension
-from distutils import sysconfig
 import os
-from amici import amici_path, hdf5_enabled
+from setuptools import find_packages, setup, Extension
+from typing import List
 
+from amici import amici_path, hdf5_enabled
+from amici.custom_commands import (my_install, my_build_clib, my_develop,
+                                   my_install_lib, my_build_ext, my_sdist)
 from amici.setuptools import (get_blas_config,
                               get_hdf5_config,
                               add_coverage_flags_if_required,
                               add_debug_flags_if_required)
-
-from typing import List
 
 
 def get_model_sources() -> List[str]:
@@ -91,8 +90,11 @@ def get_extension() -> Extension:
     )
     return ext
 
+
 # Change working directory to setup.py location
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+MODEL_EXT = get_extension()
 
 CLASSIFIERS = [
     'Development Status :: 3 - Alpha',
@@ -104,16 +106,22 @@ CLASSIFIERS = [
     'Topic :: Scientific/Engineering :: Bio-Informatics',
 ]
 
+CMDCLASS = {
+    # For parallel compilation
+    'build_ext': my_build_ext,
+}
+
 # Install
 setup(
     name='TPL_MODELNAME',
+    cmdclass=CMDCLASS,
     version='TPL_PACKAGE_VERSION',
     description='AMICI-generated module for model TPL_MODELNAME',
     url='https://github.com/ICB-DCM/AMICI',
     author='model-author-todo',
     author_email='model-author-todo',
     # license = 'BSD',
-    ext_modules=[get_extension()],
+    ext_modules=[MODEL_EXT],
     packages=find_packages(),
     install_requires=['amici==TPL_AMICI_VERSION'],
     extras_require={'wurlitzer': ['wurlitzer']},

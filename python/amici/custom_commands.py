@@ -46,6 +46,7 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
                      include_dirs=None, debug=0, extra_preargs=None,
                      extra_postargs=None, depends=None):
     """Parallelized version of distutils.ccompiler.compile"""
+
     macros, objects, extra_postargs, pp_opts, build = \
         self._setup_compile(output_dir, macros, include_dirs, sources,
                             depends, extra_postargs)
@@ -157,7 +158,13 @@ class my_build_ext(build_ext):
 
     def build_extension(self, ext):
         # Work-around for compiler-specific build options
-        set_compiler_specific_extension_options(ext, self.compiler.compiler_type)
+        set_compiler_specific_extension_options(
+            ext, self.compiler.compiler_type)
+
+        # Monkey-patch compiler instance method for parallel compilation
+        import distutils.ccompiler
+        self.compiler.compile = compile_parallel.__get__(
+            self.compiler, distutils.ccompiler.CCompiler)
 
         build_ext.build_extension(self, ext)
 

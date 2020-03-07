@@ -943,7 +943,7 @@ class ODEModel:
     def ncl(self) -> int:
         """
         Number of conservation laws.
-        
+
         :return:
             number of conservation laws
         """
@@ -1026,7 +1026,7 @@ class ODEModel:
         Returns (and constructs if necessary) the formulas for a symbolic
         entity.
 
-        :param name: 
+        :param name:
             name of the symbolic variable
 
         :return:

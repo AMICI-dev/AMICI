@@ -16,16 +16,17 @@ from setuptools import find_packages, setup, Extension
 
 import os
 import sys
-import sysconfig
 import subprocess
-import setup_clibs # Must run from within containing directory
-from custom_commands import (my_install, my_build_clib, my_develop,
-                             my_install_lib, my_build_ext, my_sdist)
+import setup_clibs  # Must run from within containing directory
 
-
+# Add current directory to path, as we need some modules from the AMICI
+# package already for installation
 sys.path.insert(0, os.getcwd())
-from amici import __version__
 
+from amici import __version__
+from amici.custom_commands import (
+    my_install, my_build_clib, my_develop,
+    my_install_lib, my_build_ext, my_sdist)
 from amici.setuptools import (
     get_blas_config,
     get_hdf5_config,
@@ -50,7 +51,6 @@ except ImportError:
     try_install('numpy')
     # retry
     import numpy as np
-
 
 # Python version check. We need >= 3.6 due to e.g. f-strings
 if sys.version_info < (3, 6):
@@ -173,7 +173,7 @@ def main():
         libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
         py_modules=['amici/amici',  # the swig interface
-                    'amici/amici_without_hdf5',   # the swig interface
+                    'amici/amici_without_hdf5',  # the swig interface
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
