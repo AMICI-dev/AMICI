@@ -13,6 +13,8 @@ import os
 import shutil
 import sys
 import tempfile
+from _collections import OrderedDict
+from itertools import chain
 from typing import List, Dict, Union, Optional, Tuple
 
 import amici
@@ -461,16 +463,19 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
     #  so we add any output parameters to the SBML model.
     #  this should be changed to something more elegant
     # <BeginWorkAround>
-    formulas = {val['formula'] for val in observables.values()}
-    formulas |= set(sigmas.values())
-    output_parameters = set()
+    formulas = chain((val['formula'] for val in observables.values()),
+                     sigmas.values())
+    output_parameters = OrderedDict()
     for formula in formulas:
-        for free_sym in sp.sympify(formula).free_symbols:
+        # we want reproducible parameter ordering upon repeated import
+        free_syms = sorted(sp.sympify(formula).free_symbols,
+                           key=lambda symbol: symbol.name)
+        for free_sym in free_syms:
             sym = str(free_sym)
             if sbml_model.getElementBySId(sym) is None:
-                output_parameters.add(sym)
+                output_parameters[sym] = None
     logger.debug(f"Adding output parameters to model: {output_parameters}")
-    for par in output_parameters:
+    for par in output_parameters.keys():
         petab.add_global_parameter(sbml_model, par)
     # <EndWorkAround>
 
