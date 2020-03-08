@@ -20,10 +20,10 @@ from distutils import log
 Library = Tuple[str, Dict[str, List[str]]]
 
 
-class my_install(install):
+class AmiciInstall(install):
     """Custom install to handle extra arguments"""
 
-    log.debug("running my_install")
+    log.debug("running AmiciInstall")
 
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = install.user_options + [
@@ -81,11 +81,11 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
     return objects
 
 
-class my_build_clib(build_clib):
+class AmiciBuildCLib(build_clib):
     """Custom build_clib"""
 
     def run(self):
-        log.debug("running my_build_clib")
+        log.debug("running AmiciBuildCLib")
 
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
@@ -95,7 +95,7 @@ class my_build_clib(build_clib):
         build_clib.run(self)
 
     def build_libraries(self, libraries: List[Library]):
-        log.debug("running my_build_clib.build_libraries")
+        log.debug("running AmiciBuildCLib.build_libraries")
 
         no_clibs = 'develop' in self.distribution.command_obj \
                    and self.get_finalized_command('develop').no_clibs
@@ -116,7 +116,7 @@ class my_build_clib(build_clib):
         build_clib.build_libraries(self, libraries)
 
 
-class my_develop(develop):
+class AmiciDevelop(develop):
     """Custom develop to build clibs"""
 
     # Passing --no-clibs allows to install the Python-only part of AMICI
@@ -134,7 +134,7 @@ class my_develop(develop):
         develop.finalize_options(self)
 
     def run(self):
-        log.debug("running my_develop")
+        log.debug("running AmiciDevelop")
 
         if not self.no_clibs:
             generate_swig_interface_files()
@@ -143,7 +143,7 @@ class my_develop(develop):
         develop.run(self)
 
 
-class my_install_lib(install_lib):
+class AmiciInstallLib(install_lib):
     """Custom install to allow preserving of debug symbols"""
 
     def run(self):
@@ -152,7 +152,7 @@ class my_install_lib(install_lib):
         Returns:
 
         """
-        log.debug("running my_install_lib")
+        log.debug("running AmiciInstallLib")
 
         if 'ENABLE_AMICI_DEBUGGING' in os.environ \
                 and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' \
@@ -167,7 +167,7 @@ class my_install_lib(install_lib):
         install_lib.run(self)
 
 
-class my_build_ext(build_ext):
+class AmiciBuildExt(build_ext):
     """Custom build_ext to allow keeping otherwise temporary static libs"""
 
     def build_extension(self, ext):
@@ -182,7 +182,7 @@ class my_build_ext(build_ext):
         the wheel
         """
 
-        log.debug("running my_build_ext")
+        log.debug("running AmiciBuildExt")
 
         no_clibs = 'develop' in self.distribution.command_obj \
                    and self.get_finalized_command('develop').no_clibs
@@ -211,7 +211,7 @@ class my_build_ext(build_ext):
                 libfilenames = glob.glob(
                     f"{build_clib.build_clib}{os.sep}*{lib}.*")
                 assert len(libfilenames) == 1, \
-                    "Found unexpected number of files: " % libfilenames
+                    f"Found unexpected number of files: {libfilenames}"
                 src = libfilenames[0]
                 dest = os.path.join(target_dir, os.path.basename(src))
                 log.info(f"copying {src} -> {dest}")
@@ -226,7 +226,7 @@ class my_build_ext(build_ext):
         build_ext.run(self)
 
 
-class my_sdist(sdist):
+class AmiciSDist(sdist):
     """Custom sdist to run swig and add the interface files to the source
     distribution
 
@@ -243,13 +243,13 @@ class my_sdist(sdist):
 
         """
 
-        log.debug("running my_sdist")
+        log.debug("running AmiciSDist")
 
-        self.runSwig()
-        self.saveGitVersion()
+        self.run_swig()
+        self.save_git_version()
         sdist.run(self)
 
-    def runSwig(self):
+    def run_swig(self):
         """Run swig
 
         Returns:
@@ -260,7 +260,7 @@ class my_sdist(sdist):
             # We create two SWIG interfaces, one with HDF5 support, one without
             generate_swig_interface_files()
 
-    def saveGitVersion(self):
+    def save_git_version(self):
         """Create file with extended version string
 
         This requires git. We assume that whoever creates the sdist will work

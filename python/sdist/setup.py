@@ -25,8 +25,8 @@ sys.path.insert(0, os.getcwd())
 
 from amici import __version__
 from amici.custom_commands import (
-    my_install, my_build_clib, my_develop,
-    my_install_lib, my_build_ext, my_sdist)
+    AmiciInstall, AmiciBuildCLib, AmiciDevelop,
+    AmiciInstallLib, AmiciBuildExt, AmiciSDist)
 from amici.setuptools import (
     get_blas_config,
     get_hdf5_config,
@@ -154,12 +154,12 @@ def main():
     setup(
         name='amici',
         cmdclass={
-            'install': my_install,
-            'sdist': my_sdist,
-            'build_ext': my_build_ext,
-            'build_clib': my_build_clib,
-            'install_lib': my_install_lib,
-            'develop': my_develop,
+            'install': AmiciInstall,
+            'sdist': AmiciSDist,
+            'build_ext': AmiciBuildExt,
+            'build_clib': AmiciBuildCLib,
+            'install_lib': AmiciInstallLib,
+            'develop': AmiciDevelop,
         },
         version=__version__,
         description='Advanced multi-language Interface to CVODES and IDAS',

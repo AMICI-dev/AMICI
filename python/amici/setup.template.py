@@ -14,7 +14,7 @@ from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 
 
-class my_build_ext(build_ext):
+class ModelBuildExt(build_ext):
     """Custom build_ext"""
 
     def build_extension(self, ext):
@@ -125,7 +125,7 @@ CLASSIFIERS = [
 
 CMDCLASS = {
     # For parallel compilation
-    'build_ext': my_build_ext,
+    'build_ext': ModelBuildExt,
 }
 
 # Install
