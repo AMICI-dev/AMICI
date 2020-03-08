@@ -29,6 +29,11 @@ from petab.C import *
 logger = get_logger(__name__, logging.WARNING)
 
 
+# ID of model parameter that is to be added to SBML model to indicate
+#  preequilibration
+PREEQ_INDICATOR_ID = 'preequilibration_indicator'
+
+
 def get_fixed_parameters(
         sbml_model: 'libsbml.Model',
         condition_df: Optional[pd.DataFrame] = None,
@@ -127,14 +132,6 @@ def get_fixed_parameters(
         raise NotImplementedError("Can't handle initial compartment sizes "
                                   "at the moment. Consider creating an "
                                   f"initial assignment for {compartments}")
-
-    species = [col for col in condition_df
-               if not np.issubdtype(condition_df[col].dtype, np.number)
-               and sbml_model.getSpecies(col) is not None]
-    if species:
-        raise NotImplementedError(
-            "Can't handle parameterized initial concentrations in condition "
-            f"table. Consider creating an initial assignment for {species}")
 
     return fixed_parameters
 
@@ -290,6 +287,7 @@ def import_petab_problem(
         import_model(sbml_model=petab_problem.sbml_model,
                      condition_table=petab_problem.condition_df,
                      observable_table=petab_problem.observable_df,
+                     measurement_table=petab_problem.measurement_df,
                      model_name=model_name,
                      model_output_dir=model_output_dir,
                      **kwargs)
@@ -363,6 +361,7 @@ def _can_import_model(model_name: str) -> bool:
 def import_model(sbml_model: Union[str, 'libsbml.Model'],
                  condition_table: Optional[Union[str, pd.DataFrame]] = None,
                  observable_table: Optional[Union[str, pd.DataFrame]] = None,
+                 measurement_table: Optional[Union[str, pd.DataFrame]] = None,
                  model_name: Optional[str] = None,
                  model_output_dir: Optional[str] = None,
                  verbose: Optional[Union[bool,int]] = True,
@@ -381,6 +380,9 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
 
     :param observable_table:
         PEtab observable table.
+
+    :param measurement_table:
+        PEtab measurement table.
 
     :param model_name:
         Name of the generated model. If model file name was provided,
@@ -477,8 +479,53 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         petab.add_global_parameter(sbml_model, par)
     # <EndWorkAround>
 
-    fixed_parameters = get_fixed_parameters(sbml_model=sbml_model,
-                                            condition_df=condition_df)
+    # TODO: to parameterize initial states or compartment sizes, we currently
+    #  need initial assignments. if they occur in the condition table, we
+    #  create a new parameter initial_${startOrCompartmentID}.
+    #  feels dirty and should be changed (see also #924)
+    # <BeginWorkAround>
+    initial_states = [col for col in condition_df
+                      if sbml_model.getSpecies(col) is not None]
+    initial_sizes = [col for col in condition_df
+                     if sbml_model.getCompartment(col) is not None]
+    fixed_parameters = []
+    if len(initial_states) or len(initial_sizes):
+        # add preequilibration indicator variable
+        # NOTE: would only be required if we actually have preequilibration
+        #  adding it anyways. can be optimized-out later
+        if sbml_model.getParameter(PREEQ_INDICATOR_ID) is not None:
+            raise AssertionError("Model already has a parameter with ID "
+                                 f"{PREEQ_INDICATOR_ID}. Cannot handle "
+                                 "species and compartments in condition table "
+                                 "then.")
+        indicator = sbml_model.createParameter()
+        indicator.setId(PREEQ_INDICATOR_ID)
+        indicator.setName(PREEQ_INDICATOR_ID)
+        # Can only reset parameters after preequilibration if they are fixed.
+        fixed_parameters.append(PREEQ_INDICATOR_ID)
+
+    for assignee_id in initial_sizes + initial_states:
+        init_par_id_preeq = f"initial_{assignee_id}_preeq"
+        init_par_id_sim = f"initial_{assignee_id}_sim"
+        for init_par_id in [init_par_id_preeq, init_par_id_sim]:
+            if sbml_model.getElementBySId(init_par_id) is not None:
+                raise ValueError(
+                    "Cannot create parameter for initial assignment "
+                    f"for {assignee_id} because an entity named "
+                    f"{init_par_id} exists already in the model.")
+            init_par = sbml_model.createParameter()
+            init_par.setId(init_par_id)
+            init_par.setName(init_par_id)
+        assignment = sbml_model.createInitialAssignment()
+        assignment.setSymbol(assignee_id)
+        formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} '\
+                  f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
+        math_ast = libsbml.parseL3Formula(formula)
+        assignment.setMath(math_ast)
+    # <EndWorkAround>
+
+    fixed_parameters.extend(
+        get_fixed_parameters(sbml_model=sbml_model, condition_df=condition_df))
 
     logger.debug(f"Fixed parameters are {fixed_parameters}")
     logger.info(f"Overall fixed parameters: {len(fixed_parameters)}")
@@ -667,6 +714,7 @@ def main():
                  sbml_model=pp.sbml_model,
                  condition_table=pp.condition_df,
                  observable_table=pp.observable_df,
+                 measurement_table=pp.measurement_df,
                  model_output_dir=args.model_output_dir,
                  compile=args.compile,
                  verbose=args.verbose)

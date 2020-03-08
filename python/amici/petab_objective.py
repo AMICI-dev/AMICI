@@ -16,9 +16,9 @@ import libsbml
 import numpy as np
 import pandas as pd
 import petab
-from amici.logging import get_logger, log_execution_time
+from .logging import get_logger, log_execution_time
 from petab.C import *
-
+from .petab_import import PREEQ_INDICATOR_ID
 
 LLH = 'llh'
 SLLH = 'sllh'
@@ -101,7 +101,7 @@ def simulate_petab(
     # we need to do that here as well to prevent parameter mapping errors
     # (PEtab does currently not care about SBML LocalParameters)
     if petab_problem.sbml_document:
-        converter_config = libsbml.SBMLLocalParameterConverter()\
+        converter_config = libsbml.SBMLLocalParameterConverter() \
             .getDefaultProperties()
         petab_problem.sbml_document.convert(converter_config)
     else:
@@ -123,6 +123,10 @@ def simulate_petab(
         simulation_conditions=simulation_conditions,
         parameter_mapping=parameter_mapping,
         scaled_parameters=scaled_parameters)
+
+    # only required if we have preequilibration AND species or
+    #  compartments in condition table, but shouldn't hurt to enable anyways.
+    amici_model.setReinitializeFixedParameterInitialStates(True)
 
     # Simulate
     rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
@@ -200,7 +204,6 @@ def edatas_from_petab(
     :return:
         List with one :class:`amici.amici.ExpData` per simulation condition.
     """
-
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
     # Can be optimized by checking for identical condition vectors.
@@ -223,7 +226,8 @@ def edatas_from_petab(
             in zip(simulation_conditions.iterrows(), parameter_mapping):
         # Create amici.ExpData for each simulation
         edata = get_edata_for_condition(
-            condition=condition, amici_model=model, petab_problem=petab_problem,
+            condition=condition, amici_model=model,
+            petab_problem=petab_problem,
             problem_parameters=problem_parameters,
             observable_ids=observable_ids,
             parameter_mapping=cur_parameter_mapping,
@@ -315,7 +319,7 @@ def get_edata_for_condition(
         raise NotImplementedError()
 
     (condition_map_preeq, condition_map_sim, condition_scale_map_preeq,
-        condition_scale_map_sim) = parameter_mapping
+     condition_scale_map_sim) = parameter_mapping
 
     logger.debug(f"PEtab mapping: {parameter_mapping}")
 
@@ -352,6 +356,86 @@ def get_edata_for_condition(
     condition_map_preeq = {key: _get_par(key, val)
                            for key, val in condition_map_preeq.items()}
 
+    ##########################################################################
+    # initial states
+    # Initial states have been set during model import based on the SBML model.
+    # If initial states were overwritten in the PEtab condition table, they are
+    # applied here.
+    # During model generation, parameters for initial concentrations and
+    # respective initial assignments have been created for the
+    # relevant species, here we add these parameters to the parameter mapping.
+    # In absence of preequilibration this could also be handled via
+    # ExpData.x0, but in the case of preequilibration this would not allow for
+    # resetting initial states.
+
+    species_in_condition_table = [
+        col for col in petab_problem.condition_df
+        if petab_problem.sbml_model.getSpecies(col) is not None]
+
+    if species_in_condition_table:
+        # set indicator fixed parameter for preeq
+        # (we expect here, that this parameter was added during import and
+        # that it was not added by the user with a different meaning...)
+        if condition_map_preeq:
+            condition_map_preeq[PREEQ_INDICATOR_ID] = 1.0
+            condition_scale_map_preeq[PREEQ_INDICATOR_ID] = LIN
+
+        condition_map_sim[PREEQ_INDICATOR_ID] = 0.0
+        condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
+
+        def _set_initial_concentration(condition_id, species_id, init_par_id,
+                                       par_map, scale_map):
+            value = petab.to_float_if_float(
+                petab_problem.condition_df.loc[condition_id, species_id])
+            if isinstance(value, float):
+                # numeric initial state
+                par_map[init_par_id] = value
+                scale_map[init_par_id] = petab.LIN
+            else:
+                # parametric initial state
+                try:
+                    # try find in mapping
+                    par_map[init_par_id] = par_map[value]
+                    scale_map[init_par_id] = scale_map[value]
+                except KeyError:
+                    # otherwise look up in parameter table
+                    par_map[init_par_id] = problem_parameters[value]
+                    if (scaled_parameters == False
+                            or PARAMETER_SCALE
+                            not in petab_problem.parameter_df
+                            or not petab_problem.parameter_df.loc[
+                                value, PARAMETER_SCALE]):
+                        scale_map[init_par_id] = LIN
+                    else:
+                        scale_map[init_par_id] = \
+                            petab_problem.parameter_df.loc[
+                                value, PARAMETER_SCALE]
+
+        for species_id in species_in_condition_table:
+            # for preequilibration
+            init_par_id = f'initial_{species_id}_preeq'
+            if PREEQUILIBRATION_CONDITION_ID in condition \
+                    and condition[PREEQUILIBRATION_CONDITION_ID]:
+                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
+                _set_initial_concentration(
+                    condition_id, species_id, init_par_id, condition_map_preeq,
+                    condition_scale_map_preeq)
+            else:
+                # need to set dummy value for preeq parameter anyways, as it
+                #  is expected below (set to 0, not nan, because will be
+                #  multiplied with indicator variable in initial assignment)
+                condition_map_sim[init_par_id] = 0.0
+                condition_scale_map_sim[init_par_id] = LIN
+
+            # for simulation
+            condition_id = condition[SIMULATION_CONDITION_ID]
+            init_par_id = f'initial_{species_id}_sim'
+            _set_initial_concentration(
+                condition_id, species_id, init_par_id, condition_map_sim,
+                condition_scale_map_sim)
+
+    ##########################################################################
+
     # separate fixed and variable AMICI parameters, because we may have
     # different fixed parameters for preeq and sim condition, but we cannot
     # have different variable parameters. without splitting,
@@ -384,7 +468,6 @@ def get_edata_for_condition(
         condition_map_preeq_var, condition_map_sim_var,
         condition_scale_map_preeq_var, condition_scale_map_sim_var,
         condition)
-
     logger.debug(f"Merged: {condition_map_sim_var}")
 
     # If necessary, scale parameters
@@ -425,42 +508,6 @@ def get_edata_for_condition(
         df_for_condition=measurement_df)
 
     edata.setTimepoints(timepoints_w_reps)
-
-    ##########################################################################
-    # initial states
-    # Initial states have been set during model import based on the SBML model.
-    # If initial states were overwritten in the PEtab condition table, they are
-    # applied here. We never change amici_model.x0 here (and assume it contains
-    # the original values; we only change ExpData.x0.
-
-    species = [col for col in petab_problem.condition_df
-               if petab_problem.sbml_model.getSpecies(col) is not None]
-    if species:
-        x0 = amici_model.getInitialStates()
-        species_ids = amici_model.getStateIds()
-        for species_id in species:
-            if not np.issubdtype(petab_problem.condition_df[species_id].dtype,
-                                 np.number):
-                raise NotImplementedError(
-                    "Support for parametric overrides for initial states "
-                    "is not yet implemented.")
-            try:
-                species_idx = species_ids.index(species_id)
-            except ValueError:
-                continue
-            if condition[PREEQUILIBRATION_CONDITION_ID]:
-                condition_id = condition[PREEQUILIBRATION_CONDITION_ID]
-            else:
-                condition_id = condition[SIMULATION_CONDITION_ID]
-
-            x0[species_idx] = petab_problem.condition_df.loc(condition_id,
-                                                             species_id)
-
-        edata.x0 = x0
-
-    # TODO: depends on #924: In case of parametric overrides, they would have
-    #  to be handled as fixed model parameters below. These cases are filtered
-    #  out at import stage.
 
     ##########################################################################
     # fixed parameters preequilibration
@@ -624,7 +671,7 @@ def _get_measurements_and_sigmas(
             y[time_ix_for_obs_ix[observable_ix],
               observable_ix] = measurement[MEASUREMENT]
             if isinstance(measurement.get(NOISE_PARAMETERS, None),
-                    numbers.Number):
+                          numbers.Number):
                 sigma_y[time_ix_for_obs_ix[observable_ix],
                         observable_ix] = measurement[NOISE_PARAMETERS]
     return y, sigma_y
@@ -724,13 +771,13 @@ def aggregate_sllh(
     model_par_ids = amici_model.getParameterIds()
     for (_, par_map_sim, _, _), rdata in zip(parameter_mapping, rdatas):
         if rdata['status'] != amici.AMICI_SUCCESS \
-                or 'sllh' not in rdata\
+                or 'sllh' not in rdata \
                 or rdata['sllh'] is None:
             return None
 
         for model_par_id, problem_par_id in par_map_sim.items():
             if isinstance(problem_par_id, str):
-                model_par_idx  = model_par_ids.index(model_par_id)
+                model_par_idx = model_par_ids.index(model_par_id)
                 cur_par_sllh = rdata['sllh'][model_par_idx]
                 try:
                     sllh[problem_par_id] += cur_par_sllh

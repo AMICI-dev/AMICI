@@ -54,11 +54,11 @@ void ForwardProblem::workForwardProblem() {
     if(edata){
         rdata->initializeObjectiveFunction();
     }
-    
+
     if(model->nx_solver == 0){
         return;
     }
-    
+
     /* if preequilibration is necessary, start Newton solver */
     if (solver->getPreequilibration() ||
         (edata && !edata->fixedParametersPreequilibration.empty())) {
@@ -71,7 +71,7 @@ void ForwardProblem::workForwardProblem() {
         solver->setup(model->t0(), model, x, dx, sx, sdx);
         // update x0 after computing consistence IC, only important for DAEs
         x.copy(solver->getState(model->t0()));
-        
+
         model->fx_rdata(x_rdata, x);
         rdata->x0 = x_rdata.getVector();
         if (solver->getSensitivityMethod() == SensitivityMethod::forward &&

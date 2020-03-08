@@ -5,7 +5,7 @@ This module provides functions to automatically check correctness of amici
 computed sensitivities using finite difference approximations
 """
 
-from . import (runAmiciSimulation, SensitivityOrder_none,
+from . import (runAmiciSimulation, SensitivityOrder_none, AMICI_SUCCESS,
                SensitivityMethod_forward, Model, Solver, ExpData, ReturnData)
 import numpy as np
 import copy
@@ -70,6 +70,7 @@ def check_finite_difference(x0: Sequence[float],
     model.setParameters(p)
     model.setParameterList(plist)
     rdata = runAmiciSimulation(model, solver, edata)
+    assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     # finite difference
     solver.setSensitivityOrder(SensitivityOrder_none)
@@ -79,12 +80,14 @@ def check_finite_difference(x0: Sequence[float],
     p[ip] += epsilon/2
     model.setParameters(p)
     rdataf = runAmiciSimulation(model, solver, edata)
+    assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     # backward:
     p = copy.deepcopy(x0)
     p[ip] -= epsilon/2
     model.setParameters(p)
     rdatab = runAmiciSimulation(model, solver, edata)
+    assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     for field in fields:
         sensi_raw = rdata[f's{field}']
@@ -142,6 +145,7 @@ def check_derivatives(model: Model,
     p = np.array(model.getParameters())
 
     rdata = runAmiciSimulation(model, solver, edata)
+    assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     fields = ['llh']
 

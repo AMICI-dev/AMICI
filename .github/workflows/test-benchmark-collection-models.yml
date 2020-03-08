@@ -30,7 +30,7 @@ jobs:
       run: |
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
-    - run: pip3 install pytest shyaml petab>=0.1.3
+    - run: pip3 install pytest shyaml
     - run: |
         echo ::add-path::${HOME}/.local/bin/
         echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
@@ -43,11 +43,7 @@ jobs:
       run: |
         AMICI_PARALLEL_COMPILE=2 check_time.sh \
             install_sdist pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)
-
-    - name: Run PEtab-related unit tests
-      run: |
-        pytest tests/testMisc.py
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
 
     # retrieve test models
     - name: Download and test benchmark collection
