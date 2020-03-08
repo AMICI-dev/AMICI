@@ -419,7 +419,7 @@ def get_edata_for_condition(
                     condition_scale_map_preeq)
             else:
                 # need to set dummy value for preeq parameter anyways, as it
-                #  expected below (set to 0, not nan, because will be
+                #  is expected below (set to 0, not nan, because will be
                 #  multiplied with indicator variable in initial assignment)
                 condition_map_sim[init_par_id] = 0.0
                 condition_scale_map_sim[init_par_id] = LIN
