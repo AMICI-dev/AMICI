@@ -54,4 +54,4 @@ jobs:
       run: |
         git clone --depth 1 https://github.com/petab-dev/petab_test_suite \
           && cd petab_test_suite; pip3 install -e .; cd .. \
-          && pytest -v tests/petab_test_suite/
+          && AMICI_PARALLEL_COMPILE=2 pytest -v tests/petab_test_suite/
