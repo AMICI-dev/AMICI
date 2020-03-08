@@ -16,16 +16,17 @@ from setuptools import find_packages, setup, Extension
 
 import os
 import sys
-import sysconfig
 import subprocess
-import setup_clibs # Must run from within containing directory
-from custom_commands import (my_install, my_build_clib, my_develop,
-                             my_install_lib, my_build_ext, my_sdist)
+import setup_clibs  # Must run from within containing directory
 
-
+# Add current directory to path, as we need some modules from the AMICI
+# package already for installation
 sys.path.insert(0, os.getcwd())
-from amici import __version__
 
+from amici import __version__
+from amici.custom_commands import (
+    AmiciInstall, AmiciBuildCLib, AmiciDevelop,
+    AmiciInstallLib, AmiciBuildExt, AmiciSDist)
 from amici.setuptools import (
     get_blas_config,
     get_hdf5_config,
@@ -50,7 +51,6 @@ except ImportError:
     try_install('numpy')
     # retry
     import numpy as np
-
 
 # Python version check. We need >= 3.6 due to e.g. f-strings
 if sys.version_info < (3, 6):
@@ -119,13 +119,6 @@ def main():
     with open("README.md", "r", encoding="utf-8") as fh:
         long_description = fh.read()
 
-    # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
-    # C++ to fix warnings.
-    cfg_vars = sysconfig.get_config_vars()
-    for key, value in cfg_vars.items():
-        if type(value) == str:
-            cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
-
     # Build shared object
     amici_module = Extension(
         name='amici._amici',
@@ -161,12 +154,12 @@ def main():
     setup(
         name='amici',
         cmdclass={
-            'install': my_install,
-            'sdist': my_sdist,
-            'build_ext': my_build_ext,
-            'build_clib': my_build_clib,
-            'install_lib': my_install_lib,
-            'develop': my_develop,
+            'install': AmiciInstall,
+            'sdist': AmiciSDist,
+            'build_ext': AmiciBuildExt,
+            'build_clib': AmiciBuildCLib,
+            'install_lib': AmiciInstallLib,
+            'develop': AmiciDevelop,
         },
         version=__version__,
         description='Advanced multi-language Interface to CVODES and IDAS',
@@ -180,7 +173,7 @@ def main():
         libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
         py_modules=['amici/amici',  # the swig interface
-                    'amici/amici_without_hdf5',   # the swig interface
+                    'amici/amici_without_hdf5',  # the swig interface
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
