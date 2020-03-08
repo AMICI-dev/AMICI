@@ -23,6 +23,8 @@ Library = Tuple[str, Dict[str, List[str]]]
 class my_install(install):
     """Custom install to handle extra arguments"""
 
+    log.debug("running my_install")
+
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = install.user_options + [
         ('no-clibs', None, "Don't build AMICI C++ extension"),
@@ -83,6 +85,8 @@ class my_build_clib(build_clib):
     """Custom build_clib"""
 
     def run(self):
+        log.debug("running my_build_clib")
+
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
         # to crashes or wrong results. We rather compile once too often...
@@ -91,6 +95,8 @@ class my_build_clib(build_clib):
         build_clib.run(self)
 
     def build_libraries(self, libraries: List[Library]):
+        log.debug("running my_build_clib.build_libraries")
+
         no_clibs = 'develop' in self.distribution.command_obj \
                    and self.get_finalized_command('develop').no_clibs
         no_clibs |= 'install' in self.distribution.command_obj \
@@ -128,21 +134,26 @@ class my_develop(develop):
         develop.finalize_options(self)
 
     def run(self):
+        log.debug("running my_develop")
+
         if not self.no_clibs:
             generate_swig_interface_files()
-            self.get_finalized_command('build_clib')
+            self.get_finalized_command('build_clib').run()
 
         develop.run(self)
 
 
 class my_install_lib(install_lib):
     """Custom install to allow preserving of debug symbols"""
+
     def run(self):
         """strip debug symbols
 
         Returns:
 
         """
+        log.debug("running my_install_lib")
+
         if 'ENABLE_AMICI_DEBUGGING' in os.environ \
                 and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' \
                 and sys.platform == 'darwin':
@@ -169,10 +180,10 @@ class my_build_ext(build_ext):
     def run(self):
         """Copy the generated clibs to the extensions folder to be included in
         the wheel
-
-        Returns:
-
         """
+
+        log.debug("running my_build_ext")
+
         no_clibs = 'develop' in self.distribution.command_obj \
                    and self.get_finalized_command('develop').no_clibs
         no_clibs |= 'install' in self.distribution.command_obj \
@@ -231,6 +242,9 @@ class my_sdist(sdist):
         Returns:
 
         """
+
+        log.debug("running my_sdist")
+
         self.runSwig()
         self.saveGitVersion()
         sdist.run(self)
