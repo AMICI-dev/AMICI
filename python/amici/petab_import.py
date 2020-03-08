@@ -505,19 +505,21 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         fixed_parameters.append(PREEQ_INDICATOR_ID)
 
     for assignee_id in initial_sizes + initial_states:
-        init_par_id = f"initial_{assignee_id}"
-        if sbml_model.getElementBySId(init_par_id) is not None:
-            raise ValueError("Cannot create parameter for initial assignment "
-                             f"for {assignee_id} because an entity named "
-                             f"{init_par_id} exists already in the model.")
-        for init_par_id_ in [f'{init_par_id}_preeq', f'{init_par_id}_sim']:
+        init_par_id_preeq = f"initial_{assignee_id}_preeq"
+        init_par_id_sim = f"initial_{assignee_id}_sim"
+        for init_par_id in [init_par_id_preeq, init_par_id_sim]:
+            if sbml_model.getElementBySId(init_par_id) is not None:
+                raise ValueError(
+                    "Cannot create parameter for initial assignment "
+                    f"for {assignee_id} because an entity named "
+                    f"{init_par_id} exists already in the model.")
             init_par = sbml_model.createParameter()
-            init_par.setId(init_par_id_)
-            init_par.setName(init_par_id_)
+            init_par.setId(init_par_id)
+            init_par.setName(init_par_id)
         assignment = sbml_model.createInitialAssignment()
         assignment.setSymbol(assignee_id)
-        formula = f'{PREEQ_INDICATOR_ID} * {init_par_id}_preeq '\
-                  f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id}_sim'
+        formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} '\
+                  f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
         math_ast = libsbml.parseL3Formula(formula)
         assignment.setMath(math_ast)
     # <EndWorkAround>

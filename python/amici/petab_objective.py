@@ -101,7 +101,7 @@ def simulate_petab(
     # we need to do that here as well to prevent parameter mapping errors
     # (PEtab does currently not care about SBML LocalParameters)
     if petab_problem.sbml_document:
-        converter_config = libsbml.SBMLLocalParameterConverter()\
+        converter_config = libsbml.SBMLLocalParameterConverter() \
             .getDefaultProperties()
         petab_problem.sbml_document.convert(converter_config)
     else:
@@ -226,7 +226,8 @@ def edatas_from_petab(
             in zip(simulation_conditions.iterrows(), parameter_mapping):
         # Create amici.ExpData for each simulation
         edata = get_edata_for_condition(
-            condition=condition, amici_model=model, petab_problem=petab_problem,
+            condition=condition, amici_model=model,
+            petab_problem=petab_problem,
             problem_parameters=problem_parameters,
             observable_ids=observable_ids,
             parameter_mapping=cur_parameter_mapping,
@@ -318,7 +319,7 @@ def get_edata_for_condition(
         raise NotImplementedError()
 
     (condition_map_preeq, condition_map_sim, condition_scale_map_preeq,
-        condition_scale_map_sim) = parameter_mapping
+     condition_scale_map_sim) = parameter_mapping
 
     logger.debug(f"PEtab mapping: {parameter_mapping}")
 
@@ -367,9 +368,11 @@ def get_edata_for_condition(
     # ExpData.x0, but in the case of preequilibration this would not allow for
     # resetting initial states.
 
-    species = [col for col in petab_problem.condition_df
-               if petab_problem.sbml_model.getSpecies(col) is not None]
-    if species:
+    species_in_condition_table = [
+        col for col in petab_problem.condition_df
+        if petab_problem.sbml_model.getSpecies(col) is not None]
+
+    if species_in_condition_table:
         # set indicator fixed parameter for preeq
         # (we expect here, that this parameter was added during import and
         # that it was not added by the user with a different meaning...)
@@ -381,7 +384,7 @@ def get_edata_for_condition(
         condition_scale_map_sim[PREEQ_INDICATOR_ID] = LIN
 
         def _set_initial_concentration(condition_id, species_id, init_par_id,
-                                      par_map, scale_map):
+                                       par_map, scale_map):
             value = petab.to_float_if_float(
                 petab_problem.condition_df.loc[condition_id, species_id])
             if isinstance(value, float):
@@ -408,7 +411,7 @@ def get_edata_for_condition(
                             petab_problem.parameter_df.loc[
                                 value, PARAMETER_SCALE]
 
-        for species_id in species:
+        for species_id in species_in_condition_table:
             # for preequilibration
             init_par_id = f'initial_{species_id}_preeq'
             if PREEQUILIBRATION_CONDITION_ID in condition \
@@ -668,7 +671,7 @@ def _get_measurements_and_sigmas(
             y[time_ix_for_obs_ix[observable_ix],
               observable_ix] = measurement[MEASUREMENT]
             if isinstance(measurement.get(NOISE_PARAMETERS, None),
-                    numbers.Number):
+                          numbers.Number):
                 sigma_y[time_ix_for_obs_ix[observable_ix],
                         observable_ix] = measurement[NOISE_PARAMETERS]
     return y, sigma_y
@@ -758,13 +761,13 @@ def aggregate_sllh(
     model_par_ids = amici_model.getParameterIds()
     for (_, par_map_sim, _, _), rdata in zip(parameter_mapping, rdatas):
         if rdata['status'] != amici.AMICI_SUCCESS \
-                or 'sllh' not in rdata\
+                or 'sllh' not in rdata \
                 or rdata['sllh'] is None:
             return None
 
         for model_par_id, problem_par_id in par_map_sim.items():
             if isinstance(problem_par_id, str):
-                model_par_idx  = model_par_ids.index(model_par_id)
+                model_par_idx = model_par_ids.index(model_par_id)
                 cur_par_sllh = rdata['sllh'][model_par_idx]
                 try:
                     sllh[problem_par_id] += cur_par_sllh
