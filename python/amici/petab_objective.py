@@ -360,7 +360,7 @@ def get_edata_for_condition(
     # Initial states have been set during model import based on the SBML model.
     # If initial states were overwritten in the PEtab condition table, they are
     # applied here.
-    # During model generation, parameter for initial concentrations and
+    # During model generation, parameters for initial concentrations and
     # respective initial assignments have been created for the
     # relevant species, here we add these parameters to the parameter mapping.
     # In absence of preequilibration this could also be handled via
