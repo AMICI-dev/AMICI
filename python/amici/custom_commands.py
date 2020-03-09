@@ -20,8 +20,10 @@ from distutils import log
 Library = Tuple[str, Dict[str, List[str]]]
 
 
-class my_install(install):
+class AmiciInstall(install):
     """Custom install to handle extra arguments"""
+
+    log.debug("running AmiciInstall")
 
     # Passing --no-clibs allows to install the Python-only part of AMICI
     user_options = install.user_options + [
@@ -38,7 +40,8 @@ class my_install(install):
         install.finalize_options(self)
 
     def run(self):
-        generate_swig_interface_files()
+        if not self.no_clibs:
+            generate_swig_interface_files()
         install.run(self)
 
 
@@ -46,6 +49,7 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
                      include_dirs=None, debug=0, extra_preargs=None,
                      extra_postargs=None, depends=None):
     """Parallelized version of distutils.ccompiler.compile"""
+
     macros, objects, extra_postargs, pp_opts, build = \
         self._setup_compile(output_dir, macros, include_dirs, sources,
                             depends, extra_postargs)
@@ -77,10 +81,12 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
     return objects
 
 
-class my_build_clib(build_clib):
+class AmiciBuildCLib(build_clib):
     """Custom build_clib"""
 
     def run(self):
+        log.debug("running AmiciBuildCLib")
+
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
         # to crashes or wrong results. We rather compile once too often...
@@ -89,8 +95,12 @@ class my_build_clib(build_clib):
         build_clib.run(self)
 
     def build_libraries(self, libraries: List[Library]):
-        no_clibs = self.get_finalized_command('develop').no_clibs
-        no_clibs |= self.get_finalized_command('install').no_clibs
+        log.debug("running AmiciBuildCLib.build_libraries")
+
+        no_clibs = 'develop' in self.distribution.command_obj \
+                   and self.get_finalized_command('develop').no_clibs
+        no_clibs |= 'install' in self.distribution.command_obj \
+                    and self.get_finalized_command('install').no_clibs
 
         if no_clibs:
             return
@@ -106,7 +116,7 @@ class my_build_clib(build_clib):
         build_clib.build_libraries(self, libraries)
 
 
-class my_develop(develop):
+class AmiciDevelop(develop):
     """Custom develop to build clibs"""
 
     # Passing --no-clibs allows to install the Python-only part of AMICI
@@ -124,21 +134,26 @@ class my_develop(develop):
         develop.finalize_options(self)
 
     def run(self):
+        log.debug("running AmiciDevelop")
+
         if not self.no_clibs:
             generate_swig_interface_files()
-            self.run_command('build')
+            self.get_finalized_command('build_clib').run()
 
         develop.run(self)
 
 
-class my_install_lib(install_lib):
+class AmiciInstallLib(install_lib):
     """Custom install to allow preserving of debug symbols"""
+
     def run(self):
         """strip debug symbols
 
         Returns:
 
         """
+        log.debug("running AmiciInstallLib")
+
         if 'ENABLE_AMICI_DEBUGGING' in os.environ \
                 and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE' \
                 and sys.platform == 'darwin':
@@ -152,57 +167,55 @@ class my_install_lib(install_lib):
         install_lib.run(self)
 
 
-class my_build_ext(build_ext):
+class AmiciBuildExt(build_ext):
     """Custom build_ext to allow keeping otherwise temporary static libs"""
 
     def build_extension(self, ext):
         # Work-around for compiler-specific build options
-        set_compiler_specific_extension_options(ext, self.compiler.compiler_type)
+        set_compiler_specific_extension_options(
+            ext, self.compiler.compiler_type)
 
         build_ext.build_extension(self, ext)
 
     def run(self):
         """Copy the generated clibs to the extensions folder to be included in
         the wheel
-
-        Returns:
-
         """
-        no_clibs = self.get_finalized_command('develop').no_clibs
-        no_clibs |= self.get_finalized_command('install').no_clibs
+
+        log.debug("running AmiciBuildExt")
+
+        no_clibs = 'develop' in self.distribution.command_obj \
+                   and self.get_finalized_command('develop').no_clibs
+        no_clibs |= 'install' in self.distribution.command_obj \
+                    and self.get_finalized_command('install').no_clibs
 
         if no_clibs:
             return
 
-        if not self.dry_run:  # --dry-run
-            libraries = []
-            build_clib = ''
-            if self.distribution.has_c_libraries():
-                # get the previously built static libraries
-                build_clib = self.get_finalized_command('build_clib')
-                libraries = build_clib.get_library_names() or []
+        if not self.dry_run and self.distribution.has_c_libraries():
+            # get the previously built static libraries
+            build_clib = self.get_finalized_command('build_clib')
+            libraries = build_clib.get_library_names() or []
 
-            # Module build directory where we want to copy the generated libs
-            # to
+            # Module build directory where we want to copy the generated
+            # libs to
             if self.inplace == 0:
                 build_dir = self.build_lib
             else:
                 build_dir = os.getcwd()
-
             target_dir = os.path.join(build_dir, 'amici', 'libs')
             self.mkpath(target_dir)
 
             # Copy the generated libs
             for lib in libraries:
                 libfilenames = glob.glob(
-                    '%s%s*%s.*' % (build_clib.build_clib, os.sep, lib)
-                )
+                    f"{build_clib.build_clib}{os.sep}*{lib}.*")
                 assert len(libfilenames) == 1, \
-                    "Found unexpected number of files: " % libfilenames
-
-                copyfile(libfilenames[0],
-                         os.path.join(target_dir,
-                                      os.path.basename(libfilenames[0])))
+                    f"Found unexpected number of files: {libfilenames}"
+                src = libfilenames[0]
+                dest = os.path.join(target_dir, os.path.basename(src))
+                log.info(f"copying {src} -> {dest}")
+                copyfile(src, dest)
 
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
@@ -213,7 +226,7 @@ class my_build_ext(build_ext):
         build_ext.run(self)
 
 
-class my_sdist(sdist):
+class AmiciSDist(sdist):
     """Custom sdist to run swig and add the interface files to the source
     distribution
 
@@ -229,11 +242,14 @@ class my_sdist(sdist):
         Returns:
 
         """
-        self.runSwig()
-        self.saveGitVersion()
+
+        log.debug("running AmiciSDist")
+
+        self.run_swig()
+        self.save_git_version()
         sdist.run(self)
 
-    def runSwig(self):
+    def run_swig(self):
         """Run swig
 
         Returns:
@@ -244,7 +260,7 @@ class my_sdist(sdist):
             # We create two SWIG interfaces, one with HDF5 support, one without
             generate_swig_interface_files()
 
-    def saveGitVersion(self):
+    def save_git_version(self):
         """Create file with extended version string
 
         This requires git. We assume that whoever creates the sdist will work

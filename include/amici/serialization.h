@@ -103,6 +103,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.unscaledParameters;
     ar &u.originalParameters;
     ar &u.fixedParameters;
+    ar &u.reinitializeFixedParameterInitialStates;
     ar &u.plist_;
     ar &u.x0data;
     ar &u.sx0data;
@@ -142,6 +143,7 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.ts;
     ar &r.xdot;
     ar &r.J;
+    ar &r.w;
     ar &r.z & r.sigmaz;
     ar &r.sz &r.ssigmaz;
     ar &r.rz;

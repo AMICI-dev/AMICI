@@ -7,5 +7,4 @@ include amici/*
 include amici/src/*template*
 include amici/swig/CMakeLists_model.cmake
 include setup_clibs.py
-include custom_commands.py
 include version.txt
