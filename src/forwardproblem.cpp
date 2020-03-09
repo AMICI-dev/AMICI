@@ -54,11 +54,10 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
 
 
 void ForwardProblem::workForwardProblem() {
-    
     if(model->nx_solver == 0){
         return;
     }
-    
+
     /* if preequilibration is necessary, start Newton solver */
     if (preequilibrated) {
         model->initialize(x, dx, sx, sdx,

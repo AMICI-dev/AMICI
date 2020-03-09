@@ -180,6 +180,8 @@ bool operator==(const Model &a, const Model &b) {
            (a.ts == b.ts) && (a.nmaxevent == b.nmaxevent) &&
            (a.pscale == b.pscale) &&
            (a.stateIsNonNegative == b.stateIsNonNegative) &&
+           (a.reinitializeFixedParameterInitialStates
+            == b.reinitializeFixedParameterInitialStates) &&
            (a.tstart == b.tstart) && bool_dxdotdp;
 }
 

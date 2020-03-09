@@ -427,6 +427,11 @@ class ExpData {
      */
     realtype t_presim = 0;
 
+    /** flag indicating whether reinitialization of states depending on
+     *  fixed parameters is activated
+     */
+    bool reinitializeFixedParameterInitialStates = false;
+
   protected:
     /**
      * @brief resizes observedData, observedDataStdDev, observedEvents and
@@ -558,6 +563,7 @@ class ConditionContext {
     std::vector<realtype> originalTimepoints;
     std::vector<int> originalParameterList;
     std::vector<amici::ParameterScaling> originalScaling;
+    bool originalReinitializeFixedParameterInitialStates;
 };
 
 } // namespace amici
