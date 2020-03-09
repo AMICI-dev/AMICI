@@ -247,7 +247,6 @@ class TestAmiciPYSBModel(unittest.TestCase):
 def get_data(model):
     solver = model.getSolver()
     model.setTimepoints(np.linspace(0, 60, 61))
-    model.setReinitializeFixedParameterInitialStates(True)
     model.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode_simulationFSA
     )
@@ -258,14 +257,15 @@ def get_data(model):
     edata.fixedParameters = [10, 2]
     edata.fixedParametersPresimulation = [3, 2]
     edata.fixedParametersPreequilibration = [3, 0]
+    edata.reinitializeFixedParameterInitialStates = True
     return edata
 
 
 def get_results(model, edata):
     solver = model.getSolver()
     solver.setSensitivityOrder(1)
+    edata.reinitializeFixedParameterInitialStates = True
     model.setTimepoints(np.linspace(0, 60, 61))
-    model.setReinitializeFixedParameterInitialStates(True)
     model.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode_simulationFSA
     )

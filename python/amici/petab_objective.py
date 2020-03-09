@@ -124,10 +124,6 @@ def simulate_petab(
         parameter_mapping=parameter_mapping,
         scaled_parameters=scaled_parameters)
 
-    # only required if we have preequilibration AND species or
-    #  compartments in condition table, but shouldn't hurt to enable anyways.
-    amici_model.setReinitializeFixedParameterInitialStates(True)
-
     # Simulate
     rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
 
@@ -420,6 +416,7 @@ def get_edata_for_condition(
                 _set_initial_concentration(
                     condition_id, species_id, init_par_id, condition_map_preeq,
                     condition_scale_map_preeq)
+                edata.reinitializeFixedParameterInitialStates = True
             else:
                 # need to set dummy value for preeq parameter anyways, as it
                 #  is expected below (set to 0, not nan, because will be
@@ -433,7 +430,6 @@ def get_edata_for_condition(
             _set_initial_concentration(
                 condition_id, species_id, init_par_id, condition_map_sim,
                 condition_scale_map_sim)
-
     ##########################################################################
 
     # separate fixed and variable AMICI parameters, because we may have
