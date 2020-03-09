@@ -6,31 +6,48 @@
 #include "amici/edata.h"
 #include "amici/rdata.h"
 #include "amici/forwardproblem.h"
+#include "amici/steadystateproblem.h"
+#include "amici/misc.h"
 
 #include <cstring>
 
 namespace amici {
 
-BackwardProblem::BackwardProblem(const ForwardProblem *fwd) :
-    model(fwd->model),
-    rdata(fwd->rdata),
-    solver(fwd->solver),
-    t(fwd->getTime()),
-    llhS0(static_cast<decltype(llhS0)::size_type>(fwd->model->nJ * fwd->model->nplist()), 0.0),
-    xB(fwd->model->nx_solver),
-    dxB(fwd->model->nx_solver),
-    xQB(fwd->model->nJ*fwd->model->nplist()),
-    x_disc(fwd->getStatesAtDiscontinuities()),
-    xdot_disc(fwd->getRHSAtDiscontinuities()),
-    xdot_old_disc(fwd->getRHSBeforeDiscontinuities()),
-    sx0(fwd->getStateSensitivity()),
-    nroots(fwd->getNumberOfRoots()),
-    discs(fwd->getDiscontinuities()),
-    irdiscs(fwd->getDiscontinuities()),
-    iroot(fwd->getRootCounter()),
-    rootidx(fwd->getRootIndexes()),
-    dJydx(fwd->getDJydx()),
-    dJzdx(fwd->getDJzdx()) {}
+BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
+                                 const SteadystateProblem *posteq):
+    model(fwd.model),
+    rdata(fwd.rdata),
+    solver(fwd.solver),
+    t(fwd.getTime()),
+    llhS0(static_cast<decltype(llhS0)::size_type>(fwd.model->nJ *
+                                                  fwd.model->nplist()), 0.0),
+    xB(fwd.model->nx_solver),
+    dxB(fwd.model->nx_solver),
+    xQB(fwd.model->nJ*fwd.model->nplist()),
+    x_disc(fwd.getStatesAtDiscontinuities()),
+    xdot_disc(fwd.getRHSAtDiscontinuities()),
+    xdot_old_disc(fwd.getRHSBeforeDiscontinuities()),
+    sx0(fwd.getStateSensitivity()),
+    nroots(fwd.getNumberOfRoots()),
+    discs(fwd.getDiscontinuities()),
+    irdiscs(fwd.getDiscontinuities()),
+    iroot(fwd.getRootCounter()),
+    rootidx(fwd.getRootIndexes()),
+    dJydx(fwd.getDJydx()),
+    dJzdx(fwd.getDJzdx()) {
+        for (int it = 0; it < fwd.model->nt(); it++) {
+            if (std::isinf(fwd.model->getTimepoint(it))) {
+                if (!posteq)
+                    throw AmiException("Model has non-finite timpoint but"
+                    "postequilibration did not run");
+                writeSlice(slice(posteq->getDJydx(), it,
+                                 fwd.model->nx_solver * fwd.model->nJ),
+                           slice(this->dJydx, it,
+                                 fwd.model->nx_solver * fwd.model->nJ));
+            }
+        }
+        
+    }
 
 
 void BackwardProblem::workBackwardProblem() {

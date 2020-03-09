@@ -15,22 +15,26 @@ class ReturnData;
 class ExpData;
 class Solver;
 class Model;
+class SteadystateProblem;
 
 /**
  * @brief The ForwardProblem class groups all functions for solving the
- * forward problem.
+ * forward problem.f
  */
 class ForwardProblem {
   public:
     /**
-      * @brief Constructor
-      * @param rdata pointer to ReturnData instance
-      * @param edata pointer to ExpData instance
-      * @param model pointer to Model instance
-      * @param solver pointer to Solver instance
-      */
+     * @brief Constructor
+     * @param rdata pointer to ReturnData instance
+     * @param edata pointer to ExpData instance
+     * @param model pointer to Model instance
+     * @param solver pointer to Solver instance
+     * @param preeq preequilibration with which to initialize the forward problem,
+     * pass nullptr for no initialization
+     */
     ForwardProblem(ReturnData *rdata, const ExpData *edata,
-                   Model *model, Solver *solver);
+                   Model *model, Solver *solver,
+                   const SteadystateProblem *preeq);
 
     ~ForwardProblem() = default;
 
@@ -160,6 +164,20 @@ class ForwardProblem {
     AmiVectorArray *getStateDerivativeSensitivityPointer() {
         return &sdx;
     }
+    
+    /**
+     * @brief Accessor for it
+     * @return it
+     */
+    int getCurrentTimeIteration() {
+        return it;
+    }
+    
+    /**
+     * @brief Compute updates for backwards (ajoint) problem
+     * @return &sdx
+     */
+    void getAdjointUpdates();
 
     /** pointer to model instance */
     Model *model;
@@ -172,14 +190,7 @@ class ForwardProblem {
 
     /** pointer to experimental data instance */
     const ExpData *edata;
-
   private:
-    /**
-     * @brief Perform preequilibration
-     */
-    void handlePreequilibration();
-
-    void updateAndReinitStatesAndSensitivities(bool isSteadystate);
 
     void handlePresimulation();
 
@@ -215,20 +226,6 @@ class ForwardProblem {
      * @param it index of data point
      */
     void handleDataPoint(int it);
-
-    /**
-     * @brief Extracts output information for data-points
-     *
-     * @param it index of current timepoint
-     */
-    void getDataOutput(int it);
-
-    /**
-     * @brief Extracts data information for forward sensitivity analysis
-     *
-     * @param it index of current timepoint
-     */
-    void getDataSensisFSA(int it);
 
     /**
      * @brief Applies the event bolus to the current state
@@ -307,10 +304,6 @@ class ForwardProblem {
     /** state vector (dimension: nx_solver) */
     AmiVector x;
 
-    /** state vector, including states eliminated from conservation laws
-     * (dimension: nx) */
-    AmiVector x_rdata;
-
     /** old state vector (dimension: nx_solver) */
     AmiVector x_old;
 
@@ -329,10 +322,6 @@ class ForwardProblem {
     /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sx;
 
-    /** full sensitivity state vector array, including states eliminated from
-     * conservation laws (dimension: nx x nplist, row-major) */
-    AmiVectorArray sx_rdata;
-
     /** differential sensitivity state vector array
      * (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sdx;
@@ -342,6 +331,12 @@ class ForwardProblem {
 
     /** storage for last found root */
     realtype tlastroot = 0.0;
+    
+    /** flag to indicate wheter solver was preeinitialized via preequilibration */
+    bool preequilibrated = false;
+    
+    /** current iteration number for time index */
+    int it;
 
 };
 

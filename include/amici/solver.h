@@ -119,6 +119,14 @@ class Solver {
                 const AmiVector &dxB0, const AmiVector &xQB0) const;
 
     /**
+     * @brief Reinitializes state and respective sensitivities (if necessary) according
+     * to changes in fixedParameters
+     *
+     * @param model pointer to the model instance
+     */
+    void updateAndReinitStatesAndSensitivities(Model *model);
+    
+    /**
      * @brief Extracts diagnosis information from solver memory block and
      * writes them into the return data object
      *

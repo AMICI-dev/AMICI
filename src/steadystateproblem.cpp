@@ -7,6 +7,7 @@
 #include "amici/forwardproblem.h"
 #include "amici/newton_solver.h"
 #include "amici/rdata.h"
+#include "amici/misc.h"
 
 #include <cmath>
 #include <cstring>
@@ -17,13 +18,14 @@
 
 namespace amici {
 
-SteadystateProblem::SteadystateProblem(const Solver *solver,
-                                       const AmiVector &x0):
-    t(solver->gett()), delta(solver->nx()), ewt(solver->nx()),
-    rel_x_newton(solver->nx()), x_newton(solver->nx()), x(x0),
-    x_old(solver->nx()), dx(solver->nx()), xdot(solver->nx()),
-    xdot_old(solver->nx()), sx(solver->getStateSensitivity(solver->gett())),
-    sdx(solver->nx(), solver->nplist()) {}
+SteadystateProblem::SteadystateProblem(const Solver &solver,
+                                       const Model &model):
+    t(solver.gett()), delta(solver.nx()), ewt(solver.nx()),
+    rel_x_newton(solver.nx()), x_newton(solver.nx()), x(solver.nx()),
+    x_old(solver.nx()), dx(solver.nx()), xdot(solver.nx()),
+    xdot_old(solver.nx()), sx(solver.getStateSensitivity(solver.gett())),
+    sdx(solver.nx(), solver.nplist()),
+    dJydx(model.nJ * model.nx_solver * model.nt(), 0.0) {}
 
 void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
                                                Solver *solver, Model *model,
@@ -44,6 +46,15 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
 
     /* First, try to do Newton steps */
     starttime = clock();
+    
+    if (it == -1){
+        // our responsibility to initialize states etc and setup solver
+        model->initialize(x, dx, sx, sdx,
+                          solver->getSensitivityOrder() >=
+                          SensitivityOrder::first);
+        solver->setup(model->t0(), model, x, dx, sx, sdx);
+    }
+    
 
     auto newtonSolver = NewtonSolver::getSolver(
         &t, &x, solver->getLinearSolver(), model, rdata,
@@ -344,5 +355,24 @@ void SteadystateProblem::writeSolution(realtype *t, AmiVector &x,
     x.copy(this->x);
     sx.copy(this->sx);
 }
+
+const AmiVector &SteadystateProblem::getState() const {
+    return x;
+}
+
+const AmiVectorArray &SteadystateProblem::getStateSensitivity() const {
+    return sx;
+}
+
+void SteadystateProblem::getAdjointUpdates(Model &model,
+                                           const ExpData *edata) {
+    for (int it=0; it < model.nt(); it++) {
+        if (std::isinf(model.getTimepoint(it))) {
+            model.getAdjointStateObservableUpdate(
+                slice(dJydx, it, model.nx_solver * model.nJ), it, x, *edata);
+        }
+    }
+}
+
 
 } // namespace amici

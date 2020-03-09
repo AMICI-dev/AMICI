@@ -6,6 +6,7 @@
 #include "amici/symbolic_functions.h"
 #include "amici/solver.h"
 #include "amici/exception.h"
+#include "amici/steadystateproblem.h"
 
 #include <cstring>
 
@@ -34,7 +35,8 @@ ReturnData::ReturnData(
       nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
       newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
       o2mode(o2mode), sensi(sensi),
-      sensi_meth(sensi_meth)
+      sensi_meth(sensi_meth),
+      x_rdata(nx), sx_rdata(nx,nplist)
     {
     xdot.resize(nx_solver, getNaN());
 
@@ -103,52 +105,99 @@ ReturnData::ReturnData(
 
 }
 
-void ReturnData::invalidate(const realtype t) {
-    invalidateLLH();
-    invalidateSLLH();
-
-    // find it corresponding to datapoint after integration failure
-    int it_start;
-    for (it_start = 0; it_start < nt; it_start++)
-        if(ts.at(it_start)>t)
-            break;
-
-    for (int it = it_start; it < nt; it++){
-        for (int ix = 0; ix < nx; ix++)
-            x.at(ix + nx * it) = getNaN();
-        for (int iy = 0; iy < ny; iy++)
-            y.at(iy + ny * it) = getNaN();
-        for (int iw = 0; iw < nw; iw++)
-            w.at(iw + nw * it) = getNaN();
+void ReturnData::processPreequilibration(SteadystateProblem const *preeq,
+                                         Model *model) {
+    
+    if (!preeq)
+        return;
+    
+    model->fx_rdata(x_rdata, preeq->getState());
+    x_ss = x_rdata.getVector();
+    if (sensi >= SensitivityOrder::first) {
+        model->fsx_rdata(sx_rdata, preeq->getStateSensitivity());
+        for (int ip = 0; ip < model->nplist(); ip++)
+            std::copy_n(sx_rdata.data(ip), nx,
+                        &sx_ss.at(ip * nx));
     }
+}
 
-    if (!sx.empty()) {
-        for (int it = it_start; it < nt; it++){
-            for (int ip = 0; ip < nplist; ip++) {
-                for (int ix = 0; ix < nx; ix++)
-                    sx.at(ix + nx*(ip + it*nplist)) = getNaN();
-            }
+void ReturnData::processForwardProblem(Solver const &solver,
+                                       Model *model,
+                                       ExpData const *edata){
+    
+    initializeObjectiveFunction();
+    
+    auto t = model->t0();
+    model->fx_rdata(x_rdata, solver.getState(t));
+    x0 = x_rdata.getVector();
+    if (sensi_meth == SensitivityMethod::forward &&
+        sensi >= SensitivityOrder::first) {
+        model->fsx_rdata(sx_rdata, solver.getStateSensitivity(t));
+        for (int ix = 0; ix < nx; ix++) {
+            for (int ip = 0; ip < model->nplist(); ip++)
+                sx0[ip * nx + ix] = sx_rdata.at(ix,ip);
         }
     }
-    if(!sy.empty()) {
-        for (int it = it_start; it < nt; it++){
-            for (int ip = 0; ip < nplist; ip++) {
-                for (int iy = 0; iy < ny; iy++)
-                    sy.at(iy + ny*(ip + it*nplist)) = getNaN();
+    for (int it=0; it<nt; it++) {
+        t = ts[it];
+        model->fx_rdata(x_rdata, solver.getState(t));
+        std::copy_n(x_rdata.data(), nx, &x.at(it * nx));
+        model->getExpression(slice(w, it, model->nw),
+                             model->getTimepoint(it), solver.getState(t));
+        getDataOutput(it, solver, model, edata);
+    }
+}
+
+void ReturnData::getDataOutput(int it,
+                               Solver const &solver,
+                               Model *model,
+                               ExpData const *edata) {
+    auto x = solver.getState(ts[it]);
+    model->getObservable(slice(y, it, ny), ts[it], x);
+    model->getObservableSigma(slice(sigmay, it, ny), it, edata);
+    if (edata) {
+        model->addObservableObjective(llh, it, x, *edata);
+        fres(it, *edata);
+        fchi2(it);
+    }
+
+    if (sensi >= SensitivityOrder::first && nplist > 0) {
+
+        model->getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
+                                             it, edata);
+
+        if (sensi_meth == SensitivityMethod::forward) {
+            getDataSensisFSA(it, solver, model, edata);
+        } else {
+            if (edata) {
+                model->addPartialObservableObjectiveSensitivity(sllh, s2llh,
+                                                                it, x, *edata);
             }
         }
     }
 }
 
-void ReturnData::invalidateLLH()
-{
-    llh = getNaN();
-    chi2 = getNaN();
-}
+void ReturnData::getDataSensisFSA(int it,
+                                  Solver const &solver,
+                                  Model *model,
+                                  ExpData const *edata) {
+    auto x = solver.getState(ts[it]);
+    auto sx = solver.getStateSensitivity(ts[it]);
+    model->fsx_rdata(sx_rdata, sx);
+    for (int ix = 0; ix < nx; ix++) {
+        for (int ip = 0; ip < nplist; ip++) {
+            this->sx[(it * nplist + ip) * nx + ix] = sx_rdata.at(ix, ip);
+        }
+    }
 
-void ReturnData::invalidateSLLH() {
-    std::fill(sllh.begin(), sllh.end(), getNaN());
-    std::fill(s2llh.begin(), s2llh.end(), getNaN());
+    model->getObservableSensitivity(slice(sy, it, nplist * ny), ts[it], x, sx);
+
+    if (edata) {
+        model->addObservableObjectiveSensitivity(sllh, s2llh,
+                                                 it, x, sx, *edata);
+        fsres(it, *edata);
+        fFIM(it);
+    }
 }
 
 void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {

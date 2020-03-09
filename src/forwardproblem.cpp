@@ -16,7 +16,8 @@
 namespace amici {
 
 ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
-                               Model *model, Solver *solver)
+                               Model *model, Solver *solver,
+                               const SteadystateProblem *preeq)
     : model(model),
       rdata(rdata),
       solver(solver),
@@ -36,34 +37,30 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       rootsfound(model->ne, 0),
       Jtmp(SUNMatrixWrapper(model->nx_solver,model->nx_solver)),
       x(model->nx_solver),
-      x_rdata(model->nx_rdata),
       x_old(model->nx_solver),
       dx(model->nx_solver),
       dx_old(model->nx_solver),
       xdot(model->nx_solver),
       xdot_old(model->nx_solver),
       sx(model->nx_solver,model->nplist()),
-      sx_rdata(model->nx_rdata,model->nplist()),
       sdx(model->nx_solver,model->nplist()),
       stau(model->nplist())
 {
+    if (preeq) {
+        preeq->writeSolution(&t, x, sx);
+        preequilibrated = true;
+    }
 }
 
 
 void ForwardProblem::workForwardProblem() {
-    if(edata){
-        rdata->initializeObjectiveFunction();
-    }
     
     if(model->nx_solver == 0){
         return;
     }
     
     /* if preequilibration is necessary, start Newton solver */
-    if (solver->getPreequilibration() ||
-        (edata && !edata->fixedParametersPreequilibration.empty())) {
-        handlePreequilibration();
-    } else {
+    if (preequilibrated) {
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
@@ -71,45 +68,34 @@ void ForwardProblem::workForwardProblem() {
         solver->setup(model->t0(), model, x, dx, sx, sdx);
         // update x0 after computing consistence IC, only important for DAEs
         x.copy(solver->getState(model->t0()));
-        
-        model->fx_rdata(x_rdata, x);
-        rdata->x0 = x_rdata.getVector();
-        if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
-                solver->getSensitivityOrder() >= SensitivityOrder::first) {
-            model->fsx_rdata(sx_rdata, sx);
-            for (int ix = 0; ix < rdata->nx; ix++) {
-                for (int ip = 0; ip < model->nplist(); ip++)
-                    rdata->sx0[ip*rdata->nx + ix] = sx_rdata.at(ix,ip);
-            }
-        }
     }
 
     /* perform presimulation if necessary */
-    if (edata && edata->t_presim > 0)
+    if (edata && edata->t_presim > 0) {
         handlePresimulation();
+        t = model->t0();
+        solver->updateAndReinitStatesAndSensitivities(model);
+    }
 
     /* loop over timepoints */
     for (int it = 0; it < model->nt(); it++) {
         auto nextTimepoint = model->getTimepoint(it);
+        
+        if (std::isinf(nextTimepoint))
+            break;
 
         if (nextTimepoint > model->t0()) {
             // Solve for nextTimepoint
             while (t < nextTimepoint) {
-                if (std::isinf(nextTimepoint)) {
-                    SteadystateProblem sstate = SteadystateProblem(solver, x);
-                    sstate.workSteadyStateProblem(rdata, solver, model, it);
-                    sstate.writeSolution(&t, x, sx);
-                } else {
-                    int status = solver->run(nextTimepoint);
-                    solver->writeSolution(&t, x, dx, sx);
-                    /* sx will be copied from solver on demand if sensitivities
-                     are computed */
-                    if (status == AMICI_ILL_INPUT) {
-                        /* clustering of roots => turn off rootfinding */
-                        solver->turnOffRootFinding();
-                    } else if (status == AMICI_ROOT_RETURN) {
-                        handleEvent(&tlastroot, false);
-                    }
+                int status = solver->run(nextTimepoint);
+                solver->writeSolution(&t, x, dx, sx);
+                /* sx will be copied from solver on demand if sensitivities
+                 are computed */
+                if (status == AMICI_ILL_INPUT) {
+                    /* clustering of roots => turn off rootfinding */
+                    solver->turnOffRootFinding();
+                } else if (status == AMICI_ROOT_RETURN) {
+                    handleEvent(&tlastroot, false);
                 }
             }
         }
@@ -121,111 +107,19 @@ void ForwardProblem::workForwardProblem() {
         getEventOutput();
     }
 
-    // set likelihood
-    if (!edata) {
-        rdata->invalidateLLH();
-        rdata->invalidateSLLH();
-    }
-
     storeJacobianAndDerivativeInReturnData();
     rdata->cpu_time = solver->getCpuTime();
-}
-
-void ForwardProblem::handlePreequilibration() {
-    // Are there dedicated condition preequilibration parameters provided?
-    bool overrideFixedParameters =
-        edata && !edata->fixedParametersPreequilibration.empty();
-
-    std::vector<realtype>
-        originalFixedParameters; // to restore after pre-equilibration
-
-    if (overrideFixedParameters) {
-        if (edata->fixedParametersPreequilibration.size() !=
-            (unsigned)model->nk())
-            throw AmiException(
-                "Number of fixed parameters (%d) in model does not match "
-                "preequilibration parameters in ExpData (%zd).",
-                model->nk(), edata->fixedParametersPreequilibration.size());
-        originalFixedParameters = model->getFixedParameters();
-        model->setFixedParameters(edata->fixedParametersPreequilibration);
-        model->initialize(x, dx, sx, sdx,
-                          solver->getSensitivityOrder() >=
-                          SensitivityOrder::first);
-        solver->setup(model->t0(), model, x, dx, sx, sdx);
-        // update x0 after computing consistence IC, only important for DAEs
-        x.copy(solver->getState(model->t0()));
-    }
-
-    // pre-equilibrate
-    SteadystateProblem sstate = SteadystateProblem(solver, x);
-
-    sstate.workSteadyStateProblem(rdata, solver, model, -1);
-    sstate.writeSolution(&t, x, sx);
-
-    if (overrideFixedParameters) {
-        // Restore
-        model->setFixedParameters(originalFixedParameters);
-    }
-
-    updateAndReinitStatesAndSensitivities(true);
-}
-
-void ForwardProblem::updateAndReinitStatesAndSensitivities(bool isSteadystate) {
-
-    if (isSteadystate) {
-        model->fx_rdata(x_rdata, x);
-        rdata->x_ss = x_rdata.getVector();
-    }
-
-    model->fx0_fixedParameters(x);
-    solver->reInit(t, x, dx);
-    model->fx_rdata(x_rdata, x);
-
-    rdata->x0 = x_rdata.getVector();
-    if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
-        if (isSteadystate) {
-            model->fsx_rdata(sx_rdata, sx);
-            for (int ip = 0; ip < model->nplist(); ip++)
-                std::copy_n(sx_rdata.data(ip), rdata->nx,
-                            &rdata->sx_ss.at(ip * rdata->nx));
-        }
-
-        model->fsx0_fixedParameters(sx, x);
-        model->fsx_rdata(sx_rdata, sx);
-
-        for (int ip = 0; ip < model->nplist(); ip++)
-            std::copy_n(sx_rdata.data(ip), rdata->nx,
-                        &rdata->sx0.at(ip * rdata->nx));
-
-        if (solver->getSensitivityMethod() == SensitivityMethod::forward)
-            solver->sensReInit(sx, sdx);
-    }
 }
 
 void ForwardProblem::handlePresimulation()
 {
     // Are there dedicated condition preequilibration parameters provided?
-    bool overrideFixedParameters = edata && !edata->fixedParametersPresimulation.empty();
-
-    std::vector<realtype> originalFixedParameters; // to restore after pre-equilibration
-
-    if(overrideFixedParameters) {
-        if(edata->fixedParametersPresimulation.size() != (unsigned) model->nk())
-            throw AmiException("Number of fixed parameters (%d) in model does not match presimulation parameters in ExpData (%zd).",
-                           model->nk(), edata->fixedParametersPresimulation.size());
-        originalFixedParameters = model->getFixedParameters();
-        model->setFixedParameters(edata->fixedParametersPresimulation);
-    }
-    t = model->t0() - edata->t_presim;
-    updateAndReinitStatesAndSensitivities(false);
+    auto cond = ConditionContext(model, edata,
+                                 FixedParameterContext::presimulation);
+    solver->updateAndReinitStatesAndSensitivities(model);
 
     solver->run(model->t0());
     solver->writeSolution(&t, x, dx, sx);
-    if(overrideFixedParameters) {
-        model->setFixedParameters(originalFixedParameters);
-    }
-    t = model->t0();
-    updateAndReinitStatesAndSensitivities(false);
 }
 
 
@@ -465,68 +359,18 @@ void ForwardProblem::getEventSensisFSA(int ie) {
     }
 }
 
+void ForwardProblem::getAdjointUpdates() {
+    for (int it=0; it < model->nt(); it++) {
+        x = solver->getState(model->getTimepoint(it));
+        model->getAdjointStateObservableUpdate(
+            slice(dJydx, it, model->nx_solver * model->nJ), it, x, *edata
+        );
+    }
+}
+
 void ForwardProblem::handleDataPoint(int it) {
-    model->fx_rdata(x_rdata, x);
-    std::copy_n(x_rdata.data(), rdata->nx, &rdata->x.at(it * rdata->nx));
-    model->getExpression(slice(rdata->w, it, model->nw),
-                model->getTimepoint(it), x);
     if (model->getTimepoint(it) > model->t0()) {
         solver->getDiagnosis(it, rdata);
-    }
-
-    getDataOutput(it);
-}
-
-void ForwardProblem::getDataOutput(int it) {
-    model->getObservable(slice(rdata->y, it, rdata->ny), rdata->ts[it], x);
-    model->getObservableSigma(slice(rdata->sigmay, it, rdata->ny), it,
-                              edata);
-    if (edata) {
-        model->addObservableObjective(rdata->llh, it, x, *edata);
-        rdata->fres(it, *edata);
-        rdata->fchi2(it);
-    }
-
-    if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        model->nplist() > 0) {
-
-        model->getObservableSigmaSensitivity(slice(rdata->ssigmay, it,
-                                                   model->nplist() * model->ny),
-                                             it, edata);
-
-        if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
-            getDataSensisFSA(it);
-        } else {
-            if (edata) {
-                model->getAdjointStateObservableUpdate(slice(dJydx, it,
-                                                             model->nx_solver * model->nJ),
-                                                       it, x, *edata);
-                model->addPartialObservableObjectiveSensitivity(rdata->sllh,
-                                                                rdata->s2llh,
-                                                                it, x, *edata);
-            }
-        }
-    }
-}
-
-void ForwardProblem::getDataSensisFSA(int it) {
-    model->fsx_rdata(sx_rdata, sx);
-    for (int ix = 0; ix < rdata->nx; ix++) {
-        for (int ip = 0; ip < model->nplist(); ip++) {
-            rdata->sx[(it * model->nplist() + ip) * rdata->nx + ix] =
-                sx_rdata.at(ix, ip);
-        }
-    }
-
-    model->getObservableSensitivity(slice(rdata->sy, it,
-                                          model->nplist() * model->ny),
-                                    t, x, sx);
-
-    if (edata) {
-        model->addObservableObjectiveSensitivity(rdata->sllh, rdata->s2llh,
-                                                 it, x, sx, *edata);
-        rdata->fsres(it, *edata);
-        rdata->fFIM(it);
     }
 }
 

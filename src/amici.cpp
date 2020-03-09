@@ -5,6 +5,7 @@
 
 #include "amici/amici.h"
 
+#include "amici/steadystateproblem.h"
 #include "amici/backwardproblem.h"
 #include "amici/forwardproblem.h"
 #include "amici/misc.h"
@@ -100,26 +101,62 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
     /* Applies condition-specific model settings and restores them when going
      * out of scope */
-    ConditionContext conditionContext(&model, edata);
+    ConditionContext conditionContext(&model, edata,
+                                      FixedParameterContext::simulation);
+    
+    rdata = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
 
+    if (model.nx_solver <= 0) {
+        return rdata;
+    }
+
+    std::unique_ptr<SteadystateProblem> preeq =
+        std::unique_ptr<SteadystateProblem>(nullptr);
+    std::unique_ptr<ForwardProblem> fwd;
+    std::unique_ptr<BackwardProblem> bwd;
+    std::unique_ptr<SteadystateProblem> posteq =
+        std::unique_ptr<SteadystateProblem>(nullptr);
+    
     try {
-        rdata = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
-
-        if (model.nx_solver <= 0) {
-            return rdata;
+        // do we need to preequilibrate?
+        
+        if (solver.getPreequilibration() ||
+            (edata && !edata->fixedParametersPreequilibration.empty())) {
+            ConditionContext conditionContext(
+                &model, edata, FixedParameterContext::preequilibration
+            );
+            
+            preeq = std::unique_ptr<SteadystateProblem>(
+                new SteadystateProblem(solver, model));
+            preeq->workSteadyStateProblem(rdata.get(), &solver, &model, -1);
+        }
+        
+        // dont merge with if above since we want the ConditionContext to go
+        // out of context first
+        if (preeq)
+            solver.updateAndReinitStatesAndSensitivities(&model);
+        
+        
+        fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),
+                                                                 edata, &model,
+                                                                 &solver,
+                                                                 preeq.get()));
+        fwd->workForwardProblem();
+        
+        if (fwd->getCurrentTimeIteration() < model.nt()) {
+            posteq = std::unique_ptr<SteadystateProblem>(
+                new SteadystateProblem(solver, model));
+            posteq->workSteadyStateProblem(rdata.get(), &solver, &model,
+                                          fwd->getCurrentTimeIteration());
+            posteq->getAdjointUpdates(model, edata);
         }
 
-        auto fwd = std::unique_ptr<ForwardProblem>(
-          new ForwardProblem(rdata.get(), edata, &model, &solver));
-        fwd->workForwardProblem();
-
-        auto bwd =
-          std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
+        bwd = std::unique_ptr<BackwardProblem>(
+            new BackwardProblem(*fwd.get(), posteq.get()));
         bwd->workBackwardProblem();
 
         rdata->status = AMICI_SUCCESS;
     } catch (amici::IntegrationFailure const& ex) {
-        rdata->invalidate(ex.time);
         rdata->status = ex.error_code;
         if (rethrow)
             throw;
@@ -128,7 +165,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.time,
                  ex.what());
     } catch (amici::IntegrationFailureB const& ex) {
-        rdata->invalidateSLLH();
         rdata->status = ex.error_code;
         if (rethrow)
             throw;
@@ -139,7 +175,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
           ex.time,
           ex.what());
     } catch (amici::AmiException const& ex) {
-        rdata->invalidate(model.t0());
         rdata->status = AMICI_ERROR;
         if (rethrow)
             throw;
@@ -148,6 +183,11 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.what(),
                  ex.getBacktrace());
     }
+    
+    if(edata){
+        rdata->initializeObjectiveFunction();
+    }
+    
 
     rdata->applyChainRuleFactorToSimulationResults(&model);
 

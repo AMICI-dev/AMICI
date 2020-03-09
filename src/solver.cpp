@@ -153,6 +153,17 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     setStabLimDetB(*which, stldet);
 }
 
+void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
+    model->fx0_fixedParameters(x);
+    reInit(t, x, dx);
+    
+    if (getSensitivityOrder() >= SensitivityOrder::first &&
+        getSensitivityMethod() == SensitivityMethod::forward) {
+            model->fsx0_fixedParameters(sx, x);
+            sensReInit(sx, sdx);
+    }
+}
+
 void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
     long int number;
 

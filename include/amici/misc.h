@@ -25,6 +25,33 @@ namespace amici {
  gsl::span<realtype> slice(std::vector<realtype> &data, int index,
                            unsigned size);
 
+/**
+ * @brief creates a constant slice from existing data
+ *
+ * @param data to be sliced
+ * @param index slice index
+ * @param size slice size
+ * @return span of the slice
+ */
+
+const gsl::span<const realtype> slice(const std::vector<realtype> &data,
+                                      int index, unsigned size);
+
+/**
+ * @brief local helper to check whether the provided buffer has the expected
+ * size
+ * @param buffer buffer to which values are to be written
+ * @param expected_size expected size of the buffer
+ */
+void checkBufferSize(gsl::span<realtype> buffer, unsigned expected_size);
+
+/**
+ * @brief local helper function to write computed slice to provided buffer
+ * @param slice computed value
+ * @param buffer buffer to which values are to be written
+ */
+void writeSlice(const gsl::span<const realtype> slice,
+                gsl::span<realtype> buffer);
 
 
 /**

@@ -24,8 +24,16 @@ class Model;
 
 class SteadystateProblem {
   public:
+    /**
+     * @brief constructor
+     * @param solver Solver instance
+     * @param model Model instance
+     */
+    explicit SteadystateProblem(const Solver &solver,
+                                const Model &model);
+    
     void workSteadyStateProblem(ReturnData *rdata, Solver *solver,
-                                      Model *model, int it);
+                                Model *model, int it);
 
     /**
      * Computes the weighted root mean square of xdot
@@ -41,8 +49,7 @@ class SteadystateProblem {
     realtype getWrmsNorm(AmiVector const &x,
                          AmiVector const &xdot,
                          realtype atol,
-                         realtype rtol
-                         );
+                         realtype rtol);
 
     /**
      * Checks convergence for state and respective sensitivities
@@ -99,13 +106,6 @@ class SteadystateProblem {
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
                                                        Model *model) const;
-
-    /**
-     * @brief constructor
-     * @param solver pointer to Solver instance
-     * @param x0 initial state
-     */
-    explicit SteadystateProblem(const Solver *solver, const AmiVector &x0);
     
     /**
      * @brief routine that writes solutions of steadystate problem to target
@@ -115,6 +115,31 @@ class SteadystateProblem {
      * @param sx steadystate state sensitivity
      */
     void writeSolution(realtype *t, AmiVector &x, AmiVectorArray &sx) const;
+    
+    /**
+     * @brief returns state at steadystate
+     * @return x
+     */
+    const AmiVector &getState() const;
+
+    
+    /**
+     * @brief returns state sensitivity at steadystate
+     * @return sx
+     */
+    const AmiVectorArray &getStateSensitivity() const;
+    
+     /**
+      * @brief Accessor for dJydx
+      * @return dJydx
+      */
+    std::vector<realtype> const& getDJydx() const {
+         return dJydx;
+     }
+    
+    void getAdjointUpdates(Model &model,
+                           const ExpData *edata);
+    
     
 
   private:
@@ -145,6 +170,10 @@ class SteadystateProblem {
 
     /** weighted root-mean-square error */
     realtype wrms = NAN;
+    
+    /** state derivative of data likelihood
+     * (dimension nJ x nx x nt, ordering =?) */
+    std::vector<realtype> dJydx;
 
 };
 

@@ -13,6 +13,7 @@ class ExpData;
 class Solver;
 class Model;
 class ForwardProblem;
+class SteadystateProblem;
 
 //!  class to solve backwards problems.
 /*!
@@ -25,8 +26,10 @@ class BackwardProblem {
     /**
      * @brief Construct backward problem from forward problem
      * @param fwd pointer to corresponding forward problem
+     * @param posteq pointer to postequilibration problem, can be nullptr
      */
-    explicit BackwardProblem(const ForwardProblem *fwd);
+    explicit BackwardProblem(const ForwardProblem &fwd,
+                             const SteadystateProblem *posteq);
 
     /**
      * @brief Solve the backward problem.
@@ -143,7 +146,7 @@ class BackwardProblem {
     const std::vector<int> rootidx;
 
     /** state derivative of data likelihood */
-    const std::vector<realtype> dJydx;
+    std::vector<realtype> dJydx;
     /** state derivative of event likelihood */
     const std::vector<realtype> dJzdx;
 };

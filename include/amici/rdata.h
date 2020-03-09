@@ -2,6 +2,8 @@
 #define AMICI_RDATA_H
 
 #include "amici/defines.h"
+#include "amici/vector.h"
+
 
 #include <vector>
 
@@ -10,6 +12,8 @@ class Model;
 class ReturnData;
 class Solver;
 class ExpData;
+class ForwardProblem;
+class SteadystateProblem;
 } // namespace amici
 
 namespace boost {
@@ -81,24 +85,21 @@ class ReturnData {
     void initializeObjectiveFunction();
 
     /**
-     * @brief Set likelihood, state variables, outputs and respective
-     * sensitivities to NaN (typically after integration failure)
-     * @param t time of integration failure
+     * @brief extracts data from a preequilibration steadystateproblem
+     * @param preeq Steadystateproblem
+     * @param model Model from which the ReturnData was obtained
      */
-    void invalidate(realtype t);
+    void processPreequilibration(SteadystateProblem const *preeq, Model *model);
 
     /**
-     * @brief Set likelihood and chi2 to NaN
-     * (typically after integration failure)
+     * @brief extracts data from a forward problem, assuming
+     * @param solver solver instance containing forward solution
+     * @param model model that was used for forward simulation
+     * @param edata ExpData instance containing observable data
      */
-    void invalidateLLH();
-
-    /**
-     * @brief Set likelihood sensitivities to NaN
-     * (typically after integration failure)
-     */
-    void invalidateSLLH();
-
+    void processForwardProblem(Solver const &solver, Model *model,
+                               ExpData const *edata);
+    
     /**
      * @brief applies the chain rule to account for parameter transformation in
      * the sensitivities of simulation results
@@ -398,6 +399,37 @@ class ReturnData {
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, ReturnData &r,
                                                 unsigned int version);
+    
+  protected:
+    /** state vector, including states eliminated from conservation laws
+     * (dimension: nx) */
+    AmiVector x_rdata;
+    
+    /** full sensitivity state vector array, including states eliminated from
+     * conservation laws (dimension: nx x nplist, row-major) */
+    AmiVectorArray sx_rdata;
+    
+
+
+    /**
+     * @brief Extracts data information for forward sensitivity analysis
+     * @param it index of current timepoint
+     * @param solver solver instance from forward solve
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getDataSensisFSA(int it, Solver const &solver, Model *model,
+                          ExpData const *edata);
+    
+    /**
+     * @brief Extracts output information for data-points
+     * @param it index of current timepoint
+     * @param solver solver instance from forward solve
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getDataOutput(int it, Solver const &solver, Model *model,
+                       ExpData const *edata);
 };
 
 } // namespace amici
