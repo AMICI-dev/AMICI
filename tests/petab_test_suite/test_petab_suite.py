@@ -20,6 +20,8 @@ from amici import SteadyStateSensitivityMode_simulationFSA
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
+stream_handler = logging.StreamHandler()
+logger.addHandler(stream_handler)
 
 
 def test_case(case):
@@ -59,7 +61,7 @@ def _test_case(case):
     ret = simulate_petab(problem, model, log_level=logging.DEBUG)
 
     rdatas = ret['rdatas']
-    chi2 = None
+    chi2 = sum(rdata['chi2'] for rdata in rdatas)
     llh = ret['llh']
     simulation_df = rdatas_to_measurement_df(rdatas, model,
                                              problem.measurement_df)
@@ -74,7 +76,7 @@ def _test_case(case):
     tol_llh = solution[petabtests.TOL_LLH]
     tol_simulations = solution[petabtests.TOL_SIMULATIONS]
 
-    chi2s_match = petabtests.evaluate_chi2(chi2, solution, tol_chi2)
+    chi2s_match = petabtests.evaluate_chi2(chi2, gt_chi2, tol_chi2)
     llhs_match = petabtests.evaluate_llh(llh, gt_llh, tol_llh)
     simulations_match = petabtests.evaluate_simulations(
         [simulation_df], gt_simulation_dfs, tol_simulations)
@@ -92,7 +94,9 @@ def _test_case(case):
     if case not in ['0007']:
         check_derivatives(problem, model)
 
-    if not all([llhs_match, simulations_match]):
+    # FIXME case 7 fails due to #963
+    if not all([llhs_match, simulations_match]) \
+            or (not chi2s_match and case != "0007"):
         # chi2s_match ignored until fixed in amici
         logger.error(f"Case {case} failed.")
         raise AssertionError(f"Case {case}: Test results do not match "
