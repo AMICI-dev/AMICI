@@ -1361,7 +1361,8 @@ def noise_distribution_to_cost_function(
                 f'/ sigma{str_symbol})**2'
     elif noise_distribution == 'log10-normal':
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2*m{str_symbol}**2) ' \
+            return f'0.5*log(2*pi*sigma{str_symbol}**2' \
+                f'*m{str_symbol}**2*log(10)**2) ' \
                 f'+ 0.5*((log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
                 f'/ sigma{str_symbol})**2'
     elif noise_distribution in ['laplace', 'lin-laplace']:
@@ -1376,7 +1377,7 @@ def noise_distribution_to_cost_function(
                 f'/ sigma{str_symbol}'
     elif noise_distribution == 'log10-laplace':
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}*m{str_symbol}) ' \
+            return f'log(2*sigma{str_symbol}*m{str_symbol}*log(10)) ' \
                 f'+ Abs(log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
                 f'/ sigma{str_symbol}'
     else:
