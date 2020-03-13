@@ -13,7 +13,7 @@ Boehm_JProteomeRes2014:
 
 Borghans_BiophysChem1997:
   llh: 83.3237191357272
-  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(sim+log(10)) / 2
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(sim*log(10)) / 2
 
 Brannmark_JBC2010:
   llh: 283.778227541074
@@ -31,7 +31,7 @@ Crauste_CellSystems2017:
 
 Elowitz_Nature2000:
   llh: 63.20279991419332
-  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(sim+log(10))) / 2
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(sim*log(10))) / 2
 
 Fiedler_BMC2016:
   llh: -117.16780323362
