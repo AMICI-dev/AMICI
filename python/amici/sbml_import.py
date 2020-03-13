@@ -142,10 +142,11 @@ class SbmlImporter:
         self.sbml_doc.validateSBML()
         checkLibSBMLErrors(self.sbml_doc, self.show_sbml_warnings)
 
-        self.processRateRules()
 
         # apply several model simplifications that make our life substantially
         # easier
+        self.processRateRules()
+
         if len(self.sbml_doc.getModel().getListOfFunctionDefinitions()) > 0:
             convertConfig = sbml.SBMLFunctionDefinitionConverter()\
                 .getDefaultProperties()
@@ -361,7 +362,7 @@ class SbmlImporter:
         self.local_symbols['avogadro'] = sp.Symbol('avogadro', real=True)
 
     def processRateRules(self):
-        """ Reformulate rate rules by an reaction of the form
+        """ Reformulate speciesx rate rules by an reaction of the form
          R: -> X with rate f(x).
 
         Arguments:
@@ -379,11 +380,10 @@ class SbmlImporter:
             rule = model.getRule(i)
             rule_variable = model.getElementBySId(rule.getVariable())
 
-            if isinstance(rule_variable, sbml.Compartment):
-                raise SBMLException('Compartment rate rules are '
+            if not isinstance(rule_variable, sbml.Species):
+                raise SBMLException('Parameter and compartment rate rules are '
                                     'currently not supported!')
-
-            if rule.isRate() and isinstance(rule_variable, sbml.Species):
+            elif rule.isRate():
 
                 # create dummy reaction R: 0 -> X with rate f(X)
                 reaction = model.createReaction()
@@ -392,8 +392,11 @@ class SbmlImporter:
                 reaction.setReversible(False)
                 reaction.setFast(False)
 
+                rule_variable.setBoundaryCondition(False)
+
                 product = reaction.createProduct()
                 product.setSpecies(rule.getVariable())
+                product.setStoichiometry(1)
                 product.setConstant(False)
 
                 k = reaction.createKineticLaw()
@@ -408,6 +411,8 @@ class SbmlImporter:
                         )
                 # remove rule
                 rule.removeFromParentAndDelete()
+
+        warnings.warn(self.sbml_doc.toSBML())
 
     def processSpecies(self):
         """Get species information from SBML model.
