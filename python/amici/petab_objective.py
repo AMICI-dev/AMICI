@@ -693,7 +693,6 @@ def rdatas_to_measurement_df(
 
     :return:
         A dataframe built from the rdatas in the format of `measurement_df`.
-        Optional in format of `simulation_df`.
     """
 
     df = pd.DataFrame(columns=list(measurement_df.columns))
@@ -743,7 +742,8 @@ def rdatas_to_simulation_df(
         measurement_df: pd.DataFrame) -> pd.DataFrame:
     """Create a PEtab simulation dataframe from ``amici.ReturnData``s.
 
-    See ``rdatas_to_measurement_df`` for details."""
+    See ``rdatas_to_measurement_df`` for details, only that model outputs
+    will appear in column "simulation" instead of "measurement"."""
 
     df = rdatas_to_measurement_df(rdatas=rdatas, model=model,
                                   measurement_df=measurement_df)
