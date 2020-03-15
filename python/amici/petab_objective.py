@@ -676,8 +676,7 @@ def _get_measurements_and_sigmas(
 def rdatas_to_measurement_df(
         rdatas: Sequence[amici.ReturnData],
         model: amici.Model,
-        measurement_df: pd.DataFrame,
-        simulation: bool = False) -> pd.DataFrame:
+        measurement_df: pd.DataFrame) -> pd.DataFrame:
     """
     Create a measurement dataframe in the PEtab format from the passed
     `rdatas` and own information.
@@ -691,9 +690,6 @@ def rdatas_to_measurement_df(
 
     :param measurement_df:
         PEtab measurement table used to generate `rdatas`.
-    
-    :param simulation:
-        Indicator to switch on return as `simulation_df`
 
     :return:
         A dataframe built from the rdatas in the format of `measurement_df`.
@@ -738,9 +734,21 @@ def rdatas_to_measurement_df(
             # append to dataframe
             df = df.append(row_sim, ignore_index=True)
 
-            if simulation:
-                df = df.rename(columns={MEASUREMENT: SIMULATION})
     return df
+
+
+def rdatas_to_simulation_df(
+        rdatas: Sequence[amici.ReturnData],
+        model: amici.Model,
+        measurement_df: pd.DataFrame) -> pd.DataFrame:
+    """Create a PEtab simulation dataframe from ``amici.ReturnData``s.
+
+    See ``rdatas_to_measurement_df`` for details."""
+
+    df = rdatas_to_measurement_df(rdatas=rdatas, model=model,
+                                  measurement_df=measurement_df)
+
+    return df.rename(columns={MEASUREMENT: SIMULATION})
 
 
 def aggregate_sllh(
@@ -759,7 +767,7 @@ def aggregate_sllh(
     :param parameter_mapping:
         PEtab parameter mapping to condition-specific
             simulation parameters
-            
+
     :return:
         aggregated sllh
     """
