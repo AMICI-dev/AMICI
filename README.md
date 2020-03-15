@@ -43,6 +43,8 @@ constrained optimization problems.
   <img src="https://zenodo.org/badge/43677177.svg"></a>
 <a href="https://amici.readthedocs.io/en/latest/?badge=latest" alt="RTD">
  <img src="https://readthedocs.org/projects/amici/badge/?version=latest"></a>
+<a href="https://bestpractices.coreinfrastructure.org/projects/3780">
+  <img src="https://bestpractices.coreinfrastructure.org/projects/3780/badge"></a>
 
 ## Features
 
