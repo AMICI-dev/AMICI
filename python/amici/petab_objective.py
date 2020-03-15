@@ -17,9 +17,13 @@ import numpy as np
 import pandas as pd
 import petab
 from .logging import get_logger, log_execution_time
-from petab.C import *
+from petab.C import *  # noqa: F403
 from .petab_import import PREEQ_INDICATOR_ID
 
+logger = get_logger(__name__)
+
+
+# string constant definitions
 LLH = 'llh'
 SLLH = 'sllh'
 FIM = 'fim'
@@ -27,8 +31,6 @@ S2LLH = 's2llh'
 RES = 'res'
 SRES = 'sres'
 RDATAS = 'rdatas'
-
-logger = get_logger(__name__)
 
 
 @log_execution_time('Simulating PEtab model', logger)
@@ -71,7 +73,7 @@ def simulate_petab(
 
         * cost function value (LLH),
         * const function sensitivity w.r.t. parameters (SLLH),
-          (**NOTE**: Sensitivities are computed for the non-scaled parameters)
+          (**NOTE**: Sensitivities are computed for the scaled parameters)
         * list of `ReturnData` (RDATAS),
 
         corresponding to the different simulation conditions.
