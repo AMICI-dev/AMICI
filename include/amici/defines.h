@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <functional>
+#include <string>
 
 namespace amici {
 

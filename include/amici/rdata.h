@@ -10,13 +10,14 @@ class Model;
 class ReturnData;
 class Solver;
 class ExpData;
-}
+} // namespace amici
 
 namespace boost {
 namespace serialization {
 template <class Archive>
 void serialize(Archive &ar, amici::ReturnData &u, unsigned int version);
-}}
+}
+} // namespace boost
 
 namespace amici {
 
@@ -51,26 +52,26 @@ class ReturnData {
      * @param nmaxevent see amici::Model::nmaxevent
      * @param nt see amici::Model::nt
      * @param newton_maxsteps see amici::Solver::newton_maxsteps
+     * @param nw see amici::Model::nw
      * @param pscale see amici::Model::pscale
      * @param o2mode see amici::Model::o2mode
      * @param sensi see amici::Solver::sensi
      * @param sensi_meth see amici::Solver::sensi_meth
      */
-    ReturnData(
-            std::vector<realtype> ts,
-            int np, int nk, int nx, int nx_solver, int nxtrue, int ny, int nytrue,
-            int nz, int nztrue, int ne, int nJ, int nplist, int nmaxevent,
-            int nt, int newton_maxsteps, std::vector<ParameterScaling> pscale,
-            SecondOrderMode o2mode, SensitivityOrder sensi, SensitivityMethod sensi_meth);
+    ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
+               int nxtrue, int ny, int nytrue, int nz, int nztrue, int ne,
+               int nJ, int nplist, int nmaxevent, int nt, int newton_maxsteps,
+               int nw,
+               std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
+               SensitivityOrder sensi, SensitivityMethod sensi_meth);
 
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
      * @param solver solver instance
      * @param model model instance
-     * bool
      */
-    ReturnData(Solver const& solver, const Model &model);
+    ReturnData(Solver const &solver, const Model &model);
 
     ~ReturnData() = default;
 
@@ -99,35 +100,34 @@ class ReturnData {
     void invalidateSLLH();
 
     /**
-     * @brief applies the chain rule to account for parameter transformation
-     * in the sensitivities of simulation results
+     * @brief applies the chain rule to account for parameter transformation in
+     * the sensitivities of simulation results
      * @param model Model from which the ReturnData was obtained
      */
-    void
-    applyChainRuleFactorToSimulationResults(const Model *model);
-    
+    void applyChainRuleFactorToSimulationResults(const Model *model);
+
     /**
-     * Residual function
+     * @brief Residual function
      * @param it time index
      * @param edata ExpData instance containing observable data
      */
     void fres(int it, const ExpData &edata);
-    
+
     /**
-     * Chi-squared function
+     * @brief Chi-squared function
      * @param it time index
      */
     void fchi2(int it);
-    
+
     /**
-     * Residual sensitivity function
+     * @brief Residual sensitivity function
      * @param it time index
      * @param edata ExpData instance containing observable data
      */
     void fsres(int it, const ExpData &edata);
-    
+
     /**
-     * Fisher information matrix function
+     * @brief Fisher information matrix function
      * @param it time index
      */
     void fFIM(int it);
@@ -138,41 +138,61 @@ class ReturnData {
     /** time derivative (dimension: nx) */
     std::vector<realtype> xdot;
 
-    /** Jacobian of differential equation right hand side (dimension: nx x nx,
-     * row-major) */
+    /**
+     * Jacobian of differential equation right hand side (dimension: nx x nx,
+     * row-major)
+     */
     std::vector<realtype> J;
+
+    /**
+     * w data from the model (recurring terms in xdot, for imported SBML models
+     * from python, this contains the flux vector)
+     * (dimensions: nt x nw, row major)
+     */
+    std::vector<realtype> w;
 
     /** event output (dimension: nmaxevent x nz, row-major) */
     std::vector<realtype> z;
 
-    /** event output sigma standard deviation (dimension: nmaxevent x nz,
-     * row-major) */
+    /**
+     * event output sigma standard deviation (dimension: nmaxevent x nz,
+     * row-major)
+     */
     std::vector<realtype> sigmaz;
 
-    /** parameter derivative of event output (dimension: nmaxevent x nz,
-     * row-major) */
+    /**
+     * parameter derivative of event output (dimension: nmaxevent x nz,
+     * row-major)
+     */
     std::vector<realtype> sz;
 
-    /** parameter derivative of event output standard deviation (dimension:
-     * nmaxevent x nz, row-major)  */
+    /**
+     * parameter derivative of event output standard deviation (dimension:
+     * nmaxevent x nz, row-major)
+     */
     std::vector<realtype> ssigmaz;
 
     /** event trigger output (dimension: nmaxevent x nz, row-major)*/
     std::vector<realtype> rz;
 
-    /** parameter derivative of event trigger output (dimension: nmaxevent x nz
-     * x nplist, row-major) */
+    /**
+     * parameter derivative of event trigger output (dimension: nmaxevent x nz
+     * x nplist, row-major)
+     */
     std::vector<realtype> srz;
 
-    /** second order parameter derivative of event trigger output (dimension:
-     * nmaxevent x nztrue x nplist x nplist, row-major) */
+    /**
+     * second order parameter derivative of event trigger output (dimension:
+     * nmaxevent x nztrue x nplist x nplist, row-major)
+     */
     std::vector<realtype> s2rz;
 
     /** state (dimension: nt x nx, row-major) */
     std::vector<realtype> x;
 
-    /** parameter derivative of state (dimension: nt x nplist x nx,
-     * row-major) */
+    /**
+     * parameter derivative of state (dimension: nt x nplist x nx, row-major)
+     */
     std::vector<realtype> sx;
 
     /** observable (dimension: nt x ny, row-major) */
@@ -181,23 +201,27 @@ class ReturnData {
     /** observable standard deviation (dimension: nt x ny, row-major) */
     std::vector<realtype> sigmay;
 
-    /** parameter derivative of observable (dimension: nt x nplist x ny,
-     * row-major) */
+    /**
+     * parameter derivative of observable (dimension: nt x nplist x ny,
+     * row-major)
+     */
     std::vector<realtype> sy;
 
-    /** parameter derivative of observable standard deviation (dimension: nt x
-     * nplist x ny, row-major) */
+    /**
+     * parameter derivative of observable standard deviation (dimension: nt x
+     * nplist x ny, row-major)
+     */
     std::vector<realtype> ssigmay;
 
     /** observable (dimension: nt*ny, row-major) */
     std::vector<realtype> res;
 
-    /** parameter derivative of residual (dimension: nt*ny x nplist,
-     * row-major) */
+    /**
+     * parameter derivative of residual (dimension: nt*ny x nplist, row-major)
+     */
     std::vector<realtype> sres;
 
-    /** fisher information matrix (dimension: nplist x nplist,
-     * row-major) */
+    /** fisher information matrix (dimension: nplist x nplist, row-major) */
     std::vector<realtype> FIM;
 
     /** number of integration steps forward problem (dimension: nt) */
@@ -218,11 +242,13 @@ class ReturnData {
     /** number of error test failures backwad problem (dimension: nt) */
     std::vector<int> numerrtestfailsB;
 
-    /** number of linear solver convergence failures forward problem (dimension:
+    /**
+     * number of linear solver convergence failures forward problem (dimension:
      * nt) */
     std::vector<int> numnonlinsolvconvfails;
 
-    /** number of linear solver convergence failures backwad problem (dimension:
+    /**
+     * number of linear solver convergence failures backwad problem (dimension:
      * nt) */
     std::vector<int> numnonlinsolvconvfailsB;
 
@@ -241,25 +267,34 @@ class ReturnData {
     /** computation time of the Newton solver [ms] */
     double newton_cpu_time = 0.0;
 
-    /** number of Newton steps for steady state problem
-     [newton, simulation, newton] (length = 3) */
+    /**
+     * number of Newton steps for steady state problem
+     * [newton, simulation, newton] (length = 3)
+     */
     std::vector<int> newton_numsteps;
 
-    /** number of linear steps by Newton step for steady state problem. this
-     will only be filled for iterative solvers (length = newton_maxsteps * 2) */
+    /**
+     * number of linear steps by Newton step for steady state problem. this
+     * will only be filled for iterative solvers (length = newton_maxsteps * 2)
+     */
     std::vector<int> newton_numlinsteps;
 
-    /** time at which steadystate was reached in the simulation based approach */
+    /**
+     * time at which steadystate was reached in the simulation based approach
+     */
     realtype t_steadystate = NAN;
 
-    /** weighted root-mean-square of the rhs when steadystate
-     was reached*/
+    /**
+     * weighted root-mean-square of the rhs when steadystate
+     * was reached
+     */
     realtype wrms_steadystate = NAN;
 
-    /** weighted root-mean-square of the rhs when steadystate
-     was reached*/
+    /**
+     * weighted root-mean-square of the rhs when steadystate
+     * was reached
+     */
     realtype wrms_sensi_steadystate = NAN;
-
 
     /** initial state (dimension: nx) */
     std::vector<realtype> x0;
@@ -270,7 +305,10 @@ class ReturnData {
     /** initial sensitivities (dimension: nplist x nx, row-major) */
     std::vector<realtype> sx0;
 
-    /** preequilibration sensitivities found by Newton solver (dimension: nplist x nx, row-major) */
+    /**
+     * preequilibration sensitivities found by Newton solver (dimension: nplist
+     * x nx, row-major)
+     */
     std::vector<realtype> sx_ss;
 
     /** loglikelihood value */
@@ -282,8 +320,10 @@ class ReturnData {
     /** parameter derivative of loglikelihood (dimension: nplist) */
     std::vector<realtype> sllh;
 
-    /** second order parameter derivative of loglikelihood (dimension: (nJ-1) x
-     * nplist, row-major) */
+    /**
+     * second order parameter derivative of loglikelihood (dimension: (nJ-1) x
+     * nplist, row-major)
+     */
     std::vector<realtype> s2llh;
 
     /** status code */
@@ -330,6 +370,9 @@ class ReturnData {
 
     /** number of considered timepoints */
     int nt{0};
+
+    /** number of columns in w */
+    int nw{0};
 
     /** maximal number of newton iterations for steady state calculation */
     int newton_maxsteps{0};

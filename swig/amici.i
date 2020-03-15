@@ -141,3 +141,14 @@ bool compiledWithOpenMP() {
 namespace amici {
 bool compiledWithOpenMP();
 }
+
+// add module docstring and import additional types for typehints
+%pythonbegin %{
+"""
+Core C++ bindings
+-----------------
+This module encompasses the complete public C++ API of AMICI, which was exposed via swig. All functions listed here are directly accessible in the main amici package, i.e., amici.amici.ExpData is available as amici.ExpData.
+"""
+
+from typing import Iterable
+%}

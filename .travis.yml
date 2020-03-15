@@ -13,7 +13,7 @@ matrix:
     - os: linux
       dist: bionic
       language: python
-      python: 3.7
+      python: 3.8
       compiler: gcc
       addons:
         apt:
@@ -27,11 +27,21 @@ matrix:
             - libc6-dbg
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
-        - CI_MODE=test
+        - CI_BUILD=TRUE
+        - CI_CPPUTEST=TRUE
+        - CI_PYTHON=TRUE
+        - CI_ARCHIVE=TRUE
+        - CI_NOTEBOOK=TRUE
       before_install:
         - ./scripts/buildValgrind.sh
       after_script:
+        # cpputest coverage cpp
+        - lcov --compat-libtool --no-external --directory ${BASE_DIR}/build/CMakeFiles/amici.dir/src --base-directory ${BASE_DIR} --capture --output-file coverage_cpp.info
+        # py coverage cpp
+        - lcov --compat-libtool --no-external --directory ${BASE_DIR}/python/sdist/build/temp.linux-x86_64-${TRAVIS_PYTHON_VERSION}/amici/src --base-directory ${BASE_DIR} --capture --output-file coverage_py.info
+        - lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
+        # py coverage py
         - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
       before_deploy:
         - cd $BASE_DIR
@@ -43,12 +53,36 @@ matrix:
           branch: master
           tags: true
 
+    - os: linux
+      dist: bionic
+      language: python
+      python: 3.7
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - libhdf5-serial-dev
+            - zlib1g-dev
+            - libatlas-base-dev
+            - g++-5
+            - libc6-dbg
+      env:
+        - CI_BUILD=TRUE
+        - CI_PYTHON=TRUE
+        - CI_NOTEBOOK=TRUE
+
     - os: osx
       osx_image: xcode11
       language: minimal
       compiler: clang
       env:
-        - CI_MODE=test
+        - CI_BUILD=TRUE
+        - CI_CPPUTEST=TRUE
+        - CI_CMAKE=TRUE
+        - CI_ARCHIVE=TRUE
+        - CI_CPPCHECK=TRUE
+        - CI_PYTHON=TRUE
+        - CI_NOTEBOOK=TRUE
       addons:
         homebrew:
           packages:
@@ -59,6 +93,7 @@ matrix:
           update: true
       before_install:
         - travis_wait brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
+        - brew link --overwrite python # https://github.com/ICB-DCM/AMICI/issues/894
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
         - pip3 install --user -U numpy
       after_success:
@@ -69,19 +104,21 @@ matrix:
       language: minimal
       compiler: clang
       env:
-        - CI_MODE=deploy
+        - CI_DOC=TRUE
       addons:
         homebrew:
           casks:
             - mactex
           packages:
-            - doxygen
+            # - doxygen # disabled because current 1.8.16 does not work with recent ghostscript
+            - bison # doxygen build
             - ragel
             - graphviz
           update: true
       before_install:
         - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
+        - brew link --overwrite python # https://github.com/ICB-DCM/AMICI/issues/894
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
       deploy:
@@ -94,34 +131,65 @@ matrix:
         on:
           branch: master
 
+    - os: windows
+      # language python currently not supported on Windows
+      language: cpp
+      compiler: msvc
+      git:
+        # clone after enabled symlinks below
+        clone: false
+      env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+      before_install:
+        - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
+        # allow PowerShell to run scripts
+        - powershell -Command Set-ExecutionPolicy Unrestricted -Force
+        # Enable Windows developer mode to support symlinks
+        - powershell -Command New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" -Name AllowDevelopmentWithoutDevLicense -Value 1  -PropertyType DWord
+        # stick to python 3.7 until there is a 3.8 wheel for windows
+        # as installation from sdist fails because of reasons...
+        - choco install python --version 3.7.5
+        - choco install swig
+        - python -m pip install --upgrade pip
+        - pip install --user -U numpy
+        - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
+        - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
+        # run BLAS installation script
+        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS; fi
+        # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
+        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib libopenblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-0.3.6-x64\\include'; fi
+
 install:
     - export BASE_DIR=`pwd`
     # Build swig4.0 (not yet available with apt) to include pydoc in source distribution for pypi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/downloadAndBuildSwig.sh && export PATH=${BASE_DIR}/ThirdParty/swig-4.0.1/install/bin:${PATH}; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export PYTHON_EXECUTABLE=$(which python3); fi # cmake wont be able to find python3 on its own ...
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
-    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
-    - if [[ "$CI_MODE" == "deploy" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSuiteSparse.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildSundials.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildCpputest.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildBNGL.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/buildAmici.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciArchive.sh; fi
-    - if [[ "$CI_MODE" == "test" ]]; then ./scripts/installAmiciSource.sh; fi
+    - if [[ "$CI_DOC" == "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
+    - if [[ "$CI_DOC" == "TRUE" ]]; then export PATH="/usr/local/opt/bison/bin:$PATH"; LDFLAGS="-L/usr/local/opt/bison/lib" scripts/downloadAndBuildDoxygen.sh; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildSuiteSparse.sh; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildSundials.sh; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildCpputest.sh; fi
+    - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/buildBNGL.sh; fi
+    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildAmici.sh; fi
+    - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
+    - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install -v $(ls -t dist/amici-*.tar.gz | head -1); fi
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-    - if [[ "$CI_MODE" == "test" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
-    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cmake ./tests/testCMakeCompilation.sh; fi
-    - if [[ "$CI_MODE" == "deploy" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" != "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$CI_MODE" == "test" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
+    - if [[ "$CI_CPPCHECK" == "TRUE" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
+    - if [[ "$CI_NOTEBOOK" == "TRUE" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
+    - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" == "TRUE" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
+    - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" != "TRUE" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
+    # needs to be run after python tests
+    - if [[ "$CI_CMAKE" == "TRUE" ]]; then $FOLD cmake ./tests/testCMakeCompilation.sh; fi
+    - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
+    - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
+    - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
+    - if [[ "$CI_PYTHON" == "TRUE" ]]; then $FOLD sphinx ./scripts/run-sphinx.sh; fi
 
 after_failure:
     - $FOLD ls -alR

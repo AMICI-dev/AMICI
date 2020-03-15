@@ -16,11 +16,23 @@ from setuptools import find_packages, setup, Extension
 
 import os
 import sys
-import sysconfig
 import subprocess
-import setup_clibs # Must run from within containing directory
-from custom_commands import (my_install, my_build_clib, my_develop,
-                             my_install_lib, my_build_ext, my_sdist)
+import setup_clibs  # Must run from within containing directory
+
+# Add current directory to path, as we need some modules from the AMICI
+# package already for installation
+sys.path.insert(0, os.getcwd())
+
+from amici import __version__
+from amici.custom_commands import (
+    AmiciInstall, AmiciBuildCLib, AmiciDevelop,
+    AmiciInstallLib, AmiciBuildExt, AmiciSDist)
+from amici.setuptools import (
+    get_blas_config,
+    get_hdf5_config,
+    add_coverage_flags_if_required,
+    add_debug_flags_if_required,
+)
 
 
 def try_install(package):
@@ -40,17 +52,6 @@ except ImportError:
     # retry
     import numpy as np
 
-
-sys.path.insert(0, os.getcwd())
-from amici import __version__
-
-from amici.setuptools import (
-    getBlasConfig,
-    getHdf5Config,
-    addCoverageFlagsIfRequired,
-    addDebugFlagsIfRequired,
-)
-
 # Python version check. We need >= 3.6 due to e.g. f-strings
 if sys.version_info < (3, 6):
     sys.exit('amici requires at least Python version 3.6')
@@ -62,13 +63,13 @@ def main():
     amici_module_linker_flags = []
     define_macros = []
 
-    blaspkgcfg = getBlasConfig()
+    blaspkgcfg = get_blas_config()
     amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
     amici_module_linker_flags.extend(
-        '-l%s' % l for l in blaspkgcfg['libraries'])
+        f'-l{lib}' for lib in blaspkgcfg['libraries'])
     define_macros.extend(blaspkgcfg['define_macros'])
 
-    h5pkgcfg = getHdf5Config()
+    h5pkgcfg = get_hdf5_config()
 
     if h5pkgcfg['found']:
         # Manually add linker flags. The libraries passed to Extension will
@@ -76,7 +77,7 @@ def main():
         # they are required.
         print("HDF5 library found. Building AMICI with HDF5 support.")
         amici_module_linker_flags.extend(
-            ['-l%s' % l for l in
+            [f'-l{lib}' for lib in
              ['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']])
         extension_sources = [
             'amici/amici_wrap.cxx',  # swig interface
@@ -88,12 +89,12 @@ def main():
             'amici/amici_wrap_without_hdf5.cxx',  # swig interface
         ]
 
-    addCoverageFlagsIfRequired(
+    add_coverage_flags_if_required(
         cxx_flags,
         amici_module_linker_flags,
     )
 
-    addDebugFlagsIfRequired(
+    add_debug_flags_if_required(
         cxx_flags,
         amici_module_linker_flags,
     )
@@ -105,13 +106,18 @@ def main():
         amici_module_linker_flags.extend(
             os.environ['AMICI_LDFLAGS'].split(' '))
 
-    libamici = setup_clibs.getLibAmici(
+    libamici = setup_clibs.get_lib_amici(
         h5pkgcfg=h5pkgcfg, blaspkgcfg=blaspkgcfg,
         extra_compiler_flags=cxx_flags)
-    libsundials = setup_clibs.getLibSundials(extra_compiler_flags=cxx_flags)
-    libsuitesparse = setup_clibs.getLibSuiteSparse(
+    libsundials = setup_clibs.get_lib_sundials(extra_compiler_flags=cxx_flags)
+    libsuitesparse = setup_clibs.get_lib_suite_sparse(
         extra_compiler_flags=cxx_flags + ['-DDLONG']
     )
+
+    # Readme as long package description to go on PyPi
+    # (https://pypi.org/project/amici/)
+    with open("README.md", "r", encoding="utf-8") as fh:
+        long_description = fh.read()
 
     # Build shared object
     amici_module = Extension(
@@ -135,45 +141,39 @@ def main():
             *blaspkgcfg['library_dirs'],
             'amici/libs',  # clib target directory
         ],
-        extra_compile_args=['-std=c++11', *cxx_flags],
+        extra_compile_args=cxx_flags,
         extra_link_args=amici_module_linker_flags
     )
-
-    # Readme as long package description to go on PyPi
-    # (https://pypi.org/project/amici/)
-    with open("README.md", "r", encoding="utf-8") as fh:
-        long_description = fh.read()
-
-    # Remove the "-Wstrict-prototypes" compiler option, which isn't valid for
-    # C++ to fix warnings.
-    cfg_vars = sysconfig.get_config_vars()
-    for key, value in cfg_vars.items():
-        if type(value) == str:
-            cfg_vars[key] = value.replace("-Wstrict-prototypes", "")
+    # Monkey-patch extension (see
+    # `custom_commands.set_compiler_specific_extension_options`)
+    amici_module.extra_compile_args_mingw32 = ['-std=c++14']
+    amici_module.extra_compile_args_unix = ['-std=c++14']
+    amici_module.extra_compile_args_msvc = ['/std:c++14']
 
     # Install
     setup(
         name='amici',
         cmdclass={
-            'install': my_install,
-            'sdist': my_sdist,
-            'build_ext': my_build_ext,
-            'build_clib': my_build_clib,
-            'install_lib': my_install_lib,
-            'develop': my_develop,
+            'install': AmiciInstall,
+            'sdist': AmiciSDist,
+            'build_ext': AmiciBuildExt,
+            'build_clib': AmiciBuildCLib,
+            'install_lib': AmiciInstallLib,
+            'develop': AmiciDevelop,
         },
         version=__version__,
         description='Advanced multi-language Interface to CVODES and IDAS',
         long_description=long_description,
         long_description_content_type="text/markdown",
         url='https://github.com/ICB-DCM/AMICI',
-        author='Fabian Froehlich, Jan Hasenauer, Daniel Weindl and Paul Stapor',
+        author='Fabian Froehlich, Jan Hasenauer, Daniel Weindl and '
+               'Paul Stapor',
         author_email='fabian_froehlich@hms.harvard.edu',
         license='BSD',
         libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
         py_modules=['amici/amici',  # the swig interface
-                    'amici/amici_without_hdf5',   # the swig interface
+                    'amici/amici_without_hdf5',  # the swig interface
                     ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
@@ -193,7 +193,7 @@ def main():
         setup_requires=['setuptools>=40.6.3'],
         python_requires='>=3.6',
         extras_require={
-            'petab': ['petab>=0.0.0a14','colorama']
+            'petab': ['petab>=0.1.4']
         },
         package_data={
             'amici': ['amici/include/amici/*',

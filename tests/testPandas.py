@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Tests for ``amici.pandas``"""
+
 import sys
 import amici
 import unittest
@@ -8,10 +10,11 @@ import copy
 import numpy as np
 import itertools
 
+
 class TestAmiciPandasImportExport(unittest.TestCase):
-    '''
+    """
     TestCase class for testing csv import using pandas
-    '''
+    """
 
     def setUp(self):
         self.default_path = copy.copy(sys.path)
@@ -116,7 +119,6 @@ class TestAmiciPandasImportExport(unittest.TestCase):
                             getattr(self.edata[0], fp),
                             cases[case][fp],
                         )
-
 
 
 if __name__ == '__main__':

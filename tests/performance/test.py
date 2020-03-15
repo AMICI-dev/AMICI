@@ -15,11 +15,13 @@ def main():
     edata = amici.ExpData(model)
     edata.setTimepoints([1e8])
     edata.setObservedData([1.0])
+    edata.setObservedDataStdDev([1.0])
 
     if arg == 'forward_simulation':
         solver.setSensitivityMethod(amici.SensitivityMethod_none)
         solver.setSensitivityOrder(amici.SensitivityOrder_none)
     elif arg == 'forward_sensitivities':
+        model.setParameterList(list(range(100)))
         solver.setSensitivityMethod(amici.SensitivityMethod_forward)
         solver.setSensitivityOrder(amici.SensitivityOrder_first)
     elif arg == 'adjoint_sensitivities':
@@ -27,12 +29,12 @@ def main():
         solver.setSensitivityOrder(amici.SensitivityOrder_first)
     elif arg == 'forward_simulation_non_optimal_parameters':
         tmpPar = model.getParameters()
-        model.setParameters([0.1 for iPar in tmpPar])
+        model.setParameters([0.1 for _ in tmpPar])
         solver.setSensitivityMethod(amici.SensitivityMethod_none)
         solver.setSensitivityOrder(amici.SensitivityOrder_none)
     elif arg == 'adjoint_sensitivities_non_optimal_parameters':
         tmpPar = model.getParameters()
-        model.setParameters([0.1 for iPar in tmpPar])
+        model.setParameters([0.1 for _ in tmpPar])
         solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
         solver.setSensitivityOrder(amici.SensitivityOrder_first)
     else:

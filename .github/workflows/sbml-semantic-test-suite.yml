@@ -12,6 +12,7 @@ on:
 
 jobs:
   build:
+    name: SBML semantic test suite
 
     runs-on: ubuntu-latest
 

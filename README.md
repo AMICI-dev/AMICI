@@ -1,4 +1,8 @@
-# About AMICI
+<img src="https://raw.githubusercontent.com/ICB-DCM/AMICI/master/documentation/gfx/banner.png" height="60" align="left">
+
+## Advanced Multilanguage Interface for CVODES and IDAS
+
+## About 
 
 AMICI provides a multi-language (Python, C++, Matlab) interface for the
 [SUNDIALS](https://computing.llnl.gov/projects/sundials/) solvers
@@ -25,6 +29,20 @@ computation in parameter estimation of biochemical reaction models but
 it is also applicable to a wider range of differential equation
 constrained optimization problems.
 
+## Current build status
+
+<a href="https://badge.fury.io/py/amici" alt="PyPI version">
+  <img src="https://badge.fury.io/py/amici.svg"></a>
+<a href="https://travis-ci.com/ICB-DCM/AMICI" alt="Build Status">
+  <img src="https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master"></a>
+<a href="https://codecov.io/gh/ICB-DCM/AMICI" alt="CodeCov">
+  <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
+<a href="https://www.codacy.com/app/FFroehlich/AMICI" alt="Codacy">
+  <img src="https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6"></a>
+<a href="https://zenodo.org/badge/latestdoi/43677177" alt="Zenodo">
+  <img src="https://zenodo.org/badge/43677177.svg"></a>
+<a href="https://amici.readthedocs.io/en/latest/?badge=latest" alt="RTD">
+ <img src="https://readthedocs.org/projects/amici/badge/?version=latest"></a>
 
 ## Features
 
@@ -68,7 +86,8 @@ To get started with Matlab-AMICI, various examples are available
 in [matlab/examples/](https://github.com/ICB-DCM/AMICI/tree/master/matlab/examples).
 
 Comprehensive documentation on installation and usage of AMICI is available
-online at [http://icb-dcm.github.io/AMICI/](http://icb-dcm.github.io/AMICI/).
+online for the [python](https://amici.readthedocs.io/en/latest/) and 
+[MATLAB/C++](http://icb-dcm.github.io/AMICI/) interfaces.
 
 Any [contributions](http://icb-dcm.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g.html)
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
@@ -99,7 +118,13 @@ and/or
   Parameter estimation for dynamical systems with discrete events and logical
   operations. Bioinformatics, 33(7), 1049-1056.
   doi:[10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
+  
+When presenting work that employs AMICI, feel free to use one of the icons in 
+[documentation/gfx/](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx), which are available under a [CC0](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx/LICENSE.md) license:
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ICB-DCM/AMICI/master/documentation/gfx/logo_text.png" height="75">
+</p>
 
 ## Status of SBML support in Python-AMICI
 
@@ -129,15 +154,3 @@ However, the following features are unlikely to be supported:
 - `delay()` due to missing SUNDIALS solver support
 
 In addition to SBML, we also plan to implement support for the [Simulation Experiment Description Markup Language (SED-ML)](https://sed-ml.org/).
-
-
-## Current build status
-
-<a href="https://badge.fury.io/py/amici" alt="PyPI version">
-  <img src="https://badge.fury.io/py/amici.svg"></a>
-<a href="https://travis-ci.com/ICB-DCM/AMICI" alt="Build Status">
-  <img src="https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master"></a>
-<a href="https://codecov.io/gh/ICB-DCM/AMICI" alt="CodeCov">
-  <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
-<a href="https://www.codacy.com/app/FFroehlich/AMICI" alt="Codacy">
-  <img src="https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6"></a>

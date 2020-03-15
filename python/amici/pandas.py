@@ -1,33 +1,88 @@
+"""
+Pandas Wrappers
+---------------
+This modules contains convenience wrappers that allow for easy interconversion
+between C++ objects from :mod:`amici.amici` and pandas DataFrames
+"""
+
 import pandas as pd
 import numpy as np
 import math
 import copy
 
+from typing import List, Union, Optional, Dict, SupportsFloat
 from .numpy import ExpDataView
 import amici
-from amici import ExpData
+
+ExpDatas = Union[
+    List[amici.amici.ExpData], List[amici.ExpDataPtr],
+    amici.amici.ExpData, amici.ExpDataPtr
+]
+ReturnDatas = Union[
+    List[amici.ReturnDataView], amici.ReturnDataView
+]
+
+AmiciModel = Union[amici.ModelPtr, amici.Model]
 
 
-def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
-    """ Write Observables from experimental data as DataFrame.
-
-    Arguments:
-        model: Model instance.
-        edata_list: list of ExpData instances with experimental data.
-            May also be a single ExpData instance.
-        by_id: bool (optional, default = False)
-            If True, uses observable ids as identifiers in dataframe,
-            otherwise the possibly more descriptive observable names
-            are used.
-
-    Returns:
-        pandas DataFrame with conditions and observables.
-
-    Raises:
-
+def _process_edata_list(edata_list: ExpDatas) -> List[amici.amici.ExpData]:
     """
-    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
-        edata_list = [edata_list]
+    Maps single instances of :class:`amici.amici.ExpData` to lists of
+    :class:`amici.amici.ExpData`
+
+    :param edata_list:
+        list of instances or single instance
+
+    :return:
+        list of instance(s)
+    """
+    if isinstance(edata_list, (amici.amici.ExpData, amici.ExpDataPtr)):
+        return [edata_list]
+    else:
+        return edata_list
+
+
+def _process_rdata_list(rdata_list: ReturnDatas) -> List[amici.ReturnDataView]:
+    """
+    Maps single instances of :class:`amici.ReturnData` to lists of
+    :class:`amici.ReturnData`
+
+    :param rdata_list:
+        list of instances or single instance
+
+    :return:
+        list of instance(s)
+    """
+    if isinstance(rdata_list, amici.ReturnDataView):
+        return [rdata_list]
+    else:
+        return rdata_list
+
+
+def getDataObservablesAsDataFrame(
+        model: AmiciModel,
+        edata_list: ExpDatas,
+        by_id: Optional[bool] = False) -> pd.DataFrame:
+    """
+    Write Observables from experimental data as DataFrame.
+
+    :param model:
+        Model instance.
+
+    :param edata_list:
+        list of ExpData instances with experimental data.
+        May also be a single ExpData instance.
+
+    :param by_id:
+        If True, uses observable ids as column names in the generated
+        DataFrame, otherwise the possibly more descriptive observable names
+        are used.
+
+    :return:
+        pandas DataFrame with conditions/timepoints as rows and observables as
+        columns.
+    """
+    edata_list = _process_edata_list(edata_list)
 
     # list of all column names using either ids or names
     cols = _get_extended_observable_cols(model, by_id=by_id)
@@ -59,29 +114,35 @@ def getDataObservablesAsDataFrame(model, edata_list, by_id=False):
 
 
 def getSimulationObservablesAsDataFrame(
-        model, edata_list, rdata_list, by_id=False):
-    """ Write Observables from simulation results as DataFrame.
-
-    Arguments:
-        model: Model instance.
-        edata_list: list of ExpData instances with experimental data.
-            May also be a single ExpData instance.
-        rdata_list: list of ReturnData instances corresponding to ExpData.
-            May also be a single ReturnData instance.
-        by_id: bool, optional (default = False)
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
-
-    Returns:
-        pandas DataFrame with conditions and observables.
-
-    Raises:
-
+        model: amici.Model,
+        edata_list: ExpDatas,
+        rdata_list: ReturnDatas,
+        by_id: Optional[bool] = False
+) -> pd.DataFrame:
     """
-    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
-        edata_list = [edata_list]
-    if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
-        rdata_list = [rdata_list]
+    Write Observables from simulation results as DataFrame.
+
+    :param model:
+        Model instance.
+
+    :param edata_list:
+        list of ExpData instances with experimental data.
+        May also be a single ExpData instance.
+
+    :param rdata_list:
+        list of ReturnData instances corresponding to ExpData.
+        May also be a single ReturnData instance.
+
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return:
+        pandas DataFrame with conditions/timepoints as rows and state
+        variables as columns.
+    """
+    edata_list = _process_edata_list(edata_list)
+    rdata_list = _process_rdata_list(rdata_list)
 
     # list of all column names using either names or ids
     cols = _get_extended_observable_cols(model, by_id=by_id)
@@ -112,29 +173,33 @@ def getSimulationObservablesAsDataFrame(
 
 
 def getSimulationStatesAsDataFrame(
-        model, edata_list, rdata_list, by_id=False):
-    """ Compute model residuals according to lists of ReturnData and ExpData.
-
-    Arguments:
-        model: Model instance.
-        edata_list: list of ExpData instances with experimental data.
-            May also be a single ExpData instance.
-        rdata_list: list of ReturnData instances corresponding to ExpData.
-            May also be a single ReturnData instance.
-        by_id: bool, optional (default = False)
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
-
-    Returns:
-        pandas DataFrame with conditions and observables.
-
-    Raises:
-
+        model: amici.Model,
+        edata_list: ExpDatas,
+        rdata_list: ReturnDatas,
+        by_id: Optional[bool] = False) -> pd.DataFrame:
     """
-    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
-        edata_list = [edata_list]
-    if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
-        rdata_list = [rdata_list]
+    Compute model residuals according to lists of ReturnData and ExpData.
+
+    :param model:
+        Model instance.
+
+    :param edata_list:
+        list of ExpData instances with experimental data.
+        May also be a single ExpData instance.
+
+    :param rdata_list:
+        list of ReturnData instances corresponding to ExpData.
+        May also be a single ReturnData instance.
+
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return: pandas DataFrame with conditions/timpoints as rows and
+        observables as columns.
+    """
+    edata_list = _process_edata_list(edata_list)
+    rdata_list = _process_rdata_list(rdata_list)
 
     # get conditions and state column names by name or id
     cols = _get_state_cols(model, by_id=by_id)
@@ -163,29 +228,33 @@ def getSimulationStatesAsDataFrame(
     return df_rdata
 
 
-def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
-    """ Convert a list of ExpData to pandas DataFrame.
+def getResidualsAsDataFrame(model: amici.Model,
+                            edata_list: ExpDatas,
+                            rdata_list: ReturnDatas,
+                            by_id: Optional[bool] = False) -> pd.DataFrame:
+    """
+    Convert a list of ExpData to pandas DataFrame.
 
-    Arguments:
-        model: Model instance.
-        edata_list: list of ExpData instances with experimental data.
-            May also be a single ExpData instance.
-        rdata_list: list of ReturnData instances corresponding to ExpData.
-            May also be a single ReturnData instance.
-        by_id: bool, optional (default = False)
+    :param model:
+        Model instance.
+
+    :param edata_list:
+        list of ExpData instances with experimental data. May also be a
+        single ExpData instance.
+
+    :param rdata_list:
+        list of ReturnData instances corresponding to ExpData. May also be a
+         single ReturnData instance.
+
+    :param by_id: bool, optional (default = False)
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
-    Returns:
+    :return:
         pandas DataFrame with conditions and observables.
-
-    Raises:
-
     """
-    if isinstance(edata_list, (amici.amici.ExpData, amici.amici.ExpDataPtr)):
-        edata_list = [edata_list]
-    if isinstance(rdata_list, (amici.amici.ReturnData, amici.amici.ReturnDataPtr)):
-        rdata_list = [rdata_list]
+    edata_list = _process_edata_list(edata_list)
+    rdata_list = _process_rdata_list(rdata_list)
 
     # create observable and simulation dataframes
     df_edata = getDataObservablesAsDataFrame(
@@ -226,24 +295,30 @@ def getResidualsAsDataFrame(model, edata_list, rdata_list, by_id=False):
     return df_res
 
 
-def _fill_conditions_dict(datadict, model, edata, by_id) -> dict:
+def _fill_conditions_dict(datadict: Dict[str, float],
+                          model: AmiciModel,
+                          edata: amici.amici.ExpData,
+                          by_id: bool) -> Dict[str, float]:
     """
     Helper function that fills in condition parameters from model and
     edata.
 
-    Arguments:
-        datadict: dictionary in which condition parameters will be inserted
-            as key value pairs.
-        model: Model instance.
-        edata: ExpData instance.
-        by_id: bool
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
+    :param datadict:
+        dictionary in which condition parameters will be inserted
+        as key value pairs.
 
-    Returns:
+    :param model:
+        Model instance.
+
+    :param edata:
+        ExpData instance.
+
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return:
         dictionary with filled condition parameters.
-
-    Raises:
 
     """
     datadict['t_presim'] = edata.t_presim
@@ -259,30 +334,30 @@ def _fill_conditions_dict(datadict, model, edata, by_id) -> dict:
             datadict[par + '_preeq'] = \
                 edata.fixedParametersPreequilibration[i_par]
         else:
-            datadict[par + '_preeq'] = math.nan
+            datadict[par + '_preeq'] = np.nan
 
         if len(edata.fixedParametersPresimulation):
             datadict[par + '_presim'] = \
                 edata.fixedParametersPresimulation[i_par]
         else:
-            datadict[par + '_presim'] = math.nan
+            datadict[par + '_presim'] = np.nan
     return datadict
 
 
-def _get_extended_observable_cols(model, by_id) -> list:
-    """ Construction helper for extended observable dataframe headers.
+def _get_extended_observable_cols(model: AmiciModel,
+                                  by_id: bool) -> List[str]:
+    """
+    Construction helper for extended observable dataframe headers.
 
-    Arguments:
-        model: Model instance.
-        by_id: bool
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
+    :param model:
+        Model instance.
 
-    Returns:
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return:
         column names as list.
-
-    Raises:
-
     """
     return \
         ['time', 'datatype', 't_presim'] + \
@@ -296,20 +371,20 @@ def _get_extended_observable_cols(model, by_id) -> list:
             _get_names_or_ids(model, 'Observable', by_id=by_id)]
 
 
-def _get_observable_cols(model, by_id):
-    """ Construction helper for observable dataframe headers.
+def _get_observable_cols(model: AmiciModel,
+                         by_id: bool) -> List[str]:
+    """
+    Construction helper for observable dataframe headers.
 
-    Arguments:
-        model: Model instance.
-        by_id: bool
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
+    :param model:
+        Model instance.
 
-    Returns:
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return:
         column names as list.
-
-    Raises:
-
     """
     return \
         ['time', 't_presim'] + \
@@ -321,20 +396,20 @@ def _get_observable_cols(model, by_id):
         _get_names_or_ids(model, 'Observable', by_id=by_id)
 
 
-def _get_state_cols(model, by_id):
-    """ Construction helper for state dataframe headers.
+def _get_state_cols(model: AmiciModel,
+                    by_id: bool) -> List[str]:
+    """
+    Construction helper for state dataframe headers.
 
-    Arguments:
-        model: Model instance.
-        by_id: bool
-            If True, ids are used as identifiers, otherwise the possibly more
-            descriptive names.
+    :param model:
+        Model instance.
 
-    Returns:
+    :param by_id:
+        If True, ids are used as identifiers, otherwise the possibly more
+        descriptive names.
+
+    :return:
         column names as list.
-
-    Raises:
-
     """
     return \
         ['time', 't_presim'] + \
@@ -346,23 +421,25 @@ def _get_state_cols(model, by_id):
         _get_names_or_ids(model, 'State', by_id=by_id)
 
 
-def _get_names_or_ids(model, variable, by_id):
+def _get_names_or_ids(model: AmiciModel,
+                      variable: str,
+                      by_id: bool) -> List[str]:
     """
     Obtains a unique list of identifiers for the specified variable.
     First tries model.getVariableNames and then uses model.getVariableIds.
+    
+    :param model:
+        Model instance.
+        
+    :param variable:
+        variable name.
+        
+    :param by_id:
+        If True, ids are used as identifiers, otherwise first the possibly
+        more descriptive names are used.
 
-    Arguments:
-        model: Model instance.
-        variable: variable name.
-        by_id: bool
-            If True, ids are used as identifiers, otherwise first the possibly
-            more descriptive names are used.
-
-    Returns:
+    :return:
         column names as list.
-
-    Raises:
-
     """
     # check whether variable type permitted
     variable_options = ['Parameter', 'FixedParameter', 'Observable', 'State']
@@ -395,20 +472,27 @@ def _get_names_or_ids(model, variable, by_id):
 
 
 def _get_specialized_fixed_parameters(
-        model, condition, overwrite, by_id) -> list:
+        model: AmiciModel,
+        condition: Union[Dict[str, SupportsFloat], pd.Series],
+        overwrite: Union[Dict[str, SupportsFloat], pd.Series],
+        by_id: bool
+) -> List[float]:
     """
     Copies values in condition and overwrites them according to key
     value pairs specified in overwrite.
 
-    Arguments:
-        model: Model instance.
-        condition: dict/pd.Series containing FixedParameter values.
-        overwrite: dict specifying which values in condition are to be replaced.
-        by_id: bool
+    :param model:
+        Model instance.
+    :param condition:
+        fixedParameter values.
+    :param overwrite:
+        dict specifying which values in condition are to be replaced.
+    :param by_id:
+        bool
             If True, ids are used as identifiers, otherwise the possibly more
             descriptive names.
 
-    Returns:
+    :return:
         overwritten FixedParameter as list.
 
     Raises:
@@ -421,29 +505,39 @@ def _get_specialized_fixed_parameters(
         model, 'FixedParameter', by_id=by_id)]
 
 
-def constructEdataFromDataFrame(df, model, condition, by_id=False):
-    """ Constructs an ExpData instance according to the provided Model and DataFrame.
+def constructEdataFromDataFrame(
+        df: pd.DataFrame,
+        model: AmiciModel,
+        condition: pd.Series,
+        by_id: Optional[bool] = False
+) -> amici.amici.ExpData:
+    """
+    Constructs an ExpData instance according to the provided Model
+    and DataFrame.
 
-    Arguments:
-        df: pd.DataFrame with Observable Names/Ids as columns.
-            Standard deviations may be specified by appending '_std' as suffix.
-        model: Model instance.
-        condition: pd.Series with FixedParameter Names/Ids as columns.
-            Preequilibration conditions may be specified by appending '_preeq' as suffix.
-            Presimulation conditions may be specified by appending '_presim' as suffix.
-        by_id: bool, optional (default = False)
-            Indicate whether in the arguments, column headers are based on ids or names.
-            This should correspond to the way `df` and `condition` was created in the
-            first place.
+    :param df:
+        pd.DataFrame with Observable Names/Ids as columns.
+        Standard deviations may be specified by appending '_std' as suffix.
 
-    Returns:
+    :param model:
+        Model instance.
+
+    :param condition:
+        pd.Series with FixedParameter Names/Ids as columns.
+        Preequilibration conditions may be specified by appending
+        '_preeq' as suffix. Presimulation conditions may be specified by
+        appending '_presim' as suffix.
+
+    :param by_id:
+        Indicate whether in the arguments, column headers are based on ids or
+         names. This should correspond to the way `df` and `condition` was
+         created in the first place.
+
+    :return:
         ExpData instance.
-
-    Raises:
-
     """
     # initialize edata
-    edata = ExpData(model.get())
+    edata = amici.ExpData(model.get())
 
     # timepoints
     df = df.sort_values(by='time', ascending=True)
@@ -461,8 +555,9 @@ def constructEdataFromDataFrame(df, model, condition, by_id=False):
             overwrite_presim[par] = condition[par + '_presim']
 
     # fill in fixed parameters
-    edata.fixedParameters = \
-        condition[_get_names_or_ids(model, 'FixedParameter', by_id=by_id)].values
+    edata.fixedParameters = condition[
+        _get_names_or_ids(model, 'FixedParameter', by_id=by_id)
+    ].values
 
     # fill in preequilibration parameters
     if any([overwrite_preeq[key] != condition[key] for key in
@@ -503,32 +598,40 @@ def constructEdataFromDataFrame(df, model, condition, by_id=False):
     return edata
 
 
-def getEdataFromDataFrame(model, df, by_id=False):
-    """ Constructs a ExpData instance according to the provided Model and DataFrame.
+def getEdataFromDataFrame(
+        model: AmiciModel,
+        df: pd.DataFrame,
+        by_id: Optional[bool] = False
+) -> List[amici.amici.ExpData]:
+    """
+    Constructs a ExpData instance according to the provided Model and
+    DataFrame.
 
-    Arguments:
-        df: pd.DataFrame with Observable Names/Ids, FixedParameter Names/Ids and time as columns.
-            Standard deviations may be specified by appending '_std' as suffix.
-            Preequilibration fixedParameters may be specified by appending '_preeq' as suffix.
-            Presimulation fixedParameters may be specified by appending '_presim' as suffix.
-            Presimulation time may be specified as 't_presim' column.
-        model: Model instance.
-        by_id: bool, optional (default = False)
-            Whether the column names in `df` are based on ids or names,
-            corresponding to how the dataframe was created in the first place.
+    :param df:
+        dataframe with Observable Names/Ids, FixedParameter Names/Ids
+        and time as columns. Standard deviations may be specified by
+        appending '_std' as suffix. Preequilibration fixedParameters may be
+        specified by appending '_preeq' as suffix. Presimulation
+        fixedParameters may be specified by appending '_presim' as suffix.
+        Presimulation time may be specified as 't_presim' column.
 
-    Returns:
-        ExpData instance.
+    :param model:
+        Model instance.
 
-    Raises:
+    :param by_id:
+        Whether the column names in `df` are based on ids or names,
+        corresponding to how the dataframe was created in the first place.
 
+    :return:
+        list of ExpData instances.
     """
     edata_list = []
 
     # aggregate features that define a condition
 
     # fixed parameters
-    condition_parameters = _get_names_or_ids(model, 'FixedParameter', by_id=by_id)
+    condition_parameters = _get_names_or_ids(model, 'FixedParameter',
+                                             by_id=by_id)
     # preeq and presim parameters
     for par in _get_names_or_ids(model, 'FixedParameter', by_id=by_id):
         if par + '_preeq' in df.columns:
@@ -542,16 +645,18 @@ def getEdataFromDataFrame(model, df, by_id=False):
     conditions = df[condition_parameters].drop_duplicates()
 
     # iterate over conditions
-    for row in conditions.iterrows():
+    for ir, row in conditions.iterrows():
         # subselect rows that match condition
         selected = np.ones((len(df),), dtype=bool)
-        for par_label, par in row[1].iteritems():
+        for par_label, par in row.iteritems():
             if math.isnan(par):
                 selected = selected & np.isnan(df[par_label].values)
             else:
                 selected = selected & (df[par_label] == par)
         edata_df = df[selected]
 
-        edata_list.append(constructEdataFromDataFrame(edata_df, model, row[1], by_id=by_id))
+        edata_list.append(
+            constructEdataFromDataFrame(edata_df, model, row, by_id=by_id)
+        )
 
     return edata_list

@@ -168,7 +168,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
             throw std::runtime_error("Number of elements in ndJydy is not equal "
                                      " nytrue.");
-        
+
         for (int iytrue = 0; iytrue < nytrue; ++iytrue)
             dJydy.emplace_back(SUNMatrixWrapper(nJ, ny, this->ndJydy[iytrue], CSC_MAT));
     } else {
@@ -187,7 +187,7 @@ bool operator==(const Model &a, const Model &b) {
             (a.ndxdotdp_implicit == b.ndxdotdp_implicit);
     if (a.pythonGenerated != b.pythonGenerated)
         bool_dxdotdp = false;
-    
+
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
            (a.nx_solver == b.nx_solver) &&
            (a.nxtrue_solver == b.nxtrue_solver) && (a.ny == b.ny) &&
@@ -204,6 +204,8 @@ bool operator==(const Model &a, const Model &b) {
            (a.ts == b.ts) && (a.nmaxevent == b.nmaxevent) &&
            (a.pscale == b.pscale) &&
            (a.stateIsNonNegative == b.stateIsNonNegative) &&
+           (a.reinitializeFixedParameterInitialStates
+            == b.reinitializeFixedParameterInitialStates) &&
            (a.tstart == b.tstart) && bool_dxdotdp;
 }
 
@@ -483,6 +485,10 @@ int Model::setFixedParametersByNameRegex(std::string const &par_name_regex,
                              par_name_regex, "fixedParameters", "name");
 }
 
+std::string Model::getName() const {
+    return "";
+}
+
 bool Model::hasParameterNames() const {
     return np() == 0 || !getParameterNames().empty();
 }
@@ -736,6 +742,12 @@ void Model::requireSensitivitiesForAllParameters() {
     plist_.resize(np());
     std::iota(plist_.begin(), plist_.end(), 0);
     initializeVectors();
+}
+
+void Model::getExpression(gsl::span<realtype> w, const realtype t, const AmiVector &x)
+{
+    fw(t, x.data());
+    writeSlice(this->w, w);
 }
 
 void Model::getObservable(gsl::span<realtype> y, const realtype t,
@@ -1263,7 +1275,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     dydp.assign(ny * nplist(), 0.0);
     fw(t, x.data());
     fdwdp(t, x.data());
-    
+
     /* get dydp slice (ny) for current time and parameter */
     for (int ip = 0; ip < nplist(); ip++)
         fdydp(&dydp.at(ip * ny), t, x.data(), unscaledParameters.data(),
@@ -1808,12 +1820,12 @@ void Model::fdwdp(const realtype t, const realtype *x) {
         // avoid bad memory access when slicing
         if (!nw)
             return;
-        
+
         fdwdp_colptrs(dwdp.indexptrs());
         fdwdp_rowvals(dwdp.indexvals());
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
               h.data(), w.data(), total_cl.data(), stotal_cl.data());
-        
+
     } else {
         // matlab generated
         fdwdp(dwdp.data(), t, x, unscaledParameters.data(),
@@ -1829,7 +1841,7 @@ void Model::fdwdp(const realtype t, const realtype *x) {
 void Model::fdwdx(const realtype t, const realtype *x) {
     fw(t, x);
     dwdx.reset();
-    
+
     fdwdx_colptrs(dwdx.indexptrs());
     fdwdx_rowvals(dwdx.indexvals());
     fdwdx(dwdx.data(), t, x, unscaledParameters.data(), fixedParameters.data(),
