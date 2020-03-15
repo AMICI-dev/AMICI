@@ -258,6 +258,9 @@ class ReturnData {
     /** computation time of the Newton solver [ms] */
     double newton_cpu_time = 0.0;
 
+    /** computation time of the Newton solver of the backward problem [ms] */
+    double newton_cpu_timeB = 0.0;
+
     /**
      * number of Newton steps for steady state problem
      * [newton, simulation, newton] (length = 3)

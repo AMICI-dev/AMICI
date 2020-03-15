@@ -108,6 +108,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
 void SteadystateProblem::workSteadyStateBackwardProblem(ReturnData *rdata, Solver *solver,
                                                         const ExpData *edata, Model *model)
 {
+    clock_t starttime = clock();
     realtype T = std::numeric_limits<realtype>::infinity();
 
     // Compute the linear system JB*v = dJydy
@@ -146,6 +147,8 @@ void SteadystateProblem::workSteadyStateBackwardProblem(ReturnData *rdata, Solve
       for (int ip=0; ip<model->nplist(); ++ip)
         xQB[ip] = N_VDotProd(rhs.getNVector(), model->dxdotdp.getNVector(ip));
     }
+
+    rdata->newton_cpu_timeB = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 }
 
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
