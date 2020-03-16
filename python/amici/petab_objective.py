@@ -196,7 +196,6 @@ def create_parameterized_edatas(
         problem_parameters=problem_parameters,
         scaled_parameters=scaled_parameters,
         parameter_mapping=parameter_mapping,
-        simulation_conditions=simulation_conditions,
         amici_model=amici_model)
 
     return edatas
@@ -495,7 +494,6 @@ def fill_in_parameters(
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool,
         parameter_mapping: List[Tuple],
-        simulation_conditions: Union[pd.DataFrame, Dict],
         amici_model: amici.Model) -> None:
     """Fill fixed and dynamic parameters into the edatas (in-place).
 
@@ -511,14 +509,10 @@ def fill_in_parameters(
         are assumed to be in linear scale.
     :param parameter_mapping:
         PEtab parameter mapping for current condition
-    :param simulation_conditions:
-        Result of petab.get_simulation_conditions. Can be provided to save
-        time if this has be obtained before.
     :param amici_model:
         AMICI model.
     """
-    for edata, mapping_for_condition, (_, condition) in \
-            zip(edatas, parameter_mapping, simulation_conditions.iterrows()):
+    for edata, mapping_for_condition in zip(edatas, parameter_mapping):
         fill_in_parameters_for_condition(
             edata, problem_parameters, scaled_parameters,
             mapping_for_condition, amici_model)
@@ -576,15 +570,16 @@ def fill_in_parameters_for_condition(
     condition_map_sim_var = {key: _get_par(key, val)
                              for key, val in condition_map_sim_var.items()}
 
-    # If necessary, scale parameters
+    # If necessary, (un)scale parameters
+    if scaled_parameters:
+        unscale_parameters_dict(condition_map_preeq_fix,
+                                condition_scale_map_preeq_fix)
+        unscale_parameters_dict(condition_map_sim_fix,
+                                condition_scale_map_sim_fix)
     if not scaled_parameters:
         # We scale all parameters to the scale they are estimated on, and pass
         # that information to amici via edata.{parameters,pscale}.
         # The scaling is necessary to obtain correct derivatives.
-        scale_parameters_dict(condition_map_preeq_fix,
-                              condition_scale_map_preeq_fix)
-        scale_parameters_dict(condition_map_sim_fix,
-                              condition_scale_map_sim_fix)
         scale_parameters_dict(condition_map_sim_var,
                               condition_scale_map_sim_var)
         # We can skip preequilibration parameters, because they are identical
@@ -599,7 +594,7 @@ def fill_in_parameters_for_condition(
                   for par_id in amici_model.getParameterIds()]
 
     # scales list from mapping dict
-    scales = [_to_amici_scale(condition_scale_map_sim_var[par_id])
+    scales = [petab_to_amici_scale(condition_scale_map_sim_var[par_id])
               for par_id in amici_model.getParameterIds()]
 
     edata.parameters = parameters
@@ -636,7 +631,7 @@ def subset_dict(full: Dict[Any, Any],
         yield {key: val for (key, val) in full.items() if key in keys}
 
 
-def _to_amici_scale(petab_scale: str) -> int:
+def petab_to_amici_scale(petab_scale: str) -> int:
     """Convert petab scale id to amici scale id."""
     if petab_scale == LIN:
         return amici.ParameterScaling_none
@@ -644,6 +639,18 @@ def _to_amici_scale(petab_scale: str) -> int:
         return amici.ParameterScaling_log10
     if petab_scale == LOG:
         return amici.ParameterScaling_ln
+    raise ValueError("PEtab scale not recognized")
+
+
+def amici_to_petab_scale(amici_scale: int) -> str:
+    """Convert amici scale id to petab scale id."""
+    if amici_scale == amici.ParameterScaling_none:
+        return LIN
+    if amici_scale == amici.ParameterScaling_log10:
+        return LOG10
+    if amici_scale == amici.ParameterScaling_ln:
+        return LOG
+    raise ValueError("AMICI scale not recognized")
 
 
 def scale_parameter(value: numbers.Number,
@@ -656,7 +663,7 @@ def scale_parameter(value: numbers.Number,
         Target scale of ``value``
 
     :return:
-        ``value`` on linear scale
+        ``value`` on target scale
     """
     if petab_scale == LIN:
         return value
@@ -664,6 +671,28 @@ def scale_parameter(value: numbers.Number,
         return np.log10(value)
     if petab_scale == LOG:
         return np.log(value)
+    raise ValueError(f"Unknown parameter scale {petab_scale}. "
+                     f"Must be from {(LIN, LOG, LOG10)}")
+
+
+def unscale_parameter(value: numbers.Number,
+                      petab_scale: str) -> numbers.Number:
+    """Bring parameter from scale to linear scale.
+
+    :param value:
+        Value to scale
+    :param petab_scale:
+        Target scale of ``value``
+
+    :return:
+        ``value`` on linear scale
+    """
+    if petab_scale == LIN:
+        return value
+    if petab_scale == LOG10:
+        return 10**value
+    if petab_scale == LOG:
+        return np.exp(value)
     raise ValueError(f"Unknown parameter scale {petab_scale}. "
                      f"Must be from {(LIN, LOG, LOG10)}")
 
@@ -683,13 +712,35 @@ def scale_parameters_dict(
 
     :param petab_scale_dict:
         Target scales of ``values``
-
     """
     if not value_dict.keys() == petab_scale_dict.keys():
         raise AssertionError("Keys don't match.")
 
     for key, value in value_dict.items():
         value_dict[key] = scale_parameter(value, petab_scale_dict[key])
+
+
+def unscale_parameters_dict(
+        value_dict: Dict[Any, numbers.Number],
+        petab_scale_dict: Dict[Any, str]) -> None:
+    """
+    Bring parameters from target scale to linear scale.
+
+    Bring values in ``value_dict`` from linear scale to the scale
+    provided in ``petab_scale_dict`` (in-place).
+    Both arguments are expected to have the same length and matching keys.
+
+    :param value_dict:
+        Values to scale
+
+    :param petab_scale_dict:
+        Target scales of ``values``
+    """
+    if not value_dict.keys() == petab_scale_dict.keys():
+        raise AssertionError("Keys don't match.")
+
+    for key, value in value_dict.items():
+        value_dict[key] = unscale_parameter(value, petab_scale_dict[key])
 
 
 def _get_timepoints_with_replicates(
