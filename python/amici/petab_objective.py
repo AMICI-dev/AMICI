@@ -163,7 +163,7 @@ def create_parameterized_edatas(
         Optional precomputed PEtab parameter mapping for efficiency.
     :param simulation_conditions:
         Result of `petab.get_simulation_conditions`. Can be provided to save
-        time if this has be obtained before.
+        time if this has been obtained before.
 
     :return:
         List with one :class:`amici.amici.ExpData` per simulation condition,
