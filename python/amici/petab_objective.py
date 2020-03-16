@@ -213,7 +213,7 @@ def create_parameter_mapping(
         PEtab problem
     :param simulation_conditions:
         Result of `petab.get_simulation_conditions`. Can be provided to save
-        time if this has be obtained before.
+        time if this has been obtained before.
     :param scaled_parameters:
         If True, problem_parameters are assumed to be on the scale provided
         in the PEtab parameter table and will be unscaled. If False, they
