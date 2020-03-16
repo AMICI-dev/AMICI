@@ -65,6 +65,7 @@ def _test_case(case):
     llh = ret['llh']
     simulation_df = rdatas_to_measurement_df(rdatas, model,
                                              problem.measurement_df)
+    petab.check_measurement_df(simulation_df, problem.observable_df)
     simulation_df = simulation_df.rename(
         columns={petab.MEASUREMENT: petab.SIMULATION})
     simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
