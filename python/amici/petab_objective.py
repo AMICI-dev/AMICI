@@ -92,17 +92,6 @@ def simulate_petab(
                               petab_problem.parameter_df.itertuples()}
         scaled_parameters = False
 
-    # Because AMICI globalizes all local parameters during model import,
-    # we need to do that here as well to prevent parameter mapping errors
-    # (PEtab does currently not care about SBML LocalParameters)
-    if petab_problem.sbml_document:
-        converter_config = libsbml.SBMLLocalParameterConverter() \
-            .getDefaultProperties()
-        petab_problem.sbml_document.convert(converter_config)
-    else:
-        logger.debug("No petab_problem.sbml_document is set. Cannot convert "
-                     "SBML LocalParameters. If the model contains "
-                     "LocalParameters, parameter mapping will fail.")
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
     # Can be optimized by checking for identical condition vectors.
@@ -115,7 +104,8 @@ def simulate_petab(
         parameter_mapping = create_parameter_mapping(
             petab_problem=petab_problem,
             simulation_conditions=simulation_conditions,
-            scaled_parameters=scaled_parameters)
+            scaled_parameters=scaled_parameters,
+            amici_model=amici_model)
 
     edatas = create_parameterized_edatas(
         amici_model=amici_model,
@@ -191,7 +181,8 @@ def create_parameterized_edatas(
         parameter_mapping = create_parameter_mapping(
             petab_problem=petab_problem,
             simulation_conditions=simulation_conditions,
-            scaled_parameters=scaled_parameters)
+            scaled_parameters=scaled_parameters,
+            amici_model=amici_model)
 
     # Generate ExpData with all condition-specific information
     edatas = create_edatas(
@@ -214,8 +205,9 @@ def create_parameterized_edatas(
 def create_parameter_mapping(
         petab_problem: petab.Problem,
         simulation_conditions: Union[pd.DataFrame, Dict],
-        scaled_parameters: bool
-) -> List[petab.ParMappingDictQuadruple]:
+        scaled_parameters: bool,
+        amici_model: amici.Model,
+) -> List[Tuple]:
     """Generate AMICI specific parameter mapping.
 
     :param petab_problem:
@@ -227,12 +219,24 @@ def create_parameter_mapping(
         If True, problem_parameters are assumed to be on the scale provided
         in the PEtab parameter table and will be unscaled. If False, they
         are assumed to be in linear scale.
+    :param amici_model:
+        AMICI model.
 
     :return:
-        The result of
-        `petab.get_optimization_to_simulation_parameter_mapping`, modified
-        in an AMICI-specific manner.
+        List of the parameter mappings.
     """
+    # Because AMICI globalizes all local parameters during model import,
+    # we need to do that here as well to prevent parameter mapping errors
+    # (PEtab does currently not care about SBML LocalParameters)
+    if petab_problem.sbml_document:
+        converter_config = libsbml.SBMLLocalParameterConverter() \
+            .getDefaultProperties()
+        petab_problem.sbml_document.convert(converter_config)
+    else:
+        logger.debug("No petab_problem.sbml_document is set. Cannot convert "
+                     "SBML LocalParameters. If the model contains "
+                     "LocalParameters, parameter mapping will fail.")
+
     prelim_parameter_mapping = \
         petab_problem.get_optimization_to_simulation_parameter_mapping(
             warn_unmapped=False, scaled_parameters=scaled_parameters)
@@ -241,7 +245,8 @@ def create_parameter_mapping(
     for (_, condition), prelim_mapping_for_condition in \
             zip(simulation_conditions.iterrows(), prelim_parameter_mapping):
         mapping_for_condition = create_parameter_mapping_for_condition(
-            prelim_mapping_for_condition, condition, petab_problem)
+            prelim_mapping_for_condition, condition, petab_problem,
+            amici_model)
         parameter_mapping.append(mapping_for_condition)
 
     return parameter_mapping
@@ -250,7 +255,8 @@ def create_parameter_mapping(
 def create_parameter_mapping_for_condition(
         parameter_mapping_for_condition: petab.ParMappingDictQuadruple,
         condition: Union[pd.Series, Dict],
-        petab_problem: petab.Problem):
+        petab_problem: petab.Problem,
+        amici_model: amici.Model) -> Tuple:
     """Generate AMICI specific parameter mapping for condition.
 
     :param parameter_mapping_for_condition:
@@ -260,9 +266,13 @@ def create_parameter_mapping_for_condition(
         simulationConditionId.
     :param petab_problem:
         Underlying PEtab problem.
+    :param amici_model:
+        AMICI model.
 
     :return:
-        Modified parameter mapping for condition.
+        The parameter and parameter scale mappings, for fixed
+        preequilibration, fixed simulation, and variable simulation
+        parameters, and then the respective scalings.
     """
     (condition_map_preeq, condition_map_sim, condition_scale_map_preeq,
      condition_scale_map_sim) = parameter_mapping_for_condition
@@ -341,8 +351,46 @@ def create_parameter_mapping_for_condition(
                 condition_id, species_id, init_par_id, condition_map_sim,
                 condition_scale_map_sim)
 
-    return (condition_map_preeq, condition_map_sim,
-            condition_scale_map_preeq, condition_scale_map_sim)
+    ##########################################################################
+    # separate fixed and variable AMICI parameters, because we may have
+    # different fixed parameters for preeq and sim condition, but we cannot
+    # have different variable parameters. without splitting,
+    # merge_preeq_and_sim_pars_condition below may fail.
+    # TODO: This can be done already in parameter mapping creation.
+    variable_par_ids = amici_model.getParameterIds()
+    fixed_par_ids = amici_model.getFixedParameterIds()
+
+    condition_map_preeq_var, condition_map_preeq_fix = \
+        subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
+
+    condition_scale_map_preeq_var, condition_scale_map_preeq_fix = \
+        subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
+
+    condition_map_sim_var, condition_map_sim_fix = \
+        subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
+
+    condition_scale_map_sim_var, condition_scale_map_sim_fix = \
+        subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
+
+    logger.debug("Fixed parameters preequilibration: "
+                 f"{condition_map_preeq_fix}")
+    logger.debug("Fixed parameters simulation: "
+                 f"{condition_map_sim_fix}")
+    logger.debug("Variable parameters preequilibration: "
+                 f"{condition_map_preeq_var}")
+    logger.debug("Variable parameters simulation: "
+                 f"{condition_map_sim_var}")
+
+    petab.merge_preeq_and_sim_pars_condition(
+        condition_map_preeq_var, condition_map_sim_var,
+        condition_scale_map_preeq_var, condition_scale_map_sim_var,
+        condition)
+    logger.debug(f"Merged: {condition_map_sim_var}")
+
+    return (condition_map_preeq_fix, condition_map_sim_fix,
+            condition_map_sim_var,
+            condition_scale_map_preeq_fix, condition_scale_map_sim_fix,
+            condition_scale_map_sim_var)
 
 
 def create_edatas(
@@ -446,7 +494,7 @@ def fill_in_parameters(
         edatas: List[amici.ExpData],
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool,
-        parameter_mapping: List[petab.ParMappingDictQuadruple],
+        parameter_mapping: List[Tuple],
         simulation_conditions: Union[pd.DataFrame, Dict],
         amici_model: amici.Model) -> None:
     """Fill fixed and dynamic parameters into the edatas (in-place).
@@ -466,23 +514,21 @@ def fill_in_parameters(
     :param simulation_conditions:
         Result of petab.get_simulation_conditions. Can be provided to save
         time if this has be obtained before.
-
     :param amici_model:
-        AMICI model
+        AMICI model.
     """
     for edata, mapping_for_condition, (_, condition) in \
             zip(edatas, parameter_mapping, simulation_conditions.iterrows()):
         fill_in_parameters_for_condition(
             edata, problem_parameters, scaled_parameters,
-            mapping_for_condition, condition, amici_model)
+            mapping_for_condition, amici_model)
 
 
 def fill_in_parameters_for_condition(
         edata: amici.ExpData,
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool,
-        parameter_mapping: petab.ParMappingDictQuadruple,
-        condition: Union[pd.Series, Dict],
+        parameter_mapping: Tuple,
         amici_model: amici.Model) -> None:
     """Fill fixed and dynamic parameters into the edata for condition
     (in-place).
@@ -498,15 +544,13 @@ def fill_in_parameters_for_condition(
         in the PEtab parameter table and will be unscaled. If False, they
         are assumed to be in linear scale.
     :param parameter_mapping:
-        PEtab parameter mapping for current condition
-    :param condition:
-        pandas.DataFrame row with preequilibrationConditionId and
-        simulationConditionId.
+        PEtab parameter mapping for current condition.
     :param amici_model:
         AMICI model
     """
-    (condition_map_preeq, condition_map_sim, condition_scale_map_preeq,
-     condition_scale_map_sim) = parameter_mapping
+    (condition_map_preeq_fix, condition_map_sim_fix, condition_map_sim_var,
+     condition_scale_map_preeq_fix, condition_scale_map_sim_fix,
+     condition_scale_map_sim_var) = parameter_mapping
 
     # PEtab parameter mapping may contain parameter_ids as values, these *must*
     # be replaced
@@ -525,47 +569,12 @@ def fill_in_parameters_for_condition(
         # constant value
         return value
 
-    condition_map_sim = {key: _get_par(key, val)
-                         for key, val in condition_map_sim.items()}
-    condition_map_preeq = {key: _get_par(key, val)
-                           for key, val in condition_map_preeq.items()}
-
-    ##########################################################################
-
-    # separate fixed and variable AMICI parameters, because we may have
-    # different fixed parameters for preeq and sim condition, but we cannot
-    # have different variable parameters. without splitting,
-    # merge_preeq_and_sim_pars_condition below may fail.
-    # TODO: This can be done already in parameter mapping creation.
-    variable_par_ids = amici_model.getParameterIds()
-    fixed_par_ids = amici_model.getFixedParameterIds()
-
-    condition_map_preeq_var, condition_map_preeq_fix = \
-        subset_dict(condition_map_preeq, variable_par_ids, fixed_par_ids)
-
-    condition_scale_map_preeq_var, condition_scale_map_preeq_fix = \
-        subset_dict(condition_scale_map_preeq, variable_par_ids, fixed_par_ids)
-
-    condition_map_sim_var, condition_map_sim_fix = \
-        subset_dict(condition_map_sim, variable_par_ids, fixed_par_ids)
-
-    condition_scale_map_sim_var, condition_scale_map_sim_fix = \
-        subset_dict(condition_scale_map_sim, variable_par_ids, fixed_par_ids)
-
-    logger.debug("Fixed parameters preequilibration: "
-                 f"{condition_map_preeq_fix}")
-    logger.debug("Fixed parameters simulation: "
-                 f"{condition_map_sim_fix}")
-    logger.debug("Variable parameters preequilibration: "
-                 f"{condition_map_preeq_var}")
-    logger.debug("Variable parameters simulation: "
-                 f"{condition_map_sim_var}")
-
-    petab.merge_preeq_and_sim_pars_condition(
-        condition_map_preeq_var, condition_map_sim_var,
-        condition_scale_map_preeq_var, condition_scale_map_sim_var,
-        condition)
-    logger.debug(f"Merged: {condition_map_sim_var}")
+    condition_map_preeq_fix = {key: _get_par(key, val)
+                               for key, val in condition_map_preeq_fix.items()}
+    condition_map_sim_fix = {key: _get_par(key, val)
+                             for key, val in condition_map_sim_fix.items()}
+    condition_map_sim_var = {key: _get_par(key, val)
+                             for key, val in condition_map_sim_var.items()}
 
     # If necessary, scale parameters
     if not scaled_parameters:
@@ -599,7 +608,7 @@ def fill_in_parameters_for_condition(
 
     ##########################################################################
     # fixed parameters preequilibration
-    if condition_map_preeq:
+    if condition_map_preeq_fix:
         fixed_pars_preeq = [condition_map_preeq_fix[par_id]
                             for par_id in amici_model.getFixedParameterIds()]
         edata.fixedParametersPreequilibration = fixed_pars_preeq
@@ -853,13 +862,14 @@ def aggregate_sllh(
     """
     sllh = {}
     model_par_ids = amici_model.getParameterIds()
-    for (_, par_map_sim, _, _), rdata in zip(parameter_mapping, rdatas):
+    for (_, _, par_map_sim_var, _, _, _), rdata in \
+            zip(parameter_mapping, rdatas):
         if rdata['status'] != amici.AMICI_SUCCESS \
                 or 'sllh' not in rdata \
                 or rdata['sllh'] is None:
             return None
 
-        for model_par_id, problem_par_id in par_map_sim.items():
+        for model_par_id, problem_par_id in par_map_sim_var.items():
             if isinstance(problem_par_id, str):
                 model_par_idx = model_par_ids.index(model_par_id)
                 cur_par_sllh = rdata['sllh'][model_par_idx]
