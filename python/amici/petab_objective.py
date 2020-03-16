@@ -463,7 +463,7 @@ def create_edata_for_condition(
         measurement_df=petab_problem.measurement_df, condition=condition)
 
     if amici_model.nytrue != len(observable_ids):
-        raise AssertionError("Number of AMICI model observables does not"
+        raise AssertionError("Number of AMICI model observables does not "
                              "match number of PEtab observables.")
 
     # create an ExpData object
