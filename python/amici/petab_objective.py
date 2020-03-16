@@ -728,12 +728,27 @@ def rdatas_to_measurement_df(
             measurement_sim = y[timepoint_idx, observable_idx]
 
             # change measurement entry
-            row_sim.measurement = measurement_sim
+            row_sim[MEASUREMENT] = measurement_sim
 
             # append to dataframe
             df = df.append(row_sim, ignore_index=True)
 
     return df
+
+
+def rdatas_to_simulation_df(
+        rdatas: Sequence[amici.ReturnData],
+        model: amici.Model,
+        measurement_df: pd.DataFrame) -> pd.DataFrame:
+    """Create a PEtab simulation dataframe from amici.ReturnDatas.
+
+    See ``rdatas_to_measurement_df`` for details, only that model outputs
+    will appear in column "simulation" instead of "measurement"."""
+
+    df = rdatas_to_measurement_df(rdatas=rdatas, model=model,
+                                  measurement_df=measurement_df)
+
+    return df.rename(columns={MEASUREMENT: SIMULATION})
 
 
 def aggregate_sllh(
@@ -751,7 +766,10 @@ def aggregate_sllh(
         Simulation results.
     :param parameter_mapping:
         PEtab parameter mapping to condition-specific
-            simulation parameters.
+            simulation parameters
+
+    :return:
+        aggregated sllh
     """
     sllh = {}
     model_par_ids = amici_model.getParameterIds()

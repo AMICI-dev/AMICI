@@ -21,6 +21,9 @@ jobs:
       with:
         fetch-depth: 1
     - name: apt
-      run: sudo apt-get install -y swig3.0 libatlas-base-dev && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y swig3.0 libatlas-base-dev \
+          && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/installAmiciSource.sh
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh

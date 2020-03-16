@@ -4,7 +4,6 @@ on:
     branches:
       - develop
       - master
-      - fix_945
 
   pull_request:
     branches:
@@ -24,7 +23,8 @@ jobs:
     # install dependencies
     - name: apt
       run: |
-        sudo apt-get install -y swig3.0 libatlas-base-dev \
+        sudo apt-get update \
+          && sudo apt-get install -y swig3.0 libatlas-base-dev \
           && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
     - name: pip
       run: |
