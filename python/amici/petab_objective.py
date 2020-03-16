@@ -224,6 +224,10 @@ def create_parameter_mapping(
     :return:
         List of the parameter mappings.
     """
+    if simulation_conditions is None:
+        simulation_conditions = \
+            petab_problem.get_simulation_conditions_from_measurement_df()
+
     # Because AMICI globalizes all local parameters during model import,
     # we need to do that here as well to prevent parameter mapping errors
     # (PEtab does currently not care about SBML LocalParameters)
@@ -411,6 +415,10 @@ def create_edatas(
         List with one :class:`amici.amici.ExpData` per simulation condition,
         with filled in timepoints and data.
     """
+    if simulation_conditions is None:
+        simulation_conditions = \
+            petab_problem.get_simulation_conditions_from_measurement_df()
+
     observable_ids = amici_model.getObservableIds()
 
     edatas = []
