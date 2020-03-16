@@ -1,0 +1,54 @@
+name: Benchmark collection
+on:
+  push:
+    branches:
+      - develop
+      - master
+
+  pull_request:
+    branches:
+      - master
+      - develop
+
+jobs:
+  build:
+    name: Benchmark collection
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 20
+
+    # install dependencies
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y swig3.0 libatlas-base-dev \
+          && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+    - name: pip
+      run: |
+        pip3 install --upgrade --user wheel \
+          && pip3 install --upgrade --user setuptools
+    - run: pip3 install pytest shyaml
+    - run: |
+        echo ::add-path::${HOME}/.local/bin/
+        echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
+    # install AMICI
+    - name: Create AMICI sdist
+      run: |
+        cd python/sdist \
+          && check_time.sh create_sdist /usr/bin/python3 setup.py sdist
+    - name: Install AMICI sdist
+      run: |
+        AMICI_PARALLEL_COMPILE=2 check_time.sh \
+            install_sdist pip3 install -v --user \
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
+
+    # retrieve test models
+    - name: Download and test benchmark collection
+      run: |
+        git clone --depth 1 https://github.com/benchmarking-initiative/Benchmark-Models-PEtab.git \
+          && export BENCHMARK_COLLECTION="$(pwd)/Benchmark-Models-PEtab/Benchmark-Models/" \
+          && AMICI_PARALLEL_COMPILE=2 tests/benchmark-models/test_benchmark_collection.sh

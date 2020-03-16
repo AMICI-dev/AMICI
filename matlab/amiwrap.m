@@ -75,22 +75,6 @@ function amiwrap( varargin )
     addpath(genpath(fullfile(matlabRootPath,'auxiliary')));
     addpath(fullfile(matlabRootPath,'symbolic'));
     
-    % compile CalcMD5 if necessary
-    try
-        CalcMD5('TEST','char','hex');
-    catch
-        try
-            addpath(fullfile(matlabRootPath,'auxiliary','CalcMD5'))
-            CalcMD5('TEST','char','hex');
-        catch
-            disp('CalcMD5 has not been compiled yet. Compiling now!')
-            tmpdir = pwd;
-            cd(fullfile(matlabRootPath,'auxiliary','CalcMD5'))
-            mex(fullfile(matlabRootPath,'auxiliary','CalcMD5','CalcMD5.c'))
-            addpath(fullfile(matlabRootPath,'auxiliary','CalcMD5'))
-            cd(tmpdir);
-        end
-    end
     
     % try to load
     if(~isstruct(symfun))

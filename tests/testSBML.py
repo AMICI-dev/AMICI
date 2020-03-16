@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Various test cases for the AMICI Python interface"""
+
 import sys
 import amici
 import unittest
@@ -11,11 +13,9 @@ from testModels import check_derivatives
 
 class TestAmiciSBMLModel(unittest.TestCase):
     """
-    TestCase class for testing SBML import and simulation from AMICI python interface
+    TestCase class for testing SBML import and simulation from AMICI python
+    interface
     """
-
-    expectedResultsFile = os.path.join(os.path.dirname(__file__),
-                                       'cpputest', 'expectedResults.h5')
 
     def setUp(self):
         self.default_path = copy.copy(sys.path)
@@ -43,7 +43,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
 
         sbmlImporter = amici.SbmlImporter(sbmlFile)
 
-        constantParameters = ['DRUG_0', 'KIN_0']
+        constant_parameters = ['DRUG_0', 'KIN_0']
 
         observables = amici.assignmentRules2observables(
             sbmlImporter.sbml,  # the libsbml model object
@@ -54,7 +54,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
                                 outdir,
                                 verbose=False,
                                 observables=observables,
-                                constantParameters=constantParameters)
+                                constant_parameters=constant_parameters)
         sys.path.insert(0, outdir)
         import test_model_presimulation as modelModule
         model = modelModule.getModel()
@@ -110,7 +110,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
         sbmlImporter.sbml2amici('test_model_steadystate_scaled',
                                 outdir,
                                 observables=observables,
-                                constantParameters=['k0'],
+                                constant_parameters=['k0'],
                                 sigmas={'observable_x1withsigma':
                                             'observable_x1withsigma_sigma'})
 
@@ -230,7 +230,7 @@ class TestAmiciSBMLModel(unittest.TestCase):
         sbmlImporter.sbml2amici('test_likelihoods',
                                 outdir,
                                 observables=observables,
-                                constantParameters=['k0'],
+                                constant_parameters=['k0'],
                                 sigmas={'observable_x1withsigma':
                                         'observable_x1withsigma_sigma'},
                                 noise_distributions=noise_distributions

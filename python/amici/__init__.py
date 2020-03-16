@@ -1,7 +1,8 @@
-""" @package amici
-The AMICI Python module (in doxygen this will also contain documentation about the C++ library)
-
-The AMICI Python module provides functionality for importing SBML models and turning them into C++ Python extensions.
+"""
+AMICI
+-----
+The AMICI Python module provides functionality for importing SBML models and
+turning them into C++ Python extensions.
 
 Getting started:
 ```
@@ -15,16 +16,22 @@ import modelName
 help(modelName)
 ```
 
-Attributes:
-    amici_path: absolute root path of the amici repository
-    amiciSwigPath: absolute path of the amici swig directory
-    amiciSrcPath: absolute path of the amici source directory
-    amiciModulePath: absolute root path of the amici module
-    hdf5_enabled: boolean indicating if amici was compiled with hdf5 support
-    has_clibs: boolean indicating if this is the full package with swig
-               interface or the raw package without
-    capture_cstdout: context to redirect C/C++ stdout to python stdout if
-        python stdout was redirected (doing nothing if not redirected).
+:var amici_path:
+    absolute root path of the amici repository
+:var amiciSwigPath:
+    absolute path of the amici swig directory
+:var amiciSrcPath:
+    absolute path of the amici source directory
+:var amiciModulePath:
+    absolute root path of the amici module
+:var hdf5_enabled:
+    boolean indicating if amici was compiled with hdf5 support
+:var has_clibs:
+    boolean indicating if this is the full package with swig interface or
+    the raw package without
+:var capture_cstdout:
+    context to redirect C/C++ stdout to python stdout if python stdout was
+    redirected (doing nothing if not redirected).
 """
 
 import os
@@ -77,17 +84,40 @@ hdf5_enabled = False
 has_clibs = False
 
 try:
+    # Try importing AMICI SWIG-interface with HDF5 enabled
     from . import amici
     from .amici import *
     hdf5_enabled = True
     has_clibs = True
-except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
-    try:
-        from . import amici_without_hdf5 as amici
-        from .amici_without_hdf5 import *
-        has_clibs = True
-    except (ImportError, ModuleNotFoundError, AttributeError):
-        pass
+except ModuleNotFoundError:
+    # import from setuptools or installation with `--no-clibs`
+    pass
+except (ImportError, AttributeError) as e:
+    # No such module exists or there are some dynamic linking problems
+    if isinstance(e, AttributeError) or "cannot import name" in str(e):
+        # No such module exists (ImportError),
+        #  or python tries to import a HDF5 function from the non-hdf5
+        #  swig interface (AttributeError):
+        #  try importing AMICI SWIG-interface without HDF5
+        try:
+            from . import amici_without_hdf5 as amici
+            from .amici_without_hdf5 import *
+            has_clibs = True
+        except ModuleNotFoundError:
+            # import from setuptools or installation with `--no-clibs`
+            pass
+        except ImportError as e:
+            if "cannot import name" in str(e):
+                # No such module exists
+                # this probably means, the model was imported during setuptools
+                # `setup` or after an installation with `--no-clibs`.
+                pass
+            else:
+                # Probably some linking problem that we don't want to hide
+                raise e
+    else:
+        # Probably some linking problem that we don't want to hide
+        raise e
 
 # Initialize AMICI paths
 amici_path = _get_amici_path()
@@ -111,9 +141,13 @@ try:
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
     from .ode_export import ODEModel, ODEExporter
-    from .pysb_import import pysb2amici, ODEModel_from_pysb_importer
-except ImportError:
-    pass
+except (ModuleNotFoundError, ImportError) as e:
+    # import from setuptools or installation with `--no-clibs`
+    if has_clibs:
+        # cannot raise as we may also end up here when installing from an
+        # already installed in-source installation without all requirements
+        # installed (e.g. fresh virtualenv)
+        print(f'Suppressing error {str(e)}')
 
 
 def runAmiciSimulation(model, solver, edata=None):

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+"""Run simulations with Matlab-AMICI pre-generated models and verify using
+saved expectations."""
+
 import sys
 import h5py
 import amici
@@ -99,12 +102,12 @@ class TestAmiciPregeneratedModel(unittest.TestCase):
                     if model_name.startswith('model_neuron'):
                         verify_simulation_opts['atol'] = 1e-5
                         verify_simulation_opts['rtol'] = 1e-2
-          
+
                     if model_name.startswith('model_robertson') and \
                             case == 'sensiforwardSPBCG':
                         verify_simulation_opts['atol'] = 1e-3
                         verify_simulation_opts['rtol'] = 1e-3
-                  
+
                     verify_simulation_results(
                         rdata, expected_results[subTest][case]['results'],
                         assert_fun, **verify_simulation_opts
@@ -187,4 +190,3 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
     suite.addTest(TestAmiciPregeneratedModel())
     unittest.main()
-

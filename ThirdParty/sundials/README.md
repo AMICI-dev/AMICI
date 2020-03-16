@@ -114,7 +114,7 @@ reporting work done with SUNDIALS:
 * Alan C. Hindmarsh, Peter N. Brown, Keith E. Grant, Steven L. Lee, Radu
 Serban, Dan E. Shumaker, and Carol S. Woodward. 2005. SUNDIALS: Suite of
 nonlinear and differential/algebraic equation solvers. ACM Trans. Math. Softw.
-31, 3 (September 2005), 363-396. DOI=http://dx.doi.org/10.1145/1089014.1089020
+31, 3 (September 2005), 363-396. DOI=https://doi.org/10.1145/1089014.1089020
 
 ## License ##
 SUNDIALS is released under the BSD 3-clause license. See the [LICENSE](./LICENSE)

@@ -1,4 +1,4 @@
-function MD5 = CalcMD5(Data, InClass, OutClass)  %#ok<STOUT,INUSD>
+function MD5 = CalcMD5(Data, varargin)  %#ok<STOUT,INUSD>
 % 128 bit MD5 checksum: file, string, byte stream [MEX]
 % This function calculates a 128 bit checksum for arrays and files.
 % Digest = CalcMD5(Data, [InClass], [OutClass])
@@ -67,5 +67,19 @@ function MD5 = CalcMD5(Data, InClass, OutClass)  %#ok<STOUT,INUSD>
 
 % If the current Matlab path is the parent folder of this script, the
 % MEX function is not found - change the current directory!
-error(['JSim:', mfilename, ':NoMex'], 'Cannot find MEX script.');
 
+% If a CalcMD5 call ends up here, this means CalcMD5 is not compiled or
+% not found in the matlab path.
+% Therefore, compile CalcMD5
+disp('CalcMD5 has not been compiled yet. Compiling now!')
+md5_path=fileparts(mfilename('fullpath'));
+addpath(fullfile(md5_path))
+tmpdir = pwd;
+cd(fullfile(md5_path))
+mex(fullfile(md5_path,'CalcMD5.c'))
+addpath(md5_path)
+cd(tmpdir);
+
+% Make actual call to mex file
+MD5 = CalcMD5(Data, varargin{:});
+end
