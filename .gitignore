@@ -171,3 +171,6 @@ ThirdParty/swig-*
 _untracked/
 
 documentation/generated/*
+
+# vim
+*.swp
