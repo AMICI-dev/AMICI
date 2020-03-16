@@ -400,7 +400,15 @@ class SbmlImporter:
                 product.setConstant(False)
 
                 k = reaction.createKineticLaw()
-                k.setMath(rule.getMath())
+
+                if model.getElementBySId(rule_variable.getCompartment()).getConstant():
+                    raise SBMLException('Species Rate Rules for concentrations are currently'
+                                        'only supported for species in compartments with constant'
+                                        'size')
+                else:
+                    compartment_size_times_derivative = f'{rule_variable.getCompartment()} * ' \
+                                                        + sbml.formulaToL3String(rule.getMath())
+                    k.setMath(sbml.parseL3Formula(compartment_size_times_derivative))
 
                 # add modifiers
                 for species in model.getListOfSpecies():
@@ -411,8 +419,6 @@ class SbmlImporter:
                         )
                 # remove rule
                 rule.removeFromParentAndDelete()
-
-        warnings.warn(self.sbml_doc.toSBML())
 
     def processSpecies(self):
         """Get species information from SBML model.
