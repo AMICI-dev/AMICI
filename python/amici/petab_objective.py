@@ -153,7 +153,7 @@ def create_parameterized_edatas(
         PEtab problem to work on.
     :param problem_parameters:
         Run simulation with these parameters. If None, PEtab `nominalValues`
-        will be used). To be provided as dict,  mapping PEtab problem
+        will be used). To be provided as dict, mapping PEtab problem
         parameters to SBML IDs.
     :param scaled_parameters:
         If True, problem_parameters are assumed to be on the scale provided
