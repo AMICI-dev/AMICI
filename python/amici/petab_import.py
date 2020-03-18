@@ -19,7 +19,6 @@ from typing import List, Dict, Union, Optional, Tuple
 
 import amici
 import libsbml
-import numpy as np
 import pandas as pd
 import petab
 import sympy as sp
