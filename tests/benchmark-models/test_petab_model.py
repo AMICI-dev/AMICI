@@ -99,13 +99,15 @@ def main():
     if args.plot:
         try:
             # visualize fit
-            ax = plot_petab_problem(petab_problem=problem, sim_data=sim_df)
+            axs = plot_petab_problem(petab_problem=problem, sim_data=sim_df)
 
             # save figure
-            fig_path = os.path.join(args.model_directory,
-                                    args.model_name + "_vis.png")
-            logger.info(f"Saving figure to {fig_path}")
-            ax.flatten()[0].get_figure().savefig(fig_path, dpi=150)
+            for plot_id, ax in axs.items():
+                fig_path = os.path.join(args.model_directory,
+                                        args.model_name + "_" + plot_id
+                                        + "_vis.png")
+                logger.info(f"Saving figure to {fig_path}")
+                ax.get_figure().savefig(fig_path, dpi=150)
 
         except NotImplementedError:
             pass

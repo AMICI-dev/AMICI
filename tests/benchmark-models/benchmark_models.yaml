@@ -59,7 +59,7 @@ Raia_CancerResearch2011:
   note: unchecked
 
 Schwen_PONE2014:
-  llh: -705.4660173266402
+  llh: -943.9992988598723
   note: benchmark collection reference value does not match, but model outputs do. maybe due to D2D data normalization
 
 Sneyd_PNAS2002:
