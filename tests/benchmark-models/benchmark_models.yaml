@@ -12,8 +12,8 @@ Boehm_JProteomeRes2014:
   note: benchmark collection reference ignores factor 1/2
 
 Borghans_BiophysChem1997:
-  llh: -3471.740659965799
-  note: benchmark collection reference value does not match, but model outputs do. maybe due to D2D data normalization
+  llh: 83.3237191357272
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10)) / 2
 
 Brannmark_JBC2010:
   llh: 283.778227541074
@@ -25,19 +25,20 @@ Chen_MSB2009:
   llh: -115700.1192629893
   note: benchmark collection reference ignores factor 1/2
 
-#Crauste_CellSystems2017:    None
+Crauste_CellSystems2017:
+  llh: 190.96398465243203
+  note: benchmark collection only reports chi2 value, but llh value can be derived
 
 Elowitz_Nature2000:
-  llh: -4249.322017350108
-  note: benchmark collection reference value does not match, but model outputs do. maybe due to D2D data normalization
+  llh: 63.20279991419332
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10))) / 2
 
 Fiedler_BMC2016:
   llh: -117.16780323362
   note: unchecked
 
 Fujita_SciSignal2010:
-  llh: -3975.060953726485
-  note: benchmark collection reference value does not include condition data7..data12
+  llh: 53.08749124997969
 
 # Hass_PONE2017    None
 
@@ -58,7 +59,7 @@ Raia_CancerResearch2011:
   note: unchecked
 
 Schwen_PONE2014:
-  llh: -705.4660173266402
+  llh: -943.9992988598723
   note: benchmark collection reference value does not match, but model outputs do. maybe due to D2D data normalization
 
 Sneyd_PNAS2002:
@@ -74,8 +75,8 @@ Swameye_PNAS2003:
   note: unchecked
 
 Weber_BMC2015:
-  llh: 592.403584529373
-  note: unchecked
+  llh: -296.2017922646865
+  note: benchmark collection reference ignores factor -1/2
 
 Zheng_PNAS2012:
   llh: 278.33353271001477

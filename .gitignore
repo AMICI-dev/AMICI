@@ -12,6 +12,7 @@ doc/*
 fonts/*
 images/*
 stylesheets/*
+documentation/_build/*
 
 sed-ml/*
 
@@ -36,6 +37,8 @@ models/model_nested_events/build/*
 models/model_robertson/build/*
 !models/model_calvetti
 models/model_calvetti/build/*
+
+amici_models/*
 
 simulate_model_*_hdf.m
 simulate_model_*.m
@@ -132,6 +135,7 @@ tests/sedml-test-suite/
 */sbml-semantic-test-cases/*
 tests/SBMLTestModels/
 tests/benchmark-models/test_bmc
+tests/petab_test_suite
 /python/test/amici-SBMLTest*/
 
 python/examples/example_steadystate/model_steadystate_scaled/*
@@ -165,3 +169,8 @@ ThirdParty/superlu_mt_3.1.tar.gz
 ThirdParty/swig-*
 
 _untracked/
+
+documentation/generated/*
+
+# vim
+*.swp

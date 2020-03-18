@@ -174,7 +174,7 @@ install:
     - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install $(ls -t dist/amici-*.tar.gz | head -1); fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install -v $(ls -t dist/amici-*.tar.gz | head -1); fi
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
@@ -189,6 +189,7 @@ script:
     - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
     - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
+    - if [[ "$CI_PYTHON" == "TRUE" ]]; then $FOLD sphinx ./scripts/run-sphinx.sh; fi
 
 after_failure:
     - $FOLD ls -alR

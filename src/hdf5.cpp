@@ -166,6 +166,13 @@ std::unique_ptr<ExpData> readSimulationExpData(std::string const& hdf5Filename,
         edata->setTimepoints(getDoubleDataset1D(file, hdf5Root + "/ts"));
     }
 
+    if(attributeExists(file,  hdf5Root,
+                        "/reinitializeFixedParameterInitialStates")) {
+        edata->reinitializeFixedParameterInitialStates = static_cast<bool>(
+            getIntScalarAttribute(file, hdf5Root,
+                                  "/reinitializeFixedParameterInitialStates"));
+    }
+
     return edata;
 }
 
@@ -213,6 +220,11 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const& file,
         createAndWriteDouble2DDataset(file, hdf5Location + "/Sigma_Z",
                                       edata.getObservedEventsStdDev(),
                                       edata.nmaxevent(), edata.nztrue());
+
+    int int_attr = edata.reinitializeFixedParameterInitialStates;
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
+                          "reinitializeFixedParameterInitialStates",
+                          &int_attr, 1);
 }
 
 void writeReturnData(const ReturnData &rdata, H5::H5File const& file, const std::string &hdf5Location)
@@ -372,10 +384,10 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "cpu_time", &rdata.cpu_time, 1);
-    
+
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "cpu_timeB", &rdata.cpu_timeB, 1);
-    
+
     if (!rdata.J.empty())
         createAndWriteDouble2DDataset(file, hdf5Location + "/J", rdata.J,
                                       rdata.nx, rdata.nx);
