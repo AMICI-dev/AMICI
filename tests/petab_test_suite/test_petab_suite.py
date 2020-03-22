@@ -15,11 +15,13 @@ from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
 from amici.petab_import import import_petab_problem
 from amici.petab_objective import (
-    simulate_petab, rdatas_to_measurement_df, edatas_from_petab)
+    simulate_petab, rdatas_to_measurement_df, create_parameterized_edatas)
 from amici import SteadyStateSensitivityMode_simulationFSA
 
 logger = get_logger(__name__, logging.DEBUG)
 set_log_level(get_logger("amici.petab_import"), logging.DEBUG)
+stream_handler = logging.StreamHandler()
+logger.addHandler(stream_handler)
 
 
 def test_case(case):
@@ -59,10 +61,11 @@ def _test_case(case):
     ret = simulate_petab(problem, model, log_level=logging.DEBUG)
 
     rdatas = ret['rdatas']
-    chi2 = None
+    chi2 = sum(rdata['chi2'] for rdata in rdatas)
     llh = ret['llh']
     simulation_df = rdatas_to_measurement_df(rdatas, model,
                                              problem.measurement_df)
+    petab.check_measurement_df(simulation_df, problem.observable_df)
     simulation_df = simulation_df.rename(
         columns={petab.MEASUREMENT: petab.SIMULATION})
     simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
@@ -74,7 +77,7 @@ def _test_case(case):
     tol_llh = solution[petabtests.TOL_LLH]
     tol_simulations = solution[petabtests.TOL_SIMULATIONS]
 
-    chi2s_match = petabtests.evaluate_chi2(chi2, solution, tol_chi2)
+    chi2s_match = petabtests.evaluate_chi2(chi2, gt_chi2, tol_chi2)
     llhs_match = petabtests.evaluate_llh(llh, gt_llh, tol_llh)
     simulations_match = petabtests.evaluate_simulations(
         [simulation_df], gt_simulation_dfs, tol_simulations)
@@ -89,10 +92,12 @@ def _test_case(case):
                f"Simulations: match = {simulations_match}")
 
     # FIXME case 7 fails due to #963
-    if case not in ['0007']:
+    if case not in ['0007', '0016']:
         check_derivatives(problem, model)
 
-    if not all([llhs_match, simulations_match]):
+    # FIXME case 7 fails due to #963
+    if not all([llhs_match, simulations_match]) \
+            or (not chi2s_match and case not in ['0007', '0016']):
         # chi2s_match ignored until fixed in amici
         logger.error(f"Case {case} failed.")
         raise AssertionError(f"Case {case}: Test results do not match "
@@ -122,8 +127,9 @@ def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
     def assert_true(x):
         assert x
 
-    for edata in edatas_from_petab(model=model, petab_problem=problem,
-                                   problem_parameters=problem_parameters):
+    for edata in create_parameterized_edatas(
+            amici_model=model, petab_problem=problem,
+            problem_parameters=problem_parameters):
         # check_derivatives does currently not support parameters in ExpData
         model.setParameters(edata.parameters)
         model.setParameterScale(edata.pscale)

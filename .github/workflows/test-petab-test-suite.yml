@@ -16,21 +16,25 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    env:
+      ENABLE_GCOV_COVERAGE: TRUE
+
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@master
       with:
         fetch-depth: 20
 
     # install dependencies
     - name: apt
       run: |
-        sudo apt-get install -y swig3.0 libatlas-base-dev \
+        sudo apt-get update \
+          && sudo apt-get install -y swig3.0 libatlas-base-dev \
           && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
     - name: pip
       run: |
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
-    - run: pip3 install pytest shyaml
+    - run: pip3 install pytest shyaml pytest-cov
     - run: |
         echo ::add-path::${HOME}/.local/bin/
         echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
@@ -47,11 +51,19 @@ jobs:
 
     - name: Run PEtab-related unit tests
       run: |
-        pytest tests/testMisc.py
+        pytest --cov-report=xml --cov=./ tests/testMisc.py
 
     # retrieve test models
     - name: Download and run petab test suite
       run: |
         git clone --depth 1 https://github.com/petab-dev/petab_test_suite \
           && cd petab_test_suite; pip3 install -e .; cd .. \
-          && AMICI_PARALLEL_COMPILE=2 pytest -v tests/petab_test_suite/
+          && AMICI_PARALLEL_COMPILE=2 pytest -v --cov-report=xml --cov-append --cov=./ tests/petab_test_suite/
+
+    - name: Codecov
+      uses: codecov/codecov-action@v1.0.6
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
+        flags: python
+        fail_ci_if_error: true

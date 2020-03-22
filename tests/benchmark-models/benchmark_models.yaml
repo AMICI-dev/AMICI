@@ -12,8 +12,8 @@ Boehm_JProteomeRes2014:
   note: benchmark collection reference ignores factor 1/2
 
 Borghans_BiophysChem1997:
-  llh: 175.90130682476047
-  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log10(sim)) / 2
+  llh: 83.3237191357272
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10)) / 2
 
 Brannmark_JBC2010:
   llh: 283.778227541074
@@ -30,8 +30,8 @@ Crauste_CellSystems2017:
   note: benchmark collection only reports chi2 value, but llh value can be derived
 
 Elowitz_Nature2000:
-  llh: 111.57663643721794
-  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log10(sim)) / 2
+  llh: 63.20279991419332
+  note: benchmark collection reference value matches up to sign when applying log10-correction +sum(log(meas*log(10))) / 2
 
 Fiedler_BMC2016:
   llh: -117.16780323362
@@ -59,7 +59,7 @@ Raia_CancerResearch2011:
   note: unchecked
 
 Schwen_PONE2014:
-  llh: -705.4660173266402
+  llh: -943.9992988598723
   note: benchmark collection reference value does not match, but model outputs do. maybe due to D2D data normalization
 
 Sneyd_PNAS2002:
