@@ -1,3 +1,20 @@
+"""
+Parameter mapping
+-----------------
+
+When performing parameter inference, often parameters need to be mapped from
+simulation to estimation parameters, and parameters can differ between
+conditions. This can be handled using the `ParameterMapping`.
+
+Note
+----
+
+While the parameter mapping can be used direcly with AMICI, it was developed
+for usage together with PEtab, for which the whole worklow of generating
+the mapping is automatized.
+"""
+
+
 import numbers
 from typing import Any, Dict, List, Union
 from collections.abc import Sequence
@@ -17,10 +34,11 @@ class ParameterMappingForCondition:
     Contains mappings for free parameters, fixed parameters, and fixed
     preequilibration parameters, both for parameters and scales.
 
-    While in the scale mappings, for each simulation parameter the scale
+    In the scale mappings, for each simulation parameter the scale
     on which the value is passed (and potentially gradients are to be
-    returned) is given, in the parameter mappings for each simulation parameter
-    a corresponding optimization parameter (or a numeric value) is given.
+    returned) is given. In the parameter mappings, for each simulation
+    parameter a corresponding optimization parameter (or a numeric value)
+    is given.
 
     If a mapping is not passed, the parameter mappings are assumed to be empty,
     and if a scale mapping is not passed, all scales are set to linear.
@@ -117,17 +135,18 @@ def fill_in_parameters(
     """Fill fixed and dynamic parameters into the edatas (in-place).
 
     :param edatas:
-        List of experimental datas with everything except parameters filled.
+        List of experimental datas `amici.ExpData` with everything except
+        parameters filled.
     :param problem_parameters:
-        PEtab problem parameters as parameterId=>value dict. Only
+        Problem parameters as parameterId=>value dict. Only
         parameters included here will be set. Remaining parameters will
         be used currently set in `amici_model`.
     :param scaled_parameters:
         If True, problem_parameters are assumed to be on the scale provided
-        in the PEtab parameter table and will be unscaled. If False, they
-        are assumed to be in linear scale.
+        in the parameter mapping. If False, they are assumed
+        to be in linear scale.
     :param parameter_mapping:
-        PEtab parameter mapping for current condition
+        Parameter mapping for all conditions.
     :param amici_model:
         AMICI model.
     """
@@ -149,15 +168,15 @@ def fill_in_parameters_for_condition(
     :param edata:
         Experimental data object to fill parameters into.
     :param problem_parameters:
-        PEtab problem parameters as parameterId=>value dict. Only
+        Problem parameters as parameterId=>value dict. Only
         parameters included here will be set. Remaining parameters will
-        be used currently set in `amici_model`.
+        be used as already set in `amici_model` and `edata`.
     :param scaled_parameters:
         If True, problem_parameters are assumed to be on the scale provided
-        in the PEtab parameter table and will be unscaled. If False, they
+        in the parameter mapping. If False, they
         are assumed to be in linear scale.
     :param parameter_mapping:
-        PEtab parameter mapping for current condition.
+        Parameter mapping for current condition.
     :param amici_model:
         AMICI model
     """
@@ -168,7 +187,7 @@ def fill_in_parameters_for_condition(
     map_sim_fix = parameter_mapping.map_sim_fix
     scale_map_sim_fix = parameter_mapping.scale_map_sim_fix
 
-    # PEtab parameter mapping may contain parameter_ids as values, these *must*
+    # Parameter mapping may contain parameter_ids as values, these *must*
     # be replaced
 
     def _get_par(model_par, value):
@@ -176,8 +195,8 @@ def fill_in_parameters_for_condition(
         problem_parameters where necessary"""
         if isinstance(value, str):
             # estimated parameter
-            # (condition table overrides have been handled by PEtab
-            # parameter mapping)
+            # (condition table overrides must have been handled already,
+            # e.g. by the PEtab parameter mapping)
             return problem_parameters[value]
         if model_par in problem_parameters:
             # user-provided
