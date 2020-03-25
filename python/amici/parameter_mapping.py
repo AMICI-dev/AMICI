@@ -7,7 +7,7 @@ simulation to estimation parameters, and parameters can differ between
 conditions. This can be handled using the `ParameterMapping`.
 
 Note
-----
+~~~~
 
 While the parameter mapping can be used direcly with AMICI, it was developed
 for usage together with PEtab, for which the whole worklow of generating
