@@ -129,6 +129,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             preeq = std::unique_ptr<SteadystateProblem>(
                 new SteadystateProblem(solver, model));
             preeq->workSteadyStateProblem(rdata.get(), &solver, &model, -1);
+            
+            rdata->processPreequilibration(preeq.get(), &model);
         }
         
         // dont merge with if above since we want the ConditionContext to go
@@ -142,6 +144,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                                                  &solver,
                                                                  preeq.get()));
         fwd->workForwardProblem();
+        
+        rdata->processForwardProblem(solver, &model, edata);
         
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::unique_ptr<SteadystateProblem>(

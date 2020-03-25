@@ -38,6 +38,7 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       Jtmp(SUNMatrixWrapper(model->nx_solver,model->nx_solver)),
       x(model->nx_solver),
       x_old(model->nx_solver),
+      trace_x(model->nt(),model->nx_solver),
       dx(model->nx_solver),
       dx_old(model->nx_solver),
       xdot(model->nx_solver),
@@ -58,8 +59,8 @@ void ForwardProblem::workForwardProblem() {
         return;
     }
 
-    /* if preequilibration is necessary, start Newton solver */
-    if (preequilibrated) {
+    /* if preequilibration was done, solver was already set up */
+    if (!preequilibrated) {
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
@@ -77,7 +78,7 @@ void ForwardProblem::workForwardProblem() {
     }
 
     /* loop over timepoints */
-    for (int it = 0; it < model->nt(); it++) {
+    for (it = 0; it < model->nt(); it++) {
         auto nextTimepoint = model->getTimepoint(it);
         
         if (std::isinf(nextTimepoint))
@@ -102,7 +103,7 @@ void ForwardProblem::workForwardProblem() {
     }
 
     /* fill events */
-    if (model->nz > 0) {
+    if (model->nz > 0 & model->nt() > 0) {
         getEventOutput();
     }
 
@@ -368,6 +369,9 @@ void ForwardProblem::getAdjointUpdates() {
 }
 
 void ForwardProblem::handleDataPoint(int it) {
+    
+    
+    
     if (model->getTimepoint(it) > model->t0()) {
         solver->getDiagnosis(it, rdata);
     }

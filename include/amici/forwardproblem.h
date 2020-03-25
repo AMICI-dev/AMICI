@@ -303,6 +303,9 @@ class ForwardProblem {
 
     /** state vector (dimension: nx_solver) */
     AmiVector x;
+    
+    /** state vector history */
+    AmiVectorArray trace_x;
 
     /** old state vector (dimension: nx_solver) */
     AmiVector x_old;
