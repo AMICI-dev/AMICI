@@ -22,6 +22,8 @@ from .petab_import import PREEQ_INDICATOR_ID
 
 logger = get_logger(__name__)
 
+AmiciModel = Union[amici.Model, amici.ModelPtr]
+
 
 # string constant definitions
 LLH = 'llh'
@@ -36,7 +38,7 @@ RDATAS = 'rdatas'
 @log_execution_time('Simulating PEtab model', logger)
 def simulate_petab(
         petab_problem: petab.Problem,
-        amici_model: amici.Model,
+        amici_model: AmiciModel,
         solver: Optional[amici.Solver] = None,
         problem_parameters: Optional[Dict[str, float]] = None,
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
@@ -139,7 +141,7 @@ def simulate_petab(
 
 
 def create_parameterized_edatas(
-        amici_model: amici.Model,
+        amici_model: AmiciModel,
         petab_problem: petab.Problem,
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool = False,
@@ -207,7 +209,7 @@ def create_parameter_mapping(
         petab_problem: petab.Problem,
         simulation_conditions: Union[pd.DataFrame, Dict],
         scaled_parameters: bool,
-        amici_model: amici.Model,
+        amici_model: AmiciModel,
 ) -> List[Tuple]:
     """Generate AMICI specific parameter mapping.
 
@@ -261,7 +263,7 @@ def create_parameter_mapping_for_condition(
         parameter_mapping_for_condition: petab.ParMappingDictQuadruple,
         condition: Union[pd.Series, Dict],
         petab_problem: petab.Problem,
-        amici_model: amici.Model) -> Tuple:
+        amici_model: AmiciModel) -> Tuple:
     """Generate AMICI specific parameter mapping for condition.
 
     :param parameter_mapping_for_condition:
@@ -399,7 +401,7 @@ def create_parameter_mapping_for_condition(
 
 
 def create_edatas(
-        amici_model: amici.Model,
+        amici_model: AmiciModel,
         petab_problem: petab.Problem,
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
 ) -> List[amici.ExpData]:
@@ -439,7 +441,7 @@ def create_edatas(
 
 def create_edata_for_condition(
         condition: Union[Dict, pd.Series],
-        amici_model: amici.Model,
+        amici_model: AmiciModel,
         petab_problem: petab.Problem,
         observable_ids: List[str],
 ) -> amici.ExpData:
@@ -504,7 +506,7 @@ def fill_in_parameters(
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool,
         parameter_mapping: List[Tuple],
-        amici_model: amici.Model) -> None:
+        amici_model: AmiciModel) -> None:
     """Fill fixed and dynamic parameters into the edatas (in-place).
 
     :param edatas:
@@ -533,7 +535,7 @@ def fill_in_parameters_for_condition(
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool,
         parameter_mapping: Tuple,
-        amici_model: amici.Model) -> None:
+        amici_model: AmiciModel) -> None:
     """Fill fixed and dynamic parameters into the edata for condition
     (in-place).
 
@@ -843,7 +845,7 @@ def _get_measurements_and_sigmas(
 
 def rdatas_to_measurement_df(
         rdatas: Sequence[amici.ReturnData],
-        model: amici.Model,
+        model: AmiciModel,
         measurement_df: pd.DataFrame) -> pd.DataFrame:
     """
     Create a measurement dataframe in the PEtab format from the passed
@@ -906,7 +908,7 @@ def rdatas_to_measurement_df(
 
 def rdatas_to_simulation_df(
         rdatas: Sequence[amici.ReturnData],
-        model: amici.Model,
+        model: AmiciModel,
         measurement_df: pd.DataFrame) -> pd.DataFrame:
     """Create a PEtab simulation dataframe from amici.ReturnDatas.
 
@@ -920,7 +922,7 @@ def rdatas_to_simulation_df(
 
 
 def aggregate_sllh(
-        amici_model: amici.Model,
+        amici_model: AmiciModel,
         rdatas: Sequence[amici.ReturnDataView],
         parameter_mapping: Optional[List[petab.ParMappingDictTuple]],
 ) -> Union[None, Dict[str, float]]:
