@@ -20,4 +20,4 @@ python testCPP.py
 python testPreequilibration.py
 python testMisc.py
 python testPandas.py
-python -m pytest testParameterMapping.py
+python testParameterMapping.py
