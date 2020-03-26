@@ -135,12 +135,12 @@ def fill_in_parameters(
     """Fill fixed and dynamic parameters into the edatas (in-place).
 
     :param edatas:
-        List of experimental datas `amici.ExpData` with everything except
-        parameters filled.
+        List of experimental datas :class:`amici.amici.ExpData` with
+        everything except parameters filled.
     :param problem_parameters:
         Problem parameters as parameterId=>value dict. Only
         parameters included here will be set. Remaining parameters will
-        be used currently set in `amici_model`.
+        be used as currently set in `amici_model`.
     :param scaled_parameters:
         If True, problem_parameters are assumed to be on the scale provided
         in the parameter mapping. If False, they are assumed
