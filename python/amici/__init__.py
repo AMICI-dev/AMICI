@@ -178,7 +178,7 @@ def runAmiciSimulation(
     return numpy.ReturnDataView(rdata)
 
 
-def ExpData(*args) -> amici.ExpData:
+def ExpData(*args) -> 'amici.ExpData':
     """
     Convenience wrapper for ExpData constructors
 
