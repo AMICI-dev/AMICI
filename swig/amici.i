@@ -153,7 +153,7 @@ main amici package, i.e., `amici.amici.ExpData` is available as `amici
 .ExpData`. Usage of functions and classes from the base `amici` package is
 generally recommended as they often include convenience wrappers that avoid
 common pitfalls when accessing C++ types from python and implement some
- nonstandard type conversions.
+nonstandard type conversions.
 """
 
 from typing import Iterable
