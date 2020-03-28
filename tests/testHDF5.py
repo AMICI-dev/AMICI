@@ -61,7 +61,7 @@ class TestAmiciHDF5(unittest.TestCase):
 
         hdf5file = 'solverSettings.hdf5'
 
-        amici.writeSolverSettingsToHDF5(solver.get(), hdf5file,
+        amici.writeSolverSettingsToHDF5(solver, hdf5file,
                                         'ssettings')
 
         new_solver = self.model.getSolver()
@@ -75,7 +75,7 @@ class TestAmiciHDF5(unittest.TestCase):
                 getattr(new_solver, attr.replace('set', 'get'))()
             )
 
-        amici.readSolverSettingsFromHDF5(hdf5file, new_solver.get(),
+        amici.readSolverSettingsFromHDF5(hdf5file, new_solver,
                                          'ssettings')
 
         # check that reading in settings worked
