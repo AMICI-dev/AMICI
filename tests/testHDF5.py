@@ -9,7 +9,6 @@ import os
 import unittest
 import importlib
 
-
 class TestAmiciHDF5(unittest.TestCase):
     """TestCase class various AMICI Python interface functions"""
 

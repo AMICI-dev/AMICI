@@ -344,6 +344,7 @@ def fix_typehints(sig: str) -> str:
     sig = sig.replace('char const *', 'str')
     sig = sig.replace('amici::', '')
     sig = sig.replace('sunindextype', 'int')
+    sig = sig.replace('H5::H5File', 'object')
 
     # enum classes
     for ec in ['SteadyStateSensitivityMode', 'InternalSensitivityMethod',
