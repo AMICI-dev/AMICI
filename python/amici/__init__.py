@@ -120,10 +120,10 @@ except (ImportError, AttributeError) as e:
         raise e
 
 from typing import Optional, Union, Sequence, List
-AmiciModel = Union[amici.Model, amici.ModelPtr]
-AmiciSolver = Union[amici.Solver, amici.SolverPtr]
-AmiciExpData = Union[amici.ExpData, amici.ExpDataPtr]
-AmiciExpDataVector = Union[amici.ExpDataPtrVector, Sequence[AmiciExpData]]
+AmiciModel = Union['amici.Model', 'amici.ModelPtr']
+AmiciSolver = Union['amici.Solver', 'amici.SolverPtr']
+AmiciExpData = Union['amici.ExpData', 'amici.ExpDataPtr']
+AmiciExpDataVector = Union['amici.ExpDataPtrVector', Sequence[AmiciExpData]]
 
 # Initialize AMICI paths
 amici_path = _get_amici_path()
