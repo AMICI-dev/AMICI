@@ -518,7 +518,7 @@ void writeSolverSettingsToHDF5(Solver const& solver,
                               std::string const& hdf5Location) {
     auto file = createOrOpenForWriting(hdf5Filename);
     
-    writeSolverSettingToHDF5(solver, file, hdf5Location);
+    writeSolverSettingsToHDF5(solver, file, hdf5Location);
 }
 
 void writeSolverSettingsToHDF5(Solver const& solver,
@@ -642,14 +642,6 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "ism", &ibuffer, 1);
 }
-
-void readSolverSettingsFromHDF5(std::string const& hdf5Filename,
-                                Solver &solver,
-                                const std::string &datasetPath) {
-    auto file = createOrOpenForWriting(hdf5Filename);
-    readSolverSettingsFromHDF5(file, solver, datasetPath);
-}
-
 
 void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
                                 const std::string &datasetPath) {

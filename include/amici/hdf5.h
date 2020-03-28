@@ -50,15 +50,6 @@ void readSolverSettingsFromHDF5(const H5::H5File &file, Solver &solver,
                                 std::string const &datasetPath);
 
 /**
- * @brief Read solver options from HDF5 file
- * @param hdf5Filename Name of HDF5 file
- * @param solver solver to set options on
- * @param datasetPath Path inside the HDF5 file
- */
-void readSolverSettingsFromHDF5(std::string const& hdf5Filename, Solver &solver,
-                                std::string const &datasetPath);
-
-/**
  * @brief Write solver options from HDF5 file
  * @param hdf5Filenamehdf5 Name of HDF5 file
  * @param solver solver to write options from
