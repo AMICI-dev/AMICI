@@ -626,9 +626,9 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "newton_damping_factor_mode", &ibuffer, 1);
     
-    ibuffer = static_cast<int>(solver.getNewtonDampingFactorLowerBound());
-    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
-                          "newton_damping_factor_lower_bound", &ibuffer, 1);
+    dbuffer = static_cast<int>(solver.getNewtonDampingFactorLowerBound());
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "newton_damping_factor_lower_bound", &dbuffer, 1);
     
     ibuffer = static_cast<int>(solver.getNewtonMaxLinearSteps());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),

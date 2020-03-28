@@ -8,7 +8,7 @@ import copy
 import os
 import unittest
 import importlib
-
+import random
 
 class TestAmiciHDF5(unittest.TestCase):
     """TestCase class for AMICI HDF5 I/O"""
@@ -52,8 +52,10 @@ class TestAmiciHDF5(unittest.TestCase):
                 cval = not val
             elif attr == 'setStabilityLimitFlag':
                 cval = 0
-            else:
+            elif isinstance(val, int):
                 cval = val + 1
+            else:
+                cval = val + random.random()
 
             getattr(solver, attr)(
                 cval
@@ -70,10 +72,12 @@ class TestAmiciHDF5(unittest.TestCase):
         for attr in dir(solver):
             if not attr.startswith('set'):
                 continue
-            self.assertNotEqual(
-                getattr(solver, attr.replace('set', 'get'))(),
-                getattr(new_solver, attr.replace('set', 'get'))()
-            )
+
+            with self.subTest(function=attr.replace('set', ''), mode='change'):
+                self.assertNotEqual(
+                    getattr(solver, attr.replace('set', 'get'))(),
+                    getattr(new_solver, attr.replace('set', 'get'))()
+                )
 
         amici.readSolverSettingsFromHDF5(hdf5file, new_solver,
                                          'ssettings')
@@ -83,10 +87,11 @@ class TestAmiciHDF5(unittest.TestCase):
             if not attr.startswith('set'):
                 continue
 
-            self.assertAlmostEqual(
-                getattr(solver, attr.replace('set', 'get'))(),
-                getattr(new_solver, attr.replace('set', 'get'))()
-            )
+            with self.subTest(function=attr.replace('set', ''), mode='load'):
+                self.assertAlmostEqual(
+                    getattr(solver, attr.replace('set', 'get'))(),
+                    getattr(new_solver, attr.replace('set', 'get'))()
+                )
 
         os.remove(hdf5file)
 
