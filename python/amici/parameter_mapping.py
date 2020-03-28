@@ -26,6 +26,7 @@ from petab.C import *  # noqa: F403
 
 SingleParameterMapping = Dict[str, Union[numbers.Number, str]]
 SingleScaleMapping = Dict[str, str]
+AmiciModel = Union[amici.Model, amici.ModelPtr]
 
 
 class ParameterMappingForCondition:
@@ -131,7 +132,7 @@ def fill_in_parameters(
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool,
         parameter_mapping: ParameterMapping,
-        amici_model: amici.Model) -> None:
+        amici_model: AmiciModel) -> None:
     """Fill fixed and dynamic parameters into the edatas (in-place).
 
     :param edatas:
@@ -161,7 +162,7 @@ def fill_in_parameters_for_condition(
         problem_parameters: Dict[str, numbers.Number],
         scaled_parameters: bool,
         parameter_mapping: ParameterMappingForCondition,
-        amici_model: amici.Model) -> None:
+        amici_model: AmiciModel) -> None:
     """Fill fixed and dynamic parameters into the edata for condition
     (in-place).
 
