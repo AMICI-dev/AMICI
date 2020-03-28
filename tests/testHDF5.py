@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Miscellaneous AMICI Python interface tests"""
+"""AMICI HDF5 I/O tests"""
 
 import amici
 import sys
@@ -11,7 +11,7 @@ import importlib
 
 
 class TestAmiciHDF5(unittest.TestCase):
-    """TestCase class various AMICI Python interface functions"""
+    """TestCase class for AMICI HDF5 I/O"""
 
     def setUp(self):
         self.default_path = copy.copy(sys.path)

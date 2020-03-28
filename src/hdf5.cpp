@@ -548,11 +548,11 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     
     dbuffer = solver.getAbsoluteToleranceB();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
-                             "rtolB", &dbuffer, 1);
+                             "atolB", &dbuffer, 1);
     
     dbuffer = solver.getRelativeToleranceB();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
-                             "atolB", &dbuffer, 1);
+                             "rtolB", &dbuffer, 1);
     
     dbuffer = solver.getAbsoluteToleranceQuadratures();
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
