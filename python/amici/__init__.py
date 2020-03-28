@@ -228,26 +228,39 @@ def runAmiciSimulations(
     return [numpy.ReturnDataView(r) for r in rdata_ptr_list]
 
 
-def readSolverSettingsFromHDF5(*args) -> None:
+def readSolverSettingsFromHDF5(
+        file: str,
+        solver: AmiciSolver,
+        location: Optional[str] = 'solverSettings'
+) -> None:
     """
-    Convenience wrapper for readSolverSettingsFromHDF5
+    Convenience wrapper for :fun:`amici.readSolverSettingsFromHDF5`
 
-    :param args: arguments
+    :param file: hdf5 filename
+    :param solver: Solver instance to which settings will be transferred
+    :param location: location of solver settings in hdf5 file
     """
-    if isinstance(args[1], amici.SolverPtr):
-        amici.readSolverSettingsFromHDF5(args[0], args[1].get(), args[2])
+    if isinstance(solver, amici.SolverPtr):
+        amici.readSolverSettingsFromHDF5(file, solver.get(), location)
     else:
-        amici.readSolverSettingsFromHDF5(*args)
+        amici.readSolverSettingsFromHDF5(file, solver, location)
 
 
-def writeSolverSettingsToHDF5(*args) -> None:
+def writeSolverSettingsToHDF5(
+        solver: AmiciSolver,
+        file: Union[str, object],
+        location: Optional[str] = 'solverSettings'
+) -> None:
     """
-    Convenience wrapper for writeSolverSettingsToHDF5
+    Convenience wrapper for :fun:`amici.writeSolverSettingsToHDF5`
 
-    :param args: arguments
+    :param file: hdf5 filename, can also be object created by
+        :fun:`amici.createOrOpenForWriting`
+    :param solver: Solver instance from which settings will stored
+    :param location: location of solver settings in hdf5 file
     """
-    if isinstance(args[0], amici.SolverPtr):
-        amici.writeSolverSettingsToHDF5(args[0].get(), *args[1:])
+    if isinstance(solver, amici.SolverPtr):
+        amici.writeSolverSettingsToHDF5(solver.get(), file, location)
     else:
-        amici.writeSolverSettingsToHDF5(*args)
+        amici.writeSolverSettingsToHDF5(solver, file, location)
 
