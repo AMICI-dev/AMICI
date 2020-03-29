@@ -37,8 +37,6 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       rootsfound(model->ne, 0),
       Jtmp(SUNMatrixWrapper(model->nx_solver,model->nx_solver)),
       x(model->nx_solver),
-      x_old(model->nx_solver),
-      trace_x(model->nt(),model->nx_solver),
       dx(model->nx_solver),
       dx_old(model->nx_solver),
       xdot(model->nx_solver),
@@ -70,12 +68,19 @@ void ForwardProblem::workForwardProblem() {
         x.copy(solver->getState(model->t0()));
     }
 
+    auto presimulated = edata && edata->t_presim > 0;
     /* perform presimulation if necessary */
-    if (edata && edata->t_presim > 0) {
+    if (presimulated) {
         handlePresimulation();
         t = model->t0();
         solver->updateAndReinitStatesAndSensitivities(model);
     }
+    
+    /* store initial sensitivity and */
+    x0.copy(x);
+    if(solver->getSensitivityOrder() >= SensitivityOrder::first &&
+       (!presimulated || solver->getSensitivityMethod() == SensitivityMethod::forward))
+        sx0.copy(sx);
 
     /* loop over timepoints */
     for (it = 0; it < model->nt(); it++) {
@@ -369,9 +374,10 @@ void ForwardProblem::getAdjointUpdates() {
 }
 
 void ForwardProblem::handleDataPoint(int it) {
-    
-    
-    
+    x_timepoints.push_back(x);
+    if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
+        solver->getSensitivityOrder() >= SensitivityOrder::first)
+        sx_timepoints.push_back(sx);
     if (model->getTimepoint(it) > model->t0()) {
         solver->getDiagnosis(it, rdata);
     }

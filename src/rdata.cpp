@@ -7,6 +7,7 @@
 #include "amici/solver.h"
 #include "amici/exception.h"
 #include "amici/steadystateproblem.h"
+#include "amici/forwardproblem.h"
 
 #include <cstring>
 
@@ -121,38 +122,37 @@ void ReturnData::processPreequilibration(SteadystateProblem const *preeq,
     }
 }
 
-void ReturnData::processForwardProblem(Solver const &solver,
+void ReturnData::processForwardProblem(ForwardProblem const &fwd,
                                        Model *model,
                                        ExpData const *edata){
     
     initializeObjectiveFunction();
     
-    auto t = model->t0();
-    model->fx_rdata(x_rdata, solver.getState(t));
+    model->fx_rdata(x_rdata, fwd.getInitialState());
     x0 = x_rdata.getVector();
     if (sensi_meth == SensitivityMethod::forward &&
         sensi >= SensitivityOrder::first) {
-        model->fsx_rdata(sx_rdata, solver.getStateSensitivity(t));
+        model->fsx_rdata(sx_rdata, fwd.getInitialStateSensitivity());
         for (int ix = 0; ix < nx; ix++) {
             for (int ip = 0; ip < model->nplist(); ip++)
                 sx0[ip * nx + ix] = sx_rdata.at(ix,ip);
         }
     }
     for (int it=0; it<nt; it++) {
-        t = ts[it];
-        model->fx_rdata(x_rdata, solver.getState(t));
+        auto x = fwd.getStateTimePoint(it);
+        auto t = model->getTimepoint(it);
+        model->fx_rdata(x_rdata, x);
         std::copy_n(x_rdata.data(), nx, &x.at(it * nx));
-        model->getExpression(slice(w, it, model->nw),
-                             model->getTimepoint(it), solver.getState(t));
-        getDataOutput(it, solver, model, edata);
+        model->getExpression(slice(w, it, model->nw), t, x);
+        getDataOutput(it, fwd, model, edata);
     }
 }
 
 void ReturnData::getDataOutput(int it,
-                               Solver const &solver,
+                               ForwardProblem const &fwd,
                                Model *model,
                                ExpData const *edata) {
-    auto x = solver.getState(ts[it]);
+    auto x = fwd.getStateTimePoint(it);
     model->getObservable(slice(y, it, ny), ts[it], x);
     model->getObservableSigma(slice(sigmay, it, ny), it, edata);
     if (edata) {
@@ -167,7 +167,7 @@ void ReturnData::getDataOutput(int it,
                                              it, edata);
 
         if (sensi_meth == SensitivityMethod::forward) {
-            getDataSensisFSA(it, solver, model, edata);
+            getDataSensisFSA(it, fwd, model, edata);
         } else {
             if (edata) {
                 model->addPartialObservableObjectiveSensitivity(sllh, s2llh,
@@ -178,11 +178,11 @@ void ReturnData::getDataOutput(int it,
 }
 
 void ReturnData::getDataSensisFSA(int it,
-                                  Solver const &solver,
+                                  ForwardProblem const &fwd,
                                   Model *model,
                                   ExpData const *edata) {
-    auto x = solver.getState(ts[it]);
-    auto sx = solver.getStateSensitivity(ts[it]);
+    auto x = fwd.getStateTimePoint(it);
+    auto sx = fwd.getStateSensitivityTimePoint(it);
     model->fsx_rdata(sx_rdata, sx);
     for (int ix = 0; ix < nx; ix++) {
         for (int ip = 0; ip < nplist; ip++) {

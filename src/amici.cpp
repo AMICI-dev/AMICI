@@ -145,7 +145,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                                                  preeq.get()));
         fwd->workForwardProblem();
         
-        rdata->processForwardProblem(solver, &model, edata);
+        rdata->processForwardProblem(*fwd.get(), &model, edata);
         
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::unique_ptr<SteadystateProblem>(

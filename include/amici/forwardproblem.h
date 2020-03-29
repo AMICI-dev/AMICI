@@ -174,6 +174,59 @@ class ForwardProblem {
     }
     
     /**
+     * @brief Accessor for x_timepoints
+     * @return x_timepoints.at(it)
+     */
+    const AmiVector &getInitialState() const {
+        return x0;
+    }
+    
+    /**
+     * @brief Accessor for sx_timepoints
+     * @return sx_timepoints.at(it)
+     */
+    const AmiVectorArray &getInitialStateSensitivity() const {
+        return sx0;
+    }
+    
+    
+    /**
+     * @brief Accessor for x_timepoints
+     * @param it timepoint index
+     * @return x_timepoints.at(it)
+     */
+    const AmiVector &getStateTimePoint(int it) const {
+        return x_timepoints.at(it);
+    }
+    
+    /**
+     * @brief Accessor for sx_timepoints
+     * @param it timepoint index
+     * @return sx_timepoints.at(it)
+     */
+    const AmiVectorArray &getStateSensitivityTimePoint(int it) const {
+        return sx_timepoints.at(it);
+    }
+    
+    /**
+     * @brief Accessor for x_timepoints
+     * @param it timepoint index
+     * @return x_timepoints.at(it)
+     */
+    const AmiVector &getStateEvent(int ie) const {
+        return x_events.at(ie);
+    }
+    
+    /**
+     * @brief Accessor for sx_timepoints
+     * @param it timepoint index
+     * @return sx_timepoints.at(it)
+     */
+    const AmiVectorArray &getStateSensitivityEvent(int ie) const {
+        return sx_events.at(ie);
+    }
+    
+    /**
      * @brief Compute updates for backwards (ajoint) problem
      * @return &sdx
      */
@@ -304,8 +357,23 @@ class ForwardProblem {
     /** state vector (dimension: nx_solver) */
     AmiVector x;
     
-    /** state vector history */
-    AmiVectorArray trace_x;
+    /** state vector history at timepoints  */
+    std::vector<AmiVector> x_timepoints;
+    
+    /** state sensitivity vector history at timepoints */
+    std::vector<AmiVectorArray> sx_timepoints;
+    
+    /** state vector history at events*/
+    std::vector<AmiVector> x_events;
+    
+    /** state sensitivity vector history at events*/
+    std::vector<AmiVectorArray> sx_events;
+    
+    /** initial state */
+    AmiVector x0;
+    
+    /** initial state sensitivity */
+    AmiVectorArray sx0;
 
     /** old state vector (dimension: nx_solver) */
     AmiVector x_old;

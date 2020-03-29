@@ -93,11 +93,12 @@ class ReturnData {
 
     /**
      * @brief extracts data from a forward problem, assuming
-     * @param solver solver instance containing forward solution
+     * @param fwd forward problem
      * @param model model that was used for forward simulation
      * @param edata ExpData instance containing observable data
      */
-    void processForwardProblem(Solver const &solver, Model *model,
+    void processForwardProblem(ForwardProblem const &fwd,
+                               Model *model,
                                ExpData const *edata);
     
     /**
@@ -414,21 +415,21 @@ class ReturnData {
     /**
      * @brief Extracts data information for forward sensitivity analysis
      * @param it index of current timepoint
-     * @param solver solver instance from forward solve
+     * @param fwd forward problem
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getDataSensisFSA(int it, Solver const &solver, Model *model,
+    void getDataSensisFSA(int it, ForwardProblem const &fwd, Model *model,
                           ExpData const *edata);
     
     /**
      * @brief Extracts output information for data-points
      * @param it index of current timepoint
-     * @param solver solver instance from forward solve
+     * @param fwd forward problem
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getDataOutput(int it, Solver const &solver, Model *model,
+    void getDataOutput(int it, ForwardProblem const &fwd, Model *model,
                        ExpData const *edata);
 };
 
