@@ -42,12 +42,32 @@ H5::H5File createOrOpenForWriting(std::string const &hdf5filename);
 
 /**
  * @brief Read solver options from HDF5 file
- * @param fileId hdf5 file handle to read from
+ * @param file hdf5 file handle to read from
  * @param solver solver to set options on
  * @param datasetPath Path inside the HDF5 file
  */
 void readSolverSettingsFromHDF5(const H5::H5File &file, Solver &solver,
                                 std::string const &datasetPath);
+
+/**
+ * @brief Write solver options from HDF5 file
+ * @param hdf5Filenamehdf5 Name of HDF5 file
+ * @param solver solver to write options from
+ * @param hdf5Location Path inside the HDF5 file
+ */
+void writeSolverSettingsToHDF5(Solver const& solver,
+                              std::string const& hdf5Filename,
+                              std::string const& hdf5Location);
+
+/**
+ * @brief Write solver options from HDF5 file
+ * @param file file handle to read from
+ * @param solver solver to write options from
+ * @param hdf5Location Path inside the HDF5 file
+ */
+void writeSolverSettingsToHDF5(Solver const& solver,
+                              H5::H5File const& file,
+                              std::string const& hdf5Location);
 
 /**
  * @brief Read solver options from HDF5 file

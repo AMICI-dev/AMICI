@@ -31,10 +31,13 @@ import testPYSB
 import testCPP
 import testMisc
 import testPreequilibration
+import testParameterMapping
+import testHDF5
+
 
 test_modules = (
     testSBML, testModels, testPandas, testPYSB, testCPP, testMisc,
-    testPreequilibration,
+    testPreequilibration, testParameterMapping, testHDF5
 )
 
 suite = unittest.TestSuite()
