@@ -5,7 +5,9 @@
 .. autoclass:: {{ objname }}
 
    {% block methods %}
+   {% if '__init__' in methods %}
    .. automethod:: __init__
+   {% endif %}
    {% if methods %}
    .. rubric:: Methods Summary
    .. autosummary::

@@ -344,6 +344,7 @@ def fix_typehints(sig: str) -> str:
     sig = sig.replace('char const *', 'str')
     sig = sig.replace('amici::', '')
     sig = sig.replace('sunindextype', 'int')
+    sig = sig.replace('H5::H5File', 'object')
 
     # enum classes
     for ec in ['SteadyStateSensitivityMode', 'InternalSensitivityMethod',
@@ -418,9 +419,7 @@ def skip_member(app, what, name, obj, skip, options):
                'Model_DAE', 'ConditionContext', 'checkSigmaPositivity',
                'createGroup', 'createGroup', 'equals', 'printErrMsgIdAndTxt',
                'wrapErrHandlerFn', 'printWarnMsgIdAndTxt',
-               'AmiciApplication', 'writeSimulationExpData', 'writeReturnData',
-               'readSimulationExpData', 'readSolverSettingsFromHDF5',
-               'readModelDataFromHDF5', 'createOrOpenForWriting',
+               'AmiciApplication', 'writeReturnData',
                'writeReturnDataDiagnosis', 'attributeExists', 'locationExists',
                'createAndWriteDouble1DDataset',
                'createAndWriteDouble2DDataset',
