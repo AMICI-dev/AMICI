@@ -125,8 +125,8 @@ void ReturnData::processPreequilibration(SteadystateProblem const *preeq,
 void ReturnData::processForwardProblem(ForwardProblem const &fwd,
                                        Model *model,
                                        ExpData const *edata){
-    
-    initializeObjectiveFunction();
+    if(edata)
+        initializeObjectiveFunction();
     
     model->fx_rdata(x_rdata, fwd.getInitialState());
     x0 = x_rdata.getVector();
@@ -142,7 +142,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
         auto x = fwd.getStateTimePoint(it);
         auto t = model->getTimepoint(it);
         model->fx_rdata(x_rdata, x);
-        std::copy_n(x_rdata.data(), nx, &x.at(it * nx));
+        std::copy_n(x_rdata.data(), nx, &this->x.at(it * nx));
         model->getExpression(slice(w, it, model->nw), t, x);
         getDataOutput(it, fwd, model, edata);
     }

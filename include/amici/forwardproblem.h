@@ -354,9 +354,6 @@ class ForwardProblem {
      * (dimension: nx x nx, col-major) */
     SUNMatrixWrapper Jtmp;
 
-    /** state vector (dimension: nx_solver) */
-    AmiVector x;
-    
     /** state vector history at timepoints  */
     std::vector<AmiVector> x_timepoints;
     
@@ -374,6 +371,9 @@ class ForwardProblem {
     
     /** initial state sensitivity */
     AmiVectorArray sx0;
+    
+    /** state vector (dimension: nx_solver) */
+    AmiVector x;
 
     /** old state vector (dimension: nx_solver) */
     AmiVector x_old;
