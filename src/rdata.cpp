@@ -151,7 +151,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
     if (nz == 0)
         return;
     
-    for (int iroot=0; iroot < fwd.getRootCounter() - 1; iroot++) {
+    for (int iroot=0; iroot < fwd.getRootCounter() + 1; iroot++) {
         getEventOutput(iroot, fwd, model, edata);
     }
 }
@@ -218,12 +218,8 @@ void ReturnData::getEventOutput(int iroot,
     
     auto rootidx = fwd.getRootIndexes();
     for(int ie = 0; ie < ne; ie++) {
-        if(rootidx[iroot * ne + ie] != 1 && t != model->getTimepoint(nt - 1))
+        if (rootidx.at(iroot).at(ie) != 1 || nroots.at(ie) >= nmaxevent)
             continue;
-        
-        if(nroots.at(ie) >= nmaxevent)
-            continue;
-        
     
         /* get event output */
         model->getEvent(slice(z, nroots.at(ie), nz), ie, t, x);

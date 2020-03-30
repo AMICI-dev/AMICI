@@ -22,15 +22,9 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       rdata(rdata),
       solver(solver),
       edata(edata),
-      rootidx(static_cast<decltype (rootidx)::size_type>(model->ne * model->ne * model->nMaxEvent()), 0),
       nroots(static_cast<decltype (nroots)::size_type>(model->ne), 0),
       rootvals(static_cast<decltype (rootvals)::size_type>(model->ne), 0.0),
       rvaltmp(static_cast<decltype (rvaltmp)::size_type>(model->ne), 0.0),
-      discs(static_cast<decltype (discs)::size_type>(model->nMaxEvent() * model->ne), 0.0),
-      irdiscs(model->nMaxEvent() * model->ne, 0.0),
-      x_disc(model->nx_solver, model->nMaxEvent()*model->ne),
-      xdot_disc(model->nx_solver, model->nMaxEvent()*model->ne),
-      xdot_old_disc(model->nx_solver, model->nMaxEvent()*model->ne),
       dJydx(model->nJ * model->nx_solver * model->nt(), 0.0),
       dJzdx(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
       t(model->t0()),
@@ -113,7 +107,7 @@ void ForwardProblem::workForwardProblem() {
 
     /* fill events */
     if (model->nz > 0 & model->nt() > 0) {
-        getEventOutput();
+        fillEvents(model->nMaxEvent());
     }
 
     storeJacobianAndDerivativeInReturnData();
@@ -135,15 +129,15 @@ void ForwardProblem::handlePresimulation()
 void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     /* store heaviside information at event occurence */
     model->froot(t, x, dx, rootvals);
+    
+    /* store timepoint at which the event occured*/
+    discs.push_back(t);
 
+    /* extract and store which events occured */
     if (!seflag) {
         solver->getRootInfo(rootsfound.data());
     }
-
-    if (iroot < model->nMaxEvent() * model->ne) {
-        std::copy(rootsfound.begin(), rootsfound.end(),
-                  &rootidx[iroot * model->ne]);
-    }
+    rootidx.push_back(rootsfound);
 
     rvaltmp = rootvals;
 
@@ -165,7 +159,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
 
     if(model->nz>0)
-        getEventOutput();
+        storeEvent();
 
     /* if we need to do forward sensitivities later on we need to store the old
      * x and the old xdot */
@@ -189,33 +183,18 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
                     }
                 }
             }
-        } else if (solver->getSensitivityMethod() == SensitivityMethod::adjoint) {
+        } else if (solver->getSensitivityMethod() ==
+                   SensitivityMethod::adjoint) {
             /* store x to compute jump in discontinuity */
-            if (iroot < model->nMaxEvent() * model->ne) {
-                x_disc[iroot] = x;
-                xdot_disc[iroot] = xdot;
-                xdot_old_disc[iroot] = xdot_old;
-            }
+            x_disc.push_back(x);
+            xdot_disc.push_back(xdot);
+            xdot_old_disc.push_back(xdot_old);
         }
     }
 
     model->updateHeaviside(rootsfound);
 
     applyEventBolus();
-
-    if (iroot < model->nMaxEvent() * model->ne) {
-        discs[iroot] = t;
-        ++iroot;
-    } else {
-        solver->app->warning(
-                    "AMICI:TOO_MUCH_EVENT",
-                        "Event was recorded but not reported as the number of "
-                        "occured events exceeded (nmaxevents)*(number of "
-                        "events in model definition)!");
-        /* reinitialise so that we can continue in peace */
-        solver->reInit(t, x, dx);
-        return;
-    }
 
     if (solver->getSensitivityOrder() >= SensitivityOrder::first
             && solver->getSensitivityMethod() == SensitivityMethod::forward) {
@@ -278,20 +257,22 @@ void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
     }
 }
 
-void ForwardProblem::getEventOutput() {
+void ForwardProblem::storeEvent() {
     if (t == model->getTimepoint(model->nt() - 1)) {
         // call from fillEvent at last timepoint
         model->froot(t, x, dx, rootvals);
-        discs[iroot] = t;
-        ++iroot;
+        for (int ie = 0; ie < model->ne; ie++) {
+            rootsfound.at(ie) = (nroots.at(ie) < model->nMaxEvent()) ? 1 : 0;
+        }
+        rootidx.push_back(rootsfound);
     }
     
-    if (iroot > x_events.size()) {
+    if (getRootCounter() < x_events.size()) {
         /* update stored state (sensi) */
-        x_events.at(iroot-1) = x;
+        x_events.at(getRootCounter()) = x;
         if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
         solver->getSensitivityMethod() == SensitivityMethod::forward)
-            sx_events.at(iroot-1) = sx;
+            sx_events.at(getRootCounter()) = sx;
     } else {
         /* add stored state (sensi) */
         x_events.push_back(x);
@@ -324,10 +305,7 @@ void ForwardProblem::getEventOutput() {
     if (t == model->getTimepoint(model->nt() - 1)) {
         // call from fillEvent at last timepoint
         // loop until all events are filled
-        if (std::any_of(nroots.cbegin(), nroots.cend(), [&](int curNRoots) {
-                return curNRoots < model->nMaxEvent();
-            }))
-            getEventOutput();
+        fillEvents(model->nMaxEvent());
     }
 }
 

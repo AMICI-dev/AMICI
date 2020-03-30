@@ -30,8 +30,6 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
     sx0(fwd.getStateSensitivity()),
     nroots(fwd.getNumberOfRoots()),
     discs(fwd.getDiscontinuities()),
-    irdiscs(fwd.getDiscontinuities()),
-    iroot(fwd.getRootCounter()),
     rootidx(fwd.getRootIndexes()),
     dJydx(fwd.getDJydx()),
     dJzdx(fwd.getDJzdx()) {
@@ -66,12 +64,11 @@ void BackwardProblem::workBackwardProblem() {
     solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
     
     --it;
-    --iroot;
 
-    while (it >= 0 || iroot >= 0) {
+    while (it >= 0 || discs.size() >= 0) {
 
         /* check if next timepoint is a discontinuity or a data-point */
-        double tnext = getTnext(discs, iroot, it);
+        double tnext = getTnext(it);
 
         if (tnext < t) {
             solver->runB(tnext);
@@ -80,11 +77,8 @@ void BackwardProblem::workBackwardProblem() {
         }
 
         /* handle discontinuity */
-        if (model->ne > 0 && rdata->nmaxevent > 0 && iroot >= 0) {
-            if (tnext == discs.at(iroot)) {
-                handleEventB(iroot);
-                --iroot;
-            }
+        if (tnext > rdata->ts[it]) {
+            handleEventB();
         }
 
         /* handle data-point */
@@ -111,25 +105,38 @@ void BackwardProblem::workBackwardProblem() {
 }
 
 
-void BackwardProblem::handleEventB(const int iroot) {
+void BackwardProblem::handleEventB() {
+    auto rootidx = this->rootidx.back();
+    this->rootidx.pop_back();
+    
+    auto x_disc = this->x_disc.back();
+    this->x_disc.pop_back();
+    
+    auto xdot_disc = this->xdot_disc.back();
+    this->xdot_disc.pop_back();
+    
+    auto xdot_old_disc = this->xdot_old_disc.back();
+    this->xdot_old_disc.pop_back();
+    
     for (int ie = 0; ie < model->ne; ie++) {
 
-        if (rootidx[iroot * model->ne + ie] == 0) {
+        if (rootidx[ie] == 0) {
             continue;
         }
 
-        model->addAdjointQuadratureEventUpdate(xQB, ie, t, x_disc[iroot], xB,
-                                               xdot_disc[iroot],
-                                               xdot_old_disc[iroot]);
-        model->addAdjointStateEventUpdate(xB, ie, t, x_disc[iroot],
-                                          xdot_disc[iroot],
-                                          xdot_old_disc[iroot]);
+        model->addAdjointQuadratureEventUpdate(xQB, ie, t, x_disc, xB,
+                                               xdot_disc,
+                                               xdot_old_disc);
+        model->addAdjointStateEventUpdate(xB, ie, t, x_disc,
+                                          xdot_disc,
+                                          xdot_old_disc);
 
         for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
             for (int iJ = 0; iJ < model->nJ; ++iJ) {
                 if (model->nz > 0) {
                     xB[ix + iJ * model->nxtrue_solver] +=
-                            dJzdx[iJ + ( ix + nroots[ie] * model->nx_solver ) * model->nJ];
+                            dJzdx[iJ + ( ix + nroots[ie] * model->nx_solver )
+                                  * model->nJ];
                 }
             }
         }
@@ -139,7 +146,7 @@ void BackwardProblem::handleEventB(const int iroot) {
         nroots[ie]--;
     }
 
-    model->updateHeavisideB(&rootidx[iroot * model->ne]);
+    model->updateHeavisideB(rootidx.data());
 }
 
 
@@ -152,11 +159,11 @@ void BackwardProblem::handleDataPointB(const int it) {
     }
 }
 
-realtype BackwardProblem::getTnext(std::vector<realtype> const& troot,
-                                   const int iroot, const int it) {
-    if (it < 0
-            || (iroot >= 0 && model->ne > 0 && troot.at(iroot) > rdata->ts[it])) {
-        return troot.at(iroot);
+realtype BackwardProblem::getTnext(const int it) {
+    if (discs.size() > 0 && discs.back() > rdata->ts[it]) {
+        double tdisc = discs.back();
+        discs.pop_back();
+        return tdisc;
     }
 
     return rdata->ts[it];

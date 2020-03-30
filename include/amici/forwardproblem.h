@@ -65,7 +65,7 @@ class ForwardProblem {
      * @brief Accessor for x_disc
      * @return x_disc
      */
-    AmiVectorArray const& getStatesAtDiscontinuities() const {
+    std::vector<AmiVector> const& getStatesAtDiscontinuities() const {
         return x_disc;
     }
 
@@ -73,7 +73,7 @@ class ForwardProblem {
      * @brief Accessor for xdot_disc
      * @return xdot_disc
      */
-    AmiVectorArray const& getRHSAtDiscontinuities() const {
+    std::vector<AmiVector> const& getRHSAtDiscontinuities() const {
         return xdot_disc;
     }
 
@@ -81,7 +81,7 @@ class ForwardProblem {
      * @brief Accessor for xdot_old_disc
      * @return xdot_old_disc
      */
-    AmiVectorArray const& getRHSBeforeDiscontinuities() const {
+    std::vector<AmiVector> const& getRHSBeforeDiscontinuities() const {
         return xdot_old_disc;
     }
 
@@ -105,7 +105,7 @@ class ForwardProblem {
      * @brief Accessor for rootidx
      * @return rootidx
      */
-    std::vector<int> const& getRootIndexes() const {
+    std::vector<std::vector<int>> const& getRootIndexes() const {
         return rootidx;
     }
 
@@ -130,7 +130,7 @@ class ForwardProblem {
      * @return iroot
      */
     int getRootCounter() const {
-        return iroot;
+        return discs.size() - 1;;
     }
 
     /**
@@ -258,7 +258,7 @@ class ForwardProblem {
     /**
      * @brief Extract output information for events
      */
-    void getEventOutput();
+    void storeEvent();
 
     /**
      * @brief Execute everything necessary for the handling of data points
@@ -278,10 +278,34 @@ class ForwardProblem {
      * @brief Applies the event bolus to the current sensitivities
      */
     void applyEventSensiBolusFSA();
+    
+    /**
+     * @brief checks whether there are any events to fill
+     *
+     * @param nmaxevent maximal number of events
+     */
+    bool checkEventsToFill(int nmaxevent) {
+        return std::any_of(nroots.cbegin(), nroots.cend(), [&](int curNRoots) {
+                return curNRoots < nmaxevent;
+        });
+    };
+    
+    /**
+     * @brief fills events at final timepoint if necessary
+     *
+     * @param nmaxevent maximal number of events
+     */
+    void fillEvents(int nmaxevent) {
+        if (checkEventsToFill(nmaxevent)) {
+            discs.push_back(t);
+            storeEvent();
+        }
+    }
+    
 
     /** array of index which root has been found
-     * (dimension: ne * ne * nmaxevent, ordering = ?) */
-    std::vector<int> rootidx;
+     * (dimension: dynamic, ordering = ?) */
+    std::vector<std::vector<int>> rootidx;
 
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
@@ -302,21 +326,17 @@ class ForwardProblem {
      * (dimension: nmaxevent x ne, ordering = ?) */
     std::vector<realtype> irdiscs;
 
-    /** current root index, will be increased during the forward solve and
-     * decreased during backward solve */
-    int iroot = 0;
-
     /** array of state vectors at discontinuities
      * (dimension nx x nMaxEvent * ne, ordering =?) */
-    AmiVectorArray x_disc;
+    std::vector<AmiVector> x_disc;
 
     /** array of differential state vectors at discontinuities
      * (dimension nx x nMaxEvent * ne, ordering =?) */
-    AmiVectorArray xdot_disc;
+    std::vector<AmiVector> xdot_disc;
 
     /** array of old differential state vectors at discontinuities
      * (dimension nx x nMaxEvent * ne, ordering =?) */
-    AmiVectorArray xdot_old_disc;
+    std::vector<AmiVector> xdot_old_disc;
 
     /** state derivative of data likelihood
      * (dimension nJ x nx x nt, ordering =?) */
