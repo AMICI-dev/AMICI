@@ -282,6 +282,22 @@ void ForwardProblem::getEventOutput() {
     if (t == model->getTimepoint(model->nt() - 1)) {
         // call from fillEvent at last timepoint
         model->froot(t, x, dx, rootvals);
+        discs[iroot] = t;
+        ++iroot;
+    }
+    
+    if (iroot > x_events.size()) {
+        /* update stored state (sensi) */
+        x_events.at(iroot-1) = x;
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        solver->getSensitivityMethod() == SensitivityMethod::forward)
+            sx_events.at(iroot-1) = sx;
+    } else {
+        /* add stored state (sensi) */
+        x_events.push_back(x);
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            solver->getSensitivityMethod() == SensitivityMethod::forward)
+            sx_events.push_back(sx);
     }
 
     /* EVENT OUTPUT */
@@ -295,43 +311,12 @@ void ForwardProblem::getEventOutput() {
             t != model->getTimepoint(model->nt() - 1)) {
             continue;
         }
-
-        /* get event output */
-        model->getEvent(slice(rdata->z, nroots.at(ie), rdata->nz), ie, t, x);
-        /* if called from fillEvent at last timepoint,
-         then also get the root function value */
-        if (t == model->getTimepoint(model->nt() - 1))
-            model->getEventRegularization(slice(rdata->rz, nroots.at(ie),
-                                                rdata->nz), ie, t, x);
-
-        if (edata) {
-            model->getEventSigma(slice(rdata->sigmaz, nroots.at(ie), rdata->nz),
-                                 ie, nroots.at(ie), t, edata);
-            model->addEventObjective(rdata->llh, ie, nroots.at(ie), t, x,
-                                     *edata);
-
-            /* if called from fillEvent at last timepoint,
-               add regularization based on rz */
-            if (t == model->getTimepoint(model->nt() - 1))
-                model->addEventObjectiveRegularization(
-                    rdata->llh, ie, nroots.at(ie), t, x, *edata);
-        }
-
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
-            if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
-                getEventSensisFSA(ie);
-            } else {
-                if (edata) {
-                model->getAdjointStateEventUpdate(slice(dJzdx, nroots.at(ie),
-                                                        model->nx_solver * model->nJ),
-                                                  ie, nroots.at(ie), t, x, *edata);
-                model->addPartialEventObjectiveSensitivity(rdata->sllh,
-                                                           rdata->s2llh,
-                                                           ie, nroots.at(ie),
-                                                           t, x, *edata);
-                }
-            }
-        }
+        
+        if (edata && solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            solver->getSensitivityMethod() == SensitivityMethod::adjoint)
+            model->getAdjointStateEventUpdate(slice(dJzdx, nroots.at(ie),
+                                                    model->nx_solver * model->nJ),
+                                              ie, nroots.at(ie), t, x, *edata);
 
         nroots.at(ie)++;
     }
@@ -346,42 +331,22 @@ void ForwardProblem::getEventOutput() {
     }
 }
 
-void ForwardProblem::getEventSensisFSA(int ie) {
-    if (t == model->getTimepoint(model->nt() - 1)) {
-        // call from fillEvent at last timepoint
-        model->getUnobservedEventSensitivity(slice(rdata->sz, nroots.at(ie),
-                                                   rdata->nz * rdata->nplist),
-                                             ie);
-        model->getEventRegularizationSensitivity(slice(rdata->srz,
-                                                       nroots.at(ie),
-                                                       rdata->nz * rdata->nplist),
-                                                 ie, t, x, sx);
-    } else {
-        model->getEventSensitivity(slice(rdata->sz, nroots.at(ie),
-                                         rdata->nz * rdata->nplist),
-                                   ie, t, x, sx);
+void ForwardProblem::handleDataPoint(int it) {
+    
+    x_timepoints.push_back(x);
+    
+    if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
+        solver->getSensitivityOrder() >= SensitivityOrder::first) {
+        sx_timepoints.push_back(sx);
     }
-
-    if (edata) {
-        model->addEventObjectiveSensitivity(rdata->sllh, rdata->s2llh, ie,
-                                            nroots.at(ie), t, x, sx, *edata);
-    }
-}
-
-void ForwardProblem::getAdjointUpdates() {
-    for (int it=0; it < model->nt(); it++) {
-        x = solver->getState(model->getTimepoint(it));
+    
+    if (edata && solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        solver->getSensitivityMethod() == SensitivityMethod::adjoint) {
         model->getAdjointStateObservableUpdate(
             slice(dJydx, it, model->nx_solver * model->nJ), it, x, *edata
         );
     }
-}
-
-void ForwardProblem::handleDataPoint(int it) {
-    x_timepoints.push_back(x);
-    if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
-        solver->getSensitivityOrder() >= SensitivityOrder::first)
-        sx_timepoints.push_back(sx);
+    
     if (model->getTimepoint(it) > model->t0()) {
         solver->getDiagnosis(it, rdata);
     }

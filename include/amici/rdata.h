@@ -410,6 +410,10 @@ class ReturnData {
      * conservation laws (dimension: nx x nplist, row-major) */
     AmiVectorArray sx_rdata;
     
+    /** array of number of found roots for a certain event type
+     * (dimension: ne) */
+    std::vector<int> nroots;
+    
 
 
     /**
@@ -424,13 +428,35 @@ class ReturnData {
     
     /**
      * @brief Extracts output information for data-points
-     * @param it index of current timepoint
+     * @param it timepoint index
      * @param fwd forward problem
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
     void getDataOutput(int it, ForwardProblem const &fwd, Model *model,
                        ExpData const *edata);
+    
+    /**
+     * @brief Extracts output information for events
+     * @param iroot event index
+     * @param fwd forward problem
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getEventOutput(int iroot, ForwardProblem const &fwd, Model *model,
+                        ExpData const *edata);
+    
+    /**
+     * @brief Extracts event information for forward sensitivity analysis
+     *
+     * @param iroot event index
+     * @param ie index of event type
+     * @param fwd forward problem
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getEventSensisFSA(int iroot, int ie, ForwardProblem const &fwd,
+                           Model *model, ExpData const *edata);
 };
 
 } // namespace amici

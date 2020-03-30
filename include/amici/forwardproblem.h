@@ -209,29 +209,23 @@ class ForwardProblem {
     }
     
     /**
-     * @brief Accessor for x_timepoints
-     * @param it timepoint index
-     * @return x_timepoints.at(it)
+     * @brief Accessor for x_events
+     * @param iroot timepoint index
+     * @return x_events.at(iroot)
      */
-    const AmiVector &getStateEvent(int ie) const {
-        return x_events.at(ie);
+    const AmiVector &getStateEvent(int iroot) const {
+        return x_events.at(iroot);
     }
     
     /**
-     * @brief Accessor for sx_timepoints
-     * @param it timepoint index
-     * @return sx_timepoints.at(it)
+     * @brief Accessor for sx_events
+     * @param iroot timepoint index
+     * @return sx_events.at(iroot)
      */
-    const AmiVectorArray &getStateSensitivityEvent(int ie) const {
-        return sx_events.at(ie);
+    const AmiVectorArray &getStateSensitivityEvent(int iroot) const {
+        return sx_events.at(iroot);
     }
     
-    /**
-     * @brief Compute updates for backwards (ajoint) problem
-     * @return &sdx
-     */
-    void getAdjointUpdates();
-
     /** pointer to model instance */
     Model *model;
 
@@ -265,13 +259,6 @@ class ForwardProblem {
      * @brief Extract output information for events
      */
     void getEventOutput();
-
-    /**
-     * @brief Extracts event information for forward sensitivity analysis
-     *
-     * @param ie index of event type
-     */
-    void getEventSensisFSA(int ie);
 
     /**
      * @brief Execute everything necessary for the handling of data points

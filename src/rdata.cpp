@@ -35,9 +35,8 @@ ReturnData::ReturnData(
       nztrue(nztrue), ne(ne), nJ(nJ),
       nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
       newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
-      o2mode(o2mode), sensi(sensi),
-      sensi_meth(sensi_meth),
-      x_rdata(nx), sx_rdata(nx,nplist)
+      o2mode(o2mode), sensi(sensi), sensi_meth(sensi_meth),
+      x_rdata(nx), sx_rdata(nx,nplist), nroots(ne)
     {
     xdot.resize(nx_solver, getNaN());
 
@@ -116,7 +115,7 @@ void ReturnData::processPreequilibration(SteadystateProblem const *preeq,
     x_ss = x_rdata.getVector();
     if (sensi >= SensitivityOrder::first) {
         model->fsx_rdata(sx_rdata, preeq->getStateSensitivity());
-        for (int ip = 0; ip < model->nplist(); ip++)
+        for (int ip = 0; ip < nplist; ip++)
             std::copy_n(sx_rdata.data(ip), nx,
                         &sx_ss.at(ip * nx));
     }
@@ -130,21 +129,30 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
     
     model->fx_rdata(x_rdata, fwd.getInitialState());
     x0 = x_rdata.getVector();
+    
     if (sensi_meth == SensitivityMethod::forward &&
         sensi >= SensitivityOrder::first) {
         model->fsx_rdata(sx_rdata, fwd.getInitialStateSensitivity());
         for (int ix = 0; ix < nx; ix++) {
-            for (int ip = 0; ip < model->nplist(); ip++)
+            for (int ip = 0; ip < nplist; ip++)
                 sx0[ip * nx + ix] = sx_rdata.at(ix,ip);
         }
     }
+    
     for (int it=0; it<nt; it++) {
         auto x = fwd.getStateTimePoint(it);
         auto t = model->getTimepoint(it);
         model->fx_rdata(x_rdata, x);
         std::copy_n(x_rdata.data(), nx, &this->x.at(it * nx));
-        model->getExpression(slice(w, it, model->nw), t, x);
+        model->getExpression(slice(w, it, nw), t, x);
         getDataOutput(it, fwd, model, edata);
+    }
+    
+    if (nz == 0)
+        return;
+    
+    for (int iroot=0; iroot < fwd.getRootCounter() - 1; iroot++) {
+        getEventOutput(iroot, fwd, model, edata);
     }
 }
 
@@ -197,6 +205,84 @@ void ReturnData::getDataSensisFSA(int it,
                                                  it, x, sx, *edata);
         fsres(it, *edata);
         fFIM(it);
+    }
+}
+
+void ReturnData::getEventOutput(int iroot,
+                                ForwardProblem const &fwd,
+                                Model *model,
+                                ExpData const *edata) {
+    
+    auto t = fwd.getDiscontinuities().at(iroot);
+    auto x = fwd.getStateEvent(iroot);
+    
+    auto rootidx = fwd.getRootIndexes();
+    for(int ie = 0; ie < ne; ie++) {
+        if(rootidx[iroot * ne + ie] != 1 && t != model->getTimepoint(nt - 1))
+            continue;
+        
+        if(nroots.at(ie) >= nmaxevent)
+            continue;
+        
+    
+        /* get event output */
+        model->getEvent(slice(z, nroots.at(ie), nz), ie, t, x);
+        /* if called from fillEvent at last timepoint,
+         then also get the root function value */
+        if (t == model->getTimepoint(nt - 1))
+            model->getEventRegularization(slice(rz, nroots.at(ie), nz),
+                                          ie, t, x);
+
+        if (edata) {
+            model->getEventSigma(slice(sigmaz, nroots.at(ie), nz),
+                                 ie, nroots.at(ie), t, edata);
+            model->addEventObjective(llh, ie, nroots.at(ie), t, x, *edata);
+
+            /* if called from fillEvent at last timepoint,
+               add regularization based on rz */
+            if (t == model->getTimepoint(nt - 1))
+                model->addEventObjectiveRegularization(llh, ie, nroots.at(ie),
+                                                       t, x, *edata);
+        }
+
+        if (sensi >= SensitivityOrder::first) {
+            if (sensi_meth == SensitivityMethod::forward) {
+                getEventSensisFSA(iroot, ie, fwd, model, edata);
+            } else {
+                if (edata)
+                    model->addPartialEventObjectiveSensitivity(sllh, s2llh,
+                                                               ie, nroots.at(ie),
+                                                               t, x, *edata);
+            }
+        }
+        nroots.at(ie)++;
+    }
+}
+
+void ReturnData::getEventSensisFSA(int iroot, int ie,
+                                   ForwardProblem const &fwd,
+                                   Model *model, ExpData const *edata) {
+    
+    auto t = fwd.getDiscontinuities().at(iroot);
+    auto x = fwd.getStateEvent(iroot);
+    auto sx = fwd.getStateSensitivityEvent(iroot);
+    
+    if (t == model->getTimepoint(nt - 1)) {
+        // call from fillEvent at last timepoint
+        model->getUnobservedEventSensitivity(slice(sz, nroots.at(ie),
+                                                   nz * nplist),
+                                             ie);
+        model->getEventRegularizationSensitivity(slice(srz, nroots.at(ie),
+                                                       nz * nplist),
+                                                 ie, t, x, sx);
+    } else {
+        model->getEventSensitivity(slice(sz, nroots.at(ie), nz * nplist),
+                                   ie, t, x, sx);
+    }
+
+    if (edata) {
+        model->addEventObjectiveSensitivity(sllh, s2llh, ie, nroots.at(ie), t,
+                                            x, sx, *edata);
     }
 }
 
