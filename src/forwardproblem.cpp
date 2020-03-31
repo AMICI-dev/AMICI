@@ -106,7 +106,7 @@ void ForwardProblem::workForwardProblem() {
     }
 
     /* fill events */
-    if (model->nz > 0 & model->nt() > 0) {
+    if (model->nz > 0 && model->nt() > 0) {
         fillEvents(model->nMaxEvent());
     }
 
