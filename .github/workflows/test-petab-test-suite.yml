@@ -47,7 +47,7 @@ jobs:
       run: |
         AMICI_PARALLEL_COMPILE=2 check_time.sh \
             install_sdist pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
+            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb]
 
     - name: Run PEtab-related unit tests
       run: |
