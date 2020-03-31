@@ -34,11 +34,12 @@ help(modelName)
     redirected (doing nothing if not redirected).
 """
 
+import importlib
 import os
 import re
 import sys
 from contextlib import suppress
-
+from types import ModuleType
 
 def _get_amici_path():
     """
@@ -264,3 +265,41 @@ def writeSolverSettingsToHDF5(
     else:
         amici.writeSolverSettingsToHDF5(solver, file, location)
 
+
+class add_path:
+    """Context manager for temporarily changing PYTHONPATH"""
+    def __init__(self, path: str):
+        self.path: str = path
+
+    def __enter__(self):
+        if self.path:
+            sys.path.insert(0, self.path)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            sys.path.remove(self.path)
+        except ValueError:
+            pass
+
+
+def import_model_module(module_name: str,
+                        module_path: Optional[str] = None) -> ModuleType:
+    """
+    Import Python module of an AMICI model
+
+    :param module_name: Name of the python module for the model
+    :param module_path: Absolute path of the module
+    :return: The model module
+    """
+
+    # ensure we will find the newly created module
+    importlib.invalidate_caches()
+
+    # module already loaded?
+    if module_name in sys.modules:
+        # reload, because may just have been created
+        importlib.reload(sys.modules[module_name])
+        return sys.modules[module_name]
+
+    with add_path(module_path):
+        return importlib.import_module(module_name)
