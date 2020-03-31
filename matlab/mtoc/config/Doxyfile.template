@@ -697,7 +697,8 @@ EXCLUDE_PATTERNS       = "_SourceDir_/models/*" \
                          "_SourceDir_/matlab/mtoc/*" \
                          "_SourceDir_/matlab/auxiliary/*" \
                          "_SourceDir_/matlab/SBMLImporter/*" \
-                         "_SourceDir_/python/test/*" \
+                         "_SourceDir_/matlab/tests/*" \
+                         "_SourceDir_/python/tests/*" \
                          "_SourceDir_/python/sdist/*" \
                          "_SourceDir_/python/examples/example_*/model_*" \
                          "_SourceDir_/build/*" \
