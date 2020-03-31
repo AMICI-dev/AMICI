@@ -76,10 +76,10 @@ def model_steadystate_module():
     return model_module
 
 
-def test_presimulation(sbml_model_presimulation_module):
+def test_presimulation(sbml_example_presimulation_module):
     """Test 'presimulation' test model"""
 
-    model = sbml_model_presimulation_module.getModel()
+    model = sbml_example_presimulation_module.getModel()
     solver = model.getSolver()
     solver.setNewtonMaxSteps(0)
     model.setTimepoints(np.linspace(0, 60, 61))

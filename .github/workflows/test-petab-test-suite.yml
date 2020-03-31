@@ -51,7 +51,7 @@ jobs:
 
     - name: Run PEtab-related unit tests
       run: |
-        pytest --cov-report=xml --cov=./ tests/testMisc.py
+        pytest --cov-report=xml --cov=./ python/tests/test_*petab*.py
 
     # retrieve test models
     - name: Download and run petab test suite

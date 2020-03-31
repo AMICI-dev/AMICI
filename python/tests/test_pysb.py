@@ -1,6 +1,5 @@
 "PYSB model tests"
 
-import copy
 import importlib
 import logging
 import os
@@ -15,39 +14,11 @@ from amici.pysb_import import pysb2amici
 from pysb.simulator import ScipyOdeSimulator
 
 
-@pytest.fixture
-def pysb_example_presimulation():
-    """PySB example_presimulation model module fixture"""
-    constant_parameters = ['DRUG_0', 'KIN_0']
-
-    pysb.SelfExporter.cleanup()  # reset pysb
-    pysb.SelfExporter.do_export = True
-
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
-                                    'examples',
-                                    'example_presimulation'))
-    if 'createModelPresimulation' in sys.modules:
-        importlib.reload(sys.modules['createModelPresimulation'])
-        model_module = sys.modules['createModelPresimulation']
-    else:
-        model_module = importlib.import_module('createModelPresimulation')
-    model = copy.deepcopy(model_module.model)
-    model.name = 'test_model_presimulation_pysb'
-    outdir_pysb = model.name
-    pysb2amici(model, outdir_pysb, verbose=False,
-               observables=['pPROT_obs'],
-               constant_parameters=constant_parameters)
-    sys.path.insert(0, outdir_pysb)
-    modelModulePYSB = importlib.import_module(outdir_pysb)
-
-    return modelModulePYSB
-
-
-def test_compare_to_sbml_import(pysb_example_presimulation,
-                                sbml_model_presimulation_module):
+def test_compare_to_sbml_import(pysb_example_presimulation_module,
+                                sbml_example_presimulation_module):
     # -------------- PYSB -----------------
 
-    model_pysb = pysb_example_presimulation.getModel()
+    model_pysb = pysb_example_presimulation_module.getModel()
 
     edata = get_data(model_pysb)
 
@@ -55,7 +26,7 @@ def test_compare_to_sbml_import(pysb_example_presimulation,
 
     # -------------- SBML -----------------
 
-    modelModuleSBML = sbml_model_presimulation_module
+    modelModuleSBML = sbml_example_presimulation_module
     model_sbml = modelModuleSBML.getModel()
 
     rdata_sbml = get_results(model_sbml, edata)

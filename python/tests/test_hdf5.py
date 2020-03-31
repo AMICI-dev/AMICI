@@ -27,9 +27,10 @@ def _modify_solver_attrs(solver):
         getattr(solver, attr)(cval)
 
 
-def test_solver_hdf5_roundtrip(sbml_model_presimulation_module):
+def test_solver_hdf5_roundtrip(sbml_example_presimulation_module):
     """TestCase class for AMICI HDF5 I/O"""
-    model = sbml_model_presimulation_module.getModel()
+
+    model = sbml_example_presimulation_module.getModel()
     solver = model.getSolver()
     _modify_solver_attrs(solver)
 

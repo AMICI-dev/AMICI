@@ -20,11 +20,11 @@ cases = [{
 
 
 @pytest.mark.parametrize('case', cases)
-def test_pandas_import_export(sbml_model_presimulation_module, case):
+def test_pandas_import_export(sbml_example_presimulation_module, case):
     """TestCase class for testing csv import using pandas"""
 
     # setup
-    model = sbml_model_presimulation_module.getModel()
+    model = sbml_example_presimulation_module.getModel()
     model.setTimepoints(np.linspace(0, 60, 61))
     solver = model.getSolver()
     rdata = amici.runAmiciSimulation(model, solver)
