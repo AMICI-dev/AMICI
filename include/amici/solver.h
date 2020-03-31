@@ -699,6 +699,22 @@ class Solver {
      * @return xQB.getLength()
      */
     int nquad() const;
+    
+    /**
+     * @brief check if FSA is being computed
+     */
+    bool computingFSA() const {
+        return getSensitivityOrder() >= SensitivityOrder::first &&
+        getSensitivityMethod() == SensitivityMethod::forward;
+    }
+    
+    /**
+     * @brief check if ASA is being computed
+     */
+    bool computingASA() const {
+        return getSensitivityOrder() >= SensitivityOrder::first &&
+        getSensitivityMethod() == SensitivityMethod::adjoint;
+    }
 
     /**
      * @brief Serialize Solver (see boost::serialization::serialize)

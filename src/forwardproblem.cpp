@@ -142,12 +142,6 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     rvaltmp = rootvals;
 
     if (!seflag) {
-        /* only extract in the first event fired */
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() == SensitivityMethod::forward) {
-            sx.copy(solver->getStateSensitivity(t));
-        }
-
         /* only check this in the first event fired, otherwise this will always
          * be true */
         if (t == *tlastroot) {
@@ -165,39 +159,36 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
      * x and the old xdot */
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
         /* store x and xdot to compute jump in sensitivities */
-        x_old = solver->getState(t);
-        if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
-            model->fxdot(t, x, dx, xdot);
-            xdot_old = xdot;
-            dx_old = dx;
-
-            /* compute event-time derivative only for primary events, we get
-             * into trouble with multiple simultaneously firing events here (but
-             * is this really well defined then?), in that case just use the
-             * last ie and hope for the best. */
-            if (!seflag) {
-                for (int ie = 0; ie < model->ne; ie++) {
-                    if (rootsfound.at(ie) == 1) {
-                        /* only consider transitions false -> true */
-                        model->getEventTimeSensitivity(stau, t, ie, x, sx);
-                    }
+        x_old.copy(x);
+    }
+    if (solver->computingFSA()) {
+        model->fxdot(t, x, dx, xdot);
+        xdot_old = xdot;
+        dx_old = dx;
+        /* compute event-time derivative only for primary events, we get
+         * into trouble with multiple simultaneously firing events here (but
+         * is this really well defined then?), in that case just use the
+         * last ie and hope for the best. */
+        if (!seflag) {
+            for (int ie = 0; ie < model->ne; ie++) {
+                if (rootsfound.at(ie) == 1) {
+                    /* only consider transitions false -> true */
+                    model->getEventTimeSensitivity(stau, t, ie, x, sx);
                 }
             }
-        } else if (solver->getSensitivityMethod() ==
-                   SensitivityMethod::adjoint) {
-            /* store x to compute jump in discontinuity */
-            x_disc.push_back(x);
-            xdot_disc.push_back(xdot);
-            xdot_old_disc.push_back(xdot_old);
         }
+    } else if (solver->computingASA()) {
+        /* store x to compute jump in discontinuity */
+        x_disc.push_back(x);
+        xdot_disc.push_back(xdot);
+        xdot_old_disc.push_back(xdot_old);
     }
 
     model->updateHeaviside(rootsfound);
 
     applyEventBolus();
 
-    if (solver->getSensitivityOrder() >= SensitivityOrder::first
-            && solver->getSensitivityMethod() == SensitivityMethod::forward) {
+    if (solver->computingFSA()) {
         /* compute the new xdot  */
         model->fxdot(t, x, dx, xdot);
         applyEventSensiBolusFSA();
@@ -234,11 +225,8 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     /* only reinitialise in the first event fired */
     if (!seflag) {
         solver->reInit(t, x, dx);
-
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
-            if (solver->getSensitivityMethod() == SensitivityMethod::forward) {
-                solver->sensReInit(sx, sdx);
-            }
+        if (solver->computingFSA()) {
+            solver->sensReInit(sx, sdx);
         }
     }
 }
@@ -270,14 +258,14 @@ void ForwardProblem::storeEvent() {
     if (getRootCounter() < x_events.size()) {
         /* update stored state (sensi) */
         x_events.at(getRootCounter()) = x;
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() == SensitivityMethod::forward)
+        h_events.at(getRootCounter()) = model->getHeavyside();
+        if (solver->computingFSA())
             sx_events.at(getRootCounter()) = sx;
     } else {
         /* add stored state (sensi) */
         x_events.push_back(x);
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() == SensitivityMethod::forward)
+        h_events.push_back(model->getHeavyside());
+        if (solver->computingFSA())
             sx_events.push_back(sx);
     }
 
@@ -293,8 +281,7 @@ void ForwardProblem::storeEvent() {
             continue;
         }
         
-        if (edata && solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() == SensitivityMethod::adjoint)
+        if (edata && solver->computingASA())
             model->getAdjointStateEventUpdate(slice(dJzdx, nroots.at(ie),
                                                     model->nx_solver * model->nJ),
                                               ie, nroots.at(ie), t, x, *edata);
@@ -312,14 +299,12 @@ void ForwardProblem::storeEvent() {
 void ForwardProblem::handleDataPoint(int it) {
     
     x_timepoints.push_back(x);
-    
-    if (solver->getSensitivityMethod() == SensitivityMethod::forward &&
-        solver->getSensitivityOrder() >= SensitivityOrder::first) {
+    h_timepoints.push_back(model->getHeavyside());
+    if (solver->computingFSA()) {
         sx_timepoints.push_back(sx);
     }
     
-    if (edata && solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() == SensitivityMethod::adjoint) {
+    if (edata && solver->computingASA()) {
         model->getAdjointStateObservableUpdate(
             slice(dJydx, it, model->nx_solver * model->nJ), it, x, *edata
         );

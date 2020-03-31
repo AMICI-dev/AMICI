@@ -200,6 +200,15 @@ class ForwardProblem {
     }
     
     /**
+     * @brief Accessor for h_timepoints
+     * @param it timepoint index
+     * @return h_timepoints.at(it)
+     */
+    const std::vector<realtype> &getHeavisideTimePoint(int it) const {
+        return h_timepoints.at(it);
+    }
+    
+    /**
      * @brief Accessor for sx_timepoints
      * @param it timepoint index
      * @return sx_timepoints.at(it)
@@ -215,6 +224,15 @@ class ForwardProblem {
      */
     const AmiVector &getStateEvent(int iroot) const {
         return x_events.at(iroot);
+    }
+    
+    /**
+     * @brief Accessor for h_events
+     * @param iroot timepoint index
+     * @return h_events.at(iroot)
+     */
+    const std::vector<realtype> &getHeavisideEvent(int iroot) const {
+        return h_events.at(iroot);
     }
     
     /**
@@ -367,11 +385,17 @@ class ForwardProblem {
     /** state sensitivity vector history at timepoints */
     std::vector<AmiVectorArray> sx_timepoints;
     
+    /** heaviside history at timepoints  */
+    std::vector<std::vector<realtype>> h_timepoints;
+    
     /** state vector history at events*/
     std::vector<AmiVector> x_events;
     
     /** state sensitivity vector history at events*/
     std::vector<AmiVectorArray> sx_events;
+    
+    /** heaviside history at events  */
+    std::vector<std::vector<realtype>> h_events;
     
     /** initial state */
     AmiVector x0;

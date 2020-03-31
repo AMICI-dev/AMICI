@@ -1087,6 +1087,15 @@ void Model::updateHeavisideB(const int *rootsfound) {
     }
 }
 
+std::vector<realtype> const& Model::getHeavyside() const {
+    return h;
+}
+
+void Model::setHeavyside(const std::vector<realtype> h){
+    this->h = h;
+}
+
+
 int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
     auto result = app->checkFinite(array, fun);
 

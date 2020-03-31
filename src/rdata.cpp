@@ -124,6 +124,7 @@ void ReturnData::processPreequilibration(SteadystateProblem const *preeq,
 void ReturnData::processForwardProblem(ForwardProblem const &fwd,
                                        Model *model,
                                        ExpData const *edata){
+    auto original_h = model->getHeavyside();
     if(edata)
         initializeObjectiveFunction();
     
@@ -154,6 +155,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
     for (int iroot=0; iroot < fwd.getRootCounter() + 1; iroot++) {
         getEventOutput(iroot, fwd, model, edata);
     }
+    model->setHeavyside(original_h);
 }
 
 void ReturnData::getDataOutput(int it,
@@ -161,6 +163,8 @@ void ReturnData::getDataOutput(int it,
                                Model *model,
                                ExpData const *edata) {
     auto x = fwd.getStateTimePoint(it);
+    model->setHeavyside(fwd.getHeavisideTimePoint(it));
+    
     model->getObservable(slice(y, it, ny), ts[it], x);
     model->getObservableSigma(slice(sigmay, it, ny), it, edata);
     if (edata) {
@@ -215,6 +219,7 @@ void ReturnData::getEventOutput(int iroot,
     
     auto t = fwd.getDiscontinuities().at(iroot);
     auto x = fwd.getStateEvent(iroot);
+    model->setHeavyside(fwd.getHeavisideEvent(iroot));
     
     auto rootidx = fwd.getRootIndexes();
     for(int ie = 0; ie < ne; ie++) {

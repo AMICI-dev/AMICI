@@ -1024,6 +1024,17 @@ class Model : public AbstractModel {
      * was found)
      */
     void updateHeavisideB(const int *rootsfound);
+    
+    /**
+     * @brief Returns the heaviside variables h
+     */
+    std::vector<realtype> const& getHeavyside() const;
+    
+    /**
+     * @brief Sets the heaviside variables h
+     * @param h new heaviside variables
+     */
+    void setHeavyside(const std::vector<realtype> h);
 
     /**
      * @brief Check if the given array has only finite elements. If not try to
