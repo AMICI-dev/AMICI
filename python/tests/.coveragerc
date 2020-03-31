@@ -1,0 +1,17 @@
+[run]
+
+source= amici
+omit =
+    */amici.py
+    */amici_without_hdf5.py
+    */ThirdParty/*
+    *.template.*
+
+[report]
+
+exclude_lines =
+    pragma: no cover
+    raise
+    except:
+    import
+

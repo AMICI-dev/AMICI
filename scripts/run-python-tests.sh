@@ -10,9 +10,9 @@ if [[ -z "${BNGPATH}" ]]; then
     export BNGPATH=${amici_path}/ThirdParty/BioNetGen-2.3.2
 fi
 
-cd "${amici_path}"/tests
+cd "${amici_path}"/python/tests
 source "${amici_path}"/build/venv/bin/activate
-pip install scipy h5py pytest
+pip install scipy h5py pytest pytest-cov
 
 # PEtab tests are run separately
 pytest --ignore-glob=*petab*
