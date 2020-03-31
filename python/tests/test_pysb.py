@@ -1,247 +1,199 @@
-#!/usr/bin/env python3
+"PYSB model tests"
 
-import sys
-import amici
-import unittest
+import copy
+import importlib
+import logging
 import os
 import platform
-import importlib
-import copy
+import sys
+
+import amici
 import numpy as np
-import logging
+import pysb.examples
+import pytest
+from amici.pysb_import import pysb2amici
 from pysb.simulator import ScipyOdeSimulator
 
-from amici.pysb_import import pysb2amici
 
-import pysb.examples
+@pytest.fixture
+def pysb_example_presimulation():
+    """PySB example_presimulation model module fixture"""
+    constant_parameters = ['DRUG_0', 'KIN_0']
 
-class TestAmiciPYSBModel(unittest.TestCase):
-    '''
-    TestCase class for testing SBML import and simulation from AMICI python
-    interface
-    '''
+    pysb.SelfExporter.cleanup()  # reset pysb
+    pysb.SelfExporter.do_export = True
 
-    expectedResultsFile = os.path.join(os.path.dirname(__file__),
-                                       'cpputest', 'expectedResults.h5')
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
+                                    'examples',
+                                    'example_presimulation'))
+    if 'createModelPresimulation' in sys.modules:
+        importlib.reload(sys.modules['createModelPresimulation'])
+        model_module = sys.modules['createModelPresimulation']
+    else:
+        model_module = importlib.import_module('createModelPresimulation')
+    model = copy.deepcopy(model_module.model)
+    model.name = 'test_model_presimulation_pysb'
+    outdir_pysb = model.name
+    pysb2amici(model, outdir_pysb, verbose=False,
+               observables=['pPROT_obs'],
+               constant_parameters=constant_parameters)
+    sys.path.insert(0, outdir_pysb)
+    modelModulePYSB = importlib.import_module(outdir_pysb)
 
-    def setUp(self):
-        self.default_path = copy.copy(sys.path)
-        self.resetdir = os.getcwd()
+    return modelModulePYSB
 
-        if os.path.dirname(__file__) != '':
-            os.chdir(os.path.dirname(__file__))
 
-    def tearDown(self):
-        os.chdir(self.resetdir)
-        sys.path = self.default_path
+def test_compare_to_sbml_import(pysb_example_presimulation,
+                                sbml_model_presimulation_module):
+    # -------------- PYSB -----------------
 
-    def runTest(self):
-        self.test_compare_to_sbml_import()
-        self.test_compare_to_pysb_simulation()
+    model_pysb = pysb_example_presimulation.getModel()
 
-    def test_compare_to_sbml_import(self):
-        constant_parameters = ['DRUG_0', 'KIN_0']
+    edata = get_data(model_pysb)
 
-        # -------------- PYSB -----------------
+    rdata_pysb = get_results(model_pysb, edata)
 
-        pysb.SelfExporter.cleanup()  # reset pysb
-        pysb.SelfExporter.do_export = True
+    # -------------- SBML -----------------
 
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
-                                        'python', 'examples',
-                                        'example_presimulation'))
-        if 'createModelPresimulation' in sys.modules:
-            importlib.reload(sys.modules['createModelPresimulation'])
-            model_module = sys.modules['createModelPresimulation']
+    modelModuleSBML = sbml_model_presimulation_module
+    model_sbml = modelModuleSBML.getModel()
+
+    rdata_sbml = get_results(model_sbml, edata)
+
+    # check if preequilibration fixed parameters are correctly applied:
+    for rdata, model, importer in zip([rdata_sbml, rdata_pysb],
+                                      [model_sbml, model_pysb],
+                                      ['sbml', 'pysb']):
+        # check equilibrium fixed parameters
+        assert np.isclose(
+            [
+                sum(rdata["x_ss"][[1, 3]]),
+                sum(rdata["x_ss"][[2, 4]])
+            ],
+            edata.fixedParametersPreequilibration,
+            atol=1e-6, rtol=1e-6
+        ).all(), f'{importer} preequilibration'
+
+        # check equilibrium initial parameters
+        assert np.isclose(
+            sum(rdata["x_ss"][[0, 3, 4, 5]]),
+            model.getParameterByName('PROT_0'),
+            atol=1e-6, rtol=1e-6
+        ), f'{importer} preequilibration'
+
+        # check reinitialization with fixed parameter after
+        # presimulation
+        assert np.isclose(
+            [rdata["x0"][1], rdata["x0"][2]],
+            edata.fixedParameters,
+            atol=1e-6, rtol=1e-6
+        ).all(), f'{importer} presimulation'
+
+    skip_attrs = ['ptr', 't_steadystate', 'numsteps', 'newton_numsteps',
+                  'numrhsevals', 'numerrtestfails', 'order', 'J', 'xdot',
+                  'wrms_steadystate', 'newton_cpu_time', 'cpu_time',
+                  'cpu_timeB', 'w']
+
+    for field in rdata_pysb:
+        if field in skip_attrs:
+            continue
+
+        if rdata_pysb[field] is None:
+            assert rdata_sbml[field] is None, field
+        elif rdata_sbml[field] is None:
+            assert rdata_pysb[field] is None, field
         else:
-            model_module = importlib.import_module('createModelPresimulation')
-        model = copy.deepcopy(model_module.model)
-        model.name = 'test_model_presimulation_pysb'
-        outdir_pysb = model.name
-        pysb2amici(model, outdir_pysb, verbose=False,
-                   observables=['pPROT_obs'],
-                   constant_parameters=constant_parameters)
-        sys.path.insert(0, outdir_pysb)
-        modelModulePYSB = importlib.import_module(outdir_pysb)
-        model_pysb = modelModulePYSB.getModel()
+            assert np.isclose(
+                rdata_sbml[field], rdata_pysb[field],
+                atol=1e-6, rtol=1e-6
+            ).all(), field
 
-        edata = get_data(model_pysb)
 
-        rdata_pysb = get_results(model_pysb, edata)
+pysb_models = [
+    'tyson_oscillator', 'robertson', 'expression_observables',
+    'bax_pore_sequential', 'bax_pore', 'bngwiki_egfr_simple',
+    'bngwiki_enzymatic_cycle_mm', 'bngwiki_simple', 'earm_1_0',
+    'earm_1_3', 'move_connected', 'michment', 'kinase_cascade',
+    'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
+    'fixed_initial',
+]
+custom_models = [
+    'bngwiki_egfr_simple_deletemolecules',
+]
 
-        # -------------- SBML -----------------
 
-        sbmlFile = os.path.join(os.path.dirname(__file__), '..', 'python',
-                                'examples', 'example_presimulation',
-                                'model_presimulation.xml')
+@pytest.mark.parametrize('example', pysb_models + custom_models)
+def test_compare_to_pysb_simulation(example):
+    atol = 1e-8
+    rtol = 1e-8
 
-        sbmlImporter = amici.SbmlImporter(sbmlFile)
+    with amici.add_path(os.path.dirname(pysb.examples.__file__)):
+        with amici.add_path(os.path.join(os.path.dirname(__file__), '..',
+                                         'tests', 'pysb_test_models')):
 
-        observables = amici.assignmentRules2observables(
-            sbmlImporter.sbml,  # the libsbml model object
-            filter_function=lambda variable: variable.getName() == 'pPROT_obs'
-        )
-        outdir_sbml = 'test_model_presimulation_sbml'
-        sbmlImporter.sbml2amici('test_model_presimulation_sbml',
-                                outdir_sbml,
-                                verbose=False,
-                                observables=observables,
-                                constantParameters=constant_parameters)
-        sys.path.insert(0, outdir_sbml)
-        modelModuleSBML = importlib.import_module(outdir_sbml)
-        model_sbml = modelModuleSBML.getModel()
+            if example == 'earm_1_3' \
+                    and platform.sys.version_info[0] == 3 \
+                    and platform.sys.version_info[1] < 7:
+                return
 
-        rdata_sbml = get_results(model_sbml, edata)
+            # load example
 
-        # check if preequilibration fixed parameters are correctly applied:
-        for rdata, model, importer in zip([rdata_sbml, rdata_pysb],
-                                          [model_sbml, model_pysb],
-                                          ['sbml', 'pysb']):
-            # check equilibrium fixed parameters
-            with self.subTest(fixed_pars='preequilibration',
-                              importer=importer):
-                self.assertTrue(np.isclose(
-                    [
-                        sum(rdata["x_ss"][[1, 3]]),
-                        sum(rdata["x_ss"][[2, 4]])
-                    ],
-                    edata.fixedParametersPreequilibration,
-                    atol=1e-6, rtol=1e-6
-                ).all())
-                # check equilibrium initial parameters
-                self.assertTrue(np.isclose(
-                    sum(rdata["x_ss"][[0, 3, 4, 5]]),
-                    model.getParameterByName('PROT_0'),
-                    atol=1e-6, rtol=1e-6
-                ))
-            with self.subTest(fixed_pars='presimulation',
-                              importer=importer):
-                # check reinitialization with fixed parameter after
-                # presimulation
-                self.assertTrue(np.isclose(
-                    [rdata["x0"][1], rdata["x0"][2]],
-                    edata.fixedParameters,
-                    atol=1e-6, rtol=1e-6
-                ).all())
+            pysb.SelfExporter.cleanup()  # reset pysb
+            pysb.SelfExporter.do_export = True
 
-        for field in rdata_pysb:
-            if field not in ['ptr', 't_steadystate', 'numsteps',
-                             'newton_numsteps', 'numrhsevals',
-                             'numerrtestfails', 'order', 'J', 'xdot',
-                             'wrms_steadystate', 'newton_cpu_time',
-                             'cpu_time', 'cpu_timeB', 'w']:
-                with self.subTest(field=field):
-                    if rdata_pysb[field] is None:
-                        self.assertIsNone(
-                            rdata_sbml[field],
-                        )
-                    elif rdata_sbml[field] is None:
-                        self.assertIsNone(
-                            rdata_pysb[field],
-                        )
-                    else:
-                        self.assertTrue(np.isclose(
-                            rdata_sbml[field],
-                            rdata_pysb[field],
-                            atol=1e-6, rtol=1e-6
-                        ).all())
+            module = importlib.import_module(example)
+            pysb_model = module.model
+            pysb_model.name = pysb_model.name.replace('pysb.examples.', '')
+            # avoid naming clash for custom pysb models
+            pysb_model.name += '_amici'
 
-    def test_compare_to_pysb_simulation(self):
+            # pysb part
 
-        sys.path.insert(0, os.path.dirname(pysb.examples.__file__))
+            tspan = np.linspace(0, 100, 101)
+            sim = ScipyOdeSimulator(
+                pysb_model,
+                tspan=tspan,
+                integrator_options={'rtol': rtol, 'atol': atol},
+                compiler='python'
+            )
+            pysb_simres = sim.run()
 
-        pysb_models = [
-            'tyson_oscillator', 'robertson', 'expression_observables',
-            'bax_pore_sequential', 'bax_pore', 'bngwiki_egfr_simple',
-            'bngwiki_enzymatic_cycle_mm', 'bngwiki_simple', 'earm_1_0',
-            'earm_1_3', 'move_connected', 'michment', 'kinase_cascade',
-            'hello_pysb', 'fricker_2010_apoptosis', 'explicit',
-            'fixed_initial',
-        ]
+            # amici part
 
-        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
-                                        'tests', 'pysb_test_models'))
+            outdir = pysb_model.name
 
-        custom_models = [
-            'bngwiki_egfr_simple_deletemolecules',
-        ]
+            if pysb_model.name in ['move_connected_amici']:
+                with pytest.raises(Exception):
+                    pysb2amici(pysb_model, outdir, verbose=logging.INFO,
+                               compute_conservation_laws=True)
+                compute_conservation_laws = False
+            else:
+                compute_conservation_laws = True
 
-        atol = 1e-8
-        rtol = 1e-8
+            pysb2amici(
+                pysb_model,
+                outdir,
+                verbose=logging.INFO,
+                compute_conservation_laws=compute_conservation_laws
+            )
+            sys.path.insert(0, outdir)
 
-        for example in pysb_models + custom_models:
-            with self.subTest(example=example):
+            amici_model_module = importlib.import_module(pysb_model.name)
 
-                if example == 'earm_1_3' \
-                        and platform.sys.version_info[0] == 3 \
-                        and platform.sys.version_info[1] < 7:
-                    continue
+            model_pysb = amici_model_module.getModel()
 
-                # load example
+            model_pysb.setTimepoints(tspan)
 
-                pysb.SelfExporter.cleanup()  # reset pysb
-                pysb.SelfExporter.do_export = True
+            solver = model_pysb.getSolver()
+            solver.setMaxSteps(int(1e5))
+            solver.setAbsoluteTolerance(atol)
+            solver.setRelativeTolerance(rtol)
+            rdata = amici.runAmiciSimulation(model_pysb, solver)
 
-                module = importlib.import_module(example)
-                pysb_model = module.model
-                pysb_model.name = pysb_model.name.replace('pysb.examples.', '')
-                # avoid naming clash for custom pysb models
-                pysb_model.name += '_amici'
+            # check agreement of species simulation
 
-                # pysb part
-
-                tspan = np.linspace(0, 100, 101)
-                sim = ScipyOdeSimulator(
-                    pysb_model,
-                    tspan=tspan,
-                    integrator_options={'rtol': rtol, 'atol': atol},
-                    compiler='python'
-                )
-                pysb_simres = sim.run()
-
-                # amici part
-
-                outdir = pysb_model.name
-
-                if pysb_model.name in ['move_connected_amici']:
-                    self.assertRaises(
-                        Exception,
-                        pysb2amici,
-                        *[pysb_model, outdir],
-                        **{'verbose': logging.INFO,
-                           'compute_conservation_laws': True}
-                    )
-                    compute_conservation_laws = False
-                else:
-                    compute_conservation_laws = True
-
-                pysb2amici(
-                    pysb_model,
-                    outdir,
-                    verbose=logging.INFO,
-                    compute_conservation_laws=compute_conservation_laws
-                )
-                sys.path.insert(0, outdir)
-
-                amici_model_module = importlib.import_module(pysb_model.name)
-
-                model_pysb = amici_model_module.getModel()
-
-                model_pysb.setTimepoints(tspan)
-
-                solver = model_pysb.getSolver()
-                solver.setMaxSteps(int(1e5))
-                solver.setAbsoluteTolerance(atol)
-                solver.setRelativeTolerance(rtol)
-                rdata = amici.runAmiciSimulation(model_pysb, solver)
-
-                # check agreement of species simulation
-
-                self.assertTrue(np.isclose(
-                    rdata['x'],
-                    pysb_simres.species,
-                    1e-4, 1e-4
-                ).all())
+            assert np.isclose(rdata['x'],
+                              pysb_simres.species, 1e-4, 1e-4).all()
 
 
 def get_data(model):
@@ -270,9 +222,3 @@ def get_results(model, edata):
         amici.SteadyStateSensitivityMode_simulationFSA
     )
     return amici.runAmiciSimulation(model, solver, edata)
-
-
-if __name__ == '__main__':
-    suite = unittest.TestSuite()
-    suite.addTest(TestAmiciPYSBModel())
-    unittest.main()

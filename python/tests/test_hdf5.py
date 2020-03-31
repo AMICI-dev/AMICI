@@ -1,102 +1,61 @@
-#!/usr/bin/env python3
-
 """AMICI HDF5 I/O tests"""
 
-import amici
-import sys
-import copy
 import os
-import unittest
-import importlib
 import random
 
-class TestAmiciHDF5(unittest.TestCase):
+import amici
+import pytest
+
+
+def _modify_solver_attrs(solver):
+    # change to non-default values
+    for attr in dir(solver):
+        if not attr.startswith('set'):
+            continue
+
+        val = getattr(solver, attr.replace('set', 'get'))()
+
+        if isinstance(val, bool):
+            cval = not val
+        elif attr == 'setStabilityLimitFlag':
+            cval = 0
+        elif isinstance(val, int):
+            cval = val + 1
+        else:
+            cval = val + random.random()
+
+        getattr(solver, attr)(cval)
+
+
+def test_solver_hdf5_roundtrip(sbml_model_presimulation_module):
     """TestCase class for AMICI HDF5 I/O"""
+    model = sbml_model_presimulation_module.getModel()
+    solver = model.getSolver()
+    _modify_solver_attrs(solver)
 
-    def setUp(self):
-        self.default_path = copy.copy(sys.path)
-        self.resetdir = os.getcwd()
+    hdf5file = 'solverSettings.hdf5'
 
-        sbml_file = os.path.join(os.path.dirname(__file__), '..', 'python',
-                                 'examples', 'example_presimulation',
-                                 'model_presimulation.xml')
+    amici.writeSolverSettingsToHDF5(solver, hdf5file, 'ssettings')
 
-        sbml_importer = amici.SbmlImporter(sbml_file)
+    new_solver = model.getSolver()
 
-        constant_parameters = ['DRUG_0', 'KIN_0']
+    # check that we changed everything
+    for attr in dir(solver):
+        if not attr.startswith('set'):
+            continue
 
-        outdir = 'test_model_presimulation'
-        sbml_importer.sbml2amici('test_model_presimulation',
-                                 outdir,
-                                 verbose=False,
-                                 constant_parameters=constant_parameters)
-        sys.path.insert(0, outdir)
-        model_module = importlib.import_module('test_model_presimulation')
-        self.model = model_module.getModel()
+        assert getattr(solver, attr.replace('set', 'get'))() \
+            != getattr(new_solver, attr.replace('set', 'get'))(), attr
 
-    def tearDown(self):
-        os.chdir(self.resetdir)
-        sys.path = self.default_path
+    amici.readSolverSettingsFromHDF5(hdf5file, new_solver, 'ssettings')
 
-    def test_solver_hdf5_roundtrip(self):
-        solver = self.model.getSolver()
+    # check that reading in settings worked
+    for attr in dir(solver):
+        if not attr.startswith('set'):
+            continue
 
-        # change to non-default values
-        for attr in dir(solver):
-            if not attr.startswith('set'):
-                continue
+        assert getattr(solver, attr.replace('set', 'get'))() \
+            == pytest.approx(
+                getattr(new_solver, attr.replace('set', 'get'))()), attr
 
-            val = getattr(solver, attr.replace('set', 'get'))()
-
-            if isinstance(val, bool):
-                cval = not val
-            elif attr == 'setStabilityLimitFlag':
-                cval = 0
-            elif isinstance(val, int):
-                cval = val + 1
-            else:
-                cval = val + random.random()
-
-            getattr(solver, attr)(
-                cval
-            )
-
-        hdf5file = 'solverSettings.hdf5'
-
-        amici.writeSolverSettingsToHDF5(solver, hdf5file,
-                                        'ssettings')
-
-        new_solver = self.model.getSolver()
-
-        # check that we changed everything
-        for attr in dir(solver):
-            if not attr.startswith('set'):
-                continue
-
-            with self.subTest(function=attr.replace('set', ''), mode='change'):
-                self.assertNotEqual(
-                    getattr(solver, attr.replace('set', 'get'))(),
-                    getattr(new_solver, attr.replace('set', 'get'))()
-                )
-
-        amici.readSolverSettingsFromHDF5(hdf5file, new_solver,
-                                         'ssettings')
-
-        # check that reading in settings worked
-        for attr in dir(solver):
-            if not attr.startswith('set'):
-                continue
-
-            with self.subTest(function=attr.replace('set', ''), mode='load'):
-                self.assertAlmostEqual(
-                    getattr(solver, attr.replace('set', 'get'))(),
-                    getattr(new_solver, attr.replace('set', 'get'))()
-                )
-
-        os.remove(hdf5file)
-
-
-if __name__ == '__main__':
-    suite = unittest.TestSuite()
-    suite.addTest(TestAmiciHDF5())
-    unittest.main()
+    os.remove(hdf5file)
