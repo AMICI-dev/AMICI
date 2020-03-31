@@ -4,6 +4,7 @@ import importlib
 import logging
 import os
 import platform
+import shutil
 import sys
 
 import amici
@@ -98,6 +99,7 @@ def test_compare_to_pysb_simulation(example):
     atol = 1e-8
     rtol = 1e-8
 
+
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(os.path.join(os.path.dirname(__file__), '..',
                                          'tests', 'pysb_test_models')):
@@ -165,6 +167,8 @@ def test_compare_to_pysb_simulation(example):
 
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
+
+            shutil.rmtree(outdir, ignore_errors=True)
 
 
 def get_data(model):

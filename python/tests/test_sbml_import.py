@@ -1,6 +1,7 @@
 """Tests related to amici.sbml_import"""
 
 import os
+import shutil
 from tempfile import TemporaryDirectory
 
 import amici
@@ -73,7 +74,9 @@ def model_steadystate_module():
 
     model_module = amici.import_model_module(module_name=module_name,
                                              module_path=outdir)
-    return model_module
+    yield model_module
+
+    shutil.rmtree(outdir, ignore_errors=True)
 
 
 def test_presimulation(sbml_example_presimulation_module):
@@ -155,8 +158,8 @@ def test_steadystate_simulation(model_steadystate_module):
     _test_set_parameters_by_dict(model_steadystate_module)
 
 
-def test_likelihoods():
-    """Test the custom noise distributions used to define cost functions."""
+@pytest.fixture
+def model_test_likelihoods():
 
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                             'examples', 'example_steadystate',
@@ -200,10 +203,16 @@ def test_likelihoods():
         noise_distributions=noise_distributions
     )
 
-    model_module = amici.import_model_module(module_name=module_name,
-                                             module_path=outdir)
+    yield amici.import_model_module(module_name=module_name,
+                                    module_path=outdir)
 
-    model = model_module.getModel()
+    shutil.rmtree(outdir, ignore_errors=True)
+
+
+def test_likelihoods(model_test_likelihoods):
+    """Test the custom noise distributions used to define cost functions."""
+
+    model = model_test_likelihoods.getModel()
     model.setTimepoints(np.linspace(0, 60, 60))
     solver = model.getSolver()
     solver.setSensitivityOrder(amici.SensitivityOrder_first)
@@ -256,4 +265,3 @@ def _test_set_parameters_by_dict(model_module):
     assert model.getParameterByName(change_par_name) == new_par_val
     model.setParameterByName(change_par_name, old_par_val)
     assert model.getParameters() == old_parameter_values
-

@@ -1,6 +1,8 @@
+"""pytest configuration file"""
 import copy
 import importlib
 import os
+import shutil
 import sys
 
 import amici
@@ -37,7 +39,9 @@ def sbml_example_presimulation_module():
 
     model_module = amici.import_model_module(module_name=module_name,
                                              module_path=outdir)
-    return model_module
+    yield model_module
+
+    shutil.rmtree(outdir, ignore_errors=True)
 
 
 @pytest.fixture(scope="session")
@@ -61,12 +65,14 @@ def pysb_example_presimulation_module():
     model = copy.deepcopy(model_module.model)
 
     model.name = 'test_model_presimulation_pysb'
-    outdir_pysb = model.name
-    pysb2amici(model, outdir_pysb, verbose=False,
+    outdir = model.name
+    pysb2amici(model, outdir, verbose=False,
                observables=['pPROT_obs'],
                constant_parameters=constant_parameters)
 
-    with amici.add_path(outdir_pysb):
-        model_module_pysb = importlib.import_module(outdir_pysb)
+    with amici.add_path(outdir):
+        model_module_pysb = importlib.import_module(outdir)
 
-    return model_module_pysb
+    yield model_module_pysb
+
+    shutil.rmtree(outdir, ignore_errors=True)
