@@ -19,5 +19,3 @@ pytest \
 
 ret=$?
 if [[ $ret != 0 ]]; then exit $ret; fi
-
-rm -rf ./test_model_steadystate_scaled
