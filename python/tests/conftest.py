@@ -4,14 +4,15 @@ import os
 import sys
 
 import amici
-import pysb
 import pytest
 from amici.pysb_import import pysb2amici
+
+pysb = pytest.importorskip("pysb")
 
 
 @pytest.fixture(scope="session")
 def sbml_example_presimulation_module():
-    """Fixture for model_presimulation import"""
+    """SBML example_presimulation model module fixture"""
 
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                              'examples', 'example_presimulation',
@@ -48,21 +49,24 @@ def pysb_example_presimulation_module():
     pysb.SelfExporter.cleanup()  # reset pysb
     pysb.SelfExporter.do_export = True
 
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..',
-                                    'examples',
-                                    'example_presimulation'))
-    if 'createModelPresimulation' in sys.modules:
-        importlib.reload(sys.modules['createModelPresimulation'])
-        model_module = sys.modules['createModelPresimulation']
-    else:
-        model_module = importlib.import_module('createModelPresimulation')
+    model_path = os.path.join(os.path.dirname(__file__), '..',
+                              'examples', 'example_presimulation')
+
+    with amici.add_path(model_path):
+        if 'createModelPresimulation' in sys.modules:
+            importlib.reload(sys.modules['createModelPresimulation'])
+            model_module = sys.modules['createModelPresimulation']
+        else:
+            model_module = importlib.import_module('createModelPresimulation')
     model = copy.deepcopy(model_module.model)
+
     model.name = 'test_model_presimulation_pysb'
     outdir_pysb = model.name
     pysb2amici(model, outdir_pysb, verbose=False,
                observables=['pPROT_obs'],
                constant_parameters=constant_parameters)
-    sys.path.insert(0, outdir_pysb)
-    model_module_pysb = importlib.import_module(outdir_pysb)
+
+    with amici.add_path(outdir_pysb):
+        model_module_pysb = importlib.import_module(outdir_pysb)
 
     return model_module_pysb
