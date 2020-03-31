@@ -13,7 +13,8 @@ fi
 
 pytest \
   --ignore-glob=*petab* \
-  --cov-report=xml:coverage_py.xml \
+  --cov=amici \
+  --cov-report=xml:"${amici_path}"/coverage_py.xml \
   --cov-append \
   "${amici_path}"/python/tests
 

@@ -1,6 +1,6 @@
 [run]
 
-source= amici
+source = amici
 omit =
     */amici.py
     */amici_without_hdf5.py
