@@ -6,6 +6,7 @@ omit =
     */amici_without_hdf5.py
     */ThirdParty/*
     *.template.*
+parallel = true
 
 [report]
 
