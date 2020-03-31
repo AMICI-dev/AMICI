@@ -187,14 +187,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.what(),
                  ex.getBacktrace());
     }
-    
-    if(edata){
-        rdata->initializeObjectiveFunction();
-    }
-    
 
     rdata->applyChainRuleFactorToSimulationResults(&model);
-
     return rdata;
 }
 
