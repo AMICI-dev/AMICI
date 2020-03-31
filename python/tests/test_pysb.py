@@ -1,4 +1,4 @@
-"PYSB model tests"
+"""PYSB model tests"""
 
 import importlib
 import logging
@@ -27,8 +27,7 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
 
     # -------------- SBML -----------------
 
-    modelModuleSBML = sbml_example_presimulation_module
-    model_sbml = modelModuleSBML.getModel()
+    model_sbml = sbml_example_presimulation_module.getModel()
 
     rdata_sbml = get_results(model_sbml, edata)
 
@@ -98,7 +97,6 @@ custom_models = [
 def test_compare_to_pysb_simulation(example):
     atol = 1e-8
     rtol = 1e-8
-
 
     with amici.add_path(os.path.dirname(pysb.examples.__file__)):
         with amici.add_path(os.path.join(os.path.dirname(__file__), '..',

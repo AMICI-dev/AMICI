@@ -136,7 +136,7 @@ def test_steadystate_simulation(model_steadystate_module):
                == list(edata_reconstructed[0].fixedParameters)
 
     assert list(edata[0].fixedParametersPreequilibration) == \
-           list(edata_reconstructed[0].fixedParametersPreequilibration)
+        list(edata_reconstructed[0].fixedParametersPreequilibration)
 
     df_state = amici.getSimulationStatesAsDataFrame(model, edata, rdata)
     assert np.isclose(rdata[0]['x'],
@@ -152,7 +152,6 @@ def test_steadystate_simulation(model_steadystate_module):
     check_derivatives(model, solver, edata[0], assert_fun, atol=1e-3,
                       rtol=1e-3, epsilon=1e-4)
 
-
     # Run some additional tests which need a working Model,
     # but don't need precomputed expectations.
     _test_set_parameters_by_dict(model_steadystate_module)
@@ -162,8 +161,8 @@ def test_steadystate_simulation(model_steadystate_module):
 def model_test_likelihoods():
 
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
-                            'examples', 'example_steadystate',
-                            'model_steadystate_scaled.xml')
+                             'examples', 'example_steadystate',
+                             'model_steadystate_scaled.xml')
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     observables = amici.assignmentRules2observables(
@@ -199,7 +198,7 @@ def model_test_likelihoods():
         observables=observables,
         constant_parameters=['k0'],
         sigmas={'observable_x1withsigma':
-                    'observable_x1withsigma_sigma'},
+                'observable_x1withsigma_sigma'},
         noise_distributions=noise_distributions
     )
 

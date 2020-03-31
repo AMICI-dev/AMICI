@@ -46,7 +46,7 @@ def test_csc_matrix_vector():
     # Test continuation of numbering of symbols
     symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix \
         = amici.ode_export.csc_matrix(matrix[:, 1], 'a',
-                                    base_index=len(symbol_list))
+                                      base_index=len(symbol_list))
 
     assert symbol_col_ptrs == [0, 1]
     assert symbol_row_vals == [1]

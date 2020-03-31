@@ -63,7 +63,8 @@ def preeq_fixture(pysb_example_presimulation_module):
         [1, 2, 3, 4, 5], [1, 1, 1],
     ]
 
-    return model, solver, edata, edata_preeq, edata_presim, edata_sim, pscales, plists
+    return (model, solver, edata, edata_preeq,
+            edata_presim, edata_sim, pscales, plists)
 
 
 def test_manual_preequilibration(preeq_fixture):
