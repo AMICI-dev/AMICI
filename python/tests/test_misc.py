@@ -1,5 +1,7 @@
 """Miscellaneous AMICI Python interface tests"""
 
+import os
+import subprocess
 from tempfile import TemporaryDirectory
 
 import amici
@@ -68,3 +70,13 @@ def test_hill_function_dwdx():
         res = dwdx.subs({'x1': 0.0})
     _ = str(res)
 
+
+def test_cmake_compilation(sbml_example_presimulation_module):
+    """Check that CMake build succeeds for one of the models generated during
+    Python tests"""
+
+    source_dir = os.path.dirname(sbml_example_presimulation_module.__path__[0])
+
+    cmd = f"set -e; cd {source_dir}; mkdir -p build; cd build; "\
+          "cmake ..; make"
+    subprocess.run(cmd, shell=True, capture_output=True, check=True)
