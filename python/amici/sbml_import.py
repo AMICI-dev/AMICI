@@ -344,10 +344,21 @@ class SbmlImporter:
         if len(self.sbml.getListOfEvents()) > 0:
             raise SBMLException('Events are currently not supported!')
 
-        if any([not(rule.isAssignment())
+        # Contains condition to allow compartment rate rules
+        if any([not(rule.isAssignment()) and
+                not(rule.getVariable() in list(map(
+                    lambda x: x.getId(), self.sbml.getListOfCompartments())))
                 for rule in self.sbml.getListOfRules()]):
             raise SBMLException('Algebraic and rate '
-                                'rules are currently not supported!')
+                                'rules are currently not supported, '
+                                'except compartment rate rules!')
+
+        if any([not(rule.isAssignment() or rule.isRate()) and
+                (rule.getVariable() in list(map(
+                    lambda x: x.getId(), self.sbml.getListOfCompartments())))
+                for rule in self.sbml.getListOfRules()]):
+            raise SBMLException('Only assignment and rate rules are currently '
+                                'supported for compartments!')
 
         if any([reaction.getFast()
                 for reaction in self.sbml.getListOfReactions()]):
@@ -590,6 +601,8 @@ class SbmlImporter:
                     locals=self.local_symbols
                 )
 
+        self.compartment_rules = {}
+
     @log_execution_time('processing SBML reactions', logger)
     def _process_reactions(self):
         """
@@ -750,8 +763,20 @@ class SbmlImporter:
                                     ' not supported!')
 
             if variable in compartmentvars:
-                raise SBMLException('Compartment assignment rules are'
-                                    ' currently not supported!')
+                if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+                    self.compartment_rules[variable] = {
+                            'type_code': sbml.SBML_ASSIGNMENT_RULE,
+                            'formula': formula
+                        }
+                elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
+                    self.compartment_rules[variable] = {
+                            'type_code': sbml.SBML_RATE_RULE,
+                            'formula': formula,
+                            'v0': self.compartment_volume[list(self.compartment_symbols).index(variable)]
+                        }
+                else:
+                    raise KeyError('Only assignment and rate rules are '
+                                   'currently supported for compartments!')
 
             if variable in parametervars:
                 if str(variable) in self.parameter_index:
@@ -817,6 +842,7 @@ class SbmlImporter:
         """
         sbml_time_symbol = sp.Symbol('time', real=True)
         amici_time_symbol = sp.Symbol('t', real=True)
+        self.amici_time_symbol = amici_time_symbol
 
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
 
@@ -1016,6 +1042,14 @@ class SbmlImporter:
             if symbol in self.symbols:
                 self.symbols[symbol]['value'] = \
                     self.symbols[symbol]['value'].subs(old, new)
+        if 'compartment_rules' in dir(self):
+            for compartment, rule in self.compartment_rules.items():
+                self.compartment_rules[compartment]['formula'] = \
+                    self.compartment_rules[compartment]['formula'].subs(old, new)
+                if rule['type_code'] == sbml.SBML_RATE_RULE:
+                    self.compartment_rules[compartment]['v0'] = \
+                        self.compartment_rules[compartment]['v0'].subs(old, new)
+
 
     def _clean_reserved_symbols(self) -> None:
         """

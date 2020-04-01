@@ -29,6 +29,8 @@ from string import Template
 import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
+from sympy import Add, Function, Derivative, solve, dsolve
+import libsbml
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
@@ -843,9 +845,79 @@ class ODEModel:
              for idx in range(len(si.flux_vector))]
         )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometric_matrix.shape[0])
+
+        def constant_of_integration(df_dt, f0):
+            '''
+            Calculates the constant of integration from an ODE IVP of the form
+            f'(t) = df_dt, f(0) = f0.
+
+            :param df_dt:
+                The right-hand side of an ODE, after the derivative term has
+                been made the subject of the equation on the left-hand side.
+
+            :param f0:
+                The value of the function at time = 0.
+            '''
+            f = Function('f')
+            t = sp.Symbol('t')
+            f0 = 1
+            ode_solve = dsolve(Derivative(f(t), t) - df_dt, f(t))
+            ivp_solve = dsolve(
+                Derivative(f(t), t) - df_dt, f(t), ics={f(0): f0})
+            solve(ode_solve.rewrite(Add) - ivp_solve.rewrite(Add))
+            # The constant of integration may not be found if there are
+            # additional free symbols.
+            constant = solve(ode_solve.rewrite(Add) - ivp_solve.rewrite(Add),
+                             ode_solve.free_symbols - ivp_solve.free_symbols)
+            if len(constant) != 1:
+                raise KeyError('Failed to find the constant of integration.')
+            return constant[0]
+
+        def dx_dt(x_index, x_Sw):
+            '''
+            Produces the appropriate expression for the first derivative of a
+            species with respect to time, for species that reside in
+            compartments with a constant volume, or a volume that is defined by
+            an assignment or rate rule.
+
+            :param x_index:
+                The index (not identifier) of the species in the variables
+                (generated in "sbml_import.py") that describe the model.
+
+            :param x_Sw:
+                The element-wise product of the row in the stoichiometric
+                matrix that corresponds to the species (row x_index) and the
+                flux (kinetic laws) vector.
+            '''
+            x_id = symbols['species']['identifier'][x_index]
+            v_name = si.species_compartment[x_index]
+            if v_name in si.compartment_rules:
+                if (si.compartment_rules[v_name]['type_code']
+                        == libsbml.SBML_ASSIGNMENT_RULE):
+                    v = si.compartment_rules[v_name]['formula']
+                    dv_dt = v.diff(si.amici_time_symbol)
+                    dv_dx = v.diff(x_id)
+                    return (x_Sw - dv_dt*x_id)/(dv_dx*x_id + v)
+                elif (si.compartment_rules[v_name]['type_code']
+                          == libsbml.SBML_RATE_RULE):
+                    dv_dt = si.compartment_rules[v_name]['formula']
+                    v = (dv_dt.integrate(si.amici_time_symbol)
+                        + constant_of_integration(dv_dt,
+                                        si.compartment_rules[v_name]['v0']))
+                    return (x_Sw - dv_dt*x_id)/v
+                else:
+                    raise TypeError(f'A compartment rule for "{v_name}" '
+                                    'exists that is neither an assignment nor '
+                                    'rate rule.')
+            else:
+                return x_Sw
+
         if len(si.stoichiometric_matrix):
-            symbols['species']['dt'] = \
-                si.stoichiometric_matrix * self.sym('w')
+            Sw = (MutableDenseMatrix(si.stoichiometric_matrix)
+                  * MutableDenseMatrix(self.sym('w')))
+            symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
+                lambda x_Sw: dx_dt(x_index, x_Sw))
+                for x_index in range(Sw.rows)])
         else:
             symbols['species']['dt'] = sp.zeros(
                 *symbols['species']['identifier'].shape
