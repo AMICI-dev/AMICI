@@ -8,7 +8,6 @@
 
 namespace amici {
 
-class ReturnData;
 class ExpData;
 class Solver;
 class Model;
@@ -116,7 +115,6 @@ class BackwardProblem {
     realtype getTnext(int it);
 
     Model *model;
-    ReturnData *rdata;
     Solver *solver;
 
     /** current time */

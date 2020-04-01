@@ -4,7 +4,6 @@
 #include "amici/solver.h"
 #include "amici/exception.h"
 #include "amici/edata.h"
-#include "amici/rdata.h"
 #include "amici/forwardproblem.h"
 #include "amici/steadystateproblem.h"
 #include "amici/misc.h"
@@ -16,7 +15,6 @@ namespace amici {
 BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                                  const SteadystateProblem *posteq):
     model(fwd.model),
-    rdata(fwd.rdata),
     solver(fwd.solver),
     t(fwd.getTime()),
     xB(fwd.model->nx_solver),
@@ -74,7 +72,6 @@ void BackwardProblem::workBackwardProblem() {
         if (tnext < t) {
             solver->runB(tnext);
             solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
-            solver->getDiagnosisB(it, rdata, this->which);
         }
 
         /* handle discontinuity */
@@ -98,10 +95,7 @@ void BackwardProblem::workBackwardProblem() {
         /* solve for backward problems */
         solver->runB(model->t0());
         solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
-        solver->getDiagnosisB(0, rdata, this->which);
     }
-
-    rdata->cpu_timeB = solver->getCpuTimeB();
 }
 
 
@@ -147,8 +141,9 @@ void BackwardProblem::handleEventB() {
     model->updateHeavisideB(rootidx.data());
 }
 
-
 void BackwardProblem::handleDataPointB(const int it) {
+    solver->storeDiagnosisB(this->which);
+    
     for (int ix = 0; ix < model->nxtrue_solver; ix++) {
         for (int iJ = 0; iJ < model->nJ; iJ++)
             // we only need the 1:nxtrue_solver (not the nx_true) slice here!

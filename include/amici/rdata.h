@@ -108,10 +108,26 @@ class ReturnData {
      * @param fwd forward problem
      * @param bwd backward problem
      * @param model model that was used for forward/backward simulation
-    */
+     */
     void processBackwardProblem(ForwardProblem const &fwd,
                                 BackwardProblem const &bwd,
                                 Model *model);
+    
+    /**
+     * @brief extracts results from solver
+     * @param solver solverl that was used for forward/backward simulation
+     */
+    void processSolver(Solver const &solver);
+    
+    /**
+     * @brief Evaluates the Jacobian and differential equation right hand side,
+     * stores it in RetunData
+     * @param solver solverl that was used for forward/backward simulation
+     * @param model model that was used for forward/backward simulation
+     */
+    void storeJacobianAndDerivativeInReturnData(Solver const &solver,
+                                                Model *model);
+    
     
     /**
      * @brief applies the chain rule to account for parameter transformation in

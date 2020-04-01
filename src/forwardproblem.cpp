@@ -6,7 +6,6 @@
 #include "amici/solver.h"
 #include "amici/exception.h"
 #include "amici/edata.h"
-#include "amici/rdata.h"
 #include "amici/steadystateproblem.h"
 
 #include <algorithm>
@@ -15,11 +14,9 @@
 
 namespace amici {
 
-ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
-                               Model *model, Solver *solver,
-                               const SteadystateProblem *preeq)
+ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
+                               Solver *solver, const SteadystateProblem *preeq)
     : model(model),
-      rdata(rdata),
       solver(solver),
       edata(edata),
       nroots(static_cast<decltype (nroots)::size_type>(model->ne), 0),
@@ -29,8 +26,6 @@ ForwardProblem::ForwardProblem(ReturnData *rdata, const ExpData *edata,
       dJzdx(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
       t(model->t0()),
       rootsfound(model->ne, 0),
-      Jtmp(SUNMatrixWrapper(model->nx_solver,model->nx_solver)),
-      
       x0(model->nx_solver),
       sx0(model->nx_solver,model->nplist()),
       x(model->nx_solver),
@@ -109,9 +104,6 @@ void ForwardProblem::workForwardProblem() {
     if (model->nz > 0 && model->nt() > 0) {
         fillEvents(model->nMaxEvent());
     }
-
-    storeJacobianAndDerivativeInReturnData();
-    rdata->cpu_time = solver->getCpuTime();
 }
 
 void ForwardProblem::handlePresimulation()
@@ -231,20 +223,6 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
 }
 
-void ForwardProblem::storeJacobianAndDerivativeInReturnData() {
-    model->fxdot(t, x, dx, xdot);
-    rdata->xdot = xdot.getVector();
-
-    model->fJ(t, 0.0, x, dx, xdot, Jtmp.get());
-    // CVODES uses colmajor, so we need to transform to rowmajor
-    for (int ix = 0; ix < model->nx_solver; ix++) {
-        for (int jx = 0; jx < model->nx_solver; jx++) {
-            rdata->J[ix * model->nx_solver + jx] =
-                Jtmp.data()[ix + model->nx_solver * jx];
-        }
-    }
-}
-
 void ForwardProblem::storeEvent() {
     if (t == model->getTimepoint(model->nt() - 1)) {
         // call from fillEvent at last timepoint
@@ -300,6 +278,8 @@ void ForwardProblem::handleDataPoint(int it) {
     
     x_timepoints.push_back(x);
     h_timepoints.push_back(model->getHeavyside());
+    solver->storeDiagnosis();
+    
     if (solver->computingFSA()) {
         sx_timepoints.push_back(sx);
     }
@@ -308,10 +288,6 @@ void ForwardProblem::handleDataPoint(int it) {
         model->getAdjointStateObservableUpdate(
             slice(dJydx, it, model->nx_solver * model->nJ), it, x, *edata
         );
-    }
-    
-    if (model->getTimepoint(it) > model->t0()) {
-        solver->getDiagnosis(it, rdata);
     }
 }
 

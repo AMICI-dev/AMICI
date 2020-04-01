@@ -164,43 +164,44 @@ void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
     }
 }
 
-void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
-    long int number;
+void Solver::storeDiagnosis() {
+    if (!solverWasCalledF || !solverMemory)
+        return;
 
-    if (solverWasCalledF && solverMemory) {
-        getNumSteps(solverMemory.get(), &number);
-        rdata->numsteps[it] = number;
+    long int lnumber;
+    getNumSteps(solverMemory.get(), &lnumber);
+    ns.push_back(static_cast<int>(lnumber));
+    
+    getNumRhsEvals(solverMemory.get(), &lnumber);
+    nrhs.push_back(static_cast<int>(lnumber));
+    
+    getNumErrTestFails(solverMemory.get(), &lnumber);
+    netf.push_back(static_cast<int>(lnumber));
+    
+    getNumNonlinSolvConvFails(solverMemory.get(), &lnumber);
+    nnlscf.push_back(static_cast<int>(lnumber));
 
-        getNumRhsEvals(solverMemory.get(), &number);
-        rdata->numrhsevals[it] = number;
-
-        getNumErrTestFails(solverMemory.get(), &number);
-        rdata->numerrtestfails[it] = number;
-
-        getNumNonlinSolvConvFails(solverMemory.get(), &number);
-        rdata->numnonlinsolvconvfails[it] = number;
-
-        getLastOrder(solverMemory.get(), &rdata->order[it]);
-    }
+    int number;
+    getLastOrder(solverMemory.get(), &number);
+    order.push_back(number);
 }
 
-void Solver::getDiagnosisB(const int it, ReturnData *rdata,
-                           const int which) const {
+void Solver::storeDiagnosisB(const int which) {
+    if (!solverWasCalledB || !solverMemoryB.at(which))
+        return;
+    
     long int number;
+    getNumSteps(solverMemoryB.at(which).get(), &number);
+    nsB.push_back(static_cast<int>(number));
 
-    if (solverWasCalledB && solverMemoryB.at(which)) {
-        getNumSteps(solverMemoryB.at(which).get(), &number);
-        rdata->numstepsB[it] = number;
+    getNumRhsEvals(solverMemoryB.at(which).get(), &number);
+    nrhsB.push_back(static_cast<int>(number));
 
-        getNumRhsEvals(solverMemoryB.at(which).get(), &number);
-        rdata->numrhsevalsB[it] = number;
+    getNumErrTestFails(solverMemoryB.at(which).get(), &number);
+    netfB.push_back(static_cast<int>(number));
 
-        getNumErrTestFails(solverMemoryB.at(which).get(), &number);
-        rdata->numerrtestfailsB[it] = number;
-
-        getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
-        rdata->numnonlinsolvconvfailsB[it] = number;
-    }
+    getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
+    nnlscfB.push_back(static_cast<int>(number));
 }
 
 void Solver::initializeLinearSolver(const Model *model) const {

@@ -125,25 +125,6 @@ class Solver {
      * @param model pointer to the model instance
      */
     void updateAndReinitStatesAndSensitivities(Model *model);
-    
-    /**
-     * @brief Extracts diagnosis information from solver memory block and
-     * writes them into the return data object
-     *
-     * @param it time-point index
-     * @param rdata pointer to the return data object
-     */
-    void getDiagnosis(int it, ReturnData *rdata) const;
-
-    /**
-     * @brief Extracts diagnosis information from solver memory block and
-     * writes them into the return data object for the backward problem
-     *
-     * @param it time-point index
-     * @param rdata pointer to the return data object
-     * @param which identifier of the backwards problem
-     */
-    void getDiagnosisB(int it, ReturnData *rdata, int which) const;
 
     /**
      * getRootInfo extracts information which event occured
@@ -702,6 +683,7 @@ class Solver {
     
     /**
      * @brief check if FSA is being computed
+     * @return flag
      */
     bool computingFSA() const {
         return getSensitivityOrder() >= SensitivityOrder::first &&
@@ -710,10 +692,95 @@ class Solver {
     
     /**
      * @brief check if ASA is being computed
+     * @return flag
      */
     bool computingASA() const {
         return getSensitivityOrder() >= SensitivityOrder::first &&
         getSensitivityMethod() == SensitivityMethod::adjoint;
+    }
+    
+    /**
+     * @brief Stores diagnosis information from solver memory block for forward problem
+     */
+    void storeDiagnosis();
+
+    /**
+     * @brief Stores diagnosis information from solver memory block for backward problem
+     *
+     * @param which identifier of the backwards problem
+     */
+    void storeDiagnosisB(int which);
+    
+    /**
+     * @brief Accessor ns
+     * @return ns
+     */
+    std::vector<int> const& getNumSteps() const {
+        return ns;
+    }
+    
+    /**
+     * @brief Accessor nsB
+     * @return nsB
+     */
+    std::vector<int> const& getNumStepsB() const {
+        return nsB;
+    }
+    
+    /**
+     * @brief Accessor nrhs
+     * @return nrhs
+     */
+    std::vector<int> const& getNumRhsEvals() const {
+        return nrhs;
+    }
+    
+    /**
+     * @brief Accessor nrhsB
+     * @return nrhsB
+     */
+    std::vector<int> const& getNumRhsEvalsB() const {
+        return nrhsB;
+    }
+    
+    /**
+     * @brief Accessor netf
+     * @return netf
+     */
+    std::vector<int> const& getNumErrTestFails() const {
+        return netf;
+    }
+    
+    /**
+     * @brief Accessor netfB
+     * @return netfB
+     */
+    std::vector<int> const& getNumErrTestFailsB() const {
+        return netfB;
+    }
+    
+    /**
+     * @brief Accessor nnlscf
+     * @return nnlscf
+     */
+    std::vector<int> const& getNumNonlinSolvConvFails() const {
+        return nnlscf;
+    }
+    
+    /**
+     * @brief Accessor nnlscfB
+     * @return nnlscfB
+     */
+    std::vector<int> const& getNumNonlinSolvConvFailsB() const {
+        return nnlscfB;
+    }
+    
+    /**
+     * @brief Accessor order
+     * @return order
+     */
+    std::vector<int> const& getLastOrder() const {
+        return order;
     }
 
     /**
@@ -1516,6 +1583,37 @@ class Solver {
 
     /** number of checkpoints in the forward problem */
     mutable int ncheckPtr = 0;
+    
+    /** number of integration steps forward problem (dimension: nt) */
+    std::vector<int> ns;
+
+    /** number of integration steps backward problem (dimension: nt) */
+    std::vector<int> nsB;
+
+    /** number of right hand side evaluations forward problem (dimension: nt) */
+    std::vector<int> nrhs;
+
+    /** number of right hand side evaluations backwad problem (dimension: nt) */
+    std::vector<int> nrhsB;
+
+    /** number of error test failures forward problem (dimension: nt) */
+    std::vector<int> netf;
+
+    /** number of error test failures backwad problem (dimension: nt) */
+    std::vector<int> netfB;
+
+    /**
+     * number of linear solver convergence failures forward problem (dimension:
+     * nt) */
+    std::vector<int> nnlscf;
+
+    /**
+     * number of linear solver convergence failures backwad problem (dimension:
+     * nt) */
+    std::vector<int> nnlscfB;
+
+    /** employed order forward problem (dimension: nt) */
+    std::vector<int> order;
 };
 
 bool operator==(const Solver &a, const Solver &b);

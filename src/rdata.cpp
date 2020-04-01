@@ -330,6 +330,42 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     }
 }
 
+void ReturnData::processSolver(Solver const &solver) {
+    cpu_time = solver.getCpuTime();
+    numsteps = solver.getNumSteps();
+    numrhsevals = solver.getNumRhsEvals();
+    numerrtestfails = solver.getNumErrTestFails();
+    numnonlinsolvconvfails = solver.getNumNonlinSolvConvFails();
+    order = solver.getLastOrder();
+    
+    cpu_timeB = solver.getCpuTimeB();
+    numstepsB = solver.getNumStepsB();
+    numrhsevalsB = solver.getNumRhsEvalsB();
+    numerrtestfailsB = solver.getNumErrTestFailsB();
+    numnonlinsolvconvfailsB = solver.getNumNonlinSolvConvFailsB();
+}
+
+void ReturnData::storeJacobianAndDerivativeInReturnData(Solver const &solver,
+                                                        Model *model) {
+    auto t = solver.gett();
+    auto x = solver.getState(t);
+    auto dx = solver.getDerivativeState(t);
+    
+    AmiVector xdot(nx_solver);
+    model->fxdot(t, x, dx, xdot);
+    this->xdot = xdot.getVector();
+
+    SUNMatrixWrapper J(SUNMatrixWrapper(nx_solver, nx_solver));
+    model->fJ(t, 0.0, x, dx, xdot, J.get());
+    // CVODES uses colmajor, so we need to transform to rowmajor
+    for (int ix = 0; ix < model->nx_solver; ix++) {
+        for (int jx = 0; jx < model->nx_solver; jx++) {
+            this->J[ix * model->nx_solver + jx] =
+                J.data()[ix + model->nx_solver * jx];
+        }
+    }
+}
+
 void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     // chain-rule factor: multiplier for am_p
     std::vector<realtype> coefficient(nplist, 1.0);

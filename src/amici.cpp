@@ -139,12 +139,11 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             solver.updateAndReinitStatesAndSensitivities(&model);
         
         
-        fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(rdata.get(),
-                                                                 edata, &model,
+        fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(edata, &model,
                                                                  &solver,
                                                                  preeq.get()));
         fwd->workForwardProblem();
-        
+        rdata->storeJacobianAndDerivativeInReturnData(solver, &model);
         rdata->processForwardProblem(*fwd.get(), &model, edata);
         
         if (fwd->getCurrentTimeIteration() < model.nt()) {
@@ -165,6 +164,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
         rdata->status = AMICI_SUCCESS;
     } catch (amici::IntegrationFailure const& ex) {
+        rdata->storeJacobianAndDerivativeInReturnData(solver, &model);
         rdata->status = ex.error_code;
         if (rethrow)
             throw;

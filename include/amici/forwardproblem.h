@@ -11,7 +11,6 @@
 
 namespace amici {
 
-class ReturnData;
 class ExpData;
 class Solver;
 class Model;
@@ -25,15 +24,13 @@ class ForwardProblem {
   public:
     /**
      * @brief Constructor
-     * @param rdata pointer to ReturnData instance
      * @param edata pointer to ExpData instance
      * @param model pointer to Model instance
      * @param solver pointer to Solver instance
      * @param preeq preequilibration with which to initialize the forward problem,
      * pass nullptr for no initialization
      */
-    ForwardProblem(ReturnData *rdata, const ExpData *edata,
-                   Model *model, Solver *solver,
+    ForwardProblem(const ExpData *edata, Model *model, Solver *solver,
                    const SteadystateProblem *preeq);
 
     ~ForwardProblem() = default;
@@ -247,9 +244,6 @@ class ForwardProblem {
     /** pointer to model instance */
     Model *model;
 
-    /** pointer to return data instance */
-    ReturnData *rdata;
-
     /** pointer to solver instance */
     Solver *solver;
 
@@ -266,12 +260,6 @@ class ForwardProblem {
      */
 
     void handleEvent(realtype *tlastroot,bool seflag);
-
-    /**
-     * @brief Evaluates the Jacobian and differential equation right hand side,
-     * stores it in RetunData
-     */
-    void storeJacobianAndDerivativeInReturnData();
 
     /**
      * @brief Extract output information for events
@@ -374,10 +362,6 @@ class ForwardProblem {
      * to have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
      */
     std::vector<int> rootsfound;
-
-    /** temporary storage of Jacobian, kept here to avoid reallocation
-     * (dimension: nx x nx, col-major) */
-    SUNMatrixWrapper Jtmp;
 
     /** state vector history at timepoints  */
     std::vector<AmiVector> x_timepoints;
