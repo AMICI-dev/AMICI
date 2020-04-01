@@ -137,8 +137,13 @@ class SteadystateProblem {
          return dJydx;
      }
     
+    /**
+     * @brief computes adjoint updates dJydx according to provided model and expdata
+     * @param model Model instance
+     * @param edata experimental data
+     */
     void getAdjointUpdates(Model &model,
-                           const ExpData *edata);
+                           const ExpData &edata);
     
     
 

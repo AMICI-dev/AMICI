@@ -109,8 +109,7 @@ void ForwardProblem::workForwardProblem() {
 void ForwardProblem::handlePresimulation()
 {
     // Are there dedicated condition preequilibration parameters provided?
-    auto cond = ConditionContext(model, edata,
-                                 FixedParameterContext::presimulation);
+    ConditionContext cond(model, edata, FixedParameterContext::presimulation);
     solver->updateAndReinitStatesAndSensitivities(model);
 
     solver->run(model->t0());
@@ -283,12 +282,6 @@ void ForwardProblem::handleDataPoint(int it) {
     if (solver->computingFSA()) {
         sx_timepoints.push_back(sx);
     }
-    
-    if (edata && solver->computingASA()) {
-        model->getAdjointStateObservableUpdate(
-            slice(dJydx, it, model->nx_solver * model->nJ), it, x, *edata
-        );
-    }
 }
 
 void ForwardProblem::applyEventBolus() {
@@ -303,6 +296,18 @@ void ForwardProblem::applyEventSensiBolusFSA() {
             /*  */
             model->addStateSensitivityEventUpdate(sx, ie, t, x_old, xdot,
                                                   xdot_old, stau);
+}
+
+void ForwardProblem::getAdjointUpdates(Model &model,
+                                       const ExpData &edata) {
+    for (int it = 0; it < model.nt(); it++) {
+        if (std::isinf(model.getTimepoint(it)))
+            return;
+        model.getAdjointStateObservableUpdate(
+            slice(dJydx, it, model.nx_solver * model.nJ), it,
+            x_timepoints.at(it), edata
+        );
+    }
 }
 
 } // namespace amici

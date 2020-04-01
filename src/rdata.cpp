@@ -37,7 +37,8 @@ ReturnData::ReturnData(
       nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
       newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
       o2mode(o2mode), sensi(sensi), sensi_meth(sensi_meth),
-      x_rdata(nx), sx_rdata(nx,nplist), nroots(ne)
+      x_solver(nx_solver), sx_solver(nx_solver, nplist),
+      x_rdata(nx), sx_rdata(nx, nplist), nroots(ne)
     {
     xdot.resize(nx_solver, getNaN());
 
@@ -106,225 +107,224 @@ ReturnData::ReturnData(
 
 }
 
-void ReturnData::processPreequilibration(SteadystateProblem const *preeq,
-                                         Model *model) {
-    
-    if (!preeq)
-        return;
-    
-    model->fx_rdata(x_rdata, preeq->getState());
+void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
+                                         Model &model) {
+    model.fx_rdata(x_rdata, preeq.getState());
     x_ss = x_rdata.getVector();
     if (sensi >= SensitivityOrder::first) {
-        model->fsx_rdata(sx_rdata, preeq->getStateSensitivity());
+        model.fsx_rdata(sx_rdata, preeq.getStateSensitivity());
         for (int ip = 0; ip < nplist; ip++)
             std::copy_n(sx_rdata.data(ip), nx,
                         &sx_ss.at(ip * nx));
     }
 }
 
+void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
+                                          Model &model,
+                                          ExpData const *edata){
+    for (int it=0; it<nt; it++) {
+        auto t = model.getTimepoint(it);
+        if (std::isinf(t)) {
+            x_solver = posteq.getState();
+            if (computingFSA())
+                sx_solver = posteq.getStateSensitivity();
+            getDataOutput(it, model, edata);
+        }
+    }
+}
+
 void ReturnData::processForwardProblem(ForwardProblem const &fwd,
-                                       Model *model,
+                                       Model &model,
                                        ExpData const *edata){
-    auto original_h = model->getHeaviside();
+    auto original_h = model.getHeaviside();
     if(edata)
         initializeObjectiveFunction();
     
-    model->fx_rdata(x_rdata, fwd.getInitialState());
+    model.fx_rdata(x_rdata, fwd.getInitialState());
     x0 = x_rdata.getVector();
     
-    if (sensi_meth == SensitivityMethod::forward &&
-        sensi >= SensitivityOrder::first) {
-        model->fsx_rdata(sx_rdata, fwd.getInitialStateSensitivity());
+    if (computingFSA()) {
+        model.fsx_rdata(sx_rdata, fwd.getInitialStateSensitivity());
         for (int ix = 0; ix < nx; ix++) {
             for (int ip = 0; ip < nplist; ip++)
                 sx0[ip * nx + ix] = sx_rdata.at(ix,ip);
         }
     }
     
-    for (int it=0; it<nt; it++) {
-        auto x = fwd.getStateTimePoint(it);
-        auto t = model->getTimepoint(it);
-        model->fx_rdata(x_rdata, x);
-        std::copy_n(x_rdata.data(), nx, &this->x.at(it * nx));
-        model->getExpression(slice(w, it, nw), t, x);
-        getDataOutput(it, fwd, model, edata);
+    for (int it=0; it <= fwd.getTimePointCounter(); it++) {
+        x_solver = fwd.getStateTimePoint(it);
+        if (computingFSA())
+            sx_solver = fwd.getStateSensitivityTimePoint(it);
+        model.setHeaviside(fwd.getHeavisideTimePoint(it));
+        getDataOutput(it, model, edata);
     }
     
-    if (nz == 0)
-        return;
-    
-    for (int iroot=0; iroot < fwd.getRootCounter() + 1; iroot++) {
-        getEventOutput(iroot, fwd, model, edata);
+    if (nz > 0) {
+        auto rootidx = fwd.getRootIndexes();
+        for (int iroot=0; iroot <= fwd.getRootCounter(); iroot++) {
+            auto t = fwd.getDiscontinuities().at(iroot);
+            x_solver = fwd.getStateEvent(iroot);
+            if (computingFSA())
+                sx_solver = fwd.getStateSensitivityEvent(iroot);
+            model.setHeaviside(fwd.getHeavisideEvent(iroot));
+            getEventOutput(iroot, t, rootidx.at(iroot), model, edata);
+        }
+        model.setHeaviside(original_h);
     }
-    model->setHeaviside(original_h);
+    
+    storeJacobianAndDerivativeInReturnData(fwd, model);
 }
 
-void ReturnData::getDataOutput(int it,
-                               ForwardProblem const &fwd,
-                               Model *model,
-                               ExpData const *edata) {
-    auto x = fwd.getStateTimePoint(it);
-    model->setHeaviside(fwd.getHeavisideTimePoint(it));
+void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
+    model.fx_rdata(x_rdata, x_solver);
+    std::copy_n(x_rdata.data(), nx, &x.at(it * nx));
+    model.getExpression(slice(w, it, nw), ts[it], x_solver);
     
-    model->getObservable(slice(y, it, ny), ts[it], x);
-    model->getObservableSigma(slice(sigmay, it, ny), it, edata);
+    model.getObservable(slice(y, it, ny), ts[it], x_solver);
+    model.getObservableSigma(slice(sigmay, it, ny), it, edata);
     if (edata) {
-        model->addObservableObjective(llh, it, x, *edata);
+        model.addObservableObjective(llh, it, x_solver, *edata);
         fres(it, *edata);
         fchi2(it);
     }
 
     if (sensi >= SensitivityOrder::first && nplist > 0) {
 
-        model->getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
-                                             it, edata);
+        model.getObservableSigmaSensitivity(slice(ssigmay, it, nplist * ny),
+                                            it, edata);
 
         if (sensi_meth == SensitivityMethod::forward) {
-            getDataSensisFSA(it, fwd, model, edata);
+            getDataSensisFSA(it, model, edata);
         } else {
             if (edata) {
-                model->addPartialObservableObjectiveSensitivity(sllh, s2llh,
-                                                                it, x, *edata);
+                model.addPartialObservableObjectiveSensitivity(sllh, s2llh,
+                                                               it, x_solver,
+                                                               *edata);
             }
         }
     }
 }
 
-void ReturnData::getDataSensisFSA(int it,
-                                  ForwardProblem const &fwd,
-                                  Model *model,
-                                  ExpData const *edata) {
-    auto x = fwd.getStateTimePoint(it);
-    auto sx = fwd.getStateSensitivityTimePoint(it);
-    model->fsx_rdata(sx_rdata, sx);
+void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
+    model.fsx_rdata(sx_rdata, sx_solver);
     for (int ix = 0; ix < nx; ix++) {
         for (int ip = 0; ip < nplist; ip++) {
             this->sx[(it * nplist + ip) * nx + ix] = sx_rdata.at(ix, ip);
         }
     }
 
-    model->getObservableSensitivity(slice(sy, it, nplist * ny), ts[it], x, sx);
+    model.getObservableSensitivity(slice(sy, it, nplist * ny), ts[it],
+                                   x_solver, sx_solver);
 
     if (edata) {
-        model->addObservableObjectiveSensitivity(sllh, s2llh,
-                                                 it, x, sx, *edata);
+        model.addObservableObjectiveSensitivity(sllh, s2llh, it,
+                                                x_solver, sx_solver,
+                                                *edata);
         fsres(it, *edata);
         fFIM(it);
     }
 }
 
-void ReturnData::getEventOutput(int iroot,
-                                ForwardProblem const &fwd,
-                                Model *model,
-                                ExpData const *edata) {
+void ReturnData::getEventOutput(int iroot, realtype t, std::vector<int> rootidx,
+                                Model &model, ExpData const *edata) {
     
-    auto t = fwd.getDiscontinuities().at(iroot);
-    auto x = fwd.getStateEvent(iroot);
-    model->setHeaviside(fwd.getHeavisideEvent(iroot));
-    
-    auto rootidx = fwd.getRootIndexes();
     for(int ie = 0; ie < ne; ie++) {
-        if (rootidx.at(iroot).at(ie) != 1 || nroots.at(ie) >= nmaxevent)
+        if (rootidx.at(ie) != 1 || nroots.at(ie) >= nmaxevent)
             continue;
     
         /* get event output */
-        model->getEvent(slice(z, nroots.at(ie), nz), ie, t, x);
+        model.getEvent(slice(z, nroots.at(ie), nz), ie, t, x_solver);
         /* if called from fillEvent at last timepoint,
          then also get the root function value */
-        if (t == model->getTimepoint(nt - 1))
-            model->getEventRegularization(slice(rz, nroots.at(ie), nz),
-                                          ie, t, x);
+        if (t == model.getTimepoint(nt - 1))
+            model.getEventRegularization(slice(rz, nroots.at(ie), nz),
+                                        ie, t, x_solver);
 
         if (edata) {
-            model->getEventSigma(slice(sigmaz, nroots.at(ie), nz),
-                                 ie, nroots.at(ie), t, edata);
-            model->addEventObjective(llh, ie, nroots.at(ie), t, x, *edata);
+            model.getEventSigma(slice(sigmaz, nroots.at(ie), nz),
+                                ie, nroots.at(ie), t, edata);
+            model.addEventObjective(llh, ie, nroots.at(ie), t,
+                                    x_solver, *edata);
 
             /* if called from fillEvent at last timepoint,
                add regularization based on rz */
-            if (t == model->getTimepoint(nt - 1))
-                model->addEventObjectiveRegularization(llh, ie, nroots.at(ie),
-                                                       t, x, *edata);
+            if (t == model.getTimepoint(nt - 1))
+                model.addEventObjectiveRegularization(llh, ie, nroots.at(ie),
+                                                       t, x_solver, *edata);
         }
 
         if (sensi >= SensitivityOrder::first) {
             if (sensi_meth == SensitivityMethod::forward) {
-                getEventSensisFSA(iroot, ie, fwd, model, edata);
+                getEventSensisFSA(iroot, ie, t, model, edata);
             } else {
                 if (edata)
-                    model->addPartialEventObjectiveSensitivity(sllh, s2llh,
-                                                               ie, nroots.at(ie),
-                                                               t, x, *edata);
+                    model.addPartialEventObjectiveSensitivity(sllh, s2llh, ie,
+                                                              nroots.at(ie), t,
+                                                              x_solver, *edata);
             }
         }
         nroots.at(ie)++;
     }
 }
 
-void ReturnData::getEventSensisFSA(int iroot, int ie,
-                                   ForwardProblem const &fwd,
-                                   Model *model, ExpData const *edata) {
-    
-    auto t = fwd.getDiscontinuities().at(iroot);
-    auto x = fwd.getStateEvent(iroot);
-    auto sx = fwd.getStateSensitivityEvent(iroot);
-    
-    if (t == model->getTimepoint(nt - 1)) {
+void ReturnData::getEventSensisFSA(int iroot, int ie, realtype t,
+                                   Model &model, ExpData const *edata) {
+    if (t == model.getTimepoint(nt - 1)) {
         // call from fillEvent at last timepoint
-        model->getUnobservedEventSensitivity(slice(sz, nroots.at(ie),
+        model.getUnobservedEventSensitivity(slice(sz, nroots.at(ie),
                                                    nz * nplist),
                                              ie);
-        model->getEventRegularizationSensitivity(slice(srz, nroots.at(ie),
+        model.getEventRegularizationSensitivity(slice(srz, nroots.at(ie),
                                                        nz * nplist),
-                                                 ie, t, x, sx);
+                                                 ie, t, x_solver, sx_solver);
     } else {
-        model->getEventSensitivity(slice(sz, nroots.at(ie), nz * nplist),
-                                   ie, t, x, sx);
+        model.getEventSensitivity(slice(sz, nroots.at(ie), nz * nplist),
+                                   ie, t, x_solver, sx_solver);
     }
 
     if (edata) {
-        model->addEventObjectiveSensitivity(sllh, s2llh, ie, nroots.at(ie), t,
-                                            x, sx, *edata);
+        model.addEventObjectiveSensitivity(sllh, s2llh, ie, nroots.at(ie), t,
+                                            x_solver, sx_solver, *edata);
     }
 }
 
 void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
                                         BackwardProblem const &bwd,
-                                        Model *model) {
-    std::vector<realtype> llhS0(fwd.model->nJ * fwd.model->nplist(), 0.0);
+                                        Model &model) {
+    std::vector<realtype> llhS0(model.nJ * model.nplist(), 0.0);
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
     auto sx0 = fwd.getInitialStateSensitivity();
     
     
-    for (int iJ = 0; iJ < model->nJ; iJ++) {
+    for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
-            for (int ip = 0; ip < model->nplist(); ++ip) {
+            for (int ip = 0; ip < model.nplist(); ++ip) {
                 llhS0[ip] = 0.0;
-                for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
+                for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
                     llhS0[ip] += xB[ix] * sx0.at(ix,ip);
                 }
             }
         } else {
-            for (int ip = 0; ip < model->nplist(); ++ip) {
-                llhS0[ip + iJ * model->nplist()] = 0.0;
-                for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
-                    llhS0[ip + iJ * model->nplist()] +=
-                        xB[ix + iJ * model->nxtrue_solver] * sx0.at(ix,ip)+
-                        xB[ix] * sx0.at(ix + iJ * model->nxtrue_solver,ip);
+            for (int ip = 0; ip < model.nplist(); ++ip) {
+                llhS0[ip + iJ * model.nplist()] = 0.0;
+                for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
+                    llhS0[ip + iJ * model.nplist()] +=
+                        xB[ix + iJ * model.nxtrue_solver] * sx0.at(ix,ip)+
+                        xB[ix] * sx0.at(ix + iJ * model.nxtrue_solver,ip);
                 }
             }
         }
     }
 
-    for (int iJ = 0; iJ < model->nJ; iJ++) {
-        for (int ip = 0; ip < model->nplist(); ip++) {
+    for (int iJ = 0; iJ < model.nJ; iJ++) {
+        for (int ip = 0; ip < model.nplist(); ip++) {
             if (iJ == 0) {
-                sllh.at(ip) -= llhS0[ip] + xQB[ip*model->nJ];
+                sllh.at(ip) -= llhS0[ip] + xQB[ip*model.nJ];
             } else {
-                s2llh.at(iJ - 1 + ip * (model->nJ - 1)) -=
-                    llhS0[ip + iJ * model->nplist()] +
-                    xQB[iJ + ip*model->nJ];
+                s2llh.at(iJ - 1 + ip * (model.nJ - 1)) -=
+                    llhS0[ip + iJ * model.nplist()] +
+                    xQB[iJ + ip*model.nJ];
             }
         }
     }
@@ -345,34 +345,34 @@ void ReturnData::processSolver(Solver const &solver) {
     numnonlinsolvconvfailsB = solver.getNumNonlinSolvConvFailsB();
 }
 
-void ReturnData::storeJacobianAndDerivativeInReturnData(Solver const &solver,
-                                                        Model *model) {
-    auto t = solver.gett();
-    auto x = solver.getState(t);
-    auto dx = solver.getDerivativeState(t);
+void ReturnData::storeJacobianAndDerivativeInReturnData(ForwardProblem const &fwd,
+                                                        Model &model) {
+    auto t = fwd.getTime();
+    auto x = fwd.getState();
+    auto dx = fwd.getStateDerivative();
     
     AmiVector xdot(nx_solver);
-    model->fxdot(t, x, dx, xdot);
+    model.fxdot(t, x, dx, xdot);
     this->xdot = xdot.getVector();
 
     SUNMatrixWrapper J(SUNMatrixWrapper(nx_solver, nx_solver));
-    model->fJ(t, 0.0, x, dx, xdot, J.get());
+    model.fJ(t, 0.0, x, dx, xdot, J.get());
     // CVODES uses colmajor, so we need to transform to rowmajor
-    for (int ix = 0; ix < model->nx_solver; ix++) {
-        for (int jx = 0; jx < model->nx_solver; jx++) {
-            this->J[ix * model->nx_solver + jx] =
-                J.data()[ix + model->nx_solver * jx];
+    for (int ix = 0; ix < model.nx_solver; ix++) {
+        for (int jx = 0; jx < model.nx_solver; jx++) {
+            this->J[ix * model.nx_solver + jx] =
+                J.data()[ix + model.nx_solver * jx];
         }
     }
 }
 
-void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
+void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
     // chain-rule factor: multiplier for am_p
     std::vector<realtype> coefficient(nplist, 1.0);
     std::vector<realtype> pcoefficient(nplist, 1.0);
 
-    std::vector<realtype> unscaledParameters = model->getParameters();
-    unscaleParameters(unscaledParameters, model->getParameterScale(), unscaledParameters);
+    std::vector<realtype> unscaledParameters = model.getParameters();
+    unscaleParameters(unscaledParameters, model.getParameterScale(), unscaledParameters);
 
     std::vector<realtype> augcoefficient(np, 1.0);
 
@@ -392,13 +392,13 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     }
 
     for (int ip = 0; ip < nplist; ++ip) {
-        switch (pscale[model->plist(ip)]) {
+        switch (pscale[model.plist(ip)]) {
         case ParameterScaling::log10:
             coefficient.at(ip) = log(10.0);
-            pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip)) * log(10);
+            pcoefficient.at(ip) = unscaledParameters.at(model.plist(ip)) * log(10);
             break;
         case ParameterScaling::ln:
-            pcoefficient.at(ip) = unscaledParameters.at(model->plist(ip));
+            pcoefficient.at(ip) = unscaledParameters.at(model.plist(ip));
             break;
         case ParameterScaling::none:
             break;
@@ -443,13 +443,13 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
                 for (int jp = 0; jp < nplist; ++jp)
                     FIM.at(jp + ip * nplist) *= pcoefficient.at(ip)*pcoefficient.at(jp);
 
-#define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                               \
-    if (!s##QUANT.empty())                                                        \
-        for (int IND1 = 0; (IND1) < (N1T); ++(IND1))                                  \
-            for (int ip = 0; ip < nplist; ++ip)                                 \
-                for (int IND2 = 0; (IND2) < (N2); ++(IND2)) {                         \
-                    s##QUANT.at(((IND2)*nplist + ip)*(N1) + (IND1)) *=                \
-                        pcoefficient.at(ip);                                    \
+#define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                             \
+    if (!s##QUANT.empty())                                                    \
+        for (int IND1 = 0; (IND1) < (N1T); ++(IND1))                          \
+            for (int ip = 0; ip < nplist; ++ip)                               \
+                for (int IND2 = 0; (IND2) < (N2); ++(IND2)) {                 \
+                    s##QUANT.at(((IND2)*nplist + ip)*(N1) + (IND1)) *=        \
+                        pcoefficient.at(ip);                                  \
                 }
 
         chainRule(x, ix, nxtrue, nx, it, nt);
@@ -467,25 +467,25 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
                 for (int iJ = 1; iJ < nJ; ++iJ) {
                     s2llh[ip * nplist + (iJ - 1)] *=
                             pcoefficient.at(ip) * augcoefficient[iJ - 1];
-                    if (model->plist(ip) == iJ - 1)
+                    if (model.plist(ip) == iJ - 1)
                         s2llh[ip * nplist + (iJ - 1)] +=
                                 sllh.at(ip) * coefficient.at(ip);
                 }
             }
         }
 
-#define s2ChainRule(QUANT, IND1, N1T, N1, IND2, N2)                            \
-    if (!s##QUANT.empty())                                                       \
-        for (int ip = 0; ip < nplist; ++ip)                                    \
-            for (int iJ = 1; iJ < nJ; ++iJ)                                    \
-                for (int IND1 = 0; IND1 < N1T; ++IND1)                         \
-                    for (int IND2 = 0; IND2 < N2; ++IND2) {                    \
-                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) *=      \
-                        pcoefficient.at(ip) * augcoefficient[iJ - 1];          \
-                        if (model->plist(ip) == iJ - 1)                        \
+#define s2ChainRule(QUANT, IND1, N1T, N1, IND2, N2)                           \
+    if (!s##QUANT.empty())                                                    \
+        for (int ip = 0; ip < nplist; ++ip)                                   \
+            for (int iJ = 1; iJ < nJ; ++iJ)                                   \
+                for (int IND1 = 0; IND1 < N1T; ++IND1)                        \
+                    for (int IND2 = 0; IND2 < N2; ++IND2) {                   \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) *=     \
+                        pcoefficient.at(ip) * augcoefficient[iJ - 1];         \
+                        if (model.plist(ip) == iJ - 1)                        \
                             s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + iJ*N1T) +=   \
-                                s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *    \
-                                    coefficient[ip];                           \
+                                s##QUANT.at((IND2*nplist + ip)*N1 + IND1) *   \
+                                    coefficient[ip];                          \
 }
 
 
@@ -500,21 +500,21 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model *model) {
     if (o2mode == SecondOrderMode::directional) { // directional
             for (int ip = 0; ip < nplist; ++ip) {
                 s2llh.at(ip) *= pcoefficient.at(ip);
-                s2llh.at(ip) += model->k()[nk - nplist + ip] * sllh.at(ip) /
-                             unscaledParameters[model->plist(ip)];
+                s2llh.at(ip) += model.k()[nk - nplist + ip] * sllh.at(ip) /
+                             unscaledParameters[model.plist(ip)];
         }
 
-#define s2vecChainRule(QUANT, IND1, N1T, N1, IND2, N2)                          \
-    if (!s##QUANT.empty())                                                        \
-        for (int ip = 0; ip < nplist; ++ip)                                     \
-            for (int IND1 = 0; IND1 < N1T; ++IND1)                              \
-                for (int IND2 = 0; IND2 < N2; ++IND2) {                         \
-                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) *=          \
-                        pcoefficient.at(ip);                                    \
-                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) +=          \
-                        model->k()[nk - nplist + ip] *                          \
-                        s##QUANT.at((IND2*nplist + ip)*N1 + IND1) /             \
-                        unscaledParameters[model->plist(ip)];                   \
+#define s2vecChainRule(QUANT, IND1, N1T, N1, IND2, N2)                        \
+    if (!s##QUANT.empty())                                                    \
+        for (int ip = 0; ip < nplist; ++ip)                                   \
+            for (int IND1 = 0; IND1 < N1T; ++IND1)                            \
+                for (int IND2 = 0; IND2 < N2; ++IND2) {                       \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) *=        \
+                        pcoefficient.at(ip);                                  \
+                    s##QUANT.at((IND2*nplist + ip)*N1 + IND1 + N1T) +=        \
+                        model.k()[nk - nplist + ip] *                         \
+                        s##QUANT.at((IND2*nplist + ip)*N1 + IND1) /           \
+                        unscaledParameters[model.plist(ip)];                  \
                 }
 
         s2vecChainRule(x, ix, nxtrue, nx, it, nt);

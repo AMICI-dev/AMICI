@@ -112,14 +112,16 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
     std::unique_ptr<SteadystateProblem> preeq =
         std::unique_ptr<SteadystateProblem>(nullptr);
-    std::unique_ptr<ForwardProblem> fwd;
-    std::unique_ptr<BackwardProblem> bwd;
+    std::unique_ptr<ForwardProblem> fwd =
+        std::unique_ptr<ForwardProblem>(nullptr);
+    std::unique_ptr<BackwardProblem> bwd =
+        std::unique_ptr<BackwardProblem>(nullptr);
     std::unique_ptr<SteadystateProblem> posteq =
         std::unique_ptr<SteadystateProblem>(nullptr);
     
     try {
-        // do we need to preequilibrate?
-        
+       
+        /* BEGIN PREEQUILIBRATION */
         if (solver.getPreequilibration() ||
             (edata && !edata->fixedParametersPreequilibration.empty())) {
             ConditionContext conditionContext(
@@ -129,8 +131,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             preeq = std::unique_ptr<SteadystateProblem>(
                 new SteadystateProblem(solver, model));
             preeq->workSteadyStateProblem(rdata.get(), &solver, &model, -1);
-            
-            rdata->processPreequilibration(preeq.get(), &model);
         }
         
         // dont merge with if above since we want the ConditionContext to go
@@ -138,33 +138,39 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         if (preeq)
             solver.updateAndReinitStatesAndSensitivities(&model);
         
+        /* END PREEQUILIBRATION */
         
+        /* BEGIN FORWARD SOLVE */
         fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(edata, &model,
                                                                  &solver,
                                                                  preeq.get()));
         fwd->workForwardProblem();
-        rdata->storeJacobianAndDerivativeInReturnData(solver, &model);
-        rdata->processForwardProblem(*fwd.get(), &model, edata);
+        /* END FORWARD SOLVE */
         
+        /* BEGIN POSTEQUILIBRATION */
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::unique_ptr<SteadystateProblem>(
                 new SteadystateProblem(solver, model));
             posteq->workSteadyStateProblem(rdata.get(), &solver, &model,
                                           fwd->getCurrentTimeIteration());
-            posteq->getAdjointUpdates(model, edata);
         }
-
-        if (solver.computingASA()) {
-            bwd = std::unique_ptr<BackwardProblem>(
-                new BackwardProblem(*fwd.get(), posteq.get()));
-            bwd->workBackwardProblem();
+        /* END POSTEQUILIBRATION */
+        
+        /* BEGIN BACKWARD SOLVE */
+        if (edata && solver.computingASA()) {
+            fwd->getAdjointUpdates(model, *edata);
+            if (posteq)
+                posteq->getAdjointUpdates(model, *edata);
             
-            rdata->processBackwardProblem(*fwd, *bwd, &model);
+            bwd = std::unique_ptr<BackwardProblem>(
+                new BackwardProblem(*fwd, posteq.get()));
+            bwd->workBackwardProblem();
         }
-
+        /* END BACKWARD SOLVE */
+        
         rdata->status = AMICI_SUCCESS;
+        
     } catch (amici::IntegrationFailure const& ex) {
-        rdata->storeJacobianAndDerivativeInReturnData(solver, &model);
         rdata->status = ex.error_code;
         if (rethrow)
             throw;
@@ -192,7 +198,19 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.getBacktrace());
     }
 
-    rdata->applyChainRuleFactorToSimulationResults(&model);
+    if (preeq)
+        rdata->processPreEquilibration(*preeq, model);
+    
+    if (fwd)
+        rdata->processForwardProblem(*fwd, model, edata);
+    
+    if (posteq)
+        rdata->processPostEquilibration(*posteq, model, edata);
+    
+    if (bwd)
+        rdata->processBackwardProblem(*fwd, *bwd, model);
+        
+    rdata->applyChainRuleFactorToSimulationResults(model);
     return rdata;
 }
 

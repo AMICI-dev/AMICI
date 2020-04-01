@@ -20,11 +20,11 @@ namespace amici {
 
 SteadystateProblem::SteadystateProblem(const Solver &solver,
                                        const Model &model):
-    t(solver.gett()), delta(solver.nx()), ewt(solver.nx()),
-    rel_x_newton(solver.nx()), x_newton(solver.nx()), x(solver.nx()),
-    x_old(solver.nx()), dx(solver.nx()), xdot(solver.nx()),
-    xdot_old(solver.nx()), sx(solver.getStateSensitivity(solver.gett())),
-    sdx(solver.nx(), solver.nplist()),
+    delta(model.nx_solver), ewt(model.nx_solver),
+    rel_x_newton(model.nx_solver), x_newton(model.nx_solver),
+    x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
+    xdot(model.nx_solver), xdot_old(model.nx_solver),
+    sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
     dJydx(model.nJ * model.nx_solver * model.nt(), 0.0) {}
 
 void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
@@ -48,11 +48,15 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
     starttime = clock();
     
     if (it == -1){
-        // our responsibility to initialize states etc and setup solver
+        // solver was not run before, set up everything
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
-        solver->setup(model->t0(), model, x, dx, sx, sdx);
+        t = model->t0();
+        solver->setup(t, model, x, dx, sx, sdx);
+    } else {
+        // solver was run before, extract current state from solver
+        solver->writeSolution(&t, x, dx, sx);
     }
     
 
@@ -365,11 +369,11 @@ const AmiVectorArray &SteadystateProblem::getStateSensitivity() const {
 }
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
-                                           const ExpData *edata) {
+                                           const ExpData &edata) {
     for (int it=0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(
-                slice(dJydx, it, model.nx_solver * model.nJ), it, x, *edata);
+                slice(dJydx, it, model.nx_solver * model.nJ), it, x, edata);
         }
     }
 }

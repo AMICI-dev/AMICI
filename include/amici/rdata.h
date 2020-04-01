@@ -87,10 +87,21 @@ class ReturnData {
 
     /**
      * @brief extracts data from a preequilibration steadystateproblem
-     * @param preeq Steadystateproblem
-     * @param model Model from which the ReturnData was obtained
+     * @param preeq Steadystateproblem for preequilibration
+     * @param model Model instance to compute return values
      */
-    void processPreequilibration(SteadystateProblem const *preeq, Model *model);
+    void processPreEquilibration(SteadystateProblem const &preeq,
+                                 Model &model);
+    
+    /**
+     * @brief extracts data from a preequilibration steadystateproblem
+     * @param post Steadystateproblem for postequilibration
+     * @param model Model instance to compute return values
+     * @param edata ExpData instance containing observable data
+     */
+    void processPostEquilibration(SteadystateProblem const &posteq,
+                                  Model &model,
+                                  ExpData const *edata);
 
     /**
      * @brief extracts results from forward problem
@@ -99,7 +110,7 @@ class ReturnData {
      * @param edata ExpData instance containing observable data
      */
     void processForwardProblem(ForwardProblem const &fwd,
-                               Model *model,
+                               Model &model,
                                ExpData const *edata);
     
     
@@ -111,7 +122,7 @@ class ReturnData {
      */
     void processBackwardProblem(ForwardProblem const &fwd,
                                 BackwardProblem const &bwd,
-                                Model *model);
+                                Model &model);
     
     /**
      * @brief extracts results from solver
@@ -120,13 +131,12 @@ class ReturnData {
     void processSolver(Solver const &solver);
     
     /**
-     * @brief Evaluates the Jacobian and differential equation right hand side,
-     * stores it in ReturnData
-     * @param solver solver that was used for forward/backward simulation
+     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @param fwd forward problem
      * @param model model that was used for forward/backward simulation
      */
-    void storeJacobianAndDerivativeInReturnData(Solver const &solver,
-                                                Model *model);
+    void storeJacobianAndDerivativeInReturnData(ForwardProblem const &fwd,
+                                                Model &model);
     
     
     /**
@@ -134,7 +144,7 @@ class ReturnData {
      * the sensitivities of simulation results
      * @param model Model from which the ReturnData was obtained
      */
-    void applyChainRuleFactorToSimulationResults(const Model *model);
+    void applyChainRuleFactorToSimulationResults(const Model &model);
 
     /**
      * @brief Residual function
@@ -430,61 +440,75 @@ class ReturnData {
                                                 unsigned int version);
     
   protected:
-    /** state vector, including states eliminated from conservation laws
-     * (dimension: nx) */
+    /** partial state vector, excluding states eliminated from conservation laws */
+    AmiVector x_solver;
+    
+    /** partial sensitivity state vector array, excluding states eliminated from
+     * conservation laws */
+    AmiVectorArray sx_solver;
+    
+    
+    /** full state vector, including states eliminated from conservation laws */
     AmiVector x_rdata;
     
     /** full sensitivity state vector array, including states eliminated from
-     * conservation laws (dimension: nx x nplist, row-major) */
+     * conservation laws */
     AmiVectorArray sx_rdata;
     
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
     std::vector<int> nroots;
     
-
-
-    /**
-     * @brief Extracts data information for forward sensitivity analysis
-     * @param it index of current timepoint
-     * @param fwd forward problem
-     * @param model model that was used in forward solve
-     * @param edata ExpData instance carrying experimental data
-     */
-    void getDataSensisFSA(int it, ForwardProblem const &fwd, Model *model,
-                          ExpData const *edata);
     
     /**
-     * @brief Extracts output information for data-points
+     * @brief Checks whether forward sensitivity analysis is performed
+     * @return boolean indicator
+     */
+    bool computingFSA() const {
+        return (sensi_meth == SensitivityMethod::forward &&
+                sensi >= SensitivityOrder::first);
+    }
+    
+    /**
+     * @brief Extracts output information for data-points, expects that x_solver and sx_solver were
+     * were set appropriately
      * @param it timepoint index
-     * @param fwd forward problem
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getDataOutput(int it, ForwardProblem const &fwd, Model *model,
-                       ExpData const *edata);
+    void getDataOutput(int it, Model &model, ExpData const *edata);
     
     /**
-     * @brief Extracts output information for events
+     * @brief Extracts data information for forward sensitivity analysis, expects that x_solver and
+     * sx_solver were were set appropriately
+     * @param it index of current timepoint
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getDataSensisFSA(int it, Model &model, ExpData const *edata);
+    
+    /**
+     * @brief Extracts output information for events, expects that x_solver and sx_solver were
+     * were set appropriately
      * @param iroot event index
-     * @param fwd forward problem
+     * @param t event timepoint
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventOutput(int iroot, ForwardProblem const &fwd, Model *model,
-                        ExpData const *edata);
+    void getEventOutput(int iroot, realtype t, const std::vector<int> rootidx,
+                        Model &model, ExpData const *edata);
     
     /**
-     * @brief Extracts event information for forward sensitivity analysis
-     *
+     * @brief Extracts event information for forward sensitivity analysis, expects that x_solver and
+     * sx_solver were were set appropriately
      * @param iroot event index
      * @param ie index of event type
-     * @param fwd forward problem
+     * @param t event timepoint
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventSensisFSA(int iroot, int ie, ForwardProblem const &fwd,
-                           Model *model, ExpData const *edata);
+    void getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
+                           ExpData const *edata);
 };
 
 } // namespace amici

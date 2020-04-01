@@ -41,6 +41,13 @@ class ForwardProblem {
      * If forward sensitivities are enabled this will also compute sensitivies.
      */
     void workForwardProblem();
+    
+    /**
+     * @brief computes adjoint updates dJydx according to provided model and expdata
+     * @param model Model instance
+     * @param edata experimental data
+     */
+    void getAdjointUpdates(Model &model, const ExpData &edata);
 
     /**
      * @brief Accessor for t
@@ -50,6 +57,22 @@ class ForwardProblem {
         return t;
     }
 
+    /**
+     * @brief Accessor for x
+     * @return x
+     */
+    AmiVector const& getState() const {
+        return x;
+    }
+    
+    /**
+     * @brief Accessor for dx
+     * @return dx
+     */
+    AmiVector const& getStateDerivative() const {
+        return dx;
+    }
+    
     /**
      * @brief Accessor for sx
      * @return sx
@@ -121,15 +144,7 @@ class ForwardProblem {
     std::vector<realtype> const& getDJzdx() const {
         return dJzdx;
     }
-
-    /**
-     * @brief Accessor for iroot
-     * @return iroot
-     */
-    int getRootCounter() const {
-        return discs.size() - 1;;
-    }
-
+    
     /**
      * @brief Accessor for pointer to x
      * @return &x
@@ -186,6 +201,13 @@ class ForwardProblem {
         return sx0;
     }
     
+    /**
+     * @brief Returns maximal time point index for which simulations are available
+     * @return index
+     */
+    int getTimePointCounter() const {
+        return x_timepoints.size() - 1;
+    }
     
     /**
      * @brief Accessor for x_timepoints
@@ -213,6 +235,15 @@ class ForwardProblem {
     const AmiVectorArray &getStateSensitivityTimePoint(int it) const {
         return sx_timepoints.at(it);
     }
+    
+    /**
+     * @brief Returns maximal event index for which simulations are available
+     * @return index
+     */
+    int getRootCounter() const {
+        return discs.size() - 1;;
+    }
+
     
     /**
      * @brief Accessor for x_events
