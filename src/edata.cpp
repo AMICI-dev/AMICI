@@ -427,7 +427,7 @@ void ConditionContext::applyCondition(const ExpData *edata,
                                  " not match ExpData (presimulation) (%zd).",
                                  model->nk(),
                                  edata->fixedParametersPresimulation.size());
-          model->setFixedParameters(edata->fixedParameters);
+          model->setFixedParameters(edata->fixedParametersPresimulation);
       }
       break;
     }

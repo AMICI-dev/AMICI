@@ -156,7 +156,7 @@ enum class NewtonDampingFactorMode {
     on = 1
 };
 
-/** fixedParameter to bet used in condition context */
+/** fixedParameter to be used in condition context */
 enum class FixedParameterContext {
     simulation = 0,
     preequilibration = 1,

@@ -1028,13 +1028,13 @@ class Model : public AbstractModel {
     /**
      * @brief Returns the heaviside variables h
      */
-    std::vector<realtype> const& getHeavyside() const;
+    std::vector<realtype> const& getHeaviside() const;
     
     /**
      * @brief Sets the heaviside variables h
      * @param h new heaviside variables
      */
-    void setHeavyside(const std::vector<realtype> h);
+    void setHeaviside(const std::vector<realtype> h);
 
     /**
      * @brief Check if the given array has only finite elements. If not try to

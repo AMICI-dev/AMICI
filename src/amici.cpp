@@ -159,7 +159,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                 new BackwardProblem(*fwd.get(), posteq.get()));
             bwd->workBackwardProblem();
             
-            rdata->processBackwardProblem(*fwd.get(), *bwd.get(), &model);
+            rdata->processBackwardProblem(*fwd, *bwd, &model);
         }
 
         rdata->status = AMICI_SUCCESS;

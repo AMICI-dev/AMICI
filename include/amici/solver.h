@@ -1593,13 +1593,13 @@ class Solver {
     /** number of right hand side evaluations forward problem (dimension: nt) */
     std::vector<int> nrhs;
 
-    /** number of right hand side evaluations backwad problem (dimension: nt) */
+    /** number of right hand side evaluations backward problem (dimension: nt) */
     std::vector<int> nrhsB;
 
     /** number of error test failures forward problem (dimension: nt) */
     std::vector<int> netf;
 
-    /** number of error test failures backwad problem (dimension: nt) */
+    /** number of error test failures backward problem (dimension: nt) */
     std::vector<int> netfB;
 
     /**
@@ -1608,7 +1608,7 @@ class Solver {
     std::vector<int> nnlscf;
 
     /**
-     * number of linear solver convergence failures backwad problem (dimension:
+     * number of linear solver convergence failures backward problem (dimension:
      * nt) */
     std::vector<int> nnlscfB;
 

@@ -18,7 +18,7 @@ class SteadystateProblem;
 
 /**
  * @brief The ForwardProblem class groups all functions for solving the
- * forward problem.f
+ * forward problem.
  */
 class ForwardProblem {
   public:
