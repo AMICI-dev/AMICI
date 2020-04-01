@@ -1087,11 +1087,11 @@ void Model::updateHeavisideB(const int *rootsfound) {
     }
 }
 
-std::vector<realtype> const& Model::getHeavyside() const {
+std::vector<realtype> const& Model::getHeaviside() const {
     return h;
 }
 
-void Model::setHeavyside(const std::vector<realtype> h){
+void Model::setHeaviside(const std::vector<realtype> h){
     this->h = h;
 }
 

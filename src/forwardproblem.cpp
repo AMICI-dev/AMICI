@@ -236,13 +236,13 @@ void ForwardProblem::storeEvent() {
     if (getRootCounter() < x_events.size()) {
         /* update stored state (sensi) */
         x_events.at(getRootCounter()) = x;
-        h_events.at(getRootCounter()) = model->getHeavyside();
+        h_events.at(getRootCounter()) = model->getHeaviside();
         if (solver->computingFSA())
             sx_events.at(getRootCounter()) = sx;
     } else {
         /* add stored state (sensi) */
         x_events.push_back(x);
-        h_events.push_back(model->getHeavyside());
+        h_events.push_back(model->getHeaviside());
         if (solver->computingFSA())
             sx_events.push_back(sx);
     }
@@ -277,7 +277,7 @@ void ForwardProblem::storeEvent() {
 void ForwardProblem::handleDataPoint(int it) {
     
     x_timepoints.push_back(x);
-    h_timepoints.push_back(model->getHeavyside());
+    h_timepoints.push_back(model->getHeaviside());
     solver->storeDiagnosis();
     
     if (solver->computingFSA()) {
