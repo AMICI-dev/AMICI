@@ -155,9 +155,13 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             posteq->getAdjointUpdates(model, edata);
         }
 
-        bwd = std::unique_ptr<BackwardProblem>(
-            new BackwardProblem(*fwd.get(), posteq.get()));
-        bwd->workBackwardProblem();
+        if (solver.computingASA()) {
+            bwd = std::unique_ptr<BackwardProblem>(
+                new BackwardProblem(*fwd.get(), posteq.get()));
+            bwd->workBackwardProblem();
+            
+            rdata->processBackwardProblem(*fwd.get(), *bwd.get(), &model);
+        }
 
         rdata->status = AMICI_SUCCESS;
     } catch (amici::IntegrationFailure const& ex) {

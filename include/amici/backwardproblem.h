@@ -71,6 +71,22 @@ class BackwardProblem {
     std::vector<realtype> const& getdJydx() const {
         return dJydx;
     }
+    
+    /**
+     * @brief Accessor for xB
+     * @return xB
+     */
+    AmiVector const& getAdjointState() const {
+        return xB;
+    }
+    
+    /**
+     * @brief Accessor for xQB
+     * @return xQB
+     */
+    AmiVector const& getAdjointQuadrature() const {
+        return xQB;
+    }
 
   private:
     /**
@@ -98,11 +114,6 @@ class BackwardProblem {
      * @return tnext next timepoint @type realtype
      */
     realtype getTnext(int it);
-
-    /**
-     * @brief Compute likelihood sensitivities.
-     */
-    void computeLikelihoodSensitivities();
 
     Model *model;
     ReturnData *rdata;

@@ -13,6 +13,7 @@ class ReturnData;
 class Solver;
 class ExpData;
 class ForwardProblem;
+class BackwardProblem;
 class SteadystateProblem;
 } // namespace amici
 
@@ -92,7 +93,7 @@ class ReturnData {
     void processPreequilibration(SteadystateProblem const *preeq, Model *model);
 
     /**
-     * @brief extracts data from a forward problem, assuming
+     * @brief extracts results from forward problem
      * @param fwd forward problem
      * @param model model that was used for forward simulation
      * @param edata ExpData instance containing observable data
@@ -100,6 +101,17 @@ class ReturnData {
     void processForwardProblem(ForwardProblem const &fwd,
                                Model *model,
                                ExpData const *edata);
+    
+    
+    /**
+     * @brief extracts results from backward problem
+     * @param fwd forward problem
+     * @param bwd backward problem
+     * @param model model that was used for forward/backward simulation
+    */
+    void processBackwardProblem(ForwardProblem const &fwd,
+                                BackwardProblem const &bwd,
+                                Model *model);
     
     /**
      * @brief applies the chain rule to account for parameter transformation in

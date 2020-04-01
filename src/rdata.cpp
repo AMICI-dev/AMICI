@@ -7,6 +7,7 @@
 #include "amici/solver.h"
 #include "amici/exception.h"
 #include "amici/steadystateproblem.h"
+#include "amici/backwardproblem.h"
 #include "amici/forwardproblem.h"
 
 #include <cstring>
@@ -284,6 +285,48 @@ void ReturnData::getEventSensisFSA(int iroot, int ie,
     if (edata) {
         model->addEventObjectiveSensitivity(sllh, s2llh, ie, nroots.at(ie), t,
                                             x, sx, *edata);
+    }
+}
+
+void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
+                                        BackwardProblem const &bwd,
+                                        Model *model) {
+    std::vector<realtype> llhS0(fwd.model->nJ * fwd.model->nplist(), 0.0);
+    auto xB = bwd.getAdjointState();
+    auto xQB = bwd.getAdjointQuadrature();
+    auto sx0 = fwd.getInitialStateSensitivity();
+    
+    
+    for (int iJ = 0; iJ < model->nJ; iJ++) {
+        if (iJ == 0) {
+            for (int ip = 0; ip < model->nplist(); ++ip) {
+                llhS0[ip] = 0.0;
+                for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
+                    llhS0[ip] += xB[ix] * sx0.at(ix,ip);
+                }
+            }
+        } else {
+            for (int ip = 0; ip < model->nplist(); ++ip) {
+                llhS0[ip + iJ * model->nplist()] = 0.0;
+                for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
+                    llhS0[ip + iJ * model->nplist()] +=
+                        xB[ix + iJ * model->nxtrue_solver] * sx0.at(ix,ip)+
+                        xB[ix] * sx0.at(ix + iJ * model->nxtrue_solver,ip);
+                }
+            }
+        }
+    }
+
+    for (int iJ = 0; iJ < model->nJ; iJ++) {
+        for (int ip = 0; ip < model->nplist(); ip++) {
+            if (iJ == 0) {
+                sllh.at(ip) -= llhS0[ip] + xQB[ip*model->nJ];
+            } else {
+                s2llh.at(iJ - 1 + ip * (model->nJ - 1)) -=
+                    llhS0[ip + iJ * model->nplist()] +
+                    xQB[iJ + ip*model->nJ];
+            }
+        }
     }
 }
 
