@@ -33,6 +33,10 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
     rootidx(fwd.getRootIndexes()),
     dJydx(fwd.getDJydx()),
     dJzdx(fwd.getDJzdx()) {
+        /* complement dJydx from postequilibration. This should overwrite
+         * anything but only fill in previously 0 values, as only non-inf
+         * timepoints are filled from fwd.
+         */
         for (int it = 0; it < fwd.model->nt(); it++) {
             if (std::isinf(fwd.model->getTimepoint(it))) {
                 if (!posteq)
@@ -50,7 +54,6 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
 
 void BackwardProblem::workBackwardProblem() {
 
-
     if (model->nx_solver <= 0 ||
         solver->getSensitivityOrder() < SensitivityOrder::first ||
         solver->getSensitivityMethod() != SensitivityMethod::adjoint ||
@@ -61,11 +64,11 @@ void BackwardProblem::workBackwardProblem() {
     int it = rdata->nt - 1;
     model->initializeB(xB, dxB, xQB);
     handleDataPointB(it);
-    solver->setupB(&which, rdata->ts[it], model, xB, dxB, xQB);
+    solver->setupB(&which, model->getTimepoint(it), model, xB, dxB, xQB);
     
     --it;
 
-    while (it >= 0 || discs.size() >= 0) {
+    while (it >= 0 || discs.size() > 0) {
 
         /* check if next timepoint is a discontinuity or a data-point */
         double tnext = getTnext(it);
@@ -77,12 +80,12 @@ void BackwardProblem::workBackwardProblem() {
         }
 
         /* handle discontinuity */
-        if (tnext > rdata->ts[it]) {
+        if (tnext > model->getTimepoint(it)) {
             handleEventB();
         }
 
         /* handle data-point */
-        if (tnext == rdata->ts[it]) {
+        if (tnext == model->getTimepoint(it)) {
             handleDataPointB(it);
             it--;
         }
@@ -166,7 +169,7 @@ realtype BackwardProblem::getTnext(const int it) {
         return tdisc;
     }
 
-    return rdata->ts[it];
+    return model->getTimepoint(it);
 }
 
 
