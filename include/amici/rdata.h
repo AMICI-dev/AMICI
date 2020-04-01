@@ -121,8 +121,8 @@ class ReturnData {
     
     /**
      * @brief Evaluates the Jacobian and differential equation right hand side,
-     * stores it in RetunData
-     * @param solver solverl that was used for forward/backward simulation
+     * stores it in ReturnData
+     * @param solver solver that was used for forward/backward simulation
      * @param model model that was used for forward/backward simulation
      */
     void storeJacobianAndDerivativeInReturnData(Solver const &solver,
