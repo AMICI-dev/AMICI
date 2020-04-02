@@ -1027,6 +1027,7 @@ class Model : public AbstractModel {
     
     /**
      * @brief Returns the heaviside variables h
+     * @return current heaviside variables
      */
     std::vector<realtype> const& getHeaviside() const;
     

@@ -95,7 +95,7 @@ class ReturnData {
     
     /**
      * @brief extracts data from a preequilibration steadystateproblem
-     * @param post Steadystateproblem for postequilibration
+     * @param posteq Steadystateproblem for postequilibration
      * @param model Model instance to compute return values
      * @param edata ExpData instance containing observable data
      */
@@ -148,6 +148,7 @@ class ReturnData {
     
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @param t timepoint
      * @param x state vector
      * @param dx state derivative vector
      * @param model model that was used for forward/backward simulation
@@ -529,6 +530,7 @@ class ReturnData {
      * were set appropriately
      * @param iroot event index
      * @param t event timepoint
+     * @param rootidx information about which roots fired (1 indicating fired, 0/-1 for not)
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
