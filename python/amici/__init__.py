@@ -295,11 +295,12 @@ def import_model_module(module_name: str,
     # ensure we will find the newly created module
     importlib.invalidate_caches()
 
-    # module already loaded?
-    if module_name in sys.modules:
-        # reload, because may just have been created
-        importlib.reload(sys.modules[module_name])
-        return sys.modules[module_name]
-
     with add_path(module_path):
+        # module already loaded?
+        if module_name in sys.modules:
+            # reload, because may just have been created
+            importlib.reload(sys.modules[module_name])
+            return sys.modules[module_name]
+
+
         return importlib.import_module(module_name)
