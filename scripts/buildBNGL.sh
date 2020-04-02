@@ -4,11 +4,11 @@
 #
 set -e
 
-SCRIPT_PATH=$(dirname $BASH_SOURCE)
-AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
+script_path=$(dirname "$BASH_SOURCE")
+amici_path=$(cd "$script_path/.." && pwd)
 
-mkdir -p ${AMICI_PATH}/ThirdParty
-cd ${AMICI_PATH}/ThirdParty
+mkdir -p "${amici_path}/ThirdParty"
+cd "${amici_path}/ThirdParty"
 
 if [ ! -d "BioNetGen-2.3.2" ]; then
     if [ ! -e "bionetgen.tar.gz" ]; then
