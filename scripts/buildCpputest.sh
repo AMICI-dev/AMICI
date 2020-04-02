@@ -4,16 +4,16 @@
 #
 set -e
 
-SCRIPT_PATH=$(dirname $BASH_SOURCE)
-AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
+script_path=$(dirname "$BASH_SOURCE")
+amici_path=$(cd "$script_path/.." && pwd)
 
-CMAKE=${CMAKE:-cmake}
-MAKE=${MAKE:-make}
+cmake=${CMAKE:-cmake}
+make=${MAKE:-make}
 
 # Cpputest
-mkdir -p ${AMICI_PATH}/ThirdParty
-cd ${AMICI_PATH}/ThirdParty
-export CPPUTEST_BUILD_DIR=${AMICI_PATH}/ThirdParty/cpputest-master/
+mkdir -p "${amici_path}/ThirdParty"
+cd "${amici_path}/ThirdParty"
+export CPPUTEST_BUILD_DIR="${amici_path}/ThirdParty/cpputest-master/"
 
 if [ ! -d "cpputest-master" ]; then
     if [ ! -e "cpputest-master.zip" ]; then
@@ -26,6 +26,7 @@ fi
 cd cpputest-master
 mkdir -p build
 cd build
-${CMAKE} -DTESTS=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DC++11=ON -DMEMORY_LEAK_DETECTION=OFF ..
-${MAKE} -j4
+${cmake} -DTESTS=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release \
+  -DC++11=ON -DMEMORY_LEAK_DETECTION=OFF ..
+${make} -j4
 
