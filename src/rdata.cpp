@@ -151,6 +151,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
         }
     }
     
+    // process timpoint data
     for (int it=0; it <= fwd.getTimePointCounter(); it++) {
         x_solver = fwd.getStateTimePoint(it);
         if (computingFSA())
@@ -158,7 +159,12 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
         model.setHeaviside(fwd.getHeavisideTimePoint(it));
         getDataOutput(it, model, edata);
     }
+    // check for integration failure but consider postequilibration
+    for (int it=fwd.getTimePointCounter() + 1; it < nt; it++)
+        if (!std::isinf(model.getTimepoint(it)))
+            invalidate(it);
     
+    // process event data
     if (nz > 0) {
         auto rootidx = fwd.getRootIndexes();
         for (int iroot=0; iroot <= fwd.getRootCounter(); iroot++) {
@@ -171,8 +177,6 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
         }
         model.setHeaviside(original_h);
     }
-    
-    storeJacobianAndDerivativeInReturnData(fwd, model);
 }
 
 void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
@@ -331,26 +335,62 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
 }
 
 void ReturnData::processSolver(Solver const &solver) {
+
     cpu_time = solver.getCpuTime();
-    numsteps = solver.getNumSteps();
-    numrhsevals = solver.getNumRhsEvals();
-    numerrtestfails = solver.getNumErrTestFails();
-    numnonlinsolvconvfails = solver.getNumNonlinSolvConvFails();
-    order = solver.getLastOrder();
+    
+    std::copy_n(solver.getNumSteps().data(),
+                solver.getNumSteps().size(),
+                numsteps.data());
+    std::copy_n(solver.getNumRhsEvals().data(),
+                solver.getNumRhsEvals().size(),
+                numrhsevals.data());
+    std::copy_n(solver.getNumErrTestFails().data(),
+                solver.getNumErrTestFails().size(),
+                numerrtestfails.data());
+    std::copy_n(solver.getNumNonlinSolvConvFails().data(),
+                solver.getNumNonlinSolvConvFails().size(),
+                numnonlinsolvconvfails.data());
+    std::copy_n(solver.getLastOrder().data(),
+                solver.getLastOrder().size(),
+                order.data());
     
     cpu_timeB = solver.getCpuTimeB();
-    numstepsB = solver.getNumStepsB();
-    numrhsevalsB = solver.getNumRhsEvalsB();
-    numerrtestfailsB = solver.getNumErrTestFailsB();
-    numnonlinsolvconvfailsB = solver.getNumNonlinSolvConvFailsB();
+    std::copy_n(solver.getNumStepsB().data(),
+                solver.getNumStepsB().size(),
+                numstepsB.data());
+    std::copy_n(solver.getNumRhsEvalsB().data(),
+                solver.getNumRhsEvalsB().size(),
+                numrhsevalsB.data());
+    std::copy_n(solver.getNumErrTestFailsB().data(),
+                solver.getNumErrTestFailsB().size(),
+                numerrtestfailsB.data());
+    std::copy_n(solver.getNumNonlinSolvConvFailsB().data(),
+                solver.getNumNonlinSolvConvFailsB().size(),
+                numnonlinsolvconvfailsB.data());
 }
 
-void ReturnData::storeJacobianAndDerivativeInReturnData(ForwardProblem const &fwd,
-                                                        Model &model) {
+void ReturnData::storeJacobianAndDerivativeInReturnData(
+        ForwardProblem const &fwd, Model &model) {
     auto t = fwd.getTime();
     auto x = fwd.getState();
     auto dx = fwd.getStateDerivative();
     
+    storeJacobianAndDerivativeInReturnData(t, x, dx, model);
+}
+
+void ReturnData::storeJacobianAndDerivativeInReturnData(
+        SteadystateProblem const &posteq, Model &model) {
+    auto t = std::numeric_limits<realtype>::infinity();
+    auto x = posteq.getState();
+    auto dx = AmiVector(model.nx_solver);
+    
+    storeJacobianAndDerivativeInReturnData(t, x, dx, model);
+}
+
+void ReturnData::storeJacobianAndDerivativeInReturnData(realtype t,
+                                                        const AmiVector &x,
+                                                        const AmiVector &dx,
+                                                        Model &model) {
     AmiVector xdot(nx_solver);
     model.fxdot(t, x, dx, xdot);
     this->xdot = xdot.getVector();
@@ -364,6 +404,51 @@ void ReturnData::storeJacobianAndDerivativeInReturnData(ForwardProblem const &fw
                 J.data()[ix + model.nx_solver * jx];
         }
     }
+}
+
+void ReturnData::invalidate(const int it_start) {
+    if (it_start >= nt)
+        return
+        
+    invalidateLLH();
+    invalidateSLLH();
+
+    for (int it = it_start; it < nt; it++){
+        for (int ix = 0; ix < nx; ix++)
+            x.at(ix + nx * it) = getNaN();
+        for (int iy = 0; iy < ny; iy++)
+            y.at(iy + ny * it) = getNaN();
+        for (int iw = 0; iw < nw; iw++)
+            w.at(iw + nw * it) = getNaN();
+    }
+
+    if (!sx.empty()) {
+        for (int it = it_start; it < nt; it++){
+            for (int ip = 0; ip < nplist; ip++) {
+                for (int ix = 0; ix < nx; ix++)
+                    sx.at(ix + nx*(ip + it*nplist)) = getNaN();
+            }
+        }
+    }
+    if(!sy.empty()) {
+        for (int it = it_start; it < nt; it++){
+            for (int ip = 0; ip < nplist; ip++) {
+                for (int iy = 0; iy < ny; iy++)
+                    sy.at(iy + ny*(ip + it*nplist)) = getNaN();
+            }
+        }
+    }
+}
+
+void ReturnData::invalidateLLH()
+{
+    llh = getNaN();
+    chi2 = getNaN();
+}
+
+void ReturnData::invalidateSLLH() {
+    std::fill(sllh.begin(), sllh.end(), getNaN());
+    std::fill(s2llh.begin(), s2llh.end(), getNaN());
 }
 
 void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {

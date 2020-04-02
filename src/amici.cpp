@@ -203,12 +203,21 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     
     if (fwd)
         rdata->processForwardProblem(*fwd, model, edata);
+    else
+        rdata->invalidate(0);
     
     if (posteq)
         rdata->processPostEquilibration(*posteq, model, edata);
     
+    if (fwd && !posteq)
+        rdata->storeJacobianAndDerivativeInReturnData(*fwd, model);
+    else if (posteq)
+        rdata->storeJacobianAndDerivativeInReturnData(*posteq, model);
+    
     if (bwd)
         rdata->processBackwardProblem(*fwd, *bwd, model);
+    else if (solver.computingASA())
+        rdata->invalidateSLLH();
         
     rdata->applyChainRuleFactorToSimulationResults(model);
     return rdata;

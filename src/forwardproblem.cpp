@@ -51,15 +51,14 @@ void ForwardProblem::workForwardProblem() {
     }
 
     /* if preequilibration was done, solver was already set up */
-    if (!preequilibrated) {
+    if (!preequilibrated)
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
-        // handlePreequilibration will setup the solver on its own.
-        solver->setup(model->t0(), model, x, dx, sx, sdx);
-        // update x0 after computing consistence IC, only important for DAEs
-        x.copy(solver->getState(model->t0()));
-    }
+    
+    solver->setup(model->t0(), model, x, dx, sx, sdx);
+    // update x0 after computing consistence IC, only important for DAEs
+    x.copy(solver->getState(model->t0()));
 
     auto presimulated = edata && edata->t_presim > 0;
     /* perform presimulation if necessary */

@@ -80,12 +80,16 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     /* Initialize CVodes/IDAs solver*/
     init(t0, x0, dx0);
+    
+    /* Clear diagnosis storage */
+    resetDiagnosis();
 
+    /* Apply stored tolerances to sundials solver */
     applyTolerances();
 
     /* Set optional inputs */
     setErrHandlerFn();
-    /* attaches userdata*/
+    /* Attaches userdata */
     setUserData(model);
     /* specify maximal number of steps */
     setMaxNumSteps(maxsteps);
@@ -164,7 +168,20 @@ void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
     }
 }
 
-void Solver::storeDiagnosis() {
+void Solver::resetDiagnosis() const {
+    ns.clear();
+    nrhs.clear();
+    netf.clear();
+    nnlscf.clear();
+    order.clear();
+    
+    nsB.clear();
+    nrhsB.clear();
+    netfB.clear();
+    nnlscfB.clear();
+}
+
+void Solver::storeDiagnosis() const {
     if (!solverWasCalledF || !solverMemory)
         return;
 
@@ -186,7 +203,7 @@ void Solver::storeDiagnosis() {
     order.push_back(number);
 }
 
-void Solver::storeDiagnosisB(const int which) {
+void Solver::storeDiagnosisB(const int which) const {
     if (!solverWasCalledB || !solverMemoryB.at(which))
         return;
     

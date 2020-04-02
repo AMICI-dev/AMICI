@@ -138,6 +138,43 @@ class ReturnData {
     void storeJacobianAndDerivativeInReturnData(ForwardProblem const &fwd,
                                                 Model &model);
     
+    /**
+     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @param posteq postequilibration steadystateproblem
+     * @param model model that was used for forward/backward simulation
+     */
+    void storeJacobianAndDerivativeInReturnData(
+        SteadystateProblem const &posteq, Model &model);
+    
+    /**
+     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @param x state vector
+     * @param dx state derivative vector
+     * @param model model that was used for forward/backward simulation
+     */
+    void storeJacobianAndDerivativeInReturnData(realtype t,
+                                                const AmiVector &x,
+                                                const AmiVector &dx,
+                                                Model &model);
+    
+    /**
+     * @brief Set likelihood, state variables, outputs and respective
+     * sensitivities to NaN (typically after integration failure)
+     * @param it_start time index at which to start invalidating
+     */
+    void invalidate(int it_start);
+
+    /**
+     * @brief Set likelihood and chi2 to NaN
+     * (typically after integration failure)
+     */
+    void invalidateLLH();
+
+    /**
+     * @brief Set likelihood sensitivities to NaN
+     * (typically after integration failure)
+     */
+    void invalidateSLLH();
     
     /**
      * @brief applies the chain rule to account for parameter transformation in

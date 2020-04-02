@@ -700,16 +700,21 @@ class Solver {
     }
     
     /**
+     * @brief Resets vectors containing diagnosis information
+     */
+    void resetDiagnosis() const;
+    
+    /**
      * @brief Stores diagnosis information from solver memory block for forward problem
      */
-    void storeDiagnosis();
+    void storeDiagnosis() const;
 
     /**
      * @brief Stores diagnosis information from solver memory block for backward problem
      *
      * @param which identifier of the backwards problem
      */
-    void storeDiagnosisB(int which);
+    void storeDiagnosisB(int which) const;
     
     /**
      * @brief Accessor ns
@@ -1585,35 +1590,35 @@ class Solver {
     mutable int ncheckPtr = 0;
     
     /** number of integration steps forward problem (dimension: nt) */
-    std::vector<int> ns;
+    mutable std::vector<int> ns;
 
     /** number of integration steps backward problem (dimension: nt) */
-    std::vector<int> nsB;
+    mutable std::vector<int> nsB;
 
     /** number of right hand side evaluations forward problem (dimension: nt) */
-    std::vector<int> nrhs;
+    mutable std::vector<int> nrhs;
 
     /** number of right hand side evaluations backward problem (dimension: nt) */
-    std::vector<int> nrhsB;
+    mutable std::vector<int> nrhsB;
 
     /** number of error test failures forward problem (dimension: nt) */
-    std::vector<int> netf;
+    mutable std::vector<int> netf;
 
     /** number of error test failures backward problem (dimension: nt) */
-    std::vector<int> netfB;
+    mutable std::vector<int> netfB;
 
     /**
      * number of linear solver convergence failures forward problem (dimension:
      * nt) */
-    std::vector<int> nnlscf;
+    mutable std::vector<int> nnlscf;
 
     /**
      * number of linear solver convergence failures backward problem (dimension:
      * nt) */
-    std::vector<int> nnlscfB;
+    mutable std::vector<int> nnlscfB;
 
     /** employed order forward problem (dimension: nt) */
-    std::vector<int> order;
+    mutable std::vector<int> order;
 };
 
 bool operator==(const Solver &a, const Solver &b);
