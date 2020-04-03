@@ -50,16 +50,19 @@ void ForwardProblem::workForwardProblem() {
         return;
     }
 
+    auto presimulate = edata && edata->t_presim > 0;
+    
     /* if preequilibration was done, solver was already set up */
     if (!preequilibrated)
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
-    
-    auto presimulated = edata && edata->t_presim > 0;
+    /* presimulation will reinit on its own and needs proper context */
+    else if(!presimulate)
+        solver->updateAndReinitStatesAndSensitivities(model);
     
     auto t0 = model->t0();
-    if (presimulated)
+    if (presimulate)
         t0 -= edata->t_presim;
     solver->setup(t0, model, x, dx, sx, sdx);
     // update x0 after computing consistence IC, only important for DAEs
@@ -67,16 +70,19 @@ void ForwardProblem::workForwardProblem() {
 
     
     /* perform presimulation if necessary */
-    if (presimulated) {
+    if (presimulate) {
         handlePresimulation();
         t = model->t0();
+        /* make sure we are back in simulation context, so dont put this in
+           handlePresimulation */
         solver->updateAndReinitStatesAndSensitivities(model);
     }
     
     /* store initial sensitivity and */
     x0.copy(x);
     if(solver->getSensitivityOrder() >= SensitivityOrder::first &&
-       (!presimulated || solver->getSensitivityMethod() == SensitivityMethod::forward))
+       (!presimulate ||
+        solver->getSensitivityMethod() == SensitivityMethod::forward))
         sx0.copy(sx);
 
     /* loop over timepoints */

@@ -133,11 +133,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             preeq->workSteadyStateProblem(rdata.get(), &solver, &model, -1);
         }
         
-        // dont merge with if above since we want the ConditionContext to go
-        // out of context first
-        if (preeq)
-            solver.updateAndReinitStatesAndSensitivities(&model);
-        
         /* END PREEQUILIBRATION */
         
         /* BEGIN FORWARD SOLVE */
