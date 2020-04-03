@@ -56,11 +56,16 @@ void ForwardProblem::workForwardProblem() {
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
     
-    solver->setup(model->t0(), model, x, dx, sx, sdx);
-    // update x0 after computing consistence IC, only important for DAEs
-    x.copy(solver->getState(model->t0()));
-
     auto presimulated = edata && edata->t_presim > 0;
+    
+    auto t0 = model->t0();
+    if (presimulated)
+        t0 -= edata->t_presim;
+    solver->setup(t0, model, x, dx, sx, sdx);
+    // update x0 after computing consistence IC, only important for DAEs
+    x.copy(solver->getState(t0));
+
+    
     /* perform presimulation if necessary */
     if (presimulated) {
         handlePresimulation();
@@ -231,7 +236,7 @@ void ForwardProblem::storeEvent() {
         rootidx.push_back(rootsfound);
     }
     
-    if (getRootCounter() < x_events.size()) {
+    if (getRootCounter() < static_cast<int>(x_events.size())) {
         /* update stored state (sensi) */
         x_events.at(getRootCounter()) = x;
         h_events.at(getRootCounter()) = model->getHeaviside();
