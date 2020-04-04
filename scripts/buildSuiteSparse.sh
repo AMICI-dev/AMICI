@@ -4,11 +4,11 @@
 #
 set -e
 
-SCRIPT_PATH=$(dirname $BASH_SOURCE)
-AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
+script_path=$(dirname "$BASH_SOURCE")
+amici_path=$(cd "$script_path/.." && pwd)
 
-SUITESPARSE_ROOT="${AMICI_PATH}/ThirdParty/SuiteSparse"
+suitesparse_root="${amici_path}/ThirdParty/SuiteSparse"
 
 for subdir in SuiteSparse_config BTF AMD CAMD COLAMD KLU
-  do cd ${SUITESPARSE_ROOT}/${subdir} && make library
+  do cd "${suitesparse_root}/${subdir}" && make library
 done

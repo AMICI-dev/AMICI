@@ -100,7 +100,8 @@ for model in $models; do
   echo
 
   if [[ -z "$dry_run" ]]; then
-    $cmd_import && $cmd_run
+    $cmd_import
+    $cmd_run
   else
     echo "$cmd_import"
     echo "$cmd_run"
