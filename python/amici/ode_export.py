@@ -30,7 +30,7 @@ import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy import Add, Function, Derivative, solve, dsolve
-import libsbml
+import libsbml # change to import libsbml as sbml to match sbml_import.py?
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
@@ -835,6 +835,8 @@ class ODEModel:
             imported SBML model
         """
 
+        self.si = si
+
         symbols = copy.copy(si.symbols)
 
         # setting these equations prevents native equation generation
@@ -845,33 +847,6 @@ class ODEModel:
              for idx in range(len(si.flux_vector))]
         )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometric_matrix.shape[0])
-
-        def constant_of_integration(df_dt, f0):
-            '''
-            Calculates the constant of integration from an ODE IVP of the form
-            f'(t) = df_dt, f(0) = f0.
-
-            :param df_dt:
-                The right-hand side of an ODE, after the derivative term has
-                been made the subject of the equation on the left-hand side.
-
-            :param f0:
-                The value of the function at time = 0.
-            '''
-            f = Function('f')
-            t = sp.Symbol('t')
-            f0 = 1
-            ode_solve = dsolve(Derivative(f(t), t) - df_dt, f(t))
-            ivp_solve = dsolve(
-                Derivative(f(t), t) - df_dt, f(t), ics={f(0): f0})
-            solve(ode_solve.rewrite(Add) - ivp_solve.rewrite(Add))
-            # The constant of integration may not be found if there are
-            # additional free symbols.
-            constant = solve(ode_solve.rewrite(Add) - ivp_solve.rewrite(Add),
-                             ode_solve.free_symbols - ivp_solve.free_symbols)
-            if len(constant) != 1:
-                raise KeyError('Failed to find the constant of integration.')
-            return constant[0]
 
         def dx_dt(x_index, x_Sw):
             '''
@@ -890,6 +865,10 @@ class ODEModel:
                 flux (kinetic laws) vector.
             '''
             x_id = symbols['species']['identifier'][x_index]
+            if x_id in si.compartment_rules:
+                return x_Sw
+            elif x_id in si.compartment_symbols:
+                raise KeyError('This should not happen. There exists an ODE for an compartment that does not have an associated rate rule.')
             v_name = si.species_compartment[x_index]
             if v_name in si.compartment_rules:
                 if (si.compartment_rules[v_name]['type_code']
@@ -897,20 +876,29 @@ class ODEModel:
                     v = si.compartment_rules[v_name]['formula']
                     dv_dt = v.diff(si.amici_time_symbol)
                     dv_dx = v.diff(x_id)
-                    return (x_Sw - dv_dt*x_id)/(dv_dx*x_id + v)
+                    # not sure if parentheses here are necessary...
+                    return ((x_Sw) - (dv_dt)*(x_id))/((dv_dx)*(x_id) + (v))
                 elif (si.compartment_rules[v_name]['type_code']
                           == libsbml.SBML_RATE_RULE):
+                    t = si.amici_time_symbol
+                    f = Function(sp.sstr(v_name))
+                    f0 = si.compartment_rules[v_name]['v0']
                     dv_dt = si.compartment_rules[v_name]['formula']
-                    v = (dv_dt.integrate(si.amici_time_symbol)
-                        + constant_of_integration(dv_dt,
-                                        si.compartment_rules[v_name]['v0']))
-                    return (x_Sw - dv_dt*x_id)/v
+                    v = dsolve(Derivative(f(t), t) - dv_dt.subs(v_name, f(t)), f(t), ics={f(0): f0}).rhs
+                    ode = ((x_Sw) - (dv_dt)*(x_id))/(v_name)
+                    # might need to do this for assignment rules as well
+                    for w_index, w in enumerate(self.sym('w')):
+                        self._eqs['dxdotdw'][x_index,w_index] = ode.diff(w)
+                    #return ((x_Sw) - (dv_dt)*(x_id))/(v_name)
+                    return ode
                 else:
+                    # this should not occur (should be handled by sbml_import.py)
                     raise TypeError(f'A compartment rule for "{v_name}" '
                                     'exists that is neither an assignment nor '
                                     'rate rule.')
             else:
-                return x_Sw
+                v = si.compartment_volume[list(si.compartment_symbols).index(si.species_compartment[x_index])]
+                return (x_Sw)/(v)
 
         if len(si.stoichiometric_matrix):
             Sw = (MutableDenseMatrix(si.stoichiometric_matrix)
@@ -1708,6 +1696,9 @@ class ODEModel:
         self._eqs[name] = sp.Matrix(
             [comp.get_val() for comp in getattr(self, component)]
         )
+
+        if name == 'x0':
+            self._eqs['x0'] = self._eqs['x0'].subs({c: self.si.compartment_rules[c]['v0'] for c in self.si.compartment_rules})
         # flatten conservation laws in expressions
         if name == 'w':
             self._eqs[name] = self._eqs[name].subs(

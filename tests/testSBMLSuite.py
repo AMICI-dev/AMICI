@@ -20,6 +20,8 @@ import numpy as np
 import sympy as sp
 import pandas as pd
 
+import libsbml
+
 
 # directory with sbml semantic test cases
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
@@ -78,6 +80,7 @@ def test_sbml_testsuite_case(test_number, result_path):
         write_result_file(simulated_x, model, test_id, result_path)
 
     except amici.sbml_import.SBMLException as err:
+        #assert False, f"Skipped {test_id}: {err}"
         print(f'TestCase {test_id} was skipped: {err}')
 
 
@@ -88,14 +91,10 @@ def verify_results(settings, rdata, results, wrapper,
 
     # verify states
     simulated_x = rdata['x']
-    expected_x = results[1:, [
-                             1 + wrapper.species_index[variable]
-                             for variable in variables_species
-                             if variable in wrapper.species_index.keys()
-                         ]]
-
+    sim_shared_cols = [variables_species.index(x_id) for x_id in wrapper.species_index.keys() if x_id in variables_species]
+    expected_x = results[1:, [1+c for c in sim_shared_cols]]
     concentrations_to_amounts(amount_species, wrapper, model, simulated_x)
-
+    #np.set_printoptions(linewidth=np.inf)
     assert np.isclose(simulated_x, expected_x, atol, rtol).all()
 
     # TODO: verify compartment volumes and parameters
@@ -106,10 +105,20 @@ def verify_results(settings, rdata, results, wrapper,
 def concentrations_to_amounts(amount_species, wrapper, model, simulated_x):
     """Convert AMICI simulated concentrations to amounts"""
     for species in amount_species:
-        if not species == '':
+        # Skip "species" that are actually compartments
+        if not species == '' and species not in [
+                sp.sstr(c) for c in wrapper.compartment_symbols]:
             symvolume = wrapper.species_compartment[
                 wrapper.species_index[species]
             ]
+
+            # Volumes are already reported for compartments with rate rules (not assignment rules)
+            if symvolume in wrapper.compartment_rules and wrapper.compartment_rules[symvolume]['type_code'] == libsbml.SBML_RATE_RULE:
+                simulated_x[:, wrapper.species_index[species]] = \
+                    simulated_x[:, wrapper.species_index[species]] * \
+                    simulated_x[:, wrapper.species_index[sp.sstr(symvolume)]]
+                continue
+
             volume = symvolume.subs({
                 comp: vol
                 for comp, vol in zip(
