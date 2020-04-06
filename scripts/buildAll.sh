@@ -4,11 +4,11 @@
 #
 set -e
 
-SCRIPT_PATH=$(dirname $BASH_SOURCE)
-SCRIPT_PATH=$(cd $SCRIPT_PATH && pwd)
+script_path=$(dirname "$BASH_SOURCE")
+script_path=$(cd "$script_path" && pwd)
 
-${SCRIPT_PATH}/buildSuiteSparse.sh
-${SCRIPT_PATH}/buildSundials.sh
-${SCRIPT_PATH}/buildCpputest.sh
-${SCRIPT_PATH}/buildBNGL.sh
-${SCRIPT_PATH}/buildAmici.sh
+"${script_path}/buildSuiteSparse.sh"
+"${script_path}/buildSundials.sh"
+"${script_path}/buildCpputest.sh"
+"${script_path}/buildBNGL.sh"
+"${script_path}/buildAmici.sh"

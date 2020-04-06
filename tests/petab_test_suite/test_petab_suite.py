@@ -15,7 +15,7 @@ from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
 from amici.petab_import import import_petab_problem
 from amici.petab_objective import (
-    simulate_petab, rdatas_to_measurement_df, edatas_from_petab)
+    simulate_petab, rdatas_to_measurement_df, create_parameterized_edatas)
 from amici import SteadyStateSensitivityMode_simulationFSA
 
 logger = get_logger(__name__, logging.DEBUG)
@@ -127,8 +127,9 @@ def check_derivatives(problem: petab.Problem, model: amici.Model) -> None:
     def assert_true(x):
         assert x
 
-    for edata in edatas_from_petab(model=model, petab_problem=problem,
-                                   problem_parameters=problem_parameters):
+    for edata in create_parameterized_edatas(
+            amici_model=model, petab_problem=problem,
+            problem_parameters=problem_parameters):
         # check_derivatives does currently not support parameters in ExpData
         model.setParameters(edata.parameters)
         model.setParameterScale(edata.pscale)

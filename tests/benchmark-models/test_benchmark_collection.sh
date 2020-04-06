@@ -11,12 +11,14 @@ Boehm_JProteomeRes2014
 Borghans_BiophysChem1997
 Elowitz_Nature2000
 Schwen_PONE2014
-Chen_MSB2009
 Fujita_SciSignal2010
 Sneyd_PNAS2002
 Zheng_PNAS2012
 Weber_BMC2015"
 
+# Model needs fixing:
+# Chen_MSB2009
+#
 # Not matching reference for unclear reasons
 # Lucarelli_CellSystems2018
 # Weber_BMC2015
@@ -98,7 +100,8 @@ for model in $models; do
   echo
 
   if [[ -z "$dry_run" ]]; then
-    $cmd_import && $cmd_run
+    $cmd_import
+    $cmd_run
   else
     echo "$cmd_import"
     echo "$cmd_run"
