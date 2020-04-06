@@ -4,16 +4,16 @@
 #
 set -e
 
-SCRIPT_PATH=$(dirname $BASH_SOURCE)
-AMICI_PATH=$(cd ${SCRIPT_PATH}/.. && pwd)
+script_path=$(dirname "$BASH_SOURCE")
+amici_path=$(cd "${script_path}/.." && pwd)
 
-cd ${AMICI_PATH}/ThirdParty
+cd "${amici_path}/ThirdParty"
 
-if [[ ! -d SuperLU_MT_3.1 ]]; then
-    if [[ ! -f superlu_mt_3.1.tar.gz ]]; then
-        wget https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_mt_3.1.tar.gz
+if [[ ! -d "SuperLU_MT_3.1" ]]; then
+    if [[ ! -f "superlu_mt_3.1.tar.gz" ]]; then
+        wget "https://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_mt_3.1.tar.gz"
     fi
-    tar -xzf superlu_mt_3.1.tar.gz SuperLU_MT_3.1/
+    tar -xzf "superlu_mt_3.1.tar.gz SuperLU_MT_3.1/"
 fi
 
 cd SuperLU_MT_3.1/

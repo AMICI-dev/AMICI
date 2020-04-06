@@ -78,7 +78,6 @@ matrix:
       env:
         - CI_BUILD=TRUE
         - CI_CPPUTEST=TRUE
-        - CI_CMAKE=TRUE
         - CI_ARCHIVE=TRUE
         - CI_CPPCHECK=TRUE
         - CI_PYTHON=TRUE
@@ -185,7 +184,6 @@ script:
     - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" == "TRUE" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" != "TRUE" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
     # needs to be run after python tests
-    - if [[ "$CI_CMAKE" == "TRUE" ]]; then $FOLD cmake ./tests/testCMakeCompilation.sh; fi
     - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
     - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
