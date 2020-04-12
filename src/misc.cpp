@@ -42,14 +42,22 @@ const gsl::span<const realtype> slice(const std::vector<realtype> &data,
     return gsl::make_span(static_cast<realtype*>(nullptr), 0);
 }
 
-void checkBufferSize(gsl::span<realtype> buffer, unsigned expected_size) {
+template <class T>
+void checkBufferSize(gsl::span<T> buffer, unsigned expected_size) {
     if (buffer.size() != expected_size)
         throw AmiException("Incorrect buffer size! Was %u, expected %u.",
                            buffer.size(), expected_size);
 }
 
+// templating will mess up vector conversion
 void writeSlice(const gsl::span<const realtype> slice,
                 gsl::span<realtype> buffer) {
+    checkBufferSize(buffer, slice.size());
+    std::copy(slice.begin(), slice.end(), buffer.data());
+}
+
+void writeSlice(const gsl::span<const int> slice,
+                gsl::span<int> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
 }

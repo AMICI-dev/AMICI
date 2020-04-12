@@ -124,10 +124,8 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
     preeq_wrms = preeq.getResidualNorm();
     if (preeq.getNewtonStatus() == NewtonStatus::newt_sim)
         preeq_t = preeq.getSteadyStateTime();
-    std::copy(preeq.getNumSteps().begin(), preeq.getNumSteps().end(),
-              preeq_numsteps.data());
-    std::copy(preeq.getNumLinSteps().begin(), preeq.getNumLinSteps().end(),
-              preeq_numlinsteps.data());
+    writeSlice(preeq.getNumSteps(), preeq_numsteps);
+    writeSlice(preeq.getNumLinSteps(), preeq_numlinsteps);
 }
 
 void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
@@ -146,10 +144,8 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     posteq_wrms = posteq.getResidualNorm();
     if (posteq.getNewtonStatus() == NewtonStatus::newt_sim)
         preeq_t = posteq.getSteadyStateTime();
-    std::copy(posteq.getNumSteps().begin(), posteq.getNumSteps().end(),
-              preeq_numsteps.data());
-    std::copy(posteq.getNumLinSteps().begin(), posteq.getNumLinSteps().end(),
-              preeq_numlinsteps.data());
+    writeSlice(posteq.getNumSteps(), preeq_numsteps);
+    writeSlice(posteq.getNumLinSteps(), preeq_numlinsteps);
 }
 
 void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
@@ -337,28 +333,17 @@ void ReturnData::processSolver(Solver const &solver) {
 
     cpu_time = solver.getCpuTime();
 
-    std::copy_n(solver.getNumSteps().data(), solver.getNumSteps().size(),
-                numsteps.data());
-    std::copy_n(solver.getNumRhsEvals().data(), solver.getNumRhsEvals().size(),
-                numrhsevals.data());
-    std::copy_n(solver.getNumErrTestFails().data(),
-                solver.getNumErrTestFails().size(), numerrtestfails.data());
-    std::copy_n(solver.getNumNonlinSolvConvFails().data(),
-                solver.getNumNonlinSolvConvFails().size(),
-                numnonlinsolvconvfails.data());
-    std::copy_n(solver.getLastOrder().data(), solver.getLastOrder().size(),
-                order.data());
+    writeSlice(solver.getNumSteps(), numsteps);
+    writeSlice(solver.getNumRhsEvals(), numrhsevals);
+    writeSlice(solver.getNumErrTestFails(), numerrtestfails);
+    writeSlice(solver.getNumNonlinSolvConvFails(), numnonlinsolvconvfails);
+    writeSlice(solver.getLastOrder(), order);
 
     cpu_timeB = solver.getCpuTimeB();
-    std::copy_n(solver.getNumStepsB().data(), solver.getNumStepsB().size(),
-                numstepsB.data());
-    std::copy_n(solver.getNumRhsEvalsB().data(),
-                solver.getNumRhsEvalsB().size(), numrhsevalsB.data());
-    std::copy_n(solver.getNumErrTestFailsB().data(),
-                solver.getNumErrTestFailsB().size(), numerrtestfailsB.data());
-    std::copy_n(solver.getNumNonlinSolvConvFailsB().data(),
-                solver.getNumNonlinSolvConvFailsB().size(),
-                numnonlinsolvconvfailsB.data());
+    writeSlice(solver.getNumStepsB(), numstepsB);
+    writeSlice(solver.getNumRhsEvalsB(), numrhsevalsB);
+    writeSlice(solver.getNumErrTestFailsB(), numerrtestfailsB);
+    writeSlice(solver.getNumNonlinSolvConvFailsB(), numnonlinsolvconvfailsB);
 }
 
 void ReturnData::storeJacobianAndDerivativeInReturnData(

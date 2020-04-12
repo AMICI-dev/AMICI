@@ -43,15 +43,24 @@ const gsl::span<const realtype> slice(const std::vector<realtype> &data,
  * @param buffer buffer to which values are to be written
  * @param expected_size expected size of the buffer
  */
-void checkBufferSize(gsl::span<realtype> buffer, unsigned expected_size);
+template <class T>
+void checkBufferSize(gsl::span<T> buffer, unsigned expected_size);
 
 /**
- * @brief local helper function to write computed slice to provided buffer
+ * @brief local helper function to write computed slice to provided buffer (realtype)
  * @param slice computed value
  * @param buffer buffer to which values are to be written
  */
 void writeSlice(const gsl::span<const realtype> slice,
                 gsl::span<realtype> buffer);
+
+/**
+ * @brief local helper function to write computed slice to provided buffer (int)
+ * @param slice computed value
+ * @param buffer buffer to which values are to be written
+ */
+void writeSlice(const gsl::span<const int> slice,
+                gsl::span<int> buffer);
 
 
 /**
