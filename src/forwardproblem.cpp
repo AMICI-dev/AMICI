@@ -39,7 +39,8 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
       stau(model->nplist())
 {
     if (preeq) {
-        preeq->writeSolution(&t, x, sx);
+        x = preeq->getState();
+        sx = preeq->getStateSensitivity();
         preequilibrated = true;
     }
 }
@@ -51,34 +52,31 @@ void ForwardProblem::workForwardProblem() {
     }
 
     auto presimulate = edata && edata->t_presim > 0;
-    
-    /* if preequilibration was done, solver was already set up */
+
+    /* if preequilibration was done, model was already initialized */
     if (!preequilibrated)
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
-    /* presimulation will reinit on its own and needs proper context */
-    else if(!presimulate)
-        solver->updateAndReinitStatesAndSensitivities(model);
-    
+
+    /* compute initial time and setup solver for (pre-)simulation */
     auto t0 = model->t0();
     if (presimulate)
         t0 -= edata->t_presim;
     solver->setup(t0, model, x, dx, sx, sdx);
-    // update x0 after computing consistence IC, only important for DAEs
-    x.copy(solver->getState(t0));
 
-    
     /* perform presimulation if necessary */
     if (presimulate) {
         handlePresimulation();
         t = model->t0();
-        /* make sure we are back in simulation context, so dont put this in
-           handlePresimulation */
-        solver->updateAndReinitStatesAndSensitivities(model);
     }
-    
-    /* store initial sensitivity and */
+    if (presimulate || preequilibrated)
+        solver->updateAndReinitStatesAndSensitivities(model);
+
+    // update x0 after computing consistence IC/presimulation
+    x.copy(solver->getState(model->t0()));
+
+    /* store initial state and sensitivity*/
     x0.copy(x);
     if(solver->getSensitivityOrder() >= SensitivityOrder::first &&
        (!presimulate ||
@@ -88,7 +86,7 @@ void ForwardProblem::workForwardProblem() {
     /* loop over timepoints */
     for (it = 0; it < model->nt(); it++) {
         auto nextTimepoint = model->getTimepoint(it);
-        
+
         if (std::isinf(nextTimepoint))
             break;
 
@@ -130,7 +128,7 @@ void ForwardProblem::handlePresimulation()
 void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     /* store heaviside information at event occurence */
     model->froot(t, x, dx, rootvals);
-    
+
     /* store timepoint at which the event occured*/
     discs.push_back(t);
 
@@ -241,19 +239,13 @@ void ForwardProblem::storeEvent() {
         }
         rootidx.push_back(rootsfound);
     }
-    
-    if (getRootCounter() < static_cast<int>(x_events.size())) {
+
+    if (getRootCounter() < getEventCounter()) {
         /* update stored state (sensi) */
-        x_events.at(getRootCounter()) = x;
-        h_events.at(getRootCounter()) = model->getHeaviside();
-        if (solver->computingFSA())
-            sx_events.at(getRootCounter()) = sx;
+        event_states.at(getRootCounter()) = getSimulationState();
     } else {
         /* add stored state (sensi) */
-        x_events.push_back(x);
-        h_events.push_back(model->getHeaviside());
-        if (solver->computingFSA())
-            sx_events.push_back(sx);
+        event_states.push_back(getSimulationState());
     }
 
     /* EVENT OUTPUT */
@@ -267,7 +259,7 @@ void ForwardProblem::storeEvent() {
             t != model->getTimepoint(model->nt() - 1)) {
             continue;
         }
-        
+
         if (edata && solver->computingASA())
             model->getAdjointStateEventUpdate(slice(dJzdx, nroots.at(ie),
                                                     model->nx_solver * model->nJ),
@@ -284,14 +276,8 @@ void ForwardProblem::storeEvent() {
 }
 
 void ForwardProblem::handleDataPoint(int it) {
-    
-    x_timepoints.push_back(x);
-    h_timepoints.push_back(model->getHeaviside());
+    timepoint_states.push_back(getSimulationState());
     solver->storeDiagnosis();
-    
-    if (solver->computingFSA()) {
-        sx_timepoints.push_back(sx);
-    }
 }
 
 void ForwardProblem::applyEventBolus() {
@@ -315,9 +301,19 @@ void ForwardProblem::getAdjointUpdates(Model &model,
             return;
         model.getAdjointStateObservableUpdate(
             slice(dJydx, it, model.nx_solver * model.nJ), it,
-            x_timepoints.at(it), edata
+            timepoint_states.at(it).x, edata
         );
     }
+}
+
+SimulationState ForwardProblem::getSimulationState() const {
+    auto state = SimulationState();
+    state.t = t;
+    state.x = x;
+    if (solver->computingFSA())
+        state.sx = sx;
+    state.state = model->getModelState();
+    return state;
 }
 
 } // namespace amici

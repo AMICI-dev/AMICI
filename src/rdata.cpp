@@ -24,7 +24,6 @@ ReturnData::ReturnData(Solver const& solver, const Model &model)
                  static_cast<SensitivityMethod>(solver.getSensitivityMethod())) {
 }
 
-
 ReturnData::ReturnData(
         std::vector<realtype> ts,
         int np, int nk, int nx, int nx_solver, int nxtrue, int ny, int nytrue,
@@ -109,10 +108,12 @@ ReturnData::ReturnData(
 
 void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
                                          Model &model) {
-    model.fx_rdata(x_rdata, preeq.getState());
+    ModelContext mc(&model);
+    readSimulationState(preeq.getSimulationState(), model);
+    model.fx_rdata(x_rdata, x_solver);
     x_ss = x_rdata.getVector();
     if (sensi >= SensitivityOrder::first) {
-        model.fsx_rdata(sx_rdata, preeq.getStateSensitivity());
+        model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++)
             std::copy_n(sx_rdata.data(ip), nx,
                         &sx_ss.at(ip * nx));
@@ -122,12 +123,11 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
 void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
                                           Model &model,
                                           ExpData const *edata){
+    ModelContext mc(&model);
     for (int it=0; it<nt; it++) {
         auto t = model.getTimepoint(it);
         if (std::isinf(t)) {
-            x_solver = posteq.getState();
-            if (computingFSA())
-                sx_solver = posteq.getStateSensitivity();
+            readSimulationState(posteq.getSimulationState(), model);
             getDataOutput(it, model, edata);
         }
     }
@@ -136,7 +136,7 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
 void ReturnData::processForwardProblem(ForwardProblem const &fwd,
                                        Model &model,
                                        ExpData const *edata){
-    auto original_h = model.getHeaviside();
+    ModelContext mc(&model);
     if(edata)
         initializeObjectiveFunction();
     
@@ -153,10 +153,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
     
     // process timpoint data
     for (int it=0; it <= fwd.getTimePointCounter(); it++) {
-        x_solver = fwd.getStateTimePoint(it);
-        if (computingFSA())
-            sx_solver = fwd.getStateSensitivityTimePoint(it);
-        model.setHeaviside(fwd.getHeavisideTimePoint(it));
+        readSimulationState(fwd.getSimulationStateTimepoint(it), model);
         getDataOutput(it, model, edata);
     }
     // check for integration failure but consider postequilibration
@@ -167,15 +164,10 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
     // process event data
     if (nz > 0) {
         auto rootidx = fwd.getRootIndexes();
-        for (int iroot=0; iroot <= fwd.getRootCounter(); iroot++) {
-            auto t = fwd.getDiscontinuities().at(iroot);
-            x_solver = fwd.getStateEvent(iroot);
-            if (computingFSA())
-                sx_solver = fwd.getStateSensitivityEvent(iroot);
-            model.setHeaviside(fwd.getHeavisideEvent(iroot));
+        for (int iroot=0; iroot <= fwd.getEventCounter(); iroot++) {
+            readSimulationState(fwd.getSimulationStateEvent(iroot), model);
             getEventOutput(iroot, t, rootidx.at(iroot), model, edata);
         }
-        model.setHeaviside(original_h);
     }
 }
 
@@ -371,6 +363,8 @@ void ReturnData::processSolver(Solver const &solver) {
 
 void ReturnData::storeJacobianAndDerivativeInReturnData(
         ForwardProblem const &fwd, Model &model) {
+    // dont use SimulationState here since we explicitely want to evaluate at
+    // final timepoint
     auto t = fwd.getTime();
     auto x = fwd.getState();
     auto dx = fwd.getStateDerivative();
@@ -385,6 +379,16 @@ void ReturnData::storeJacobianAndDerivativeInReturnData(
     auto dx = AmiVector(model.nx_solver);
     
     storeJacobianAndDerivativeInReturnData(t, x, dx, model);
+}
+
+void ReturnData::readSimulationState(SimulationState const &state,
+                                     Model &model) {
+    x_solver = state.x;
+    if (computingFSA())
+        sx_solver = state.sx;
+    t = state.t;
+    model.setModelState(state.state);
+    
 }
 
 void ReturnData::storeJacobianAndDerivativeInReturnData(realtype t,
@@ -674,6 +678,19 @@ void ReturnData::fFIM(const int it) {
             }
         }
     }
+}
+
+ModelContext::ModelContext(Model *model)
+    : model(model), original_state(model->getModelState()) {}
+
+ModelContext::~ModelContext()
+{
+    restore();
+}
+
+void ModelContext::restore()
+{
+    model->setModelState(original_state);
 }
 
 

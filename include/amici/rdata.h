@@ -3,18 +3,19 @@
 
 #include "amici/defines.h"
 #include "amici/vector.h"
+#include "amici/model.h"
 
 
 #include <vector>
 
 namespace amici {
-class Model;
 class ReturnData;
 class Solver;
 class ExpData;
 class ForwardProblem;
 class BackwardProblem;
 class SteadystateProblem;
+struct SimulationState;
 } // namespace amici
 
 namespace boost {
@@ -157,6 +158,12 @@ class ReturnData {
                                                 const AmiVector &x,
                                                 const AmiVector &dx,
                                                 Model &model);
+    /**
+     * @brief sets member variables and model state according to provided simulation state
+     * @param state simulation state provided by Problem
+     * @param model model that was used for forward/backward simulation
+     */
+    void readSimulationState(SimulationState const &state, Model &model);
     
     /**
      * @brief Set likelihood, state variables, outputs and respective
@@ -478,6 +485,10 @@ class ReturnData {
                                                 unsigned int version);
     
   protected:
+    
+    /** timepoint for model evaluation*/
+    realtype t;
+    
     /** partial state vector, excluding states eliminated from conservation laws */
     AmiVector x_solver;
     
@@ -549,6 +560,34 @@ class ReturnData {
     void getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
                            ExpData const *edata);
 };
+
+/**
+ * @brief The ModelContext temporarily stores amici::Model::state
+ * estores it when going out of scope
+ */
+class ModelContext {
+  public:
+    /**
+     * @brief initialize backup of the original values.
+     *
+     * @param model
+     */
+    explicit ModelContext(Model *model);
+
+    ~ModelContext();
+
+    /**
+     * @brief Restore original state on constructor-supplied amici::Model.
+     * Will be called during destruction. Explicit call is generally not
+     * necessary.
+     */
+    void restore();
+
+  private:
+    Model *model = nullptr;
+    ModelState original_state;
+};
+
 
 } // namespace amici
 

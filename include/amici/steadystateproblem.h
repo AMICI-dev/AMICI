@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 #include "amici/solver_cvodes.h"
+#include "amici/forwardproblem.h"
 #include <amici/newton_solver.h>
 
 #include <nvector/nvector_serial.h>
@@ -21,7 +22,6 @@ class Model;
  * @brief The SteadystateProblem class solves a steady-state problem using
  * Newton's method and falls back to integration on failure.
  */
-
 class SteadystateProblem {
   public:
     /**
@@ -31,7 +31,7 @@ class SteadystateProblem {
      */
     explicit SteadystateProblem(const Solver &solver,
                                 const Model &model);
-    
+
     void workSteadyStateProblem(ReturnData *rdata, Solver *solver,
                                 Model *model, int it);
 
@@ -106,29 +106,38 @@ class SteadystateProblem {
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
                                                        Model *model) const;
-    
+
     /**
-     * @brief routine that writes solutions of steadystate problem to target
-     vectors
-     * @param t final timepoint
-     * @param x steadystate state
-     * @param sx steadystate state sensitivity
+     * @brief store carbon copy of current simulation state variables as SimulationState
+     * @param model model carrying the ModelState to be used
+     * @param storesensi flag to enable storage of sensitivities
      */
-    void writeSolution(realtype *t, AmiVector &x, AmiVectorArray &sx) const;
-    
+    void storeSimulationState(Model *model, bool storesensi);
+
+    /**
+     * @brief returns the stored SimulationState
+     */
+    const SimulationState getSimulationState() const {
+        return state;
+    };
+
     /**
      * @brief returns state at steadystate
      * @return x
      */
-    const AmiVector &getState() const;
+    const AmiVector &getState() const {
+        return x;
+    };
 
-    
+
     /**
      * @brief returns state sensitivity at steadystate
      * @return sx
      */
-    const AmiVectorArray &getStateSensitivity() const;
-    
+    const AmiVectorArray &getStateSensitivity() const {
+        return sx;
+    };
+
      /**
       * @brief Accessor for dJydx
       * @return dJydx
@@ -136,7 +145,7 @@ class SteadystateProblem {
     std::vector<realtype> const& getDJydx() const {
          return dJydx;
      }
-    
+
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
      * @param model Model instance
@@ -144,8 +153,8 @@ class SteadystateProblem {
      */
     void getAdjointUpdates(Model &model,
                            const ExpData &edata);
-    
-    
+
+
 
   private:
     /** time variable for simulation steadystate finding */
@@ -175,11 +184,12 @@ class SteadystateProblem {
 
     /** weighted root-mean-square error */
     realtype wrms = NAN;
-    
+
     /** state derivative of data likelihood
      * (dimension nJ x nx x nt, ordering =?) */
     std::vector<realtype> dJydx;
 
+    SimulationState state;
 };
 
 } // namespace amici

@@ -46,7 +46,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
 
     /* First, try to do Newton steps */
     starttime = clock();
-    
+
     if (it == -1){
         // solver was not run before, set up everything
         model->initialize(x, dx, sx, sdx,
@@ -58,7 +58,7 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
         // solver was run before, extract current state from solver
         solver->writeSolution(&t, x, dx, sx);
     }
-    
+
 
     auto newtonSolver = NewtonSolver::getSolver(
         &t, &x, solver->getLinearSolver(), model, rdata,
@@ -118,6 +118,8 @@ void SteadystateProblem::workSteadyStateProblem(ReturnData *rdata,
 
     /* Get output of steady state solver, write it to x0 and reset time if necessary */
     writeNewtonOutput(rdata, model, newton_status, run_time, it);
+    storeSimulationState(model, solver->getSensitivityOrder() >=
+                                SensitivityOrder::first);
 }
 
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
@@ -137,7 +139,8 @@ bool SteadystateProblem::checkConvergence(
                                          Model *model
                                          ) {
     model->fxdot(t, x, dx, xdot);
-    wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(), solver->getRelativeToleranceSteadyState());
+    wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(),
+                       solver->getRelativeToleranceSteadyState());
     bool converged = wrms < RCONST(1.0);
     if (solver->getSensitivityOrder()>SensitivityOrder::none &&
         solver->getSensitivityMethod() == SensitivityMethod::forward) {
@@ -353,21 +356,6 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     return newton_solver;
 }
 
-void SteadystateProblem::writeSolution(realtype *t, AmiVector &x,
-                                       AmiVectorArray &sx) const {
-    *t = this->t;
-    x.copy(this->x);
-    sx.copy(this->sx);
-}
-
-const AmiVector &SteadystateProblem::getState() const {
-    return x;
-}
-
-const AmiVectorArray &SteadystateProblem::getStateSensitivity() const {
-    return sx;
-}
-
 void SteadystateProblem::getAdjointUpdates(Model &model,
                                            const ExpData &edata) {
     for (int it=0; it < model.nt(); it++) {
@@ -378,5 +366,12 @@ void SteadystateProblem::getAdjointUpdates(Model &model,
     }
 }
 
+void SteadystateProblem::storeSimulationState(Model *model, bool storesensi) {
+    state.t = INFINITY;
+    state.x = x;
+    if (storesensi)
+        state.sx = sx;
+    state.state = model->getModelState();
+}
 
 } // namespace amici

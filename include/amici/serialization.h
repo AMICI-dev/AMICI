@@ -99,12 +99,12 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.o2mode;
     ar &u.z2event;
     ar &u.idlist;
-    ar &u.h;
-    ar &u.unscaledParameters;
+    ar &u.state.h;
+    ar &u.state.unscaledParameters;
     ar &u.originalParameters;
-    ar &u.fixedParameters;
+    ar &u.state.fixedParameters;
     ar &u.reinitializeFixedParameterInitialStates;
-    ar &u.plist_;
+    ar &u.state.plist;
     ar &u.x0data;
     ar &u.sx0data;
     ar &u.ts;

@@ -3,6 +3,7 @@
 
 #include "amici/defines.h"
 #include "amici/vector.h"
+#include "amici/model.h"
 #include "amici/sundials_matrix_wrapper.h"
 
 #include <sundials/sundials_direct.h>
@@ -13,8 +14,15 @@ namespace amici {
 
 class ExpData;
 class Solver;
-class Model;
 class SteadystateProblem;
+
+struct SimulationState{
+    realtype t;
+    AmiVector x;
+    AmiVectorArray sx;
+    ModelState state;
+};
+
 
 /**
  * @brief The ForwardProblem class groups all functions for solving the
@@ -41,7 +49,7 @@ class ForwardProblem {
      * If forward sensitivities are enabled this will also compute sensitivies.
      */
     void workForwardProblem();
-    
+
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
      * @param model Model instance
@@ -64,7 +72,7 @@ class ForwardProblem {
     AmiVector const& getState() const {
         return x;
     }
-    
+
     /**
      * @brief Accessor for dx
      * @return dx
@@ -72,7 +80,7 @@ class ForwardProblem {
     AmiVector const& getStateDerivative() const {
         return dx;
     }
-    
+
     /**
      * @brief Accessor for sx
      * @return sx
@@ -144,7 +152,7 @@ class ForwardProblem {
     std::vector<realtype> const& getDJzdx() const {
         return dJzdx;
     }
-    
+
     /**
      * @brief Accessor for pointer to x
      * @return &x
@@ -176,7 +184,7 @@ class ForwardProblem {
     AmiVectorArray *getStateDerivativeSensitivityPointer() {
         return &sdx;
     }
-    
+
     /**
      * @brief Accessor for it
      * @return it
@@ -184,93 +192,64 @@ class ForwardProblem {
     int getCurrentTimeIteration() {
         return it;
     }
-    
+
     /**
-     * @brief Accessor for x_timepoints
-     * @return x_timepoints.at(it)
+     * @brief Accessor for x0
+     * @return x0
      */
     const AmiVector &getInitialState() const {
         return x0;
     }
-    
+
     /**
-     * @brief Accessor for sx_timepoints
-     * @return sx_timepoints.at(it)
+     * @brief Accessor for sx0
+     * @return sx0
      */
     const AmiVectorArray &getInitialStateSensitivity() const {
         return sx0;
     }
-    
+
     /**
      * @brief Returns maximal time point index for which simulations are available
      * @return index
      */
     int getTimePointCounter() const {
-        return x_timepoints.size() - 1;
+        return timepoint_states.size() - 1;
     }
-    
-    /**
-     * @brief Accessor for x_timepoints
-     * @param it timepoint index
-     * @return x_timepoints.at(it)
-     */
-    const AmiVector &getStateTimePoint(int it) const {
-        return x_timepoints.at(it);
-    }
-    
-    /**
-     * @brief Accessor for h_timepoints
-     * @param it timepoint index
-     * @return h_timepoints.at(it)
-     */
-    const std::vector<realtype> &getHeavisideTimePoint(int it) const {
-        return h_timepoints.at(it);
-    }
-    
-    /**
-     * @brief Accessor for sx_timepoints
-     * @param it timepoint index
-     * @return sx_timepoints.at(it)
-     */
-    const AmiVectorArray &getStateSensitivityTimePoint(int it) const {
-        return sx_timepoints.at(it);
-    }
-    
+
     /**
      * @brief Returns maximal event index for which simulations are available
      * @return index
      */
-    int getRootCounter() const {
-        return discs.size() - 1;;
+    int getEventCounter() const {
+        return event_states.size() - 1;
     }
 
-    
     /**
-     * @brief Accessor for x_events
-     * @param iroot timepoint index
-     * @return x_events.at(iroot)
+     * @brief Returns maximal event index for which the timepoint is available
+     * @return index
      */
-    const AmiVector &getStateEvent(int iroot) const {
-        return x_events.at(iroot);
+    int getRootCounter() const {
+        return discs.size() - 1;
     }
-    
+
     /**
-     * @brief Accessor for h_events
-     * @param iroot timepoint index
-     * @return h_events.at(iroot)
+     * @brief Retrieves the carbon copy of the simulation state variables at
+     * the specified timepoint index
+     * @return state
      */
-    const std::vector<realtype> &getHeavisideEvent(int iroot) const {
-        return h_events.at(iroot);
-    }
-    
+    const SimulationState &getSimulationStateTimepoint(int it) const {
+        return timepoint_states.at(it);
+    };
+
     /**
-     * @brief Accessor for sx_events
-     * @param iroot timepoint index
-     * @return sx_events.at(iroot)
+     * @brief Retrieves the carbon copy of the simulation state variables at
+     * the specified event index
+     * @return state
      */
-    const AmiVectorArray &getStateSensitivityEvent(int iroot) const {
-        return sx_events.at(iroot);
-    }
+    const SimulationState &getSimulationStateEvent(int iroot) const {
+        return event_states.at(iroot);
+    };
     
     /** pointer to model instance */
     Model *model;
@@ -315,7 +294,7 @@ class ForwardProblem {
      * @brief Applies the event bolus to the current sensitivities
      */
     void applyEventSensiBolusFSA();
-    
+
     /**
      * @brief checks whether there are any events to fill
      *
@@ -326,7 +305,7 @@ class ForwardProblem {
                 return curNRoots < nmaxevent;
         });
     };
-    
+
     /**
      * @brief fills events at final timepoint if necessary
      *
@@ -338,7 +317,13 @@ class ForwardProblem {
             storeEvent();
         }
     }
-    
+
+    /**
+     * @brief Creates a carbon copy of the current simulation state variables
+     * @return state
+     */
+    SimulationState getSimulationState() const;
+
 
     /** array of index which root has been found
      * (dimension: dynamic, ordering = ?) */
@@ -394,30 +379,18 @@ class ForwardProblem {
      */
     std::vector<int> rootsfound;
 
-    /** state vector history at timepoints  */
-    std::vector<AmiVector> x_timepoints;
-    
-    /** state sensitivity vector history at timepoints */
-    std::vector<AmiVectorArray> sx_timepoints;
-    
-    /** heaviside history at timepoints  */
-    std::vector<std::vector<realtype>> h_timepoints;
-    
+    /** simulation states at timepoints  */
+    std::vector<SimulationState> timepoint_states;
+
     /** state vector history at events*/
-    std::vector<AmiVector> x_events;
-    
-    /** state sensitivity vector history at events*/
-    std::vector<AmiVectorArray> sx_events;
-    
-    /** heaviside history at events  */
-    std::vector<std::vector<realtype>> h_events;
-    
+    std::vector<SimulationState> event_states;
+
     /** initial state */
     AmiVector x0;
-    
+
     /** initial state sensitivity */
     AmiVectorArray sx0;
-    
+
     /** state vector (dimension: nx_solver) */
     AmiVector x;
 
@@ -442,21 +415,20 @@ class ForwardProblem {
     /** differential sensitivity state vector array
      * (dimension: nx_cl x nplist, row-major) */
     AmiVectorArray sdx;
-    
+
     /** sensitivity of the event timepoint (dimension: nplist) */
     std::vector<realtype> stau;
 
     /** storage for last found root */
     realtype tlastroot = 0.0;
-    
+
     /** flag to indicate wheter solver was preeinitialized via preequilibration */
     bool preequilibrated = false;
-    
+
     /** current iteration number for time index */
     int it;
 
 };
-
 
 } // namespace amici
 

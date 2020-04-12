@@ -37,10 +37,7 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
                                       ['sbml', 'pysb']):
         # check equilibrium fixed parameters
         assert np.isclose(
-            [
-                sum(rdata["x_ss"][[1, 3]]),
-                sum(rdata["x_ss"][[2, 4]])
-            ],
+            [sum(rdata["x_ss"][[1, 3]]), sum(rdata["x_ss"][[2, 4]])],
             edata.fixedParametersPreequilibration,
             atol=1e-6, rtol=1e-6
         ).all(), f'{importer} preequilibration'
@@ -54,7 +51,7 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
 
         # check reinitialization with fixed parameter after
         # presimulation
-        assert np.isclose(
+        assert np.isclose(,
             [rdata["x0"][1], rdata["x0"][2]],
             edata.fixedParameters,
             atol=1e-6, rtol=1e-6
