@@ -38,8 +38,8 @@ const gsl::span<const realtype> slice(const std::vector<realtype> &data,
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
         return gsl::make_span(&data.at(index*size), size);
-    else
-        return gsl::make_span(static_cast<realtype*>(nullptr), 0);
+    
+    return gsl::make_span(static_cast<realtype*>(nullptr), 0);
 }
 
 void checkBufferSize(gsl::span<realtype> buffer, unsigned expected_size) {
