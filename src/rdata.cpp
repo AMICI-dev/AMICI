@@ -53,8 +53,10 @@ ReturnData::ReturnData(
     sigmay.resize(nt * ny, 0.0);
     w.resize(nt * nw, 0.0);
 
-    newton_numsteps.resize(3, 0);
-    newton_numlinsteps.resize(newton_maxsteps*2, 0);
+    preeq_numsteps.resize(3, 0);
+    preeq_numlinsteps.resize(newton_maxsteps*2, 0);
+    posteq_numsteps.resize(3, 0);
+    posteq_numlinsteps.resize(newton_maxsteps*2, 0);
 
     if(nt>0) {
         numsteps.resize(nt, 0);
@@ -118,6 +120,16 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
             std::copy_n(sx_rdata.data(ip), nx,
                         &sx_ss.at(ip * nx));
     }
+    /* Get cpu time for Newton solve in seconds */
+    preeq_cpu_time = preeq.getCPUTime() / 1000;
+    preeq_status = static_cast<int>(preeq.getNewtonStatus());
+    preeq_wrms = preeq.getResidualNorm();
+    if (preeq.getNewtonStatus() == NewtonStatus::newt_sim)
+       preeq_t = preeq.getSteadyStateTime();
+    std::copy(preeq.getNumSteps().begin(), preeq.getNumSteps().end(),
+              preeq_numsteps.data());
+    std::copy(preeq.getNumLinSteps().begin(), preeq.getNumLinSteps().end(),
+              preeq_numlinsteps.data());
 }
 
 void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
@@ -131,6 +143,16 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
             getDataOutput(it, model, edata);
         }
     }
+    /* Get cpu time for Newton solve in seconds */
+    posteq_cpu_time = posteq.getCPUTime() / 1000;
+    posteq_status = static_cast<int>(posteq.getNewtonStatus());
+    posteq_wrms = posteq.getResidualNorm();
+    if (posteq.getNewtonStatus() == NewtonStatus::newt_sim)
+       preeq_t = posteq.getSteadyStateTime();
+    std::copy(posteq.getNumSteps().begin(), posteq.getNumSteps().end(),
+              preeq_numsteps.data());
+    std::copy(posteq.getNumLinSteps().begin(), posteq.getNumLinSteps().end(),
+              preeq_numlinsteps.data());
 }
 
 void ReturnData::processForwardProblem(ForwardProblem const &fwd,
@@ -145,10 +167,8 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd,
     
     if (computingFSA()) {
         model.fsx_rdata(sx_rdata, fwd.getInitialStateSensitivity());
-        for (int ix = 0; ix < nx; ix++) {
-            for (int ip = 0; ip < nplist; ip++)
-                sx0[ip * nx + ix] = sx_rdata.at(ix,ip);
-        }
+        for (int ip = 0; ip < nplist; ip++)
+            std::copy_n(sx_rdata.data(ip), nx, &sx0.at(ip*nx));
     }
     
     // process timpoint data
@@ -203,10 +223,8 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
 
 void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
     model.fsx_rdata(sx_rdata, sx_solver);
-    for (int ix = 0; ix < nx; ix++) {
-        for (int ip = 0; ip < nplist; ip++) {
-            this->sx[(it * nplist + ip) * nx + ix] = sx_rdata.at(ix, ip);
-        }
+    for (int ip = 0; ip < nplist; ip++) {
+        std::copy_n(sx_rdata.data(ip), nx, &sx.at((it * nplist + ip) * nx));
     }
 
     model.getObservableSensitivity(slice(sy, it, nplist * ny), ts[it],

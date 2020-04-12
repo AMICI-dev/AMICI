@@ -130,7 +130,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             
             preeq = std::unique_ptr<SteadystateProblem>(
                 new SteadystateProblem(solver, model));
-            preeq->workSteadyStateProblem(rdata.get(), &solver, &model, -1);
+            preeq->workSteadyStateProblem(&solver, &model, -1);
         }
         
         /* END PREEQUILIBRATION */
@@ -146,8 +146,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::unique_ptr<SteadystateProblem>(
                 new SteadystateProblem(solver, model));
-            posteq->workSteadyStateProblem(rdata.get(), &solver, &model,
-                                          fwd->getCurrentTimeIteration());
+            posteq->workSteadyStateProblem(&solver, &model,
+                                           fwd->getCurrentTimeIteration());
         }
         /* END POSTEQUILIBRATION */
         

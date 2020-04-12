@@ -4,7 +4,6 @@
 #include "amici/solver.h"
 #include "amici/steadystateproblem.h"
 #include "amici/forwardproblem.h"
-#include "amici/rdata.h"
 #include "amici/edata.h"
 
 #include "sunlinsol/sunlinsol_klu.h" // sparse solver
@@ -16,9 +15,8 @@
 
 namespace amici {
 
-NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model,
-                           ReturnData *rdata)
-    : model(model), rdata(rdata), xdot(model->nx_solver), dx(model->nx_solver)
+NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model)
+    : model(model), xdot(model->nx_solver), dx(model->nx_solver)
     {
     this->t = t;
     this->x = x;
@@ -27,17 +25,15 @@ NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model,
 /* ------------------------------------------------------------------------- */
 
 std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
-        realtype *t, AmiVector *x, LinearSolver linsolType, Model *model,
-        ReturnData *rdata, int maxlinsteps, int maxsteps, double atol, double rtol,
-        NewtonDampingFactorMode dampingFactorMode, double dampingFactorLowerBound) {
+        realtype *t, AmiVector *x, Solver &simulationSolver, Model *model) {
 
     std::unique_ptr<NewtonSolver> solver;
 
-    switch (linsolType) {
+    switch (simulationSolver.getLinearSolver()) {
 
     /* DIRECT SOLVERS */
     case LinearSolver::dense:
-        solver.reset(new NewtonSolverDense(t, x, model, rdata));
+        solver.reset(new NewtonSolverDense(t, x, model));
         break;
 
     case LinearSolver::band:
@@ -57,7 +53,7 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
 
     case LinearSolver::SPBCG:
-        solver.reset(new NewtonSolverIterative(t, x, model, rdata));
+        solver.reset(new NewtonSolverIterative(t, x, model));
         break;
 
     case LinearSolver::SPTFQMR:
@@ -67,18 +63,18 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
     case LinearSolver::SuperLUMT:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
     case LinearSolver::KLU:
-        solver.reset(new NewtonSolverSparse(t, x, model, rdata));
+        solver.reset(new NewtonSolverSparse(t, x, model));
         break;
     default:
         throw NewtonFailure(AMICI_NOT_IMPLEMENTED, "getSolver");
     }
-
-    solver->atol = atol;
-    solver->rtol = rtol;
-    solver->maxlinsteps = maxlinsteps;
-    solver->maxsteps = maxsteps;
-    solver->dampingFactorMode = dampingFactorMode;
-    solver->dampingFactorLowerBound = dampingFactorLowerBound;
+    solver->atol = simulationSolver.getAbsoluteTolerance();
+    solver->rtol = simulationSolver.getRelativeTolerance();
+    solver->maxlinsteps = simulationSolver.getNewtonMaxLinearSteps();
+    solver->maxsteps = simulationSolver.getNewtonMaxSteps();
+    solver->dampingFactorMode = simulationSolver.getNewtonDampingFactorMode();
+    solver->dampingFactorLowerBound = simulationSolver.getNewtonDampingFactorLowerBound();
+    solver->numlinsteps.resize(simulationSolver.getNewtonMaxLinearSteps(), 0.0);
 
     return solver;
 }
@@ -138,9 +134,8 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
 /* ------------------------------------------------------------------------- */
 
 /* Derived class for dense linear solver */
-NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model,
-                                     ReturnData *rdata)
-    : NewtonSolver(t, x, model, rdata),
+NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
+    : NewtonSolver(t, x, model),
       Jtmp(model->nx_solver, model->nx_solver),
       linsol(SUNLinSol_Dense(x->getNVector(), Jtmp.get()))
 {
@@ -182,9 +177,8 @@ NewtonSolverDense::~NewtonSolverDense() {
 /* ------------------------------------------------------------------------- */
 
 /* Derived class for sparse linear solver */
-NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model,
-                                       ReturnData *rdata)
-    : NewtonSolver(t, x, model, rdata),
+NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
+    : NewtonSolver(t, x, model),
       Jtmp(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT),
       linsol(SUNKLU(x->getNVector(), Jtmp.get()))
 {
@@ -227,8 +221,8 @@ NewtonSolverSparse::~NewtonSolverSparse() {
 /* ------------------------------------------------------------------------- */
 
 NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x,
-                                             Model *model, ReturnData *rdata)
-    : NewtonSolver(t, x, model, rdata), ns_p(model->nx_solver),
+                                             Model *model)
+    : NewtonSolver(t, x, model), ns_p(model->nx_solver),
     ns_h(model->nx_solver), ns_t(model->nx_solver), ns_s(model->nx_solver),
     ns_r(model->nx_solver), ns_rt(model->nx_solver), ns_v(model->nx_solver),
     ns_Jv(model->nx_solver), ns_tmp(model->nx_solver),
@@ -331,8 +325,7 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
         // Test convergence
         if (res < atol) {
             // Write number of steps needed
-            rdata->newton_numlinsteps[(ntry - 1) * maxsteps +
-                                      nnewt] = i_linstep + 1;
+            numlinsteps.at(nnewt) = i_linstep + 1;
 
             // Return success
             return;

@@ -340,46 +340,83 @@ class ReturnData {
     /** employed order forward problem (dimension: nt) */
     std::vector<int> order;
 
-    /** computation time of forward solve [ms] */
+    /** computation time of forward solve [s] */
     double cpu_time = 0.0;
 
-    /** computation time of backward solve [ms] */
+    /** computation time of backward solve [s] */
     double cpu_timeB = 0.0;
 
-    /** flag indicating success of Newton solver */
-    int newton_status = 0;
+    /** flag indicating success of Newton solver (preequilibration) */
+    int preeq_status = 0;
 
-    /** computation time of the Newton solver [ms] */
-    double newton_cpu_time = 0.0;
+    /** computation time of the Newton solver [s] (preequilibration) */
+    double preeq_cpu_time = 0.0;
+    
+    /** flag indicating success of Newton solver  (postequilibration) */
+    int posteq_status = 0;
+
+    /** computation time of the Newton solver [s]  (postequilibration) */
+    double posteq_cpu_time = 0.0;
 
     /**
-     * number of Newton steps for steady state problem
+     * number of Newton steps for steady state problem (preequilibration)
      * [newton, simulation, newton] (length = 3)
      */
-    std::vector<int> newton_numsteps;
+    std::vector<int> preeq_numsteps;
 
     /**
      * number of linear steps by Newton step for steady state problem. this
-     * will only be filled for iterative solvers (length = newton_maxsteps * 2)
+     * will only be filled for iterative solvers (preequilibration)
+     * (length = newton_maxsteps * 2)
      */
-    std::vector<int> newton_numlinsteps;
+    std::vector<int> preeq_numlinsteps;
+    
+    /**
+     * number of Newton steps for steady state problem (preequilibration)
+     * [newton, simulation, newton] (length = 3) (postequilibration)
+     */
+    std::vector<int> posteq_numsteps;
 
     /**
-     * time at which steadystate was reached in the simulation based approach
+     * number of linear steps by Newton step for steady state problem. this
+     * will only be filled for iterative solvers (postequilibration)
+     * (length = newton_maxsteps * 2)
      */
-    realtype t_steadystate = NAN;
+    std::vector<int> posteq_numlinsteps;
+
+    /**
+     * time at which steadystate was reached in the simulation based approach (preequilibration)
+     */
+    realtype preeq_t = NAN;
 
     /**
      * weighted root-mean-square of the rhs when steadystate
-     * was reached
+     * was reached (preequilibration)
      */
-    realtype wrms_steadystate = NAN;
+    realtype preeq_wrms = NAN;
 
     /**
      * weighted root-mean-square of the rhs when steadystate
-     * was reached
+     * was reached (preequilibration)
      */
-    realtype wrms_sensi_steadystate = NAN;
+    realtype preeq_wrms_sensi = NAN;
+    
+    /**
+     * time at which steadystate was reached in the simulation based approach (postequilibration)
+     */
+    realtype posteq_t = NAN;
+
+    /**
+     * weighted root-mean-square of the rhs when steadystate
+     * was reached (postequilibration)
+     */
+    realtype posteq_wrms = NAN;
+
+    /**
+     * weighted root-mean-square of the rhs when steadystate
+     * was reached (postequilibration)
+     */
+    realtype posteq_wrms_sensi = NAN;
 
     /** initial state (dimension: nx) */
     std::vector<realtype> x0;

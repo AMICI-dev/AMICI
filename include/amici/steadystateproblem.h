@@ -32,8 +32,18 @@ class SteadystateProblem {
     explicit SteadystateProblem(const Solver &solver,
                                 const Model &model);
 
-    void workSteadyStateProblem(ReturnData *rdata, Solver *solver,
-                                Model *model, int it);
+    /**
+     * Tries to determine the steady state of the ODE system by a Newton
+     * solver, uses forward intergration, if the Newton solver fails,
+     * restarts Newton solver, if integration fails.
+     * Computes steady state sensitivities
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param it integer with the index of the current time step
+     * @param rdata pointer to the return data object
+     */
+    void workSteadyStateProblem(Solver *solver, Model *model, int it);
 
     /**
      * Computes the weighted root mean square of xdot
@@ -65,43 +75,27 @@ class SteadystateProblem {
      * Runs the Newton solver iterations and checks for convergence to steady
      * state
      *
-     * @param rdata pointer to the return data object
-     * @param model pointer to the AMICI model object
+     * @param model pointer to the model object
      * @param newtonSolver pointer to the NewtonSolver object @type
      * NewtonSolver
      * @param steadystate_try start status of Newton solver
      */
-    void applyNewtonsMethod(ReturnData *rdata, Model *model,
-                            NewtonSolver *newtonSolver,
+    void applyNewtonsMethod(Model *model, NewtonSolver *newtonSolver,
                             NewtonStatus steadystate_try);
-    /**
-     * Stores output of workSteadyStateProblem in return data
-     *
-     * @param newton_status integer flag indicating when a steady state was
-     * found
-     * @param run_time double coputation time of the solver in milliseconds
-     * @param rdata pointer to the return data instance
-     * @param model pointer to the model instance
-     * @param it current timepoint index, <0 indicates preequilibration
-     */
-    void writeNewtonOutput(ReturnData *rdata, const Model *model,
-                           NewtonStatus newton_status, double run_time, int it);
 
     /**
      * Forward simulation is launched, if Newton solver fails in first try
      *
-     * @param solver pointer to the AMICI solver object
-     * @param model pointer to the AMICI model object
-     * @param rdata pointer to the return data object
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
      */
-    void getSteadystateSimulation(ReturnData *rdata, Solver *solver,
-                                  Model *model);
+    void getSteadystateSimulation(Solver *solver, Model *model);
 
     /**
      * initialize CVodeSolver instance for preequilibration simulation
      *
-     * @param solver pointer to the AMICI solver object
-     * @param model pointer to the AMICI model object
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
      * @return solver instance
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
@@ -145,6 +139,54 @@ class SteadystateProblem {
     std::vector<realtype> const& getDJydx() const {
          return dJydx;
      }
+    
+     /**
+      * @brief Accessor for run_time
+      * @return run_time
+      */
+     double getCPUTime() const {
+         return cpu_time;
+     }
+    
+    /**
+     * @brief Accessor for newton_status
+     * @return newton_status
+     */
+    NewtonStatus getNewtonStatus() const {
+        return newton_status;
+    }
+    
+    /**
+     * @brief Accessor for t
+     * @return t
+     */
+    realtype getSteadyStateTime() const {
+        return t;
+    }
+    
+    /**
+     * @brief Accessor for wrms
+     * @return wrms
+     */
+    realtype getResidualNorm() const {
+        return wrms;
+    }
+    
+    /**
+     * @brief Accessor for numsteps
+     * @return numsteps
+     */
+    const std::vector<int> &getNumSteps() const {
+        return numsteps;
+    }
+    
+    /**
+     * @brief Accessor for numlinsteps
+     * @return numlinsteps
+     */
+    const std::vector<int> &getNumLinSteps() const {
+        return numlinsteps;
+    }
 
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
@@ -190,6 +232,18 @@ class SteadystateProblem {
     std::vector<realtype> dJydx;
 
     SimulationState state;
+    
+    /** stores diagnostic information about employed number of steps */
+    std::vector<int> numsteps;
+    
+    /** stores diagnostic information about employed number of linear steps */
+    std::vector<int> numlinsteps;
+    
+    /** stores diagnostic information about runtime */
+    double cpu_time;
+    
+    /** stores diagnostic information about execution success*/
+    NewtonStatus newton_status = NewtonStatus::failed;
 };
 
 } // namespace amici
