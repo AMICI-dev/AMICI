@@ -139,54 +139,42 @@ class SteadystateProblem {
     std::vector<realtype> const& getDJydx() const {
          return dJydx;
      }
-    
-     /**
-      * @brief Accessor for run_time
-      * @return run_time
-      */
-     double getCPUTime() const {
-         return cpu_time;
-     }
-    
+
+    /**
+     * @brief Accessor for run_time
+     * @return run_time
+     */
+    double getCPUTime() const { return cpu_time; }
+
     /**
      * @brief Accessor for newton_status
      * @return newton_status
      */
-    NewtonStatus getNewtonStatus() const {
-        return newton_status;
-    }
-    
+    NewtonStatus getNewtonStatus() const { return newton_status; }
+
     /**
      * @brief Accessor for t
      * @return t
      */
-    realtype getSteadyStateTime() const {
-        return t;
-    }
-    
+    realtype getSteadyStateTime() const { return t; }
+
     /**
      * @brief Accessor for wrms
      * @return wrms
      */
-    realtype getResidualNorm() const {
-        return wrms;
-    }
-    
+    realtype getResidualNorm() const { return wrms; }
+
     /**
      * @brief Accessor for numsteps
      * @return numsteps
      */
-    const std::vector<int> &getNumSteps() const {
-        return numsteps;
-    }
-    
+    const std::vector<int> &getNumSteps() const { return numsteps; }
+
     /**
      * @brief Accessor for numlinsteps
      * @return numlinsteps
      */
-    const std::vector<int> &getNumLinSteps() const {
-        return numlinsteps;
-    }
+    const std::vector<int> &getNumLinSteps() const { return numlinsteps; }
 
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
@@ -232,16 +220,16 @@ class SteadystateProblem {
     std::vector<realtype> dJydx;
 
     SimulationState state;
-    
+
     /** stores diagnostic information about employed number of steps */
     std::vector<int> numsteps;
-    
+
     /** stores diagnostic information about employed number of linear steps */
     std::vector<int> numlinsteps;
-    
+
     /** stores diagnostic information about runtime */
     double cpu_time;
-    
+
     /** stores diagnostic information about execution success*/
     NewtonStatus newton_status = NewtonStatus::failed;
 };

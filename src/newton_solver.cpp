@@ -16,16 +16,16 @@
 namespace amici {
 
 NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model)
-    : model(model), xdot(model->nx_solver), dx(model->nx_solver)
-    {
+    : model(model), xdot(model->nx_solver), dx(model->nx_solver) {
     this->t = t;
     this->x = x;
 }
 
 /* ------------------------------------------------------------------------- */
 
-std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
-        realtype *t, AmiVector *x, Solver &simulationSolver, Model *model) {
+std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x,
+                                                      Solver &simulationSolver,
+                                                      Model *model) {
 
     std::unique_ptr<NewtonSolver> solver;
 
@@ -73,7 +73,8 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(
     solver->maxlinsteps = simulationSolver.getNewtonMaxLinearSteps();
     solver->maxsteps = simulationSolver.getNewtonMaxSteps();
     solver->dampingFactorMode = simulationSolver.getNewtonDampingFactorMode();
-    solver->dampingFactorLowerBound = simulationSolver.getNewtonDampingFactorLowerBound();
+    solver->dampingFactorLowerBound =
+        simulationSolver.getNewtonDampingFactorLowerBound();
     solver->numlinsteps.resize(simulationSolver.getNewtonMaxLinearSteps(), 0.0);
 
     return solver;
@@ -135,10 +136,8 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
 
 /* Derived class for dense linear solver */
 NewtonSolverDense::NewtonSolverDense(realtype *t, AmiVector *x, Model *model)
-    : NewtonSolver(t, x, model),
-      Jtmp(model->nx_solver, model->nx_solver),
-      linsol(SUNLinSol_Dense(x->getNVector(), Jtmp.get()))
-{
+    : NewtonSolver(t, x, model), Jtmp(model->nx_solver, model->nx_solver),
+      linsol(SUNLinSol_Dense(x->getNVector(), Jtmp.get())) {
     int status = SUNLinSolInitialize_Dense(linsol);
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_Dense");
@@ -180,8 +179,7 @@ NewtonSolverDense::~NewtonSolverDense() {
 NewtonSolverSparse::NewtonSolverSparse(realtype *t, AmiVector *x, Model *model)
     : NewtonSolver(t, x, model),
       Jtmp(model->nx_solver, model->nx_solver, model->nnz, CSC_MAT),
-      linsol(SUNKLU(x->getNVector(), Jtmp.get()))
-{
+      linsol(SUNKLU(x->getNVector(), Jtmp.get())) {
     int status = SUNLinSolInitialize_KLU(linsol);
     if(status != AMICI_SUCCESS)
         throw NewtonFailure(status, "SUNLinSolInitialize_KLU");
@@ -222,13 +220,10 @@ NewtonSolverSparse::~NewtonSolverSparse() {
 
 NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x,
                                              Model *model)
-    : NewtonSolver(t, x, model), ns_p(model->nx_solver),
-    ns_h(model->nx_solver), ns_t(model->nx_solver), ns_s(model->nx_solver),
-    ns_r(model->nx_solver), ns_rt(model->nx_solver), ns_v(model->nx_solver),
-    ns_Jv(model->nx_solver), ns_tmp(model->nx_solver),
-    ns_Jdiag(model->nx_solver)
-    {
-}
+    : NewtonSolver(t, x, model), ns_p(model->nx_solver), ns_h(model->nx_solver),
+      ns_t(model->nx_solver), ns_s(model->nx_solver), ns_r(model->nx_solver),
+      ns_rt(model->nx_solver), ns_v(model->nx_solver), ns_Jv(model->nx_solver),
+      ns_tmp(model->nx_solver), ns_Jdiag(model->nx_solver) {}
 
 /* ------------------------------------------------------------------------- */
 
