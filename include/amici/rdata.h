@@ -394,12 +394,6 @@ class ReturnData {
      * was reached (preequilibration)
      */
     realtype preeq_wrms = NAN;
-
-    /**
-     * weighted root-mean-square of the rhs when steadystate
-     * was reached (preequilibration)
-     */
-    realtype preeq_wrms_sensi = NAN;
     
     /**
      * time at which steadystate was reached in the simulation based approach (postequilibration)
@@ -411,12 +405,6 @@ class ReturnData {
      * was reached (postequilibration)
      */
     realtype posteq_wrms = NAN;
-
-    /**
-     * weighted root-mean-square of the rhs when steadystate
-     * was reached (postequilibration)
-     */
-    realtype posteq_wrms_sensi = NAN;
 
     /** initial state (dimension: nx) */
     std::vector<realtype> x0;
