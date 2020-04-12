@@ -125,7 +125,8 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
     if (preeq.getNewtonStatus() == NewtonStatus::newt_sim)
         preeq_t = preeq.getSteadyStateTime();
     writeSlice(preeq.getNumSteps(), preeq_numsteps);
-    writeSlice(preeq.getNumLinSteps(), preeq_numlinsteps);
+    if (!preeq.getNumLinSteps().empty())
+        writeSlice(preeq.getNumLinSteps(), preeq_numlinsteps);
 }
 
 void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
@@ -145,7 +146,8 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     if (posteq.getNewtonStatus() == NewtonStatus::newt_sim)
         preeq_t = posteq.getSteadyStateTime();
     writeSlice(posteq.getNumSteps(), preeq_numsteps);
-    writeSlice(posteq.getNumLinSteps(), preeq_numlinsteps);
+    if (!posteq.getNumLinSteps().empty())
+        writeSlice(posteq.getNumLinSteps(), preeq_numlinsteps);
 }
 
 void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
