@@ -2,6 +2,7 @@
 #define AMICI_MISC_H
 
 #include "amici/defines.h"
+#include "amici/exception.h"
 #include <sunmatrix/sunmatrix_sparse.h> // SUNMatrixContent_Sparse
 
 #include <algorithm>
@@ -22,11 +23,18 @@ namespace amici {
  * @return span of the slice
  */
 
- gsl::span<realtype> slice(std::vector<realtype> &data, int index,
-                           unsigned size);
+template <class T>
+gsl::span<T> slice(std::vector<T> &data, int index, unsigned size) {
+    if ((index + 1) * size > data.size())
+        throw std::out_of_range("requested slice is out of data range");
+    if (size > 0)
+        return gsl::make_span(&data.at(index*size), size);
+    else
+        return gsl::make_span(static_cast<realtype*>(nullptr), 0);
+}
 
 /**
- * @brief creates a constant slice from existing data
+ * @brief creates a constant slice from existing constant data
  *
  * @param data to be sliced
  * @param index slice index
@@ -34,8 +42,16 @@ namespace amici {
  * @return span of the slice
  */
 
-const gsl::span<const realtype> slice(const std::vector<realtype> &data,
-                                      int index, unsigned size);
+template <class T>
+const gsl::span<const T> slice(const std::vector<T> &data,
+                               int index, unsigned size) {
+    if ((index + 1) * size > data.size())
+        throw std::out_of_range("requested slice is out of data range");
+    if (size > 0)
+        return gsl::make_span(&data.at(index*size), size);
+    else
+        return gsl::make_span(static_cast<realtype*>(nullptr), 0);
+}
 
 /**
  * @brief local helper to check whether the provided buffer has the expected
@@ -44,23 +60,48 @@ const gsl::span<const realtype> slice(const std::vector<realtype> &data,
  * @param expected_size expected size of the buffer
  */
 template <class T>
-void checkBufferSize(gsl::span<T> buffer, unsigned expected_size);
+inline void checkBufferSize(gsl::span<T> buffer, unsigned expected_size) {
+    if (buffer.size() != expected_size)
+        throw AmiException("Incorrect buffer size! Was %u, expected %u.",
+                           buffer.size(), expected_size);
+}
+
+// TODO: templating breaks implicit conversion, not sure whether this is fixable
 
 /**
- * @brief local helper function to write computed slice to provided buffer (realtype)
+ * @brief local helper function to write computed slice to provided buffer (span)
  * @param slice computed value
  * @param buffer buffer to which values are to be written
  */
-void writeSlice(const gsl::span<const realtype> slice,
-                gsl::span<realtype> buffer);
+template <class T>
+void writeSlice(const gsl::span<const T> slice,
+                gsl::span<T> buffer) {
+    checkBufferSize(buffer, slice.size());
+    std::copy(slice.begin(), slice.end(), buffer.data());
+};
 
 /**
- * @brief local helper function to write computed slice to provided buffer (int)
+ * @brief local helper function to write computed slice to provided buffer (vector)
  * @param slice computed value
  * @param buffer buffer to which values are to be written
  */
-void writeSlice(const gsl::span<const int> slice,
-                gsl::span<int> buffer);
+template <class T>
+void writeSlice(const std::vector<T> s,
+                std::vector<T> b) {
+    writeSlice(gsl::make_span(s.data(), s.size()),
+               gsl::make_span(b.data(), b.size()));
+};
+
+/**
+ * @brief local helper function to write computed slice to provided buffer (vector/span)
+ * @param slice computed value
+ * @param buffer buffer to which values are to be written
+ */
+template <class T>
+void writeSlice(const std::vector<T> s,
+                gsl::span<T> b) {
+    writeSlice(gsl::make_span(s.data(), s.size()), b);
+};
 
 
 /**

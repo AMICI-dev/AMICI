@@ -60,13 +60,21 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.order == s.order);
     CHECK_TRUE(r.cpu_time == s.cpu_time);
     CHECK_TRUE(r.cpu_timeB == s.cpu_timeB);
-    CHECK_TRUE(r.newton_cpu_time == s.newton_cpu_time);
 
-    CHECK_TRUE(r.newton_status == s.newton_status);
-    CHECK_TRUE(r.newton_numsteps == s.newton_numsteps);
-    CHECK_TRUE(r.newton_numlinsteps == s.newton_numlinsteps);
-
-    DOUBLES_EQUAL(r.newton_cpu_time, s.newton_cpu_time, 1e-16);
+    CHECK_TRUE(r.preeq_status == s.preeq_status);
+    CHECK_TRUE(r.preeq_t == s.preeq_t);
+    CHECK_TRUE(r.preeq_wrms == s.preeq_wrms);
+    CHECK_TRUE(r.preeq_numsteps == s.preeq_numsteps);
+    CHECK_TRUE(r.preeq_numlinsteps == s.preeq_numlinsteps);
+    DOUBLES_EQUAL(r.preeq_cpu_time, s.preeq_cpu_time, 1e-16);
+    
+    CHECK_TRUE(r.posteq_status == s.posteq_status);
+    CHECK_TRUE(r.posteq_t == s.posteq_t);
+    CHECK_TRUE(r.posteq_wrms == s.posteq_wrms);
+    CHECK_TRUE(r.posteq_numsteps == s.posteq_numsteps);
+    CHECK_TRUE(r.posteq_numlinsteps == s.posteq_numlinsteps);
+    DOUBLES_EQUAL(r.preeq_cpu_time, s.posteq_cpu_time, 1e-16);
+    
     checkEqualArray(r.x0, s.x0, 1e-16, 1e-16, "x0");
     checkEqualArray(r.sx0, s.sx0, 1e-16, 1e-16, "sx0");
 

@@ -21,47 +21,6 @@
 
 namespace amici {
 
-gsl::span<realtype> slice(std::vector<realtype> &data, const int index,
-                          const unsigned size) {
-    if ((index + 1) * size > data.size())
-        throw std::out_of_range("requested slice is out of data range");
-    if (size > 0)
-        return gsl::make_span(&data.at(index*size), size);
-    else
-        return gsl::make_span(static_cast<realtype*>(nullptr), 0);
-}
-
-const gsl::span<const realtype> slice(const std::vector<realtype> &data,
-                                      const int index,
-                                      const unsigned size) {
-    if ((index + 1) * size > data.size())
-        throw std::out_of_range("requested slice is out of data range");
-    if (size > 0)
-        return gsl::make_span(&data.at(index*size), size);
-    
-    return gsl::make_span(static_cast<realtype*>(nullptr), 0);
-}
-
-template <class T>
-void checkBufferSize(gsl::span<T> buffer, unsigned expected_size) {
-    if (buffer.size() != expected_size)
-        throw AmiException("Incorrect buffer size! Was %u, expected %u.",
-                           buffer.size(), expected_size);
-}
-
-// templating will mess up vector conversion
-void writeSlice(const gsl::span<const realtype> slice,
-                gsl::span<realtype> buffer) {
-    checkBufferSize(buffer, slice.size());
-    std::copy(slice.begin(), slice.end(), buffer.data());
-}
-
-void writeSlice(const gsl::span<const int> slice,
-                gsl::span<int> buffer) {
-    checkBufferSize(buffer, slice.size());
-    std::copy(slice.begin(), slice.end(), buffer.data());
-}
-
 double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
 {
     switch (scaling) {
