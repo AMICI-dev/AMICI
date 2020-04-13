@@ -633,8 +633,8 @@ class Model : public AbstractModel {
         if (this->state.total_cl.size() !=
             state.total_cl.size())
             throw AmiException("Mismatch in conservation law size");
-        if (state.stotal_cl.size() !=
-            state.total_cl.size() * state.plist.size())
+        if (state.stotal_cl.size() != 0 && state.stotal_cl.size() !=
+            state.total_cl.size() * state.plist.size() )
             throw AmiException("Inconsistent conservation law sensitivity"
                                " size");
         this->state = state;
