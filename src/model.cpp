@@ -134,7 +134,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
 
     state.h.resize(ne, 0.0);
     state.total_cl.resize(nx_rdata - nx_solver, 0.0);
-    state.stotal_cl.resize((nx_rdata - nx_solver) * plist.size(), 0.0);
+    state.stotal_cl.resize((nx_rdata - nx_solver) * p.size(), 0.0);
     state.unscaledParameters = p;
     state.fixedParameters = k;
     state.plist = plist;

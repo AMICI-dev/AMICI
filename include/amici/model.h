@@ -622,21 +622,16 @@ class Model : public AbstractModel {
      * @param state model state
      */
     void setModelState(ModelState const &state) {
-        if (this->state.unscaledParameters.size() !=
-            state.unscaledParameters.size())
+        if (static_cast<int>(state.unscaledParameters.size()) != np())
             throw AmiException("Mismatch in parameter size");
-        if (this->state.fixedParameters.size() != state.fixedParameters.size())
+        if (static_cast<int>(state.fixedParameters.size()) != nk())
             throw AmiException("Mismatch in fixed parameter size");
-        if (this->state.h.size() !=
-            state.h.size())
+        if (static_cast<int>(state.h.size()) != ne)
             throw AmiException("Mismatch in heaviside size");
-        if (this->state.total_cl.size() !=
-            state.total_cl.size())
+        if (static_cast<int>(state.total_cl.size()) != ncl())
             throw AmiException("Mismatch in conservation law size");
-        if (state.stotal_cl.size() != 0 && state.stotal_cl.size() !=
-            state.total_cl.size() * state.plist.size() )
-            throw AmiException("Inconsistent conservation law sensitivity"
-                               " size");
+        if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
+            throw AmiException("Mismatch in conservation law sensitivity size");
         this->state = state;
     };
 
