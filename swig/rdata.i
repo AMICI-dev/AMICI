@@ -17,6 +17,6 @@ using namespace amici;
 %ignore processForwardProblem;
 %ignore processBackwardProblem;
 %ignore processSolver;
-
+%ignore readSimulationState;
 // Process symbols in header
 %include "amici/rdata.h"

@@ -7,6 +7,7 @@
    {% block methods %}
    {% if '__init__' in methods %}
    .. automethod:: __init__
+      :noindex:
    {% endif %}
    {% if methods %}
    .. rubric:: Methods Summary
