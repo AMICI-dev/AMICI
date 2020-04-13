@@ -51,7 +51,7 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
 
         # check reinitialization with fixed parameter after
         # presimulation
-        assert np.isclose(,
+        assert np.isclose(
             [rdata["x0"][1], rdata["x0"][2]],
             edata.fixedParameters,
             atol=1e-6, rtol=1e-6
