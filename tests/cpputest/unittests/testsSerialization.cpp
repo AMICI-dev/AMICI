@@ -72,7 +72,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     
     CHECK_TRUE(r.posteq_status == s.posteq_status);
     CHECK_TRUE(r.posteq_t == s.posteq_t ||
-               (std::isnan(r.posteq_t) && isnan(s.posteq_t)));
+               (std::isnan(r.posteq_t) && std::isnan(s.posteq_t)));
     CHECK_TRUE(r.posteq_wrms == s.posteq_wrms ||
                (std::isnan(r.posteq_wrms) && std::isnan(s.posteq_wrms)));
     CHECK_TRUE(r.posteq_numsteps == s.posteq_numsteps);
