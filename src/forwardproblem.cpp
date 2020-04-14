@@ -74,14 +74,11 @@ void ForwardProblem::workForwardProblem() {
         solver->updateAndReinitStatesAndSensitivities(model);
 
     // update x0 after computing consistence IC/presimulation
-    x.copy(solver->getState(model->t0()));
+    x = solver->getState(model->t0());
 
     /* store initial state and sensitivity*/
-    x0.copy(x);
-    if(solver->getSensitivityOrder() >= SensitivityOrder::first &&
-       (!presimulate ||
-        solver->getSensitivityMethod() == SensitivityMethod::forward))
-        sx0.copy(sx);
+    x0 = x;
+    sx0 = sx;
 
     /* loop over timepoints */
     for (it = 0; it < model->nt(); it++) {
@@ -158,7 +155,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
      * x and the old xdot */
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
         /* store x and xdot to compute jump in sensitivities */
-        x_old.copy(x);
+        x_old = x;
     }
     if (solver->computingFSA()) {
         model->fxdot(t, x, dx, xdot);

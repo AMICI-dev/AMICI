@@ -158,8 +158,8 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
 
     model.fx_rdata(x_rdata, fwd.getInitialState());
     x0 = x_rdata.getVector();
-
-    if (computingFSA()) {
+    
+    if (!sx0.empty()) {
         model.fsx_rdata(sx_rdata, fwd.getInitialStateSensitivity());
         for (int ip = 0; ip < nplist; ip++)
             std::copy_n(sx_rdata.data(ip), nx, &sx0.at(ip * nx));
