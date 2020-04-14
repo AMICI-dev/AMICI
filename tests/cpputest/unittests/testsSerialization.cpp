@@ -62,27 +62,19 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.cpu_timeB == s.cpu_timeB);
 
     CHECK_TRUE(r.preeq_status == s.preeq_status);
-    if (isnan(r.preeq_t))
-        CHECK_TRUE(isnan(s.preeq_t));
-    else
-        CHECK_TRUE(r.preeq_t == s.preeq_t);
-    if (isnan(r.preeq_wrms))
-        CHECK_TRUE(isnan(s.preeq_wrms));
-    else
-        CHECK_TRUE(r.preeq_wrms == s.preeq_wrms);
+    CHECK_TRUE(r.preeq_t == s.preeq_t ||
+               (std::isnan(r.preeq_t) && std::isnan(s.preeq_t)));
+    CHECK_TRUE(r.preeq_wrms == s.preeq_wrms ||
+               (std::isnan(r.preeq_wrms) && std::isnan(s.preeq_wrms)));
     CHECK_TRUE(r.preeq_numsteps == s.preeq_numsteps);
     CHECK_TRUE(r.preeq_numlinsteps == s.preeq_numlinsteps);
     DOUBLES_EQUAL(r.preeq_cpu_time, s.preeq_cpu_time, 1e-16);
     
     CHECK_TRUE(r.posteq_status == s.posteq_status);
-    if (isnan(r.posteq_t))
-        CHECK_TRUE(isnan(s.posteq_t));
-    else
-        CHECK_TRUE(r.posteq_t == s.posteq_t);
-    if (isnan(r.posteq_wrms))
-        CHECK_TRUE(isnan(s.posteq_wrms));
-    else
-        CHECK_TRUE(r.posteq_wrms == s.posteq_wrms);
+    CHECK_TRUE(r.posteq_t == s.posteq_t ||
+               (std::isnan(r.posteq_t) && isnan(s.posteq_t)));
+    CHECK_TRUE(r.posteq_wrms == s.posteq_wrms ||
+               (std::isnan(r.posteq_wrms) && std::isnan(s.posteq_wrms)));
     CHECK_TRUE(r.posteq_numsteps == s.posteq_numsteps);
     CHECK_TRUE(r.posteq_numlinsteps == s.posteq_numlinsteps);
     DOUBLES_EQUAL(r.posteq_cpu_time, s.posteq_cpu_time, 1e-16);
