@@ -13,6 +13,7 @@ import math
 import itertools as itt
 import warnings
 import logging
+import copy
 from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel
@@ -142,6 +143,11 @@ class SbmlImporter:
         self._reset_symbols()
 
         self.local_symbols = {}
+
+        self.compartment_rate_rules = {}
+        self.species_rate_rules = {}
+        self.compartment_assignment_rules = {}
+        self.species_assignment_rules = {}
 
     def _process_document(self) -> None:
         """
@@ -286,6 +292,11 @@ class SbmlImporter:
         self._reset_symbols()
         self._process_sbml(constant_parameters)
         self._process_observables(observables, sigmas, noise_distributions)
+
+        self._process_time()
+        self._clean_reserved_symbols()
+        self._replace_special_constants()
+
         ode_model = ODEModel(simplify=sp.powsimp)
         ode_model.import_from_sbml_importer(self)
         exporter = ODEExporter(
@@ -320,14 +331,11 @@ class SbmlImporter:
         self.check_support()
         self._gather_locals()
         self._process_parameters(constant_parameters)
+        self._process_compartments()
         self._process_species()
         self._process_reactions()
-        self._process_compartments()
         self._process_rules()
         self._process_volume_conversion()
-        self._process_time()
-        self._clean_reserved_symbols()
-        self._replace_special_constants()
 
     def check_support(self) -> None:
         """
@@ -347,19 +355,29 @@ class SbmlImporter:
             raise SBMLException('Events are currently not supported!')
 
         # Contains condition to allow compartment rate rules
-        compartment_ids = list(map(lambda x: x.getId(), self.sbml.getListOfCompartments()))
+        compartment_ids = list(map(lambda x: x.getId(),
+                                   self.sbml.getListOfCompartments()))
+        species_ids = list(map(lambda x: x.getId(),
+                               self.sbml.getListOfSpecies()))
         if any([not(rule.isAssignment()) and
-                not(rule.getVariable() in compartment_ids)
+                not(rule.getVariable() in compartment_ids) and
+                not(rule.getVariable() in species_ids)
                 for rule in self.sbml.getListOfRules()]):
-            raise SBMLException('Algebraic and rate '
-                                'rules are currently not supported, '
-                                'except compartment rate rules!')
+            raise SBMLException('Algebraic rules are currently not supported, '
+                                'and rate rules are only supported for '
+                                'species and compartments.')
 
         if any([not(rule.isAssignment() or rule.isRate()) and
                 (rule.getVariable() in compartment_ids)
                 for rule in self.sbml.getListOfRules()]):
             raise SBMLException('Only assignment and rate rules are currently '
                                 'supported for compartments!')
+
+        if any([not(rule.isAssignment() or rule.isRate()) and
+                (rule.getVariable() in species_ids)
+                for rule in self.sbml.getListOfRules()]):
+            raise SBMLException('Only assignment and rate rules are currently '
+                                'supported for species!')
 
         if any([reaction.getFast()
                 for reaction in self.sbml.getListOfReactions()]):
@@ -401,6 +419,35 @@ class SbmlImporter:
         # SBML time symbol + constants
         self.local_symbols['time'] = sp.Symbol('time', real=True)
         self.local_symbols['avogadro'] = sp.Symbol('avogadro', real=True)
+
+    @log_execution_time('processing SBML compartments', logger)
+    def _process_compartments(self) -> None:
+        """
+        Get compartment information, stoichiometric matrix and fluxes from
+        SBML model.
+        """
+        compartments = self.sbml.getListOfCompartments()
+        self.compartment_symbols = sp.Matrix(
+            [sp.Symbol(comp.getId(), real=True) for comp in compartments]
+        )
+
+        # Initial volumes may be overridden at the end of _process_species,
+        # where compartment assignment rules are processed.
+        self.compartment_volume = sp.Matrix([
+            sp.sympify(comp.getVolume()) if comp.isSetVolume()
+            else sp.sympify(1.0) for comp in compartments
+        ])
+
+        compartment_ids = [comp.getId() for comp in compartments]
+        for initial_assignment in self.sbml.getListOfInitialAssignments():
+            if initial_assignment.getId() in compartment_ids:
+                index = compartment_ids.index(
+                        initial_assignment.getId()
+                    )
+                self.compartment_volume[index] = sp.sympify(
+                    sbml.formulaToL3String(initial_assignment.getMath()),
+                    locals=self.local_symbols
+                )
 
     @log_execution_time('processing SBML species', logger)
     def _process_species(self) -> None:
@@ -510,6 +557,141 @@ class SbmlImporter:
              for specie in species
         ])
 
+        # Process assignment and rate rules for species and compartments.
+        # Compartments with rate rules are implemented as species. Species and
+        # compartments with assignments are implemented as observables (and
+        # replaced with their assignment in all expressions). Note that, in the
+        # case of species, rate rules may describe the change in amount, not
+        # concentration, of a species.
+        rules = self.sbml.getListOfRules()
+        compartmentvars = self.compartment_symbols.free_symbols
+        # compartments with rules are replaced with constants in the relevant
+        # equations during the _replace_in_all_expressions call inside
+        # _process_rules
+        for rule in rules:
+            ### Taken from _process_rules
+            if rule.getFormula() == '':
+                continue
+            variable = sp.sympify(rule.getVariable(),
+                                  locals=self.local_symbols)
+            # avoid incorrect parsing of pow(x, -1) in symengine
+            formula = sp.sympify(_parse_logical_operators(
+                sbml.formulaToL3String(rule.getMath())),
+                locals=self.local_symbols)
+            formula = _parse_special_functions(formula)
+            _check_unsupported_functions(formula, 'Rule')
+            ###
+
+            # Species rules are processed first, to avoid processing
+            # compartments twice (as compartments with rate rules are
+            # implemented as species). Could also be avoided with a
+            # `not in self.compartment_rate_rules` condition.
+            if variable in self.symbols['species']['identifier']:
+                if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+                    # Handled in _process_rules and _process_observables.
+                    # TODO: set a species initial value to its assignment rule?
+                    pass
+                elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
+                    self.add_d_dt(
+                        formula,
+                        variable,
+                        self.symbols['species']['value'],
+                        sbml.SBML_SPECIES)
+                else:
+                    raise KeyError('The only rules currently supported for'
+                                   'species are assignment and rate rules!')
+
+            if variable in compartmentvars:
+                if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+                    # Handled in _process_rules and _process_observables
+                    # SBML Assignment Rules can be used to specify initial
+                    # values (see SBML L3V2 manual, Section 3.4.8).
+                    # Priority appears to be above InitialAssignment.
+                    self.compartment_volume[list(
+                        self.compartment_symbols).index(variable)] = formula
+                elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
+                    self.add_d_dt(
+                        formula,
+                        variable,
+                        self.compartment_volume[list(
+                            self.compartment_symbols).index(variable)],
+                        sbml.SBML_COMPARTMENT)
+                else:
+                    raise KeyError('Only assignment and rate rules are '
+                                   'currently supported for compartments!')
+
+    def add_d_dt(
+            self,
+            d_dt: sp.Expr,
+            variable: sp.Symbol,
+            variable0: Union[float, sp.Expr],
+            component: int,
+            name: str = None
+    ) -> None:
+        '''
+        Creates or modifies species, to implement rate rules for compartments
+        and species, respectively.
+
+        Arguments
+        ---------
+        d_dt:
+            The rate rule (or, right-hand side of an ODE).
+
+        variable:
+            The subject of the rate rule.
+
+        variable0:
+            The initial value of the variable.
+
+        component:
+            The type of SBML component. Currently, only libsbml.SBML_SPECIES
+        and libsbml.SBML_COMPARTMENT are supported.
+        '''
+        if name is None:
+            name = ''
+        if component == sbml.SBML_COMPARTMENT:
+            self.symbols['species']['identifier'] = \
+                self.symbols['species']['identifier'].col_join(
+                    sp.Matrix([variable]))
+            self.symbols['species']['name'].append(name)
+            self.symbols['species']['value'] = \
+                self.symbols['species']['value'].col_join(
+                    sp.Matrix([variable0]))
+            self.species_index[str(variable)] = len(self.species_index)
+            self.compartment_rate_rules[variable] = d_dt
+        elif component == sbml.SBML_SPECIES:
+            if str(variable) in self.species_index:
+                # SBML species are already in the species symbols
+                x_index = self.species_index[str(variable)]
+                if self.species_has_only_substance_units[x_index]:
+                    self.symbols['species']['value'][x_index] *= \
+                        self.species_compartment[x_index]
+                self.species_rate_rules[variable] = d_dt
+            else:
+                # For Jakob to specify rules independently of SBML (untested)
+                # Remove assert statement to use
+                # Currently untested...
+                assert False, "Error while processing species rate rules."
+                self.symbols['species']['identifier'] = \
+                    self.symbols['species']['identifier'].col_join(
+                        sp.Matrix([variable]))
+                self.symbols['species']['name'].append(name)
+                self.symbols['species']['value'] = \
+                    self.symbols['species']['value'].col_join(
+                        sp.Matrix([variable0]))
+                self.species_index[str(variable)] = len(self.species_index)
+                self.species_rate_rules[variable] = d_dt
+                # May need to modify this function (`add_d_dt`) to allow
+                # specification of whether the argument `d_dt` describes change
+                # in amount or concentration.
+                #if self.species_has_only_substance_units[x_index]:
+                #    self.symbols['species']['value'][x_index] *= \
+                #    self.species_compartment[x_index]
+        else:
+            raise TypeError(f'Rate rules are currently only supported for '
+                            'libsbml.SBML_COMPARTMENT and '
+                            'libsbml.SBML_SPECIES components.')
+
     @log_execution_time('processing SBML parameters', logger)
     def _process_parameters(self,
                             constant_parameters: List[str] = None) -> None:
@@ -583,41 +765,13 @@ class SbmlImporter:
                 }
             )
 
-    @log_execution_time('processing SBML compartments', logger)
-    def _process_compartments(self) -> None:
-        """
-        Get compartment information, stoichiometric matrix and fluxes from
-        SBML model.
-        """
-        compartments = self.sbml.getListOfCompartments()
-        self.compartment_symbols = sp.Matrix(
-            [sp.Symbol(comp.getId(), real=True) for comp in compartments]
-        )
-        self.compartment_volume = sp.Matrix([
-            sp.sympify(comp.getVolume()) if comp.isSetVolume()
-            else sp.sympify(1.0) for comp in compartments
-        ])
-
-        compartment_ids = [comp.getId() for comp in compartments]
-        for initial_assignment in self.sbml.getListOfInitialAssignments():
-            if initial_assignment.getId() in compartment_ids:
-                index = compartment_ids.index(
-                        initial_assignment.getId()
-                    )
-                self.compartment_volume[index] = sp.sympify(
-                    sbml.formulaToL3String(initial_assignment.getMath()),
-                    locals=self.local_symbols
-                )
-
-        self.compartment_rules = {}
-
     @log_execution_time('processing SBML reactions', logger)
     def _process_reactions(self):
         """
         Get reactions from SBML model.
         """
         reactions = self.sbml.getListOfReactions()
-        nr = len(reactions)
+        nr = max(1, len(reactions))
         nx = len(self.symbols['species']['name'])
         # stoichiometric matrix
         self.stoichiometric_matrix = sp.SparseMatrix(sp.zeros(nx, nr))
@@ -678,6 +832,13 @@ class SbmlImporter:
                                       (reaction.getListOfProducts(), 1.0)]:
                 elements = {}
                 for index, element in enumerate(elementList):
+                    # Handle SBML testsuite case 01498
+                    # Also results in ~60 additional cases failing, compared
+                    # with the develop branch.
+                    #if str(element.getId()) and \
+                    #   str(element.getId()) not in self.species_index:
+                    #    raise SBMLException('Unknown species: '
+                    #                        f'{element.getId()}.')
                     # we need the index here as we might have multiple elements
                     # for the same species
                     elements[index] = {'species': element.getSpecies()}
@@ -751,6 +912,10 @@ class SbmlImporter:
         assignments = {}
 
         for rule in rules:
+            # Rate rules should not be substituted for the target of the rate
+            # rule.
+            if rule.getTypeCode() == sbml.SBML_RATE_RULE:
+                continue
             if rule.getFormula() == '':
                 continue
             variable = sp.sympify(rule.getVariable(),
@@ -763,50 +928,26 @@ class SbmlImporter:
             _check_unsupported_functions(formula, 'Rule')
 
             if variable in stoichvars:
-                if variable not in self.compartment_symbols: # change to only self.compartment_rules symbols?
-                    self.stoichiometric_matrix = \
-                        self.stoichiometric_matrix.subs(variable, formula)
-                #else:
-                #    self.stoichiometric_matrix = \
-                #        self.stoichiometric_matrix.subs(variable, self.compartment_volume[list(self.compartment_symbols).index(variable)])
+                self.stoichiometric_matrix = \
+                    self.stoichiometric_matrix.subs(variable, formula)
 
             if variable in specvars:
-                raise SBMLException('Species assignment rules are currently'
-                                    ' not supported!')
+                if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
+                    self.species_assignment_rules[variable] = formula
+                    assignments[str(variable)] = formula
+                else:
+                    # Rate rules are handled in _process_species, and are
+                    # skipped in this loop
+                    raise KeyError('Only assignment and rate rules are '
+                                   'currently supported for species!')
 
             if variable in compartmentvars:
                 if rule.getTypeCode() == sbml.SBML_ASSIGNMENT_RULE:
-                    self.compartment_rules[variable] = {
-                            'type_code': sbml.SBML_ASSIGNMENT_RULE,
-                            'formula': formula,
-                            # setting v0 might be unnecessary. currently in place to satisfy the ODEModel _equation_from_component method (which I edited to require v0...)
-                            'v0': self.compartment_volume[list(self.compartment_symbols).index(variable)].subs(
-                                self.symbols['species']['identifier'],
-                                self.symbols['species']['value']
-                            )
-                        }
-                    self.compartment_volume[list(self.compartment_symbols).index(variable)] = formula
+                    self.compartment_assignment_rules[variable] = formula
                     assignments[str(variable)] = formula
-                    #continue # avoid simplifying substitution of the compartment expression, to avoid possibly circular substitution
-                elif rule.getTypeCode() == sbml.SBML_RATE_RULE:
-                    self.compartment_rules[variable] = {
-                            'type_code': sbml.SBML_RATE_RULE,
-                            'formula': formula,
-                            'v0': self.compartment_volume[list(self.compartment_symbols).index(variable)]
-                        }
-
-                    self.symbols['species']['identifier'] = self.symbols['species']['identifier'].col_join(sp.Matrix([variable]))
-                    self.symbols['species']['name'].append('')
-                    self.symbols['species']['value'] = self.symbols['species']['value'].col_join(sp.Matrix([variable]))
-                    #self.symbols['species']['value'] = self.symbols['species']['value'].col_join(sp.Matrix([self.compartment_rules[variable]['v0']]))
-                    self.species_index.update({sp.sstr(variable): len(self.species_index)}) #necessary?
-                    self.stoichiometric_matrix = self.stoichiometric_matrix.col_join(
-                            sp.zeros(1, self.stoichiometric_matrix.shape[1])).row_join(
-                            sp.zeros(self.stoichiometric_matrix.shape[0]+1, 1)) # +1 as a row is added in the above line. may cause errors depending on how python handles this...
-                    self.stoichiometric_matrix[-1, -1] = 1
-                    self.flux_vector = self.flux_vector.col_join(sp.Matrix([formula]))
-                    continue # avoid simplifying substitution of the compartment expression, to avoid possibly circular substitution
                 else:
+                    # Rate rules are handled in _process_species, and are
+                    # skipped in this loop
                     raise KeyError('Only assignment and rate rules are '
                                    'currently supported for compartments!')
 
@@ -820,13 +961,8 @@ class SbmlImporter:
                     assignments[str(variable)] = formula
 
             if variable in fluxvars:
-                if variable not in self.compartment_rules:
-                # compartments with rate rules are exported as species, so can remain in flux_vector formulae
-                # compartments with assignment rules also don't need to be substituted here, since ODE export was modified to substitute compartments
-                #if variable not in [c for c in self.compartment_rules if self.compartment_rules[c]['type_code'] == sbml.SBML_RATE_RULE]:
-                    self.flux_vector = self.flux_vector.subs(variable, formula)
+                self.flux_vector = self.flux_vector.subs(variable, formula)
 
-            #if variable in volumevars and variable not in self.compartment_rules:
             if variable in volumevars:
                 self.compartment_volume = \
                     self.compartment_volume.subs(variable, formula)
@@ -840,24 +976,22 @@ class SbmlImporter:
                         nested_formula.subs(variable, formula)
                     nested_rule.setFormula(str(nested_formula))
 
-                for variable in assignments: # might want to rename variable (variable is defined already)
+                for variable in assignments:
                     assignments[variable].subs(variable, formula)
 
         # do this at the very end to ensure we have flattened all recursive
         # rules
         for variable in assignments.keys():
-            #if variable not in self.compartment_rules:
+            #if variable not in self.compartment_rate_rules:
             self._replace_in_all_expressions(
                 sp.Symbol(variable, real=True),
                 assignments[variable]
             )
         for comp, vol in zip(self.compartment_symbols,
                              self.compartment_volume):
-            #if comp not in [c for c, rule in self.compartment_rules.items() if rule['type_code'] == sbml.SBML_RATE_RULE]:
-            if comp not in self.compartment_rules:
-                self._replace_in_all_expressions(
-                    comp, vol
-                )
+            self._replace_in_all_expressions(
+                comp, vol
+            )
 
     def _process_volume_conversion(self) -> None:
         """
@@ -866,8 +1000,7 @@ class SbmlImporter:
         compartments = self.species_compartment
         for comp, vol in zip(self.compartment_symbols,
                              self.compartment_volume):
-            #if comp not in [c for c in self.compartment_rules if self.compartment_rules[c]['type_code'] == sbml.SBML_RATE_RULE]:
-            if comp not in self.compartment_rules:
+            if comp not in self.compartment_rate_rules:
                 compartments = compartments.subs(comp, vol)
         for index, sunits in enumerate(self.species_has_only_substance_units):
             if sunits:
@@ -938,8 +1071,33 @@ class SbmlImporter:
                     f"{unknown_ids}.")
 
         species_syms = self.symbols['species']['identifier']
+        assignments = {str(c):str(r)
+                       for c, r in self.compartment_assignment_rules.items()}
+        assignments.update({str(s):str(r)
+                            for s, r in self.species_assignment_rules.items()})
 
-        # add user-provided observables or make all species observable
+        def replace_assignments(formula: str) -> sp.Basic:
+            """
+            Replace assignment rules in observables
+
+            :param formula:
+                algebraic formula of the observable
+
+            :return:
+                observable formula with assignment rules replaced
+            """
+            formula = sp.sympify(formula, locals=self.local_symbols)
+            for s in formula.free_symbols:
+                r = self.sbml.getAssignmentRuleByVariable(str(s))
+                if r is not None:
+                    formula = formula.replace(s, sp.sympify(
+                        sbml.formulaToL3String(r.getMath()),
+                        locals=self.local_symbols
+                    ))
+            return formula
+
+        # add user-provided observables or make all species, and compartments
+        # with assignment rules, observable
         if observables:
             # Replace logX(.) by log(., X) since symengine cannot parse the
             # former. Also replace symengine-incompatible sbml log(basis, x)
@@ -957,26 +1115,6 @@ class SbmlImporter:
                     )
                     observables[observable]['formula'] = repl
 
-            def replace_assignments(formula: str) -> sp.Basic:
-                """
-                Replace assignment rules in observables
-
-                :param formula:
-                    algebraic formula of the observable
-
-                :return:
-                    observable formula with assignment rules replaced
-                """
-                formula = sp.sympify(formula, locals=self.local_symbols)
-                for s in formula.free_symbols:
-                    r = self.sbml.getAssignmentRuleByVariable(str(s))
-                    if r is not None:
-                        formula = formula.replace(s, sp.sympify(
-                            sbml.formulaToL3String(r.getMath()),
-                            locals=self.local_symbols
-                        ))
-                return formula
-
             observable_values = sp.Matrix([
                 replace_assignments(observables[observable]['formula'])
                 for observable in observables
@@ -992,7 +1130,7 @@ class SbmlImporter:
             ])
             observable_ids = observables.keys()
         else:
-            observable_values = species_syms
+            observable_values = copy.deepcopy(species_syms)
             observable_ids = [
                 f'x{index}' for index in range(len(species_syms))
             ]
@@ -1001,6 +1139,25 @@ class SbmlImporter:
                 [sp.symbols(f'y{index}', real=True)
                  for index in range(len(species_syms))]
             )
+            # Add compartment and species assignment rules as observables
+            # Useful for passing the SBML Test Suite (compartment volumes are
+            # used to calculate species amounts).
+            # The id's and names below may conflict with the automatically
+            # generated id's and names above.
+            for compartment in self.compartment_assignment_rules:
+                observable_values = observable_values.col_join(sp.Matrix(
+                    [self.compartment_assignment_rules[compartment]]))
+                observable_ids.append(str(compartment))
+                observable_names.append(str(compartment))
+                observable_syms = observable_syms.col_join(sp.Matrix(
+                    [compartment]))
+            for species in self.species_assignment_rules:
+                x_index = self.species_index[str(species)]
+                observable_values[x_index] = sp.Matrix(
+                    [replace_assignments(str(species))])
+                observable_ids[x_index] = str(species)
+                observable_names[x_index] = str(species)
+                observable_syms[x_index] = sp.Matrix([species])
 
         sigma_y_syms = sp.Matrix(
             [sp.symbols(f'sigma{symbol}', real=True)
@@ -1069,29 +1226,62 @@ class SbmlImporter:
         :param new:
             replacement symbolic variables
         """
-        fields = [
-            'stoichiometric_matrix', 'flux_vector',
-        ]
-        for field in fields:
-            if field in dir(self):
-                self.__setattr__(field, self.__getattribute__(field).subs(
-                    old, new
-                ))
+        # Avoid replacing variables with rates
+        if old not in set((*self.compartment_rate_rules.keys(),
+                           *self.species_rate_rules.keys())):
+            fields = [
+                'stoichiometric_matrix', 'flux_vector',
+            ]
+            for field in fields:
+                if field in dir(self):
+                    self.__setattr__(field, self.__getattribute__(field).subs(
+                        old, new
+                    ))
+            for compartment in self.compartment_rate_rules:
+                self.compartment_rate_rules[compartment] = \
+                    self.compartment_rate_rules[compartment].subs(old, new)
+            for species in self.species_rate_rules:
+                self.species_rate_rules[species] = \
+                    self.species_rate_rules[species].subs(old, new)
+
         symbols = [
-            'species', 'observables',
+            'species', 'observable',
         ]
         for symbol in symbols:
-            if symbol in self.symbols and old not in self.compartment_rules:
-                self.symbols[symbol]['value'] = \
-                    self.symbols[symbol]['value'].subs(old, new)
-        if 'compartment_rules' in dir(self):
-            for compartment, rule in self.compartment_rules.items():
-                self.compartment_rules[compartment]['formula'] = \
-                    self.compartment_rules[compartment]['formula'].subs(old, new)
-                #if rule['type_code'] == sbml.SBML_RATE_RULE:
-                self.compartment_rules[compartment]['v0'] = \
-                    self.compartment_rules[compartment]['v0'].subs(old, new)
+            if symbol in self.symbols:
+                # Initial species values that are specified as amounts need to
+                # be divided by their compartment volume to obtain
+                # concentration. The condition below ensures that species
+                # initial amount is divided by the initial compartment size,
+                # and not the expression for a compartment assignment rule.
+                if symbol == 'species' and (
+                        old in self.compartment_assignment_rules):
+                    self.symbols[symbol]['value'] = \
+                        self.symbols[symbol]['value'].subs(
+                            old,
+                            self.compartment_volume[
+                                list(self.compartment_symbols).index(old)])
+                else:
+                    # self.symbols['observable'] may not yet be defined.
+                    if not self.symbols[symbol]:
+                        continue
+                    self.symbols[symbol]['value'] = \
+                        self.symbols[symbol]['value'].subs(old, new)
 
+        for compartment in self.compartment_assignment_rules:
+            self.compartment_assignment_rules[compartment] = \
+                self.compartment_assignment_rules[compartment].subs(old, new)
+        # Initial compartment volume may also be specified with an assignment
+        # rule (at the end of the _process_species method), hence needs to be
+        # processed here too.
+        for index in range(len(self.compartment_volume)):
+            if 'amici_time_symbol' in dir(self) and (
+                    new == self.amici_time_symbol):
+                self.compartment_volume[index] = \
+                    self.compartment_volume[index].subs(old, 0)
+            else:
+                self.compartment_volume[index] = \
+                    self.compartment_volume[index].subs(old, new)
 
     def _clean_reserved_symbols(self) -> None:
         """

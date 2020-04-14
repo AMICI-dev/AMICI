@@ -30,7 +30,6 @@ import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
 from sympy import Add, Function, Derivative, solve, dsolve
-import libsbml # change to import libsbml as sbml to match sbml_import.py?
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
@@ -835,8 +834,6 @@ class ODEModel:
             imported SBML model
         """
 
-        self.si = si
-
         symbols = copy.copy(si.symbols)
 
         # setting these equations prevents native equation generation
@@ -862,54 +859,50 @@ class ODEModel:
             :param x_Sw:
                 The element-wise product of the row in the stoichiometric
                 matrix that corresponds to the species (row x_index) and the
-                flux (kinetic laws) vector.
+                flux (kinetic laws) vector. Ignored in the case of rate rules.
             '''
             x_id = symbols['species']['identifier'][x_index]
-            if x_id in si.compartment_rules:
-                return x_Sw
-            elif x_id in si.compartment_symbols:
-                raise KeyError('This should not happen. There exists an ODE for an compartment that does not have an associated rate rule.')
-            v_name = si.species_compartment[x_index]
-            if v_name in si.compartment_rules:
-                if (si.compartment_rules[v_name]['type_code']
-                        == libsbml.SBML_ASSIGNMENT_RULE):
-                    v = si.compartment_rules[v_name]['formula']
-                    dv_dt = v.diff(si.amici_time_symbol)
-                    dv_dx = v.diff(x_id)
-                    # not sure if parentheses here are necessary...
-                    return ((x_Sw) - (dv_dt)*(x_id))/((dv_dx)*(x_id) + (v))
-                elif (si.compartment_rules[v_name]['type_code']
-                          == libsbml.SBML_RATE_RULE):
-                    t = si.amici_time_symbol
-                    f = Function(sp.sstr(v_name))
-                    f0 = si.compartment_rules[v_name]['v0']
-                    dv_dt = si.compartment_rules[v_name]['formula']
-                    v = dsolve(Derivative(f(t), t) - dv_dt.subs(v_name, f(t)), f(t), ics={f(0): f0}).rhs
-                    ode = ((x_Sw) - (dv_dt)*(x_id))/(v_name)
-                    # might need to do this for assignment rules as well
-                    for w_index, w in enumerate(self.sym('w')):
-                        self._eqs['dxdotdw'][x_index,w_index] = ode.diff(w)
-                    #return ((x_Sw) - (dv_dt)*(x_id))/(v_name)
-                    return ode
-                else:
-                    # this should not occur (should be handled by sbml_import.py)
-                    raise TypeError(f'A compartment rule for "{v_name}" '
-                                    'exists that is neither an assignment nor '
-                                    'rate rule.')
-            else:
-                v = si.compartment_volume[list(si.compartment_symbols).index(si.species_compartment[x_index])]
-                return (x_Sw)/(v)
 
-        if len(si.stoichiometric_matrix):
-            Sw = (MutableDenseMatrix(si.stoichiometric_matrix)
-                  * MutableDenseMatrix(self.sym('w')))
-            symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
-                lambda x_Sw: dx_dt(x_index, x_Sw))
-                for x_index in range(Sw.rows)])
-        else:
-            symbols['species']['dt'] = sp.zeros(
-                *symbols['species']['identifier'].shape
-            )
+            # Rate rules specify dx_dt.
+            # Note that the rate rule of species may describe amount, not
+            # concentration.
+            if x_id in si.compartment_rate_rules:
+                return si.compartment_rate_rules[x_id]
+            elif x_id in si.species_rate_rules:
+                return si.species_rate_rules[x_id]
+
+            # The derivation of the below return expressions can be found in
+            # the documentation. They are found by rearranging
+            # $\frac{d}{dt} (vx) = Sw$ for $\frac{dx}{dt}$, where $v$ is the
+            # vector of species compartment volumes, $x$ is the vector of
+            # species concentrations, $S$ is the stoichiometric matrix, and $w$
+            # is the flux vector. The conditional below handles the cases of
+            # species in (i) compartments with a rate rule, (ii) compartments
+            # with an assignment rule, and (iii) compartments with a constant
+            # volume, respectively.
+            v_name = si.species_compartment[x_index]
+            if v_name in si.compartment_rate_rules:
+                dv_dt = si.compartment_rate_rules[v_name]
+                xdot = (x_Sw - dv_dt*x_id)/v_name
+                # might need to do this for assignment rules as well
+                for w_index, w in enumerate(self.sym('w')):
+                    self._eqs['dxdotdw'][x_index,w_index] = xdot.diff(w)
+                return xdot
+            elif v_name in si.compartment_assignment_rules:
+                v = si.compartment_assignment_rules[v_name]
+                dv_dt = v.diff(si.amici_time_symbol)
+                dv_dx = v.diff(x_id)
+                return (x_Sw - dv_dt*x_id)/(dv_dx*x_id + v)
+            else:
+                v = si.compartment_volume[list(si.compartment_symbols).index(
+                    si.species_compartment[x_index])]
+                return x_Sw/v
+
+        Sw = (MutableDenseMatrix(si.stoichiometric_matrix)
+              * MutableDenseMatrix(self.sym('w')))
+        symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
+            lambda x_Sw: dx_dt(x_index, x_Sw))
+            for x_index in range(Sw.rows)])
 
         for symbol in [s for s in symbols if s != 'my']:
             # transform dict of lists into a list of dicts
@@ -1697,8 +1690,6 @@ class ODEModel:
             [comp.get_val() for comp in getattr(self, component)]
         )
 
-        if name == 'x0':
-            self._eqs['x0'] = self._eqs['x0'].subs({c: self.si.compartment_rules[c]['v0'] for c in self.si.compartment_rules})
         # flatten conservation laws in expressions
         if name == 'w':
             self._eqs[name] = self._eqs[name].subs(
