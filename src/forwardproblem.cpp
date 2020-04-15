@@ -75,6 +75,7 @@ void ForwardProblem::workForwardProblem() {
 
     // update x0 after computing consistence IC/presimulation
     x = solver->getState(model->t0());
+    sx = solver->getStateSensitivity(model->t0());
 
     /* store initial state and sensitivity*/
     x0 = x;
