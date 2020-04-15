@@ -157,7 +157,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
         initializeObjectiveFunction();
 
     model.fx_rdata(x_rdata, fwd.getInitialState());
-    x0 = x_rdata.getVector();
+    std::copy_n(x_rdata.data(), nx, x0.data());
     
     if (!sx0.empty()) {
         model.fsx_rdata(sx_rdata, fwd.getInitialStateSensitivity());

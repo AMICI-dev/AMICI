@@ -73,9 +73,16 @@ void ForwardProblem::workForwardProblem() {
     if (presimulate || preequilibrated)
         solver->updateAndReinitStatesAndSensitivities(model);
 
-    // update x0 after computing consistence IC/presimulation
+    // update x0 after computing consistence IC/reinitialization
     x = solver->getState(model->t0());
-    sx = solver->getStateSensitivity(model->t0());
+    /* this is a bit tricky here. we want to update sx0 after calling
+     solver->updateAndReinitStatesAndSensitivities, but not end up overwriting
+     results from non-FSA preequilibration. checking for solver->computingFSA()
+     is not the most intuitive way to make sure we do the right thing, but does
+     the right job */
+    if (solver->computingFSA())
+        sx = solver->getStateSensitivity(model->t0());
+    
 
     /* store initial state and sensitivity*/
     x0 = x;
