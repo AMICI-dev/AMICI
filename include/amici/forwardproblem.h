@@ -16,10 +16,20 @@ class ExpData;
 class Solver;
 class SteadystateProblem;
 
+/**
+ * @brief implements an exchange format to store and transfer the state of a simulation at a
+ * specific timepoint.
+ */
+
+
 struct SimulationState{
+    /** timepoint */
     realtype t;
+    /** state variables */
     AmiVector x;
+    /** state variable sensitivity */
     AmiVectorArray sx;
+    /** state of the model that was used for simulation */
     ModelState state;
 };
 

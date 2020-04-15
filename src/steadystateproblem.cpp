@@ -6,7 +6,6 @@
 #include "amici/edata.h"
 #include "amici/forwardproblem.h"
 #include "amici/newton_solver.h"
-#include "amici/rdata.h"
 #include "amici/misc.h"
 
 #include <cmath>
@@ -168,7 +167,6 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     x_old = x;
     xdot_old = xdot;
 
-    //rdata->newton_numsteps[newton_try - 1] = 0.0;
     wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol);
     bool converged = wrms < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->maxsteps) {

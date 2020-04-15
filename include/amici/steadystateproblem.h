@@ -14,7 +14,6 @@
 
 namespace amici {
 
-class ReturnData;
 class Solver;
 class Model;
 
@@ -41,7 +40,6 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
-     * @param rdata pointer to the return data object
      */
     void workSteadyStateProblem(Solver *solver, Model *model, int it);
 
@@ -110,6 +108,7 @@ class SteadystateProblem {
 
     /**
      * @brief returns the stored SimulationState
+     * @return stored SimulationState
      */
     const SimulationState getSimulationState() const {
         return state;

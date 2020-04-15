@@ -116,6 +116,7 @@ class NewtonSolver {
     /** current state time derivative (DAE) */
     AmiVector dx;
     
+    /** history of number of linear steps */
     std::vector<int> numlinsteps;
 };
 
