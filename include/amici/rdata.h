@@ -575,7 +575,7 @@ class ReturnData {
     
     /**
      * @brief Extracts event information for forward sensitivity analysis, expects that x_solver and
-     * sx_solver were were set appropriately
+     * sx_solver were set appropriately
      * @param iroot event index
      * @param ie index of event type
      * @param t event timepoint
@@ -588,7 +588,7 @@ class ReturnData {
 
 /**
  * @brief The ModelContext temporarily stores amici::Model::state
- * estores it when going out of scope
+ * and restores it when going out of scope
  */
 class ModelContext {
   public:

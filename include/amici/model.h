@@ -33,7 +33,7 @@ namespace amici {
 
 /**
  * @brief implements an exchange format to store and transfer the state of the model at a
- * specific timepoint. This is designed to only encompass the minimal numner of attributes that needs to be
+ * specific timepoint. This is designed to only encompass the minimal number of attributes that need to be
  * transferred.
  */
 struct ModelState {

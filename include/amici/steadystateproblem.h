@@ -33,7 +33,7 @@ class SteadystateProblem {
 
     /**
      * Tries to determine the steady state of the ODE system by a Newton
-     * solver, uses forward intergration, if the Newton solver fails,
+     * solver, uses forward integration, if the Newton solver fails,
      * restarts Newton solver, if integration fails.
      * Computes steady state sensitivities
      *
