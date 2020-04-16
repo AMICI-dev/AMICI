@@ -40,6 +40,9 @@ using namespace amici;
 %ignore dxdotdp;
 %ignore dxdotdp_implicit;
 %ignore dxdotdp_explicit;
+%ignore ModelState;
+%ignore getModelState;
+%ignore setModelState;
 
 // Process symbols in header
 %include "amici/model.h"
