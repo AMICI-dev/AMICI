@@ -3,9 +3,11 @@
 #===============================================================================
 
 # This file contains all configuration settings for all packages in SuiteSparse,
-# except for CSparse (which is stand-alone) and the packages in MATLAB_Tools.
+# except for CSparse (which is stand-alone), the packages in MATLAB_Tools,
+# and GraphBLAS.  The configuration settings for GraphBLAS are determined by
+# GraphBLAS/CMakeLists.txt
 
-SUITESPARSE_VERSION = 4.5.3
+SUITESPARSE_VERSION = 5.4.0
 
 #===============================================================================
 # Options you can change without editing this file:
@@ -57,6 +59,15 @@ SUITESPARSE_VERSION = 4.5.3
     INSTALL_INCLUDE ?= $(INSTALL)/include
     INSTALL_DOC ?= $(INSTALL)/share/doc/suitesparse-$(SUITESPARSE_VERSION)
 
+    CMAKE_OPTIONS ?= -DCMAKE_INSTALL_PREFIX=$(INSTALL)
+
+    #---------------------------------------------------------------------------
+    # parallel make
+    #---------------------------------------------------------------------------
+
+    # sequential make's by default
+    JOBS ?= 1
+
     #---------------------------------------------------------------------------
     # optimization level
     #---------------------------------------------------------------------------
@@ -78,18 +89,10 @@ SUITESPARSE_VERSION = 4.5.3
         CXX = g++
         BLAS = -lrefblas -lgfortran -lstdc++
         LAPACK = -llapack
-	CFLAGS += --coverage
-	OPTIMIZATION = -g
-	LDFLAGS += --coverage
+        CFLAGS += --coverage
+        OPTIMIZATION = -g
+        LDFLAGS += --coverage
     endif
-
-    #---------------------------------------------------------------------------
-    # CFLAGS for the C/C++ compiler
-    #---------------------------------------------------------------------------
-
-    # The CF macro is used by SuiteSparse Makefiles as a combination of
-    # CFLAGS, CPPFLAGS, TARGET_ARCH, and system-dependent settings.
-    CF ?= $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) $(OPTIMIZATION) -fexceptions -fPIC
 
     #---------------------------------------------------------------------------
     # OpenMP is used in CHOLMOD
@@ -112,9 +115,12 @@ SUITESPARSE_VERSION = 4.5.3
     ifneq ($(AUTOCC),no)
         ifneq ($(shell which icc 2>/dev/null),)
             # use the Intel icc compiler for C codes, and -qopenmp for OpenMP
-            CC = icc -D_GNU_SOURCE
-            CXX = $(CC)
+            CC = icc
+            CFLAGS += -D_GNU_SOURCE
+            CXX = icpc
             CFOPENMP = -qopenmp -I$(MKLROOT)/include
+            LDFLAGS += -qopenmp
+            LDLIBS += -lm -lirc
         endif
         ifneq ($(shell which ifort 2>/dev/null),)
             # use the Intel ifort compiler for Fortran codes
@@ -122,8 +128,18 @@ SUITESPARSE_VERSION = 4.5.3
         endif
     endif
 
+    CMAKE_OPTIONS += -DCMAKE_CXX_COMPILER=$(CXX) -DCMAKE_C_COMPILER=$(CC)
+
     #---------------------------------------------------------------------------
-    # code formatting (for Tcov only)
+    # CFLAGS for the C/C++ compiler
+    #---------------------------------------------------------------------------
+
+    # The CF macro is used by SuiteSparse Makefiles as a combination of
+    # CFLAGS, CPPFLAGS, TARGET_ARCH, and system-dependent settings.
+    CF ?= $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) $(OPTIMIZATION) -fexceptions -fPIC
+
+    #---------------------------------------------------------------------------
+    # code formatting (for Tcov on Linux only)
     #---------------------------------------------------------------------------
 
     PRETTY ?= grep -v "^\#" | indent -bl -nce -bli0 -i4 -sob -l120
@@ -156,7 +172,7 @@ SUITESPARSE_VERSION = 4.5.3
             #   $(MKLROOT)/lib/intel64/libmkl_intel_thread.a \
             #   -Wl,--end-group -lpthread -lm
             # using dynamic linking:
-            BLAS = -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -lpthread -lm
+            BLAS = -lmkl_intel_lp64 -lmkl_core -lmkl_intel_thread -liomp5 -lpthread -lm
             LAPACK =
         else
             # use the OpenBLAS at http://www.openblas.net
@@ -222,13 +238,16 @@ SUITESPARSE_VERSION = 4.5.3
         CUBLAS_LIB    = $(CUDA_PATH)/lib64/libcublas.so
         CUDA_INC_PATH = $(CUDA_PATH)/include/
         CUDA_INC      = -I$(CUDA_INC_PATH)
+                MAGMA_INC     = -I/opt/magma-2.4.0/include/
+                MAGMA_LIB     = -L/opt/magma-2.4.0/lib/ -lmagma
         NVCC          = $(CUDA_PATH)/bin/nvcc
         NVCCFLAGS     = -Xcompiler -fPIC -O3 \
-                            -gencode=arch=compute_20,code=sm_20 \
                             -gencode=arch=compute_30,code=sm_30 \
                             -gencode=arch=compute_35,code=sm_35 \
                             -gencode=arch=compute_50,code=sm_50 \
-                            -gencode=arch=compute_50,code=compute_50
+                            -gencode=arch=compute_53,code=sm_53 \
+                            -gencode=arch=compute_53,code=sm_53 \
+                            -gencode=arch=compute_60,code=compute_60
     endif
 
     #---------------------------------------------------------------------------
@@ -305,8 +324,9 @@ SUITESPARSE_VERSION = 4.5.3
 
     SPQR_CONFIG ?= $(GPU_CONFIG)
 
-    # to compile with Intel's TBB, use TBB=-ltbb SPQR_CONFIG=-DHAVE_TBB
+    # to compile with Intel's TBB, use TBB=-ltbb -DSPQR_CONFIG=-DHAVE_TBB
     TBB ?=
+    # TBB = -ltbb -DSPQR_CONFIG=-DHAVE_TBB
 
     # TODO: this *mk file should auto-detect the presence of Intel's TBB,
     # and set the compiler flags accordingly.
@@ -432,8 +452,6 @@ ifeq ($(UNAME),Windows)
     SO_PLAIN  = $(LIBRARY).dll
     SO_MAIN   = $(LIBRARY).$(SO_VERSION).dll
     SO_TARGET = $(LIBRARY).$(VERSION).dll
-    SO_OPTS  += -shared \
-		-L$(SUITESPARSE)/lib
     SO_INSTALL_NAME = echo
 else
     # Mac or Linux/Unix
@@ -556,6 +574,7 @@ config:
 	@echo 'Install include files in: INSTALL_INCLUDE=' '$(INSTALL_INCLUDE)'
 	@echo 'Install documentation in: INSTALL_DOC=    ' '$(INSTALL_DOC)'
 	@echo 'Optimization level:       OPTIMIZATION=   ' '$(OPTIMIZATION)'
+	@echo 'parallel make jobs:       JOBS=           ' '$(JOBS)'
 	@echo 'BLAS library:             BLAS=           ' '$(BLAS)'
 	@echo 'LAPACK library:           LAPACK=         ' '$(LAPACK)'
 	@echo 'Intel TBB library:        TBB=            ' '$(TBB)'
