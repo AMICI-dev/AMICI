@@ -156,7 +156,10 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
     if (edata)
         initializeObjectiveFunction();
 
-    readSimulationState(fwd.getInitialSimulationState(), model);
+    auto initialState = fwd.getInitialSimulationState();
+    if (initialState.x.getLength() == 0)
+        return; // if x wasn't set forward problem failed during initialization
+    readSimulationState(initialState, model);
     model.fx_rdata(x_rdata, x_solver);
     std::copy_n(x_rdata.data(), nx, x0.data());
 
