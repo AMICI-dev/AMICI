@@ -223,7 +223,7 @@ class ForwardProblem {
      * @brief Returns maximal time point index for which simulations are available
      * @return index
      */
-    int getTimePointCounter() const {
+    int getTimepointCounter() const {
         return timepoint_states.size() - 1;
     }
 
@@ -260,7 +260,7 @@ class ForwardProblem {
     const SimulationState &getSimulationStateEvent(int iroot) const {
         return event_states.at(iroot);
     };
-    
+
     /** pointer to model instance */
     Model *model;
 
@@ -334,9 +334,9 @@ class ForwardProblem {
      */
     SimulationState getSimulationState() const;
 
-
-    /** array of index which root has been found
-     * (dimension: dynamic, ordering = ?) */
+    /** array of index vectors (dimension ne) indicating whether the respective
+     * root has been detected for all so far encountered discontinuities,
+     * extended as needed (dimension: dynamic) */
     std::vector<std::vector<int>> rootidx;
 
     /** array of number of found roots for a certain event type
@@ -358,16 +358,16 @@ class ForwardProblem {
      * (dimension: nmaxevent x ne, ordering = ?) */
     std::vector<realtype> irdiscs;
 
-    /** array of state vectors at discontinuities
-     * (dimension nx x nMaxEvent * ne, ordering =?) */
+    /** array of state vectors (dimension nx) for all so far encountered
+     * discontinuities, extended as needed (dimension dynamic) */
     std::vector<AmiVector> x_disc;
 
-    /** array of differential state vectors at discontinuities
-     * (dimension nx x nMaxEvent * ne, ordering =?) */
+    /** array of differential state vectors (dimension nx) for all so far
+     * encountered discontinuities, extended as needed (dimension dynamic) */
     std::vector<AmiVector> xdot_disc;
 
-    /** array of old differential state vectors at discontinuities
-     * (dimension nx x nMaxEvent * ne, ordering =?) */
+    /** array of old differential state vectors (dimension nx) for all so far
+     * encountered discontinuities, extended as needed (dimension dynamic) */
     std::vector<AmiVector> xdot_old_disc;
 
     /** state derivative of data likelihood

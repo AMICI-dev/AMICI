@@ -84,11 +84,11 @@ def test_manual_preequilibration(preeq_fixture):
 
         # combined
         rdata_auto = amici.runAmiciSimulation(model, solver, edata)
-        assert rdata_auto.status == 0
+        assert rdata_auto.status == amici.AMICI_SUCCESS
 
         # manual preequilibration
         rdata_preeq = amici.runAmiciSimulation(model, solver, edata_preeq)
-        assert rdata_preeq.status == 0
+        assert rdata_preeq.status == amici.AMICI_SUCCESS
 
         # manual reinitialization + presimulation
         x0 = rdata_preeq['x'][0, :]
@@ -100,7 +100,7 @@ def test_manual_preequilibration(preeq_fixture):
         model.setInitialStates(x0)
         model.setInitialStateSensitivities(sx0.flatten())
         rdata_presim = amici.runAmiciSimulation(model, solver, edata_presim)
-        assert rdata_presim.status == 0
+        assert rdata_presim.status == amici.AMICI_SUCCESS
 
         # manual reinitialization + simulation
         x0 = rdata_presim['x'][0, :]
@@ -112,7 +112,7 @@ def test_manual_preequilibration(preeq_fixture):
         model.setInitialStates(x0)
         model.setInitialStateSensitivities(sx0.flatten())
         rdata_sim = amici.runAmiciSimulation(model, solver, edata_sim)
-        assert rdata_sim.status == 0
+        assert rdata_sim.status == amici.AMICI_SUCCESS
 
         for variable in ['x', 'sx']:
             assert np.isclose(
