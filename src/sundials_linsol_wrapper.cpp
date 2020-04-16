@@ -99,8 +99,9 @@ int SUNNonLinSolWrapper::setLSolveFn(SUNNonlinSolLSolveFn SolveFn) {
     return SUNNonlinSolSetLSolveFn(solver, SolveFn);
 }
 
-int SUNNonLinSolWrapper::setConvTestFn(SUNNonlinSolConvTestFn CTestFn) {
-    return SUNNonlinSolSetConvTestFn(solver, CTestFn);
+int SUNNonLinSolWrapper::setConvTestFn(SUNNonlinSolConvTestFn CTestFn,
+                                       void* ctest_data) {
+    return SUNNonlinSolSetConvTestFn(solver, CTestFn, ctest_data);
 }
 
 int SUNNonLinSolWrapper::setMaxIters(int maxiters) {

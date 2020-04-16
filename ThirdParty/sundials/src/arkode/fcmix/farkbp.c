@@ -2,7 +2,7 @@
  * Programmer(s): Daniel R. Reynolds @ SMU
  *---------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -30,7 +30,10 @@
 void FARK_BPINIT(long int *N, long int *mu,
                  long int *ml, int *ier)
 {
-  *ier = ARKBandPrecInit(ARK_arkodemem, *N, *mu, *ml);
+  *ier = ARKBandPrecInit(ARK_arkodemem,
+                         (sunindextype)(*N),
+                         (sunindextype)(*mu),
+                         (sunindextype)(*ml));
   return;
 }
 
