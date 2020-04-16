@@ -156,11 +156,12 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
     if (edata)
         initializeObjectiveFunction();
 
-    model.fx_rdata(x_rdata, fwd.getInitialState());
+    readSimulationState(fwd.getInitialSimulationState(), model);
+    model.fx_rdata(x_rdata, x_solver);
     std::copy_n(x_rdata.data(), nx, x0.data());
-    
+
     if (!sx0.empty()) {
-        model.fsx_rdata(sx_rdata, fwd.getInitialStateSensitivity());
+        model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++)
             std::copy_n(sx_rdata.data(ip), nx, &sx0.at(ip * nx));
     }
@@ -294,17 +295,19 @@ void ReturnData::getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
 void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
                                         BackwardProblem const &bwd,
                                         Model &model) {
+    ModelContext mc(&model);
+    readSimulationState(fwd.getInitialSimulationState(), model);
+
     std::vector<realtype> llhS0(model.nJ * model.nplist(), 0.0);
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
-    auto sx0 = fwd.getInitialStateSensitivity();
 
     for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < model.nplist(); ++ip) {
                 llhS0[ip] = 0.0;
                 for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
-                    llhS0[ip] += xB[ix] * sx0.at(ix, ip);
+                    llhS0[ip] += xB[ix] * sx_solver.at(ix, ip);
                 }
             }
         } else {
@@ -312,8 +315,10 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
                 llhS0[ip + iJ * model.nplist()] = 0.0;
                 for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
                     llhS0[ip + iJ * model.nplist()] +=
-                        xB[ix + iJ * model.nxtrue_solver] * sx0.at(ix, ip) +
-                        xB[ix] * sx0.at(ix + iJ * model.nxtrue_solver, ip);
+                        xB[ix + iJ * model.nxtrue_solver] *
+                            sx_solver.at(ix, ip) +
+                        xB[ix] *
+                            sx_solver.at(ix + iJ * model.nxtrue_solver, ip);
                 }
             }
         }
@@ -371,7 +376,7 @@ void ReturnData::storeJacobianAndDerivativeInReturnData(
 void ReturnData::readSimulationState(SimulationState const &state,
                                      Model &model) {
     x_solver = state.x;
-    if (computingFSA())
+    if (computingFSA() || state.t == model.t0())
         sx_solver = state.sx;
     t = state.t;
     model.setModelState(state.state);

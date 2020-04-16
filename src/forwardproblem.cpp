@@ -26,8 +26,6 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
       dJzdx(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
       t(model->t0()),
       rootsfound(model->ne, 0),
-      x0(model->nx_solver),
-      sx0(model->nx_solver,model->nplist()),
       x(model->nx_solver),
       x_old(model->nx_solver),
       dx(model->nx_solver),
@@ -85,8 +83,7 @@ void ForwardProblem::workForwardProblem() {
     
 
     /* store initial state and sensitivity*/
-    x0 = x;
-    sx0 = sx;
+    initial_state = getSimulationState();
 
     /* loop over timepoints */
     for (it = 0; it < model->nt(); it++) {
@@ -315,7 +312,7 @@ SimulationState ForwardProblem::getSimulationState() const {
     auto state = SimulationState();
     state.t = t;
     state.x = x;
-    if (solver->computingFSA())
+    if (solver->computingFSA() || t == model->t0())
         state.sx = sx;
     state.state = model->getModelState();
     return state;

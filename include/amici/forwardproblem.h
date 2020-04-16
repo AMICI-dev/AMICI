@@ -204,22 +204,6 @@ class ForwardProblem {
     }
 
     /**
-     * @brief Accessor for x0
-     * @return x0
-     */
-    const AmiVector &getInitialState() const {
-        return x0;
-    }
-
-    /**
-     * @brief Accessor for sx0
-     * @return sx0
-     */
-    const AmiVectorArray &getInitialStateSensitivity() const {
-        return sx0;
-    }
-
-    /**
      * @brief Returns maximal time point index for which simulations are available
      * @return index
      */
@@ -246,6 +230,7 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
      * the specified timepoint index
+     * @param it timpoint index
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
@@ -255,10 +240,20 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at
      * the specified event index
+     * @param iroot event index
      * @return state
      */
     const SimulationState &getSimulationStateEvent(int iroot) const {
         return event_states.at(iroot);
+    };
+
+    /**
+     * @brief Retrieves the carbon copy of the simulation state variables at the
+     * initial timepoint
+     * @return state
+     */
+    const SimulationState &getInitialSimulationState() const {
+        return initial_state;
     };
 
     /** pointer to model instance */
@@ -389,17 +384,14 @@ class ForwardProblem {
      */
     std::vector<int> rootsfound;
 
-    /** simulation states at timepoints  */
+    /** simulation states history at timepoints  */
     std::vector<SimulationState> timepoint_states;
 
-    /** state vector history at events*/
+    /** simulation state history at events*/
     std::vector<SimulationState> event_states;
 
-    /** initial state */
-    AmiVector x0;
-
-    /** initial state sensitivity */
-    AmiVectorArray sx0;
+    /** simulation state after initialization*/
+    SimulationState initial_state;
 
     /** state vector (dimension: nx_solver) */
     AmiVector x;
