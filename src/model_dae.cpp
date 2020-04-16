@@ -112,7 +112,6 @@ void Model_DAE::fdxdotdp(const realtype t, const N_Vector x,
     } else {
         // matlab generated
         fdwdp(t, N_VGetArrayPointer(x_pos));
-        // Why is it x_pos here and x ind model_ode.cpp?
 
         for (int ip = 0; ip < nplist(); ip++) {
             N_VConst(0.0, dxdotdp.getNVector(ip));

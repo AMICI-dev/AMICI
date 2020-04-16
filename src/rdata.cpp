@@ -145,9 +145,9 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     posteq_wrms = posteq.getResidualNorm();
     if (posteq.getNewtonStatus() == NewtonStatus::newt_sim)
         preeq_t = posteq.getSteadyStateTime();
-    writeSlice(posteq.getNumSteps(), preeq_numsteps);
+    writeSlice(posteq.getNumSteps(), posteq_numsteps);
     if (!posteq.getNumLinSteps().empty())
-        writeSlice(posteq.getNumLinSteps(), preeq_numlinsteps);
+        writeSlice(posteq.getNumLinSteps(), posteq_numlinsteps);
 }
 
 void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,

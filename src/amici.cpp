@@ -97,30 +97,24 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                      Model& model,
                                      bool rethrow)
 {
-    std::unique_ptr<ReturnData> rdata;
-
     /* Applies condition-specific model settings and restores them when going
      * out of scope */
     ConditionContext conditionContext(&model, edata,
                                       FixedParameterContext::simulation);
     
-    rdata = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
+    std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver,
+                                                                     model);
 
     if (model.nx_solver <= 0) {
         return rdata;
     }
 
-    std::unique_ptr<SteadystateProblem> preeq =
-        std::unique_ptr<SteadystateProblem>(nullptr);
-    std::unique_ptr<ForwardProblem> fwd =
-        std::unique_ptr<ForwardProblem>(nullptr);
-    std::unique_ptr<BackwardProblem> bwd =
-        std::unique_ptr<BackwardProblem>(nullptr);
-    std::unique_ptr<SteadystateProblem> posteq =
-        std::unique_ptr<SteadystateProblem>(nullptr);
+    std::unique_ptr<SteadystateProblem> preeq {};
+    std::unique_ptr<ForwardProblem> fwd {};
+    std::unique_ptr<BackwardProblem> bwd {};
+    std::unique_ptr<SteadystateProblem> posteq {};
     
     try {
-       
         /* BEGIN PREEQUILIBRATION */
         if (solver.getPreequilibration() ||
             (edata && !edata->fixedParametersPreequilibration.empty())) {
@@ -128,24 +122,21 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                 &model, edata, FixedParameterContext::preequilibration
             );
             
-            preeq = std::unique_ptr<SteadystateProblem>(
-                new SteadystateProblem(solver, model));
+            preeq = std::make_unique<SteadystateProblem>(solver, model);
             preeq->workSteadyStateProblem(&solver, &model, -1);
         }
         
         /* END PREEQUILIBRATION */
         
         /* BEGIN FORWARD SOLVE */
-        fwd = std::unique_ptr<ForwardProblem>(new ForwardProblem(edata, &model,
-                                                                 &solver,
-                                                                 preeq.get()));
+        fwd = std::make_unique<ForwardProblem>(edata, &model, &solver,
+                                               preeq.get());
         fwd->workForwardProblem();
         /* END FORWARD SOLVE */
         
         /* BEGIN POSTEQUILIBRATION */
         if (fwd->getCurrentTimeIteration() < model.nt()) {
-            posteq = std::unique_ptr<SteadystateProblem>(
-                new SteadystateProblem(solver, model));
+            posteq = std::make_unique<SteadystateProblem>(solver, model);
             posteq->workSteadyStateProblem(&solver, &model,
                                            fwd->getCurrentTimeIteration());
         }
@@ -157,8 +148,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             if (posteq)
                 posteq->getAdjointUpdates(model, *edata);
             
-            bwd = std::unique_ptr<BackwardProblem>(
-                new BackwardProblem(*fwd, posteq.get()));
+            bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
             bwd->workBackwardProblem();
         }
         /* END BACKWARD SOLVE */

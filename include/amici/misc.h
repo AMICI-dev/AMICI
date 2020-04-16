@@ -29,8 +29,8 @@ gsl::span<T> slice(std::vector<T> &data, int index, unsigned size) {
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
         return gsl::make_span(&data.at(index*size), size);
-    else
-        return gsl::make_span(static_cast<realtype*>(nullptr), 0);
+    
+    return gsl::make_span(static_cast<realtype*>(nullptr), 0);
 }
 
 /**
@@ -49,8 +49,8 @@ const gsl::span<const T> slice(const std::vector<T> &data,
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
         return gsl::make_span(&data.at(index*size), size);
-    else
-        return gsl::make_span(static_cast<realtype*>(nullptr), 0);
+    
+    return gsl::make_span(static_cast<realtype*>(nullptr), 0);
 }
 
 /**
@@ -60,13 +60,14 @@ const gsl::span<const T> slice(const std::vector<T> &data,
  * @param expected_size expected size of the buffer
  */
 template <class T>
-inline void checkBufferSize(gsl::span<T> buffer, unsigned expected_size) {
+void checkBufferSize(gsl::span<T> buffer, unsigned expected_size) {
     if (buffer.size() != expected_size)
         throw AmiException("Incorrect buffer size! Was %u, expected %u.",
                            buffer.size(), expected_size);
 }
 
-// TODO: templating breaks implicit conversion, not sure whether this is fixable
+/* TODO: templating writeSlice breaks implicit conversion between vector & span
+ not sure whether this is fixable */
 
 /**
  * @brief local helper function to write computed slice to provided buffer (span)
