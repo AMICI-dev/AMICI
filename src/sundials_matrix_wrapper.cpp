@@ -230,7 +230,12 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     case SUNMATRIX_CUSTOM:
         throw std::domain_error("Amici currently does not support custom"
                                 " matrix types.");
+    case SUNMATRIX_SLUNRLOC:
+        throw std::domain_error("Not Implemented.");
+    case SUNMATRIX_CUSPARSE:
+        throw std::domain_error("Not Implemented.");
     }
+    
 }
 
 void SUNMatrixWrapper::multiply(N_Vector c,
@@ -392,6 +397,10 @@ void SUNMatrixWrapper::update_ptrs() {
     case SUNMATRIX_CUSTOM:
         throw std::domain_error("Amici currently does not support "
                                 "custom matrix types.");
+    case SUNMATRIX_SLUNRLOC:
+        throw std::domain_error("Not Implemented.");
+    case SUNMATRIX_CUSPARSE:
+        throw std::domain_error("Not Implemented.");
     }
 }
 

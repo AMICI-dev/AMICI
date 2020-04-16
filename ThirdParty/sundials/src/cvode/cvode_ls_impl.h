@@ -3,7 +3,7 @@
  *                Alan C. Hindmarsh and Radu Serban @ LLNL
  *-----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -49,11 +49,18 @@ extern "C" {
   -----------------------------------------------------------------*/
 typedef struct CVLsMemRec {
 
+  /* Linear solver type information */
+  booleantype iterative;    /* is the solver iterative?    */
+  booleantype matrixbased;  /* is a matrix structure used? */
+
   /* Jacobian construction & storage */
   booleantype jacDQ;  /* SUNTRUE if using internal DQ Jac approx.     */
   CVLsJacFn jac;      /* Jacobian routine to be called                */
   void *J_data;       /* user data is passed to jac                   */
   booleantype jbad;   /* heuristic suggestion for pset                */
+
+  /* Matrix-based solver, scale solution to account for change in gamma */
+  booleantype scalesol;
 
   /* Iterative solver tolerance */
   realtype sqrtN;     /* sqrt(N)                                      */
@@ -64,7 +71,7 @@ typedef struct CVLsMemRec {
   SUNMatrix A;        /* A = I - gamma * df/dy                        */
   SUNMatrix savedJ;   /* savedJ = old Jacobian                        */
   N_Vector ytemp;     /* temp vector passed to jtimes and psolve      */
-  N_Vector x;         /* temp vector used by CVLsSolve             */
+  N_Vector x;         /* temp vector used by CVLsSolve                */
   N_Vector ycur;      /* CVODE current y vector in Newton Iteration   */
   N_Vector fcur;      /* fcur = f(tn, ycur)                           */
 
@@ -105,7 +112,18 @@ typedef struct CVLsMemRec {
   CVLsJacTimesVecFn jtimes;
   void *jt_data;
 
-  long int last_flag; /* last error flag returned by any function */
+  /* Linear system setup function
+   * (a) user-provided linsys function:
+   *     - user_linsys = SUNTRUE
+   *     - A_data      = user_data
+   * (b) internal linsys function:
+   *     - user_linsys = SUNFALSE
+   *     - A_data      = cvode_mem */
+  booleantype user_linsys;
+  CVLsLinSysFn linsys;
+  void* A_data;
+
+  int last_flag; /* last error flag returned by any function */
 
 } *CVLsMem;
 

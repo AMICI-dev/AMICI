@@ -101,7 +101,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
 }
 
 mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
-    const int numFields = 17;
+    const int numFields = 23;
     const char *field_names_sol[numFields] = {"xdot",
                                               "J",
                                               "numsteps",
@@ -113,13 +113,18 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                                               "numrhsevalsB",
                                               "numerrtestfailsB",
                                               "numnonlinsolvconvfailsB",
-                                              "newton_status",
-                                              "newton_numsteps",
-                                              "newton_numlinsteps",
-                                              "newton_cpu_time",
-                                              "newton_t_steadystate",
-                                              "newton_wrms"
-    };
+                                              "preeq_status",
+                                              "preeq_numsteps",
+                                              "preeq_numlinsteps",
+                                              "preeq_cpu_time",
+                                              "preeq_t",
+                                              "preeq_wrms",
+                                              "posteq_status",
+                                              "posteq_numsteps",
+                                              "posteq_numlinsteps",
+                                              "posteq_cpu_time",
+                                              "posteq_t",
+                                              "posteq_wrms"};
     
     checkFieldNames(field_names_sol,numFields);
     
@@ -137,12 +142,20 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
     if (rdata->nx > 0) {
         writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx);
         writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx, perm1);
-        writeMatlabField0(matlabDiagnosisStruct, "newton_status", rdata->newton_status);
-        writeMatlabField1(matlabDiagnosisStruct, "newton_numsteps", rdata->newton_numsteps, 3);
-        writeMatlabField2(matlabDiagnosisStruct, "newton_numlinsteps", rdata->newton_numlinsteps, rdata->newton_maxsteps, 2, perm1);
-        writeMatlabField0(matlabDiagnosisStruct, "newton_cpu_time", rdata->newton_cpu_time);
-        writeMatlabField0(matlabDiagnosisStruct, "newton_t_steadystate", rdata->t_steadystate);
-        writeMatlabField0(matlabDiagnosisStruct, "newton_wrms", rdata->wrms_steadystate);
+        
+        writeMatlabField0(matlabDiagnosisStruct, "preeq_status", rdata->preeq_status);
+        writeMatlabField1(matlabDiagnosisStruct, "preeq_numsteps", rdata->preeq_numsteps, 3);
+        writeMatlabField2(matlabDiagnosisStruct, "preeq_numlinsteps", rdata->preeq_numlinsteps, rdata->newton_maxsteps, 2, perm1);
+        writeMatlabField0(matlabDiagnosisStruct, "preeq_cpu_time", rdata->preeq_cpu_time);
+        writeMatlabField0(matlabDiagnosisStruct, "preeq_t", rdata->preeq_t);
+        writeMatlabField0(matlabDiagnosisStruct, "preeq_wrms", rdata->preeq_wrms);
+        
+        writeMatlabField0(matlabDiagnosisStruct, "posteq_status", rdata->posteq_status);
+        writeMatlabField1(matlabDiagnosisStruct, "posteq_numsteps", rdata->posteq_numsteps, 3);
+        writeMatlabField2(matlabDiagnosisStruct, "posteq_numlinsteps", rdata->posteq_numlinsteps, rdata->newton_maxsteps, 2, perm1);
+        writeMatlabField0(matlabDiagnosisStruct, "posteq_cpu_time", rdata->posteq_cpu_time);
+        writeMatlabField0(matlabDiagnosisStruct, "posteq_t", rdata->posteq_t);
+        writeMatlabField0(matlabDiagnosisStruct, "posteq_wrms", rdata->posteq_wrms);
     }
     if (rdata->sensi >= SensitivityOrder::first) {
         if (rdata->sensi_meth == SensitivityMethod::adjoint) {

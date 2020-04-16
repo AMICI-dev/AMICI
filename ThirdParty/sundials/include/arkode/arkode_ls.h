@@ -2,7 +2,7 @@
  * Programmer(s): Daniel R. Reynolds @ SMU
  * ----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -76,6 +76,11 @@ typedef int (*ARKLsJacTimesVecFn)(N_Vector v, N_Vector Jv,
                                   realtype t, N_Vector y,
                                   N_Vector fy, void *user_data,
                                   N_Vector tmp);
+
+typedef int (*ARKLsLinSysFn)(realtype t, N_Vector y, N_Vector fy, SUNMatrix A,
+                             SUNMatrix M, booleantype jok, booleantype *jcur,
+                             realtype gamma, void *user_data, N_Vector tmp1,
+                             N_Vector tmp2, N_Vector tmp3);
 
 typedef int (*ARKLsMassTimesSetupFn)(realtype t, void *mtimes_data);
 

@@ -754,9 +754,10 @@ class SUNNonLinSolWrapper {
     /**
      * @brief Set function to test for convergence
      * @param CTestFn
+     * @param ctest_data
      * @return
      */
-    int setConvTestFn(SUNNonlinSolConvTestFn CTestFn);
+    int setConvTestFn(SUNNonlinSolConvTestFn CTestFn, void* ctest_data);
 
     /**
      * @brief Set maximum number of non-linear iterations
