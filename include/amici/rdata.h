@@ -2,14 +2,20 @@
 #define AMICI_RDATA_H
 
 #include "amici/defines.h"
+#include "amici/vector.h"
+#include "amici/model.h"
+
 
 #include <vector>
 
 namespace amici {
-class Model;
 class ReturnData;
 class Solver;
 class ExpData;
+class ForwardProblem;
+class BackwardProblem;
+class SteadystateProblem;
+struct SimulationState;
 } // namespace amici
 
 namespace boost {
@@ -81,11 +87,90 @@ class ReturnData {
     void initializeObjectiveFunction();
 
     /**
+     * @brief extracts data from a preequilibration steadystateproblem
+     * @param preeq Steadystateproblem for preequilibration
+     * @param model Model instance to compute return values
+     */
+    void processPreEquilibration(SteadystateProblem const &preeq,
+                                 Model &model);
+    
+    /**
+     * @brief extracts data from a preequilibration steadystateproblem
+     * @param posteq Steadystateproblem for postequilibration
+     * @param model Model instance to compute return values
+     * @param edata ExpData instance containing observable data
+     */
+    void processPostEquilibration(SteadystateProblem const &posteq,
+                                  Model &model,
+                                  ExpData const *edata);
+
+    /**
+     * @brief extracts results from forward problem
+     * @param fwd forward problem
+     * @param model model that was used for forward simulation
+     * @param edata ExpData instance containing observable data
+     */
+    void processForwardProblem(ForwardProblem const &fwd,
+                               Model &model,
+                               ExpData const *edata);
+    
+    
+    /**
+     * @brief extracts results from backward problem
+     * @param fwd forward problem
+     * @param bwd backward problem
+     * @param model model that was used for forward/backward simulation
+     */
+    void processBackwardProblem(ForwardProblem const &fwd,
+                                BackwardProblem const &bwd,
+                                Model &model);
+    
+    /**
+     * @brief extracts results from solver
+     * @param solver solverl that was used for forward/backward simulation
+     */
+    void processSolver(Solver const &solver);
+    
+    /**
+     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @param fwd forward problem
+     * @param model model that was used for forward/backward simulation
+     */
+    void storeJacobianAndDerivativeInReturnData(ForwardProblem const &fwd,
+                                                Model &model);
+    
+    /**
+     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @param posteq postequilibration steadystateproblem
+     * @param model model that was used for forward/backward simulation
+     */
+    void storeJacobianAndDerivativeInReturnData(
+        SteadystateProblem const &posteq, Model &model);
+    
+    /**
+     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @param t timepoint
+     * @param x state vector
+     * @param dx state derivative vector
+     * @param model model that was used for forward/backward simulation
+     */
+    void storeJacobianAndDerivativeInReturnData(realtype t,
+                                                const AmiVector &x,
+                                                const AmiVector &dx,
+                                                Model &model);
+    /**
+     * @brief sets member variables and model state according to provided simulation state
+     * @param state simulation state provided by Problem
+     * @param model model that was used for forward/backward simulation
+     */
+    void readSimulationState(SimulationState const &state, Model &model);
+    
+    /**
      * @brief Set likelihood, state variables, outputs and respective
      * sensitivities to NaN (typically after integration failure)
-     * @param t time of integration failure
+     * @param it_start time index at which to start invalidating
      */
-    void invalidate(realtype t);
+    void invalidate(int it_start);
 
     /**
      * @brief Set likelihood and chi2 to NaN
@@ -98,13 +183,13 @@ class ReturnData {
      * (typically after integration failure)
      */
     void invalidateSLLH();
-
+    
     /**
      * @brief applies the chain rule to account for parameter transformation in
      * the sensitivities of simulation results
      * @param model Model from which the ReturnData was obtained
      */
-    void applyChainRuleFactorToSimulationResults(const Model *model);
+    void applyChainRuleFactorToSimulationResults(const Model &model);
 
     /**
      * @brief Residual function
@@ -255,46 +340,71 @@ class ReturnData {
     /** employed order forward problem (dimension: nt) */
     std::vector<int> order;
 
-    /** computation time of forward solve [ms] */
+    /** computation time of forward solve [s] */
     double cpu_time = 0.0;
 
-    /** computation time of backward solve [ms] */
+    /** computation time of backward solve [s] */
     double cpu_timeB = 0.0;
 
-    /** flag indicating success of Newton solver */
-    int newton_status = 0;
+    /** flag indicating success of Newton solver (preequilibration) */
+    int preeq_status = 0;
 
-    /** computation time of the Newton solver [ms] */
-    double newton_cpu_time = 0.0;
+    /** computation time of the Newton solver [s] (preequilibration) */
+    double preeq_cpu_time = 0.0;
+    
+    /** flag indicating success of Newton solver  (postequilibration) */
+    int posteq_status = 0;
+
+    /** computation time of the Newton solver [s]  (postequilibration) */
+    double posteq_cpu_time = 0.0;
 
     /**
-     * number of Newton steps for steady state problem
+     * number of Newton steps for steady state problem (preequilibration)
      * [newton, simulation, newton] (length = 3)
      */
-    std::vector<int> newton_numsteps;
+    std::vector<int> preeq_numsteps;
 
     /**
      * number of linear steps by Newton step for steady state problem. this
-     * will only be filled for iterative solvers (length = newton_maxsteps * 2)
+     * will only be filled for iterative solvers (preequilibration)
+     * (length = newton_maxsteps * 2)
      */
-    std::vector<int> newton_numlinsteps;
+    std::vector<int> preeq_numlinsteps;
+    
+    /**
+     * number of Newton steps for steady state problem (preequilibration)
+     * [newton, simulation, newton] (length = 3) (postequilibration)
+     */
+    std::vector<int> posteq_numsteps;
 
     /**
-     * time at which steadystate was reached in the simulation based approach
+     * number of linear steps by Newton step for steady state problem. this
+     * will only be filled for iterative solvers (postequilibration)
+     * (length = newton_maxsteps * 2)
      */
-    realtype t_steadystate = NAN;
+    std::vector<int> posteq_numlinsteps;
+
+    /**
+     * time at which steadystate was reached in the simulation based approach (preequilibration)
+     */
+    realtype preeq_t = NAN;
 
     /**
      * weighted root-mean-square of the rhs when steadystate
-     * was reached
+     * was reached (preequilibration)
      */
-    realtype wrms_steadystate = NAN;
+    realtype preeq_wrms = NAN;
+    
+    /**
+     * time at which steadystate was reached in the simulation based approach (postequilibration)
+     */
+    realtype posteq_t = NAN;
 
     /**
      * weighted root-mean-square of the rhs when steadystate
-     * was reached
+     * was reached (postequilibration)
      */
-    realtype wrms_sensi_steadystate = NAN;
+    realtype posteq_wrms = NAN;
 
     /** initial state (dimension: nx) */
     std::vector<realtype> x0;
@@ -398,7 +508,111 @@ class ReturnData {
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, ReturnData &r,
                                                 unsigned int version);
+    
+  protected:
+    
+    /** timepoint for model evaluation*/
+    realtype t;
+    
+    /** partial state vector, excluding states eliminated from conservation laws */
+    AmiVector x_solver;
+    
+    /** partial sensitivity state vector array, excluding states eliminated from
+     * conservation laws */
+    AmiVectorArray sx_solver;
+    
+    
+    /** full state vector, including states eliminated from conservation laws */
+    AmiVector x_rdata;
+    
+    /** full sensitivity state vector array, including states eliminated from
+     * conservation laws */
+    AmiVectorArray sx_rdata;
+    
+    /** array of number of found roots for a certain event type
+     * (dimension: ne) */
+    std::vector<int> nroots;
+    
+    
+    /**
+     * @brief Checks whether forward sensitivity analysis is performed
+     * @return boolean indicator
+     */
+    bool computingFSA() const {
+        return (sensi_meth == SensitivityMethod::forward &&
+                sensi >= SensitivityOrder::first);
+    }
+    
+    /**
+     * @brief Extracts output information for data-points, expects that x_solver and sx_solver were
+     * were set appropriately
+     * @param it timepoint index
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getDataOutput(int it, Model &model, ExpData const *edata);
+    
+    /**
+     * @brief Extracts data information for forward sensitivity analysis, expects that x_solver and
+     * sx_solver were were set appropriately
+     * @param it index of current timepoint
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getDataSensisFSA(int it, Model &model, ExpData const *edata);
+    
+    /**
+     * @brief Extracts output information for events, expects that x_solver and sx_solver were
+     * were set appropriately
+     * @param iroot event index
+     * @param t event timepoint
+     * @param rootidx information about which roots fired (1 indicating fired, 0/-1 for not)
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getEventOutput(int iroot, realtype t, const std::vector<int> rootidx,
+                        Model &model, ExpData const *edata);
+    
+    /**
+     * @brief Extracts event information for forward sensitivity analysis, expects that x_solver and
+     * sx_solver were set appropriately
+     * @param iroot event index
+     * @param ie index of event type
+     * @param t event timepoint
+     * @param model model that was used in forward solve
+     * @param edata ExpData instance carrying experimental data
+     */
+    void getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
+                           ExpData const *edata);
 };
+
+/**
+ * @brief The ModelContext temporarily stores amici::Model::state
+ * and restores it when going out of scope
+ */
+class ModelContext {
+  public:
+    /**
+     * @brief initialize backup of the original values.
+     *
+     * @param model
+     */
+    explicit ModelContext(Model *model);
+
+    ~ModelContext();
+
+    /**
+     * @brief Restore original state on constructor-supplied amici::Model.
+     * Will be called during destruction. Explicit call is generally not
+     * necessary.
+     */
+    void restore();
+
+  private:
+    Model *model = nullptr;
+    ModelState original_state;
+};
+
 
 } // namespace amici
 

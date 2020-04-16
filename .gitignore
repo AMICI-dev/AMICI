@@ -136,6 +136,7 @@ tests/sedml-test-suite/
 tests/SBMLTestModels/
 tests/benchmark-models/test_bmc
 tests/petab_test_suite
+petab_test_suite
 /python/test/amici-SBMLTest*/
 
 python/examples/example_steadystate/model_steadystate_scaled/*

@@ -320,7 +320,8 @@ int ExpData::nmaxevent() const
     return nmaxevent_;
 }
 
-ConditionContext::ConditionContext(Model *model, const ExpData *edata)
+ConditionContext::ConditionContext(Model *model, const ExpData *edata,
+                                   FixedParameterContext fpc)
     : model(model),
       originalParameters(model->getParameters()),
       originalFixedParameters(model->getFixedParameters()),
@@ -336,7 +337,7 @@ ConditionContext::ConditionContext(Model *model, const ExpData *edata)
     if(model->hasCustomInitialStateSensitivities())
         originalsx0 = model->getInitialStateSensitivities();
 
-    applyCondition(edata);
+    applyCondition(edata, fpc);
 }
 
 ConditionContext::~ConditionContext()
@@ -344,7 +345,8 @@ ConditionContext::~ConditionContext()
     restore();
 }
 
-void ConditionContext::applyCondition(const ExpData *edata)
+void ConditionContext::applyCondition(const ExpData *edata,
+                                      FixedParameterContext fpc)
 {
     if(!edata)
         return;
@@ -389,13 +391,45 @@ void ConditionContext::applyCondition(const ExpData *edata)
         model->setParameters(edata->parameters);
     }
 
-    if(!edata->fixedParameters.empty()) {
-        // fixed parameter in model are superseded by those provided in edata
-        if(edata->fixedParameters.size() != (unsigned) model->nk())
-            throw AmiException("Number of fixed parameters (%d) in model does"
-                               " not match ExpData (%zd).",
-                               model->nk(), edata->fixedParameters.size());
-        model->setFixedParameters(edata->fixedParameters);
+    switch (fpc) {
+    case FixedParameterContext::simulation:
+      if (!edata->fixedParameters.empty()) {
+          // fixed parameter in model are superseded by those provided in
+          // edata
+          if (edata->fixedParameters.size()
+              != (unsigned)model->nk())
+              throw AmiException("Number of fixed parameters (%d) in model does"
+                                 "not match ExpData (%zd).",
+                                 model->nk(), edata->fixedParameters.size());
+          model->setFixedParameters(edata->fixedParameters);
+      }
+    break;
+    case FixedParameterContext::preequilibration:
+      if (!edata->fixedParametersPreequilibration.empty()) {
+          // fixed parameter in model are superseded by those provided in
+          // edata
+          if (edata->fixedParametersPreequilibration.size() !=
+              (unsigned)model->nk())
+              throw AmiException("Number of fixed parameters (%d) in model does"
+                                 "not match ExpData (preequilibration) (%zd).",
+                                 model->nk(),
+                                 edata->fixedParametersPreequilibration.size());
+          model->setFixedParameters(edata->fixedParametersPreequilibration);
+      }
+      break;
+    case FixedParameterContext::presimulation:
+      if (!edata->fixedParametersPresimulation.empty()) {
+          // fixed parameter in model are superseded by those provided in
+          // edata
+          if (edata->fixedParametersPresimulation.size()
+              != (unsigned)model->nk())
+              throw AmiException("Number of fixed parameters (%d) in model does"
+                                 " not match ExpData (presimulation) (%zd).",
+                                 model->nk(),
+                                 edata->fixedParametersPresimulation.size());
+          model->setFixedParameters(edata->fixedParametersPresimulation);
+      }
+      break;
     }
 
     if(edata->nt()) {

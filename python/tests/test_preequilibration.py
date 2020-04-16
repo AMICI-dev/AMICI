@@ -84,9 +84,11 @@ def test_manual_preequilibration(preeq_fixture):
 
         # combined
         rdata_auto = amici.runAmiciSimulation(model, solver, edata)
+        assert rdata_auto.status == amici.AMICI_SUCCESS
 
         # manual preequilibration
         rdata_preeq = amici.runAmiciSimulation(model, solver, edata_preeq)
+        assert rdata_preeq.status == amici.AMICI_SUCCESS
 
         # manual reinitialization + presimulation
         x0 = rdata_preeq['x'][0, :]
@@ -98,6 +100,7 @@ def test_manual_preequilibration(preeq_fixture):
         model.setInitialStates(x0)
         model.setInitialStateSensitivities(sx0.flatten())
         rdata_presim = amici.runAmiciSimulation(model, solver, edata_presim)
+        assert rdata_presim.status == amici.AMICI_SUCCESS
 
         # manual reinitialization + simulation
         x0 = rdata_presim['x'][0, :]
@@ -109,6 +112,7 @@ def test_manual_preequilibration(preeq_fixture):
         model.setInitialStates(x0)
         model.setInitialStateSensitivities(sx0.flatten())
         rdata_sim = amici.runAmiciSimulation(model, solver, edata_sim)
+        assert rdata_sim.status == amici.AMICI_SUCCESS
 
         for variable in ['x', 'sx']:
             assert np.isclose(
@@ -146,6 +150,18 @@ def test_parameter_in_expdata(preeq_fixture):
 
     rdata = amici.runAmiciSimulation(model, solver, edata)
 
+    # get initial states will compute initial states if nothing is set,
+    # this needs go first as we need unmodified model. Also set to
+    # preequilibration fixpars first as this is where initial states would be
+    # computed otherwise
+    model.setFixedParameters(edata.fixedParametersPreequilibration)
+    edata.x0 = model.getInitialStates()
+    edata.sx0 = model.getInitialStateSensitivities()
+
+    # perturb model initial states
+    model.setInitialStates(rdata['x_ss'] * 4)
+    model.setInitialStateSensitivities(rdata['sx_ss'].flatten() / 2)
+
     # set ExpData plist
     edata.plist = model.getParameterList()
     # perturb model parameter list
@@ -170,13 +186,6 @@ def test_parameter_in_expdata(preeq_fixture):
         else amici.ParameterScaling_none
         for scaling in model.getParameterScale()
     ]))
-
-    edata.x0 = rdata['x_ss']
-    edata.sx0 = rdata['sx_ss'].flatten()
-
-    # perturb model initial states
-    model.setInitialStates(rdata['x_ss'] * 4)
-    model.setInitialStateSensitivities(rdata['sx_ss'].flatten() / 2)
 
     rdata_edata = amici.runAmiciSimulation(
         model, solver, edata

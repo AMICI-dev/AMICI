@@ -80,12 +80,16 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     /* Initialize CVodes/IDAs solver*/
     init(t0, x0, dx0);
+    
+    /* Clear diagnosis storage */
+    resetDiagnosis();
 
+    /* Apply stored tolerances to sundials solver */
     applyTolerances();
 
     /* Set optional inputs */
     setErrHandlerFn();
-    /* attaches userdata*/
+    /* Attaches userdata */
     setUserData(model);
     /* specify maximal number of steps */
     setMaxNumSteps(maxsteps);
@@ -153,43 +157,68 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     setStabLimDetB(*which, stldet);
 }
 
-void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
-    long int number;
-
-    if (solverWasCalledF && solverMemory) {
-        getNumSteps(solverMemory.get(), &number);
-        rdata->numsteps[it] = number;
-
-        getNumRhsEvals(solverMemory.get(), &number);
-        rdata->numrhsevals[it] = number;
-
-        getNumErrTestFails(solverMemory.get(), &number);
-        rdata->numerrtestfails[it] = number;
-
-        getNumNonlinSolvConvFails(solverMemory.get(), &number);
-        rdata->numnonlinsolvconvfails[it] = number;
-
-        getLastOrder(solverMemory.get(), &rdata->order[it]);
+void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
+    model->fx0_fixedParameters(x);
+    reInit(t, x, dx);
+    
+    if (getSensitivityOrder() >= SensitivityOrder::first &&
+        getSensitivityMethod() == SensitivityMethod::forward) {
+            model->fsx0_fixedParameters(sx, x);
+            sensReInit(sx, sdx);
     }
 }
 
-void Solver::getDiagnosisB(const int it, ReturnData *rdata,
-                           const int which) const {
+void Solver::resetDiagnosis() const {
+    ns.clear();
+    nrhs.clear();
+    netf.clear();
+    nnlscf.clear();
+    order.clear();
+    
+    nsB.clear();
+    nrhsB.clear();
+    netfB.clear();
+    nnlscfB.clear();
+}
+
+void Solver::storeDiagnosis() const {
+    if (!solverWasCalledF || !solverMemory)
+        return;
+
+    long int lnumber;
+    getNumSteps(solverMemory.get(), &lnumber);
+    ns.push_back(static_cast<int>(lnumber));
+    
+    getNumRhsEvals(solverMemory.get(), &lnumber);
+    nrhs.push_back(static_cast<int>(lnumber));
+    
+    getNumErrTestFails(solverMemory.get(), &lnumber);
+    netf.push_back(static_cast<int>(lnumber));
+    
+    getNumNonlinSolvConvFails(solverMemory.get(), &lnumber);
+    nnlscf.push_back(static_cast<int>(lnumber));
+
+    int number;
+    getLastOrder(solverMemory.get(), &number);
+    order.push_back(number);
+}
+
+void Solver::storeDiagnosisB(const int which) const {
+    if (!solverWasCalledB || !solverMemoryB.at(which))
+        return;
+    
     long int number;
+    getNumSteps(solverMemoryB.at(which).get(), &number);
+    nsB.push_back(static_cast<int>(number));
 
-    if (solverWasCalledB && solverMemoryB.at(which)) {
-        getNumSteps(solverMemoryB.at(which).get(), &number);
-        rdata->numstepsB[it] = number;
+    getNumRhsEvals(solverMemoryB.at(which).get(), &number);
+    nrhsB.push_back(static_cast<int>(number));
 
-        getNumRhsEvals(solverMemoryB.at(which).get(), &number);
-        rdata->numrhsevalsB[it] = number;
+    getNumErrTestFails(solverMemoryB.at(which).get(), &number);
+    netfB.push_back(static_cast<int>(number));
 
-        getNumErrTestFails(solverMemoryB.at(which).get(), &number);
-        rdata->numerrtestfailsB[it] = number;
-
-        getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
-        rdata->numnonlinsolvconvfailsB[it] = number;
-    }
+    getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
+    nnlscfB.push_back(static_cast<int>(number));
 }
 
 void Solver::initializeLinearSolver(const Model *model) const {
