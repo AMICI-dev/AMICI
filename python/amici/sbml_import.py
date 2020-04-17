@@ -188,6 +188,7 @@ class SbmlImporter:
                    compiler: str = None,
                    allow_reinit_fixpar_initcond: bool = True,
                    compile: bool = True,
+                   compute_conservation_laws: bool = True,
                    **kwargs) -> None:
         """
         Generate AMICI C++ files for the model provided to the constructor.
@@ -242,6 +243,11 @@ class SbmlImporter:
             If True, compile the generated Python package,
             if False, just generate code.
 
+        :param compute_conservation_laws:
+            if set to true, conservation laws are automatically computed and
+            applied such that the state-jacobian of the ODE right-hand-side has
+            full rank. This option should be set to True when using the newton
+            algorithm to compute steadystates
         """
         set_log_level(logger, verbose)
 
