@@ -29,7 +29,6 @@ from string import Template
 import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
-from sympy import Add, Function, Derivative, solve, dsolve
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
@@ -1689,7 +1688,6 @@ class ODEModel:
         self._eqs[name] = sp.Matrix(
             [comp.get_val() for comp in getattr(self, component)]
         )
-
         # flatten conservation laws in expressions
         if name == 'w':
             self._eqs[name] = self._eqs[name].subs(
