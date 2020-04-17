@@ -645,7 +645,7 @@ class SbmlImporter:
 
         :param component:
             The type of SBML component. Currently, only libsbml.SBML_SPECIES
-        and libsbml.SBML_COMPARTMENT are supported.
+            and libsbml.SBML_COMPARTMENT are supported.
         '''
         if name is None:
             name = ''
