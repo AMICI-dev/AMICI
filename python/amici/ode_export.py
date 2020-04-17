@@ -858,6 +858,9 @@ class ODEModel:
             for proto in protos:
                 self.add_component(symbol_to_type[symbol](**proto))
 
+        # process conservation laws
+        si._process_conservation_laws(self)
+
         self.generate_basic_variables()
 
     def add_component(self, component: ModelQuantity) -> None:

@@ -38,6 +38,8 @@ default_symbols = {
     'llhy': {},
 }
 
+ConservationLaw = Dict[str, Union[str, sp.Basic]]
+
 logger = get_logger(__name__, logging.ERROR)
 
 
@@ -988,6 +990,61 @@ class SbmlImporter:
         self.symbols['llhy']['value'] = llh_y_values
         self.symbols['llhy']['name'] = l2s(llh_y_syms)
         self.symbols['llhy']['identifier'] = llh_y_syms
+
+    def _process_conservation_laws(self, ode_model) -> None:
+        """
+        Find conservation laws in reactions and species.
+        """
+
+        conservation_laws = []
+        # So far, only conservation laws for constant species are supported
+        self._add_conservation_for_constant_species(ode_model,
+                                                    conservation_laws)
+
+        # add the found CLs to the ode_model
+        for cl in conservation_laws:
+            ode_model.add_conservation_law(**cl)
+
+    def _add_conservation_for_constant_species(
+            self,
+            ode_model: ODEModel,
+            conservation_laws: List[ConservationLaw]
+    ) -> None:
+        """
+        Adds constant species to conservations laws
+
+        """
+
+        # decide which species to keep in stoichiometry
+        species_solver = list(range(ode_model.nx_rdata()))
+        S = self.stoichiometric_matrix
+
+        for ix in range(ode_model.nx_rdata()):
+            if ode_model.state_is_constant(ix):
+                target_state = ode_model._states[ix]._identifier
+                total_abundance = ode_model._states[ix].get_val()
+                conservation_laws.append({
+                    'state': target_state,
+                    'total_abundance': total_abundance,
+                    'state_expr': target_state,
+                    'abundance_expr': total_abundance,
+                })
+
+                # mark species to delete from stoichiometrix matrix
+                species_solver.pop(ix)
+
+        # reduce the stoichiometry for this conservation law
+        self.stoichiometric_matrix = S[species_solver, :]
+        ode_model._eqs['dxdotdw'] = self.stoichiometric_matrix
+        ode_model._eqs['dxdotdx'] = \
+            sp.zeros(self.stoichiometric_matrix .shape[0])
+        if len(self.stoichiometric_matrix):
+            self.symbols['species']['dt'] = \
+                self.stoichiometric_matrix * ode_model.sym('w')
+        else:
+            self.symbols['species']['dt'] = sp.zeros(
+                *self.symbols['species']['identifier'].shape
+            )
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
