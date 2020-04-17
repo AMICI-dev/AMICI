@@ -1026,9 +1026,10 @@ class SbmlImporter:
                 conservation_laws.append({
                     'state': target_state,
                     'total_abundance': total_abundance,
-                    'state_expr': target_state,
-                    'abundance_expr': total_abundance,
+                    'state_expr': total_abundance,
+                    'abundance_expr': target_state,
                 })
+                self._replace_in_all_expressions(target_state, total_abundance)
 
                 # mark species to delete from stoichiometrix matrix
                 species_solver.pop(ix)
@@ -1036,6 +1037,11 @@ class SbmlImporter:
         # reduce the stoichiometry for this conservation law
         self.stoichiometric_matrix = S[species_solver, :]
         ode_model._eqs['dxdotdw'] = self.stoichiometric_matrix
+        ode_model._eqs['w'] = self.flux_vector
+        ode_model._syms['w'] = sp.Matrix(
+            [sp.Symbol(f'flux_r{idx}', real=True)
+             for idx in range(len(self.flux_vector))]
+        )
         ode_model._eqs['dxdotdx'] = \
             sp.zeros(self.stoichiometric_matrix .shape[0])
         if len(self.stoichiometric_matrix):
