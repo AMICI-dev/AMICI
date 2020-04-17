@@ -2,7 +2,7 @@
  * Programmer(s): Daniel R. Reynolds @ SMU
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -72,6 +72,8 @@ SUNDIALS_EXPORT int ERKStepRootInit(void *arkode_mem, int nrtfn,
 /* Optional input functions -- must be called AFTER ERKStepCreate */
 SUNDIALS_EXPORT int ERKStepSetDefaults(void* arkode_mem);
 SUNDIALS_EXPORT int ERKStepSetOrder(void *arkode_mem, int maxord);
+SUNDIALS_EXPORT int ERKStepSetInterpolantType(void *arkode_mem, int itype);
+SUNDIALS_EXPORT int ERKStepSetInterpolantDegree(void *arkode_mem, int degree);
 SUNDIALS_EXPORT int ERKStepSetDenseOrder(void *arkode_mem, int dord);
 SUNDIALS_EXPORT int ERKStepSetTable(void *arkode_mem,
                                     ARKodeButcherTable B);
@@ -89,7 +91,7 @@ SUNDIALS_EXPORT int ERKStepSetFixedStepBounds(void *arkode_mem,
 SUNDIALS_EXPORT int ERKStepSetAdaptivityMethod(void *arkode_mem,
                                                int imethod,
                                                int idefault, int pq,
-                                               realtype *adapt_params);
+                                               realtype adapt_params[3]);
 SUNDIALS_EXPORT int ERKStepSetAdaptivityFn(void *arkode_mem,
                                            ARKAdaptFn hfun,
                                            void *h_data);
@@ -104,6 +106,8 @@ SUNDIALS_EXPORT int ERKStepSetStabilityFn(void *arkode_mem,
                                           void *estab_data);
 SUNDIALS_EXPORT int ERKStepSetMaxErrTestFails(void *arkode_mem,
                                               int maxnef);
+SUNDIALS_EXPORT int ERKStepSetConstraints(void *arkode_mem,
+                                          N_Vector constraints);
 SUNDIALS_EXPORT int ERKStepSetMaxNumSteps(void *arkode_mem,
                                           long int mxsteps);
 SUNDIALS_EXPORT int ERKStepSetMaxHnilWarns(void *arkode_mem,
@@ -118,6 +122,8 @@ SUNDIALS_EXPORT int ERKStepSetStopTime(void *arkode_mem,
                                        realtype tstop);
 SUNDIALS_EXPORT int ERKStepSetFixedStep(void *arkode_mem,
                                         realtype hfixed);
+SUNDIALS_EXPORT int ERKStepSetMaxNumConstrFails(void *arkode_mem,
+                                                int maxfails);
 
 SUNDIALS_EXPORT int ERKStepSetRootDirection(void *arkode_mem,
                                             int *rootdir);
@@ -134,7 +140,9 @@ SUNDIALS_EXPORT int ERKStepSetDiagnostics(void *arkode_mem,
                                           FILE *diagfp);
 
 SUNDIALS_EXPORT int ERKStepSetPostprocessStepFn(void *arkode_mem,
-                                                ARKPostProcessStepFn ProcessStep);
+                                                ARKPostProcessFn ProcessStep);
+SUNDIALS_EXPORT int ERKStepSetPostprocessStageFn(void *arkode_mem,
+                                                 ARKPostProcessFn ProcessStage);
 
 
 /* Integrate the ODE over an interval in t */
@@ -182,6 +190,8 @@ SUNDIALS_EXPORT int ERKStepGetNumGEvals(void *arkode_mem,
                                         long int *ngevals);
 SUNDIALS_EXPORT int ERKStepGetRootInfo(void *arkode_mem,
                                        int *rootsfound);
+SUNDIALS_EXPORT int ERKStepGetNumConstrFails(void *arkode_mem,
+                                             long int *nconstrfails);
 SUNDIALS_EXPORT char *ERKStepGetReturnFlagName(long int flag);
 
 SUNDIALS_EXPORT int ERKStepWriteParameters(void *arkode_mem, FILE *fp);

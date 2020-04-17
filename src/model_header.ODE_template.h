@@ -151,7 +151,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
@@ -167,7 +167,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param xB Vector with the adjoint states
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
@@ -185,7 +185,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
@@ -326,7 +326,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param ip sensitivity index
      * @param ie event index
      * @param xdot new model right hand side
@@ -346,7 +346,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param w repeating elements vector
      * @param ip sensitivity index
      * @param ie event index
@@ -368,7 +368,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param ie event index
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
@@ -384,7 +384,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param ie event index
      * @param xdot new model right hand side
      * @param xdot_old previous model right hand side
@@ -404,7 +404,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      **/
     virtual void fdrzdp(realtype *drzdp, const int ie, const realtype t,
@@ -418,7 +418,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      **/
     virtual void fdrzdx(realtype *drzdx, const int ie, const realtype t,
                         const realtype *x, const realtype *p, const realtype *k,
@@ -485,7 +485,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      **/
     virtual void fdydx(realtype *dydx, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
@@ -499,7 +499,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      **/
     virtual void fdydp(realtype *dydp, const realtype t, const realtype *x,
@@ -517,7 +517,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param ip parameter index w.r.t. which the derivative is requested
      **/
     virtual void fdzdp(realtype *dzdp, const int ie, const realtype t,
@@ -532,7 +532,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      **/
     virtual void fdzdx(realtype *dzdx, const int ie, const realtype t,
                        const realtype *x, const realtype *p, const realtype *k,
@@ -544,7 +544,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      **/
     virtual void froot(realtype *root, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k,
@@ -558,7 +558,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      **/
     virtual void frz(realtype *rz, const int ie, const realtype t,
                      const realtype *x, const realtype *p, const realtype *k,
@@ -592,7 +592,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param p parameter vector
      * @param k constant vector
      * @param sx current state sensitivity
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param ip sensitivity index
      **/
     virtual void fsrz(realtype *srz, const int ie, const realtype t,
@@ -606,7 +606,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param sx current state sensitivity
      * @param ip sensitivity index
      * @param ie event index
@@ -652,7 +652,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param sx current state sensitivity
      * @param ip sensitivity index
      **/
@@ -692,7 +692,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x Vector with the states
      * @param p parameter vector
      * @param k constants vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      * @param w vector with helper variables
      **/
     virtual void fxdot(realtype *xdot, const realtype t, const realtype *x,
@@ -707,7 +707,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      **/
     virtual void fy(realtype *y, const realtype t, const realtype *x,
                     const realtype *p, const realtype *k, const realtype *h,
@@ -722,7 +722,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @param x current state
      * @param p parameter vector
      * @param k constant vector
-     * @param h heavyside vector
+     * @param h heaviside vector
      **/
     virtual void fz(realtype *z, const int ie, const realtype t,
                     const realtype *x, const realtype *p, const realtype *k,

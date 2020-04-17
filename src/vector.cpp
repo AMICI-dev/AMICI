@@ -58,7 +58,10 @@ void AmiVector::synchroniseNVector() {
     nvec = N_VMake_Serial(static_cast<long int>(vec.size()), vec.data());
 }
 
-AmiVector::~AmiVector() { N_VDestroy_Serial(nvec); }
+AmiVector::~AmiVector() {
+    if (nvec)
+        N_VDestroy_Serial(nvec);
+}
 
 AmiVectorArray::AmiVectorArray(long int length_inner, long int length_outer)
     : vec_array(length_outer, AmiVector(length_inner)) {

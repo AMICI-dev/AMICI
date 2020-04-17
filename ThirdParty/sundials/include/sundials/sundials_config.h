@@ -73,7 +73,7 @@
 /* Use POSIX timers if available.
  *     #define SUNDIALS_HAVE_POSIX_TIMERS
  */
-#define SUNDIALS_HAVE_POSIX_TIMERS
+/* #undef SUNDIALS_HAVE_POSIX_TIMERS */
 
 /* Blas/Lapack available
  * If working libraries for Blas/lapack support were found, then
@@ -88,11 +88,28 @@
 /* #undef SUNDIALS_SUPERLUMT */
 /* #undef SUNDIALS_SUPERLUMT_THREAD_TYPE */
 
+/* SUPERLUDIST available
+ * If working libraries for SUPERLUDIST support were found, then
+ *    #define SUNDIALS_SUPERLUDIST
+ */
+/* #undef SUNDIALS_SUPERLUDIST */
+
 /* KLU available
  * If working libraries for KLU support were found, then
  *     #define SUNDIALS_KLU 
  */
 #define SUNDIALS_KLU
+
+/* Trilinos available
+ * If working libraries for Trilinos support were found, then
+ *     #define SUNDIALS_TRILINOS
+ */
+/* #undef SUNDIALS_TRILINOS */
+
+ /* Trilinos with MPI is available, then
+  *    #define SUNDIALS_TRILINOS_HAVE_MPI
+  */
+/* #undef SUNDIALS_TRILINOS_HAVE_MPI */
 
 /* Set if SUNDIALS is built with MPI support.
  * 

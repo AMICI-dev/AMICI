@@ -2,7 +2,7 @@
  * Programmer(s): Slaven Peles @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -137,6 +137,10 @@ SUNDIALS_EXPORT int N_VLinearCombinationVectorArray_Raja(int nvec, int nsum,
                                                          realtype* c,
                                                          N_Vector** X,
                                                          N_Vector* Z);
+
+/* OPTIONAL local reduction kernels (no parallel communication) */
+SUNDIALS_EXPORT realtype N_VWSqrSumLocal_Raja(N_Vector x, N_Vector w);
+SUNDIALS_EXPORT realtype N_VWSqrSumMaskLocal_Raja(N_Vector x, N_Vector w, N_Vector id);
 
 /*
  * -----------------------------------------------------------------

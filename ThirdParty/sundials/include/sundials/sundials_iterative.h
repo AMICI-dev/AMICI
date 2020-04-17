@@ -2,7 +2,7 @@
  * Programmer(s): Scott D. Cohen and Alan C. Hindmarsh @ LLNL
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -161,7 +161,7 @@ typedef int (*PSolveFn)(void *P_data, N_Vector r, N_Vector z,
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT int ModifiedGS(N_Vector *v, realtype **h, int k, int p,
+SUNDIALS_EXPORT int ModifiedGS(N_Vector* v, realtype **h, int k, int p,
                                realtype *new_vk_norm);
 
 /*
@@ -184,9 +184,9 @@ SUNDIALS_EXPORT int ModifiedGS(N_Vector *v, realtype **h, int k, int p,
  * -----------------------------------------------------------------
  */
 
-SUNDIALS_EXPORT int ClassicalGS(N_Vector *v, realtype **h, int k, int p,
+SUNDIALS_EXPORT int ClassicalGS(N_Vector* v, realtype **h, int k, int p,
                                 realtype *new_vk_norm, realtype *stemp,
-                                N_Vector *vtemp);
+                                N_Vector* vtemp);
 
 /*
  * -----------------------------------------------------------------

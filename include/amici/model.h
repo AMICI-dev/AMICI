@@ -32,7 +32,39 @@ void serialize(Archive &ar, amici::Model &u, unsigned int version);
 namespace amici {
 
 /**
- * @brief The Model class represents an AMICI ODE model. The model can compute
+ * @brief implements an exchange format to store and transfer the state of the model at a
+ * specific timepoint. This is designed to only encompass the minimal number of attributes that need to be
+ * transferred.
+ */
+struct ModelState {
+    /** flag indicating whether a certain heaviside function should be active or
+         not (dimension: ne) */
+    std::vector<realtype> h;
+
+    /** total abundances for conservation laws
+     (dimension: nx_rdata-nx_solver) */
+    std::vector<realtype> total_cl;
+
+    /** sensitivities of total abundances for conservation laws
+     (dimension: (nx_rdata-nx_solver) x np, row-major) */
+    std::vector<realtype> stotal_cl;
+
+    /** unscaled parameters (dimension: np) */
+    std::vector<realtype> unscaledParameters;
+
+    /** constants (dimension: nk) */
+    std::vector<realtype> fixedParameters;
+
+    /** indexes of parameters wrt to which sensitivities are computed
+     *  (dimension: nplist)
+     */
+    std::vector<int> plist;
+};
+
+
+
+/**
+ * @brief The Model class represents an AMICI ODE/DAE model. The model can compute
  * various model related quantities based on symbolically generated code.
  */
 class Model : public AbstractModel {
@@ -576,6 +608,32 @@ class Model : public AbstractModel {
      * non-negative
      */
     void setAllStatesNonNegative();
+
+    /**
+     * @brief retrieves the current model state
+     * @return current model state
+     */
+    ModelState const &getModelState() const {
+        return state;
+    };
+
+    /**
+     * @brief sets the current model state
+     * @param state model state
+     */
+    void setModelState(ModelState const &state) {
+        if (static_cast<int>(state.unscaledParameters.size()) != np())
+            throw AmiException("Mismatch in parameter size");
+        if (static_cast<int>(state.fixedParameters.size()) != nk())
+            throw AmiException("Mismatch in fixed parameter size");
+        if (static_cast<int>(state.h.size()) != ne)
+            throw AmiException("Mismatch in heaviside size");
+        if (static_cast<int>(state.total_cl.size()) != ncl())
+            throw AmiException("Mismatch in conservation law size");
+        if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
+            throw AmiException("Mismatch in conservation law sensitivity size");
+        this->state = state;
+    };
 
     /**
      * @brief Get the list of parameters for which sensitivities are computed
@@ -1590,6 +1648,9 @@ class Model : public AbstractModel {
      */
     N_Vector computeX_pos(const_N_Vector x);
 
+    /** all variables necessary for function evaluation */
+    ModelState state;
+
     /** Sparse Jacobian (dimension: nnz)*/
     mutable SUNMatrixWrapper J;
 
@@ -1750,39 +1811,16 @@ class Model : public AbstractModel {
      */
     mutable std::vector<realtype> deltaqB;
 
-    /** flag indicating whether a certain heaviside function should be active or
-         not (dimension: ne) */
-    mutable std::vector<realtype> h;
-
-    /** total abundances for conservation laws
-     (dimension: nx_rdata-nx_solver) */
-    mutable std::vector<realtype> total_cl;
-
-    /** sensitivities of total abundances for conservation laws
-     (dimension: (nx_rdata-nx_solver) x np, row-major) */
-    mutable std::vector<realtype> stotal_cl;
-
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: nx_solver) */
     mutable AmiVector x_pos_tmp;
-
-    /** unscaled parameters (dimension: np) */
-    std::vector<realtype> unscaledParameters;
 
     /** orignal user-provided, possibly scaled parameter array (dimension: np)
      */
     std::vector<realtype> originalParameters;
 
-    /** constants (dimension: nk) */
-    std::vector<realtype> fixedParameters;
-
     /** index indicating to which event an event output belongs */
     std::vector<int> z2event;
-
-    /** indexes of parameters wrt to which sensitivities are computed
-     *  (dimension: nplist)
-     */
-    std::vector<int> plist_;
 
     /** state initialisation (size nx_solver) */
     std::vector<double> x0data;
