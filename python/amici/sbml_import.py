@@ -295,7 +295,8 @@ class SbmlImporter:
         self._process_sbml(constant_parameters)
         self._process_observables(observables, sigmas, noise_distributions)
         ode_model = ODEModel(simplify=sp.powsimp)
-        ode_model.import_from_sbml_importer(self)
+        ode_model.import_from_sbml_importer(
+            self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
             ode_model,
             outdir=output_dir,

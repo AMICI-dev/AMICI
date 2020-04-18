@@ -823,7 +823,8 @@ class ODEModel:
         self._simplify: Callable = simplify
 
     def import_from_sbml_importer(self,
-                                  si: 'sbml_import.SbmlImporter') -> None:
+                                  si: 'sbml_import.SbmlImporter',
+                                  compute_cls: Optional[bool] = True) -> None:
         """
         Imports a model specification from a
         :class:`amici.sbml_import.SbmlImporter`
@@ -859,7 +860,8 @@ class ODEModel:
                 self.add_component(symbol_to_type[symbol](**proto))
 
         # process conservation laws
-        si._process_conservation_laws(self)
+        if compute_cls:
+            si._process_conservation_laws(self)
 
         self.generate_basic_variables()
 
