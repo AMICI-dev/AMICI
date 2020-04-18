@@ -82,7 +82,6 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     checkEqualArray(r.x0, s.x0, 1e-16, 1e-16, "x0");
     checkEqualArray(r.sx0, s.sx0, 1e-16, 1e-16, "sx0");
 
-
     CHECK_TRUE(r.llh == s.llh || (std::isnan(r.llh) && std::isnan(s.llh)));
     CHECK_TRUE(r.chi2 == s.chi2 || (std::isnan(r.llh) && std::isnan(s.llh)));
     CHECK_EQUAL(r.status, s.status);
@@ -97,18 +96,18 @@ TEST_GROUP(dataSerialization){
     amici::CVodeSolver solver;
     void setup() {
         // set non-default values for all members
-        solver.setAbsoluteTolerance(4);
-        solver.setRelativeTolerance(4);
-        solver.setAbsoluteToleranceQuadratures(4);
-        solver.setRelativeToleranceQuadratures(4);
-        solver.setAbsoluteToleranceSteadyState(4);
-        solver.setRelativeToleranceSteadyState(4);
+        solver.setAbsoluteTolerance(1e-4);
+        solver.setRelativeTolerance(1e-5);
+        solver.setAbsoluteToleranceQuadratures(1e-6);
+        solver.setRelativeToleranceQuadratures(1e-7);
+        solver.setAbsoluteToleranceSteadyState(1e-8);
+        solver.setRelativeToleranceSteadyState(1e-9);
         solver.setSensitivityMethod(amici::SensitivityMethod::adjoint);
         solver.setSensitivityOrder(amici::SensitivityOrder::second);
-        solver.setMaxSteps(1e6);
-        solver.setMaxStepsBackwardProblem(1e6);
-        solver.setNewtonMaxSteps(1e6);
-        solver.setNewtonMaxLinearSteps(1e6);
+        solver.setMaxSteps(1e1);
+        solver.setMaxStepsBackwardProblem(1e2);
+        solver.setNewtonMaxSteps(1e3);
+        solver.setNewtonMaxLinearSteps(1e4);
         solver.setPreequilibration(true);
         solver.setStateOrdering(static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD));
         solver.setInterpolationType(amici::InterpolationType::polynomial);
@@ -117,6 +116,7 @@ TEST_GROUP(dataSerialization){
         solver.setLinearMultistepMethod(amici::LinearMultistepMethod::adams);
         solver.setNonlinearSolverIteration(amici::NonlinearSolverIteration::newton);
         solver.setInternalSensitivityMethod(amici::InternalSensitivityMethod::staggered);
+        solver.setReturnDataReportingMode(amici::RDataReporting::residuals);
     }
 
     void teardown() {

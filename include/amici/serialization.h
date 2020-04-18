@@ -69,7 +69,7 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.ordering;
     ar &u.cpu_time;
     ar &u.cpu_timeB;
-    ar &u.rdata_reporting;
+    ar &u.rdata_mode;
 }
 
 
