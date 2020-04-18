@@ -346,13 +346,6 @@ def fix_typehints(sig: str) -> str:
     sig = sig.replace('sunindextype', 'int')
     sig = sig.replace('H5::H5File', 'object')
 
-    # enum classes
-    for ec in ['SteadyStateSensitivityMode', 'InternalSensitivityMethod',
-               'InterpolationType', 'LinearMultistepMethod', 'LinearSolver',
-               'NewtonDampingFactorMode', 'NonlinearSolverIteration',
-               'SensitivityMethod', 'SensitivityOrder']:
-        sig = sig.replace(ec, 'int')
-
     # remove const
     sig = sig.replace(' const ', r' ')
     sig = re.sub(r' const$', r'', sig)
