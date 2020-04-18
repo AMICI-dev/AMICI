@@ -93,7 +93,7 @@ class ReturnData {
      */
     void processPreEquilibration(SteadystateProblem const &preeq,
                                  Model &model);
-    
+
     /**
      * @brief extracts data from a preequilibration steadystateproblem
      * @param posteq Steadystateproblem for postequilibration
@@ -113,8 +113,8 @@ class ReturnData {
     void processForwardProblem(ForwardProblem const &fwd,
                                Model &model,
                                ExpData const *edata);
-    
-    
+
+
     /**
      * @brief extracts results from backward problem
      * @param fwd forward problem
@@ -124,13 +124,13 @@ class ReturnData {
     void processBackwardProblem(ForwardProblem const &fwd,
                                 BackwardProblem const &bwd,
                                 Model &model);
-    
+
     /**
      * @brief extracts results from solver
-     * @param solver solverl that was used for forward/backward simulation
+     * @param solver solver that was used for forward/backward simulation
      */
     void processSolver(Solver const &solver);
-    
+
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
      * @param fwd forward problem
@@ -138,7 +138,7 @@ class ReturnData {
      */
     void storeJacobianAndDerivativeInReturnData(ForwardProblem const &fwd,
                                                 Model &model);
-    
+
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
      * @param posteq postequilibration steadystateproblem
@@ -146,7 +146,7 @@ class ReturnData {
      */
     void storeJacobianAndDerivativeInReturnData(
         SteadystateProblem const &posteq, Model &model);
-    
+
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
      * @param t timepoint
@@ -164,7 +164,7 @@ class ReturnData {
      * @param model model that was used for forward/backward simulation
      */
     void readSimulationState(SimulationState const &state, Model &model);
-    
+
     /**
      * @brief Set likelihood, state variables, outputs and respective
      * sensitivities to NaN (typically after integration failure)
@@ -183,7 +183,7 @@ class ReturnData {
      * (typically after integration failure)
      */
     void invalidateSLLH();
-    
+
     /**
      * @brief applies the chain rule to account for parameter transformation in
      * the sensitivities of simulation results
@@ -351,7 +351,7 @@ class ReturnData {
 
     /** computation time of the Newton solver [s] (preequilibration) */
     double preeq_cpu_time = 0.0;
-    
+
     /** flag indicating success of Newton solver  (postequilibration) */
     int posteq_status = 0;
 
@@ -370,7 +370,7 @@ class ReturnData {
      * (length = newton_maxsteps * 2)
      */
     std::vector<int> preeq_numlinsteps;
-    
+
     /**
      * number of Newton steps for steady state problem (preequilibration)
      * [newton, simulation, newton] (length = 3) (postequilibration)
@@ -394,7 +394,7 @@ class ReturnData {
      * was reached (preequilibration)
      */
     realtype preeq_wrms = NAN;
-    
+
     /**
      * time at which steadystate was reached in the simulation based approach (postequilibration)
      */
@@ -508,32 +508,32 @@ class ReturnData {
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, ReturnData &r,
                                                 unsigned int version);
-    
+
   protected:
-    
+
     /** timepoint for model evaluation*/
     realtype t;
-    
+
     /** partial state vector, excluding states eliminated from conservation laws */
     AmiVector x_solver;
-    
+
     /** partial sensitivity state vector array, excluding states eliminated from
      * conservation laws */
     AmiVectorArray sx_solver;
-    
-    
+
+
     /** full state vector, including states eliminated from conservation laws */
     AmiVector x_rdata;
-    
+
     /** full sensitivity state vector array, including states eliminated from
      * conservation laws */
     AmiVectorArray sx_rdata;
-    
+
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
     std::vector<int> nroots;
-    
-    
+
+
     /**
      * @brief Checks whether forward sensitivity analysis is performed
      * @return boolean indicator
@@ -542,7 +542,7 @@ class ReturnData {
         return (sensi_meth == SensitivityMethod::forward &&
                 sensi >= SensitivityOrder::first);
     }
-    
+
     /**
      * @brief Extracts output information for data-points, expects that x_solver and sx_solver were
      * were set appropriately
@@ -551,7 +551,7 @@ class ReturnData {
      * @param edata ExpData instance carrying experimental data
      */
     void getDataOutput(int it, Model &model, ExpData const *edata);
-    
+
     /**
      * @brief Extracts data information for forward sensitivity analysis, expects that x_solver and
      * sx_solver were were set appropriately
@@ -560,7 +560,7 @@ class ReturnData {
      * @param edata ExpData instance carrying experimental data
      */
     void getDataSensisFSA(int it, Model &model, ExpData const *edata);
-    
+
     /**
      * @brief Extracts output information for events, expects that x_solver and sx_solver were
      * were set appropriately
@@ -572,7 +572,7 @@ class ReturnData {
      */
     void getEventOutput(int iroot, realtype t, const std::vector<int> rootidx,
                         Model &model, ExpData const *edata);
-    
+
     /**
      * @brief Extracts event information for forward sensitivity analysis, expects that x_solver and
      * sx_solver were set appropriately
