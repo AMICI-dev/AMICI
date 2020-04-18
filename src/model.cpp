@@ -126,9 +126,9 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       idlist(std::move(idlist)), J(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
       dwdp(nw, p.size(), ndwdp, CSC_MAT), dwdx(nw, nx_solver, ndwdx, CSC_MAT),
-      M(nx_solver, nx_solver), w(nw), x_rdata(nx_rdata, 0.0),
-      sx_rdata(nx_rdata, 0.0), x_pos_tmp(nx_solver), originalParameters(p),
-      z2event(std::move(z2event)), stateIsNonNegative(nx_solver, false),
+      w(nw), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0),
+      x_pos_tmp(nx_solver), originalParameters(p), z2event(std::move(z2event)),
+      stateIsNonNegative(nx_solver, false),
       pscale(std::vector<amici::ParameterScaling>(p.size(),
                                                   ParameterScaling::none)) {
 
