@@ -326,6 +326,7 @@ void SteadystateProblem::getAdjointUpdates(Model &model,
 void SteadystateProblem::storeSimulationState(Model *model, bool storesensi) {
     state.t = INFINITY;
     state.x = x;
+    state.dx = xdot;
     if (storesensi)
         state.sx = sx;
     state.state = model->getModelState();

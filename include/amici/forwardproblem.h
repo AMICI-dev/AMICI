@@ -15,18 +15,19 @@ namespace amici {
 class ExpData;
 class Solver;
 class SteadystateProblem;
+class FinalStateStorer;
 
 /**
  * @brief implements an exchange format to store and transfer the state of a simulation at a
  * specific timepoint.
  */
-
-
 struct SimulationState{
     /** timepoint */
     realtype t;
     /** state variables */
     AmiVector x;
+    /** state variables */
+    AmiVector dx;
     /** state variable sensitivity */
     AmiVectorArray sx;
     /** state of the model that was used for simulation */
@@ -52,6 +53,8 @@ class ForwardProblem {
                    const SteadystateProblem *preeq);
 
     ~ForwardProblem() = default;
+    
+    friend FinalStateStorer;
 
     /**
      * @brief Solve the forward problem.
@@ -255,6 +258,13 @@ class ForwardProblem {
     const SimulationState &getInitialSimulationState() const {
         return initial_state;
     };
+    
+    /**
+     * @brief
+     */
+    const SimulationState &getFinalSimulationState() const {
+        return final_state;
+    };
 
     /** pointer to model instance */
     Model *model;
@@ -392,6 +402,9 @@ class ForwardProblem {
 
     /** simulation state after initialization*/
     SimulationState initial_state;
+    
+    /** simulation state after simulation*/
+    SimulationState final_state;
 
     /** state vector (dimension: nx_solver) */
     AmiVector x;
@@ -430,6 +443,29 @@ class ForwardProblem {
     /** current iteration number for time index */
     int it;
 
+};
+
+/**
+ * @brief stores the stimulation state when it goes out of scope
+ */
+class FinalStateStorer{
+  public:
+    /**
+     * @brief constructor, attaches problem pointer
+     * @param fwd problem from which the simulation state is to be stored
+     */
+    FinalStateStorer(ForwardProblem *fwd) {
+        this->fwd = fwd;
+    }
+    /**
+     * @brief destructor, stores simulation state
+     */
+    ~FinalStateStorer() {
+        if(fwd)
+            fwd->final_state = fwd->getSimulationState();
+    }
+  private:
+    ForwardProblem *fwd;
 };
 
 } // namespace amici

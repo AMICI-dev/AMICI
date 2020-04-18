@@ -4,7 +4,7 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 #include "amici/model.h"
-
+#include "amici/forwardproblem.h"
 
 #include <vector>
 
@@ -15,7 +15,6 @@ class ExpData;
 class ForwardProblem;
 class BackwardProblem;
 class SteadystateProblem;
-struct SimulationState;
 } // namespace amici
 
 namespace boost {
@@ -133,11 +132,13 @@ class ReturnData {
 
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
-     * @param fwd forward problem
+     * @param problem forward problem or steadystate problem
      * @param model model that was used for forward/backward simulation
      */
-    void storeJacobianAndDerivativeInReturnData(ForwardProblem const &fwd,
-                                                Model &model);
+    template <class T>
+    void storeFinalSimulationState(T const &problem) {
+        final_model_state = problem.getFinalSimulationState();
+    };
 
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
@@ -149,15 +150,9 @@ class ReturnData {
 
     /**
      * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
-     * @param t timepoint
-     * @param x state vector
-     * @param dx state derivative vector
      * @param model model that was used for forward/backward simulation
      */
-    void storeJacobianAndDerivativeInReturnData(realtype t,
-                                                const AmiVector &x,
-                                                const AmiVector &dx,
-                                                Model &model);
+    void storeJacobianAndDerivativeInReturnData(Model &model);
     /**
      * @brief sets member variables and model state according to provided simulation state
      * @param state simulation state provided by Problem
@@ -515,11 +510,13 @@ class ReturnData {
 
     /** partial state vector, excluding states eliminated from conservation laws */
     AmiVector x_solver;
+    
+    /** partial time derivative of state vector, excluding states eliminated from conservation laws */
+    AmiVector dx_solver;
 
     /** partial sensitivity state vector array, excluding states eliminated from
      * conservation laws */
     AmiVectorArray sx_solver;
-
 
     /** full state vector, including states eliminated from conservation laws */
     AmiVector x_rdata;
@@ -527,10 +524,16 @@ class ReturnData {
     /** full sensitivity state vector array, including states eliminated from
      * conservation laws */
     AmiVectorArray sx_rdata;
+    
+    /** model state at final simulated timepoint */
+    SimulationState final_model_state;
 
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
     std::vector<int> nroots;
+    
+    /** pointer to model that was used for simulation, THIS MAY GO OUT OF CONTEXT */
+    Model *model_ptr;
 
 
     /**

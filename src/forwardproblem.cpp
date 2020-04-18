@@ -43,8 +43,8 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
     }
 }
 
-
 void ForwardProblem::workForwardProblem() {
+    FinalStateStorer ffs(this);
     if(model->nx_solver == 0){
         return;
     }
@@ -312,6 +312,7 @@ SimulationState ForwardProblem::getSimulationState() const {
     auto state = SimulationState();
     state.t = t;
     state.x = x;
+    state.dx = dx;
     if (solver->computingFSA() || t == model->t0())
         state.sx = sx;
     state.state = model->getModelState();

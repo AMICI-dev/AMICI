@@ -109,7 +109,7 @@ ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
 void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
                                          Model &model) {
     ModelContext mc(&model);
-    readSimulationState(preeq.getSimulationState(), model);
+    readSimulationState(preeq.getFinalSimulationState(), model);
     model.fx_rdata(x_rdata, x_solver);
     x_ss = x_rdata.getVector();
     if (sensi >= SensitivityOrder::first) {
@@ -134,7 +134,7 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     for (int it = 0; it < nt; it++) {
         auto t = model.getTimepoint(it);
         if (std::isinf(t)) {
-            readSimulationState(posteq.getSimulationState(), model);
+            readSimulationState(posteq.getFinalSimulationState(), model);
             getDataOutput(it, model, edata);
         }
     }
@@ -354,45 +354,26 @@ void ReturnData::processSolver(Solver const &solver) {
     writeSlice(solver.getNumNonlinSolvConvFailsB(), numnonlinsolvconvfailsB);
 }
 
-void ReturnData::storeJacobianAndDerivativeInReturnData(
-    ForwardProblem const &fwd, Model &model) {
-    // dont use SimulationState here since we explicitely want to evaluate at
-    // final timepoint
-    auto t = fwd.getTime();
-    auto x = fwd.getState();
-    auto dx = fwd.getStateDerivative();
-
-    storeJacobianAndDerivativeInReturnData(t, x, dx, model);
-}
-
-void ReturnData::storeJacobianAndDerivativeInReturnData(
-    SteadystateProblem const &posteq, Model &model) {
-    auto t = std::numeric_limits<realtype>::infinity();
-    auto x = posteq.getState();
-    auto dx = AmiVector(model.nx_solver);
-
-    storeJacobianAndDerivativeInReturnData(t, x, dx, model);
-}
-
 void ReturnData::readSimulationState(SimulationState const &state,
                                      Model &model) {
     x_solver = state.x;
+    dx_solver = state.dx;
     if (computingFSA() || state.t == model.t0())
         sx_solver = state.sx;
     t = state.t;
     model.setModelState(state.state);
 }
 
-void ReturnData::storeJacobianAndDerivativeInReturnData(realtype t,
-                                                        const AmiVector &x,
-                                                        const AmiVector &dx,
-                                                        Model &model) {
+void ReturnData::storeJacobianAndDerivativeInReturnData(* model_ptr) {
+    ModelContext mc(&model);
+    readSimulationState(final_model_state, model);
+    
     AmiVector xdot(nx_solver);
-    model.fxdot(t, x, dx, xdot);
+    model.fxdot(t, x_solver, dx_solver, xdot);
     this->xdot = xdot.getVector();
 
     SUNMatrixWrapper J(SUNMatrixWrapper(nx_solver, nx_solver));
-    model.fJ(t, 0.0, x, dx, xdot, J.get());
+    model.fJ(t, 0.0, x_solver, dx_solver, xdot, J.get());
     // CVODES uses colmajor, so we need to transform to rowmajor
     for (int ix = 0; ix < model.nx_solver; ix++) {
         for (int jx = 0; jx < model.nx_solver; jx++) {

@@ -195,9 +195,10 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
         rdata->processPostEquilibration(*posteq, model, edata);
     
     if (fwd && !posteq)
-        rdata->storeJacobianAndDerivativeInReturnData(*fwd, model);
+        rdata->storeFinalSimulationState(*fwd);
     else if (posteq)
-        rdata->storeJacobianAndDerivativeInReturnData(*posteq, model);
+        rdata->storeFinalSimulationState(*posteq);
+    rdata->storeJacobianAndDerivativeInReturnData(model);
     
     if (bwd)
         rdata->processBackwardProblem(*fwd, *bwd, model);
