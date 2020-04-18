@@ -62,13 +62,15 @@ class ReturnData {
      * @param o2mode see amici::Model::o2mode
      * @param sensi see amici::Solver::sensi
      * @param sensi_meth see amici::Solver::sensi_meth
+     * @param sensi_meth see amici::Solver::rdata_reporting
      */
     ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
                int nxtrue, int ny, int nytrue, int nz, int nztrue, int ne,
                int nJ, int nplist, int nmaxevent, int nt, int newton_maxsteps,
                int nw,
                std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
-               SensitivityOrder sensi, SensitivityMethod sensi_meth);
+               SensitivityOrder sensi, SensitivityMethod sensi_meth,
+               RDataReporting rdrm);
 
     /**
      * @brief constructor that uses information from model and solver to
@@ -315,64 +317,67 @@ class ReturnData {
     int status = 0;
 
     /** total number of model parameters */
-    int np{0};
+    const int np{0};
 
     /** number of fixed parameters */
-    int nk{0};
+    const int nk{0};
 
     /** number of states */
-    int nx{0};
+    const int nx{0};
 
     /** number of states with conservation laws applied */
-    int nx_solver{0};
+    const int nx_solver{0};
 
     /** number of states in the unaugmented system */
-    int nxtrue{0};
+    const int nxtrue{0};
 
     /** number of observables */
-    int ny{0};
+    const int ny{0};
 
     /** number of observables in the unaugmented system */
-    int nytrue{0};
+    const int nytrue{0};
 
     /** number of event outputs */
-    int nz{0};
+    const int nz{0};
 
     /** number of event outputs in the unaugmented system */
-    int nztrue{0};
+    const int nztrue{0};
 
     /** number of events */
-    int ne{0};
+    const int ne{0};
 
     /** dimension of the augmented objective function for 2nd order ASA */
-    int nJ{0};
+    const int nJ{0};
 
     /** number of parameter for which sensitivities were requested */
-    int nplist{0};
+    const int nplist{0};
 
     /** maximal number of occuring events (for every event type) */
-    int nmaxevent{0};
+    const int nmaxevent{0};
 
     /** number of considered timepoints */
-    int nt{0};
+    const int nt{0};
 
     /** number of columns in w */
-    int nw{0};
+    const int nw{0};
 
     /** maximal number of newton iterations for steady state calculation */
-    int newton_maxsteps{0};
+    const int newton_maxsteps{0};
 
     /** scaling of parameterization (lin,log,log10) */
     std::vector<ParameterScaling> pscale;
 
     /** flag indicating whether second order sensitivities were requested */
-    SecondOrderMode o2mode{SecondOrderMode::none};
+    const SecondOrderMode o2mode{SecondOrderMode::none};
 
     /** sensitivity order */
-    SensitivityOrder sensi{SensitivityOrder::none};
+    const SensitivityOrder sensi{SensitivityOrder::none};
 
     /** sensitivity method */
-    SensitivityMethod sensi_meth{SensitivityMethod::none};
+    const SensitivityMethod sensi_meth{SensitivityMethod::none};
+    
+    /** reporting mode */
+    const RDataReporting rdata_reporting{RDataReporting::full};
 
     /**
      * @brief Serialize ReturnData (see boost::serialization::serialize)
@@ -409,6 +414,21 @@ class ReturnData {
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
     std::vector<int> nroots;
+    
+    /**
+     * @brief initializes storage for likelihood reporting mode
+     */
+    void initializeLikelihoodReporting();
+    
+    /**
+     * @brief initializes storage for residual reporting mode
+     */
+    void initializeResidualReporting();
+    
+    /**
+     * @brief initializes storage for full reporting mode
+     */
+    void initializeFullReporting();
     
     
     /**

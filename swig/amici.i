@@ -161,6 +161,7 @@ SteadyStateSensitivityMode = enum('SteadyStateSensitivityMode')
 NewtonStatus = enum('NewtonStatus')
 NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
 FixedParameterContext = enum('FixedParameterContext')
+RDataReporting = enum('RDataReporting')
 %}
 
 // add module docstring and import additional types for typehints
@@ -179,5 +180,3 @@ nonstandard type conversions.
 
 from typing import Iterable
 %}
-
-
