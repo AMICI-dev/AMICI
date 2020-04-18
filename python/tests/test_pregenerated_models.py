@@ -23,10 +23,6 @@ model_cases = [(sub_test, case)
                for case in list(expected_results[sub_test].keys())]
 
 
-def assert_fun(x):
-    assert x
-
-
 @pytest.mark.parametrize("sub_test,case", model_cases)
 def test_pregenerated_model(sub_test, case):
     """Tests models that were pregenerated using the the matlab code
@@ -81,8 +77,7 @@ def test_pregenerated_model(sub_test, case):
             and len(model.getParameterList()) \
             and not model_name.startswith('model_neuron') \
             and not case.endswith('byhandpreeq'):
-        check_derivatives(model, solver, edata,
-                          assert_fun, **check_derivative_opts)
+        check_derivatives(model, solver, edata, **check_derivative_opts)
 
     verify_simulation_opts = dict()
 
@@ -97,19 +92,19 @@ def test_pregenerated_model(sub_test, case):
 
     verify_simulation_results(
         rdata, expected_results[sub_test][case]['results'],
-        assert_fun, **verify_simulation_opts
+        **verify_simulation_opts
     )
 
     if model_name == 'model_steadystate' and \
             case == 'sensiforwarderrorint':
         edata = amici.amici.ExpData(model.get())
 
+    # Test runAmiciSimulations: ensure running twice
+    # with same ExpData yields same results
     if edata and model_name != 'model_neuron_o2' and not (
         model_name == 'model_robertson' and
         case == 'sensiforwardSPBCG'
     ):
-        # Test runAmiciSimulations: ensure running twice
-        # with same ExpData yields same results
         if isinstance(edata, amici.amici.ExpData):
             edatas = [edata, edata]
         else:
@@ -120,15 +115,33 @@ def test_pregenerated_model(sub_test, case):
             failfast=False
         )
         verify_simulation_results(
-            rdatas[0],
-            expected_results[sub_test][case]['results'],
-            assert_fun, **verify_simulation_opts
+            rdatas[0], expected_results[sub_test][case]['results'],
+            **verify_simulation_opts
         )
         verify_simulation_results(
-            rdatas[1],
-            expected_results[sub_test][case]['results'],
-            assert_fun, **verify_simulation_opts
+            rdatas[1], expected_results[sub_test][case]['results'],
+            **verify_simulation_opts
         )
+
+    # test residuals mode
+    if solver.getSensitivityMethod == amici.SensitivityMethod.adjoint:
+        with pytest.raises(Exception):
+            solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
+    else:
+        solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
+        rdata = amici.runAmiciSimulation(model, solver, edata)
+        verify_simulation_results(
+            rdata, expected_results[sub_test][case]['results'],
+            **verify_simulation_opts
+        )
+
+    # test likelihood mode
+    solver.setReturnDataReportingMode(amici.RDataReporting.likelihood)
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    verify_simulation_results(
+        rdata, expected_results[sub_test][case]['results'],
+        **verify_simulation_opts
+    )
 
     with pytest.raises(RuntimeError):
         model.getParameterByName('thisParameterDoesNotExist')
