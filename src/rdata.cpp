@@ -106,9 +106,40 @@ ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
     }
 }
 
+void ReturnData::processSimulationObjects(SteadystateProblem const *preeq,
+                                          ForwardProblem const *fwd,
+                                          BackwardProblem const *bwd,
+                                          SteadystateProblem const *posteq,
+                                          Model &model, Solver const &solver,
+                                          ExpData const *edata) {
+    ModelContext mc(&model);
+    
+    if (preeq)
+        processPreEquilibration(*preeq, model);
+    
+    if (fwd)
+        processForwardProblem(*fwd, model, edata);
+    else
+        invalidate(0);
+    
+    if (posteq)
+        processPostEquilibration(*posteq, model, edata);
+    
+    if (fwd && !posteq)
+        storeJacobianAndDerivativeInReturnData(*fwd, model);
+    else if (posteq)
+        storeJacobianAndDerivativeInReturnData(*posteq, model);
+    
+    if (bwd)
+        processBackwardProblem(*fwd, *bwd, model);
+    else if (solver.computingASA())
+        invalidateSLLH();
+        
+    applyChainRuleFactorToSimulationResults(model);
+}
+
 void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
                                          Model &model) {
-    ModelContext mc(&model);
     readSimulationState(preeq.getFinalSimulationState(), model);
     model.fx_rdata(x_rdata, x_solver);
     x_ss = x_rdata.getVector();
@@ -130,7 +161,6 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
 
 void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
                                           Model &model, ExpData const *edata) {
-    ModelContext mc(&model);
     for (int it = 0; it < nt; it++) {
         auto t = model.getTimepoint(it);
         if (std::isinf(t)) {
@@ -151,7 +181,6 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
 
 void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
                                        ExpData const *edata) {
-    ModelContext mc(&model);
     if (edata)
         initializeObjectiveFunction();
 
@@ -296,7 +325,6 @@ void ReturnData::getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
 void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
                                         BackwardProblem const &bwd,
                                         Model &model) {
-    ModelContext mc(&model);
     readSimulationState(fwd.getInitialSimulationState(), model);
 
     std::vector<realtype> llhS0(model.nJ * model.nplist(), 0.0);
@@ -362,25 +390,6 @@ void ReturnData::readSimulationState(SimulationState const &state,
         sx_solver = state.sx;
     t = state.t;
     model.setModelState(state.state);
-}
-
-void ReturnData::storeJacobianAndDerivativeInReturnData(* model_ptr) {
-    ModelContext mc(&model);
-    readSimulationState(final_model_state, model);
-    
-    AmiVector xdot(nx_solver);
-    model.fxdot(t, x_solver, dx_solver, xdot);
-    this->xdot = xdot.getVector();
-
-    SUNMatrixWrapper J(SUNMatrixWrapper(nx_solver, nx_solver));
-    model.fJ(t, 0.0, x_solver, dx_solver, xdot, J.get());
-    // CVODES uses colmajor, so we need to transform to rowmajor
-    for (int ix = 0; ix < model.nx_solver; ix++) {
-        for (int jx = 0; jx < model.nx_solver; jx++) {
-            this->J[ix * model.nx_solver + jx] =
-                J.data()[ix + model.nx_solver * jx];
-        }
-    }
 }
 
 void ReturnData::invalidate(const int it_start) {
