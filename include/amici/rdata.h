@@ -317,67 +317,67 @@ class ReturnData {
     int status = 0;
 
     /** total number of model parameters */
-    const int np{0};
+    int np{0};
 
     /** number of fixed parameters */
-    const int nk{0};
+    int nk{0};
 
     /** number of states */
-    const int nx{0};
+    int nx{0};
 
     /** number of states with conservation laws applied */
-    const int nx_solver{0};
+    int nx_solver{0};
 
     /** number of states in the unaugmented system */
-    const int nxtrue{0};
+    int nxtrue{0};
 
     /** number of observables */
-    const int ny{0};
+    int ny{0};
 
     /** number of observables in the unaugmented system */
-    const int nytrue{0};
+    int nytrue{0};
 
     /** number of event outputs */
-    const int nz{0};
+    int nz{0};
 
     /** number of event outputs in the unaugmented system */
-    const int nztrue{0};
+    int nztrue{0};
 
     /** number of events */
-    const int ne{0};
+    int ne{0};
 
     /** dimension of the augmented objective function for 2nd order ASA */
-    const int nJ{0};
+    int nJ{0};
 
     /** number of parameter for which sensitivities were requested */
-    const int nplist{0};
+    int nplist{0};
 
     /** maximal number of occuring events (for every event type) */
-    const int nmaxevent{0};
+    int nmaxevent{0};
 
     /** number of considered timepoints */
-    const int nt{0};
+    int nt{0};
 
     /** number of columns in w */
-    const int nw{0};
+    int nw{0};
 
     /** maximal number of newton iterations for steady state calculation */
-    const int newton_maxsteps{0};
+    int newton_maxsteps{0};
 
     /** scaling of parameterization (lin,log,log10) */
     std::vector<ParameterScaling> pscale;
 
     /** flag indicating whether second order sensitivities were requested */
-    const SecondOrderMode o2mode{SecondOrderMode::none};
+    SecondOrderMode o2mode{SecondOrderMode::none};
 
     /** sensitivity order */
-    const SensitivityOrder sensi{SensitivityOrder::none};
+    SensitivityOrder sensi{SensitivityOrder::none};
 
     /** sensitivity method */
-    const SensitivityMethod sensi_meth{SensitivityMethod::none};
+    SensitivityMethod sensi_meth{SensitivityMethod::none};
     
     /** reporting mode */
-    const RDataReporting rdata_reporting{RDataReporting::full};
+    RDataReporting rdata_reporting{RDataReporting::full};
 
     /**
      * @brief Serialize ReturnData (see boost::serialization::serialize)
