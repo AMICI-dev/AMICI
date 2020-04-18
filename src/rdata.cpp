@@ -93,7 +93,6 @@ ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
             sz.resize(nmaxevent * nz * nplist, 0.0);
             srz.resize(nmaxevent * nz * nplist, 0.0);
 
-            FIM.resize(nplist * nplist, 0.0);
             sres.resize(nt * nytrue * nplist, 0.0);
         }
 
@@ -231,7 +230,6 @@ void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
         model.addObservableObjectiveSensitivity(sllh, s2llh, it, x_solver,
                                                 sx_solver, *edata);
         fsres(it, *edata);
-        fFIM(it);
     }
 }
 
@@ -659,16 +657,21 @@ void ReturnData::fsres(const int it, const ExpData &edata) {
     }
 }
 
-void ReturnData::fFIM(const int it) {
+void ReturnData::fFIM() {
+    if (FIM.empty())
+        FIM.resize(nplist * nplist, 0.0);
+    
     if (sres.empty())
         return;
 
-    for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt_true = iy + it * nytrue;
-        for (int ip = 0; ip < nplist; ++ip) {
-            for (int jp = 0; jp < nplist; ++jp) {
-                FIM.at(ip + nplist * jp) += sres.at(iyt_true * nplist + ip) *
-                    sres.at(iyt_true * nplist + jp);
+    for (int it = 0; it <nt; ++it) {
+        for (int iy = 0; iy < nytrue; ++iy) {
+            int iyt_true = iy + it * nytrue;
+            for (int ip = 0; ip < nplist; ++ip) {
+                for (int jp = 0; jp < nplist; ++jp) {
+                    FIM.at(ip + nplist * jp) += sres.at(iyt_true * nplist + ip)
+                        * sres.at(iyt_true * nplist + jp);
+                }
             }
         }
     }

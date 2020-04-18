@@ -213,9 +213,8 @@ class ReturnData {
 
     /**
      * @brief Fisher information matrix function
-     * @param it time index
      */
-    void fFIM(int it);
+    void fFIM();
 
     /** timepoints (dimension: nt) */
     std::vector<realtype> ts;

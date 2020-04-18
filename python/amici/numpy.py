@@ -1,39 +1,37 @@
 import numpy as np
 import copy
 import collections
+
 from . import ExpDataPtr, ReturnDataPtr, ExpData, ReturnData
+from typing import Union, List, Dict, Iterator
 
 
 class SwigPtrView(collections.abc.Mapping):
-    """ Interface class to expose std::vector<double> and scalar members of
+    """
+    Interface class to expose std::vector<double> and scalar members of
     swig wrapped C++ objects as numpy array attributes and fields. This
     class is memory efficient as copies of the underlying C++ objects is
     only created when respective fields are accessed for the first time.
     Cached copies are used for all subsequent calls.
 
-    Attributes:
-        _swigptr: pointer to the c++ object
-            @type SwigPtr
-        _field_names: names of members that will be exposed as numpy arrays
-            @type list
-        _field_dimensions: dimensions of numpy arrays @type list
-        _cache: dictionary with cached values @type dict
+    :ivar _swigptr: pointer to the c++ object
+    :ivar _field_names: names of members that will be exposed as numpy arrays
+    :ivar _field_dimensions: dimensions of numpy arrays
+    :ivar _cache: dictionary with cached values
     """
 
     _swigptr = None
-    _field_names = []
-    _field_dimensions = dict()
+    _field_names: List[str] = []
+    _field_dimensions: Dict[str, List[int]] = dict()
 
-    def __getitem__(self, item):
-        """Access to field names, copies data from C++ object into numpy
+    def __getitem__(self, item: str) -> Union[np.ndarray, float]:
+        """
+        Access to field names, copies data from C++ object into numpy
         array, reshapes according to field dimensions and stores values in
         cache.
 
-        Arguments:
-            item: field name
-
-        Returns:
-            value @type numpy.array or float
+        :param item: field name
+        :return: value
         """
         if self._swigptr is None:
             raise NotImplementedError('Cannot get items from abstract class.')
@@ -47,70 +45,61 @@ class SwigPtrView(collections.abc.Mapping):
         if item not in self._field_names:
             self.__missing__(item)
 
-        value = fieldAsNumpy(
+        value = field_as_numpy(
             self._field_dimensions, item, self._swigptr
         )
         self._cache[item] = value
         return value
 
-    def __missing__(self, key):
-        """Default behaviour for missing keys
+    def __missing__(self, key: str) -> None:
+        """
+        Default behaviour for missing keys
 
-        Arguments:
-            key: field name
-
-        Returns:
-
-        Raises:
-            KeyError
+        :param key: field name
         """
         raise KeyError(f'Unknown field name {key}.')
 
-    def __getattr__(self, item):
-        """Attribute accessor for field names
+    def __getattr__(self, item) -> Union[np.ndarray, float]:
+        """
+        Attribute accessor for field names
 
-        Arguments:
-            item: field name
+        :param item: field name
 
-        Returns:
-            value @type numpy.array or float
+        :returns: value
         """
         return self.__getitem__(item)
 
     def __init__(self, swigptr):
-        """Constructor
+        """
+        Constructor
 
-        Arguments:
-            swigptr: pointer to the C++ object
-
+        :param swigptr: pointer to the C++ object
         """
         self._swigptr = swigptr
         self._cache = dict()
         super(SwigPtrView, self).__init__()
 
-    def __len__(self):
-        """Returns the number of available keys/fields
+    def __len__(self) -> int:
+        """
+        Returns the number of available keys/fields
 
-        Returns:
-            length of _field_names @type int
+        :returns: length of _field_names
         """
         return len(self._field_names)
 
-    def __iter__(self):
-        """Create an iterator of the keys/fields
+    def __iter__(self) -> Iterator:
+        """
+        Create an iterator of the keys/fields
 
-        Returns:
-            iterator over _field_names @type iter
+        :returns: iterator over _field_names
         """
         return iter(self._field_names)
 
     def __copy__(self):
-        """Create a shallow copy
+        """
+        Create a shallow copy
 
-        Arguments:
-
-        Returns:
-            SwigPtrView shallow copy @type SwigPtrView
+        :return: SwigPtrView shallow copy
         """
         other = SwigPtrView(self._swigptr)
         other._field_names = self._field_names
@@ -118,25 +107,23 @@ class SwigPtrView(collections.abc.Mapping):
         other._cache = self._cache
         return other
 
-    def __contains__(self, item):
-        """Faster implementation of __contains__ that avoids copy of the field
+    def __contains__(self, item) -> bool:
+        """
+        Faster implementation of __contains__ that avoids copy of the field
 
-        Arguments:
-            item: item to check for
+        :param item: item to check for
 
-        Returns:
-            whether item is available as key @type bool
+        :returns: whether item is available as key
         """
         return item in self._field_names
 
     def __deepcopy__(self, memo):
-        """Create a deep copy
+        """
+        Create a deep copy
 
-        Arguments:
-            memo: dict with id-to-object mapping
+        :param memo: dict with id-to-object mapping
 
-        Returns:
-            SwigPtrView deep copy @type SwigPtrView
+        :returns: SwigPtrView deep copy
         """
         other = SwigPtrView(self._swigptr)
         other._field_names = copy.deepcopy(self._field_names)
@@ -146,7 +133,8 @@ class SwigPtrView(collections.abc.Mapping):
 
 
 class ReturnDataView(SwigPtrView):
-    """ Interface class for C++ Return Data objects that avoids possibly costly
+    """
+    Interface class for C++ Return Data objects that avoids possibly costly
     copies of member data.
     """
 
@@ -160,16 +148,15 @@ class ReturnDataView(SwigPtrView):
         'posteq_numsteps', 'posteq_cpu_time',
         'numsteps', 'numrhsevals', 'numerrtestfails',
         'numnonlinsolvconvfails', 'order', 'cpu_time',
-        'numstepsB','numrhsevalsB', 'numerrtestfailsB',
+        'numstepsB', 'numrhsevalsB', 'numerrtestfailsB',
         'numnonlinsolvconvfailsB', 'cpu_timeB'
     ]
 
-    def __init__(self, rdata):
-        """Constructor
+    def __init__(self, rdata: Union[ReturnDataPtr, ReturnData]):
+        """
+        Constructor
 
-        Arguments:
-            rdata: pointer to the ReturnData instance
-
+        :param rdata: pointer to the ReturnData instance
         """
         if not isinstance(rdata, (ReturnDataPtr, ReturnData)):
             raise TypeError(f'Unsupported pointer {type(rdata)}, must be'
@@ -225,22 +212,25 @@ class ReturnDataView(SwigPtrView):
         }
         super(ReturnDataView, self).__init__(rdata)
 
-    def __getitem__(self, item):
-        """Custom getitem implementation shim to map `t` to `ts`
+    def __getitem__(self, item: str) -> Union[np.ndarray, ReturnDataPtr,
+                                              ReturnData, float]:
+        """
+        Custom getitem implementation shim to map `t` to `ts`
 
-        Arguments:
-            item: field/attribute key
+        :param item: field/attribute key
 
-        Returns:
-            self[item] @type numpy.array/float
+        :returns: self[item]
         """
         if item == 't':
             item = 'ts'
+        if item == 'FIM' and 'FIM' not in self._cache:
+            self['ptr'].fFIM()
         return super(ReturnDataView, self).__getitem__(item)
 
 
 class ExpDataView(SwigPtrView):
-    """ Interface class for C++ Exp Data objects that avoids possibly costly
+    """
+    Interface class for C++ Exp Data objects that avoids possibly costly
     copies of member data.
     """
 
@@ -251,12 +241,11 @@ class ExpDataView(SwigPtrView):
         'fixedParametersPresimulation'
     ]
 
-    def __init__(self, edata):
-        """Constructor
+    def __init__(self, edata: Union[ExpDataPtr, ExpData]):
+        """
+        Constructor
 
-        Arguments:
-            edata: pointer to the ExpData instance
-
+        :param edata: pointer to the ExpData instance
         """
         if not isinstance(edata, (ExpDataPtr, ExpData)):
             raise TypeError(f'Unsupported pointer {type(edata)}, must be'
@@ -283,22 +272,21 @@ class ExpDataView(SwigPtrView):
         super(ExpDataView, self).__init__(edata)
 
 
-def fieldAsNumpy(field_dimensions, field, data):
-    """ Convert data object field to numpy array with dimensions according to
+def field_as_numpy(field_dimensions: Dict[str, List[int]],
+                   field: str, data: SwigPtrView) -> Union[np.ndarray,
+                                                           float,
+                                                           None]:
+    """
+    Convert data object field to numpy array with dimensions according to
     specified field dimensions
 
-    Arguments:
-        field_dimensions: dimension specifications
+    :param field_dimensions: dimension specifications
             dict({field: list([dim1, dim2, ...])})
-        data: object with fields
-        field: Name of field
+    :param data: object with fields
+    :param field: Name of field
 
-    Returns:
-        Field Data as numpy array with dimensions according to specified field
-        dimensions
-
-    Raises:
-
+    :returns: Field Data as numpy array with dimensions according to
+    specified field dimensions
     """
     attr = getattr(data, field)
     if field in field_dimensions.keys():
