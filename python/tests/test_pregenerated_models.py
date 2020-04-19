@@ -137,7 +137,8 @@ def test_pregenerated_model(sub_test, case):
         rdata = amici.runAmiciSimulation(model, solver, edata)
         verify_simulation_results(
             rdata, expected_results[sub_test][case]['results'],
-            fields=['res', 'sres'], **verify_simulation_opts
+            fields=['t', 'res', 'sres', 'y', 'sy', 'sigmay', 'ssigmay', 'FIM'],
+            **verify_simulation_opts
         )
         with pytest.raises(RuntimeError):
             solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
@@ -147,7 +148,7 @@ def test_pregenerated_model(sub_test, case):
     rdata = amici.runAmiciSimulation(model, solver, edata)
     verify_simulation_results(
         rdata, expected_results[sub_test][case]['results'],
-        fields=['llh', 'sllh'], **verify_simulation_opts
+        fields=['t', 'llh', 'sllh', 's2llh'], **verify_simulation_opts
     )
 
     with pytest.raises(RuntimeError):
@@ -167,13 +168,19 @@ def verify_simulation_results(rdata, expected_results, fields=None,
     :param rtol: relative tolerance
     """
 
+    subfields = []
     if fields is None:
         attrs = expected_results.attrs.keys()
         fields = expected_results.keys()
+        if 'diagnosis' in expected_results.keys():
+            subfields = expected_results['diagnosis'].keys()
 
     else:
         attrs = [field for field in fields
                  if field in expected_results.attrs.keys()]
+        if 'diagnosis' in expected_results.keys():
+            subfields = [field for field in fields
+                         if field in expected_results['diagnosis'].keys()]
         fields = [field for field in fields
                   if field in expected_results.keys()]
 
@@ -181,13 +188,19 @@ def verify_simulation_results(rdata, expected_results, fields=None,
         assert rdata['status'] == expected_results.attrs['status'][0]
         return
 
-    for field in fields:
+    for field in expected_results.keys():
         if field == 'diagnosis':
             for subfield in ['J', 'xdot']:
+                if subfield not in subfields:
+                    assert rdata[subfield] is None, field
+                    continue
                 check_results(rdata, subfield,
                               expected_results[field][subfield][()],
                               assert_fun, 1e-8, 1e-8)
         else:
+            if field not in fields:
+                assert rdata[field] is None, field
+                continue
             if field == 's2llh':
                 check_results(rdata, field, expected_results[field][()],
                               assert_fun, 1e-4, 1e-3)
