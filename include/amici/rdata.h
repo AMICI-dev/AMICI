@@ -509,7 +509,7 @@ class ReturnData {
             model.fxdot(t, x_solver, dx_solver, xdot);
         
         if (!this->xdot.empty())
-            writeSlice(xdot.getVector(), this->xdot);
+            writeSlice(xdot, this->xdot);
         
         if (!this->J.empty()) {
             SUNMatrixWrapper J(nx_solver, nx_solver);
