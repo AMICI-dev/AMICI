@@ -390,12 +390,6 @@ class SbmlImporter:
             raise SBMLException('Non-unity stoichiometry is'
                                 ' currently not supported!')
 
-        dynamics_rules = [rule for rule in self.sbml.getListOfRules()
-                          if any([rule.isAssignment(), rule.isRate()])]
-        if len(self.sbml.getListOfReactions()) + len(dynamics_rules) == 0:
-            raise SBMLException('The model must contain at least one reaction,'
-                                ' or assignment rule, or rate rule.')
-
     def _gather_locals(self) -> None:
         """
         Populate self.local_symbols with all model entities.
