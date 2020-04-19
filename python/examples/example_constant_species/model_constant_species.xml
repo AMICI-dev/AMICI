@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created by COPASI version 4.20 (Build 158) on 2020-04-16 16:57 with libSBML version 5.15.1. -->
+<sbml xmlns="http://www.sbml.org/sbml/level2/version4" level="2" version="4">
+  <model metaid="COPASI0" id="New_Model" name="New Model">
+    <listOfUnitDefinitions>
+      <unitDefinition id="volume" name="volume">
+        <listOfUnits>
+          <unit kind="litre" exponent="1" scale="-3" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+      <unitDefinition id="substance" name="substance">
+        <listOfUnits>
+          <unit kind="mole" exponent="1" scale="-3" multiplier="1"/>
+        </listOfUnits>
+      </unitDefinition>
+    </listOfUnitDefinitions>
+    <listOfCompartments>
+      <compartment id="compartment" name="compartment" spatialDimensions="3" size="1" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="substrate" name="substrate" compartment="compartment" initialConcentration="5" boundaryCondition="false" constant="false" />
+      <species id="enzyme" name="enzyme" compartment="compartment" initialConcentration="2" boundaryCondition="true" constant="true" />
+      <species id="complex" name="complex" compartment="compartment" initialConcentration="0" boundaryCondition="false" constant="false" />
+      <species id="product" name="product" compartment="compartment" initialConcentration="0" boundaryCondition="false" constant="false" />
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="init_substrate" name="init_substrate" value="0" constant="true" />
+      <parameter id="init_enzyme" name="init_enzyme" value="2" constant="true" />
+      <parameter id="substrate_product" name="substrate_product" value="5" constant="false" />
+      <parameter id="k_bind" name="k_bind" value="10" constant="true" />
+      <parameter id="k_unbind" name="k_unbind" value="1" constant="true" />
+      <parameter id="k_convert" name="k_convert" value="10" constant="true" />
+      <parameter id="k_create" name="k_create" value="2" constant="true" />
+      <parameter id="k_decay" name="k_decay" value="1" constant="true" />
+    </listOfParameters>
+    <listOfInitialAssignments>
+      <initialAssignment symbol="substrate">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> init_substrate </ci>
+        </math>
+      </initialAssignment>
+      <initialAssignment symbol="enzyme">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <ci> init_enzyme </ci>
+        </math>
+      </initialAssignment>
+    </listOfInitialAssignments>
+    <listOfRules>
+      <assignmentRule variable="substrate_product">
+        <math xmlns="http://www.w3.org/1998/Math/MathML">
+          <apply>
+            <plus/>
+            <ci> complex </ci>
+            <ci> product </ci>
+            <ci> substrate </ci>
+          </apply>
+        </math>
+      </assignmentRule>
+    </listOfRules>
+    <listOfReactions>
+      <reaction id="creation" name="creation" reversible="false">
+        <listOfProducts>
+          <speciesReference species="substrate" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> compartment </ci>
+              <ci> k_create </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="binding" name="binding" reversible="true">
+        <listOfReactants>
+          <speciesReference species="substrate" stoichiometry="1"/>
+          <speciesReference species="enzyme" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="complex" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> compartment </ci>
+              <apply>
+                <minus/>
+                <apply>
+                  <times/>
+                  <ci> k_bind </ci>
+                  <ci> substrate </ci>
+                  <ci> enzyme </ci>
+                </apply>
+                <apply>
+                  <times/>
+                  <ci> k_unbind </ci>
+                  <ci> complex </ci>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="conversion" name="conversion" reversible="false">
+        <listOfReactants>
+          <speciesReference species="complex" stoichiometry="1"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="enzyme" stoichiometry="1"/>
+          <speciesReference species="product" stoichiometry="1"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> compartment </ci>
+              <ci> k_convert </ci>
+              <ci> complex </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="decay" name="decay" reversible="false">
+        <listOfReactants>
+          <speciesReference species="product" stoichiometry="1"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> compartment </ci>
+              <ci> k_decay </ci>
+              <ci> product </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>
