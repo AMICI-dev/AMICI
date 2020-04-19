@@ -32,7 +32,7 @@ def generate_models():
     model_name_cl = model_output_dir_cl = 'model_constant_species_cl'
 
     # Define constants, observables, sigmas
-    constantParameters = ['init_substrate', 'init_enzyme']
+    constant_parameters = ['init_substrate', 'init_enzyme']
     observables = {
         'observable_product': {'name': '', 'formula': 'product'},
         'observable_substrate': {'name': '', 'formula': 'substrate'},
@@ -43,12 +43,12 @@ def generate_models():
     sbml_importer.sbml2amici(model_name_cl,
                              model_output_dir_cl,
                              observables=observables,
-                             constantParameters=constantParameters,
+                             constantParameters=constant_parameters,
                              sigmas=sigmas)
     sbml_importer.sbml2amici(model_name,
                              model_output_dir,
                              observables=observables,
-                             constantParameters=constantParameters,
+                             constantParameters=constant_parameters,
                              sigmas=sigmas,
                              compute_conservation_laws=False)
 
@@ -135,7 +135,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
             rdata_failure = get_results(model_without_cl,
                                         edata=edata_fixture,
                                         sensi_order=1)
-    except:
+    except RuntimeError:
         rdata_failure = None
 
     assert rdata_failure is None
