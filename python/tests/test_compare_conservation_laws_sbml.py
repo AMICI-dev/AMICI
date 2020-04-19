@@ -43,12 +43,12 @@ def generate_models():
     sbml_importer.sbml2amici(model_name_cl,
                              model_output_dir_cl,
                              observables=observables,
-                             constantParameters=constant_parameters,
+                             constant_parameters=constant_parameters,
                              sigmas=sigmas)
     sbml_importer.sbml2amici(model_name,
                              model_output_dir,
                              observables=observables,
-                             constantParameters=constant_parameters,
+                             constant_parameters=constant_parameters,
                              sigmas=sigmas,
                              compute_conservation_laws=False)
 
@@ -94,8 +94,8 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     rdata = get_results(model_without_cl, sensi_order=1)
 
     # compare state trajectories
-    assert np.isclose(rdata['x'], rdata_cl['x']).all()
-    assert np.isclose(rdata['sx'], rdata_cl['sx']).all()
+    for field in ['x', 'sx']:
+        assert np.isclose(rdata[field], rdata_cl[field]).all()
 
     # ----- compare simulations wo edata, sensi = 0, states and sensis -------
     model_without_cl.setSteadyStateSensitivityMode(
@@ -107,9 +107,8 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     rdata = get_results(model_without_cl, edata=edata_fixture)
 
     # compare preequilibrated states
-    assert np.isclose(rdata['x'], rdata_cl['x']).all()
-    assert np.isclose(rdata['x_ss'], rdata_cl['x_ss']).all()
-    assert np.isclose(rdata['llh'], rdata_cl['llh']).all()
+    for field in ['x', 'x_ss', 'llh']:
+        assert np.isclose(rdata[field], rdata_cl[field]).all()
 
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
 
@@ -118,11 +117,8 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     rdata = get_results(model_without_cl, edata=edata_fixture, sensi_order=1)
 
     # compare state sensitivities with edata and preequilibration
-    assert np.isclose(rdata['x'], rdata_cl['x']).all()
-    assert np.isclose(rdata['x_ss'], rdata_cl['x_ss']).all()
-    assert np.isclose(rdata['sx'], rdata_cl['sx']).all()
-    assert np.isclose(rdata['llh'], rdata_cl['llh']).all()
-    assert np.isclose(rdata['sllh'], rdata_cl['sllh']).all()
+    for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
+        assert np.isclose(rdata[field], rdata_cl[field]).all()
 
     # ----- check failure st.st. sensi computation if run wo CLs -------------
     # check failure of steady state senistivity computation if run wo CLs
