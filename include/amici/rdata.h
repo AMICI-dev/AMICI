@@ -63,7 +63,7 @@ class ReturnData {
      * @param o2mode see amici::Model::o2mode
      * @param sensi see amici::Solver::sensi
      * @param sensi_meth see amici::Solver::sensi_meth
-     * @param sensi_meth see amici::Solver::rdata_reporting
+     * @param rdrm see amici::Solver::rdata_reporting
      */
     ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
                int nxtrue, int ny, int nytrue, int nz, int nztrue, int ne,
@@ -83,6 +83,18 @@ class ReturnData {
 
     ~ReturnData() = default;
     
+    /**
+     * @brief constructor that uses information from model and solver to
+     * appropriately initialize fields
+     * @param preeq simulated preequilibration problem, pass nullptr to ignore
+     * @param fwd simulated forward problem, pass nullptr to ignore
+     * @param bwd simulat
+     * ed backward problem, pass nullptr to ignore
+     * @param posteq simulated postequilibration problem, pass nullptr to ignore
+     * @param model matching model instance
+     * @param solver matching solver instance
+     * @param edata matching experimental data
+     */
     void processSimulationObjects(SteadystateProblem const *preeq,
                                   ForwardProblem const *fwd,
                                   BackwardProblem const *bwd,
@@ -497,7 +509,7 @@ class ReturnData {
             model.fxdot(t, x_solver, dx_solver, xdot);
         
         if (!this->xdot.empty())
-            std::copy_n(xdot.data(), nx, this->xdot.data());
+            writeSlice(xdot.getVector(), this->xdot);
         
         if (!this->J.empty()) {
             SUNMatrixWrapper J(nx_solver, nx_solver);
@@ -505,7 +517,7 @@ class ReturnData {
             // CVODES uses colmajor, so we need to transform to rowmajor
             for (int ix = 0; ix < model.nx_solver; ix++)
                 for (int jx = 0; jx < model.nx_solver; jx++)
-                    this->J[ix * model.nx_solver + jx] =
+                    this->J.at(ix * model.nx_solver + jx) =
                         J.data()[ix + model.nx_solver * jx];
         }
     }

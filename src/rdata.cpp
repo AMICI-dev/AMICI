@@ -177,12 +177,12 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
 
     if (!x_ss.empty()) {
         model.fx_rdata(x_rdata, x_solver);
-        std::copy_n(x_rdata.data(), nx, x_ss.data());
+        writeSlice(x_rdata.getVector(), x_ss);
     }
     if (!sx_ss.empty() && sensi >= SensitivityOrder::first) {
         model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++)
-            std::copy_n(sx_rdata.data(ip), nx, &sx_ss.at(ip * nx));
+            writeSlice(sx_rdata[ip].getVector(), slice(sx_ss, ip, nx));
     }
     /* Get cpu time for Newton solve in seconds */
     preeq_cpu_time = preeq.getCPUTime() / 1000;
@@ -229,13 +229,13 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
 
     if (!x0.empty()) {
         model.fx_rdata(x_rdata, x_solver);
-        std::copy_n(x_rdata.data(), nx, x0.data());
+        writeSlice(x_rdata.getVector(), x0);
     }
     
     if (!sx0.empty()) {
         model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++)
-            std::copy_n(sx_rdata.data(ip), nx, &sx0.at(ip * nx));
+            writeSlice(sx_rdata[ip].getVector(), slice(sx0, ip, nx));
     }
 
     // process timpoint data
@@ -261,7 +261,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
 void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
     if (!x.empty()) {
         model.fx_rdata(x_rdata, x_solver);
-        std::copy_n(x_rdata.data(), nx, &x.at(it * nx));
+        writeSlice(x_rdata.getVector(), slice(x, it, nx));
     }
     if (!w.empty())
         model.getExpression(slice(w, it, nw), ts[it], x_solver);
@@ -299,7 +299,8 @@ void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
     if (!sx.empty()) {
         model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++) {
-            std::copy_n(sx_rdata.data(ip), nx, &sx.at((it * nplist + ip) * nx));
+            writeSlice(sx_rdata[ip].getVector(),
+                       slice(sx, it * nplist + ip, nx));
         }
     }
 

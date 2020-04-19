@@ -54,6 +54,7 @@ class ForwardProblem {
 
     ~ForwardProblem() = default;
     
+    /** allow FinalStateStorer to access private members and functions */
     friend FinalStateStorer;
 
     /**
@@ -260,7 +261,8 @@ class ForwardProblem {
     };
     
     /**
-     * @brief
+     * @brief Retrieves the carbon copy of the simulation state variables at the
+     * final timepoint (or when simulation failed)
      */
     const SimulationState &getFinalSimulationState() const {
         return final_state;
