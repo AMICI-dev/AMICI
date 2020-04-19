@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 #include "amici/model.h"
+#include "amici/misc.h"
 #include "amici/forwardproblem.h"
 
 #include <vector>
@@ -492,17 +493,20 @@ class ReturnData {
         readSimulationState(problem.getFinalSimulationState(), model);
         
         AmiVector xdot(nx_solver);
-        model.fxdot(t, x_solver, dx_solver, xdot);
-        this->xdot = xdot.getVector();
-
-        SUNMatrixWrapper J(SUNMatrixWrapper(nx_solver, nx_solver));
-        model.fJ(t, 0.0, x_solver, dx_solver, xdot, J.get());
-        // CVODES uses colmajor, so we need to transform to rowmajor
-        for (int ix = 0; ix < model.nx_solver; ix++) {
-            for (int jx = 0; jx < model.nx_solver; jx++) {
-                this->J[ix * model.nx_solver + jx] =
-                    J.data()[ix + model.nx_solver * jx];
-            }
+        if (!this->xdot.empty() || !this->J.empty())
+            model.fxdot(t, x_solver, dx_solver, xdot);
+        
+        if (!this->xdot.empty())
+            std::copy_n(xdot.data(), nx, this->xdot.data());
+        
+        if (!this->J.empty()) {
+            SUNMatrixWrapper J(nx_solver, nx_solver);
+            model.fJ(t, 0.0, x_solver, dx_solver, xdot, J.get());
+            // CVODES uses colmajor, so we need to transform to rowmajor
+            for (int ix = 0; ix < model.nx_solver; ix++)
+                for (int jx = 0; jx < model.nx_solver; jx++)
+                    this->J[ix * model.nx_solver + jx] =
+                        J.data()[ix + model.nx_solver * jx];
         }
     }
     /**

@@ -143,11 +143,11 @@ bool compiledWithOpenMP();
 }
 
 %pythoncode %{
-from enum import Enum
+from enum import IntEnum
 def enum(prefix):
     values = {k:v for k,v in globals().items() if k.startswith(prefix + '_')}
     values = {k[len(prefix)+1:]:v for k,v in values.items()}
-    return Enum(prefix, values)
+    return IntEnum(prefix, values)
 ParameterScaling = enum('ParameterScaling')
 SecondOrderMode = enum('SecondOrderMode')
 SensitivityOrder = enum('SensitivityOrder')

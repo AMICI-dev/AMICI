@@ -116,7 +116,7 @@ TEST_GROUP(dataSerialization){
         solver.setLinearMultistepMethod(amici::LinearMultistepMethod::adams);
         solver.setNonlinearSolverIteration(amici::NonlinearSolverIteration::newton);
         solver.setInternalSensitivityMethod(amici::InternalSensitivityMethod::staggered);
-        solver.setReturnDataReportingMode(amici::RDataReporting::residuals);
+        solver.setReturnDataReportingMode(amici::RDataReporting::likelihood);
     }
 
     void teardown() {

@@ -65,9 +65,15 @@ void ReturnData::initializeLikelihoodReporting() {
 }
 
 void ReturnData::initializeResidualReporting() {
+    y.resize(nt * ny, 0.0);
+    sigmay.resize(nt * ny, 0.0);
     res.resize(nt * nytrue, 0.0);
-    if (sensi_meth == SensitivityMethod::forward ||
-        sensi >= SensitivityOrder::second) {
+    if ((sensi_meth == SensitivityMethod::forward &&
+         sensi >= SensitivityOrder::first)
+        || sensi >= SensitivityOrder::second) {
+        
+        sy.resize(nt * ny * nplist, 0.0);
+        ssigmay.resize(nt * ny * nplist, 0.0);
         sres.resize(nt * nytrue * nplist, 0.0);
     }
 }
@@ -87,8 +93,6 @@ void ReturnData::initializeFullReporting() {
 
     rz.resize(nmaxevent * nz, 0.0);
     x.resize(nt * nx, 0.0);
-    y.resize(nt * ny, 0.0);
-    sigmay.resize(nt * ny, 0.0);
     w.resize(nt * nw, 0.0);
 
     preeq_numsteps.resize(3, 0);
@@ -123,7 +127,6 @@ void ReturnData::initializeFullReporting() {
             sensi >= SensitivityOrder::second) {
             // for second order we can fill in from the augmented states
             sx.resize(nt * nx * nplist, 0.0);
-            sy.resize(nt * ny * nplist, 0.0);
             sz.resize(nmaxevent * nz * nplist, 0.0);
             srz.resize(nmaxevent * nz * nplist, 0.0);
         }
@@ -174,7 +177,7 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
 
     if (!x_ss.empty()) {
         model.fx_rdata(x_rdata, x_solver);
-        x_ss = x_rdata.getVector();
+        std::copy_n(x_rdata.data(), nx, x_ss.data());
     }
     if (!sx_ss.empty() && sensi >= SensitivityOrder::first) {
         model.fsx_rdata(sx_rdata, sx_solver);
@@ -224,10 +227,11 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
         return; // if x wasn't set forward problem failed during initialization
     readSimulationState(initialState, model);
 
-    if (!x0.empty())
+    if (!x0.empty()) {
         model.fx_rdata(x_rdata, x_solver);
-    std::copy_n(x_rdata.data(), nx, x0.data());
-
+        std::copy_n(x_rdata.data(), nx, x0.data());
+    }
+    
     if (!sx0.empty()) {
         model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++)
@@ -467,9 +471,9 @@ void ReturnData::readSimulationState(SimulationState const &state,
 
 void ReturnData::invalidate(const int it_start) {
     if (it_start >= nt)
-        return
+        return;
 
-            invalidateLLH();
+    invalidateLLH();
     invalidateSLLH();
 
     if (!x.empty())
@@ -491,8 +495,10 @@ void ReturnData::invalidateLLH() {
 }
 
 void ReturnData::invalidateSLLH() {
-    std::fill(sllh.begin(), sllh.end(), getNaN());
-    std::fill(s2llh.begin(), s2llh.end(), getNaN());
+    if (!sllh.empty()) {
+        std::fill(sllh.begin(), sllh.end(), getNaN());
+        std::fill(s2llh.begin(), s2llh.end(), getNaN());
+    }
 }
 
 void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
@@ -542,39 +548,40 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
         if (sensi == SensitivityOrder::second &&
             o2mode == SecondOrderMode::full) {
             if (sensi_meth == SensitivityMethod::adjoint) {
-                for (int ip = 0; ip < nplist; ++ip)
-                    for (int ix = 0; ix < nxtrue; ++ix)
-                        for (int it = 0; it < nt; ++it)
-                            sx.at(ix + nxtrue * (ip + it * nplist)) =
-                                x.at(it * nx + nxtrue + ip * nxtrue + ix);
+                if (!sx.empty() && !x.empty())
+                    for (int ip = 0; ip < nplist; ++ip)
+                        for (int ix = 0; ix < nxtrue; ++ix)
+                            for (int it = 0; it < nt; ++it)
+                                sx.at(ix + nxtrue * (ip + it * nplist)) =
+                                    x.at(it * nx + nxtrue + ip * nxtrue + ix);
 
-                for (int ip = 0; ip < nplist; ++ip)
-                    for (int iy = 0; iy < nytrue; ++iy)
-                        for (int it = 0; it < nt; ++it)
-                            sy.at(iy + nytrue * (ip + it * nplist)) =
-                                y.at(it * ny + nytrue + ip * nytrue + iy);
+                if (!sy.empty() && !y.empty())
+                    for (int ip = 0; ip < nplist; ++ip)
+                        for (int iy = 0; iy < nytrue; ++iy)
+                            for (int it = 0; it < nt; ++it)
+                                sy.at(iy + nytrue * (ip + it * nplist)) =
+                                    y.at(it * ny + nytrue + ip * nytrue + iy);
 
-                for (int ip = 0; ip < nplist; ++ip)
-                    for (int iz = 0; iz < nztrue; ++iz)
-                        for (int it = 0; it < nt; ++it)
-                            sz.at(iz + nztrue * (ip + it * nplist)) =
-                                z.at(it * nz + nztrue + ip * nztrue + iz);
+                if (!sz.empty() && !z.empty())
+                    for (int ip = 0; ip < nplist; ++ip)
+                        for (int iz = 0; iz < nztrue; ++iz)
+                            for (int it = 0; it < nt; ++it)
+                                sz.at(iz + nztrue * (ip + it * nplist)) =
+                                    z.at(it * nz + nztrue + ip * nztrue + iz);
             }
         }
 
-        for (int ip = 0; ip < nplist; ++ip)
-            sllh.at(ip) *= pcoefficient.at(ip);
+        if (!sllh.empty())
+            for (int ip = 0; ip < nplist; ++ip)
+                sllh.at(ip) *= pcoefficient.at(ip);
 
+        
         if (!sres.empty())
             for (int iyt = 0; iyt < nytrue * nt; ++iyt)
                 for (int ip = 0; ip < nplist; ++ip)
                     sres.at((iyt * nplist + ip)) *= pcoefficient.at(ip);
-
-        if (!FIM.empty())
-            for (int ip = 0; ip < nplist; ++ip)
-                for (int jp = 0; jp < nplist; ++jp)
-                    FIM.at(jp + ip * nplist) *=
-                        pcoefficient.at(ip) * pcoefficient.at(jp);
+        
+        /* FIM is computed later, so transformation of sres is sufficient */
 
 #define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                              \
     if (!s##QUANT.empty())                                                     \

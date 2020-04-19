@@ -754,7 +754,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     fdydx(t, x);
     fdydp(t, x);
 
-    this->sx.assign(nx_solver * nplist(), 0.0);
+    this->sx.resize(nx_solver * nplist());
     sx.flatten_to_vector(this->sx);
 
     // compute sy = 1.0*dydx*sx + 1.0*sy
@@ -815,6 +815,7 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ        x nx_solver
     // sx           rdata->nt x nx_solver x nplist()
+    this->sx.resize(nx_solver * nplist());
     sx.flatten_to_vector(this->sx);
 
     // C := alpha*op(A)*op(B) + beta*C,
