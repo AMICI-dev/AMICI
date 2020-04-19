@@ -245,7 +245,7 @@ class ForwardProblem {
      * @brief Retrieves the carbon copy of the simulation state variables at
      * the specified event index
      * @param iroot event index
-     * @return state
+     * @return SimulationState
      */
     const SimulationState &getSimulationStateEvent(int iroot) const {
         return event_states.at(iroot);
@@ -254,7 +254,7 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
      * initial timepoint
-     * @return state
+     * @return SimulationState
      */
     const SimulationState &getInitialSimulationState() const {
         return initial_state;
@@ -263,6 +263,7 @@ class ForwardProblem {
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
      * final timepoint (or when simulation failed)
+     * @return SimulationState
      */
     const SimulationState &getFinalSimulationState() const {
         return final_state;
