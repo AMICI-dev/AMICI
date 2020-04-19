@@ -48,9 +48,12 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
     setObservedEventsStdDev(observedEventsStdDev);
 }
 
-ExpData::ExpData(Model const& model)
+ExpData::ExpData(Model const &model)
     : ExpData(model.nytrue, model.nztrue, model.nMaxEvent(),
-              model.getTimepoints(), model.getFixedParameters()) {}
+              model.getTimepoints(), model.getFixedParameters()) {
+    reinitializeFixedParameterInitialStates =
+        model.getReinitializeFixedParameterInitialStates();
+}
 
 ExpData::ExpData(ReturnData const& rdata, realtype sigma_y, realtype sigma_z)
     : ExpData(rdata, std::vector<realtype>(rdata.nytrue*rdata.nt, sigma_y), std::vector<realtype>(rdata.nztrue*rdata.nmaxevent, sigma_z)) {}
