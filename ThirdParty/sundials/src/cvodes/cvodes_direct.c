@@ -1,8 +1,8 @@
-/* ----------------------------------------------------------------- 
+/* -----------------------------------------------------------------
  * Programmer(s): Daniel R. Reynolds @ SMU
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -11,7 +11,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  * SUNDIALS Copyright End
  * -----------------------------------------------------------------
- * Header file for the deprecated direct linear solver interface in 
+ * Header file for the deprecated direct linear solver interface in
  * CVODES; these routines now just wrap the updated CVODE generic
  * linear solver interface in cvodes_ls.h.
  * -----------------------------------------------------------------*/
@@ -63,4 +63,3 @@ int CVDlsSetJacFnBS(void *cvode_mem, int which, CVDlsJacFnBS jacBS)
 #ifdef __cplusplus
 }
 #endif
-

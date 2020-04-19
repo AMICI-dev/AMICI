@@ -2,7 +2,7 @@
  * Programmer(s): Daniel R. Reynolds @ SMU
  *---------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -45,11 +45,18 @@ extern "C" {
   ---------------------------------------------------------------*/
 typedef struct ARKLsMemRec {
 
+  /* Linear solver type information */
+  booleantype iterative;    /* is the solver iterative?    */
+  booleantype matrixbased;  /* is a matrix structure used? */
+
   /* Jacobian construction & storage */
   booleantype jacDQ;  /* SUNTRUE if using internal DQ Jacobian approx. */
   ARKLsJacFn jac;     /* Jacobian routine to be called                 */
   void *J_data;       /* user data is passed to jac                    */
   booleantype jbad;   /* heuristic suggestion for pset                 */
+
+  /* Matrix-based solver, scale solution to account for change in gamma */
+  booleantype scalesol;
 
   /* Iterative solver tolerance */
   realtype sqrtN;     /* sqrt(N)                                       */
@@ -102,7 +109,18 @@ typedef struct ARKLsMemRec {
   ARKLsJacTimesVecFn jtimes;
   void *Jt_data;
 
-  long int last_flag; /* last error flag returned by any function */
+  /* Linear system setup function
+   * (a) user-provided linsys function:
+   *     - user_linsys = SUNTRUE
+   *     - A_data      = user_data
+   * (b) internal linsys function:
+   *     - user_linsys = SUNFALSE
+   *     - A_data      = cvode_mem */
+  booleantype user_linsys;
+  ARKLsLinSysFn linsys;
+  void* A_data;
+
+  int last_flag; /* last error flag returned by any function */
 
 } *ARKLsMem;
 
@@ -114,30 +132,36 @@ typedef struct ARKLsMemRec {
   ---------------------------------------------------------------*/
 typedef struct ARKLsMassMemRec {
 
+  /* Linear solver type information */
+  booleantype iterative;    /* is the solver iterative?    */
+  booleantype matrixbased;  /* is a matrix structure used? */
+
   /* Mass matrix construction & storage */
-  ARKLsMassFn mass;   /* user-provided mass matrix routine to call  */
-  SUNMatrix M;        /* mass matrix structure                      */
-  SUNMatrix M_lu;     /* mass matrix structure for LU decomposition */
+  ARKLsMassFn mass;   /* user-provided mass matrix routine to call   */
+  SUNMatrix M;        /* mass matrix structure                       */
+  SUNMatrix M_lu;     /* mass matrix structure for LU decomposition  */
+  void* M_data;       /* user data pointer */
 
   /* Iterative solver tolerance */
-  realtype sqrtN;     /* sqrt(N)                                    */
-  realtype eplifac;   /* nonlinear -> linear tol scaling factor     */
+  realtype sqrtN;     /* sqrt(N)                                     */
+  realtype eplifac;   /* nonlinear -> linear tol scaling factor      */
 
   /* Statistics and associated parameters */
-  booleantype time_dependent;  /* flag whether M depends on t       */
-  long int nmsetups;  /* total number of mass matrix-solver setups  */
-  long int nmsolves;  /* total number of mass matrix-solver solves  */
-  long int nmtsetup;  /* total number of calls to mtsetup           */
-  long int nmtimes;   /* total number of calls to mtimes            */
-  long int npe;       /* total number of pset calls                 */
-  long int nli;       /* total number of linear iterations          */
-  long int nps;       /* total number of psolve calls               */
-  long int ncfl;      /* total number of convergence failures       */
+  booleantype time_dependent;  /* flag whether M depends on t        */
+  long int nmsetups;  /* total number of mass matrix-solver setups   */
+  long int nmsolves;  /* total number of mass matrix-solver solves   */
+  long int nmtsetup;  /* total number of calls to mtsetup            */
+  long int nmtimes;   /* total number of calls to mtimes             */
+  long int nmvsetup;  /* total number of calls to SUNMatMatvec setup */
+  long int npe;       /* total number of pset calls                  */
+  long int nli;       /* total number of linear iterations           */
+  long int nps;       /* total number of psolve calls                */
+  long int ncfl;      /* total number of convergence failures        */
 
   /* Linear solver, matrix and vector objects/pointers */
-  SUNLinearSolver LS; /* generic linear solver object               */
-  N_Vector x;         /* solution vector used by SUNLinearSolver    */
-  N_Vector ycur;      /* ptr to ARKode current y vector             */
+  SUNLinearSolver LS; /* generic linear solver object                */
+  N_Vector x;         /* solution vector used by SUNLinearSolver     */
+  N_Vector ycur;      /* ptr to ARKode current y vector              */
 
   /* Preconditioner computation
     (a) user-provided:
@@ -145,7 +169,7 @@ typedef struct ARKLsMassMemRec {
         - pfree == NULL (the user dealocates memory for user_data)
     (b) internal preconditioner module
         - P_data == arkode_mem
-        - pfree == set by the prec. module and called in ARKodeFree */
+        - pfree == set by the prec. module and called in ARKodeFree  */
   ARKLsMassPrecSetupFn pset;
   ARKLsMassPrecSolveFn psolve;
   int (*pfree)(ARKodeMem ark_mem);
@@ -156,7 +180,7 @@ typedef struct ARKLsMassMemRec {
   ARKLsMassTimesVecFn mtimes;
   void *mt_data;
 
-  long int last_flag; /* last error flag returned by any function  */
+  int last_flag; /* last error flag returned by any function    */
 
 } *ARKLsMassMem;
 
@@ -240,6 +264,7 @@ int arkLSSetMassFn(void* arkode_mem, ARKLsMassFn mass);
 int arkLSSetEpsLin(void* arkode_mem, realtype eplifac);
 int arkLSSetMassEpsLin(void* arkode_mem, realtype eplifac);
 int arkLSSetMaxStepsBetweenJac(void* arkode_mem, long int msbj);
+int arkLSSetLinearSolutionScaling(void* arkode_mem, booleantype onoff);
 int arkLSSetPreconditioner(void* arkode_mem, ARKLsPrecSetupFn psetup,
                            ARKLsPrecSolveFn psolve);
 int arkLSSetMassPreconditioner(void* arkode_mem, ARKLsMassPrecSetupFn psetup,
@@ -248,6 +273,10 @@ int arkLSSetJacTimes(void* arkode_mem, ARKLsJacTimesSetupFn jtsetup,
                      ARKLsJacTimesVecFn jtimes);
 int arkLSSetMassTimes(void* arkode_mem, ARKLsMassTimesSetupFn msetup,
                       ARKLsMassTimesVecFn mtimes, void* mtimes_data);
+int arkLSSetLinSysFn(void* arkode_mem, ARKLsLinSysFn linsys);
+
+int arkLSSetUserData(void *arkode_mem, void* user_data);
+int arkLSSetMassUserData(void *arkode_mem, void* user_data);
 
 int arkLSGetWorkSpace(void* arkode_mem, long int* lenrwLS, long int* leniwLS);
 int arkLSGetNumJacEvals(void* arkode_mem, long int* njevals);
@@ -264,6 +293,7 @@ int arkLSGetMassWorkSpace(void* arkode_mem, long int* lenrwMLS,
                           long int* leniwMLS);
 int arkLSGetNumMassSetups(void* arkode_mem, long int* nmsetups);
 int arkLSGetNumMassMult(void* arkode_mem, long int* nmvevals);
+int arkLSGetNumMassMatvecSetups(void *arkode_mem, long int *nmvsetups);
 int arkLSGetNumMassSolves(void* arkode_mem, long int* nmsolves);
 int arkLSGetNumMassPrecEvals(void* arkode_mem, long int* nmpevals);
 int arkLSGetNumMassPrecSolves(void* arkode_mem, long int* nmpsolves);

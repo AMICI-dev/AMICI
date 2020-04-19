@@ -2,7 +2,7 @@
  * Programmer(s): Daniel R. Reynolds @ SMU
  *---------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -55,8 +55,13 @@ void FARK_BBDINIT(long int *Nloc, long int *mudq,
 {
   /* Notes: FARKgloc is a pointer to the ARKLocalFn function,
      and FARKcfn is a pointer to the ARKCommFn function */
-  *ier = ARKBBDPrecInit(ARK_arkodemem, *Nloc, *mudq, *mldq,
-                        *mu, *ml, *dqrely, 
+  *ier = ARKBBDPrecInit(ARK_arkodemem,
+                        (sunindextype)(*Nloc),
+                        (sunindextype)(*mudq),
+                        (sunindextype)(*mldq),
+                        (sunindextype)(*mu),
+                        (sunindextype)(*ml),
+                        *dqrely,
                         (ARKLocalFn) FARKgloc,
                         (ARKCommFn) FARKcfn);
   return;
@@ -69,7 +74,10 @@ void FARK_BBDINIT(long int *Nloc, long int *mudq,
 void FARK_BBDREINIT(long int *mudq, long int *mldq,
                     realtype* dqrely, int *ier)
 {
-  *ier = ARKBBDPrecReInit(ARK_arkodemem, *mudq, *mldq, *dqrely);
+  *ier = ARKBBDPrecReInit(ARK_arkodemem,
+                          (sunindextype)(*mudq),
+                          (sunindextype)(*mldq),
+                          *dqrely);
   return;
 }
 

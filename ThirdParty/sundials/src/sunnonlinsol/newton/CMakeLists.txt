@@ -2,7 +2,7 @@
 # Programmer(s): David J. Gardner @ LLNL
 # ------------------------------------------------------------------------------
 # SUNDIALS Copyright Start
-# Copyright (c) 2002-2019, Lawrence Livermore National Security
+# Copyright (c) 2002-2020, Lawrence Livermore National Security
 # and Southern Methodist University.
 # All rights reserved.
 #
@@ -17,9 +17,9 @@
 install(CODE "MESSAGE(\"\nInstall SUNNONLINSOL_NEWTON\n\")")
 
 # Add F90 module if F2003 interface is enabled
-if(F90_FOUND AND F2003_INTERFACE_ENABLE)
-  add_subdirectory(F90)
-endif(F90_FOUND AND F2003_INTERFACE_ENABLE)
+if(F2003_FOUND AND F2003_INTERFACE_ENABLE)
+  add_subdirectory(fmod)
+endif(F2003_FOUND AND F2003_INTERFACE_ENABLE)
 
 # Add variable with the sources for the library
 set(lib_SOURCES sunnonlinsol_newton.c)
@@ -74,7 +74,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 # Install the header files
-INSTALL(FILES ${lib_HEADERS} DESTINATION include/sunnonlinsol)
+install(FILES ${lib_HEADERS} DESTINATION include/sunnonlinsol)
 
 # If FCMIX is enabled, build and install the F library
 if(F77_INTERFACE_ENABLE AND F77_FOUND)
