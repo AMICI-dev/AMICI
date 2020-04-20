@@ -247,7 +247,7 @@ class SbmlImporter:
             if set to true, conservation laws are automatically computed and
             applied such that the state-jacobian of the ODE right-hand-side has
             full rank. This option should be set to True when using the newton
-            algorithm to compute steadystates
+            algorithm to compute steadystate sensititivities.
         """
         set_log_level(logger, verbose)
 
