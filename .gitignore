@@ -108,6 +108,8 @@ tests/test/*
 */tests/test_model_presimulation/*
 */tests/test_model_presimulation_pysb/*
 */tests/test_model_presimulation_sbml/*
+*/tests/model_constant_species_cl/*
+*/tests/model_constant_species/*
 */tests/test_likelihoods/*
 */tests/bax_pore_sequential_amici/*
 */tests/bax_pore_amici/*
