@@ -1001,35 +1001,49 @@ class SbmlImporter:
     def _process_conservation_laws(self, ode_model) -> None:
         """
         Find conservation laws in reactions and species.
+
+        :param ode_model:
+            ODEModel object with basic definitions
+
         """
 
         conservation_laws = []
         # So far, only conservation laws for constant species are supported
-        self._add_conservation_for_constant_species(ode_model,
-                                                    conservation_laws)
+        species_solver = self._add_conservation_for_constant_species(
+            ode_model, conservation_laws)
 
         # add the found CLs to the ode_model
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
 
+        self.reduce_stoichiometry(ode_model, species_solver)
+
     def _add_conservation_for_constant_species(
             self,
             ode_model: ODEModel,
             conservation_laws: List[ConservationLaw]
-    ) -> None:
+    ) -> List[int]:
         """
         Adds constant species to conservations laws
 
+        :param ode_model:
+            ODEModel object with basic definitions
+
+        :param conservation_laws:
+            List of already known conservation laws
+
+        :return:
+            List of indices for the state variables which remain in x_solver
         """
 
         # decide which species to keep in stoichiometry
         species_solver = list(range(ode_model.nx_rdata()))
-        S = self.stoichiometric_matrix
 
+        # iterate over species, find constant ones
         for ix in range(ode_model.nx_rdata()):
             if ode_model.state_is_constant(ix):
                 target_state = ode_model._states[ix]._identifier
-                total_abundance = ode_model._states[ix].get_val()
+                total_abundance = sp.Symbol(f'tcl_{target_state}')
                 conservation_laws.append({
                     'state': target_state,
                     'total_abundance': total_abundance,
@@ -1042,7 +1056,23 @@ class SbmlImporter:
                 # mark species to delete from stoichiometrix matrix
                 species_solver.pop(ix)
 
-        # reduce the stoichiometry for this conservation law
+        return species_solver
+
+    def reduce_stoichiometry(
+            self,
+            ode_model: ODEModel,
+            species_solver: List[int]
+    ) -> None:
+        """
+        reduce the stoichiometry for known conservation laws
+
+        :param ode_model:
+            ODEModel object with basic definitions
+
+        :param species_solver:
+            List of indices for the state variables which remain in x_solver
+        """
+        S = self.stoichiometric_matrix
         self.stoichiometric_matrix = S[species_solver, :]
         ode_model._eqs['dxdotdw'] = self.stoichiometric_matrix
         ode_model._eqs['w'] = self.flux_vector
