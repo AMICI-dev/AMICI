@@ -844,13 +844,65 @@ class ODEModel:
              for idx in range(len(si.flux_vector))]
         )
         self._eqs['dxdotdx'] = sp.zeros(si.stoichiometric_matrix.shape[0])
-        if len(si.stoichiometric_matrix):
-            symbols['species']['dt'] = \
-                si.stoichiometric_matrix * self.sym('w')
-        else:
-            symbols['species']['dt'] = sp.zeros(
-                *symbols['species']['identifier'].shape
-            )
+
+        def dx_dt(x_index, x_Sw):
+            '''
+            Produces the appropriate expression for the first derivative of a
+            species with respect to time, for species that reside in
+            compartments with a constant volume, or a volume that is defined by
+            an assignment or rate rule.
+
+            :param x_index:
+                The index (not identifier) of the species in the variables
+                (generated in "sbml_import.py") that describe the model.
+
+            :param x_Sw:
+                The element-wise product of the row in the stoichiometric
+                matrix that corresponds to the species (row x_index) and the
+                flux (kinetic laws) vector. Ignored in the case of rate rules.
+            '''
+            x_id = symbols['species']['identifier'][x_index]
+
+            # Rate rules specify dx_dt.
+            # Note that the rate rule of species may describe amount, not
+            # concentration.
+            if x_id in si.compartment_rate_rules:
+                return si.compartment_rate_rules[x_id]
+            elif x_id in si.species_rate_rules:
+                return si.species_rate_rules[x_id]
+
+            # The derivation of the below return expressions can be found in
+            # the documentation. They are found by rearranging
+            # $\frac{d}{dt} (vx) = Sw$ for $\frac{dx}{dt}$, where $v$ is the
+            # vector of species compartment volumes, $x$ is the vector of
+            # species concentrations, $S$ is the stoichiometric matrix, and $w$
+            # is the flux vector. The conditional below handles the cases of
+            # species in (i) compartments with a rate rule, (ii) compartments
+            # with an assignment rule, and (iii) compartments with a constant
+            # volume, respectively.
+            v_name = si.species_compartment[x_index]
+            if v_name in si.compartment_rate_rules:
+                dv_dt = si.compartment_rate_rules[v_name]
+                xdot = (x_Sw - dv_dt*x_id)/v_name
+                # might need to do this for assignment rules as well
+                for w_index, w in enumerate(self.sym('w')):
+                    self._eqs['dxdotdw'][x_index,w_index] = xdot.diff(w)
+                return xdot
+            elif v_name in si.compartment_assignment_rules:
+                v = si.compartment_assignment_rules[v_name]
+                dv_dt = v.diff(si.amici_time_symbol)
+                dv_dx = v.diff(x_id)
+                return (x_Sw - dv_dt*x_id)/(dv_dx*x_id + v)
+            else:
+                v = si.compartment_volume[list(si.compartment_symbols).index(
+                    si.species_compartment[x_index])]
+                return x_Sw/v
+
+        Sw = (MutableDenseMatrix(si.stoichiometric_matrix)
+              * MutableDenseMatrix(self.sym('w')))
+        symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
+            lambda x_Sw: dx_dt(x_index, x_Sw))
+            for x_index in range(Sw.rows)])
 
         for symbol in [s for s in symbols if s != 'my']:
             # transform dict of lists into a list of dicts

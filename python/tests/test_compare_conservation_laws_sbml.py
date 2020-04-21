@@ -83,7 +83,9 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     # ----- compare simulations wo edata, sensi = 0, states ------------------
     # run simulations
     rdata_cl = get_results(model_with_cl)
+    assert rdata_cl['status'] == amici.AMICI_SUCCESS
     rdata = get_results(model_without_cl)
+    assert rdata['status'] == amici.AMICI_SUCCESS
 
     # compare state trajectories
     assert np.isclose(rdata['x'], rdata_cl['x']).all()
@@ -91,11 +93,13 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
     # run simulations
     rdata_cl = get_results(model_with_cl, sensi_order=1)
+    assert rdata_cl['status'] == amici.AMICI_SUCCESS
     rdata = get_results(model_without_cl, sensi_order=1)
+    assert rdata['status'] == amici.AMICI_SUCCESS
 
     # compare state trajectories
     for field in ['x', 'sx']:
-        assert np.isclose(rdata[field], rdata_cl[field]).all()
+        assert np.isclose(rdata[field], rdata_cl[field]).all(), field
 
     # ----- compare simulations wo edata, sensi = 0, states and sensis -------
     model_without_cl.setSteadyStateSensitivityMode(
@@ -104,34 +108,32 @@ def test_compare_conservation_laws_sbml(edata_fixture):
 
     # run simulations
     rdata_cl = get_results(model_with_cl, edata=edata_fixture)
+    assert rdata_cl['status'] == amici.AMICI_SUCCESS
     rdata = get_results(model_without_cl, edata=edata_fixture)
+    assert rdata['status'] == amici.AMICI_SUCCESS
 
     # compare preequilibrated states
     for field in ['x', 'x_ss', 'llh']:
-        assert np.isclose(rdata[field], rdata_cl[field]).all()
+        assert np.isclose(rdata[field], rdata_cl[field]).all(), field
 
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
 
     # run simulations
     rdata_cl = get_results(model_with_cl, edata=edata_fixture, sensi_order=1)
+    assert rdata_cl['status'] == amici.AMICI_SUCCESS
     rdata = get_results(model_without_cl, edata=edata_fixture, sensi_order=1)
+    assert rdata['status'] == amici.AMICI_SUCCESS
 
     # compare state sensitivities with edata and preequilibration
     for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
-        assert np.isclose(rdata[field], rdata_cl[field]).all()
+        assert np.isclose(rdata[field], rdata_cl[field]).all(), field
 
     # ----- check failure st.st. sensi computation if run wo CLs -------------
     # check failure of steady state senistivity computation if run wo CLs
     model_without_cl.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode_newtonOnly
     )
-    try:
+    with pytest.raises(RuntimeError):
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore")
-            rdata_failure = get_results(model_without_cl,
-                                        edata=edata_fixture,
-                                        sensi_order=1)
-    except RuntimeError:
-        rdata_failure = None
-
-    assert rdata_failure is None
+            get_results(model_without_cl, edata=edata_fixture, sensi_order=1)

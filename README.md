@@ -130,7 +130,7 @@ When presenting work that employs AMICI, feel free to use one of the icons in
 
 ## Status of SBML support in Python-AMICI
 
-Python-AMICI currently passes 500 out of the 1780 (~28%) test cases from
+Python-AMICI currently passes 696 out of the 1780 (~39%) test cases from
 the semantic
 [SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
 ([current status](https://github.com/ICB-DCM/AMICI/actions)).
@@ -139,10 +139,7 @@ In addition, we currently plan to add support for the following features
 (see corresponding issues for details and progress):
 
 - Events (currently Matlab-only)
-- Rate rules
 - Algebraic rules
-- Species assignment rules
-- Compartment assignment rules
 - Models without species
 
 contributions are welcome.
