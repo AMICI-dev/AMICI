@@ -850,6 +850,8 @@ class ODEModel:
         nr = len(fluxes)
 
         # correct time derivatives for compartment changes
+
+        dxdotdw_updates = []
         def dx_dt(x_index, x_Sw):
             '''
             Produces the appropriate expression for the first derivative of a
@@ -890,8 +892,8 @@ class ODEModel:
                 dv_dt = si.compartment_rate_rules[v_name]
                 xdot = (x_Sw - dv_dt*x_id)/v_name
                 # might need to do this for assignment rules as well
-                for w_index, w in enumerate(self.sym('w')):
-                    self._eqs['dxdotdw'][x_index, w_index] = xdot.diff(w)
+                for w_index, flux in enumerate(fluxes):
+                    dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
                 return xdot
             elif v_name in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[v_name]
@@ -936,6 +938,8 @@ class ODEModel:
         self._eqs['dxdotdw'] = si.stoichiometric_matrix.row_join(
             sp.zeros(nx_solver, nw-nr)
         )
+        for ix, iw, val in dxdotdw_updates:
+            self._eqs['dxdotdw'][ix, iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables()
