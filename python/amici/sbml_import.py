@@ -1277,23 +1277,21 @@ class SbmlImporter:
             ODEModel object with basic definitions
 
         """
-
         conservation_laws = []
+
         # So far, only conservation laws for constant species are supported
-        species_solver = self._add_conservation_for_constant_species(
-            ode_model, conservation_laws)
+        self._add_conservation_for_constant_species(ode_model,
+                                                    conservation_laws)
 
         # add the found CLs to the ode_model
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
 
-        self.reduce_stoichiometry(ode_model, species_solver)
-
     def _add_conservation_for_constant_species(
             self,
             ode_model: ODEModel,
             conservation_laws: List[ConservationLaw]
-    ) -> List[int]:
+    ) -> None:
         """
         Adds constant species to conservations laws
 
@@ -1302,9 +1300,6 @@ class SbmlImporter:
 
         :param conservation_laws:
             List of already known conservation laws
-
-        :return:
-            List of indices for the state variables which remain in x_solver
         """
 
         # decide which species to keep in stoichiometry
@@ -1327,39 +1322,9 @@ class SbmlImporter:
                 # mark species to delete from stoichiometrix matrix
                 species_solver.pop(ix)
 
-        return species_solver
-
-    def reduce_stoichiometry(
-            self,
-            ode_model: ODEModel,
-            species_solver: List[int]
-    ) -> None:
-        """
-        reduce the stoichiometry for known conservation laws
-
-        :param ode_model:
-            ODEModel object with basic definitions
-
-        :param species_solver:
-            List of indices for the state variables which remain in x_solver
-        """
-        S = self.stoichiometric_matrix
-        self.stoichiometric_matrix = S[species_solver, :]
-        ode_model._eqs['dxdotdw'] = self.stoichiometric_matrix
-        ode_model._eqs['w'] = self.flux_vector
-        ode_model._syms['w'] = sp.Matrix(
-            [sp.Symbol(f'flux_r{idx}', real=True)
-             for idx in range(len(self.flux_vector))]
-        )
-        ode_model._eqs['dxdotdx'] = \
-            sp.zeros(self.stoichiometric_matrix .shape[0])
-        if len(self.stoichiometric_matrix):
-            self.symbols['species']['dt'] = \
-                self.stoichiometric_matrix * ode_model.sym('w')
-        else:
-            self.symbols['species']['dt'] = sp.zeros(
-                *self.symbols['species']['identifier'].shape
-            )
+        # prune out constant species from stoichiometric matrix
+        self.stoichiometric_matrix = \
+            self.stoichiometric_matrix[species_solver, :]
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
