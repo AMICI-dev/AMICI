@@ -39,6 +39,8 @@ default_symbols = {
     'llhy': {},
 }
 
+ConservationLaw = Dict[str, Union[str, sp.Basic]]
+
 logger = get_logger(__name__, logging.ERROR)
 
 
@@ -192,6 +194,7 @@ class SbmlImporter:
                    compiler: str = None,
                    allow_reinit_fixpar_initcond: bool = True,
                    compile: bool = True,
+                   compute_conservation_laws: bool = True,
                    **kwargs) -> None:
         """
         Generate AMICI C++ files for the model provided to the constructor.
@@ -246,6 +249,11 @@ class SbmlImporter:
             If True, compile the generated Python package,
             if False, just generate code.
 
+        :param compute_conservation_laws:
+            if set to true, conservation laws are automatically computed and
+            applied such that the state-jacobian of the ODE right-hand-side has
+            full rank. This option should be set to True when using the newton
+            algorithm to compute steadystate sensititivities.
         """
         set_log_level(logger, verbose)
 
@@ -298,7 +306,8 @@ class SbmlImporter:
         self._replace_special_constants()
 
         ode_model = ODEModel(simplify=sp.powsimp)
-        ode_model.import_from_sbml_importer(self)
+        ode_model.import_from_sbml_importer(
+            self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
             ode_model,
             outdir=output_dir,
@@ -1259,6 +1268,62 @@ class SbmlImporter:
         self.symbols['llhy']['value'] = llh_y_values
         self.symbols['llhy']['name'] = l2s(llh_y_syms)
         self.symbols['llhy']['identifier'] = llh_y_syms
+
+    def process_conservation_laws(self, ode_model) -> None:
+        """
+        Find conservation laws in reactions and species.
+
+        :param ode_model:
+            ODEModel object with basic definitions
+
+        """
+        conservation_laws = []
+
+        # So far, only conservation laws for constant species are supported
+        self._add_conservation_for_constant_species(ode_model,
+                                                    conservation_laws)
+
+        # add the found CLs to the ode_model
+        for cl in conservation_laws:
+            ode_model.add_conservation_law(**cl)
+
+    def _add_conservation_for_constant_species(
+            self,
+            ode_model: ODEModel,
+            conservation_laws: List[ConservationLaw]
+    ) -> None:
+        """
+        Adds constant species to conservations laws
+
+        :param ode_model:
+            ODEModel object with basic definitions
+
+        :param conservation_laws:
+            List of already known conservation laws
+        """
+
+        # decide which species to keep in stoichiometry
+        species_solver = list(range(ode_model.nx_rdata()))
+
+        # iterate over species, find constant ones
+        for ix in reversed(range(ode_model.nx_rdata())):
+            if ode_model.state_is_constant(ix):
+                # dont use sym('x') here since conservation laws need to be
+                # added before symbols are generated
+                target_state = ode_model._states[ix].get_id()
+                total_abundance = sp.Symbol(f'tcl_{target_state}')
+                conservation_laws.append({
+                    'state': target_state,
+                    'total_abundance': total_abundance,
+                    'state_expr': total_abundance,
+                    'abundance_expr': target_state,
+                })
+                # mark species to delete from stoichiometrix matrix
+                species_solver.pop(ix)
+
+        # prune out constant species from stoichiometric matrix
+        self.stoichiometric_matrix = \
+            self.stoichiometric_matrix[species_solver, :]
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
