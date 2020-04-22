@@ -837,37 +837,22 @@ class ODEModel:
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
 
-        # create symbols for expressions (in pySB generated ealier, has to
-        # be done 'by hand' for SBML. Expressions will become 'w' later
+        # create a temporary version of helper variables 'w'
+        # those are needed to create a pre-conservation law version of the
+        # time derivatives, which is later corrected for conservation laws
+        temp_w = sp.Matrix([sp.Symbol(f'flux_r{idx}', real=True)
+                            for idx in range(len(si.flux_vector))])
+
+        # create symbols for expressions (in pySB generated automatically,
+        # has to be done 'by hand' in SBML.  The helper variables
+        # 'w' will later be recreated from those expressions
         symbols['expression'] = {
-            'identifier': sp.Matrix([sp.Symbol(f'flux_r{idx}', real=True)
-                                     for idx in range(len(si.flux_vector))]),
+            'identifier': temp_w,
             'name': [f'flux_r{idx}' for idx in range(len(si.flux_vector))],
             'value': si.flux_vector
         }
 
-        # create all basic components of the ODE model and add them.
-        # For species, dx/dt used to be added here as well. In order to
-        # unify things with pySB import, this happens afterwards now.
-        for symbol in [s for s in symbols if s != 'my']:
-            # transform dict of lists into a list of dicts
-            protos = [dict(zip(symbols[symbol], t))
-                      for t in zip(*symbols[symbol].values())]
-            for proto in protos:
-                self.add_component(symbol_to_type[symbol](**proto))
-
-        # process conservation laws
-        if compute_cls:
-            si._process_conservation_laws(self)
-
-        # fill in self._sym based on prototypes and components in ode_model
-        self.generate_basic_variables()
-
-        # setting these equations prevents native equation generation
-        self._eqs['dxdotdw'] = si.stoichiometric_matrix
-        self._eqs['w'] = si.flux_vector
-        self._eqs['dxdotdx'] = sp.zeros(si.stoichiometric_matrix.shape[0])
-
+        # correct time derivatives for compartment changes
         def dx_dt(x_index, x_Sw):
             '''
             Produces the appropriate expression for the first derivative of a
@@ -921,11 +906,35 @@ class ODEModel:
                     si.species_compartment[x_index])]
                 return x_Sw/v
 
+        # create dynmics without respecting conservation laws first
         Sw = (MutableDenseMatrix(si.stoichiometric_matrix)
-              * MutableDenseMatrix(self.sym('w')))
+              * MutableDenseMatrix(temp_w))
         symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
             lambda x_Sw: dx_dt(x_index, x_Sw))
             for x_index in range(Sw.rows)])
+
+        # create all basic components of the ODE model and add them.
+        for symbol in [s for s in symbols if s != 'my']:
+            # transform dict of lists into a list of dicts
+            protos = [dict(zip(symbols[symbol], t))
+                      for t in zip(*symbols[symbol].values())]
+            for proto in protos:
+                self.add_component(symbol_to_type[symbol](**proto))
+
+        # process conservation laws
+        if compute_cls:
+            si._process_conservation_laws(self)
+
+        # fill in 'self._sym' based on prototypes and components in ode_model,
+        # re-create dynamics using expressions, which also respects
+        # conservation laws now
+        self.generate_basic_variables()
+
+        # setting these equations prevents native equation generation
+#        self._eqs['w'] = si.flux_vector
+#        self._eqs['dxdotdw'] = si.stoichiometric_matrix
+#        self._eqs['dxdotdx'] = sp.zeros(si.stoichiometric_matrix.shape[0])
+
 
     def add_component(self, component: ModelQuantity) -> None:
         """
