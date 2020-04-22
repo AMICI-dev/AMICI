@@ -42,7 +42,8 @@ def test_sbml2amici_no_observables(simple_sbml_model):
     with TemporaryDirectory() as tmpdir:
         sbml_importer.sbml2amici(model_name="test",
                                  output_dir=tmpdir,
-                                 observables=None)
+                                 observables=None,
+                                 compute_conservation_laws=False)
 
 
 def assert_fun(x):

@@ -47,7 +47,8 @@ def test_sbml2amici_no_observables():
     tmpdir = TemporaryDirectory()
     sbml_importer.sbml2amici(modelName="test",
                              output_dir=tmpdir.name,
-                             observables=None)
+                             observables=None,
+                             compute_conservation_laws=False)
 
 
 def test_hill_function_dwdx():
