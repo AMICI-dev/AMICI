@@ -837,21 +837,17 @@ class ODEModel:
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
 
-        # create a temporary version of helper variables 'w'
-        # those are needed to create a pre-conservation law version of the
-        # time derivatives, which is later corrected for conservation laws
-        temp_w = sp.Matrix([sp.Symbol(f'flux_r{idx}', real=True)
-                            for idx in range(len(si.flux_vector))])
-
-        # create symbols for expressions (in pySB generated automatically,
-        # has to be done 'by hand' in SBML.  The helper variables
-        # 'w' will later be recreated from those expressions
-        symbols['expression'] = {
-            'identifier': temp_w,
-            'name': [f'flux_r{idx}' for idx in range(len(si.flux_vector))],
-            'value': si.flux_vector
-        }
-        n_fluxes = len(symbols['expression']['name'])
+        # assemble fluxes and add them as expressions to the model
+        fluxes = []
+        for ir, flux in enumerate(si.flux_vector):
+            flux_id = sp.Symbol(f'flux_r{ir}', real=True)
+            self.add_component(Expression(
+                identifier=flux_id,
+                name=str(flux),
+                value=flux
+            ))
+            fluxes.append(flux_id)
+        nr = len(fluxes)
 
         # correct time derivatives for compartment changes
         def dx_dt(x_index, x_Sw):
@@ -895,7 +891,7 @@ class ODEModel:
                 xdot = (x_Sw - dv_dt*x_id)/v_name
                 # might need to do this for assignment rules as well
                 for w_index, w in enumerate(self.sym('w')):
-                    self._eqs['dxdotdw'][x_index,w_index] = xdot.diff(w)
+                    self._eqs['dxdotdw'][x_index, w_index] = xdot.diff(w)
                 return xdot
             elif v_name in si.compartment_assignment_rules:
                 v = si.compartment_assignment_rules[v_name]
@@ -909,7 +905,7 @@ class ODEModel:
 
         # create dynmics without respecting conservation laws first
         Sw = (MutableDenseMatrix(si.stoichiometric_matrix)
-              * MutableDenseMatrix(temp_w))
+              * MutableDenseMatrix(fluxes))
         symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
             lambda x_Sw: dx_dt(x_index, x_Sw))
             for x_index in range(Sw.rows)])
@@ -924,18 +920,24 @@ class ODEModel:
 
         # process conservation laws
         if compute_cls:
-            si._process_conservation_laws(self)
-        # expressions are handled slightly different in SBML than in pySB,
-        # hence we need to correct for expressions soming directly from CLs
-        self._expressions = self._expressions[0:n_fluxes]
+            si.process_conservation_laws(self)
 
-        # set derivatives of xdot
-        self._eqs['dxdotdw'] = si.stoichiometric_matrix
-        self._eqs['dxdotdx'] = sp.zeros(si.stoichiometric_matrix.shape[0])
+        # set derivatives of xdot, this circumvents regular computation. we
+        # do this as we can save a substantial amount of computations by
+        # knowing the right solutions here
+        nx_solver = si.stoichiometric_matrix.shape[0]
+        self._eqs['dxdotdx'] = sp.zeros(nx_solver)
 
-        # fill in 'self._sym' based on prototypes and components in ode_model,
-        # re-create dynamics using expressions, which also respects
-        # conservation laws now
+        nw = len(self._expressions)
+        # append zero rows for conservation law `w`s, note that
+        # _process_conservation_laws is called after the fluxes are added as
+        # expressions, if this ordering needs to be changed, this will have
+        # to be adapted.
+        self._eqs['dxdotdw'] = si.stoichiometric_matrix.row_join(
+            sp.zeros(nx_solver, nw-nr)
+        )
+
+        # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables()
 
     def add_component(self, component: ModelQuantity) -> None:

@@ -1269,7 +1269,7 @@ class SbmlImporter:
         self.symbols['llhy']['name'] = l2s(llh_y_syms)
         self.symbols['llhy']['identifier'] = llh_y_syms
 
-    def _process_conservation_laws(self, ode_model) -> None:
+    def process_conservation_laws(self, ode_model) -> None:
         """
         Find conservation laws in reactions and species.
 
@@ -1306,9 +1306,11 @@ class SbmlImporter:
         species_solver = list(range(ode_model.nx_rdata()))
 
         # iterate over species, find constant ones
-        for ix in range(ode_model.nx_rdata()):
+        for ix in reversed(range(ode_model.nx_rdata())):
             if ode_model.state_is_constant(ix):
-                target_state = ode_model._states[ix]._identifier
+                # dont use sym('x') here since conservation laws need to be
+                # added before symbols are generated
+                target_state = ode_model._states[ix].get_id()
                 total_abundance = sp.Symbol(f'tcl_{target_state}')
                 conservation_laws.append({
                     'state': target_state,
