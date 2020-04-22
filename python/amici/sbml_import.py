@@ -1316,9 +1316,6 @@ class SbmlImporter:
                     'state_expr': total_abundance,
                     'abundance_expr': target_state,
                 })
-                # replace expression in the fluxes
-                self.flux_vector = self.flux_vector.subs(target_state,
-                                                         total_abundance)
                 # mark species to delete from stoichiometrix matrix
                 species_solver.pop(ix)
 
