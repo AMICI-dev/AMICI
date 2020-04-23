@@ -445,7 +445,7 @@ class ReturnData {
     
     
     /**
-     * @brief initializeObjectiveFunction
+     * @brief initialize values for chi2 and llh and derivatives
      */
     void initializeObjectiveFunction();
 
