@@ -1033,8 +1033,8 @@ class SbmlImporter:
                     if nested_rule.setFormula(nested_formula) != sbml.LIBSBML_OPERATION_SUCCESS:
                         raise SBMLException(f'Formula {nested_formula} cannot be parsed by libSBML!')
 
-                for variable in assignments:
-                    assignments[variable].subs(variable, formula)
+                for variable2 in assignments:
+                    assignments[variable2] = assignments[variable2].subs(variable, formula)
 
         # do this at the very end to ensure we have flattened all recursive
         # rules
