@@ -899,10 +899,16 @@ class ODEModel:
                 v = si.compartment_assignment_rules[v_name]
                 dv_dt = v.diff(si.amici_time_symbol)
                 dv_dx = v.diff(x_id)
-                return (x_Sw - dv_dt*x_id)/(dv_dx*x_id + v)
+                xdot = (x_Sw - dv_dt*x_id)/(dv_dx*x_id + v)
+                for w_index, flux in enumerate(fluxes):
+                    dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
+                return xdot
             else:
                 v = si.compartment_volume[list(si.compartment_symbols).index(
                     si.species_compartment[x_index])]
+                for w_index, flux in enumerate(fluxes):
+                    dxdotdw_updates.append((x_index, w_index,
+                        si.stoichiometric_matrix[x_index, w_index] / v))
                 return x_Sw/v
 
         # create dynmics without respecting conservation laws first
