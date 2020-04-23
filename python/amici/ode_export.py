@@ -891,7 +891,6 @@ class ODEModel:
             if v_name in si.compartment_rate_rules:
                 dv_dt = si.compartment_rate_rules[v_name]
                 xdot = (x_Sw - dv_dt*x_id)/v_name
-                # might need to do this for assignment rules as well
                 for w_index, flux in enumerate(fluxes):
                     dxdotdw_updates.append((x_index, w_index, xdot.diff(flux)))
                 return xdot
