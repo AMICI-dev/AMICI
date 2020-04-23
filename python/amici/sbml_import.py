@@ -1029,8 +1029,9 @@ class SbmlImporter:
                         sbml.formulaToL3String(nested_rule.getMath()),
                         locals=self.local_symbols)
                     nested_formula = \
-                        nested_formula.subs(variable, formula)
-                    nested_rule.setFormula(str(nested_formula))
+                        str(nested_formula.subs(variable, formula)).replace('**', '^')
+                    if nested_rule.setFormula(nested_formula) != sbml.LIBSBML_OPERATION_SUCCESS:
+                        raise SBMLException(f'Formula {nested_formula} cannot be parsed by libSBML!')
 
                 for variable in assignments:
                     assignments[variable].subs(variable, formula)
