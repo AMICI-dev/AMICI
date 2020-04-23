@@ -223,8 +223,7 @@ class ReturnDataView(SwigPtrView):
         """
         if item == 't':
             item = 'ts'
-        if item == 'FIM' and 'FIM' not in self._cache:
-            self['ptr'].fFIM()
+
         return super(ReturnDataView, self).__getitem__(item)
 
 

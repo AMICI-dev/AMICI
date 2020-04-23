@@ -61,6 +61,9 @@ void ReturnData::initializeLikelihoodReporting() {
         sllh.resize(nplist, getNaN());
         if (sensi >= SensitivityOrder::second)
             s2llh.resize(nplist * (nJ - 1), getNaN());
+        
+        if (sensi_meth == SensitivityMethod::forward)
+            FIM.resize(nplist * nplist, 0.0);
     }
 }
 
@@ -273,7 +276,7 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
     if (edata) {
         if (!isNaN(llh))
             model.addObservableObjective(llh, it, x_solver, *edata);
-        fres(it, *edata);
+        fres(it, model, *edata);
         fchi2(it);
     }
 
@@ -313,7 +316,8 @@ void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
         if (!sllh.empty())
             model.addObservableObjectiveSensitivity(sllh, s2llh, it, x_solver,
                                                     sx_solver, *edata);
-        fsres(it, *edata);
+        fsres(it, model, *edata);
+        fFIM(it, model, *edata);
     }
 }
 
@@ -582,7 +586,11 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
                 for (int ip = 0; ip < nplist; ++ip)
                     sres.at((iyt * nplist + ip)) *= pcoefficient.at(ip);
         
-        /* FIM is computed later, so transformation of sres is sufficient */
+        if(!FIM.empty())
+            for (int ip = 0; ip < nplist; ++ip)
+                for (int jp = 0; jp < nplist; ++jp)
+                    FIM.at(jp + ip * nplist) *=
+                        pcoefficient.at(ip)*pcoefficient.at(jp);
 
 #define chainRule(QUANT, IND1, N1T, N1, IND2, N2)                              \
     if (!s##QUANT.empty())                                                     \
@@ -681,17 +689,35 @@ void ReturnData::initializeObjectiveFunction() {
         chi2 = 0.0;
 }
 
-void ReturnData::fres(const int it, const ExpData &edata) {
+static realtype fres(realtype y, realtype my, realtype sigma_y) {
+    return (y - my) / sigma_y;
+}
+
+static realtype fsres(realtype y, realtype sy, realtype my,
+                      realtype sigma_y, realtype ssigma_y) {
+    double r = fres(sy, 0.0, sigma_y);
+    if (ssigma_y > 0)
+        r += fres(y, my, sigma_y * sigma_y / ssigma_y);
+    return r;
+}
+
+void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
     if (res.empty())
         return;
 
+    std::vector<realtype> y_it(ny, 0.0);
+    model.getObservable(y_it, ts[it], x_solver);
+    
+    std::vector<realtype> sigmay_it(ny, 0.0);
+    model.getObservableSigma(sigmay_it, it, &edata);
+    
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt_true = iy + it * edata.nytrue();
-        int iyt = iy + it * ny;
+        int iyt = iy + it * edata.nytrue();
         if (!edata.isSetObservedData(it, iy))
             continue;
-        res.at(iyt_true) = (y.at(iyt) - observedData[iy]) / sigmay.at(iyt);
+        res.at(iyt) = amici::fres(y_it.at(iy), observedData[iy],
+                                  sigmay_it.at(iy));
     }
 }
 
@@ -705,38 +731,59 @@ void ReturnData::fchi2(const int it) {
     }
 }
 
-void ReturnData::fsres(const int it, const ExpData &edata) {
+void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
     if (sres.empty())
         return;
 
+    std::vector<realtype> y_it(ny, 0.0);
+    model.getObservable(y_it, ts[it], x_solver);
+    std::vector<realtype> sy_it(ny * nplist, 0.0);
+    model.getObservableSensitivity(sy_it, ts[it], x_solver, sx_solver);
+    
+    std::vector<realtype> sigmay_it(ny, 0.0);
+    model.getObservableSigma(sigmay_it, it, &edata);
+    std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
+    model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
+    
+    auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
-        int iyt_true = iy + it * edata.nytrue();
-        int iyt = iy + it * ny;
         if (!edata.isSetObservedData(it, iy))
             continue;
         for (int ip = 0; ip < nplist; ++ip) {
-            sres.at(iyt_true * nplist + ip) =
-                sy.at(iy + ny * (ip + it * nplist)) / sigmay.at(iyt);
+            int idx = (iy + it * edata.nytrue()) * nplist + ip;
+            sres.at(idx) = amici::fsres(y_it.at(iy), sy_it.at(iy + ny * ip),
+                                        observedData[iy], sigmay_it.at(iy),
+                                        ssigmay_it.at(iy + ny * ip));
         }
     }
 }
 
-void ReturnData::fFIM() {
-    if (sres.empty())
+void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
+    if (FIM.empty())
         return;
 
-    if (FIM.empty())
-        FIM.resize(nplist * nplist, 0.0);
+    std::vector<realtype> y_it(ny, 0.0);
+    model.getObservable(y_it, ts[it], x_solver);
+    std::vector<realtype> sy_it(ny * nplist, 0.0);
+    model.getObservableSensitivity(sy_it, ts[it], x_solver, sx_solver);
+    
+    std::vector<realtype> sigmay_it(ny, 0.0);
+    model.getObservableSigma(sigmay_it, it, &edata);
+    std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
+    model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
 
-    for (int it = 0; it < nt; ++it) {
-        for (int iy = 0; iy < nytrue; ++iy) {
-            int iyt_true = iy + it * nytrue;
-            for (int ip = 0; ip < nplist; ++ip) {
-                for (int jp = 0; jp < nplist; ++jp) {
-                    FIM.at(ip + nplist * jp) +=
-                        sres.at(iyt_true * nplist + ip) *
-                        sres.at(iyt_true * nplist + jp);
-                }
+    auto observedData = edata.getObservedDataPtr(it);
+    for (int iy = 0; iy < nytrue; ++iy) {
+        for (int ip = 0; ip < nplist; ++ip) {
+            for (int jp = 0; jp < nplist; ++jp) {
+                FIM.at(ip + nplist * jp) +=
+                    amici::fsres(y_it.at(iy), sy_it.at(iy + ny * ip),
+                                 observedData[iy], sigmay_it.at(iy),
+                                 ssigmay_it.at(iy + ny * ip))
+                    *
+                    amici::fsres(y_it.at(iy), sy_it.at(iy + ny * jp),
+                                 observedData[iy], sigmay_it.at(iy),
+                                 ssigmay_it.at(iy + ny * jp));
             }
         }
     }

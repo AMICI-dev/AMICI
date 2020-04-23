@@ -102,11 +102,6 @@ class ReturnData {
                                   Model &model, Solver const &solver,
                                   ExpData const *edata);
 
-    /**
-     * @brief Fisher information matrix function
-     */
-    void fFIM();
-
     /** timepoints (dimension: nt) */
     std::vector<realtype> ts;
 
@@ -531,9 +526,10 @@ class ReturnData {
     /**
      * @brief Residual function
      * @param it time index
+     * @param model model that was used for forward/backward simulation
      * @param edata ExpData instance containing observable data
      */
-    void fres(int it, const ExpData &edata);
+    void fres(int it, Model &model, const ExpData &edata);
 
     /**
      * @brief Chi-squared function
@@ -544,9 +540,18 @@ class ReturnData {
     /**
      * @brief Residual sensitivity function
      * @param it time index
+     * @param model model that was used for forward/backward simulation
      * @param edata ExpData instance containing observable data
      */
-    void fsres(int it, const ExpData &edata);
+    void fsres(int it, Model &model, const ExpData &edata);
+    
+    /**
+     * @brief Fisher information matrix function
+     * @param it time index
+     * @param model model that was used for forward/backward simulation
+     * @param edata ExpData instance containing observable data
+     */
+    void fFIM(int it, Model &model, const ExpData &edata);
     
     /**
      * @brief Set likelihood, state variables, outputs and respective
