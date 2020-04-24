@@ -26,12 +26,13 @@ Solver::Solver(const Solver &other)
       newton_maxlinsteps(other.newton_maxlinsteps),
       newton_damping_factor_mode(other.newton_damping_factor_mode),
       newton_damping_factor_lower_bound(other.newton_damping_factor_lower_bound),
-      requires_preequilibration(other.requires_preequilibration), linsol(other.linsol),
-      atol(other.atol), rtol(other.rtol), atol_fsa(other.atol_fsa),
-      rtol_fsa(other.rtol_fsa), atolB(other.atolB), rtolB(other.rtolB),
-      quad_atol(other.quad_atol), quad_rtol(other.quad_rtol),
-      ss_atol(other.ss_atol), ss_rtol(other.ss_rtol),
-      ss_atol_sensi(other.ss_atol_sensi), ss_rtol_sensi(other.ss_rtol_sensi),
+      requires_preequilibration(other.requires_preequilibration),
+      linsol(other.linsol), atol(other.atol), rtol(other.rtol),
+      atol_fsa(other.atol_fsa), rtol_fsa(other.rtol_fsa),
+      atolB(other.atolB), rtolB(other.rtolB), quad_atol(other.quad_atol),
+      quad_rtol(other.quad_rtol), ss_atol(other.ss_atol),
+      ss_rtol(other.ss_rtol), ss_atol_sensi(other.ss_atol_sensi),
+      ss_rtol_sensi(other.ss_rtol_sensi), rdata_mode(other.rdata_mode),
       maxstepsB(other.maxstepsB), sensi(other.sensi)
 {}
 
@@ -433,7 +434,8 @@ bool operator==(const Solver &a, const Solver &b) {
             (isNaN(a.atol_fsa) && isNaN(b.atol_fsa))) &&
            (a.rtolB == b.rtolB || (isNaN(a.rtolB) && isNaN(b.rtolB))) &&
            (a.atolB == b.atolB || (isNaN(a.atolB) && isNaN(b.atolB))) &&
-           (a.sensi == b.sensi) && (a.sensi_meth == b.sensi_meth);
+           (a.sensi == b.sensi) && (a.sensi_meth == b.sensi_meth) &&
+           (a.rdata_mode == b.rdata_mode);
 }
 
 void Solver::applyTolerances() const {
@@ -503,6 +505,10 @@ void Solver::applySensitivityTolerances() const {
 SensitivityMethod Solver::getSensitivityMethod() const { return sensi_meth; }
 
 void Solver::setSensitivityMethod(const SensitivityMethod sensi_meth) {
+    if (rdata_mode == RDataReporting::residuals &&
+        sensi_meth == SensitivityMethod::adjoint)
+        throw AmiException("Adjoint Sensitivity Analysis is not compatible with"
+                           " only reporting residuals!");
     if (sensi_meth != this->sensi_meth)
         resetMutableMemory(nx(), nplist(), nquad());
     this->sensi_meth = sensi_meth;
@@ -830,6 +836,18 @@ void Solver::setInternalSensitivityMethod(const InternalSensitivityMethod ism) {
     if (solverMemory)
         resetMutableMemory(nx(), nplist(), nquad());
     this->ism = ism;
+}
+
+RDataReporting Solver::getReturnDataReportingMode() const {
+    return rdata_mode;
+};
+
+void Solver::setReturnDataReportingMode(RDataReporting rdrm) {
+    if (rdrm == RDataReporting::residuals &&
+        sensi_meth == SensitivityMethod::adjoint)
+        throw AmiException("Adjoint Sensitivity Analysis cannot report "
+                           "residuals!");
+    rdata_mode = rdrm;
 }
 
 void Solver::initializeNonLinearSolverSens(const Model *model) const {

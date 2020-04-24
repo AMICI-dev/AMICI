@@ -103,7 +103,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
 
     # ----- compare simulations wo edata, sensi = 0, states and sensis -------
     model_without_cl.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode_simulationFSA
+        amici.SteadyStateSensitivityMode.simulationFSA
     )
 
     # run simulations
@@ -131,7 +131,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     # ----- check failure st.st. sensi computation if run wo CLs -------------
     # check failure of steady state senistivity computation if run wo CLs
     model_without_cl.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode_newtonOnly
+        amici.SteadyStateSensitivityMode.newtonOnly
     )
     with pytest.raises(RuntimeError):
         with warnings.catch_warnings():

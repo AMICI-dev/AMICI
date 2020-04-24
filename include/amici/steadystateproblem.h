@@ -110,7 +110,7 @@ class SteadystateProblem {
      * @brief returns the stored SimulationState
      * @return stored SimulationState
      */
-    const SimulationState getSimulationState() const {
+    const SimulationState &getFinalSimulationState() const {
         return state;
     };
 

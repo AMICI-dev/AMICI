@@ -174,7 +174,7 @@ def get_data(model):
     solver = model.getSolver()
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode_simulationFSA
+        amici.SteadyStateSensitivityMode.simulationFSA
     )
 
     rdata = amici.runAmiciSimulation(model, solver)
@@ -193,6 +193,6 @@ def get_results(model, edata):
     edata.reinitializeFixedParameterInitialStates = True
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode_simulationFSA
+        amici.SteadyStateSensitivityMode.simulationFSA
     )
     return amici.runAmiciSimulation(model, solver, edata)

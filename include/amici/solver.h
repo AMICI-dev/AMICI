@@ -539,6 +539,18 @@ class Solver {
      * @param ism internal sensitivity method
      */
     void setInternalSensitivityMethod(InternalSensitivityMethod ism);
+    
+    /**
+     * @brief returns the ReturnData reporting mode
+     * @return ReturnData reporting mode
+     */
+    RDataReporting getReturnDataReportingMode() const;
+
+    /**
+     * @brief sets the ReturnData reporting mode
+     * @param rdrm ReturnData reporting mode
+     */
+    void setReturnDataReportingMode(RDataReporting rdrm);
 
     /**
      * @brief write solution from forward simulation
@@ -1556,6 +1568,8 @@ class Solver {
 
     /** relative tolerances for steadystate computation */
     realtype ss_rtol_sensi = NAN;
+    
+    RDataReporting rdata_mode = RDataReporting::full;
 
     /** CPU time, forward solve */
     mutable realtype cpu_time = 0.0;

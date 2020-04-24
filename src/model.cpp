@@ -126,9 +126,9 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       idlist(std::move(idlist)), J(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
       dwdp(nw, p.size(), ndwdp, CSC_MAT), dwdx(nw, nx_solver, ndwdx, CSC_MAT),
-      M(nx_solver, nx_solver), w(nw), x_rdata(nx_rdata, 0.0),
-      sx_rdata(nx_rdata, 0.0), x_pos_tmp(nx_solver), originalParameters(p),
-      z2event(std::move(z2event)), stateIsNonNegative(nx_solver, false),
+      w(nw), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0),
+      x_pos_tmp(nx_solver), originalParameters(p), z2event(std::move(z2event)),
+      stateIsNonNegative(nx_solver, false),
       pscale(std::vector<amici::ParameterScaling>(p.size(),
                                                   ParameterScaling::none)) {
 
@@ -754,7 +754,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     fdydx(t, x);
     fdydp(t, x);
 
-    this->sx.assign(nx_solver * nplist(), 0.0);
+    this->sx.resize(nx_solver * nplist());
     sx.flatten_to_vector(this->sx);
 
     // compute sy = 1.0*dydx*sx + 1.0*sy
@@ -815,6 +815,7 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ        x nx_solver
     // sx           rdata->nt x nx_solver x nplist()
+    this->sx.resize(nx_solver * nplist());
     sx.flatten_to_vector(this->sx);
 
     // C := alpha*op(A)*op(B) + beta*C,

@@ -163,6 +163,12 @@ enum class FixedParameterContext {
     presimulation = 2,
 };
 
+enum class RDataReporting {
+    full,
+    residuals,
+    likelihood,
+};
+
 /**
  * Type for function to process warnings or error messages.
  */

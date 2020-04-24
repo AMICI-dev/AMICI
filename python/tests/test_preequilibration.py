@@ -219,9 +219,9 @@ def test_parameter_in_expdata(preeq_fixture):
     # perturb model pscale, needs to be done after getting parameters,
     # otherwise we will mess up parameter value
     model.setParameterScale(amici.parameterScalingFromIntVector([
-        amici.ParameterScaling_log10
-        if scaling == amici.ParameterScaling_none
-        else amici.ParameterScaling_none
+        amici.ParameterScaling.log10
+        if scaling == amici.ParameterScaling.none
+        else amici.ParameterScaling.none
         for scaling in model.getParameterScale()
     ]))
 

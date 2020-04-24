@@ -115,7 +115,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     std::unique_ptr<SteadystateProblem> posteq {};
     
     try {
-        /* BEGIN PREEQUILIBRATION */
         if (solver.getPreequilibration() ||
             (edata && !edata->fixedParametersPreequilibration.empty())) {
             ConditionContext conditionContext(
@@ -125,24 +124,20 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             preeq = std::make_unique<SteadystateProblem>(solver, model);
             preeq->workSteadyStateProblem(&solver, &model, -1);
         }
+
         
-        /* END PREEQUILIBRATION */
-        
-        /* BEGIN FORWARD SOLVE */
         fwd = std::make_unique<ForwardProblem>(edata, &model, &solver,
                                                preeq.get());
         fwd->workForwardProblem();
-        /* END FORWARD SOLVE */
         
-        /* BEGIN POSTEQUILIBRATION */
+        
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::make_unique<SteadystateProblem>(solver, model);
             posteq->workSteadyStateProblem(&solver, &model,
                                            fwd->getCurrentTimeIteration());
         }
-        /* END POSTEQUILIBRATION */
+
         
-        /* BEGIN BACKWARD SOLVE */
         if (edata && solver.computingASA()) {
             fwd->getAdjointUpdates(model, *edata);
             if (posteq)
@@ -151,7 +146,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
             bwd->workBackwardProblem();
         }
-        /* END BACKWARD SOLVE */
         
         rdata->status = AMICI_SUCCESS;
         
@@ -183,28 +177,9 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.getBacktrace());
     }
 
-    if (preeq)
-        rdata->processPreEquilibration(*preeq, model);
-    
-    if (fwd)
-        rdata->processForwardProblem(*fwd, model, edata);
-    else
-        rdata->invalidate(0);
-    
-    if (posteq)
-        rdata->processPostEquilibration(*posteq, model, edata);
-    
-    if (fwd && !posteq)
-        rdata->storeJacobianAndDerivativeInReturnData(*fwd, model);
-    else if (posteq)
-        rdata->storeJacobianAndDerivativeInReturnData(*posteq, model);
-    
-    if (bwd)
-        rdata->processBackwardProblem(*fwd, *bwd, model);
-    else if (solver.computingASA())
-        rdata->invalidateSLLH();
-        
-    rdata->applyChainRuleFactorToSimulationResults(model);
+    rdata->processSimulationObjects(preeq.get(), fwd.get(), bwd.get(),
+                                    posteq.get(), model, solver, edata);
+
     return rdata;
 }
 

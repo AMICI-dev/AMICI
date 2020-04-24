@@ -3,6 +3,7 @@
 
 #include "amici/defines.h"
 #include "amici/exception.h"
+#include "amici/vector.h"
 #include <sunmatrix/sunmatrix_sparse.h> // SUNMatrixContent_Sparse
 
 #include <algorithm>
@@ -30,7 +31,7 @@ gsl::span<T> slice(std::vector<T> &data, int index, unsigned size) {
     if (size > 0)
         return gsl::make_span(&data.at(index*size), size);
     
-    return gsl::make_span(static_cast<realtype*>(nullptr), 0);
+    return gsl::make_span(static_cast<T*>(nullptr), 0);
 }
 
 /**
@@ -50,7 +51,7 @@ const gsl::span<const T> slice(const std::vector<T> &data,
     if (size > 0)
         return gsl::make_span(&data.at(index*size), size);
     
-    return gsl::make_span(static_cast<realtype*>(nullptr), 0);
+    return gsl::make_span(static_cast<T*>(nullptr), 0);
 }
 
 /**
@@ -75,8 +76,7 @@ void checkBufferSize(gsl::span<T> buffer, unsigned expected_size) {
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(const gsl::span<const T> slice,
-                gsl::span<T> buffer) {
+void writeSlice(const gsl::span<const T> slice, gsl::span<T> buffer) {
     checkBufferSize(buffer, slice.size());
     std::copy(slice.begin(), slice.end(), buffer.data());
 };
@@ -87,8 +87,7 @@ void writeSlice(const gsl::span<const T> slice,
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(const std::vector<T> s,
-                std::vector<T> b) {
+void writeSlice(const std::vector<T> &s, std::vector<T> &b) {
     writeSlice(gsl::make_span(s.data(), s.size()),
                gsl::make_span(b.data(), b.size()));
 };
@@ -99,10 +98,16 @@ void writeSlice(const std::vector<T> s,
  * @param buffer buffer to which values are to be written
  */
 template <class T>
-void writeSlice(const std::vector<T> s,
-                gsl::span<T> b) {
+void writeSlice(const std::vector<T> &s, gsl::span<T> b) {
     writeSlice(gsl::make_span(s.data(), s.size()), b);
 };
+
+/**
+ * @brief local helper function to write computed slice to provided buffer (AmiVector/span)
+ * @param slice computed value
+ * @param buffer buffer to which values are to be written
+ */
+void writeSlice(const AmiVector &s, gsl::span<realtype> b);
 
 
 /**
