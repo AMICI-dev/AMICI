@@ -223,7 +223,6 @@ class ReturnDataView(SwigPtrView):
         """
         if item == 't':
             item = 'ts'
-
         return super(ReturnDataView, self).__getitem__(item)
 
 

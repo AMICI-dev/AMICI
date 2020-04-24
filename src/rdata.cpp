@@ -62,7 +62,8 @@ void ReturnData::initializeLikelihoodReporting() {
         if (sensi >= SensitivityOrder::second)
             s2llh.resize(nplist * (nJ - 1), getNaN());
         
-        if (sensi_meth == SensitivityMethod::forward)
+        if (sensi_meth == SensitivityMethod::forward ||
+            sensi >= SensitivityOrder::second)
             FIM.resize(nplist * nplist, 0.0);
     }
 }

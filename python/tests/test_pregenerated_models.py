@@ -137,7 +137,7 @@ def test_pregenerated_model(sub_test, case):
         rdata = amici.runAmiciSimulation(model, solver, edata)
         verify_simulation_results(
             rdata, expected_results[sub_test][case]['results'],
-            fields=['t', 'res', 'sres', 'y', 'sy', 'sigmay', 'ssigmay', 'FIM'],
+            fields=['t', 'res', 'sres', 'y', 'sy', 'sigmay', 'ssigmay'],
             **verify_simulation_opts
         )
         with pytest.raises(RuntimeError):
@@ -148,7 +148,7 @@ def test_pregenerated_model(sub_test, case):
     rdata = amici.runAmiciSimulation(model, solver, edata)
     verify_simulation_results(
         rdata, expected_results[sub_test][case]['results'],
-        fields=['t', 'llh', 'sllh', 's2llh'], **verify_simulation_opts
+        fields=['t', 'llh', 'sllh', 's2llh', 'FIM'], **verify_simulation_opts
     )
 
     with pytest.raises(RuntimeError):
