@@ -21,6 +21,10 @@
 
 namespace amici {
 
+void writeSlice(const AmiVector &s, gsl::span<realtype> b) {
+    writeSlice(s.getVector(), b);
+};
+
 double getUnscaledParameter(double scaledParameter, ParameterScaling scaling)
 {
     switch (scaling) {

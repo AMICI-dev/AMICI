@@ -15,14 +15,14 @@ def test_parameter_scaling_from_int_vector():
 
     scale_vector = amici.parameterScalingFromIntVector(
         [
-            amici.ParameterScaling_log10,
-            amici.ParameterScaling_ln,
-            amici.ParameterScaling_none
+            amici.ParameterScaling.log10,
+            amici.ParameterScaling.ln,
+            amici.ParameterScaling.none
         ])
 
-    assert scale_vector[0] == amici.ParameterScaling_log10
-    assert scale_vector[1] == amici.ParameterScaling_ln
-    assert scale_vector[2] == amici.ParameterScaling_none
+    assert scale_vector[0] == amici.ParameterScaling.log10
+    assert scale_vector[1] == amici.ParameterScaling.ln
+    assert scale_vector[2] == amici.ParameterScaling.none
 
 
 def test_sbml2amici_no_observables():

@@ -88,9 +88,9 @@ def test_presimulation(sbml_example_presimulation_module):
     solver.setNewtonMaxSteps(0)
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode_simulationFSA
+        amici.SteadyStateSensitivityMode.simulationFSA
     )
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
     model.setReinitializeFixedParameterInitialStates(True)
 
     rdata = amici.runAmiciSimulation(model, solver)
@@ -111,7 +111,7 @@ def test_steadystate_simulation(model_steadystate_module):
     model = model_steadystate_module.getModel()
     model.setTimepoints(np.linspace(0, 60, 60))
     solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
     rdata = amici.runAmiciSimulation(model, solver)
     edata = [amici.ExpData(rdata, 1, 0)]
     rdata = amici.runAmiciSimulations(model, solver, edata)
@@ -215,7 +215,7 @@ def test_likelihoods(model_test_likelihoods):
     model = model_test_likelihoods.getModel()
     model.setTimepoints(np.linspace(0, 60, 60))
     solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
 
     # run model once to create an edata
     rdata = amici.runAmiciSimulation(model, solver)

@@ -668,6 +668,10 @@ void writeSolverSettingsToHDF5(Solver const& solver,
     ibuffer = static_cast<int>(solver.getInternalSensitivityMethod());
     H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
                           "ism", &ibuffer, 1);
+    
+    ibuffer = static_cast<int>(solver.getReturnDataReportingMode());
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
+                          "rdrm", &ibuffer, 1);
 }
 
 void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
@@ -824,6 +828,12 @@ void readSolverSettingsFromHDF5(H5::H5File const& file, Solver &solver,
         solver.setInternalSensitivityMethod(
                     static_cast<InternalSensitivityMethod>(
                         getIntScalarAttribute(file, datasetPath, "ism")));
+    }
+    
+    if(attributeExists(file, datasetPath, "rdrm")) {
+        solver.setReturnDataReportingMode(
+                    static_cast<RDataReporting>(
+                        getIntScalarAttribute(file, datasetPath, "rdrm")));
     }
 }
 

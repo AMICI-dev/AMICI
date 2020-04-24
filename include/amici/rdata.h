@@ -4,7 +4,8 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 #include "amici/model.h"
-
+#include "amici/misc.h"
+#include "amici/forwardproblem.h"
 
 #include <vector>
 
@@ -15,7 +16,6 @@ class ExpData;
 class ForwardProblem;
 class BackwardProblem;
 class SteadystateProblem;
-struct SimulationState;
 } // namespace amici
 
 namespace boost {
@@ -63,13 +63,15 @@ class ReturnData {
      * @param o2mode see amici::Model::o2mode
      * @param sensi see amici::Solver::sensi
      * @param sensi_meth see amici::Solver::sensi_meth
+     * @param rdrm see amici::Solver::rdata_reporting
      */
     ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
                int nxtrue, int ny, int nytrue, int nz, int nztrue, int ne,
                int nJ, int nplist, int nmaxevent, int nt, int newton_maxsteps,
                int nw,
                std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
-               SensitivityOrder sensi, SensitivityMethod sensi_meth);
+               SensitivityOrder sensi, SensitivityMethod sensi_meth,
+               RDataReporting rdrm);
 
     /**
      * @brief constructor that uses information from model and solver to
@@ -80,142 +82,25 @@ class ReturnData {
     ReturnData(Solver const &solver, const Model &model);
 
     ~ReturnData() = default;
-
+    
     /**
-     * @brief initializeObjectiveFunction
+     * @brief constructor that uses information from model and solver to
+     * appropriately initialize fields
+     * @param preeq simulated preequilibration problem, pass nullptr to ignore
+     * @param fwd simulated forward problem, pass nullptr to ignore
+     * @param bwd simulat
+     * ed backward problem, pass nullptr to ignore
+     * @param posteq simulated postequilibration problem, pass nullptr to ignore
+     * @param model matching model instance
+     * @param solver matching solver instance
+     * @param edata matching experimental data
      */
-    void initializeObjectiveFunction();
-
-    /**
-     * @brief extracts data from a preequilibration steadystateproblem
-     * @param preeq Steadystateproblem for preequilibration
-     * @param model Model instance to compute return values
-     */
-    void processPreEquilibration(SteadystateProblem const &preeq,
-                                 Model &model);
-
-    /**
-     * @brief extracts data from a preequilibration steadystateproblem
-     * @param posteq Steadystateproblem for postequilibration
-     * @param model Model instance to compute return values
-     * @param edata ExpData instance containing observable data
-     */
-    void processPostEquilibration(SteadystateProblem const &posteq,
-                                  Model &model,
+    void processSimulationObjects(SteadystateProblem const *preeq,
+                                  ForwardProblem const *fwd,
+                                  BackwardProblem const *bwd,
+                                  SteadystateProblem const *posteq,
+                                  Model &model, Solver const &solver,
                                   ExpData const *edata);
-
-    /**
-     * @brief extracts results from forward problem
-     * @param fwd forward problem
-     * @param model model that was used for forward simulation
-     * @param edata ExpData instance containing observable data
-     */
-    void processForwardProblem(ForwardProblem const &fwd,
-                               Model &model,
-                               ExpData const *edata);
-
-
-    /**
-     * @brief extracts results from backward problem
-     * @param fwd forward problem
-     * @param bwd backward problem
-     * @param model model that was used for forward/backward simulation
-     */
-    void processBackwardProblem(ForwardProblem const &fwd,
-                                BackwardProblem const &bwd,
-                                Model &model);
-
-    /**
-     * @brief extracts results from solver
-     * @param solver solver that was used for forward/backward simulation
-     */
-    void processSolver(Solver const &solver);
-
-    /**
-     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
-     * @param fwd forward problem
-     * @param model model that was used for forward/backward simulation
-     */
-    void storeJacobianAndDerivativeInReturnData(ForwardProblem const &fwd,
-                                                Model &model);
-
-    /**
-     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
-     * @param posteq postequilibration steadystateproblem
-     * @param model model that was used for forward/backward simulation
-     */
-    void storeJacobianAndDerivativeInReturnData(
-        SteadystateProblem const &posteq, Model &model);
-
-    /**
-     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
-     * @param t timepoint
-     * @param x state vector
-     * @param dx state derivative vector
-     * @param model model that was used for forward/backward simulation
-     */
-    void storeJacobianAndDerivativeInReturnData(realtype t,
-                                                const AmiVector &x,
-                                                const AmiVector &dx,
-                                                Model &model);
-    /**
-     * @brief sets member variables and model state according to provided simulation state
-     * @param state simulation state provided by Problem
-     * @param model model that was used for forward/backward simulation
-     */
-    void readSimulationState(SimulationState const &state, Model &model);
-
-    /**
-     * @brief Set likelihood, state variables, outputs and respective
-     * sensitivities to NaN (typically after integration failure)
-     * @param it_start time index at which to start invalidating
-     */
-    void invalidate(int it_start);
-
-    /**
-     * @brief Set likelihood and chi2 to NaN
-     * (typically after integration failure)
-     */
-    void invalidateLLH();
-
-    /**
-     * @brief Set likelihood sensitivities to NaN
-     * (typically after integration failure)
-     */
-    void invalidateSLLH();
-
-    /**
-     * @brief applies the chain rule to account for parameter transformation in
-     * the sensitivities of simulation results
-     * @param model Model from which the ReturnData was obtained
-     */
-    void applyChainRuleFactorToSimulationResults(const Model &model);
-
-    /**
-     * @brief Residual function
-     * @param it time index
-     * @param edata ExpData instance containing observable data
-     */
-    void fres(int it, const ExpData &edata);
-
-    /**
-     * @brief Chi-squared function
-     * @param it time index
-     */
-    void fchi2(int it);
-
-    /**
-     * @brief Residual sensitivity function
-     * @param it time index
-     * @param edata ExpData instance containing observable data
-     */
-    void fsres(int it, const ExpData &edata);
-
-    /**
-     * @brief Fisher information matrix function
-     * @param it time index
-     */
-    void fFIM(int it);
 
     /** timepoints (dimension: nt) */
     std::vector<realtype> ts;
@@ -498,6 +383,9 @@ class ReturnData {
 
     /** sensitivity method */
     SensitivityMethod sensi_meth{SensitivityMethod::none};
+    
+    /** reporting mode */
+    RDataReporting rdata_reporting{RDataReporting::full};
 
     /**
      * @brief Serialize ReturnData (see boost::serialization::serialize)
@@ -516,11 +404,13 @@ class ReturnData {
 
     /** partial state vector, excluding states eliminated from conservation laws */
     AmiVector x_solver;
+    
+    /** partial time derivative of state vector, excluding states eliminated from conservation laws */
+    AmiVector dx_solver;
 
     /** partial sensitivity state vector array, excluding states eliminated from
      * conservation laws */
     AmiVectorArray sx_solver;
-
 
     /** full state vector, including states eliminated from conservation laws */
     AmiVector x_rdata;
@@ -532,6 +422,162 @@ class ReturnData {
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
     std::vector<int> nroots;
+    
+    /**
+     * @brief initializes storage for likelihood reporting mode
+     */
+    void initializeLikelihoodReporting();
+    
+    /**
+     * @brief initializes storage for residual reporting mode
+     */
+    void initializeResidualReporting();
+    
+    /**
+     * @brief initializes storage for full reporting mode
+     */
+    void initializeFullReporting();
+    
+    
+    /**
+     * @brief initialize values for chi2 and llh and derivatives
+     */
+    void initializeObjectiveFunction();
+
+    /**
+     * @brief extracts data from a preequilibration steadystateproblem
+     * @param preeq Steadystateproblem for preequilibration
+     * @param model Model instance to compute return values
+     */
+    void processPreEquilibration(SteadystateProblem const &preeq,
+                                 Model &model);
+
+    /**
+     * @brief extracts data from a preequilibration steadystateproblem
+     * @param posteq Steadystateproblem for postequilibration
+     * @param model Model instance to compute return values
+     * @param edata ExpData instance containing observable data
+     */
+    void processPostEquilibration(SteadystateProblem const &posteq,
+                                  Model &model,
+                                  ExpData const *edata);
+
+    /**
+     * @brief extracts results from forward problem
+     * @param fwd forward problem
+     * @param model model that was used for forward simulation
+     * @param edata ExpData instance containing observable data
+     */
+    void processForwardProblem(ForwardProblem const &fwd,
+                               Model &model,
+                               ExpData const *edata);
+
+
+    /**
+     * @brief extracts results from backward problem
+     * @param fwd forward problem
+     * @param bwd backward problem
+     * @param model model that was used for forward/backward simulation
+     */
+    void processBackwardProblem(ForwardProblem const &fwd,
+                                BackwardProblem const &bwd,
+                                Model &model);
+
+    /**
+     * @brief extracts results from solver
+     * @param solver solver that was used for forward/backward simulation
+     */
+    void processSolver(Solver const &solver);
+
+    /**
+     * @brief Evaluates and stores the Jacobian and right hand side at final timepoint
+     * @param problem forward problem or steadystate problem
+     * @param model model that was used for forward/backward simulation
+     */
+    template <class T>
+    void storeJacobianAndDerivativeInReturnData(T const &problem, Model &model)
+    {
+        readSimulationState(problem.getFinalSimulationState(), model);
+        
+        AmiVector xdot(nx_solver);
+        if (!this->xdot.empty() || !this->J.empty())
+            model.fxdot(t, x_solver, dx_solver, xdot);
+        
+        if (!this->xdot.empty())
+            writeSlice(xdot, this->xdot);
+        
+        if (!this->J.empty()) {
+            SUNMatrixWrapper J(nx_solver, nx_solver);
+            model.fJ(t, 0.0, x_solver, dx_solver, xdot, J.get());
+            // CVODES uses colmajor, so we need to transform to rowmajor
+            for (int ix = 0; ix < model.nx_solver; ix++)
+                for (int jx = 0; jx < model.nx_solver; jx++)
+                    this->J.at(ix * model.nx_solver + jx) =
+                        J.data()[ix + model.nx_solver * jx];
+        }
+    }
+    /**
+     * @brief sets member variables and model state according to provided simulation state
+     * @param state simulation state provided by Problem
+     * @param model model that was used for forward/backward simulation
+     */
+    void readSimulationState(SimulationState const &state, Model &model);
+    
+    /**
+     * @brief Residual function
+     * @param it time index
+     * @param model model that was used for forward/backward simulation
+     * @param edata ExpData instance containing observable data
+     */
+    void fres(int it, Model &model, const ExpData &edata);
+
+    /**
+     * @brief Chi-squared function
+     * @param it time index
+     */
+    void fchi2(int it);
+
+    /**
+     * @brief Residual sensitivity function
+     * @param it time index
+     * @param model model that was used for forward/backward simulation
+     * @param edata ExpData instance containing observable data
+     */
+    void fsres(int it, Model &model, const ExpData &edata);
+    
+    /**
+     * @brief Fisher information matrix function
+     * @param it time index
+     * @param model model that was used for forward/backward simulation
+     * @param edata ExpData instance containing observable data
+     */
+    void fFIM(int it, Model &model, const ExpData &edata);
+    
+    /**
+     * @brief Set likelihood, state variables, outputs and respective
+     * sensitivities to NaN (typically after integration failure)
+     * @param it_start time index at which to start invalidating
+     */
+    void invalidate(int it_start);
+
+    /**
+     * @brief Set likelihood and chi2 to NaN
+     * (typically after integration failure)
+     */
+    void invalidateLLH();
+
+    /**
+     * @brief Set likelihood sensitivities to NaN
+     * (typically after integration failure)
+     */
+    void invalidateSLLH();
+
+    /**
+     * @brief applies the chain rule to account for parameter transformation in
+     * the sensitivities of simulation results
+     * @param model Model from which the ReturnData was obtained
+     */
+    void applyChainRuleFactorToSimulationResults(const Model &model);
 
 
     /**
