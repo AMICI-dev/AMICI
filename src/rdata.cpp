@@ -774,6 +774,8 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
 
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
+        if (!edata.isSetObservedData(it, iy))
+            continue;
         for (int ip = 0; ip < nplist; ++ip) {
             for (int jp = 0; jp < nplist; ++jp) {
                 FIM.at(ip + nplist * jp) +=
