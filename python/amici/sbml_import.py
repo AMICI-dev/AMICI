@@ -1270,29 +1270,42 @@ class SbmlImporter:
         self.symbols['llhy']['name'] = l2s(llh_y_syms)
         self.symbols['llhy']['identifier'] = llh_y_syms
 
-    def process_conservation_laws(self, ode_model) -> None:
+    def process_conservation_laws(self, ode_model, volume_updates) -> List:
         """
         Find conservation laws in reactions and species.
 
         :param ode_model:
             ODEModel object with basic definitions
 
+        :param volume_updates:
+            List with updates for the stoichiometrix matrix accounting for
+            compartment volumes
+
+        :returns volume_updates_solver:
+            List (according to reduced stoichiometry) with updates for the
+            stoichiometrix matrix accounting for compartment volumes
         """
         conservation_laws = []
 
         # So far, only conservation laws for constant species are supported
-        self._add_conservation_for_constant_species(ode_model,
-                                                    conservation_laws)
+        species_solver = self._add_conservation_for_constant_species(
+            ode_model, conservation_laws)
+
+        # prune out species from stoichiometry and
+        volume_updates_solver = self._reduce_stoichiometry(species_solver,
+                                                           volume_updates)
 
         # add the found CLs to the ode_model
         for cl in conservation_laws:
             ode_model.add_conservation_law(**cl)
 
+        return volume_updates_solver
+
     def _add_conservation_for_constant_species(
             self,
             ode_model: ODEModel,
             conservation_laws: List[ConservationLaw]
-    ) -> None:
+    ) -> List[int]:
         """
         Adds constant species to conservations laws
 
@@ -1301,6 +1314,9 @@ class SbmlImporter:
 
         :param conservation_laws:
             List of already known conservation laws
+
+        :returns species_solver:
+            List of species indices which remain later in the ODE solver
         """
 
         # decide which species to keep in stoichiometry
@@ -1322,9 +1338,39 @@ class SbmlImporter:
                 # mark species to delete from stoichiometrix matrix
                 species_solver.pop(ix)
 
+        return species_solver
+
+    def _reduce_stoichiometry(self, species_solver, volume_updates) -> List:
+        """
+        Reduces the stoichiometry with respect to conserved quantities
+
+        :param species_solver:
+            List of species indices which remain later in the ODE solver
+
+        :param volume_updates:
+            List with updates for the stoichiometrix matrix accounting for
+            compartment volumes
+
+        :returns volume_updates_solver:
+            List (according to reduced stoichiometry) with updates for the
+            stoichiometrix matrix accounting for compartment volumes
+        """
+
         # prune out constant species from stoichiometric matrix
         self.stoichiometric_matrix = \
             self.stoichiometric_matrix[species_solver, :]
+
+        # updates of stoichiometry (later dxdotdw in ode_exporter) must be
+        # corrected for conserved quantities:
+        volume_updates_solver = []
+        for update in volume_updates:
+            x_index = update[0]
+            if x_index in species_solver:
+                x_index = species_solver.index(x_index)
+                volume_updates_solver.append((x_index, update[1], update[2]))
+
+        return volume_updates_solver
+
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
