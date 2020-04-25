@@ -1,12 +1,10 @@
 name: SBML semantic test suite
 on:
   push:
-    paths:
-      - python/amici/sbml_import.py
-      - python/amici/ode_export.py
-  pull_request:
     branches:
+      - develop
       - master
+  pull_request:
     paths:
       - python/amici/sbml_import.py
       - python/amici/ode_export.py
