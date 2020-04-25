@@ -4,9 +4,15 @@ on:
     branches:
       - develop
       - master
+    paths:
+      - python/amici/sbml_import.py
+      - python/amici/ode_export.py
   pull_request:
     branches:
       - master
+    paths:
+      - python/amici/sbml_import.py
+      - python/amici/ode_export.py
 
 jobs:
   build:
