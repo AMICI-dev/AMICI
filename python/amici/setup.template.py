@@ -29,6 +29,14 @@ class ModelBuildExt(build_ext):
 
         build_ext.build_extension(self, ext)
 
+    def find_swig(self) -> str:
+        """Find SWIG executable
+
+        Overrides horribly outdated distutils function."""
+
+        from amici.swig import find_swig
+        return find_swig()
+
 
 def get_model_sources() -> List[str]:
     """Get list of source files for the amici base library"""
