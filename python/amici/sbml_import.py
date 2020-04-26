@@ -1367,12 +1367,9 @@ class SbmlImporter:
 
         # updates of stoichiometry (later dxdotdw in ode_exporter) must be
         # corrected for conserved quantities:
-        volume_updates_solver = []
-        for update in volume_updates:
-            x_index = update[0]
-            if x_index in species_solver:
-                x_index = species_solver.index(x_index)
-                volume_updates_solver.append((x_index, update[1], update[2]))
+        volume_updates_solver = [(species_solver.index(ix), iw, val)
+                                 for (ix, iw, val) in volume_updates
+                                 if ix in species_solver]
 
         return volume_updates_solver
 
