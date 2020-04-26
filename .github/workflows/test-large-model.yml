@@ -4,6 +4,7 @@ on:
     branches:
       - develop
       - master
+      - detailed_logging
 
   pull_request:
     branches:
