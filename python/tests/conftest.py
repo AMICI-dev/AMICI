@@ -66,7 +66,7 @@ def pysb_example_presimulation_module():
 
     model.name = 'test_model_presimulation_pysb'
     outdir = model.name
-    pysb2amici(model, outdir, verbose=False,
+    pysb2amici(model, outdir, verbose=True,
                observables=['pPROT_obs'],
                constant_parameters=constant_parameters)
 
