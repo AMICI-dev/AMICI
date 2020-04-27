@@ -1291,6 +1291,12 @@ class SbmlImporter:
         species_solver = self._add_conservation_for_constant_species(
             ode_model, conservation_laws)
 
+        # Check, whether species_solver is empty now. As currently, AMICI
+        # cannot handle ODEs without species, CLs must switched in this case
+        if len(species_solver) == 0:
+            conservation_laws = []
+            species_solver = list(range(ode_model.nx_rdata()))
+
         # prune out species from stoichiometry and
         volume_updates_solver = self._reduce_stoichiometry(species_solver,
                                                            volume_updates)
@@ -1362,12 +1368,9 @@ class SbmlImporter:
 
         # updates of stoichiometry (later dxdotdw in ode_exporter) must be
         # corrected for conserved quantities:
-        volume_updates_solver = []
-        for update in volume_updates:
-            x_index = update[0]
-            if x_index in species_solver:
-                x_index = species_solver.index(x_index)
-                volume_updates_solver.append((x_index, update[1], update[2]))
+        volume_updates_solver = [(species_solver.index(ix), iw, val)
+                       for (ix, iw, val) in volume_updates
+                       if ix in species_solver]
 
         return volume_updates_solver
 
