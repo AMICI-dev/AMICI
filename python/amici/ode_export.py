@@ -1257,14 +1257,16 @@ class ODEModel:
             ])
             return
         elif name == 'dtcldp':
+            # check, whether the CL consists of only one state. Then,
+            # sensitivities drop out, syms can be deleted
+            state_set = {state.get_id() for state in self._states}
             self._syms[name] = sp.Matrix([
-                [
-                    sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
-                              f'{strip_pysb(par.get_id())}',
-                              real=True)
+                [sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
+                           f'{strip_pysb(par.get_id())}', real=True)
                     for par in self._parameters
-                ]
-                for tcl in self._conservationlaws
+                 ]
+                for tcl in self._conservationlaws if len(
+                    state_set.intersection(tcl.get_val().free_symbols)) > 1
             ])
             return
         elif name in sparse_functions:
@@ -1493,8 +1495,20 @@ class ODEModel:
             self._eqs[name] = sp.zeros(self.ncl(), self.nx_solver())
 
         elif name == 'dtcldp':
-            # force symbols
-            self._eqs[name] = self.sym(name)
+            # check, whether the CL consists of only one state. Then,
+            # sensitivities drop out, syms can be deleted
+            state_set = {state.get_id() for state in self._states}
+            self._eqs[name] = sp.Matrix([
+                [0] * self.np()
+                if len(state_set.intersection(
+                    tcl.get_val().free_symbols)) == 1
+                else [
+                    sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
+                              f'{strip_pysb(par.get_id())}', real=True)
+                    for par in self._parameters
+                ]
+                for tcl in self._conservationlaws
+            ])
 
         elif name == 'dxdotdp_explicit':
             # force symbols
