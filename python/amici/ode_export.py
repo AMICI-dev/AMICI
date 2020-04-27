@@ -1259,8 +1259,7 @@ class ODEModel:
         elif name == 'dtcldp':
             # check, whether the CL consists of only one state. Then,
             # sensitivities drop out, otherwise generate symbols
-            state_set = set(self.sym('x_rdata'))
-            self._eqs[name] = sp.Matrix([
+            self._syms[name] = sp.Matrix([
                 [sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
                            f'{strip_pysb(par.get_id())}', real=True)
                     for par in self._parameters]
@@ -1843,9 +1842,8 @@ class ODEModel:
     def conservation_law_has_multispecies(self,
                                           tcl: ConservationLaw) -> bool:
         """
-        Checks whether a conservation law has multiple species (this
-        requires sensitivity computation) or it just defines one constant
-        species (requires no sensitivity computation)
+        Checks whether a conservation law has multiple species or it just
+        defines one constant species
 
         :param tcl:
             conservation law
@@ -2168,6 +2166,8 @@ class ODEExporter:
 
         for index, symbol in enumerate(symbols):
             symbol_name = strip_pysb(symbol)
+            if str(symbol) == '0':
+                continue
             lines.append(
                 f'#define {symbol_name} {name}[{index}]'
             )
