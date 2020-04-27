@@ -13,6 +13,8 @@ import warnings
 import time
 import functools
 
+from inspect import getouterframes, currentframe
+
 LOG_LEVEL_ENV_VAR = 'AMICI_LOG'
 BASE_LOGGER_NAME = 'amici'
 # Supported values for LOG_LEVEL_ENV_VAR
@@ -175,12 +177,25 @@ def log_execution_time(description: str, logger: logging.Logger) -> Callable:
     def decorator_timer(func):
         @functools.wraps(func)
         def wrapper_timer(*args, **kwargs):
+
+            # append pluses to indicate recursion level
+            recursion_level = sum(
+                frame.function == 'wrapper_timer'
+                and frame.filename == __file__
+                for frame in getouterframes(currentframe())
+            )
+
+            recursion = ''
+            if recursion_level > 1:
+                recursion = '+' * (recursion_level - 1)
+
             tstart = time.perf_counter()
             rval = func(*args, **kwargs)
             tend = time.perf_counter()
-            spacers = ' ' * max(55 - len(description) - len(logger.name), 0)
+            spacers = ' ' * max(54 - len(description) - len(logger.name) -
+                                len(recursion), 0)
             logger.info(f'Finished {description}{spacers}'
-                        f'({(tend - tstart):.2E}s)')
+                        f'{recursion} ({(tend - tstart):.2E}s)')
             return rval
         return wrapper_timer
     return decorator_timer
