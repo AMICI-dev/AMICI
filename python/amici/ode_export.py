@@ -1258,15 +1258,15 @@ class ODEModel:
             return
         elif name == 'dtcldp':
             # check, whether the CL consists of only one state. Then,
-            # sensitivities drop out, syms can be deleted
-            state_set = {state.get_id() for state in self._states}
-            self._syms[name] = sp.Matrix([
+            # sensitivities drop out, otherwise generate symbols
+            state_set = set(self.sym('x_rdata'))
+            self._eqs[name] = sp.Matrix([
                 [sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
                            f'{strip_pysb(par.get_id())}', real=True)
-                    for par in self._parameters
-                 ]
-                for tcl in self._conservationlaws if len(
-                    state_set.intersection(tcl.get_val().free_symbols)) > 1
+                    for par in self._parameters]
+                if self.conservation_law_has_multispecies(tcl)
+                else [0] * self.np()
+                for tcl in self._conservationlaws
             ])
             return
         elif name in sparse_functions:
@@ -1495,20 +1495,8 @@ class ODEModel:
             self._eqs[name] = sp.zeros(self.ncl(), self.nx_solver())
 
         elif name == 'dtcldp':
-            # check, whether the CL consists of only one state. Then,
-            # sensitivities drop out, syms can be deleted
-            state_set = {state.get_id() for state in self._states}
-            self._eqs[name] = sp.Matrix([
-                [0] * self.np()
-                if len(state_set.intersection(
-                    tcl.get_val().free_symbols)) == 1
-                else [
-                    sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
-                              f'{strip_pysb(par.get_id())}', real=True)
-                    for par in self._parameters
-                ]
-                for tcl in self._conservationlaws
-            ])
+            # force symbols
+            self._eqs[name] = self.sym(name)
 
         elif name == 'dxdotdp_explicit':
             # force symbols
@@ -1851,6 +1839,24 @@ class ODEModel:
 
         """
         return self._states[ix].get_dt() == 0.0
+
+    def conservation_law_has_multispecies(self,
+                                          tcl: ConservationLaw) -> bool:
+        """
+        Checks whether a conservation law has multiple species (this
+        requires sensitivity computation) or it just defines one constant
+        species (requires no sensitivity computation)
+
+        :param tcl:
+            conservation law
+
+        :return:
+            boolean indicating if conservation_law is not None
+
+        """
+        state_set = set(self.sym('x_rdata'))
+        n_species = len(state_set.intersection(tcl.get_val().free_symbols))
+        return n_species > 1
 
 
 def _print_with_exception(math: sp.Basic) -> str:
