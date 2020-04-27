@@ -1132,7 +1132,8 @@ class ODEModel:
         """
 
         if name not in self._eqs:
-            self._compute_equation(name)
+            dec = log_execution_time(f'computing {name}', logger)
+            dec(self._compute_equation)(name)
         return self._eqs[name]
 
     def sparseeq(self, name) -> sp.Matrix:

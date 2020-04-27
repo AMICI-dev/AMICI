@@ -19,6 +19,24 @@ import sys
 import subprocess
 import setup_clibs  # Must run from within containing directory
 
+
+def try_install(package):
+    """Try installing the given package using pip. Exit on error."""
+    errno = subprocess.call([sys.executable, "-m", "pip", "install", package])
+    if errno:
+        print(f"Failed trying to install {package}. Please install manually.")
+        raise SystemExit(errno)
+
+try:
+    # Required for numpy include directory, and for importing anything from
+    # the `amici` package. Therefore, try before any amici import.
+    import numpy as np
+except ImportError:
+    # We need numpy, but setup_requires fires too late
+    try_install('numpy')
+    # retry
+    import numpy as np
+
 # Add current directory to path, as we need some modules from the AMICI
 # package already for installation
 sys.path.insert(0, os.getcwd())
@@ -35,22 +53,6 @@ from amici.setuptools import (
 )
 
 
-def try_install(package):
-    """Try installing the given package using pip. Exit on error."""
-    errno = subprocess.call([sys.executable, "-m", "pip", "install", package])
-    if errno:
-        print(f"Failed trying to install {package}. Please install manually.")
-        raise SystemExit(errno)
-
-
-try:
-    # required for include directory
-    import numpy as np
-except ImportError:
-    # We need numpy, but setup_requires fires too late
-    try_install('numpy')
-    # retry
-    import numpy as np
 
 # Python version check. We need >= 3.6 due to e.g. f-strings
 if sys.version_info < (3, 6):

@@ -5,8 +5,11 @@ on:
       - develop
       - master
   pull_request:
-    branches:
-      - master
+    paths:
+      - python/amici/sbml_import.py
+      - python/amici/ode_export.py
+      - scripts/run-SBMLTestsuite.sh
+      - tests/testSBMLSuite.py
 
 jobs:
   build:
