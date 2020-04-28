@@ -1,7 +1,7 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-#include "testfunctions.hpp"
+#include "testfunctions.h"
 
 #include <cstring>
 #include "wrapfunctions.h"

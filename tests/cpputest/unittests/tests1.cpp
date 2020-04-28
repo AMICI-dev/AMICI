@@ -1,4 +1,4 @@
-#include "testfunctions.hpp"
+#include "testfunctions.h"
 
 #include <amici/amici.h>
 #include <amici/forwardproblem.h>
