@@ -1455,7 +1455,7 @@ class ODEModel:
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:, ip] += \
                         dx0_fixed_parametersdx \
-                        * self.sym('sx0') \
+                        * self.sym('sx0')
 
             for index, formula in enumerate(self.eq('x0_fixedParameters')):
                 if formula == 0 or formula == 0.0:
