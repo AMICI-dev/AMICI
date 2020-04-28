@@ -5,6 +5,7 @@ jobs:
   build:
     name: C++ testsuite / Ubuntu
 
+    # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest
 
     env:
@@ -22,6 +23,7 @@ jobs:
     - run: echo "::add-path::${SONAR_SCANNER_HOME}/bin"
     - run: echo "::add-path::$HOME/.sonar/build-wrapper-linux-x86"
 
+    # TODO: add to ci image
     - name: Install sonarcloud tools
       run: |
         sudo apt install nodejs curl unzip \
@@ -67,11 +69,15 @@ jobs:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
 
+    # TODO: valgrind
+    # TODO: C++ coverage
+    # TODO: python precompiled models run+coverage
+
     - name: Run sonar-scanner
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        sonar-scanner -X \
+        sonar-scanner \
          -Dsonar.cfamily.build-wrapper-output=bw-output \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
