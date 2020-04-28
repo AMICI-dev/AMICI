@@ -81,4 +81,4 @@ jobs:
          -Dsonar.cfamily.build-wrapper-output=bw-output \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
 
-    - run: cd build && make python-sdist
+    # TODO required here? - run: cd build && make python-sdist
