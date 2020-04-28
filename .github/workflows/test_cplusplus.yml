@@ -69,7 +69,7 @@ jobs:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
 
-    # TODO: valgrind
+    # TODO: valgrind #     - run: scripts/run-valgrind.sh
     # TODO: C++ coverage
     # TODO: python precompiled models run+coverage
 

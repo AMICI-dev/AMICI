@@ -29,7 +29,7 @@ CppUTest_DIR=${cpputest_build_dir} \
 # build, with or without sonarcloud wrapper
 if [[ "$CI_SONARCLOUD" == "TRUE" ]]; then
   build-wrapper-linux-x86-64 \
-    --out-dir bw-output \
+    --out-dir "${script_path}/../bw-output" \
     cmake --build . --parallel
 else
   cmake --build . --parallel
