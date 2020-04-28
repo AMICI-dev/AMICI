@@ -2,7 +2,7 @@
 #include <amici/model.h>
 #include <amici/solver_cvodes.h>
 
-#include "testfunctions.h"
+#include "testfunctions.hpp"
 
 #include <cmath>
 
@@ -48,7 +48,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     checkEqualArray(r.sigmay, s.sigmay, 1e-16, 1e-16, "sigmay");
     checkEqualArray(r.sy, s.sy, 1e-16, 1e-16, "sy");
     checkEqualArray(r.ssigmay, s.ssigmay, 1e-16, 1e-16, "ssigmay");
-    
+
     CHECK_TRUE(r.numsteps == s.numsteps);
     CHECK_TRUE(r.numstepsB == s.numstepsB);
     CHECK_TRUE(r.numrhsevals == s.numrhsevals);
@@ -69,7 +69,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.preeq_numsteps == s.preeq_numsteps);
     CHECK_TRUE(r.preeq_numlinsteps == s.preeq_numlinsteps);
     DOUBLES_EQUAL(r.preeq_cpu_time, s.preeq_cpu_time, 1e-16);
-    
+
     CHECK_TRUE(r.posteq_status == s.posteq_status);
     CHECK_TRUE(r.posteq_t == s.posteq_t ||
                (std::isnan(r.posteq_t) && std::isnan(s.posteq_t)));
@@ -78,7 +78,7 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.posteq_numsteps == s.posteq_numsteps);
     CHECK_TRUE(r.posteq_numlinsteps == s.posteq_numlinsteps);
     DOUBLES_EQUAL(r.posteq_cpu_time, s.posteq_cpu_time, 1e-16);
-    
+
     checkEqualArray(r.x0, s.x0, 1e-16, 1e-16, "x0");
     checkEqualArray(r.sx0, s.sx0, 1e-16, 1e-16, "sx0");
 

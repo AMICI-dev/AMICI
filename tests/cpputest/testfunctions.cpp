@@ -1,4 +1,4 @@
-#include "testfunctions.h"
+#include "testfunctions.hpp"
 
 #include <cstring>
 #include <execinfo.h>
@@ -155,9 +155,9 @@ void checkEqualArrayStrided(const double *expected, const double *actual, int le
 
 void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
                       const ReturnData *rdata, const Model *model, double atol, double rtol) {
-    
+
     CHECK_FALSE(rdata == nullptr);
-    
+
     if(!hdf5::locationExists(hdffile, resultPath)) {
         fprintf(stderr, "ERROR: No results available for %s!\n",
                 resultPath.c_str());
@@ -168,7 +168,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     H5::H5File file(hdffile, H5F_ACC_RDONLY);
 
     hsize_t m, n;
-    
+
     std::vector<realtype> expected;
 
     auto statusExp = hdf5::getIntScalarAttribute(file, resultPath, "status");
@@ -188,7 +188,7 @@ void verifyReturnData(std::string const& hdffile, std::string const& resultPath,
     }
 
     //    CHECK_EQUAL(AMICI_O2MODE_FULL, udata->o2mode);
-    
+
     if(hdf5::locationExists(file, resultPath + "/diagnosis/J")) {
         expected = hdf5::getDoubleDataset2D(file, resultPath + "/diagnosis/J", m, n);
         checkEqualArray(expected, rdata->J, atol, rtol, "J");
