@@ -1,0 +1,78 @@
+name: C++ testsuite / Ubuntu
+on: [push]
+
+jobs:
+  build:
+    name: C++ testsuite / Ubuntu
+
+    runs-on: ubuntu-latest
+
+    env:
+      ENABLE_GCOV_COVERAGE: TRUE
+      CI_SONARCLOUD: TRUE
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+      # sonar cloud
+    - run: echo "::set-env name=SONAR_SCANNER_VERSION::4.2.0.1873"
+    - run: echo "::set-env name=SONAR_SCANNER_HOME::$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux"
+    - run: echo "::set-env name=SONAR_SCANNER_OPTS::-server"
+    - run: echo "::add-path::${SONAR_SCANNER_HOME}/bin"
+    - run: echo "::add-path::$HOME/.sonar/build-wrapper-linux-x86"
+
+    - name: Install sonarcloud tools
+      run: |
+        sudo apt install nodejs curl unzip \
+        && curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip \
+          https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION-linux.zip \
+        && unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/ \
+        && curl --create-dirs -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip \
+          https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip \
+        && unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/ \
+
+    # install amici dependencies
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y \
+            cmake \
+            g++ \
+            libatlas-base-dev \
+            libboost-serialization-dev \
+            libhdf5-serial-dev \
+            swig
+
+    - name: Build suitesparse
+      run: |
+        scripts/buildSuiteSparse.sh
+
+    - name: Build sundials
+      run: |
+        scripts/buildSundials.sh
+
+    - name: Build cpputest
+      run: |
+        scripts/buildCpputest.sh
+
+    - name: Build AMICI
+      run: |
+        CI_SONARCLOUD=TRUE scripts/buildAmici.sh
+
+    - name: Cache sonar files
+      id: cache-sonar
+      uses: actions/cache@v1
+      with:
+        path: sonar_cache
+        key: ${{ runner.os }}-sonar_cache
+
+    - name: Run sonar-scanner
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        sonar-scanner -X \
+         -Dsonar.cfamily.build-wrapper-output=bw-output \
+         -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
+
+    - run: cd build && make python-sdist
