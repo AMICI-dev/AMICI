@@ -113,6 +113,15 @@ class AmiciBuildCLib(build_clib):
         set_compiler_specific_library_options(
             libraries, self.compiler.compiler_type)
 
+        # Monkey-patch setuptools, to force recompilation of library sources
+        # --force does not work as expected
+
+        # need full import here, not module-level imported build_clib
+        import setuptools.command.build_clib
+        # the patched function may return anything but `([], [])` to trigger
+        # recompilation
+        setuptools.command.build_clib.newer_pairwise_group = lambda *_: None
+
         build_clib.build_libraries(self, libraries)
 
 
