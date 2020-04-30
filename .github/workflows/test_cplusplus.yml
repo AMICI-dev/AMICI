@@ -70,17 +70,15 @@ jobs:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
 
+    # TODO separate valgrind job
     - name: C++ tests / Valgrind
       run: |
         scripts/run-cpputest.sh # scripts/run-valgrind.sh
     - name: gcov
       run: cd build && gcov CMakeFiles/amici.dir/src/*.o
 
-    # TODO: valgrind #     - run:
-    # TODO: C++ coverage
     # TODO: python precompiled models run+coverage
     # TODO WARN: No report was found for sonar.python.coverage.reportPaths using pattern build/coverage_py.info
-    # TODO: WARN: Directory with gcov reports not found, please check property 'sonar.cfamily.gcov.reportsPath': /home/runner/work/AMICI/AMICI/build/Testing/CoverageInfo
     - name: Run sonar-scanner
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
