@@ -695,6 +695,25 @@ symbol_to_type = {
 }
 
 
+def smart_jacobian(eq: sp.MutableDenseMatrix,
+                   sym_var: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
+    if min(eq.shape) and min(sym_var.shape) \
+            and eq.is_zero is not True and sym_var.is_zero is not True \
+            and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
+        return eq.jacobian(sym_var)
+    else:
+        return sp.zeros(eq.shape[0], sym_var.shape[0])
+
+
+def smart_multiply(x: sp.MutableDenseMatrix,
+                   y: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
+    if not x.shape[0] or not y.shape[1] or x.is_zero is True or \
+            y.is_zero is True:
+        return sp.zeros(x.shape[0], y.shape[1])
+    else:
+        return x * y
+
+
 class ODEModel:
     """
     Defines an Ordinary Differential Equation as set of ModelQuantities.
@@ -970,8 +989,8 @@ class ODEModel:
                 return x_Sw/v
 
         # create dynmics without respecting conservation laws first
-        Sw = (MutableDenseMatrix(si.stoichiometric_matrix)
-              * MutableDenseMatrix(fluxes))
+        Sw = smart_multiply(MutableDenseMatrix(si.stoichiometric_matrix),
+                            MutableDenseMatrix(fluxes))
         symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
             lambda x_Sw: dx_dt(x_index, x_Sw))
             for x_index in range(Sw.rows)])
@@ -1509,29 +1528,19 @@ class ODEModel:
             # if x0_fixedParameters>0 else 0
             # sx0_fixedParameters = sx+deltasx =
             # dx0_fixed_parametersdx*sx+dx0_fixedParametersdp
-            if len(self.sym('p')):
-                self._eqs[name] = \
-                    self.eq('x0_fixedParameters').jacobian(self.sym('p'))
-            else:
-                self._eqs[name] = sp.zeros(
-                    len(self.eq('x0_fixedParameters')),
-                    len(self.sym('p'))
-                )
+            self._eqs[name] = smart_jacobian(
+                self.eq('x0_fixedParameters'), self.sym('p')
+            )
 
-            if len(self.sym('x')):
-                dx0_fixed_parametersdx = \
-                    self.eq('x0_fixedParameters').jacobian(self.sym('x'))
-            else:
-                dx0_fixed_parametersdx = sp.zeros(
-                    len(self.eq('x0_fixedParameters')),
-                    len(self.sym('x'))
-                )
+            dx0_fixed_parametersdx = smart_jacobian(
+                self.eq('x0_fixedParameters'), self.sym('x')
+            )
 
             if dx0_fixed_parametersdx.is_zero is not True:
                 for ip in range(self._eqs[name].shape[1]):
-                    self._eqs[name][:, ip] += \
-                        dx0_fixed_parametersdx \
-                        * self.sym('sx0') \
+                    self._eqs[name][:, ip] += smart_multiply(
+                        dx0_fixed_parametersdx, self.sym('sx0')
+                    )
 
             for index, formula in enumerate(self.eq('x0_fixedParameters')):
                 if formula == 0 or formula == 0.0:
@@ -1665,12 +1674,7 @@ class ODEModel:
         #  branch
         sym_var = self.sym(var, needs_stripped_symbols)
 
-        if min(eq.shape) and min(sym_var.shape) \
-                and eq.is_zero is not True and sym_var.is_zero is not True \
-                and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
-            self._eqs[name] = eq.jacobian(sym_var)
-        else:
-            self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])
+        self._eqs[name] = smart_jacobian(eq, sym_var)
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
@@ -1726,9 +1730,9 @@ class ODEModel:
                 if dxdz.shape[1] == 1 and \
                         self._eqs[name].shape[1] != dxdz.shape[1]:
                     for iz in range(self._eqs[name].shape[1]):
-                        self._eqs[name][:, iz] += dydx * dxdz
+                        self._eqs[name][:, iz] += smart_multiply(dydx, dxdz)
                 else:
-                    self._eqs[name] += dydx * dxdz
+                    self._eqs[name] += smart_multiply(dydx, dxdz)
 
     def sym_or_eq(self, name: str, varname: str) -> sp.Matrix:
         """
@@ -1793,11 +1797,7 @@ class ODEModel:
 
         yy = variables[y]
 
-        if not xx.shape[0] or not yy.shape[1] or xx.is_zero is True or \
-                yy.is_zero is True:
-            self._eqs[name] = sp.zeros(xx.shape[0], yy.shape[1])
-        else:
-            self._eqs[name] = sign * xx * yy
+        self._eqs[name] = sign * smart_multiply(xx, yy)
 
     def _equation_from_component(self, name: str, component: str) -> None:
         """
