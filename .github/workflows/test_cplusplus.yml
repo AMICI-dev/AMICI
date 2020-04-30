@@ -17,7 +17,7 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}"/ThirdParty/BioNetGen-2.3.2"
+    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
 
       # sonar cloud
     - run: echo "::set-env name=SONAR_SCANNER_VERSION::4.2.0.1873"
