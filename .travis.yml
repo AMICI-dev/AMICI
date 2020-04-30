@@ -25,7 +25,6 @@ matrix:
             - libboost-serialization-dev
             - g++-5
             - libc6-dbg
-
       env:
         - ENABLE_GCOV_COVERAGE=TRUE
         - CI_BUILD=TRUE
