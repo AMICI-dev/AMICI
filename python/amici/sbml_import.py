@@ -1025,8 +1025,16 @@ class SbmlImporter:
 
             if variable in rulevars:
                 for nested_rule in rules:
-                    nested_rule_math_ml = sp.printing.print_mathml(
-                        sbml.formulaToL3String(nested_rule.getMath()))
+
+                    nested_formula = sp.sympify(
+                        sbml.formulaToL3String(nested_rule.getMath()),
+                        locals=self.local_symbols).subs(variable, formula)
+
+                    if not isinstance(nested_formula, sp.Function):
+                        raise SBMLException(f'Formula {str(nested_formula)}'
+                                            f' cannot be parsed by sympy!')
+
+                    nested_rule_math_ml = sp.printing.mathml.mathml(nested_formula)
                     nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml)
 
                     if nested_rule.setMath(nested_rule_math_ml_ast_node) != sbml.LIBSBML_OPERATION_SUCCESS:
