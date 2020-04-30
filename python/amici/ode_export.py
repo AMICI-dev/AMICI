@@ -935,8 +935,6 @@ class ODEModel:
         # do this as we can save a substantial amount of computations by
         # knowing the right solutions here
         nx_solver = si.stoichiometric_matrix.shape[0]
-        self._eqs['dxdotdx'] = sp.zeros(nx_solver)
-
         nw = len(self._expressions)
         # append zero rows for conservation law `w`s, note that
         # _process_conservation_laws is called after the fluxes are added as
@@ -1590,7 +1588,8 @@ class ODEModel:
         sym_var = self.sym(var, needs_stripped_symbols)
 
         if min(eq.shape) and min(sym_var.shape) \
-                and eq.is_zero is not True and sym_var.is_zero is not True:
+                and eq.is_zero is not True and sym_var.is_zero is not True \
+                and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
             self._eqs[name] = eq.jacobian(sym_var)
         else:
             self._eqs[name] = sp.zeros(eq.shape[0], self.sym(var).shape[0])

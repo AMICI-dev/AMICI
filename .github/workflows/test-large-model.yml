@@ -4,6 +4,7 @@ on:
     branches:
       - develop
       - master
+      - feature_speed
 
   pull_request:
     branches:
