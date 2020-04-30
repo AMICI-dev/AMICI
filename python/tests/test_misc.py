@@ -80,4 +80,9 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 
     cmd = f"set -e; cd {source_dir}; mkdir -p build; cd build; "\
           "cmake ..; make"
-    subprocess.run(cmd, shell=True, capture_output=True, check=True)
+
+    # TODO: when tests run on ubuntu20:
+    #  subprocess.run(cmd, shell=True, capture_output=True, check=True)
+
+    subprocess.run(cmd, shell=True, stdout=subprocess.PIPE,
+                   stderr=subprocess.PIPE, check=True)

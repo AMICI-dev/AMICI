@@ -90,7 +90,7 @@ jobs:
     - name: Install python package
       run: scripts/installAmiciSource.sh
 
-    - name: Pregenerated models via Python
+    - name: Python tests
       run: |
         source build/venv/bin/activate \
         && pip3 install coverage pytest pytest-cov \
