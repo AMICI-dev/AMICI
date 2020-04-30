@@ -47,6 +47,7 @@ jobs:
             libatlas-base-dev \
             libboost-serialization-dev \
             libhdf5-serial-dev \
+            python3.6- \
             python3.7 \
             swig
 
