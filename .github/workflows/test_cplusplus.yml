@@ -44,8 +44,7 @@ jobs:
             libatlas-base-dev \
             libboost-serialization-dev \
             libhdf5-serial-dev \
-            swig \
-            valgrind
+            swig
 
     - name: Build suitesparse
       run: |
