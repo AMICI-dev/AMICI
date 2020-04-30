@@ -44,8 +44,10 @@ jobs:
         scripts/buildCpputest.sh
 
     - name: Build AMICI
+      # TODO: should get rid of having to install numpy before
       run: |
-        scripts/buildAmici.sh
+        pip3 install numpy \
+        && scripts/buildAmici.sh
 
     - name: C++ tests / Valgrind
       run: |
