@@ -14,6 +14,18 @@ jobs:
       CI_SONARCLOUD: TRUE
 
     steps:
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y \
+            cmake \
+            g++ \
+            git \
+            libatlas-base-dev \
+            libboost-serialization-dev \
+            libhdf5-serial-dev \
+            swig
+
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
@@ -37,18 +49,6 @@ jobs:
         && curl --create-dirs -sSLo $HOME/.sonar/build-wrapper-linux-x86.zip \
           https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip \
         && unzip -o $HOME/.sonar/build-wrapper-linux-x86.zip -d $HOME/.sonar/ \
-
-    # install amici dependencies
-    - name: apt
-      run: |
-        sudo apt-get update \
-          && sudo apt-get install -y \
-            cmake \
-            g++ \
-            libatlas-base-dev \
-            libboost-serialization-dev \
-            libhdf5-serial-dev \
-            swig
 
     - name: Build suitesparse
       run: |
