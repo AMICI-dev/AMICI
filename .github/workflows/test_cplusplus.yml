@@ -70,9 +70,9 @@ jobs:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
 
-    - name: Valgrind
+    - name: C++ tests / Valgrind
       run: |
-        scripts/run-valgrind.sh
+        scripts/run-cpputest.sh # scripts/run-valgrind.sh
     - name: gcov
       run: cd build && gcov CMakeFiles/amici.dir/src/*.o
 
