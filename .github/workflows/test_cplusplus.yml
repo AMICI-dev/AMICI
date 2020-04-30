@@ -17,7 +17,9 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    # sonar cloud
+    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}"/ThirdParty/BioNetGen-2.3.2"
+
+      # sonar cloud
     - run: echo "::set-env name=SONAR_SCANNER_VERSION::4.2.0.1873"
     - run: echo "::set-env name=SONAR_SCANNER_HOME::$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux"
     - run: echo "::set-env name=SONAR_SCANNER_OPTS::-server"
@@ -58,6 +60,10 @@ jobs:
     - name: Build cpputest
       run: |
         scripts/buildCpputest.sh
+
+    - name: Build cpputest
+      run: |
+        scripts/buildBNGL.sh
 
     - name: Build AMICI
       run: |
