@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-      # sonar cloud
+    # sonar cloud
     - run: echo "::set-env name=SONAR_SCANNER_VERSION::4.2.0.1873"
     - run: echo "::set-env name=SONAR_SCANNER_HOME::$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux"
     - run: echo "::set-env name=SONAR_SCANNER_OPTS::-server"
@@ -44,7 +44,8 @@ jobs:
             libatlas-base-dev \
             libboost-serialization-dev \
             libhdf5-serial-dev \
-            swig
+            swig \
+            valgrind
 
     - name: Build suitesparse
       run: |
@@ -69,10 +70,17 @@ jobs:
         path: sonar_cache
         key: ${{ runner.os }}-sonar_cache
 
-    # TODO: valgrind #     - run: scripts/run-valgrind.sh
+    - name: Valgrind
+      run: |
+        scripts/run-valgrind.sh
+    - name: gcov
+      run: gcov build/CMakeFiles/amici.dir/src/*.o
+
+    # TODO: valgrind #     - run:
     # TODO: C++ coverage
     # TODO: python precompiled models run+coverage
-
+    # TODO WARN: No report was found for sonar.python.coverage.reportPaths using pattern build/coverage_py.info
+    # TODO: WARN: Directory with gcov reports not found, please check property 'sonar.cfamily.gcov.reportsPath': /home/runner/work/AMICI/AMICI/build/Testing/CoverageInfo
     - name: Run sonar-scanner
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
