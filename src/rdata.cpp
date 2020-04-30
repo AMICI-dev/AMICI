@@ -180,11 +180,11 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
     readSimulationState(preeq.getFinalSimulationState(), model);
 
     if (!x_ss.empty()) {
-        model.fx_rdata(x_rdata, t, x_solver);
+        model.fx_rdata(x_rdata, x_solver);
         writeSlice(x_rdata, x_ss);
     }
     if (!sx_ss.empty() && sensi >= SensitivityOrder::first) {
-        model.fsx_rdata(sx_rdata, t, x_solver, sx_solver);
+        model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++)
             writeSlice(sx_rdata[ip], slice(sx_ss, ip, nx));
     }
@@ -232,12 +232,12 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
     readSimulationState(initialState, model);
 
     if (!x0.empty()) {
-        model.fx_rdata(x_rdata, t, x_solver);
+        model.fx_rdata(x_rdata, x_solver);
         writeSlice(x_rdata, x0);
     }
     
     if (!sx0.empty()) {
-        model.fsx_rdata(sx_rdata, t, x_solver, sx_solver);
+        model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++)
             writeSlice(sx_rdata[ip], slice(sx0, ip, nx));
     }
@@ -264,7 +264,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
 
 void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
     if (!x.empty()) {
-        model.fx_rdata(x_rdata, t, x_solver);
+        model.fx_rdata(x_rdata, x_solver);
         writeSlice(x_rdata, slice(x, it, nx));
     }
     if (!w.empty())
@@ -301,7 +301,7 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
 
 void ReturnData::getDataSensisFSA(int it, Model &model, ExpData const *edata) {
     if (!sx.empty()) {
-        model.fsx_rdata(sx_rdata, t, x_solver, sx_solver);
+        model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++) {
             writeSlice(sx_rdata[ip],
                        slice(sx, it * nplist + ip, nx));

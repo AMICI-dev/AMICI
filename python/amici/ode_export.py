@@ -216,14 +216,15 @@ functions = {
     },
     'x_rdata': {
         'signature':
-            '(realtype *x_rdata, const realtype *x, const realtype *w)',
+            '(realtype *x_rdata, const realtype *x, const realtype *w, '
+            'const realtype *tcl)',
     },
-    # explicitely use x_rdata, x, instead of sx_rdata, sx to be able
+    # explicitely use x_rdata, x, tcl, instead of sx_rdata, sx, stcl to be able
     # to use code for x_rdata for ip-independent implementation
     'sx_rdata': {
         'signature':
             '(realtype *x_rdata, const realtype *x, const realtype *w, '
-            ' const realtype *dwdp, const int ip)',
+            ' const realtype *dwdp, const realtype *tcl, const int ip)',
     },
     'total_cl': {
         'signature':
@@ -415,6 +416,9 @@ class State(ModelQuantity):
 
     :ivar _expression:
         Expression which replaces this state
+
+    :ivar _is_conservation_law:
+        Indicator whether this species is replaced by a conservation law
     """
 
     def __init__(self,
@@ -445,8 +449,44 @@ class State(ModelQuantity):
 
         self._dt = dt
         self._expression: Union[Expression, None] = None
+        self._is_conservation_law: bool = False
 
-    def set_expression(self, expr: Expression) -> None:
+    def set_conservation_law(self, law: Expression) -> None:
+        """
+        Sets the conservation law of a state. If the a conservation law
+        is set, the respective state will be replaced by an algebraic
+        formula according to the respective conservation law. If
+        activated, this state will not appear in 'x' syms/eqs but only in
+        'x_rdata'.
+
+        :param law:
+            linear sum of states that if added to this state remain
+            constant over time
+        """
+        self.set_expression(law, True)
+
+    def get_conservation_law(self) -> sp.Basic:
+        """
+        Gets the symbolic expression for the conservation law that replaces
+        this state.
+
+        :returns law:
+            linear sum of states that if added to this state remain
+            constant over time
+        """
+        return self._expression.get_val()
+
+    def has_conservation_law(self) -> bool:
+        """
+        Checks whether the state has a conservation law set
+
+        :returns:
+            boolean indicator
+        """
+        return self._is_conservation_law
+
+    def set_expression(self, expr: Expression,
+                       conservation_law: bool = False) -> None:
         """
         Specifies that this state is to be replaced by an expression. If
         activated, this state will not appear in 'x' syms/eqs but only in
@@ -454,12 +494,17 @@ class State(ModelQuantity):
 
         :param expr:
             exression that replaces that state
+
+        :param conservation_law:
+            indicator whether this is a conservation law
+
         """
         if not isinstance(expr, Expression):
-            raise TypeError(f'expr must have type '
-                            f'Expression, was {type(expr)}')
+            raise TypeError(f'conservation law must have type '
+                            f'ConservationLaw, was {type(expr)}')
 
         self._expression = expr
+        self._is_conservation_law = conservation_law
 
     def get_expression(self) -> sp.Basic:
         """
@@ -1045,6 +1090,11 @@ class ODEModel:
         :param total_abundance:
             symbolic identifier of the total abundance (T/a_j)
 
+        :param state_expr:
+            symbolic algebraic formula that replaces the the state. This is
+            used to compute the numeric value of of `state` during simulations.
+            x_j = T/a_j - sum_i≠j(a_i * x_i)/a_j
+
         :param abundance_expr:
             symbolic algebraic formula that computes the value of the
             conserved quantity. This is used to update the numeric value for
@@ -1066,12 +1116,14 @@ class ODEModel:
         if not self.conservation_law_has_multispecies(abundance_expr):
             expr = Expression(state_id, str(state_id),
                               self._states[ix].get_val())
+            self.get_state(ix).set_expression(expr)
         else:
             expr = Expression(state_id, str(state_id), state_expr)
             self.add_component(ConservationLaw(total_abundance,
                                                f'total_{state_id}',
                                                abundance_expr))
-        self.get_state(ix).set_expression(expr)
+            self.get_state(ix).set_conservation_law(expr)
+
         self.add_component(expr)
 
     def nx_rdata(self) -> int:
@@ -1457,6 +1509,8 @@ class ODEModel:
         elif name == 'x_rdata':
             self._eqs[name] = sp.Matrix([
                 state.get_id()
+                if not state.has_conservation_law()
+                else state.get_conservation_law()
                 for state in self._states
             ])
 
@@ -1782,8 +1836,22 @@ class ODEModel:
         # flatten conservation laws and state expressions in `w`
         if name == 'w':
             self._eqs[name] = self._eqs[name].subs(
+                self.get_conservation_laws()
+            ).subs(
                 self.get_state_expressions()
             )
+
+    def get_conservation_laws(self) -> List[Tuple[sp.Symbol, sp.Basic]]:
+        """ Returns a list of states with conservation law set
+
+        :return:
+            list of state identifier, conservation law tuples
+        """
+        return [
+            (state.get_id(), state.get_conservation_law())
+            for state in self._states
+            if state.has_conservation_law()
+        ]
 
     def get_state_expressions(self) -> List[Tuple[sp.Symbol, sp.Basic]]:
         """ Returns a list of states with conservation law set
@@ -1862,6 +1930,20 @@ class ODEModel:
             fp in [c.get_id() for c in self._constants]
             for fp in ic.free_symbols
         ])
+
+    def state_has_conservation_law(self, ix: int) -> bool:
+        """
+        Checks whether the state at specified index has a conservation
+        law set
+
+        :param ix:
+            state index
+
+        :return:
+            boolean indicating if conservation_law is not None
+
+        """
+        return self.get_state(ix).has_conservation_law()
 
     def state_is_constant(self, ix: int) -> bool:
         """

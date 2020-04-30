@@ -1139,15 +1139,14 @@ void Model::fx0(AmiVector &x) {
     }
 }
 
-void Model::fx0_fixedParameters(AmiVector &x, const realtype t0) {
+void Model::fx0_fixedParameters(AmiVector &x) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
     /* we transform to the unreduced states x_rdata and then apply
      x0_fixedparameters to (i) enable updates to states that were removed from
      conservation laws and (ii) be able to correctly compute total abundances
      after updating the state variables */
-    fw(t0, x.data());
-    fx_rdata(x_rdata.data(), x.data(), w.data());
+    fx_rdata(x_rdata.data(), x.data(), w.data(), state.total_cl.data());
     fx0_fixedParameters(x_rdata.data(), tstart, state.unscaledParameters.data(),
                         state.fixedParameters.data());
     fx_solver(x.data(), x_rdata.data());
@@ -1169,45 +1168,40 @@ void Model::fsx0(AmiVectorArray &sx, const AmiVector &x) {
     }
 }
 
-void Model::fsx0_fixedParameters(AmiVectorArray &sx, const realtype t0,
-                                 const AmiVector &x) {
+void Model::fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x) {
     if (!getReinitializeFixedParameterInitialStates())
         return;
     realtype *stcl = nullptr;
-    fw(t0, x.data());
-    fdwdp(t0, x.data());
     for (int ip = 0; ip < nplist(); ip++) {
+        if (ncl() > 0)
+            stcl = &state.stotal_cl.at(plist(ip) * ncl());
         std::fill(sx_rdata.begin(), sx_rdata.end(), 0.0);
-        fsx_rdata(sx_rdata.data(), sx.data(ip), w.data(), dwdp.data(),
+        fsx_rdata(sx_rdata.data(), sx.data(ip), w.data(), dwdp.data(), stcl,
                   plist(ip));
         fsx0_fixedParameters(sx_rdata.data(), tstart, x.data(),
                              state.unscaledParameters.data(),
                              state.fixedParameters.data(),
                              plist(ip));
         fsx_solver(sx.data(ip), sx_rdata.data());
-        if (ncl() > 0) {
-            stcl = &state.stotal_cl.at(plist(ip) * ncl());
-            fstotal_cl(stcl, sx_rdata.data(), plist(ip));
-        }
+        fstotal_cl(stcl, sx_rdata.data(), plist(ip));
     }
 }
 
 void Model::fsdx0() {}
 
-void Model::fx_rdata(AmiVector &x_rdata, const realtype t, const AmiVector &x) {
-    fw(t, x.data());
-    fx_rdata(x_rdata.data(), x.data(), w.data());
+void Model::fx_rdata(AmiVector &x_rdata, const AmiVector &x) {
+    fx_rdata(x_rdata.data(), x.data(), w.data(), state.total_cl.data());
     if (alwaysCheckFinite)
         checkFinite(x_rdata.getVector(), "x_rdata");
 }
 
-void Model::fsx_rdata(AmiVectorArray &sx_rdata, const realtype t,
-                      const AmiVector &x, const AmiVectorArray &sx) {
-    fw(t, x.data());
-    fdwdp(t, x.data());
+void Model::fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx) {
+    realtype *stcl = nullptr;
     for (int ip = 0; ip < nplist(); ip++) {
+        if (ncl() > 0)
+            stcl = &state.stotal_cl.at(plist(ip) * ncl());
         sx_rdata[ip].set(0.0);
-        fsx_rdata(sx_rdata.data(ip), sx.data(ip), w.data(), dwdp.data(),
+        fsx_rdata(sx_rdata.data(ip), sx.data(ip), w.data(), dwdp.data(), stcl,
                   plist(ip));
     }
 }
@@ -1867,7 +1861,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
 }
 
 void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
-                     const realtype * /*w*/) {
+                     const realtype *w, const realtype * /*tcl*/) {
     if (nx_solver != nx_rdata)
         throw AmiException(
             "A model that has differing nx_solver and nx_rdata needs "
@@ -1877,6 +1871,7 @@ void Model::fx_rdata(realtype *x_rdata, const realtype *x_solver,
 
 void Model::fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
                       const realtype * /*w*/, const realtype * /*dwdp*/,
+                      const realtype * /*stcl*/,
                       const int /*ip*/) {
     if (nx_solver != nx_rdata)
         throw AmiException(

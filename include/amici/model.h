@@ -1117,10 +1117,9 @@ class Model : public AbstractModel {
     /**
      * @brief Sets only those initial states that are specified via
      * fixedParmeters
-     * @param t0 initialization timepoint
      * @param x pointer to state variables
      */
-    void fx0_fixedParameters(AmiVector &x, const realtype t0);
+    void fx0_fixedParameters(AmiVector &x);
 
     /**
      * @brief Initial value for initial state sensitivities
@@ -1132,12 +1131,10 @@ class Model : public AbstractModel {
     /**
      * @brief Sets only those initial states sensitivities that are affected
      * from fx0 fixedParmeters
-     * @param t0 initialization timepoint
      * @param sx pointer to state sensitivity variables
      * @param x pointer to state variables
      */
-    void fsx0_fixedParameters(AmiVectorArray &sx, const realtype t0,
-                              const AmiVector &x);
+    void fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x);
 
     /**
      * @brief Sensitivity of derivative initial states sensitivities sdx0 (only
@@ -1147,26 +1144,21 @@ class Model : public AbstractModel {
 
     /**
      * @brief Expands conservation law for states
-     * @param t current timepoint
      * @param x_rdata pointer to state variables with conservation laws expanded
+     * (stored in rdata)
      * @param x_solver pointer to state variables with conservation laws applied
      * (solver returns this)
      */
-    void fx_rdata(AmiVector &x_rdata, const realtype t,
-                  const AmiVector &x_solver);
+    void fx_rdata(AmiVector &x_rdata, const AmiVector &x_solver);
 
     /**
      * @brief Expands conservation law for state sensitivities
      * @param sx_rdata pointer to state variable sensitivities with conservation
-     * laws expanded
-     * @param t current timepoint
-     * @param x_solver pointer to state variables with conservation laws applied
-     * (solver returns this)
+     * laws expanded (stored in rdata)
      * @param sx_solver pointer to state variable sensitivities with
      * conservation laws applied (solver returns this)
      */
-    void fsx_rdata(AmiVectorArray &sx_rdata, const realtype t,
-                   const AmiVector &x_solver, const AmiVectorArray &sx_solver);
+    void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver);
 
     /** number of states */
     int nx_rdata{0};
@@ -1593,9 +1585,11 @@ class Model : public AbstractModel {
      * @param x_rdata state variables with conservation laws expanded
      * @param x_solver state variables with conservation laws applied
      * @param w expressions
+     * @param tcl total abundances for conservation laws
      */
     virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver,
-                          const realtype *w);
+                          const realtype *w,
+                          const realtype *tcl);
 
     /**
      * @brief Model specific implementation of fsx_solver
@@ -1605,11 +1599,12 @@ class Model : public AbstractModel {
      * applied
      * @param w expressions
      * @param dwdp sensitivities of expressions
+     * @param stcl sensitivities of total abundances for conservation laws
      * @param ip sensitivity index
      */
     virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
                            const realtype *w, const realtype *dwdp,
-                           const int ip);
+                           const realtype *stcl, int ip);
 
     /**
      * @brief Model specific implementation of fx_solver
