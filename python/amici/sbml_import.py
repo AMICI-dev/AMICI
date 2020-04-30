@@ -1338,6 +1338,7 @@ class SbmlImporter:
                 conservation_laws.append({
                     'state': target_state,
                     'total_abundance': total_abundance,
+                    'state_expr': total_abundance,
                     'abundance_expr': target_state,
                 })
                 # mark species to delete from stoichiometrix matrix
@@ -1368,10 +1369,11 @@ class SbmlImporter:
         # updates of stoichiometry (later dxdotdw in ode_exporter) must be
         # corrected for conserved quantities:
         volume_updates_solver = [(species_solver.index(ix), iw, val)
-                                 for (ix, iw, val) in volume_updates
-                                 if ix in species_solver]
+                       for (ix, iw, val) in volume_updates
+                       if ix in species_solver]
 
         return volume_updates_solver
+
 
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
@@ -1386,8 +1388,8 @@ class SbmlImporter:
             replacement symbolic variables
         """
         # Avoid replacing variables with rates
-        if old not in {*self.compartment_rate_rules.keys(),
-                       *self.species_rate_rules.keys()}:
+        if old not in set((*self.compartment_rate_rules.keys(),
+                           *self.species_rate_rules.keys())):
             fields = [
                 'stoichiometric_matrix', 'flux_vector',
             ]

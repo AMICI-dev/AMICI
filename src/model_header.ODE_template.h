@@ -95,7 +95,6 @@ extern void y_TPL_MODELNAME(realtype *y, const realtype t, const realtype *x,
                             const realtype *p, const realtype *k,
                             const realtype *h, const realtype *w);
 TPL_X_RDATA_DEF
-TPL_SX_RDATA_DEF
 TPL_X_SOLVER_DEF
 TPL_TOTAL_CL_DEF
 
@@ -730,8 +729,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                     const realtype *h) override {}
 
     TPL_X_RDATA_IMPL
-    
-    TPL_SX_RDATA_IMPL
 
     TPL_X_SOLVER_IMPL
 

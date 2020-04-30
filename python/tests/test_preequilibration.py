@@ -11,7 +11,6 @@ from test_pysb import get_data
 @pytest.fixture
 def preeq_fixture(pysb_example_presimulation_module):
     model = pysb_example_presimulation_module.getModel()
-    assert model.ncl() > 0
     model.setReinitializeFixedParameterInitialStates(True)
 
     solver = model.getSolver()

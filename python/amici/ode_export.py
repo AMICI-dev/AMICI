@@ -216,15 +216,7 @@ functions = {
     },
     'x_rdata': {
         'signature':
-            '(realtype *x_rdata, const realtype *x, const realtype *w, '
-            'const realtype *tcl)',
-    },
-    # explicitely use x_rdata, x, tcl, instead of sx_rdata, sx, stcl to be able
-    # to use code for x_rdata for ip-independent implementation
-    'sx_rdata': {
-        'signature':
-            '(realtype *x_rdata, const realtype *x, const realtype *w, '
-            ' const realtype *dwdp, const realtype *tcl, const int ip)',
+            '(realtype *x_rdata, const realtype *x, const realtype *tcl)',
     },
     'total_cl': {
         'signature':
@@ -358,68 +350,18 @@ class ModelQuantity:
         return self._value
 
 
-class ConservationLaw(ModelQuantity):
-    """
-    A conservation law defines the total amount of a
-    (weighted) sum of states
-
-    """
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Basic):
-        """
-        Create a new ConservationLaw instance.
-
-        :param identifier:
-            unique identifier of the ConservationLaw
-
-        :param name:
-            individual name of the ConservationLaw (does not need to be
-            unique)
-
-        :param value: formula (sum of states)
-        """
-        super(ConservationLaw, self).__init__(identifier, name, value)
-
-
-class Expression(ModelQuantity):
-    """
-    An Expression is a recurring element in symbolic formulas. Specifying
-    this may yield more compact expressions which may lead to substantially
-    shorter model compilation times, but may also reduce model simulation time,
-    abbreviated by `w`.
-    """
-    def __init__(self,
-                 identifier: sp.Symbol,
-                 name: str,
-                 value: sp.Basic):
-        """
-        Create a new Expression instance.
-
-        :param identifier:
-            unique identifier of the Expression
-
-        :param name:
-            individual name of the Expression (does not need to be unique)
-
-        :param value:
-            formula
-        """
-        super(Expression, self).__init__(identifier, name, value)
-
-
 class State(ModelQuantity):
     """
     A State variable defines an entity that evolves with time according to
     the provided time derivative, abbreviated by `x`
 
-    :ivar _expression:
-        Expression which replaces this state
+    :ivar conservation_law:
+        algebraic formula that allows computation of this
+        species according to a conservation law
 
-    :ivar _is_conservation_law:
-        Indicator whether this species is replaced by a conservation law
     """
+
+    conservation_law: Union[sp.Basic, None] = None
 
     def __init__(self,
                  identifier: sp.Symbol,
@@ -448,79 +390,24 @@ class State(ModelQuantity):
                             f'{type(dt)}')
 
         self._dt = dt
-        self._expression: Union[Expression, None] = None
-        self._is_conservation_law: bool = False
+        self.conservation_law = None
 
-    def set_conservation_law(self, law: Expression) -> None:
+    def set_conservation_law(self,
+                             law: sp.Basic) -> None:
         """
         Sets the conservation law of a state. If the a conservation law
         is set, the respective state will be replaced by an algebraic
-        formula according to the respective conservation law. If
-        activated, this state will not appear in 'x' syms/eqs but only in
-        'x_rdata'.
+        formula according to the respective conservation law.
 
         :param law:
             linear sum of states that if added to this state remain
             constant over time
         """
-        self.set_expression(law, True)
+        if not isinstance(law, sp.Basic):
+            raise TypeError(f'conservation law must have type sympy.Basic, '
+                            f'was {type(law)}')
 
-    def get_conservation_law(self) -> sp.Basic:
-        """
-        Gets the symbolic expression for the conservation law that replaces
-        this state.
-
-        :returns law:
-            linear sum of states that if added to this state remain
-            constant over time
-        """
-        return self._expression.get_val()
-
-    def has_conservation_law(self) -> bool:
-        """
-        Checks whether the state has a conservation law set
-
-        :returns:
-            boolean indicator
-        """
-        return self._is_conservation_law
-
-    def set_expression(self, expr: Expression,
-                       conservation_law: bool = False) -> None:
-        """
-        Specifies that this state is to be replaced by an expression. If
-        activated, this state will not appear in 'x' syms/eqs but only in
-        'x_rdata'.
-
-        :param expr:
-            exression that replaces that state
-
-        :param conservation_law:
-            indicator whether this is a conservation law
-
-        """
-        if not isinstance(expr, Expression):
-            raise TypeError(f'conservation law must have type '
-                            f'ConservationLaw, was {type(expr)}')
-
-        self._expression = expr
-        self._is_conservation_law = conservation_law
-
-    def get_expression(self) -> sp.Basic:
-        """
-        Gets the symbolic expression for the Expression that replaces
-        this state.
-        """
-        return self._expression.get_val()
-
-    def is_expression(self) -> bool:
-        """
-        Checks whether this state is set to be an expression
-
-        :returns:
-            indicator variable
-        """
-        return self._expression is not None
+        self.conservation_law = law
 
     def set_dt(self,
                dt: sp.Basic) -> None:
@@ -544,14 +431,30 @@ class State(ModelQuantity):
         """
         return self._dt
 
-    def requires_simulations(self) -> bool:
-        """
-        Checks whether simulation for this state has to be carried out
 
-        :return:
-            time derivative
+class ConservationLaw(ModelQuantity):
+    """
+    A conservation law defines the absolute the total amount of a
+    (weighted) sum of states
+
+    """
+    def __init__(self,
+                 identifier: sp.Symbol,
+                 name: str,
+                 value: sp.Basic):
         """
-        return not self.is_expression()
+        Create a new ConservationLaw instance.
+
+        :param identifier:
+            unique identifier of the ConservationLaw
+
+        :param name:
+            individual name of the ConservationLaw (does not need  to be
+            unique)
+
+        :param value: formula (sum of states)
+        """
+        super(ConservationLaw, self).__init__(identifier, name, value)
 
 
 class Observable(ModelQuantity):
@@ -602,6 +505,32 @@ class SigmaY(ModelQuantity):
             formula
         """
         super(SigmaY, self).__init__(identifier, name, value)
+
+
+class Expression(ModelQuantity):
+    """
+    An Expressions is a recurring elements in symbolic formulas. Specifying
+    this may yield more compact expression which may lead to substantially
+    shorter model compilation times, but may also reduce model simulation time,
+    abbreviated by `w`
+    """
+    def __init__(self,
+                 identifier: sp.Symbol,
+                 name: str,
+                 value: sp.Basic):
+        """
+        Create a new Expression instance.
+
+        :param identifier:
+            unique identifier of the Expression
+
+        :param name:
+            individual name of the Expression (does not need to be unique)
+
+        :param value:
+            formula
+        """
+        super(Expression, self).__init__(identifier, name, value)
 
 
 class Parameter(ModelQuantity):
@@ -896,6 +825,19 @@ class ODEModel:
                     'chainvars': ['w'],
                     'var': 'x',
                 },
+                'sxdot': {
+                    'eq': 'xdot',
+                    'chainvars': ['x'],
+                    'var': 'p',
+                    'dydx_name': 'JSparse',
+                    'dxdz_name': 'sx',
+                },
+                'sx_rdata': {
+                    'eq': 'x_rdata',
+                    'chainvars': ['x'],
+                    'var': 'p',
+                    'dxdz_name': 'sx',
+                },
             }
         self._multiplication_prototypes: Dict[str, Dict[str, str]] = {
             'Jv': {
@@ -1062,21 +1004,10 @@ class ODEModel:
                 return
         Exception(f'Invalid component type {type(component)}')
 
-    def get_state(self, ix: int) -> State:
-        """
-        Returns state at the specified index
-
-        :param ix:
-            state index
-
-        :returns:
-            state at specified index
-        """
-        return self._states[ix]
-
     def add_conservation_law(self,
                              state: sp.Symbol,
                              total_abundance: sp.Symbol,
+                             state_expr: sp.Basic,
                              abundance_expr: sp.Basic) -> None:
         """
         Adds a new conservation law to the model. A conservation law is defined
@@ -1110,21 +1041,21 @@ class ODEModel:
             raise Exception(f'Specified state {state} was not found in the '
                             f'model states.')
 
-        state_id = self.get_state(ix).get_id()
-        state_expr = sp.solve(total_abundance - abundance_expr, state_id)[0]
+        state_id = self._states[ix].get_id()
 
-        if not self.conservation_law_has_multispecies(abundance_expr):
-            expr = Expression(state_id, str(state_id),
-                              self._states[ix].get_val())
-            self.get_state(ix).set_expression(expr)
-        else:
-            expr = Expression(state_id, str(state_id), state_expr)
-            self.add_component(ConservationLaw(total_abundance,
-                                               f'total_{state_id}',
-                                               abundance_expr))
-            self.get_state(ix).set_conservation_law(expr)
+        self.add_component(
+            Expression(state_id, str(state_id), state_expr)
+        )
 
-        self.add_component(expr)
+        self.add_component(
+            ConservationLaw(
+                total_abundance,
+                f'total_{state_id}',
+                abundance_expr
+            )
+        )
+
+        self._states[ix].set_conservation_law(state_expr)
 
     def nx_rdata(self) -> int:
         """
@@ -1360,7 +1291,7 @@ class ODEModel:
             self._syms[name] = sp.Matrix([
                 state.get_id()
                 for state in self._states
-                if state.requires_simulations()
+                if state.conservation_law is None
             ])
             return
         elif name == 'dtcldp':
@@ -1369,7 +1300,9 @@ class ODEModel:
             self._syms[name] = sp.Matrix([
                 [sp.Symbol(f's{strip_pysb(tcl.get_id())}__'
                            f'{strip_pysb(par.get_id())}', real=True)
-                 for par in self._parameters]
+                    for par in self._parameters]
+                if self.conservation_law_has_multispecies(tcl)
+                else [0] * self.np()
                 for tcl in self._conservationlaws
             ])
             return
@@ -1502,15 +1435,15 @@ class ODEModel:
 
         elif name == 'xdot':
             self._eqs[name] = sp.Matrix([
-                state.get_dt() for state in self._states
-                if state.requires_simulations()
+                s.get_dt() for s in self._states
+                if s.conservation_law is None
             ])
 
         elif name == 'x_rdata':
             self._eqs[name] = sp.Matrix([
                 state.get_id()
-                if not state.has_conservation_law()
-                else state.get_conservation_law()
+                if state.conservation_law is None
+                else state.conservation_law
                 for state in self._states
             ])
 
@@ -1518,25 +1451,14 @@ class ODEModel:
             self._eqs[name] = sp.Matrix([
                 state.get_id()
                 for state in self._states
-                if state.requires_simulations()
-            ])
-
-        elif name == 'sx_rdata':
-            # we only implement the ip-dependent implementation here,
-            # the ip-dependent part will be implemented in ODE_exporter.
-            # this avoids writing a probably pretty dense nx x np matrix here
-            self._eqs[name] = sp.Matrix([
-                self.sym('dwdp')[self.get_state_expression_index(state), :]
-                if state.is_expression()
-                else [sp.sympify(0.0)] * self.np()
-                for state in self._states
+                if state.conservation_law is None
             ])
 
         elif name == 'sx_solver':
             self._eqs[name] = sp.Matrix([
                 self.sym('sx_rdata')[ix]
                 for ix, state in enumerate(self._states)
-                if state.requires_simulations()
+                if state.conservation_law is None
             ])
 
         elif name == 'sx0':
@@ -1833,46 +1755,25 @@ class ODEModel:
         self._eqs[name] = sp.Matrix(
             [comp.get_val() for comp in getattr(self, component)]
         )
-        # flatten conservation laws and state expressions in `w`
+        # flatten conservation laws in expressions
         if name == 'w':
             self._eqs[name] = self._eqs[name].subs(
                 self.get_conservation_laws()
-            ).subs(
-                self.get_state_expressions()
             )
 
     def get_conservation_laws(self) -> List[Tuple[sp.Symbol, sp.Basic]]:
         """ Returns a list of states with conservation law set
 
-        :return:
-            list of state identifier, conservation law tuples
-        """
-        return [
-            (state.get_id(), state.get_conservation_law())
-            for state in self._states
-            if state.has_conservation_law()
-        ]
-
-    def get_state_expressions(self) -> List[Tuple[sp.Symbol, sp.Basic]]:
-        """ Returns a list of states with conservation law set
-
 
         :return:
-            generator of state identifier, conservation law tuples
+            list of state identifiers
+
         """
         return [
-            (state.get_id(), state.get_expression())
+            (state.get_id(), state.conservation_law)
             for state in self._states
-            if state.is_expression()
+            if state.conservation_law is not None
         ]
-
-    def get_state_expression_index(self, state: State) -> int:
-        index = next((iw for iw, w in enumerate(self._expressions)
-                      if w.get_id() == state.get_id()), None)
-        if index is None:
-            raise RuntimeError('could not find state in expressions')
-
-        return index
 
     def _generate_value(self, name: str) -> None:
         """
@@ -1923,7 +1824,7 @@ class ODEModel:
             variables is contained in the model constants
 
         """
-        ic = self.get_state(ix).get_val()
+        ic = self._states[ix].get_val()
         if not isinstance(ic, sp.Basic):
             return False
         return any([
@@ -1943,7 +1844,7 @@ class ODEModel:
             boolean indicating if conservation_law is not None
 
         """
-        return self.get_state(ix).has_conservation_law()
+        return self._states[ix].conservation_law is not None
 
     def state_is_constant(self, ix: int) -> bool:
         """
@@ -1956,23 +1857,23 @@ class ODEModel:
             boolean indicating if constant over time
 
         """
-        return self.get_state(ix).get_dt() == 0.0
+        return self._states[ix].get_dt() == 0.0
 
-    def conservation_law_has_multispecies(self, tcl: sp.Basic) -> bool:
+    def conservation_law_has_multispecies(self,
+                                          tcl: ConservationLaw) -> bool:
         """
         Checks whether a conservation law has multiple species or it just
         defines one constant species
 
         :param tcl:
-            conservation law total abundance expression
+            conservation law
 
         :return:
-            boolean indicating if conservation_law depends on more than a
-            single species
+            boolean indicating if conservation_law is not None
 
         """
         state_set = set(self.sym('x_rdata'))
-        n_species = len(state_set.intersection(tcl.free_symbols))
+        n_species = len(state_set.intersection(tcl.get_val().free_symbols))
         return n_species > 1
 
 
@@ -2342,26 +2243,6 @@ class ODEExporter:
 
         # function body
         body = self._get_function_body(function, symbol)
-        if function == 'sx_rdata':
-            # this is the ip-independent implementation of sx_rdata for
-            # simulated species and conservation laws.
-            # **This is a nasty hack and should not serve as reference**
-            # We exploit here that the respective matrices for the the chain
-            # rule wrt x and tcl are identity matrices with a couple of zero
-            # rows for non-simulation/conservationlaw species. If this changes,
-            # this implementation will become obsolete. A more generic
-            # implementation would be to implement this as matrix-matrix
-            # multiplication in c++ code.
-            rdata_body = self._get_function_body(
-                'x_rdata',
-                sp.dense.MutableDenseMatrix([
-                    eq if not self.model.get_state(ix).is_expression()
-                    else sp.sympify(0.0)
-                    for ix, eq in enumerate(self.model.eq('x_rdata'))
-                ])
-            )
-            body.extend(rdata_body)
-
         if self.assume_pow_positivity and 'assume_pow_positivity' \
                 in self.functions[function].get('flags', []):
             body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
@@ -2490,12 +2371,6 @@ class ODEExporter:
         else:
             lines += _get_sym_lines(symbol, function, 4)
 
-        if function == 'sx_rdata':
-            # use x_rdata instead of sx_rdata as this is only the
-            # ip-dependent code and we want to reuse code from x_rdata body
-            lines = [line.replace('sx_rdata', 'x_rdata')
-                     for line in lines if line]
-
         return [line for line in lines if line]
 
     def _write_wrapfunctions_cpp(self) -> None:
@@ -2582,7 +2457,7 @@ class ODEExporter:
         for fun in [
             'w', 'dwdp', 'dwdx', 'x_rdata', 'x_solver', 'total_cl', 'dxdotdw',
             'dxdotdp_explicit', 'dxdotdp_implicit', 'JSparse', 'JSparseB',
-            'dJydy', 'sx_rdata'
+            'dJydy'
         ]:
             tpl_data[f'{fun.upper()}_DEF'] = \
                 get_function_extern_declaration(fun, self.model_name)
