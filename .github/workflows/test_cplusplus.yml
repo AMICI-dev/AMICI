@@ -74,7 +74,7 @@ jobs:
       run: |
         scripts/run-valgrind.sh
     - name: gcov
-      run: gcov build/CMakeFiles/amici.dir/src/*.o
+      run: cd build && gcov CMakeFiles/amici.dir/src/*.o
 
     # TODO: valgrind #     - run:
     # TODO: C++ coverage
