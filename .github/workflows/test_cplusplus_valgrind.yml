@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: C++ testsuite / Valgrind / Ubuntu
+    name: _
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest
