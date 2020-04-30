@@ -697,6 +697,17 @@ symbol_to_type = {
 
 def smart_jacobian(eq: sp.MutableDenseMatrix,
                    sym_var: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
+    """
+    Wrapper around symbolic jacobian with some additional checks that reduce
+    computation time for large matrices
+
+    :param eq:
+        equation
+    :param sym_var:
+        differentiation variable
+    :return:
+        jacobian of eq wrt sym_var
+    """
     if min(eq.shape) and min(sym_var.shape) \
             and eq.is_zero is not True and sym_var.is_zero is not True \
             and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
@@ -707,6 +718,17 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
 
 def smart_multiply(x: sp.MutableDenseMatrix,
                    y: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
+    """
+    Wrapper around symbolic multiplication with some additional checks that
+    reduce computation time for large matrices
+
+    :param x:
+        educt 1
+    :param y:
+        educt 2
+    :return:
+        product
+    """
     if not x.shape[0] or not y.shape[1] or x.is_zero is True or \
             y.is_zero is True:
         return sp.zeros(x.shape[0], y.shape[1])
