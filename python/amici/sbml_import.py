@@ -1025,14 +1025,13 @@ class SbmlImporter:
 
             if variable in rulevars:
                 for nested_rule in rules:
-                    nested_formula = sp.sympify(
-                        sbml.formulaToL3String(nested_rule.getMath()),
-                        locals=self.local_symbols)
-                    nested_formula = \
-                        str(nested_formula.subs(variable, formula)).replace('**', '^')
-                    if nested_rule.setFormula(nested_formula) != sbml.LIBSBML_OPERATION_SUCCESS:
-                        raise SBMLException(f'Formula {nested_formula} cannot be parsed by libSBML!')
+                    nested_rule_math_ml = sp.printing.print_mathml(
+                        sbml.formulaToL3String(nested_rule.getMath()))
+                    nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml)
 
+                    if nested_rule.setMath(nested_rule_math_ml_ast_node) != sbml.LIBSBML_OPERATION_SUCCESS:
+                        raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
+                                            f' cannot be parsed by libSBML!')
                 for assignment in assignments:
                     assignments[assignment] = assignments[assignment].subs(variable, formula)
 
