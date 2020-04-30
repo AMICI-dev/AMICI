@@ -360,7 +360,7 @@ class ModelQuantity:
 
 class ConservationLaw(ModelQuantity):
     """
-    A conservation law defines the absolute the total amount of a
+    A conservation law defines the total amount of a
     (weighted) sum of states
 
     """
@@ -375,7 +375,7 @@ class ConservationLaw(ModelQuantity):
             unique identifier of the ConservationLaw
 
         :param name:
-            individual name of the ConservationLaw (does not need  to be
+            individual name of the ConservationLaw (does not need to be
             unique)
 
         :param value: formula (sum of states)
@@ -385,10 +385,10 @@ class ConservationLaw(ModelQuantity):
 
 class Expression(ModelQuantity):
     """
-    An Expressions is a recurring elements in symbolic formulas. Specifying
-    this may yield more compact expression which may lead to substantially
+    An Expression is a recurring element in symbolic formulas. Specifying
+    this may yield more compact expressions which may lead to substantially
     shorter model compilation times, but may also reduce model simulation time,
-    abbreviated by `w`
+    abbreviated by `w`.
     """
     def __init__(self,
                  identifier: sp.Symbol,
@@ -701,8 +701,7 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
             and eq.is_zero is not True and sym_var.is_zero is not True \
             and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
         return eq.jacobian(sym_var)
-    else:
-        return sp.zeros(eq.shape[0], sym_var.shape[0])
+    return sp.zeros(eq.shape[0], sym_var.shape[0])
 
 
 def smart_multiply(x: sp.MutableDenseMatrix,
@@ -710,8 +709,7 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     if not x.shape[0] or not y.shape[1] or x.is_zero is True or \
             y.is_zero is True:
         return sp.zeros(x.shape[0], y.shape[1])
-    else:
-        return x * y
+    return x * y
 
 
 class ODEModel:
