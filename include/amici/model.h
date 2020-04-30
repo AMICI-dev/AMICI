@@ -1584,9 +1584,11 @@ class Model : public AbstractModel {
      * @brief Model specific implementation of fx_rdata
      * @param x_rdata state variables with conservation laws expanded
      * @param x_solver state variables with conservation laws applied
+     * @param w expressions
      * @param tcl total abundances for conservation laws
      */
     virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver,
+                          const realtype *w,
                           const realtype *tcl);
 
     /**
@@ -1595,10 +1597,13 @@ class Model : public AbstractModel {
      * expanded
      * @param sx_solver state sensitivity variables with conservation laws
      * applied
+     * @param w expressions
+     * @param dwdp sensitivities of expressions
      * @param stcl sensitivities of total abundances for conservation laws
      * @param ip sensitivity index
      */
     virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
+                           const realtype *w, const realtype *dwdp,
                            const realtype *stcl, int ip);
 
     /**

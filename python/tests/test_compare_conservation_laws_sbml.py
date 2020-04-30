@@ -28,7 +28,7 @@ def generate_models():
     sbml_importer = amici.SbmlImporter(sbml_file)
 
     # Name of the model that will also be the name of the python module
-    model_name =  model_output_dir ='model_constant_species'
+    model_name = model_output_dir = 'model_constant_species'
     model_name_cl = model_output_dir_cl = 'model_constant_species_cl'
 
     # Define constants, observables, sigmas
