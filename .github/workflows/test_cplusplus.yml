@@ -47,10 +47,7 @@ jobs:
             libatlas-base-dev \
             libboost-serialization-dev \
             libhdf5-serial-dev \
-            python3.6- \
-            python3.7 \
-            python3.7-dev \
-            python3.7-venv \
+            python3-dev \
             swig
 
     - name: Build suitesparse
