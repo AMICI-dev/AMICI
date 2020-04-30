@@ -1200,10 +1200,9 @@ void Model::fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx) {
     for (int ip = 0; ip < nplist(); ip++) {
         if (ncl() > 0)
             stcl = &state.stotal_cl.at(plist(ip) * ncl());
-        std::fill(sx_rdata[ip].getVector().begin(),
-                  sx_rdata[ip].getVector().end(), 0.0);
+        sx_rdata[ip].set(0.0);
         fsx_rdata(sx_rdata.data(ip), sx.data(ip), w.data(), dwdp.data(), stcl,
-                  ip);
+                  plist(ip));
     }
 }
 
