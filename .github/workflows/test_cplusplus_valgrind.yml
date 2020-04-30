@@ -1,0 +1,51 @@
+name: C++ testsuite / Valgrind / Ubuntu
+on:
+  push:
+    branches:
+      - develop
+      - master
+      - feature_1053_sonarcloud
+
+
+jobs:
+  build:
+    name: C++ testsuite / Valgrind / Ubuntu
+
+    # TODO: prepare image with more deps preinstalled
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+    # install amici dependencies
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y \
+            cmake \
+            g++ \
+            libatlas-base-dev \
+            libboost-serialization-dev \
+            libhdf5-serial-dev \
+            swig
+
+    - name: Build suitesparse
+      run: |
+        scripts/buildSuiteSparse.sh
+
+    - name: Build sundials
+      run: |
+        scripts/buildSundials.sh
+
+    - name: Build cpputest
+      run: |
+        scripts/buildCpputest.sh
+
+    - name: Build AMICI
+      run: |
+        scripts/buildAmici.sh
+
+    - name: C++ tests / Valgrind
+      run: |
+        scripts/run-valgrind.sh
