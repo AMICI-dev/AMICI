@@ -159,12 +159,12 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
 }
 
 void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
-    model->fx0_fixedParameters(x);
+    model->fx0_fixedParameters(x, t);
     reInit(t, x, dx);
     
     if (getSensitivityOrder() >= SensitivityOrder::first &&
         getSensitivityMethod() == SensitivityMethod::forward) {
-            model->fsx0_fixedParameters(sx, x);
+            model->fsx0_fixedParameters(sx, t, x);
             sensReInit(sx, sdx);
     }
 }
