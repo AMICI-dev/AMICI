@@ -871,16 +871,12 @@ def _construct_conservation_from_prototypes(
         total_abundance = sp.Symbol(f'tcl__s{target_index}')
         # = T/a_j
 
-        state_expr = total_abundance - target_expression
-        # x_j = T/a_j - sum_i≠j(a_i * x_i)/a_j
-
         abundance_expr = target_expression + target_state
         # T/a_j = sum_i≠j(a_i * x_i)/a_j + x_j
 
         conservation_laws.append({
             'state': target_state,
             'total_abundance': total_abundance,
-            'state_expr': state_expr,
             'abundance_expr': abundance_expr,
         })
 
@@ -911,7 +907,6 @@ def _add_conservation_for_constant_species(
             conservation_laws.append({
                 'state': target_state,
                 'total_abundance': total_abundance,
-                'state_expr': total_abundance,
                 'abundance_expr': target_state,
             })
 
@@ -1034,7 +1029,9 @@ def _conservation_law_variables(
     """
     variables = set()
     for cl in conservation_laws:
-        variables |= cl['state_expr'].free_symbols
+        cl_vars = cl['abundance_expr'].free_symbols
+        cl_vars.remove(cl['state'])
+        variables |= cl_vars
     return variables
 
 
