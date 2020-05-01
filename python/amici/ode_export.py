@@ -1007,6 +1007,7 @@ class ODEModel:
     def add_conservation_law(self,
                              state: sp.Symbol,
                              total_abundance: sp.Symbol,
+                             state_expr: sp.Basic,
                              abundance_expr: sp.Basic) -> None:
         """
         Adds a new conservation law to the model. A conservation law is defined
@@ -1019,6 +1020,11 @@ class ODEModel:
 
         :param total_abundance:
             symbolic identifier of the total abundance (T/a_j)
+
+        :param state_expr:
+            symbolic algebraic formula that replaces the the state. This is
+            used to compute the numeric value of of `state` during simulations.
+            x_j = T/a_j - sum_i≠j(a_i * x_i)/a_j
 
         :param abundance_expr:
             symbolic algebraic formula that computes the value of the
@@ -1036,7 +1042,6 @@ class ODEModel:
                             f'model states.')
 
         state_id = self._states[ix].get_id()
-        state_expr = sp.solve(total_abundance - abundance_expr, state_id)[0]
 
         self.add_component(
             Expression(state_id, str(state_id), state_expr)

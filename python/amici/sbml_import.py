@@ -1338,6 +1338,7 @@ class SbmlImporter:
                 conservation_laws.append({
                     'state': target_state,
                     'total_abundance': total_abundance,
+                    'state_expr': total_abundance,
                     'abundance_expr': target_state,
                 })
                 # mark species to delete from stoichiometrix matrix
