@@ -1036,7 +1036,7 @@ class ODEModel:
                             f'model states.')
 
         state_id = self._states[ix].get_id()
-        state_expr = sp.solve(total_abundance - abundance_expr, state_id)[0]
+        state_expr = total_abundance - abundance_expr + state
 
         self.add_component(
             Expression(state_id, str(state_id), state_expr)
