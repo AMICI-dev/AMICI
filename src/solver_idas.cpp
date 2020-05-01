@@ -412,6 +412,12 @@ void IDASolver::sensReInit(const AmiVectorArray &yyS0,
         throw IDAException(IDA_VECTOROP_ERR, "IDASensReInit");
 }
 
+void IDASolver::sensToggleOff() const {
+    auto status = IDASensToggleOff(solverMemory.get());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASensToggleOff");
+}
+
 void IDASolver::reInitB(const int which, const realtype tB0,
                         const AmiVector &yyB0, const AmiVector &ypB0) const {
 

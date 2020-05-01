@@ -488,6 +488,12 @@ void CVodeSolver::reInitB(const int which, const realtype tB0,
     resetState(cv_memB, xB.getNVector());
 }
 
+void CVodeSolver::sensToggleOff() const {
+    auto status = CVodeSensToggleOff(solverMemory.get());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSensToggleOff");
+}
+
 void CVodeSolver::quadReInitB(int which, const AmiVector &yQB0) const {
     auto cv_memB =
         static_cast<CVodeMem>(CVodeGetAdjCVodeBmem(solverMemory.get(), which));

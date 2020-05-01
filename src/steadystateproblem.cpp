@@ -253,8 +253,14 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
 {
     /* Loop over steps and check for convergence */
     bool converged = checkConvergence(solver, model);
-
     int steps_newton = 0;
+    /* If flag for forward sensitivity computation by simulation is not set,
+     disable forward sensitivity integration. Sensitivities will be combputed
+     by newonSolver->computeNewtonSensis then */
+    if model->getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::newtonOnly)
+        solver->sensToggleOff();
+
     while (!converged) {
         /* One step of ODE integration
          reason for tout specification:

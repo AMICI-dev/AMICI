@@ -639,6 +639,12 @@ class Solver {
                             const AmiVectorArray &ypS0) const = 0;
 
     /**
+     * @brief Switches off computation of  state sensitivites without
+     * deallocating the memory for sensitivities
+     */
+    virtual void sensToggleOff() const = 0;
+
+    /**
      * @brief Reinitializes the adjoint states after an event occurence
      *
      * @param which identifier of the backwards problem
