@@ -457,7 +457,7 @@ class FinalStateStorer : public ContextManager {
      * @brief constructor, attaches problem pointer
      * @param fwd problem from which the simulation state is to be stored
      */
-    FinalStateStorer(ForwardProblem *fwd) {
+    explicit FinalStateStorer(ForwardProblem *fwd) {
         this->fwd = fwd;
     }
 

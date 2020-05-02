@@ -182,7 +182,7 @@ class ContextManager{
     ContextManager(ContextManager &other) = delete;
     ContextManager &operator=(const ContextManager &other) = delete;
     ContextManager(ContextManager &&other) = delete;
-}
+};
 
 
 } // namespace amici

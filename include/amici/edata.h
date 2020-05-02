@@ -3,6 +3,7 @@
 
 #include "amici/defines.h"
 #include "amici/vector.h"
+#include "amici/misc.h"
 
 #include <vector>
 
