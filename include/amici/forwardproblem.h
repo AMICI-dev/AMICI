@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/vector.h"
 #include "amici/model.h"
+#include "amici/misc.h"
 #include "amici/sundials_matrix_wrapper.h"
 
 #include <sundials/sundials_direct.h>

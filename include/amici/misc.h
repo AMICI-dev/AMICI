@@ -178,7 +178,7 @@ std::string printfToString(const char *fmt, va_list ap);
 
 class ContextManager{
   public:
-    ContextManager() = delete;
+    ContextManager() = default;
     ContextManager(ContextManager &other) = delete;
     ContextManager &operator=(const ContextManager &other) = delete;
     ContextManager(ContextManager &&other) = delete;
