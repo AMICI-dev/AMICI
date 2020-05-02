@@ -3,6 +3,19 @@ import sys
 import re
 import subprocess
 import mock
+
+from sphinx.transforms.post_transforms import ReferencesResolver
+
+import amici
+
+# The short X.Y version
+version = amici.__version__
+# The full version, including alpha/beta/rc tags
+release = version
+
+del amici
+
+
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -38,8 +51,6 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-from sphinx.transforms.post_transforms import ReferencesResolver
-
 sys.path.insert(0, os.path.abspath('../python/sdist'))
 sys.path.insert(0, os.path.abspath('../'))
 
@@ -55,18 +66,7 @@ for mod_name in autodoc_mock_imports:
 project = 'AMICI'
 copyright = '2020, The AMICI developers'
 author = 'The AMICI developers'
-tite = 'AMICI Documentation'
-
-import amici
-
-# The short X.Y version
-version = amici.__version__
-# The full version, including alpha/beta/rc tags
-release = version
-
-del amici
-
-
+title = 'AMICI Documentation'
 
 # -- General configuration ---------------------------------------------------
 
