@@ -53,7 +53,7 @@ class ForwardProblem {
                    const SteadystateProblem *preeq);
 
     ~ForwardProblem() = default;
-    
+
     /** allow FinalStateStorer to access private members and functions */
     friend FinalStateStorer;
 
@@ -259,7 +259,7 @@ class ForwardProblem {
     const SimulationState &getInitialSimulationState() const {
         return initial_state;
     };
-    
+
     /**
      * @brief Retrieves the carbon copy of the simulation state variables at the
      * final timepoint (or when simulation failed)
@@ -405,7 +405,7 @@ class ForwardProblem {
 
     /** simulation state after initialization*/
     SimulationState initial_state;
-    
+
     /** simulation state after simulation*/
     SimulationState final_state;
 
@@ -451,7 +451,7 @@ class ForwardProblem {
 /**
  * @brief stores the stimulation state when it goes out of scope
  */
-class FinalStateStorer{
+class FinalStateStorer : public ContextManager {
   public:
     /**
      * @brief constructor, attaches problem pointer
@@ -460,6 +460,7 @@ class FinalStateStorer{
     FinalStateStorer(ForwardProblem *fwd) {
         this->fwd = fwd;
     }
+
     /**
      * @brief destructor, stores simulation state
      */

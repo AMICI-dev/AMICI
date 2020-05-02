@@ -520,7 +520,7 @@ void checkSigmaPositivity(realtype sigma, const char *sigmaName);
  * @brief The ConditionContext class applies condition-specific amici::Model
  * settings and restores them when going out of scope
  */
-class ConditionContext {
+class ConditionContext : public ContextManager {
   public:
     /**
      * @brief Apply condition-specific settings from edata to model while
@@ -530,9 +530,9 @@ class ConditionContext {
      * @param edata
      * @param fpc flag indicating which fixedParmeter from edata to apply
      */
-    explicit ConditionContext(Model *model,
-                              const ExpData *edata = nullptr,
-                              FixedParameterContext fpc = FixedParameterContext::simulation);
+    explicit ConditionContext(
+        Model *model, const ExpData *edata = nullptr,
+        FixedParameterContext fpc = FixedParameterContext::simulation);
 
     ~ConditionContext();
 

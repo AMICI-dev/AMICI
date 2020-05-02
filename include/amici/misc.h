@@ -30,7 +30,7 @@ gsl::span<T> slice(std::vector<T> &data, int index, unsigned size) {
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
         return gsl::make_span(&data.at(index*size), size);
-    
+
     return gsl::make_span(static_cast<T*>(nullptr), 0);
 }
 
@@ -50,7 +50,7 @@ const gsl::span<const T> slice(const std::vector<T> &data,
         throw std::out_of_range("requested slice is out of data range");
     if (size > 0)
         return gsl::make_span(&data.at(index*size), size);
-    
+
     return gsl::make_span(static_cast<T*>(nullptr), 0);
 }
 
@@ -174,6 +174,15 @@ std::string regexErrorToString(std::regex_constants::error_type err_type);
  * @return Formatted String
  */
 std::string printfToString(const char *fmt, va_list ap);
+
+
+class ContextManager{
+  public:
+    ContextManager() = delete;
+    ContextManager(ContextManager &other) = delete;
+    ContextManager &operator=(const ContextManager &other) = delete;
+    ContextManager(ContextManager &&other) = delete;
+}
 
 
 } // namespace amici
