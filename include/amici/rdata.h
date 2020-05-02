@@ -636,7 +636,7 @@ class ReturnData {
  * @brief The ModelContext temporarily stores amici::Model::state
  * and restores it when going out of scope
  */
-class ModelContext {
+class ModelContext : public ContextManager {
   public:
     /**
      * @brief initialize backup of the original values.
