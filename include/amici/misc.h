@@ -175,15 +175,16 @@ std::string regexErrorToString(std::regex_constants::error_type err_type);
  */
 std::string printfToString(const char *fmt, va_list ap);
 
-
+/**
+ * @brief Generic implementation for a context manager, explicitely deletes copy and move operators for
+ * derived classes
+ */
 class ContextManager{
   public:
     ContextManager() = default;
     ContextManager(ContextManager &other) = delete;
-    ContextManager &operator=(const ContextManager &other) = delete;
     ContextManager(ContextManager &&other) = delete;
 };
-
 
 } // namespace amici
 
