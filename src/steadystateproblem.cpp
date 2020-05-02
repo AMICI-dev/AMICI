@@ -154,7 +154,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     int i_newtonstep = 0;
     int ix = 0;
     double gamma = 1.0;
-    bool compNewStep = TRUE;
+    bool compNewStep = true;
 
     /* initialize output of linear solver for Newton step */
     delta.reset();
@@ -206,7 +206,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             x_old = x;
             xdot_old = xdot;
             /* New linear solve due to new state */
-            compNewStep = TRUE;
+            compNewStep = true;
             /* Check residuals vs tolerances */
             converged = wrms < RCONST(1.0);
 
@@ -236,7 +236,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
               throw AmiException("Newton solver failed: a damping factor reached its lower bound");
 
             /* No new linear solve, only try new dampening */
-            compNewStep = FALSE;
+            compNewStep = false;
         }
         /* increase step counter */
         i_newtonstep++;
