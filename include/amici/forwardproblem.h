@@ -462,6 +462,8 @@ class FinalStateStorer : public ContextManager {
         this->fwd = fwd;
     }
 
+    FinalStateStorer &operator=(const FinalStateStorer &other) = delete;
+
     /**
      * @brief destructor, stores simulation state
      */

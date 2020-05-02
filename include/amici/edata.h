@@ -535,6 +535,8 @@ class ConditionContext : public ContextManager {
         Model *model, const ExpData *edata = nullptr,
         FixedParameterContext fpc = FixedParameterContext::simulation);
 
+    ConditionContext &operator=(const ConditionContext &other) = delete;
+
     ~ConditionContext();
 
     /**

@@ -82,7 +82,7 @@ class ReturnData {
     ReturnData(Solver const &solver, const Model &model);
 
     ~ReturnData() = default;
-    
+
     /**
      * @brief constructor that uses information from model and solver to
      * appropriately initialize fields
@@ -383,7 +383,7 @@ class ReturnData {
 
     /** sensitivity method */
     SensitivityMethod sensi_meth{SensitivityMethod::none};
-    
+
     /** reporting mode */
     RDataReporting rdata_reporting{RDataReporting::full};
 
@@ -404,7 +404,7 @@ class ReturnData {
 
     /** partial state vector, excluding states eliminated from conservation laws */
     AmiVector x_solver;
-    
+
     /** partial time derivative of state vector, excluding states eliminated from conservation laws */
     AmiVector dx_solver;
 
@@ -422,23 +422,23 @@ class ReturnData {
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
     std::vector<int> nroots;
-    
+
     /**
      * @brief initializes storage for likelihood reporting mode
      */
     void initializeLikelihoodReporting();
-    
+
     /**
      * @brief initializes storage for residual reporting mode
      */
     void initializeResidualReporting();
-    
+
     /**
      * @brief initializes storage for full reporting mode
      */
     void initializeFullReporting();
-    
-    
+
+
     /**
      * @brief initialize values for chi2 and llh and derivatives
      */
@@ -498,14 +498,14 @@ class ReturnData {
     void storeJacobianAndDerivativeInReturnData(T const &problem, Model &model)
     {
         readSimulationState(problem.getFinalSimulationState(), model);
-        
+
         AmiVector xdot(nx_solver);
         if (!this->xdot.empty() || !this->J.empty())
             model.fxdot(t, x_solver, dx_solver, xdot);
-        
+
         if (!this->xdot.empty())
             writeSlice(xdot, this->xdot);
-        
+
         if (!this->J.empty()) {
             SUNMatrixWrapper J(nx_solver, nx_solver);
             model.fJ(t, 0.0, x_solver, dx_solver, xdot, J.get());
@@ -522,7 +522,7 @@ class ReturnData {
      * @param model model that was used for forward/backward simulation
      */
     void readSimulationState(SimulationState const &state, Model &model);
-    
+
     /**
      * @brief Residual function
      * @param it time index
@@ -544,7 +544,7 @@ class ReturnData {
      * @param edata ExpData instance containing observable data
      */
     void fsres(int it, Model &model, const ExpData &edata);
-    
+
     /**
      * @brief Fisher information matrix function
      * @param it time index
@@ -552,7 +552,7 @@ class ReturnData {
      * @param edata ExpData instance containing observable data
      */
     void fFIM(int it, Model &model, const ExpData &edata);
-    
+
     /**
      * @brief Set likelihood, state variables, outputs and respective
      * sensitivities to NaN (typically after integration failure)
@@ -644,6 +644,8 @@ class ModelContext : public ContextManager {
      * @param model
      */
     explicit ModelContext(Model *model);
+
+    ModelContext &operator=(const ModelContext &other) = delete;
 
     ~ModelContext();
 
