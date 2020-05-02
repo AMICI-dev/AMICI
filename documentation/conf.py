@@ -397,14 +397,14 @@ def process_missing_ref(app, env, node, contnode):
 
     for old, new in doclinks.items():
         node['reftarget'] = node['reftarget'].replace(old, new)
-    contnode = node[0]
-    if 'refuri' in contnode:
+    cnode = node[0]
+    if 'refuri' in cnode:
         for old, new in doclinks.items():
-            contnode['refuri'] = contnode['refuri'].replace(old, new)
+            cnode['refuri'] = cnode['refuri'].replace(old, new)
 
     refdoc = node.get('refdoc', env.docname)
     resolver = ReferencesResolver(env.get_doctree(refdoc))
-    result = resolver.resolve_anyref(refdoc, node, contnode)
+    result = resolver.resolve_anyref(refdoc, node, cnode)
     return result
 
 
