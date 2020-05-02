@@ -55,6 +55,7 @@ for mod_name in autodoc_mock_imports:
 project = 'AMICI'
 copyright = '2020, The AMICI developers'
 author = 'The AMICI developers'
+tite = 'AMICI Documentation'
 
 import amici
 
@@ -188,8 +189,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'AMICI.tex', 'AMICI Documentation',
-     'The AMICI developers', 'manual'),
+    (master_doc, 'AMICI.tex', title,
+     author, 'manual'),
 ]
 
 
@@ -198,7 +199,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'amici', 'AMICI Documentation',
+    (master_doc, 'amici', title,
      [author], 1)
 ]
 
@@ -209,7 +210,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'AMICI', 'AMICI Documentation',
+    (master_doc, 'AMICI', title,
      author, 'AMICI', 'Advanced Multilanguage Interface for CVODES and IDAS.',
      'Miscellaneous'),
 ]
