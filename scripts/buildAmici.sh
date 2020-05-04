@@ -8,13 +8,13 @@ make=${MAKE:-make}
 
 script_path=$(dirname "$BASH_SOURCE")
 amici_path=$(cd "$script_path/.." && pwd)
+amici_build_dir="${amici_path}/build"
+mkdir -p "${amici_build_dir}"
+cd "${amici_build_dir}"
 
-mkdir -p "${amici_path}/build"
-cd "${amici_path}/build"
+cpputest_build_dir="${amici_path}/ThirdParty/cpputest-master/build/"
 
-cpputest_build_dir="${amici_path}"/ThirdParty/cpputest-master/build/
-
-if [[ $TRAVIS = true ]]; then
+if [[ $TRAVIS = true ]] || [[ $GITHUB_ACTIONS = true ]]; then
   # Running on CI server
   build_type="Debug"
 else
@@ -22,9 +22,19 @@ else
 fi
 
 CppUTest_DIR=${cpputest_build_dir} \
-  ${cmake} -DCMAKE_BUILD_TYPE=$build_type -DPython3_EXECUTABLE="$(command -v python3)" ..
+  ${cmake} \
+    -DCMAKE_BUILD_TYPE=$build_type \
+    -DPython3_EXECUTABLE="$(command -v python3)" ..
 
-${make}
-
-${make} python-sdist
-set -x
+# build, with or without sonarcloud wrapper
+if [[ "$CI_SONARCLOUD" == "TRUE" ]]; then
+  build-wrapper-linux-x86-64 \
+    --out-dir "${amici_path}/bw-output" \
+    cmake --build . --parallel
+elif [[ "$TRAVIS" == "true" ]]; then
+  cmake --build .
+  ${make} python-sdist
+else
+  cmake --build . --parallel
+  ${make} python-sdist
+fi
