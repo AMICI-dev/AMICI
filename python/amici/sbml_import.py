@@ -1030,16 +1030,14 @@ class SbmlImporter:
                         sbml.formulaToL3String(nested_rule.getMath()),
                         locals=self.local_symbols).subs(variable, formula)
 
-                    if not isinstance(nested_formula, sp.Function):
-                        raise SBMLException(f'Formula {str(nested_formula)}'
-                                            f' cannot be parsed by sympy!')
+                    nested_rule_math_ml = sp.printing.mathml(nested_formula)
 
-                    nested_rule_math_ml = sp.printing.mathml.mathml(nested_formula)
                     nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml)
 
                     if nested_rule.setMath(nested_rule_math_ml_ast_node) != sbml.LIBSBML_OPERATION_SUCCESS:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
                                             f' cannot be parsed by libSBML!')
+
                 for assignment in assignments:
                     assignments[assignment] = assignments[assignment].subs(variable, formula)
 
@@ -1134,9 +1132,9 @@ class SbmlImporter:
                     f"{unknown_ids}.")
 
         species_syms = self.symbols['species']['identifier']
-        assignments = {str(c):str(r)
+        assignments = {str(c): str(r)
                        for c, r in self.compartment_assignment_rules.items()}
-        assignments.update({str(s):str(r)
+        assignments.update({str(s): str(r)
                             for s, r in self.species_assignment_rules.items()})
 
         def replace_assignments(formula: str) -> sp.Basic:
