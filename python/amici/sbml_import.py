@@ -1036,7 +1036,8 @@ class SbmlImporter:
 
                     if nested_rule_math_ml_ast_node is None:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
-                                            f' cannot be parsed to MathML by SymPy!')
+                                            f' cannot be parsed to valid MathML by SymPy!')
+
                     elif nested_rule.setMath(nested_rule_math_ml_ast_node) != sbml.LIBSBML_OPERATION_SUCCESS:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
                                             f' cannot be parsed by libSBML!')
