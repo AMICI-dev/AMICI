@@ -107,7 +107,9 @@ def get_hdf5_config() -> PackageInfo:
         # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true
         # although no libraries or include dirs are available
         h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg \
-                            and h5pkgcfg['include_dirs']
+                            and h5pkgcfg['include_dirs'] and \
+                            'library_dirs' in h5pkgcfg \
+                            and h5pkgcfg['library_dirs']
         if h5pkgcfg['found']:
             return h5pkgcfg
 
