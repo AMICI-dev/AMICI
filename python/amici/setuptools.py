@@ -98,20 +98,6 @@ def get_hdf5_config() -> PackageInfo:
     :return:
         hdf5 related package information
     """
-    if pkgconfig:
-        h5pkgcfg = {}
-        try:
-            h5pkgcfg = pkgconfig.parse('hdf5')
-        except pkgconfig.PackageNotFoundError:
-            pass
-        # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true
-        # although no libraries or include dirs are available
-        h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg \
-                            and h5pkgcfg['include_dirs'] and \
-                            'library_dirs' in h5pkgcfg \
-                            and h5pkgcfg['library_dirs']
-        if h5pkgcfg['found']:
-            return h5pkgcfg
 
     h5pkgcfg = {'include_dirs': [],
                 'library_dirs': [],
@@ -136,13 +122,6 @@ def get_hdf5_config() -> PackageInfo:
         '/usr/local/Cellar/hdf5/1.10.2_1/lib'  # travis macOS
     ]
 
-    # Check for Environment Modules variables
-    if 'HDF5_BASE' in os.environ:
-        hdf5_include_dir_hints.insert(
-            0, os.path.join(os.environ['HDF5_BASE'], 'include'))
-        hdf5_library_dir_hints.insert(
-            0, os.path.join(os.environ['HDF5_BASE'], 'lib'))
-
     # special treatment for conda environments
     # as the conda library dir is provided first, we should also check for
     # conda header files first
@@ -151,6 +130,13 @@ def get_hdf5_config() -> PackageInfo:
             0, os.path.join(os.environ['CONDA_DIR'], 'include'))
         hdf5_library_dir_hints.insert(
             0, os.path.join(os.environ['CONDA_DIR'], 'lib'))
+
+    # Check for Environment Modules variables
+    if 'HDF5_BASE' in os.environ:
+        hdf5_include_dir_hints.insert(
+            0, os.path.join(os.environ['HDF5_BASE'], 'include'))
+        hdf5_library_dir_hints.insert(
+            0, os.path.join(os.environ['HDF5_BASE'], 'lib'))
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
@@ -172,7 +158,23 @@ def get_hdf5_config() -> PackageInfo:
         if hdf5_library_dir_found:
             # break to not override hdf5_library_dir_found
             break
+
     h5pkgcfg['found'] = hdf5_include_dir_found and hdf5_library_dir_found
+    if h5pkgcfg['found']:
+        return h5pkgcfg
+
+    if pkgconfig:
+        h5pkgcfg = {}
+        try:
+            h5pkgcfg = pkgconfig.parse('hdf5')
+        except pkgconfig.PackageNotFoundError:
+            pass
+        # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true
+        # although no libraries or include dirs are available
+        h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg \
+                            and h5pkgcfg['include_dirs'] and \
+                            'library_dirs' in h5pkgcfg \
+                            and h5pkgcfg['library_dirs']
 
     return h5pkgcfg
 
