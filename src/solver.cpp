@@ -918,6 +918,8 @@ void Solver::setInitDone() const { initialized = true; };
 
 void Solver::setSensInitDone() const { sensInitialized = true; }
 
+void Solver::setSensInitOff() const { sensInitialized = false; }
+
 void Solver::setAdjInitDone() const { adjInitialized = true; }
 
 void Solver::setInitDoneB(const int which) const {
@@ -930,6 +932,11 @@ void Solver::setQuadInitDoneB(const int which) const {
     if (which >= static_cast<int>(initializedQB.size()))
         initializedQB.resize(which + 1, false);
     initializedQB.at(which) = true;
+}
+
+void Solver::switchForwardSensisOff() const {
+    sensToggleOff();
+    setSensInitOff();
 }
 
 realtype Solver::getCpuTime() const {
