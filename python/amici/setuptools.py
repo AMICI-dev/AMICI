@@ -73,12 +73,17 @@ def get_blas_config() -> PackageInfo:
 
     # Try pkgconfig
     if pkgconfig:
-        if pkgconfig.exists('cblas'):
-            blaspkgcfg = pkgconfig.parse('cblas')
-            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
-            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
+        for blas_name in ['cblas', 'openblas']:
+            if pkgconfig.exists(blas_name):
+                blaspkgcfg = pkgconfig.parse(blas_name)
+                blaspkgcfg['extra_compile_args'] = [
+                    pkgconfig.cflags(blas_name)
+                ]
+                blaspkgcfg['extra_link_args'] = [
+                    pkgconfig.libs(blas_name)
+                ]
 
-            return blaspkgcfg
+                return blaspkgcfg
 
     # If none of the previous worked, fall back to libcblas in default paths
     blaspkgcfg['libraries'] = ['cblas']
@@ -186,7 +191,7 @@ def add_coverage_flags_if_required(cxx_flags: List[str],
         print("ENABLE_GCOV_COVERAGE was set to TRUE."
               " Building AMICI with coverage symbols.")
         cxx_flags.extend(['-g', '-O0',  '--coverage'])
-        linker_flags.extend(['--coverage','-g'])
+        linker_flags.extend(['--coverage', '-g'])
 
 
 def add_debug_flags_if_required(cxx_flags: List[str],
