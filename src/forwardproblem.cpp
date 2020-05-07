@@ -220,7 +220,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
     /* fire the secondary event */
     if (secondevent > 0) {
-        handleEvent(tlastroot, TRUE);
+        handleEvent(tlastroot, true);
     }
 
     /* only reinitialise in the first event fired */

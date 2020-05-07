@@ -43,14 +43,6 @@ constexpr int AMICI_PREEQUILIBRATE=           -1;
 #define booleantype int
 #endif
 
-#ifndef FALSE
-constexpr int FALSE=0;
-#endif
-
-#ifndef TRUE
-constexpr int TRUE=1;
-#endif
-
 /** defines variable type for simulation variables
  * (determines numerical accuracy) */
 using realtype = double;
