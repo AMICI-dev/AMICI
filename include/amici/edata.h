@@ -528,8 +528,11 @@ class ConditionContext {
      *
      * @param model
      * @param edata
+     * @param fpc flag indicating which fixedParmeter from edata to apply
      */
-    explicit ConditionContext(Model *model, const ExpData *edata = nullptr);
+    explicit ConditionContext(Model *model,
+                              const ExpData *edata = nullptr,
+                              FixedParameterContext fpc = FixedParameterContext::simulation);
 
     ~ConditionContext();
 
@@ -539,8 +542,10 @@ class ConditionContext {
      * backed-up in the constructor call.
      *
      * @param edata
+     * @param fpc flag indicating which fixedParmeter from edata to apply
      */
-    void applyCondition(const ExpData *edata);
+    void applyCondition(const ExpData *edata,
+                        FixedParameterContext fpc);
 
     /**
      * @brief Restore original settings on constructor-supplied amici::Model.

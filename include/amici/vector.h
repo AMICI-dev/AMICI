@@ -89,7 +89,7 @@ class AmiVector {
      * @brief Vector accessor
      * @return Vector
      */
-    std::vector<realtype> const &getVector();
+    std::vector<realtype> const &getVector() const;
 
     /**
      * @brief returns the length of the vector

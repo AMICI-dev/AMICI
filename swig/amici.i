@@ -142,6 +142,28 @@ namespace amici {
 bool compiledWithOpenMP();
 }
 
+%pythoncode %{
+from enum import IntEnum
+def enum(prefix):
+    values = {k:v for k,v in globals().items() if k.startswith(prefix + '_')}
+    values = {k[len(prefix)+1:]:v for k,v in values.items()}
+    return IntEnum(prefix, values)
+ParameterScaling = enum('ParameterScaling')
+SecondOrderMode = enum('SecondOrderMode')
+SensitivityOrder = enum('SensitivityOrder')
+SensitivityMethod = enum('SensitivityMethod')
+LinearSolver = enum('LinearSolver')
+InternalSensitivityMethod = enum('InternalSensitivityMethod')
+InterpolationType = enum('InterpolationType')
+LinearMultistepMethod = enum('LinearMultistepMethod')
+NonlinearSolverIteration = enum('NonlinearSolverIteration')
+SteadyStateSensitivityMode = enum('SteadyStateSensitivityMode')
+NewtonStatus = enum('NewtonStatus')
+NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
+FixedParameterContext = enum('FixedParameterContext')
+RDataReporting = enum('RDataReporting')
+%}
+
 // add module docstring and import additional types for typehints
 %pythonbegin %{
 """

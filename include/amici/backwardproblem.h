@@ -8,11 +8,11 @@
 
 namespace amici {
 
-class ReturnData;
 class ExpData;
 class Solver;
 class Model;
 class ForwardProblem;
+class SteadystateProblem;
 
 //!  class to solve backwards problems.
 /*!
@@ -25,8 +25,10 @@ class BackwardProblem {
     /**
      * @brief Construct backward problem from forward problem
      * @param fwd pointer to corresponding forward problem
+     * @param posteq pointer to postequilibration problem, can be nullptr
      */
-    explicit BackwardProblem(const ForwardProblem *fwd);
+    explicit BackwardProblem(const ForwardProblem &fwd,
+                             const SteadystateProblem *posteq);
 
     /**
      * @brief Solve the backward problem.
@@ -68,15 +70,29 @@ class BackwardProblem {
     std::vector<realtype> const& getdJydx() const {
         return dJydx;
     }
+    
+    /**
+     * @brief Accessor for xB
+     * @return xB
+     */
+    AmiVector const& getAdjointState() const {
+        return xB;
+    }
+    
+    /**
+     * @brief Accessor for xQB
+     * @return xQB
+     */
+    AmiVector const& getAdjointQuadrature() const {
+        return xQB;
+    }
 
   private:
     /**
      * @brief Execute everything necessary for the handling of events
      * for the backward problem
-     *
-     * @param iroot index of event @type int
      */
-    void handleEventB(int iroot);
+    void handleEventB();
 
     /**
      * @brief Execute everything necessary for the handling of data
@@ -93,21 +109,12 @@ class BackwardProblem {
      * This is the maximum of tdata and troot but also takes into account if
      * it<0 or iroot<0 where these expressions do not necessarily make sense.
      *
-     * @param troot timepoint of next event @type realtype
-     * @param iroot index of next event @type int
      * @param it index of next data point @type int
-     * @param model pointer to model specification object @type Model
      * @return tnext next timepoint @type realtype
      */
-    realtype getTnext(std::vector<realtype> const& troot, int iroot, int it);
-
-    /**
-     * @brief Compute likelihood sensitivities.
-     */
-    void computeLikelihoodSensitivities();
+    realtype getTnext(int it);
 
     Model *model;
-    ReturnData *rdata;
     Solver *solver;
 
     /** current time */
@@ -121,29 +128,24 @@ class BackwardProblem {
     /** quadrature state vector */
     AmiVector xQB;
     /** array of state vectors at discontinuities*/
-    const AmiVectorArray x_disc;
+    std::vector<AmiVector> x_disc;
     /** array of differential state vectors at discontinuities*/
-    const AmiVectorArray xdot_disc;
+    std::vector<AmiVector> xdot_disc;
     /** array of old differential state vectors at discontinuities*/
-    const AmiVectorArray xdot_old_disc;
+    std::vector<AmiVector> xdot_old_disc;
     /** sensitivity state vector array */
     AmiVectorArray sx0;
     /** array of number of found roots for a certain event type */
     std::vector<int> nroots;
     /** array containing the time-points of discontinuities*/
-    const std::vector<realtype> discs;
-    /** array containing the index of discontinuities */
-    const std::vector<realtype> irdiscs;
+    std::vector<realtype> discs;
     /** index of the backward problem */
     int which = 0;
-    /** current root index, will be increased during the forward solve and
-     * decreased during backward solve */
-    int iroot = 0;
     /** array of index which root has been found */
-    const std::vector<int> rootidx;
+    std::vector<std::vector<int>> rootidx;
 
     /** state derivative of data likelihood */
-    const std::vector<realtype> dJydx;
+    std::vector<realtype> dJydx;
     /** state derivative of event likelihood */
     const std::vector<realtype> dJzdx;
 };

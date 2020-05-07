@@ -2,7 +2,7 @@
  * Programmer(s): Daniel R. Reynolds @ SMU
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -58,6 +58,13 @@ extern "C" {
 #define DEFAULT_ARK_ITABLE_5    ARK548L2SA_DIRK_8_4_5
 
 
+/* ------------------------------
+ * User-Supplied Function Types
+ * ------------------------------ */
+
+typedef int (*ARKStepStagePredictFn)(realtype t, N_Vector zpred,
+                                     void *user_data);
+
 /* -------------------
  * Exported Functions
  * ------------------- */
@@ -110,6 +117,8 @@ SUNDIALS_EXPORT int ARKStepRootInit(void *arkode_mem, int nrtfn,
 SUNDIALS_EXPORT int ARKStepSetDefaults(void* arkode_mem);
 SUNDIALS_EXPORT int ARKStepSetOptimalParams(void *arkode_mem);
 SUNDIALS_EXPORT int ARKStepSetOrder(void *arkode_mem, int maxord);
+SUNDIALS_EXPORT int ARKStepSetInterpolantType(void *arkode_mem, int itype);
+SUNDIALS_EXPORT int ARKStepSetInterpolantDegree(void *arkode_mem, int degree);
 SUNDIALS_EXPORT int ARKStepSetDenseOrder(void *arkode_mem, int dord);
 SUNDIALS_EXPORT int ARKStepSetNonlinearSolver(void *arkode_mem,
                                               SUNNonlinearSolver NLS);
@@ -136,7 +145,7 @@ SUNDIALS_EXPORT int ARKStepSetFixedStepBounds(void *arkode_mem,
 SUNDIALS_EXPORT int ARKStepSetAdaptivityMethod(void *arkode_mem,
                                                int imethod,
                                                int idefault, int pq,
-                                               realtype *adapt_params);
+                                               realtype adapt_params[3]);
 SUNDIALS_EXPORT int ARKStepSetAdaptivityFn(void *arkode_mem,
                                            ARKAdaptFn hfun,
                                            void *h_data);
@@ -169,6 +178,8 @@ SUNDIALS_EXPORT int ARKStepSetMaxConvFails(void *arkode_mem,
                                            int maxncf);
 SUNDIALS_EXPORT int ARKStepSetNonlinConvCoef(void *arkode_mem,
                                              realtype nlscoef);
+SUNDIALS_EXPORT int ARKStepSetConstraints(void *arkode_mem,
+                                          N_Vector constraints);
 SUNDIALS_EXPORT int ARKStepSetMaxNumSteps(void *arkode_mem,
                                           long int mxsteps);
 SUNDIALS_EXPORT int ARKStepSetMaxHnilWarns(void *arkode_mem,
@@ -183,6 +194,8 @@ SUNDIALS_EXPORT int ARKStepSetStopTime(void *arkode_mem,
                                        realtype tstop);
 SUNDIALS_EXPORT int ARKStepSetFixedStep(void *arkode_mem,
                                         realtype hfixed);
+SUNDIALS_EXPORT int ARKStepSetMaxNumConstrFails(void *arkode_mem,
+                                                int maxfails);
 
 SUNDIALS_EXPORT int ARKStepSetRootDirection(void *arkode_mem,
                                             int *rootdir);
@@ -199,7 +212,11 @@ SUNDIALS_EXPORT int ARKStepSetDiagnostics(void *arkode_mem,
                                           FILE *diagfp);
 
 SUNDIALS_EXPORT int ARKStepSetPostprocessStepFn(void *arkode_mem,
-                                                ARKPostProcessStepFn ProcessStep);
+                                                ARKPostProcessFn ProcessStep);
+SUNDIALS_EXPORT int ARKStepSetPostprocessStageFn(void *arkode_mem,
+                                                 ARKPostProcessFn ProcessStage);
+SUNDIALS_EXPORT int ARKStepSetStagePredictFn(void *arkode_mem,
+                                             ARKStepStagePredictFn PredictStage);
 
 /* Linear solver interface optional input functions -- must be called
    AFTER ARKStepSetLinearSolver and/or ARKStepSetMassLinearSolver */
@@ -207,6 +224,8 @@ SUNDIALS_EXPORT int ARKStepSetJacFn(void *arkode_mem, ARKLsJacFn jac);
 SUNDIALS_EXPORT int ARKStepSetMassFn(void *arkode_mem, ARKLsMassFn mass);
 SUNDIALS_EXPORT int ARKStepSetMaxStepsBetweenJac(void *arkode_mem,
                                                  long int msbj);
+SUNDIALS_EXPORT int ARKStepSetLinearSolutionScaling(void *arkode_mem,
+                                                    booleantype onoff);
 SUNDIALS_EXPORT int ARKStepSetEpsLin(void *arkode_mem, realtype eplifac);
 SUNDIALS_EXPORT int ARKStepSetMassEpsLin(void *arkode_mem, realtype eplifac);
 SUNDIALS_EXPORT int ARKStepSetPreconditioner(void *arkode_mem,
@@ -222,6 +241,7 @@ SUNDIALS_EXPORT int ARKStepSetMassTimes(void *arkode_mem,
                                         ARKLsMassTimesSetupFn msetup,
                                         ARKLsMassTimesVecFn mtimes,
                                         void *mtimes_data);
+SUNDIALS_EXPORT int ARKStepSetLinSysFn(void *arkode_mem, ARKLsLinSysFn linsys);
 
 /* Integrate the ODE over an interval in t */
 SUNDIALS_EXPORT int ARKStepEvolve(void *arkode_mem, realtype tout,
@@ -264,6 +284,10 @@ SUNDIALS_EXPORT int ARKStepGetCurrentStep(void *arkode_mem,
                                           realtype *hcur);
 SUNDIALS_EXPORT int ARKStepGetCurrentTime(void *arkode_mem,
                                           realtype *tcur);
+SUNDIALS_EXPORT int ARKStepGetCurrentState(void *arkode_mem,
+                                           N_Vector *ycur);
+SUNDIALS_EXPORT int ARKStepGetCurrentGamma(void *arkode_mem,
+                                           realtype *gamma);
 SUNDIALS_EXPORT int ARKStepGetTolScaleFactor(void *arkode_mem,
                                              realtype *tolsfac);
 SUNDIALS_EXPORT int ARKStepGetErrWeights(void *arkode_mem,
@@ -274,6 +298,8 @@ SUNDIALS_EXPORT int ARKStepGetNumGEvals(void *arkode_mem,
                                         long int *ngevals);
 SUNDIALS_EXPORT int ARKStepGetRootInfo(void *arkode_mem,
                                        int *rootsfound);
+SUNDIALS_EXPORT int ARKStepGetNumConstrFails(void *arkode_mem,
+                                             long int *nconstrfails);
 SUNDIALS_EXPORT char *ARKStepGetReturnFlagName(long int flag);
 
 SUNDIALS_EXPORT int ARKStepWriteParameters(void *arkode_mem, FILE *fp);
@@ -334,6 +360,8 @@ SUNDIALS_EXPORT int ARKStepGetMassWorkSpace(void *arkode_mem,
                                             long int *leniwMLS);
 SUNDIALS_EXPORT int ARKStepGetNumMassSetups(void *arkode_mem,
                                             long int *nmsetups);
+SUNDIALS_EXPORT int ARKStepGetNumMassMultSetups(void *arkode_mem,
+                                                long int *nmvsetups);
 SUNDIALS_EXPORT int ARKStepGetNumMassMult(void *arkode_mem,
                                           long int *nmvevals);
 SUNDIALS_EXPORT int ARKStepGetNumMassSolves(void *arkode_mem,

@@ -60,16 +60,27 @@ void checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s
     CHECK_TRUE(r.order == s.order);
     CHECK_TRUE(r.cpu_time == s.cpu_time);
     CHECK_TRUE(r.cpu_timeB == s.cpu_timeB);
-    CHECK_TRUE(r.newton_cpu_time == s.newton_cpu_time);
 
-    CHECK_TRUE(r.newton_status == s.newton_status);
-    CHECK_TRUE(r.newton_numsteps == s.newton_numsteps);
-    CHECK_TRUE(r.newton_numlinsteps == s.newton_numlinsteps);
-
-    DOUBLES_EQUAL(r.newton_cpu_time, s.newton_cpu_time, 1e-16);
+    CHECK_TRUE(r.preeq_status == s.preeq_status);
+    CHECK_TRUE(r.preeq_t == s.preeq_t ||
+               (std::isnan(r.preeq_t) && std::isnan(s.preeq_t)));
+    CHECK_TRUE(r.preeq_wrms == s.preeq_wrms ||
+               (std::isnan(r.preeq_wrms) && std::isnan(s.preeq_wrms)));
+    CHECK_TRUE(r.preeq_numsteps == s.preeq_numsteps);
+    CHECK_TRUE(r.preeq_numlinsteps == s.preeq_numlinsteps);
+    DOUBLES_EQUAL(r.preeq_cpu_time, s.preeq_cpu_time, 1e-16);
+    
+    CHECK_TRUE(r.posteq_status == s.posteq_status);
+    CHECK_TRUE(r.posteq_t == s.posteq_t ||
+               (std::isnan(r.posteq_t) && std::isnan(s.posteq_t)));
+    CHECK_TRUE(r.posteq_wrms == s.posteq_wrms ||
+               (std::isnan(r.posteq_wrms) && std::isnan(s.posteq_wrms)));
+    CHECK_TRUE(r.posteq_numsteps == s.posteq_numsteps);
+    CHECK_TRUE(r.posteq_numlinsteps == s.posteq_numlinsteps);
+    DOUBLES_EQUAL(r.posteq_cpu_time, s.posteq_cpu_time, 1e-16);
+    
     checkEqualArray(r.x0, s.x0, 1e-16, 1e-16, "x0");
     checkEqualArray(r.sx0, s.sx0, 1e-16, 1e-16, "sx0");
-
 
     CHECK_TRUE(r.llh == s.llh || (std::isnan(r.llh) && std::isnan(s.llh)));
     CHECK_TRUE(r.chi2 == s.chi2 || (std::isnan(r.llh) && std::isnan(s.llh)));
@@ -85,18 +96,18 @@ TEST_GROUP(dataSerialization){
     amici::CVodeSolver solver;
     void setup() {
         // set non-default values for all members
-        solver.setAbsoluteTolerance(4);
-        solver.setRelativeTolerance(4);
-        solver.setAbsoluteToleranceQuadratures(4);
-        solver.setRelativeToleranceQuadratures(4);
-        solver.setAbsoluteToleranceSteadyState(4);
-        solver.setRelativeToleranceSteadyState(4);
+        solver.setAbsoluteTolerance(1e-4);
+        solver.setRelativeTolerance(1e-5);
+        solver.setAbsoluteToleranceQuadratures(1e-6);
+        solver.setRelativeToleranceQuadratures(1e-7);
+        solver.setAbsoluteToleranceSteadyState(1e-8);
+        solver.setRelativeToleranceSteadyState(1e-9);
         solver.setSensitivityMethod(amici::SensitivityMethod::adjoint);
         solver.setSensitivityOrder(amici::SensitivityOrder::second);
-        solver.setMaxSteps(1e6);
-        solver.setMaxStepsBackwardProblem(1e6);
-        solver.setNewtonMaxSteps(1e6);
-        solver.setNewtonMaxLinearSteps(1e6);
+        solver.setMaxSteps(1e1);
+        solver.setMaxStepsBackwardProblem(1e2);
+        solver.setNewtonMaxSteps(1e3);
+        solver.setNewtonMaxLinearSteps(1e4);
         solver.setPreequilibration(true);
         solver.setStateOrdering(static_cast<int>(amici::SUNLinSolKLU::StateOrdering::COLAMD));
         solver.setInterpolationType(amici::InterpolationType::polynomial);
@@ -105,6 +116,7 @@ TEST_GROUP(dataSerialization){
         solver.setLinearMultistepMethod(amici::LinearMultistepMethod::adams);
         solver.setNonlinearSolverIteration(amici::NonlinearSolverIteration::newton);
         solver.setInternalSensitivityMethod(amici::InternalSensitivityMethod::staggered);
+        solver.setReturnDataReportingMode(amici::RDataReporting::likelihood);
     }
 
     void teardown() {

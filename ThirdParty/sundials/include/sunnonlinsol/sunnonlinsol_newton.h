@@ -2,7 +2,7 @@
  * Programmer(s): David J. Gardner @ LLNL
  * -----------------------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -49,6 +49,7 @@ struct _SUNNonlinearSolverContent_Newton {
   int         maxiters;   /* maximum number of iterations in a solve attempt        */
   long int    niters;     /* total number of nonlinear iterations across all solves */
   long int    nconvfails; /* total number of convergence failures across all solves */
+  void*       ctest_data; /* data to pass to convergence test function              */
 };
 
 typedef struct _SUNNonlinearSolverContent_Newton *SUNNonlinearSolverContent_Newton;
@@ -84,7 +85,8 @@ SUNDIALS_EXPORT int SUNNonlinSolSetLSolveFn_Newton(SUNNonlinearSolver NLS,
                                                    SUNNonlinSolLSolveFn LSolveFn);
 
 SUNDIALS_EXPORT int SUNNonlinSolSetConvTestFn_Newton(SUNNonlinearSolver NLS,
-                                                     SUNNonlinSolConvTestFn CTestFn);
+                                                     SUNNonlinSolConvTestFn CTestFn,
+                                                     void* ctest_data);
 
 SUNDIALS_EXPORT int SUNNonlinSolSetMaxIters_Newton(SUNNonlinearSolver NLS,
                                                    int maxiters);

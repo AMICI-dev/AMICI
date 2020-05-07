@@ -94,7 +94,6 @@ matrix:
         - travis_wait brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
         - brew link --overwrite python # https://github.com/ICB-DCM/AMICI/issues/894
         - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-        - pip3 install --user -U numpy
       after_success:
         - cd $BASE_DIR # cd to base dir for correct relative path in deploy
 
@@ -149,7 +148,6 @@ matrix:
         - choco install python --version 3.7.5
         - choco install swig
         - python -m pip install --upgrade pip
-        - pip install --user -U numpy
         - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
         # run BLAS installation script

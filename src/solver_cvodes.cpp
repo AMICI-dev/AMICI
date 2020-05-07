@@ -89,6 +89,7 @@ static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
 void CVodeSolver::init(const realtype t0, const AmiVector &x0,
                        const AmiVector & /*dx0*/) const {
     solverWasCalledF = false;
+    forceReInitPostProcessF = false;
     t = t0;
     x.copy(x0);
     int status;
@@ -124,6 +125,7 @@ void CVodeSolver::binit(const int which, const realtype tf,
                         const AmiVector &xB0,
                         const AmiVector & /*dxB0*/) const {
     solverWasCalledB = false;
+    forceReInitPostProcessB = false;
     xB.copy(xB0);
     int status;
     if (getInitDoneB(which)) {

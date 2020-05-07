@@ -5,6 +5,7 @@
 
 #include "amici/amici.h"
 
+#include "amici/steadystateproblem.h"
 #include "amici/backwardproblem.h"
 #include "amici/forwardproblem.h"
 #include "amici/misc.h"
@@ -96,30 +97,59 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                                      Model& model,
                                      bool rethrow)
 {
-    std::unique_ptr<ReturnData> rdata;
-
     /* Applies condition-specific model settings and restores them when going
      * out of scope */
-    ConditionContext conditionContext(&model, edata);
+    ConditionContext conditionContext(&model, edata,
+                                      FixedParameterContext::simulation);
+    
+    std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver,
+                                                                     model);
 
+    if (model.nx_solver <= 0) {
+        return rdata;
+    }
+
+    std::unique_ptr<SteadystateProblem> preeq {};
+    std::unique_ptr<ForwardProblem> fwd {};
+    std::unique_ptr<BackwardProblem> bwd {};
+    std::unique_ptr<SteadystateProblem> posteq {};
+    
     try {
-        rdata = std::unique_ptr<ReturnData>(new ReturnData(solver, model));
-
-        if (model.nx_solver <= 0) {
-            return rdata;
+        if (solver.getPreequilibration() ||
+            (edata && !edata->fixedParametersPreequilibration.empty())) {
+            ConditionContext conditionContext(
+                &model, edata, FixedParameterContext::preequilibration
+            );
+            
+            preeq = std::make_unique<SteadystateProblem>(solver, model);
+            preeq->workSteadyStateProblem(&solver, &model, -1);
         }
 
-        auto fwd = std::unique_ptr<ForwardProblem>(
-          new ForwardProblem(rdata.get(), edata, &model, &solver));
+        
+        fwd = std::make_unique<ForwardProblem>(edata, &model, &solver,
+                                               preeq.get());
         fwd->workForwardProblem();
+        
+        
+        if (fwd->getCurrentTimeIteration() < model.nt()) {
+            posteq = std::make_unique<SteadystateProblem>(solver, model);
+            posteq->workSteadyStateProblem(&solver, &model,
+                                           fwd->getCurrentTimeIteration());
+        }
 
-        auto bwd =
-          std::unique_ptr<BackwardProblem>(new BackwardProblem(fwd.get()));
-        bwd->workBackwardProblem();
-
+        
+        if (edata && solver.computingASA()) {
+            fwd->getAdjointUpdates(model, *edata);
+            if (posteq)
+                posteq->getAdjointUpdates(model, *edata);
+            
+            bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
+            bwd->workBackwardProblem();
+        }
+        
         rdata->status = AMICI_SUCCESS;
+        
     } catch (amici::IntegrationFailure const& ex) {
-        rdata->invalidate(ex.time);
         rdata->status = ex.error_code;
         if (rethrow)
             throw;
@@ -128,7 +158,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.time,
                  ex.what());
     } catch (amici::IntegrationFailureB const& ex) {
-        rdata->invalidateSLLH();
         rdata->status = ex.error_code;
         if (rethrow)
             throw;
@@ -139,7 +168,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
           ex.time,
           ex.what());
     } catch (amici::AmiException const& ex) {
-        rdata->invalidate(model.t0());
         rdata->status = AMICI_ERROR;
         if (rethrow)
             throw;
@@ -149,7 +177,8 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
                  ex.getBacktrace());
     }
 
-    rdata->applyChainRuleFactorToSimulationResults(&model);
+    rdata->processSimulationObjects(preeq.get(), fwd.get(), bwd.get(),
+                                    posteq.get(), model, solver, edata);
 
     return rdata;
 }

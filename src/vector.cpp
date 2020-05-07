@@ -18,7 +18,7 @@ N_Vector AmiVector::getNVector() { return nvec; }
 
 const_N_Vector AmiVector::getNVector() const { return nvec; }
 
-std::vector<realtype> const &AmiVector::getVector() { return vec; }
+std::vector<realtype> const &AmiVector::getVector() const { return vec; }
 
 int AmiVector::getLength() const { return static_cast<int>(vec.size()); }
 
@@ -58,7 +58,10 @@ void AmiVector::synchroniseNVector() {
     nvec = N_VMake_Serial(static_cast<long int>(vec.size()), vec.data());
 }
 
-AmiVector::~AmiVector() { N_VDestroy_Serial(nvec); }
+AmiVector::~AmiVector() {
+    if (nvec)
+        N_VDestroy_Serial(nvec);
+}
 
 AmiVectorArray::AmiVectorArray(long int length_inner, long int length_outer)
     : vec_array(length_outer, AmiVector(length_inner)) {

@@ -69,6 +69,7 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
     ar &u.ordering;
     ar &u.cpu_time;
     ar &u.cpu_timeB;
+    ar &u.rdata_mode;
 }
 
 
@@ -99,12 +100,12 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.o2mode;
     ar &u.z2event;
     ar &u.idlist;
-    ar &u.h;
-    ar &u.unscaledParameters;
+    ar &u.state.h;
+    ar &u.state.unscaledParameters;
     ar &u.originalParameters;
-    ar &u.fixedParameters;
+    ar &u.state.fixedParameters;
     ar &u.reinitializeFixedParameterInitialStates;
-    ar &u.plist_;
+    ar &u.state.plist;
     ar &u.x0data;
     ar &u.sx0data;
     ar &u.ts;
@@ -165,15 +166,18 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.order;
     ar &r.cpu_time;
     ar &r.cpu_timeB;
-    ar &r.newton_cpu_time;
-
-    ar &r.newton_status;
-    ar &r.newton_cpu_time;
-    ar &r.newton_numsteps;
-    ar &r.newton_numlinsteps;
-    ar &r.wrms_steadystate;
-    ar &r.wrms_sensi_steadystate;
-    ar &r.t_steadystate;
+    ar &r.preeq_cpu_time;
+    ar &r.preeq_status;
+    ar &r.preeq_numsteps;
+    ar &r.preeq_numlinsteps;
+    ar &r.preeq_wrms;
+    ar &r.preeq_t;
+    ar &r.posteq_cpu_time;
+    ar &r.posteq_status;
+    ar &r.posteq_numsteps;
+    ar &r.posteq_numlinsteps;
+    ar &r.posteq_wrms;
+    ar &r.posteq_t;
     ar &r.x0;
     ar &r.sx0;
     ar &r.llh;

@@ -48,7 +48,7 @@ sys.path.insert(0, os.path.abspath('../'))
 # Note that for sub-modules, all parent modules must be listed explicitly.
 autodoc_mock_imports = ['_amici', 'amici._amici']
 for mod_name in autodoc_mock_imports:
-    sys.modules[mod_name] = mock.Mock()
+    sys.modules[mod_name] = mock.MagicMock()
 
 # -- Project information -----------------------------------------------------
 
@@ -345,13 +345,6 @@ def fix_typehints(sig: str) -> str:
     sig = sig.replace('amici::', '')
     sig = sig.replace('sunindextype', 'int')
     sig = sig.replace('H5::H5File', 'object')
-
-    # enum classes
-    for ec in ['SteadyStateSensitivityMode', 'InternalSensitivityMethod',
-               'InterpolationType', 'LinearMultistepMethod', 'LinearSolver',
-               'NewtonDampingFactorMode', 'NonlinearSolverIteration',
-               'SensitivityMethod', 'SensitivityOrder']:
-        sig = sig.replace(ec, 'int')
 
     # remove const
     sig = sig.replace(' const ', r' ')

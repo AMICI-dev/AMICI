@@ -2,10 +2,10 @@ function [objectsstr, includesstr] = compileAMICIDependencies(dependencyPath, ob
     %COMPILEAMICIDEPENDENCIES Compiles Sundials and SuiteSparse libraries required by AMICI
 
     sundials_path = fullfile(dependencyPath,'sundials');
-    sundials_ver = '4.0.2';
+    sundials_ver = '5.2.0';
 
     ssparse_path = fullfile(dependencyPath,'SuiteSparse');
-    ssparse_ver = '4.5.3';
+    ssparse_ver = '5.4.0';
 
     lapack_path = fullfile(dependencyPath,'lapack-3.5.0'); % currently not used, lapack implementation still needs to be done
     lapack_ver = '3.5.0';
@@ -135,19 +135,12 @@ function sources_sundials = getSourcesSundials()
         fullfile('src', 'idas', 'idas_nls_sim.c');
         fullfile('src', 'idas', 'idaa_io.c');
         fullfile('src', 'sundials', 'sundials_math.c');
-        fullfile('src', 'sundials', 'sundials_mpi.c');
-        fullfile('src', 'sundials', 'sundials_sptfqmr.c');
         fullfile('src', 'sundials', 'sundials_matrix.c');
-        fullfile('src', 'sundials', 'sundials_pcg.c');
         fullfile('src', 'sundials', 'sundials_direct.c');
-        fullfile('src', 'sundials', 'sundials_spgmr.c');
-        fullfile('src', 'sundials', 'sundials_spbcgs.c');
         fullfile('src', 'sundials', 'sundials_nvector_senswrapper.c');
         fullfile('src', 'sundials', 'sundials_dense.c');
         fullfile('src', 'sundials', 'sundials_nvector.c');
         fullfile('src', 'sundials', 'sundials_version.c');
-        fullfile('src', 'sundials', 'sundials_spfgmr.c');
-        fullfile('src', 'sundials', 'sundials_sparse.c');
         fullfile('src', 'sundials', 'sundials_iterative.c');
         fullfile('src', 'sundials', 'sundials_nonlinearsolver.c');
         fullfile('src', 'sundials', 'sundials_linearsolver.c');
@@ -279,33 +272,26 @@ function objects_sundials = getObjectsSundials(o_suffix)
         'idas_nls_sim.o';
         'idaa_io.o';
         'sundials_math.o';
-        'sundials_mpi.o';
-        'sundials_sptfqmr.o';
         'sundials_matrix.o';
-        'sundials_pcg.o';
         'sundials_direct.o';
-        'sundials_spgmr.o';
-        'sundials_spbcgs.o';
         'sundials_nvector_senswrapper.o';
         'sundials_dense.o';
         'sundials_nvector.o';
         'sundials_version.o';
-        'sundials_spfgmr.o';
-        'sundials_sparse.o';
         'sundials_iterative.o';
         'sundials_nonlinearsolver.o';
         'sundials_linearsolver.o';
         'sundials_band.o';
-        'sunlinsol_dense.o';
         'sunmatrix_band.o';
-        'sunlinsol_spfgmr.o';
+        'sunmatrix_sparse.o';
         'sunnonlinsol_newton.o';
         'sunnonlinsol_fixedpoint.o';
-        'sunmatrix_sparse.o';
         'nvector_serial.o';
         'sunlinsol_pcg.o';
+        'sunlinsol_dense.o';
         'sunlinsol_spbcgs.o';
         'sunlinsol_band.o';
+        'sunlinsol_spfgmr.o';
         'cvodes_spils.o';
         'cvodes_nls_stg.o';
         'cvodes_ls.o';

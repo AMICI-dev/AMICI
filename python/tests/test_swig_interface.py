@@ -18,7 +18,6 @@ def test_copy_constructors(pysb_example_presimulation_module):
     model = pysb_example_presimulation_module.getModel()
     solver = model.getSolver()
 
-    # TODO: expand this to serialization
     for obj in [model, solver]:
         for attr in dir(obj):
             if attr.startswith('__') \
@@ -73,10 +72,18 @@ def get_val(obj, attr):
 def get_mod_val(val, attr):
     if attr == 'getStabilityLimitFlag':
         return val - 1
+    elif attr == 'getReturnDataReportingMode':
+        return amici.RDataReporting.likelihood
+    elif attr == 'getParameterList':
+        return tuple(get_mod_val(val[0], '') for _ in val)
+    elif attr == 'getStateIsNonNegative':
+        raise ValueError('Cannot modify value')
     elif isinstance(val, bool):
         return not val
     elif isinstance(val, numbers.Number):
         return val + 1
+    elif isinstance(val, tuple):
+        return tuple(get_mod_val(v, attr) for v in val)
 
     raise ValueError('Cannot modify value')
 
