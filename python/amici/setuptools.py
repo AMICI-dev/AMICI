@@ -73,12 +73,17 @@ def get_blas_config() -> PackageInfo:
 
     # Try pkgconfig
     if pkgconfig:
-        if pkgconfig.exists('cblas'):
-            blaspkgcfg = pkgconfig.parse('cblas')
-            blaspkgcfg['extra_compile_args'] = [pkgconfig.cflags('cblas')]
-            blaspkgcfg['extra_link_args'] = [pkgconfig.libs('cblas')]
+        for blas_name in ['cblas', 'openblas']:
+            if pkgconfig.exists(blas_name):
+                blaspkgcfg = pkgconfig.parse(blas_name)
+                blaspkgcfg['extra_compile_args'] = [
+                    pkgconfig.cflags(blas_name)
+                ]
+                blaspkgcfg['extra_link_args'] = [
+                    pkgconfig.libs(blas_name)
+                ]
 
-            return blaspkgcfg
+                return blaspkgcfg
 
     # If none of the previous worked, fall back to libcblas in default paths
     blaspkgcfg['libraries'] = ['cblas']
@@ -93,18 +98,6 @@ def get_hdf5_config() -> PackageInfo:
     :return:
         hdf5 related package information
     """
-    if pkgconfig:
-        h5pkgcfg = {}
-        try:
-            h5pkgcfg = pkgconfig.parse('hdf5')
-        except pkgconfig.PackageNotFoundError:
-            pass
-        # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true
-        # although no libraries or include dirs are available
-        h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg \
-                            and h5pkgcfg['include_dirs']
-        if h5pkgcfg['found']:
-            return h5pkgcfg
 
     h5pkgcfg = {'include_dirs': [],
                 'library_dirs': [],
@@ -129,13 +122,6 @@ def get_hdf5_config() -> PackageInfo:
         '/usr/local/Cellar/hdf5/1.10.2_1/lib'  # travis macOS
     ]
 
-    # Check for Environment Modules variables
-    if 'HDF5_BASE' in os.environ:
-        hdf5_include_dir_hints.insert(
-            0, os.path.join(os.environ['HDF5_BASE'], 'include'))
-        hdf5_library_dir_hints.insert(
-            0, os.path.join(os.environ['HDF5_BASE'], 'lib'))
-
     # special treatment for conda environments
     # as the conda library dir is provided first, we should also check for
     # conda header files first
@@ -144,6 +130,13 @@ def get_hdf5_config() -> PackageInfo:
             0, os.path.join(os.environ['CONDA_DIR'], 'include'))
         hdf5_library_dir_hints.insert(
             0, os.path.join(os.environ['CONDA_DIR'], 'lib'))
+
+    # Check for Environment Modules variables
+    if 'HDF5_BASE' in os.environ:
+        hdf5_include_dir_hints.insert(
+            0, os.path.join(os.environ['HDF5_BASE'], 'include'))
+        hdf5_library_dir_hints.insert(
+            0, os.path.join(os.environ['HDF5_BASE'], 'lib'))
 
     for hdf5_include_dir_hint in hdf5_include_dir_hints:
         hdf5_include_dir_found = os.path.isfile(
@@ -165,7 +158,22 @@ def get_hdf5_config() -> PackageInfo:
         if hdf5_library_dir_found:
             # break to not override hdf5_library_dir_found
             break
+
     h5pkgcfg['found'] = hdf5_include_dir_found and hdf5_library_dir_found
+    if h5pkgcfg['found']:
+        return h5pkgcfg
+
+    if pkgconfig:
+        try:
+            h5pkgcfg = pkgconfig.parse('hdf5')
+        except pkgconfig.PackageNotFoundError:
+            pass
+        # NOTE: Cannot use pkgconfig.exists('hdf5f'), since this is true
+        # although no libraries or include dirs are available
+        h5pkgcfg['found'] = 'include_dirs' in h5pkgcfg \
+                            and h5pkgcfg['include_dirs'] and \
+                            'library_dirs' in h5pkgcfg \
+                            and h5pkgcfg['library_dirs']
 
     return h5pkgcfg
 
@@ -186,7 +194,7 @@ def add_coverage_flags_if_required(cxx_flags: List[str],
         print("ENABLE_GCOV_COVERAGE was set to TRUE."
               " Building AMICI with coverage symbols.")
         cxx_flags.extend(['-g', '-O0',  '--coverage'])
-        linker_flags.extend(['--coverage','-g'])
+        linker_flags.extend(['--coverage', '-g'])
 
 
 def add_debug_flags_if_required(cxx_flags: List[str],
