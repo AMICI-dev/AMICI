@@ -129,9 +129,9 @@ def get_amici_base_sources(with_hdf5: bool = True) -> List[str]:
         with_hdf5: compile with HDF5 support
     """
 
-    amici_base_sources = glob.glob('amici{s}src{s}*.cpp'.format(s=os.sep))
-    amici_base_sources = [src for src in amici_base_sources if not re.search(
-        r'(matlab)|(\.template\.)', src)]
+    amici_base_sources = glob.glob(os.path.join('amici', 'src', '*.cpp'))
+    amici_base_sources = [src for src in amici_base_sources
+                          if not re.search(r'(matlab)|(\.template\.)', src)]
 
     if not with_hdf5:
         hdf5_cpp = os.path.join('amici', 'src', 'hdf5.cpp')
@@ -191,8 +191,7 @@ def get_lib_suite_sparse(extra_compiler_flags: Optional[List[str]] = None) -> \
                          'amici/ThirdParty/SuiteSparse/COLAMD/Include/',
                          'amici/ThirdParty/SuiteSparse/BTF/Include/',
                          'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
-                         'amici/ThirdParty/SuiteSparse/include'
-                         ],
+                         'amici/ThirdParty/SuiteSparse/include'],
         'cflags': [*extra_compiler_flags],
         'cflags_mingw32': ['-Wno-unused-but-set-variable'],
         'cflags_unix': ['-Wno-unused-but-set-variable']
