@@ -98,7 +98,7 @@ void BackwardProblem::workBackwardProblem() {
         solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
     }
     if (edata && edata->t_presim > 0) {
-        ConditionContext(model, edata, FixedParameterContext::presimulation);
+        ConditionContext cc(model, edata, FixedParameterContext::presimulation);
         solver->runB(model->t0() -  edata->t_presim);
         solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
     }

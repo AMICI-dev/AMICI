@@ -1009,13 +1009,11 @@ const AmiVector &Solver::getDerivativeState(const realtype t) const {
 }
 
 const AmiVectorArray &Solver::getStateSensitivity(const realtype t) const {
-    if (sensInitialized) {
-        if (solverWasCalledF) {
-            if (t == this->t) {
-                getSens();
-            } else {
-                getSensDky(t, 0);
-            }
+    if (sensInitialized && solverWasCalledF) {
+        if (t == this->t) {
+            getSens();
+        } else {
+            getSensDky(t, 0);
         }
     }
     return sx;
