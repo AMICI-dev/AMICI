@@ -805,9 +805,9 @@ void Solver::setStateOrdering(int ordering) {
 int Solver::getStabilityLimitFlag() const { return stldet; }
 
 void Solver::setStabilityLimitFlag(const int stldet) {
-    if (stldet != TRUE && stldet != FALSE)
+    if (stldet != true && stldet != false)
         throw AmiException("Invalid stldet flag, valid values are %i or %i",
-                           TRUE, FALSE);
+                           true, false);
 
     this->stldet = stldet;
     if (solverMemory) {
