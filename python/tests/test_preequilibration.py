@@ -148,8 +148,9 @@ def test_data_replicates(preeq_fixture):
     model, solver, edata, edata_preeq, \
         edata_presim, edata_sim, pscales, plists = preeq_fixture
 
-    for sensi_meth in [amici.SensitivityMethod_forward,
-                       amici.SensitivityMethod_adjoint]:
+    for sensi_meth in [amici.SensitivityMethod_forward,]:
+        # will be changed back to [..., amici.SensitivityMethod_adjoint] as
+        # soon as postequilibration with adjoints is implemented
         solver.setSensitivityMethod(sensi_meth)
 
         # add infty timepoint
@@ -234,3 +235,40 @@ def test_parameter_in_expdata(preeq_fixture):
             rdata_edata[variable][0, :],
             1e-6, 1e-6
         ).all(), variable
+
+
+def test_raise_postequilibration_with_adjoints(preeq_fixture):
+    """Test data replicates"""
+
+    model, solver, edata, edata_preeq, \
+        edata_presim, edata_sim, pscales, plists = preeq_fixture
+
+    rdatas = {}
+    for sensi_meth in [amici.SensitivityMethod_forward,
+                       amici.SensitivityMethod_adjoint]:
+        # set sensi method
+        solver.setSensitivityMethod(sensi_meth)
+        solver.setNewtonMaxSteps(0)
+        solver.SteadyStateSensitivityMethod = \
+            amici.SteadyStateSensitivityMode_simulationFSA
+        # add rdatas
+        rdatas[sensi_meth] = amici.runAmiciSimulation(model, solver, edata)
+
+    for variable in ['llh', 'sllh']:
+        assert np.isclose(
+            rdatas[amici.SensitivityMethod_forward][variable],
+            rdatas[amici.SensitivityMethod_adjoint][variable],
+            1e-6, 1e-6
+        ).all()
+
+    # add infty timepoint
+    solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
+    y = edata.getObservedData()
+    stdy = edata.getObservedDataStdDev()
+    ts = np.hstack([*edata.getTimepoints(), np.inf])
+    edata.setTimepoints(sorted(ts))
+    edata.setObservedData(np.hstack([y, y[0]]))
+    edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
+
+    with pytest.raises(RuntimeError):
+        amici.runAmiciSimulation(model, solver, edata)

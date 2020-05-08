@@ -35,14 +35,21 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     starttime = clock();
 
     if (it == -1) {
-        // solver was not run before, set up everything
+        /* solver was not run before, set up everything */
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                               SensitivityOrder::first);
         t = model->t0();
         solver->setup(t, model, x, dx, sx, sdx);
     } else {
-        // solver was run before, extract current state from solver
+        /* Are we computing adjoint sensitivities? That's not yet supoorted
+           with steady state sensitivity analysis */
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            solver->getSensitivityMethod() == SensitivityMethod::adjoint)
+            throw AmiException("Steady state sensitivity computation together "
+                               "with adjoint sensitivity analysis is currently "
+                               "not supported.");
+        /* solver was run before, extract current state from solver */
         solver->writeSolution(&t, x, dx, sx);
     }
 
