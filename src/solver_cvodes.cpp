@@ -107,7 +107,7 @@ void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
                             const AmiVectorArray & /*sdx0*/) const {
     int status = CV_SUCCESS;
     sx = sx0;
-    if (getSensitivityMethod() == SensitivityMethod::forward) {
+    if (getSensitivityMethod() == SensitivityMethod::forward && nplist() > 0) {
         if (getSensInitDone()) {
             status = CVodeSensReInit(
                 solverMemory.get(),

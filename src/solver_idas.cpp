@@ -102,7 +102,7 @@ void IDASolver::sensInit1(const AmiVectorArray &sx0,
     int status = IDA_SUCCESS;
     sx = sx0;
     sdx = sdx0;
-    if (getSensitivityMethod() == SensitivityMethod::forward) {
+    if (getSensitivityMethod() == SensitivityMethod::forward && nplist() > 0) {
         if (getSensInitDone()) {
             status =
                 IDASensReInit(solverMemory.get(),
