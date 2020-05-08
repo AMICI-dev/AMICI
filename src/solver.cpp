@@ -104,12 +104,12 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     if (sensi >= SensitivityOrder::first && model->nx_solver > 0) {
         auto plist = model->getParameterList();
+        sensInit1(sx0, sdx0);
         if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {
             /* Set sensitivity analysis optional inputs */
             auto par = model->getUnscaledParameters();
 
             /* Activate sensitivity calculations */
-            sensInit1(sx0, sdx0);
             initializeNonLinearSolverSens(model);
             setSensParams(par.data(), nullptr, plist.data());
 
@@ -162,10 +162,10 @@ void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
     model->fx0_fixedParameters(x);
     reInit(t, x, dx);
     
-    if (getSensitivityOrder() >= SensitivityOrder::first &&
-        getSensitivityMethod() == SensitivityMethod::forward) {
+    if (getSensitivityOrder() >= SensitivityOrder::first) {
             model->fsx0_fixedParameters(sx, x);
-            sensReInit(sx, sdx);
+            if (getSensitivityMethod() == SensitivityMethod::forward)
+                sensReInit(sx, sdx);
     }
 }
 
@@ -1017,8 +1017,6 @@ const AmiVectorArray &Solver::getStateSensitivity(const realtype t) const {
                 getSensDky(t, 0);
             }
         }
-    } else {
-        sx.reset();
     }
     return sx;
 }

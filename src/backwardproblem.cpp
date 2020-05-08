@@ -16,6 +16,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                                  const SteadystateProblem *posteq):
     model(fwd.model),
     solver(fwd.solver),
+    edata(fwd.edata),
     t(fwd.getTime()),
     xB(fwd.model->nx_solver),
     dxB(fwd.model->nx_solver),
@@ -94,6 +95,11 @@ void BackwardProblem::workBackwardProblem() {
     if (t > model->t0()) {
         /* solve for backward problems */
         solver->runB(model->t0());
+        solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
+    }
+    if (edata && edata->t_presim > 0) {
+        ConditionContext(model, edata, FixedParameterContext::presimulation);
+        solver->runB(model->t0() -  edata->t_presim);
         solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
     }
 }
