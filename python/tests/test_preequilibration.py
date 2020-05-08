@@ -264,7 +264,7 @@ def test_raise_postequilibration_with_adjoints(preeq_fixture):
         rdatas[sensi_meth] = amici.runAmiciSimulation(model, solver, edata)
         assert rdatas[sensi_meth]['status'] == amici.AMICI_SUCCESS
 
-    for variable in ['llh', 'sllh']:
+    for variable in ['llh', 'sllh', 'sx0']:
         assert np.allclose(
             rdatas[amici.SensitivityMethod.forward][variable],
             rdatas[amici.SensitivityMethod.adjoint][variable],
