@@ -104,12 +104,12 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     if (sensi >= SensitivityOrder::first && model->nx_solver > 0) {
         auto plist = model->getParameterList();
+        sensInit1(sx0, sdx0);
         if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {
             /* Set sensitivity analysis optional inputs */
             auto par = model->getUnscaledParameters();
 
             /* Activate sensitivity calculations */
-            sensInit1(sx0, sdx0);
             initializeNonLinearSolverSens(model);
             setSensParams(par.data(), nullptr, plist.data());
 
@@ -162,10 +162,10 @@ void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
     model->fx0_fixedParameters(x);
     reInit(t, x, dx);
     
-    if (getSensitivityOrder() >= SensitivityOrder::first &&
-        getSensitivityMethod() == SensitivityMethod::forward) {
+    if (getSensitivityOrder() >= SensitivityOrder::first) {
             model->fsx0_fixedParameters(sx, x);
-            sensReInit(sx, sdx);
+            if (getSensitivityMethod() == SensitivityMethod::forward)
+                sensReInit(sx, sdx);
     }
 }
 
@@ -805,9 +805,9 @@ void Solver::setStateOrdering(int ordering) {
 int Solver::getStabilityLimitFlag() const { return stldet; }
 
 void Solver::setStabilityLimitFlag(const int stldet) {
-    if (stldet != TRUE && stldet != FALSE)
+    if (stldet != true && stldet != false)
         throw AmiException("Invalid stldet flag, valid values are %i or %i",
-                           TRUE, FALSE);
+                           true, false);
 
     this->stldet = stldet;
     if (solverMemory) {
@@ -918,6 +918,8 @@ void Solver::setInitDone() const { initialized = true; };
 
 void Solver::setSensInitDone() const { sensInitialized = true; }
 
+void Solver::setSensInitOff() const { sensInitialized = false; }
+
 void Solver::setAdjInitDone() const { adjInitialized = true; }
 
 void Solver::setInitDoneB(const int which) const {
@@ -930,6 +932,11 @@ void Solver::setQuadInitDoneB(const int which) const {
     if (which >= static_cast<int>(initializedQB.size()))
         initializedQB.resize(which + 1, false);
     initializedQB.at(which) = true;
+}
+
+void Solver::switchForwardSensisOff() const {
+    sensToggleOff();
+    setSensInitOff();
 }
 
 realtype Solver::getCpuTime() const {
@@ -1002,16 +1009,12 @@ const AmiVector &Solver::getDerivativeState(const realtype t) const {
 }
 
 const AmiVectorArray &Solver::getStateSensitivity(const realtype t) const {
-    if (sensInitialized) {
-        if (solverWasCalledF) {
-            if (t == this->t) {
-                getSens();
-            } else {
-                getSensDky(t, 0);
-            }
+    if (sensInitialized && solverWasCalledF) {
+        if (t == this->t) {
+            getSens();
+        } else {
+            getSensDky(t, 0);
         }
-    } else {
-        sx.reset();
     }
     return sx;
 }

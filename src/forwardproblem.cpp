@@ -65,20 +65,30 @@ void ForwardProblem::workForwardProblem() {
 
     /* perform presimulation if necessary */
     if (presimulate) {
+        if (solver->computingASA())
+            throw AmiException("Presimulation with adjoint sensitivities"
+                               " is currently not implemented.");
         handlePresimulation();
         t = model->t0();
     }
+    /* when computing adjoint sensitivity analysis with presimulation,
+     we need to store sx after the reinitialization after preequilibration
+     but before reinitialization after presimulation. As presimulation with ASA
+     will not update sx, we can simply extract the values here.*/
+    if (solver->computingASA() && presimulate)
+        sx = solver->getStateSensitivity(model->t0());
+    
     if (presimulate || preequilibrated)
         solver->updateAndReinitStatesAndSensitivities(model);
 
     // update x0 after computing consistence IC/reinitialization
     x = solver->getState(model->t0());
-    /* this is a bit tricky here. we want to update sx0 after calling
-     solver->updateAndReinitStatesAndSensitivities, but not end up overwriting
-     results from non-FSA preequilibration. checking for solver->computingFSA()
-     is not the most intuitive way to make sure we do the right thing, but does
-     the right job */
-    if (solver->computingFSA())
+    /* when computing forward sensitivities, we generally want to update sx
+     after presimulation/preequilibration, and if we didn't do either this also
+     wont harm. when computing ASA, we only want to update here, if we didn't
+     update before presimulation (if applicable).
+    */
+    if (solver->computingFSA() || (solver->computingASA() && !presimulate ))
         sx = solver->getStateSensitivity(model->t0());
     
 
@@ -220,7 +230,7 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     }
     /* fire the secondary event */
     if (secondevent > 0) {
-        handleEvent(tlastroot, TRUE);
+        handleEvent(tlastroot, true);
     }
 
     /* only reinitialise in the first event fired */

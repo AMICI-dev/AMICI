@@ -178,6 +178,11 @@ class Solver {
     void setSensitivityMethod(SensitivityMethod sensi_meth);
 
     /**
+     * @brief Disable forward sensitivity integration (used in steady state sim)
+     */
+    void switchForwardSensisOff() const;
+
+    /**
      * @brief Get maximum number of allowed Newton steps for steady state
      * computation
      * @return
@@ -637,6 +642,12 @@ class Solver {
      */
     virtual void sensReInit(const AmiVectorArray &yyS0,
                             const AmiVectorArray &ypS0) const = 0;
+
+    /**
+     * @brief Switches off computation of  state sensitivites without
+     * deallocating the memory for sensitivities
+     */
+    virtual void sensToggleOff() const = 0;
 
     /**
      * @brief Reinitializes the adjoint states after an event occurence
@@ -1451,6 +1462,11 @@ class Solver {
      * @brief sets that memory for forward sensitivities has been allocated
      */
     void setSensInitDone() const;
+
+    /**
+     * @brief sets that memory for forward sensitivities has not been allocated
+     */
+    void setSensInitOff() const;
 
     /**
      * @brief sets that memory for forward interpolation has been allocated

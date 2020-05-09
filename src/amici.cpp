@@ -22,15 +22,18 @@
 #include <type_traits>
 
 // ensure definitions are in sync
-static_assert(AMICI_SUCCESS == CV_SUCCESS, "AMICI_SUCCESS != CV_SUCCESS");
-static_assert(AMICI_DATA_RETURN == CV_TSTOP_RETURN,
+static_assert(amici::AMICI_SUCCESS == CV_SUCCESS,
+              "AMICI_SUCCESS != CV_SUCCESS");
+static_assert(amici::AMICI_DATA_RETURN == CV_TSTOP_RETURN,
               "AMICI_DATA_RETURN != CV_TSTOP_RETURN");
-static_assert(AMICI_ROOT_RETURN == CV_ROOT_RETURN,
+static_assert(amici::AMICI_ROOT_RETURN == CV_ROOT_RETURN,
               "AMICI_ROOT_RETURN != CV_ROOT_RETURN");
-static_assert(AMICI_ILL_INPUT == CV_ILL_INPUT,
+static_assert(amici::AMICI_ILL_INPUT == CV_ILL_INPUT,
               "AMICI_ILL_INPUT != CV_ILL_INPUT");
-static_assert(AMICI_NORMAL == CV_NORMAL, "AMICI_NORMAL != CV_NORMAL");
-static_assert(AMICI_ONE_STEP == CV_ONE_STEP, "AMICI_ONE_STEP != CV_ONE_STEP");
+static_assert(amici::AMICI_NORMAL == CV_NORMAL,
+              "AMICI_NORMAL != CV_NORMAL");
+static_assert(amici::AMICI_ONE_STEP == CV_ONE_STEP,
+              "AMICI_ONE_STEP != CV_ONE_STEP");
 static_assert(std::is_same<amici::realtype, realtype>::value,
               "Definition of realtype does not match");
 
