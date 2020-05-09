@@ -35,14 +35,21 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     starttime = clock();
 
     if (it == -1) {
-        // solver was not run before, set up everything
+        /* solver was not run before, set up everything */
         model->initialize(x, dx, sx, sdx,
                           solver->getSensitivityOrder() >=
                               SensitivityOrder::first);
         t = model->t0();
         solver->setup(t, model, x, dx, sx, sdx);
     } else {
-        // solver was run before, extract current state from solver
+        /* Are we computing adjoint sensitivities? That's not yet supoorted
+           with steady state sensitivity analysis */
+        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+            solver->getSensitivityMethod() == SensitivityMethod::adjoint)
+            throw AmiException("Steady state sensitivity computation together "
+                               "with adjoint sensitivity analysis is currently "
+                               "not supported.");
+        /* solver was run before, extract current state from solver */
         solver->writeSolution(&t, x, dx, sx);
     }
 
@@ -100,12 +107,11 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     cpu_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Compute steady state sensitvities */
-
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
         (newton_status == NewtonStatus::newt ||
          newton_status == NewtonStatus::newt_sim_newt ||
-         model->getSteadyStateSensitivityMode() !=
-             SteadyStateSensitivityMode::simulationFSA))
+         model->getSteadyStateSensitivityMode() ==
+             SteadyStateSensitivityMode::newtonOnly))
         // for newton_status == 2 the sensis were computed via FSA
         newtonSolver->computeNewtonSensis(sx);
 
@@ -128,12 +134,22 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
 }
 
 bool SteadystateProblem::checkConvergence(const Solver *solver, Model *model) {
+    /* get RHS and compute weighted error norm */
     model->fxdot(t, x, dx, xdot);
     wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(),
                        solver->getRelativeToleranceSteadyState());
     bool converged = wrms < RCONST(1.0);
-    if (solver->getSensitivityOrder() > SensitivityOrder::none &&
-        solver->getSensitivityMethod() == SensitivityMethod::forward) {
+
+    /* If we also integrate forward sensis, we need to also check those:
+       Check if: sensis enabled && steadyStateSensiMode == simulation
+     */
+    bool checkForwardSensis =
+        solver->getSensitivityOrder() > SensitivityOrder::none &&
+        model->getSteadyStateSensitivityMode() ==
+            SteadyStateSensitivityMode::simulationFSA;
+
+    /* get RHS of sensitivities and compute weighted error norm */
+    if (checkForwardSensis) {
         for (int ip = 0; ip < model->nplist(); ++ip) {
             if (converged) {
                 sx = solver->getStateSensitivity(t);
@@ -253,8 +269,14 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
 {
     /* Loop over steps and check for convergence */
     bool converged = checkConvergence(solver, model);
-
     int steps_newton = 0;
+    /* If flag for forward sensitivity computation by simulation is not set,
+     disable forward sensitivity integration. Sensitivities will be combputed
+     by newonSolver->computeNewtonSensis then */
+    if (model->getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::newtonOnly)
+        solver->switchForwardSensisOff();
+
     while (!converged) {
         /* One step of ODE integration
          reason for tout specification:
@@ -278,7 +300,9 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
         }
     }
     numsteps.at(static_cast<int>(NewtonStatus::newt_sim) - 1) = steps_newton;
-    if (solver->getSensitivityOrder() > SensitivityOrder::none)
+    if (solver->getSensitivityOrder() > SensitivityOrder::none &&
+        model->getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::simulationFSA)
         sx = solver->getStateSensitivity(t);
 }
 

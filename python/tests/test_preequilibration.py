@@ -14,8 +14,8 @@ def preeq_fixture(pysb_example_presimulation_module):
     model.setReinitializeFixedParameterInitialStates(True)
 
     solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder_first)
-    solver.setSensitivityMethod(amici.SensitivityMethod_forward)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.setSensitivityMethod(amici.SensitivityMethod.forward)
 
     edata = get_data(model)
     edata.t_presim = 2
@@ -49,12 +49,12 @@ def preeq_fixture(pysb_example_presimulation_module):
     edata_sim.fixedParametersPreequilibration = ()
 
     pscales = [
-        amici.ParameterScaling_log10, amici.ParameterScaling_ln,
-        amici.ParameterScaling_none,
+        amici.ParameterScaling.log10, amici.ParameterScaling.ln,
+        amici.ParameterScaling.none,
         amici.parameterScalingFromIntVector([
-            amici.ParameterScaling_log10, amici.ParameterScaling_ln,
-            amici.ParameterScaling_none, amici.ParameterScaling_log10,
-            amici.ParameterScaling_ln, amici.ParameterScaling_none
+            amici.ParameterScaling.log10, amici.ParameterScaling.ln,
+            amici.ParameterScaling.none, amici.ParameterScaling.log10,
+            amici.ParameterScaling.ln, amici.ParameterScaling.none
         ])
     ]
 
@@ -148,8 +148,9 @@ def test_data_replicates(preeq_fixture):
     model, solver, edata, edata_preeq, \
         edata_presim, edata_sim, pscales, plists = preeq_fixture
 
-    for sensi_meth in [amici.SensitivityMethod_forward,
-                       amici.SensitivityMethod_adjoint]:
+    for sensi_meth in [amici.SensitivityMethod.forward, ]:
+        # will be changed back to [..., amici.SensitivityMethod.adjoint] as
+        # soon as postequilibration with adjoints is implemented
         solver.setSensitivityMethod(sensi_meth)
 
         # add infty timepoint
@@ -234,3 +235,50 @@ def test_parameter_in_expdata(preeq_fixture):
             rdata_edata[variable][0, :],
             1e-6, 1e-6
         ).all(), variable
+
+
+def test_raise_postequilibration_with_adjoints(preeq_fixture):
+    """Test data replicates"""
+
+    model, solver, edata, edata_preeq, \
+        edata_presim, edata_sim, pscales, plists = preeq_fixture
+
+    # this needs to fail unless we remove presimulation
+    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    assert rdata['status'] == amici.AMICI_ERROR
+
+    edata.t_presim = 0.0
+    edata.fixedParametersPresimulation = ()
+
+    rdatas = {}
+    for sensi_meth in [amici.SensitivityMethod.forward,
+                       amici.SensitivityMethod.adjoint]:
+        # set sensi method
+        solver.setSensitivityMethod(sensi_meth)
+        solver.setNewtonMaxSteps(0)
+        solver.SteadyStateSensitivityMethod = \
+            amici.SteadyStateSensitivityMode.simulationFSA
+        # add rdatas
+        rdatas[sensi_meth] = amici.runAmiciSimulation(model, solver, edata)
+        assert rdatas[sensi_meth]['status'] == amici.AMICI_SUCCESS
+
+    for variable in ['llh', 'sllh', 'sx0']:
+        assert np.allclose(
+            rdatas[amici.SensitivityMethod.forward][variable],
+            rdatas[amici.SensitivityMethod.adjoint][variable],
+            1e-6, 1e-6
+        ), variable
+
+    # add infty timepoint
+    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+    y = edata.getObservedData()
+    stdy = edata.getObservedDataStdDev()
+    ts = np.hstack([*edata.getTimepoints(), np.inf])
+    edata.setTimepoints(sorted(ts))
+    edata.setObservedData(np.hstack([y, y[0]]))
+    edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
+
+    with pytest.raises(RuntimeError):
+        amici.runAmiciSimulation(model, solver, edata)
