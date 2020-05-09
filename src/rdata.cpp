@@ -167,7 +167,7 @@ void ReturnData::processSimulationObjects(SteadystateProblem const *preeq,
     else if (posteq)
         storeJacobianAndDerivativeInReturnData(*posteq, model);
 
-    if (bwd)
+    if (fwd && bwd)
         processBackwardProblem(*fwd, *bwd, model);
     else if (solver.computingASA())
         invalidateSLLH();

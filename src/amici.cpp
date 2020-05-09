@@ -102,8 +102,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 {
     /* Applies condition-specific model settings and restores them when going
      * out of scope */
-    ConditionContext conditionContext(&model, edata,
-                                      FixedParameterContext::simulation);
+    ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
     
     std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver,
                                                                      model);
@@ -120,7 +119,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     try {
         if (solver.getPreequilibration() ||
             (edata && !edata->fixedParametersPreequilibration.empty())) {
-            ConditionContext conditionContext(
+            ConditionContext cc2(
                 &model, edata, FixedParameterContext::preequilibration
             );
             
