@@ -22,7 +22,7 @@ jobs:
     steps:
     - uses: actions/checkout@v1
       with:
-        fetch-depth: 200
+        fetch-depth: 1
     - name: apt
       run: |
         sudo apt-get update \
