@@ -53,7 +53,7 @@ class SbmlImporter:
         indicates whether libSBML warnings should be
         displayed
 
-    :ivar symbols: dict
+    :ivar symbols:
         dict carrying symbolic definitions
 
     :ivar sbml_reader:
@@ -67,38 +67,38 @@ class SbmlImporter:
     :ivar sbml:
         sbml definition [!not storing this will result in a segfault!]
 
-    :ivar species_index: dict
+    :ivar species_index:
         maps species names to indices
 
     :ivar species_compartment: sympy.Matrix
         compartment for each species
 
-    :ivar constant_species: list[sting]
+    :ivar constant_species:
         ids of species that are marked as constant
 
-    :ivar boundary_condition_species: list[string]
+    :ivar boundary_condition_species:
         ids of species that are marked as boundary
         condition
 
-    :ivar species_has_only_substance_units: list[bool]
+    :ivar species_has_only_substance_units:
         flags indicating whether a species has only substance units
 
-    :ivar species_conversion_factor: sympy.Matrix
+    :ivar species_conversion_factor:
         conversion factors for every species
 
-    :ivar compartment_symbols: sympy.Matrix
+    :ivar compartment_symbols
         compartment ids
 
-    :ivar compartment_volume: sympy.Matrix
+    :ivar compartment_volume:
         numeric/symbolic compartment volumes
 
-    :ivar stoichiometric_matrix: sympy.Matrix
+    :ivar stoichiometric_matrix:
         stoichiometric matrix of the model
 
-    :ivar flux_vector: sympy.Matrix
+    :ivar flux_vector:
         reaction kinetic laws
 
-    :ivar local_symbols: dict
+    :ivar local_symbols:
         model symbols for sympy to consider during sympification
         see `locals`argument in `sympy.sympify`
 
@@ -133,7 +133,7 @@ class SbmlImporter:
                 sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
             self.sbml_doc = sbml_doc
 
-        self.show_sbml_warnings = show_sbml_warnings
+        self.show_sbml_warnings : bool = show_sbml_warnings
 
         # process document
         self._process_document()
@@ -144,12 +144,12 @@ class SbmlImporter:
         self.symbols = dict()
         self._reset_symbols()
 
-        self.local_symbols = {}
+        self.local_symbols : dict = {}
 
-        self.compartment_rate_rules = {}
-        self.species_rate_rules = {}
-        self.compartment_assignment_rules = {}
-        self.species_assignment_rules = {}
+        self.compartment_rate_rules : dict = {}
+        self.species_rate_rules : dict = {}
+        self.compartment_assignment_rules : dict = {}
+        self.species_assignment_rules : dict = {}
 
     def _process_document(self) -> None:
         """
