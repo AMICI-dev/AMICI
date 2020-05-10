@@ -81,8 +81,8 @@ def test_pregenerated_model(sub_test, case):
             and len(model.getParameterList()) \
             and not model_name.startswith('model_neuron') \
             and not case.endswith('byhandpreeq'):
-        check_derivatives(model, solver, edata,
-                          assert_fun, **check_derivative_opts)
+        check_derivatives(model, solver, edata, assert_fun,
+                          **check_derivative_opts)
 
     verify_simulation_opts = dict()
 
@@ -97,19 +97,19 @@ def test_pregenerated_model(sub_test, case):
 
     verify_simulation_results(
         rdata, expected_results[sub_test][case]['results'],
-        assert_fun, **verify_simulation_opts
+        **verify_simulation_opts
     )
 
     if model_name == 'model_steadystate' and \
             case == 'sensiforwarderrorint':
         edata = amici.amici.ExpData(model.get())
 
+    # Test runAmiciSimulations: ensure running twice
+    # with same ExpData yields same results
     if edata and model_name != 'model_neuron_o2' and not (
         model_name == 'model_robertson' and
         case == 'sensiforwardSPBCG'
     ):
-        # Test runAmiciSimulations: ensure running twice
-        # with same ExpData yields same results
         if isinstance(edata, amici.amici.ExpData):
             edatas = [edata, edata]
         else:
@@ -120,32 +120,69 @@ def test_pregenerated_model(sub_test, case):
             failfast=False
         )
         verify_simulation_results(
-            rdatas[0],
-            expected_results[sub_test][case]['results'],
-            assert_fun, **verify_simulation_opts
+            rdatas[0], expected_results[sub_test][case]['results'],
+            **verify_simulation_opts
         )
         verify_simulation_results(
-            rdatas[1],
-            expected_results[sub_test][case]['results'],
-            assert_fun, **verify_simulation_opts
+            rdatas[1], expected_results[sub_test][case]['results'],
+            **verify_simulation_opts
         )
+
+    # test residuals mode
+    if solver.getSensitivityMethod() == amici.SensitivityMethod.adjoint:
+        with pytest.raises(RuntimeError):
+            solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
+    else:
+        solver.setReturnDataReportingMode(amici.RDataReporting.residuals)
+        rdata = amici.runAmiciSimulation(model, solver, edata)
+        verify_simulation_results(
+            rdata, expected_results[sub_test][case]['results'],
+            fields=['t', 'res', 'sres', 'y', 'sy', 'sigmay', 'ssigmay'],
+            **verify_simulation_opts
+        )
+        with pytest.raises(RuntimeError):
+            solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+
+    # test likelihood mode
+    solver.setReturnDataReportingMode(amici.RDataReporting.likelihood)
+    rdata = amici.runAmiciSimulation(model, solver, edata)
+    verify_simulation_results(
+        rdata, expected_results[sub_test][case]['results'],
+        fields=['t', 'llh', 'sllh', 's2llh', 'FIM'], **verify_simulation_opts
+    )
 
     with pytest.raises(RuntimeError):
         model.getParameterByName('thisParameterDoesNotExist')
 
 
-def verify_simulation_results(rdata, expected_results, assert_fun,
+def verify_simulation_results(rdata, expected_results, fields=None,
                               atol=1e-8, rtol=1e-4):
     """
     compares all fields of the simulation results in rdata against the
     expectedResults using the provided tolerances
 
-    Arguments:
-        rdata: simulation results as returned by amici.runAmiciSimulation
-        expected_results: stored test results
-        atol: absolute tolerance
-        rtol: relative tolerance
+    :param rdata: simulation results as returned by amici.runAmiciSimulation
+    :param expected_results: stored test results
+    :param fields: subsetting of expected results to check
+    :param atol: absolute tolerance
+    :param rtol: relative tolerance
     """
+
+    subfields = []
+    if fields is None:
+        attrs = expected_results.attrs.keys()
+        fields = expected_results.keys()
+        if 'diagnosis' in expected_results.keys():
+            subfields = expected_results['diagnosis'].keys()
+
+    else:
+        attrs = [field for field in fields
+                 if field in expected_results.attrs.keys()]
+        if 'diagnosis' in expected_results.keys():
+            subfields = [field for field in fields
+                         if field in expected_results['diagnosis'].keys()]
+        fields = [field for field in fields
+                  if field in expected_results.keys()]
 
     if expected_results.attrs['status'][0] != 0:
         assert rdata['status'] == expected_results.attrs['status'][0]
@@ -154,10 +191,16 @@ def verify_simulation_results(rdata, expected_results, assert_fun,
     for field in expected_results.keys():
         if field == 'diagnosis':
             for subfield in ['J', 'xdot']:
+                if subfield not in subfields:
+                    assert rdata[subfield] is None, field
+                    continue
                 check_results(rdata, subfield,
                               expected_results[field][subfield][()],
                               assert_fun, 1e-8, 1e-8)
         else:
+            if field not in fields:
+                assert rdata[field] is None, field
+                continue
             if field == 's2llh':
                 check_results(rdata, field, expected_results[field][()],
                               assert_fun, 1e-4, 1e-3)
@@ -165,6 +208,6 @@ def verify_simulation_results(rdata, expected_results, assert_fun,
                 check_results(rdata, field, expected_results[field][()],
                               assert_fun, atol, rtol)
 
-    for attr in expected_results.attrs.keys():
+    for attr in attrs:
         check_results(rdata, attr, expected_results.attrs[attr], assert_fun,
                       atol, rtol)

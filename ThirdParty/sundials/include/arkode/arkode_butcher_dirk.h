@@ -2,7 +2,7 @@
  * Programmer(s): Daniel R. Reynolds @ SMU
  * -----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -39,10 +39,12 @@ extern "C" {
 #define ARK436L2SA_DIRK_6_3_4   109
 #define KVAERNO_7_4_5           110
 #define ARK548L2SA_DIRK_8_4_5   111
+#define ARK437L2SA_DIRK_7_3_4   112
+#define ARK548L2SAb_DIRK_8_4_5  113
 
 /* Utility #defines to ensure valid input IDs for DIRK tables */
 #define MIN_DIRK_NUM            100
-#define MAX_DIRK_NUM            111
+#define MAX_DIRK_NUM            113
 
 /* Accessor routine to load built-in DIRK table */
 SUNDIALS_EXPORT ARKodeButcherTable ARKodeButcherTable_LoadDIRK(int imethod);

@@ -108,6 +108,8 @@ tests/test/*
 */tests/test_model_presimulation/*
 */tests/test_model_presimulation_pysb/*
 */tests/test_model_presimulation_sbml/*
+*/tests/model_constant_species_cl/*
+*/tests/model_constant_species/*
 */tests/test_likelihoods/*
 */tests/bax_pore_sequential_amici/*
 */tests/bax_pore_amici/*
@@ -136,6 +138,7 @@ tests/sedml-test-suite/
 tests/SBMLTestModels/
 tests/benchmark-models/test_bmc
 tests/petab_test_suite
+petab_test_suite
 /python/test/amici-SBMLTest*/
 
 python/examples/example_steadystate/model_steadystate_scaled/*

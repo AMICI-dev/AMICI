@@ -42,6 +42,8 @@ class IDASolver : public Solver {
     void sensReInit(const AmiVectorArray &yyS0,
                     const AmiVectorArray &ypS0) const override;
 
+    void sensToggleOff() const override;
+
     void reInitB(int which, realtype tB0,
                  const AmiVector &yyB0, const AmiVector &ypB0) const override;
 

@@ -3,6 +3,19 @@ import sys
 import re
 import subprocess
 import mock
+
+from sphinx.transforms.post_transforms import ReferencesResolver
+
+import amici
+
+# The short X.Y version
+version = amici.__version__
+# The full version, including alpha/beta/rc tags
+release = version
+
+del amici
+
+
 # -*- coding: utf-8 -*-
 #
 # Configuration file for the Sphinx documentation builder.
@@ -38,8 +51,6 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-from sphinx.transforms.post_transforms import ReferencesResolver
-
 sys.path.insert(0, os.path.abspath('../python/sdist'))
 sys.path.insert(0, os.path.abspath('../'))
 
@@ -48,24 +59,14 @@ sys.path.insert(0, os.path.abspath('../'))
 # Note that for sub-modules, all parent modules must be listed explicitly.
 autodoc_mock_imports = ['_amici', 'amici._amici']
 for mod_name in autodoc_mock_imports:
-    sys.modules[mod_name] = mock.Mock()
+    sys.modules[mod_name] = mock.MagicMock()
 
 # -- Project information -----------------------------------------------------
 
 project = 'AMICI'
 copyright = '2020, The AMICI developers'
 author = 'The AMICI developers'
-
-import amici
-
-# The short X.Y version
-version = amici.__version__
-# The full version, including alpha/beta/rc tags
-release = version
-
-del amici
-
-
+title = 'AMICI Documentation'
 
 # -- General configuration ---------------------------------------------------
 
@@ -188,8 +189,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'AMICI.tex', 'AMICI Documentation',
-     'The AMICI developers', 'manual'),
+    (master_doc, 'AMICI.tex', title,
+     author, 'manual'),
 ]
 
 
@@ -198,7 +199,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'amici', 'AMICI Documentation',
+    (master_doc, 'amici', title,
      [author], 1)
 ]
 
@@ -209,7 +210,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'AMICI', 'AMICI Documentation',
+    (master_doc, 'AMICI', title,
      author, 'AMICI', 'Advanced Multilanguage Interface for CVODES and IDAS.',
      'Miscellaneous'),
 ]
@@ -346,13 +347,6 @@ def fix_typehints(sig: str) -> str:
     sig = sig.replace('sunindextype', 'int')
     sig = sig.replace('H5::H5File', 'object')
 
-    # enum classes
-    for ec in ['SteadyStateSensitivityMode', 'InternalSensitivityMethod',
-               'InterpolationType', 'LinearMultistepMethod', 'LinearSolver',
-               'NewtonDampingFactorMode', 'NonlinearSolverIteration',
-               'SensitivityMethod', 'SensitivityOrder']:
-        sig = sig.replace(ec, 'int')
-
     # remove const
     sig = sig.replace(' const ', r' ')
     sig = re.sub(r' const$', r'', sig)
@@ -403,14 +397,14 @@ def process_missing_ref(app, env, node, contnode):
 
     for old, new in doclinks.items():
         node['reftarget'] = node['reftarget'].replace(old, new)
-    contnode = node[0]
-    if 'refuri' in contnode:
+    cnode = node[0]
+    if 'refuri' in cnode:
         for old, new in doclinks.items():
-            contnode['refuri'] = contnode['refuri'].replace(old, new)
+            cnode['refuri'] = cnode['refuri'].replace(old, new)
 
     refdoc = node.get('refdoc', env.docname)
     resolver = ReferencesResolver(env.get_doctree(refdoc))
-    result = resolver.resolve_anyref(refdoc, node, contnode)
+    result = resolver.resolve_anyref(refdoc, node, cnode)
     return result
 
 

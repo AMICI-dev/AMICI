@@ -3,7 +3,7 @@
  *                Alan C. Hindmarsh and Radu Serban @ LLNL
  *-----------------------------------------------------------------
  * SUNDIALS Copyright Start
- * Copyright (c) 2002-2019, Lawrence Livermore National Security
+ * Copyright (c) 2002-2020, Lawrence Livermore National Security
  * and Southern Methodist University.
  * All rights reserved.
  *
@@ -34,6 +34,10 @@ extern "C" {
   -----------------------------------------------------------------*/
 typedef struct IDALsMemRec {
 
+  /* Linear solver type information */
+  booleantype iterative;    /* is the solver iterative?    */
+  booleantype matrixbased;  /* is a matrix structure used? */
+
   /* Jacobian construction & storage */
   booleantype jacDQ;    /* SUNTRUE if using internal DQ Jacobian approx. */
   IDALsJacFn jac;       /* Jacobian routine to be called                 */
@@ -48,6 +52,9 @@ typedef struct IDALsMemRec {
   N_Vector ycur;        /* current y vector in Newton iteration          */
   N_Vector ypcur;       /* current yp vector in Newton iteration         */
   N_Vector rcur;        /* rcur = F(tn, ycur, ypcur)                     */
+
+  /* Matrix-based solver, scale solution to account for change in cj */
+  booleantype scalesol;
 
   /* Iterative solver tolerance */
   realtype sqrtN;     /* sqrt(N)                                      */
@@ -69,7 +76,7 @@ typedef struct IDALsMemRec {
   long int ncfl0;     /* ncfl0 = saved ncfl (for performance monitor) */
   long int nwarn;     /* nwarn = no. of warnings (for perf. monitor)  */
 
-  long int last_flag; /* last error return flag                       */
+  int last_flag;      /* last error return flag                       */
 
   /* Preconditioner computation
      (a) user-provided:

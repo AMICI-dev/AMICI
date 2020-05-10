@@ -37,8 +37,8 @@ constrained optimization problems.
   <img src="https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master"></a>
 <a href="https://codecov.io/gh/ICB-DCM/AMICI" alt="CodeCov">
   <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
-<a href="https://www.codacy.com/app/FFroehlich/AMICI" alt="Codacy">
-  <img src="https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6"></a>
+<a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master" alt="SonarCloud">
+  <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index"></a>
 <a href="https://zenodo.org/badge/latestdoi/43677177" alt="Zenodo">
   <img src="https://zenodo.org/badge/43677177.svg"></a>
 <a href="https://amici.readthedocs.io/en/latest/?badge=latest" alt="RTD">
@@ -130,7 +130,7 @@ When presenting work that employs AMICI, feel free to use one of the icons in
 
 ## Status of SBML support in Python-AMICI
 
-Python-AMICI currently passes 500 out of the 1780 (~28%) test cases from
+Python-AMICI currently passes 696 out of the 1780 (~39%) test cases from
 the semantic
 [SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
 ([current status](https://github.com/ICB-DCM/AMICI/actions)).
@@ -139,10 +139,7 @@ In addition, we currently plan to add support for the following features
 (see corresponding issues for details and progress):
 
 - Events (currently Matlab-only)
-- Rate rules
 - Algebraic rules
-- Species assignment rules
-- Compartment assignment rules
 - Models without species
 
 contributions are welcome.

@@ -75,7 +75,9 @@ class Model_DAE : public Model {
         : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
                 nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
                 nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
-                pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {}
+                pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {
+            M = SUNMatrixWrapper(nx_solver, nx_solver);
+        }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
             const AmiVector &xdot, SUNMatrix J) override;

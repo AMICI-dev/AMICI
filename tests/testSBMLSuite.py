@@ -20,6 +20,10 @@ import numpy as np
 import sympy as sp
 import pandas as pd
 
+import libsbml
+
+from typing import List
+
 
 # directory with sbml semantic test cases
 TEST_PATH = os.path.join(os.path.dirname(__file__), 'sbml-test-suite', 'cases',
@@ -69,15 +73,16 @@ def test_sbml_testsuite_case(test_number, result_path):
         rdata = amici.runAmiciSimulation(model, solver)
 
         # verify
-        simulated_x = verify_results(settings, rdata, results, wrapper,
+        simulated_x, x_ids = verify_results(settings, rdata, results, wrapper,
                                      model, atol, rtol)
 
         print(f'TestCase {test_id} passed.')
 
         # record results
-        write_result_file(simulated_x, model, test_id, result_path)
+        write_result_file(simulated_x, model, test_id, result_path, x_ids)
 
     except amici.sbml_import.SBMLException as err:
+        #assert False, f"Skipped {test_id}: {err}"
         print(f'TestCase {test_id} was skipped: {err}')
 
 
@@ -88,28 +93,133 @@ def verify_results(settings, rdata, results, wrapper,
 
     # verify states
     simulated_x = rdata['x']
-    expected_x = results[1:, [
-                             1 + wrapper.species_index[variable]
-                             for variable in variables_species
-                             if variable in wrapper.species_index.keys()
-                         ]]
 
-    concentrations_to_amounts(amount_species, wrapper, model, simulated_x)
+    # Add species with assignment rules to the simulated data.
+    for x_id, x_index in wrapper.species_index.items():
+        # Currently assumes that x_id is also an observable.
+        # Also assumes that observable "species" have the same index in both
+        # the 'x' and 'y' keys of rdata.
+        if x_id in [str(s) for s in wrapper.species_assignment_rules]:
+            simulated_x[:,x_index] = rdata['y'][:,x_index]
+
+    x_ids = [x_id
+            for x_id in wrapper.species_index
+            if x_id in variables_species]
+    x_ids_results_columns = [variables_species.index(x_id)
+            for x_id in x_ids]
+
+    expected_x = results[1:, [1+c for c in x_ids_results_columns]]
+
+    # SBML test suite case 01308 defines species with initialAmount and
+    # hasOnlySubstanceUnits="true", but then request results as concentrations.
+    requested_concentrations = [s
+            for s in settings['concentration'].replace(
+                ' ', '').replace('\n', '').split(',') if s]
+    # The rate rules condition here may be unnecessary/better implemented
+    # elsewhere.
+    concentration_species = [species for species in requested_concentrations
+            if wrapper.species_has_only_substance_units[
+                wrapper.species_index[species]]
+            and species in [str(s) for s in wrapper.species_rate_rules]]
+    amounts_to_concentrations(concentration_species, wrapper, model,
+            simulated_x, rdata['y'], requested_concentrations)
+
+    concentrations_to_amounts(amount_species, wrapper, model,
+            simulated_x, rdata['y'], requested_concentrations)
+
+    # Add observables to the verification. This includes compartments with
+    # assignment rules, as they are implemented as observables.
+    # Currently only used for SBML test suite case 01223.
+    observables = {str(o_id): (o_index, variables_species.index(str(o_id)))
+            for o_index, o_id in enumerate(
+                wrapper.symbols['observable']['identifier'])
+            if str(o_id) in variables_species and (
+                str(o_id) not in wrapper.species_index)}
+    for o_id, indices in observables.items():
+        simulated_x = np.hstack((simulated_x, np.array([rdata['y'][:,indices[0]]]).T))
+        expected_x = np.hstack((expected_x, np.array([results[1:, 1+indices[1]]]).T))
+        x_ids.append(o_id)
 
     assert np.isclose(simulated_x, expected_x, atol, rtol).all()
 
     # TODO: verify compartment volumes and parameters
+    # Currently, compartments with assignment and rate rules are verified.
+    # Compartments with assignment rules are exported as observables, and
+    # compartments with rate rules are exported as species.
 
-    return simulated_x
+    return simulated_x, x_ids
 
 
-def concentrations_to_amounts(amount_species, wrapper, model, simulated_x):
-    """Convert AMICI simulated concentrations to amounts"""
+def amounts_to_concentrations(
+        amount_species,
+        wrapper,
+        model,
+        simulated_x,
+        simulated_y,
+        requested_concentrations
+):
+    """
+    Convert AMICI simulated amounts to concentrations
+    Convert from concentration to amount:
+    C=n/V
+    n=CV (multiply by V)
+    Convert from amount to concentration:
+    n=CV
+    C=n/V (divide by V)
+    Dividing by V is equivalent to multiplying the reciprocal by V, then taking
+    the reciprocal.
+    This allows for the reuse of the concentrations_to_amounts method...
+    """
     for species in amount_species:
         if not species == '':
+            simulated_x[:, wrapper.species_index[species]] = \
+                1 / simulated_x[:, wrapper.species_index[species]]
+            concentrations_to_amounts([species], wrapper, model, simulated_x,
+                    simulated_y, requested_concentrations)
+            simulated_x[:, wrapper.species_index[species]] = \
+                1 / simulated_x[:, wrapper.species_index[species]]
+
+
+def concentrations_to_amounts(
+        amount_species,
+        wrapper,
+        model,
+        simulated_x,
+        simulated_y,
+        requested_concentrations
+):
+    """Convert AMICI simulated concentrations to amounts"""
+    for species in amount_species:
+        # Skip "species" that are actually compartments
+        if not species == '' \
+                and species not in [
+                        str(c) for c in wrapper.compartment_symbols] \
+                and species not in (
+                        set([str(s) for s in wrapper.species_rate_rules
+                            if wrapper.species_has_only_substance_units[
+                                wrapper.species_index[str(s)]]
+                    ]).difference(requested_concentrations)
+        ):
             symvolume = wrapper.species_compartment[
                 wrapper.species_index[species]
             ]
+
+            # Volumes are already reported for compartments with rate rules
+            if symvolume in wrapper.compartment_rate_rules:
+                simulated_x[:, wrapper.species_index[species]] = \
+                    simulated_x[:, wrapper.species_index[species]] * \
+                    simulated_x[:, wrapper.species_index[str(symvolume)]]
+                continue
+
+            # Volumes are reported as observables for compartments with
+            # assignment rules
+            if symvolume in wrapper.compartment_assignment_rules:
+                simulated_x[:, wrapper.species_index[species]] = \
+                    simulated_x[:, wrapper.species_index[species]] * \
+                    simulated_y[:, model.getObservableIds().index(
+                        str(symvolume))]
+                continue
+
             volume = symvolume.subs({
                 comp: vol
                 for comp, vol in zip(
@@ -140,7 +250,7 @@ def concentrations_to_amounts(amount_species, wrapper, model, simulated_x):
 
 def write_result_file(simulated_x: np.array,
                       model: amici.Model,
-                      test_id: str, result_path: str):
+                      test_id: str, result_path: str, x_ids: List[str]):
     """
     Create test result file for upload to
     http://sbml.org/Facilities/Database/Submission/Create
@@ -152,7 +262,7 @@ def write_result_file(simulated_x: np.array,
     filename = os.path.join(result_path, f'{test_id}.csv')
 
     df = pd.DataFrame(simulated_x)
-    df.columns = model.getStateIds()
+    df.columns = x_ids
     df.insert(0, 'time', model.getTimepoints())
     df.to_csv(filename, index=False)
 

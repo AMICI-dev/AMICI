@@ -26,12 +26,13 @@ Solver::Solver(const Solver &other)
       newton_maxlinsteps(other.newton_maxlinsteps),
       newton_damping_factor_mode(other.newton_damping_factor_mode),
       newton_damping_factor_lower_bound(other.newton_damping_factor_lower_bound),
-      requires_preequilibration(other.requires_preequilibration), linsol(other.linsol),
-      atol(other.atol), rtol(other.rtol), atol_fsa(other.atol_fsa),
-      rtol_fsa(other.rtol_fsa), atolB(other.atolB), rtolB(other.rtolB),
-      quad_atol(other.quad_atol), quad_rtol(other.quad_rtol),
-      ss_atol(other.ss_atol), ss_rtol(other.ss_rtol),
-      ss_atol_sensi(other.ss_atol_sensi), ss_rtol_sensi(other.ss_rtol_sensi),
+      requires_preequilibration(other.requires_preequilibration),
+      linsol(other.linsol), atol(other.atol), rtol(other.rtol),
+      atol_fsa(other.atol_fsa), rtol_fsa(other.rtol_fsa),
+      atolB(other.atolB), rtolB(other.rtolB), quad_atol(other.quad_atol),
+      quad_rtol(other.quad_rtol), ss_atol(other.ss_atol),
+      ss_rtol(other.ss_rtol), ss_atol_sensi(other.ss_atol_sensi),
+      ss_rtol_sensi(other.ss_rtol_sensi), rdata_mode(other.rdata_mode),
       maxstepsB(other.maxstepsB), sensi(other.sensi)
 {}
 
@@ -80,12 +81,16 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     /* Initialize CVodes/IDAs solver*/
     init(t0, x0, dx0);
+    
+    /* Clear diagnosis storage */
+    resetDiagnosis();
 
+    /* Apply stored tolerances to sundials solver */
     applyTolerances();
 
     /* Set optional inputs */
     setErrHandlerFn();
-    /* attaches userdata*/
+    /* Attaches userdata */
     setUserData(model);
     /* specify maximal number of steps */
     setMaxNumSteps(maxsteps);
@@ -99,12 +104,12 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
     if (sensi >= SensitivityOrder::first && model->nx_solver > 0) {
         auto plist = model->getParameterList();
+        sensInit1(sx0, sdx0);
         if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {
             /* Set sensitivity analysis optional inputs */
             auto par = model->getUnscaledParameters();
 
             /* Activate sensitivity calculations */
-            sensInit1(sx0, sdx0);
             initializeNonLinearSolverSens(model);
             setSensParams(par.data(), nullptr, plist.data());
 
@@ -153,43 +158,68 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     setStabLimDetB(*which, stldet);
 }
 
-void Solver::getDiagnosis(const int it, ReturnData *rdata) const {
-    long int number;
-
-    if (solverWasCalledF && solverMemory) {
-        getNumSteps(solverMemory.get(), &number);
-        rdata->numsteps[it] = number;
-
-        getNumRhsEvals(solverMemory.get(), &number);
-        rdata->numrhsevals[it] = number;
-
-        getNumErrTestFails(solverMemory.get(), &number);
-        rdata->numerrtestfails[it] = number;
-
-        getNumNonlinSolvConvFails(solverMemory.get(), &number);
-        rdata->numnonlinsolvconvfails[it] = number;
-
-        getLastOrder(solverMemory.get(), &rdata->order[it]);
+void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
+    model->fx0_fixedParameters(x);
+    reInit(t, x, dx);
+    
+    if (getSensitivityOrder() >= SensitivityOrder::first) {
+            model->fsx0_fixedParameters(sx, x);
+            if (getSensitivityMethod() == SensitivityMethod::forward)
+                sensReInit(sx, sdx);
     }
 }
 
-void Solver::getDiagnosisB(const int it, ReturnData *rdata,
-                           const int which) const {
+void Solver::resetDiagnosis() const {
+    ns.clear();
+    nrhs.clear();
+    netf.clear();
+    nnlscf.clear();
+    order.clear();
+    
+    nsB.clear();
+    nrhsB.clear();
+    netfB.clear();
+    nnlscfB.clear();
+}
+
+void Solver::storeDiagnosis() const {
+    if (!solverWasCalledF || !solverMemory)
+        return;
+
+    long int lnumber;
+    getNumSteps(solverMemory.get(), &lnumber);
+    ns.push_back(static_cast<int>(lnumber));
+    
+    getNumRhsEvals(solverMemory.get(), &lnumber);
+    nrhs.push_back(static_cast<int>(lnumber));
+    
+    getNumErrTestFails(solverMemory.get(), &lnumber);
+    netf.push_back(static_cast<int>(lnumber));
+    
+    getNumNonlinSolvConvFails(solverMemory.get(), &lnumber);
+    nnlscf.push_back(static_cast<int>(lnumber));
+
+    int number;
+    getLastOrder(solverMemory.get(), &number);
+    order.push_back(number);
+}
+
+void Solver::storeDiagnosisB(const int which) const {
+    if (!solverWasCalledB || !solverMemoryB.at(which))
+        return;
+    
     long int number;
+    getNumSteps(solverMemoryB.at(which).get(), &number);
+    nsB.push_back(static_cast<int>(number));
 
-    if (solverWasCalledB && solverMemoryB.at(which)) {
-        getNumSteps(solverMemoryB.at(which).get(), &number);
-        rdata->numstepsB[it] = number;
+    getNumRhsEvals(solverMemoryB.at(which).get(), &number);
+    nrhsB.push_back(static_cast<int>(number));
 
-        getNumRhsEvals(solverMemoryB.at(which).get(), &number);
-        rdata->numrhsevalsB[it] = number;
+    getNumErrTestFails(solverMemoryB.at(which).get(), &number);
+    netfB.push_back(static_cast<int>(number));
 
-        getNumErrTestFails(solverMemoryB.at(which).get(), &number);
-        rdata->numerrtestfailsB[it] = number;
-
-        getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
-        rdata->numnonlinsolvconvfailsB[it] = number;
-    }
+    getNumNonlinSolvConvFails(solverMemoryB.at(which).get(), &number);
+    nnlscfB.push_back(static_cast<int>(number));
 }
 
 void Solver::initializeLinearSolver(const Model *model) const {
@@ -404,7 +434,8 @@ bool operator==(const Solver &a, const Solver &b) {
             (isNaN(a.atol_fsa) && isNaN(b.atol_fsa))) &&
            (a.rtolB == b.rtolB || (isNaN(a.rtolB) && isNaN(b.rtolB))) &&
            (a.atolB == b.atolB || (isNaN(a.atolB) && isNaN(b.atolB))) &&
-           (a.sensi == b.sensi) && (a.sensi_meth == b.sensi_meth);
+           (a.sensi == b.sensi) && (a.sensi_meth == b.sensi_meth) &&
+           (a.rdata_mode == b.rdata_mode);
 }
 
 void Solver::applyTolerances() const {
@@ -474,6 +505,10 @@ void Solver::applySensitivityTolerances() const {
 SensitivityMethod Solver::getSensitivityMethod() const { return sensi_meth; }
 
 void Solver::setSensitivityMethod(const SensitivityMethod sensi_meth) {
+    if (rdata_mode == RDataReporting::residuals &&
+        sensi_meth == SensitivityMethod::adjoint)
+        throw AmiException("Adjoint Sensitivity Analysis is not compatible with"
+                           " only reporting residuals!");
     if (sensi_meth != this->sensi_meth)
         resetMutableMemory(nx(), nplist(), nquad());
     this->sensi_meth = sensi_meth;
@@ -770,9 +805,9 @@ void Solver::setStateOrdering(int ordering) {
 int Solver::getStabilityLimitFlag() const { return stldet; }
 
 void Solver::setStabilityLimitFlag(const int stldet) {
-    if (stldet != TRUE && stldet != FALSE)
+    if (stldet != true && stldet != false)
         throw AmiException("Invalid stldet flag, valid values are %i or %i",
-                           TRUE, FALSE);
+                           true, false);
 
     this->stldet = stldet;
     if (solverMemory) {
@@ -801,6 +836,18 @@ void Solver::setInternalSensitivityMethod(const InternalSensitivityMethod ism) {
     if (solverMemory)
         resetMutableMemory(nx(), nplist(), nquad());
     this->ism = ism;
+}
+
+RDataReporting Solver::getReturnDataReportingMode() const {
+    return rdata_mode;
+};
+
+void Solver::setReturnDataReportingMode(RDataReporting rdrm) {
+    if (rdrm == RDataReporting::residuals &&
+        sensi_meth == SensitivityMethod::adjoint)
+        throw AmiException("Adjoint Sensitivity Analysis cannot report "
+                           "residuals!");
+    rdata_mode = rdrm;
 }
 
 void Solver::initializeNonLinearSolverSens(const Model *model) const {
@@ -871,6 +918,8 @@ void Solver::setInitDone() const { initialized = true; };
 
 void Solver::setSensInitDone() const { sensInitialized = true; }
 
+void Solver::setSensInitOff() const { sensInitialized = false; }
+
 void Solver::setAdjInitDone() const { adjInitialized = true; }
 
 void Solver::setInitDoneB(const int which) const {
@@ -883,6 +932,11 @@ void Solver::setQuadInitDoneB(const int which) const {
     if (which >= static_cast<int>(initializedQB.size()))
         initializedQB.resize(which + 1, false);
     initializedQB.at(which) = true;
+}
+
+void Solver::switchForwardSensisOff() const {
+    sensToggleOff();
+    setSensInitOff();
 }
 
 realtype Solver::getCpuTime() const {
@@ -955,16 +1009,12 @@ const AmiVector &Solver::getDerivativeState(const realtype t) const {
 }
 
 const AmiVectorArray &Solver::getStateSensitivity(const realtype t) const {
-    if (sensInitialized) {
-        if (solverWasCalledF) {
-            if (t == this->t) {
-                getSens();
-            } else {
-                getSensDky(t, 0);
-            }
+    if (sensInitialized && solverWasCalledF) {
+        if (t == this->t) {
+            getSens();
+        } else {
+            getSensDky(t, 0);
         }
-    } else {
-        sx.reset();
     }
     return sx;
 }

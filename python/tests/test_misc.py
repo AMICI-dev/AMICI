@@ -15,14 +15,14 @@ def test_parameter_scaling_from_int_vector():
 
     scale_vector = amici.parameterScalingFromIntVector(
         [
-            amici.ParameterScaling_log10,
-            amici.ParameterScaling_ln,
-            amici.ParameterScaling_none
+            amici.ParameterScaling.log10,
+            amici.ParameterScaling.ln,
+            amici.ParameterScaling.none
         ])
 
-    assert scale_vector[0] == amici.ParameterScaling_log10
-    assert scale_vector[1] == amici.ParameterScaling_ln
-    assert scale_vector[2] == amici.ParameterScaling_none
+    assert scale_vector[0] == amici.ParameterScaling.log10
+    assert scale_vector[1] == amici.ParameterScaling.ln
+    assert scale_vector[2] == amici.ParameterScaling.none
 
 
 def test_sbml2amici_no_observables():
@@ -47,7 +47,8 @@ def test_sbml2amici_no_observables():
     tmpdir = TemporaryDirectory()
     sbml_importer.sbml2amici(modelName="test",
                              output_dir=tmpdir.name,
-                             observables=None)
+                             observables=None,
+                             compute_conservation_laws=False)
 
 
 def test_hill_function_dwdx():
@@ -79,4 +80,6 @@ def test_cmake_compilation(sbml_example_presimulation_module):
 
     cmd = f"set -e; cd {source_dir}; mkdir -p build; cd build; "\
           "cmake ..; make"
-    subprocess.run(cmd, shell=True, capture_output=True, check=True)
+
+    subprocess.run(cmd, shell=True, check=True,
+                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)

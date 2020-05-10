@@ -37,10 +37,7 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
                                       ['sbml', 'pysb']):
         # check equilibrium fixed parameters
         assert np.isclose(
-            [
-                sum(rdata["x_ss"][[1, 3]]),
-                sum(rdata["x_ss"][[2, 4]])
-            ],
+            [sum(rdata["x_ss"][[1, 3]]), sum(rdata["x_ss"][[2, 4]])],
             edata.fixedParametersPreequilibration,
             atol=1e-6, rtol=1e-6
         ).all(), f'{importer} preequilibration'
@@ -60,9 +57,9 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
             atol=1e-6, rtol=1e-6
         ).all(), f'{importer} presimulation'
 
-    skip_attrs = ['ptr', 't_steadystate', 'numsteps', 'newton_numsteps',
+    skip_attrs = ['ptr', 'preeq_t', 'numsteps', 'preeq_numsteps',
                   'numrhsevals', 'numerrtestfails', 'order', 'J', 'xdot',
-                  'wrms_steadystate', 'newton_cpu_time', 'cpu_time',
+                  'preeq_wrms', 'preeq_cpu_time', 'cpu_time',
                   'cpu_timeB', 'w']
 
     for field in rdata_pysb:
@@ -73,6 +70,10 @@ def test_compare_to_sbml_import(pysb_example_presimulation_module,
             assert rdata_sbml[field] is None, field
         elif rdata_sbml[field] is None:
             assert rdata_pysb[field] is None, field
+        elif np.isnan(rdata_sbml[field]).all():
+            assert np.isnan(rdata_pysb[field]).all(), field
+        elif np.isnan(rdata_pysb[field]).all():
+            assert np.isnan(rdata_sbml[field]).all(), field
         else:
             assert np.isclose(
                 rdata_sbml[field], rdata_pysb[field],
@@ -173,7 +174,7 @@ def get_data(model):
     solver = model.getSolver()
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode_simulationFSA
+        amici.SteadyStateSensitivityMode.simulationFSA
     )
 
     rdata = amici.runAmiciSimulation(model, solver)
@@ -192,6 +193,6 @@ def get_results(model, edata):
     edata.reinitializeFixedParameterInitialStates = True
     model.setTimepoints(np.linspace(0, 60, 61))
     model.setSteadyStateSensitivityMode(
-        amici.SteadyStateSensitivityMode_simulationFSA
+        amici.SteadyStateSensitivityMode.simulationFSA
     )
     return amici.runAmiciSimulation(model, solver, edata)

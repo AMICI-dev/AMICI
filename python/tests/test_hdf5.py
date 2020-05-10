@@ -19,6 +19,8 @@ def _modify_solver_attrs(solver):
             cval = not val
         elif attr == 'setStabilityLimitFlag':
             cval = 0
+        elif attr == 'setReturnDataReportingMode':
+            cval = amici.RDataReporting.likelihood
         elif isinstance(val, int):
             cval = val + 1
         else:

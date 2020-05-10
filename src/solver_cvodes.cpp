@@ -89,8 +89,9 @@ static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
 void CVodeSolver::init(const realtype t0, const AmiVector &x0,
                        const AmiVector & /*dx0*/) const {
     solverWasCalledF = false;
+    forceReInitPostProcessF = false;
     t = t0;
-    x.copy(x0);
+    x = x0;
     int status;
     if (getInitDone()) {
         status = CVodeReInit(solverMemory.get(), t0, x.getNVector());
@@ -104,17 +105,21 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
 
 void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
                             const AmiVectorArray & /*sdx0*/) const {
-    int status;
-    sx.copy(sx0);
-    if (getSensInitDone()) {
-        status = CVodeSensReInit(solverMemory.get(),
-                                 static_cast<int>(getSensitivityMethod()),
-                                 sx.getNVectorArray());
-    } else {
-        status = CVodeSensInit1(solverMemory.get(), nplist(),
-                                static_cast<int>(getSensitivityMethod()),
-                                fsxdot, sx.getNVectorArray());
-        setSensInitDone();
+    int status = CV_SUCCESS;
+    sx = sx0;
+    if (getSensitivityMethod() == SensitivityMethod::forward && nplist() > 0) {
+        if (getSensInitDone()) {
+            status = CVodeSensReInit(
+                solverMemory.get(),
+                static_cast<int>(getInternalSensitivityMethod()),
+                sx.getNVectorArray());
+        } else {
+            status =
+                CVodeSensInit1(solverMemory.get(), nplist(),
+                               static_cast<int>(getInternalSensitivityMethod()),
+                               fsxdot, sx.getNVectorArray());
+            setSensInitDone();
+        }
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSensInit1");
@@ -124,7 +129,8 @@ void CVodeSolver::binit(const int which, const realtype tf,
                         const AmiVector &xB0,
                         const AmiVector & /*dxB0*/) const {
     solverWasCalledB = false;
-    xB.copy(xB0);
+    forceReInitPostProcessB = false;
+    xB = xB0;
     int status;
     if (getInitDoneB(which)) {
         status = CVodeReInitB(solverMemory.get(), which, tf, xB.getNVector());
@@ -138,7 +144,7 @@ void CVodeSolver::binit(const int which, const realtype tf,
 }
 
 void CVodeSolver::qbinit(const int which, const AmiVector &xQB0) const {
-    xQB.copy(xQB0);
+    xQB = xQB0;
     int status;
     if (getQuadInitDoneB(which)) {
         status = CVodeQuadReInitB(solverMemory.get(), which, xQB.getNVector());
@@ -484,6 +490,12 @@ void CVodeSolver::reInitB(const int which, const realtype tB0,
     cv_memB->cv_tn = tB0;
     xB.copy(yyB0);
     resetState(cv_memB, xB.getNVector());
+}
+
+void CVodeSolver::sensToggleOff() const {
+    auto status = CVodeSensToggleOff(solverMemory.get());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSensToggleOff");
 }
 
 void CVodeSolver::quadReInitB(int which, const AmiVector &yQB0) const {

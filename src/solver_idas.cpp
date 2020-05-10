@@ -83,8 +83,8 @@ void IDASolver::init(const realtype t0, const AmiVector &x0,
     int status;
     solverWasCalledF = false;
     t = t0;
-    x.copy(x0);
-    dx.copy(dx0);
+    x = x0;
+    dx = dx0;
     if (getInitDone()) {
         status =
             IDAReInit(solverMemory.get(), t, x.getNVector(), dx.getNVector());
@@ -99,18 +99,22 @@ void IDASolver::init(const realtype t0, const AmiVector &x0,
 
 void IDASolver::sensInit1(const AmiVectorArray &sx0,
                           const AmiVectorArray &sdx0) const {
-    int status;
-    sx.copy(sx0);
-    sdx.copy(sdx0);
-    if (getSensInitDone()) {
-        status = IDASensReInit(solverMemory.get(),
-                               static_cast<int>(getSensitivityMethod()),
-                               sx.getNVectorArray(), sdx.getNVectorArray());
-    } else {
-        status = IDASensInit(solverMemory.get(), nplist(),
-                             static_cast<int>(getSensitivityMethod()), fsxdot,
-                             sx.getNVectorArray(), sdx.getNVectorArray());
-        setSensInitDone();
+    int status = IDA_SUCCESS;
+    sx = sx0;
+    sdx = sdx0;
+    if (getSensitivityMethod() == SensitivityMethod::forward && nplist() > 0) {
+        if (getSensInitDone()) {
+            status =
+                IDASensReInit(solverMemory.get(),
+                              static_cast<int>(getInternalSensitivityMethod()),
+                              sx.getNVectorArray(), sdx.getNVectorArray());
+        } else {
+            status = IDASensInit(
+                solverMemory.get(), nplist(),
+                static_cast<int>(getInternalSensitivityMethod()), fsxdot,
+                sx.getNVectorArray(), sdx.getNVectorArray());
+            setSensInitDone();
+        }
     }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASensInit");
@@ -119,8 +123,8 @@ void IDASolver::sensInit1(const AmiVectorArray &sx0,
 void IDASolver::binit(const int which, const realtype tf, const AmiVector &xB0,
                       const AmiVector &dxB0) const {
     int status;
-    xB.copy(xB0);
-    dxB.copy(dxB0);
+    xB = xB0;
+    dxB = dxB0;
     if (getInitDoneB(which))
         status = IDAReInitB(solverMemory.get(), which, tf, xB.getNVector(),
                             dxB.getNVector());
@@ -410,6 +414,12 @@ void IDASolver::sensReInit(const AmiVectorArray &yyS0,
                                  sdx.getNVectorArray(), ida_mem->ida_phiS[1]);
     if (status != IDA_SUCCESS)
         throw IDAException(IDA_VECTOROP_ERR, "IDASensReInit");
+}
+
+void IDASolver::sensToggleOff() const {
+    auto status = IDASensToggleOff(solverMemory.get());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASensToggleOff");
 }
 
 void IDASolver::reInitB(const int which, const realtype tB0,
