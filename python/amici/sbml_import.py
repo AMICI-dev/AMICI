@@ -1032,7 +1032,12 @@ class SbmlImporter:
 
                     nested_rule_math_ml = sp.printing.mathml(nested_formula)
 
-                    nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml)
+                    header = "<?xml version='1.0' encoding='UTF-8'?>\n " \
+                             "<math xmlns='http://www.w3.org/1998/Math/MathML'>\n"
+                    footer = "</math>"
+                    nested_rule_math_ml_wrapped = f'{header}{nested_rule_math_ml}{footer}'
+
+                    nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml_wrapped)
 
                     if nested_rule_math_ml_ast_node is None:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
