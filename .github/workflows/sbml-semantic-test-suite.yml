@@ -10,6 +10,8 @@ on:
       - python/amici/ode_export.py
       - scripts/run-SBMLTestsuite.sh
       - tests/testSBMLSuite.py
+  check_suite:
+   types: [requested]
 
 jobs:
   build:
