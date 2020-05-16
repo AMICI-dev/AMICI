@@ -242,7 +242,7 @@ nobody_functions = [
 sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
-    and function is not 'sxdot'
+    and function != 'sxdot'
 ]
 # list of multiobs functions
 multiobs_functions = [
