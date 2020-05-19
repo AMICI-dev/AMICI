@@ -183,6 +183,19 @@ class Solver {
     void switchForwardSensisOff() const;
 
     /**
+     * @brief Check if the Newton solver in used in the adjoin problem.
+     * @return
+     */
+    bool getNewtonSolverBackward() const;
+
+    /**
+     * @brief Use Newton solver instead of a backward integration in the adjoint
+     * problem. Valid only for stady-states and adjoint sensitivity method.
+     * @param newton_solver_backward
+     */
+    void setNewtonSolverBackward(bool newton_solver_backward);
+
+    /**
      * @brief Get maximum number of allowed Newton steps for steady state
      * computation
      * @return
@@ -1522,6 +1535,9 @@ class Solver {
   private:
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth = SensitivityMethod::forward;
+
+    /** Use possibly the Newton solver in the adjoint problem. */
+    bool newton_solver_backward = false;
 
     /** flag controlling stability limit detection */
     booleantype stldet = true;

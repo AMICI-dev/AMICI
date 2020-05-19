@@ -14,6 +14,7 @@
 
 namespace amici {
 
+class ExpData;
 class Solver;
 class Model;
 
@@ -42,6 +43,18 @@ class SteadystateProblem {
      * @param it integer with the index of the current time step
      */
     void workSteadyStateProblem(Solver *solver, Model *model, int it);
+
+    /**
+     * Integrates over the adjoint state backward in time by solving a linear
+     * system of equations, which gives the analytical solution.
+     * Computes the gradient via adjoint steady state sensitivities
+     *
+     * @param solver pointer to the solver object
+     * @param edata pointer to the expdata object
+     * @param model pointer to the model object
+     */
+    void workSteadyStateBackwardProblem(Solver *solver, const ExpData *edata,
+                                        Model *model);
 
     /**
      * Computes the weighted root mean square of xdot
@@ -183,8 +196,6 @@ class SteadystateProblem {
     void getAdjointUpdates(Model &model,
                            const ExpData &edata);
 
-
-
   private:
     /** time variable for simulation steadystate finding */
     realtype t;
@@ -210,6 +221,8 @@ class SteadystateProblem {
     AmiVectorArray sx;
     /** state differential sensitivities */
     AmiVectorArray sdx;
+    /** quadrature state vector */
+    AmiVector xQB;
 
     /** weighted root-mean-square error */
     realtype wrms = NAN;

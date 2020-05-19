@@ -514,6 +514,12 @@ void Solver::setSensitivityMethod(const SensitivityMethod sensi_meth) {
     this->sensi_meth = sensi_meth;
 }
 
+bool Solver::getNewtonSolverBackward() const { return newton_solver_backward; }
+
+void Solver::setNewtonSolverBackward(bool newton_solver_backward) {
+  this->newton_solver_backward = newton_solver_backward;
+}
+
 int Solver::getNewtonMaxSteps() const { return newton_maxsteps; }
 
 void Solver::setNewtonMaxSteps(const int newton_maxsteps) {

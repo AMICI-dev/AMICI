@@ -121,6 +121,45 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                     SensitivityOrder::first);
 }
 
+void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
+                                                        const ExpData *edata,
+                                                        Model *model,
+                                                        int it)
+{
+    realtype t = std::numeric_limits<realtype>::infinity();
+
+    // Compute the linear system JB*v = dJydy
+    auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
+
+    // Construct the right hand size
+    // FIXME: Could be simplified? What is the order on dJydx?
+    std::vector<realtype> dJydx(model->nJ * model->nx_solver, 0.0);
+    model->getAdjointStateObservableUpdate(dJydx, rdata->nt-1, x, *edata);
+
+    amici::AmiVector rhs(model->nx_solver);
+    getAdjointUpdates(Model &model, const ExpData &edata);
+    for (int ix = 0; ix < model->nxtrue_solver; ix++)
+        for (int iJ = 0; iJ < model->nJ; iJ++)
+            rhs[ix + iJ * model->nxtrue_solver] = dJydx[iJ + ix * model->nJ];
+
+    newtonSolver->prepareLinearSystemB(0, -1);
+    newtonSolver->solveLinearSystem(rhs);
+
+    // Compute the inner product v*dxotdp
+    if (model->pythonGenerated) {
+        const auto& plist = model->getParameterList();
+        if (model->ndxdotdp_explicit > 0)
+            model->dxdotdp_explicit.multiply(xQB.getNVector(),
+                                             rhs.getNVector(), plist, true);
+        if (model->ndxdotdp_implicit > 0)
+            model->dxdotdp_implicit.multiply(xQB.getNVector(),
+                                             rhs.getNVector(), plist, true);
+    } else {
+      for (int ip=0; ip<model->nplist(); ++ip)
+          xQB[ip] = N_VDotProd(rhs.getNVector(), model->dxdotdp.getNVector(ip));
+    }
+}
+
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
                                          const AmiVector &xdot,
                                          realtype atol,
@@ -339,12 +378,10 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
                                            const ExpData &edata) {
-    for (int it=0; it < model.nt(); it++) {
-        if (std::isinf(model.getTimepoint(it))) {
+    for (int it=0; it < model.nt(); it++)
+        if (std::isinf(model.getTimepoint(it)))
             model.getAdjointStateObservableUpdate(
                 slice(dJydx, it, model.nx_solver * model.nJ), it, x, edata);
-        }
-    }
 }
 
 void SteadystateProblem::storeSimulationState(Model *model, bool storesensi) {
@@ -354,6 +391,10 @@ void SteadystateProblem::storeSimulationState(Model *model, bool storesensi) {
     if (storesensi)
         state.sx = sx;
     state.state = model->getModelState();
+}
+
+void SteadystateProblem::writeSolutionBackward(AmiVector &xQB) const {
+    xQB.copy(this->xQB);
 }
 
 } // namespace amici

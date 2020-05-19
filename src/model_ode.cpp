@@ -301,6 +301,13 @@ void Model_ODE::fdxdotdw_rowvals(sunindextype * /*indexvals*/) {
                        __func__); // not implemented
 }
 
+void Model_ODE::fJB(const realtype t, realtype /*cj*/, const AmiVector &x,
+                     const AmiVector & /*dx*/, const AmiVector &xB,
+                     const AmiVector & /*dxB*/, const AmiVector &xBdot,
+                     SUNMatrix JB) {
+    fJB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(), JB);
+}
+
 void Model_ODE::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector /*xBdot*/,
                     SUNMatrix JB) {
     auto x_pos = computeX_pos(x);
@@ -309,6 +316,13 @@ void Model_ODE::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector /*xBdot*/,
     fJB(SM_DATA_D(JB), t, N_VGetArrayPointer(x_pos),
         state.unscaledParameters.data(), state.fixedParameters.data(),
         state.h.data(), N_VGetArrayPointer(xB), w.data(), dwdx.data());
+}
+
+void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
+                          const AmiVector & /*dx*/, const AmiVector &xB,
+                          const AmiVector & /*dxB*/, const AmiVector &xBdot,
+                          SUNMatrix JB) {
+    fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(), JB);
 }
 
 void Model_ODE::fJSparseB(realtype t, N_Vector x, N_Vector xB,
