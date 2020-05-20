@@ -148,7 +148,8 @@ def test_data_replicates(preeq_fixture):
     model, solver, edata, edata_preeq, \
         edata_presim, edata_sim, pscales, plists = preeq_fixture
 
-    for sensi_meth in [amici.SensitivityMethod.forward, ]:
+    for sensi_meth in [amici.SensitivityMethod.forward, 
+                       amici.SensitivityMethod.adjoint]:
         # will be changed back to [..., amici.SensitivityMethod.adjoint] as
         # soon as postequilibration with adjoints is implemented
         solver.setSensitivityMethod(sensi_meth)
