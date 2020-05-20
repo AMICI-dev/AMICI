@@ -27,11 +27,9 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       numlinsteps(solver.getNewtonMaxSteps() * 2, 0) {}
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
-                                                int it) {
+                                                const ExpData *edata, int it) {
 
     clock_t starttime;
-
-    /* First, try to do Newton steps */
     starttime = clock();
 
     if (it == -1) {
@@ -42,13 +40,6 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         t = model->t0();
         solver->setup(t, model, x, dx, sx, sdx);
     } else {
-        /* Are we computing adjoint sensitivities? That's not yet supoorted
-           with steady state sensitivity analysis */
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() == SensitivityMethod::adjoint)
-            throw AmiException("Steady state sensitivity computation together "
-                               "with adjoint sensitivity analysis is currently "
-                               "not supported.");
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t, x, dx, sx);
     }
@@ -57,6 +48,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     newton_status = NewtonStatus::failed;
     try {
+        /* First, try to do Newton steps */
         applyNewtonsMethod(model, newtonSolver.get(), NewtonStatus::newt);
         newton_status = NewtonStatus::newt;
         std::copy_n(newtonSolver->getNumLinSteps().begin(),
@@ -106,41 +98,48 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     }
     cpu_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
-    /* Compute steady state sensitvities */
-    if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        (newton_status == NewtonStatus::newt ||
-         newton_status == NewtonStatus::newt_sim_newt ||
-         model->getSteadyStateSensitivityMode() ==
-             SteadyStateSensitivityMode::newtonOnly))
-        // for newton_status == 2 the sensis were computed via FSA
+    /* We need to check whether we still need to compute sensitivities.
+       These boolean operation could be simplified, but here, clarity
+       is more important than code reduction. */
+    bool forwardSensisAlreadyComputed =
+        solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        newton_status == NewtonStatus::newt_sim &&
+        model->getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::simulationFSA;
+    bool needForwardSensisPosteq = not(forwardSensisAlreadyComputed) &&
+        solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        solver->getSensitivityMethod() >= SensitivityMethod::forward &&
+        it > -1;
+    bool needForwardSensisPreeq = not(forwardSensisAlreadyComputed) &&
+        solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        it == -1;
+    bool needForwardSensis = needForwardSensisPreeq || needForwardSensisPosteq;
+
+    /* Compute forward steady state sensitvities */
+    if (needForwardSensis)
         newtonSolver->computeNewtonSensis(sx);
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
-    storeSimulationState(model, solver->getSensitivityOrder() >=
-                                    SensitivityOrder::first);
+    storeSimulationState(model, needForwardSensis);
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
-                                                        const ExpData *edata,
                                                         Model *model,
-                                                        int it)
-{
-    realtype t = std::numeric_limits<realtype>::infinity();
-
-    // Compute the linear system JB*v = dJydy
-    auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
-
+                                                        const ExpData *edata) {
+    /*
     // Construct the right hand size
     // FIXME: Could be simplified? What is the order on dJydx?
     std::vector<realtype> dJydx(model->nJ * model->nx_solver, 0.0);
-    model->getAdjointStateObservableUpdate(dJydx, rdata->nt-1, x, *edata);
+    model->getAdjointStateObservableUpdate(dJydx, model->nt-1, x, *edata);
+     */
+    auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 
     amici::AmiVector rhs(model->nx_solver);
-    getAdjointUpdates(Model &model, const ExpData &edata);
+    rhs.reset();
     for (int ix = 0; ix < model->nxtrue_solver; ix++)
         for (int iJ = 0; iJ < model->nJ; iJ++)
-            rhs[ix + iJ * model->nxtrue_solver] = dJydx[iJ + ix * model->nJ];
+            rhs[ix] += dJydx[iJ + ix * model->nJ];
 
     newtonSolver->prepareLinearSystemB(0, -1);
     newtonSolver->solveLinearSystem(rhs);
@@ -378,10 +377,12 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
                                            const ExpData &edata) {
-    for (int it=0; it < model.nt(); it++)
-        if (std::isinf(model.getTimepoint(it)))
+    for (int it=0; it < model.nt(); it++) {
+        if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(
                 slice(dJydx, it, model.nx_solver * model.nJ), it, x, edata);
+        }
+    }
 }
 
 void SteadystateProblem::storeSimulationState(Model *model, bool storesensi) {
@@ -391,10 +392,6 @@ void SteadystateProblem::storeSimulationState(Model *model, bool storesensi) {
     if (storesensi)
         state.sx = sx;
     state.state = model->getModelState();
-}
-
-void SteadystateProblem::writeSolutionBackward(AmiVector &xQB) const {
-    xQB.copy(this->xQB);
 }
 
 } // namespace amici

@@ -242,7 +242,7 @@ NewtonSolverSparse::~NewtonSolverSparse() {
 
 NewtonSolverIterative::NewtonSolverIterative(realtype *t, AmiVector *x,
                                              Model *model)
-    : NewtonSolver(t, x, model, rdata), ns_p(model->nx_solver),
+    : NewtonSolver(t, x, model), ns_p(model->nx_solver),
     ns_h(model->nx_solver), ns_t(model->nx_solver), ns_s(model->nx_solver),
     ns_r(model->nx_solver), ns_rt(model->nx_solver), ns_v(model->nx_solver),
     ns_Jv(model->nx_solver), ns_tmp(model->nx_solver),

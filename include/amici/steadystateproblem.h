@@ -40,9 +40,11 @@ class SteadystateProblem {
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
+     * @param edata pointer to the expdata object
      * @param it integer with the index of the current time step
      */
-    void workSteadyStateProblem(Solver *solver, Model *model, int it);
+    void workSteadyStateProblem(Solver *solver, Model *model,
+                                const ExpData *edata, int it);
 
     /**
      * Integrates over the adjoint state backward in time by solving a linear
@@ -50,11 +52,11 @@ class SteadystateProblem {
      * Computes the gradient via adjoint steady state sensitivities
      *
      * @param solver pointer to the solver object
-     * @param edata pointer to the expdata object
      * @param model pointer to the model object
+     * @param edata pointer to the expdata object
      */
-    void workSteadyStateBackwardProblem(Solver *solver, const ExpData *edata,
-                                        Model *model);
+    void workSteadyStateBackwardProblem(Solver *solver, Model *model,
+                                        const ExpData *edata);
 
     /**
      * Computes the weighted root mean square of xdot
@@ -127,6 +129,13 @@ class SteadystateProblem {
         return state;
     };
 
+    /*
+    * @brief gets the quadratures from postequilibration
+    * @return xQB Vector with quadratures
+    */
+    const AmiVector &getEquilibrationQuadratures() const {
+        return xQB;
+    }
     /**
      * @brief returns state at steadystate
      * @return x
@@ -193,8 +202,7 @@ class SteadystateProblem {
      * @param model Model instance
      * @param edata experimental data
      */
-    void getAdjointUpdates(Model &model,
-                           const ExpData &edata);
+    void getAdjointUpdates(Model &model, const ExpData &edata);
 
   private:
     /** time variable for simulation steadystate finding */

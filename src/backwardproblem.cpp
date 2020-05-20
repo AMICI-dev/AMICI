@@ -39,10 +39,16 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                 if (!posteq)
                     throw AmiException("Model has non-finite timpoint but"
                     "postequilibration did not run");
+
+                /* copy adjoint update to postequilibration */
                 writeSlice(slice(posteq->getDJydx(), it,
                                  fwd.model->nx_solver * fwd.model->nJ),
                            slice(this->dJydx, it,
                                  fwd.model->nx_solver * fwd.model->nJ));
+
+                /* If adjoint sensis were computed, copy also quadratures */
+                if (solver->getNewtonSolverBackward())
+                    this->xQB = posteq->getEquilibrationQuadratures();
             }
         }
         
@@ -61,14 +67,9 @@ void BackwardProblem::workBackwardProblem() {
     int it = model->nt() - 1;
     model->initializeB(xB, dxB, xQB);
 
-    /* If we have postequilibration */
+    /* If we have posteq, this was already accomplished, skip this timepoint */
     if (std::isinf(model->getTimepoint(it)) && solver->getNewtonSolverBackward())
-    {
-        SteadystateProblem sstate(solver, AmiVector(slice(rdata->x, it, rdata->nx)));
-        sstate.workSteadyStateBackwardProblem(solver, edata, model, it);
-        sstate.writeSolutionBackward(xQB);
         --it;
-    }
 
     if ((it >= 0 || discs.size() > 0) && model->getTimepoint(it) > model->t0())
     {
