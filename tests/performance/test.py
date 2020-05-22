@@ -18,25 +18,37 @@ def main():
     edata.setObservedDataStdDev([1.0])
 
     if arg == 'forward_simulation':
-        solver.setSensitivityMethod(amici.SensitivityMethod_none)
-        solver.setSensitivityOrder(amici.SensitivityOrder_none)
+        solver.setSensitivityMethod(amici.SensitivityMethod.none)
+        solver.setSensitivityOrder(amici.SensitivityOrder.none)
     elif arg == 'forward_sensitivities':
         model.setParameterList(list(range(100)))
-        solver.setSensitivityMethod(amici.SensitivityMethod_forward)
-        solver.setSensitivityOrder(amici.SensitivityOrder_first)
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
     elif arg == 'adjoint_sensitivities':
-        solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
-        solver.setSensitivityOrder(amici.SensitivityOrder_first)
+        solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
     elif arg == 'forward_simulation_non_optimal_parameters':
         tmpPar = model.getParameters()
         model.setParameters([0.1 for _ in tmpPar])
-        solver.setSensitivityMethod(amici.SensitivityMethod_none)
-        solver.setSensitivityOrder(amici.SensitivityOrder_none)
+        solver.setSensitivityMethod(amici.SensitivityMethod.none)
+        solver.setSensitivityOrder(amici.SensitivityOrder.none)
     elif arg == 'adjoint_sensitivities_non_optimal_parameters':
         tmpPar = model.getParameters()
         model.setParameters([0.1 for _ in tmpPar])
-        solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
-        solver.setSensitivityOrder(amici.SensitivityOrder_first)
+        solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    elif arg == 'forward_steadystate_sensitivities_non_optimal_parameters':
+        tmpPar = model.getParameters()
+        model.setParameters([0.1 for _ in tmpPar])
+        solver.setSensitivityMethod(amici.SensitivityMethod.forward)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        edata.setTimepoints([float('inf')])
+    elif arg == 'adjoint_steadystate_sensitivities_non_optimal_parameters':
+        tmpPar = model.getParameters()
+        model.setParameters([0.1 for _ in tmpPar])
+        solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        edata.setTimepoints([float('inf')])
     else:
         print("Unknown argument:", arg)
         sys.exit(1)
