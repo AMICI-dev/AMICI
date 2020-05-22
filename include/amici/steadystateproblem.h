@@ -229,6 +229,8 @@ class SteadystateProblem {
     AmiVectorArray sx;
     /** state differential sensitivities */
     AmiVectorArray sdx;
+    /** adjoint state vector */
+    AmiVector xB;
     /** quadrature state vector */
     AmiVector xQB;
 

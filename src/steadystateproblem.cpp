@@ -23,6 +23,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
+      xB(model.nJ * model.nx_solver), xQB(model.nplist()),
       dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0),
       numlinsteps(solver.getNewtonMaxSteps() * 2, 0) {}
 
@@ -121,7 +122,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
-    storeSimulationState(model, needForwardSensis);
+    storeSimulationState(model,
+                         needForwardSensis || forwardSensisAlreadyComputed);
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
@@ -135,27 +137,26 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
      */
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 
-    amici::AmiVector rhs(model->nx_solver);
-    rhs.reset();
+    xB.reset();
     for (int ix = 0; ix < model->nxtrue_solver; ix++)
         for (int iJ = 0; iJ < model->nJ; iJ++)
-            rhs[ix] += dJydx[iJ + ix * model->nJ];
+            xB[iJ + ix * model->nJ] += dJydx[iJ + ix * model->nJ];
 
     newtonSolver->prepareLinearSystemB(0, -1);
-    newtonSolver->solveLinearSystem(rhs);
+    newtonSolver->solveLinearSystem(xB);
 
     // Compute the inner product v*dxotdp
     if (model->pythonGenerated) {
         const auto& plist = model->getParameterList();
         if (model->ndxdotdp_explicit > 0)
             model->dxdotdp_explicit.multiply(xQB.getNVector(),
-                                             rhs.getNVector(), plist, true);
+                                             xB.getNVector(), plist, true);
         if (model->ndxdotdp_implicit > 0)
             model->dxdotdp_implicit.multiply(xQB.getNVector(),
-                                             rhs.getNVector(), plist, true);
+                                             xB.getNVector(), plist, true);
     } else {
       for (int ip=0; ip<model->nplist(); ++ip)
-          xQB[ip] = N_VDotProd(rhs.getNVector(), model->dxdotdp.getNVector(ip));
+          xQB[ip] = N_VDotProd(xB.getNVector(), model->dxdotdp.getNVector(ip));
     }
 }
 
