@@ -12,6 +12,7 @@
 #include <cstring>
 #include <ctime>
 #include <cmath>
+#include <iostream>
 
 namespace amici {
 

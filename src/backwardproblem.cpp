@@ -47,8 +47,8 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                                  fwd.model->nx_solver * fwd.model->nJ));
 
                 /* If adjoint sensis were computed, copy also quadratures */
-                if (solver->getNewtonSolverBackward())
-                    xQB = posteq->getEquilibrationQuadratures();
+                xQB.reset();
+                xQB = posteq->getEquilibrationQuadratures();
             }
         }
         
@@ -65,12 +65,16 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     int it = model->nt() - 1;
-    model->initializeB(xB, dxB, xQB);
-
-    /* If we have posteq, this was already accomplished, skip this timepoint */
-    if (std::isinf(model->getTimepoint(it)) && solver->getNewtonSolverBackward())
-        --it;
-
+    /* If we have posteq, infty timepoints must be skipped */
+    for (int jt = model->nt() - 1; jt >= 0; jt--)
+        if (std::isinf(model->getTimepoint(it)))
+            --it;
+    if (it < model->nt() - 1){
+        model->initializeB(xB, dxB, dxB);
+    } else {
+        model->initializeB(xB, dxB, xQB);
+    }
+    
     if ((it >= 0 || discs.size() > 0) && model->getTimepoint(it) > model->t0())
     {
         handleDataPointB(it);

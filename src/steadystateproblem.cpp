@@ -14,6 +14,7 @@
 #include <sundials/sundials_dense.h>
 #include <memory>
 #include <cvodes/cvodes.h>
+#include <iostream>
 
 namespace amici {
 
@@ -141,11 +142,6 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
      */
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 
-    xB.reset();
-    for (int ix = 0; ix < model->nxtrue_solver; ix++)
-        for (int iJ = 0; iJ < model->nJ; iJ++)
-            xB[iJ + ix * model->nJ] -= dJydx[iJ + ix * model->nJ];
-
     newtonSolver->prepareLinearSystemB(0, -1);
     newtonSolver->solveLinearSystem(xB);
 
@@ -159,8 +155,9 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
             model->dxdotdp_implicit.multiply(xQB.getNVector(),
                                              xB.getNVector(), plist, true);
     } else {
-      for (int ip=0; ip<model->nplist(); ++ip)
-          xQB[ip] = N_VDotProd(xB.getNVector(), model->dxdotdp.getNVector(ip));
+        for (int ip=0; ip<model->nplist(); ++ip)
+            xQB[ip] = N_VDotProd(xB.getNVector(),
+                                 model->dxdotdp.getNVector(ip));
     }
 }
 
@@ -382,11 +379,27 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
                                            const ExpData &edata) {
+    std::cout << "before update" << std::endl;
+    for(double entry : dJydx) {
+        std::cout << entry << std::endl;
+    }
+
+    xB.reset();
     for (int it=0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(
                 slice(dJydx, it, model.nx_solver * model.nJ), it, x, edata);
+
+            for (int ix = 0; ix < model.nxtrue_solver; ix++)
+                for (int iJ = 0; iJ < model.nJ; iJ++)
+                    xB[ix + iJ * model.nxtrue_solver] +=
+                        dJydx[iJ + ( ix + it * model.nx_solver ) * model.nJ];
         }
+    }
+
+    std::cout << "after update" << std::endl;
+    for(double entry : dJydx) {
+        std::cout << entry << std::endl;
     }
 }
 

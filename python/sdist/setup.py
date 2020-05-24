@@ -77,7 +77,7 @@ if sys.version_info < (3, 6):
 
 def main():
     # Extra compiler flags
-    cxx_flags = []
+    cxx_flags = ['-g', '-O0']
     amici_module_linker_flags = []
     define_macros = []
 
