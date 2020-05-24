@@ -14,7 +14,6 @@
 #include <sundials/sundials_dense.h>
 #include <memory>
 #include <cvodes/cvodes.h>
-#include <iostream>
 
 namespace amici {
 
@@ -379,11 +378,6 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
                                            const ExpData &edata) {
-    std::cout << "before update" << std::endl;
-    for(double entry : dJydx) {
-        std::cout << entry << std::endl;
-    }
-
     xB.reset();
     for (int it=0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it))) {
@@ -395,11 +389,6 @@ void SteadystateProblem::getAdjointUpdates(Model &model,
                     xB[ix + iJ * model.nxtrue_solver] +=
                         dJydx[iJ + ( ix + it * model.nx_solver ) * model.nJ];
         }
-    }
-
-    std::cout << "after update" << std::endl;
-    for(double entry : dJydx) {
-        std::cout << entry << std::endl;
     }
 }
 
