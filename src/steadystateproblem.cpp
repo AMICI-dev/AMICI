@@ -63,10 +63,14 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 t = model->t0();
             else /* Carry on simulating from last point */
                 t = model->getTimepoint(it - 1);
-            if (it < 0) {
-                /* Preequilibration? -> Create a new CVode object for sim */
+            if (it == -1 ||
+                solver->getSensitivityMethod() == SensitivityMethod::adjoint) {
+                /* Preeq or adjoint+posteq? Create new CVode object for sim */
+                bool integrateFSA = model->getSteadyStateSensitivityMode() ==
+                    SteadyStateSensitivityMode::simulationFSA && it == -1 &&
+                    solver->getSensitivityMethod() != SensitivityMethod::none;
                 auto newtonSimSolver =
-                    createSteadystateSimSolver(solver, model);
+                    createSteadystateSimSolver(solver, model, integrateFSA);
                 getSteadystateSimulation(newtonSimSolver.get(), model);
             } else {
                 /* Solver was already created, use this one */
@@ -109,7 +113,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         SteadyStateSensitivityMode::simulationFSA;
     bool needForwardSensisPosteq = not(forwardSensisAlreadyComputed) &&
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        solver->getSensitivityMethod() >= SensitivityMethod::forward &&
+        solver->getSensitivityMethod() == SensitivityMethod::forward &&
         it > -1;
     bool needForwardSensisPreeq = not(forwardSensisAlreadyComputed) &&
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
@@ -140,7 +144,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
     xB.reset();
     for (int ix = 0; ix < model->nxtrue_solver; ix++)
         for (int iJ = 0; iJ < model->nJ; iJ++)
-            xB[iJ + ix * model->nJ] += dJydx[iJ + ix * model->nJ];
+            xB[iJ + ix * model->nJ] -= dJydx[iJ + ix * model->nJ];
 
     newtonSolver->prepareLinearSystemB(0, -1);
     newtonSolver->solveLinearSystem(xB);
@@ -346,7 +350,7 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
 }
 
 std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
-        const Solver *solver, Model *model) const
+        const Solver *solver, Model *model, bool integrateForwardSensis) const
 {
     /* Create new CVode solver object */
 

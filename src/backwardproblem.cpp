@@ -48,7 +48,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
 
                 /* If adjoint sensis were computed, copy also quadratures */
                 if (solver->getNewtonSolverBackward())
-                    this->xQB = posteq->getEquilibrationQuadratures();
+                    xQB = posteq->getEquilibrationQuadratures();
             }
         }
         

@@ -109,10 +109,12 @@ class SteadystateProblem {
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
+     * @param boolean flag switching on integration with FSA
      * @return solver instance
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
-                                                       Model *model) const;
+                                                       Model *model,
+                                                       bool integrateForwardSensis) const;
 
     /**
      * @brief store carbon copy of current simulation state variables as SimulationState
