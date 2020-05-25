@@ -13,7 +13,6 @@ import math
 import itertools as itt
 import warnings
 import logging
-import copy
 from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel
@@ -22,6 +21,7 @@ from . import has_clibs
 
 from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
+from sympy.printing.mathml import MathMLContentPrinter
 
 
 class SBMLException(Exception):
@@ -1030,14 +1030,8 @@ class SbmlImporter:
                         sbml.formulaToL3String(nested_rule.getMath()),
                         locals=self.local_symbols).subs(variable, formula)
 
-                    nested_rule_math_ml = sp.printing.mathml(nested_formula)
-
-                    header = "<?xml version='1.0' encoding='UTF-8'?>\n " \
-                             "<math xmlns='http://www.w3.org/1998/Math/MathML'>\n"
-                    footer = "</math>"
-                    nested_rule_math_ml_wrapped = f'{header}{nested_rule_math_ml}{footer}'
-
-                    nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml_wrapped)
+                    nested_rule_math_ml = mathml(nested_formula)
+                    nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml)
 
                     if nested_rule_math_ml_ast_node is None:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
@@ -1200,7 +1194,7 @@ class SbmlImporter:
             ])
             observable_ids = observables.keys()
         else:
-            observable_values = copy.deepcopy(species_syms)
+            observable_values = species_syms.copy() # prefer sympy's copy over deepcopy, see sympy issue #7672
             observable_ids = [
                 f'x{index}' for index in range(len(species_syms))
             ]
@@ -1825,3 +1819,22 @@ def noise_distribution_to_cost_function(
             f"Cost identifier {noise_distribution} not recognized.")
 
     return nllh_y_string
+
+class MathMLSbmlPrinter(MathMLContentPrinter):
+    """Prints a SymPy expression to a MathML expression parsable by libSBML.
+    Differences from `sympy.MathMLContentPrinter`:
+    1. underscores in symbol names are not converted to subscripts
+    2. symbols with name 'time' are converted to the SBML time symbol
+    """
+    def _print_Symbol(self, sym):
+        ci = self.dom.createElement(self.mathml_tag(sym))
+        ci.appendChild(self.dom.createTextNode(sym.name))
+        return ci
+    def doprint(self, expr):
+        mathml = super().doprint(expr)
+        mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">' + mathml + '</math>'
+        mathml = mathml.replace(f'<ci>time</ci>', '<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>')
+        return mathml
+
+def mathml(expr, **settings):
+    return MathMLSbmlPrinter(settings).doprint(expr)
