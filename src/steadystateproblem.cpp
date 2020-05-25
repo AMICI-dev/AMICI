@@ -24,7 +24,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
       dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0),
-      numlinsteps(solver.getNewtonMaxSteps() * 2, 0) {}
+      numlinsteps(std::max(solver.getNewtonMaxSteps(), 1) * 2, 0) {}
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 int it) {
@@ -60,10 +60,10 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         applyNewtonsMethod(model, newtonSolver.get(), NewtonStatus::newt);
         newton_status = NewtonStatus::newt;
         std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                    solver->getNewtonMaxSteps(), numlinsteps.begin());
+                    std::max(solver->getNewtonMaxSteps(), 1), numlinsteps.begin());
     } catch (NewtonFailure const &ex1) {
         std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                    solver->getNewtonMaxSteps(), numlinsteps.begin());
+                    std::max(solver->getNewtonMaxSteps(), 1), numlinsteps.begin());
         try {
             /* Newton solver did not work, so try a simulation */
             if (it < 1) /* No previous time point computed, set t = t0 */
@@ -89,12 +89,12 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 newton_status = NewtonStatus::newt_sim_newt;
                 std::copy_n(
                     newtonSolver->getNumLinSteps().begin(),
-                    solver->getNewtonMaxSteps(),
+                    std::max(solver->getNewtonMaxSteps(), 1),
                     &numlinsteps.at(solver->getNewtonMaxLinearSteps() + 1));
             } catch (NewtonFailure const &ex3) {
                 std::copy_n(
                     newtonSolver->getNumLinSteps().begin(),
-                    solver->getNewtonMaxSteps(),
+                    std::max(solver->getNewtonMaxSteps(), 1),
                     &numlinsteps.at(solver->getNewtonMaxLinearSteps() + 1));
                 if (ex3.error_code == AMICI_TOO_MUCH_WORK)
                     throw AmiException("Steady state computation failed to "
