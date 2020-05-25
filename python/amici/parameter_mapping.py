@@ -316,7 +316,7 @@ def unscale_parameter(value: numbers.Number,
     if petab_scale == LIN:
         return value
     if petab_scale == LOG10:
-        return np.pow(10, value)
+        return np.power(10, value)
     if petab_scale == LOG:
         return np.exp(value)
     raise ValueError(f"Unknown parameter scale {petab_scale}. "
