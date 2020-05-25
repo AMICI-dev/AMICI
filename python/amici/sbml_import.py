@@ -13,7 +13,6 @@ import math
 import itertools as itt
 import warnings
 import logging
-import copy
 from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel
@@ -1200,7 +1199,7 @@ class SbmlImporter:
             ])
             observable_ids = observables.keys()
         else:
-            observable_values = copy.deepcopy(species_syms)
+            observable_values = species_syms.copy() # prefer sympy's copy over deepcopy, see sympy issue #7672
             observable_ids = [
                 f'x{index}' for index in range(len(species_syms))
             ]
