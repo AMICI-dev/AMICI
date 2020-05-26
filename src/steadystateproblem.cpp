@@ -107,13 +107,16 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 /* Throw error message according to final error */
                 switch (ex3.error_code) {
                     case AMICI_TOO_MUCH_WORK:
+                        throw AmiException("Steady state computation failed "
+                            "due to not converging within the allowed maximum "
+                            "number of iterations");
+                        break;
+                    case AMICI_SINGULAR_JACOBIAN:
                         throw AmiException("Steady state computation failed to "
-                            "not converging within the allowed maximum number "
-                            "of iterations");
+                            "unsuccessful factorization of RHS Jacobian");
                         break;
                     default:
-                        throw AmiException("Steady state computation failed "
-                                           "with unexpected error.");
+                        throw AmiException("Steady state computation failed.");
                 }
             }
         }
