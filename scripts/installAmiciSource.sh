@@ -29,6 +29,7 @@ fi
 
 # install wheel separately to prevent build_wheel fail in next step
 pip install --upgrade wheel
-pip install --upgrade pip setuptools pkgconfig scipy matplotlib pysb coverage pytest pytest-cov
+pip install --upgrade pip setuptools pkgconfig scipy matplotlib coverage pytest pytest-cov
+pip install git+https://github.com/pysb/pysb # pin to develop to fix sympy compatibility
 pip install --verbose -e ${AMICI_PATH}/python/sdist[petab]
 deactivate
