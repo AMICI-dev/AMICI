@@ -638,7 +638,8 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
         jacobian of eq wrt sym_var
     """
     if min(eq.shape) and min(sym_var.shape) \
-            and eq.is_zero is not True and sym_var.is_zero is not True \
+            and eq.is_zero_matrix is not True \
+            and sym_var.is_zero_matrix is not True \
             and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
         return eq.jacobian(sym_var)
     return sp.zeros(eq.shape[0], sym_var.shape[0])
@@ -657,8 +658,9 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     :return:
         product
     """
-    if not x.shape[0] or not y.shape[1] or x.is_zero is True or \
-            y.is_zero is True:
+    assert x.shape[1] == y.shape[0]
+    if not x.shape[0] or not y.shape[1] or x.is_zero_matrix is True or \
+            y.is_zero_matrix is True:
         return sp.zeros(x.shape[0], y.shape[1])
     return x * y
 
@@ -1290,6 +1292,13 @@ class ODEModel:
         elif name == 'x':
             self._syms[name] = sp.Matrix([
                 state.get_id()
+                for state in self._states
+                if state.conservation_law is None
+            ])
+            return
+        elif name == 'sx0':
+            self._syms[name] = sp.Matrix([
+                f's{state.get_id()}_0'
                 for state in self._states
                 if state.conservation_law is None
             ])
