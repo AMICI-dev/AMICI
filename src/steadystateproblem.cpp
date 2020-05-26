@@ -24,8 +24,13 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
       xB(model.nJ * model.nx_solver), xQB(model.nplist()),
-      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0),
-      numlinsteps(solver.getNewtonMaxSteps() * 2, 0) {}
+    dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
+        /* maxSteps must be adapted if iterative linear solvers are used */
+        if (solver.getLinearSolver() == LinearSolver::SPBCG) {
+            maxSteps = solver.getNewtonMaxSteps();
+            numlinsteps.resize(2 * maxSteps, 0);
+        }
+    }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 const ExpData *edata, int it) {
@@ -52,11 +57,13 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         /* First, try to do Newton steps */
         applyNewtonsMethod(model, newtonSolver.get(), NewtonStatus::newt);
         newton_status = NewtonStatus::newt;
-        std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                    solver->getNewtonMaxSteps(), numlinsteps.begin());
+        if (maxSteps > 0)
+            std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                        maxSteps, numlinsteps.begin());
     } catch (NewtonFailure const &ex1) {
-        std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                    solver->getNewtonMaxSteps(), numlinsteps.begin());
+        if (maxSteps > 0)
+            std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                        maxSteps, numlinsteps.begin());
         try {
             /* Newton solver did not work, so try a simulation */
             if (it < 1) /* No previous time point computed, set t = t0 */
@@ -84,20 +91,28 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 applyNewtonsMethod(model, newtonSolver.get(),
                                    NewtonStatus::newt_sim_newt);
                 newton_status = NewtonStatus::newt_sim_newt;
-                std::copy_n(
-                    newtonSolver->getNumLinSteps().begin(),
-                    solver->getNewtonMaxSteps(),
-                    &numlinsteps.at(solver->getNewtonMaxLinearSteps() + 1));
+                if (maxSteps > 0)
+                    std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                                maxSteps, &numlinsteps.at(maxSteps));
             } catch (NewtonFailure const &ex3) {
-                std::copy_n(
-                    newtonSolver->getNumLinSteps().begin(),
-                    solver->getNewtonMaxSteps(),
-                    &numlinsteps.at(solver->getNewtonMaxLinearSteps() + 1));
-                if (ex3.error_code == AMICI_TOO_MUCH_WORK)
-                    throw AmiException("Steady state computation failed to "
-                                       "converge within the allowed maximum "
-                                       "number of iterations");
-                throw;
+                if (maxSteps > 0)
+                    std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                                maxSteps, &numlinsteps.at(maxSteps));
+                /* No steady state could be inferred. Store simulation state */
+                storeSimulationState(model, solver->getSensitivityOrder() >=
+                                     SensitivityOrder::first);
+                /* Throw error message according to final error */
+                switch (ex3.error_code) {
+                    case AMICI_TOO_MUCH_WORK:
+                        throw AmiException("Steady state computation failed "
+                            "due to not converging within the allowed maximum "
+                            "number of iterations");
+                    case AMICI_SINGULAR_JACOBIAN:
+                        throw AmiException("Steady state computation failed to "
+                            "unsuccessful factorization of RHS Jacobian");
+                    default:
+                        throw AmiException("Steady state computation failed.");
+                }
             }
         }
     }

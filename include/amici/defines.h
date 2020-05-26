@@ -29,6 +29,7 @@ constexpr int AMICI_ERR_FAILURE=              -3;
 constexpr int AMICI_CONV_FAILURE=             -4;
 constexpr int AMICI_ILL_INPUT=               -22;
 constexpr int AMICI_ERROR=                   -99;
+constexpr int AMICI_SINGULAR_JACOBIAN=      -807;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
 constexpr int AMICI_SUCCESS=                   0;
 constexpr int AMICI_DATA_RETURN=               1;

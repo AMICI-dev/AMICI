@@ -242,7 +242,7 @@ nobody_functions = [
 sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
-    and function is not 'sxdot'
+    and function != 'sxdot'
 ]
 # list of multiobs functions
 multiobs_functions = [
@@ -1654,9 +1654,11 @@ class ODEModel:
         # Dydz = dydx*dxdz + dydz
 
         # initialize with partial derivative dydz without chain rule
-        self._eqs[name] = copy.deepcopy(
-            self.sym_or_eq(name, f'd{eq}d{var}')
-        )
+        self._eqs[name] = self.sym_or_eq(name, f'd{eq}d{var}')
+        if not isinstance(self._eqs[name], sp.Symbol):
+            # if not a Symbol, create a copy using sympy API
+            # NB deepcopy does not work safely, see sympy issue #7672
+            self._eqs[name] = self._eqs[name].copy()
 
         for chainvar in chainvars:
             if dydx_name is None:
