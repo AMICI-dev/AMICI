@@ -108,8 +108,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                             "due to not converging within the allowed maximum "
                             "number of iterations");
                     case AMICI_SINGULAR_JACOBIAN:
-                        throw AmiException("Steady state computation failed to "
-                            "unsuccessful factorization of RHS Jacobian");
+                        throw AmiException("Steady state computation failed "
+                            "due to unsuccessful factorization of RHS Jacobian");
                     default:
                         throw AmiException("Steady state computation failed.");
                 }
@@ -156,8 +156,16 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
      */
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 
-    newtonSolver->prepareLinearSystemB(0, -1);
-    newtonSolver->solveLinearSystem(xB);
+    try {
+        newtonSolver->prepareLinearSystemB(0, -1);
+        newtonSolver->solveLinearSystem(xB);
+    } catch (NewtonFailure const &ex) {
+        if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
+            throw NewtonFailure(ex.error_code, "Steady state backward "
+                                "computation failed due to unsuccessful "
+                                "factorization of RHS Jacobian. ");
+        throw ex;
+    }
 
     // Compute the inner product v*dxotdp
     if (model->pythonGenerated) {
