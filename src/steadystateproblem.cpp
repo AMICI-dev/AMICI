@@ -99,11 +99,24 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 std::copy_n(
                     newtonSolver->getNumLinSteps().begin(), maxSteps,
                     &numlinsteps.at(solver->getNewtonMaxLinearSteps() + 1));
-                if (ex3.error_code == AMICI_TOO_MUCH_WORK)
-                    throw AmiException("Steady state computation failed to "
-                                       "converge within the allowed maximum "
-                                       "number of iterations");
-                throw;
+                /* No steady state could be inferred. Store simulation state */
+                storeSimulationState(model, solver->getSensitivityOrder() >=
+                                     SensitivityOrder::first);
+                /* Throw error message according to final error */
+                switch (ex3.error_code) {
+                    case AMICI_TOO_MUCH_WORK:
+                        throw AmiException("Steady state computation failed to "
+                            "converge within the allowed maximum number of "
+                            "iterations");
+                        break;
+                    case AMICI_LINEAR_SOLVER_KLU:
+                        throw AmiException("Steady state computation failed "
+                            "due to unsuccessful factorization of Jacobian");
+                        break;
+                    default:
+                        throw AmiException("Steady state computation failed "
+                                           "with unexpected error.");
+                }
             }
         }
     }
