@@ -23,14 +23,11 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
-      maxSteps(std::max(solver.getNewtonMaxSteps(), 1)),
-      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0),
-      numlinsteps(2, 0) {
+      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
+              maxSteps = solver.getNewtonMaxSteps();
               numlinsteps.resize(2 * maxSteps, 0);
-          } else {
-              maxSteps = 1;
           }
       }
 
@@ -67,11 +64,13 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     try {
         applyNewtonsMethod(model, newtonSolver.get(), NewtonStatus::newt);
         newton_status = NewtonStatus::newt;
-        std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                    maxSteps, numlinsteps.begin());
+        if (maxSteps > 0)
+            std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                        maxSteps, numlinsteps.begin());
     } catch (NewtonFailure const &ex1) {
-        std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                    maxSteps, numlinsteps.begin());
+        if (maxSteps > 0)
+            std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                        maxSteps, numlinsteps.begin());
         try {
             /* Newton solver did not work, so try a simulation */
             if (it < 1) /* No previous time point computed, set t = t0 */
@@ -95,13 +94,13 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 applyNewtonsMethod(model, newtonSolver.get(),
                                    NewtonStatus::newt_sim_newt);
                 newton_status = NewtonStatus::newt_sim_newt;
-                std::copy_n(
-                    newtonSolver->getNumLinSteps().begin(), maxSteps,
-                    &numlinsteps.at(maxSteps));
+                if (maxSteps > 0)
+                    std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                                maxSteps, &numlinsteps.at(maxSteps));
             } catch (NewtonFailure const &ex3) {
-                std::copy_n(
-                    newtonSolver->getNumLinSteps().begin(), maxSteps,
-                    &numlinsteps.at(maxSteps));
+                if (maxSteps > 0)
+                    std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                                maxSteps, &numlinsteps.at(maxSteps));
                 /* No steady state could be inferred. Store simulation state */
                 storeSimulationState(model, solver->getSensitivityOrder() >=
                                      SensitivityOrder::first);
