@@ -638,7 +638,8 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
         jacobian of eq wrt sym_var
     """
     if min(eq.shape) and min(sym_var.shape) \
-            and eq.is_zero is not True and sym_var.is_zero is not True \
+            and eq.is_zero_matrix is not True \
+            and sym_var.is_zero_matrix is not True \
             and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
         return eq.jacobian(sym_var)
     return sp.zeros(eq.shape[0], sym_var.shape[0])
@@ -657,8 +658,8 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     :return:
         product
     """
-    if not x.shape[0] or not y.shape[1] or x.is_zero is True or \
-            y.is_zero is True:
+    if not x.shape[0] or not y.shape[1] or x.is_zero_matrix is True or \
+            y.is_zero_matrix is True:
         return sp.zeros(x.shape[0], y.shape[1])
     return x * y
 
@@ -1294,6 +1295,13 @@ class ODEModel:
                 if state.conservation_law is None
             ])
             return
+        elif name == 'sx0':
+            self._syms[name] = sp.Matrix([
+                f's{state.get_id()}_0'
+                for state in self._states
+                if state.conservation_law is None
+            ])
+            return
         elif name == 'dtcldp':
             # check, whether the CL consists of only one state. Then,
             # sensitivities drop out, otherwise generate symbols
@@ -1479,6 +1487,8 @@ class ODEModel:
             )
 
             if dx0_fixed_parametersdx.is_zero is not True:
+                if isinstance(self._eqs[name], ImmutableDenseMatrix):
+                    self._eqs[name] = MutableDenseMatrix(self._eqs[name])
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:, ip] += smart_multiply(
                         dx0_fixed_parametersdx, self.sym('sx0')
