@@ -27,8 +27,11 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0),
       numlinsteps(2, 0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
-          if (solver.getLinearSolver() == LinearSolver::SPBCG)
+          if (solver.getLinearSolver() == LinearSolver::SPBCG) {
               numlinsteps.resize(2 * maxSteps, 0);
+          } else {
+              maxSteps = 1;
+          }
       }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
@@ -94,7 +97,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 newton_status = NewtonStatus::newt_sim_newt;
                 std::copy_n(
                     newtonSolver->getNumLinSteps().begin(), maxSteps,
-                    &numlinsteps.at(solver->getNewtonMaxLinearSteps() + 1));
+                    &numlinsteps.at(maxSteps));
             } catch (NewtonFailure const &ex3) {
                 std::copy_n(
                     newtonSolver->getNumLinSteps().begin(), maxSteps,
@@ -106,12 +109,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 switch (ex3.error_code) {
                     case AMICI_TOO_MUCH_WORK:
                         throw AmiException("Steady state computation failed to "
-                            "converge within the allowed maximum number of "
-                            "iterations");
-                        break;
-                    case AMICI_SINGULAR_JACOBIAN:
-                        throw AmiException("Steady state computation failed "
-                            "due to unsuccessful factorization of Jacobian");
+                            "not converging within the allowed maximum number "
+                            "of iterations");
                         break;
                     default:
                         throw AmiException("Steady state computation failed "
