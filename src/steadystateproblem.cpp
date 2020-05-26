@@ -28,7 +28,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       numlinsteps(2, 0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG)
-              numlinsteps.resize(2 * solver.getNewtonMaxSteps(), 0.0);
+              numlinsteps.resize(2 * solver.getNewtonMaxSteps(), 0);
       }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,

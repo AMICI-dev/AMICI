@@ -76,9 +76,9 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x,
     solver->dampingFactorLowerBound =
         simulationSolver.getNewtonDampingFactorLowerBound();
     if (simulationSolver.getLinearSolver() == LinearSolver::SPBCG) {
-        solver->numlinsteps.resize(simulationSolver.getNewtonMaxSteps(), 0.0);
+        solver->numlinsteps.resize(simulationSolver.getNewtonMaxSteps(), 0);
     } else {
-        solver->numlinsteps.resize(1, 0.0);
+        solver->numlinsteps.resize(1, 0);
     }
 
     return solver;
