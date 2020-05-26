@@ -658,7 +658,6 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     :return:
         product
     """
-    assert x.shape[1] == y.shape[0]
     if not x.shape[0] or not y.shape[1] or x.is_zero_matrix is True or \
             y.is_zero_matrix is True:
         return sp.zeros(x.shape[0], y.shape[1])
