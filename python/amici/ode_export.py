@@ -1488,6 +1488,8 @@ class ODEModel:
             )
 
             if dx0_fixed_parametersdx.is_zero is not True:
+                if isinstance(self._eqs[name], ImmutableDenseMatrix):
+                    self._eqs[name] = MutableDenseMatrix(self._eqs[name])
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:, ip] += smart_multiply(
                         dx0_fixed_parametersdx, self.sym('sx0')
