@@ -110,11 +110,9 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                         throw AmiException("Steady state computation failed "
                             "due to not converging within the allowed maximum "
                             "number of iterations");
-                        break;
                     case AMICI_SINGULAR_JACOBIAN:
                         throw AmiException("Steady state computation failed to "
                             "unsuccessful factorization of RHS Jacobian");
-                        break;
                     default:
                         throw AmiException("Steady state computation failed.");
                 }
