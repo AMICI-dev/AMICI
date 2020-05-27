@@ -24,13 +24,13 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
       xB(model.nJ * model.nx_solver), xQB(model.nplist()),
-    dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
-        /* maxSteps must be adapted if iterative linear solvers are used */
-        if (solver.getLinearSolver() == LinearSolver::SPBCG) {
-            maxSteps = solver.getNewtonMaxSteps();
-            numlinsteps.resize(2 * maxSteps, 0);
-        }
-    }
+      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
+          /* maxSteps must be adapted if iterative linear solvers are used */
+          if (solver.getLinearSolver() == LinearSolver::SPBCG) {
+              maxSteps = solver.getNewtonMaxSteps();
+              numlinsteps.resize(2 * maxSteps, 0);
+          }
+      }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                                 const ExpData *edata, int it) {
@@ -108,8 +108,13 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                             "due to not converging within the allowed maximum "
                             "number of iterations");
                     case AMICI_SINGULAR_JACOBIAN:
+<<<<<<< HEAD
                         throw AmiException("Steady state computation failed "
                             "due to unsuccessful factorization of RHS Jacobian");
+=======
+                        throw AmiException("Steady state computation failed to "
+                            "unsuccessful factorization of RHS Jacobian");
+>>>>>>> develop
                     default:
                         throw AmiException("Steady state computation failed.");
                 }
