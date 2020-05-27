@@ -108,7 +108,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                             "due to not converging within the allowed maximum "
                             "number of iterations");
                     case AMICI_SINGULAR_JACOBIAN:
-                        throw NewtonFailure(ex.error_code, "Steady state "
+                        throw NewtonFailure(ex3.error_code, "Steady state "
                             "backward computation failed due to unsuccessful "
                             "factorization of RHS Jacobian. ");
                     default:
