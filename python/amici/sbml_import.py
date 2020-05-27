@@ -260,18 +260,21 @@ class SbmlImporter:
         if observables is None:
             observables = {}
 
-        if constant_parameters is None:
-            constant_parameters = kwargs.pop('constantParameters', [])
-            if constant_parameters is not []:
-                logger.warning('Use of `constantParameters` as argument name '
-                               'is deprecated and will be removed in a future '
-                               'version. Please use `constant_parameters` as '
-                               'argument name.')
-        else:
-            if 'constantParameters' in kwargs:
+        if 'constantParameters' in kwargs:
+            logger.warning('Use of `constantParameters` as argument name '
+                           'is deprecated and will be removed in a future '
+                           'version. Please use `constant_parameters` as '
+                           'argument name.')
+
+            if constant_parameters is not None:
                 raise ValueError('Cannot specify constant parameters using '
                                  'both `constantParameters` and '
                                  '`constant_parameters` as argument names.')
+
+            constant_parameters = kwargs.pop('constantParameters', [])
+
+        elif constant_parameters is None:
+            constant_parameters = []
 
         if sigmas is None:
             sigmas = {}
