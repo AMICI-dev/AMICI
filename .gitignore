@@ -144,8 +144,8 @@ petab_test_suite
 python/examples/example_steadystate/model_steadystate_scaled/*
 python/examples/example_presimulation/model_presimulation/*
 python/examples/example_presimulation/model_presimulation_re/*
-python/examples/enzyme_model_reduced/*
-python/examples/enzyme_model/*
+python/examples/example_constant_species/model_constant_species_reduced/*
+python/examples/example_constant_species/model_constant_species/*
 
 python/sdist/amici.egg-info/*
 python/sdist/amici/version.txt
