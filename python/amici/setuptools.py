@@ -10,6 +10,7 @@ import shlex
 import subprocess
 import shutil
 
+from distutils import log
 from .swig import find_swig, get_swig_version
 
 try:
@@ -142,7 +143,7 @@ def get_hdf5_config() -> PackageInfo:
         hdf5_include_dir_found = os.path.isfile(
             os.path.join(hdf5_include_dir_hint, 'hdf5.h'))
         if hdf5_include_dir_found:
-            print('hdf5.h found in %s' % hdf5_include_dir_hint)
+            log.info('hdf5.h found in %s' % hdf5_include_dir_hint)
             h5pkgcfg['include_dirs'] = [hdf5_include_dir_hint]
             break
 
@@ -152,7 +153,7 @@ def get_hdf5_config() -> PackageInfo:
             hdf5_library_dir_found = os.path.isfile(
                 os.path.join(hdf5_library_dir_hint, lib_filename))
             if hdf5_library_dir_found:
-                print(f'{lib_filename} found in {hdf5_library_dir_hint}')
+                log.info(f'{lib_filename} found in {hdf5_library_dir_hint}')
                 h5pkgcfg['library_dirs'] = [hdf5_library_dir_hint]
                 break
         if hdf5_library_dir_found:
@@ -191,7 +192,7 @@ def add_coverage_flags_if_required(cxx_flags: List[str],
     """
     if 'ENABLE_GCOV_COVERAGE' in os.environ and \
             os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
-        print("ENABLE_GCOV_COVERAGE was set to TRUE."
+        log.info("ENABLE_GCOV_COVERAGE was set to TRUE."
               " Building AMICI with coverage symbols.")
         cxx_flags.extend(['-g', '-O0',  '--coverage'])
         linker_flags.extend(['--coverage', '-g'])
@@ -211,7 +212,7 @@ def add_debug_flags_if_required(cxx_flags: List[str],
     """
     if 'ENABLE_AMICI_DEBUGGING' in os.environ \
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
-        print("ENABLE_AMICI_DEBUGGING was set to TRUE."
+        log.info("ENABLE_AMICI_DEBUGGING was set to TRUE."
               " Building AMICI with debug symbols.")
         cxx_flags.extend(['-g', '-O0'])
         linker_flags.extend(['-g'])
@@ -233,7 +234,7 @@ def generate_swig_interface_files() -> None:
         '-Iamici/swig', '-Iamici/include',
     ]
 
-    print(f"Found SWIG version {swig_version}")
+    log.info(f"Found SWIG version {swig_version}")
 
     # Swig AMICI interface without HDF5 dependency
     swig_cmd = [swig_exe,
@@ -247,7 +248,7 @@ def generate_swig_interface_files() -> None:
     if swig_version >= (4, 0, 0):
         swig_cmd.insert(1, '-doxygen')
 
-    print(f"Running SWIG: {' '.join(swig_cmd)}")
+    log.info(f"Running SWIG: {' '.join(swig_cmd)}")
     sp = subprocess.run(swig_cmd, stdout=subprocess.PIPE,
                         stderr=sys.stdout.buffer)
     if not sp.returncode == 0:
@@ -264,7 +265,7 @@ def generate_swig_interface_files() -> None:
                 'amici/swig/amici.i']
     if swig_version >= (4, 0, 0):
         swig_cmd.insert(1, '-doxygen')
-    print(f"Running SWIG: {' '.join(swig_cmd)}")
+    log.info(f"Running SWIG: {' '.join(swig_cmd)}")
     sp = subprocess.run(swig_cmd, stdout=subprocess.PIPE,
                         stderr=sys.stdout.buffer)
     if not sp.returncode == 0:
