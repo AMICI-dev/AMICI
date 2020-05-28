@@ -274,7 +274,9 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
             if (gamma < newtonSolver->dampingFactorLowerBound)
-              throw AmiException("Newton solver failed: a damping factor reached its lower bound");
+              throw NewtonFailure(AMICI_TOO_MUCH_WORK,
+                                  "Newton solver failed: the damping factor "
+                                  "reached its lower bound");
 
             /* No new linear solve, only try new dampening */
             compNewStep = false;
