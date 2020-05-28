@@ -63,6 +63,7 @@ wrap_unique_ptr(ExpDataPtr, amici::ExpData)
 %include "amici/defines.h"
 
 %include abstract_model.i
+%include misc.i
 %include edata.i
 %include rdata.i
 %include solver.i
