@@ -1,10 +1,6 @@
 #include "TPL_MODELNAME.h"
 #include <array>
 
-namespace amici {
-
-namespace model_TPL_MODELNAME {
-
 std::array<std::string, TPL_NP> parameterNames = {
     TPL_PARAMETER_NAMES_INITIALIZER_LIST
 };
@@ -36,8 +32,3 @@ std::array<std::string, TPL_NX_RDATA> stateIds = {
 std::array<std::string, TPL_NY> observableIds = {
     TPL_OBSERVABLE_IDS_INITIALIZER_LIST
 };
-
-
-} // namespace model_TPL_MODELNAME
-
-} // namespace amici

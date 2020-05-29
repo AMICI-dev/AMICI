@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
         hdffile = argv[1];
     }
 
-    auto model = amici::generic_model::getModel();
+    auto model = getModel();
     auto solver = model->getSolver();
 
     // Read AMICI settings and model parameters from HDF5 file
