@@ -25,6 +25,7 @@ from .parameter_mapping import (
 logger = get_logger(__name__)
 
 AmiciModel = Union[amici.Model, amici.ModelPtr]
+ExpData = Union[amici.ExpData, amici.ExpDataPtr]
 
 
 # string constant definitions
@@ -43,6 +44,7 @@ def simulate_petab(
         amici_model: AmiciModel,
         solver: Optional[amici.Solver] = None,
         problem_parameters: Optional[Dict[str, float]] = None,
+        edatas: List[ExpData] = None,
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
         parameter_mapping: ParameterMapping = None,
         scaled_parameters: Optional[bool] = False,
@@ -112,13 +114,21 @@ def simulate_petab(
             scaled_parameters=scaled_parameters,
             amici_model=amici_model)
 
-    edatas = create_parameterized_edatas(
-        amici_model=amici_model,
-        petab_problem=petab_problem,
+    # Get edatas
+    if edatas is None:
+        # Generate ExpData with all condition-specific information
+        edatas = create_edatas(
+            amici_model=amici_model,
+            petab_problem=petab_problem,
+            simulation_conditions=simulation_conditions)
+
+    # Fill parameters in ExpDatas (in-place)
+    fill_in_parameters(
+        edatas=edatas,
         problem_parameters=problem_parameters,
         scaled_parameters=scaled_parameters,
         parameter_mapping=parameter_mapping,
-        simulation_conditions=simulation_conditions)
+        amici_model=amici_model)
 
     # Simulate
     rdatas = amici.runAmiciSimulations(amici_model, solver, edata_list=edatas)
