@@ -131,7 +131,7 @@ def get_amici_base_sources(with_hdf5: bool = True) -> List[str]:
 
     amici_base_sources = glob.glob(os.path.join('amici', 'src', '*.cpp'))
     amici_base_sources = [src for src in amici_base_sources
-                          if not re.search(r'(matlab)|(\.template\.)', src)]
+                          if not re.search(r'(matlab)|(\.(ODE_)?template\.)', src)]
 
     if not with_hdf5:
         hdf5_cpp = os.path.join('amici', 'src', 'hdf5.cpp')
