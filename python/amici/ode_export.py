@@ -1200,7 +1200,7 @@ class ODEModel:
             name of the symbolic variable
 
         :return:
-            linearized symengine.DenseMatrix containing the symbolic formulas
+            linearized matrix containing the symbolic formulas
 
         """
         if name not in sparse_functions:
@@ -2093,7 +2093,7 @@ class ODEExporter:
 
         self._write_wrapfunctions_cpp()
         self._write_wrapfunctions_header()
-        self._write_model_header()
+        self._write_model_header_cpp()
         self._write_c_make_file()
         self._write_swig_files()
         self._write_module_setup()
@@ -2343,7 +2343,6 @@ class ODEExporter:
 
         :param symbol:
             symbolic defintion of the function body
-            symengine.DenseMatrix
 
         :return:
             generated C++ code
@@ -2424,9 +2423,9 @@ class ODEExporter:
             template_data
         )
 
-    def _write_model_header(self) -> None:
+    def _write_model_header_cpp(self) -> None:
         """
-        Write model-specific header file (MODELNAME.h).
+        Write model-specific header and cpp file (MODELNAME.{h,cpp}).
         """
 
         tpl_data = {
@@ -2516,6 +2515,12 @@ class ODEExporter:
             tpl_data
         )
 
+        apply_template(
+            os.path.join(amiciSrcPath, 'model.ODE_template.cpp'),
+            os.path.join(self.model_path, f'{self.model_name}.cpp'),
+            tpl_data
+        )
+
     def _get_symbol_name_initializer_list(self, name: str) -> str:
         """
         Get SBML name initializer list for vector of names for the given
@@ -2567,6 +2572,8 @@ class ODEExporter:
                            + '_colptrs.cpp')
             sources.append(self.model_name + '_' + function
                            + '_rowvals.cpp ')
+
+        sources.append(f'{self.model_name}.cpp')
 
         template_data = {'MODELNAME': self.model_name,
                          'SOURCES': '\n'.join(sources),
