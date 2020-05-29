@@ -2353,7 +2353,8 @@ class ODEExporter:
 
         lines = []
 
-        if len(symbol) == 0 or (isinstance(symbol, sp.Matrix)
+        if len(symbol) == 0 or (isinstance(symbol, (sp.Matrix,
+                                                    sp.ImmutableDenseMatrix))
                                 and min(symbol.shape) == 0):
             # dJydy is a list
             return lines
@@ -2367,8 +2368,6 @@ class ODEExporter:
             # was applied
             cases = dict()
             for ipar in range(self.model.np()):
-                if smart_is_zero_matrix(symbol[:, ipar]):
-                    continue
                 expressions = []
                 for index, formula in zip(
                         self.model._x0_fixedParameters_idx,
