@@ -2557,6 +2557,8 @@ class ODEExporter:
             sources.append(self.model_name + '_' + function
                            + '_rowvals.cpp ')
 
+        sources.append(f'{self.model_name}.cpp')
+
         template_data = {'MODELNAME': self.model_name,
                          'SOURCES': '\n'.join(sources),
                          'AMICI_VERSION': __version__}
