@@ -4,6 +4,7 @@ on:
     branches:
       - develop
       - master
+      - fix_superslowsympy
 
   pull_request:
     branches:
