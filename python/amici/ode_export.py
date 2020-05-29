@@ -1195,7 +1195,7 @@ class ODEModel:
             name of the symbolic variable
 
         :return:
-            linearized symengine.DenseMatrix containing the symbolic formulas
+            linearized matrix containing the symbolic formulas
 
         """
         if name not in sparse_functions:
@@ -2346,7 +2346,6 @@ class ODEExporter:
 
         :param symbol:
             symbolic defintion of the function body
-            symengine.DenseMatrix
 
         :return:
             generated C++ code
@@ -2372,7 +2371,7 @@ class ODEExporter:
                 for index, formula in enumerate(
                         self.model.eq('x0')
                 ):
-                    if any([sym in formula.free_symbols for sym in k]):
+                    if any([sym in formula.free_symbols for sym in self.model.sym('k')]):
                         expressions.append(f'{function}[{index}] = '
                                            f'{symbol[index, ipar]};')
                 cases[ipar] = expressions
