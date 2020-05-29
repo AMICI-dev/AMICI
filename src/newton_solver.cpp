@@ -107,7 +107,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
                 auto data_ptr = model->dxdotdp_explicit.data();
                 for (sunindextype iCol = col[model->plist(ip)];
                      iCol < col[model->plist(ip) + 1]; ++iCol)
-                    sx.at(row[iCol], ip) -= data_ptr[iCol];
+                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
             }
 
             // copy implicit version
@@ -117,7 +117,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
                 auto data_ptr = model->dxdotdp_implicit.data();
                 for (sunindextype iCol = col[model->plist(ip)];
                      iCol < col[model->plist(ip) + 1]; ++iCol)
-                    sx.at(row[iCol], ip) -= data_ptr[iCol];
+                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
             }
 
             solveLinearSystem(sx[ip]);

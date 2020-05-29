@@ -61,7 +61,8 @@ const gsl::span<const T> slice(const std::vector<T> &data,
  * @param expected_size expected size of the buffer
  */
 template <class T>
-void checkBufferSize(gsl::span<T> buffer, unsigned expected_size) {
+void checkBufferSize(gsl::span<T> buffer,
+                     typename gsl::span<T>::index_type expected_size) {
     if (buffer.size() != expected_size)
         throw AmiException("Incorrect buffer size! Was %u, expected %u.",
                            buffer.size(), expected_size);

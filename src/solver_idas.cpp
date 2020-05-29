@@ -524,7 +524,7 @@ void IDASolver::allocateSolverB(int *which) const {
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) =
         std::unique_ptr<void, std::function<void(void *)>>(
-            getAdjBmem(solverMemory.get(), *which), [](void */*ptr*/) {});
+            getAdjBmem(solverMemory.get(), *which), [](void * /*ptr*/) {});
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDACreateB");
 }

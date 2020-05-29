@@ -83,32 +83,44 @@ if sys.stdout != sys.__stdout__:
 
 hdf5_enabled = False
 has_clibs = False
-
+from traceback import print_stack
 try:
     # Try importing AMICI SWIG-interface with HDF5 enabled
     from . import amici
     from .amici import *
     hdf5_enabled = True
     has_clibs = True
-except ModuleNotFoundError:
+except ModuleNotFoundError as e:
     # import from setuptools or installation with `--no-clibs`
+    print(f'Suppressing error1 {type(e)} {str(e)}')
+    print_stack()
     pass
 except (ImportError, AttributeError) as e:
     # No such module exists or there are some dynamic linking problems
-    if isinstance(e, AttributeError) or "cannot import name" in str(e):
+    print(f'Suppressing error2 {type(e)} {str(e)}')
+    print_stack()
+    if isinstance(e, AttributeError) \
+            or "cannot import name" in str(e) \
+            or "DLL load failed" in str(e):
         # No such module exists (ImportError),
         #  or python tries to import a HDF5 function from the non-hdf5
         #  swig interface (AttributeError):
         #  try importing AMICI SWIG-interface without HDF5
         try:
             from . import amici_without_hdf5 as amici
+            print(amici)
             from .amici_without_hdf5 import *
             has_clibs = True
         except ModuleNotFoundError:
             # import from setuptools or installation with `--no-clibs`
+            print(f'Suppressing error3 {type(e)} {str(e)}')
+            print_stack()
             pass
         except ImportError as e:
-            if "cannot import name" in str(e):
+            print(f'Suppressing error4 {type(e)} {str(e)}')
+            print_stack()
+            if "cannot import name" in str(e) \
+                    or "DLL load failed" in str(e):
                 # No such module exists
                 # this probably means, the model was imported during setuptools
                 # `setup` or after an installation with `--no-clibs`.
@@ -118,6 +130,7 @@ except (ImportError, AttributeError) as e:
                 raise e
     else:
         # Probably some linking problem that we don't want to hide
+        print_stack()
         raise e
 
 from typing import Optional, Union, Sequence, List
