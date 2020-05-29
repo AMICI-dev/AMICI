@@ -24,7 +24,9 @@ try:
 except ImportError:
     pysb = None
 
-from typing import Callable, Optional, Union, List, Dict, Tuple, SupportsFloat
+from typing import (
+    Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence
+)
 from string import Template
 import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -776,6 +778,8 @@ class ODEModel:
         derivative expressions. Receives sympy expressions as only argument.
         To apply multiple simplifications, wrap them in a lambda expression.
         NOTE: This does currently not work with PySB symbols.
+
+    :ivar _x0_fixedParameters_idx:
     """
 
     def __init__(self, simplify: Optional[Callable] = sp.powsimp):
@@ -873,6 +877,7 @@ class ODEModel:
 
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
+        self._x0_fixedParameters_idx: Union[None, Sequence[int]]
 
     def import_from_sbml_importer(self,
                                   si: 'sbml_import.SbmlImporter',
@@ -1498,22 +1503,13 @@ class ODEModel:
                 self.eq('x0_fixedParameters'), self.sym('x')
             )
 
-            if dx0_fixed_parametersdx.is_zero is not True:
+            if smart_is_zero_matrix(dx0_fixed_parametersdx) is not True:
                 if isinstance(self._eqs[name], ImmutableDenseMatrix):
                     self._eqs[name] = MutableDenseMatrix(self._eqs[name])
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:, ip] += smart_multiply(
                         dx0_fixed_parametersdx, self.sym('sx0')
                     )
-
-            for index, formula in enumerate(self.eq('x0_fixedParameters')):
-                if formula == 0 or formula == 0.0:
-                    # sp.simplify returns ImmutableDenseMatrix, if we need to
-                    # change them, they need to be made mutable
-                    if isinstance(self._eqs[name], ImmutableDenseMatrix):
-                        self._eqs[name] = MutableDenseMatrix(self._eqs[name])
-                    self._eqs[name][index, :] = \
-                        sp.zeros(1, self._eqs[name].shape[1])
 
         elif name == 'JB':
             self._eqs[name] = -self.eq('J').transpose()
@@ -1523,14 +1519,14 @@ class ODEModel:
 
         elif name == 'x0_fixedParameters':
             k = self.sym('k')
-            self._eqs[name] = sp.Matrix([
-                eq
-                # check if the equation contains constants
+            self._x0_fixedParameters_idx = [
+                ix
+                for ix, eq in enumerate(self.eq('x0'))
                 if any([sym in eq.free_symbols for sym in k])
-                # if not set to zero
-                else 0.0
-                for eq in self.eq('x0')
-            ])
+            ]
+            eq = self.eq('x0')
+            self._eqs[name] = sp.Matrix([eq[ix] for ix in
+                                         self._x0_fixedParameters_idx])
 
         elif name in ['JSparse', 'JSparseB']:
             self._eqs[name] = self.eq(name.replace('Sparse', ''))
@@ -1692,7 +1688,8 @@ class ODEModel:
             dxdz = self.sym_or_eq(name, dxdz_name)
             # Save time for for large models if one multiplicand is zero,
             # which is not checked for by sympy
-            if dydx.is_zero is not True and dxdz.is_zero is not True:
+            if not smart_is_zero_matrix(dydx) and not \
+                    smart_is_zero_matrix(dxdz):
                 if dxdz.shape[1] == 1 and \
                         self._eqs[name].shape[1] != dxdz.shape[1]:
                     for iz in range(self._eqs[name].shape[1]):
@@ -2369,14 +2366,22 @@ class ODEExporter:
             cases = dict()
             for ipar in range(self.model.np()):
                 expressions = []
-                for index, formula in enumerate(
-                        self.model.eq('x0')
+                for index, formula in zip(
+                        self.model._x0_fixedParameters_idx,
+                        symbol[:, ipar]
                 ):
-                    if any([sym in formula.free_symbols for sym in k]):
-                        expressions.append(f'{function}[{index}] = '
-                                           f'{symbol[index, ipar]};')
+                    expressions.append(f'{function}[{index}] = '
+                                       f'{_print_with_exception(formula)};')
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
+
+        if function == 'x0_fixedParameters':
+            for index, formula in zip(
+                    self.model._x0_fixedParameters_idx,
+                    symbol
+            ):
+                lines.append(f'{function}[{index}] = '
+                             f'{_print_with_exception(formula)};')
 
         elif function in sensi_functions:
             cases = {ipar: _get_sym_lines(symbol[:, ipar], function, 0)
