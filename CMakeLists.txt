@@ -189,6 +189,7 @@ add_custom_target(
     src/CMakeLists.template.cmake
     src/main.template.cpp
     src/model_header.ODE_template.h
+    src/model.ODE_template.cpp
     src/wrapfunctions.ODE_template.h
     src/wrapfunctions.template.cpp
     swig/CMakeLists_model.cmake
