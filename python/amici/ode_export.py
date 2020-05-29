@@ -2376,7 +2376,7 @@ class ODEExporter:
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
-        if function == 'x0_fixedParameters':
+        elif function == 'x0_fixedParameters':
             for index, formula in zip(
                     self.model._x0_fixedParameters_idx,
                     symbol
