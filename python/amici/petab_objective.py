@@ -16,16 +16,15 @@ import libsbml
 import numpy as np
 import pandas as pd
 import petab
-from .logging import get_logger, log_execution_time
 from petab.C import *  # noqa: F403
+
+from . import AmiciModel, AmiciExpData
+from .logging import get_logger, log_execution_time
 from .petab_import import PREEQ_INDICATOR_ID
 from .parameter_mapping import (
     fill_in_parameters, ParameterMappingForCondition, ParameterMapping)
 
 logger = get_logger(__name__)
-
-AmiciModel = Union[amici.Model, amici.ModelPtr]
-ExpData = Union[amici.ExpData, amici.ExpDataPtr]
 
 
 # string constant definitions
@@ -45,7 +44,7 @@ def simulate_petab(
         solver: Optional[amici.Solver] = None,
         problem_parameters: Optional[Dict[str, float]] = None,
         simulation_conditions: Union[pd.DataFrame, Dict] = None,
-        edatas: List[ExpData] = None,
+        edatas: List[AmiciExpData] = None,
         parameter_mapping: ParameterMapping = None,
         scaled_parameters: Optional[bool] = False,
         log_level: int = logging.WARNING
@@ -65,6 +64,7 @@ def simulate_petab(
     :param simulation_conditions:
         Result of `petab.get_simulation_conditions`. Can be provided to save
         time if this has be obtained before.
+        Not required if `edatas` and `parameter_mapping` are provided.
     :param edatas:
         Experimental data. Parameters are inserted in-place for simulation.
     :param parameter_mapping:
@@ -104,7 +104,8 @@ def simulate_petab(
     # number of amici simulations will be number of unique
     # (preequilibrationConditionId, simulationConditionId) pairs.
     # Can be optimized by checking for identical condition vectors.
-    if simulation_conditions is None:
+    if simulation_conditions is None and parameter_mapping is None \
+            and edatas is None:
         simulation_conditions = \
             petab_problem.get_simulation_conditions_from_measurement_df()
 
