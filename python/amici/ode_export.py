@@ -2355,6 +2355,7 @@ class ODEExporter:
 
         if len(symbol) == 0 or (isinstance(symbol, sp.Matrix)
                                 and min(symbol.shape) == 0):
+            # dJydy is a list
             return lines
 
         if not self.allow_reinit_fixpar_initcond \
@@ -2366,6 +2367,8 @@ class ODEExporter:
             # was applied
             cases = dict()
             for ipar in range(self.model.np()):
+                if smart_is_zero_matrix(symbol[:, ipar]):
+                    continue
                 expressions = []
                 for index, formula in zip(
                         self.model._x0_fixedParameters_idx,
@@ -2386,16 +2389,19 @@ class ODEExporter:
 
         elif function in sensi_functions:
             cases = {ipar: _get_sym_lines(symbol[:, ipar], function, 0)
-                     for ipar in range(self.model.np())}
+                     for ipar in range(self.model.np())
+                     if not smart_is_zero_matrix(symbol[:, ipar])}
             lines.extend(get_switch_statement('ip', cases, 1))
 
         elif function in multiobs_functions:
             if function == 'dJydy':
                 cases = {iobs: _get_sym_lines(symbol[iobs], function, 0)
-                         for iobs in range(self.model.ny())}
+                         for iobs in range(self.model.ny())
+                         if not smart_is_zero_matrix(symbol[iobs])}
             else:
                 cases = {iobs: _get_sym_lines(symbol[:, iobs], function, 0)
-                         for iobs in range(self.model.ny())}
+                         for iobs in range(self.model.ny())
+                         if not smart_is_zero_matrix(symbol[:, iobs])}
             lines.extend(get_switch_statement('iy', cases, 1))
 
         else:
