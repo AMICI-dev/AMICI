@@ -638,8 +638,8 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
         jacobian of eq wrt sym_var
     """
     if min(eq.shape) and min(sym_var.shape) \
-            and eq.is_zero_matrix is not True \
-            and sym_var.is_zero_matrix is not True \
+            and smart_is_zero_matrix(eq) is not True \
+            and smart_is_zero_matrix(sym_var) is not True \
             and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
         return eq.jacobian(sym_var)
     return sp.zeros(eq.shape[0], sym_var.shape[0])
@@ -658,10 +658,22 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     :return:
         product
     """
-    if not x.shape[0] or not y.shape[1] or x.is_zero_matrix is True or \
-            y.is_zero_matrix is True:
+    if not x.shape[0] or not y.shape[1] or smart_is_zero_matrix(x) is True or \
+            smart_is_zero_matrix(y) is True:
         return sp.zeros(x.shape[0], y.shape[1])
     return x * y
+
+
+def smart_is_zero_matrix(x: sp.MutableDenseMatrix) -> bool:
+    """A faster implementation of sympy's is_zero_matrix
+
+    Avoids repeated indexer type checks and double iteration to distinguish
+    False/None. Found to be about 100x faster for large matrices.
+
+    :param x: Matrix to check
+    """
+
+    return not any(xx.is_zero is not True for xx in x._mat)
 
 
 class ODEModel:
