@@ -2084,7 +2084,7 @@ class ODEExporter:
 
         self._write_wrapfunctions_cpp()
         self._write_wrapfunctions_header()
-        self._write_model_header()
+        self._write_model_header_cpp()
         self._write_c_make_file()
         self._write_swig_files()
         self._write_module_setup()
@@ -2407,9 +2407,9 @@ class ODEExporter:
             template_data
         )
 
-    def _write_model_header(self) -> None:
+    def _write_model_header_cpp(self) -> None:
         """
-        Write model-specific header file (MODELNAME.h).
+        Write model-specific header and cpp file (MODELNAME.{h,cpp}).
         """
 
         tpl_data = {
@@ -2496,6 +2496,12 @@ class ODEExporter:
         apply_template(
             os.path.join(amiciSrcPath, 'model_header.ODE_template.h'),
             os.path.join(self.model_path, f'{self.model_name}.h'),
+            tpl_data
+        )
+
+        apply_template(
+            os.path.join(amiciSrcPath, 'model.ODE_template.cpp'),
+            os.path.join(self.model_path, f'{self.model_name}.cpp'),
             tpl_data
         )
 
