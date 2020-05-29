@@ -963,7 +963,7 @@ class ODEModel:
                             si.stoichiometric_matrix[x_index, w_index] / v))
                 return x_Sw/v
 
-        # create dynmics without respecting conservation laws first
+        # create dynamics without respecting conservation laws first
         Sw = smart_multiply(MutableDenseMatrix(si.stoichiometric_matrix),
                             MutableDenseMatrix(fluxes))
         symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
