@@ -2370,10 +2370,9 @@ class ODEExporter:
             for ipar in range(self.model.np()):
                 expressions = []
                 for index, formula in enumerate(
-                        self.model.eq('x0_fixedParameters')
+                        self.model.eq('x0')
                 ):
-                    if formula != 0 and formula != 0.0 \
-                            and symbol[index, ipar] != 0:
+                    if any([sym in formula.free_symbols for sym in k]):
                         expressions.append(f'{function}[{index}] = '
                                            f'{symbol[index, ipar]};')
                 cases[ipar] = expressions
