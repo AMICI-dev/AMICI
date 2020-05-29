@@ -640,8 +640,8 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
         jacobian of eq wrt sym_var
     """
     if min(eq.shape) and min(sym_var.shape) \
-            and smart_is_zero_matrix(eq) is not True \
-            and smart_is_zero_matrix(sym_var) is not True \
+            and not smart_is_zero_matrix(eq) \
+            and not smart_is_zero_matrix(sym_var) \
             and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
         return eq.jacobian(sym_var)
     return sp.zeros(eq.shape[0], sym_var.shape[0])
@@ -660,8 +660,8 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     :return:
         product
     """
-    if not x.shape[0] or not y.shape[1] or smart_is_zero_matrix(x) is True or \
-            smart_is_zero_matrix(y) is True:
+    if not x.shape[0] or not y.shape[1] or smart_is_zero_matrix(x) or \
+            smart_is_zero_matrix(y):
         return sp.zeros(x.shape[0], y.shape[1])
     return x * y
 
@@ -1503,7 +1503,7 @@ class ODEModel:
                 self.eq('x0_fixedParameters'), self.sym('x')
             )
 
-            if smart_is_zero_matrix(dx0_fixed_parametersdx) is not True:
+            if not smart_is_zero_matrix(dx0_fixed_parametersdx):
                 if isinstance(self._eqs[name], ImmutableDenseMatrix):
                     self._eqs[name] = MutableDenseMatrix(self._eqs[name])
                 for ip in range(self._eqs[name].shape[1]):
