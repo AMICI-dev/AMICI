@@ -780,6 +780,8 @@ class ODEModel:
         NOTE: This does currently not work with PySB symbols.
 
     :ivar _x0_fixedParameters_idx:
+        Index list of subset of states for which x0_fixedParameters was
+        computed
     """
 
     def __init__(self, simplify: Optional[Callable] = sp.powsimp):
