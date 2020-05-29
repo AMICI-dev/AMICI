@@ -258,7 +258,7 @@ def test_raise_postequilibration_with_adjoints(preeq_fixture):
         # set sensi method
         solver.setSensitivityMethod(sensi_meth)
         solver.setNewtonMaxSteps(0)
-        model.setSteadyStateSensitivityMethod(
+        model.setSteadyStateSensitivityMode(
             amici.SteadyStateSensitivityMode.simulationFSA)
         # add rdatas
         rdatas[sensi_meth] = amici.runAmiciSimulation(model, solver, edata)

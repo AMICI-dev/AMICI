@@ -133,7 +133,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     model_without_cl.setSteadyStateSensitivityMode(
         amici.SteadyStateSensitivityMode.newtonOnly
     )
-    with pytest.raises(RuntimeError):
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore")
-            get_results(model_without_cl, edata=edata_fixture, sensi_order=1)
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore")
+        rdata = get_results(model_without_cl, edata=edata_fixture, sensi_order=1)
+        assert rdata['status'] == amici.AMICI_ERROR
