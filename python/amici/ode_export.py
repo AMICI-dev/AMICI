@@ -2175,14 +2175,14 @@ class ODEExporter:
         lines.append('')
 
         # write the actual compiling code
-        lines.append('''modelName = '{model_name}';'''.format(
-            model_name=self.model_name))
-        lines.append('''amimodel.compileAndLinkModel(modelName, '', [], [], [],
-                        []);''')
-        lines.append(f'''amimodel.generateMatlabWrapper({nxtrue_rdata}, 
-                        {nytrue}, {self.model.np()}, {self.model.nk()},
-                        {nz}, {o2flag}, [], ... ['simulate_' modelName 
-                        '.m'], modelName, 'lin', 1, 1);''')
+        lines.append("modelName = '{self.model_name}';")
+        lines.append("amimodel.compileAndLinkModel"
+                     "(modelName, '', [], [], [], []);")
+        lines.append(f"amimodel.generateMatlabWrapper({nxtrue_rdata}, "
+                     f"{nytrue}, {self.model.np()}, {self.model.nk()}, "
+                     f"{nz}, {o2flag}, ...\n    [], "
+                     "['simulate_' modelName '.m'], modelName, ...\n"
+                     "    'lin', 1, 1);")
 
         # write compile script (for mex)
         compile_script = os.path.join(self.model_path, 'compileMexFile.m')
