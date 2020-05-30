@@ -138,7 +138,8 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     for j=1:length(funs)
         filename = fullfile(modelObjectFolder, [modelname '_' strrep(funs{j}, 'sigma_', 'sigma') objectFileSuffix]);
         if(exist(filename,'file'))
-            objectsstr = strcat(objectsstr, ' "',filename,'"');
+            objectsstr = strcat(objectsstr,...
+                ' "',filename,'"');
         end
     end
 
@@ -146,12 +147,9 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
     fprintf('wrapfunctions | ');
     eval(['mex ' DEBUG COPT ...
         ' -c -outdir "' modelObjectFolder '" "' ...
-        fullfile(modelSourceFolder, 'wrapfunctions.cpp') '" ' ...
-        fullfile(modelSourceFolder, [modelname '.cpp']) '" ' ...
+        fullfile(modelSourceFolder,'wrapfunctions.cpp') '" ' ...
         includesstr]);
-    objectsstr = [objectsstr, ...
-       ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '"',
-       ' "' fullfile(modelObjectFolder,['modelname' objectFileSuffix]) '"'];
+    objectsstr = [objectsstr, ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '"'];
 
     % now we have compiled everything model-specific, so we can replace hashes.mat to prevent recompilation
     try
