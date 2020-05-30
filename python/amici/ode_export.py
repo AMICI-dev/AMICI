@@ -2175,7 +2175,7 @@ class ODEExporter:
         lines.append('')
 
         # write the actual compiling code
-        lines.append("modelName = '{self.model_name}';")
+        lines.append(f"modelName = '{self.model_name}';")
         lines.append("amimodel.compileAndLinkModel"
                      "(modelName, '', [], [], [], []);")
         lines.append(f"amimodel.generateMatlabWrapper({nxtrue_rdata}, "
