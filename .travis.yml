@@ -32,8 +32,6 @@ matrix:
         - CI_PYTHON=TRUE
         - CI_ARCHIVE=TRUE
         - CI_NOTEBOOK=TRUE
-      before_install:
-        - ./scripts/buildValgrind.sh
       after_script:
         # cpputest coverage cpp
         - lcov --compat-libtool --no-external --directory ${BASE_DIR}/build/CMakeFiles/amici.dir/src --base-directory ${BASE_DIR} --capture --output-file coverage_cpp.info
@@ -182,8 +180,7 @@ script:
     - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" == "TRUE" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" != "TRUE" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
     # needs to be run after python tests
-    - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then $FOLD valgrind ./scripts/run-valgrind.sh; fi
-    - if [[ "$CI_CPPUTEST" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
+    - if [[ "$CI_CPPUTEST" == "TRUE" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then $FOLD sphinx ./scripts/run-sphinx.sh; fi
 
