@@ -9,8 +9,10 @@
 #include "sundials/sundials_types.h"
 
 namespace amici {
+
 class Solver;
-}
+
+namespace model_TPL_MODELNAME {
 
 extern std::array<std::string, TPL_NP> parameterNames;
 extern std::array<std::string, TPL_NK> fixedParameterNames;
@@ -839,5 +841,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
         return "TPL_AMICI_COMMIT_STRING";
     }
 };
+
+
+} // namespace model_TPL_MODELNAME
+
+} // namespace amici
 
 #endif /* _amici_TPL_MODELNAME_h */

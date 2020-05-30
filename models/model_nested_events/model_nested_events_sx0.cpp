@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_nested_events{
+
 void sx0_model_nested_events(realtype *sx0, const realtype t,const realtype *x0, const realtype *p, const realtype *k, const int ip) {
 switch (ip) {
   case 0: {
@@ -15,4 +19,8 @@ switch (ip) {
 
 }
 }
+
+} // namespace model_model_nested_events
+
+} // namespace amici
 

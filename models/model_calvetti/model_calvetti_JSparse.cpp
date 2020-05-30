@@ -7,6 +7,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_calvetti{
+
 void JSparse_model_calvetti(SUNMatrixContent_Sparse JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) {
   JSparse->indexvals[0] = 0;
   JSparse->indexvals[1] = 3;
@@ -68,4 +72,8 @@ void JSparse_model_calvetti(SUNMatrixContent_Sparse JSparse, const realtype t, c
   JSparse->data[24] = -dwdx[50];
   JSparse->data[25] = -dwdx[52]-1.0;
 }
+
+} // namespace model_model_calvetti
+
+} // namespace amici
 

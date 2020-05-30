@@ -2205,7 +2205,7 @@ class ODEExporter:
             else:
                 symbols = self.model.sym(name).T
         else:
-            raise Exception('Unknown symbolic array')
+            raise Exception(f'Unknown symbolic array: {name}')
 
         for index, symbol in enumerate(symbols):
             symbol_name = strip_pysb(symbol)
@@ -2244,7 +2244,6 @@ class ODEExporter:
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
             '#include <cmath>',
-            ''
         ]
 
         # function signature
@@ -2260,7 +2259,12 @@ class ODEExporter:
             ):
                 lines.append(f'#include "{sym}.h"')
 
-        lines.append('')
+        lines.extend([
+            '',
+            'namespace amici {',
+            f'namespace model_{self.model_name} {{',
+            '',
+        ])
 
         lines.append(f'void {function}_{self.model_name}{signature}{{')
 
@@ -2276,7 +2280,12 @@ class ODEExporter:
                     for line in body]
         self.functions[function]['body'] = body
         lines += body
-        lines.append('}')
+        lines.extend([
+            '}',
+            '',
+            '} // namespace amici',
+            f'}} // namespace model_{self.model_name}',
+        ])
         # if not body is None:
         with open(os.path.join(
                 self.model_path, f'{self.model_name}_{function}.cpp'), 'w'
@@ -2313,6 +2322,9 @@ class ODEExporter:
         lines = [
             '#include "sundials/sundials_types.h"',
             '',
+            'namespace amici {',
+            f'namespace model_{self.model_name} {{',
+            '',
             f'void {function}_{indextype}_{self.model_name}{signature}{{',
         ]
         if function in multiobs_functions:
@@ -2327,7 +2339,12 @@ class ODEExporter:
                 [' ' * 4 + f'{indextype}[{index}] = {value};'
                  for index, value in enumerate(values)]
             )
-        lines.append('}')
+        lines.extend([
+            '}'
+            '',
+            '} // namespace amici',
+            f'}} // namespace model_{self.model_name}',
+        ])
         with open(os.path.join(
                 self.model_path,
                 f'{self.model_name}_{function}_{indextype}.cpp'
