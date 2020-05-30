@@ -125,12 +125,12 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       ndxdotdp_implicit(ndxdotdp_implicit), o2mode(o2mode),
       idlist(std::move(idlist)), J(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
-      dwdp(nw, p.size(), ndwdp, CSC_MAT), dwdx(nw, nx_solver, ndwdx, CSC_MAT),
+      dwdp(nw, static_cast<int>(p.size()), ndwdp, CSC_MAT),
+      dwdx(nw, nx_solver, ndwdx, CSC_MAT),
       w(nw), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0),
       x_pos_tmp(nx_solver), originalParameters(p), z2event(std::move(z2event)),
       stateIsNonNegative(nx_solver, false),
-      pscale(std::vector<amici::ParameterScaling>(p.size(),
-                                                  ParameterScaling::none)) {
+      pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
 
     state.h.resize(ne, 0.0);
     state.total_cl.resize(nx_rdata - nx_solver, 0.0);
