@@ -85,7 +85,7 @@ for ifun = this.funs
             fprintf(fid,'}\n');
             fprintf(fid,'\n');
             fprintf(fid,['} // namespace model_' this.modelname '\n\n']);
-            fprintf(fid,'} // namespace amici \n\n');
+            fprintf(fid,'} // namespace amici\n\n');
 
             fclose(fid);
         end
