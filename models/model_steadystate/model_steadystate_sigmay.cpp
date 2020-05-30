@@ -18,5 +18,5 @@ void sigmay_model_steadystate(double *sigmay, const realtype t, const realtype *
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 

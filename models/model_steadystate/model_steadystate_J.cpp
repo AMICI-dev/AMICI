@@ -24,5 +24,5 @@ void J_model_steadystate(realtype *J, const realtype t, const realtype *x, const
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 

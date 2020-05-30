@@ -18,5 +18,5 @@ void dydx_model_steadystate(double *dydx, const realtype t, const realtype *x, c
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 

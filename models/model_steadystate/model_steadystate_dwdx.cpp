@@ -17,5 +17,5 @@ void dwdx_model_steadystate(realtype *dwdx, const realtype t, const realtype *x,
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 

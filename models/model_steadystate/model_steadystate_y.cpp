@@ -18,5 +18,5 @@ void y_model_steadystate(double *y, const realtype t, const realtype *x, const r
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 

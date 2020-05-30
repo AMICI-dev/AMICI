@@ -18,5 +18,5 @@ void JDiag_model_steadystate(realtype *JDiag, const realtype t, const realtype *
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 

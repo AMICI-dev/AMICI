@@ -18,5 +18,5 @@ void xdot_model_steadystate(realtype *xdot, const realtype t, const realtype *x,
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 

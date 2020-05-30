@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_jakstat_adjoint_o2{
+
 void J_model_jakstat_adjoint_o2(realtype *J, const realtype t, const realtype *x, const double *p, const double *k, const realtype *h, const realtype *w, const realtype *dwdx) {
   J[0+0*162] = -k[0]*p[0]*w[0]*w[2];
   J[0+8*162] = k[1]*p[3]*w[2];
@@ -392,4 +396,8 @@ void J_model_jakstat_adjoint_o2(realtype *J, const realtype t, const realtype *x
   J[161+160*162] = p[3];
   J[161+161*162] = -p[3];
 }
+
+} // namespace model_model_jakstat_adjoint_o2
+
+} // namespace amici
 

@@ -26,5 +26,5 @@ switch(iy){
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 

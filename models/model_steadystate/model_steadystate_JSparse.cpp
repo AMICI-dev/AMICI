@@ -38,5 +38,5 @@ void JSparse_model_steadystate(SUNMatrixContent_Sparse JSparse, const realtype t
 
 } // namespace model_model_steadystate
 
-} // namespace amici 
+} // namespace amici
 
