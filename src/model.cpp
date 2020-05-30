@@ -144,9 +144,11 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
      */
     if (pythonGenerated) {
         dxdotdp_explicit =
-            SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
+            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
+                             ndxdotdp_explicit, CSC_MAT);
         dxdotdp_implicit =
-            SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
+            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
+                             ndxdotdp_implicit, CSC_MAT);
 
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
@@ -266,11 +268,11 @@ void Model::initHeaviside(AmiVector const &x, AmiVector const &dx) {
     }
 }
 
-int Model::nplist() const { return state.plist.size(); }
+int Model::nplist() const { return static_cast<int>(state.plist.size()); }
 
-int Model::np() const { return originalParameters.size(); }
+int Model::np() const { return static_cast<int>(originalParameters.size()); }
 
-int Model::nk() const { return state.fixedParameters.size(); }
+int Model::nk() const { return static_cast<int>(state.fixedParameters.size()); }
 
 int Model::ncl() const { return nx_rdata - nx_solver; }
 
@@ -280,7 +282,7 @@ int Model::nMaxEvent() const { return nmaxevent; }
 
 void Model::setNMaxEvent(int nmaxevent) { this->nmaxevent = nmaxevent; }
 
-int Model::nt() const { return ts.size(); }
+int Model::nt() const { return static_cast<int>(ts.size()); }
 
 const std::vector<ParameterScaling> &Model::getParameterScale() const {
     return pscale;
