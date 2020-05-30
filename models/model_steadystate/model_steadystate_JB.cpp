@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_steadystate{
+
 void JB_model_steadystate(realtype *JB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) {
   JB[0+0*3] = p[1]*x[1]+p[0]*dwdx[0]*2.0;
   JB[0+1*3] = p[1]*x[1]-p[0]*dwdx[0];
@@ -17,4 +21,8 @@ void JB_model_steadystate(realtype *JB, const realtype t, const realtype *x, con
   JB[2+1*3] = -dwdx[1];
   JB[2+2*3] = k[3]+dwdx[1];
 }
+
+} // namespace model_model_steadystate
+
+} // namespace amici 
 

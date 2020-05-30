@@ -170,7 +170,10 @@ target_link_libraries(${PROJECT_NAME}
 
 # For matlab interface
 add_custom_target(matlabInterface
-    SOURCES src/interface_matlab.cpp src/returndata_matlab.cpp)
+    SOURCES
+    src/interface_matlab.cpp
+    src/returndata_matlab.cpp
+    include/amici/interface_matlab.h)
 set_target_properties(matlabInterface
     PROPERTIES INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/include/")
 find_package(Matlab)
