@@ -350,7 +350,7 @@ void CVodeSolver::setStabLimDetB(const int which, const int stldet) const {
         throw CvodeException(status, "CVodeSetStabLimDetB");
 }
 
-void CVodeSolver::setId(const Model */*model*/) const {}
+void CVodeSolver::setId(const Model * /*model*/) const {}
 
 void CVodeSolver::setSuppressAlg(const bool /*flag*/) const {}
 
@@ -584,7 +584,7 @@ void CVodeSolver::allocateSolverB(int *which) const {
         solverMemoryB.resize(*which + 1);
     solverMemoryB.at(*which) =
         std::unique_ptr<void, std::function<void(void *)>>(
-            getAdjBmem(solverMemory.get(), *which), [](void */*ptr*/) {});
+            getAdjBmem(solverMemory.get(), *which), [](void * /*ptr*/) {});
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeCreateB");
 }
