@@ -1,3 +1,4 @@
+Get-ChildItem -Path C:\ -Include depends.exe -File -Recurse -ErrorAction SilentlyContinue
 Write-Host 'script installOpenBLAS.ps1 started'
 $VerbosePreference = "Continue" # display verbose messages
 New-Item -Path 'C:\BLAS' -ItemType Directory -Force # create directory
