@@ -184,7 +184,7 @@ install:
     - echo "::add-path::C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64"
     - echo "::add-path::C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Redist\\MSVC\\14.16.27012\\x64\\Microsoft.VC141.CRT"
     - dumpbin /dependents 'c:\python37\Lib\site-packages\amici\_amici.cp37-win_amd64.pyd'
-    - "DEPENDS.EXE -c -ot:depends.txt -of:depends2.txt 'c:\python37\Lib\site-packages\amici\_amici.cp37-win_amd64.pyd'"
+    - DEPENDS.EXE -c -ot:depends.txt -of:depends2.txt 'c:\python37\Lib\site-packages\amici\_amici.cp37-win_amd64.pyd'
     - cat depends.txt
     - cat depends2.txt
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $PATH && cd && echo "from amici.amici_without_hdf5 import _amici; print(_amici)" | python; fi
