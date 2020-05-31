@@ -1,4 +1,3 @@
-Get-ChildItem -Path C:\ -Include libopenblas.dll,python37.dll,MSVCP140.dll,KERNEL32.dll,VCRUNTIME140.dll,api-ms-win-crt-heap-l1-1-0.dll,api-ms-win-crt-stdio-l1-1-0.dll,api-ms-win-crt-string-l1-1-0.dll,api-ms-win-crt-runtime-l1-1-0.dll,api-ms-win-crt-math-l1-1-0.dll,api-ms-win-crt-time-l1-1-0.dll -File -Recurse -ErrorAction SilentlyContinue
 Write-Host 'script installOpenBLAS.ps1 started'
 $VerbosePreference = "Continue" # display verbose messages
 New-Item -Path 'C:\BLAS' -ItemType Directory -Force # create directory
