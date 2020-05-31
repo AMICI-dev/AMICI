@@ -184,11 +184,8 @@ install:
     - echo "::add-path::C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64"
     - echo "::add-path::C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Redist\\MSVC\\14.16.27012\\x64\\Microsoft.VC141.CRT"
     - C:\\Program\ Files\ \(x86\)\\Microsoft\ Visual\ Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64\\dumpbin.exe -DEPENDENTS c:\\python37\\Lib\\site-packages\\amici\\_amici.cp37-win_amd64.pyd
-    #- DEPENDS.EXE -c -ot:depends.txt -of:depends2.txt 'c:\python37\Lib\site-packages\amici\_amici.cp37-win_amd64.pyd'
-    #- cat depends.txt
-    #- cat depends2.txt
-    - cp /C/BLAS/OpenBLAS-0.3.6-x64/lib/* /c/python37/Lib/site-packages/amici
-    - echo from amici.amici_without_hdf5 import _amici; print(_amici) | python || true
+    - cp -v C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib\\* c:\\python37\\Lib\\site-packages\\amici
+    - echo 'from amici.amici_without_hdf5 import _amici; print(_amici)' | python || true
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cmd //c 'set PATH=C:/BLAS/OpenBLAS-0.3.6-x64/bin;C:/BLAS/OpenBLAS-0.3.6-x64/lib;%PATH% & echo %PATH% & echo from amici.amici_without_hdf5 import _amici; print(_amici) | python' ; fi
     - #&& echo $PATH && export "PATH=/C/Program Files/dotnet/shared/Microsoft.NETCore.App/2.1.15:/C/Program Files/dotnet/shared/Microsoft.NETCore.App/2.0.9:/C/python37/libs:/C/python37/PCbuild/amd64:/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC/Tools/MSVC/14.16.27023/ATLMFC/lib/x64:/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC/Tools/MSVC/14.16.27023/lib/x64:/C/Program Files (x86)/Windows Kits/NETFXSDK/4.6.1/lib/um/x64:/C/Program Files (x86)/Windows Kits/10/lib/10.0.18362.0/um/x64:/C/Program Files (x86)/Windows Kits/10/lib/10.0.18362.0/ucrt/x64:/C/BLAS/OpenBLAS-0.3.6-x64/bin:/C/BLAS/OpenBLAS-0.3.6-x64/lib:/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC/Tools/MSVC/14.16.27023/bin/Hostx64/x64:/C/Program Files (x86)/Microsoft Visual Studio/2017/BuildTools/VC/Redist/MSVC/14.16.27012/x64/Microsoft.VC141.CRT:$PATH" &&  cd && echo "from amici.amici_without_hdf5 import _amici; print(_amici)" | python; fi
 
