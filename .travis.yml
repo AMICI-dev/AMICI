@@ -145,7 +145,7 @@ matrix:
         # as installation from sdist fails because of reasons...
         - choco install python --version 3.7.5
         - choco install swig
-        - choco install dependencywalker
+        #- choco install dependencywalker
         - python -m pip install --upgrade pip
         - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
@@ -183,10 +183,10 @@ install:
     - echo "::add-path::C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib"
     - echo "::add-path::C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64"
     - echo "::add-path::C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Redist\\MSVC\\14.16.27012\\x64\\Microsoft.VC141.CRT"
-    - C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64\\dumpbin.exe' /dependents c:\\python37\\Lib\\site-packages\\amici\\_amici.cp37-win_amd64.pyd'
-    - DEPENDS.EXE -c -ot:depends.txt -of:depends2.txt 'c:\python37\Lib\site-packages\amici\_amici.cp37-win_amd64.pyd'
-    - cat depends.txt
-    - cat depends2.txt
+    - C:\\Program Files \(x86\)\\Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.16.27023\\bin\\Hostx64\\x64\\dumpbin.exe' /dependents c:\\python37\\Lib\\site-packages\\amici\\_amici.cp37-win_amd64.pyd'
+    #- DEPENDS.EXE -c -ot:depends.txt -of:depends2.txt 'c:\python37\Lib\site-packages\amici\_amici.cp37-win_amd64.pyd'
+    #- cat depends.txt
+    #- cat depends2.txt
     - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then echo $PATH && cd && echo "from amici.amici_without_hdf5 import _amici; print(_amici)" | python; fi
 
 script:
