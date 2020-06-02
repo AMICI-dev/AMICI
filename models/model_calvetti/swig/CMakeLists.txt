@@ -11,8 +11,9 @@ if(POLICY CMP0086)
   cmake_policy(SET CMP0086 NEW)
 endif(POLICY CMP0086)
 
-
 find_package(SWIG REQUIRED)
+find_package(OpenMP)
+
 include(${SWIG_USE_FILE})
 
 if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
