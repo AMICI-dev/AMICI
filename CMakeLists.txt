@@ -166,12 +166,6 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC ${BLAS_LIBRARIES}
     )
 
-# OpenMP?
-find_package(OpenMP)
-if (${OpenMP_FOUND})
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
-endif()
-
 # Create targets to make the sources show up in IDEs for convenience
 
 # For matlab interface
@@ -228,7 +222,6 @@ install(TARGETS ${PROJECT_NAME} EXPORT AmiciTargets
 export(EXPORT AmiciTargets FILE AmiciTargets.cmake
     NAMESPACE Upstream::
     )
-
 configure_file(cmake/AmiciConfig.cmake
     "${CMAKE_CURRENT_BINARY_DIR}/AmiciConfig.cmake"
     @ONLY

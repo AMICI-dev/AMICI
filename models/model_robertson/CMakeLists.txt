@@ -57,13 +57,6 @@ ${MODEL_DIR}/wrapfunctions.cpp
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
 add_library(model ALIAS ${PROJECT_NAME})
 
-# OpenMP?
-find_package(OpenMP)
-if (${OpenMP_FOUND})
-    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
-endif()
-
-
 # This option can be helpful when using the Intel compiler and compilation of
 # wrapfunctions.cpp fails due to insufficient memory.
 option(ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS "Enable compiler optimizations for wrapfunctions.cpp?" ON)
