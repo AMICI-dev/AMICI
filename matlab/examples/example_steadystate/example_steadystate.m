@@ -219,7 +219,7 @@ function example_steadystate
         
         subplot(1,3,3);
         hold on;
-        bar(sol_newton_fail.diagnosis.newton_numsteps([1, 3]));
+        bar(sol_newton_fail.diagnosis.posteq_numsteps([1, 3]));
         legend boxoff;
         title('Number of Newton steps');
         xlabel('Solver run');
