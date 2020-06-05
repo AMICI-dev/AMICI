@@ -125,12 +125,12 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
       ndxdotdp_implicit(ndxdotdp_implicit), o2mode(o2mode),
       idlist(std::move(idlist)), J(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw(nx_solver, nw, ndxdotdw, CSC_MAT),
-      dwdp(nw, p.size(), ndwdp, CSC_MAT), dwdx(nw, nx_solver, ndwdx, CSC_MAT),
+      dwdp(nw, static_cast<int>(p.size()), ndwdp, CSC_MAT),
+      dwdx(nw, nx_solver, ndwdx, CSC_MAT),
       w(nw), x_rdata(nx_rdata, 0.0), sx_rdata(nx_rdata, 0.0),
       x_pos_tmp(nx_solver), originalParameters(p), z2event(std::move(z2event)),
       stateIsNonNegative(nx_solver, false),
-      pscale(std::vector<amici::ParameterScaling>(p.size(),
-                                                  ParameterScaling::none)) {
+      pscale(std::vector<ParameterScaling>(p.size(), ParameterScaling::none)) {
 
     state.h.resize(ne, 0.0);
     state.total_cl.resize(nx_rdata - nx_solver, 0.0);
@@ -144,9 +144,11 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
      */
     if (pythonGenerated) {
         dxdotdp_explicit =
-            SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_explicit, CSC_MAT);
+            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
+                             ndxdotdp_explicit, CSC_MAT);
         dxdotdp_implicit =
-            SUNMatrixWrapper(nx_solver, p.size(), ndxdotdp_implicit, CSC_MAT);
+            SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
+                             ndxdotdp_implicit, CSC_MAT);
 
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
@@ -266,11 +268,11 @@ void Model::initHeaviside(AmiVector const &x, AmiVector const &dx) {
     }
 }
 
-int Model::nplist() const { return state.plist.size(); }
+int Model::nplist() const { return static_cast<int>(state.plist.size()); }
 
-int Model::np() const { return originalParameters.size(); }
+int Model::np() const { return static_cast<int>(originalParameters.size()); }
 
-int Model::nk() const { return state.fixedParameters.size(); }
+int Model::nk() const { return static_cast<int>(state.fixedParameters.size()); }
 
 int Model::ncl() const { return nx_rdata - nx_solver; }
 
@@ -280,7 +282,7 @@ int Model::nMaxEvent() const { return nmaxevent; }
 
 void Model::setNMaxEvent(int nmaxevent) { this->nmaxevent = nmaxevent; }
 
-int Model::nt() const { return ts.size(); }
+int Model::nt() const { return static_cast<int>(ts.size()); }
 
 const std::vector<ParameterScaling> &Model::getParameterScale() const {
     return pscale;

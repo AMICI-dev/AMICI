@@ -67,7 +67,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         if (maxSteps > 0)
             std::copy_n(newtonSolver->getNumLinSteps().begin(),
                         maxSteps, numlinsteps.begin());
-    } catch (NewtonFailure const &ex1) {
+    } catch (NewtonFailure const &) {
         if (maxSteps > 0)
             std::copy_n(newtonSolver->getNumLinSteps().begin(),
                         maxSteps, numlinsteps.begin());
@@ -87,7 +87,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 getSteadystateSimulation(solver, model);
             }
             newton_status = NewtonStatus::newt_sim;
-        } catch (AmiException const &ex2) {
+        } catch (AmiException const &) {
             /* may be integration failure from AmiSolve, so NewtonFailure
                won't do for all cases */
             try {
@@ -209,7 +209,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 newtonSolver->getStep(steadystate_try == NewtonStatus::newt ? 1
                                                                             : 2,
                                       i_newtonstep, delta);
-            } catch (NewtonFailure const &ex) {
+            } catch (NewtonFailure const &) {
                 numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
                     i_newtonstep;
                 throw;
