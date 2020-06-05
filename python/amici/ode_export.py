@@ -2206,7 +2206,7 @@ class ODEExporter:
             else:
                 symbols = self.model.sym(name).T
         else:
-            raise Exception(f'Unknown symbolic array: {name}')
+            raise ValueError(f'Unknown symbolic array: {name}')
 
         for index, symbol in enumerate(symbols):
             symbol_name = strip_pysb(symbol)
