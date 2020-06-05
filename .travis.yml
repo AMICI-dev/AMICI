@@ -87,6 +87,7 @@ matrix:
             - swig
             - gcc
             - cppcheck
+            - libomp
           update: true
       before_install:
         - travis_wait brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
