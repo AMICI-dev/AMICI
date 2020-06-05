@@ -1022,7 +1022,8 @@ class ODEModel:
                     component
                 )
                 return
-        Exception(f'Invalid component type {type(component)}')
+
+        raise ValueError(f'Invalid component type {type(component)}')
 
     def add_conservation_law(self,
                              state: sp.Symbol,
