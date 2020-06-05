@@ -1022,7 +1022,8 @@ class ODEModel:
                     component
                 )
                 return
-        Exception(f'Invalid component type {type(component)}')
+
+        raise ValueError(f'Invalid component type {type(component)}')
 
     def add_conservation_law(self,
                              state: sp.Symbol,
@@ -2205,7 +2206,7 @@ class ODEExporter:
             else:
                 symbols = self.model.sym(name).T
         else:
-            raise Exception(f'Unknown symbolic array: {name}')
+            raise ValueError(f'Unknown symbolic array: {name}')
 
         for index, symbol in enumerate(symbols):
             symbol_name = strip_pysb(symbol)
