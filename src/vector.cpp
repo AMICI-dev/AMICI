@@ -122,7 +122,7 @@ void AmiVectorArray::reset() {
 }
 
 void AmiVectorArray::flatten_to_vector(std::vector<realtype> &vec) const {
-    int n_outer = vec_array.size();
+    int n_outer = static_cast<int>(vec_array.size());
     if (n_outer == 0)
         return; // nothing to do ...
     int n_inner = vec_array.at(0).getLength();

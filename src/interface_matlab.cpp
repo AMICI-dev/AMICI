@@ -482,7 +482,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
                         "Incorrect number of input arguments (must be at least 7)!");
     };
 
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     model->app = &amiciApp;
 
     auto solver = model->getSolver();

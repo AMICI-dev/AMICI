@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_neuron_o2{
+
 void dxdotdp_model_neuron_o2(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) {
 switch (ip) {
   case 0: {
@@ -28,4 +32,8 @@ switch (ip) {
 
 }
 }
+
+} // namespace model_model_neuron_o2
+
+} // namespace amici
 

@@ -7,6 +7,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_neuron_o2{
+
 void JSparse_model_neuron_o2(SUNMatrixContent_Sparse JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w, const realtype *dwdx) {
   JSparse->indexvals[0] = 0;
   JSparse->indexvals[1] = 1;
@@ -74,4 +78,8 @@ void JSparse_model_neuron_o2(SUNMatrixContent_Sparse JSparse, const realtype t, 
   JSparse->data[25] = -1.0;
   JSparse->data[26] = -p[0];
 }
+
+} // namespace model_model_neuron_o2
+
+} // namespace amici
 

@@ -24,7 +24,9 @@ try:
 except ImportError:
     pysb = None
 
-from typing import Callable, Optional, Union, List, Dict, Tuple, SupportsFloat
+from typing import (
+    Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence
+)
 from string import Template
 import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
@@ -242,7 +244,7 @@ nobody_functions = [
 sensi_functions = [
     function for function in functions
     if 'const int ip' in functions[function]['signature']
-    and function is not 'sxdot'
+    and function != 'sxdot'
 ]
 # list of multiobs functions
 multiobs_functions = [
@@ -638,7 +640,8 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
         jacobian of eq wrt sym_var
     """
     if min(eq.shape) and min(sym_var.shape) \
-            and eq.is_zero is not True and sym_var.is_zero is not True \
+            and not smart_is_zero_matrix(eq) \
+            and not smart_is_zero_matrix(sym_var) \
             and not sym_var.free_symbols.isdisjoint(eq.free_symbols):
         return eq.jacobian(sym_var)
     return sp.zeros(eq.shape[0], sym_var.shape[0])
@@ -657,10 +660,22 @@ def smart_multiply(x: sp.MutableDenseMatrix,
     :return:
         product
     """
-    if not x.shape[0] or not y.shape[1] or x.is_zero is True or \
-            y.is_zero is True:
+    if not x.shape[0] or not y.shape[1] or smart_is_zero_matrix(x) or \
+            smart_is_zero_matrix(y):
         return sp.zeros(x.shape[0], y.shape[1])
     return x * y
+
+
+def smart_is_zero_matrix(x: sp.MutableDenseMatrix) -> bool:
+    """A faster implementation of sympy's is_zero_matrix
+
+    Avoids repeated indexer type checks and double iteration to distinguish
+    False/None. Found to be about 100x faster for large matrices.
+
+    :param x: Matrix to check
+    """
+
+    return not any(xx.is_zero is not True for xx in x._mat)
 
 
 class ODEModel:
@@ -763,6 +778,10 @@ class ODEModel:
         derivative expressions. Receives sympy expressions as only argument.
         To apply multiple simplifications, wrap them in a lambda expression.
         NOTE: This does currently not work with PySB symbols.
+
+    :ivar _x0_fixedParameters_idx:
+        Index list of subset of states for which x0_fixedParameters was
+        computed
     """
 
     def __init__(self, simplify: Optional[Callable] = sp.powsimp):
@@ -860,6 +879,7 @@ class ODEModel:
 
         self._lock_total_derivative: List[str] = list()
         self._simplify: Callable = simplify
+        self._x0_fixedParameters_idx: Union[None, Sequence[int]]
 
     def import_from_sbml_importer(self,
                                   si: 'sbml_import.SbmlImporter',
@@ -950,7 +970,7 @@ class ODEModel:
                             si.stoichiometric_matrix[x_index, w_index] / v))
                 return x_Sw/v
 
-        # create dynmics without respecting conservation laws first
+        # create dynamics without respecting conservation laws first
         Sw = smart_multiply(MutableDenseMatrix(si.stoichiometric_matrix),
                             MutableDenseMatrix(fluxes))
         symbols['species']['dt'] = sp.Matrix([Sw.row(x_index).applyfunc(
@@ -1002,7 +1022,8 @@ class ODEModel:
                     component
                 )
                 return
-        Exception(f'Invalid component type {type(component)}')
+
+        raise ValueError(f'Invalid component type {type(component)}')
 
     def add_conservation_law(self,
                              state: sp.Symbol,
@@ -1182,7 +1203,7 @@ class ODEModel:
             name of the symbolic variable
 
         :return:
-            linearized symengine.DenseMatrix containing the symbolic formulas
+            linearized matrix containing the symbolic formulas
 
         """
         if name not in sparse_functions:
@@ -1290,6 +1311,13 @@ class ODEModel:
         elif name == 'x':
             self._syms[name] = sp.Matrix([
                 state.get_id()
+                for state in self._states
+                if state.conservation_law is None
+            ])
+            return
+        elif name == 'sx0':
+            self._syms[name] = sp.Matrix([
+                f's{state.get_id()}_0'
                 for state in self._states
                 if state.conservation_law is None
             ])
@@ -1478,20 +1506,13 @@ class ODEModel:
                 self.eq('x0_fixedParameters'), self.sym('x')
             )
 
-            if dx0_fixed_parametersdx.is_zero is not True:
+            if not smart_is_zero_matrix(dx0_fixed_parametersdx):
+                if isinstance(self._eqs[name], ImmutableDenseMatrix):
+                    self._eqs[name] = MutableDenseMatrix(self._eqs[name])
                 for ip in range(self._eqs[name].shape[1]):
                     self._eqs[name][:, ip] += smart_multiply(
                         dx0_fixed_parametersdx, self.sym('sx0')
                     )
-
-            for index, formula in enumerate(self.eq('x0_fixedParameters')):
-                if formula == 0 or formula == 0.0:
-                    # sp.simplify returns ImmutableDenseMatrix, if we need to
-                    # change them, they need to be made mutable
-                    if isinstance(self._eqs[name], ImmutableDenseMatrix):
-                        self._eqs[name] = MutableDenseMatrix(self._eqs[name])
-                    self._eqs[name][index, :] = \
-                        sp.zeros(1, self._eqs[name].shape[1])
 
         elif name == 'JB':
             self._eqs[name] = -self.eq('J').transpose()
@@ -1501,14 +1522,14 @@ class ODEModel:
 
         elif name == 'x0_fixedParameters':
             k = self.sym('k')
-            self._eqs[name] = sp.Matrix([
-                eq
-                # check if the equation contains constants
+            self._x0_fixedParameters_idx = [
+                ix
+                for ix, eq in enumerate(self.eq('x0'))
                 if any([sym in eq.free_symbols for sym in k])
-                # if not set to zero
-                else 0.0
-                for eq in self.eq('x0')
-            ])
+            ]
+            eq = self.eq('x0')
+            self._eqs[name] = sp.Matrix([eq[ix] for ix in
+                                         self._x0_fixedParameters_idx])
 
         elif name in ['JSparse', 'JSparseB']:
             self._eqs[name] = self.eq(name.replace('Sparse', ''))
@@ -1654,9 +1675,11 @@ class ODEModel:
         # Dydz = dydx*dxdz + dydz
 
         # initialize with partial derivative dydz without chain rule
-        self._eqs[name] = copy.deepcopy(
-            self.sym_or_eq(name, f'd{eq}d{var}')
-        )
+        self._eqs[name] = self.sym_or_eq(name, f'd{eq}d{var}')
+        if not isinstance(self._eqs[name], sp.Symbol):
+            # if not a Symbol, create a copy using sympy API
+            # NB deepcopy does not work safely, see sympy issue #7672
+            self._eqs[name] = self._eqs[name].copy()
 
         for chainvar in chainvars:
             if dydx_name is None:
@@ -1668,7 +1691,8 @@ class ODEModel:
             dxdz = self.sym_or_eq(name, dxdz_name)
             # Save time for for large models if one multiplicand is zero,
             # which is not checked for by sympy
-            if dydx.is_zero is not True and dxdz.is_zero is not True:
+            if not smart_is_zero_matrix(dydx) and not \
+                    smart_is_zero_matrix(dxdz):
                 if dxdz.shape[1] == 1 and \
                         self._eqs[name].shape[1] != dxdz.shape[1]:
                     for iz in range(self._eqs[name].shape[1]):
@@ -2072,7 +2096,7 @@ class ODEExporter:
 
         self._write_wrapfunctions_cpp()
         self._write_wrapfunctions_header()
-        self._write_model_header()
+        self._write_model_header_cpp()
         self._write_c_make_file()
         self._write_swig_files()
         self._write_module_setup()
@@ -2152,14 +2176,14 @@ class ODEExporter:
         lines.append('')
 
         # write the actual compiling code
-        lines.append('''modelName = '{model_name}';'''.format(
-            model_name=self.model_name))
-        lines.append('''amimodel.compileAndLinkModel(modelName, '', [], [], [],
-                        []);''')
-        lines.append(f'''amimodel.generateMatlabWrapper({nxtrue_rdata}, 
-                        {nytrue}, {self.model.np()}, {self.model.nk()},
-                        {nz}, {o2flag}, [], ... ['simulate_' modelName 
-                        '.m'], modelName, 'lin', 1, 1);''')
+        lines.append(f"modelName = '{self.model_name}';")
+        lines.append("amimodel.compileAndLinkModel"
+                     "(modelName, '', [], [], [], []);")
+        lines.append(f"amimodel.generateMatlabWrapper({nxtrue_rdata}, "
+                     f"{nytrue}, {self.model.np()}, {self.model.nk()}, "
+                     f"{nz}, {o2flag}, ...\n    [], "
+                     "['simulate_' modelName '.m'], modelName, ...\n"
+                     "    'lin', 1, 1);")
 
         # write compile script (for mex)
         compile_script = os.path.join(self.model_path, 'compileMexFile.m')
@@ -2182,7 +2206,7 @@ class ODEExporter:
             else:
                 symbols = self.model.sym(name).T
         else:
-            raise Exception('Unknown symbolic array')
+            raise ValueError(f'Unknown symbolic array: {name}')
 
         for index, symbol in enumerate(symbols):
             symbol_name = strip_pysb(symbol)
@@ -2221,7 +2245,6 @@ class ODEExporter:
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
             '#include <cmath>',
-            ''
         ]
 
         # function signature
@@ -2237,7 +2260,12 @@ class ODEExporter:
             ):
                 lines.append(f'#include "{sym}.h"')
 
-        lines.append('')
+        lines.extend([
+            '',
+            'namespace amici {',
+            f'namespace model_{self.model_name} {{',
+            '',
+        ])
 
         lines.append(f'void {function}_{self.model_name}{signature}{{')
 
@@ -2253,7 +2281,12 @@ class ODEExporter:
                     for line in body]
         self.functions[function]['body'] = body
         lines += body
-        lines.append('}')
+        lines.extend([
+            '}',
+            '',
+            '} // namespace amici',
+            f'}} // namespace model_{self.model_name}',
+        ])
         # if not body is None:
         with open(os.path.join(
                 self.model_path, f'{self.model_name}_{function}.cpp'), 'w'
@@ -2290,6 +2323,9 @@ class ODEExporter:
         lines = [
             '#include "sundials/sundials_types.h"',
             '',
+            'namespace amici {',
+            f'namespace model_{self.model_name} {{',
+            '',
             f'void {function}_{indextype}_{self.model_name}{signature}{{',
         ]
         if function in multiobs_functions:
@@ -2304,7 +2340,12 @@ class ODEExporter:
                 [' ' * 4 + f'{indextype}[{index}] = {value};'
                  for index, value in enumerate(values)]
             )
-        lines.append('}')
+        lines.extend([
+            '}'
+            '',
+            '} // namespace amici',
+            f'}} // namespace model_{self.model_name}',
+        ])
         with open(os.path.join(
                 self.model_path,
                 f'{self.model_name}_{function}_{indextype}.cpp'
@@ -2322,7 +2363,6 @@ class ODEExporter:
 
         :param symbol:
             symbolic defintion of the function body
-            symengine.DenseMatrix
 
         :return:
             generated C++ code
@@ -2331,8 +2371,10 @@ class ODEExporter:
 
         lines = []
 
-        if len(symbol) == 0 or (isinstance(symbol, sp.Matrix)
+        if len(symbol) == 0 or (isinstance(symbol, (sp.Matrix,
+                                                    sp.ImmutableDenseMatrix))
                                 and min(symbol.shape) == 0):
+            # dJydy is a list
             return lines
 
         if not self.allow_reinit_fixpar_initcond \
@@ -2345,27 +2387,38 @@ class ODEExporter:
             cases = dict()
             for ipar in range(self.model.np()):
                 expressions = []
-                for index, formula in enumerate(
-                        self.model.eq('x0_fixedParameters')
+                for index, formula in zip(
+                        self.model._x0_fixedParameters_idx,
+                        symbol[:, ipar]
                 ):
-                    if formula != 0 and formula != 0.0:
-                        expressions.append(f'{function}[{index}] = '
-                                           f'{symbol[index, ipar]};')
+                    expressions.append(f'{function}[{index}] = '
+                                       f'{_print_with_exception(formula)};')
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
+        elif function == 'x0_fixedParameters':
+            for index, formula in zip(
+                    self.model._x0_fixedParameters_idx,
+                    symbol
+            ):
+                lines.append(f'{function}[{index}] = '
+                             f'{_print_with_exception(formula)};')
+
         elif function in sensi_functions:
             cases = {ipar: _get_sym_lines(symbol[:, ipar], function, 0)
-                     for ipar in range(self.model.np())}
+                     for ipar in range(self.model.np())
+                     if not smart_is_zero_matrix(symbol[:, ipar])}
             lines.extend(get_switch_statement('ip', cases, 1))
 
         elif function in multiobs_functions:
             if function == 'dJydy':
                 cases = {iobs: _get_sym_lines(symbol[iobs], function, 0)
-                         for iobs in range(self.model.ny())}
+                         for iobs in range(self.model.ny())
+                         if not smart_is_zero_matrix(symbol[iobs])}
             else:
                 cases = {iobs: _get_sym_lines(symbol[:, iobs], function, 0)
-                         for iobs in range(self.model.ny())}
+                         for iobs in range(self.model.ny())
+                         if not smart_is_zero_matrix(symbol[:, iobs])}
             lines.extend(get_switch_statement('iy', cases, 1))
 
         else:
@@ -2395,9 +2448,9 @@ class ODEExporter:
             template_data
         )
 
-    def _write_model_header(self) -> None:
+    def _write_model_header_cpp(self) -> None:
         """
-        Write model-specific header file (MODELNAME.h).
+        Write model-specific header and cpp file (MODELNAME.{h,cpp}).
         """
 
         tpl_data = {
@@ -2487,6 +2540,12 @@ class ODEExporter:
             tpl_data
         )
 
+        apply_template(
+            os.path.join(amiciSrcPath, 'model.ODE_template.cpp'),
+            os.path.join(self.model_path, f'{self.model_name}.cpp'),
+            tpl_data
+        )
+
     def _get_symbol_name_initializer_list(self, name: str) -> str:
         """
         Get SBML name initializer list for vector of names for the given
@@ -2538,6 +2597,8 @@ class ODEExporter:
                            + '_colptrs.cpp')
             sources.append(self.model_name + '_' + function
                            + '_rowvals.cpp ')
+
+        sources.append(f'{self.model_name}.cpp')
 
         template_data = {'MODELNAME': self.model_name,
                          'SOURCES': '\n'.join(sources),

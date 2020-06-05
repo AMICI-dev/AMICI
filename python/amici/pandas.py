@@ -87,10 +87,8 @@ def getDataObservablesAsDataFrame(
     # list of all column names using either ids or names
     cols = _get_extended_observable_cols(model, by_id=by_id)
 
-    # initialize dataframe with columns
-    df_edata = pd.DataFrame(columns=cols)
-
-    # append all converted edatas
+    # aggregate recrods
+    dicts = []
     for edata in edata_list:
         npdata = ExpDataView(edata)
         for i_time, timepoint in enumerate(edata.getTimepoints()):
@@ -108,9 +106,9 @@ def getDataObservablesAsDataFrame(
             # add conditions
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
 
-            df_edata.loc[len(df_edata)] = datadict
+            dicts.append(datadict)
 
-    return df_edata
+    return pd.DataFrame.from_records(dicts, columns=cols)
 
 
 def getSimulationObservablesAsDataFrame(
@@ -147,10 +145,8 @@ def getSimulationObservablesAsDataFrame(
     # list of all column names using either names or ids
     cols = _get_extended_observable_cols(model, by_id=by_id)
 
-    # initialize dataframe with columns
-    df_rdata = pd.DataFrame(columns=cols)
-
-    # append all converted rdatas
+    # aggregate recrods
+    dicts = []
     for edata, rdata in zip(edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
             datadict = {
@@ -167,9 +163,9 @@ def getSimulationObservablesAsDataFrame(
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
 
             # append to dataframe
-            df_rdata.loc[len(df_rdata)] = datadict
+            dicts.append(datadict)
 
-    return df_rdata
+    return pd.DataFrame.from_records(dicts, columns=cols)
 
 
 def getSimulationStatesAsDataFrame(
@@ -204,10 +200,8 @@ def getSimulationStatesAsDataFrame(
     # get conditions and state column names by name or id
     cols = _get_state_cols(model, by_id=by_id)
 
-    # initialize dataframe with columns
-    df_rdata = pd.DataFrame(columns=cols)
-
-    # append states
+    # aggregate recrods
+    dicts = []
     for edata, rdata in zip(edata_list, rdata_list):
         for i_time, timepoint in enumerate(rdata['t']):
             datadict = {
@@ -223,9 +217,9 @@ def getSimulationStatesAsDataFrame(
             _fill_conditions_dict(datadict, model, edata, by_id=by_id)
 
             # append to dataframe
-            df_rdata.loc[len(df_rdata)] = datadict
+            dicts.append(datadict)
 
-    return df_rdata
+    return pd.DataFrame.from_records(dicts, columns=cols)
 
 
 def getResidualsAsDataFrame(model: amici.Model,
@@ -265,10 +259,8 @@ def getResidualsAsDataFrame(model: amici.Model,
     # get all column names using names or ids
     cols = _get_observable_cols(model, by_id=by_id)
 
-    #  initialize dataframe with columns
-    df_res = pd.DataFrame(columns=cols)
-
-    # iterate over rdata rows
+    # aggregate recrods
+    dicts = []
     for row in df_rdata.index:
         datadict = {
             'time': df_rdata.loc[row]['time'],
@@ -290,9 +282,9 @@ def getResidualsAsDataFrame(model: amici.Model,
             datadict[par + '_presim'] = df_rdata.loc[row][par + '_presim']
 
         # append to dataframe
-        df_res.loc[len(df_res)] = datadict
+        dicts.append(datadict)
 
-    return df_res
+    return pd.DataFrame.from_records(dicts, columns=cols)
 
 
 def _fill_conditions_dict(datadict: Dict[str, float],

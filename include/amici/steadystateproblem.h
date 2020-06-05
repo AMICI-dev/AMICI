@@ -211,6 +211,9 @@ class SteadystateProblem {
     /** state differential sensitivities */
     AmiVectorArray sdx;
 
+    /** maximum number of steps for Newton solver for allocating numlinsteps */
+    int maxSteps = 0;
+
     /** weighted root-mean-square error */
     realtype wrms = NAN;
 

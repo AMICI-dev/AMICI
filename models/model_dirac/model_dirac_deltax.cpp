@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_dirac{
+
 void deltax_model_dirac(double *deltax, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ie, const realtype *xdot, const realtype *xdot_old) {
               switch(ie) { 
               case 0: {
@@ -20,4 +24,8 @@ void deltax_model_dirac(double *deltax, const realtype t, const realtype *x, con
 
               } 
 }
+
+} // namespace model_model_dirac
+
+} // namespace amici
 

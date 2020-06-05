@@ -43,6 +43,8 @@ for ifun = this.funs
             fprintf(fid,'\n');
             fprintf(fid,'using namespace amici;\n');
             fprintf(fid,'\n');
+            fprintf(fid,'namespace amici {\n\n');
+            fprintf(fid,['namespace model_' this.modelname '{\n\n']);
 
             % function definition
             fprintf(fid,['void ' cppFunctionName '_' this.modelname '' this.fun.(ifun{1}).argstr ' {\n']);
@@ -82,10 +84,15 @@ for ifun = this.funs
             end
             fprintf(fid,'}\n');
             fprintf(fid,'\n');
+            fprintf(fid,['} // namespace model_' this.modelname '\n\n']);
+            fprintf(fid,'} // namespace amici\n\n');
+
             fclose(fid);
         end
     end
 end
+
+% wrapfunctions.h
 
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.h'),'w');
 fprintf(fid,'#ifndef _amici_wrapfunctions_h\n');
@@ -93,8 +100,12 @@ fprintf(fid,'#define _amici_wrapfunctions_h\n');
 fprintf(fid,'\n');
 fprintf(fid,['#include "' this.modelname '.h"\n']);
 fprintf(fid,'\n');
+fprintf(fid,'namespace amici {\n\n');
+fprintf(fid,'namespace generic_model {\n\n');
 fprintf(fid,'std::unique_ptr<amici::Model> getModel();\n');
 fprintf(fid,'\n');
+fprintf(fid,'} // namespace generic_model\n\n');
+fprintf(fid,'} // namespace amici \n\n');
 fprintf(fid,'#endif /* _amici_wrapfunctions_h */\n');
 fclose(fid);
 
@@ -121,9 +132,9 @@ else
     fprintf(fid,'#include "amici/model_dae.h"\n');
 end
 fprintf(fid,'\n');
-fprintf(fid,'namespace amici {\nclass Solver;\n}\n');
-fprintf(fid,'\n');
-fprintf(fid,'\n');
+fprintf(fid,'namespace amici {\n\n');
+fprintf(fid,'class Solver;\n\n');
+fprintf(fid,['namespace model_' this.modelname '{\n\n']);
 
 for ifun = this.funs
     if(~isfield(this.fun,ifun{1}))
@@ -194,17 +205,23 @@ for ifun = this.funs
     fprintf(fid,'    }\n\n');
 end
 fprintf(fid,'};\n\n');
-
+fprintf(fid,['} // namespace model_' this.modelname '\n\n']);
+fprintf(fid,'} // namespace amici \n\n');
 fprintf(fid,['#endif /* _amici_' this.modelname '_h */\n']);
 fclose(fid);
 
-
+% wrapfunctions.cpp
 fid = fopen(fullfile(this.wrap_path,'models',this.modelname,'wrapfunctions.cpp'),'w');
 fprintf(fid,'#include "amici/model.h"\n');
 fprintf(fid,'#include "wrapfunctions.h"\n\n');
+fprintf(fid,'namespace amici {\n\n');
+fprintf(fid,'namespace generic_model {\n\n');
 fprintf(fid,'std::unique_ptr<amici::Model> getModel() {\n');
-fprintf(fid, ['    return std::unique_ptr<amici::Model>(new Model_' this.modelname '());\n']);
+fprintf(fid,'    return std::unique_ptr<amici::Model>(\n');
+fprintf(fid,['        new amici::model_' this.modelname '::Model_' this.modelname '());\n']);
 fprintf(fid,'}\n\n');
+fprintf(fid,'} // namespace generic_model\n\n');
+fprintf(fid,'} // namespace amici \n\n');
 fclose(fid);
 
 fprintf('CMakeLists | ');

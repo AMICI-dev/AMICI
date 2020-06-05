@@ -6,11 +6,14 @@
 #include <mex.h>
 #include <memory>
 
-class Model;
+
+namespace amici {
+
+namespace generic_model {
 extern std::unique_ptr<amici::Model> getModel();
+} // namespace generic_model
 
-namespace amici {    
-
+class Model;
 class ReturnDataMatlab;
 
 
@@ -39,7 +42,7 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver& solver);
  */
 ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs);
 
-    
+
 /*!
  * @brief expDataFromMatlabCall parses the experimental data from the matlab
  * call and writes it to an ExpData class object

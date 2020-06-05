@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_calvetti{
+
 void w_model_calvetti(realtype *w, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *tcl) {
   w[0] = 1.0/k[0];
   w[1] = k[2]*k[2];
@@ -46,4 +50,8 @@ void w_model_calvetti(realtype *w, const realtype t, const realtype *x, const re
   w[36] = k[1]+k[3]+w[35]-1.0;
   w[37] = x[2]*w[11]*w[32]*w[33]*w[34]*w[36]*(1.0/6.1E1);
 }
+
+} // namespace model_model_calvetti
+
+} // namespace amici
 

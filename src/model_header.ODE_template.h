@@ -9,14 +9,21 @@
 #include "sundials/sundials_types.h"
 
 namespace amici {
-class Solver;
-}
 
-/**
- * @brief Wrapper function to instantiate the linked Amici model without knowing
- * the name at compile time.
- * @return
- */
+class Solver;
+
+namespace model_TPL_MODELNAME {
+
+extern std::array<std::string, TPL_NP> parameterNames;
+extern std::array<std::string, TPL_NK> fixedParameterNames;
+extern std::array<std::string, TPL_NX_RDATA> stateNames;
+extern std::array<std::string, TPL_NY> observableNames;
+extern std::array<std::string, TPL_NP> parameterIds;
+extern std::array<std::string, TPL_NK> fixedParameterIds;
+extern std::array<std::string, TPL_NX_RDATA> stateIds;
+extern std::array<std::string, TPL_NY> observableIds;
+
+
 extern void J_TPL_MODELNAME(realtype *J, const realtype t, const realtype *x,
                             const realtype *p, const realtype *k,
                             const realtype *h, const realtype *w,
@@ -454,31 +461,31 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DJYDY_ROWVALS_IMPL
 
     TPL_DWDP_IMPL
-    
+
     TPL_DWDP_COLPTRS_IMPL
-    
+
     TPL_DWDP_ROWVALS_IMPL
 
     TPL_DWDX_IMPL
 
     TPL_DWDX_COLPTRS_IMPL
-    
+
     TPL_DWDX_ROWVALS_IMPL
-    
+
     TPL_DXDOTDW_IMPL
     TPL_DXDOTDW_COLPTRS_IMPL
     TPL_DXDOTDW_ROWVALS_IMPL
 
     TPL_DXDOTDP_EXPLICIT_IMPL
-    
+
     TPL_DXDOTDP_EXPLICIT_COLPTRS_IMPL
-    
+
     TPL_DXDOTDP_EXPLICIT_ROWVALS_IMPL
 
     TPL_DXDOTDP_IMPLICIT_COLPTRS_IMPL
-    
+
     TPL_DXDOTDP_IMPLICIT_ROWVALS_IMPL
-    
+
     /** model specific implementation of fdydx
      * @param dydx partial derivative of observables y w.r.t. model states x
      * @param t current time
@@ -733,7 +740,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_X_SOLVER_IMPL
 
     TPL_TOTAL_CL_IMPL
-    
+
     std::string getName() const override {
         return "TPL_MODELNAME";
     }
@@ -743,7 +750,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @return the names
      */
     virtual std::vector<std::string> getParameterNames() const override {
-        return std::vector<std::string>{TPL_PARAMETER_NAMES_INITIALIZER_LIST};
+        return std::vector<std::string>(parameterNames.begin(),
+                                        parameterNames.end());
     }
 
     /**
@@ -751,7 +759,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @return the names
      */
     virtual std::vector<std::string> getStateNames() const override {
-        return std::vector<std::string>{TPL_STATE_NAMES_INITIALIZER_LIST};
+        return std::vector<std::string>(stateNames.begin(), stateNames.end());
     }
 
     /**
@@ -759,8 +767,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @return the names
      */
     virtual std::vector<std::string> getFixedParameterNames() const override {
-        return std::vector<std::string>{
-            TPL_FIXED_PARAMETER_NAMES_INITIALIZER_LIST};
+        return std::vector<std::string>(fixedParameterNames.begin(),
+                                        fixedParameterNames.end());
     }
 
     /**
@@ -768,7 +776,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @return the names
      */
     virtual std::vector<std::string> getObservableNames() const override {
-        return std::vector<std::string>{TPL_OBSERVABLE_NAMES_INITIALIZER_LIST};
+        return std::vector<std::string>(observableNames.begin(),
+                                        observableNames.end());
     }
 
     /**
@@ -776,7 +785,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @return the ids
      */
     virtual std::vector<std::string> getParameterIds() const override {
-        return std::vector<std::string>{TPL_PARAMETER_IDS_INITIALIZER_LIST};
+        return std::vector<std::string>(parameterIds.begin(),
+                                        parameterIds.end());
     }
 
     /**
@@ -784,7 +794,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @return the ids
      */
     virtual std::vector<std::string> getStateIds() const override {
-        return std::vector<std::string>{TPL_STATE_IDS_INITIALIZER_LIST};
+        return std::vector<std::string>(stateIds.begin(), stateIds.end());
     }
 
     /**
@@ -792,8 +802,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @return the ids
      */
     virtual std::vector<std::string> getFixedParameterIds() const override {
-        return std::vector<std::string>{
-            TPL_FIXED_PARAMETER_IDS_INITIALIZER_LIST};
+        return std::vector<std::string>(fixedParameterIds.begin(),
+                                        fixedParameterIds.end());
     }
 
     /**
@@ -801,7 +811,8 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
      * @return the ids
      */
     virtual std::vector<std::string> getObservableIds() const override {
-        return std::vector<std::string>{TPL_OBSERVABLE_IDS_INITIALIZER_LIST};
+        return std::vector<std::string>(observableIds.begin(),
+                                        observableIds.end());
     }
 
     /**
@@ -830,5 +841,10 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
         return "TPL_AMICI_COMMIT_STRING";
     }
 };
+
+
+} // namespace model_TPL_MODELNAME
+
+} // namespace amici
 
 #endif /* _amici_TPL_MODELNAME_h */
