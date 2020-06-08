@@ -284,6 +284,6 @@ def test_raise_postequilibration_with_adjoints(preeq_fixture):
     with pytest.raises(RuntimeError):
         rdata = amici.runAmiciSimulation(model, solver, edata)
     
-    # this should cause simulation failure (issue python warning)
-    rdata = amici.runAmiciSimulation(model, solver, edata_preeq)
-    assert rdata['status'] == amici.AMICI_ERROR
+    # this should raise an exception, due to adjoint + postequilibration
+    with pytest.raises(RuntimeError):
+        rdata = amici.runAmiciSimulation(model, solver, edata_preeq)
