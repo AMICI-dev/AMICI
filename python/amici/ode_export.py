@@ -2333,7 +2333,7 @@ class ODEExporter:
             '',
         ]
 
-        # TODO Generate static array with indices
+        # Generate static array with indices
         if len(values):
             static_array_name = f"{function}_{indextype}_{self.model_name}_"
             if function in multiobs_functions:
