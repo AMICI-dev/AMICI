@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_robertson{
+
 void dxdotdp_model_robertson(realtype *dxdotdp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *dx, const realtype *w, const realtype *dwdp) {
 switch (ip) {
   case 0: {
@@ -27,4 +31,8 @@ switch (ip) {
 
 }
 }
+
+} // namespace model_model_robertson
+
+} // namespace amici
 

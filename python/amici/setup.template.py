@@ -3,13 +3,15 @@
 import os
 from typing import List
 
-from amici import amici_path, hdf5_enabled
+from amici import amici_path, hdf5_enabled, compiledWithOpenMP
 from amici.custom_commands import (set_compiler_specific_extension_options,
                                    compile_parallel)
 from amici.setuptools import (get_blas_config,
                               get_hdf5_config,
                               add_coverage_flags_if_required,
-                              add_debug_flags_if_required)
+                              add_debug_flags_if_required,
+                              add_openmp_flags,
+                              )
 from setuptools import find_packages, setup, Extension
 from setuptools.command.build_ext import build_ext
 
@@ -61,6 +63,11 @@ def get_extension() -> Extension:
 
     cxx_flags = ['-std=c++14']
     linker_flags = []
+
+    if compiledWithOpenMP():
+        # Only build model with OpenMP support if AMICI base packages was built
+        #  that way
+        add_openmp_flags(cxx_flags=cxx_flags, ldflags=linker_flags)
 
     add_coverage_flags_if_required(cxx_flags, linker_flags)
     add_debug_flags_if_required(cxx_flags, linker_flags)

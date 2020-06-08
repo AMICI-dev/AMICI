@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_events{
+
 void dydp_model_events(double *dydp, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const int ip, const realtype *w, const realtype *dwdp) {
 switch (ip) {
   case 3: {
@@ -15,4 +19,8 @@ switch (ip) {
 
 }
 }
+
+} // namespace model_model_events
+
+} // namespace amici
 

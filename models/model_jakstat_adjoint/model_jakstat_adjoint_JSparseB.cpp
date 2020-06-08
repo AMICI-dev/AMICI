@@ -7,6 +7,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_jakstat_adjoint{
+
 void JSparseB_model_jakstat_adjoint(SUNMatrixContent_Sparse JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) {
   JSparseB->indexvals[0] = 0;
   JSparseB->indexvals[1] = 8;
@@ -55,4 +59,8 @@ void JSparseB_model_jakstat_adjoint(SUNMatrixContent_Sparse JSparseB, const real
   JSparseB->data[16] = -p[3];
   JSparseB->data[17] = p[3];
 }
+
+} // namespace model_model_jakstat_adjoint
+
+} // namespace amici
 

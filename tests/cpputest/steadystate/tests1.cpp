@@ -27,7 +27,7 @@ TEST(groupSteadystate, testModelFromHDF5) {
     std::vector<double> pExp {1, 0.5, 0.4, 2, 0.1};
     std::vector<double> kExp {0.1, 0.4, 0.7, 1.0};
 
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     amici::hdf5::readModelDataFromHDF5(NEW_OPTION_FILE, *model, "/model_steadystate/nosensi/options");
 
     amici::checkEqualArray(kExp, model->getFixedParameters(), TEST_ATOL, TEST_RTOL, "k");
@@ -43,7 +43,7 @@ TEST(groupSteadystate, testModelFromHDF5) {
 }
 
 TEST(groupSteadystate, testInequality) {
-    auto modelA = getModel();
+    auto modelA = amici::generic_model::getModel();
     auto modelB = std::unique_ptr<amici::Model>(new amici::Model_Test());
 
     CHECK_FALSE(*modelA == *modelB);
@@ -51,7 +51,7 @@ TEST(groupSteadystate, testInequality) {
 
 
 TEST(groupSteadystate, testCopyModel) {
-    auto modelA = getModel();
+    auto modelA = amici::generic_model::getModel();
     auto modelB = std::unique_ptr<amici::Model>(modelA->clone());
 
     CHECK_TRUE(*modelA == *modelB);
@@ -59,14 +59,15 @@ TEST(groupSteadystate, testCopyModel) {
 
 
 TEST(groupSteadystate, testCloneModel) {
-    auto modelA = getModel();
-    auto modelB = std::unique_ptr<amici::Model>(new Model_model_steadystate());
+    auto modelA = amici::generic_model::getModel();
+    auto modelB = std::unique_ptr<amici::Model>(
+        new amici::model_model_steadystate::Model_model_steadystate());
 
     CHECK_TRUE(*modelA == *modelB);
 }
 
 TEST(groupSteadystate, testExpDataFromReturnData) {
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
 
     amici::hdf5::readModelDataFromHDF5(NEW_OPTION_FILE, *model, "/model_steadystate/nosensi/options");
@@ -78,7 +79,7 @@ TEST(groupSteadystate, testExpDataFromReturnData) {
 }
 
 TEST(groupSteadystate, testReuseSolver) {
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
 
     amici::hdf5::readModelDataFromHDF5(NEW_OPTION_FILE, *model, "/model_steadystate/nosensi/options");
@@ -89,7 +90,7 @@ TEST(groupSteadystate, testReuseSolver) {
 }
 
 TEST(groupSteadystate, testRethrow) {
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
 
     amici::hdf5::readModelDataFromHDF5(NEW_OPTION_FILE, *model, "/model_steadystate/nosensi/options");
@@ -108,12 +109,12 @@ TEST(groupSteadystate, testRethrow) {
 }
 
 TEST(groupSteadystate, testInitialStatesNonEmpty) {
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     CHECK_FALSE(model->getInitialStates().empty());
 }
 
 TEST(groupSteadystate, testInitialStateSensitivitiesNonEmpty) {
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     CHECK_FALSE(model->getInitialStateSensitivities().empty());
 }
 

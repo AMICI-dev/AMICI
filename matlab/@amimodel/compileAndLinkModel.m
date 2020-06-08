@@ -143,13 +143,24 @@ function compileAndLinkModel(modelname, modelSourceFolder, coptim, debug, funs, 
         end
     end
 
+    % in case we compile python-generated code, there is a modelname.cpp
+    model_cpp = fullfile(modelSourceFolder, [modelname '.cpp']);
+    if(exist(model_cpp, 'file'))
+        model_cpp = ['"' model_cpp '" '];
+        model_cpp_obj = [' "' fullfile(modelObjectFolder,[modelname objectFileSuffix]) '" '];
+    else
+        model_cpp = '';
+        model_cpp_obj = '';
+    end
+
+
     % compile the wrapfunctions object
     fprintf('wrapfunctions | ');
     eval(['mex ' DEBUG COPT ...
         ' -c -outdir "' modelObjectFolder '" "' ...
-        fullfile(modelSourceFolder,'wrapfunctions.cpp') '" ' ...
+        fullfile(modelSourceFolder,'wrapfunctions.cpp') '" ' model_cpp ...
         includesstr]);
-    objectsstr = [objectsstr, ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '"'];
+    objectsstr = [objectsstr, ' "' fullfile(modelObjectFolder,['wrapfunctions' objectFileSuffix]) '" ' model_cpp_obj];
 
     % now we have compiled everything model-specific, so we can replace hashes.mat to prevent recompilation
     try

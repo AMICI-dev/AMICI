@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_calvetti{
+
 void JDiag_model_calvetti(realtype *JDiag, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) {
   JDiag[0+0*6] = -cj-w[0]*(1.0E2/8.99E2)+dwdx[6];
   JDiag[1+0*6] = -cj-w[6]*1.202935161794779E-2+dwdx[19];
@@ -14,4 +18,8 @@ void JDiag_model_calvetti(realtype *JDiag, const realtype t, const realtype *x, 
   JDiag[4+0*6] = -dwdx[43]-1.0;
   JDiag[5+0*6] = -dwdx[52]-1.0;
 }
+
+} // namespace model_model_calvetti
+
+} // namespace amici
 

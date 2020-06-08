@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_neuron_o2{
+
 void xdot_model_neuron_o2(realtype *xdot, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *w) {
   xdot[0] = k[1]+x[0]*5.0-x[1]+(x[0]*x[0])*(1.0/2.5E1)+1.4E2;
   xdot[1] = -p[0]*(x[1]-p[1]*x[0]);
@@ -18,4 +22,8 @@ void xdot_model_neuron_o2(realtype *xdot, const realtype t, const realtype *x, c
   xdot[8] = -x[9]+w[1]*x[8];
   xdot[9] = -p[0]*x[9]+p[0]*p[1]*x[8];
 }
+
+} // namespace model_model_neuron_o2
+
+} // namespace amici
 

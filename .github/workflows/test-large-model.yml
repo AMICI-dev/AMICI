@@ -4,6 +4,7 @@ on:
     branches:
       - develop
       - master
+      - fix_sx0_zeros
 
   pull_request:
     branches:

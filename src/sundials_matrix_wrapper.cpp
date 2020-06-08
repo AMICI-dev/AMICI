@@ -201,8 +201,10 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
 
     switch (SUNMatGetID(matrix)) {
     case SUNMATRIX_DENSE:
-        amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans, nrows,
-                    ncols, 1.0, data(), nrows, b.data(), 1, 1.0, c.data(), 1);
+        amici_dgemv(BLASLayout::colMajor, BLASTranspose::noTrans,
+                    static_cast<int>(nrows), static_cast<int>(ncols),
+                    1.0, data(), static_cast<int>(nrows),
+                    b.data(), 1, 1.0, c.data(), 1);
         break;
     case SUNMATRIX_SPARSE:
 
@@ -235,7 +237,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     case SUNMATRIX_CUSPARSE:
         throw std::domain_error("Not Implemented.");
     }
-    
+
 }
 
 void SUNMatrixWrapper::multiply(N_Vector c,

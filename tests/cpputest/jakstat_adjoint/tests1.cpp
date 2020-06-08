@@ -43,7 +43,7 @@ TEST(groupJakstatAdjoint, testSensitivityAdjointEmptySensInd) {
 
 IGNORE_TEST(groupJakstatAdjoint, testSensitivityAdjointUnusedNanOutputs) {
     /* UN-IGNORE ONCE THIS MODEL HAS BEEN IMPORTED VIA PYTHON INTERFACE */
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
     amici::hdf5::readModelDataFromHDF5(
                 NEW_OPTION_FILE, *model,
@@ -81,7 +81,7 @@ IGNORE_TEST(groupJakstatAdjoint, testSensitivityAdjointUnusedNanOutputs) {
 TEST(groupJakstatAdjoint, testSensitivityReplicates) {
     // Check that we can handle replicates correctly
 
-    auto model = getModel();
+    auto model = amici::generic_model::getModel();
     auto solver = model->getSolver();
     amici::hdf5::readModelDataFromHDF5(
                 NEW_OPTION_FILE, *model,
