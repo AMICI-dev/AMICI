@@ -225,12 +225,11 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
                     i_newtonstep;
                 throw;
-            } catch (std::exception const &ex) {
+            } catch (std::exception const &) {
                 numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
                     i_newtonstep;
                 throw NewtonFailure(AMICI_CONV_FAILURE,
-                                    "Newton solver failed to compute new step: "
-                                    "%s", ex.what());
+                                    "Newton solver failed to compute new step");
             }
         }
 
