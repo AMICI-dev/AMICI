@@ -258,8 +258,8 @@ def test_raise_postequilibration_with_adjoints(preeq_fixture):
         # set sensi method
         solver.setSensitivityMethod(sensi_meth)
         solver.setNewtonMaxSteps(0)
-        solver.SteadyStateSensitivityMethod = \
-            amici.SteadyStateSensitivityMode.simulationFSA
+        model.setSteadyStateSensitivityMode(
+            amici.SteadyStateSensitivityMode.simulationFSA)
         # add rdatas
         rdatas[sensi_meth] = amici.runAmiciSimulation(model, solver, edata)
         assert rdatas[sensi_meth]['status'] == amici.AMICI_SUCCESS
@@ -280,5 +280,10 @@ def test_raise_postequilibration_with_adjoints(preeq_fixture):
     edata.setObservedData(np.hstack([y, y[0]]))
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
 
+    # this should raise an exception, due to presimulation
     with pytest.raises(RuntimeError):
         amici.runAmiciSimulation(model, solver, edata)
+    
+    # this should raise an exception, due to adjoint + postequilibration
+    with pytest.raises(RuntimeError):
+        amici.runAmiciSimulation(model, solver, edata_preeq)

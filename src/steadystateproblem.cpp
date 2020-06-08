@@ -123,12 +123,24 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Compute steady state sensitvities */
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        /* for newton_status == NewtonStatus::newt_sim the sensis were computed
+           via forward simulation with FSA */
         (newton_status == NewtonStatus::newt ||
          newton_status == NewtonStatus::newt_sim_newt ||
          model->getSteadyStateSensitivityMode() ==
-             SteadyStateSensitivityMode::newtonOnly))
-        // for newton_status == 2 the sensis were computed via FSA
-        newtonSolver->computeNewtonSensis(sx);
+         SteadyStateSensitivityMode::newtonOnly)) {
+        try {
+            /* this might still fail, if the Jacobian is singular and
+               simulation did not find a steady state */
+            newtonSolver->computeNewtonSensis(sx);
+        } catch (NewtonFailure const &) {
+            /* No steady state could be inferred. Store simulation state */
+            storeSimulationState(model, solver->getSensitivityOrder() >=
+                                 SensitivityOrder::first);
+            throw AmiException("Steady state sensitvitiy computation failed due "
+                               "to unsuccessful factorization of RHS Jacobian");
+        }
+    }
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
@@ -213,12 +225,6 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
                     i_newtonstep;
                 throw;
-            } catch (std::exception const &ex) {
-                numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
-                    i_newtonstep;
-                throw AmiException("Newton solver failed to compute new step: "
-                                   "%s",
-                                   ex.what());
             }
         }
 
@@ -264,7 +270,9 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
             if (gamma < newtonSolver->dampingFactorLowerBound)
-              throw AmiException("Newton solver failed: a damping factor reached its lower bound");
+              throw NewtonFailure(AMICI_CONV_FAILURE,
+                                  "Newton solver failed: the damping factor "
+                                  "reached its lower bound");
 
             /* No new linear solve, only try new dampening */
             compNewStep = false;

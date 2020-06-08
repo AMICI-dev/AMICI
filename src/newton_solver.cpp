@@ -205,7 +205,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector &rhs) {
     // last argument is tolerance and does not have any influence on result
 
     if(status != AMICI_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolSolve_Dense");
+        throw NewtonFailure(status, "SUNLinSolSolve_KLU");
 }
 
 /* ------------------------------------------------------------------------- */
@@ -232,8 +232,9 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
     newton_try = ntry;
     i_newton = nnewt;
     if (nnewt == -1) {
-        throw AmiException("Linear solver SPBCG does not support sensitivity "
-                           "computation for steady state problems.");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
+                            "Linear solver SPBCG does not support sensitivity "
+                            "computation for steady state problems.");
     }
 }
 
