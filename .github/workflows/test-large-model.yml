@@ -4,7 +4,7 @@ on:
     branches:
       - develop
       - master
-      - fix_sx0_zeros
+      - feature_fast_index_compilation
 
   pull_request:
     branches:
