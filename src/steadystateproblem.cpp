@@ -133,7 +133,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
             /* this might still fail, if the Jacobian is singular and
                simulation did not find a steady state */
             newtonSolver->computeNewtonSensis(sx);
-        } catch (NewtonFailure const &ex) {
+        } catch (NewtonFailure const &) {
             /* No steady state could be inferred. Store simulation state */
             storeSimulationState(model, solver->getSensitivityOrder() >=
                                  SensitivityOrder::first);
@@ -228,8 +228,9 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             } catch (std::exception const &ex) {
                 numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
                     i_newtonstep;
-                throw AmiException("Newton solver failed to compute new step: "
-                                   "%s", ex.what());
+                throw NewtonFailure(AMICI_CONV_FAILURE,
+                                    "Newton solver failed to compute new step: "
+                                    "%s", ex.what());
             }
         }
 
@@ -275,7 +276,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
             if (gamma < newtonSolver->dampingFactorLowerBound)
-              throw NewtonFailure(AMICI_TOO_MUCH_WORK,
+              throw NewtonFailure(AMICI_CONV_FAILURE,
                                   "Newton solver failed: the damping factor "
                                   "reached its lower bound");
 
