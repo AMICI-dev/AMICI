@@ -1212,7 +1212,8 @@ class ODEModel:
             self._generate_sparse_symbol(name)
         return self._sparseeqs[name]
 
-    def colptrs(self, name: str) -> List[sp.Number]:
+    def colptrs(self, name: str) -> Union[List[sp.Number],
+                                          List[List[sp.Number]]]:
         """
         Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
@@ -1230,7 +1231,8 @@ class ODEModel:
             self._generate_sparse_symbol(name)
         return self._colptrs[name]
 
-    def rowvals(self, name: str) -> List[sp.Number]:
+    def rowvals(self, name: str) -> Union[List[sp.Number],
+                                          List[List[sp.Number]]]:
         """
         Returns (and constructs if necessary) the row values for a
         sparsified symbolic variable.
@@ -2340,14 +2342,14 @@ class ODEExporter:
                              f"{len(values[0])}>, {len(values)}> "
                              f"{static_array_name} = {{{{")
                 lines.extend(['    {'
-                              + ', '.join(str(x) for x in index_vector) + '}, '
+                              + ', '.join(map(str, index_vector)) + '}, '
                               for index_vector in values])
                 lines.append("}};")
             else:
                 # single index vector
                 lines.append("static constexpr std::array<int, "
                              f"{len(values)}> {static_array_name} = {{")
-                lines.append('    ' + ', '.join(str(x) for x in values))
+                lines.append('    ' + ', '.join(map(str, values)))
                 lines.append("};")
 
         lines.extend([
