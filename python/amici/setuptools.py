@@ -271,3 +271,22 @@ def generate_swig_interface_files() -> None:
     if not sp.returncode == 0:
         raise AssertionError('Swigging AMICI failed:\n'
                              + sp.stdout.decode('utf-8'))
+
+
+def add_openmp_flags(cxx_flags: List, ldflags: List) -> None:
+    """Add OpenMP flags to lists for compiler/linker flags (in-place)"""
+
+    # Enable OpenMP support for Linux / OSX:
+    if sys.platform == 'linux':
+        log.info("Adding OpenMP flags...")
+        cxx_flags.append("-fopenmp")
+        ldflags.append("-fopenmp")
+    elif sys.platform == 'darwin':
+        if os.path.exists('/usr/local/lib/libomp.a'):
+            log.info("Adding OpenMP flags...")
+            cxx_flags.extend(["-Xpreprocessor", "-fopenmp"])
+            ldflags.extend(["-Xpreprocessor", "-fopenmp", "-lomp"])
+        else:
+            log.info("Not adding OpenMP flags, because /usr/local/lib/libomp.a"
+                     " does not exist. To enable, run `brew install libomp` "
+                     "or add flags manually.")

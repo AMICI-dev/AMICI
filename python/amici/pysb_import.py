@@ -107,6 +107,7 @@ def pysb2amici(model: pysb.Model,
     exporter.compile_model()
 
 
+@log_execution_time('creating ODE model', logger)
 def ode_model_from_pysb_importer(model: pysb.Model,
                                  constant_parameters: List[str] = None,
                                  observables: List[str] = None,

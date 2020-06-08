@@ -60,7 +60,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         if (maxSteps > 0)
             std::copy_n(newtonSolver->getNumLinSteps().begin(),
                         maxSteps, numlinsteps.begin());
-    } catch (NewtonFailure const &ex1) {
+    } catch (NewtonFailure const &) {
         if (maxSteps > 0)
             std::copy_n(newtonSolver->getNumLinSteps().begin(),
                         maxSteps, numlinsteps.begin());
@@ -84,7 +84,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 getSteadystateSimulation(solver, model);
             }
             newton_status = NewtonStatus::newt_sim;
-        } catch (AmiException const &ex2) {
+        } catch (AmiException const &) {
             /* may be integration failure from AmiSolve, so NewtonFailure
                won't do for all cases */
             try {
@@ -136,9 +136,19 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         it == -1;
     bool needForwardSensis = needForwardSensisPreeq || needForwardSensisPosteq;
 
-    /* Compute forward steady state sensitvities */
-    if (needForwardSensis)
-        newtonSolver->computeNewtonSensis(sx);
+    if (needForwardSensis) {
+        try {
+            /* this might still fail, if the Jacobian is singular and
+               simulation did not find a steady state */
+            newtonSolver->computeNewtonSensis(sx);
+        } catch (NewtonFailure const &) {
+            /* No steady state could be inferred. Store simulation state */
+            storeSimulationState(model, solver->getSensitivityOrder() >=
+                                 SensitivityOrder::first);
+            throw AmiException("Steady state sensitvitiy computation failed due "
+                               "to unsuccessful factorization of RHS Jacobian");
+        }
+    }
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
@@ -257,16 +267,10 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 newtonSolver->getStep(steadystate_try == NewtonStatus::newt ? 1
                                                                             : 2,
                                       i_newtonstep, delta);
-            } catch (NewtonFailure const &ex) {
+            } catch (NewtonFailure const &) {
                 numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
                     i_newtonstep;
                 throw;
-            } catch (std::exception const &ex) {
-                numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
-                    i_newtonstep;
-                throw AmiException("Newton solver failed to compute new step: "
-                                   "%s",
-                                   ex.what());
             }
         }
 
@@ -312,7 +316,9 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
             if (gamma < newtonSolver->dampingFactorLowerBound)
-              throw AmiException("Newton solver failed: a damping factor reached its lower bound");
+              throw NewtonFailure(AMICI_CONV_FAILURE,
+                                  "Newton solver failed: the damping factor "
+                                  "reached its lower bound");
 
             /* No new linear solve, only try new dampening */
             compNewStep = false;

@@ -109,7 +109,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
                 auto data_ptr = model->dxdotdp_explicit.data();
                 for (sunindextype iCol = col[model->plist(ip)];
                      iCol < col[model->plist(ip) + 1]; ++iCol)
-                    sx.at(row[iCol], ip) -= data_ptr[iCol];
+                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
             }
 
             // copy implicit version
@@ -119,7 +119,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
                 auto data_ptr = model->dxdotdp_implicit.data();
                 for (sunindextype iCol = col[model->plist(ip)];
                      iCol < col[model->plist(ip) + 1]; ++iCol)
-                    sx.at(row[iCol], ip) -= data_ptr[iCol];
+                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
             }
 
             solveLinearSystem(sx[ip]);
@@ -228,7 +228,7 @@ void NewtonSolverSparse::solveLinearSystem(AmiVector &rhs) {
     // last argument is tolerance and does not have any influence on result
 
     if(status != AMICI_SUCCESS)
-        throw NewtonFailure(status, "SUNLinSolSolve_Dense");
+        throw NewtonFailure(status, "SUNLinSolSolve_KLU");
 }
 
 /* ------------------------------------------------------------------------- */
@@ -258,8 +258,9 @@ void NewtonSolverIterative::prepareLinearSystem(int ntry, int nnewt) {
     newton_try = ntry;
     i_newton = nnewt;
     if (nnewt == -1) {
-        throw AmiException("Linear solver SPBCG does not support sensitivity "
-                           "computation for steady state problems.");
+        throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
+                            "Linear solver SPBCG does not support sensitivity "
+                            "computation for steady state problems.");
     }
 
     // Get the Jacobian and its diagonal for preconditioning

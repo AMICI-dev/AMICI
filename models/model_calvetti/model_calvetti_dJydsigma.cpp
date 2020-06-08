@@ -6,6 +6,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_calvetti{
+
 void dJydsigma_model_calvetti(double *dJydsigma, const int iy, const realtype *p, const realtype *k, const double *y, const double *sigmay, const double *my) {
 switch(iy){
     case 0:
@@ -28,4 +32,8 @@ switch(iy){
     break;
 }
 }
+
+} // namespace model_model_calvetti
+
+} // namespace amici
 

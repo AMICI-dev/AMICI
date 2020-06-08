@@ -7,6 +7,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_dirac{
+
 void JSparseB_model_dirac(SUNMatrixContent_Sparse JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) {
   JSparseB->indexvals[0] = 0;
   JSparseB->indexvals[1] = 0;
@@ -18,4 +22,8 @@ void JSparseB_model_dirac(SUNMatrixContent_Sparse JSparseB, const realtype t, co
   JSparseB->data[1] = -p[2];
   JSparseB->data[2] = p[3];
 }
+
+} // namespace model_model_dirac
+
+} // namespace amici
 

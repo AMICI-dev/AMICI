@@ -239,7 +239,7 @@ double spline(double t, int num, ...) {
     /* clean memory reserved for valist */
     va_end(valist);
 
-    spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
+    spline(num, static_cast<int>(ss), 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
 
     return uout;
@@ -291,7 +291,7 @@ double spline_pos(double t, int num, ...) {
     /* clean memory reserved for valist */
     va_end(valist);
 
-    spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
+    spline(num, static_cast<int>(ss), 0, dudt, 0.0, ts, uslog, b, c, d);
     uout = seval(num, t, ts, uslog, b, c, d);
 
     return exp(uout);
@@ -348,7 +348,7 @@ double Dspline(int id, double t, int num, ...) {
     /* clean memory reserved for valist */
     va_end(valist);
 
-    spline(num, ss, 0, dudt, 0.0, ts, us, b, c, d);
+    spline(num, static_cast<int>(ss), 0, dudt, 0.0, ts, us, b, c, d);
     uout = seval(num, t, ts, us, b, c, d);
 
     return uout;
@@ -409,10 +409,10 @@ double Dspline_pos(int id, double t, int num, ...) {
     /* clean memory reserved for valist */
     va_end(valist);
 
-    spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
+    spline(num, static_cast<int>(ss), 0, dudt, 0.0, ts, uslog, b, c, d);
     uspline_pos = exp(seval(num, t, ts, uslog, b, c, d));
 
-    spline(num, ss, 0, dudt, 0.0, ts, sus, b, c, d);
+    spline(num, static_cast<int>(ss), 0, dudt, 0.0, ts, sus, b, c, d);
     suspline = seval(num, t, ts, sus, b, c, d);
     uout = suspline * uspline_pos / us[did];
 
@@ -501,13 +501,13 @@ double DDspline_pos(int id1, int id2, double t, int num, ...) {
     /* clean memory reserved for valist */
     va_end(valist);
 
-    spline(num, ss, 0, dudt, 0.0, ts, uslog, b, c, d);
+    spline(num, static_cast<int>(ss), 0, dudt, 0.0, ts, uslog, b, c, d);
     uspline_pos = exp(seval(num, t, ts, uslog, b, c, d));
 
-    spline(num, ss, 0, dudt, 0.0, ts, sus1, b, c, d);
+    spline(num, static_cast<int>(ss), 0, dudt, 0.0, ts, sus1, b, c, d);
     su1spline = seval(num, t, ts, sus1, b, c, d);
 
-    spline(num, ss, 0, dudt, 0.0, ts, sus2, b, c, d);
+    spline(num, static_cast<int>(ss), 0, dudt, 0.0, ts, sus2, b, c, d);
     su2spline = seval(num, t, ts, sus2, b, c, d);
 
     if (id1 == id2) {

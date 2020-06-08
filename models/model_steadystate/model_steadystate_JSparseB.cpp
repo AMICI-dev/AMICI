@@ -7,6 +7,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_steadystate{
+
 void JSparseB_model_steadystate(SUNMatrixContent_Sparse JSparseB, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype *xB, const realtype *w, const realtype *dwdx) {
   JSparseB->indexvals[0] = 0;
   JSparseB->indexvals[1] = 1;
@@ -31,4 +35,8 @@ void JSparseB_model_steadystate(SUNMatrixContent_Sparse JSparseB, const realtype
   JSparseB->data[7] = -p[1]*x[0];
   JSparseB->data[8] = k[3]+dwdx[1];
 }
+
+} // namespace model_model_steadystate
+
+} // namespace amici
 

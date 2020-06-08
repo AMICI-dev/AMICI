@@ -15,11 +15,16 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-std::unique_ptr<amici::Model>
-getModel()
+namespace amici {
+namespace generic_model {
+
+std::unique_ptr<amici::Model> getModel()
 {
     return std::unique_ptr<amici::Model>(new amici::Model_Test());
 }
+
+} // namespace generic_model
+} // namespace amici
 
 using namespace amici;
 
@@ -283,7 +288,7 @@ TEST_GROUP(edata)
     int nx = 1, ny = 2, nz = 3, nmaxevent = 4;
     std::vector<realtype> timepoints = { 1, 2, 3, 4 };
 
-    std::unique_ptr<amici::Model> model = getModel();
+    std::unique_ptr<amici::Model> model = amici::generic_model::getModel();
 
     Model_Test testModel = Model_Test(nx,
                                       nx,
@@ -581,7 +586,7 @@ TEST_GROUP(solver)
     double tol, badtol;
     std::vector<realtype> timepoints = { 1, 2, 3, 4 };
 
-    std::unique_ptr<amici::Model> model = getModel();
+    std::unique_ptr<amici::Model> model = amici::generic_model::getModel();
     SensitivityMethod sensi_meth;
     SensitivityOrder sensi;
     int steps, badsteps;

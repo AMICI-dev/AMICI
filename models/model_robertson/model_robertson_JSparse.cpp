@@ -7,6 +7,10 @@ typedef amici::realtype realtype;
 
 using namespace amici;
 
+namespace amici {
+
+namespace model_model_robertson{
+
 void JSparse_model_robertson(SUNMatrixContent_Sparse JSparse, const realtype t, const realtype *x, const realtype *p, const realtype *k, const realtype *h, const realtype cj, const realtype *dx, const realtype *w, const realtype *dwdx) {
   JSparse->indexvals[0] = 0;
   JSparse->indexvals[1] = 1;
@@ -31,4 +35,8 @@ void JSparse_model_robertson(SUNMatrixContent_Sparse JSparse, const realtype t, 
   JSparse->data[7] = -dwdx[1];
   JSparse->data[8] = 1.0;
 }
+
+} // namespace model_model_robertson
+
+} // namespace amici
 

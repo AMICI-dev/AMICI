@@ -213,7 +213,7 @@ class ForwardProblem {
      * @return index
      */
     int getTimepointCounter() const {
-        return timepoint_states.size() - 1;
+        return static_cast<int>(timepoint_states.size() - 1);
     }
 
     /**
@@ -221,7 +221,7 @@ class ForwardProblem {
      * @return index
      */
     int getEventCounter() const {
-        return event_states.size() - 1;
+        return static_cast<int>(event_states.size() - 1);
     }
 
     /**
@@ -229,7 +229,7 @@ class ForwardProblem {
      * @return index
      */
     int getRootCounter() const {
-        return discs.size() - 1;
+        return static_cast<int>(discs.size() - 1);
     }
 
     /**

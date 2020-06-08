@@ -6,6 +6,10 @@ endif(POLICY CMP0060)
 if(POLICY CMP0065)
   cmake_policy(SET CMP0065 NEW)
 endif(POLICY CMP0065)
+if(POLICY CMP0074)
+  # Use package_ROOT environment variables
+  cmake_policy(SET CMP0074 NEW)
+endif(POLICY CMP0074)
 
 project(model_calvetti)
 
@@ -51,6 +55,13 @@ ${MODEL_DIR}/wrapfunctions.cpp
 
 add_library(${PROJECT_NAME} ${SRC_LIST_LIB})
 add_library(model ALIAS ${PROJECT_NAME})
+
+# This option can be helpful when using the Intel compiler and compilation of
+# wrapfunctions.cpp fails due to insufficient memory.
+option(ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS "Enable compiler optimizations for wrapfunctions.cpp?" ON)
+if(NOT ENABLE_WRAPFUNCTIONS_OPTIMIZATIONS)
+    set_source_files_properties(wrapfunctions.cpp PROPERTIES COMPILE_FLAGS -O0)
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
