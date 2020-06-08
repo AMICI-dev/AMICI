@@ -123,7 +123,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Compute steady state sensitvities */
     if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        /* for newton_status == 2 the sensis were computed via FSA */
+        /* for newton_status == NewtonStatus::newt_sim the sensis were computed
+           via forward simulation with FSA */
         (newton_status == NewtonStatus::newt ||
          newton_status == NewtonStatus::newt_sim_newt ||
          model->getSteadyStateSensitivityMode() ==
@@ -136,8 +137,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
             /* No steady state could be inferred. Store simulation state */
             storeSimulationState(model, solver->getSensitivityOrder() >=
                                  SensitivityOrder::first);
-            throw AmiException("Steady state sensitvitiy computation failed to "
-                               "unsuccessful factorization of RHS Jacobian");
+            throw AmiException("Steady state sensitvitiy computation failed due "
+                               "to unsuccessful factorization of RHS Jacobian");
         }
     }
 

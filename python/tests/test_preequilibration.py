@@ -280,5 +280,10 @@ def test_raise_postequilibration_with_adjoints(preeq_fixture):
     edata.setObservedData(np.hstack([y, y[0]]))
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
 
-    rdata = amici.runAmiciSimulation(model, solver, edata)
+    # this should raise an exception, due to presimulation
+    with pytest.raises(RuntimeError):
+        rdata = amici.runAmiciSimulation(model, solver, edata)
+    
+    # this should cause simulation failure (issue python warning)
+    rdata = amici.runAmiciSimulation(model, solver, edata_preeq)
     assert rdata['status'] == amici.AMICI_ERROR
