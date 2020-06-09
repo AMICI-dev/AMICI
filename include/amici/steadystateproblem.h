@@ -40,11 +40,9 @@ class SteadystateProblem {
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
-     * @param edata pointer to the expdata object
      * @param it integer with the index of the current time step
      */
-    void workSteadyStateProblem(Solver *solver, Model *model,
-                                const ExpData *edata, int it);
+    void workSteadyStateProblem(Solver *solver, Model *model, int it);
 
     /**
      * Integrates over the adjoint state backward in time by solving a linear
@@ -53,10 +51,8 @@ class SteadystateProblem {
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
-     * @param edata pointer to the expdata object
      */
-    void workSteadyStateBackwardProblem(Solver *solver, Model *model,
-                                        const ExpData *edata);
+    void workSteadyStateBackwardProblem(Solver *solver, Model *model
 
     /**
      * Computes the weighted root mean square of xdot

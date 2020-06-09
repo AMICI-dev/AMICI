@@ -33,7 +33,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
-                                                const ExpData *edata, int it) {
+                                                int it) {
 
     clock_t starttime;
     starttime = clock();
@@ -127,11 +127,11 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         newton_status == NewtonStatus::newt_sim &&
         model->getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::simulationFSA;
-    bool needForwardSensisPosteq = not(forwardSensisAlreadyComputed) &&
+    bool needForwardSensisPosteq = !forwardSensisAlreadyComputed &&
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
         solver->getSensitivityMethod() == SensitivityMethod::forward &&
         it > -1;
-    bool needForwardSensisPreeq = not(forwardSensisAlreadyComputed) &&
+    bool needForwardSensisPreeq = !forwardSensisAlreadyComputed &&
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
         it == -1;
     bool needForwardSensis = needForwardSensisPreeq || needForwardSensisPosteq;
@@ -157,14 +157,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
-                                                        Model *model,
-                                                        const ExpData *edata) {
-    /*
-    // Construct the right hand size
-    // FIXME: Could be simplified? What is the order on dJydx?
-    std::vector<realtype> dJydx(model->nJ * model->nx_solver, 0.0);
-    model->getAdjointStateObservableUpdate(dJydx, model->nt-1, x, *edata);
-     */
+                                                        Model *model) {
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 
     try {
@@ -175,10 +168,11 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
             throw NewtonFailure(ex.error_code, "Steady state backward "
                                 "computation failed due to unsuccessful "
                                 "factorization of RHS Jacobian. ");
-        throw ex;
+        throw NewtonFailure(ex.error_code, "Steady state backward "
+                            "computation failed. ");
     }
 
-    // Compute the inner product v*dxotdp
+    /* Compute the inner product v*dxotdp */
     if (model->pythonGenerated) {
         const auto& plist = model->getParameterList();
         if (model->ndxdotdp_explicit > 0)
@@ -383,19 +377,18 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     auto newton_solver = std::unique_ptr<Solver>(solver->clone());
 
     switch (solver->getLinearSolver()) {
-    case LinearSolver::dense:
-    case LinearSolver::KLU:
-    case LinearSolver::SuperLUMT:
-        break;
-    default:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
-                            "invalid solver for steadystate simulation");
+
+        case LinearSolver::dense:
+        case LinearSolver::KLU:
+
+        default:
+            throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
+                                "invalid solver for steadystate simulation");
     }
-    if (solver->getSensitivityMethod() != SensitivityMethod::none &&
-        model->getSteadyStateSensitivityMode() ==
-            SteadyStateSensitivityMode::simulationFSA)
+
+    if (integrateForwardSensis)
         newton_solver->setSensitivityMethod(SensitivityMethod::forward);
-    // need forward to compute sx0
+    /* need forward to compute sx0 */
     else
         newton_solver->setSensitivityMethod(SensitivityMethod::none);
 

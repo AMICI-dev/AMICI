@@ -260,6 +260,7 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     edata.fixedParametersPreequilibration = ()
     
     rdata = amici.runAmiciSimulation(model, solver, edata)
+    assert rdata['status'] == amici.AMICI_SUCCESS
     
     
 def test_only_equilibration_with_adjoints(preeq_fixture):
