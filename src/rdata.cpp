@@ -407,6 +407,8 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
 
+    /* NB: This nested loop will not be necessary for fully adjoint
+       preequilibration or post-equilibration without further time points */
     for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < model.nplist(); ++ip) {

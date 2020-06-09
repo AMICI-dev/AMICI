@@ -373,24 +373,22 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
         const Solver *solver, Model *model, bool integrateForwardSensis) const
 {
     /* Create new CVode solver object */
-
     auto newton_solver = std::unique_ptr<Solver>(solver->clone());
 
     switch (solver->getLinearSolver()) {
-
         case LinearSolver::dense:
         case LinearSolver::KLU:
-
         default:
             throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
                                 "invalid solver for steadystate simulation");
     }
 
-    if (integrateForwardSensis)
+    /* need to integrate full forward sensitivities? */
+    if (integrateForwardSensis) {
         newton_solver->setSensitivityMethod(SensitivityMethod::forward);
-    /* need forward to compute sx0 */
-    else
+    } else {
         newton_solver->setSensitivityMethod(SensitivityMethod::none);
+    }
 
     /* use x and sx as dummies for dx and sdx
      (they wont get touched in a CVodeSolver) */
@@ -406,11 +404,8 @@ void SteadystateProblem::getAdjointUpdates(Model &model,
         if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(
                 slice(dJydx, it, model.nx_solver * model.nJ), it, x, edata);
-
             for (int ix = 0; ix < model.nxtrue_solver; ix++)
-                for (int iJ = 0; iJ < model.nJ; iJ++)
-                    xB[ix + iJ * model.nxtrue_solver] +=
-                        dJydx[iJ + ( ix + it * model.nx_solver ) * model.nJ];
+                xB[ix] += dJydx[ix + it * model.nx_solver];
         }
     }
 }

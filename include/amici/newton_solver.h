@@ -127,8 +127,6 @@ class NewtonSolver {
     AmiVector dx;
     /** history of number of linear steps */
     std::vector<int> numlinsteps;
-
-  private:
     /** current adjoint state */
     AmiVector xB;
     /** current adjoint state time derivative (DAE) */

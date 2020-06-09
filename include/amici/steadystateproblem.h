@@ -52,7 +52,7 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void workSteadyStateBackwardProblem(Solver *solver, Model *model
+    void workSteadyStateBackwardProblem(Solver *solver, Model *model);
 
     /**
      * Computes the weighted root mean square of xdot
