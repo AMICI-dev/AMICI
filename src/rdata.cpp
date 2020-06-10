@@ -61,7 +61,7 @@ void ReturnData::initializeLikelihoodReporting() {
         sllh.resize(nplist, getNaN());
         if (sensi >= SensitivityOrder::second)
             s2llh.resize(nplist * (nJ - 1), getNaN());
-        
+
         if (sensi_meth == SensitivityMethod::forward ||
             sensi >= SensitivityOrder::second)
             FIM.resize(nplist * nplist, 0.0);
@@ -75,7 +75,7 @@ void ReturnData::initializeResidualReporting() {
     if ((sensi_meth == SensitivityMethod::forward &&
          sensi >= SensitivityOrder::first)
         || sensi >= SensitivityOrder::second) {
-        
+
         sy.resize(nt * ny * nplist, 0.0);
         ssigmay.resize(nt * ny * nplist, 0.0);
         sres.resize(nt * nytrue * nplist, 0.0);
@@ -148,6 +148,8 @@ void ReturnData::processSimulationObjects(SteadystateProblem const *preeq,
                                           Model &model, Solver const &solver,
                                           ExpData const *edata) {
     ModelContext mc(&model);
+
+    processSolver(solver);
 
     if (preeq)
         processPreEquilibration(*preeq, model);
@@ -237,7 +239,7 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
         model.fx_rdata(x_rdata, x_solver);
         writeSlice(x_rdata, x0);
     }
-    
+
     if (!sx0.empty()) {
         model.fsx_rdata(sx_rdata, sx_solver);
         for (int ip = 0; ip < nplist; ip++)
@@ -445,26 +447,25 @@ void ReturnData::processSolver(Solver const &solver) {
 
     cpu_time = solver.getCpuTime();
     if (!numsteps.empty())
-        writeSlice(solver.getNumSteps(), numsteps);
+        numsteps = solver.getNumSteps();
     if (!numrhsevals.empty())
-        writeSlice(solver.getNumRhsEvals(), numrhsevals);
+        numrhsevals = solver.getNumRhsEvals();
     if (!numerrtestfails.empty())
-        writeSlice(solver.getNumErrTestFails(), numerrtestfails);
+        numerrtestfails = solver.getNumErrTestFails();
     if (!numnonlinsolvconvfails.empty())
-        writeSlice(solver.getNumNonlinSolvConvFails(), numnonlinsolvconvfails);
+        numnonlinsolvconvfails = solver.getNumNonlinSolvConvFails();
     if (!order.empty())
-        writeSlice(solver.getLastOrder(), order);
+        order = solver.getLastOrder();
 
     cpu_timeB = solver.getCpuTimeB();
     if (!numstepsB.empty())
-        writeSlice(solver.getNumStepsB(), numstepsB);
+        numstepsB = solver.getNumStepsB();
     if (!numrhsevalsB.empty())
-        writeSlice(solver.getNumRhsEvalsB(), numrhsevalsB);
+        numrhsevalsB = solver.getNumRhsEvalsB();
     if (!numerrtestfailsB.empty())
-        writeSlice(solver.getNumErrTestFailsB(), numerrtestfailsB);
+        numerrtestfailsB = solver.getNumErrTestFailsB();
     if (!numnonlinsolvconvfailsB.empty())
-        writeSlice(solver.getNumNonlinSolvConvFailsB(),
-                   numnonlinsolvconvfailsB);
+        numnonlinsolvconvfailsB = solver.getNumNonlinSolvConvFailsB();
 }
 
 void ReturnData::readSimulationState(SimulationState const &state,
@@ -583,12 +584,12 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
             for (int ip = 0; ip < nplist; ++ip)
                 sllh.at(ip) *= pcoefficient.at(ip);
 
-        
+
         if (!sres.empty())
             for (int iyt = 0; iyt < nytrue * nt; ++iyt)
                 for (int ip = 0; ip < nplist; ++ip)
                     sres.at((iyt * nplist + ip)) *= pcoefficient.at(ip);
-        
+
         if(!FIM.empty())
             for (int ip = 0; ip < nplist; ++ip)
                 for (int jp = 0; jp < nplist; ++jp)
@@ -710,10 +711,10 @@ void ReturnData::fres(const int it, Model &model, const ExpData &edata) {
 
     std::vector<realtype> y_it(ny, 0.0);
     model.getObservable(y_it, ts[it], x_solver);
-    
+
     std::vector<realtype> sigmay_it(ny, 0.0);
     model.getObservableSigma(sigmay_it, it, &edata);
-    
+
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
         int iyt = iy + it * edata.nytrue();
@@ -742,12 +743,12 @@ void ReturnData::fsres(const int it, Model &model, const ExpData &edata) {
     model.getObservable(y_it, ts[it], x_solver);
     std::vector<realtype> sy_it(ny * nplist, 0.0);
     model.getObservableSensitivity(sy_it, ts[it], x_solver, sx_solver);
-    
+
     std::vector<realtype> sigmay_it(ny, 0.0);
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
     model.getObservableSigmaSensitivity(ssigmay_it, it, &edata);
-    
+
     auto observedData = edata.getObservedDataPtr(it);
     for (int iy = 0; iy < nytrue; ++iy) {
         if (!edata.isSetObservedData(it, iy))
@@ -769,7 +770,7 @@ void ReturnData::fFIM(int it, Model &model, const ExpData &edata) {
     model.getObservable(y_it, ts[it], x_solver);
     std::vector<realtype> sy_it(ny * nplist, 0.0);
     model.getObservableSensitivity(sy_it, ts[it], x_solver, sx_solver);
-    
+
     std::vector<realtype> sigmay_it(ny, 0.0);
     model.getObservableSigma(sigmay_it, it, &edata);
     std::vector<realtype> ssigmay_it(ny * nplist, 0.0);
