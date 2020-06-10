@@ -183,8 +183,14 @@ void Solver::resetDiagnosis() const {
 }
 
 void Solver::storeDiagnosis() const {
-    if (!solverWasCalledF || !solverMemory)
+    if (!solverWasCalledF || !solverMemory) {
+        ns.push_back(0);
+        nrhs.push_back(0);
+        netf.push_back(0);
+        nnlscf.push_back(0);
+        order.push_back(0);
         return;
+    }
 
     long int lnumber;
     getNumSteps(solverMemory.get(), &lnumber);
