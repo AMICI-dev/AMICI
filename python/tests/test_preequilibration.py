@@ -252,12 +252,14 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     # this also needs to fail
     y = edata.getObservedData()
     stdy = edata.getObservedDataStdDev()
+    
     # add infty timepoint
     ts = np.hstack([*edata.getTimepoints(), np.inf])
     edata.setTimepoints(sorted(ts))
     edata.setObservedData(np.hstack([y, y[0]]))
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
-    edata.fixedParametersPreequilibration = ()
+    edata.t_presim = 0
+    edata.fixedParametersPresimulation = ()
     
     rdata = amici.runAmiciSimulation(model, solver, edata)
     assert rdata['status'] == amici.AMICI_SUCCESS
