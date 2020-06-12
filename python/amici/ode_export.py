@@ -1212,7 +1212,8 @@ class ODEModel:
             self._generate_sparse_symbol(name)
         return self._sparseeqs[name]
 
-    def colptrs(self, name: str) -> List[sp.Number]:
+    def colptrs(self, name: str) -> Union[List[sp.Number],
+                                          List[List[sp.Number]]]:
         """
         Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
@@ -1230,7 +1231,8 @@ class ODEModel:
             self._generate_sparse_symbol(name)
         return self._colptrs[name]
 
-    def rowvals(self, name: str) -> List[sp.Number]:
+    def rowvals(self, name: str) -> Union[List[sp.Number],
+                                          List[List[sp.Number]]]:
         """
         Returns (and constructs if necessary) the row values for a
         sparsified symbolic variable.
@@ -2311,8 +2313,8 @@ class ODEExporter:
         elif indextype == 'rowvals':
             values = self.model.rowvals(function)
         else:
-            raise ValueError('Invalid value for type, must be colptr or '
-                             'rowval')
+            raise ValueError('Invalid value for indextype, must be colptrs or '
+                             f'rowvals: {indextype}')
 
         # function signature
         if function in multiobs_functions:
@@ -2323,33 +2325,58 @@ class ODEExporter:
         lines = [
             '#include "sundials/sundials_types.h"',
             '',
+            '#include <array>',
+            '#include <algorithm>',
+            '',
             'namespace amici {',
             f'namespace model_{self.model_name} {{',
             '',
-            f'void {function}_{indextype}_{self.model_name}{signature}{{',
         ]
-        if function in multiobs_functions:
-            # list of index vectors
-            cases = {switch_case: [' ' * 4 + f'{indextype}[{index}] = {value};'
-                     for index, value in enumerate(idx_vector)]
-                     for switch_case, idx_vector in enumerate(values)}
-            lines.extend(get_switch_statement('index', cases, 1))
-        else:
-            # single index vector
-            lines.extend(
-                [' ' * 4 + f'{indextype}[{index}] = {value};'
-                 for index, value in enumerate(values)]
-            )
+
+        # Generate static array with indices
+        if len(values):
+            static_array_name = f"{function}_{indextype}_{self.model_name}_"
+            if function in multiobs_functions:
+                # list of index vectors
+                lines.append("static constexpr std::array<std::array<int, "
+                             f"{len(values[0])}>, {len(values)}> "
+                             f"{static_array_name} = {{{{")
+                lines.extend(['    {'
+                              + ', '.join(map(str, index_vector)) + '}, '
+                              for index_vector in values])
+                lines.append("}};")
+            else:
+                # single index vector
+                lines.append("static constexpr std::array<int, "
+                             f"{len(values)}> {static_array_name} = {{")
+                lines.append('    ' + ', '.join(map(str, values)))
+                lines.append("};")
+
+        lines.extend([
+            '',
+            f'void {function}_{indextype}_{self.model_name}{signature}{{',
+        ])
+
+        if len(values):
+            if function in multiobs_functions:
+                lines.append(f"    std::copy({static_array_name}[index]"
+                             f".begin(), {static_array_name}[index].end(), "
+                             f"{indextype});")
+            else:
+                lines.append(f"    std::copy({static_array_name}.begin(), "
+                             f"{static_array_name}.end(), {indextype});")
+
         lines.extend([
             '}'
             '',
             '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
         ])
-        with open(os.path.join(
-                self.model_path,
-                f'{self.model_name}_{function}_{indextype}.cpp'
-        ), 'w') as fileout:
+
+        filename = f'{self.model_name}_{function}_{indextype}.cpp'
+        filename = os.path.join(self.model_path, filename)
+
+        with open(filename, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
     def _get_function_body(self,
