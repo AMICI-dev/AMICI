@@ -261,6 +261,7 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     edata.t_presim = 0
     edata.fixedParametersPresimulation = ()
     
+    # no presim any more, this should work
     rdata = amici.runAmiciSimulation(model, solver, edata)
     assert rdata['status'] == amici.AMICI_SUCCESS
     
@@ -321,7 +322,7 @@ def test_newton_solver_equilibration(preeq_fixture):
         edata_presim, edata_sim, pscales, plists = preeq_fixture
 
     # we don't want presim
-    edata_preeq.t_presim = 0.0
+    edata.t_presim = 0.0
     edata.fixedParametersPresimulation = ()
 
     # add infty timepoint
@@ -359,3 +360,19 @@ def test_newton_solver_equilibration(preeq_fixture):
             rdatas[settings[1]][variable],
             1e-6, 1e-6
         ), variable
+
+    # test failure for iterative linear solver with sensitivities
+    edata.fixedParametersPreequilibration = ()
+    edata.t_presim = 0.0
+    edata.fixedParametersPresimulation = ()
+    
+    solver.setLinearSolver(amici.LinearSolver.SPBCG)
+    solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    solver.SteadyStateSensitivityMethod = \
+        amici.SteadyStateSensitivityMode.newtonOnly
+    solver.setNewtonMaxSteps(10)
+    solver.setNewtonMaxLinearSteps(10)
+    rdata_spbcg = amici.runAmiciSimulation(model, solver, edata)
+    
+    assert rdata_spbcg['status'] == amici.AMICI_ERROR
