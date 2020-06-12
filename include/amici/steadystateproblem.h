@@ -44,6 +44,30 @@ class SteadystateProblem {
     void workSteadyStateProblem(Solver *solver, Model *model, int it);
 
     /**
+     * Handles the computation of the staedy state and potentially
+     * steady state sensitivities, if requested
+     *
+     * @param solver pointer to the solver object
+     * @param newtonSolver pointer to the newtonSolver solver object
+     * @param model pointer to the model object
+     * @param it integer with the index of the current time step
+     * @return final status of NewtonSolver solver object
+     */
+    NewtonStatus findSteadyState(Solver *solver,
+                                 NewtonSolver *newtonSolver,
+                                 Model *model, int it);
+
+    /**
+     * Checks depending on the status of the Newton solver,
+     * solver settings, and the model, whether state sensitivities
+     * still need to be computed via a linear system solve
+     *
+     * @param model pointer to the model object
+     * @return flag telling whether state sensis need to be computed
+     */
+    bool processSensitivityLogic(Model *model);
+
+    /**
      * Computes the weighted root mean square of xdot
      * the weights are computed according to x:
      * w_i = 1 / ( rtol * x_i + atol )
