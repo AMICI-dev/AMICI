@@ -45,7 +45,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                                  fwd.model->nx_solver * fwd.model->nJ));
             }
         }
-        
+
     }
 
 
@@ -57,12 +57,12 @@ void BackwardProblem::workBackwardProblem() {
         model->nplist() == 0) {
         return;
     }
-    
+
     int it = model->nt() - 1;
     model->initializeB(xB, dxB, xQB);
     handleDataPointB(it);
     solver->setupB(&which, model->getTimepoint(it), model, xB, dxB, xQB);
-    
+
     --it;
 
     while (it >= 0 || discs.size() > 0) {
@@ -108,16 +108,16 @@ void BackwardProblem::workBackwardProblem() {
 void BackwardProblem::handleEventB() {
     auto rootidx = this->rootidx.back();
     this->rootidx.pop_back();
-    
+
     auto x_disc = this->x_disc.back();
     this->x_disc.pop_back();
-    
+
     auto xdot_disc = this->xdot_disc.back();
     this->xdot_disc.pop_back();
-    
+
     auto xdot_old_disc = this->xdot_old_disc.back();
     this->xdot_old_disc.pop_back();
-    
+
     for (int ie = 0; ie < model->ne; ie++) {
 
         if (rootidx[ie] == 0) {
@@ -131,12 +131,12 @@ void BackwardProblem::handleEventB() {
                                           xdot_disc,
                                           xdot_old_disc);
 
-        for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
-            for (int iJ = 0; iJ < model->nJ; ++iJ) {
-                if (model->nz > 0) {
+        if (model->nz > 0) {
+            for (int ix = 0; ix < model->nxtrue_solver; ++ix) {
+                for (int iJ = 0; iJ < model->nJ; ++iJ) {
                     xB[ix + iJ * model->nxtrue_solver] +=
-                            dJzdx[iJ + ( ix + nroots[ie] * model->nx_solver )
-                                  * model->nJ];
+                        dJzdx[iJ + ( ix + nroots[ie] * model->nx_solver )
+                                       * model->nJ];
                 }
             }
         }
@@ -149,7 +149,7 @@ void BackwardProblem::handleEventB() {
 
 void BackwardProblem::handleDataPointB(const int it) {
     solver->storeDiagnosisB(this->which);
-    
+
     for (int ix = 0; ix < model->nxtrue_solver; ix++) {
         for (int iJ = 0; iJ < model->nJ; iJ++)
             // we only need the 1:nxtrue_solver (not the nx_true) slice here!
