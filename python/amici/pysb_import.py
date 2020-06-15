@@ -319,7 +319,7 @@ def _get_sigma_name_and_value(
     """
     if obs_name in sigmas:
         if sigmas[obs_name] not in pysb_model.expressions:
-            raise Exception(f'value of sigma {obs_name} is not a '
+            raise ValueError(f'value of sigma {obs_name} is not a '
                             f'valid expression.')
         sigma_name = pysb_model.expressions[sigmas[obs_name]].name
         sigma_value = pysb_model.expressions[sigmas[obs_name]].expand_expr()
@@ -482,10 +482,10 @@ def _compute_possible_indices(cl_prototypes: CL_Prototype,
             ]
 
             if len(set(compartments)) > 1:
-                raise Exception('Conservation laws involving species in '
-                                'multiple compartments are currently not '
-                                'supported! Please run pysb2amici with '
-                                'compute_conservation_laws=False')
+                raise ValueError('Conservation laws involving species in '
+                                 'multiple compartments are currently not '
+                                 'supported! Please run pysb2amici with '
+                                 'compute_conservation_laws=False')
                 # TODO: implement this, multiply species by the volume of
                 # their respective compartment and allow total_cl to depend
                 # on parameters + constants and update the respective symbolic
@@ -585,8 +585,8 @@ def _compute_target_index(cl_prototypes: CL_Prototype,
             ]
         # select target index as possible index with minimal appearance count
         if len(prototype['appearance_counts']) == 0:
-            raise Exception(f'Failed to compute conservation law for monomer '
-                            f'{monomer}')
+            raise RuntimeError(f'Failed to compute conservation law for '
+                               f'monomer {monomer}')
 
         idx = np.argmin(prototype['appearance_counts'])
 
@@ -777,8 +777,8 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
         prototype['diff_fillin'] == -1
         for prototype in cl_prototypes.values()
     ):
-        raise Exception('Could not compute a valid set of conservation '
-                        'laws for this model!')
+        raise RuntimeError('Could not compute a valid set of conservation '
+                           'laws for this model!')
 
     # this puts prototypes with high diff_fillin last
     cl_prototypes = sorted(
