@@ -198,14 +198,13 @@ class SUNMatrixWrapper {
      */
     void zero();
 
+  private:
+    void update_ptrs();
+
     /**
      * @brief CSC matrix to which all methods are applied
      */
     SUNMatrix matrix = nullptr;
-
-  private:
-    void update_ptrs();
-
     realtype *data_ptr = nullptr;
     sunindextype *indexptrs_ptr = nullptr;
     sunindextype *indexvals_ptr = nullptr;
