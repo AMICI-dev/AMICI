@@ -4,6 +4,7 @@
 #include "amici/defines.h" // necessary for realtype
 
 #include <exception>
+#include <array>
 
 namespace amici {
 
