@@ -21,7 +21,7 @@ ReturnData::ReturnData(Solver const &solver, const Model &model)
                  model.nMaxEvent(), model.nt(), solver.getNewtonMaxSteps(),
                  model.nw, model.getParameterScale(), model.o2mode,
                  solver.getSensitivityOrder(),
-                 static_cast<SensitivityMethod>(solver.getSensitivityMethod()),
+                 solver.getSensitivityMethod(),
                  solver.getReturnDataReportingMode()) {}
 
 ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
@@ -293,12 +293,9 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
 
         if (sensi_meth == SensitivityMethod::forward) {
             getDataSensisFSA(it, model, edata);
-        } else {
-            if (edata) {
-                if (!sllh.empty())
-                    model.addPartialObservableObjectiveSensitivity(
-                        sllh, s2llh, it, x_solver, *edata);
-            }
+        } else if (edata && !sllh.empty()) {
+            model.addPartialObservableObjectiveSensitivity(
+                sllh, s2llh, it, x_solver, *edata);
         }
     }
 }
