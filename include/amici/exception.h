@@ -19,13 +19,13 @@ public:
      * @param fmt error message with printf format
      * @param ... printf formating variables
      */
-    AmiException(char const* fmt, ...);
+    explicit AmiException(char const* fmt, ...);
 
     /**
-     * @brief Copy constructor
-     * @param old object to copy from
+     * @brief Move constructor
+     * @param old object to move from
      */
-    AmiException(const AmiException& old);
+    AmiException(AmiException&& old) noexcept;
 
     /**
      * @brief Override of default error message function
@@ -46,8 +46,8 @@ public:
     void storeBacktrace(int nMaxFrames);
 
 private:
-    char msg[500]{};
-    char trace[500]{};
+    std::array<char, 500> msg;
+    std::array<char, 500> trace;
 };
 
 
