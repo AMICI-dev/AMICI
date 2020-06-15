@@ -41,13 +41,7 @@ testSolverGetterSetters(CVodeSolver solver,
                         double tol,
                         double badtol);
 
-TEST_GROUP(amici){ void setup(){
-
-}
-
-                   void teardown(){
-
-                   } };
+TEST_GROUP(amici){};
 
 TEST_GROUP(model)
 {

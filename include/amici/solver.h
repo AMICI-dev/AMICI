@@ -7,6 +7,7 @@
 #include "amici/symbolic_functions.h"
 #include "amici/vector.h"
 
+#include <cmath>
 #include <functional>
 #include <memory>
 
@@ -544,7 +545,7 @@ class Solver {
      * @param ism internal sensitivity method
      */
     void setInternalSensitivityMethod(InternalSensitivityMethod ism);
-    
+
     /**
      * @brief returns the ReturnData reporting mode
      * @return ReturnData reporting mode
@@ -703,7 +704,7 @@ class Solver {
      * @return xQB.getLength()
      */
     int nquad() const;
-    
+
     /**
      * @brief check if FSA is being computed
      * @return flag
@@ -712,7 +713,7 @@ class Solver {
         return getSensitivityOrder() >= SensitivityOrder::first &&
         getSensitivityMethod() == SensitivityMethod::forward;
     }
-    
+
     /**
      * @brief check if ASA is being computed
      * @return flag
@@ -721,12 +722,12 @@ class Solver {
         return getSensitivityOrder() >= SensitivityOrder::first &&
         getSensitivityMethod() == SensitivityMethod::adjoint;
     }
-    
+
     /**
      * @brief Resets vectors containing diagnosis information
      */
     void resetDiagnosis() const;
-    
+
     /**
      * @brief Stores diagnosis information from solver memory block for forward problem
      */
@@ -738,7 +739,7 @@ class Solver {
      * @param which identifier of the backwards problem
      */
     void storeDiagnosisB(int which) const;
-    
+
     /**
      * @brief Accessor ns
      * @return ns
@@ -746,7 +747,7 @@ class Solver {
     std::vector<int> const& getNumSteps() const {
         return ns;
     }
-    
+
     /**
      * @brief Accessor nsB
      * @return nsB
@@ -754,7 +755,7 @@ class Solver {
     std::vector<int> const& getNumStepsB() const {
         return nsB;
     }
-    
+
     /**
      * @brief Accessor nrhs
      * @return nrhs
@@ -762,7 +763,7 @@ class Solver {
     std::vector<int> const& getNumRhsEvals() const {
         return nrhs;
     }
-    
+
     /**
      * @brief Accessor nrhsB
      * @return nrhsB
@@ -770,7 +771,7 @@ class Solver {
     std::vector<int> const& getNumRhsEvalsB() const {
         return nrhsB;
     }
-    
+
     /**
      * @brief Accessor netf
      * @return netf
@@ -778,7 +779,7 @@ class Solver {
     std::vector<int> const& getNumErrTestFails() const {
         return netf;
     }
-    
+
     /**
      * @brief Accessor netfB
      * @return netfB
@@ -786,7 +787,7 @@ class Solver {
     std::vector<int> const& getNumErrTestFailsB() const {
         return netfB;
     }
-    
+
     /**
      * @brief Accessor nnlscf
      * @return nnlscf
@@ -794,7 +795,7 @@ class Solver {
     std::vector<int> const& getNumNonlinSolvConvFails() const {
         return nnlscf;
     }
-    
+
     /**
      * @brief Accessor nnlscfB
      * @return nnlscfB
@@ -802,7 +803,7 @@ class Solver {
     std::vector<int> const& getNumNonlinSolvConvFailsB() const {
         return nnlscfB;
     }
-    
+
     /**
      * @brief Accessor order
      * @return order
@@ -1511,7 +1512,7 @@ class Solver {
     mutable AmiVector xQB = AmiVector(0);
 
     /** integration time of the forward problem */
-    mutable realtype t;
+    mutable realtype t = std::nan("");
 
     /** flag to force reInitPostProcessF before next call to solve */
     mutable bool forceReInitPostProcessF = false;
@@ -1584,7 +1585,7 @@ class Solver {
 
     /** relative tolerances for steadystate computation */
     realtype ss_rtol_sensi = NAN;
-    
+
     RDataReporting rdata_mode = RDataReporting::full;
 
     /** CPU time, forward solve */
@@ -1618,7 +1619,7 @@ class Solver {
 
     /** number of checkpoints in the forward problem */
     mutable int ncheckPtr = 0;
-    
+
     /** number of integration steps forward problem (dimension: nt) */
     mutable std::vector<int> ns;
 

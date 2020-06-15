@@ -1059,8 +1059,8 @@ class ODEModel:
                 for s in self._states
             ].index(state)
         except ValueError:
-            raise Exception(f'Specified state {state} was not found in the '
-                            f'model states.')
+            raise ValueError(f'Specified state {state} was not found in the '
+                             f'model states.')
 
         state_id = self._states[ix].get_id()
 
@@ -1172,7 +1172,7 @@ class ODEModel:
 
         """
         if name not in sparse_functions:
-            raise Exception(f'{name} is not marked as sparse')
+            raise ValueError(f'{name} is not marked as sparse')
         if name not in self._sparsesyms:
             self._generate_sparse_symbol(name)
         return self._sparsesyms[name]
@@ -1207,7 +1207,7 @@ class ODEModel:
 
         """
         if name not in sparse_functions:
-            raise Exception(f'{name} is not marked as sparse')
+            raise ValueError(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generate_sparse_symbol(name)
         return self._sparseeqs[name]
@@ -1226,7 +1226,7 @@ class ODEModel:
 
         """
         if name not in sparse_functions:
-            raise Exception(f'{name} is not marked as sparse')
+            raise ValueError(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generate_sparse_symbol(name)
         return self._colptrs[name]
@@ -1245,7 +1245,7 @@ class ODEModel:
 
         """
         if name not in sparse_functions:
-            raise Exception(f'{name} is not marked as sparse')
+            raise ValueError(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generate_sparse_symbol(name)
         return self._rowvals[name]
@@ -1556,7 +1556,7 @@ class ODEModel:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
 
         else:
-            raise Exception(f'Unknown equation {name}')
+            raise ValueError(f'Unknown equation {name}')
 
         if name in ['Jy', 'dydx']:
             # do not transpose if we compute the partial derivative as part of
@@ -1813,7 +1813,7 @@ class ODEModel:
         if name in self._value_prototype:
             component = self._value_prototype[name]
         else:
-            raise Exception(f'No values for {name}')
+            raise ValueError(f'No values for {name}')
 
         self._vals[name] = [comp.get_val()
                             for comp in getattr(self, component)]
@@ -1832,7 +1832,7 @@ class ODEModel:
         elif name in self._equation_prototype:
             component = self._equation_prototype[name]
         else:
-            raise Exception(f'No names for {name}')
+            raise ValueError(f'No names for {name}')
 
         self._names[name] = [comp.get_name()
                              for comp in getattr(self, component)]
@@ -1918,7 +1918,7 @@ def _print_with_exception(math: sp.Basic) -> str:
         ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
         return ret
     except TypeError as e:
-        raise Exception(
+        raise ValueError(
             f'Encountered unsupported function in expression "{math}": '
             f'{e}!'
         )
@@ -2719,7 +2719,7 @@ def get_symbolic_diagonal(matrix: sp.Matrix) -> sp.Matrix:
         A Symbolic matrix with the diagonal of `matrix`.
     """
     if not matrix.cols == matrix.rows:
-        raise Exception('Provided matrix is not square!')
+        raise ValueError('Provided matrix is not square!')
 
     diagonal = [matrix[index, index] for index in range(matrix.cols)]
 

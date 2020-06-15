@@ -3,38 +3,17 @@
 
 #include <testfunctions.h>
 
-#include <cstring>
 #include "wrapfunctions.h"
+#include <cstring>
 
-TEST_GROUP(groupDirac)
+TEST_GROUP(groupDirac){};
+
+TEST(groupDirac, testSimulation)
 {
-    void setup() {
-
-    }
-
-    void teardown() {
-
-    }
-};
-
-TEST(groupDirac, testSimulation) {
     amici::simulateVerifyWrite("/model_dirac/nosensi/");
 }
 
-TEST(groupDirac, testSimulationExpData) {
-
-}
-
-TEST(groupDirac, testSensitivityForward) {
+TEST(groupDirac, testSensitivityForward)
+{
     amici::simulateVerifyWrite("/model_dirac/sensiforward/");
 }
-
-TEST(groupDirac, testSensitivityState) {
-
-}
-
-TEST(groupDirac, testSensitivityAdjoint) {
-
-}
-
-
