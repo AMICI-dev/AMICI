@@ -148,7 +148,7 @@ try:
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
     from .ode_export import ODEModel, ODEExporter
-except (ModuleNotFoundError, ImportError) as e:
+except ImportError as e:
     # import from setuptools or installation with `--no-clibs`
     if has_clibs:
         # cannot raise as we may also end up here when installing from an
