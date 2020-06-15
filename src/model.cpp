@@ -1231,8 +1231,8 @@ void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
                     nJ - 1);
 }
 
-void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
-                               std::vector<realtype> &s2llh) {
+void Model::checkLLHBufferSize(std::vector<realtype> const &sllh,
+                               std::vector<realtype> const &s2llh) const {
     if (sllh.size() != static_cast<unsigned>(nplist()))
         throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
                            sllh.size(), nplist());

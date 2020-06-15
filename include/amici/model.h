@@ -1291,8 +1291,8 @@ class Model : public AbstractModel {
      * @param sllh first order buffer
      * @param s2llh second order buffer
      */
-    void checkLLHBufferSize(std::vector<realtype> &sllh,
-                            std::vector<realtype> &s2llh);
+    void checkLLHBufferSize(const std::vector<realtype> &sllh,
+                            const std::vector<realtype> &s2llh) const;
 
     /**
      * @brief Set the nplist-dependent vectors to their proper sizes
