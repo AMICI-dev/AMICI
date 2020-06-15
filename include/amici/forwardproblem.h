@@ -204,7 +204,7 @@ class ForwardProblem {
      * @brief Accessor for it
      * @return it
      */
-    int getCurrentTimeIteration() {
+    int getCurrentTimeIteration() const {
         return it;
     }
 
@@ -319,8 +319,9 @@ class ForwardProblem {
      *
      * @param nmaxevent maximal number of events
      */
-    bool checkEventsToFill(int nmaxevent) {
-        return std::any_of(nroots.cbegin(), nroots.cend(), [&](int curNRoots) {
+    bool checkEventsToFill(int nmaxevent) const {
+        return std::any_of(nroots.cbegin(), nroots.cend(),
+                           [nmaxevent](int curNRoots) {
                 return curNRoots < nmaxevent;
         });
     };
@@ -458,8 +459,7 @@ class FinalStateStorer : public ContextManager {
      * @brief constructor, attaches problem pointer
      * @param fwd problem from which the simulation state is to be stored
      */
-    explicit FinalStateStorer(ForwardProblem *fwd) {
-        this->fwd = fwd;
+    explicit FinalStateStorer(ForwardProblem *fwd) : fwd(fwd) {
     }
 
     FinalStateStorer &operator=(const FinalStateStorer &other) = delete;
