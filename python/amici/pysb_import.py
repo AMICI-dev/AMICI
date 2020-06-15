@@ -38,6 +38,7 @@ def pysb2amici(model: pysb.Model,
                assume_pow_positivity: bool = False,
                compiler: str = None,
                compute_conservation_laws: bool = True,
+               compile: bool = True,
                ):
     """
     Generate AMICI C++ files for the model provided to the constructor.
@@ -77,6 +78,10 @@ def pysb2amici(model: pysb.Model,
         applied such that the state-jacobian of the ODE right-hand-side has
         full rank. This option should be set to True when using the newton
         algorithm to compute steadystates
+
+    :param compile:
+        If true, build the python module for the generated model. If false,
+        just generate the source code.
     """
     if observables is None:
         observables = []
@@ -104,7 +109,9 @@ def pysb2amici(model: pysb.Model,
     exporter.set_name(model.name)
     exporter.set_paths(output_dir)
     exporter.generate_model_code()
-    exporter.compile_model()
+
+    if compile:
+        exporter.compile_model()
 
 
 @log_execution_time('creating ODE model', logger)
