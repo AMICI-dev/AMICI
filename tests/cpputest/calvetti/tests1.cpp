@@ -1,26 +1,13 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
-#include <testfunctions.h>
-#include <cstring>
 #include "wrapfunctions.h"
+#include <cstring>
+#include <testfunctions.h>
 
-TEST_GROUP(groupCalvetti)
+TEST_GROUP(groupCalvetti){};
+
+TEST(groupCalvetti, testSimulation)
 {
-    void setup() {
-
-    }
-
-    void teardown() {
-
-    }
-};
-
-TEST(groupCalvetti, testSimulation) {
     amici::simulateVerifyWrite("/model_calvetti/nosensi/");
 }
-
-
-
-
-

@@ -152,10 +152,10 @@ def check_derivatives(model: Model,
     leastsquares_applicable = \
         solver.getSensitivityMethod() == SensitivityMethod_forward
 
-    if 'ssigmay' in rdata.keys():
-        if rdata['ssigmay'] is not None:
-            if rdata['ssigmay'].any():
-                leastsquares_applicable = False
+    if 'ssigmay' in rdata.keys() \
+            and rdata['ssigmay'] is not None \
+            and rdata['ssigmay'].any():
+        leastsquares_applicable = False
 
     if leastsquares_applicable:
         fields += ['res', 'x', 'y']

@@ -15,6 +15,22 @@ from typing import Dict, List, Union, Tuple, Any, Optional
 PackageInfo = Dict[str, List[Union[str, Tuple[str, Any]]]]
 Library = Tuple[str, PackageInfo]
 
+# suite sparse include directories
+suite_sparse_include_dirs = [
+    'amici/ThirdParty/SuiteSparse/KLU/Include/',
+    'amici/ThirdParty/SuiteSparse/AMD/Include/',
+    'amici/ThirdParty/SuiteSparse/COLAMD/Include/',
+    'amici/ThirdParty/SuiteSparse/BTF/Include/',
+    'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
+    'amici/ThirdParty/SuiteSparse/include'
+]
+
+# sundials include directories
+sundials_include_dirs = [
+    'amici/ThirdParty/sundials/include',
+    'amici/ThirdParty/sundials/src',
+]
+
 
 def get_sundials_sources() -> List[str]:
     """Get list of Sundials source files"""
@@ -158,14 +174,9 @@ def get_lib_sundials(extra_compiler_flags: Optional[List[str]] = None) -> \
 
     libsundials = ('sundials', {
         'sources': get_sundials_sources(),
-        'include_dirs': ['amici/ThirdParty/sundials/include',
-                         'amici/ThirdParty/sundials/src',
-                         'amici/ThirdParty/SuiteSparse/KLU/Include/',
-                         'amici/ThirdParty/SuiteSparse/AMD/Include/',
-                         'amici/ThirdParty/SuiteSparse/COLAMD/Include/',
-                         'amici/ThirdParty/SuiteSparse/BTF/Include/',
-                         'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
-                         'amici/ThirdParty/SuiteSparse/include'],
+        'include_dirs': [*sundials_include_dirs,
+                         *suite_sparse_include_dirs,
+                         ],
         'cflags': [*extra_compiler_flags],
         'cflags_mingw32': ['-Wno-misleading-indentation'],
         'cflags_unix': ['-Wno-misleading-indentation']
@@ -186,12 +197,7 @@ def get_lib_suite_sparse(extra_compiler_flags: Optional[List[str]] = None) -> \
 
     libsuitesparse = ('suitesparse', {
         'sources': get_suite_sparse_sources(),
-        'include_dirs': ['amici/ThirdParty/SuiteSparse/KLU/Include/',
-                         'amici/ThirdParty/SuiteSparse/AMD/Include/',
-                         'amici/ThirdParty/SuiteSparse/COLAMD/Include/',
-                         'amici/ThirdParty/SuiteSparse/BTF/Include/',
-                         'amici/ThirdParty/SuiteSparse/SuiteSparse_config',
-                         'amici/ThirdParty/SuiteSparse/include'],
+        'include_dirs': suite_sparse_include_dirs,
         'cflags': [*extra_compiler_flags],
         'cflags_mingw32': ['-Wno-unused-but-set-variable'],
         'cflags_unix': ['-Wno-unused-but-set-variable']
@@ -226,14 +232,8 @@ def get_lib_amici(extra_compiler_flags: List[str] = None,
                        and h5pkgcfg['include_dirs'])
             ),
         'include_dirs': ['amici/include',
-                         'amici/ThirdParty/SuiteSparse/KLU/Include/',
-                         'amici/ThirdParty/SuiteSparse/AMD/Include/',
-                         'amici/ThirdParty/SuiteSparse/COLAMD/Include/',
-                         'amici/ThirdParty/SuiteSparse/BTF/Include/',
-                         'amici/ThirdParty/SuiteSparse/SuiteSparse_config/',
-                         'amici/ThirdParty/SuiteSparse/include',
-                         'amici/ThirdParty/sundials/include',
-                         'amici/ThirdParty/sundials/src',
+                         *suite_sparse_include_dirs,
+                         *sundials_include_dirs,
                          'amici/ThirdParty/gsl/',
                          ],
         'cflags': [*extra_compiler_flags],

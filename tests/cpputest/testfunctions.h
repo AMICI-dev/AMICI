@@ -187,7 +187,7 @@ void simulateWithDefaultOptions();
 
 void simulateVerifyWrite(const std::string& path);
 
-void simulateVerifyWrite(std::string path, double atol, double rtol);
+void simulateVerifyWrite(std::string const& path, double atol, double rtol);
 
 void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& hdffileResults,
                          const std::string& hdffilewrite, const std::string& path,

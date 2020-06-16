@@ -5,7 +5,6 @@
 #include "amici/model.h"
 #include "amici/rdata.h"
 
-#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
@@ -20,7 +19,7 @@ Solver::Solver(AmiciApplication *app) : app(app)
 
 Solver::Solver(const Solver &other)
     : ism(other.ism), lmm(other.lmm), iter(other.iter),
-      interpType(other.interpType), maxsteps(other.maxsteps), t(nan("")),
+      interpType(other.interpType), maxsteps(other.maxsteps),
       sensi_meth(other.sensi_meth), stldet(other.stldet),
       ordering(other.ordering), newton_maxsteps(other.newton_maxsteps),
       newton_maxlinsteps(other.newton_maxlinsteps),
@@ -451,16 +450,16 @@ bool operator==(const Solver &a, const Solver &b) {
 
 void Solver::applyTolerances() const {
     if (!getInitDone())
-        throw AmiException(("Solver instance was not yet set up, the "
-                            "tolerances cannot be applied yet!"));
+        throw AmiException("Solver instance was not yet set up, the "
+                           "tolerances cannot be applied yet!");
 
     setSStolerances(this->rtol, this->atol);
 }
 
 void Solver::applyTolerancesFSA() const {
     if (!getInitDone())
-        throw AmiException(("Solver instance was not yet set up, the "
-                            "tolerances cannot be applied yet!"));
+        throw AmiException("Solver instance was not yet set up, the "
+                           "tolerances cannot be applied yet!");
 
     if (sensi < SensitivityOrder::first)
         return;
@@ -474,8 +473,8 @@ void Solver::applyTolerancesFSA() const {
 
 void Solver::applyTolerancesASA(const int which) const {
     if (!getAdjInitDone())
-        throw AmiException(("Adjoint solver instance was not yet set up, the "
-                            "tolerances cannot be applied yet!"));
+        throw AmiException("Adjoint solver instance was not yet set up, the "
+                           "tolerances cannot be applied yet!");
 
     if (sensi < SensitivityOrder::first)
         return;
@@ -486,8 +485,8 @@ void Solver::applyTolerancesASA(const int which) const {
 
 void Solver::applyQuadTolerancesASA(const int which) const {
     if (!getAdjInitDone())
-        throw AmiException(("Adjoint solver instance was not yet set up, the "
-                            "tolerances cannot be applied yet!"));
+        throw AmiException("Adjoint solver instance was not yet set up, the "
+                           "tolerances cannot be applied yet!");
 
     if (sensi < SensitivityOrder::first)
         return;
@@ -1082,7 +1081,7 @@ realtype Solver::gett() const { return t; }
 
 void wrapErrHandlerFn(int error_code, const char *module,
                       const char *function, char *msg, void * eh_data) {
-#define BUF_SIZE 250
+    constexpr int BUF_SIZE = 250;
     char buffer[BUF_SIZE];
     char buffid[BUF_SIZE];
     snprintf(buffer, BUF_SIZE, "AMICI ERROR: in module %s in function %s : %s ", module,
