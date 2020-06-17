@@ -160,10 +160,16 @@ class SteadystateProblem {
      }
 
     /**
-     * @brief Accessor for run_time
+     * @brief Accessor for run_time of the forward problem
      * @return run_time
      */
     double getCPUTime() const { return cpu_time; }
+
+    /**
+     * @brief Accessor for run_time of the backward problem
+     * @return run_time
+     */
+    double getCPUTimeB() const { return cpu_timeB; }
 
     /**
      * @brief Accessor for newton_status
@@ -252,6 +258,9 @@ class SteadystateProblem {
 
     /** stores diagnostic information about runtime */
     double cpu_time;
+
+    /** stores diagnostic information about runtime backward */
+    double cpu_timeB;
 
     /** stores diagnostic information about execution success*/
     NewtonStatus newton_status = NewtonStatus::failed;

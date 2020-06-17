@@ -160,6 +160,10 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
                                                         Model *model) {
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 
+    /* get the run time */
+    clock_t starttime;
+    starttime = clock();
+
     try {
         newtonSolver->prepareLinearSystemB(0, -1);
         newtonSolver->solveLinearSystem(xB);
@@ -186,6 +190,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
             xQB[ip] = N_VDotProd(xB.getNVector(),
                                  model->dxdotdp.getNVector(ip));
     }
+    cpu_timeB = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 }
 
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
