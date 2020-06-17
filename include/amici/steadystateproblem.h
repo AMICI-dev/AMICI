@@ -209,10 +209,11 @@ class SteadystateProblem {
     double getCPUTime() const { return cpu_time; }
 
     /**
-     * @brief Accessor for newton_status
-     * @return newton_status
+     * @brief Accessor for steady_state_status
+     * @return steady_state_status
      */
-    NewtonStatus getNewtonStatus() const { return newton_status; }
+    std::vector<SteadyStateStatus> getSteadyStateStatus() const
+    { return steady_state_status; }
 
     /**
      * @brief Accessor for t
@@ -248,11 +249,9 @@ class SteadystateProblem {
 
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
-     * @param model Model instance
      * @return covergence of steady state solver
      */
-    bool checkSteadyStateConvergence();
-
+    bool checkSteadyStateSuccess();
 
 
   private:

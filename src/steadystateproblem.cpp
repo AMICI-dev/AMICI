@@ -256,7 +256,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver, Model *model) {
     return converged;
 }
 
-bool checkSteadyStateStatus() {
+bool checkSteadyStateSuccess() {
     /* Did one of the attempts yield s steady state? */
     if (steady_state_status[0] == SteadyStateStatus::success ||
         steady_state_status[1] == SteadyStateStatus::success ||

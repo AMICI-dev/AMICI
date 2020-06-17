@@ -100,7 +100,9 @@ void ReturnData::initializeFullReporting() {
     w.resize(nt * nw, 0.0);
 
     preeq_numsteps.resize(3, 0);
+    preeq_status.resize(3, SteadyStateStatus::not_run);
     posteq_numsteps.resize(3, 0);
+    posteq_status.resize(3, SteadyStateStatus::not_run);
 
     if (nt > 0) {
         numsteps.resize(nt, 0);
@@ -188,11 +190,11 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
         for (int ip = 0; ip < nplist; ip++)
             writeSlice(sx_rdata[ip], slice(sx_ss, ip, nx));
     }
-    /* Get cpu time for Newton solve in seconds */
-    preeq_cpu_time = preeq.getCPUTime() / 1000;
-    preeq_status = static_cast<int>(preeq.getNewtonStatus());
+    /* Get cpu time for Newton solve in milliseconds */
+    preeq_cpu_time = preeq.getCPUTime();
+    preeq_status = preeq.getSteadyStateStatus();
     preeq_wrms = preeq.getResidualNorm();
-    if (preeq.getNewtonStatus() == NewtonStatus::newt_sim)
+    if (preeq_status[1] == SteadyStateStatus::success)
         preeq_t = preeq.getSteadyStateTime();
     if (!preeq_numsteps.empty())
         writeSlice(preeq.getNumSteps(), preeq_numsteps);
@@ -211,11 +213,11 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
             getDataOutput(it, model, edata);
         }
     }
-    /* Get cpu time for Newton solve in seconds */
-    posteq_cpu_time = posteq.getCPUTime() / 1000;
-    posteq_status = static_cast<int>(posteq.getNewtonStatus());
+    /* Get cpu time for Newton solve in milliseconds */
+    posteq_cpu_time = posteq.getCPUTime();
+    posteq_status = posteq.getSteadyStateStatus();
     posteq_wrms = posteq.getResidualNorm();
-    if (posteq.getNewtonStatus() == NewtonStatus::newt_sim)
+    if (posteq_status[1] == SteadyStateStatus::success)
         preeq_t = posteq.getSteadyStateTime();
     if (!posteq_numsteps.empty())
         writeSlice(posteq.getNumSteps(), posteq_numsteps);
