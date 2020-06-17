@@ -44,18 +44,57 @@ class SteadystateProblem {
     void workSteadyStateProblem(Solver *solver, Model *model, int it);
 
     /**
-     * Handles the computation of the staedy state and potentially
-     * steady state sensitivities, if requested
+     * Handles the computation of the steady state, throws an AmiException,
+     * if no steady state was found
      *
      * @param solver pointer to the solver object
      * @param newtonSolver pointer to the newtonSolver solver object
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
-     * @return final status of NewtonSolver solver object
      */
-    NewtonStatus findSteadyState(Solver *solver,
-                                 NewtonSolver *newtonSolver,
-                                 Model *model, int it);
+    void findSteadyState(Solver *solver,
+                         NewtonSolver *newtonSolver,
+                         Model *model, int it);
+
+    /**
+     * Tries to determine the steady state by using Newton's method
+     *
+     * @param newtonSolver pointer to the newtonSolver solver object
+     * @param model pointer to the model object
+     * @param newton_retry bool flag indicating whether being relaunched
+     */
+    void findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolver,
+                                        Model *model,
+                                        bool newton_retry);
+
+    /**
+     * Tries to determine the steady state by using forward simulation
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param it integer with the index of the current time step
+     */
+    void findSteadyStateBySimulation(Solver *solver,
+                                     Model *model,
+                                     int it);
+
+    /**
+     * Stores state and throws error message if steady state computaiton failed
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     */
+    void handleSteadyStateComputationFailure(Solver *solver, Model *model);
+
+    /**
+     * Assembles the error message to be thrown.
+     *
+     * @param error_string string with error message
+     * @param status Entry of steady_state_staus to be processed
+     * @return error_string updated string with error message
+     */
+    std::string write_error_string(std::string error_string,
+                                   SteadyStateStatus status);
 
     /**
      * Checks depending on the status of the Newton solver,
@@ -207,6 +246,13 @@ class SteadystateProblem {
     void getAdjointUpdates(Model &model,
                            const ExpData &edata);
 
+    /**
+     * @brief computes adjoint updates dJydx according to provided model and expdata
+     * @param model Model instance
+     * @return covergence of steady state solver
+     */
+    bool checkSteadyStateConvergence();
+
 
 
   private:
@@ -256,8 +302,11 @@ class SteadystateProblem {
     /** stores diagnostic information about runtime */
     double cpu_time;
 
-    /** stores diagnostic information about execution success*/
-    NewtonStatus newton_status = NewtonStatus::failed;
+    /** stores diagnostic information about execution success of the different
+     * approaches [newton, simulation, newton] (length = 3)
+     */
+    std::vector<SteadyStateStatus> steady_state_status
+    (3, SteadyStateStatus::not_run);
 };
 
 } // namespace amici

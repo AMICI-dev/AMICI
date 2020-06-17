@@ -59,7 +59,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Compute steady state and get the computation time */
     clock_t starttime = clock();
-    newton_status = findSteadyState(solver, newtonSolver.get(), model, it);
+    findSteadyState(solver, newtonSolver.get(), model, it);
     cpu_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
@@ -83,30 +83,66 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                                     SensitivityOrder::first);
 }
 
-NewtonStatus SteadystateProblem::findSteadyState(Solver *solver,
-                                                 NewtonSolver *newtonSolver,
-                                                 Model *model, int it) {
+void SteadystateProblem::findSteadyState(Solver *solver,
+                                         NewtonSolver *newtonSolver,
+                                         Model *model, int it) {
     /* First, try to run the Newton solver */
-    try {
-        applyNewtonsMethod(model, newtonSolver, NewtonStatus::newt);
-        if (maxSteps > 0)
-            std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                        maxSteps, numlinsteps.begin());
-        return NewtonStatus::newt;
-    } catch (NewtonFailure const &) {
-        /* Newton solver failed. Get the number of steps used. */
-        if (maxSteps > 0)
-            std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                        maxSteps, numlinsteps.begin());
-    }
+    findSteadyStateByNewtonsMethod(newtonSolver, model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
-    try {
-        if (it < 1) /* No previous time point computed, set t = t0 */
-            t = model->t0();
-        else /* Carry on simulating from last point */
-            t = model->getTimepoint(it - 1);
+    if (!checkSteadyStateStatus())
+        findSteadyStateBySimulation(solver, model, it);
 
+    /* Simulation didn't work, retry the Newton solver from last sim state. */
+    if (!checkSteadyStateStatus())
+        findSteadyStateByNewtonsMethod(newtonSolver, model, true);
+
+    /* Nothing worked, throw an as informative error as possible */
+    if (!checkSteadyStateStatus())
+        handleSteadyStateComputationFailure(model, solver);
+}
+
+void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolver,
+                                                        Model *model,
+                                                        bool newton_retry) {
+    try {
+        applyNewtonsMethod(model, newtonSolver, newton_retry);
+        if (newton_retry)
+            steady_state_status[2] = SteadyStateStatus::success;
+        else
+            steady_state_status[0] = SteadyStateStatus::success;
+    } catch (NewtonFailure const &ex) {
+        /* nothing to be done */
+        switch (ex.error_code) {
+            case AMICI_TOO_MUCH_WORK:
+                steady_state_status[0] = SteadyStateStatus::failed_convergence;
+                break;
+            case AMICI_SINGULAR_JACOBIAN:
+                steady_state_status[0] = SteadyStateStatus::failed_factorization;
+                break;
+            case AMICI_DAMPING_FACTOR_ERROR:
+                steady_state_status[0] = SteadyStateStatus::failed_damping;
+                break;
+            default:
+                steady_state_status[0] = SteadyStateStatus::failed;
+    }
+
+    /* copy number of linear steps used */
+    if (maxSteps > 0)
+        std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                    maxSteps, numlinsteps.begin());
+}
+
+void SteadystateProblem::findSteadyStateByNewtonSimulation(Solver *solver,
+                                                           Model *model,
+                                                           int it) {
+    /* set starting timepoint for the simulation solver */
+    if (it < 1) /* No previous time point computed, set t = t0 */
+        t = model->t0();
+    else /* Carry on simulating from last point */
+        t = model->getTimepoint(it - 1);
+
+    try {
         if (it < 0) {
             /* Preequilibration? -> Create a new CVode object for sim */
             auto newtonSimSolver = createSteadystateSimSolver(solver, model);
@@ -115,41 +151,52 @@ NewtonStatus SteadystateProblem::findSteadyState(Solver *solver,
             /* Solver was already created, use this one */
             getSteadystateSimulation(solver, model);
         }
-        return NewtonStatus::newt_sim;
-    } catch (AmiException const &) {
-        /* Nothing to be done here. */
-    }
-
-    /* Simulation didn't work, so retry the Newton solver from the current
-       simulation solver state. */
-    try {
-        applyNewtonsMethod(model, newtonSolver,
-                            NewtonStatus::newt_sim_newt);
-        if (maxSteps > 0)
-            std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                        maxSteps, &numlinsteps.at(maxSteps));
-        return NewtonStatus::newt_sim_newt;
-    } catch (NewtonFailure const &ex3) {
-        if (maxSteps > 0)
-            std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                        maxSteps, &numlinsteps.at(maxSteps));
-        /* No steady state could be inferred. Store simulation state */
-        storeSimulationState(model, solver->getSensitivityOrder() >=
-                             SensitivityOrder::first);
-        /* Throw error message according to final error */
-        switch (ex3.error_code) {
-            case AMICI_TOO_MUCH_WORK:
-                throw AmiException("Steady state computation failed "
-                                   "due to not converging within the allowed maximum "
-                                   "number of iterations");
-            case AMICI_SINGULAR_JACOBIAN:
-                throw AmiException("Steady state computation failed to "
-                                   "unsuccessful factorization of RHS Jacobian");
-            default:
-                throw AmiException("Steady state computation failed.");
+        steady_state_status[1] = SteadyStateStatus::success;
+    } catch (NewtonFailure const &ex) {
+        if (ex.error_code == AMICI_TOO_MUCH_WORK) {
+            steady_state_status[1] = SteadyStateStatus::failed_convergence;
+        } else {
+            steady_state_status[1] = SteadyStateStatus::failed;
         }
+    } catch (AmiException const &) {
+        steady_state_status[1] = SteadyStateStatus::failed;
     }
 }
+
+void SteadystateProblem::handleSteadyStateComputationFailure(Solver *solver,
+                                                             Model *model) {
+    /* No steady state could be inferred. Store simulation state */
+    storeSimulationState(model, solver->getSensitivityOrder() >=
+                         SensitivityOrder::first);
+
+    /* Throw error message according to error codes */
+    string error_string = "Steady state computation failed. "
+                          "First run of Newton solver failed";
+    error_string = write_error_string(error_string, steady_state_status[0]);
+    error_string.apppend(" Simulation to steady state failed");
+    error_string = write_error_string(error_string, steady_state_status[1]);
+    error_string.apppend(" Second run of Newton solver failed");
+    error_string = write_error_string(error_string, steady_state_status[2]);
+
+    throw AmiException(error_string);
+}
+
+std::string SteadystateProblem::write_error_string(std::string error_string,
+                                                   SteadyStateStatus status) {
+    /* write error message according to steady state status */
+    switch (status) {
+        case SteadyStateStatus::failed_damping:
+            error_string.append(": Damping factor reached lower bound.");
+        case SteadyStateStatus::failed_factorization:
+            error_string.append(": RHS could not be factorized.");
+        case SteadyStateStatus::failed_factorization:
+            error_string.append(": No convergence was achieved.");
+        case SteadyStateStatus::failed:
+            error_string.append(".");
+    }
+    return error_string;
+}
+
 
 bool SteadystateProblem::processSensitivityLogic(Model *model) {
     /* NB: Currently, this logic processing is still "simple".
@@ -161,8 +208,8 @@ bool SteadystateProblem::processSensitivityLogic(Model *model) {
         SteadyStateSensitivityMode::newtonOnly;
     /* ... or if Newton's method found the steady state */
     needStateSenis = needStateSenis ||
-        newton_status == NewtonStatus::newt ||
-        newton_status == NewtonStatus::newt_sim_newt;
+        steady_state_status[0] == SteadyStateStatus::success ||
+        steady_state_status[2] == SteadyStateStatus::success;
     return needStateSenis;
 }
 
@@ -209,9 +256,20 @@ bool SteadystateProblem::checkConvergence(const Solver *solver, Model *model) {
     return converged;
 }
 
+bool checkSteadyStateStatus() {
+    /* Did one of the attempts yield s steady state? */
+    if (steady_state_status[0] == SteadyStateStatus::success ||
+        steady_state_status[1] == SteadyStateStatus::success ||
+        steady_state_status[2] == SteadyStateStatus::success) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
 void SteadystateProblem::applyNewtonsMethod(Model *model,
                                             NewtonSolver *newtonSolver,
-                                            NewtonStatus steadystate_try) {
+                                            bool newton_retry) {
     int i_newtonstep = 0;
     int ix = 0;
     double gamma = 1.0;
@@ -236,12 +294,9 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
         if (compNewStep) {
             try {
                 delta = xdot;
-                newtonSolver->getStep(steadystate_try == NewtonStatus::newt ? 1
-                                                                            : 2,
-                                      i_newtonstep, delta);
+                newtonSolver->getStep(newton_retry ? 2 : 1, i_newtonstep, delta);
             } catch (NewtonFailure const &) {
-                numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) =
-                    i_newtonstep;
+                numsteps.at(newton_retry ? 2 : 0) = i_newtonstep;
                 throw;
             }
         }
@@ -300,7 +355,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     }
 
     /* Set return values */
-    numsteps.at(steadystate_try == NewtonStatus::newt ? 0 : 2) = i_newtonstep;
+    numsteps.at(newton_retry ? 2 : 0) = i_newtonstep;
     if (!converged)
         throw NewtonFailure(AMICI_TOO_MUCH_WORK, "applyNewtonsMethod");
 }
@@ -310,7 +365,7 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
 {
     /* Loop over steps and check for convergence */
     bool converged = checkConvergence(solver, model);
-    int steps_newton = 0;
+    int sim_steps = 0;
     /* If flag for forward sensitivity computation by simulation is not set,
      disable forward sensitivity integration. Sensitivities will be combputed
      by newonSolver->computeNewtonSensis then */
@@ -332,15 +387,19 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
         /* Check for convergence */
         converged = checkConvergence(solver, model);
         /* increase counter, check for maxsteps */
-        steps_newton++;
-        if (steps_newton >= solver->getMaxSteps() && !converged) {
-            numsteps.at(static_cast<int>(NewtonStatus::newt_sim) - 1) =
-                steps_newton;
+        sim_steps++;
+        if (sim_steps >= solver->getMaxSteps() && !converged) {
+            numsteps.at(1) = sim_steps;
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,
                                 "exceeded maximum number of steps");
         }
+        if (t >= 1e100 && !converged) {
+            numsteps.at(1) = sim_steps;
+            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
+                                "simulated beyond t=1e100 without convergence");
+        }
     }
-    numsteps.at(static_cast<int>(NewtonStatus::newt_sim) - 1) = steps_newton;
+    numsteps.at(1) = sim_steps;
     if (solver->getSensitivityOrder() > SensitivityOrder::none &&
         model->getSteadyStateSensitivityMode() ==
         SteadyStateSensitivityMode::simulationFSA)

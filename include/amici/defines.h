@@ -136,11 +136,13 @@ enum class SteadyStateSensitivityMode {
 };
 
 /** State in which the steady state computation finished */
-enum class NewtonStatus {
-    failed=-1,
-    newt=1,
-    newt_sim=2,
-    newt_sim_newt=3,
+enum class SteadyStateStatus {
+    failed_damping = -4,
+    failed_factorization = -3,
+    failed_convergence = -2,
+    failed = -1,
+    not_run = 0,
+    success = 1,
 };
 
 /** Damping factor flag for the Newton method */
