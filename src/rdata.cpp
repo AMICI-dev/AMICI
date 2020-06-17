@@ -213,6 +213,7 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     }
     /* Get cpu time for Newton solve in seconds */
     posteq_cpu_time = posteq.getCPUTime();
+    posteq_cpu_timeB = posteq.getCPUTimeB();
     posteq_status = static_cast<int>(posteq.getNewtonStatus());
     posteq_wrms = posteq.getResidualNorm();
     if (posteq.getNewtonStatus() == NewtonStatus::newt_sim)
