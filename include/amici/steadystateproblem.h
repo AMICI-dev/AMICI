@@ -127,8 +127,8 @@ class SteadystateProblem {
         return state;
     };
 
-    /*
-    * @brief returns the quadratures from postequilibration
+    /**
+    * @brief returns the quadratures from pre- or postequilibration
     * @return xQB Vector with quadratures
     */
     const AmiVector &getEquilibrationQuadratures() const {
