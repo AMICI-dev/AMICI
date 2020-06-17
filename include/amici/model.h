@@ -70,7 +70,7 @@ struct ModelState {
 class Model : public AbstractModel {
   public:
     /** default constructor */
-    Model();
+    Model() = default;
 
     /**
      * @brief Constructor with model dimensions
@@ -209,7 +209,7 @@ class Model : public AbstractModel {
      * @param dxB time derivative of adjoint states (DAE only)
      * @param xQB adjoint quadratures
      */
-    void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB);
+    void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB) const;
 
     /**
      * @brief Initialization of initial states
@@ -1250,7 +1250,7 @@ class Model : public AbstractModel {
      * temporary storage of dxdotdp data across functions, Matlab only
      * (dimension: nplist x nx_solver, row-major)
      */
-    AmiVectorArray dxdotdp;
+    AmiVectorArray dxdotdp {0, 0};
     /** AMICI context */
     AmiciApplication *app = &defaultContext;
 
@@ -1291,8 +1291,8 @@ class Model : public AbstractModel {
      * @param sllh first order buffer
      * @param s2llh second order buffer
      */
-    void checkLLHBufferSize(std::vector<realtype> &sllh,
-                            std::vector<realtype> &s2llh);
+    void checkLLHBufferSize(const std::vector<realtype> &sllh,
+                            const std::vector<realtype> &s2llh) const;
 
     /**
      * @brief Set the nplist-dependent vectors to their proper sizes
@@ -1813,7 +1813,7 @@ class Model : public AbstractModel {
 
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: nx_solver) */
-    mutable AmiVector x_pos_tmp;
+    mutable AmiVector x_pos_tmp {0};
 
     /** orignal user-provided, possibly scaled parameter array (dimension: np)
      */

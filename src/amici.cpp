@@ -103,7 +103,7 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     /* Applies condition-specific model settings and restores them when going
      * out of scope */
     ConditionContext cc1(&model, edata, FixedParameterContext::simulation);
-    
+
     std::unique_ptr<ReturnData> rdata = std::make_unique<ReturnData>(solver,
                                                                      model);
 
@@ -115,42 +115,42 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
     std::unique_ptr<ForwardProblem> fwd {};
     std::unique_ptr<BackwardProblem> bwd {};
     std::unique_ptr<SteadystateProblem> posteq {};
-    
+
     try {
         if (solver.getPreequilibration() ||
             (edata && !edata->fixedParametersPreequilibration.empty())) {
             ConditionContext cc2(
                 &model, edata, FixedParameterContext::preequilibration
             );
-            
+
             preeq = std::make_unique<SteadystateProblem>(solver, model);
             preeq->workSteadyStateProblem(&solver, &model, -1);
         }
 
-        
+
         fwd = std::make_unique<ForwardProblem>(edata, &model, &solver,
                                                preeq.get());
         fwd->workForwardProblem();
-        
-        
+
+
         if (fwd->getCurrentTimeIteration() < model.nt()) {
             posteq = std::make_unique<SteadystateProblem>(solver, model);
             posteq->workSteadyStateProblem(&solver, &model,
                                            fwd->getCurrentTimeIteration());
         }
 
-        
+
         if (edata && solver.computingASA()) {
             fwd->getAdjointUpdates(model, *edata);
             if (posteq)
                 posteq->getAdjointUpdates(model, *edata);
-            
+
             bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
             bwd->workBackwardProblem();
         }
-        
+
         rdata->status = AMICI_SUCCESS;
-        
+
     } catch (amici::IntegrationFailure const& ex) {
         rdata->status = ex.error_code;
         if (rethrow)
@@ -227,7 +227,7 @@ AmiciApplication::runAmiciSimulations(const Solver& solver,
 }
 
 void
-AmiciApplication::warningF(const char* identifier, const char* format, ...)
+AmiciApplication::warningF(const char* identifier, const char* format, ...) const
 {
     va_list argptr;
     va_start(argptr, format);
@@ -237,7 +237,7 @@ AmiciApplication::warningF(const char* identifier, const char* format, ...)
 }
 
 void
-AmiciApplication::errorF(const char* identifier, const char* format, ...)
+AmiciApplication::errorF(const char* identifier, const char* format, ...) const
 {
     va_list argptr;
     va_start(argptr, format);

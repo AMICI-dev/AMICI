@@ -21,7 +21,7 @@ ReturnData::ReturnData(Solver const &solver, const Model &model)
                  model.nMaxEvent(), model.nt(), solver.getNewtonMaxSteps(),
                  model.nw, model.getParameterScale(), model.o2mode,
                  solver.getSensitivityOrder(),
-                 static_cast<SensitivityMethod>(solver.getSensitivityMethod()),
+                 solver.getSensitivityMethod(),
                  solver.getReturnDataReportingMode()) {}
 
 ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
@@ -295,12 +295,9 @@ void ReturnData::getDataOutput(int it, Model &model, ExpData const *edata) {
 
         if (sensi_meth == SensitivityMethod::forward) {
             getDataSensisFSA(it, model, edata);
-        } else {
-            if (edata) {
-                if (!sllh.empty())
-                    model.addPartialObservableObjectiveSensitivity(
-                        sllh, s2llh, it, x_solver, *edata);
-            }
+        } else if (edata && !sllh.empty()) {
+            model.addPartialObservableObjectiveSensitivity(
+                sllh, s2llh, it, x_solver, *edata);
         }
     }
 }
@@ -355,21 +352,18 @@ void ReturnData::getEventOutput(int iroot, realtype t, std::vector<int> rootidx,
 
             /* if called from fillEvent at last timepoint,
                add regularization based on rz */
-            if (t == model.getTimepoint(nt - 1))
-                if (!isNaN(llh))
-                    model.addEventObjectiveRegularization(
-                        llh, ie, nroots.at(ie), t, x_solver, *edata);
+            if (t == model.getTimepoint(nt - 1) && !isNaN(llh)) {
+                model.addEventObjectiveRegularization(
+                    llh, ie, nroots.at(ie), t, x_solver, *edata);
+            }
         }
 
         if (sensi >= SensitivityOrder::first) {
             if (sensi_meth == SensitivityMethod::forward) {
                 getEventSensisFSA(iroot, ie, t, model, edata);
-            } else {
-                if (edata)
-                    if (!sllh.empty())
-                        model.addPartialEventObjectiveSensitivity(
-                            sllh, s2llh, ie, nroots.at(ie), t, x_solver,
-                            *edata);
+            } else if (edata && !sllh.empty()) {
+                model.addPartialEventObjectiveSensitivity(
+                    sllh, s2llh, ie, nroots.at(ie), t, x_solver, *edata);
             }
         }
         nroots.at(ie)++;
@@ -387,16 +381,14 @@ void ReturnData::getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
             model.getEventRegularizationSensitivity(
                 slice(srz, nroots.at(ie), nz * nplist), ie, t, x_solver,
                 sx_solver);
-    } else {
-        if (!sz.empty())
-            model.getEventSensitivity(slice(sz, nroots.at(ie), nz * nplist), ie,
-                                      t, x_solver, sx_solver);
+    } else if (!sz.empty()) {
+        model.getEventSensitivity(slice(sz, nroots.at(ie), nz * nplist), ie,
+                                  t, x_solver, sx_solver);
     }
 
-    if (edata) {
-        if (!sllh.empty())
-            model.addEventObjectiveSensitivity(sllh, s2llh, ie, nroots.at(ie),
-                                               t, x_solver, sx_solver, *edata);
+    if (edata && !sllh.empty()) {
+        model.addEventObjectiveSensitivity(sllh, s2llh, ie, nroots.at(ie),
+                                           t, x_solver, sx_solver, *edata);
     }
 }
 
@@ -556,30 +548,30 @@ void ReturnData::applyChainRuleFactorToSimulationResults(const Model &model) {
     if (sensi >= SensitivityOrder::first) {
         // recover first order sensitivies from states for adjoint sensitivity
         // analysis
-        if (sensi == SensitivityOrder::second &&
-            o2mode == SecondOrderMode::full) {
-            if (sensi_meth == SensitivityMethod::adjoint) {
-                if (!sx.empty() && !x.empty())
-                    for (int ip = 0; ip < nplist; ++ip)
-                        for (int ix = 0; ix < nxtrue; ++ix)
-                            for (int it = 0; it < nt; ++it)
-                                sx.at(ix + nxtrue * (ip + it * nplist)) =
-                                    x.at(it * nx + nxtrue + ip * nxtrue + ix);
+        if (sensi == SensitivityOrder::second
+            && o2mode == SecondOrderMode::full
+            && sensi_meth == SensitivityMethod::adjoint) {
+            if (!sx.empty() && !x.empty())
+                for (int ip = 0; ip < nplist; ++ip)
+                    for (int ix = 0; ix < nxtrue; ++ix)
+                        for (int it = 0; it < nt; ++it)
+                            sx.at(ix + nxtrue * (ip + it * nplist)) =
+                                x.at(it * nx + nxtrue + ip * nxtrue + ix);
 
-                if (!sy.empty() && !y.empty())
-                    for (int ip = 0; ip < nplist; ++ip)
-                        for (int iy = 0; iy < nytrue; ++iy)
-                            for (int it = 0; it < nt; ++it)
-                                sy.at(iy + nytrue * (ip + it * nplist)) =
-                                    y.at(it * ny + nytrue + ip * nytrue + iy);
+            if (!sy.empty() && !y.empty())
+                for (int ip = 0; ip < nplist; ++ip)
+                    for (int iy = 0; iy < nytrue; ++iy)
+                        for (int it = 0; it < nt; ++it)
+                            sy.at(iy + nytrue * (ip + it * nplist)) =
+                                y.at(it * ny + nytrue + ip * nytrue + iy);
 
-                if (!sz.empty() && !z.empty())
-                    for (int ip = 0; ip < nplist; ++ip)
-                        for (int iz = 0; iz < nztrue; ++iz)
-                            for (int it = 0; it < nt; ++it)
-                                sz.at(iz + nztrue * (ip + it * nplist)) =
-                                    z.at(it * nz + nztrue + ip * nztrue + iz);
-            }
+            if (!sz.empty() && !z.empty())
+                for (int ip = 0; ip < nplist; ++ip)
+                    for (int iz = 0; iz < nztrue; ++iz)
+                        for (int it = 0; it < nt; ++it)
+                            sz.at(iz + nztrue * (ip + it * nplist)) =
+                                z.at(it * nz + nztrue + ip * nztrue + iz);
+
         }
 
         if (!sllh.empty())

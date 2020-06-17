@@ -104,8 +104,6 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
     }
 }
 
-Model::Model() : dxdotdp(0, 0), x_pos_tmp(0) {}
-
 Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const int nxtrue_solver, const int ny, const int nytrue,
              const int nz, const int nztrue, const int ne, const int nJ,
@@ -212,7 +210,7 @@ void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
         initHeaviside(x, dx);
 }
 
-void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB) {
+void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB) const {
     xB.reset();
     dxB.reset();
     xQB.reset();
@@ -225,9 +223,7 @@ void Model::initializeStates(AmiVector &x) {
         std::vector<realtype> x0_solver(nx_solver, 0.0);
         ftotal_cl(state.total_cl.data(), x0data.data());
         fx_solver(x0_solver.data(), x0data.data());
-        for (int ix = 0; ix < nx_solver; ix++) {
-            x[ix] = (realtype)x0_solver.at(ix);
-        }
+        std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
 }
 
@@ -244,7 +240,7 @@ void Model::initializeStateSensitivities(AmiVectorArray &sx,
             fstotal_cl(stcl, &sx0data.at(ip * nx_rdata), plist(ip));
             fsx_solver(sx0_solver_slice.data(), &sx0data.at(ip * nx_rdata));
             for (int ix = 0; ix < nx_solver; ix++) {
-                sx.at(ix, ip) = (realtype)sx0_solver_slice.at(ix);
+                sx.at(ix, ip) = sx0_solver_slice.at(ix);
             }
         }
     }
@@ -342,7 +338,7 @@ void Model::setParameterById(const std::map<std::string, realtype> &p,
     for (auto& kv : p) {
         try {
             setParameterById(kv.first, kv.second);
-        } catch (AmiException&) {
+        } catch (AmiException const&) {
             if(!ignoreErrors)
                 throw;
         }
@@ -386,7 +382,7 @@ void Model::setParameterByName(const std::map<std::string, realtype> &p,
     for (auto& kv : p) {
         try {
             setParameterByName(kv.first, kv.second);
-        } catch (AmiException&) {
+        } catch (AmiException const&) {
             if(!ignoreErrors)
                 throw;
         }
@@ -1235,8 +1231,8 @@ void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
                     nJ - 1);
 }
 
-void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
-                               std::vector<realtype> &s2llh) {
+void Model::checkLLHBufferSize(std::vector<realtype> const &sllh,
+                               std::vector<realtype> const &s2llh) const {
     if (sllh.size() != static_cast<unsigned>(nplist()))
         throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
                            sllh.size(), nplist());

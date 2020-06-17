@@ -3,30 +3,22 @@
 
 #include "testfunctions.h"
 
-#include <cstring>
 #include "wrapfunctions.h"
+#include <cstring>
 
-TEST_GROUP(groupEvents)
+TEST_GROUP(groupEvents){};
+
+TEST(groupEvents, testDefault)
 {
-    void setup() {
-
-    }
-
-    void teardown() {
-
-    }
-};
-
-TEST(groupEvents, testDefault) {
     amici::simulateWithDefaultOptions();
 }
 
-TEST(groupEvents, testSimulation) {
+TEST(groupEvents, testSimulation)
+{
     amici::simulateVerifyWrite("/model_events/nosensi/");
 }
 
-TEST(groupEvents, testSensitivityForward) {
+TEST(groupEvents, testSensitivityForward)
+{
     amici::simulateVerifyWrite("/model_events/sensiforward/");
 }
-
-

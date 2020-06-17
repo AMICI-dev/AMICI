@@ -3,26 +3,17 @@
 
 #include "testfunctions.h"
 
-#include <cstring>
 #include "wrapfunctions.h"
+#include <cstring>
 
-TEST_GROUP(groupEvents)
+TEST_GROUP(groupEvents){};
+
+TEST(groupEvents, testSimulation)
 {
-    void setup() {
-
-    }
-
-    void teardown() {
-
-    }
-};
-
-TEST(groupEvents, testSimulation) {
     amici::simulateVerifyWrite("/model_nested_events/nosensi/");
 }
 
-TEST(groupEvents, testSensitivityForward) {
+TEST(groupEvents, testSensitivityForward)
+{
     amici::simulateVerifyWrite("/model_nested_events/sensiforward/");
 }
-
-

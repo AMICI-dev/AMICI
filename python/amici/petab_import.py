@@ -185,10 +185,13 @@ def species_to_parameters(species_ids: List[str],
         for species_id in transformables:
             # loop, since removeX only removes one instance
             while reaction.removeReactant(species_id):
+                # remove from reactants
                 pass
             while reaction.removeProduct(species_id):
+                # remove from products
                 pass
             while reaction.removeModifier(species_id):
+                # remove from modifiers
                 pass
 
     return transformables
