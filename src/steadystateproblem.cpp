@@ -53,7 +53,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t, x, dx, sx);
     }
-
+    steady_state_status.resize(3, SteadyStateStatus::not_run);
+    
     /* create a Newton solver obejct */
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 

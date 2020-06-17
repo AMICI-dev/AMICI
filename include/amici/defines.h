@@ -142,7 +142,7 @@ enum class SteadyStateStatus {
     failed_convergence = -2,
     failed = -1,
     not_run = 0,
-    success = 1,
+    success = 1
 };
 
 /** Damping factor flag for the Newton method */

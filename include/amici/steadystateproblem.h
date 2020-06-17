@@ -139,10 +139,10 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param newtonSolver pointer to the NewtonSolver object @type
      * NewtonSolver
-     * @param steadystate_try start status of Newton solver
+     * @param newton_retry flag indicating if Newton solver is rerun
      */
     void applyNewtonsMethod(Model *model, NewtonSolver *newtonSolver,
-                            NewtonStatus steadystate_try);
+                            bool newton_retry);
 
     /**
      * Forward simulation is launched, if Newton solver fails in first try
@@ -212,7 +212,7 @@ class SteadystateProblem {
      * @brief Accessor for steady_state_status
      * @return steady_state_status
      */
-    std::vector<SteadyStateStatus> getSteadyStateStatus() const
+    std::vector<SteadyStateStatus> const& getSteadyStateStatus() const
     { return steady_state_status; }
 
     /**
@@ -304,8 +304,7 @@ class SteadystateProblem {
     /** stores diagnostic information about execution success of the different
      * approaches [newton, simulation, newton] (length = 3)
      */
-    std::vector<SteadyStateStatus> steady_state_status
-    (3, SteadyStateStatus::not_run);
+    std::vector<SteadyStateStatus> steady_state_status;
 };
 
 } // namespace amici
