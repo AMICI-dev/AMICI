@@ -65,7 +65,7 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     int it = model->nt() - 1;
-    /* If we have posteq, infty timepoints must be skipped */
+    /* If we have posteq, infty timepoints were already treated */
     for (int jt = model->nt() - 1; jt >= 0; jt--)
         if (std::isinf(model->getTimepoint(it)))
             --it;
