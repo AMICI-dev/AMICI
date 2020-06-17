@@ -23,7 +23,8 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
-      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
+      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0),
+      steady_state_status(3, SteadyStateStatus::not_run) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
               maxSteps = solver.getNewtonMaxSteps();
@@ -53,7 +54,6 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t, x, dx, sx);
     }
-    steady_state_status.resize(3, SteadyStateStatus::not_run);
     
     /* create a Newton solver obejct */
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
@@ -91,16 +91,16 @@ void SteadystateProblem::findSteadyState(Solver *solver,
     findSteadyStateByNewtonsMethod(newtonSolver, model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
-    if (!checkSteadyStateStatus())
+    if (!checkSteadyStateSuccess())
         findSteadyStateBySimulation(solver, model, it);
 
     /* Simulation didn't work, retry the Newton solver from last sim state. */
-    if (!checkSteadyStateStatus())
+    if (!checkSteadyStateSuccess())
         findSteadyStateByNewtonsMethod(newtonSolver, model, true);
 
     /* Nothing worked, throw an as informative error as possible */
-    if (!checkSteadyStateStatus())
-        handleSteadyStateComputationFailure(model, solver);
+    if (!checkSteadyStateSuccess())
+        handleSteadyStateComputationFailure(solver, model);
 }
 
 void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolver,
@@ -126,6 +126,7 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolv
                 break;
             default:
                 steady_state_status[0] = SteadyStateStatus::failed;
+        }
     }
 
     /* copy number of linear steps used */
@@ -134,9 +135,9 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolv
                     maxSteps, numlinsteps.begin());
 }
 
-void SteadystateProblem::findSteadyStateByNewtonSimulation(Solver *solver,
-                                                           Model *model,
-                                                           int it) {
+void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
+                                                     Model *model,
+                                                     int it) {
     /* set starting timepoint for the simulation solver */
     if (it < 1) /* No previous time point computed, set t = t0 */
         t = model->t0();
@@ -171,15 +172,15 @@ void SteadystateProblem::handleSteadyStateComputationFailure(Solver *solver,
                          SensitivityOrder::first);
 
     /* Throw error message according to error codes */
-    string error_string = "Steady state computation failed. "
-                          "First run of Newton solver failed";
+    std::string error_string = "Steady state computation failed. "
+                               "First run of Newton solver failed";
     error_string = write_error_string(error_string, steady_state_status[0]);
-    error_string.apppend(" Simulation to steady state failed");
+    error_string.append(" Simulation to steady state failed");
     error_string = write_error_string(error_string, steady_state_status[1]);
-    error_string.apppend(" Second run of Newton solver failed");
+    error_string.append(" Second run of Newton solver failed");
     error_string = write_error_string(error_string, steady_state_status[2]);
 
-    throw AmiException(error_string);
+    throw AmiException(error_string.c_str());
 }
 
 std::string SteadystateProblem::write_error_string(std::string error_string,
@@ -187,13 +188,18 @@ std::string SteadystateProblem::write_error_string(std::string error_string,
     /* write error message according to steady state status */
     switch (status) {
         case SteadyStateStatus::failed_damping:
+            break;
             error_string.append(": Damping factor reached lower bound.");
         case SteadyStateStatus::failed_factorization:
             error_string.append(": RHS could not be factorized.");
-        case SteadyStateStatus::failed_factorization:
+        case SteadyStateStatus::failed_convergence:
+            break;
             error_string.append(": No convergence was achieved.");
         case SteadyStateStatus::failed:
             error_string.append(".");
+            break;
+        default:
+            break;
     }
     return error_string;
 }
@@ -217,8 +223,7 @@ bool SteadystateProblem::processSensitivityLogic(Model *model) {
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
                                          const AmiVector &xdot,
                                          realtype atol,
-                                         realtype rtol
-                                         ) {
+                                         realtype rtol) {
     N_VAbs(x.getNVector(), ewt.getNVector());
     N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
@@ -257,7 +262,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver, Model *model) {
     return converged;
 }
 
-bool checkSteadyStateSuccess() {
+bool SteadystateProblem::checkSteadyStateSuccess() {
     /* Did one of the attempts yield s steady state? */
     if (steady_state_status[0] == SteadyStateStatus::success ||
         steady_state_status[1] == SteadyStateStatus::success ||
@@ -266,7 +271,7 @@ bool checkSteadyStateSuccess() {
     } else {
         return false;
     }
-};
+}
 
 void SteadystateProblem::applyNewtonsMethod(Model *model,
                                             NewtonSolver *newtonSolver,
