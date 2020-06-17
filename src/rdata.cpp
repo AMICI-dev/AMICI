@@ -189,7 +189,7 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
             writeSlice(sx_rdata[ip], slice(sx_ss, ip, nx));
     }
     /* Get cpu time for Newton solve in seconds */
-    preeq_cpu_time = preeq.getCPUTime() / 1000;
+    preeq_cpu_time = preeq.getCPUTime();
     preeq_status = static_cast<int>(preeq.getNewtonStatus());
     preeq_wrms = preeq.getResidualNorm();
     if (preeq.getNewtonStatus() == NewtonStatus::newt_sim)
@@ -212,7 +212,7 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
         }
     }
     /* Get cpu time for Newton solve in seconds */
-    posteq_cpu_time = posteq.getCPUTime() / 1000;
+    posteq_cpu_time = posteq.getCPUTime();
     posteq_status = static_cast<int>(posteq.getNewtonStatus());
     posteq_wrms = posteq.getResidualNorm();
     if (posteq.getNewtonStatus() == NewtonStatus::newt_sim)
