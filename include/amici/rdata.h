@@ -232,7 +232,7 @@ class ReturnData {
     double cpu_timeB = 0.0;
 
     /** flags indicating success of steady state solver (preequilibration) */
-    std::vector<SteadyStateStatus> posteq_status;
+    std::vector<SteadyStateStatus> preeq_status;
 
     /** computation time of the steady state solver [ms] (preequilibration) */
     double preeq_cpu_time = 0.0;
