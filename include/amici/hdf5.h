@@ -9,7 +9,6 @@
 
 #include <gsl/gsl-lite.hpp>
 
-#undef AMI_HDF5_H_DEBUG
 
 /* Macros for enabling/disabling  HDF5 error auto-printing
  * AMICI_H5_SAVE_ERROR_HANDLER and AMICI_H5_RESTORE_ERROR_HANDLER must be called

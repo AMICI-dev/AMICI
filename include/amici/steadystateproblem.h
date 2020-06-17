@@ -105,7 +105,7 @@ class SteadystateProblem {
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
-     * @param boolean flag switching on integration with FSA
+     * @param integrateForwardSensis flag switching on integration with FSA
      * @return solver instance
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
@@ -127,8 +127,8 @@ class SteadystateProblem {
         return state;
     };
 
-    /*
-    * @brief gets the quadratures from postequilibration
+    /**
+    * @brief returns the quadratures from pre- or postequilibration
     * @return xQB Vector with quadratures
     */
     const AmiVector &getEquilibrationQuadratures() const {

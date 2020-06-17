@@ -87,7 +87,7 @@ class AmiciApplication {
      * @param format string with warning message printf-style format
      * @param ... arguments to be formatted
      */
-    void warningF(const char *identifier, const char *format, ...);
+    void warningF(const char *identifier, const char *format, ...) const;
 
     /**
      * @brief printf interface to error()
@@ -95,7 +95,7 @@ class AmiciApplication {
      * @param format string with error message printf-style format
      * @param ... arguments to be formatted
      */
-    void errorF(const char *identifier, const char *format, ...);
+    void errorF(const char *identifier, const char *format, ...) const;
 
     /**
      * @brief Checks the values in an array for NaNs and Infs
