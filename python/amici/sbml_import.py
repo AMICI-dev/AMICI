@@ -1237,8 +1237,7 @@ class SbmlImporter:
         # set user-provided sigmas
         for iy, obs_name in enumerate(observables):
             if obs_name in sigmas:
-                sigma_y_values[iy] = sp.sympify(sigmas[obs_name],
-                                                locals=self.local_symbols)
+                sigma_y_values[iy] = replace_assignments(sigmas[obs_name])
 
         measurement_y_syms = sp.Matrix(
             [sp.symbols(f'm{symbol}', real=True) for symbol in observable_syms]
