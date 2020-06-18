@@ -101,7 +101,8 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
     initializeLinearSolver(model);
     initializeNonLinearSolver();
 
-    if (sensi >= SensitivityOrder::first && model->nx_solver > 0) {
+    if (sensi >= SensitivityOrder::first &&
+        sensi_meth > SensitivityMethod::none && model->nx_solver > 0) {
         auto plist = model->getParameterList();
         sensInit1(sx0, sdx0);
         if (sensi_meth == SensitivityMethod::forward && !plist.empty()) {

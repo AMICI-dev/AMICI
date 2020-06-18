@@ -378,7 +378,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
         const Solver *solver, Model *model, bool integrateForwardSensis) const
 {
     /* Create new CVode solver object */
-    auto newton_solver = std::unique_ptr<Solver>(solver->clone());
+    auto sim_solver = std::unique_ptr<Solver>(solver->clone());
 
     switch (solver->getLinearSolver()) {
         case LinearSolver::dense:
@@ -389,19 +389,22 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
             throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
                                 "invalid solver for steadystate simulation");
     }
-
-    /* need to integrate full forward sensitivities? */
-    if (integrateForwardSensis) {
-        newton_solver->setSensitivityMethod(SensitivityMethod::forward);
-    } else {
-        newton_solver->setSensitivityMethod(SensitivityMethod::none);
+    /* do we need sensitivities? */
+    if (solver->getSensitivityMethod() != SensitivityMethod::none &&
+        model->getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::simulationFSA) {
+        // need forward to compute sx0
+        sim_solver->setSensitivityMethod(SensitivityMethod::forward);
     }
-
+    else {
+        sim_solver->setSensitivityMethod(SensitivityMethod::none);
+        sim_solver->setSensitivityOrder(SensitivityOrder::none);
+    }
     /* use x and sx as dummies for dx and sdx
      (they wont get touched in a CVodeSolver) */
-    newton_solver->setup(model->t0(), model, x, x, sx, sx);
+    sim_solver->setup(model->t0(), model, x, x, sx, sx);
 
-    return newton_solver;
+    return sim_solver;
 }
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
