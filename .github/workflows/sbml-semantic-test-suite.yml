@@ -4,11 +4,11 @@ on:
     branches:
       - develop
       - master
-      - feature_1108_artifacts
   pull_request:
     paths:
-      - python/amici/sbml_import.py
+      - .github/workflows/sbml-semantic-test-suite.yml
       - python/amici/ode_export.py
+      - python/amici/sbml_import.py
       - scripts/run-SBMLTestsuite.sh
       - tests/testSBMLSuite.py
   check_suite:
