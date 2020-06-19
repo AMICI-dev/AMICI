@@ -100,13 +100,15 @@ class SteadystateProblem {
     /**
      * Checks depending on the status of the Newton solver,
      * solver settings, and the model, whether state sensitivities
-     * still need to be computed via a linear system solve
+     * still need to be computed via a linear system solve or stored
      *
      * @param model pointer to the model object
-     * @return flag telling whether state sensis need to be computed
+     * @param solver pointer to the solver object
+     * @param it integer with the index of the current time step
+     * @param context integer telling in which situation we need the flag
+     * @return flag telling how to process state sensis
      */
-
-    bool processSensitivityLogic(Model *model);
+    bool getSensitivityFlag(Model *model, Solver *solver, int it, int context);
 
     /**
      * Integrates over the adjoint state backward in time by solving a linear

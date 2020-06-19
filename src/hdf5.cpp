@@ -369,7 +369,7 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
 
     if (!rdata.preeq_status.empty()) {
         std::vector<int> preeq_status_int (rdata.preeq_status.size());
-        for (int i = 0; i < rdata.preeq_status.size(); i++)
+        for (int i = 0; (unsigned)i < rdata.preeq_status.size(); i++)
             preeq_status_int[i] = static_cast<int>(rdata.preeq_status[i]);
         createAndWriteInt1DDataset(file, hdf5Location + "/preeq_status",
                                    preeq_status_int);
@@ -395,7 +395,7 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
 
     if (!rdata.posteq_status.empty()) {
         std::vector<int> posteq_status_int (rdata.posteq_status.size());
-        for (int i = 0; i < rdata.posteq_status.size(); i++)
+        for (int i = 0; (unsigned)i < rdata.posteq_status.size(); i++)
             posteq_status_int[i] = static_cast<int>(rdata.posteq_status[i]);
         createAndWriteInt1DDataset(file, hdf5Location + "/posteq_status",
                                    posteq_status_int);

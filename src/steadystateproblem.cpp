@@ -58,7 +58,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     cpu_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
-    if (getSensitivityFlag(model, solver, it, false)) {
+    if (getSensitivityFlag(model, solver, it, 1)) {
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
@@ -74,7 +74,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
-    storeSimulationState(model, getSensitivityFlag(model, solver, it, true));
+    storeSimulationState(model, getSensitivityFlag(model, solver, it, 2));
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
@@ -177,7 +177,9 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
     try {
         if (it < 0) {
             /* Preequilibration? -> Create a new CVode object for sim */
-            auto newtonSimSolver = createSteadystateSimSolver(solver, model);
+            bool integrateSensis = getSensitivityFlag(model, solver, it, 3);
+            auto newtonSimSolver = createSteadystateSimSolver(solver, model,
+                                                              integrateSensis);
             getSteadystateSimulation(newtonSimSolver.get(), model);
         } else {
             /* Solver was already created, use this one */
@@ -235,8 +237,8 @@ std::string SteadystateProblem::write_error_string(std::string error_string,
 }
 
 
-bool SteadystateProblem::processSensitivityLogic(Model *model, Solver *solver,
-                                                 int it, bool storage) {
+bool SteadystateProblem::getSensitivityFlag(Model *model, Solver *solver,
+                                            int it, int context) {
     /* We need to check whether we still need to compute sensitivities.
        These boolean operation could be simplified, but here, clarity
        may more important than code reduction. */
@@ -253,12 +255,19 @@ bool SteadystateProblem::processSensitivityLogic(Model *model, Solver *solver,
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
         it == -1;
     bool needForwardSensis = needForwardSensisPreeq || needForwardSensisPosteq;
+    bool needForwardSensiByIntegration =
+        solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        it == -1 && model->getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::simulationFSA;
 
     /* Check if we need to store sensis */
-    if (!storage) {
-        return needForwardSensis;
-    } else {
-        return needForwardSensis || forwardSensisAlreadyComputed;
+    switch (context) {
+        case 1:
+            return needForwardSensis;
+        case 2:
+            return needForwardSensis || forwardSensisAlreadyComputed;
+        case 3:
+            return needForwardSensiByIntegration;
     }
 }
 
