@@ -474,7 +474,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
                            key=lambda symbol: symbol.name)
         for free_sym in free_syms:
             sym = str(free_sym)
-            if sbml_model.getElementBySId(sym) is None:
+            if sbml_model.getElementBySId(sym) is None and sym != 'time':
                 output_parameters[sym] = None
     logger.debug(f"Adding output parameters to model: {output_parameters}")
     for par in output_parameters.keys():
