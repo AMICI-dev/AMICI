@@ -285,34 +285,33 @@ def test_only_equilibration_with_adjoints(preeq_fixture):
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
 
     rdatas = {}
-    settings = []
-    for equil_meth in [amici.SteadyStateSensitivityMode.newtonOnly,]:
-#                       amici.SteadyStateSensitivityMode.simulationFSA,]:
-        for sensi_meth in [amici.SensitivityMethod.forward,
-                           amici.SensitivityMethod.adjoint]:
-            # set sensi method
-            solver.setSensitivityMethod(sensi_meth)
-            solver.SteadyStateSensitivityMethod = equil_meth
-            solver.setNewtonMaxSteps(0)
-
-            # add rdatas
-            settings.append((equil_meth, sensi_meth))
-            print((equil_meth, sensi_meth))
-            rdatas[(equil_meth, sensi_meth)] = \
-                amici.runAmiciSimulation(model, solver, edata)
+    equil_meths = [amici.SteadyStateSensitivityMode.newtonOnly,
+                   amici.SteadyStateSensitivityMode.simulationFSA]
+    sensi_meths = [amici.SensitivityMethod.forward,
+                   amici.SensitivityMethod.adjoint]
+    settings = itertools.product(equil_meths, sensi_meths)
 
     for setting in settings:
+        # unpack, solver settings
+        equil_meth, sensi_meth = setting
+        model.SteadyStateSensitivityMethod = equil_meth
+        solver.setSensitivityMethod(sensi_meth)
+        solver.setNewtonMaxSteps(0)
+
+        # add rdatas
+        rdatas[setting] = amici.runAmiciSimulation(model, solver, edata)
         # assert successful simulation
+
         assert rdatas[setting]['status'] == amici.AMICI_SUCCESS
 
+    for setting1, setting2 in itertools.product(settings, settings):
         # assert correctness of result
-        for setting2 in settings:
-            for variable in ['llh', 'sllh']:
-                assert np.allclose(
-                    rdatas[setting][variable],
-                    rdatas[setting2][variable],
-                    1e-6, 1e-6
-                ), variable
+        for variable in ['llh', 'sllh']:
+            assert np.allclose(
+                rdatas[setting1][variable],
+                rdatas[setting2][variable],
+                1e-6, 1e-6
+            ), variable
 
 
 def test_newton_solver_equilibration(preeq_fixture):

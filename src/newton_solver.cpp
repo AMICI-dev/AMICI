@@ -12,7 +12,6 @@
 #include <cstring>
 #include <ctime>
 #include <cmath>
-#include <iostream>
 
 namespace amici {
 
@@ -324,7 +323,6 @@ void NewtonSolverIterative::linsolveSPBCG(int ntry, int nnewt,
     double omega = 1.0;
     double alpha = 1.0;
 
-    // can be set to 0 at the moment
     ns_J.multiply(ns_Jv.getNVector(), ns_delta.getNVector());
 
     // ns_r = xdot - ns_Jv;

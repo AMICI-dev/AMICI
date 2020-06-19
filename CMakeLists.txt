@@ -1,7 +1,7 @@
 #
 # Build AMICI library
 #
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.3)
 
 if(POLICY CMP0065)
   cmake_policy(SET CMP0065 NEW)

@@ -67,15 +67,13 @@ void BackwardProblem::workBackwardProblem() {
     int it = model->nt() - 1;
     /* If we have posteq, infty timepoints were already treated */
     for (int jt = model->nt() - 1; jt >= 0; jt--)
-        if (std::isinf(model->getTimepoint(it)))
+        if (std::isinf(model->getTimepoint(jt)))
             --it;
-    if (it < model->nt() - 1){
-        model->initializeB(xB, dxB, dxB);
-    } else {
-        model->initializeB(xB, dxB, xQB);
-    }
 
-    if ((it >= 0 || discs.size() > 0) && model->getTimepoint(it) > model->t0())
+    /* initialize state vectors, depending on postequilibration */
+    model->initializeB(xB, dxB, xQB, it < model->nt() - 1);
+
+    if ((it >= 0 || !discs.empty()) && model->getTimepoint(it) > model->t0())
     {
         handleDataPointB(it);
         solver->setupB(&which, model->getTimepoint(it), model, xB, dxB, xQB);
@@ -105,13 +103,13 @@ void BackwardProblem::workBackwardProblem() {
             solver->reInitB(which, t, xB, dxB);
             solver->quadReInitB(which, xQB);
         }
+    }
 
-        /* we still need to integrate from first datapoint to tstart */
-        if (t > model->t0()) {
-            /* solve for backward problems */
-            solver->runB(model->t0());
-            solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
-        }
+    /* we still need to integrate from first datapoint to tstart */
+    if (t > model->t0()) {
+        /* solve for backward problems */
+        solver->runB(model->t0());
+        solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
     }
 
     if (edata && edata->t_presim > 0) {
