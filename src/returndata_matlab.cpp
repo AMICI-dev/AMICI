@@ -143,7 +143,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx);
         writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx, perm1);
 
-        writeMatlabField0(matlabDiagnosisStruct, "preeq_status", rdata->preeq_status);
+        writeMatlabField1(matlabDiagnosisStruct, "preeq_status", rdata->preeq_status, 3);
         writeMatlabField1(matlabDiagnosisStruct, "preeq_numsteps", rdata->preeq_numsteps, 3);
         writeMatlabField2(matlabDiagnosisStruct, "preeq_numlinsteps",
                           rdata->preeq_numlinsteps,
@@ -153,7 +153,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         writeMatlabField0(matlabDiagnosisStruct, "preeq_t", rdata->preeq_t);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_wrms", rdata->preeq_wrms);
 
-        writeMatlabField0(matlabDiagnosisStruct, "posteq_status", rdata->posteq_status);
+        writeMatlabField1(matlabDiagnosisStruct, "posteq_status", rdata->posteq_status, 3);
         writeMatlabField1(matlabDiagnosisStruct, "posteq_numsteps", rdata->posteq_numsteps, 3);
         writeMatlabField2(matlabDiagnosisStruct, "posteq_numlinsteps",
                           rdata->posteq_numlinsteps,
