@@ -1524,6 +1524,9 @@ class Solver {
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth = SensitivityMethod::forward;
 
+    /** Use possibly the Newton solver in the adjoint problem. */
+    bool newton_solver_backward = true;
+
     /** flag controlling stability limit detection */
     booleantype stldet = true;
 

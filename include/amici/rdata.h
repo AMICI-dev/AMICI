@@ -225,23 +225,26 @@ class ReturnData {
     /** employed order forward problem (dimension: nt) */
     std::vector<int> order;
 
-    /** computation time of forward solve [s] */
+    /** computation time of forward solve [ms] */
     double cpu_time = 0.0;
 
-    /** computation time of backward solve [s] */
+    /** computation time of backward solve [ms] */
     double cpu_timeB = 0.0;
 
     /** flag indicating success of Newton solver (preequilibration) */
     int preeq_status = 0;
 
-    /** computation time of the Newton solver [s] (preequilibration) */
+    /** computation time of the Newton solver [ms] (preequilibration) */
     double preeq_cpu_time = 0.0;
 
     /** flag indicating success of Newton solver  (postequilibration) */
     int posteq_status = 0;
 
-    /** computation time of the Newton solver [s]  (postequilibration) */
+    /** computation time of the Newton solver [ms]  (postequilibration) */
     double posteq_cpu_time = 0.0;
+
+    /** computation time of the Newton solver of the backward problem [ms] */
+    double posteq_cpu_timeB = 0.0;
 
     /**
      * number of Newton steps for steady state problem (preequilibration)
