@@ -413,6 +413,9 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "posteq_cpu_time", &rdata.posteq_cpu_time, 1);
 
+    H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
+                             "posteq_cpu_timeB", &rdata.posteq_cpu_timeB, 1);
+
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "posteq_t",
                              &rdata.posteq_t, 1);
 

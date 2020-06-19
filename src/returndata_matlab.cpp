@@ -101,7 +101,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
 }
 
 mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
-    const int numFields = 23;
+    const int numFields = 24;
     const char *field_names_sol[numFields] = {"xdot",
                                               "J",
                                               "numsteps",
@@ -123,6 +123,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                                               "posteq_numsteps",
                                               "posteq_numlinsteps",
                                               "posteq_cpu_time",
+                                              "posteq_cpu_timeB",
                                               "posteq_t",
                                               "posteq_wrms"};
 
@@ -160,6 +161,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                           rdata->posteq_numlinsteps.size() > 0
                               ? rdata->newton_maxsteps : 0, 2, perm1);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_cpu_time", rdata->posteq_cpu_time);
+        writeMatlabField0(matlabDiagnosisStruct, "posteq_cpu_timeB", rdata->posteq_cpu_timeB);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_t", rdata->posteq_t);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_wrms", rdata->posteq_wrms);
     }

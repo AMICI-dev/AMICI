@@ -208,8 +208,10 @@ class Model : public AbstractModel {
      * @param xB adjoint state variables
      * @param dxB time derivative of adjoint states (DAE only)
      * @param xQB adjoint quadratures
+     * @param posteq flag indicating whether postequilibration was performed
      */
-    void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB) const;
+    void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB,
+                     bool posteq) const;
 
     /**
      * @brief Initialization of initial states

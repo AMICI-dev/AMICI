@@ -23,6 +23,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
+      xB(model.nJ * model.nx_solver), xQB(model.nplist()),
       dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0),
       steady_state_status(3, SteadyStateStatus::not_run) {
           /* maxSteps must be adapted if iterative linear solvers are used */
@@ -44,13 +45,6 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         t = model->t0();
         solver->setup(t, model, x, dx, sx, sdx);
     } else {
-        /* Are we computing adjoint sensitivities? That's not yet supoorted
-           with steady state sensitivity analysis */
-        if (solver->getSensitivityOrder() >= SensitivityOrder::first &&
-            solver->getSensitivityMethod() == SensitivityMethod::adjoint)
-            throw AmiException("Steady state sensitivity computation together "
-                               "with adjoint sensitivity analysis is currently "
-                               "not supported.");
         /* solver was run before, extract current state from solver */
         solver->writeSolution(&t, x, dx, sx);
     }
@@ -64,7 +58,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     cpu_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
-    if (processSensitivityLogic(model)) {
+    if (getSensitivityFlag(model, solver, it, false)) {
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
@@ -80,8 +74,44 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
-    storeSimulationState(model, solver->getSensitivityOrder() >=
-                                    SensitivityOrder::first);
+    storeSimulationState(model, getSensitivityFlag(model, solver, it, true));
+}
+
+void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
+                                                        Model *model) {
+    auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
+
+    /* get the run time */
+    clock_t starttime;
+    starttime = clock();
+
+    try {
+        newtonSolver->prepareLinearSystemB(0, -1);
+        newtonSolver->solveLinearSystem(xB);
+    } catch (NewtonFailure const &ex) {
+        if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
+            throw NewtonFailure(ex.error_code, "Steady state backward "
+                                "computation failed due to unsuccessful "
+                                "factorization of RHS Jacobian. ");
+        throw NewtonFailure(ex.error_code, "Steady state backward "
+                            "computation failed. ");
+    }
+
+    /* Compute the inner product v*dxotdp */
+    if (model->pythonGenerated) {
+        const auto& plist = model->getParameterList();
+        if (model->ndxdotdp_explicit > 0)
+            model->dxdotdp_explicit.multiply(xQB.getNVector(),
+                                             xB.getNVector(), plist, true);
+        if (model->ndxdotdp_implicit > 0)
+            model->dxdotdp_implicit.multiply(xQB.getNVector(),
+                                             xB.getNVector(), plist, true);
+    } else {
+        for (int ip=0; ip<model->nplist(); ++ip)
+            xQB[ip] = N_VDotProd(xB.getNVector(),
+                                 model->dxdotdp.getNVector(ip));
+    }
+    cpu_timeB = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 }
 
 void SteadystateProblem::findSteadyState(Solver *solver,
@@ -205,19 +235,31 @@ std::string SteadystateProblem::write_error_string(std::string error_string,
 }
 
 
-bool SteadystateProblem::processSensitivityLogic(Model *model) {
-    /* NB: Currently, this logic processing is still "simple".
-           However, it will become more involved once adjoint
-           sensitivities are implemented */
+bool SteadystateProblem::processSensitivityLogic(Model *model, Solver *solver,
+                                                 int it, bool storage) {
+    /* We need to check whether we still need to compute sensitivities.
+       These boolean operation could be simplified, but here, clarity
+       may more important than code reduction. */
+    bool forwardSensisAlreadyComputed =
+        solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        steady_state_status[1] == SteadyStateStatus::success &&
+        model->getSteadyStateSensitivityMode() ==
+        SteadyStateSensitivityMode::simulationFSA;
+    bool needForwardSensisPosteq = !forwardSensisAlreadyComputed &&
+        solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        solver->getSensitivityMethod() == SensitivityMethod::forward &&
+        it > -1;
+    bool needForwardSensisPreeq = !forwardSensisAlreadyComputed &&
+        solver->getSensitivityOrder() >= SensitivityOrder::first &&
+        it == -1;
+    bool needForwardSensis = needForwardSensisPreeq || needForwardSensisPosteq;
 
-    /* We want to solve the linear system if newtonOnly was used... */
-    bool needStateSenis = model->getSteadyStateSensitivityMode() ==
-        SteadyStateSensitivityMode::newtonOnly;
-    /* ... or if Newton's method found the steady state */
-    needStateSenis = needStateSenis ||
-        steady_state_status[0] == SteadyStateStatus::success ||
-        steady_state_status[2] == SteadyStateStatus::success;
-    return needStateSenis;
+    /* Check if we need to store sensis */
+    if (!storage) {
+        return needForwardSensis;
+    } else {
+        return needForwardSensis || forwardSensisAlreadyComputed;
+    }
 }
 
 realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
@@ -413,28 +455,25 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
 }
 
 std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
-        const Solver *solver, Model *model) const
+        const Solver *solver, Model *model, bool integrateForwardSensis) const
 {
     /* Create new CVode solver object */
-
     auto sim_solver = std::unique_ptr<Solver>(solver->clone());
 
     switch (solver->getLinearSolver()) {
-    case LinearSolver::dense:
-    case LinearSolver::KLU:
-    case LinearSolver::SuperLUMT:
-        break;
-    default:
-        throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
-                            "invalid solver for steadystate simulation");
+        case LinearSolver::dense:
+            break;
+        case LinearSolver::KLU:
+            break;
+        default:
+            throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
+                                "invalid solver for steadystate simulation");
     }
-    if (solver->getSensitivityMethod() != SensitivityMethod::none &&
-        model->getSteadyStateSensitivityMode() ==
-        SteadyStateSensitivityMode::simulationFSA) {
+    /* do we need sensitivities? */
+    if (integrateForwardSensis) {
         // need forward to compute sx0
         sim_solver->setSensitivityMethod(SensitivityMethod::forward);
-    }
-    else {
+    } else {
         sim_solver->setSensitivityMethod(SensitivityMethod::none);
         sim_solver->setSensitivityOrder(SensitivityOrder::none);
     }
@@ -447,10 +486,13 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 
 void SteadystateProblem::getAdjointUpdates(Model &model,
                                            const ExpData &edata) {
+    xB.reset();
     for (int it=0; it < model.nt(); it++) {
         if (std::isinf(model.getTimepoint(it))) {
             model.getAdjointStateObservableUpdate(
                 slice(dJydx, it, model.nx_solver * model.nJ), it, x, edata);
+            for (int ix = 0; ix < model.nxtrue_solver; ix++)
+                xB[ix] += dJydx[ix + it * model.nx_solver];
         }
     }
 }

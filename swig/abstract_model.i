@@ -4,6 +4,8 @@
 %ignore fJDiag;
 %ignore fJSparse;
 %ignore fJv;
+%ignore fJB;
+%ignore fJSparseB;
 %ignore fdx0;
 %ignore fdxdotdp;
 %ignore froot;

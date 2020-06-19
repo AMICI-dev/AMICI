@@ -39,10 +39,16 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                 if (!posteq)
                     throw AmiException("Model has non-finite timpoint but"
                     "postequilibration did not run");
+
+                /* copy adjoint update to postequilibration */
                 writeSlice(slice(posteq->getDJydx(), it,
                                  fwd.model->nx_solver * fwd.model->nJ),
                            slice(this->dJydx, it,
                                  fwd.model->nx_solver * fwd.model->nJ));
+
+                /* If adjoint sensis were computed, copy also quadratures */
+                xQB.reset();
+                xQB = posteq->getEquilibrationQuadratures();
             }
         }
 
@@ -59,36 +65,44 @@ void BackwardProblem::workBackwardProblem() {
     }
 
     int it = model->nt() - 1;
-    model->initializeB(xB, dxB, xQB);
-    handleDataPointB(it);
-    solver->setupB(&which, model->getTimepoint(it), model, xB, dxB, xQB);
+    /* If we have posteq, infty timepoints were already treated */
+    for (int jt = model->nt() - 1; jt >= 0; jt--)
+        if (std::isinf(model->getTimepoint(jt)))
+            --it;
 
-    --it;
+    /* initialize state vectors, depending on postequilibration */
+    model->initializeB(xB, dxB, xQB, it < model->nt() - 1);
 
-    while (it >= 0 || discs.size() > 0) {
+    if ((it >= 0 || !discs.empty()) && model->getTimepoint(it) > model->t0())
+    {
+        handleDataPointB(it);
+        solver->setupB(&which, model->getTimepoint(it), model, xB, dxB, xQB);
+        --it;
 
-        /* check if next timepoint is a discontinuity or a data-point */
-        double tnext = getTnext(it);
+        while (it >= 0 || discs.size() > 0) {
+            /* check if next timepoint is a discontinuity or a data-point */
+            double tnext = getTnext(it);
 
-        if (tnext < t) {
-            solver->runB(tnext);
-            solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
+            if (tnext < t) {
+                solver->runB(tnext);
+                solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
+            }
+
+            /* handle discontinuity */
+            if (tnext > model->getTimepoint(it)) {
+                handleEventB();
+            }
+
+            /* handle data-point */
+            if (tnext == model->getTimepoint(it)) {
+                handleDataPointB(it);
+                it--;
+            }
+
+            /* reinit states */
+            solver->reInitB(which, t, xB, dxB);
+            solver->quadReInitB(which, xQB);
         }
-
-        /* handle discontinuity */
-        if (tnext > model->getTimepoint(it)) {
-            handleEventB();
-        }
-
-        /* handle data-point */
-        if (tnext == model->getTimepoint(it)) {
-            handleDataPointB(it);
-            it--;
-        }
-
-        /* reinit states */
-        solver->reInitB(which, t, xB, dxB);
-        solver->quadReInitB(which, xQB);
     }
 
     /* we still need to integrate from first datapoint to tstart */
@@ -97,6 +111,7 @@ void BackwardProblem::workBackwardProblem() {
         solver->runB(model->t0());
         solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
     }
+
     if (edata && edata->t_presim > 0) {
         ConditionContext cc(model, edata, FixedParameterContext::presimulation);
         solver->runB(model->t0() -  edata->t_presim);

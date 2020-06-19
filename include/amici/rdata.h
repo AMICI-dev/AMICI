@@ -243,6 +243,9 @@ class ReturnData {
     /** computation time of the steady state solver [ms]  (postequilibration) */
     double posteq_cpu_time = 0.0;
 
+    /** computation time of the Newton solver of the backward problem [ms] */
+    double posteq_cpu_timeB = 0.0;
+
     /**
      * number of Newton steps for steady state problem (preequilibration)
      * [newton, simulation, newton] (length = 3)

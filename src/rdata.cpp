@@ -215,6 +215,7 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     }
     /* Get cpu time for Newton solve in milliseconds */
     posteq_cpu_time = posteq.getCPUTime();
+    posteq_cpu_timeB = posteq.getCPUTimeB();
     posteq_status = posteq.getSteadyStateStatus();
     posteq_wrms = posteq.getResidualNorm();
     if (posteq_status[1] == SteadyStateStatus::success)
@@ -403,6 +404,8 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
 
+    /* NB: This nested loop will not be necessary for fully adjoint
+       preequilibration or post-equilibration without further time points */
     for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < model.nplist(); ++ip) {

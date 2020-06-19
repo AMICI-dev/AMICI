@@ -94,6 +94,10 @@ class Model_ODE : public Model {
      **/
     void fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J);
 
+    void fJB(const realtype t, realtype cj, const AmiVector &x,
+             const AmiVector &dx, const AmiVector &xB, const AmiVector &dxB,
+             const AmiVector &xBdot, SUNMatrix JB) override;
+
     /** implementation of fJB at the N_Vector level, this function provides an
      *interface to the model specific routines for the solver implementation
      * @param t timepoint
@@ -118,6 +122,11 @@ class Model_ODE : public Model {
      * @param J Matrix to which the Jacobian will be written
      */
     void fJSparse(realtype t, N_Vector x, SUNMatrix J);
+
+    void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                   const AmiVector &dx, const AmiVector &xB,
+                   const AmiVector &dxB, const AmiVector &xBdot,
+                   SUNMatrix JB) override;
 
     /** implementation of fJSparseB at the N_Vector level, this function
      * provides an interface to the model specific routines for the solver
