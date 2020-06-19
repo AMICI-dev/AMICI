@@ -75,7 +75,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
                 /* Preeq or adjoint+posteq? Create new CVode object for sim */
                 bool integrateFSA = model->getSteadyStateSensitivityMode() ==
                     SteadyStateSensitivityMode::simulationFSA && it == -1 &&
-                    solver->getSensitivityMethod() != SensitivityMethod::none;
+                    solver->getSensitivityMethod() != SensitivityMethod::none &&
+                    solver->getSensitivityOrder() != SensitivityOrder::none;
                 auto newtonSimSolver =
                     createSteadystateSimSolver(solver, model, integrateFSA);
                 getSteadystateSimulation(newtonSimSolver.get(), model);
@@ -390,13 +391,10 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
                                 "invalid solver for steadystate simulation");
     }
     /* do we need sensitivities? */
-    if (solver->getSensitivityMethod() != SensitivityMethod::none &&
-        model->getSteadyStateSensitivityMode() ==
-        SteadyStateSensitivityMode::simulationFSA) {
+    if (integrateForwardSensis) {
         // need forward to compute sx0
         sim_solver->setSensitivityMethod(SensitivityMethod::forward);
-    }
-    else {
+    } else {
         sim_solver->setSensitivityMethod(SensitivityMethod::none);
         sim_solver->setSensitivityOrder(SensitivityOrder::none);
     }
