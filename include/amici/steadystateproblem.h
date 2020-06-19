@@ -14,6 +14,7 @@
 
 namespace amici {
 
+class ExpData;
 class Solver;
 class Model;
 
@@ -42,6 +43,16 @@ class SteadystateProblem {
      * @param it integer with the index of the current time step
      */
     void workSteadyStateProblem(Solver *solver, Model *model, int it);
+
+    /**
+     * Integrates over the adjoint state backward in time by solving a linear
+     * system of equations, which gives the analytical solution.
+     * Computes the gradient via adjoint steady state sensitivities
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     */
+    void workSteadyStateBackwardProblem(Solver *solver, Model *model);
 
     /**
      * Computes the weighted root mean square of xdot
@@ -94,10 +105,12 @@ class SteadystateProblem {
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
+     * @param integrateForwardSensis flag switching on integration with FSA
      * @return solver instance
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
-                                                       Model *model) const;
+                                                       Model *model,
+                                                       bool integrateForwardSensis) const;
 
     /**
      * @brief store carbon copy of current simulation state variables as SimulationState
@@ -114,6 +127,13 @@ class SteadystateProblem {
         return state;
     };
 
+    /**
+    * @brief returns the quadratures from pre- or postequilibration
+    * @return xQB Vector with quadratures
+    */
+    const AmiVector &getEquilibrationQuadratures() const {
+        return xQB;
+    }
     /**
      * @brief returns state at steadystate
      * @return x
@@ -140,10 +160,16 @@ class SteadystateProblem {
      }
 
     /**
-     * @brief Accessor for run_time
+     * @brief Accessor for run_time of the forward problem
      * @return run_time
      */
     double getCPUTime() const { return cpu_time; }
+
+    /**
+     * @brief Accessor for run_time of the backward problem
+     * @return run_time
+     */
+    double getCPUTimeB() const { return cpu_timeB; }
 
     /**
      * @brief Accessor for newton_status
@@ -180,10 +206,7 @@ class SteadystateProblem {
      * @param model Model instance
      * @param edata experimental data
      */
-    void getAdjointUpdates(Model &model,
-                           const ExpData &edata);
-
-
+    void getAdjointUpdates(Model &model, const ExpData &edata);
 
   private:
     /** time variable for simulation steadystate finding */
@@ -210,6 +233,10 @@ class SteadystateProblem {
     AmiVectorArray sx;
     /** state differential sensitivities */
     AmiVectorArray sdx;
+    /** adjoint state vector */
+    AmiVector xB;
+    /** quadrature state vector */
+    AmiVector xQB;
 
     /** maximum number of steps for Newton solver for allocating numlinsteps */
     int maxSteps = 0;
@@ -231,6 +258,9 @@ class SteadystateProblem {
 
     /** stores diagnostic information about runtime */
     double cpu_time;
+
+    /** stores diagnostic information about runtime backward */
+    double cpu_timeB;
 
     /** stores diagnostic information about execution success*/
     NewtonStatus newton_status = NewtonStatus::failed;

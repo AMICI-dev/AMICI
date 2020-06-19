@@ -189,7 +189,7 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
             writeSlice(sx_rdata[ip], slice(sx_ss, ip, nx));
     }
     /* Get cpu time for Newton solve in seconds */
-    preeq_cpu_time = preeq.getCPUTime() / 1000;
+    preeq_cpu_time = preeq.getCPUTime();
     preeq_status = static_cast<int>(preeq.getNewtonStatus());
     preeq_wrms = preeq.getResidualNorm();
     if (preeq.getNewtonStatus() == NewtonStatus::newt_sim)
@@ -212,7 +212,8 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
         }
     }
     /* Get cpu time for Newton solve in seconds */
-    posteq_cpu_time = posteq.getCPUTime() / 1000;
+    posteq_cpu_time = posteq.getCPUTime();
+    posteq_cpu_timeB = posteq.getCPUTimeB();
     posteq_status = static_cast<int>(posteq.getNewtonStatus());
     posteq_wrms = posteq.getResidualNorm();
     if (posteq.getNewtonStatus() == NewtonStatus::newt_sim)
@@ -401,6 +402,8 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
 
+    /* NB: This nested loop will not be necessary for fully adjoint
+       preequilibration or post-equilibration without further time points */
     for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < model.nplist(); ++ip) {

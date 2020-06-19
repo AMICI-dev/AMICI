@@ -142,8 +142,10 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
         if (edata && solver.computingASA()) {
             fwd->getAdjointUpdates(model, *edata);
-            if (posteq)
+            if (posteq) {
                 posteq->getAdjointUpdates(model, *edata);
+                posteq->workSteadyStateBackwardProblem(&solver, &model);
+            }
 
             bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
             bwd->workBackwardProblem();
@@ -181,7 +183,6 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
     rdata->processSimulationObjects(preeq.get(), fwd.get(), bwd.get(),
                                     posteq.get(), model, solver, edata);
-
     return rdata;
 }
 

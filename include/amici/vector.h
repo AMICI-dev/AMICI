@@ -45,6 +45,13 @@ class AmiVector {
         : vec(std::move(rvec)),
           nvec(N_VMake_Serial(static_cast<long int>(vec.size()), vec.data())) {}
 
+    /** Copy data from gsl::span and constructs a vector
+     * @brief constructor from gsl::span,
+     * @param rvec vector from which the data will be copied
+     */
+    explicit AmiVector(gsl::span<realtype> rvec)
+        : AmiVector(std::vector<realtype>(rvec.begin(), rvec.end())) {}
+
     /**
      * @brief copy constructor
      * @param vold vector from which the data will be copied

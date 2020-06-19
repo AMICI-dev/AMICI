@@ -200,10 +200,12 @@ void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
         initHeaviside(x, dx);
 }
 
-void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB) const {
+void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB,
+                        bool posteq) const {
     xB.reset();
     dxB.reset();
-    xQB.reset();
+    if (!posteq)
+        xQB.reset();
 }
 
 void Model::initializeStates(AmiVector &x) {
