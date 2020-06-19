@@ -5,35 +5,35 @@ namespace amici {
 
 namespace model_TPL_MODELNAME {
 
-std::array<std::string, TPL_NP> parameterNames = {
+std::array<const char*, TPL_NP> parameterNames = {
     TPL_PARAMETER_NAMES_INITIALIZER_LIST
 };
 
-std::array<std::string, TPL_NK> fixedParameterNames = {
+std::array<const char*, TPL_NK> fixedParameterNames = {
     TPL_FIXED_PARAMETER_NAMES_INITIALIZER_LIST
 };
 
-std::array<std::string, TPL_NX_RDATA> stateNames = {
+std::array<const char*, TPL_NX_RDATA> stateNames = {
     TPL_STATE_NAMES_INITIALIZER_LIST
 };
 
-std::array<std::string, TPL_NY> observableNames = {
+std::array<const char*, TPL_NY> observableNames = {
     TPL_OBSERVABLE_NAMES_INITIALIZER_LIST
 };
 
-std::array<std::string, TPL_NP> parameterIds = {
+std::array<const char*, TPL_NP> parameterIds = {
     TPL_PARAMETER_IDS_INITIALIZER_LIST
 };
 
-std::array<std::string, TPL_NK> fixedParameterIds = {
+std::array<const char*, TPL_NK> fixedParameterIds = {
     TPL_FIXED_PARAMETER_IDS_INITIALIZER_LIST
 };
 
-std::array<std::string, TPL_NX_RDATA> stateIds = {
+std::array<const char*, TPL_NX_RDATA> stateIds = {
     TPL_STATE_IDS_INITIALIZER_LIST
 };
 
-std::array<std::string, TPL_NY> observableIds = {
+std::array<const char*, TPL_NY> observableIds = {
     TPL_OBSERVABLE_IDS_INITIALIZER_LIST
 };
 
