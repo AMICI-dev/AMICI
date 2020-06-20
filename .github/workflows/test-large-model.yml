@@ -4,7 +4,6 @@ on:
     branches:
       - develop
       - master
-      - feature_speedup_compilation
 
   pull_request:
     branches:
@@ -58,6 +57,12 @@ jobs:
             -n 'CS_Signalling_ERBB_RAS_AKT_petab' \
             -y 'FroehlichKes2018/PEtab/FroehlichKes2018.yaml' \
             --no-compile
+
+    - name: "Upload artifact: CS_Signalling_ERBB_RAS_AKT_petab"
+      uses: actions/upload-artifact@v1
+      with:
+        name: CS_Signalling_ERBB_RAS_AKT
+        path: CS_Signalling_ERBB_RAS_AKT/CS_Signalling_ERBB_RAS_AKT_petab
 
     # install model package
     - name: Install test model
