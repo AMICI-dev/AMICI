@@ -91,12 +91,12 @@ class SteadystateProblem {
     /**
      * Assembles the error message to be thrown.
      *
-     * @param error_string string with error message
+     * @param errorString string with error message
      * @param status Entry of steady_state_staus to be processed
-     * @return error_string updated string with error message
+     * @return errorString updated string with error message
      */
-    std::string write_error_string(std::string error_string,
-                                   SteadyStateStatus status);
+    std::string writeErrorString(std::string errorString,
+                                 SteadyStateStatus status) const;
 
     /**
      * Checks depending on the status of the Newton solver,
@@ -109,7 +109,7 @@ class SteadystateProblem {
      * @param context SteadyStateContext giving the situation for the flag
      * @return flag telling how to process state sensis
      */
-    bool getSensitivityFlag(Model *model, Solver *solver, int it,
+    bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
                             SteadyStateContext context);
 
     /**

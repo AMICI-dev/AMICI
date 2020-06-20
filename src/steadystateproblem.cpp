@@ -159,13 +159,20 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolv
                 break;
             default:
                 steady_state_status[0] = SteadyStateStatus::failed;
+                break;
         }
     }
 
     /* copy number of linear steps used */
-    if (maxSteps > 0)
-        std::copy_n(newtonSolver->getNumLinSteps().begin(),
-                    maxSteps, numlinsteps.begin());
+    if (maxSteps > 0) {
+        if (newton_retry) {
+            std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                        maxSteps, &numlinsteps.at(maxSteps));
+        } else {
+            std::copy_n(newtonSolver->getNumLinSteps().begin(),
+                        maxSteps, numlinsteps.begin());
+        }
+    }
 }
 
 void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
@@ -209,37 +216,41 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
                          SensitivityOrder::first);
 
     /* Throw error message according to error codes */
-    std::string error_string = "Steady state computation failed. "
-                               "First run of Newton solver failed";
-    error_string = write_error_string(error_string, steady_state_status[0]);
-    error_string.append(" Simulation to steady state failed");
-    error_string = write_error_string(error_string, steady_state_status[1]);
-    error_string.append(" Second run of Newton solver failed");
-    error_string = write_error_string(error_string, steady_state_status[2]);
+    std::string errorString = "Steady state computation failed. "
+                              "First run of Newton solver failed";
+    errorString = writeErrorString(errorString, steady_state_status[0]);
+    errorString.append(" Simulation to steady state failed");
+    errorString = writeErrorString(errorString, steady_state_status[1]);
+    errorString.append(" Second run of Newton solver failed");
+    errorString = writeErrorString(errorString, steady_state_status[2]);
 
-    throw AmiException(error_string.c_str());
+    throw AmiException(errorString.c_str());
 }
 
-std::string SteadystateProblem::write_error_string(std::string error_string,
-                                                   SteadyStateStatus status) {
+std::string SteadystateProblem::writeErrorString(std::string errorString,
+                                                 SteadyStateStatus status) const {
     /* write error message according to steady state status */
     switch (status) {
         case SteadyStateStatus::failed_damping:
-            error_string.append(": Damping factor reached lower bound.");
+            errorString.append(": Damping factor reached lower bound.");
+            break;
         case SteadyStateStatus::failed_factorization:
-            error_string.append(": RHS could not be factorized.");
+            errorString.append(": RHS could not be factorized.");
+            break;
         case SteadyStateStatus::failed_convergence:
-            error_string.append(": No convergence was achieved.");
+            errorString.append(": No convergence was achieved.");
+            break;
         case SteadyStateStatus::failed:
-            error_string.append(".");
+            errorString.append(".");
+            break;
         default:
             break;
     }
-    return error_string;
+    return errorString;
 }
 
-
-bool SteadystateProblem::getSensitivityFlag(Model *model, Solver *solver,
+bool SteadystateProblem::getSensitivityFlag(const Model *model,
+                                            const Solver *solver,
                                             int it, SteadyStateContext context) {
     /* We need to check whether we still need to compute sensitivities.
        These boolean operation could be simplified, but here, clarity
@@ -270,6 +281,9 @@ bool SteadystateProblem::getSensitivityFlag(Model *model, Solver *solver,
             return needForwardSensis || forwardSensisAlreadyComputed;
         case SteadyStateContext::integration:
             return needForwardSensiByIntegration;
+        default:
+            throw AmiException("Requested invalid context in sensitivity "
+                               "processing during steady state computation");
     }
 }
 
@@ -317,9 +331,9 @@ bool SteadystateProblem::checkConvergence(const Solver *solver, Model *model) {
 
 bool SteadystateProblem::checkSteadyStateSuccess() const {
     /* Did one of the attempts yield s steady state? */
-    if (steady_state_status[0] == SteadyStateStatus::success ||
-        steady_state_status[1] == SteadyStateStatus::success ||
-        steady_state_status[2] == SteadyStateStatus::success) {
+    if (std::any_of(steady_state_status.begin(), steady_state_status.end(),
+                    [](SteadyStateStatus status)
+                    {return status == SteadyStateStatus::success;})) {
         return true;
     } else {
         return false;
@@ -402,7 +416,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
             if (gamma < newtonSolver->dampingFactorLowerBound)
-              throw NewtonFailure(AMICI_CONV_FAILURE,
+              throw NewtonFailure(AMICI_DAMPING_FACTOR_ERROR,
                                   "Newton solver failed: the damping factor "
                                   "reached its lower bound");
 
