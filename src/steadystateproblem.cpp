@@ -24,8 +24,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
       xB(model.nJ * model.nx_solver), xQB(model.nplist()),
-      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0),
-      steady_state_status(3, SteadyStateStatus::not_run) {
+      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
               maxSteps = solver.getNewtonMaxSteps();
@@ -58,7 +57,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     cpu_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
-    if (getSensitivityFlag(model, solver, it, 1)) {
+    if (getSensitivityFlag(model, solver, it, SteadyStateContext::newton))
+    {
         try {
             /* this might still fail, if the Jacobian is singular and
              simulation did not find a steady state */
@@ -74,7 +74,8 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
-    storeSimulationState(model, getSensitivityFlag(model, solver, it, 2));
+    storeSimulationState(model, getSensitivityFlag(model, solver, it,
+                                                   SteadyStateContext::storage));
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
@@ -118,6 +119,7 @@ void SteadystateProblem::findSteadyState(Solver *solver,
                                          NewtonSolver *newtonSolver,
                                          Model *model, int it) {
     /* First, try to run the Newton solver */
+    steady_state_status.resize(3, SteadyStateStatus::not_run);
     findSteadyStateByNewtonsMethod(newtonSolver, model, false);
 
     /* Newton solver didn't work, so try to simulate to steady state */
@@ -130,7 +132,7 @@ void SteadystateProblem::findSteadyState(Solver *solver,
 
     /* Nothing worked, throw an as informative error as possible */
     if (!checkSteadyStateSuccess())
-        handleSteadyStateComputationFailure(solver, model);
+        handleSteadyStateFailure(solver, model);
 }
 
 void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolver,
@@ -138,10 +140,11 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolv
                                                         bool newton_retry) {
     try {
         applyNewtonsMethod(model, newtonSolver, newton_retry);
-        if (newton_retry)
+        if (newton_retry) {
             steady_state_status[2] = SteadyStateStatus::success;
-        else
+        } else {
             steady_state_status[0] = SteadyStateStatus::success;
+        }
     } catch (NewtonFailure const &ex) {
         /* nothing to be done */
         switch (ex.error_code) {
@@ -177,7 +180,9 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
     try {
         if (it < 0) {
             /* Preequilibration? -> Create a new CVode object for sim */
-            bool integrateSensis = getSensitivityFlag(model, solver, it, 3);
+            bool integrateSensis =
+                getSensitivityFlag(model, solver, it,
+                                   SteadyStateContext::integration);
             auto newtonSimSolver = createSteadystateSimSolver(solver, model,
                                                               integrateSensis);
             getSteadystateSimulation(newtonSimSolver.get(), model);
@@ -197,8 +202,8 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
     }
 }
 
-void SteadystateProblem::handleSteadyStateComputationFailure(Solver *solver,
-                                                             Model *model) {
+[[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,
+                                                               Model *model) {
     /* No steady state could be inferred. Store simulation state */
     storeSimulationState(model, solver->getSensitivityOrder() >=
                          SensitivityOrder::first);
@@ -220,16 +225,13 @@ std::string SteadystateProblem::write_error_string(std::string error_string,
     /* write error message according to steady state status */
     switch (status) {
         case SteadyStateStatus::failed_damping:
-            break;
             error_string.append(": Damping factor reached lower bound.");
         case SteadyStateStatus::failed_factorization:
             error_string.append(": RHS could not be factorized.");
         case SteadyStateStatus::failed_convergence:
-            break;
             error_string.append(": No convergence was achieved.");
         case SteadyStateStatus::failed:
             error_string.append(".");
-            break;
         default:
             break;
     }
@@ -238,7 +240,7 @@ std::string SteadystateProblem::write_error_string(std::string error_string,
 
 
 bool SteadystateProblem::getSensitivityFlag(Model *model, Solver *solver,
-                                            int it, int context) {
+                                            int it, SteadyStateContext context) {
     /* We need to check whether we still need to compute sensitivities.
        These boolean operation could be simplified, but here, clarity
        may more important than code reduction. */
@@ -262,11 +264,11 @@ bool SteadystateProblem::getSensitivityFlag(Model *model, Solver *solver,
 
     /* Check if we need to store sensis */
     switch (context) {
-        case 1:
+        case SteadyStateContext::newton:
             return needForwardSensis;
-        case 2:
+        case SteadyStateContext::storage:
             return needForwardSensis || forwardSensisAlreadyComputed;
-        case 3:
+        case SteadyStateContext::integration:
             return needForwardSensiByIntegration;
     }
 }
@@ -313,7 +315,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver, Model *model) {
     return converged;
 }
 
-bool SteadystateProblem::checkSteadyStateSuccess() {
+bool SteadystateProblem::checkSteadyStateSuccess() const {
     /* Did one of the attempts yield s steady state? */
     if (steady_state_status[0] == SteadyStateStatus::success ||
         steady_state_status[1] == SteadyStateStatus::success ||

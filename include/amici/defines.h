@@ -146,6 +146,13 @@ enum class SteadyStateStatus {
     success = 1
 };
 
+/** Context for which the sensitivity flag should be computed */
+enum class SteadyStateContext {
+    newton = 0,
+    storage = 1,
+    integration = 2
+};
+
 /** Damping factor flag for the Newton method */
 enum class NewtonDampingFactorMode {
     off = 0,

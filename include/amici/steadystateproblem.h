@@ -85,7 +85,8 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void handleSteadyStateComputationFailure(Solver *solver, Model *model);
+    [[noreturn]] void handleSteadyStateFailure(const Solver *solver,
+                                               Model *model);
 
     /**
      * Assembles the error message to be thrown.
@@ -105,10 +106,11 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param solver pointer to the solver object
      * @param it integer with the index of the current time step
-     * @param context integer telling in which situation we need the flag
+     * @param context SteadyStateContext giving the situation for the flag
      * @return flag telling how to process state sensis
      */
-    bool getSensitivityFlag(Model *model, Solver *solver, int it, int context);
+    bool getSensitivityFlag(Model *model, Solver *solver, int it,
+                            SteadyStateContext context);
 
     /**
      * Integrates over the adjoint state backward in time by solving a linear
@@ -279,7 +281,7 @@ class SteadystateProblem {
      * @brief computes adjoint updates dJydx according to provided model and expdata
      * @return covergence of steady state solver
      */
-    bool checkSteadyStateSuccess();
+    bool checkSteadyStateSuccess() const;
 
   private:
     /** time variable for simulation steadystate finding */
