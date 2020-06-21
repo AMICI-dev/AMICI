@@ -29,6 +29,7 @@ constexpr int AMICI_ERR_FAILURE=              -3;
 constexpr int AMICI_CONV_FAILURE=             -4;
 constexpr int AMICI_ILL_INPUT=               -22;
 constexpr int AMICI_ERROR=                   -99;
+constexpr int AMICI_DAMPING_FACTOR_ERROR=   -800;
 constexpr int AMICI_SINGULAR_JACOBIAN=      -807;
 constexpr int AMICI_NOT_IMPLEMENTED=        -999;
 constexpr int AMICI_SUCCESS=                   0;
@@ -136,11 +137,20 @@ enum class SteadyStateSensitivityMode {
 };
 
 /** State in which the steady state computation finished */
-enum class NewtonStatus {
-    failed=-1,
-    newt=1,
-    newt_sim=2,
-    newt_sim_newt=3,
+enum class SteadyStateStatus {
+    failed_damping = -4,
+    failed_factorization = -3,
+    failed_convergence = -2,
+    failed = -1,
+    not_run = 0,
+    success = 1
+};
+
+/** Context for which the sensitivity flag should be computed */
+enum class SteadyStateContext {
+    newton = 0,
+    storage = 1,
+    integration = 2
 };
 
 /** Damping factor flag for the Newton method */

@@ -367,8 +367,13 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
                     file, hdf5Location + "/numnonlinsolvconvfailsB",
                     rdata.numnonlinsolvconvfailsB);
 
-    H5LTset_attribute_int(file.getId(), (hdf5Location + "").c_str(),
-                          "preeq_status", &rdata.preeq_status, 1);
+    if (!rdata.preeq_status.empty()) {
+        std::vector<int> preeq_status_int (rdata.preeq_status.size());
+        for (int i = 0; (unsigned)i < rdata.preeq_status.size(); i++)
+            preeq_status_int[i] = static_cast<int>(rdata.preeq_status[i]);
+        createAndWriteInt1DDataset(file, hdf5Location + "/preeq_status",
+                                   preeq_status_int);
+    }
 
     if (!rdata.preeq_numsteps.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/preeq_numsteps",
@@ -388,8 +393,13 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "preeq_wrms",
                              &rdata.preeq_wrms, 1);
 
-    H5LTset_attribute_int(file.getId(), (hdf5Location + "").c_str(),
-                          "posteq_status", &rdata.posteq_status, 1);
+    if (!rdata.posteq_status.empty()) {
+        std::vector<int> posteq_status_int (rdata.posteq_status.size());
+        for (int i = 0; (unsigned)i < rdata.posteq_status.size(); i++)
+            posteq_status_int[i] = static_cast<int>(rdata.posteq_status[i]);
+        createAndWriteInt1DDataset(file, hdf5Location + "/posteq_status",
+                                   posteq_status_int);
+    }
 
     if (!rdata.posteq_numsteps.empty())
         createAndWriteInt1DDataset(file, hdf5Location + "/posteq_numsteps",

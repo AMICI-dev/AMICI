@@ -231,16 +231,16 @@ class ReturnData {
     /** computation time of backward solve [ms] */
     double cpu_timeB = 0.0;
 
-    /** flag indicating success of Newton solver (preequilibration) */
-    int preeq_status = 0;
+    /** flags indicating success of steady state solver (preequilibration) */
+    std::vector<SteadyStateStatus> preeq_status;
 
-    /** computation time of the Newton solver [ms] (preequilibration) */
+    /** computation time of the steady state solver [ms] (preequilibration) */
     double preeq_cpu_time = 0.0;
 
-    /** flag indicating success of Newton solver  (postequilibration) */
-    int posteq_status = 0;
+    /** flags indicating success of steady state solver  (postequilibration) */
+    std::vector<SteadyStateStatus> posteq_status;
 
-    /** computation time of the Newton solver [ms]  (postequilibration) */
+    /** computation time of the steady state solver [ms]  (postequilibration) */
     double posteq_cpu_time = 0.0;
 
     /** computation time of the Newton solver of the backward problem [ms] */

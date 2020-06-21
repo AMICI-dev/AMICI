@@ -45,6 +45,74 @@ class SteadystateProblem {
     void workSteadyStateProblem(Solver *solver, Model *model, int it);
 
     /**
+     * Handles the computation of the steady state, throws an AmiException,
+     * if no steady state was found
+     *
+     * @param solver pointer to the solver object
+     * @param newtonSolver pointer to the newtonSolver solver object
+     * @param model pointer to the model object
+     * @param it integer with the index of the current time step
+     */
+    void findSteadyState(Solver *solver,
+                         NewtonSolver *newtonSolver,
+                         Model *model, int it);
+
+    /**
+     * Tries to determine the steady state by using Newton's method
+     *
+     * @param newtonSolver pointer to the newtonSolver solver object
+     * @param model pointer to the model object
+     * @param newton_retry bool flag indicating whether being relaunched
+     */
+    void findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolver,
+                                        Model *model,
+                                        bool newton_retry);
+
+    /**
+     * Tries to determine the steady state by using forward simulation
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param it integer with the index of the current time step
+     */
+    void findSteadyStateBySimulation(Solver *solver,
+                                     Model *model,
+                                     int it);
+
+    /**
+     * Stores state and throws error message if steady state computaiton failed
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     */
+    [[noreturn]] void handleSteadyStateFailure(const Solver *solver,
+                                               Model *model);
+
+    /**
+     * Assembles the error message to be thrown.
+     *
+     * @param errorString const pointer to string with error message
+     * @param status Entry of steady_state_staus to be processed
+     * @return errorString updated string with error message
+     */
+    void writeErrorString(std::string *errorString, SteadyStateStatus
+                          status) const;
+
+    /**
+     * Checks depending on the status of the Newton solver,
+     * solver settings, and the model, whether state sensitivities
+     * still need to be computed via a linear system solve or stored
+     *
+     * @param model pointer to the model object
+     * @param solver pointer to the solver object
+     * @param it integer with the index of the current time step
+     * @param context SteadyStateContext giving the situation for the flag
+     * @return flag telling how to process state sensis
+     */
+    bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
+                            SteadyStateContext context);
+
+    /**
      * Integrates over the adjoint state backward in time by solving a linear
      * system of equations, which gives the analytical solution.
      * Computes the gradient via adjoint steady state sensitivities
@@ -87,10 +155,10 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param newtonSolver pointer to the NewtonSolver object @type
      * NewtonSolver
-     * @param steadystate_try start status of Newton solver
+     * @param newton_retry flag indicating if Newton solver is rerun
      */
     void applyNewtonsMethod(Model *model, NewtonSolver *newtonSolver,
-                            NewtonStatus steadystate_try);
+                            bool newton_retry);
 
     /**
      * Forward simulation is launched, if Newton solver fails in first try
@@ -172,10 +240,11 @@ class SteadystateProblem {
     double getCPUTimeB() const { return cpu_timeB; }
 
     /**
-     * @brief Accessor for newton_status
-     * @return newton_status
+     * @brief Accessor for steady_state_status
+     * @return steady_state_status
      */
-    NewtonStatus getNewtonStatus() const { return newton_status; }
+    std::vector<SteadyStateStatus> const& getSteadyStateStatus() const
+    { return steady_state_status; }
 
     /**
      * @brief Accessor for t
@@ -207,6 +276,12 @@ class SteadystateProblem {
      * @param edata experimental data
      */
     void getAdjointUpdates(Model &model, const ExpData &edata);
+
+    /**
+     * @brief computes adjoint updates dJydx according to provided model and expdata
+     * @return covergence of steady state solver
+     */
+    bool checkSteadyStateSuccess() const;
 
   private:
     /** time variable for simulation steadystate finding */
@@ -259,11 +334,13 @@ class SteadystateProblem {
     /** stores diagnostic information about runtime */
     double cpu_time;
 
+    /** stores diagnostic information about execution success of the different
+     * approaches [newton, simulation, newton] (length = 3)
+     */
+    std::vector<SteadyStateStatus> steady_state_status;
+
     /** stores diagnostic information about runtime backward */
     double cpu_timeB;
-
-    /** stores diagnostic information about execution success*/
-    NewtonStatus newton_status = NewtonStatus::failed;
 };
 
 } // namespace amici
