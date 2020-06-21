@@ -218,35 +218,34 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
     /* Throw error message according to error codes */
     std::string errorString = "Steady state computation failed. "
                               "First run of Newton solver failed";
-    errorString = writeErrorString(errorString, steady_state_status[0]);
+    writeErrorString(&errorString, steady_state_status[0]);
     errorString.append(" Simulation to steady state failed");
-    errorString = writeErrorString(errorString, steady_state_status[1]);
+    writeErrorString(&errorString, steady_state_status[1]);
     errorString.append(" Second run of Newton solver failed");
-    errorString = writeErrorString(errorString, steady_state_status[2]);
+    writeErrorString(&errorString, steady_state_status[2]);
 
     throw AmiException(errorString.c_str());
 }
 
-std::string SteadystateProblem::writeErrorString(std::string errorString,
-                                                 SteadyStateStatus status) const {
+void SteadystateProblem::writeErrorString(std::string *errorString,
+                                          SteadyStateStatus status) const {
     /* write error message according to steady state status */
     switch (status) {
         case SteadyStateStatus::failed_damping:
-            errorString.append(": Damping factor reached lower bound.");
+            (*errorString).append(": Damping factor reached lower bound.");
             break;
         case SteadyStateStatus::failed_factorization:
-            errorString.append(": RHS could not be factorized.");
+            (*errorString).append(": RHS could not be factorized.");
             break;
         case SteadyStateStatus::failed_convergence:
-            errorString.append(": No convergence was achieved.");
+            (*errorString).append(": No convergence was achieved.");
             break;
         case SteadyStateStatus::failed:
-            errorString.append(".");
+            (*errorString).append(".");
             break;
         default:
             break;
     }
-    return errorString;
 }
 
 bool SteadystateProblem::getSensitivityFlag(const Model *model,

@@ -91,12 +91,12 @@ class SteadystateProblem {
     /**
      * Assembles the error message to be thrown.
      *
-     * @param errorString string with error message
+     * @param errorString const pointer to string with error message
      * @param status Entry of steady_state_staus to be processed
      * @return errorString updated string with error message
      */
-    std::string writeErrorString(std::string errorString,
-                                 SteadyStateStatus status) const;
+    void writeErrorString(std::string *errorString, SteadyStateStatus
+                          status) const;
 
     /**
      * Checks depending on the status of the Newton solver,
