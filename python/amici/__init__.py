@@ -61,8 +61,7 @@ def _get_commit_hash():
         (
             file for file in [
                 os.path.join(basedir, '.git', 'FETCH_HEAD'),
-                os.path.join(basedir, '.git', 'ORIG_HEAD'),
-            ]
+                os.path.join(basedir, '.git', 'ORIG_HEAD'), ]
             if os.path.isfile(file)
         ),
         None
@@ -125,25 +124,29 @@ with open(os.path.join(amici_path, 'version.txt')) as f:
 
 __commit__ = _get_commit_hash()
 
-
 # Import SWIG module and swig-dependent submodules if required and available
-if not _imported_from_setup() and has_clibs:
-    if hdf5_enabled:
-        from . import amici
-        from .amici import *
-    else:
-        from . import amici_without_hdf5 as amici
-        from .amici_without_hdf5 import *
+if not _imported_from_setup():
+    if has_clibs:
+        if hdf5_enabled:
+            from . import amici
+            from .amici import *
+        else:
+            from . import amici_without_hdf5 as amici
+            from .amici_without_hdf5 import *
 
-    # These module require the swig interface and other dependencies
-    from .numpy import ReturnDataView, ExpDataView
-    from .pandas import getEdataFromDataFrame, \
-        getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
-        getSimulationStatesAsDataFrame, getResidualsAsDataFrame
+        # These module require the swig interface and other dependencies
+        from .numpy import ReturnDataView, ExpDataView
+        from .pandas import (
+            getEdataFromDataFrame,
+            getDataObservablesAsDataFrame,
+            getSimulationObservablesAsDataFrame,
+            getSimulationStatesAsDataFrame,
+            getResidualsAsDataFrame
+        )
 
-# These modules don't require the swig interface
-from .sbml_import import SbmlImporter, assignmentRules2observables
-from .ode_export import ODEModel, ODEExporter
+    # These modules don't require the swig interface
+    from .sbml_import import SbmlImporter, assignmentRules2observables
+    from .ode_export import ODEModel, ODEExporter
 
 
 def runAmiciSimulation(
@@ -257,6 +260,7 @@ def writeSolverSettingsToHDF5(
 
 class add_path:
     """Context manager for temporarily changing PYTHONPATH"""
+
     def __init__(self, path: str):
         self.path: str = path
 
@@ -290,6 +294,5 @@ def import_model_module(module_name: str,
             # reload, because may just have been created
             importlib.reload(sys.modules[module_name])
             return sys.modules[module_name]
-
 
         return importlib.import_module(module_name)
