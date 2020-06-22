@@ -179,6 +179,18 @@ class Solver {
     void setSensitivityMethod(SensitivityMethod sensi_meth);
 
     /**
+     * @brief Return current sensitivity method during  preequilibration
+     * @return method enum
+     */
+    SensitivityMethod getSensitivityMethodPreequilibration() const;
+
+    /**
+     * @brief Set sensitivity method during preequilibration
+     * @param sensi_meth_preeq
+     */
+    void setSensitivityMethodPreequilibration(SensitivityMethod sensi_meth_preeq);
+
+    /**
      * @brief Disable forward sensitivity integration (used in steady state sim)
      */
     void switchForwardSensisOff() const;
@@ -1523,6 +1535,9 @@ class Solver {
   private:
     /** method for sensitivity computation */
     SensitivityMethod sensi_meth = SensitivityMethod::forward;
+
+    /** method for sensitivity computation */
+    SensitivityMethod sensi_meth_preeq = SensitivityMethod::forward;
 
     /** Use possibly the Newton solver in the adjoint problem. */
     bool newton_solver_backward = true;

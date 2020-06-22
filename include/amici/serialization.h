@@ -105,6 +105,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.originalParameters;
     ar &u.state.fixedParameters;
     ar &u.reinitializeFixedParameterInitialStates;
+    ar &u.hasConservedQuantities;
     ar &u.state.plist;
     ar &u.x0data;
     ar &u.sx0data;

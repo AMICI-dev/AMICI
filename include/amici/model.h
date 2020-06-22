@@ -730,6 +730,20 @@ class Model : public AbstractModel {
     bool getReinitializeFixedParameterInitialStates() const;
 
     /**
+     * @brief Set whether conservation laws beyond conserved species
+     *  (i.e. conserved linear combinations of states) are present in the model
+     * @param flag true/false
+     */
+    void setHasConservedQuantities(bool flag);
+
+    /**
+     * @brief Get whether conservation laws beyond conserved species
+     *  (i.e. conserved linear combinations of states) are present in the model
+     * @return flag true/false
+     */
+    bool getHasConservedQuantities() const;
+
+    /**
      * @brief Require computation of sensitivities for all parameters p [0..np[
      * in natural order, resets initial state sensitivities
      */
@@ -1859,6 +1873,11 @@ class Model : public AbstractModel {
      *  fixed parameters is activated
      */
     bool reinitializeFixedParameterInitialStates = false;
+
+    /** flag indicating whether conservation laws beyond conserved species
+     *  (i.e. conserved linear combinations of states) are present in the model
+     */
+    bool hasConservedQuantities = false;
 
     /** Indicates whether the result of every call to Model::f* should be
      * checked for finiteness */
