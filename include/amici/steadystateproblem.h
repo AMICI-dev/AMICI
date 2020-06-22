@@ -278,6 +278,14 @@ class SteadystateProblem {
     void getAdjointUpdates(Model &model, const ExpData &edata);
 
     /**
+     * @brief overwrites the adjoint state before backward preeequilibration
+     * @param xB_reset vector with new values for xB
+     */
+    void SteadystateProblem::resetAdjointState(AmiVector const &xB_reset)
+    { xB.copy(xB_reset); }
+
+
+    /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
      * @return covergence of steady state solver
      */

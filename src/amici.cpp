@@ -149,6 +149,11 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
 
             bwd = std::make_unique<BackwardProblem>(*fwd, posteq.get());
             bwd->workBackwardProblem();
+
+            if (preeq) {
+                preeq->resetAdjointState(bwd->getAdjointState());
+                preeq->workSteadyStateBackwardProblem(&solver, &model);
+            }
         }
 
         rdata->status = AMICI_SUCCESS;

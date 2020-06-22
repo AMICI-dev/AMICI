@@ -23,7 +23,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
-      xB(model.nJ * model.nx_solver), xQB(model.nplist()),
+      xB(model.nJ * model.nx_solver), xQB(model.nplist(), 0.0),
       dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
@@ -79,7 +79,14 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
-                                                        Model *model) {
+                                                        Model *model,
+                                                        int it) {
+    /* If we're in preequilibration, we only want to proceed if the
+     corresponding sensitivity method is set to adjoint */
+    if (it == -1 && solver->getSensitivityMethodPreequilibration !=
+        SensitivityMethod::adjoint)
+        return;
+
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 
     /* get the run time */

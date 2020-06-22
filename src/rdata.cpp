@@ -192,6 +192,7 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
     }
     /* Get cpu time for Newton solve in milliseconds */
     preeq_cpu_time = preeq.getCPUTime();
+    preeq_cpu_timeB = preeq.getCPUTimeB();
     preeq_status = preeq.getSteadyStateStatus();
     preeq_wrms = preeq.getResidualNorm();
     if (preeq_status[1] == SteadyStateStatus::success)
