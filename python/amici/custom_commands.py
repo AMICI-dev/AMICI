@@ -199,23 +199,10 @@ class AmiciBuildExt(build_ext):
         no_clibs |= 'install' in self.distribution.command_obj \
                     and self.get_finalized_command('install').no_clibs
 
-        # remove swig-python-wrapper files
-        unused_swig_wrappers = {'amici/amici_wrap.cxx',
-                                'amici/amici_wrap_without_hdf5.cxx'}
-        if not no_clibs:
-            # check for used c++ interface files
-            for ext in self.extensions:
-                unused_swig_wrappers -= set(ext.sources)
+        lib_dir = "" if self.inplace \
+            else self.get_finalized_command('build_py').build_lib
 
-        if 'amici/amici_wrap.cxx' in unused_swig_wrappers:
-            unused_swig_wrappers.add('amici/amici.py')
-        if 'amici/amici_wrap_without_hdf5.cxx' in unused_swig_wrappers:
-            unused_swig_wrappers.add('amici/amici_without_hdf5.py')
-
-        for filename in unused_swig_wrappers:
-            with contextlib.suppress(FileNotFoundError):
-                log.info(f"Removing unused SWIG wrapper {filename}")
-                os.remove(filename)
+        remove_swig_wrappers(self.extensions, no_clibs, lib_dir)
 
         if no_clibs:
             # Nothing to build
@@ -364,3 +351,26 @@ def set_compiler_specific_extension_options(
         except AttributeError:
             # No compiler-specific options set
             pass
+
+
+def remove_swig_wrappers(extensions: 'setuptools.Extension',
+                         no_clibs: bool, lib_dir: str) -> None:
+    """Remove swig wrapper files not needed by the built extensions"""
+
+    # remove swig-python-wrapper files
+    unused_swig_wrappers = {'amici/amici_wrap.cxx',
+                            'amici/amici_wrap_without_hdf5.cxx'}
+    if not no_clibs:
+        # check for used c++ interface files
+        for ext in extensions:
+            unused_swig_wrappers -= set(ext.sources)
+
+    if 'amici/amici_wrap.cxx' in unused_swig_wrappers:
+        unused_swig_wrappers.add('amici/amici.py')
+    if 'amici/amici_wrap_without_hdf5.cxx' in unused_swig_wrappers:
+        unused_swig_wrappers.add('amici/amici_without_hdf5.py')
+
+    for filename in unused_swig_wrappers:
+        with contextlib.suppress(FileNotFoundError):
+            log.info(f"Removing unused SWIG wrapper {os.path.realpath(filename)}")
+            os.remove(os.path.join(lib_dir, filename))
