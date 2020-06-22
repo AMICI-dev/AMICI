@@ -41,6 +41,7 @@ import sys
 from contextlib import suppress
 from types import ModuleType
 
+
 def _get_amici_path():
     """
     Determine package installation path, or, if used directly from git
@@ -72,6 +73,27 @@ def _get_commit_hash():
     return 'unknown'
 
 
+def _imported_from_setup() -> bool:
+    """Check whether this module is imported from `setup.py`"""
+
+    from inspect import getouterframes, currentframe
+
+    # in case we are imported from setup.py, this will be the AMICI package
+    # root directory (otherwise it is most likely the Python library directory,
+    # we are not interested in)
+    package_root = os.path.dirname(os.path.dirname(__file__))
+
+    for frame in getouterframes(currentframe()):
+        # Need to compare the full path, in case a user tries to import AMICI
+        # from a module `*setup.py`. Will still cause trouble if some package
+        # requires the AMICI extension during its installation, but seems
+        # unlikely...
+        if frame.filename == os.path.join(package_root, 'setup.py'):
+            return True
+
+    return False
+
+
 # redirect C/C++ stdout to python stdout if python stdout is redirected,
 # e.g. in ipython notebook
 capture_cstdout = suppress
@@ -84,41 +106,43 @@ if sys.stdout != sys.__stdout__:
 hdf5_enabled = False
 has_clibs = False
 
-try:
-    # Try importing AMICI SWIG-interface with HDF5 enabled
-    from . import amici
-    from .amici import *
-    hdf5_enabled = True
-    has_clibs = True
-except ModuleNotFoundError:
-    # import from setuptools or installation with `--no-clibs`
-    pass
-except (ImportError, AttributeError) as e:
-    # No such module exists or there are some dynamic linking problems
-    if isinstance(e, AttributeError) or "cannot import name" in str(e):
-        # No such module exists (ImportError),
-        #  or python tries to import a HDF5 function from the non-hdf5
-        #  swig interface (AttributeError):
-        #  try importing AMICI SWIG-interface without HDF5
-        try:
-            from . import amici_without_hdf5 as amici
-            from .amici_without_hdf5 import *
-            has_clibs = True
-        except ModuleNotFoundError:
-            # import from setuptools or installation with `--no-clibs`
-            pass
-        except ImportError as e:
-            if "cannot import name" in str(e):
-                # No such module exists
-                # this probably means, the model was imported during setuptools
-                # `setup` or after an installation with `--no-clibs`.
+if not _imported_from_setup():
+    try:
+        # Try importing AMICI SWIG-interface with HDF5 enabled
+        from . import amici
+        from .amici import *
+        hdf5_enabled = True
+        has_clibs = True
+    except ModuleNotFoundError:
+        # import from setuptools or installation with `--no-clibs`
+        pass
+    except (ImportError, AttributeError) as e:
+        # No such module exists or there are some dynamic linking problems
+        if isinstance(e, AttributeError) or "cannot import name" in str(e):
+            # No such module exists (ImportError),
+            #  or python tries to import a HDF5 function from the non-hdf5
+            #  swig interface (AttributeError):
+            #  try importing AMICI SWIG-interface without HDF5
+            try:
+                from . import amici_without_hdf5 as amici
+                from .amici_without_hdf5 import *
+                has_clibs = True
+            except ModuleNotFoundError:
+                # import from setuptools or installation with `--no-clibs`
                 pass
-            else:
-                # Probably some linking problem that we don't want to hide
-                raise e
-    else:
-        # Probably some linking problem that we don't want to hide
-        raise e
+            except ImportError as e:
+                if "cannot import name" in str(e):
+                    # No such module exists
+                    # this probably means, the model was imported during
+                    # setuptools `setup` or after an installation with
+                    # `--no-clibs`.
+                    pass
+                else:
+                    # Probably some linking problem that we don't want to hide
+                    raise e
+        else:
+            # Probably some linking problem that we don't want to hide
+            raise e
 
 from typing import Optional, Union, Sequence, List
 AmiciModel = Union['amici.Model', 'amici.ModelPtr']
