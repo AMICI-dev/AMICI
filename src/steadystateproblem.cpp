@@ -138,27 +138,30 @@ void SteadystateProblem::findSteadyState(Solver *solver,
 void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolver,
                                                         Model *model,
                                                         bool newton_retry) {
+    int ind = newton_retry ? 2 : 0;
     try {
         applyNewtonsMethod(model, newtonSolver, newton_retry);
-        if (newton_retry) {
-            steady_state_status[2] = SteadyStateStatus::success;
-        } else {
-            steady_state_status[0] = SteadyStateStatus::success;
-        }
+        steady_state_status[ind] = SteadyStateStatus::success;
     } catch (NewtonFailure const &ex) {
         /* nothing to be done */
         switch (ex.error_code) {
             case AMICI_TOO_MUCH_WORK:
-                steady_state_status[0] = SteadyStateStatus::failed_convergence;
+                steady_state_status[ind] =
+                    SteadyStateStatus::failed_convergence;
+                break;
+            case AMICI_NO_STEADY_STATE:
+                steady_state_status[ind] =
+                    SteadyStateStatus::failed_too_long_simulation;
                 break;
             case AMICI_SINGULAR_JACOBIAN:
-                steady_state_status[0] = SteadyStateStatus::failed_factorization;
+                steady_state_status[ind] =
+                    SteadyStateStatus::failed_factorization;
                 break;
             case AMICI_DAMPING_FACTOR_ERROR:
-                steady_state_status[0] = SteadyStateStatus::failed_damping;
+                steady_state_status[ind] = SteadyStateStatus::failed_damping;
                 break;
             default:
-                steady_state_status[0] = SteadyStateStatus::failed;
+                steady_state_status[ind] = SteadyStateStatus::failed;
                 break;
         }
     }
@@ -231,6 +234,10 @@ void SteadystateProblem::writeErrorString(std::string *errorString,
                                           SteadyStateStatus status) const {
     /* write error message according to steady state status */
     switch (status) {
+        case SteadyStateStatus::failed_too_long_simulation:
+            (*errorString).append(": Simulation beyond t=1e100 without finding "
+                                  " a steady state.");
+            break;
         case SteadyStateStatus::failed_damping:
             (*errorString).append(": Damping factor reached lower bound.");
             break;
@@ -467,7 +474,7 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
         }
         if (t >= 1e100 && !converged) {
             numsteps.at(1) = sim_steps;
-            throw NewtonFailure(AMICI_TOO_MUCH_WORK,
+            throw NewtonFailure(AMICI_NO_STEADY_STATE,
                                 "simulated beyond t=1e100 without convergence");
         }
     }
