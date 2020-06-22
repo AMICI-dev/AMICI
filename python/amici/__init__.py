@@ -40,6 +40,7 @@ import re
 import sys
 from contextlib import suppress
 from types import ModuleType
+from typing import Optional, Union, Sequence, List
 
 
 def _get_amici_path():
@@ -103,58 +104,20 @@ if sys.stdout != sys.__stdout__:
     except ModuleNotFoundError:
         pass
 
-hdf5_enabled = False
-has_clibs = False
-
-if not _imported_from_setup():
-    try:
-        # Try importing AMICI SWIG-interface with HDF5 enabled
-        from . import amici
-        from .amici import *
-        hdf5_enabled = True
-        has_clibs = True
-    except ModuleNotFoundError:
-        # import from setuptools or installation with `--no-clibs`
-        pass
-    except (ImportError, AttributeError) as e:
-        # No such module exists or there are some dynamic linking problems
-        if isinstance(e, AttributeError) or "cannot import name" in str(e):
-            # No such module exists (ImportError),
-            #  or python tries to import a HDF5 function from the non-hdf5
-            #  swig interface (AttributeError):
-            #  try importing AMICI SWIG-interface without HDF5
-            try:
-                from . import amici_without_hdf5 as amici
-                from .amici_without_hdf5 import *
-                has_clibs = True
-            except ModuleNotFoundError:
-                # import from setuptools or installation with `--no-clibs`
-                pass
-            except ImportError as e:
-                if "cannot import name" in str(e):
-                    # No such module exists
-                    # this probably means, the model was imported during
-                    # setuptools `setup` or after an installation with
-                    # `--no-clibs`.
-                    pass
-                else:
-                    # Probably some linking problem that we don't want to hide
-                    raise e
-        else:
-            # Probably some linking problem that we don't want to hide
-            raise e
-
-from typing import Optional, Union, Sequence, List
-AmiciModel = Union['amici.Model', 'amici.ModelPtr']
-AmiciSolver = Union['amici.Solver', 'amici.SolverPtr']
-AmiciExpData = Union['amici.ExpData', 'amici.ExpDataPtr']
-AmiciExpDataVector = Union['amici.ExpDataPtrVector', Sequence[AmiciExpData]]
-
 # Initialize AMICI paths
 amici_path = _get_amici_path()
 amiciSwigPath = os.path.join(amici_path, 'swig')
 amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
+
+hdf5_enabled = os.path.isfile(os.path.join(amici_path, 'amici.py'))
+has_clibs = any([os.path.isfile(os.path.join(amici_path, wrapper))
+                 for wrapper in ['amici.py', 'amici_without_hdf5.py']])
+
+AmiciModel = Union['amici.Model', 'amici.ModelPtr']
+AmiciSolver = Union['amici.Solver', 'amici.SolverPtr']
+AmiciExpData = Union['amici.ExpData', 'amici.ExpDataPtr']
+AmiciExpDataVector = Union['amici.ExpDataPtrVector', Sequence[AmiciExpData]]
 
 # Get version number from file
 with open(os.path.join(amici_path, 'version.txt')) as f:
@@ -162,23 +125,25 @@ with open(os.path.join(amici_path, 'version.txt')) as f:
 
 __commit__ = _get_commit_hash()
 
-try:
-    # These module require the swig interface and other dependencies which will
-    # be installed if the the AMICI package was properly installed. If not,
-    # AMICI was probably imported from setup.py and we don't need those.
-    from .sbml_import import SbmlImporter, assignmentRules2observables
+
+# Import SWIG module and swig-dependent submodules if required and available
+if not _imported_from_setup() and has_clibs:
+    if hdf5_enabled:
+        from . import amici
+        from .amici import *
+    else:
+        from . import amici_without_hdf5 as amici
+        from .amici_without_hdf5 import *
+
+    # These module require the swig interface and other dependencies
     from .numpy import ReturnDataView, ExpDataView
     from .pandas import getEdataFromDataFrame, \
         getDataObservablesAsDataFrame, getSimulationObservablesAsDataFrame, \
         getSimulationStatesAsDataFrame, getResidualsAsDataFrame
-    from .ode_export import ODEModel, ODEExporter
-except ImportError as e:
-    # import from setuptools or installation with `--no-clibs`
-    if has_clibs:
-        # cannot raise as we may also end up here when installing from an
-        # already installed in-source installation without all requirements
-        # installed (e.g. fresh virtualenv)
-        print(f'Suppressing error {str(e)}')
+
+# These modules don't require the swig interface
+from .sbml_import import SbmlImporter, assignmentRules2observables
+from .ode_export import ODEModel, ODEExporter
 
 
 def runAmiciSimulation(
