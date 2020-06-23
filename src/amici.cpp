@@ -153,9 +153,12 @@ AmiciApplication::runAmiciSimulation(Solver& solver,
             bwd->workBackwardProblem();
 
 
-            if (preeq)
+            if (preeq) {
+                ConditionContext cond(&model, edata,
+                                      FixedParameterContext::preequilibration);
                 preeq->workSteadyStateBackwardProblem(&solver, &model,
                                                       bwd.get());
+            }
         }
 
         rdata->status = AMICI_SUCCESS;

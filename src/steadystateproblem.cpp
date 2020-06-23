@@ -209,6 +209,7 @@ void SteadystateProblem::initializeBackwardProblem(Solver *solver,
 
         /* If we have a backward problem, we're in preequilibration.
            Hence, quantities like t, x, and xB must be set. */
+        solver->updateAndReinitStatesAndSensitivities(model);
         t = model->t0();
         x = solver->getState(t);
         xB.copy(bwd->getAdjointState());

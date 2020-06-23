@@ -20,7 +20,7 @@ const_N_Vector AmiVector::getNVector() const { return nvec; }
 
 std::vector<realtype> const &AmiVector::getVector() const { return vec; }
 
-void AmiVector::clear() { vec.clear(); }
+void AmiVector::clear() { vec.clear(); N_VDestroy_Serial(nvec); }
 
 int AmiVector::getLength() const { return static_cast<int>(vec.size()); }
 
