@@ -249,7 +249,6 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
             xQB[ip] = N_VDotProd(xB.getNVector(),
                                  model->dxdotdp.getNVector(ip));
     }
-    hasQuadrature = true;
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,

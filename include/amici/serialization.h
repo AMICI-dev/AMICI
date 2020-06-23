@@ -168,6 +168,7 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.cpu_time;
     ar &r.cpu_timeB;
     ar &r.preeq_cpu_time;
+    ar &r.preeq_cpu_timeB;
     ar &r.preeq_status;
     ar &r.preeq_numsteps;
     ar &r.preeq_numlinsteps;

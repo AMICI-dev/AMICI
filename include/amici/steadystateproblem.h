@@ -310,7 +310,7 @@ class SteadystateProblem {
      * @brief Accessor for hasQuadratures
      * @return hasQuadrature
      */
-    const bool getHasQuadrature() const { return hasQuadrature; }
+    const bool getHasQuadrature() const { return xQB.getVector().empty(); }
 
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
@@ -347,9 +347,6 @@ class SteadystateProblem {
     AmiVector xB;
     /** quadrature state vector */
     AmiVector xQB;
-
-    /** flag indicating if adjoint steady state computation was carried out */
-    bool hasQuadrature = false;
 
     /** maximum number of steps for Newton solver for allocating numlinsteps */
     int maxSteps = 0;
