@@ -170,7 +170,7 @@ void ReturnData::processSimulationObjects(SteadystateProblem const *preeq,
         storeJacobianAndDerivativeInReturnData(*posteq, model);
 
     if (fwd && bwd)
-        processBackwardProblem(*fwd, *bwd, model);
+        processBackwardProblem(*fwd, *bwd, preeq, model);
     else if (solver.computingASA())
         invalidateSLLH();
 
@@ -396,6 +396,7 @@ void ReturnData::getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
 
 void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
                                         BackwardProblem const &bwd,
+                                        SteadystateProblem const *preeq,
                                         Model &model) {
     if (sllh.empty())
         return;
@@ -405,8 +406,36 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
 
-    /* NB: This nested loop will not be necessary for fully adjoint
-       preequilibration or post-equilibration without further time points */
+    if (preeq && preeq->getHasQuadrature()) {
+        handleSx0Backward(model, *preeq, llhS0, xQB);
+    } else {
+        handleSx0Forward(model, llhS0, xB, sx_solver);
+    }
+
+    for (int iJ = 0; iJ < model.nJ; iJ++) {
+        for (int ip = 0; ip < model.nplist(); ip++) {
+            if (iJ == 0) {
+                sllh.at(ip) -= llhS0[ip] + xQB[ip * model.nJ];
+            } else {
+                s2llh.at(iJ - 1 + ip * (model.nJ - 1)) -=
+                    llhS0[ip + iJ * model.nplist()] + xQB[iJ + ip * model.nJ];
+            }
+        }
+    }
+}
+
+void ReturnData::handleSx0Backward(Model &model,
+                                   SteadystateProblem const &preeq,
+                                   std::vector<realtype> &llhS0,
+                                   AmiVector &xQB) {
+    auto xQBpreeq = preeq.getAdjointQuadrature();
+    for (int ip = 0; ip < model.nplist(); ++ip)
+        xQB[ip] += xQBpreeq[ip];
+}
+
+void ReturnData::handleSx0Forward(Model &model,
+                                  std::vector<realtype> &llhS0,
+                                  AmiVector &xB, AmiVectorArray &sx_solver) {
     for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < model.nplist(); ++ip) {
@@ -420,22 +449,9 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
                 llhS0[ip + iJ * model.nplist()] = 0.0;
                 for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
                     llhS0[ip + iJ * model.nplist()] +=
-                        xB[ix + iJ * model.nxtrue_solver] *
-                            sx_solver.at(ix, ip) +
-                        xB[ix] *
-                            sx_solver.at(ix + iJ * model.nxtrue_solver, ip);
+                        xB[ix + iJ * model.nxtrue_solver] * sx_solver.at(ix, ip) +
+                        xB[ix] * sx_solver.at(ix + iJ * model.nxtrue_solver, ip);
                 }
-            }
-        }
-    }
-
-    for (int iJ = 0; iJ < model.nJ; iJ++) {
-        for (int ip = 0; ip < model.nplist(); ip++) {
-            if (iJ == 0) {
-                sllh.at(ip) -= llhS0[ip] + xQB[ip * model.nJ];
-            } else {
-                s2llh.at(iJ - 1 + ip * (model.nJ - 1)) -=
-                    llhS0[ip + iJ * model.nplist()] + xQB[iJ + ip * model.nJ];
             }
         }
     }

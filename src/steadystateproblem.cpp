@@ -23,7 +23,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
-      xB(model.nJ * model.nx_solver), xQB(model.nplist(), 0.0),
+      xB(model.nJ * model.nx_solver), xQB(model.nplist()),
       dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
@@ -83,11 +83,14 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
                                                         int it) {
     /* If we're in preequilibration, we only want to proceed if the
      corresponding sensitivity method is set to adjoint */
-    if (it == -1 && solver->getSensitivityMethodPreequilibration !=
+    if (it == -1 && solver->getSensitivityMethodPreequilibration() !=
         SensitivityMethod::adjoint)
         return;
 
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
+
+    xB.reset();
+    xQB.reset();
 
     /* get the run time */
     clock_t starttime;
@@ -120,6 +123,8 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
                                  model->dxdotdp.getNVector(ip));
     }
     cpu_timeB = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
+    hasQuadrature = true;
+    xB.reset();
 }
 
 void SteadystateProblem::findSteadyState(Solver *solver,

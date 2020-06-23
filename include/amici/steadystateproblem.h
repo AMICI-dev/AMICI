@@ -119,8 +119,9 @@ class SteadystateProblem {
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
+     * @param it integer with the index of the current time step
      */
-    void workSteadyStateBackwardProblem(Solver *solver, Model *model);
+    void workSteadyStateBackwardProblem(Solver *solver, Model *model, int it);
 
     /**
      * Computes the weighted root mean square of xdot
@@ -278,12 +279,23 @@ class SteadystateProblem {
     void getAdjointUpdates(Model &model, const ExpData &edata);
 
     /**
+     * @brief Accessor for xQB
+     * @return xQB
+     */
+    AmiVector const& getAdjointQuadrature() const { return xQB; }
+
+    /**
+     * @brief Accessor for hasQuadratures
+     * @return hasQuadrature
+     */
+    const bool getHasQuadrature() const { return hasQuadrature; }
+
+    /**
      * @brief overwrites the adjoint state before backward preeequilibration
      * @param xB_reset vector with new values for xB
      */
-    void SteadystateProblem::resetAdjointState(AmiVector const &xB_reset)
+    void resetAdjointState(AmiVector const &xB_reset)
     { xB.copy(xB_reset); }
-
 
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
@@ -321,6 +333,9 @@ class SteadystateProblem {
     /** quadrature state vector */
     AmiVector xQB;
 
+    /** flag indicating if adjoint steady state computation was carried out */
+    bool hasQuadrature = false;
+
     /** maximum number of steps for Newton solver for allocating numlinsteps */
     int maxSteps = 0;
 
@@ -342,13 +357,13 @@ class SteadystateProblem {
     /** stores diagnostic information about runtime */
     double cpu_time;
 
+    /** stores diagnostic information about runtime backward */
+    double cpu_timeB;
+
     /** stores diagnostic information about execution success of the different
      * approaches [newton, simulation, newton] (length = 3)
      */
     std::vector<SteadyStateStatus> steady_state_status;
-
-    /** stores diagnostic information about runtime backward */
-    double cpu_timeB;
 };
 
 } // namespace amici

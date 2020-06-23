@@ -485,10 +485,12 @@ class ReturnData {
      * @brief extracts results from backward problem
      * @param fwd forward problem
      * @param bwd backward problem
+     * @param preeq Steadystateproblem for preequilibration
      * @param model model that was used for forward/backward simulation
      */
     void processBackwardProblem(ForwardProblem const &fwd,
                                 BackwardProblem const &bwd,
+                                SteadystateProblem const *preeq,
                                 Model &model);
 
     /**
@@ -638,6 +640,29 @@ class ReturnData {
      */
     void getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
                            ExpData const *edata);
+
+    /**
+     * @brief Updates contribution to likelihood for inital state sensitivities
+     * (llhS0), if preequilibration was run in adjoint mode
+     * @param model model that was used for forward/backward simulation
+     * @param preeq Steadystateproblem for preequilibration
+     * @param llhS0 contribution to likelihood for inital state sensitivities
+     * @param xQB vector with quadratures from adjoint computation
+     */
+    void handleSx0Backward(Model &model, SteadystateProblem const &preeq,
+                           std::vector<realtype> &llhS0, AmiVector &xQB);
+
+    /**
+     * @brief Updates contribution to likelihood for inital state sensitivities
+     * (llhS0), if no preequilibration was run or if forward sensis were used
+     * @param model model that was used for forward/backward simulation
+     * @param llhS0 contribution to likelihood for inital state sensitivities
+     * @param xB vector with final adjoint state
+     * @param sx_solver vector with partial state sensitivities
+     * (exluding conservation laws)
+     */
+    void handleSx0Forward(Model &model, std::vector<realtype> &llhS0,
+                          AmiVector &xB, AmiVectorArray &sx_solver);
 };
 
 /**
