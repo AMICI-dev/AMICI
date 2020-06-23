@@ -5,6 +5,7 @@
 #include "amici/solver_cvodes.h"
 #include "amici/edata.h"
 #include "amici/forwardproblem.h"
+#include "amici/backwardproblem.h"
 #include "amici/newton_solver.h"
 #include "amici/misc.h"
 
@@ -80,50 +81,21 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
                                                         Model *model,
-                                                        int it) {
-    /* If we're in preequilibration, we only want to proceed if the
-     corresponding sensitivity method is set to adjoint */
-    if (it == -1 && solver->getSensitivityMethodPreequilibration() !=
-        SensitivityMethod::adjoint)
+                                                        BackwardProblem *bwd) {
+    /* initialize and check if there is something to be done */
+    initializeBackwardProblem(solver, model, bwd);
+    if (xQB.getVector().empty())
         return;
 
+    /* Get the Newton solver */
     auto newtonSolver = NewtonSolver::getSolver(&t, &x, *solver, model);
 
-    xB.reset();
-    xQB.reset();
-
     /* get the run time */
-    clock_t starttime;
-    starttime = clock();
-
-    try {
-        newtonSolver->prepareLinearSystemB(0, -1);
-        newtonSolver->solveLinearSystem(xB);
-    } catch (NewtonFailure const &ex) {
-        if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
-            throw NewtonFailure(ex.error_code, "Steady state backward "
-                                "computation failed due to unsuccessful "
-                                "factorization of RHS Jacobian. ");
-        throw NewtonFailure(ex.error_code, "Steady state backward "
-                            "computation failed. ");
-    }
-
-    /* Compute the inner product v*dxotdp */
-    if (model->pythonGenerated) {
-        const auto& plist = model->getParameterList();
-        if (model->ndxdotdp_explicit > 0)
-            model->dxdotdp_explicit.multiply(xQB.getNVector(),
-                                             xB.getNVector(), plist, true);
-        if (model->ndxdotdp_implicit > 0)
-            model->dxdotdp_implicit.multiply(xQB.getNVector(),
-                                             xB.getNVector(), plist, true);
-    } else {
-        for (int ip=0; ip<model->nplist(); ++ip)
-            xQB[ip] = N_VDotProd(xB.getNVector(),
-                                 model->dxdotdp.getNVector(ip));
-    }
+    clock_t starttime = clock();
+    computeSteadyStateQuadrature(newtonSolver.get(), model);
     cpu_timeB = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
-    hasQuadrature = true;
+
+    /* Finalize by setting addjoint state to zero (its steady state) */
     xB.reset();
 }
 
@@ -222,6 +194,62 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
     } catch (AmiException const &) {
         steady_state_status[1] = SteadyStateStatus::failed;
     }
+}
+
+void SteadystateProblem::initializeBackwardProblem(Solver *solver,
+                                                   Model *model,
+                                                   BackwardProblem *bwd) {
+    if (bwd) {
+        /* If preequilibration but not adjoint mode, there's nothing to do */
+        if (solver->getSensitivityMethodPreequilibration() !=
+            SensitivityMethod::adjoint) {
+            xQB.clear();
+            return;
+        }
+
+        /* If we have a backward problem, we're in preequilibration.
+           Hence, quantities like t, x, and xB must be set. */
+        t = model->t0();
+        x = solver->getState(t);
+        xB.copy(bwd->getAdjointState());
+    } else {
+        xB.reset();
+    }
+
+    /* Will need to write quadratures: reset */
+    xQB.reset();
+}
+
+void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver,
+                                                      Model *model) {
+    /* compute the integral over the adjoint state xBintegral */
+    try {
+        newtonSolver->prepareLinearSystemB(0, -1);
+        newtonSolver->solveLinearSystem(xB);
+    } catch (NewtonFailure const &ex) {
+        if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
+            throw NewtonFailure(ex.error_code, "Steady state backward "
+                                "computation failed due to unsuccessful "
+                                "factorization of RHS Jacobian. ");
+        throw NewtonFailure(ex.error_code, "Steady state backward "
+                            "computation failed. ");
+    }
+
+    /* Compute the quadrature as the inner product xBintegral * dxotdp */
+    if (model->pythonGenerated) {
+        const auto& plist = model->getParameterList();
+        if (model->ndxdotdp_explicit > 0)
+            model->dxdotdp_explicit.multiply(xQB.getNVector(),
+                                             xB.getNVector(), plist, true);
+        if (model->ndxdotdp_implicit > 0)
+            model->dxdotdp_implicit.multiply(xQB.getNVector(),
+                                             xB.getNVector(), plist, true);
+    } else {
+        for (int ip=0; ip<model->nplist(); ++ip)
+            xQB[ip] = N_VDotProd(xB.getNVector(),
+                                 model->dxdotdp.getNVector(ip));
+    }
+    hasQuadrature = true;
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,
