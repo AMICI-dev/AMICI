@@ -1186,6 +1186,9 @@ class Model : public AbstractModel {
      */
     int nxtrue_solver{0};
 
+    /** number of solver states to be reinitilized after preequilibration */
+    int nx_solver_reinit{0};
+
     /** number of observables */
     int ny{0};
 
@@ -1868,9 +1871,6 @@ class Model : public AbstractModel {
      *  fixed parameters is activated
      */
     bool reinitializeFixedParameterInitialStates = false;
-
-    /** number of solver states to be reinitilized after preequilibration */
-    int nx_solver_reinit = 0;
 
     /** Indicates whether the result of every call to Model::f* should be
      * checked for finiteness */

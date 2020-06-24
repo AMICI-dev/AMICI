@@ -48,6 +48,7 @@ class ReturnData {
      * @param nx see amici::Model::nx_rdata
      * @param nx_solver see amici::Model::nx_solver
      * @param nxtrue see amici::Model::nxtrue_rdata
+     * @param nx_solver_reinit see amici::Model::nx_solver_reinit
      * @param ny see amici::Model::ny
      * @param nytrue see amici::Model::nytrue
      * @param nz see amici::Model::nz
@@ -66,7 +67,7 @@ class ReturnData {
      * @param rdrm see amici::Solver::rdata_reporting
      */
     ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
-               int nxtrue, int ny, int nytrue, int nz, int nztrue, int ne,
+               int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
                int nJ, int nplist, int nmaxevent, int nt, int newton_maxsteps,
                int nw,
                std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
@@ -346,6 +347,9 @@ class ReturnData {
 
     /** number of states in the unaugmented system */
     int nxtrue{0};
+
+    /** number of solver states to be reinitilized after preequilibration */
+    int nx_solver_reinit{0};
 
     /** number of observables */
     int ny{0};

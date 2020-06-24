@@ -303,6 +303,11 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver &solver)
             solver.setSensitivityMethod(static_cast<SensitivityMethod>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth")))));
         }
 
+        if (mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth_preeq")) {
+            solver.setSensitivityMethodPreequilibration(
+                static_cast<SensitivityMethod>(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "sensi_meth_preeq")))));
+        }
+
         if (mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering")) {
             solver.setStateOrdering(dbl2int(mxGetScalar(mxGetProperty(prhs[RHS_OPTIONS], 0, "ordering"))));
         }

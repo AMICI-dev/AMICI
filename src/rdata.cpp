@@ -16,7 +16,7 @@ namespace amici {
 
 ReturnData::ReturnData(Solver const &solver, const Model &model)
     : ReturnData(model.getTimepoints(), model.np(), model.nk(), model.nx_rdata,
-                 model.nx_solver, model.nxtrue_rdata, model.ny, model.nytrue,
+                 model.nx_solver, model.nxtrue_rdata, model.nx_solver_reinit, model.ny, model.nytrue,
                  model.nz, model.nztrue, model.ne, model.nJ, model.nplist(),
                  model.nMaxEvent(), model.nt(), solver.getNewtonMaxSteps(),
                  model.nw, model.getParameterScale(), model.o2mode,
@@ -25,14 +25,14 @@ ReturnData::ReturnData(Solver const &solver, const Model &model)
                  solver.getReturnDataReportingMode()) {}
 
 ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
-                       int nx_solver, int nxtrue, int ny, int nytrue, int nz,
+                       int nx_solver, int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz,
                        int nztrue, int ne, int nJ, int nplist, int nmaxevent,
                        int nt, int newton_maxsteps, int nw,
                        std::vector<ParameterScaling> pscale,
                        SecondOrderMode o2mode, SensitivityOrder sensi,
                        SensitivityMethod sensi_meth, RDataReporting rdrm)
     : ts(std::move(ts)), np(np), nk(nk), nx(nx), nx_solver(nx_solver),
-      nxtrue(nxtrue), ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne),
+      nxtrue(nxtrue), nx_solver_reinit(nx_solver_reinit), ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne),
       nJ(nJ), nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
       newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
       o2mode(o2mode), sensi(sensi), sensi_meth(sensi_meth),
