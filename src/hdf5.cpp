@@ -895,12 +895,6 @@ void readModelDataFromHDF5(const H5::H5File &file, Model &model,
                                               "steadyStateSensitivityMode")));
     }
 
-    if(attributeExists(file, datasetPath, "hasConservedQuantities")) {
-        model.setHasConservedQuantities(static_cast<bool>(
-            getIntScalarAttribute(file, datasetPath,
-                                  "hasConservedQuantities")));
-    }
-
     if(locationExists(file, datasetPath + "/theta")) {
         model.setParameters(getDoubleDataset1D(file, datasetPath + "/theta"));
     }

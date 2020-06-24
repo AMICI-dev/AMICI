@@ -84,6 +84,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.nxtrue_rdata;
     ar &u.nx_solver;
     ar &u.nxtrue_solver;
+    ar &u.nx_solver_reinit;
     ar &u.ny;
     ar &u.nytrue;
     ar &u.nz;
@@ -105,7 +106,6 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.originalParameters;
     ar &u.state.fixedParameters;
     ar &u.reinitializeFixedParameterInitialStates;
-    ar &u.hasConservedQuantities;
     ar &u.state.plist;
     ar &u.x0data;
     ar &u.sx0data;

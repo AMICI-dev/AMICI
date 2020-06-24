@@ -95,20 +95,20 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
 }
 
 Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-             const int nxtrue_solver, const int ny, const int nytrue,
-             const int nz, const int nztrue, const int ne, const int nJ,
-             const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
-             std::vector<int> ndJydy, const int nnz, const int ubw,
-             const int lbw, SecondOrderMode o2mode,
+             const int nxtrue_solver, const int nx_solver_reinit, const int ny, 
+             const int nytrue, const int nz, const int nztrue, const int ne, 
+             const int nJ, const int nw, const int ndwdx, const int ndwdp, 
+             const int ndxdotdw, std::vector<int> ndJydy, const int nnz, 
+             const int ubw, const int lbw, SecondOrderMode o2mode,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
              std::vector<int> z2event, const bool pythonGenerated,
              const int ndxdotdp_explicit, const int ndxdotdp_implicit)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
-      nxtrue_solver(nxtrue_solver), ny(ny), nytrue(nytrue), nz(nz),
-      nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
-      ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz), nJ(nJ), ubw(ubw),
-      lbw(lbw), pythonGenerated(pythonGenerated),
+      nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny), 
+      nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), 
+      ndwdp(ndwdp), ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz), 
+      nJ(nJ), ubw(ubw), lbw(lbw), pythonGenerated(pythonGenerated),
       ndxdotdp_explicit(ndxdotdp_explicit),
       ndxdotdp_implicit(ndxdotdp_implicit), o2mode(o2mode),
       idlist(std::move(idlist)), J(nx_solver, nx_solver, nnz, CSC_MAT),
@@ -166,7 +166,8 @@ bool operator==(const Model &a, const Model &b) {
 
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
            (a.nx_solver == b.nx_solver) &&
-           (a.nxtrue_solver == b.nxtrue_solver) && (a.ny == b.ny) &&
+           (a.nxtrue_solver == b.nxtrue_solver) && 
+           (a.nx_solver_reinit == b.nx_solver_reinit) && (a.ny == b.ny) &&
            (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
            (a.ne == b.ne) && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) &&
            (a.ndwdp == b.ndwdp) && (a.ndxdotdw == b.ndxdotdw) &&
@@ -263,6 +264,8 @@ int Model::np() const { return static_cast<int>(originalParameters.size()); }
 int Model::nk() const { return static_cast<int>(state.fixedParameters.size()); }
 
 int Model::ncl() const { return nx_rdata - nx_solver; }
+
+int Model::nx_reinit() const { return nx_solver_reinit; }
 
 const double *Model::k() const { return state.fixedParameters.data(); }
 

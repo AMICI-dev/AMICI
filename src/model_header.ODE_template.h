@@ -119,6 +119,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_NXTRUE_RDATA,                            // nxtrue_rdata
               TPL_NX_SOLVER,                               // nx_solver
               TPL_NXTRUE_SOLVER,                           // nxtrue_solver
+              TPL_NX_SOLVER_REINIT,                        // nx_solver_reinit
               TPL_NY,                                      // ny
               TPL_NYTRUE,                                  // nytrue
               TPL_NZ,                                      // nz
