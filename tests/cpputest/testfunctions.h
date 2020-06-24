@@ -65,7 +65,7 @@ public:
    * @param z2event mapping of event outputs to events
    */
   Model_Test(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-             const int nxtrue_solver, const int ny, const int nytrue,
+             const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
              const int nz, const int nztrue, const int ne, const int nJ,
              const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
              const int nnz, const int ubw, const int lbw,
@@ -78,7 +78,7 @@ public:
 
   /** default constructor */
   Model_Test()
-      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, 0, 0, 0,
+      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, 0, 0, 0,
               SecondOrderMode::none, std::vector<realtype>(),
               std::vector<realtype>(), std::vector<int>(),
               std::vector<realtype>(), std::vector<int>()) {}

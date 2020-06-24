@@ -203,7 +203,6 @@ void SteadystateProblem::initializeBackwardProblem(Solver *solver,
         /* If preequilibration but not adjoint mode, there's nothing to do */
         if (solver->getSensitivityMethodPreequilibration() !=
             SensitivityMethod::adjoint) {
-            xQB.clear();
             return;
         }
 
@@ -217,7 +216,7 @@ void SteadystateProblem::initializeBackwardProblem(Solver *solver,
         xB.reset();
     }
 
-    /* Will need to write quadratures: reset */
+    /* Will need to write quadratures: resize */
     xQB.reset();
 }
 
@@ -250,6 +249,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
             xQB[ip] = N_VDotProd(xB.getNVector(),
                                  model->dxdotdp.getNVector(ip));
     }
+    hasQuadrature = true;
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,

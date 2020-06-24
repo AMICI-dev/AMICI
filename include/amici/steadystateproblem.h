@@ -307,10 +307,10 @@ class SteadystateProblem {
     AmiVector const& getAdjointQuadrature() const { return xQB; }
 
     /**
-     * @brief Accessor for hasQuadratures
+     * @brief Accessor for hasQuadrature
      * @return hasQuadrature
      */
-    const bool getHasQuadrature() const { return xQB.getVector().empty(); }
+    const bool getHasQuadrature() const { return hasQuadrature; }
 
     /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
@@ -371,6 +371,9 @@ class SteadystateProblem {
 
     /** stores diagnostic information about runtime backward */
     double cpu_timeB;
+
+    /** flag indicating whether backward mode was run */
+    bool hasQuadrature = false;
 
     /** stores diagnostic information about execution success of the different
      * approaches [newton, simulation, newton] (length = 3)

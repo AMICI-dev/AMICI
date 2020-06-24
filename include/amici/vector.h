@@ -99,11 +99,6 @@ class AmiVector {
     std::vector<realtype> const &getVector() const;
 
     /**
-     * @brief Clear vector
-     */
-    void clear();
-
-    /**
      * @brief returns the length of the vector
      * @return length
      */
