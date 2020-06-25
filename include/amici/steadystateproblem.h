@@ -199,8 +199,9 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param bwd pointer to backward problem
+     * @return flag indicating whether backward computation to be carried out
      */
-    void initializeBackwardProblem(Solver *solver, Model *model,
+    bool initializeBackwardProblem(Solver *solver, Model *model,
                                    BackwardProblem *bwd);
 
     /**

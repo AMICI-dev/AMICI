@@ -83,8 +83,8 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
                                                         Model *model,
                                                         BackwardProblem *bwd) {
     /* initialize and check if there is something to be done */
-    initializeBackwardProblem(solver, model, bwd);
-    if (xQB.getVector().empty())
+    bool computeBackward = initializeBackwardProblem(solver, model, bwd);
+    if (!computeBackward)
         return;
 
     /* Get the Newton solver */
@@ -196,21 +196,19 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
     }
 }
 
-void SteadystateProblem::initializeBackwardProblem(Solver *solver,
+bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
                                                    Model *model,
                                                    BackwardProblem *bwd) {
     if (bwd) {
         /* If preequilibration but not adjoint mode, there's nothing to do */
         if (solver->getSensitivityMethodPreequilibration() !=
             SensitivityMethod::adjoint) {
-            return;
+            return false;
         }
 
         /* If we have a backward problem, we're in preequilibration.
            Hence, quantities like t, x, and xB must be set. */
         solver->updateAndReinitStatesAndSensitivities(model);
-        t = model->t0();
-        x = solver->getState(t);
         xB.copy(bwd->getAdjointState());
     } else {
         xB.reset();
@@ -218,6 +216,7 @@ void SteadystateProblem::initializeBackwardProblem(Solver *solver,
 
     /* Will need to write quadratures: resize */
     xQB.reset();
+    return true;
 }
 
 void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver,

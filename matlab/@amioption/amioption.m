@@ -41,6 +41,8 @@ classdef amioption < matlab.mixin.CustomDisplay
         ism = 1;
         % sensitivity method
         sensi_meth = 1;
+        % sensitivity method for preequilibration
+        sensi_meth_preeq = 1;
         % sensitivity order
         sensi = 0;
         % number of reported events

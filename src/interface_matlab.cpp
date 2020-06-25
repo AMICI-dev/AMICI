@@ -227,6 +227,11 @@ std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
         }
     }
 
+    // preequilibration condition parameters
+    if (mxGetProperty(prhs[RHS_DATA], 0, "reinitializeStates"))
+        edata->reinitializeFixedParameterInitialStates =
+            static_cast<int>(mxGetScalar(mxGetProperty(prhs[RHS_DATA], 0, "reinitializeStates")));
+
     return edata;
 }
 
@@ -449,6 +454,10 @@ void setModelData(const mxArray *prhs[], int nrhs, Model &model)
                                                                    mxGetPr(sx0) + mxGetM(sx0) * mxGetN(sx0)));
         }
     }
+    // preequilibration condition parameters
+    if (mxGetPr(prhs[RHS_DATA]) && mxGetProperty(prhs[RHS_DATA], 0, "reinitializeStates"))
+        model.setReinitializeFixedParameterInitialStates(
+            static_cast<bool>(mxGetScalar(mxGetProperty(prhs[RHS_DATA], 0, "reinitializeStates"))));
 }
 
 } // namespace amici

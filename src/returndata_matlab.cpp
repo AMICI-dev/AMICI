@@ -101,7 +101,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
 }
 
 mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
-    const int numFields = 24;
+    const int numFields = 25;
     const char *field_names_sol[numFields] = {"xdot",
                                               "J",
                                               "numsteps",
@@ -117,6 +117,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                                               "preeq_numsteps",
                                               "preeq_numlinsteps",
                                               "preeq_cpu_time",
+                                              "preeq_cpu_timeB",
                                               "preeq_t",
                                               "preeq_wrms",
                                               "posteq_status",
@@ -141,8 +142,8 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
     writeMatlabField1(matlabDiagnosisStruct, "order", rdata->order, rdata->nt);
 
     if (rdata->nx > 0) {
-        writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx);
-        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx, perm1);
+        writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx_solver);
+        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx_solver, rdata->nx_solver, perm1);
 
         writeMatlabField1(matlabDiagnosisStruct, "preeq_status", rdata->preeq_status, 3);
         writeMatlabField1(matlabDiagnosisStruct, "preeq_numsteps", rdata->preeq_numsteps, 3);
@@ -151,6 +152,7 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                           rdata->preeq_numlinsteps.size() > 0
                               ? rdata->newton_maxsteps : 0, 2, perm1);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_cpu_time", rdata->preeq_cpu_time);
+        writeMatlabField0(matlabDiagnosisStruct, "preeq_cpu_timeB", rdata->preeq_cpu_timeB);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_t", rdata->preeq_t);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_wrms", rdata->preeq_wrms);
 
