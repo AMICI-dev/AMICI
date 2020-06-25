@@ -208,10 +208,9 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
 
         /* If we have a backward problem, we're in preequilibration.
            Hence, quantities like t, x, and xB must be set. */
+        solver->reInit(t, x, x);
         solver->updateAndReinitStatesAndSensitivities(model);
         xB.copy(bwd->getAdjointState());
-    } else {
-        xB.reset();
     }
 
     /* Will need to write quadratures: resize */
@@ -237,6 +236,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
     /* Compute the quadrature as the inner product xBintegral * dxotdp */
     if (model->pythonGenerated) {
         const auto& plist = model->getParameterList();
+        model->fdxdotdp(t, x, x);
         if (model->ndxdotdp_explicit > 0)
             model->dxdotdp_explicit.multiply(xQB.getNVector(),
                                              xB.getNVector(), plist, true);
