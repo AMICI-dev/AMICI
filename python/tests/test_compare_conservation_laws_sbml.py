@@ -81,10 +81,10 @@ def generate_models():
 def get_results(model, edata=None, sensi_order=0,
                 sensi_meth=amici.SensitivityMethod.forward,
                 sensi_meth_preeq=amici.SensitivityMethod.forward,
-                reinitializeStates=False):
+                reinitialize_states=False):
 
     # set model and data properties
-    model.setReinitializeFixedParameterInitialStates(reinitializeStates)
+    model.setReinitializeFixedParameterInitialStates(reinitialize_states)
 
     # get the solver, set the properties
     solver = model.getSolver()
@@ -95,7 +95,7 @@ def get_results(model, edata=None, sensi_order=0,
     if edata is None:
         model.setTimepoints(np.linspace(0, 5, 101))
     else:
-        edata.reinitializeFixedParameterInitialStates = reinitializeStates
+        edata.reinitializeFixedParameterInitialStates = reinitialize_states
 
     # return simulation results
     return amici.runAmiciSimulation(model, solver, edata)
@@ -177,15 +177,15 @@ def test_adjoint_preequilibration(edata_fixture):
             rff = get_results(model, edata=edata, sensi_order=1,
                               sensi_meth=amici.SensitivityMethod.forward,
                               sensi_meth_preeq=amici.SensitivityMethod.forward,
-                              reinitializeStates=reinit)
+                              reinitialize_states=reinit)
             rfa = get_results(model, edata=edata, sensi_order=1,
                               sensi_meth=amici.SensitivityMethod.adjoint,
                               sensi_meth_preeq=amici.SensitivityMethod.forward,
-                              reinitializeStates=reinit)
+                              reinitialize_states=reinit)
             raa = get_results(model, edata=edata, sensi_order=1,
                               sensi_meth=amici.SensitivityMethod.adjoint,
                               sensi_meth_preeq=amici.SensitivityMethod.adjoint,
-                              reinitializeStates=reinit)
+                              reinitialize_states=reinit)
 
             # assert all are close
             assert np.isclose(rff['sllh'], rfa['sllh']).all()
