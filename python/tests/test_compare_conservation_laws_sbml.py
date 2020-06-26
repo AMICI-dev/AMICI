@@ -9,15 +9,29 @@ import warnings
 
 @pytest.fixture
 def edata_fixture():
-    """edata is generated to test preequilibration"""
-    edata = amici.ExpData(2, 0, 0,
+    """edata is generated to test pre- and postequilibration"""
+    edata_pre = amici.ExpData(2, 0, 0,
                           np.array([0., 0.1, 0.2, 0.5, 1., 2., 5., 10.]))
-    edata.setObservedData([1.5] * 16)
-    edata.fixedParameters = np.array([3., 5.])
-    edata.fixedParametersPreequilibration = np.array([0., 5.])
-    edata.reinitializeFixedParameterInitialStates = True
+    edata_pre.setObservedData([1.5] * 16)
+    edata_pre.fixedParameters = np.array([5., 20.])
+    edata_pre.fixedParametersPreequilibration = np.array([0., 10.])
+    edata_pre.reinitializeFixedParameterInitialStates = True
 
-    return edata
+    # edata for postequilibration
+    edata_post = amici.ExpData(2, 0, 0,
+                          np.array([float('inf')] * 3))
+    edata_post.setObservedData([0.75] * 6)
+    edata_post.fixedParameters = np.array([7.5, 30.])
+
+    # edata with both equilibrations
+    edata_full = amici.ExpData(2, 0, 0,
+        np.array([0., 0., 0., 1., 2., 2., 4., float('inf'), float('inf')]))
+    edata_full.setObservedData([3.14] * 18)
+    edata_full.fixedParameters = np.array([1., 2.])
+    edata_full.fixedParametersPreequilibration = np.array([3., 4.])
+    edata_full.reinitializeFixedParameterInitialStates = True
+
+    return edata_pre, edata_post, edata_full
 
 
 def generate_models():
@@ -32,7 +46,7 @@ def generate_models():
     model_name_cl = model_output_dir_cl = 'model_constant_species_cl'
 
     # Define constants, observables, sigmas
-    constant_parameters = ['init_substrate', 'init_enzyme']
+    constant_parameters = ['synthesis_substrate', 'init_enzyme']
     observables = {
         'observable_product': {'name': '', 'formula': 'product'},
         'observable_substrate': {'name': '', 'formula': 'substrate'},
@@ -64,13 +78,24 @@ def generate_models():
     return model_with_cl, model_without_cl
 
 
-def get_results(model, edata=None, sensi_order=0):
+def get_results(model, edata=None, sensi_order=0,
+                sensi_meth=amici.SensitivityMethod.forward,
+                sensi_meth_preeq=amici.SensitivityMethod.forward,
+                reinitializeStates=False):
+
+    # set model and data properties
+    model.setReinitializeFixedParameterInitialStates(reinitializeStates)
+
     # get the solver, set the properties
     solver = model.getSolver()
     solver.setNewtonMaxSteps(20)
     solver.setSensitivityOrder(sensi_order)
+    solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)
+    solver.setSensitivityMethod(sensi_meth)
     if edata is None:
         model.setTimepoints(np.linspace(0, 5, 101))
+    else:
+        edata.reinitializeFixedParameterInitialStates = reinitializeStates
 
     # return simulation results
     return amici.runAmiciSimulation(model, solver, edata)
@@ -107,9 +132,10 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     )
 
     # run simulations
-    rdata_cl = get_results(model_with_cl, edata=edata_fixture)
+    edata, _, _ = edata_fixture
+    rdata_cl = get_results(model_with_cl, edata=edata)
     assert rdata_cl['status'] == amici.AMICI_SUCCESS
-    rdata = get_results(model_without_cl, edata=edata_fixture)
+    rdata = get_results(model_without_cl, edata=edata)
     assert rdata['status'] == amici.AMICI_SUCCESS
 
     # compare preequilibrated states
@@ -119,9 +145,9 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     # ----- compare simulations wo edata, sensi = 1, states and sensis -------
 
     # run simulations
-    rdata_cl = get_results(model_with_cl, edata=edata_fixture, sensi_order=1)
+    rdata_cl = get_results(model_with_cl, edata=edata, sensi_order=1)
     assert rdata_cl['status'] == amici.AMICI_SUCCESS
-    rdata = get_results(model_without_cl, edata=edata_fixture, sensi_order=1)
+    rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
     assert rdata['status'] == amici.AMICI_SUCCESS
 
     # compare state sensitivities with edata and preequilibration
@@ -135,5 +161,33 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     )
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
-        rdata = get_results(model_without_cl, edata=edata_fixture, sensi_order=1)
+        rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
         assert rdata['status'] == amici.AMICI_ERROR
+
+def test_adjoint_preequilibration(edata_fixture):
+    # get the model
+    sys.path.insert(0, os.path.abspath('model_constant_species_cl'))
+    model_module = importlib.import_module('model_constant_species_cl')
+    model = model_module.getModel()
+
+    # check gradient with and without state reinitialization
+    for edata in edata_fixture:
+        for reinit in [False, True]:
+            # run simulations
+            rff = get_results(model, edata=edata, sensi_order=1,
+                              sensi_meth=amici.SensitivityMethod.forward,
+                              sensi_meth_preeq=amici.SensitivityMethod.forward,
+                              reinitializeStates=reinit)
+            rfa = get_results(model, edata=edata, sensi_order=1,
+                              sensi_meth=amici.SensitivityMethod.adjoint,
+                              sensi_meth_preeq=amici.SensitivityMethod.forward,
+                              reinitializeStates=reinit)
+            raa = get_results(model, edata=edata, sensi_order=1,
+                              sensi_meth=amici.SensitivityMethod.adjoint,
+                              sensi_meth_preeq=amici.SensitivityMethod.adjoint,
+                              reinitializeStates=reinit)
+
+            # assert all are close
+            assert np.isclose(rff['sllh'], rfa['sllh']).all()
+            assert np.isclose(rfa['sllh'], raa['sllh']).all()
+            assert np.isclose(raa['sllh'], rff['sllh']).all()
