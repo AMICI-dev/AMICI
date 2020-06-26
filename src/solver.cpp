@@ -20,8 +20,9 @@ Solver::Solver(AmiciApplication *app) : app(app)
 Solver::Solver(const Solver &other)
     : ism(other.ism), lmm(other.lmm), iter(other.iter),
       interpType(other.interpType), maxsteps(other.maxsteps),
-      sensi_meth(other.sensi_meth), stldet(other.stldet),
-      ordering(other.ordering), newton_maxsteps(other.newton_maxsteps),
+      sensi_meth(other.sensi_meth), sensi_meth_preeq(other.sensi_meth_preeq),
+      stldet(other.stldet), ordering(other.ordering),
+      newton_maxsteps(other.newton_maxsteps),
       newton_maxlinsteps(other.newton_maxlinsteps),
       newton_damping_factor_mode(other.newton_damping_factor_mode),
       newton_damping_factor_lower_bound(other.newton_damping_factor_lower_bound),
