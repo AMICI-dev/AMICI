@@ -202,9 +202,14 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
     if (bwd) {
         /* If preequilibration but not adjoint mode, there's nothing to do */
         if (solver->getSensitivityMethodPreequilibration() !=
-            SensitivityMethod::adjoint) {
+            SensitivityMethod::adjoint)
             return false;
-        }
+
+        /* If we need to reinitialize solver states, this won't work yet. */
+        if (model->nx_reinit() > 0)
+            throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
+                "Adjoint preequilibration with reinitialization of "
+                "non-constant states is not xet implemented. Stopping.");
 
         /* If we have a backward problem, we're in preequilibration.
            Hence, quantities like t, x, and xB must be set. */
@@ -235,8 +240,10 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
 
     /* Compute the quadrature as the inner product xBintegral * dxotdp */
     if (model->pythonGenerated) {
+        /* fill dxdotdp with current values */
         const auto& plist = model->getParameterList();
         model->fdxdotdp(t, x, x);
+
         if (model->ndxdotdp_explicit > 0)
             model->dxdotdp_explicit.multiply(xQB.getNVector(),
                                              xB.getNVector(), plist, true);
@@ -248,6 +255,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
             xQB[ip] = N_VDotProd(xB.getNVector(),
                                  model->dxdotdp.getNVector(ip));
     }
+    /* set flag that quadratures is available (for processing in rdata) */
     hasQuadrature = true;
 }
 
@@ -309,9 +317,9 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
         solver->getSensitivityMethod() == SensitivityMethod::forward &&
         it > -1;
-    bool needForwardSensisPreeq = !forwardSensisAlreadyComputed &&
+    bool needForwardSensisPreeq = !forwardSensisAlreadyComputed && it == -1 &&
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
-        it == -1;
+        solver->getSensitivityMethodPreequilibration() == SensitivityMethod::forward;
     bool needForwardSensis = needForwardSensisPreeq || needForwardSensisPosteq;
     bool needForwardSensiByIntegration =
         solver->getSensitivityOrder() >= SensitivityOrder::first &&
@@ -351,8 +359,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver, Model *model) {
     bool converged = wrms < RCONST(1.0);
 
     /* If we also integrate forward sensis, we need to also check those:
-       Check if: sensis enabled && steadyStateSensiMode == simulation
-     */
+       Check if: sensis enabled && steadyStateSensiMode == simulation */
     bool checkForwardSensis =
         solver->getSensitivityOrder() > SensitivityOrder::none &&
         model->getSteadyStateSensitivityMode() ==
