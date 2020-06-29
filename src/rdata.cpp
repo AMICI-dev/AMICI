@@ -431,6 +431,13 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
 void ReturnData::handleSx0Backward(const Model &model,
                                    SteadystateProblem const &preeq,
                                    AmiVector &xQB) const {
+    /* If preequilibration is run in adjoint mode, the scalar product of sx0
+       with its adjoint counterpart (see handleSx0Forward()) is not necessary:
+       the actual simulation is "extended" by the preequilibration time.
+       At initialization (at t=-inf), the adjoint state is in steady state (= 0)
+       and so is the scalar product. Instead of the scalar product, the
+       quadratures xQB from preequilibration contribute to the gradient
+       (see example notebook on equilibration for further documentation). */
     auto xQBpreeq = preeq.getAdjointQuadrature();
     for (int ip = 0; ip < model.nplist(); ++ip)
         xQB[ip] += xQBpreeq[ip];
@@ -439,6 +446,10 @@ void ReturnData::handleSx0Backward(const Model &model,
 void ReturnData::handleSx0Forward(const Model &model,
                                   std::vector<realtype> &llhS0,
                                   AmiVector &xB) const {
+    /* If preequilibration is run in forward mode or is not needed, then adjoint
+       sensitivity analysis still needs the state sensitivities at t=0 (sx0),
+       to compute the gradient. For each parameter, the scalar product of sx0
+       with its adjoint counterpart contributes to the gradient. */
     for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < model.nplist(); ++ip) {
