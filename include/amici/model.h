@@ -80,7 +80,7 @@ class Model : public AbstractModel {
      * @param nxtrue_solver number of state variables of the non-augmented model
      * with conservation laws applied
      * @param nx_solver_reinit number of state variables with conservation laws
-     * applied which would be reinitiliazed after preequilibration
+     * subject to reinitialization
      * @param ny number of observables
      * @param nytrue number of observables of the non-augmented model
      * @param nz number of event observables
@@ -262,7 +262,7 @@ class Model : public AbstractModel {
     int ncl() const;
 
     /**
-     * @brief Number of solver states to be reinitiliazed after preequilibration
+     * @brief Number of solver states subject to reinitialization
      * @return model member nx_solver_reinit
      */
     int nx_reinit() const;
@@ -1186,7 +1186,7 @@ class Model : public AbstractModel {
      */
     int nxtrue_solver{0};
 
-    /** number of solver states to be reinitilized after preequilibration */
+    /** number of solver states subject to reinitialization */
     int nx_solver_reinit{0};
 
     /** number of observables */

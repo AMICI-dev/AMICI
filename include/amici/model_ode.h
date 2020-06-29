@@ -37,7 +37,7 @@ class Model_ODE : public Model {
      * @param nxtrue_solver number of state variables of the non-augmented model
      with conservation laws applied
      * @param nx_solver_reinit number of state variables with conservation laws
-     * applied which would be reinitiliazed after preequilibration
+     * subject to reinitialization
      * @param ny number of observables
      * @param nytrue number of observables of the non-augmented model
      * @param nz number of event observables

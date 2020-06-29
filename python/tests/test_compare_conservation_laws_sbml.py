@@ -1,7 +1,5 @@
-import importlib
 import amici
 import os
-import sys
 import pytest
 import numpy as np
 import warnings
@@ -67,10 +65,8 @@ def generate_models():
                              compute_conservation_laws=False)
 
     # load both models
-    sys.path.insert(0, os.path.abspath(model_name))
-    sys.path.insert(0, os.path.abspath(model_name_cl))
-    model_without_cl_module = importlib.import_module(model_name)
-    model_with_cl_module = importlib.import_module(model_name_cl)
+    model_without_cl_module = amici.import_model_module(model_name)
+    model_with_cl_module = amici.import_model_module(model_name_cl)
 
     # get the models and return
     model_without_cl = model_without_cl_module.getModel()
@@ -164,10 +160,9 @@ def test_compare_conservation_laws_sbml(edata_fixture):
         rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
         assert rdata['status'] == amici.AMICI_ERROR
 
-def test_adjoint_preequilibration(edata_fixture):
+def test_adjoint_pre_and_post_equilibration(edata_fixture):
     # get the model
-    sys.path.insert(0, os.path.abspath('model_constant_species_cl'))
-    model_module = importlib.import_module('model_constant_species_cl')
+    model_module = amici.import_model_module('model_constant_species_cl')
     model = model_module.getModel()
 
     # check gradient with and without state reinitialization

@@ -248,7 +248,7 @@ class ReturnData {
     /** computation time of the steady state solver [ms]  (postequilibration) */
     double posteq_cpu_time = 0.0;
 
-    /** computation time of the steady state solverof the backward problem [ms]
+    /** computation time of the steady state solver of the backward problem [ms]
      *  (postequilibration) */
     double posteq_cpu_timeB = 0.0;
 
@@ -279,7 +279,7 @@ class ReturnData {
     std::vector<int> posteq_numlinsteps;
 
     /**
-     * time at which steadystate was reached in the simulation based approach (preequilibration)
+     * time when steadystate was reached via simulation (preequilibration)
      */
     realtype preeq_t = NAN;
 
@@ -290,7 +290,7 @@ class ReturnData {
     realtype preeq_wrms = NAN;
 
     /**
-     * time at which steadystate was reached in the simulation based approach (postequilibration)
+     * time when steadystate was reached via simulation (postequilibration)
      */
     realtype posteq_t = NAN;
 
@@ -646,27 +646,26 @@ class ReturnData {
                            ExpData const *edata);
 
     /**
-     * @brief Updates contribution to likelihood for inital state sensitivities
-     * (llhS0), if preequilibration was run in adjoint mode
+     * @brief Updates contribution to likelihood from quadratures (xQB),
+     * if preequilibration was run in adjoint mode
      * @param model model that was used for forward/backward simulation
      * @param preeq Steadystateproblem for preequilibration
-     * @param llhS0 contribution to likelihood for inital state sensitivities
      * @param xQB vector with quadratures from adjoint computation
      */
-    void handleSx0Backward(Model &model, SteadystateProblem const &preeq,
-                           std::vector<realtype> &llhS0, AmiVector &xQB);
+    void handleSx0Backward(const Model &model, SteadystateProblem const &preeq,
+                           AmiVector &xQB) const;
 
     /**
      * @brief Updates contribution to likelihood for inital state sensitivities
-     * (llhS0), if no preequilibration was run or if forward sensis were used
+     * (llhS0), if no preequilibration was run or if forward sensitivities were used
      * @param model model that was used for forward/backward simulation
      * @param llhS0 contribution to likelihood for inital state sensitivities
      * @param xB vector with final adjoint state
-     * @param sx_solver vector with partial state sensitivities
      * (exluding conservation laws)
      */
-    void handleSx0Forward(Model &model, std::vector<realtype> &llhS0,
-                          AmiVector &xB, AmiVectorArray &sx_solver);
+    void handleSx0Forward(const Model &model,
+                          std::vector<realtype> &llhS0,
+                          AmiVector &xB) const;
 };
 
 /**

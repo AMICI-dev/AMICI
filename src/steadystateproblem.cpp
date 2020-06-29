@@ -198,7 +198,7 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
 
 bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
                                                    Model *model,
-                                                   BackwardProblem *bwd) {
+                                                   const BackwardProblem *bwd) {
     if (bwd) {
         /* If preequilibration but not adjoint mode, there's nothing to do */
         if (solver->getSensitivityMethodPreequilibration() !=
@@ -209,7 +209,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
         if (model->nx_reinit() > 0)
             throw NewtonFailure(AMICI_NOT_IMPLEMENTED,
                 "Adjoint preequilibration with reinitialization of "
-                "non-constant states is not xet implemented. Stopping.");
+                "non-constant states is not yet implemented. Stopping.");
 
         /* If we have a backward problem, we're in preequilibration.
            Hence, quantities like t, x, and xB must be set. */
@@ -225,7 +225,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
 
 void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver,
                                                       Model *model) {
-    /* compute the integral over the adjoint state xBintegral */
+    /* compute the integral over the adjoint state xB */
     try {
         newtonSolver->prepareLinearSystemB(0, -1);
         newtonSolver->solveLinearSystem(xB);
@@ -233,9 +233,9 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
         if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
             throw NewtonFailure(ex.error_code, "Steady state backward "
                                 "computation failed due to unsuccessful "
-                                "factorization of RHS Jacobian. ");
+                                "factorization of RHS Jacobian.");
         throw NewtonFailure(ex.error_code, "Steady state backward "
-                            "computation failed. ");
+                            "computation failed.");
     }
 
     /* Compute the quadrature as the inner product xBintegral * dxotdp */

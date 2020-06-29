@@ -266,7 +266,7 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     assert rdata['status'] == amici.AMICI_SUCCESS
     
     
-def test_only_equilibration_with_adjoints(preeq_fixture):
+def test_equilibration_methods_with_adjoints(preeq_fixture):
     """Test data replicates"""
 
     model, solver, edata, edata_preeq, \

@@ -202,7 +202,7 @@ class SteadystateProblem {
      * @return flag indicating whether backward computation to be carried out
      */
     bool initializeBackwardProblem(Solver *solver, Model *model,
-                                   BackwardProblem *bwd);
+                                   const BackwardProblem *bwd);
 
     /**
      * @brief store carbon copy of current simulation state variables as SimulationState

@@ -407,9 +407,9 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xQB = bwd.getAdjointQuadrature();
 
     if (preeq && preeq->getHasQuadrature()) {
-        handleSx0Backward(model, *preeq, llhS0, xQB);
+        handleSx0Backward(model, *preeq, xQB);
     } else {
-        handleSx0Forward(model, llhS0, xB, sx_solver);
+        handleSx0Forward(model, llhS0, xB);
     }
 
     for (int iJ = 0; iJ < model.nJ; iJ++) {
@@ -424,18 +424,17 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     }
 }
 
-void ReturnData::handleSx0Backward(Model &model,
+void ReturnData::handleSx0Backward(const Model &model,
                                    SteadystateProblem const &preeq,
-                                   std::vector<realtype> &llhS0,
-                                   AmiVector &xQB) {
+                                   AmiVector &xQB) const {
     auto xQBpreeq = preeq.getAdjointQuadrature();
     for (int ip = 0; ip < model.nplist(); ++ip)
         xQB[ip] += xQBpreeq[ip];
 }
 
-void ReturnData::handleSx0Forward(Model &model,
+void ReturnData::handleSx0Forward(const Model &model,
                                   std::vector<realtype> &llhS0,
-                                  AmiVector &xB, AmiVectorArray &sx_solver) {
+                                  AmiVector &xB) const {
     for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < model.nplist(); ++ip) {
