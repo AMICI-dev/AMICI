@@ -134,12 +134,16 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
 
     std::vector<int> perm1 = {0, 1};
+    int finite_nt = 0;
+    for (int it = 0; it < rdata->nt; it++)
+        if (!std::isinf(rdata->ts[it]))
+            finite_nt++;
 
-    writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numrhsevals", rdata->numrhsevals, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numerrtestfails", rdata->numerrtestfails, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "order", rdata->order, rdata->nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, finite_nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numrhsevals", rdata->numrhsevals, finite_nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numerrtestfails", rdata->numerrtestfails, finite_nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, finite_nt);
+    writeMatlabField1(matlabDiagnosisStruct, "order", rdata->order, finite_nt);
 
     if (rdata->nx > 0) {
         writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx_solver);
@@ -169,10 +173,10 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
     }
     if (rdata->sensi >= SensitivityOrder::first) {
         if (rdata->sensi_meth == SensitivityMethod::adjoint) {
-            writeMatlabField1(matlabDiagnosisStruct, "numstepsB", rdata->numstepsB, rdata->nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numrhsevalsB", rdata->numrhsevalsB, rdata->nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numerrtestfailsB, rdata->nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfailsB", rdata->numnonlinsolvconvfailsB, rdata->nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numstepsB", rdata->numstepsB, finite_nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numrhsevalsB", rdata->numrhsevalsB, finite_nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numerrtestfailsB, finite_nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfailsB", rdata->numnonlinsolvconvfailsB, finite_nt);
         }
     }
 

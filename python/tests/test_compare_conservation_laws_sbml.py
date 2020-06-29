@@ -149,7 +149,7 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
     assert rdata['status'] == amici.AMICI_SUCCESS
     # check that steady state computation succeeded only by sim in full model
-    assert rdata['preeq_status'] == np.array([-3, 1, 0])
+    assert (rdata['preeq_status'] == np.array([-3, 1, 0])).all()
     # check that steady state computation succeeded by Newton in reduced model
     assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
 
