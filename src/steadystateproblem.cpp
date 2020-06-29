@@ -31,6 +31,13 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
               maxSteps = solver.getNewtonMaxSteps();
               numlinsteps.resize(2 * maxSteps, 0);
           }
+          /* Check for compatibility of options */
+          if (solver.getSensitivityMethod == SensitivityMethod::forward &&
+              solver.getSensitivityMethodPreequilibration == SensitivityMethod::adjoint &&
+              solver.getSensitivityOrder > SensitivityOrder::none)
+              throw AmiException("Preequilibration using adjoint sensitivities "
+                                 "is not compatible with using forward "
+                                 "sensitivities during simulation");
       }
 
 void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
