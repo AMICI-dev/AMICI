@@ -32,9 +32,9 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
               numlinsteps.resize(2 * maxSteps, 0);
           }
           /* Check for compatibility of options */
-          if (solver.getSensitivityMethod == SensitivityMethod::forward &&
-              solver.getSensitivityMethodPreequilibration == SensitivityMethod::adjoint &&
-              solver.getSensitivityOrder > SensitivityOrder::none)
+          if (solver.getSensitivityMethod() == SensitivityMethod::forward &&
+              solver.getSensitivityMethodPreequilibration() == SensitivityMethod::adjoint &&
+              solver.getSensitivityOrder() > SensitivityOrder::none)
               throw AmiException("Preequilibration using adjoint sensitivities "
                                  "is not compatible with using forward "
                                  "sensitivities during simulation");
