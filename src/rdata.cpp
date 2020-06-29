@@ -406,7 +406,7 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
 
-    if (preeq && preeq->getHasQuadrature()) {
+    if (preeq && preeq->hasQuadrature()) {
         handleSx0Backward(model, *preeq, xQB);
     } else {
         handleSx0Forward(model, llhS0, xB);

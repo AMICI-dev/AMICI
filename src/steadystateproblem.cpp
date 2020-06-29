@@ -256,7 +256,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
                                  model->dxdotdp.getNVector(ip));
     }
     /* set flag that quadratures is available (for processing in rdata) */
-    hasQuadrature = true;
+    hasQuadrature_ = true;
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,
