@@ -38,7 +38,6 @@ class Model_DAE : public Model {
      with conservation laws applied
      * @param nx_solver_reinit number of state variables with conservation laws
      * subject to reinitialization
-     * applied which would be reinitiliazed after preequilibration
      * @param ny number of observables
      * @param nytrue number of observables of the non-augmented model
      * @param nz number of event observables
