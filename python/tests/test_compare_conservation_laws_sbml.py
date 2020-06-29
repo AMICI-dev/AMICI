@@ -1,5 +1,6 @@
 import amici
 import os
+import sys
 import pytest
 import numpy as np
 import warnings
@@ -65,6 +66,8 @@ def generate_models():
                              compute_conservation_laws=False)
 
     # load both models
+    sys.path.insert(0, os.path.abspath(model_name))
+    sys.path.insert(0, os.path.abspath(model_name_cl))
     model_without_cl_module = amici.import_model_module(model_name)
     model_with_cl_module = amici.import_model_module(model_name_cl)
 
@@ -145,6 +148,10 @@ def test_compare_conservation_laws_sbml(edata_fixture):
     assert rdata_cl['status'] == amici.AMICI_SUCCESS
     rdata = get_results(model_without_cl, edata=edata, sensi_order=1)
     assert rdata['status'] == amici.AMICI_SUCCESS
+    # check that steady state computation succeeded only by sim in full model
+    assert rdata['preeq_status'] == np.array([-3, 1, 0])
+    # check that steady state computation succeeded by Newton in reduced model
+    assert (rdata_cl['preeq_status'] == np.array([1, 0, 0])).all()
 
     # compare state sensitivities with edata and preequilibration
     for field in ['x', 'x_ss', 'sx', 'llh', 'sllh']:
