@@ -659,7 +659,7 @@ class ReturnData {
      * @brief Updates contribution to likelihood for inital state sensitivities
      * (llhS0), if no preequilibration was run or if forward sensitivities were used
      * @param model model that was used for forward/backward simulation
-     * @param llhS0 contribution to likelihood for inital state sensitivities
+     * @param llhS0 contribution to likelihood for initial state sensitivities
      * @param xB vector with final adjoint state
      * (exluding conservation laws)
      */
