@@ -368,10 +368,10 @@ class SteadystateProblem {
     std::vector<int> numlinsteps;
 
     /** stores diagnostic information about runtime */
-    double cpu_time;
+    double cpu_time = 0.0;
 
     /** stores diagnostic information about runtime backward */
-    double cpu_timeB;
+    double cpu_timeB = 0.0;
 
     /** flag indicating whether backward mode was run */
     bool hasQuadrature_ = false;
