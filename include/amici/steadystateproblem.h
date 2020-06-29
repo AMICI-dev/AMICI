@@ -93,7 +93,7 @@ class SteadystateProblem {
                                      int it);
 
     /**
-     * Compute the quadrature in steady state abckward mode by solvingthe
+     * Compute the quadrature in steady state backward mode by solving the
      * linear system defined by the backward Jacobian
      *
      * @param newtonSolver pointer to the newtonSolver solver object
