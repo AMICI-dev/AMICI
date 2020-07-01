@@ -1032,13 +1032,16 @@ class SbmlImporter:
                     nested_formula = sp.sympify(
                         sbml.formulaToL3String(nested_rule.getMath()),
                         locals=self.local_symbols).subs(variable, formula)
+                    nested_formula = _parse_special_functions(nested_formula)
+                    _check_unsupported_functions(nested_formula, 'Rule')
 
                     nested_rule_math_ml = mathml(nested_formula)
                     nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml)
 
                     if nested_rule_math_ml_ast_node is None:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
-                                            f' cannot be parsed to valid MathML by SymPy!')
+                                            f' cannot be correctly read by SymPy'
+                                            f' or cannot be converted to valid MathML by SymPy!')
 
                     elif nested_rule.setMath(nested_rule_math_ml_ast_node) != sbml.LIBSBML_OPERATION_SUCCESS:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
