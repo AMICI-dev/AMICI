@@ -385,7 +385,7 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
                              "preeq_cpu_time", &rdata.preeq_cpu_time, 1);
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
-                             "preeq_cpu_timeB", &rdata.preeq_cpu_time, 1);
+                             "preeq_cpu_timeB", &rdata.preeq_cpu_timeB, 1);
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(), "preeq_t",
                              &rdata.preeq_t, 1);
