@@ -69,6 +69,8 @@ classdef amioption < matlab.mixin.CustomDisplay
         % unscaled parameters p.
         % Use [] for default as specified in the model (fallback: 'lin').
         pscale = [];
+        % Mode for for computing sensitivities ({0: Newton}, 1: Simulation)
+        steadyStateSensitivityMode = 0;
     end
     
     methods
