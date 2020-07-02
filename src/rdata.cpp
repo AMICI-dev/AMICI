@@ -100,9 +100,9 @@ void ReturnData::initializeFullReporting() {
     w.resize(nt * nw, 0.0);
 
     preeq_numsteps.resize(3, 0);
-    preeq_status.resize(3, 0);
+    preeq_status.resize(3, SteadyStateStatus::not_run);
     posteq_numsteps.resize(3, 0);
-    posteq_status.resize(3, 0);
+    posteq_status.resize(3, SteadyStateStatus::not_run);
 
     if (nt > 0) {
         numsteps.resize(nt, 0);
@@ -194,10 +194,8 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
     preeq_cpu_time = preeq.getCPUTime();
     preeq_cpu_timeB = preeq.getCPUTimeB();
     preeq_wrms = preeq.getResidualNorm();
-    auto preeq_status_tmp = preeq.getSteadyStateStatus();
-    for(int is=0; is < preeq_status_tmp.size(); ++is)
-        preeq_status[is] = static_cast<int>(preeq_status_tmp[is]);
-    if (preeq_status_tmp[1] == SteadyStateStatus::success)
+    preeq_status = preeq.getSteadyStateStatus();
+    if (preeq_status[1] == SteadyStateStatus::success)
         preeq_t = preeq.getSteadyStateTime();
     if (!preeq_numsteps.empty())
         writeSlice(preeq.getNumSteps(), preeq_numsteps);
@@ -220,10 +218,8 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     posteq_cpu_time = posteq.getCPUTime();
     posteq_cpu_timeB = posteq.getCPUTimeB();
     posteq_wrms = posteq.getResidualNorm();
-    auto posteq_status_tmp = posteq.getSteadyStateStatus();
-    for(int is=0; is < posteq_status_tmp.size(); ++is)
-        posteq_status[is] = static_cast<int>(posteq_status_tmp[is]);
-    if (posteq_status_tmp[1] == SteadyStateStatus::success)
+    posteq_status = posteq.getSteadyStateStatus();
+    if (posteq_status[1] == SteadyStateStatus::success)
         posteq_t = posteq.getSteadyStateTime();
     if (!posteq_numsteps.empty())
         writeSlice(posteq.getNumSteps(), posteq_numsteps);
