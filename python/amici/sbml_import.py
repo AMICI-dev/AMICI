@@ -1030,7 +1030,7 @@ class SbmlImporter:
                 for nested_rule in rules:
 
                     nested_formula = sp.sympify(
-                        sbml.formulaToL3String(nested_rule.getMath()),
+                        _parse_logical_operators(sbml.formulaToL3String(nested_rule.getMath())),
                         locals=self.local_symbols).subs(variable, formula)
                     nested_formula = _parse_special_functions(nested_formula)
                     _check_unsupported_functions(nested_formula, 'Rule')
@@ -1160,10 +1160,13 @@ class SbmlImporter:
             for s in formula.free_symbols:
                 r = self.sbml.getAssignmentRuleByVariable(str(s))
                 if r is not None:
-                    formula = formula.replace(s, sp.sympify(
-                        sbml.formulaToL3String(r.getMath()),
-                        locals=self.local_symbols
-                    ))
+                    rule_formula = _parse_logical_operators(
+                        sbml.formulaToL3String(r.getMath()))
+                    rule_formula = sp.sympify(
+                        rule_formula, locals=self.local_symbols)
+                    rule_formula = _parse_special_functions(rule_formula)
+                    _check_unsupported_functions(rule_formula, 'Rule')
+                    formula = formula.replace(s, rule_formula)
             return formula
 
         # add user-provided observables or make all species, and compartments
