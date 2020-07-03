@@ -8,9 +8,7 @@ function testModels()
     warning('off','AMICI:mex:CVODES:CVode:TOO_MUCH_WORK')
 
     ignoredTests = {'/model_jakstat_adjoint/sensiadjointemptysensind', ...
-                    '/model_jakstat_adjoint/sensiforwardemptysensind', ...
-                    '/model_steadystate/sensiforwarderrorint', ...
-                    '/model_steadystate/sensiforwarderrornewt'};
+                    '/model_jakstat_adjoint/sensiforwardemptysensind'};
 
     cd(fileparts(mfilename('fullpath')))
     addpath(genpath('../../tests/cpputest'));

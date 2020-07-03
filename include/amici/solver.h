@@ -173,7 +173,7 @@ class Solver {
     SensitivityMethod getSensitivityMethod() const;
 
     /**
-     * @brief Set sensitivity method
+     * @brief Set sensitivity method (wrapper for sensitivityMethod())
      * @param sensi_meth
      */
     void setSensitivityMethod(SensitivityMethod sensi_meth);
@@ -185,7 +185,7 @@ class Solver {
     SensitivityMethod getSensitivityMethodPreequilibration() const;
 
     /**
-     * @brief Set sensitivity method during preequilibration
+     * @brief Set sensitivity method for preequilibration (wrapper for sensitivityMethod())
      * @param sensi_meth_preeq
      */
     void setSensitivityMethodPreequilibration(SensitivityMethod sensi_meth_preeq);
@@ -1497,6 +1497,14 @@ class Solver {
      * @param which adjoint problem index
      */
     void setQuadInitDoneB(int which) const;
+
+    /**
+     * @brief Sets sensitivity method (for simulation or preequilibration)
+     * @param member pointer class member sensi_meth[_preeq]
+     * @param value user input for new value of class member sensi_meth[_preeq]
+     */
+    void sensitivityMethod(SensitivityMethod *member,
+                           const SensitivityMethod value);
 
     /** state (dimension: nx_solver) */
     mutable AmiVector x = AmiVector(0);

@@ -55,7 +55,7 @@ class SteadystateProblem {
      * @param bwd backward problem
      */
     void workSteadyStateBackwardProblem(Solver *solver, Model *model,
-                                        BackwardProblem *bwd);
+                                        const BackwardProblem *bwd);
 
     /**
      * Handles the computation of the steady state, throws an AmiException,

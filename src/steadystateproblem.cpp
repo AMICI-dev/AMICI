@@ -88,10 +88,9 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
                                                         Model *model,
-                                                        BackwardProblem *bwd) {
+                                                        const BackwardProblem *bwd) {
     /* initialize and check if there is something to be done */
-    bool computeBackward = initializeBackwardProblem(solver, model, bwd);
-    if (!computeBackward)
+    if (!initializeBackwardProblem(solver, model, bwd))
         return;
 
     /* Get the Newton solver */
@@ -225,14 +224,28 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
         xB.copy(bwd->getAdjointState());
     }
 
-    /* Will need to write quadratures: resize */
+    /* Will need to write quadratures: set to 0 */
     xQB.reset();
     return true;
 }
 
 void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver,
                                                       Model *model) {
-    /* compute the integral over the adjoint state xB */
+    /* This routine computes the qudratures:
+         xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
+     As we're in steady state, we have x(t) = x_ss (x_steadystate), hence
+         xQB = Integral[ xB(x_ss, t, p) | dt ] * dxdot/dp(x_ss, t, p)
+     We therefore compute the integral over xB first and then do a
+     matrix-vector multiplication */
+
+    /* Compute the integral over the adjoint state xB:
+       If the Jacobian has full rank, this has an anlytical solution, since
+           d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
+       This linear ODE system with time-constant matrix has the solution
+           xB(t) = exp( t * JB^T(x_ss, p) ) * xB(0)
+       This integral xBI is given as the solution of
+           JB^T(x_ss, p) * xBI = xB(0)
+       So we first try to solve the linear system, if possible. */
     try {
         newtonSolver->prepareLinearSystemB(0, -1);
         newtonSolver->solveLinearSystem(xB);
@@ -245,7 +258,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
                             "computation failed.");
     }
 
-    /* Compute the quadrature as the inner product xBintegral * dxotdp */
+    /* Compute the quadrature as the inner product xBI * dxotdp */
     if (model->pythonGenerated) {
         /* fill dxdotdp with current values */
         const auto& plist = model->getParameterList();
@@ -289,8 +302,8 @@ void SteadystateProblem::writeErrorString(std::string *errorString,
     /* write error message according to steady state status */
     switch (status) {
         case SteadyStateStatus::failed_too_long_simulation:
-            (*errorString).append(": Simulation beyond t=1e100 without finding "
-                                  " a steady state.");
+            (*errorString).append(": System could not be equilibrated via"
+                                  " simulating to a late time point.");
             break;
         case SteadyStateStatus::failed_damping:
             (*errorString).append(": Damping factor reached lower bound.");
@@ -527,8 +540,8 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
         }
         if (t >= 1e100 && !converged) {
             numsteps.at(1) = sim_steps;
-            throw NewtonFailure(AMICI_NO_STEADY_STATE,
-                                "simulated beyond t=1e100 without convergence");
+            throw NewtonFailure(AMICI_NO_STEADY_STATE, "simulated to late time"
+                                " point without convergence of RHS");
         }
     }
     numsteps.at(1) = sim_steps;
