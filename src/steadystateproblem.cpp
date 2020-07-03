@@ -285,6 +285,7 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver) {
         newtonSolver->prepareLinearSystemB(0, -1);
         newtonSolver->solveLinearSystem(xBI);
     } catch (NewtonFailure const &ex) {
+        hasQuadrature_ = false;
         if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
             throw NewtonFailure(ex.error_code, "Steady state backward "
                                 "computation failed due to unsuccessful "
