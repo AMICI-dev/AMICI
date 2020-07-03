@@ -99,7 +99,8 @@ class SteadystateProblem {
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
-    void computeSteadyStateQuadrature(NewtonSolver *newtonSolver, Model *model);
+    void computeSteadyStateQuadrature(NewtonSolver *newtonSolver,
+                                      const Solver *solver, Model *model);
 
     /**
      * Computes the quadrature in steady state backward mode by solving the
@@ -194,20 +195,23 @@ class SteadystateProblem {
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
+     * @param backward flag indicating adjoint mode (including quadrature)
      */
-    void getSteadystateSimulation(Solver *solver, Model *model);
+    void getSteadystateSimulation(Solver *solver, Model *model, bool backward);
 
     /**
      * initialize CVodeSolver instance for preequilibration simulation
      *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
-     * @param integrateForwardSensis flag switching on integration with FSA
+     * @param forwardSensis flag switching on integration with FSA
+     * @param backward flag switching on quadratures computation
      * @return solver instance
      */
     std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
                                                        Model *model,
-                                                       bool integrateForwardSensis) const;
+                                                       bool forwardSensis,
+                                                       bool backward) const;
 
     /**
      * initialize backward computation by setting state, time, adjoint
@@ -363,6 +367,8 @@ class SteadystateProblem {
     AmiVectorArray sdx;
     /** adjoint state vector */
     AmiVector xB;
+    /** integral over adjoint state vector */
+    AmiVector xBI;
     /** quadrature state vector */
     AmiVector xQB;
 
@@ -383,6 +389,9 @@ class SteadystateProblem {
 
     /** stores diagnostic information about employed number of linear steps */
     std::vector<int> numlinsteps;
+
+    /** stores information about employed number of backward steps */
+    int numstepsB = 0;
 
     /** stores diagnostic information about runtime */
     double cpu_time = 0.0;

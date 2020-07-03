@@ -24,8 +24,9 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
-      xB(model.nJ * model.nx_solver), xQB(model.nplist()),
-      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0), numsteps(3, 0) {
+      xB(model.nJ * model.nx_solver), xBI(model.nJ * model.nx_solver),
+      xQB(model.nplist()), dJydx(model.nJ * model.nx_solver * model.nt(), 0.0),
+      numsteps(3, 0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
               maxSteps = solver.getNewtonMaxSteps();
@@ -180,15 +181,15 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
     try {
         if (it < 0) {
             /* Preequilibration? -> Create a new CVode object for sim */
-            bool integrateSensis =
-                getSensitivityFlag(model, solver, it,
+            bool integrateSensis = getSensitivityFlag(model, solver, it,
                                    SteadyStateContext::integration);
             auto newtonSimSolver = createSteadystateSimSolver(solver, model,
-                                                              integrateSensis);
-            getSteadystateSimulation(newtonSimSolver.get(), model);
+                                                              integrateSensis,
+                                                              false);
+            getSteadystateSimulation(newtonSimSolver.get(), model, false);
         } else {
             /* Solver was already created, use this one */
-            getSteadystateSimulation(solver, model);
+            getSteadystateSimulation(solver, model, false);
         }
         steady_state_status[1] = SteadyStateStatus::success;
     } catch (NewtonFailure const &ex) {
@@ -225,6 +226,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
     }
 
     /* Will need to write quadratures: set to 0 */
+    xBI.reset();
     xQB.reset();
     return true;
 }
@@ -301,7 +303,20 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
        by usual integration over time, but  simplifications can be applied:
        x is not time dependent, no forward trajectory is needed. */
 
-    AmiException("Oh well, this ain't implemented yet, bro!");
+    /* set starting timepoint for the simulation solver */
+    t = 0;
+
+    /* create a new solver object */
+    auto simSolver = createSteadystateSimSolver(solver, model, false, true);
+
+    /* perform integration and qudrature */
+    try {
+        getSteadystateSimulation(simSolver.get(), model, true);
+        hasQuadrature_ = true;
+    } catch (NewtonFailure const &) {
+        hasQuadrature_ = false;
+    }
+
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,
@@ -531,7 +546,8 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
 }
 
 void SteadystateProblem::getSteadystateSimulation(Solver *solver,
-                                                  Model *model)
+                                                  Model *model,
+                                                  bool backward)
 {
     /* Loop over steps and check for convergence */
     bool converged = checkConvergence(solver, model);
@@ -569,15 +585,21 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
                                 " point without convergence of RHS");
         }
     }
-    numsteps.at(1) = sim_steps;
-    if (solver->getSensitivityOrder() > SensitivityOrder::none &&
-        model->getSteadyStateSensitivityMode() ==
-        SteadyStateSensitivityMode::simulationFSA)
-        sx = solver->getStateSensitivity(t);
+
+    /* store information about steps and sensitivities, if necessary */
+    if (backward) {
+        numstepsB = sim_steps;
+    } else {
+        numsteps.at(1) = sim_steps;
+        if (solver->getSensitivityOrder() > SensitivityOrder::none &&
+            model->getSteadyStateSensitivityMode() ==
+            SteadyStateSensitivityMode::simulationFSA)
+            sx = solver->getStateSensitivity(t);
+    }
 }
 
 std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
-        const Solver *solver, Model *model, bool integrateForwardSensis) const
+        const Solver *solver, Model *model, bool forwardSensis, bool backward) const
 {
     /* Create new CVode solver object */
     auto sim_solver = std::unique_ptr<Solver>(solver->clone());
@@ -592,7 +614,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
                                 "invalid solver for steadystate simulation");
     }
     /* do we need sensitivities? */
-    if (integrateForwardSensis) {
+    if (forwardSensis) {
         // need forward to compute sx0
         sim_solver->setSensitivityMethod(SensitivityMethod::forward);
     } else {
