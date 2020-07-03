@@ -84,6 +84,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.nxtrue_rdata;
     ar &u.nx_solver;
     ar &u.nxtrue_solver;
+    ar &u.nx_solver_reinit;
     ar &u.ny;
     ar &u.nytrue;
     ar &u.nz;
@@ -167,6 +168,7 @@ void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
     ar &r.cpu_time;
     ar &r.cpu_timeB;
     ar &r.preeq_cpu_time;
+    ar &r.preeq_cpu_timeB;
     ar &r.preeq_status;
     ar &r.preeq_numsteps;
     ar &r.preeq_numlinsteps;

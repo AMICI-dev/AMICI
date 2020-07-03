@@ -17,6 +17,7 @@ checkReturnDataEqual(amici::ReturnData const& r, amici::ReturnData const& s)
     CHECK_EQUAL(r.nx, s.nx);
     CHECK_EQUAL(r.nxtrue, s.nxtrue);
     CHECK_EQUAL(r.nx_solver, s.nx_solver);
+    CHECK_EQUAL(r.nx_solver_reinit, s.nx_solver_reinit);
     CHECK_EQUAL(r.ny, s.ny);
     CHECK_EQUAL(r.nytrue, s.nytrue);
     CHECK_EQUAL(r.nz, s.nz);
@@ -136,6 +137,7 @@ TEST(dataSerialization, testFile)
                                             nx,
                                             nx,
                                             nx,
+                                            0,
                                             4,
                                             4,
                                             nz,
@@ -185,6 +187,7 @@ TEST(dataSerialization, testString)
                                             nx,
                                             nx,
                                             nx,
+                                            0,
                                             4,
                                             4,
                                             nz,

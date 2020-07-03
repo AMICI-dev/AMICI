@@ -24,7 +24,7 @@
       <species id="product" name="product" compartment="compartment" initialConcentration="0" boundaryCondition="false" constant="false" />
     </listOfSpecies>
     <listOfParameters>
-      <parameter id="init_substrate" name="init_substrate" value="0" constant="true" />
+      <parameter id="synthesis_substrate" name="synthesis_substrate" value="0" constant="true" />
       <parameter id="init_enzyme" name="init_enzyme" value="2" constant="true" />
       <parameter id="substrate_product" name="substrate_product" value="5" constant="false" />
       <parameter id="k_bind" name="k_bind" value="10" constant="true" />
@@ -34,11 +34,6 @@
       <parameter id="k_decay" name="k_decay" value="1" constant="true" />
     </listOfParameters>
     <listOfInitialAssignments>
-      <initialAssignment symbol="substrate">
-        <math xmlns="http://www.w3.org/1998/Math/MathML">
-          <ci> init_substrate </ci>
-        </math>
-      </initialAssignment>
       <initialAssignment symbol="enzyme">
         <math xmlns="http://www.w3.org/1998/Math/MathML">
           <ci> init_enzyme </ci>
@@ -67,7 +62,11 @@
             <apply>
               <times/>
               <ci> compartment </ci>
-              <ci> k_create </ci>
+              <apply>
+                <plus/>
+                <ci> synthesis_substrate </ci>
+                <ci> k_create </ci>
+              </apply>
             </apply>
           </math>
         </kineticLaw>

@@ -165,6 +165,8 @@ FixedParameterContext = enum('FixedParameterContext')
 RDataReporting = enum('RDataReporting')
 %}
 
+%template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
+
 // add module docstring and import additional types for typehints
 %pythonbegin %{
 """

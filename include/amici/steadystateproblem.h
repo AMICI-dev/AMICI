@@ -44,6 +44,19 @@ class SteadystateProblem {
      */
     void workSteadyStateProblem(Solver *solver, Model *model, int it);
 
+
+    /**
+     * Integrates over the adjoint state backward in time by solving a linear
+     * system of equations, which gives the analytical solution.
+     * Computes the gradient via adjoint steady state sensitivities
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param bwd backward problem
+     */
+    void workSteadyStateBackwardProblem(Solver *solver, Model *model,
+                                        const BackwardProblem *bwd);
+
     /**
      * Handles the computation of the steady state, throws an AmiException,
      * if no steady state was found
@@ -80,6 +93,15 @@ class SteadystateProblem {
                                      int it);
 
     /**
+     * Compute the quadrature in steady state backward mode by solving the
+     * linear system defined by the backward Jacobian
+     *
+     * @param newtonSolver pointer to the newtonSolver solver object
+     * @param model pointer to the model object
+     */
+    void computeSteadyStateQuadrature(NewtonSolver *newtonSolver, Model *model);
+
+    /**
      * Stores state and throws error message if steady state computaiton failed
      *
      * @param solver pointer to the solver object
@@ -111,16 +133,6 @@ class SteadystateProblem {
      */
     bool getSensitivityFlag(const Model *model, const Solver *solver, int it,
                             SteadyStateContext context);
-
-    /**
-     * Integrates over the adjoint state backward in time by solving a linear
-     * system of equations, which gives the analytical solution.
-     * Computes the gradient via adjoint steady state sensitivities
-     *
-     * @param solver pointer to the solver object
-     * @param model pointer to the model object
-     */
-    void workSteadyStateBackwardProblem(Solver *solver, Model *model);
 
     /**
      * Computes the weighted root mean square of xdot
@@ -179,6 +191,18 @@ class SteadystateProblem {
     std::unique_ptr<Solver> createSteadystateSimSolver(const Solver *solver,
                                                        Model *model,
                                                        bool integrateForwardSensis) const;
+
+    /**
+     * initialize backward computation by setting state, time, adjoint
+     * state and checking for preequilibration mode
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param bwd pointer to backward problem
+     * @return flag indicating whether backward computation to be carried out
+     */
+    bool initializeBackwardProblem(Solver *solver, Model *model,
+                                   const BackwardProblem *bwd);
 
     /**
      * @brief store carbon copy of current simulation state variables as SimulationState
@@ -278,6 +302,18 @@ class SteadystateProblem {
     void getAdjointUpdates(Model &model, const ExpData &edata);
 
     /**
+     * @brief Accessor for xQB
+     * @return xQB
+     */
+    AmiVector const& getAdjointQuadrature() const { return xQB; }
+
+    /**
+     * @brief Accessor for hasQuadrature_
+     * @return hasQuadrature_
+     */
+    const bool hasQuadrature() const { return hasQuadrature_; }
+
+    /**
      * @brief computes adjoint updates dJydx according to provided model and expdata
      * @return covergence of steady state solver
      */
@@ -332,15 +368,18 @@ class SteadystateProblem {
     std::vector<int> numlinsteps;
 
     /** stores diagnostic information about runtime */
-    double cpu_time;
+    double cpu_time = 0.0;
+
+    /** stores diagnostic information about runtime backward */
+    double cpu_timeB = 0.0;
+
+    /** flag indicating whether backward mode was run */
+    bool hasQuadrature_ = false;
 
     /** stores diagnostic information about execution success of the different
      * approaches [newton, simulation, newton] (length = 3)
      */
     std::vector<SteadyStateStatus> steady_state_status;
-
-    /** stores diagnostic information about runtime backward */
-    double cpu_timeB;
 };
 
 } // namespace amici

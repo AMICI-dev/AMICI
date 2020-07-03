@@ -16,23 +16,23 @@ namespace amici {
 
 ReturnData::ReturnData(Solver const &solver, const Model &model)
     : ReturnData(model.getTimepoints(), model.np(), model.nk(), model.nx_rdata,
-                 model.nx_solver, model.nxtrue_rdata, model.ny, model.nytrue,
-                 model.nz, model.nztrue, model.ne, model.nJ, model.nplist(),
-                 model.nMaxEvent(), model.nt(), solver.getNewtonMaxSteps(),
-                 model.nw, model.getParameterScale(), model.o2mode,
-                 solver.getSensitivityOrder(),
-                 solver.getSensitivityMethod(),
+                 model.nx_solver, model.nxtrue_rdata, model.nx_solver_reinit,
+                 model.ny, model.nytrue, model.nz, model.nztrue, model.ne,
+                 model.nJ, model.nplist(), model.nMaxEvent(), model.nt(),
+                 solver.getNewtonMaxSteps(), model.nw,
+                 model.getParameterScale(), model.o2mode,
+                 solver.getSensitivityOrder(), solver.getSensitivityMethod(),
                  solver.getReturnDataReportingMode()) {}
 
 ReturnData::ReturnData(std::vector<realtype> ts, int np, int nk, int nx,
-                       int nx_solver, int nxtrue, int ny, int nytrue, int nz,
+                       int nx_solver, int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz,
                        int nztrue, int ne, int nJ, int nplist, int nmaxevent,
                        int nt, int newton_maxsteps, int nw,
                        std::vector<ParameterScaling> pscale,
                        SecondOrderMode o2mode, SensitivityOrder sensi,
                        SensitivityMethod sensi_meth, RDataReporting rdrm)
     : ts(std::move(ts)), np(np), nk(nk), nx(nx), nx_solver(nx_solver),
-      nxtrue(nxtrue), ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne),
+      nxtrue(nxtrue), nx_solver_reinit(nx_solver_reinit), ny(ny), nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne),
       nJ(nJ), nplist(nplist), nmaxevent(nmaxevent), nt(nt), nw(nw),
       newton_maxsteps(newton_maxsteps), pscale(std::move(pscale)),
       o2mode(o2mode), sensi(sensi), sensi_meth(sensi_meth),
@@ -170,7 +170,7 @@ void ReturnData::processSimulationObjects(SteadystateProblem const *preeq,
         storeJacobianAndDerivativeInReturnData(*posteq, model);
 
     if (fwd && bwd)
-        processBackwardProblem(*fwd, *bwd, model);
+        processBackwardProblem(*fwd, *bwd, preeq, model);
     else if (solver.computingASA())
         invalidateSLLH();
 
@@ -192,8 +192,9 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
     }
     /* Get cpu time for Newton solve in milliseconds */
     preeq_cpu_time = preeq.getCPUTime();
-    preeq_status = preeq.getSteadyStateStatus();
+    preeq_cpu_timeB = preeq.getCPUTimeB();
     preeq_wrms = preeq.getResidualNorm();
+    preeq_status = preeq.getSteadyStateStatus();
     if (preeq_status[1] == SteadyStateStatus::success)
         preeq_t = preeq.getSteadyStateTime();
     if (!preeq_numsteps.empty())
@@ -216,10 +217,10 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     /* Get cpu time for Newton solve in milliseconds */
     posteq_cpu_time = posteq.getCPUTime();
     posteq_cpu_timeB = posteq.getCPUTimeB();
-    posteq_status = posteq.getSteadyStateStatus();
     posteq_wrms = posteq.getResidualNorm();
+    posteq_status = posteq.getSteadyStateStatus();
     if (posteq_status[1] == SteadyStateStatus::success)
-        preeq_t = posteq.getSteadyStateTime();
+        posteq_t = posteq.getSteadyStateTime();
     if (!posteq_numsteps.empty())
         writeSlice(posteq.getNumSteps(), posteq_numsteps);
     if (!posteq.getNumLinSteps().empty() && !posteq_numlinsteps.empty()) {
@@ -395,6 +396,7 @@ void ReturnData::getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
 
 void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
                                         BackwardProblem const &bwd,
+                                        SteadystateProblem const *preeq,
                                         Model &model) {
     if (sllh.empty())
         return;
@@ -404,8 +406,46 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
     auto xB = bwd.getAdjointState();
     auto xQB = bwd.getAdjointQuadrature();
 
-    /* NB: This nested loop will not be necessary for fully adjoint
-       preequilibration or post-equilibration without further time points */
+    if (preeq && preeq->hasQuadrature()) {
+        handleSx0Backward(model, *preeq, xQB);
+    } else {
+        handleSx0Forward(model, llhS0, xB);
+    }
+
+    for (int iJ = 0; iJ < model.nJ; iJ++) {
+        for (int ip = 0; ip < model.nplist(); ip++) {
+            if (iJ == 0) {
+                sllh.at(ip) -= llhS0[ip] + xQB[ip * model.nJ];
+            } else {
+                s2llh.at(iJ - 1 + ip * (model.nJ - 1)) -=
+                    llhS0[ip + iJ * model.nplist()] + xQB[iJ + ip * model.nJ];
+            }
+        }
+    }
+}
+
+void ReturnData::handleSx0Backward(const Model &model,
+                                   SteadystateProblem const &preeq,
+                                   AmiVector &xQB) const {
+    /* If preequilibration is run in adjoint mode, the scalar product of sx0
+       with its adjoint counterpart (see handleSx0Forward()) is not necessary:
+       the actual simulation is "extended" by the preequilibration time.
+       At initialization (at t=-inf), the adjoint state is in steady state (= 0)
+       and so is the scalar product. Instead of the scalar product, the
+       quadratures xQB from preequilibration contribute to the gradient
+       (see example notebook on equilibration for further documentation). */
+    auto xQBpreeq = preeq.getAdjointQuadrature();
+    for (int ip = 0; ip < model.nplist(); ++ip)
+        xQB[ip] += xQBpreeq[ip];
+}
+
+void ReturnData::handleSx0Forward(const Model &model,
+                                  std::vector<realtype> &llhS0,
+                                  AmiVector &xB) const {
+    /* If preequilibration is run in forward mode or is not needed, then adjoint
+       sensitivity analysis still needs the state sensitivities at t=0 (sx0),
+       to compute the gradient. For each parameter, the scalar product of sx0
+       with its adjoint counterpart contributes to the gradient. */
     for (int iJ = 0; iJ < model.nJ; iJ++) {
         if (iJ == 0) {
             for (int ip = 0; ip < model.nplist(); ++ip) {
@@ -419,22 +459,9 @@ void ReturnData::processBackwardProblem(ForwardProblem const &fwd,
                 llhS0[ip + iJ * model.nplist()] = 0.0;
                 for (int ix = 0; ix < model.nxtrue_solver; ++ix) {
                     llhS0[ip + iJ * model.nplist()] +=
-                        xB[ix + iJ * model.nxtrue_solver] *
-                            sx_solver.at(ix, ip) +
-                        xB[ix] *
-                            sx_solver.at(ix + iJ * model.nxtrue_solver, ip);
+                        xB[ix + iJ * model.nxtrue_solver] * sx_solver.at(ix, ip) +
+                        xB[ix] * sx_solver.at(ix + iJ * model.nxtrue_solver, ip);
                 }
-            }
-        }
-    }
-
-    for (int iJ = 0; iJ < model.nJ; iJ++) {
-        for (int ip = 0; ip < model.nplist(); ip++) {
-            if (iJ == 0) {
-                sllh.at(ip) -= llhS0[ip] + xQB[ip * model.nJ];
-            } else {
-                s2llh.at(iJ - 1 + ip * (model.nJ - 1)) -=
-                    llhS0[ip + iJ * model.nplist()] + xQB[iJ + ip * model.nJ];
             }
         }
     }

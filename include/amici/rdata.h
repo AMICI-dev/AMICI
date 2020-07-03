@@ -48,6 +48,7 @@ class ReturnData {
      * @param nx see amici::Model::nx_rdata
      * @param nx_solver see amici::Model::nx_solver
      * @param nxtrue see amici::Model::nxtrue_rdata
+     * @param nx_solver_reinit see amici::Model::nx_solver_reinit
      * @param ny see amici::Model::ny
      * @param nytrue see amici::Model::nytrue
      * @param nz see amici::Model::nz
@@ -66,7 +67,7 @@ class ReturnData {
      * @param rdrm see amici::Solver::rdata_reporting
      */
     ReturnData(std::vector<realtype> ts, int np, int nk, int nx, int nx_solver,
-               int nxtrue, int ny, int nytrue, int nz, int nztrue, int ne,
+               int nxtrue, int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
                int nJ, int nplist, int nmaxevent, int nt, int newton_maxsteps,
                int nw,
                std::vector<ParameterScaling> pscale, SecondOrderMode o2mode,
@@ -237,13 +238,18 @@ class ReturnData {
     /** computation time of the steady state solver [ms] (preequilibration) */
     double preeq_cpu_time = 0.0;
 
+    /** computation time of the steady state solver of the backward problem [ms]
+     *  (preequilibration) */
+    double preeq_cpu_timeB = 0.0;
+
     /** flags indicating success of steady state solver  (postequilibration) */
     std::vector<SteadyStateStatus> posteq_status;
 
     /** computation time of the steady state solver [ms]  (postequilibration) */
     double posteq_cpu_time = 0.0;
 
-    /** computation time of the Newton solver of the backward problem [ms] */
+    /** computation time of the steady state solver of the backward problem [ms]
+     *  (postequilibration) */
     double posteq_cpu_timeB = 0.0;
 
     /**
@@ -273,7 +279,7 @@ class ReturnData {
     std::vector<int> posteq_numlinsteps;
 
     /**
-     * time at which steadystate was reached in the simulation based approach (preequilibration)
+     * time when steadystate was reached via simulation (preequilibration)
      */
     realtype preeq_t = NAN;
 
@@ -284,7 +290,7 @@ class ReturnData {
     realtype preeq_wrms = NAN;
 
     /**
-     * time at which steadystate was reached in the simulation based approach (postequilibration)
+     * time when steadystate was reached via simulation (postequilibration)
      */
     realtype posteq_t = NAN;
 
@@ -341,6 +347,9 @@ class ReturnData {
 
     /** number of states in the unaugmented system */
     int nxtrue{0};
+
+    /** number of solver states to be reinitilized after preequilibration */
+    int nx_solver_reinit{0};
 
     /** number of observables */
     int ny{0};
@@ -480,10 +489,12 @@ class ReturnData {
      * @brief extracts results from backward problem
      * @param fwd forward problem
      * @param bwd backward problem
+     * @param preeq Steadystateproblem for preequilibration
      * @param model model that was used for forward/backward simulation
      */
     void processBackwardProblem(ForwardProblem const &fwd,
                                 BackwardProblem const &bwd,
+                                SteadystateProblem const *preeq,
                                 Model &model);
 
     /**
@@ -633,6 +644,28 @@ class ReturnData {
      */
     void getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
                            ExpData const *edata);
+
+    /**
+     * @brief Updates contribution to likelihood from quadratures (xQB),
+     * if preequilibration was run in adjoint mode
+     * @param model model that was used for forward/backward simulation
+     * @param preeq Steadystateproblem for preequilibration
+     * @param xQB vector with quadratures from adjoint computation
+     */
+    void handleSx0Backward(const Model &model, SteadystateProblem const &preeq,
+                           AmiVector &xQB) const;
+
+    /**
+     * @brief Updates contribution to likelihood for inital state sensitivities
+     * (llhS0), if no preequilibration was run or if forward sensitivities were used
+     * @param model model that was used for forward/backward simulation
+     * @param llhS0 contribution to likelihood for initial state sensitivities
+     * @param xB vector with final adjoint state
+     * (exluding conservation laws)
+     */
+    void handleSx0Forward(const Model &model,
+                          std::vector<realtype> &llhS0,
+                          AmiVector &xB) const;
 };
 
 /**

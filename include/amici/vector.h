@@ -29,7 +29,7 @@ class AmiVector {
      * Using N_VMake_Serial ensures that the N_Vector
      * module does not try to deallocate the data vector
      * when calling N_VDestroy_Serial
-     * @brief emmpty constructor
+     * @brief empty constructor
      * @param length number of elements in vector
      */
     explicit AmiVector(const long int length)

@@ -37,8 +37,8 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
         for (int it = 0; it < fwd.model->nt(); it++) {
             if (std::isinf(fwd.model->getTimepoint(it))) {
                 if (!posteq)
-                    throw AmiException("Model has non-finite timpoint but"
-                    "postequilibration did not run");
+                    throw AmiException("Model has non-finite timpoint but, "
+                                       "postequilibration did not run");
 
                 /* copy adjoint update to postequilibration */
                 writeSlice(slice(posteq->getDJydx(), it,
@@ -114,7 +114,7 @@ void BackwardProblem::workBackwardProblem() {
 
     if (edata && edata->t_presim > 0) {
         ConditionContext cc(model, edata, FixedParameterContext::presimulation);
-        solver->runB(model->t0() -  edata->t_presim);
+        solver->runB(model->t0() - edata->t_presim);
         solver->writeSolutionB(&t, xB, dxB, xQB, this->which);
     }
 }
