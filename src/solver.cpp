@@ -68,7 +68,7 @@ void Solver::runB(const realtype tout) const {
 
 void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
                    const AmiVector &dx0, const AmiVectorArray &sx0,
-                   const AmiVectorArray &sdx0) const {
+                   const AmiVectorArray &sdx0, bool steadystate = false) const {
     if (nx() != model->nx_solver || nplist() != model->nplist() ||
         nquad() != model->nJ * model->nplist()) {
         resetMutableMemory(model->nx_solver, model->nplist(),
@@ -116,8 +116,13 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
 
             applyTolerancesFSA();
         } else if (sensi_meth == SensitivityMethod::adjoint) {
-            /* Allocate space for the adjoint computation */
-            adjInit();
+            if (steadystate) {
+                /* Allocate space for forward quadratures */
+                quadInit();
+            } else {
+                /* Allocate space for the adjoint computation */
+                adjInit();
+            }
         }
     }
 
@@ -500,6 +505,23 @@ void Solver::applyQuadTolerancesASA(const int which) const {
     setQuadErrConB(which, !std::isinf(quad_atol) && !std::isinf(quad_rtol));
 
     quadSStolerancesB(which, quad_rtol, quad_atol);
+}
+
+void Solver::applyQuadTolerances() const {
+    if (!getQuadInitDone())
+        throw AmiException("Quadratures were not intialized, the "
+                           "tolerances cannot be applied yet!");
+
+    if (sensi < SensitivityOrder::first)
+        return;
+
+    realtype quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
+    realtype quad_atol = isNaN(this->quad_atol) ? atol : this->quad_atol;
+
+    /* Enable Quadrature Error Control */
+    setQuadErrCon(!std::isinf(quad_atol) && !std::isinf(quad_rtol));
+
+    quadSStolerances(quad_rtol, quad_atol);
 }
 
 void Solver::applySensitivityTolerances() const {
@@ -956,6 +978,8 @@ void Solver::setQuadInitDoneB(const int which) const {
         initializedQB.resize(which + 1, false);
     initializedQB.at(which) = true;
 }
+
+void Solver::setQuadInitDone() const { quadInitialized = true; }
 
 void Solver::switchForwardSensisOff() const {
     sensToggleOff();

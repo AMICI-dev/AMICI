@@ -143,6 +143,8 @@ class IDASolver : public Solver {
 
     void adjInit() const override;
 
+    void quadInit() const override;
+
     void allocateSolverB(int *which) const override;
 
     void setMaxNumStepsB(int which,
@@ -180,8 +182,6 @@ class IDASolver : public Solver {
                const AmiVector &xB0, const AmiVector &dxB0) const override;
 
     void qbinit(int which, const AmiVector &xQB0) const override;
-
-    void qinit(const AmiVector &xQ0) const override;
 
     void rootInit(int ne) const override;
 

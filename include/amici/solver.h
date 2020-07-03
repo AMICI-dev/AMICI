@@ -952,14 +952,6 @@ class Solver {
     virtual void qbinit(int which, const AmiVector &xQB0) const = 0;
 
     /**
-     * @brief Initialises the quadrature states (used in steady state adjoint)
-     *
-     * @param which identifier of the backwards problem
-     * @param xQ0 intial forward quadrature state
-     */
-    virtual void qinit(const AmiVector &xQ0) const = 0;
-
-    /**
      * @brief Initialises the rootfinding for events
      *
      * @param ne number of different events
@@ -1203,7 +1195,11 @@ class Solver {
 
     /**
      * @brief initializes the adjoint problem
-     *
+     */
+    virtual void adjInit() const = 0;
+
+    /**
+     * @brief initializes the quadratures
      */
     virtual void adjInit() const = 0;
 

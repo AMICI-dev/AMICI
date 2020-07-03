@@ -144,6 +144,8 @@ class CVodeSolver : public Solver {
 
     void adjInit() const override;
 
+    void quadInit() const override;
+    
     void allocateSolverB(int *which) const override;
 
     void setSStolerancesB(int which, realtype relTolB,
@@ -192,8 +194,6 @@ class CVodeSolver : public Solver {
                const AmiVector &dxB0) const override;
 
     void qbinit(int which, const AmiVector &xQB0) const override;
-
-    void qinit(const AmiVector &xQ0) const override;
 
     void rootInit(int ne) const override;
 
