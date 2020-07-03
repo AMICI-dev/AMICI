@@ -61,6 +61,8 @@ class CVodeSolver : public Solver {
     void getQuadDkyB(realtype t, int k,
                      int which) const override;
 
+    void getQuadDky(realtype t, int k) const override;
+
     void getDkyB(realtype t, int k, int which) const override;
 
     void getRootInfo(int *rootsfound) const override;
@@ -96,6 +98,8 @@ class CVodeSolver : public Solver {
     void getSens() const override;
 
     void getQuadB(int which) const override;
+
+    void getQuad() const override;
 
     void reInitPostProcessF(realtype tnext) const override;
 
@@ -146,6 +150,8 @@ class CVodeSolver : public Solver {
     void quadSStolerancesB(int which, realtype reltolQB,
                            realtype abstolQB) const override;
 
+    void quadSStolerances(realtype reltolQ, realtype abstolQ) const override;
+
     void setMaxNumStepsB(int which, long int mxstepsB) const override;
 
     void diag() const override;
@@ -184,6 +190,8 @@ class CVodeSolver : public Solver {
                const AmiVector &dxB0) const override;
 
     void qbinit(int which, const AmiVector &xQB0) const override;
+
+    void qinit(const AmiVector &xQ0) const override;
 
     void rootInit(int ne) const override;
 
