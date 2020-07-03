@@ -1062,6 +1062,14 @@ class Solver {
     virtual void setQuadErrConB(int which, bool flag) const = 0;
 
     /**
+     * @brief Specifies whether error control is also enforced for the
+     * forward quadrature problem
+     *
+     * @param flag activation flag
+     */
+    virtual void setQuadErrCon(bool flag) const = 0;
+
+    /**
      * @brief Attaches the error handler function (errMsgIdAndTxt)
      * to the solver
      *
