@@ -98,7 +98,7 @@ void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
 
     /* get the run time */
     clock_t starttime = clock();
-    computeSteadyStateQuadrature(newtonSolver.get(), model);
+    computeSteadyStateQuadrature(newtonSolver.get(), solver, model);
     cpu_timeB = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Finalize by setting addjoint state to zero (its steady state) */
@@ -230,6 +230,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
 }
 
 void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver,
+                                                      const Solver *solver,
                                                       Model *model) {
     /* This routine computes the qudratures:
          xQB = Integral[ xB(x(t), t, p) * dxdot/dp(x(t), t, p) | dt ]
@@ -238,25 +239,12 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
      We therefore compute the integral over xB first and then do a
      matrix-vector multiplication */
 
-    /* Compute the integral over the adjoint state xB:
-       If the Jacobian has full rank, this has an anlytical solution, since
-           d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
-       This linear ODE system with time-constant matrix has the solution
-           xB(t) = exp( t * JB^T(x_ss, p) ) * xB(0)
-       This integral xBI is given as the solution of
-           JB^T(x_ss, p) * xBI = xB(0)
-       So we first try to solve the linear system, if possible. */
-    try {
-        newtonSolver->prepareLinearSystemB(0, -1);
-        newtonSolver->solveLinearSystem(xB);
-    } catch (NewtonFailure const &ex) {
-        if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
-            throw NewtonFailure(ex.error_code, "Steady state backward "
-                                "computation failed due to unsuccessful "
-                                "factorization of RHS Jacobian.");
-        throw NewtonFailure(ex.error_code, "Steady state backward "
-                            "computation failed.");
-    }
+    /* Try to compute the analytical solution for quadrature algebraically */
+    getQuadratureByLinSolve(newtonSolver);
+
+    /* Analytical solution didn't work, perform simulation instead */
+    if (!hasQuadrature())
+        getQuadratureBySimulation(solver, model);
 
     /* Compute the quadrature as the inner product xBI * dxotdp */
     if (model->pythonGenerated) {
@@ -275,8 +263,45 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
             xQB[ip] = N_VDotProd(xB.getNVector(),
                                  model->dxdotdp.getNVector(ip));
     }
+}
+
+void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver) {
+    /* Computes the integral over the adjoint state xB:
+     If the Jacobian has full rank, this has an anlytical solution, since
+     d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
+     This linear ODE system with time-constant matrix has the solution
+     xB(t) = exp( t * JB^T(x_ss, p) ) * xB(0)
+     This integral xBI is given as the solution of
+     JB^T(x_ss, p) * xBI = xB(0)
+     So we first try to solve the linear system, if possible. */
+
+    /* copy content of xB into vector with integral */
+    xBI.copy(xB);
+
+    /* try to solve the linear system */
+    try {
+        newtonSolver->prepareLinearSystemB(0, -1);
+        newtonSolver->solveLinearSystem(xBI);
+    } catch (NewtonFailure const &ex) {
+        if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
+            throw NewtonFailure(ex.error_code, "Steady state backward "
+                                "computation failed due to unsuccessful "
+                                "factorization of RHS Jacobian.");
+        throw NewtonFailure(ex.error_code, "Steady state backward "
+                            "computation failed.");
+    }
+
     /* set flag that quadratures is available (for processing in rdata) */
     hasQuadrature_ = true;
+}
+
+void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
+                                                   Model *model) {
+    /* If the Jacobian is singular, the integral over xB must be computed
+       by usual integration over time, but  simplifications can be applied:
+       x is not time dependent, no forward trajectory is needed. */
+
+    AmiException("Oh well, this ain't implemented yet, bro!");
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,

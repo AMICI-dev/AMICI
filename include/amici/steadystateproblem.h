@@ -93,13 +93,30 @@ class SteadystateProblem {
                                      int it);
 
     /**
-     * Compute the quadrature in steady state backward mode by solving the
-     * linear system defined by the backward Jacobian
+     * Handles the computation of the quadrature in steady state backward mode
      *
      * @param newtonSolver pointer to the newtonSolver solver object
+     * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
     void computeSteadyStateQuadrature(NewtonSolver *newtonSolver, Model *model);
+
+    /**
+     * Computes the quadrature in steady state backward mode by solving the
+     * linear system defined by the backward Jacobian
+     *
+     * @param newtonSolver pointer to the newtonSolver solver object
+     */
+    void getQuadratureByLinSolve(NewtonSolver *newtonSolver);
+
+    /**
+     * Computes the quadrature in steady state backward mode by numerical
+     * integration of xB forward in time
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     */
+    void getQuadratureBySimulation(const Solver *solver, Model *model);
 
     /**
      * Stores state and throws error message if steady state computaiton failed
