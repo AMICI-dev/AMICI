@@ -640,7 +640,7 @@ void CVodeSolver::quadSStolerancesB(const int which, const realtype reltolQB,
 void CVodeSolver::quadSStolerances(const realtype reltolQB,
                                    const realtype abstolQB) const {
     int status =
-    CVodeQuadSStolerances(solverMemory.get(),reltolQB, abstolQB);
+    CVodeQuadSStolerances(solverMemory.get(), reltolQB, abstolQB);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeQuadSStolerances");
 }
