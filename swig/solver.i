@@ -12,6 +12,7 @@ using namespace amici;
 // be exposed in swig
 %ignore getAdjointDerivativeState;
 %ignore getAdjointQuadrature;
+%ignore getQuadrature;
 %ignore getAdjointState;
 %ignore getDerivativeState;
 %ignore getState;

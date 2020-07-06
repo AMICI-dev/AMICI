@@ -1214,6 +1214,7 @@ class Solver {
 
     /**
      * @brief initializes the quadratures
+     * @param xQ0 vector with initial values for xQ
      */
     virtual void quadInit(const AmiVector &xQ0) const = 0;
 
@@ -1404,6 +1405,7 @@ class Solver {
 
     /**
      * @brief checks whether memory for quadratures has been allocated
+     * @return proxy for solverMemory->(cv|ida)_QuadMallocDone
      */
     bool getQuadInitDone() const;
 

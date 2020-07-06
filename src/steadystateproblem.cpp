@@ -306,6 +306,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
 
     /* set starting timepoint for the simulation solver */
     t = 0;
+    xQ.reset();
     /* initialize the Jacobian */
     // model->fJSparseB(t, x.getNVector(), xB, nullptr, model->J.get());
 
@@ -619,13 +620,20 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     if (forwardSensis) {
         // need forward to compute sx0
         sim_solver->setSensitivityMethod(SensitivityMethod::forward);
+    } else if(backward) {
+        sim_solver->setSensitivityMethod(SensitivityMethod::adjoint);
+        sim_solver->setSensitivityOrder(SensitivityOrder::first);
     } else {
         sim_solver->setSensitivityMethod(SensitivityMethod::none);
         sim_solver->setSensitivityOrder(SensitivityOrder::none);
     }
     /* use x and sx as dummies for dx and sdx
      (they wont get touched in a CVodeSolver) */
-    sim_solver->setup(model->t0(), model, x, x, sx, sx);
+    if (backward) {
+        sim_solver->setup(model->t0(), model, x, x, sx, sx, true, xQ);
+    } else {
+        sim_solver->setup(model->t0(), model, x, x, sx, sx);
+    }
 
     return sim_solver;
 }
