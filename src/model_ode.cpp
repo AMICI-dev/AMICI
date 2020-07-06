@@ -398,7 +398,6 @@ void Model_ODE::fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot) {
     /* Right hande side of the adjoint state for steady state computations.
        J is fixed (as x remeins in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
-    fJSparseB(t, x, xB, nullptr, J.get());
     J.multiply(xBdot, xB);
 }
 
