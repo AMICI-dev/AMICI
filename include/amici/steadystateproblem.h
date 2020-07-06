@@ -310,6 +310,12 @@ class SteadystateProblem {
     const std::vector<int> &getNumSteps() const { return numsteps; }
 
     /**
+     * @brief Accessor for numstepsB
+     * @return numstepsB
+     */
+    const int getNumStepsB() const { return numstepsB; }
+
+    /**
      * @brief Accessor for numlinsteps
      * @return numlinsteps
      */

@@ -384,6 +384,9 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
                                    rdata.preeq_numlinsteps,
                                    rdata.newton_maxsteps, 2);
 
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
+                          "preeq_numstepsB", &rdata.preeq_numstepsB, 1);
+
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "preeq_cpu_time", &rdata.preeq_cpu_time, 1);
 
@@ -412,6 +415,9 @@ void writeReturnDataDiagnosis(const ReturnData &rdata,
         createAndWriteInt2DDataset(file, hdf5Location + "/posteq_numlinsteps",
                                    rdata.posteq_numlinsteps,
                                    rdata.newton_maxsteps, 2);
+
+    H5LTset_attribute_int(file.getId(), hdf5Location.c_str(),
+                          "posteq_numstepsB", &rdata.posteq_numstepsB, 1);
 
     H5LTset_attribute_double(file.getId(), hdf5Location.c_str(),
                              "posteq_cpu_time", &rdata.posteq_cpu_time, 1);

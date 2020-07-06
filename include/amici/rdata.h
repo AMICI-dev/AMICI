@@ -266,6 +266,12 @@ class ReturnData {
     std::vector<int> preeq_numlinsteps;
 
     /**
+     * number of simulation steps for adjoint steady state problem
+     * (preequilibration) [== 0 if analytical solution worked, > 0 otherwise]
+     */
+    int preeq_numstepsB;
+
+    /**
      * number of Newton steps for steady state problem (preequilibration)
      * [newton, simulation, newton] (length = 3) (postequilibration)
      */
@@ -277,6 +283,12 @@ class ReturnData {
      * (length = newton_maxsteps * 2)
      */
     std::vector<int> posteq_numlinsteps;
+
+    /**
+     * number of simulation steps for adjoint steady state problem
+     * (postequilibration) [== 0 if analytical solution worked, > 0 otherwise]
+     */
+    int posteq_numstepsB;
 
     /**
      * time when steadystate was reached via simulation (preequilibration)
