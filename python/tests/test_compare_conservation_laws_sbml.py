@@ -169,27 +169,40 @@ def test_compare_conservation_laws_sbml(edata_fixture):
 
 def test_adjoint_pre_and_post_equilibration(edata_fixture):
     # get the model
-    model_module = amici.import_model_module('model_constant_species_cl')
+    model_module_cl = amici.import_model_module('model_constant_species_cl')
+    model_cl = model_module_cl.getModel()
+    model_module = amici.import_model_module('model_constant_species')
     model = model_module.getModel()
 
     # check gradient with and without state reinitialization
     for edata in edata_fixture:
         for reinit in [False, True]:
-            # run simulations
-            rff = get_results(model, edata=edata, sensi_order=1,
-                              sensi_meth=amici.SensitivityMethod.forward,
-                              sensi_meth_preeq=amici.SensitivityMethod.forward,
-                              reinitialize_states=reinit)
-            rfa = get_results(model, edata=edata, sensi_order=1,
-                              sensi_meth=amici.SensitivityMethod.adjoint,
-                              sensi_meth_preeq=amici.SensitivityMethod.forward,
-                              reinitialize_states=reinit)
-            raa = get_results(model, edata=edata, sensi_order=1,
-                              sensi_meth=amici.SensitivityMethod.adjoint,
-                              sensi_meth_preeq=amici.SensitivityMethod.adjoint,
-                              reinitialize_states=reinit)
+            # run simulations with different ways of preequilibration
+            # using a model with full rank Jacobian
+            rff_cl = get_results(model_cl, edata=edata, sensi_order=1,
+                                 sensi_meth=amici.SensitivityMethod.forward,
+                                 sensi_meth_preeq=amici.SensitivityMethod.forward,
+                                 reinitialize_states=reinit)
+            rfa_cl = get_results(model_cl, edata=edata, sensi_order=1,
+                                 sensi_meth=amici.SensitivityMethod.adjoint,
+                                 sensi_meth_preeq=amici.SensitivityMethod.forward,
+                                 reinitialize_states=reinit)
+            raa_cl = get_results(model_cl, edata=edata, sensi_order=1,
+                                 sensi_meth=amici.SensitivityMethod.adjoint,
+                                 sensi_meth_preeq=amici.SensitivityMethod.adjoint,
+                                 reinitialize_states=reinit)
 
             # assert all are close
             assert np.isclose(rff['sllh'], rfa['sllh']).all()
             assert np.isclose(rfa['sllh'], raa['sllh']).all()
             assert np.isclose(raa['sllh'], rff['sllh']).all()
+
+            # run simulations with different ways of preequilibration
+            # using a model with singular Jacobian
+            raa = get_results(model, edata=edata, sensi_order=1,
+                              sensi_meth=amici.SensitivityMethod.adjoint,
+                              sensi_meth_preeq=amici.SensitivityMethod.adjoint,
+                              reinitialize_states=reinit)
+                              
+            # assert gradients are close
+            assert np.isclose(raa_cl['sllh'], raa['sllh']).all()
