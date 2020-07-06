@@ -226,6 +226,20 @@ class Model_ODE : public Model {
      */
     void fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot);
 
+    /** implementation of fxBdot for steady state case at the N_Vector level
+     * @param t timepoint
+     * @param xB Vector with the states
+     * @param xBdot Vector with the adjoint right hand side
+     */
+    void fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot);
+
+    /** implementation of fqBdot for steady state case at the N_Vector level
+     * @param t timepoint
+     * @param xB Vector with the adjoint states
+     * @param qBdot Vector with the adjoint quadrature right hand side
+     */
+    void fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot);
+
     /** Sensitivity of dx/dt wrt model parameters w
      * @param t timepoint
      * @param x Vector with the states

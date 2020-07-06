@@ -68,7 +68,8 @@ void Solver::runB(const realtype tout) const {
 
 void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
                    const AmiVector &dx0, const AmiVectorArray &sx0,
-                   const AmiVectorArray &sdx0, bool steadystate = false) const {
+                   const AmiVectorArray &sdx0, bool steadystate,
+                   const AmiVector &xQ0) const {
     if (nx() != model->nx_solver || nplist() != model->nplist() ||
         nquad() != model->nJ * model->nplist()) {
         resetMutableMemory(model->nx_solver, model->nplist(),
@@ -118,7 +119,8 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
         } else if (sensi_meth == SensitivityMethod::adjoint) {
             if (steadystate) {
                 /* Allocate space for forward quadratures */
-                quadInit();
+                quadInit(xQ0);
+                applyQuadTolerances();
             } else {
                 /* Allocate space for the adjoint computation */
                 adjInit();
@@ -1018,13 +1020,14 @@ void Solver::resetMutableMemory(const int nx, const int nplist,
 }
 
 void Solver::writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
-                           AmiVectorArray &sx) const {
+                           AmiVectorArray &sx, AmiVector &xQ) const {
     *t = gett();
     x.copy(getState(*t));
     dx.copy(getDerivativeState(*t));
-    if (sensInitialized) {
+    if (sensInitialized)
         sx.copy(getStateSensitivity(*t));
-    }
+    if (quadInitialized)
+        xQ.copy(getQuadrature(*t));
 }
 
 void Solver::writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
@@ -1113,6 +1116,22 @@ const AmiVector &Solver::getAdjointQuadrature(const int which,
     }
     return xQB;
 }
+
+const AmiVector &Solver::getQuadrature(const realtype t) const {
+    if (quadInitialized) {
+        if (solverWasCalled) {
+            if (t == this->t) {
+                getQuad();
+                return xQB;
+            }
+            getQuadDky(t, 0);
+        }
+    } else {
+        xQ.reset();
+    }
+    return xQ;
+}
+
 
 realtype Solver::gett() const { return t; }
 

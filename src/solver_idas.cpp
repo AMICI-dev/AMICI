@@ -532,11 +532,14 @@ void IDASolver::adjInit() const {
         throw IDAException(status, "IDAAdjInit");
 }
 
-void IDASolver::quadInit() const {
+void IDASolver::quadInit(const AmiVector &xQ0) const {
     int status;
     if (getQuadInitDone()) {
+        xQ.copy(xQ0);
         status = IDAQuadReInit(solverMemory.get(), xQ0.getNVector());
     } else {
+        xQ.resize(nx_solver, 0.0);
+        xQ.copy(xQ0);
         status = IDAQuadInit(solverMemory.get(), fQdot_ss, xQ.getNVector());
         setQuadInitDone();
     }

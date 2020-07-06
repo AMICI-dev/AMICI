@@ -368,7 +368,7 @@ class SteadystateProblem {
     /** adjoint state vector */
     AmiVector xB;
     /** integral over adjoint state vector */
-    AmiVector xBI;
+    AmiVector xQ;
     /** quadrature state vector */
     AmiVector xQB;
 

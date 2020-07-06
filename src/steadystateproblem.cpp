@@ -24,7 +24,7 @@ SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
-      xB(model.nJ * model.nx_solver), xBI(model.nJ * model.nx_solver),
+      xB(model.nJ * model.nx_solver), xQ(model.nJ * model.nx_solver),
       xQB(model.nplist()), dJydx(model.nJ * model.nx_solver * model.nt(), 0.0),
       numsteps(3, 0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
@@ -54,7 +54,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
         solver->setup(t, model, x, dx, sx, sdx);
     } else {
         /* solver was run before, extract current state from solver */
-        solver->writeSolution(&t, x, dx, sx);
+        solver->writeSolution(&t, x, dx, sx, xQ);
     }
     
     /* create a Newton solver obejct */
@@ -226,7 +226,7 @@ bool SteadystateProblem::initializeBackwardProblem(Solver *solver,
     }
 
     /* Will need to write quadratures: set to 0 */
-    xBI.reset();
+    xQ.reset();
     xQB.reset();
     return true;
 }
@@ -248,7 +248,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
     if (!hasQuadrature())
         getQuadratureBySimulation(solver, model);
 
-    /* Compute the quadrature as the inner product xBI * dxotdp */
+    /* Compute the quadrature as the inner product xQ * dxotdp */
     if (model->pythonGenerated) {
         /* fill dxdotdp with current values */
         const auto& plist = model->getParameterList();
@@ -256,13 +256,13 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
 
         if (model->ndxdotdp_explicit > 0)
             model->dxdotdp_explicit.multiply(xQB.getNVector(),
-                                             xB.getNVector(), plist, true);
+                                             xQ.getNVector(), plist, true);
         if (model->ndxdotdp_implicit > 0)
             model->dxdotdp_implicit.multiply(xQB.getNVector(),
-                                             xB.getNVector(), plist, true);
+                                             xQ.getNVector(), plist, true);
     } else {
         for (int ip=0; ip<model->nplist(); ++ip)
-            xQB[ip] = N_VDotProd(xB.getNVector(),
+            xQB[ip] = N_VDotProd(xQ.getNVector(),
                                  model->dxdotdp.getNVector(ip));
     }
 }
@@ -273,17 +273,17 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver) {
      d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
      This linear ODE system with time-constant matrix has the solution
      xB(t) = exp( t * JB^T(x_ss, p) ) * xB(0)
-     This integral xBI is given as the solution of
-     JB^T(x_ss, p) * xBI = xB(0)
+     This integral xQ over xB is given as the solution of
+     JB^T(x_ss, p) * xQ = xB(0)
      So we first try to solve the linear system, if possible. */
 
     /* copy content of xB into vector with integral */
-    xBI.copy(xB);
+    xQ.copy(xB);
 
     /* try to solve the linear system */
     try {
         newtonSolver->prepareLinearSystemB(0, -1);
-        newtonSolver->solveLinearSystem(xBI);
+        newtonSolver->solveLinearSystem(xQ);
     } catch (NewtonFailure const &ex) {
         hasQuadrature_ = false;
         if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
@@ -306,6 +306,8 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
 
     /* set starting timepoint for the simulation solver */
     t = 0;
+    /* initialize the Jacobian */
+    model->fJSparseB(t, x, xB, nullptr, model->J.get());
 
     /* create a new solver object */
     auto simSolver = createSteadystateSimSolver(solver, model, false, true);
@@ -317,7 +319,6 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
     } catch (NewtonFailure const &) {
         hasQuadrature_ = false;
     }
-
 }
 
 [[noreturn]] void SteadystateProblem::handleSteadyStateFailure(const Solver *solver,
@@ -569,7 +570,7 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
          only direction w.r.t. current t
          */
         solver->step(std::max(t, 1.0) * 10);
-        solver->writeSolution(&t, x, dx, sx);
+        solver->writeSolution(&t, x, dx, sx, xQ);
 
         /* Check for convergence */
         converged = checkConvergence(solver, model);

@@ -100,11 +100,14 @@ class Solver {
      * @param dx0 initial derivative states
      * @param sx0 initial state sensitivities
      * @param sdx0 initial derivative state sensitivities
+     * @param steadystate (optional) flag indicating steadystate case
+     * @param xQ0 initial quadrature vector
      */
 
     void setup(realtype t0, Model *model, const AmiVector &x0,
                const AmiVector &dx0, const AmiVectorArray &sx0,
-               const AmiVectorArray &sdx0) const;
+               const AmiVectorArray &sdx0, bool steadystate = false,
+               const AmiVector &xQ0 = AmiVector(0)) const;
 
     /**
      * @brief Initialises the AMI memory object for the backwards problem
@@ -576,9 +579,10 @@ class Solver {
      * @param x state
      * @param dx derivative state
      * @param sx state sensitivity
+     * @param xQ quadrature
      */
     void writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
-                       AmiVectorArray &sx) const;
+                       AmiVectorArray &sx, AmiVector &xQ) const;
 
     /**
      * @brief write solution from forward simulation
@@ -1577,6 +1581,9 @@ class Solver {
 
     /** adjoint quadrature interface variable (dimension: nJ x nplist) */
     mutable AmiVector xQB = AmiVector(0);
+
+    /** forward quadrature interface variable (dimension: nx_solver) */
+    mutable AmiVector xQ = AmiVector(0);
 
     /** integration time of the forward problem */
     mutable realtype t = std::nan("");
