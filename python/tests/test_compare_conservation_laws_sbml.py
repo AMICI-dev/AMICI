@@ -193,9 +193,9 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
                                  reinitialize_states=reinit)
 
             # assert all are close
-            assert np.isclose(rff['sllh'], rfa['sllh']).all()
-            assert np.isclose(rfa['sllh'], raa['sllh']).all()
-            assert np.isclose(raa['sllh'], rff['sllh']).all()
+            assert np.isclose(rff_cl['sllh'], rfa_cl['sllh']).all()
+            assert np.isclose(rfa_cl['sllh'], raa_cl['sllh']).all()
+            assert np.isclose(raa_cl['sllh'], rff_cl['sllh']).all()
 
             # run simulations with different ways of preequilibration
             # using a model with singular Jacobian
