@@ -226,6 +226,18 @@ class SteadystateProblem {
                                    const BackwardProblem *bwd);
 
     /**
+     * initialize backward computation by setting state, time, adjoint
+     * state and checking for preequilibration mode
+     *
+     * @param solver pointer to the solver object
+     * @param model pointer to the model object
+     * @param bwd pointer to backward problem
+     * @return flag indicating whether backward computation to be carried out
+     */
+    bool initializeBackwardProblem(Solver *solver, Model *model,
+                                   const BackwardProblem *bwd);
+
+    /**
      * @brief store carbon copy of current simulation state variables as SimulationState
      * @param model model carrying the ModelState to be used
      * @param storesensi flag to enable storage of sensitivities
