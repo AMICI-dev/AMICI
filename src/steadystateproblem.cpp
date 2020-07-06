@@ -307,7 +307,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
     /* set starting timepoint for the simulation solver */
     t = 0;
     /* initialize the Jacobian */
-    model->fJSparseB(t, x, xB, nullptr, model->J.get());
+    // model->fJSparseB(t, x.getNVector(), xB, nullptr, model->J.get());
 
     /* create a new solver object */
     auto simSolver = createSteadystateSimSolver(solver, model, false, true);

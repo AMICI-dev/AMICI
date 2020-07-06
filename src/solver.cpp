@@ -81,7 +81,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
         throw AmiException("Failed to allocated solver memory!");
 
     /* Initialize CVodes/IDAs solver*/
-    init(t0, x0, dx0);
+    init(t0, x0, dx0, steadystate);
 
     /* Clear diagnosis storage */
     resetDiagnosis();
@@ -961,6 +961,8 @@ bool Solver::getQuadInitDoneB(const int which) const {
            initializedQB.at(which);
 }
 
+bool Solver::getQuadInitDone() const { return quadInitialized; }
+
 void Solver::setInitDone() const { initialized = true; };
 
 void Solver::setSensInitDone() const { sensInitialized = true; }
@@ -1013,6 +1015,7 @@ void Solver::resetMutableMemory(const int nx, const int nplist,
     xB = AmiVector(nx);
     dxB = AmiVector(nx);
     xQB = AmiVector(nquad);
+    xQ = AmiVector(nx);
 
     solverMemoryB.clear();
     initializedB.clear();
@@ -1117,11 +1120,11 @@ const AmiVector &Solver::getAdjointQuadrature(const int which,
     return xQB;
 }
 
-const AmiVector &Solver::getQuadrature(const realtype t) const {
+const AmiVector &Solver::getQuadrature(realtype t) const {
     if (quadInitialized) {
-        if (solverWasCalled) {
+        if (solverWasCalledF) {
             if (t == this->t) {
-                getQuad();
+                getQuad(t);
                 return xQB;
             }
             getQuadDky(t, 0);

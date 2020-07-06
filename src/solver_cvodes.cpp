@@ -79,6 +79,10 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
 static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                   void *user_data);
 
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot, void *user_data);
+
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot, void *user_data);
+
 static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                   N_Vector sx, N_Vector sxdot, void *user_data,
                   N_Vector tmp1, N_Vector tmp2);
@@ -87,7 +91,7 @@ static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
 /* Function implementations */
 
 void CVodeSolver::init(const realtype t0, const AmiVector &x0,
-                       const AmiVector & /*dx0*/) const {
+                       const AmiVector & /*dx0*/, bool steadystate) const {
     solverWasCalledF = false;
     forceReInitPostProcessF = false;
     t = t0;
@@ -96,7 +100,12 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
     if (getInitDone()) {
         status = CVodeReInit(solverMemory.get(), t0, x.getNVector());
     } else {
-        status = CVodeInit(solverMemory.get(), fxdot, t0, x.getNVector());
+        if (steadystate) {
+            status = CVodeInit(solverMemory.get(), fxBdot_ss, t0,
+                               x.getNVector());
+        } else {
+            status = CVodeInit(solverMemory.get(), fxdot, t0, x.getNVector());
+        }
         setInitDone();
     }
     if (status != CV_SUCCESS)
@@ -559,9 +568,8 @@ void CVodeSolver::getQuadB(int which) const {
         throw CvodeException(status, "CVodeGetQuadB");
 }
 
-void CVodeSolver::getQuad(const realtype t) const {
-    int status =
-    CVodeGetQuad(solverMemory.get(), &t, xQ.getNVector());
+void CVodeSolver::getQuad(realtype &t) const {
+    int status = CVodeGetQuad(solverMemory.get(), &t, xQ.getNVector());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetQuad");
 }
@@ -596,13 +604,11 @@ void CVodeSolver::adjInit() const {
 
 void CVodeSolver::quadInit(const AmiVector &xQ0) const {
     int status;
+    xQ.copy(xQ0);
     if (getQuadInitDone()) {
-        xQ.copy(xQ0);
         status = CVodeQuadReInit(solverMemory.get(), xQ0.getNVector());
     } else {
-        xQ.resize(nx_solver, 0.0);
-        xQ.copy(xQ0);
-        status = CVodeQuadInit(solverMemory.get(), fQdot_ss, xQ.getNVector());
+        status = CVodeQuadInit(solverMemory.get(), fqBdot_ss, xQ.getNVector());
         setQuadInitDone();
     }
     if (status != CV_SUCCESS)
@@ -1016,6 +1022,40 @@ static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
     auto model = static_cast<Model_ODE *>(user_data);
     model->fqBdot(t, x, xB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot");
+}
+
+
+/**
+ * @brief Right hand side of differential equation for adjoint state xB
+ * when simulating in steadystate mode
+ * @param t timepoint
+ * @param xB Vector with the adjoint states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param user_data object with user input @type Model_ODE
+ * @return status flag indicating successful execution
+ */
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
+                     void *user_data) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fxBdot_ss(t, xB, xBdot);
+    return model->checkFinite(gsl::make_span(xBdot), "fxBdot_ss");
+}
+
+
+/**
+ * @brief Right hand side of integral equation for quadrature states qB
+ * when simulating in steadystate mode
+ * @param t timepoint
+ * @param xB Vector with the adjoint states
+ * @param qBdot Vector with the adjoint quadrature right hand side
+ * @param user_data pointer to temp data object
+ * @return status flag indicating successful execution
+ */
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
+                     void *user_data) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fqBdot_ss(t, xB, qBdot);
+    return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
 }
 
 

@@ -253,6 +253,21 @@ void Model_DAE::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     }
 }
 
+void Model_DAE::fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB,
+                          N_Vector xBdot) {
+    /* Right hande side of the adjoint state for steady state computations.
+     J is fixed (as x remeins in steady state), so the RHS becomes simple. */
+    N_VConst(0.0, xBdot);
+    J.multiply(xBdot, xB);
+}
+
+void Model_DAE::fqBdot_ss(realtype t, N_Vector xB, N_Vector /*dxB*/,
+                          N_Vector qBdot) {
+    /* Quadratures when computing adjoints for steady state. The integrand is
+     just the adjoint state itself. */
+    N_VScale(1.0, xB, qBdot);
+}
+
 void Model_DAE::fsxdot(const realtype t, const AmiVector &x,
                        const AmiVector &dx, const int ip, const AmiVector &sx,
                        const AmiVector &sdx, AmiVector &sxdot) {

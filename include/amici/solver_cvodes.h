@@ -61,8 +61,6 @@ class CVodeSolver : public Solver {
     void getQuadDkyB(realtype t, int k,
                      int which) const override;
 
-    void getQuadDky(realtype t, int k) const override;
-
     void getDkyB(realtype t, int k, int which) const override;
 
     void getRootInfo(int *rootsfound) const override;
@@ -99,7 +97,9 @@ class CVodeSolver : public Solver {
 
     void getQuadB(int which) const override;
 
-    void getQuad() const override;
+    void getQuad(realtype &t) const override;
+
+    void getQuadDky(realtype t, int k) const override;
 
     void reInitPostProcessF(realtype tnext) const override;
 
@@ -184,8 +184,8 @@ class CVodeSolver : public Solver {
 
     friend bool operator==(const CVodeSolver &a, const CVodeSolver &b);
 
-    void init(realtype t0, const AmiVector &x0, const AmiVector &dx0)
-    const override;
+    void init(realtype t0, const AmiVector &x0, const AmiVector &dx0,
+              bool steadystate) const override;
 
     void sensInit1(const AmiVectorArray &sx0, const AmiVectorArray &sdx0)
     const override;

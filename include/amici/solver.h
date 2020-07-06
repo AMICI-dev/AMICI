@@ -641,6 +641,13 @@ class Solver {
     const AmiVector &getAdjointQuadrature(int which, realtype t) const;
 
     /**
+     * @brief Access quadrature solution at time t
+     * @param t time
+     * @return (interpolated) solution xQ
+     */
+    const AmiVector &getQuadrature(realtype t) const;
+
+    /**
      * @brief Reinitializes the states in the solver after an event occurence
      *
      * @param t0 reinitialization timepoint
@@ -915,8 +922,10 @@ class Solver {
     /**
      * @brief extracts the quadrature at the current timepoint from solver
      * memory and writes it to the xQ member variable
+     *
+     * @param t timepoint for quadrature extraction
      */
-    virtual void getQuad() const = 0;
+    virtual void getQuad(realtype &t) const = 0;
 
     /**
      * @brief Initialises the states at the specified initial timepoint
@@ -924,9 +933,10 @@ class Solver {
      * @param t0 initial timepoint
      * @param x0 initial states
      * @param dx0 initial derivative states
+     * @param steadystate flag indicating simulation in steadystate
      */
     virtual void init(realtype t0, const AmiVector &x0,
-                      const AmiVector &dx0) const = 0;
+                      const AmiVector &dx0, bool steadystate) const = 0;
 
     /**
      * @brief initialises the forward sensitivities
@@ -1205,7 +1215,7 @@ class Solver {
     /**
      * @brief initializes the quadratures
      */
-    virtual void adjInit() const = 0;
+    virtual void quadInit(const AmiVector &xQ0) const = 0;
 
     /**
      * @brief Specifies solver method and initializes solver memory for the
@@ -1391,6 +1401,11 @@ class Solver {
      * @return proxy for solverMemoryB->(cv|ida)_QuadMallocDone
      */
     bool getQuadInitDoneB(int which) const;
+
+    /**
+     * @brief checks whether memory for quadratures has been allocated
+     */
+    bool getQuadInitDone() const;
 
     /**
      * @brief attaches a diagonal linear solver to the forward problem

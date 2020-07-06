@@ -106,7 +106,7 @@ void ForwardProblem::workForwardProblem() {
             // Solve for nextTimepoint
             while (t < nextTimepoint) {
                 int status = solver->run(nextTimepoint);
-                solver->writeSolution(&t, x, dx, sx, xQ);
+                solver->writeSolution(&t, x, dx, sx, dx);
                 /* sx will be copied from solver on demand if sensitivities
                  are computed */
                 if (status == AMICI_ILL_INPUT) {
@@ -133,7 +133,7 @@ void ForwardProblem::handlePresimulation()
     solver->updateAndReinitStatesAndSensitivities(model);
 
     solver->run(model->t0());
-    solver->writeSolution(&t, x, dx, sx, xQ);
+    solver->writeSolution(&t, x, dx, sx, dx);
 }
 
 
