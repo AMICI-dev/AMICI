@@ -462,7 +462,9 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
             }
         }
     } else if (checkSensitivities == SensitivityMethod::adjoint) {
-        // pass atm
+        wrms = getWrmsNorm(xQ, xB, solver->getAbsoluteToleranceSteadyState(),
+                           solver->getRelativeToleranceSteadyState());
+        converged = wrms < RCONST(1.0);
     }
     return converged;
 }

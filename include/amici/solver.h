@@ -1573,11 +1573,11 @@ class Solver {
 
     /**
      * @brief Sets sensitivity method (for simulation or preequilibration)
-     * @param member pointer class member sensi_meth[_preeq]
-     * @param value user input for new value of class member sensi_meth[_preeq]
+     * @param new_sensi_meth new value for sensi_meth[_preeq]
+     * @param preequilibration flag indicating preequilibration or simulation
      */
-    void sensitivityMethod(SensitivityMethod *member,
-                           const SensitivityMethod value);
+    void sensitivityMethod(const SensitivityMethod new_sensi_meth,
+                           bool preequilibration);
 
     /** state (dimension: nx_solver) */
     mutable AmiVector x = AmiVector(0);

@@ -546,20 +546,24 @@ SensitivityMethod Solver::getSensitivityMethodPreequilibration() const { return 
 void Solver::setSensitivityMethod(const SensitivityMethod sensi_meth) {
     if (sensi_meth != this->sensi_meth)
         resetMutableMemory(nx(), nplist(), nquad());
-    sensitivityMethod(&this->sensi_meth, sensi_meth);
+    sensitivityMethod(sensi_meth, false);
 }
 
 void Solver::setSensitivityMethodPreequilibration(const SensitivityMethod sensi_meth_preeq) {
-    sensitivityMethod(&this->sensi_meth_preeq, sensi_meth_preeq);
+    sensitivityMethod(sensi_meth_preeq, true);
 }
 
-void Solver::sensitivityMethod(SensitivityMethod *member,
-                               const SensitivityMethod value) {
+void Solver::sensitivityMethod(const SensitivityMethod new_sensi_meth,
+                               bool preequilibration) {
     if (rdata_mode == RDataReporting::residuals &&
-        value == SensitivityMethod::adjoint)
+        new_sensi_meth == SensitivityMethod::adjoint)
         throw AmiException("Adjoint Sensitivity Analysis is not compatible with"
                            " only reporting residuals!");
-    *member = value;
+    if (preequilibration) {
+        this->sensi_meth_preeq = new_sensi_meth;
+    } else {
+        this->sensi_meth = new_sensi_meth;
+    }
 }
 
 int Solver::getNewtonMaxSteps() const { return newton_maxsteps; }
