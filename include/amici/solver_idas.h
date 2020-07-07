@@ -200,6 +200,8 @@ class IDASolver : public Solver {
     void setBandJacFnB(int which) const override;
 
     void setJacTimesVecFnB(int which) const override;
+
+    void setSparseJacFn_ss() const override;
 };
 
 } // namespace amici

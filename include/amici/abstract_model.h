@@ -80,6 +80,12 @@ class AbstractModel {
                            const AmiVector &dxB, AmiVector &xBdot) = 0;
 
     /**
+     * @brief Sparse Jacobian function backward, steady state case
+     * @param JB sparse matrix to which values of the Jacobian will be written
+     */
+    virtual void fJSparseB_ss(SUNMatrix JB) = 0;
+
+    /**
      * @brief Dense Jacobian function
      * @param t time
      * @param cj scaling factor (inverse of timestep, DAE only)
@@ -122,7 +128,7 @@ class AbstractModel {
                           SUNMatrix J) = 0;
 
     /**
-     * @brief Dense Jacobian function
+     * @brief Sparse Jacobian function
      * @param t time
      * @param cj scaling factor (inverse of timestep, DAE only)
      * @param x state
@@ -138,7 +144,7 @@ class AbstractModel {
                            SUNMatrix JB) = 0;
 
     /**
-     * @brief Dense Jacobian function
+     * @brief Sparse Jacobian function
      * @param t time
      * @param cj scaling factor (inverse of timestep, DAE only)
      * @param x state

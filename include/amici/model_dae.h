@@ -255,6 +255,12 @@ class Model_DAE : public Model {
      */
     void fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot);
 
+    /**
+     * @brief Sparse Jacobian function backward, steady state case
+     * @param JB sparse matrix to which values of the Jacobian will be written
+     */
+    void fJSparseB_ss(SUNMatrix JB) override;
+
     /** Sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states

@@ -1027,6 +1027,11 @@ class Solver {
     virtual void setJacTimesVecFnB(int which) const = 0;
 
     /**
+     * @brief sets the sparse Jacobian function for backward steady state case
+     */
+    virtual void setSparseJacFn_ss() const = 0;
+
+    /**
      * @brief Create specifies solver method and initializes solver memory for
      * the forward problem
      */

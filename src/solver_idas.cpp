@@ -76,6 +76,10 @@ static int fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot,
 static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
                      void *user_data);
 
+static int fJSparseB_ss(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                        N_Vector xBdot, SUNMatrix JB, void *user_data,
+                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
 static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx,
                   N_Vector xdot, N_Vector *sx, N_Vector *sdx,
                   N_Vector *sxdot, void *user_data, N_Vector tmp1,
@@ -215,6 +219,12 @@ void IDASolver::setJacTimesVecFnB(const int which) const {
     int status = IDASetJacTimesB(solverMemory.get(), which, nullptr, fJvB);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASpilsSetJacTimesVecFnB");
+}
+
+void IDASolver::setSparseJacFn_ss() const {
+    int status = IDASetJacFn(solverMemory.get(), fJSparseB_ss);
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetJacFn");
 }
 
 Solver *IDASolver::clone() const { return new IDASolver(*this); }
@@ -1088,6 +1098,28 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
     return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
 }
 
+/**
+ * @brief JB in sparse form for steady state case
+ * @param t timepoint
+ * @param cj scalar in Jacobian (inverse stepsize)
+ * @param x Vector with the states
+ * @param dx Vector with the derivative states
+ * @param xdot Vector with the right hand side
+ * @param J Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_DAE
+ * @param tmp1 temporary storage vector
+ * @param tmp2 temporary storage vector
+ * @param tmp3 temporary storage vector
+ * @return status flag indicating successful execution
+ */
+    static int fJSparseB_ss(realtype /*t*/, realtype /*cj*/, N_Vector /*x*/,
+                            N_Vector /*dx*/, N_Vector xBdot, SUNMatrix JB,
+                            void *user_data, N_Vector /*tmp1*/,
+                            N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
+    auto model = static_cast<Model_DAE *>(user_data);
+    model->fJSparseB_ss(JB);
+    return model->checkFinite(gsl::make_span(xBdot), "JSparseB_ss");
+}
 
 /**
  * @brief Right hand side of differential equation for state sensitivities sx

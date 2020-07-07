@@ -281,6 +281,11 @@ void Model_DAE::fqBdot_ss(realtype t, N_Vector xB, N_Vector /*dxB*/,
     N_VScale(1.0, xB, qBdot);
 }
 
+void Model_DAE::fJSparseB_ss(SUNMatrix JB) {
+    /* Just pass the model Jacobian on to JB */
+    JB = J.get();
+}
+
 void Model_DAE::fsxdot(const realtype t, const AmiVector &x,
                        const AmiVector &dx, const int ip, const AmiVector &sx,
                        const AmiVector &sdx, AmiVector &sxdot) {

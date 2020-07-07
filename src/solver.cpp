@@ -121,6 +121,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
                 /* Allocate space for forward quadratures */
                 quadInit(xQ0);
                 applyQuadTolerances();
+                setSparseJacFn_ss();
             } else {
                 /* Allocate space for the adjoint computation */
                 adjInit();
