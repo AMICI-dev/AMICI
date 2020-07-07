@@ -394,11 +394,18 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
     }
 }
 
+void Model_ODE::fxBdot_ss(const realtype t, const AmiVector &xB,
+                          const AmiVector & /*dx*/, AmiVector &xBdot) {
+    fxBdot_ss(t, xB.getNVector(), xBdot.getNVector());
+}
+
 void Model_ODE::fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot) {
     /* Right hande side of the adjoint state for steady state computations.
        J is fixed (as x remeins in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
     J.multiply(xBdot, xB);
+    /* Mind the minus sign... */
+    N_VScale(-1.0, xBdot, xBdot);
 }
 
 void Model_ODE::fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot) {

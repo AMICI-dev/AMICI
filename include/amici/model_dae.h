@@ -232,6 +232,9 @@ class Model_DAE : public Model {
     void fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
                 N_Vector qBdot);
 
+    void fxBdot_ss(const realtype t, const AmiVector &xB,
+                   const AmiVector &dxB, AmiVector &xBdot);
+
     /** implementation of fxBdot for steady state case at the N_Vector level
      * @param t timepoint
      * @param xB Vector with the adjoint state

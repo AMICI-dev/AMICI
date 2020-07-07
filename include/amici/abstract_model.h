@@ -69,6 +69,17 @@ class AbstractModel {
                         const AmiVector &sdx, AmiVector &sxdot) = 0;
 
     /**
+     * @brief Residual function backward when running in steady state mode
+     * @param t time
+     * @param xB adjoint state
+     * @param dxB time derivative of state (DAE only)
+     * @param xBdot array to which values of the residual function will be
+     * written
+     */
+    virtual void fxBdot_ss(const realtype t, const AmiVector &xB,
+                           const AmiVector &dxB, AmiVector &xBdot) = 0;
+
+    /**
      * @brief Dense Jacobian function
      * @param t time
      * @param cj scaling factor (inverse of timestep, DAE only)

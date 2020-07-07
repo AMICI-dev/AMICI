@@ -173,10 +173,11 @@ class SteadystateProblem {
      *
      * @param solver Solver instance
      * @param model instance
+     * @param checkSensitivities flag whether sensitivities should be checked
      * @return boolean indicating convergence
      */
-    bool checkConvergence(const Solver *solver,
-                          Model *model);
+    bool checkConvergence(const Solver *solver, Model *model,
+                          SensitivityMethod checkSensitivities);
 
     /**
      * Runs the Newton solver iterations and checks for convergence to steady

@@ -130,7 +130,7 @@ class Model_ODE : public Model {
                    const AmiVector &dxB, const AmiVector &xBdot,
                    SUNMatrix JB) override;
 
-    /** implementation of fJSparseB at the N_Vector level, this function
+   /** implementation of fJSparseB at the N_Vector level, this function
      * provides an interface to the model specific routines for the solver
      * implementation
      * @param t timepoint
@@ -225,6 +225,9 @@ class Model_ODE : public Model {
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
     void fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot);
+
+    void fxBdot_ss(const realtype t, const AmiVector &xB,
+                   const AmiVector & /*dxB*/, AmiVector &xBdot);
 
     /** implementation of fxBdot for steady state case at the N_Vector level
      * @param t timepoint

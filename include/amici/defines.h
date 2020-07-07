@@ -152,7 +152,8 @@ enum class SteadyStateStatus {
 enum class SteadyStateContext {
     newton = 0,
     storage = 1,
-    integration = 2
+    integration = 2,
+    creation = 3
 };
 
 /** Damping factor flag for the Newton method */

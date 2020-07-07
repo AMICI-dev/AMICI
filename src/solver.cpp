@@ -1125,7 +1125,7 @@ const AmiVector &Solver::getQuadrature(realtype t) const {
         if (solverWasCalledF) {
             if (t == this->t) {
                 getQuad(t);
-                return xQB;
+                return xQ;
             }
             getQuadDky(t, 0);
         }
