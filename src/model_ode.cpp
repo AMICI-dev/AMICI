@@ -320,6 +320,12 @@ void Model_ODE::fJB(realtype t, N_Vector x, N_Vector xB, N_Vector /*xBdot*/,
 
 void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
                           const AmiVector & /*dx*/, const AmiVector &xB,
+                          const AmiVector & /*dxB*/, const AmiVector &xBdot) {
+    fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(), J.get());
+}
+
+void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
+                          const AmiVector & /*dx*/, const AmiVector &xB,
                           const AmiVector & /*dxB*/, const AmiVector &xBdot,
                           SUNMatrix JB) {
     fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(), JB);

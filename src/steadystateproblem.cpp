@@ -307,7 +307,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
     t = 0;
     xQ.reset();
     /* initialize the Jacobian */
-    // model->fJSparseB(t, x, xB);
+    model->fJSparseB(t, 0, x, x, xB, xB, xB);
 
     /* create a new solver object */
     auto simSolver = createSteadystateSimSolver(solver, model, false, true);
@@ -416,9 +416,6 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
 
         case SteadyStateContext::creation:
             return needForwardSensiAtCreation;
-
-        case SteadyStateContext::integration:
-            return needForwardSensiDuringIntegration;
 
         default:
             throw AmiException("Requested invalid context in sensitivity "

@@ -205,6 +205,12 @@ void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
 
 void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
                           const AmiVector &dx, const AmiVector &xB,
+                          const AmiVector &dxB, const AmiVector & /*xBdot*/) {
+    fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(), dxB.getNVector(), J.get());
+}
+
+void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                          const AmiVector &dx, const AmiVector &xB,
                           const AmiVector &dxB, const AmiVector & /*xBdot*/,
                           SUNMatrix JB) {
     fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(), dxB.getNVector(), JB);

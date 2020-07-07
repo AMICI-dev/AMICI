@@ -127,6 +127,10 @@ class Model_ODE : public Model {
 
     void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
                    const AmiVector &dx, const AmiVector &xB,
+                   const AmiVector &dxB, const AmiVector &xBdot) override;
+
+    void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                   const AmiVector &dx, const AmiVector &xB,
                    const AmiVector &dxB, const AmiVector &xBdot,
                    SUNMatrix JB) override;
 
@@ -227,7 +231,7 @@ class Model_ODE : public Model {
     void fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot);
 
     void fxBdot_ss(const realtype t, const AmiVector &xB,
-                   const AmiVector & /*dxB*/, AmiVector &xBdot);
+                   const AmiVector & /*dxB*/, AmiVector &xBdot) override;
 
     /** implementation of fxBdot for steady state case at the N_Vector level
      * @param t timepoint
