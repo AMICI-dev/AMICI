@@ -169,6 +169,8 @@ def test_compare_conservation_laws_sbml(edata_fixture):
 
 def test_adjoint_pre_and_post_equilibration(edata_fixture):
     # get the model
+    sys.path.insert(0, os.path.abspath('model_constant_species_cl'))
+    sys.path.insert(0, os.path.abspath('model_constant_species'))
     model_module_cl = amici.import_model_module('model_constant_species_cl')
     model_cl = model_module_cl.getModel()
     model_module = amici.import_model_module('model_constant_species')
