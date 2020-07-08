@@ -248,6 +248,12 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
     if (!hasQuadrature())
         getQuadratureBySimulation(solver, model);
 
+    /* If analytic solution and integration did not work, throw an Exception */
+    if (!hasQuadrature())
+        throw AmiException("Steady state backward computation failed: Linear "
+            "system could not be solved (possibly due to singular Jacobian), "
+            "and numerical integration did not equilibrate within maxsteps");
+
     /* Compute the quadrature as the inner product xQ * dxotdp */
     if (model->pythonGenerated) {
         /* fill dxdotdp with current values */
@@ -288,12 +294,6 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver) {
         hasQuadrature_ = true;
     } catch (NewtonFailure const &ex) {
         hasQuadrature_ = false;
-        /*if (ex.error_code == AMICI_SINGULAR_JACOBIAN)
-            throw NewtonFailure(ex.error_code, "Steady state backward "
-                                "computation failed due to unsuccessful "
-                                "factorization of RHS Jacobian.");
-        throw NewtonFailure(ex.error_code, "Steady state backward "
-                            "computation failed.");*/
     }
 }
 
