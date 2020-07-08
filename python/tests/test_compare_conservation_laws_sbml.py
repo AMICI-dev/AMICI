@@ -207,4 +207,4 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
                               reinitialize_states=reinit)
                               
             # assert gradients are close
-            assert np.isclose(raa_cl['sllh'], raa['sllh']).all()
+            assert np.isclose(raa_cl['sllh'], raa['sllh'], 1e-5, 1e-5).all()

@@ -322,6 +322,9 @@ void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
                           const AmiVector & /*dx*/, const AmiVector &xB,
                           const AmiVector & /*dxB*/, const AmiVector &xBdot) {
     fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(), J.get());
+    auto data_ptr = J.data();
+    for (int i = 0; i < static_cast<int>(J.nonzeros()); ++i)
+        data_ptr[i] *= -1;
 }
 
 void Model_ODE::fJSparseB(const realtype t, realtype /*cj*/, const AmiVector &x,
@@ -410,8 +413,6 @@ void Model_ODE::fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot) {
        J is fixed (as x remeins in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
     J.multiply(xBdot, xB);
-    /* Mind the minus sign... */
-    N_VScale(-1.0, xBdot, xBdot);
 }
 
 void Model_ODE::fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot) {

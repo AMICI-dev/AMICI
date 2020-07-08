@@ -461,10 +461,11 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
                 converged = wrms < RCONST(1.0);
             }
         }
-    } else if (checkSensitivities == SensitivityMethod::adjoint) {
+    } else if (checkSensitivities == SensitivityMethod::adjoint && converged) {
+        /*
         wrms = getWrmsNorm(xQ, xB, solver->getAbsoluteToleranceSteadyState(),
                            solver->getRelativeToleranceSteadyState());
-        converged = wrms < RCONST(1.0);
+        converged = wrms < RCONST(1.0);*/
     }
     return converged;
 }
