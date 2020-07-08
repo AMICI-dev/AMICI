@@ -161,12 +161,14 @@ class SteadystateProblem {
      * @param xdot current rhs
      * @param atol absolute tolerance
      * @param rtol relative tolerance
+     * @param ewt error weight vector
      * @return root-mean-square norm
      */
     realtype getWrmsNorm(AmiVector const &x,
                          AmiVector const &xdot,
                          realtype atol,
-                         realtype rtol);
+                         realtype rtol,
+                         AmiVector &ewt);
 
     /**
      * Checks convergence for state and respective sensitivities
@@ -225,6 +227,16 @@ class SteadystateProblem {
      */
     bool initializeBackwardProblem(Solver *solver, Model *model,
                                    const BackwardProblem *bwd);
+
+    /**
+     * initialize backward computation by setting state, time, adjoint
+     * state and checking for preequilibration mode
+     *
+     * @param model pointer to the model object
+     * @param yQ vector to be multiplied with dxdotdp
+     * @param yQB resulting vector after multiplication
+     */
+    void getQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB);
 
     /**
      * @brief store carbon copy of current simulation state variables as SimulationState
@@ -354,6 +366,8 @@ class SteadystateProblem {
     AmiVector delta;
     /** error weights */
     AmiVector ewt;
+    /** error weights for backward quadratures */
+    AmiVector ewtQB;
     /** container for relative error calcuation? */
     AmiVector rel_x_newton;
     /** container for absolute error calcuation? */
@@ -378,6 +392,8 @@ class SteadystateProblem {
     AmiVector xQ;
     /** quadrature state vector */
     AmiVector xQB;
+    /** quadrature state vector */
+    AmiVector xQBdot;
 
     /** maximum number of steps for Newton solver for allocating numlinsteps */
     int maxSteps = 0;

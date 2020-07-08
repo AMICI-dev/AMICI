@@ -88,6 +88,7 @@ def get_results(model, edata=None, sensi_order=0,
     # get the solver, set the properties
     solver = model.getSolver()
     solver.setNewtonMaxSteps(20)
+    solver.setMaxSteps(100000)
     solver.setSensitivityOrder(sensi_order)
     solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)
     solver.setSensitivityMethod(sensi_meth)
