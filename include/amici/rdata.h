@@ -269,7 +269,7 @@ class ReturnData {
      * number of simulation steps for adjoint steady state problem
      * (preequilibration) [== 0 if analytical solution worked, > 0 otherwise]
      */
-    int preeq_numstepsB;
+    int preeq_numstepsB = 0;
 
     /**
      * number of Newton steps for steady state problem (preequilibration)
@@ -288,7 +288,7 @@ class ReturnData {
      * number of simulation steps for adjoint steady state problem
      * (postequilibration) [== 0 if analytical solution worked, > 0 otherwise]
      */
-    int posteq_numstepsB;
+    int posteq_numstepsB = 0;
 
     /**
      * time when steadystate was reached via simulation (preequilibration)
