@@ -244,7 +244,7 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
      matrix-vector multiplication */
 
     /* Try to compute the analytical solution for quadrature algebraically */
-    getQuadratureByLinSolve(newtonSolver);
+    getQuadratureByLinSolve(newtonSolver, model);
 
     /* Analytical solution didn't work, perform simulation instead */
     if (!hasQuadrature())
@@ -255,12 +255,10 @@ void SteadystateProblem::computeSteadyStateQuadrature(NewtonSolver *newtonSolver
         throw AmiException("Steady state backward computation failed: Linear "
             "system could not be solved (possibly due to singular Jacobian), "
             "and numerical integration did not equilibrate within maxsteps");
-
-    /* Compute the quadrature as the inner product xQ * dxotdp */
-    getQBfromQ(model, xQ, xQB);
 }
 
-void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver) {
+void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
+                                                 Model *model) {
     /* Computes the integral over the adjoint state xB:
      If the Jacobian has full rank, this has an anlytical solution, since
      d/dt[ xB(t) ] = JB^T(x(t), p) xB(t) = JB^T(x_ss, p) xB(t)
@@ -275,8 +273,11 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver) {
 
     /* try to solve the linear system */
     try {
+        /* compute integral over xB and write to xQ */
         newtonSolver->prepareLinearSystemB(0, -1);
         newtonSolver->solveLinearSystem(xQ);
+        /* Compute the quadrature as the inner product xQ * dxotdp */
+        getQBfromQ(model, xQ, xQB);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
     } catch (NewtonFailure const &ex) {

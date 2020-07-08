@@ -422,8 +422,8 @@ void Model_ODE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector qBdot) {
 }
 
 void Model_ODE::fJSparseB_ss(SUNMatrix JB) {
-    /* Just pass the model Jacobian (which as been  on to JB */
-    JB = J.get();
+    /* Just copy the model Jacobian */
+    SUNMatCopy(J.get(), JB);
 }
 
 void Model_ODE::fsxdot(const realtype t, const AmiVector &x,

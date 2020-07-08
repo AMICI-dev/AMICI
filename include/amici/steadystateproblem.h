@@ -107,8 +107,9 @@ class SteadystateProblem {
      * linear system defined by the backward Jacobian
      *
      * @param newtonSolver pointer to the newtonSolver solver object
+     * @param model pointer to the model object
      */
-    void getQuadratureByLinSolve(NewtonSolver *newtonSolver);
+    void getQuadratureByLinSolve(NewtonSolver *newtonSolver, Model *model);
 
     /**
      * Computes the quadrature in steady state backward mode by numerical

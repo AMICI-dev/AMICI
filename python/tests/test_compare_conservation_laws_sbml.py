@@ -88,7 +88,7 @@ def get_results(model, edata=None, sensi_order=0,
     # get the solver, set the properties
     solver = model.getSolver()
     solver.setNewtonMaxSteps(20)
-    solver.setMaxSteps(100000)
+    solver.setMaxSteps(15000) # the model takes a while to equilibrate...
     solver.setSensitivityOrder(sensi_order)
     solver.setSensitivityMethodPreequilibration(sensi_meth_preeq)
     solver.setSensitivityMethod(sensi_meth)
@@ -207,5 +207,5 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
                               sensi_meth_preeq=amici.SensitivityMethod.adjoint,
                               reinitialize_states=reinit)
                               
-            # assert gradients are close
+            # assert gradients are close (quadrature tolerances are laxer)
             assert np.isclose(raa_cl['sllh'], raa['sllh'], 1e-5, 1e-5).all()
