@@ -402,10 +402,6 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
     bool needForwardSensiAtCreation = needForwardSensisPreeq &&
         model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA;
 
-    /* Are we integrating and need to check convergence? */
-    bool needForwardSensiDuringIntegration = needForwardSensisNewton &&
-    model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::simulationFSA;
-
     /* Check if we need to store sensis */
     switch (context) {
         case SteadyStateContext::newton:
