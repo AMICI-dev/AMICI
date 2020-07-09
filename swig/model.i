@@ -21,7 +21,6 @@ using namespace amici;
 %ignore addStateSensitivityEventUpdate;
 %ignore fsx_rdata;
 %ignore fx_rdata;
-%ignore fJSparseB_ss;
 %ignore getAdjointStateEventUpdate;
 %ignore getEventTimeSensitivity;
 %ignore getAdjointStateObservableUpdate;

@@ -149,10 +149,10 @@ public:
         throw AmiException("not implemented");
     }
 
-    virtual void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
-                           const AmiVector &dx, const AmiVector &xB,
-                           const AmiVector &dxB, const AmiVector &xBdot)
-                           override {
+    virtual void writeSteadystateJB(const realtype t, realtype cj, 
+                                    const AmiVector &x, const AmiVector &dx, 
+                                    const AmiVector &xB, const AmiVector &dxB, 
+                                    const AmiVector &xBdot) override {
         throw AmiException("not implemented");
     }
 

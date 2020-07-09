@@ -130,10 +130,6 @@ class Model_DAE : public Model {
 
     void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
                    const AmiVector &dx, const AmiVector &xB,
-                   const AmiVector &dxB, const AmiVector &xBdot) override;
-
-    void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
-                   const AmiVector &dx, const AmiVector &xB,
                    const AmiVector &dxB, const AmiVector &xBdot,
                    SUNMatrix JB) override;
 
@@ -260,6 +256,22 @@ class Model_DAE : public Model {
      * @param JB sparse matrix to which values of the Jacobian will be written
      */
     void fJSparseB_ss(SUNMatrix JB) override;
+
+    /**
+     * @brief Computes the sparse backward Jacobian for steadystate integration
+     * and writes it to the model member
+     * @param t timepoint
+     * @param cj scalar in Jacobian
+     * @param x Vector with the states
+     * @param dx Vector with the derivative states
+     * @param xB Vector with the adjoint states
+     * @param dxB Vector with the adjoint derivative states
+     * @param xBdot Vector with the adjoint state right hand side
+     */
+    void writeSteadystateJB(const realtype t, realtype cj,
+                            const AmiVector &x, const AmiVector &dx,
+                            const AmiVector &xB, const AmiVector &dxB,
+                            const AmiVector &xBdot) override;
 
     /** Sensitivity of dx/dt wrt model parameters p
      * @param t timepoint

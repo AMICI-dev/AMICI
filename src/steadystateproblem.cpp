@@ -296,7 +296,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
     /* xQ was written in getQuadratureByLinSolve() -> reset */
     xQ.reset();
     /* initialize the Jacobian */
-    model->fJSparseB(t, 0, x, x, xB, xB, xB);
+    model->writeSteadystateJB(t, 0, x, x, xB, xB, xB);
 
     /* create a new solver object */
     auto simSolver = createSteadystateSimSolver(solver, model, false, true);
