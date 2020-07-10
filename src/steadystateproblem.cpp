@@ -277,7 +277,7 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
         newtonSolver->prepareLinearSystemB(0, -1);
         newtonSolver->solveLinearSystem(xQ);
         /* Compute the quadrature as the inner product xQ * dxotdp */
-        getQBfromQ(model, xQ, xQB);
+        computeQBfromQ(model, xQ, xQB);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
     } catch (NewtonFailure const &ex) {
@@ -413,6 +413,8 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
                                          realtype atol,
                                          realtype rtol,
                                          AmiVector &ewt) {
+    /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
+       we need to pass ewt[QB], as xdot and xQBdot have different sizes */
     N_VAbs(x.getNVector(), ewt.getNVector());
     N_VScale(rtol, ewt.getNVector(), ewt.getNVector());
     N_VAddConst(ewt.getNVector(), atol, ewt.getNVector());
@@ -425,28 +427,34 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
                                           SensitivityMethod checkSensitivities) {
     /* get RHS and compute weighted error norm */
     if (checkSensitivities == SensitivityMethod::adjoint) {
-        getQBfromQ(model, xQ, xQB);
-        getQBfromQ(model, xB, xQBdot);
+        /* In the adjoitncase, only xQB contributes to the gradient,
+           the exact steadystate is less important. First, compute xQB: */
+        computeQBfromQ(model, xQ, xQB);
+        computeQBfromQ(model, xB, xQBdot);
         wrms = getWrmsNorm(xQB, xQBdot, solver->getAbsoluteToleranceQuadratures(),
                            solver->getRelativeToleranceQuadratures(), ewtQB);
-    } else {
-        model->fxdot(t, x, dx, xdot);
-        wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(),
-                           solver->getRelativeToleranceSteadyState(), ewt);
+        return wrms < RCONST(1.0);
     }
-    bool converged = wrms < RCONST(1.0);
 
-    /* get RHS of sensitivities and compute weighted error norm */
-    if (checkSensitivities == SensitivityMethod::forward) {
-        for (int ip = 0; ip < model->nplist(); ++ip) {
-            if (converged) {
-                sx = solver->getStateSensitivity(t);
-                model->fsxdot(t, x, dx, ip, sx[ip], dx, xdot);
-                wrms = getWrmsNorm(
-                    x, xdot, solver->getAbsoluteToleranceSteadyStateSensi(),
-                    solver->getRelativeToleranceSteadyStateSensi(), ewt);
-                converged = wrms < RCONST(1.0);
-            }
+    /* We're not in adjoint mode. Check convergence of xdot first */
+    model->fxdot(t, x, dx, xdot);
+    wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(),
+                       solver->getRelativeToleranceSteadyState(), ewt);
+
+    /* Do we need sensitivities? If not, we're done */
+    if (checkSensitivities == SensitivityMethod::none)
+        return wrms < RCONST(1.0);
+
+    /* Forward sensitivities: Compute weighted error norm for their RHS */
+    bool converged = wrms < RCONST(1.0);
+    for (int ip = 0; ip < model->nplist(); ++ip) {
+        if (converged) {
+            sx = solver->getStateSensitivity(t);
+            model->fsxdot(t, x, dx, ip, sx[ip], dx, xdot);
+            wrms = getWrmsNorm(
+                x, xdot, solver->getAbsoluteToleranceSteadyStateSensi(),
+                solver->getRelativeToleranceSteadyStateSensi(), ewt);
+            converged = wrms < RCONST(1.0);
         }
     }
     return converged;
@@ -657,8 +665,8 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     return sim_solver;
 }
 
-void SteadystateProblem::getQBfromQ(Model *model, const AmiVector &yQ,
-                                    AmiVector &yQB) {
+void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
+                                        AmiVector &yQB) {
     /* Compute the quadrature as the inner product: yQB = dxotdp * yQ */
 
     /* reset first, as multiplication add to existing value */

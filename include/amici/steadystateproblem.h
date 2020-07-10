@@ -230,14 +230,14 @@ class SteadystateProblem {
                                    const BackwardProblem *bwd);
 
     /**
-     * initialize backward computation by setting state, time, adjoint
-     * state and checking for preequilibration mode
+     * compute the backward quadratures, which contribute to the gradient (xQB)
+     * from the quadrature over the backward state itself (xQ)
      *
      * @param model pointer to the model object
      * @param yQ vector to be multiplied with dxdotdp
      * @param yQB resulting vector after multiplication
      */
-    void getQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB);
+    void computeQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB);
 
     /**
      * @brief store carbon copy of current simulation state variables as SimulationState
