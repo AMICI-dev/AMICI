@@ -544,26 +544,23 @@ SensitivityMethod Solver::getSensitivityMethod() const { return sensi_meth; }
 SensitivityMethod Solver::getSensitivityMethodPreequilibration() const { return sensi_meth_preeq; }
 
 void Solver::setSensitivityMethod(const SensitivityMethod sensi_meth) {
-    if (sensi_meth != this->sensi_meth)
-        resetMutableMemory(nx(), nplist(), nquad());
-    sensitivityMethod(sensi_meth, false);
+    checkSensitivityMethod(const SensitivityMethod new_sensi_meth, false);
+    this->sensi_meth = sensi_meth;
 }
 
 void Solver::setSensitivityMethodPreequilibration(const SensitivityMethod sensi_meth_preeq) {
-    sensitivityMethod(sensi_meth_preeq, true);
+    checkSensitivityMethod(sensi_meth_preeq, true);
+    this->sensi_meth_preeq = sensi_meth_preeq;
 }
 
-void Solver::sensitivityMethod(const SensitivityMethod new_sensi_meth,
-                               bool preequilibration) {
+void Solver::checkSensitivityMethod(const SensitivityMethod sensi_meth,
+                                    bool preequilibration) {
     if (rdata_mode == RDataReporting::residuals &&
-        new_sensi_meth == SensitivityMethod::adjoint)
+        sensi_meth == SensitivityMethod::adjoint)
         throw AmiException("Adjoint Sensitivity Analysis is not compatible with"
                            " only reporting residuals!");
-    if (preequilibration) {
-        this->sensi_meth_preeq = new_sensi_meth;
-    } else {
-        this->sensi_meth = new_sensi_meth;
-    }
+    if (!preequilibration && sensi_meth != this->sensi_meth)
+        resetMutableMemory(nx(), nplist(), nquad());
 }
 
 int Solver::getNewtonMaxSteps() const { return newton_maxsteps; }
@@ -1030,12 +1027,12 @@ void Solver::resetMutableMemory(const int nx, const int nplist,
 void Solver::writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
                            AmiVectorArray &sx, AmiVector &xQ) const {
     *t = gett();
-    x.copy(getState(*t));
-    dx.copy(getDerivativeState(*t));
-    if (sensInitialized)
-        sx.copy(getStateSensitivity(*t));
     if (quadInitialized)
         xQ.copy(getQuadrature(*t));
+    if (sensInitialized)
+        sx.copy(getStateSensitivity(*t));
+    x.copy(getState(*t));
+    dx.copy(getDerivativeState(*t));
 }
 
 void Solver::writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
