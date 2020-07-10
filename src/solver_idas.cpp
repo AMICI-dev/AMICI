@@ -89,7 +89,7 @@ static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx,
 /* Function implementations */
 
 void IDASolver::init(const realtype t0, const AmiVector &x0,
-                     const AmiVector &dx0, bool steadystate) const {
+                     const AmiVector &dx0) const {
     int status;
     solverWasCalledF = false;
     t = t0;
@@ -99,17 +99,26 @@ void IDASolver::init(const realtype t0, const AmiVector &x0,
         status =
             IDAReInit(solverMemory.get(), t, x.getNVector(), dx.getNVector());
     } else {
-        if (steadystate) {
-            status = IDAInit(solverMemory.get(), fxBdot_ss, t, x.getNVector(),
-                             dx.getNVector());
-        } else {
-            status = IDAInit(solverMemory.get(), fxdot, t, x.getNVector(),
-                             dx.getNVector());
-        }
+        status = IDAInit(solverMemory.get(), fxdot, t, x.getNVector(),
+                         dx.getNVector());
         setInitDone();
     }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAInit");
+}
+
+void IDASolver::initSteadystate(const realtype t0, const AmiVector &x0,
+                                const AmiVector &dx0) const {
+    /* (re)set solver state */
+    t = t0;
+    x = x0;
+    dx = dx0;
+
+    /* We need to set the steadystate rhs function. SUndials doesn't have this
+     in itspublic api, so we have to change it in the solver memory,
+     as re-calling init would unset solver settings. */
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
+    ida_mem->ida_res = fxBdot_ss;
 }
 
 void IDASolver::sensInit1(const AmiVectorArray &sx0,

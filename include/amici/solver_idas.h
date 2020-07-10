@@ -174,7 +174,10 @@ class IDASolver : public Solver {
     void *getAdjBmem(void *ami_mem, int which) const override;
 
     void init(realtype t0, const AmiVector &x0,
-              const AmiVector &dx0, bool steadystate) const override;
+              const AmiVector &dx0) const override;
+
+    void initSteadystate(const realtype t0, const AmiVector &x0,
+                         const AmiVector &dx0) const override;
 
     void sensInit1(const AmiVectorArray &sx0, const AmiVectorArray &sdx0) const override;
 

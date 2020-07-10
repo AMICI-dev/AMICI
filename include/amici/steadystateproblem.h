@@ -201,7 +201,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param backward flag indicating adjoint mode (including quadrature)
      */
-    void getSteadystateSimulation(Solver *solver, Model *model, bool backward);
+    void runSteadystateSimulation(Solver *solver, Model *model, bool backward);
 
     /**
      * initialize CVodeSolver instance for preequilibration simulation

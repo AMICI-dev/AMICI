@@ -186,17 +186,22 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
             auto newtonSimSolver = createSteadystateSimSolver(solver, model,
                                                               integrateSensis,
                                                               false);
-            getSteadystateSimulation(newtonSimSolver.get(), model, false);
+            runSteadystateSimulation(newtonSimSolver.get(), model, false);
         } else {
             /* Solver was already created, use this one */
-            getSteadystateSimulation(solver, model, false);
+            runSteadystateSimulation(solver, model, false);
         }
         steady_state_status[1] = SteadyStateStatus::success;
     } catch (NewtonFailure const &ex) {
-        if (ex.error_code == AMICI_TOO_MUCH_WORK) {
-            steady_state_status[1] = SteadyStateStatus::failed_convergence;
-        } else {
-            steady_state_status[1] = SteadyStateStatus::failed;
+        switch (ex.error_code) {
+            case AMICI_TOO_MUCH_WORK:
+                steady_state_status[1] = SteadyStateStatus::failed_convergence;
+                break;
+            case AMICI_NO_STEADY_STATE:
+                steady_state_status[1] = SteadyStateStatus::failed_too_long_simulation;
+                break;
+            default:
+                steady_state_status[1] = SteadyStateStatus::failed;
         }
     } catch (AmiException const &) {
         steady_state_status[1] = SteadyStateStatus::failed;
@@ -303,7 +308,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
 
     /* perform integration and qudrature */
     try {
-        getSteadystateSimulation(simSolver.get(), model, true);
+        runSteadystateSimulation(simSolver.get(), model, true);
         hasQuadrature_ = true;
     } catch (NewtonFailure const &) {
         hasQuadrature_ = false;
@@ -565,26 +570,29 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
         throw NewtonFailure(AMICI_TOO_MUCH_WORK, "applyNewtonsMethod");
 }
 
-void SteadystateProblem::getSteadystateSimulation(Solver *solver,
+void SteadystateProblem::runSteadystateSimulation(Solver *solver,
                                                   Model *model,
                                                   bool backward)
 {
-    /* Loop over steps and check for convergence. Do we need to check also
-       the sensitivities for covergence? */
-    SensitivityMethod sensitivityFlag;
-    if (solver->getSensitivityOrder() > SensitivityOrder::none) {
-        sensitivityFlag = backward ? SensitivityMethod::adjoint : SensitivityMethod::forward;
-    } else {
-        sensitivityFlag = SensitivityMethod::none;
-    }
+    /* Loop over steps and check for convergence */
+    SensitivityMethod sensitivityFlag = SensitivityMethod::none;
 
-    bool converged = checkConvergence(solver, model, sensitivityFlag);
-    int sim_steps = 0;
+    /* Do we also have to check for convergence of sensitivities? */
+    if (solver->getSensitivityOrder() > SensitivityOrder::none &&
+        solver->getSensitivityMethod() > SensitivityMethod::forward)
+        sensitivityFlag = SensitivityMethod::forward;
     /* If flag for forward sensitivity computation by simulation is not set,
      disable forward sensitivity integration. Sensitivities will be combputed
      by newonSolver->computeNewtonSensis then */
-    if (model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::newtonOnly)
+    if (model->getSteadyStateSensitivityMode() == SteadyStateSensitivityMode::newtonOnly) {
         solver->switchForwardSensisOff();
+        sensitivityFlag = SensitivityMethod::none;
+    }
+    if (backward)
+        sensitivityFlag = SensitivityMethod::adjoint;
+
+    bool converged = checkConvergence(solver, model, sensitivityFlag);
+    int sim_steps = 0;
 
     while (!converged) {
         /* One step of ODE integration
@@ -610,7 +618,7 @@ void SteadystateProblem::getSteadystateSimulation(Solver *solver,
             throw NewtonFailure(AMICI_TOO_MUCH_WORK,
                                 "exceeded maximum number of steps");
         }
-        if (t >= 1e100 && !converged) {
+        if (t >= 1e200 && !converged) {
             numsteps.at(1) = sim_steps;
             throw NewtonFailure(AMICI_NO_STEADY_STATE, "simulated to late time"
                                 " point without convergence of RHS");
@@ -646,22 +654,17 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     }
     /* do we need sensitivities? */
     if (forwardSensis) {
-        // need forward to compute sx0
+        /* need forward to compute sx0 */
         sim_solver->setSensitivityMethod(SensitivityMethod::forward);
-    } else if(backward) {
-        sim_solver->setSensitivityMethod(SensitivityMethod::adjoint);
-        sim_solver->setSensitivityOrder(SensitivityOrder::first);
     } else {
         sim_solver->setSensitivityMethod(SensitivityMethod::none);
         sim_solver->setSensitivityOrder(SensitivityOrder::none);
     }
     /* use x and sx as dummies for dx and sdx
      (they wont get touched in a CVodeSolver) */
-    if (backward) {
-        sim_solver->setup(model->t0(), model, xB, xB, sx, sx, true, xQ);
-    } else {
-        sim_solver->setup(model->t0(), model, x, x, sx, sx);
-    }
+    sim_solver->setup(model->t0(), model, x, x, sx, sx);
+    if (backward)
+        sim_solver->setupSteadystate(model->t0(), xB, xB, xQ);
 
     return sim_solver;
 }

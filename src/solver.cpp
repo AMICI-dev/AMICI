@@ -68,8 +68,7 @@ void Solver::runB(const realtype tout) const {
 
 void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
                    const AmiVector &dx0, const AmiVectorArray &sx0,
-                   const AmiVectorArray &sdx0, bool steadystate,
-                   const AmiVector &xQ0) const {
+                   const AmiVectorArray &sdx0) const {
     if (nx() != model->nx_solver || nplist() != model->nplist() ||
         nquad() != model->nJ * model->nplist()) {
         resetMutableMemory(model->nx_solver, model->nplist(),
@@ -81,7 +80,7 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
         throw AmiException("Failed to allocated solver memory!");
 
     /* Initialize CVodes/IDAs solver*/
-    init(t0, x0, dx0, steadystate);
+    init(t0, x0, dx0);
 
     /* Clear diagnosis storage */
     resetDiagnosis();
@@ -111,21 +110,13 @@ void Solver::setup(const realtype t0, Model *model, const AmiVector &x0,
             /* Set sensitivity analysis optional inputs */
             auto par = model->getUnscaledParameters();
 
-            /* Activate sensitivity calculations */
+            /* Activate sensitivity calculations  and apply tolerances */
             initializeNonLinearSolverSens(model);
             setSensParams(par.data(), nullptr, plist.data());
-
             applyTolerancesFSA();
-        } else if (sensi_meth == SensitivityMethod::adjoint) {
-            if (steadystate) {
-                /* Allocate space for forward quadratures */
-                quadInit(xQ0);
-                applyQuadTolerances();
-                setSparseJacFn_ss();
-            } else {
-                /* Allocate space for the adjoint computation */
-                adjInit();
-            }
+        } else {
+            /* Allocate space for the adjoint computation */
+            adjInit();
         }
     }
 
@@ -165,6 +156,21 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     applyQuadTolerancesASA(*which);
 
     setStabLimDetB(*which, stldet);
+}
+
+void Solver::setupSteadystate(const realtype t0, const AmiVector &x0,
+                              const AmiVector &dx0, const AmiVector &xQ0) const {
+    /* Initialize CVodes/IDAs solver with steadystate RHS function */
+    initSteadystate(t0, x0, dx0);
+
+    /* Allocate space for forward quadratures */
+    quadInit(xQ0);
+
+    /* Apply tolerances */
+    applyQuadTolerances();
+
+    /* Set Jacobian function */
+    setSparseJacFn_ss();
 }
 
 void Solver::updateAndReinitStatesAndSensitivities(Model *model) {
@@ -544,7 +550,7 @@ SensitivityMethod Solver::getSensitivityMethod() const { return sensi_meth; }
 SensitivityMethod Solver::getSensitivityMethodPreequilibration() const { return sensi_meth_preeq; }
 
 void Solver::setSensitivityMethod(const SensitivityMethod sensi_meth) {
-    checkSensitivityMethod(const SensitivityMethod new_sensi_meth, false);
+    checkSensitivityMethod(sensi_meth, false);
     this->sensi_meth = sensi_meth;
 }
 
@@ -1006,6 +1012,7 @@ void Solver::resetMutableMemory(const int nx, const int nplist,
     initialized = false;
     adjInitialized = false;
     sensInitialized = false;
+    quadInitialized = false;
     solverWasCalledF = false;
     solverWasCalledB = false;
 

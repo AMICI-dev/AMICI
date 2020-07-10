@@ -184,8 +184,11 @@ class CVodeSolver : public Solver {
 
     friend bool operator==(const CVodeSolver &a, const CVodeSolver &b);
 
-    void init(realtype t0, const AmiVector &x0, const AmiVector &dx0,
-              bool steadystate) const override;
+    void init(realtype t0, const AmiVector &x0,
+              const AmiVector &dx0) const override;
+
+    void initSteadystate(const realtype t0, const AmiVector &x0,
+                         const AmiVector &dx0) const override;
 
     void sensInit1(const AmiVectorArray &sx0, const AmiVectorArray &sdx0)
     const override;

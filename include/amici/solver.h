@@ -100,14 +100,11 @@ class Solver {
      * @param dx0 initial derivative states
      * @param sx0 initial state sensitivities
      * @param sdx0 initial derivative state sensitivities
-     * @param steadystate (optional) flag indicating steadystate case
-     * @param xQ0 initial quadrature vector
      */
 
     void setup(realtype t0, Model *model, const AmiVector &x0,
                const AmiVector &dx0, const AmiVectorArray &sx0,
-               const AmiVectorArray &sdx0, bool steadystate = false,
-               const AmiVector &xQ0 = AmiVector(0)) const;
+               const AmiVectorArray &sdx0) const;
 
     /**
      * @brief Initialises the AMI memory object for the backwards problem
@@ -121,6 +118,17 @@ class Solver {
 
     void setupB(int *which, realtype tf, Model *model, const AmiVector &xB0,
                 const AmiVector &dxB0, const AmiVector &xQB0) const;
+
+    /**
+     * @brief Initialises the ami memory for quadrature computation
+     * @param t0 initial timepoint
+     * @param x0 initial states
+     * @param dx0 initial derivative states
+     * @param xQ0 initial quadrature vector
+     */
+
+    void setupSteadystate(const realtype t0, const AmiVector &x0,
+                          const AmiVector &dx0, const AmiVector &xQ0) const;
 
     /**
      * @brief Reinitializes state and respective sensitivities (if necessary) according
@@ -176,7 +184,7 @@ class Solver {
     SensitivityMethod getSensitivityMethod() const;
 
     /**
-     * @brief Set sensitivity method (wrapper for sensitivityMethod())
+     * @brief Set sensitivity method
      * @param sensi_meth
      */
     void setSensitivityMethod(SensitivityMethod sensi_meth);
@@ -188,7 +196,7 @@ class Solver {
     SensitivityMethod getSensitivityMethodPreequilibration() const;
 
     /**
-     * @brief Set sensitivity method for preequilibration (wrapper for sensitivityMethod())
+     * @brief Set sensitivity method for preequilibration
      * @param sensi_meth_preeq
      */
     void setSensitivityMethodPreequilibration(SensitivityMethod sensi_meth_preeq);
@@ -933,10 +941,19 @@ class Solver {
      * @param t0 initial timepoint
      * @param x0 initial states
      * @param dx0 initial derivative states
-     * @param steadystate flag indicating simulation in steadystate
      */
     virtual void init(realtype t0, const AmiVector &x0,
-                      const AmiVector &dx0, bool steadystate) const = 0;
+                      const AmiVector &dx0) const = 0;
+
+    /**
+     * @brief Initialises the states at the specified initial timepoint
+     *
+     * @param t0 initial timepoint
+     * @param x0 initial states
+     * @param dx0 initial derivative states
+     */
+    virtual void initSteadystate(realtype t0, const AmiVector &x0,
+                                 const AmiVector &dx0) const = 0;
 
     /**
      * @brief initialises the forward sensitivities
@@ -1576,8 +1593,8 @@ class Solver {
      * @param new_sensi_meth new value for sensi_meth[_preeq]
      * @param preequilibration flag indicating preequilibration or simulation
      */
-    void sensitivityMethod(const SensitivityMethod new_sensi_meth,
-                           bool preequilibration);
+    void checkSensitivityMethod(const SensitivityMethod sensi_meth,
+                                bool preequilibration);
 
     /** state (dimension: nx_solver) */
     mutable AmiVector x = AmiVector(0);

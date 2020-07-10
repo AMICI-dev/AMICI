@@ -95,7 +95,7 @@ static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
 /* Function implementations */
 
 void CVodeSolver::init(const realtype t0, const AmiVector &x0,
-                       const AmiVector & /*dx0*/, bool steadystate) const {
+                       const AmiVector & /*dx0*/) const {
     solverWasCalledF = false;
     forceReInitPostProcessF = false;
     t = t0;
@@ -104,16 +104,23 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
     if (getInitDone()) {
         status = CVodeReInit(solverMemory.get(), t0, x.getNVector());
     } else {
-        if (steadystate) {
-            status = CVodeInit(solverMemory.get(), fxBdot_ss, t0,
-                               x.getNVector());
-        } else {
-            status = CVodeInit(solverMemory.get(), fxdot, t0, x.getNVector());
-        }
+        status = CVodeInit(solverMemory.get(), fxdot, t0, x.getNVector());
         setInitDone();
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeInit");
+}
+
+void CVodeSolver::initSteadystate(const realtype t0, const AmiVector &x0,
+                                  const AmiVector &dx0) const {
+    /* We need to set the steadystate rhs function. SUndials doesn't have this
+       in itspublic api, so we have to change it in the solver memory,
+       as re-calling init would unset solver settings. */
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    cv_mem->cv_f = fxBdot_ss;
+
+    /* (re)set solver state */
+    init(t0, x0, dx0);
 }
 
 void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
