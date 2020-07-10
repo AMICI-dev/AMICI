@@ -423,11 +423,8 @@ void Model_ODE::writeSteadystateJB(const realtype t, realtype /*cj*/,
                                    const AmiVector &xBdot) {
     /* Get backward Jacobian */
     fJSparseB(t, x.getNVector(), xB.getNVector(), xBdot.getNVector(), J.get());
-
     /* Switch sign, as we integrate forward in time, not backward */
-    auto data_ptr = J.data();
-    for (int i = 0; i < static_cast<int>(J.nonzeros()); ++i)
-        data_ptr[i] *= -1;
+    J.scale(-1);
 }
 
 void Model_ODE::fsxdot(const realtype t, const AmiVector &x,

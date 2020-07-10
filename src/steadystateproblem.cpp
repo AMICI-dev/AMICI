@@ -292,7 +292,7 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
        x is not time dependent, no forward trajectory is needed. */
 
     /* set starting timepoint for the simulation solver */
-    t = 0;
+    t = model->t0();
     /* xQ was written in getQuadratureByLinSolve() -> reset */
     xQ.reset();
     /* initialize the Jacobian */
@@ -428,7 +428,8 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
     /* get RHS and compute weighted error norm */
     if (checkSensitivities == SensitivityMethod::adjoint) {
         /* In the adjoitncase, only xQB contributes to the gradient,
-           the exact steadystate is less important. First, compute xQB: */
+           the exact steadystate is less important, and xB = xQdot may even
+           not converge to zero. So we need xQBdot, hence compute xQB first. */
         computeQBfromQ(model, xQ, xQB);
         computeQBfromQ(model, xB, xQBdot);
         wrms = getWrmsNorm(xQB, xQBdot, solver->getAbsoluteToleranceQuadratures(),

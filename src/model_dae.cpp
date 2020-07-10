@@ -287,11 +287,8 @@ void Model_DAE::writeSteadystateJB(const realtype t, realtype cj,
     /* Get backward Jacobian */
     fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(),
               dxB.getNVector(), J.get());
-
     /* Switch sign, as we integrate forward in time, not backward */
-    auto data_ptr = J.data();
-    for (int i = 0; i < static_cast<int>(J.nonzeros()); ++i)
-        data_ptr[i] *= -1;
+    J.scale(-1);
 }
 
 void Model_DAE::fsxdot(const realtype t, const AmiVector &x,

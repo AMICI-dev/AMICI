@@ -365,9 +365,9 @@ class SteadystateProblem {
     realtype t;
     /** newton step */
     AmiVector delta;
-    /** error weights */
+    /** error weights for solver state, dimension nx_solver */
     AmiVector ewt;
-    /** error weights for backward quadratures */
+    /** error weights for backward quadratures, dimension nplist() */
     AmiVector ewtQB;
     /** container for relative error calcuation? */
     AmiVector rel_x_newton;

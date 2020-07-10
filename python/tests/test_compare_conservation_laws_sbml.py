@@ -66,10 +66,10 @@ def generate_models():
                              compute_conservation_laws=False)
 
     # load both models
-    sys.path.insert(0, os.path.abspath(model_name))
-    sys.path.insert(0, os.path.abspath(model_name_cl))
-    model_without_cl_module = amici.import_model_module(model_name)
-    model_with_cl_module = amici.import_model_module(model_name_cl)
+    model_without_cl_module = amici.import_model_module(model_name, 
+        module_path=os.path.abspath(model_name))
+    model_with_cl_module = amici.import_model_module(model_name_cl,
+        module_path=os.path.abspath(model_name_cl))
 
     # get the models and return
     model_without_cl = model_without_cl_module.getModel()
@@ -168,27 +168,29 @@ def test_compare_conservation_laws_sbml(edata_fixture):
         assert rdata['status'] == amici.AMICI_ERROR
 
 def test_adjoint_pre_and_post_equilibration(edata_fixture):
-    # get the model
-    sys.path.insert(0, os.path.abspath('model_constant_species_cl'))
-    sys.path.insert(0, os.path.abspath('model_constant_species'))
-    model_module_cl = amici.import_model_module('model_constant_species_cl')
-    model_cl = model_module_cl.getModel()
-    model_module = amici.import_model_module('model_constant_species')
+    # get both models
+    model_module = amici.import_model_module('model_constant_species', 
+        module_path=os.path.abspath('model_constant_species'))
     model = model_module.getModel()
+    model_module_cl = amici.import_model_module('model_constant_species_cl',
+        module_path=os.path.abspath('model_constant_species_cl'))
+    model_cl = model_module_cl.getModel()
 
     # check gradient with and without state reinitialization
     for edata in edata_fixture:
         for reinit in [False, True]:
-            # run simulations with different ways of preequilibration
-            # using a model with full rank Jacobian
+    # --- compare different ways of preequilibration, full rank Jacobian ---------
+            # forward preequilibration, forward simulation
             rff_cl = get_results(model_cl, edata=edata, sensi_order=1,
                                  sensi_meth=amici.SensitivityMethod.forward,
                                  sensi_meth_preeq=amici.SensitivityMethod.forward,
                                  reinitialize_states=reinit)
+            # forward preequilibration, adjoint simulation
             rfa_cl = get_results(model_cl, edata=edata, sensi_order=1,
                                  sensi_meth=amici.SensitivityMethod.adjoint,
                                  sensi_meth_preeq=amici.SensitivityMethod.forward,
                                  reinitialize_states=reinit)
+            # adjoint preequilibration, adjoint simulation
             raa_cl = get_results(model_cl, edata=edata, sensi_order=1,
                                  sensi_meth=amici.SensitivityMethod.adjoint,
                                  sensi_meth_preeq=amici.SensitivityMethod.adjoint,
@@ -199,12 +201,11 @@ def test_adjoint_pre_and_post_equilibration(edata_fixture):
             assert np.isclose(rfa_cl['sllh'], raa_cl['sllh']).all()
             assert np.isclose(raa_cl['sllh'], rff_cl['sllh']).all()
 
-            # run simulations with different ways of preequilibration
-            # using a model with singular Jacobian
+    # --- compare fully adjoint approach to simulation with singular Jacobian ----
             raa = get_results(model, edata=edata, sensi_order=1,
                               sensi_meth=amici.SensitivityMethod.adjoint,
                               sensi_meth_preeq=amici.SensitivityMethod.adjoint,
                               reinitialize_states=reinit)
-                              
+
             # assert gradients are close (quadrature tolerances are laxer)
             assert np.isclose(raa_cl['sllh'], raa['sllh'], 1e-5, 1e-5).all()
