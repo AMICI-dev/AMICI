@@ -66,7 +66,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     cpu_time = (double)((clock() - starttime) * 1000) / CLOCKS_PER_SEC;
 
     /* Check whether state sensis still need to be computed */
-    if (getSensitivityFlag(model, solver, it, SteadyStateContext::newton))
+    if (getSensitivityFlag(model, solver, it, SteadyStateContext::newtonSensi))
     {
         try {
             /* this might still fail, if the Jacobian is singular and
@@ -84,7 +84,7 @@ void SteadystateProblem::workSteadyStateProblem(Solver *solver, Model *model,
     /* Get output of steady state solver, write it to x0 and reset time
      if necessary */
     storeSimulationState(model, getSensitivityFlag(model, solver, it,
-                                                   SteadyStateContext::storage));
+                         SteadyStateContext::sensiStorage));
 }
 
 void SteadystateProblem::workSteadyStateBackwardProblem(Solver *solver,
@@ -182,7 +182,7 @@ void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
         if (it < 0) {
             /* Preequilibration? -> Create a new CVode object for sim */
             bool integrateSensis = getSensitivityFlag(model, solver, it,
-                                   SteadyStateContext::creation);
+                                   SteadyStateContext::solverCreation);
             auto newtonSimSolver = createSteadystateSimSolver(solver, model,
                                                               integrateSensis,
                                                               false);
@@ -393,13 +393,13 @@ bool SteadystateProblem::getSensitivityFlag(const Model *model,
 
     /* Check if we need to store sensis */
     switch (context) {
-        case SteadyStateContext::newton:
+        case SteadyStateContext::newtonSensi:
             return needForwardSensisNewton;
 
-        case SteadyStateContext::storage:
+        case SteadyStateContext::sensiStorage:
             return needForwardSensisNewton || forwardSensisAlreadyComputed;
 
-        case SteadyStateContext::creation:
+        case SteadyStateContext::solverCreation:
             return needForwardSensiAtCreation;
 
         default:
