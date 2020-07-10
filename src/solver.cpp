@@ -158,8 +158,9 @@ void Solver::setupB(int *which, const realtype tf, Model *model,
     setStabLimDetB(*which, stldet);
 }
 
-void Solver::setupSteadystate(const realtype t0, const AmiVector &x0,
-                              const AmiVector &dx0, const AmiVector &xQ0) const {
+void Solver::setupSteadystate(const realtype t0, Model *model, const AmiVector &x0,
+                              const AmiVector &dx0, const AmiVector &xB0,
+                              const AmiVector &dxB0, const AmiVector &xQ0) const {
     /* Initialize CVodes/IDAs solver with steadystate RHS function */
     initSteadystate(t0, x0, dx0);
 
@@ -169,8 +170,13 @@ void Solver::setupSteadystate(const realtype t0, const AmiVector &x0,
     /* Apply tolerances */
     applyQuadTolerances();
 
-    /* Set Jacobian function */
+    /* Check linear solver (works only with KLU atm) */
+    if (linsol != LinearSolver::KLU)
+        throw AmiException("Backward steady state computation via integration "
+            "is currently only implemented for KLU linear solver");
+    /* Set Jacobian function and intialize values */
     setSparseJacFn_ss();
+    model->writeSteadystateJB(t0, 0, x0, dx0, xB0, dxB0, xB0);
 }
 
 void Solver::updateAndReinitStatesAndSensitivities(Model *model) {

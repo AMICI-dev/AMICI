@@ -109,14 +109,9 @@ void IDASolver::init(const realtype t0, const AmiVector &x0,
 
 void IDASolver::initSteadystate(const realtype t0, const AmiVector &x0,
                                 const AmiVector &dx0) const {
-    /* (re)set solver state */
-    t = t0;
-    x = x0;
-    dx = dx0;
-
     /* We need to set the steadystate rhs function. SUndials doesn't have this
-     in itspublic api, so we have to change it in the solver memory,
-     as re-calling init would unset solver settings. */
+       in its public api, so we have to change it in the solver memory,
+       as re-calling init would unset solver settings. */
     auto ida_mem = static_cast<IDAMem>(solverMemory.get());
     ida_mem->ida_res = fxBdot_ss;
 }

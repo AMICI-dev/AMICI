@@ -114,13 +114,10 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
 void CVodeSolver::initSteadystate(const realtype t0, const AmiVector &x0,
                                   const AmiVector &dx0) const {
     /* We need to set the steadystate rhs function. SUndials doesn't have this
-       in itspublic api, so we have to change it in the solver memory,
+       in its public api, so we have to change it in the solver memory,
        as re-calling init would unset solver settings. */
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     cv_mem->cv_f = fxBdot_ss;
-
-    /* (re)set solver state */
-    init(t0, x0, dx0);
 }
 
 void CVodeSolver::sensInit1(const AmiVectorArray &sx0,

@@ -122,13 +122,17 @@ class Solver {
     /**
      * @brief Initialises the ami memory for quadrature computation
      * @param t0 initial timepoint
+     * @param model pointer to the model instance
      * @param x0 initial states
      * @param dx0 initial derivative states
+     * @param x0 initial adjoint states
+     * @param dx0 initial derivative adjoint states
      * @param xQ0 initial quadrature vector
      */
 
-    void setupSteadystate(const realtype t0, const AmiVector &x0,
-                          const AmiVector &dx0, const AmiVector &xQ0) const;
+    void setupSteadystate(const realtype t0, Model *model, const AmiVector &x0,
+                          const AmiVector &dx0, const AmiVector &xB0,
+                          const AmiVector &dxB0, const AmiVector &xQ0) const;
 
     /**
      * @brief Reinitializes state and respective sensitivities (if necessary) according

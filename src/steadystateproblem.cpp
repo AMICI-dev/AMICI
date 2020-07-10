@@ -300,8 +300,6 @@ void SteadystateProblem::getQuadratureBySimulation(const Solver *solver,
     t = model->t0();
     /* xQ was written in getQuadratureByLinSolve() -> reset */
     xQ.reset();
-    /* initialize the Jacobian */
-    model->writeSteadystateJB(t, 0, x, x, xB, xB, xB);
 
     /* create a new solver object */
     auto simSolver = createSteadystateSimSolver(solver, model, false, true);
@@ -663,8 +661,12 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
     /* use x and sx as dummies for dx and sdx
      (they wont get touched in a CVodeSolver) */
     sim_solver->setup(model->t0(), model, x, x, sx, sx);
-    if (backward)
-        sim_solver->setupSteadystate(model->t0(), xB, xB, xQ);
+    if (backward) {
+        sim_solver->setup(model->t0(), model, xB, xB, sx, sx);
+        sim_solver->setupSteadystate(model->t0(), model, x, x, xB, xB, xQ);
+    } else {
+        sim_solver->setup(model->t0(), model, x, x, sx, sx);
+    }
 
     return sim_solver;
 }
