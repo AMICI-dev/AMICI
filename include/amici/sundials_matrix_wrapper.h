@@ -146,7 +146,7 @@ class SUNMatrixWrapper {
     void reset();
 
     /**
-     * @brief multiply with a scalar
+     * @brief multiply with a scalar (in-place)
      * @param a scalar value to multiply matrix
      */
     void scale(realtype a);
