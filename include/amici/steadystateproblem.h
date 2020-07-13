@@ -33,11 +33,9 @@ class SteadystateProblem {
                                 const Model &model);
 
     /**
-     * Tries to determine the steady state of the ODE system by a Newton
-     * solver, uses forward integration, if the Newton solver fails,
-     * restarts Newton solver, if integration fails.
-     * Computes steady state sensitivities
-     *
+     * @brief Handles steady state computation in the forward case:
+     * tries to determine the steady state of the ODE system and computes
+     * steady state sensitivities if requested.
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
@@ -49,7 +47,6 @@ class SteadystateProblem {
      * Integrates over the adjoint state backward in time by solving a linear
      * system of equations, which gives the analytical solution.
      * Computes the gradient via adjoint steady state sensitivities
-     *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param bwd backward problem
@@ -58,9 +55,8 @@ class SteadystateProblem {
                                         const BackwardProblem *bwd);
 
     /**
-     * Handles the computation of the steady state, throws an AmiException,
-     * if no steady state was found
-     *
+     * @brief Handles the computation of the steady state, throws an
+     * AmiException, if no steady state was found
      * @param solver pointer to the solver object
      * @param newtonSolver pointer to the newtonSolver solver object
      * @param model pointer to the model object
@@ -71,8 +67,7 @@ class SteadystateProblem {
                          Model *model, int it);
 
     /**
-     * Tries to determine the steady state by using Newton's method
-     *
+     * @brief Tries to determine the steady state by using Newton's method
      * @param newtonSolver pointer to the newtonSolver solver object
      * @param model pointer to the model object
      * @param newton_retry bool flag indicating whether being relaunched
@@ -82,8 +77,7 @@ class SteadystateProblem {
                                         bool newton_retry);
 
     /**
-     * Tries to determine the steady state by using forward simulation
-     *
+     * @brief Tries to determine the steady state by using forward simulation
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
@@ -93,8 +87,7 @@ class SteadystateProblem {
                                      int it);
 
     /**
-     * Handles the computation of the quadrature in steady state backward mode
-     *
+     * @brief Handles the computation of quadratures in adjoint mode
      * @param newtonSolver pointer to the newtonSolver solver object
      * @param solver pointer to the solver object
      * @param model pointer to the model object
@@ -103,26 +96,23 @@ class SteadystateProblem {
                                       const Solver *solver, Model *model);
 
     /**
-     * Computes the quadrature in steady state backward mode by solving the
-     * linear system defined by the backward Jacobian
-     *
+     * @brief Computes the quadrature in steady state backward mode by
+     * solving the linear system defined by the backward Jacobian
      * @param newtonSolver pointer to the newtonSolver solver object
      * @param model pointer to the model object
      */
     void getQuadratureByLinSolve(NewtonSolver *newtonSolver, Model *model);
 
     /**
-     * Computes the quadrature in steady state backward mode by numerical
-     * integration of xB forward in time
-     *
+     * @brief Computes the quadrature in steady state backward mode by
+     * numerical integration of xB forward in time
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
     void getQuadratureBySimulation(const Solver *solver, Model *model);
 
     /**
-     * Stores state and throws error message if steady state computaiton failed
-     *
+     * @brief Stores state and throws an exception if equilibration failed
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      */
@@ -130,8 +120,7 @@ class SteadystateProblem {
                                                Model *model);
 
     /**
-     * Assembles the error message to be thrown.
-     *
+     * @brief Assembles the error message to be thrown.
      * @param errorString const pointer to string with error message
      * @param status Entry of steady_state_staus to be processed
      * @return errorString updated string with error message
@@ -140,10 +129,9 @@ class SteadystateProblem {
                           status) const;
 
     /**
-     * Checks depending on the status of the Newton solver,
+     * @brief Checks depending on the status of the Newton solver,
      * solver settings, and the model, whether state sensitivities
      * still need to be computed via a linear system solve or stored
-     *
      * @param model pointer to the model object
      * @param solver pointer to the solver object
      * @param it integer with the index of the current time step
@@ -154,10 +142,9 @@ class SteadystateProblem {
                             SteadyStateContext context);
 
     /**
-     * Computes the weighted root mean square of xdot
+     * @brief Computes the weighted root mean square of xdot
      * the weights are computed according to x:
      * w_i = 1 / ( rtol * x_i + atol )
-     *
      * @param x current state
      * @param xdot current rhs
      * @param atol absolute tolerance
@@ -172,8 +159,7 @@ class SteadystateProblem {
                          AmiVector &ewt);
 
     /**
-     * Checks convergence for state and respective sensitivities
-     *
+     * @brief Checks convergence for state and respective sensitivities
      * @param solver Solver instance
      * @param model instance
      * @param checkSensitivities flag whether sensitivities should be checked
@@ -183,9 +169,8 @@ class SteadystateProblem {
                           SensitivityMethod checkSensitivities);
 
     /**
-     * Runs the Newton solver iterations and checks for convergence to steady
-     * state
-     *
+     * @brief Runs the Newton solver iterations and checks for convergence
+     * to steady state
      * @param model pointer to the model object
      * @param newtonSolver pointer to the NewtonSolver object @type
      * NewtonSolver
@@ -195,8 +180,7 @@ class SteadystateProblem {
                             bool newton_retry);
 
     /**
-     * Forward simulation is launched, if Newton solver fails in first try
-     *
+     * @brief Simulation is launched, if Newton solver or linear system solve fails
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param backward flag indicating adjoint mode (including quadrature)
@@ -204,8 +188,7 @@ class SteadystateProblem {
     void runSteadystateSimulation(Solver *solver, Model *model, bool backward);
 
     /**
-     * initialize CVodeSolver instance for preequilibration simulation
-     *
+     * @brief Initialize CVodeSolver instance for preequilibration simulation
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param forwardSensis flag switching on integration with FSA
@@ -218,9 +201,8 @@ class SteadystateProblem {
                                                        bool backward) const;
 
     /**
-     * initialize backward computation by setting state, time, adjoint
+     * @brief Initialize backward computation by setting state, time, adjoint
      * state and checking for preequilibration mode
-     *
      * @param solver pointer to the solver object
      * @param model pointer to the model object
      * @param bwd pointer to backward problem
@@ -230,9 +212,8 @@ class SteadystateProblem {
                                    const BackwardProblem *bwd);
 
     /**
-     * compute the backward quadratures, which contribute to the gradient (xQB)
-     * from the quadrature over the backward state itself (xQ)
-     *
+     * @brief Compute the backward quadratures, which contribute to the
+     * gradient (xQB) from the quadrature over the backward state itself (xQ)
      * @param model pointer to the model object
      * @param yQ vector to be multiplied with dxdotdp
      * @param yQB resulting vector after multiplication
@@ -240,14 +221,14 @@ class SteadystateProblem {
     void computeQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB);
 
     /**
-     * @brief store carbon copy of current simulation state variables as SimulationState
+     * @brief Store carbon copy of current simulation state variables as SimulationState
      * @param model model carrying the ModelState to be used
      * @param storesensi flag to enable storage of sensitivities
      */
     void storeSimulationState(Model *model, bool storesensi);
 
     /**
-     * @brief returns the stored SimulationState
+     * @brief Returns the stored SimulationState
      * @return stored SimulationState
      */
     const SimulationState &getFinalSimulationState() const {
@@ -255,14 +236,14 @@ class SteadystateProblem {
     };
 
     /**
-    * @brief returns the quadratures from pre- or postequilibration
+    * @brief Returns the quadratures from pre- or postequilibration
     * @return xQB Vector with quadratures
     */
     const AmiVector &getEquilibrationQuadratures() const {
         return xQB;
     }
     /**
-     * @brief returns state at steadystate
+     * @brief Returns state at steadystate
      * @return x
      */
     const AmiVector &getState() const {
@@ -271,7 +252,7 @@ class SteadystateProblem {
 
 
     /**
-     * @brief returns state sensitivity at steadystate
+     * @brief Returns state sensitivity at steadystate
      * @return sx
      */
     const AmiVectorArray &getStateSensitivity() const {
