@@ -430,9 +430,9 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
                                           SensitivityMethod checkSensitivities) {
     /* get RHS and compute weighted error norm */
     if (checkSensitivities == SensitivityMethod::adjoint) {
-        /* In the adjoitncase, only xQB contributes to the gradient,
-           the exact steadystate is less important, and xB = xQdot may even
-           not converge to zero. So we need xQBdot, hence compute xQB first. */
+        /* In the adjoint case, only xQB contributes to the gradient, the exact
+           steadystate is less important, as xB = xQdot may even not converge
+           to zero at all. So we need xQBdot, hence compute xQB first. */
         computeQBfromQ(model, xQ, xQB);
         computeQBfromQ(model, xB, xQBdot);
         wrms = getWrmsNorm(xQB, xQBdot, solver->getAbsoluteToleranceQuadratures(),
@@ -572,10 +572,14 @@ void SteadystateProblem::runSteadystateSimulation(Solver *solver,
                                                   Model *model,
                                                   bool backward)
 {
-    /* Loop over steps and check for convergence */
-    SensitivityMethod sensitivityFlag = SensitivityMethod::none;
+    /* Loop over steps and check for convergence
+       NB: This function is used for forward and backward simulation, and may
+       be called by workSteadyStateProblem and workSteadyStateBackwardProblem.
+       Whether we simulate forward or backward in time is reflected by the
+       flag "backward". */
 
     /* Do we also have to check for convergence of sensitivities? */
+    SensitivityMethod sensitivityFlag = SensitivityMethod::none;
     if (solver->getSensitivityOrder() > SensitivityOrder::none &&
         solver->getSensitivityMethod() > SensitivityMethod::forward)
         sensitivityFlag = SensitivityMethod::forward;
