@@ -23,6 +23,7 @@ using namespace amici;
 %ignore sensReInit;
 %ignore setup;
 %ignore setupB;
+%ignore setupSteadystate;
 %ignore writeSolution;
 %ignore writeSolutionB;
 
