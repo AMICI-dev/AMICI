@@ -428,7 +428,6 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
 bool SteadystateProblem::checkConvergence(const Solver *solver,
                                           Model *model,
                                           SensitivityMethod checkSensitivities) {
-    /* get RHS and compute weighted error norm */
     if (checkSensitivities == SensitivityMethod::adjoint) {
         /* In the adjoint case, only xQB contributes to the gradient, the exact
            steadystate is less important, as xB = xQdot may even not converge
@@ -437,20 +436,19 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
         computeQBfromQ(model, xB, xQBdot);
         wrms = getWrmsNorm(xQB, xQBdot, solver->getAbsoluteToleranceQuadratures(),
                            solver->getRelativeToleranceQuadratures(), ewtQB);
-        return wrms < RCONST(1.0);
+    } else {
+        /* If we're doing a forward simulation (with or without sensitivities:
+           Get RHS and compute weighted error norm */
+        model->fxdot(t, x, dx, xdot);
+        wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(),
+                           solver->getRelativeToleranceSteadyState(), ewt);
     }
+    bool converged = wrms < RCONST(1.0);
 
-    /* We're not in adjoint mode. Check convergence of xdot first */
-    model->fxdot(t, x, dx, xdot);
-    wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(),
-                       solver->getRelativeToleranceSteadyState(), ewt);
-
-    /* Do we need sensitivities? If not, we're done */
-    if (checkSensitivities == SensitivityMethod::none)
-        return wrms < RCONST(1.0);
+    if (checkSensitivities != SensitivityMethod::forward)
+        return converged;
 
     /* Forward sensitivities: Compute weighted error norm for their RHS */
-    bool converged = wrms < RCONST(1.0);
     for (int ip = 0; ip < model->nplist(); ++ip) {
         if (converged) {
             sx = solver->getStateSensitivity(t);
