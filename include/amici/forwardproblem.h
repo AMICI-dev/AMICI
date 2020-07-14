@@ -239,7 +239,11 @@ class ForwardProblem {
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
-        return timepoint_states.find(timepoints.at(it))->second;
+        if (timepoints.at(it) == initial_state.t) {
+            return getInitialSimulationState;
+        } else {
+            return timepoint_states.find(timepoints.at(it))->second;
+        }
     };
 
     /**

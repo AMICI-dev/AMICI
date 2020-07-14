@@ -289,8 +289,11 @@ void ForwardProblem::storeEvent() {
 
 void ForwardProblem::handleDataPoint(int it) {
     timepoints.push_back(getTime());
-    timepoint_states.insert(std::make_pair(getTime(), getSimulationState()));
     solver->storeDiagnosis();
+    /* We only store the simulation state if it's not the initial state, as the
+       initial state is stored anyway and we want to avoid storing it twice */
+    if (t != model->t0())
+        timepoint_states.insert(std::make_pair(t, getSimulationState()));
 }
 
 void ForwardProblem::applyEventBolus() {
@@ -314,7 +317,7 @@ void ForwardProblem::getAdjointUpdates(Model &model,
             return;
         model.getAdjointStateObservableUpdate(
             slice(dJydx, it, model.nx_solver * model.nJ), it,
-            (timepoint_states.find(timepoints.at(it))->second).x, edata
+            getSimulationStateTimepoint(it).x, edata
         );
     }
 }
