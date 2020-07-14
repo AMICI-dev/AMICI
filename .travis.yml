@@ -152,7 +152,7 @@ matrix:
         # run BLAS installation script
         - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS; fi
         # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
-        #- if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib libopenblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-0.3.6-x64\\include'; fi
+        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\BLAS\\lib libopenblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-v0.3.10\\OpenBLAS-0.3.10'; fi
 
 install:
     - export BASE_DIR=`pwd`
