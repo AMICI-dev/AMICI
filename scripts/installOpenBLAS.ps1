@@ -21,7 +21,7 @@ Expand-Archive -Path 'C:\BLAS\v0.3.10.zip' -DestinationPath 'C:\BLAS\OpenBLAS-v0
 [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
 [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::User)
-[System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\include", [System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Process)
 # Get-ChildItem 'C:\BLAS\OpenBLAS-v0.3.10' -Recurse # check for files
 Get-Item -Path Env:BLAS_* # check environment variables
 $VerbosePreference = "SilentlyContinue" # don't display verbose messages
