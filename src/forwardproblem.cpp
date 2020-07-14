@@ -288,7 +288,8 @@ void ForwardProblem::storeEvent() {
 }
 
 void ForwardProblem::handleDataPoint(int it) {
-    timepoint_states.push_back(getSimulationState());
+    timepoints.push_back(getTime());
+    timepoint_states.insert(std::make_pair(getTime(), getSimulationState()));
     solver->storeDiagnosis();
 }
 
@@ -313,7 +314,7 @@ void ForwardProblem::getAdjointUpdates(Model &model,
             return;
         model.getAdjointStateObservableUpdate(
             slice(dJydx, it, model.nx_solver * model.nJ), it,
-            timepoint_states.at(it).x, edata
+            timepoint_states[timepoints.at(it)].x, edata
         );
     }
 }

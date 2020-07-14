@@ -213,7 +213,7 @@ class ForwardProblem {
      * @return index
      */
     int getTimepointCounter() const {
-        return static_cast<int>(timepoint_states.size() - 1);
+        return static_cast<int>(timepoints.size() - 1);
     }
 
     /**
@@ -239,7 +239,7 @@ class ForwardProblem {
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
-        return timepoint_states.at(it);
+        return timepoint_states[timepoints.at(it)];
     };
 
     /**
@@ -391,6 +391,9 @@ class ForwardProblem {
     /** current time */
     realtype t;
 
+    /** number of timepoints */
+    std::vector<realtype> timepoints;
+
     /**
      * @brief Array of flags indicating which root has beend found.
      *
@@ -400,10 +403,10 @@ class ForwardProblem {
     std::vector<int> rootsfound;
 
     /** simulation states history at timepoints  */
-    std::vector<SimulationState> timepoint_states;
+    std::map<realtype, SimulationState> timepoint_states;
 
     /** simulation state history at events*/
-    std::vector<SimulationState> event_states;
+    std::map<SimulationState> event_states;
 
     /** simulation state after initialization*/
     SimulationState initial_state;
