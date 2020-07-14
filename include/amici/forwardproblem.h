@@ -239,7 +239,7 @@ class ForwardProblem {
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
-        return timepoint_states[timepoints.at(it)];
+        return timepoint_states.find(timepoints.at(it))->second;
     };
 
     /**
@@ -406,7 +406,7 @@ class ForwardProblem {
     std::map<realtype, SimulationState> timepoint_states;
 
     /** simulation state history at events*/
-    std::map<SimulationState> event_states;
+    std::vector<SimulationState> event_states;
 
     /** simulation state after initialization*/
     SimulationState initial_state;

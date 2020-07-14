@@ -314,7 +314,7 @@ void ForwardProblem::getAdjointUpdates(Model &model,
             return;
         model.getAdjointStateObservableUpdate(
             slice(dJydx, it, model.nx_solver * model.nJ), it,
-            timepoint_states[timepoints.at(it)].x, edata
+            (timepoint_states.find(timepoints.at(it))->second).x, edata
         );
     }
 }
