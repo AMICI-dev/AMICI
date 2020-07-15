@@ -209,8 +209,8 @@ class ForwardProblem {
     }
 
     /**
-     * @brief Returns maximal time point index for which simulations are available
-     * @return index
+     * @brief Returns final time point for which simulations are available
+     * @return time point
      */
     realtype getFinalTime() const {
         return final_state.t;
@@ -239,11 +239,9 @@ class ForwardProblem {
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
-        if (model->getTimepoint(it) == initial_state.t) {
+        if (model->getTimepoint(it) == initial_state.t)
             return getInitialSimulationState();
-        } else {
-            return timepoint_states.find(model->getTimepoint(it))->second;
-        }
+        return timepoint_states.find(model->getTimepoint(it))->second;
     };
 
     /**
