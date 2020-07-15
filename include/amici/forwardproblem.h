@@ -395,9 +395,6 @@ class ForwardProblem {
     /** current time */
     realtype t;
 
-    /** number of timepoints */
-    std::vector<realtype> timepoints;
-
     /**
      * @brief Array of flags indicating which root has beend found.
      *
