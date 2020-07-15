@@ -288,12 +288,12 @@ void ForwardProblem::storeEvent() {
 }
 
 void ForwardProblem::handleDataPoint(int it) {
-    timepoints.push_back(getTime());
-    solver->storeDiagnosis();
     /* We only store the simulation state if it's not the initial state, as the
        initial state is stored anyway and we want to avoid storing it twice */
     if (t != model->t0())
         timepoint_states.insert(std::make_pair(t, getSimulationState()));
+    /* store diagnosis information for debugging */
+    solver->storeDiagnosis();
 }
 
 void ForwardProblem::applyEventBolus() {
