@@ -66,7 +66,7 @@ def test_hill_function_dwdx():
         _ = str(res)
 
     # Test that powsimp does the job
-    dwdx = dwdx.applyfunc(sp.powsimp)
+    dwdx = dwdx.applyfunc(lambda x: sp.powsimp(x, deep=True))
     with sp.evaluate(False):
         res = dwdx.subs({'x1': 0.0})
     _ = str(res)
