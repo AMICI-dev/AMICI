@@ -2,7 +2,6 @@ Write-Host 'script installOpenBLAS.ps1 started'
 New-Item -Path 'C:\BLAS' -ItemType Directory -Force # create directory
 # Enforce stronger cryptography
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
-# $uri = 'https://sourceforge.net/projects/openblas/files/v0.3.6/OpenBLAS-0.3.6-x64.zip/download'
 $uri = 'https://github.com/xianyi/OpenBLAS/archive/v0.3.10.zip'
 $output = 'C:\BLAS\v0.3.10.zip'
 # Invoke-WebRequest $uri -OutFile $output
