@@ -82,7 +82,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param it integer with the index of the current time step
      */
-    void findSteadyStateBySimulation(Solver *solver,
+    void findSteadyStateBySimulation(const Solver *solver,
                                      Model *model,
                                      int it);
 

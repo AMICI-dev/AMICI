@@ -169,7 +169,7 @@ void SteadystateProblem::findSteadyStateByNewtonsMethod(NewtonSolver *newtonSolv
     }
 }
 
-void SteadystateProblem::findSteadyStateBySimulation(Solver *solver,
+void SteadystateProblem::findSteadyStateBySimulation(const Solver *solver,
                                                      Model *model,
                                                      int it) {
     /* set starting timepoint for the simulation solver */
