@@ -1,0 +1,72 @@
+name: C++ testsuite / OSX
+on: [push]
+
+jobs:
+  build:
+    name: tests_osx
+
+    runs-on: macos-latest
+
+    env:
+      ENABLE_GCOV_COVERAGE: FALSE
+      CI_SONARCLOUD: FALSE
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
+
+    # install amici dependencies
+    - name: homebrew
+      run: |
+        brew install hdf5 swig gcc cppcheck libomp
+
+    - name: Build suitesparse
+      run: |
+        scripts/buildSuiteSparse.sh
+
+    - name: Build sundials
+      run: |
+        scripts/buildSundials.sh
+
+    - name: Build cpputest
+      run: |
+        scripts/buildCpputest.sh
+
+    - name: Build cpputest
+      run: |
+        scripts/buildBNGL.sh
+
+    - name: Build AMICI
+      run: |
+        scripts/buildAmici.sh
+    
+    - name: Install python archive
+      run: |
+        scripts/installAmiciArchive.sh
+        
+    - name: Install python package
+      run: |
+        scripts/installAmiciSource.sh
+        
+    - name: cppcheck
+      run: |
+        scripts/run-cppcheck.sh
+        
+    - name: notebooks
+      run: |
+        scripts/runNotebook.sh python/examples/example_*/
+        
+    - name: Python tests
+      run: |
+        scripts/run-python-tests.sh
+
+    - name: C++ tests
+      run: |
+        scripts/run-cpputest.sh
+        
+    - name: sphinx
+      run: |
+        scripts/run-sphinx.sh
