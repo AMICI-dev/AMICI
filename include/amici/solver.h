@@ -125,8 +125,8 @@ class Solver {
      * @param model pointer to the model instance
      * @param x0 initial states
      * @param dx0 initial derivative states
-     * @param x0 initial adjoint states
-     * @param dx0 initial derivative adjoint states
+     * @param xB0 initial adjoint states
+     * @param dxB0 initial derivative adjoint states
      * @param xQ0 initial quadrature vector
      */
 
@@ -1594,11 +1594,11 @@ class Solver {
 
     /**
      * @brief Sets sensitivity method (for simulation or preequilibration)
-     * @param new_sensi_meth new value for sensi_meth[_preeq]
+     * @param sensi_meth new value for sensi_meth[_preeq]
      * @param preequilibration flag indicating preequilibration or simulation
      */
     void checkSensitivityMethod(const SensitivityMethod sensi_meth,
-                                bool preequilibration);
+                                bool preequilibration) const;
 
     /** state (dimension: nx_solver) */
     mutable AmiVector x = AmiVector(0);

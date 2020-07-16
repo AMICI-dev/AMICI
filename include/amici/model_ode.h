@@ -276,14 +276,12 @@ class Model_ODE : public Model {
      * @brief Sensitivity of dx/dt wrt model parameters w
      * @param t timepoint
      * @param x Vector with the states
-     * @return status flag indicating successful execution
      */
     void fdxdotdw(realtype t, const N_Vector x);
 
     /** Explicit sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states
-     * @return status flag indicating successful execution
      */
     void fdxdotdp(realtype t, const N_Vector x);
 
