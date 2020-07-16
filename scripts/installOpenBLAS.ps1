@@ -12,8 +12,10 @@ $webclient.DownloadFile($uri,"$output")
 Expand-Archive -Path 'C:\BLAS\v0.3.10.zip' -DestinationPath 'C:\BLAS\OpenBLAS-v0.3.10' -Force # expand zip file
 #Set-Location "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10" # change directory
 C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd
-Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\Release\openblas.lib" -Destination "C:\BLAS\lib"
-Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\openblas.dll" -Destination "C:\BLAS\bin"
+#New-Item -Path 'C:\BLAS\lib' -ItemType Directory -Force # create directory
+Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\Release\openblas.lib" -Destination "C:\BLAS\lib" -Recurse
+#New-Item -Path 'C:\BLAS\bin' -ItemType Directory -Force # create directory
+Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\openblas.dll" -Destination "C:\BLAS\bin" -Recurse
 Get-ChildItem -Path "C:\BLAS" -Include "openblas.lib" -Recurse # check for file
 Get-ChildItem -Path "C:\BLAS" -Include "openblas.dll" -Recurse # check for file
 # New-Item -Path Env:BLAS_LIBS -Value "/LIBPATH:C:\BLAS\\lib libopenblas.lib" -Force # create environment variable
