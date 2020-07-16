@@ -288,7 +288,11 @@ void ForwardProblem::storeEvent() {
 }
 
 void ForwardProblem::handleDataPoint(int it) {
-    timepoint_states.push_back(getSimulationState());
+    /* We only store the simulation state if it's not the initial state, as the
+       initial state is stored anyway and we want to avoid storing it twice */
+    if (t != model->t0() && timepoint_states.count(t) == 0)
+        timepoint_states[t] = getSimulationState();
+    /* store diagnosis information for debugging */
     solver->storeDiagnosis();
 }
 
@@ -313,7 +317,7 @@ void ForwardProblem::getAdjointUpdates(Model &model,
             return;
         model.getAdjointStateObservableUpdate(
             slice(dJydx, it, model.nx_solver * model.nJ), it,
-            timepoint_states.at(it).x, edata
+            getSimulationStateTimepoint(it).x, edata
         );
     }
 }

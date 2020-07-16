@@ -364,11 +364,12 @@ def test_newton_solver_equilibration(preeq_fixture):
     edata.fixedParametersPreequilibration = ()
     edata.t_presim = 0.0
     edata.fixedParametersPresimulation = ()
-    
-    model.setSteadyStateSensitivityMode(amici.SteadyStateSensitivityMode.newtonOnly)
+
     solver.setLinearSolver(amici.LinearSolver.SPBCG)
     solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    model.setSteadyStateSensitivityMode(
+        amici.SteadyStateSensitivityMode.newtonOnly)
     solver.setNewtonMaxSteps(10)
     solver.setNewtonMaxLinearSteps(10)
     rdata_spbcg = amici.runAmiciSimulation(model, solver, edata)
