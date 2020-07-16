@@ -277,7 +277,7 @@ void Model_DAE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
 
 void Model_DAE::fJSparseB_ss(SUNMatrix JB) {
     /* Just pass the model Jacobian on to JB */
-    JB = J.get();
+    SUNMatCopy(J.get(), JB);
 }
 
 void Model_DAE::writeSteadystateJB(const realtype t, realtype cj,
