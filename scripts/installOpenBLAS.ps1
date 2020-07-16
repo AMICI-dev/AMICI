@@ -11,8 +11,7 @@ $webclient = New-Object System.Net.WebClient
 $webclient.DownloadFile($uri,"$output")
 Expand-Archive -Path 'C:\BLAS\v0.3.10.zip' -DestinationPath 'C:\BLAS\OpenBLAS-v0.3.10' -Force # expand zip file
 #Set-Location "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10" # change directory
-Get-ChildItem "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build"-Recurse # check for vcvars64.bat
-Get-ChildItem  "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build"-Recurse # check for vcvars64.bat
+#Get-ChildItem "C:\Program Files (x86)\Microsoft Visual Studio\2017\2017\BuildTools\VC\Auxiliary\Build"-Recurse # check for vcvars64.bat
 C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd
 #Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\openblas.lib" -Destination "C:\BLAS\lib"
 #Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\openblas.dll" -Destination "C:\BLAS\bin"
