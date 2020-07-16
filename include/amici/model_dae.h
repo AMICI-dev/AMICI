@@ -249,7 +249,7 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param xBdot Vector with the adjoint right hand side
      */
-    void fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot);
+    void fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot) const;
 
     /**
      * @brief Implementation of fqBdot for steady state at the N_Vector level
@@ -258,7 +258,7 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
-    void fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot);
+    void fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot) const;
 
     /**
      * @brief Sparse Jacobian function backward, steady state case

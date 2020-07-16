@@ -530,13 +530,13 @@ void Solver::applyQuadTolerances() const {
     if (sensi < SensitivityOrder::first)
         return;
 
-    realtype quad_rtol = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
-    realtype quad_atol = isNaN(this->quad_atol) ? atol : this->quad_atol;
+    realtype quad_rtolF = isNaN(this->quad_rtol) ? rtol : this->quad_rtol;
+    realtype quad_atolF = isNaN(this->quad_atol) ? atol : this->quad_atol;
 
     /* Enable Quadrature Error Control */
-    setQuadErrCon(!std::isinf(quad_atol) && !std::isinf(quad_rtol));
+    setQuadErrCon(!std::isinf(quad_atolF) && !std::isinf(quad_rtolF));
 
-    quadSStolerances(quad_rtol, quad_atol);
+    quadSStolerances(quad_rtolF, quad_atolF);
 }
 
 void Solver::applySensitivityTolerances() const {
@@ -566,7 +566,7 @@ void Solver::setSensitivityMethodPreequilibration(const SensitivityMethod sensi_
 }
 
 void Solver::checkSensitivityMethod(const SensitivityMethod sensi_meth,
-                                    bool preequilibration) {
+                                    bool preequilibration) const {
     if (rdata_mode == RDataReporting::residuals &&
         sensi_meth == SensitivityMethod::adjoint)
         throw AmiException("Adjoint Sensitivity Analysis is not compatible with"

@@ -240,7 +240,7 @@ class Model_ODE : public Model {
      * @param xB Vector with the states
      * @param xBdot Vector with the adjoint right hand side
      */
-    void fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot);
+    void fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot) const;
 
     /**
      * @brief Implementation of fqBdot for steady state case at the N_Vector level
@@ -248,7 +248,7 @@ class Model_ODE : public Model {
      * @param xB Vector with the adjoint states
      * @param qBdot Vector with the adjoint quadrature right hand side
      */
-    void fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot);
+    void fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot) const;
 
     /**
      * @brief Sparse Jacobian function backward, steady state case

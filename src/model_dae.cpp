@@ -258,8 +258,8 @@ void Model_DAE::fxBdot_ss(const realtype t, const AmiVector &xB,
     fxBdot_ss(t, xB.getNVector(), dxB.getNVector(), xBdot.getNVector());
 }
 
-void Model_DAE::fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB,
-                          N_Vector xBdot) {
+void Model_DAE::fxBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
+                          N_Vector xBdot) const {
     /* Right hande side of the adjoint state for steady state computations.
      J is fixed (as x remeins in steady state), so the RHS becomes simple. */
     N_VConst(0.0, xBdot);
@@ -268,8 +268,8 @@ void Model_DAE::fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB,
     N_VScale(-1.0, xBdot, xBdot);
 }
 
-void Model_DAE::fqBdot_ss(realtype t, N_Vector xB, N_Vector /*dxB*/,
-                          N_Vector qBdot) {
+void Model_DAE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
+                          N_Vector qBdot) const {
     /* Quadratures when computing adjoints for steady state. The integrand is
      just the adjoint state itself. */
     N_VScale(1.0, xB, qBdot);
