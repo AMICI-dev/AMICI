@@ -19,14 +19,14 @@
 namespace amici {
 
 SteadystateProblem::SteadystateProblem(const Solver &solver, const Model &model)
-    : delta(model.nx_solver), ewt(model.nx_solver), ewtQB(model.nplist()),
+    : delta(model.nx_solver), ewt_(model.nx_solver), ewtQB_(model.nplist()),
       rel_x_newton(model.nx_solver), x_newton(model.nx_solver),
       x(model.nx_solver), x_old(model.nx_solver), dx(model.nx_solver),
       xdot(model.nx_solver), xdot_old(model.nx_solver),
       sx(model.nx_solver, model.nplist()), sdx(model.nx_solver, model.nplist()),
       xB(model.nJ * model.nx_solver), xQ(model.nJ * model.nx_solver),
-      xQB(model.nplist()), xQBdot(model.nplist()), dJydx(model.nJ * model.nx_solver * model.nt(), 0.0),
-      numsteps(3, 0) {
+      xQB(model.nplist()), xQBdot(model.nplist()),
+      dJydx(model.nJ * model.nx_solver * model.nt(), 0.0) {
           /* maxSteps must be adapted if iterative linear solvers are used */
           if (solver.getLinearSolver() == LinearSolver::SPBCG) {
               maxSteps = solver.getNewtonMaxSteps();
@@ -285,7 +285,7 @@ void SteadystateProblem::getQuadratureByLinSolve(NewtonSolver *newtonSolver,
         computeQBfromQ(model, xQ, xQB);
         /* set flag that quadratures is available (for processing in rdata) */
         hasQuadrature_ = true;
-    } catch (NewtonFailure const &ex) {
+    } catch (NewtonFailure const &) {
         hasQuadrature_ = false;
     }
 }
@@ -415,7 +415,7 @@ realtype SteadystateProblem::getWrmsNorm(const AmiVector &x,
                                          const AmiVector &xdot,
                                          realtype atol,
                                          realtype rtol,
-                                         AmiVector &ewt) {
+                                         AmiVector &ewt) const {
     /* Depending on what convergence we want to check (xdot, sxdot, xQBdot)
        we need to pass ewt[QB], as xdot and xQBdot have different sizes */
     N_VAbs(x.getNVector(), ewt.getNVector());
@@ -435,13 +435,13 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
         computeQBfromQ(model, xQ, xQB);
         computeQBfromQ(model, xB, xQBdot);
         wrms = getWrmsNorm(xQB, xQBdot, solver->getAbsoluteToleranceQuadratures(),
-                           solver->getRelativeToleranceQuadratures(), ewtQB);
+                           solver->getRelativeToleranceQuadratures(), ewtQB_);
     } else {
         /* If we're doing a forward simulation (with or without sensitivities:
            Get RHS and compute weighted error norm */
         model->fxdot(t, x, dx, xdot);
         wrms = getWrmsNorm(x, xdot, solver->getAbsoluteToleranceSteadyState(),
-                           solver->getRelativeToleranceSteadyState(), ewt);
+                           solver->getRelativeToleranceSteadyState(), ewt_);
     }
     bool converged = wrms < RCONST(1.0);
 
@@ -455,7 +455,7 @@ bool SteadystateProblem::checkConvergence(const Solver *solver,
             model->fsxdot(t, x, dx, ip, sx[ip], dx, xdot);
             wrms = getWrmsNorm(
                 x, xdot, solver->getAbsoluteToleranceSteadyStateSensi(),
-                solver->getRelativeToleranceSteadyStateSensi(), ewt);
+                solver->getRelativeToleranceSteadyStateSensi(), ewt_);
             converged = wrms < RCONST(1.0);
         }
     }
@@ -484,7 +484,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     /* initialize output of linear solver for Newton step */
     delta.reset();
 
-    model->fxdot(t, x, dx,xdot);
+    model->fxdot(t, x, dx, xdot);
 
     /* Check for relative error, but make sure not to divide by 0!
         Ensure positivity of the state */
@@ -492,7 +492,8 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     x_old = x;
     xdot_old = xdot;
 
-    wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol, ewt);
+    wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
+                       newtonSolver->rtol, ewt_);
     bool converged = wrms < RCONST(1.0);
     while (!converged && i_newtonstep < newtonSolver->maxsteps) {
 
@@ -514,7 +515,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
         /* Compute new xdot and residuals */
         model->fxdot(t, x, dx, xdot);
         realtype wrms_tmp = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
-                                        newtonSolver->rtol, ewt);
+                                        newtonSolver->rtol, ewt_);
 
         if (wrms_tmp < wrms) {
             /* If new residuals are smaller than old ones, update state */
@@ -538,7 +539,8 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 }
                 if (recheck_convergence) {
                   model->fxdot(t, x, dx, xdot);
-                  wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol, newtonSolver->rtol, ewt);
+                  wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
+                                     newtonSolver->rtol, ewt_);
                   converged = wrms < RCONST(1.0);
                 }
             } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
@@ -566,7 +568,7 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
         throw NewtonFailure(AMICI_TOO_MUCH_WORK, "applyNewtonsMethod");
 }
 
-void SteadystateProblem::runSteadystateSimulation(Solver *solver,
+void SteadystateProblem::runSteadystateSimulation(const Solver *solver,
                                                   Model *model,
                                                   bool backward)
 {
@@ -674,7 +676,7 @@ std::unique_ptr<Solver> SteadystateProblem::createSteadystateSimSolver(
 }
 
 void SteadystateProblem::computeQBfromQ(Model *model, const AmiVector &yQ,
-                                        AmiVector &yQB) {
+                                        AmiVector &yQB) const {
     /* Compute the quadrature as the inner product: yQB = dxotdp * yQ */
 
     /* reset first, as multiplication add to existing value */

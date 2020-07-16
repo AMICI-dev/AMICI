@@ -155,7 +155,7 @@ class SteadystateProblem {
                          AmiVector const &xdot,
                          realtype atol,
                          realtype rtol,
-                         AmiVector &ewt);
+                         AmiVector &ewt) const;
 
     /**
      * @brief Checks convergence for state and respective sensitivities
@@ -184,7 +184,7 @@ class SteadystateProblem {
      * @param model pointer to the model object
      * @param backward flag indicating adjoint mode (including quadrature)
      */
-    void runSteadystateSimulation(Solver *solver, Model *model, bool backward);
+    void runSteadystateSimulation(const Solver *solver, Model *model, bool backward);
 
     /**
      * @brief Initialize CVodeSolver instance for preequilibration simulation
@@ -217,7 +217,7 @@ class SteadystateProblem {
      * @param yQ vector to be multiplied with dxdotdp
      * @param yQB resulting vector after multiplication
      */
-    void computeQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB);
+    void computeQBfromQ(Model *model, const AmiVector &yQ, AmiVector &yQB) const;
 
     /**
      * @brief Store carbon copy of current simulation state variables as SimulationState
@@ -346,9 +346,9 @@ class SteadystateProblem {
     /** newton step */
     AmiVector delta;
     /** error weights for solver state, dimension nx_solver */
-    AmiVector ewt;
+    AmiVector ewt_;
     /** error weights for backward quadratures, dimension nplist() */
-    AmiVector ewtQB;
+    AmiVector ewtQB_;
     /** container for relative error calcuation? */
     AmiVector rel_x_newton;
     /** container for absolute error calcuation? */
@@ -389,7 +389,7 @@ class SteadystateProblem {
     SimulationState state;
 
     /** stores diagnostic information about employed number of steps */
-    std::vector<int> numsteps;
+    std::vector<int> numsteps = std::vector<int> (3, 0);
 
     /** stores diagnostic information about employed number of linear steps */
     std::vector<int> numlinsteps;
