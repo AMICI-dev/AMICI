@@ -11,10 +11,11 @@ $webclient = New-Object System.Net.WebClient
 $webclient.DownloadFile($uri,"$output")
 Expand-Archive -Path 'C:\BLAS\v0.3.10.zip' -DestinationPath 'C:\BLAS\OpenBLAS-v0.3.10' -Force # expand zip file
 #Set-Location "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10" # change directory
-#Get-ChildItem "C:\Program Files (x86)\Microsoft Visual Studio\2017\2017\BuildTools\VC\Auxiliary\Build"-Recurse # check for vcvars64.bat
 C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd
-#Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\openblas.lib" -Destination "C:\BLAS\lib"
-#Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\openblas.dll" -Destination "C:\BLAS\bin"
+Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\Release\openblas.lib" -Destination "C:\BLAS\lib"
+Copy-Item "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\lib\openblas.dll" -Destination "C:\BLAS\bin"
+Get-ChildItem -Path "C:\BLAS" -Include "openblas.lib" -Recurse # check for file
+Get-ChildItem -Path "C:\BLAS" -Include "openblas.dll" -Recurse # check for file
 # New-Item -Path Env:BLAS_LIBS -Value "/LIBPATH:C:\BLAS\\lib libopenblas.lib" -Force # create environment variable
 # New-Item -Path Env:BLAS_CFLAGS -Value "/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10\include" -Force # create environment variable
 [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::Machine)
@@ -23,7 +24,6 @@ C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd
 [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Machine)
 [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::User)
 [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Process)
-# Get-ChildItem 'C:\BLAS\OpenBLAS-v0.3.10' -Recurse # check for files
 Get-Item -Path Env:BLAS_* # check environment variables
 $VerbosePreference = "SilentlyContinue" # don't display verbose messages
 Write-Host 'script installOpenBLAS.ps1 completed'
