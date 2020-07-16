@@ -195,7 +195,7 @@ class SbmlImporter:
                    allow_reinit_fixpar_initcond: bool = True,
                    compile: bool = True,
                    compute_conservation_laws: bool = True,
-                   simplify: Callable = sp.powsimp,
+                   simplify: Callable = lambda x: sp.powsimp(x, deep=True),
                    **kwargs) -> None:
         """
         Generate AMICI C++ files for the model provided to the constructor.
