@@ -209,11 +209,11 @@ class ForwardProblem {
     }
 
     /**
-     * @brief Returns maximal time point index for which simulations are available
-     * @return index
+     * @brief Returns final time point for which simulations are available
+     * @return time point
      */
-    int getTimepointCounter() const {
-        return static_cast<int>(timepoint_states.size() - 1);
+    realtype getFinalTime() const {
+        return final_state.t;
     }
 
     /**
@@ -239,7 +239,9 @@ class ForwardProblem {
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
-        return timepoint_states.at(it);
+        if (model->getTimepoint(it) == initial_state.t)
+            return getInitialSimulationState();
+        return timepoint_states.find(model->getTimepoint(it))->second;
     };
 
     /**
@@ -400,7 +402,7 @@ class ForwardProblem {
     std::vector<int> rootsfound;
 
     /** simulation states history at timepoints  */
-    std::vector<SimulationState> timepoint_states;
+    std::map<realtype, SimulationState> timepoint_states;
 
     /** simulation state history at events*/
     std::vector<SimulationState> event_states;
