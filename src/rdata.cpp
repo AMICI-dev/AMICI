@@ -193,6 +193,7 @@ void ReturnData::processPreEquilibration(SteadystateProblem const &preeq,
     /* Get cpu time for Newton solve in milliseconds */
     preeq_cpu_time = preeq.getCPUTime();
     preeq_cpu_timeB = preeq.getCPUTimeB();
+    preeq_numstepsB = preeq.getNumStepsB();
     preeq_wrms = preeq.getResidualNorm();
     preeq_status = preeq.getSteadyStateStatus();
     if (preeq_status[1] == SteadyStateStatus::success)
@@ -217,6 +218,7 @@ void ReturnData::processPostEquilibration(SteadystateProblem const &posteq,
     /* Get cpu time for Newton solve in milliseconds */
     posteq_cpu_time = posteq.getCPUTime();
     posteq_cpu_timeB = posteq.getCPUTimeB();
+    posteq_numstepsB = posteq.getNumStepsB();
     posteq_wrms = posteq.getResidualNorm();
     posteq_status = posteq.getSteadyStateStatus();
     if (posteq_status[1] == SteadyStateStatus::success)

@@ -79,6 +79,14 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
 static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                   void *user_data);
 
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot, void *user_data);
+
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot, void *user_data);
+
+static int fJSparseB_ss(realtype t, N_Vector x, N_Vector xBdot,
+                        SUNMatrix JB, void *user_data, N_Vector tmp1,
+                        N_Vector tmp2, N_Vector tmp3);
+
 static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                   N_Vector sx, N_Vector sxdot, void *user_data,
                   N_Vector tmp1, N_Vector tmp2);
@@ -101,6 +109,15 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeInit");
+}
+
+void CVodeSolver::initSteadystate(const realtype t0, const AmiVector &x0,
+                                  const AmiVector &dx0) const {
+    /* We need to set the steadystate rhs function. SUndials doesn't have this
+       in its public api, so we have to change it in the solver memory,
+       as re-calling init would unset solver settings. */
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    cv_mem->cv_f = fxBdot_ss;
 }
 
 void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
@@ -211,6 +228,12 @@ void CVodeSolver::setJacTimesVecFnB(int which) const {
         throw CvodeException(status, "CVodeSetJacTimesB");
 }
 
+void CVodeSolver::setSparseJacFn_ss() const {
+    int status = CVodeSetJacFn(solverMemory.get(), fJSparseB_ss);
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetJacFn");
+}
+
 Solver *CVodeSolver::clone() const { return new CVodeSolver(*this); }
 
 void CVodeSolver::allocateSolver() const {
@@ -244,6 +267,12 @@ void CVodeSolver::setQuadErrConB(const int which, const bool flag) const {
     int status = CVodeSetQuadErrConB(solverMemory.get(), which, flag);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetQuadErrConB");
+}
+
+void CVodeSolver::setQuadErrCon(const bool flag) const {
+    int status = CVodeSetQuadErrCon(solverMemory.get(), flag);
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetQuadErrCon");
 }
 
 void CVodeSolver::getRootInfo(int *rootsfound) const {
@@ -553,12 +582,25 @@ void CVodeSolver::getQuadB(int which) const {
         throw CvodeException(status, "CVodeGetQuadB");
 }
 
+void CVodeSolver::getQuad(realtype &t) const {
+    int status = CVodeGetQuad(solverMemory.get(), &t, xQ.getNVector());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeGetQuad");
+}
+
 void CVodeSolver::getQuadDkyB(const realtype t, const int k, int which) const {
     int status =
         CVodeGetQuadDky(CVodeGetAdjCVodeBmem(solverMemory.get(), which), t, k,
                         xQB.getNVector());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetQuadDkyB");
+}
+
+void CVodeSolver::getQuadDky(const realtype t, const int k) const {
+    int status =
+    CVodeGetQuadDky(solverMemory.get(), t, k, xQ.getNVector());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeGetQuadDky");
 }
 
 void CVodeSolver::adjInit() const {
@@ -572,6 +614,19 @@ void CVodeSolver::adjInit() const {
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeAdjInit");
+}
+
+void CVodeSolver::quadInit(const AmiVector &xQ0) const {
+    int status;
+    xQ.copy(xQ0);
+    if (getQuadInitDone()) {
+        status = CVodeQuadReInit(solverMemory.get(), xQ0.getNVector());
+    } else {
+        status = CVodeQuadInit(solverMemory.get(), fqBdot_ss, xQ.getNVector());
+        setQuadInitDone();
+    }
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeQuadInit");
 }
 
 void CVodeSolver::allocateSolverB(int *which) const {
@@ -603,6 +658,14 @@ void CVodeSolver::quadSStolerancesB(const int which, const realtype reltolQB,
         CVodeQuadSStolerancesB(solverMemory.get(), which, reltolQB, abstolQB);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeQuadSStolerancesB");
+}
+
+void CVodeSolver::quadSStolerances(const realtype reltolQB,
+                                   const realtype abstolQB) const {
+    int status =
+    CVodeQuadSStolerances(solverMemory.get(), reltolQB, abstolQB);
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeQuadSStolerances");
 }
 
 void CVodeSolver::getB(const int which) const {
@@ -973,6 +1036,60 @@ static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
     auto model = static_cast<Model_ODE *>(user_data);
     model->fqBdot(t, x, xB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot");
+}
+
+
+/**
+ * @brief Right hand side of differential equation for adjoint state xB
+ * when simulating in steadystate mode
+ * @param t timepoint
+ * @param xB Vector with the adjoint states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param user_data object with user input @type Model_ODE
+ * @return status flag indicating successful execution
+ */
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
+                     void *user_data) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fxBdot_ss(t, xB, xBdot);
+    return model->checkFinite(gsl::make_span(xBdot), "fxBdot_ss");
+}
+
+
+/**
+ * @brief Right hand side of integral equation for quadrature states qB
+ * when simulating in steadystate mode
+ * @param t timepoint
+ * @param xB Vector with the adjoint states
+ * @param qBdot Vector with the adjoint quadrature right hand side
+ * @param user_data pointer to temp data object
+ * @return status flag indicating successful execution
+ */
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
+                     void *user_data) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fqBdot_ss(t, xB, qBdot);
+    return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
+}
+
+/**
+ * @brief JB in sparse form for steady state case
+ * @param t timepoint
+ * @param x Vector with the states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_ODE
+ * @param tmp1B temporary storage vector
+ * @param tmp2B temporary storage vector
+ * @param tmp3B temporary storage vector
+ * @return status flag indicating successful execution
+ */
+static int fJSparseB_ss(realtype /*t*/, N_Vector /*x*/, N_Vector xBdot,
+                        SUNMatrix JB, void *user_data, N_Vector /*tmp1*/,
+                        N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fJSparseB_ss(JB);
+    return model->checkFinite(gsl::make_span(xBdot), "JSparseB_ss");
 }
 
 

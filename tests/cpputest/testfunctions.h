@@ -140,6 +140,22 @@ public:
         throw AmiException("not implemented");
     }
 
+    virtual void fxBdot_ss(const realtype t, const AmiVector &xB,
+                           const AmiVector &dxB, AmiVector &xBdot) override {
+        throw AmiException("not implemented");
+    }
+
+    virtual void fJSparseB_ss(SUNMatrix JB) override {
+        throw AmiException("not implemented");
+    }
+
+    virtual void writeSteadystateJB(const realtype t, realtype cj, 
+                                    const AmiVector &x, const AmiVector &dx, 
+                                    const AmiVector &xB, const AmiVector &dxB, 
+                                    const AmiVector &xBdot) override {
+        throw AmiException("not implemented");
+    }
+
     virtual std::vector<std::string> getParameterNames() const override
     {
         return getVariableNames("p", np());

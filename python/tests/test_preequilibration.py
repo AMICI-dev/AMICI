@@ -307,11 +307,11 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
     for setting1, setting2 in itertools.product(settings, settings):
         # assert correctness of result
         for variable in ['llh', 'sllh']:
-            assert np.allclose(
+            assert np.isclose(
                 rdatas[setting1][variable],
                 rdatas[setting2][variable],
                 1e-6, 1e-6
-            ), variable
+            ).all(), variable
 
 
 def test_newton_solver_equilibration(preeq_fixture):
@@ -354,17 +354,17 @@ def test_newton_solver_equilibration(preeq_fixture):
 
     # assert correct results
     for variable in ['llh', 'sllh', 'sx0', 'sx_ss', 'x_ss']:
-        assert np.allclose(
+        assert np.isclose(
             rdatas[settings[0]][variable],
             rdatas[settings[1]][variable],
             1e-6, 1e-6
-        ), variable
+        ).all(), variable
 
     # test failure for iterative linear solver with sensitivities
     edata.fixedParametersPreequilibration = ()
     edata.t_presim = 0.0
     edata.fixedParametersPresimulation = ()
-    
+
     solver.setLinearSolver(amici.LinearSolver.SPBCG)
     solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
