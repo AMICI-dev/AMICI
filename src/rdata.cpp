@@ -251,14 +251,17 @@ void ReturnData::processForwardProblem(ForwardProblem const &fwd, Model &model,
     }
 
     // process timpoint data
-    for (int it = 0; it <= fwd.getTimepointCounter(); it++) {
-        readSimulationState(fwd.getSimulationStateTimepoint(it), model);
-        getDataOutput(it, model, edata);
+    realtype tf = fwd.getFinalTime();
+    for (int it = 0; it < model.nt(); it++) {
+        if (model.getTimepoint(it) <= tf) {
+            readSimulationState(fwd.getSimulationStateTimepoint(it), model);
+            getDataOutput(it, model, edata);
+        } else {
+            // check for integration failure but consider postequilibration
+            if (!std::isinf(model.getTimepoint(it)))
+                invalidate(it);
+        }
     }
-    // check for integration failure but consider postequilibration
-    for (int it = fwd.getTimepointCounter() + 1; it < nt; it++)
-        if (!std::isinf(model.getTimepoint(it)))
-            invalidate(it);
 
     // process event data
     if (nz > 0) {

@@ -294,7 +294,7 @@ def test_equilibration_methods_with_adjoints(preeq_fixture):
     for setting in settings:
         # unpack, solver settings
         equil_meth, sensi_meth = setting
-        model.SteadyStateSensitivityMethod = equil_meth
+        model.setSteadyStateSensitivityMode(equil_meth)
         solver.setSensitivityMethod(sensi_meth)
         solver.setNewtonMaxSteps(0)
 
@@ -340,7 +340,7 @@ def test_newton_solver_equilibration(preeq_fixture):
         # set sensi method
         sensi_meth = amici.SensitivityMethod.forward
         solver.setSensitivityMethod(sensi_meth)
-        solver.SteadyStateSensitivityMethod = equil_meth
+        model.setSteadyStateSensitivityMode(equil_meth)
         if equil_meth == amici.SteadyStateSensitivityMode.newtonOnly:
             solver.setNewtonMaxSteps(10)
         else:
@@ -368,8 +368,8 @@ def test_newton_solver_equilibration(preeq_fixture):
     solver.setLinearSolver(amici.LinearSolver.SPBCG)
     solver.setSensitivityMethod(amici.SensitivityMethod.adjoint)
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    solver.SteadyStateSensitivityMethod = \
-        amici.SteadyStateSensitivityMode.newtonOnly
+    model.setSteadyStateSensitivityMode(
+        amici.SteadyStateSensitivityMode.newtonOnly)
     solver.setNewtonMaxSteps(10)
     solver.setNewtonMaxLinearSteps(10)
     rdata_spbcg = amici.runAmiciSimulation(model, solver, edata)
