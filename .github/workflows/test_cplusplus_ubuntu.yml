@@ -63,7 +63,7 @@ jobs:
       run: |
         scripts/buildCpputest.sh
 
-    - name: Build cpputest
+    - name: Build BNGL
       run: |
         scripts/buildBNGL.sh
 
@@ -111,17 +111,7 @@ jobs:
       run: |
         lcov --compat-libtool --no-external \
         --directory "${AMICI_DIR}/build/CMakeFiles/amici.dir/src" \
-        --base-directory ${AMICI_DIR} --capture --output-file coverage_cpp.info
-        
-    - name: lcov pytest
-      run: |
-        lcov --compat-libtool --no-external \
-        --directory "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
-        --base-directory ${AMICI_DIR} --capture --output-file coverage_py.info
-      
-    - name: lcov combine
-      run: |
-        lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+        --base-directory ${AMICI_DIR} --capture --output-file coverage.info
         
     - name: Codecov CPP
       uses: codecov/codecov-action@v1.0.6
