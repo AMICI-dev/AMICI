@@ -1,0 +1,5 @@
+<map id="setAbsoluteToleranceQuadratures" name="setAbsoluteToleranceQuadratures">
+<area shape="rect" id="node1" title="sets the absolute tolerance for the quadrature problem" alt="" coords="5,5,224,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#ac4719da01affd1bb5e47a90903a95387" title="updates ASA solver tolerances according to the currently specified member variables" alt="" coords="272,5,415,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a89667d5b61c9ad3829415b9cd26baf5e" title="checks whether memory for forward interpolation has been allocated" alt="" coords="463,5,571,32"/>
+</map>

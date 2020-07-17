@@ -1,0 +1,16 @@
+<map id="getInitialStateSensitivities" name="getInitialStateSensitivities">
+<area shape="rect" id="node1" title="Get the initial states sensitivities." alt="" coords="5,284,179,311"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a647b2865d4c9f26ad461a51246bbefcd" title="Initial value for initial state sensitivities." alt="" coords="258,259,305,285"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="399,309,452,336"/>
+<area shape="rect" id="node10" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="402,360,449,387"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model.html#af6c1a377a0867481f969ac492c138f5b" title="Get the initial states." alt="" coords="227,132,336,159"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="529,233,684,260"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#ac112075ad7c01dac4588496c47b00e86" title="Model specific implementation of fstotal_cl." alt="" coords="388,107,463,133"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#acaa80cbfc886abd3a0f038f5ff9f54e3" title="Model specific implementation of fsx_solver." alt="" coords="384,208,467,235"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="406,157,445,184"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#ab7c357d92ab37cfe9728a31e4232cfe9" title="Model specific implementation of ftotal_cl." alt="" coords="573,107,641,133"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#ac08ad3aa4016a5a3ff89d601e15971cc" title="Model specific implementation of fx_solver." alt="" coords="569,169,644,196"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#aa7f0fd75cc6f00cee8807c6d54f3ac94" title="Initial states." alt="" coords="405,56,445,83"/>
+<area shape="rect" id="node13" href="$classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="562,56,651,83"/>
+<area shape="rect" id="node14" href="$classamici_1_1_ami_vector.html#a822a8fbee44aaca671b6bb2d61a13c19" title="Vector accessor." alt="" coords="515,5,699,32"/>
+</map>

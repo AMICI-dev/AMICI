@@ -1,0 +1,4 @@
+<map id="applyNewtonsMethod" name="applyNewtonsMethod">
+<area shape="rect" id="node1" title="Runs the Newton solver iterations and checks for convergence to steady state." alt="" coords="236,13,384,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#ad62b1882c1bc397bcda7a9fcfc7456f1" title="Tries to determine the steady state by using Newton&#39;s method." alt="" coords="5,5,188,47"/>
+</map>

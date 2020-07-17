@@ -1,0 +1,46 @@
+\hypertarget{amiwrap_8m}{}\doxysubsection{amiwrap.\+m File Reference}
+\label{amiwrap_8m}\index{amiwrap.m@{amiwrap.m}}
+
+
+A\+M\+I\+W\+R\+AP generates c++ mex files for the simulation of systems of differential equations via C\+V\+O\+D\+ES and I\+D\+AS.  
+
+
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+noret\+::substitute \mbox{\hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap}} (matlabtypesubstitute varargin)
+\begin{DoxyCompactList}\small\item\em A\+M\+I\+W\+R\+AP generates c++ mex files for the simulation of systems of differential equations via C\+V\+O\+D\+ES and I\+D\+AS. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Function Documentation}
+\mbox{\Hypertarget{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}\label{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}} 
+\index{amiwrap.m@{amiwrap.m}!amiwrap@{amiwrap}}
+\index{amiwrap@{amiwrap}!amiwrap.m@{amiwrap.m}}
+\doxyparagraph{\texorpdfstring{amiwrap()}{amiwrap()}}
+{\footnotesize\ttfamily noret\+::substitute amiwrap (\begin{DoxyParamCaption}\item[{matlabtypesubstitute}]{varargin }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em varargin} & ~\newline
+ 
+\begin{DoxyCode}{1}
+\DoxyCodeLine{\mbox{\hyperlink{amiwrap_8m_a183dd11adc4bd525147faa2590ea325b}{amiwrap}} ( modelname, symfun, tdir, o2flag ) }
+\end{DoxyCode}
+ {\itshape Required Parameters for varargin\+:}
+\begin{DoxyItemize}
+\item  modelname specifies the name of the model which will be later used for the naming of the simulation file
+\item  symfun specifies a function which executes model definition see \mbox{\hyperlink{matlab_interface}{M\+A\+T\+L\+AB Interface}} for details
+\item  tdir target directory where the simulation file should be placed {\bfseries{Default\+:}} \$\+A\+M\+I\+C\+I\+D\+IR/models/modelname
+\item  o2flag boolean whether second order sensitivities should be enabled {\bfseries{Default\+:}} false
+\end{DoxyItemize}\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em o2flag} & void \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 17 of file amiwrap.\+m.
+

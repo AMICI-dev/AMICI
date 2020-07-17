@@ -1,0 +1,4 @@
+<map id="gccode" name="gccode">
+<area shape="rect" id="node1" title="gccode transforms symbolic expressions into c code and writes the respective expression into a specif..." alt="" coords="141,5,205,32"/>
+<area shape="rect" id="node2" href="$classamifun.html#a8e48f2842268ff64ca32db8eb4b69377" title="writeCcode is a wrapper for gccode which initialises data and reduces overhead by check nonzero value..." alt="" coords="5,5,93,32"/>
+</map>

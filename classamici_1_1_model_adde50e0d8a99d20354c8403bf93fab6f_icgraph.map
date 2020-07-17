@@ -1,0 +1,6 @@
+<map id="k" name="k">
+<area shape="rect" id="node1" title="Fixed parameters." alt="" coords="403,31,441,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a6fc7d7ca95d2685dbe94649bc9f2cd7a" title="Constructor with model dimensions." alt="" coords="257,5,314,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a14ba63ae81b4e8fa1f46884b703e2c30" title="Sets the fixedParameter member." alt="" coords="216,56,355,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_condition_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original settings on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="5,49,168,90"/>
+</map>

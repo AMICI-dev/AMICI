@@ -1,0 +1,18 @@
+<map id="getAdjointStateObservableUpdate" name="getAdjointStateObservableUpdate">
+<area shape="rect" id="node1" title="State sensitivity of the negative loglikelihood Jy, partial derivative (to be used with adjoint senst..." alt="" coords="5,542,183,583"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="231,549,292,576"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="340,510,401,537"/>
+<area shape="rect" id="node8" href="$classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="692,612,927,638"/>
+<area shape="rect" id="node13" href="$classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="449,662,644,689"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="343,165,398,192"/>
+<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="975,183,1133,224"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#afb12baf7d81eb577502dfdaaae702185" title="Model specific implementation of fdJydy colptrs." alt="" coords="493,460,600,486"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a346c33f111a251baf4e29b5843a76395" title="Model specific implementation of fdJydy row vals." alt="" coords="490,561,603,588"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="513,612,581,638"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="527,292,566,318"/>
+<area shape="rect" id="node12" href="$classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="449,394,644,435"/>
+<area shape="rect" id="node10" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="732,241,887,268"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="790,190,829,217"/>
+<area shape="rect" id="node15" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="722,74,897,115"/>
+<area shape="rect" id="node16" href="$classamici_1_1_model.html#a7afd5fb5b12531657d3536508fd7a066" title="Recurring terms in xdot, state derivative." alt="" coords="518,140,575,166"/>
+</map>

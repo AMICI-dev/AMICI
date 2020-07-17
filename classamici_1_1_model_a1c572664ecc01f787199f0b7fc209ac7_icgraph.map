@@ -1,0 +1,6 @@
+<map id="initializeStates" name="initializeStates">
+<area shape="rect" id="node1" title="Initialization of initial states." alt="" coords="349,46,456,73"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a76f3aa67bb6232cce1f56cc1ec9c9c4e" title="Initialization of model properties." alt="" coords="232,46,301,73"/>
+<area shape="rect" id="node3" href="$classamici_1_1_forward_problem.html#a4ef001eef23bc48270159d6193036858" title="Solve the forward problem." alt="" coords="17,5,173,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#a0b71cc4193afae24ae5890094e210682" title="Handles steady state computation in the forward case: tries to determine the steady state of the ODE ..." alt="" coords="5,71,184,112"/>
+</map>

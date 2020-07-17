@@ -1,0 +1,12 @@
+<map id="fdJzdsigma" name="fdJzdsigma">
+<area shape="rect" id="node1" title="Sensitivity of event measurement negative log&#45;likelihood Jz w.r.t. standard deviation sigmaz." alt="" coords="5,205,95,231"/>
+<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="161,41,319,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="206,147,274,174"/>
+<area shape="rect" id="node6" href="$classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="385,201,592,243"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a171bc1e22a0829aff5fd16f6d6bffa5a" title="Event&#45;resolved output." alt="" coords="221,255,259,282"/>
+<area shape="rect" id="node10" href="$classamici_1_1_exp_data.html#a95ab3fe91af62612f202fdc6cd033d2a" title="get function that returns a pointer to observed data at ieth occurence" alt="" coords="143,307,337,348"/>
+<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="409,5,568,47"/>
+<area shape="rect" id="node5" href="$classamici_1_1_exp_data.html#aabab4dfc080fdf961b6a3bbf1aebd631" title="get function that returns a pointer to standard deviation of observed event data at ieth occurence" alt="" coords="391,71,586,112"/>
+<area shape="rect" id="node7" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="385,136,592,177"/>
+<area shape="rect" id="node9" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="411,267,566,294"/>
+</map>

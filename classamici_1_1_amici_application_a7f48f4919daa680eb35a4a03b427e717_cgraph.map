@@ -1,0 +1,4 @@
+<map id="checkFinite" name="checkFinite">
+<area shape="rect" id="node1" title="Checks the values in an array for NaNs and Infs." alt="" coords="5,5,95,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="143,5,217,32"/>
+</map>

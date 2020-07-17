@@ -1,0 +1,9 @@
+<map id="columns" name="columns">
+<area shape="rect" id="node1" title="Get the number of columns." alt="" coords="644,31,715,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a886b96fde5c5d4caf09286d59666a731" title="Perform matrix vector multiplication c += A*b." alt="" coords="506,5,573,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a991ac2bbf070c02955140ceb328d8864" title="Perform matrix matrix multiplication C[:, :] += A * B for sparse A, B, C." alt="" coords="483,56,596,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model___o_d_e.html#ab36987125ea3360ae5f03b0019513891" title=" " alt="" coords="244,56,435,83"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model___o_d_e.html#a2feef05eaf143813199126109ef64bb3" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="5,5,196,32"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model___o_d_e.html#a9d0e4612af8d7b3c418d000b5e9ba84f" title="Implementation of fqBdot at the N_Vector level." alt="" coords="11,56,190,83"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model___o_d_e.html#a786f028681b0928eb431cd44e9bd254a" title="Implementation of fsxdot at the N_Vector level." alt="" coords="13,107,189,133"/>
+</map>

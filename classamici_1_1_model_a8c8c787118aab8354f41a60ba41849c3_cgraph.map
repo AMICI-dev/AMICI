@@ -1,0 +1,27 @@
+<map id="fdJydx" name="fdJydx">
+<area shape="rect" id="node1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="5,291,67,318"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="115,251,176,278"/>
+<area shape="rect" id="node10" href="$classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="467,75,701,102"/>
+<area shape="rect" id="node16" href="$classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="224,411,419,438"/>
+<area shape="rect" id="node17" href="$classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="118,538,173,565"/>
+<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="749,455,908,496"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#afb12baf7d81eb577502dfdaaae702185" title="Model specific implementation of fdJydy colptrs." alt="" coords="268,41,375,67"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a346c33f111a251baf4e29b5843a76395" title="Model specific implementation of fdJydy row vals." alt="" coords="265,91,378,118"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="287,193,355,219"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="302,361,341,387"/>
+<area shape="rect" id="node15" href="$classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="224,244,419,285"/>
+<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="956,455,1115,496"/>
+<area shape="rect" id="node8" href="$classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="487,127,681,168"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="535,193,633,219"/>
+<area shape="rect" id="node11" href="$classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="481,244,687,285"/>
+<area shape="rect" id="node13" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="507,411,661,438"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="565,462,603,489"/>
+<area shape="rect" id="node18" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="497,513,671,555"/>
+<area shape="rect" id="node19" href="$classamici_1_1_model.html#a7afd5fb5b12531657d3536508fd7a066" title="Recurring terms in xdot, state derivative." alt="" coords="293,671,350,698"/>
+<area shape="rect" id="node20" href="$classamici_1_1_abstract_model.html#a8d0efa23764dd2210e01f40918be36ae" title="Model specific implementation for dwdx, column pointers." alt="" coords="511,827,657,868"/>
+<area shape="rect" id="node21" href="$classamici_1_1_abstract_model.html#a209b18059172ea4286c85931d0231a8a" title="Model specific implementation for dwdx, row values." alt="" coords="511,892,657,933"/>
+<area shape="rect" id="node22" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="484,958,684,985"/>
+<area shape="rect" id="node23" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="497,631,671,672"/>
+<area shape="rect" id="node24" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="497,696,671,737"/>
+<area shape="rect" id="node25" href="$classamici_1_1_s_u_n_matrix_wrapper.html#ad20897c5c8bd47f5d4005989bead0e55" title="reset data to zeroes" alt="" coords="497,761,671,803"/>
+</map>

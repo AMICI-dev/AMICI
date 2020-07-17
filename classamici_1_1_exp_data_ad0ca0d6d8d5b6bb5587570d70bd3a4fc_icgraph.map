@@ -1,0 +1,14 @@
+<map id="getObservedDataStdDevPtr" name="getObservedDataStdDevPtr">
+<area shape="rect" id="node1" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="837,97,1023,123"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="639,97,789,123"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="400,5,591,47"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#abb22422c569ab3fac8a439cb25c1f65d" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. standard deviation sigma." alt="" coords="410,71,581,98"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="424,122,567,149"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="401,216,589,257"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="5,165,141,207"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a00e6579fcfb0bb339e621cf194b9ee40" title="Compute sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t...." alt="" coords="199,71,342,98"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="199,122,342,149"/>
+<area shape="rect" id="node10" href="$classamici_1_1_return_data.html#ae14af17c97c07d4d2ba3cb11ba67891c" title="Fisher information matrix function." alt="" coords="189,223,352,250"/>
+<area shape="rect" id="node11" href="$classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="191,274,350,301"/>
+<area shape="rect" id="node12" href="$classamici_1_1_return_data.html#abc6748b3ff26fac3301f7e56842fd540" title="Residual sensitivity function." alt="" coords="203,325,339,367"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="at" name="at">
+<area shape="rect" id="node1" title="accessor to elements of AmiVector elements" alt="" coords="677,122,716,149"/>
+<area shape="rect" id="node2" href="$classamici_1_1_newton_solver.html#a8061901935161d3cbd563daae8fa4e9f" title="Computes steady state sensitivities." alt="" coords="457,5,623,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector_array.html#ab084098fb95a107daadc484ee7b5dd76" title="flattens the AmiVectorArray to a vector in row&#45;major format" alt="" coords="481,71,599,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model___o_d_e.html#a9d0e4612af8d7b3c418d000b5e9ba84f" title="Implementation of fqBdot at the N_Vector level." alt="" coords="451,122,629,149"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model___d_a_e.html#ae3dc4629c9c56a4af01350b8c49f49a8" title="Right hand side of integral equation for quadrature states qB." alt="" coords="451,173,629,199"/>
+<area shape="rect" id="node6" href="$classamici_1_1_return_data.html#a75ac7721fb3493fad52eb770f4e71c59" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="472,224,608,265"/>
+<area shape="rect" id="node7" href="$classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="228,224,403,265"/>
+<area shape="rect" id="node8" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,224,180,265"/>
+</map>

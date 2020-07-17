@@ -1,0 +1,4 @@
+<map id="initializeLinearSolver" name="initializeLinearSolver">
+<area shape="rect" id="node1" title="Initializes and sets the linear solver for the forward problem." alt="" coords="108,5,249,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#add1a21548bb13b646662836fb51933f1" title="Initialises the ami memory object and applies specified options." alt="" coords="5,5,60,32"/>
+</map>

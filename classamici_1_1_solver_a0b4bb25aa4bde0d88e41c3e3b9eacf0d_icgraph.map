@@ -1,0 +1,6 @@
+<map id="getDkyB" name="getDkyB">
+<area shape="rect" id="node1" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="379,31,452,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a6954ec01ccea10a0313b20b6156acd23" title="Access adjoint derivative solution at time t." alt="" coords="160,5,331,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a9168eb08135dfbbc2f43b6ad1dd33db6" title="Access adjoint solution at time t." alt="" coords="190,56,301,83"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#af892618e72c2824035f019a4fa3af7b3" title="write solution from forward simulation" alt="" coords="5,31,112,57"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="storeDiagnosisB" name="storeDiagnosisB">
+<area shape="rect" id="node1" title="Stores diagnosis information from solver memory block for backward problem." alt="" coords="5,81,124,108"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#aa0931152e97fdc5b537686cf7cc1af36" title="Accessor netf." alt="" coords="198,5,337,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#aa54e7564abf32a5dfbb3dfc70fa35ffb" title="Accessor nnlscf." alt="" coords="172,56,363,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#adaa5dd60e78cca1c3ba65103289d2632" title="Accessor nrhs." alt="" coords="205,107,330,133"/>
+<area shape="rect" id="node5" href="$classamici_1_1_solver.html#ac3ddfaa90701a8b5da5b2a7b4738f289" title="Accessor ns." alt="" coords="216,157,319,184"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="updateAndReinitStatesAndSensitivities" name="updateAndReinitStatesAndSensitivities">
+<area shape="rect" id="node1" title="Reinitializes state and respective sensitivities (if necessary) according to changes in fixedParamete..." alt="" coords="5,126,184,167"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a137d6ba3f54998477871f0387c01628c" title="Sets only those initial states that are specified via fixedParmeters." alt="" coords="232,83,456,109"/>
+<area shape="rect" id="node9" href="$classamici_1_1_solver.html#affde3089fec2a1cca40d6cc0c4c2cf1d" title="Get sensitvity order." alt="" coords="277,133,411,160"/>
+<area shape="rect" id="node10" href="$classamici_1_1_solver.html#a4ae55a423380d290258306710688bbe2" title="Reinitializes the states in the solver after an event occurence." alt="" coords="319,184,369,211"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="747,7,901,33"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#ab7c357d92ab37cfe9728a31e4232cfe9" title="Model specific implementation of ftotal_cl." alt="" coords="522,32,673,59"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="522,83,673,109"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#ac08ad3aa4016a5a3ff89d601e15971cc" title="Model specific implementation of fx_solver." alt="" coords="519,133,676,160"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a09f372616ff7bf8073c732801b666f7e" title="Get whether initial states depending on fixedParmeters are to be reinitialized after preequilibration..." alt="" coords="504,185,691,226"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="739,83,909,109"/>
+</map>

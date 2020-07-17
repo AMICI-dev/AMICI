@@ -1,0 +1,4 @@
+<map id="writeSensitivitySliceEvent" name="writeSensitivitySliceEvent">
+<area shape="rect" id="node1" title="Writes part of a sensitivity slice to a buffer according to indices specified in z2event." alt="" coords="5,5,180,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="228,5,281,32"/>
+</map>

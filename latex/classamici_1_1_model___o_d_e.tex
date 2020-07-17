@@ -1,0 +1,1798 @@
+\hypertarget{classamici_1_1_model___o_d_e}{}\doxysubsection{Model\+\_\+\+O\+DE Class Reference}
+\label{classamici_1_1_model___o_d_e}\index{Model\_ODE@{Model\_ODE}}
+
+
+The \mbox{\hyperlink{classamici_1_1_model}{Model}} class represents an A\+M\+I\+CI O\+DE model.  
+
+
+
+
+{\ttfamily \#include $<$model\+\_\+ode.\+h$>$}
+
+
+
+Inheritance diagram for Model\+\_\+\+O\+DE\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=160pt]{classamici_1_1_model___o_d_e__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_model___o_d_e_afa75ea13c14a0222d1dfd25b2846ecbb}{Model\+\_\+\+O\+DE}} ()=default
+\item 
+\mbox{\hyperlink{classamici_1_1_model___o_d_e_af20b2702d68028199dec171ec47b5711}{Model\+\_\+\+O\+DE}} (const int \mbox{\hyperlink{classamici_1_1_model_a0946b3ca4e0896973b4c72cb859d31bd}{nx\+\_\+rdata}}, const int \mbox{\hyperlink{classamici_1_1_model_af578efed4eb15c4441b91933f3c67a96}{nxtrue\+\_\+rdata}}, const int \mbox{\hyperlink{classamici_1_1_model_a2babf7eded5fda4881efb9d9c6a28ee5}{nx\+\_\+solver}}, const int \mbox{\hyperlink{classamici_1_1_model_ac0c32ae3d00ba4cbba7ccf7d03d6da1b}{nxtrue\+\_\+solver}}, const int \mbox{\hyperlink{classamici_1_1_model_a02462970bfe618f70b58d03895c2b693}{nx\+\_\+solver\+\_\+reinit}}, const int \mbox{\hyperlink{classamici_1_1_model_a9f4e20a91b26459133b83992e9d8d381}{ny}}, const int \mbox{\hyperlink{classamici_1_1_model_a2179f7f0a75c20d53cde0bc0784b11d7}{nytrue}}, const int \mbox{\hyperlink{classamici_1_1_model_ac2eda98bb6d7e89cc3239973db2800cf}{nz}}, const int \mbox{\hyperlink{classamici_1_1_model_a497ab69923c4edc945a506fff241e73e}{nztrue}}, const int \mbox{\hyperlink{classamici_1_1_model_a3bf1137663f19e5c361c845cf4dfb7db}{ne}}, const int \mbox{\hyperlink{classamici_1_1_model_ac34193c02e086a579a1b04039ace096b}{nJ}}, const int \mbox{\hyperlink{classamici_1_1_model_a5f1f313510bc2ed23b768a182d874b04}{nw}}, const int \mbox{\hyperlink{classamici_1_1_model_a5d72e4fbc565bf6c368d133970c4fa42}{ndwdx}}, const int \mbox{\hyperlink{classamici_1_1_model_a7c494626b8b05a385a07968b9bf9c10b}{ndwdp}}, const int \mbox{\hyperlink{classamici_1_1_model_a9417818cd9de07bbc7a34006df96c3ef}{ndxdotdw}}, std\+::vector$<$ int $>$ \mbox{\hyperlink{classamici_1_1_model_a1a24f7c225e9d92aca6e038db89b9bf8}{nd\+Jydy}}, const int \mbox{\hyperlink{classamici_1_1_model_ab2361e558c5db00957746267e430bd8a}{nnz}}, const int \mbox{\hyperlink{classamici_1_1_model_a06d233a8791c550cfddeb67cb3bee726}{ubw}}, const int \mbox{\hyperlink{classamici_1_1_model_a679eba46cc7aaef273b9d7910e62c754}{lbw}}, const Second\+Order\+Mode \mbox{\hyperlink{classamici_1_1_model_a3a3feb0696a3b0183439810c5f6f17e9}{o2mode}}, std\+::vector$<$ realtype $>$ const \&p, std\+::vector$<$ realtype $>$ const \&\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, std\+::vector$<$ int $>$ const \&\mbox{\hyperlink{classamici_1_1_model_a6ac0de1b7dfddbb4a480657f62573563}{plist}}, std\+::vector$<$ realtype $>$ const \&\mbox{\hyperlink{classamici_1_1_model_ab789f70300a5fedfb3b86e9d518da402}{idlist}}, std\+::vector$<$ int $>$ const \&\mbox{\hyperlink{classamici_1_1_model_a321dcd555e2cb99e84d9da8527b6327e}{z2event}}, const bool \mbox{\hyperlink{classamici_1_1_model_ac041fc130fcc27b7b144cef27a94f6bd}{python\+Generated}}=false, const int \mbox{\hyperlink{classamici_1_1_model_ab66f5b6f18c3e8ce287693b8711cb472}{ndxdotdp\+\_\+explicit}}=0, const int \mbox{\hyperlink{classamici_1_1_model_a473747682b5be1d4e146486b457d7d82}{ndxdotdp\+\_\+implicit}}=0)
+\begin{DoxyCompactList}\small\item\em Constructor with model dimensions. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_ac0c58a5c04ff52daaa4254becbf18ad6}{fJ}} (realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xdot, S\+U\+N\+Matrix \mbox{\hyperlink{classamici_1_1_model_adba21c578673394a1e31a6d9e8996de4}{J}}) override
+\begin{DoxyCompactList}\small\item\em Dense Jacobian function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a067d153d4e5576a23947c5ca5d0a59ca}{fJ}} (realtype t, N\+\_\+\+Vector x, N\+\_\+\+Vector xdot, S\+U\+N\+Matrix \mbox{\hyperlink{classamici_1_1_model_adba21c578673394a1e31a6d9e8996de4}{J}})
+\begin{DoxyCompactList}\small\item\em Implementation of fJ at the N\+\_\+\+Vector level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a93a8eccf4486f48116cb2a9d977ef28b}{f\+JB}} (const realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dxB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+Bdot, S\+U\+N\+Matrix JB) override
+\begin{DoxyCompactList}\small\item\em Dense Jacobian function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_ae32c409195dda73cf01af3233abb8a53}{f\+JB}} (realtype t, N\+\_\+\+Vector x, N\+\_\+\+Vector xB, N\+\_\+\+Vector x\+Bdot, S\+U\+N\+Matrix JB)
+\begin{DoxyCompactList}\small\item\em Implementation of f\+JB at the N\+\_\+\+Vector level, this function provides an interface to the model specific routines for the solver implementation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a201dbbf01f1b93592bc9eb1a78ad5d61}{f\+J\+Sparse}} (realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xdot, S\+U\+N\+Matrix \mbox{\hyperlink{classamici_1_1_model_adba21c578673394a1e31a6d9e8996de4}{J}}) override
+\begin{DoxyCompactList}\small\item\em Sparse Jacobian function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a34b8cc80bcd4074c2c4be1938f418a27}{f\+J\+Sparse}} (realtype t, N\+\_\+\+Vector x, S\+U\+N\+Matrix \mbox{\hyperlink{classamici_1_1_model_adba21c578673394a1e31a6d9e8996de4}{J}})
+\begin{DoxyCompactList}\small\item\em Implementation of f\+J\+Sparse at the N\+\_\+\+Vector level, this function provides an interface to the model specific routines for the solver implementation aswell as the \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} level implementation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_aad4e82ee649196eff3cae36c944a1980}{f\+J\+SparseB}} (const realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dxB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+Bdot, S\+U\+N\+Matrix JB) override
+\begin{DoxyCompactList}\small\item\em Sparse Jacobian function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_aa64bd4d26ed1342671ba6aa255a36434}{f\+J\+SparseB}} (realtype t, N\+\_\+\+Vector x, N\+\_\+\+Vector xB, N\+\_\+\+Vector x\+Bdot, S\+U\+N\+Matrix JB)
+\begin{DoxyCompactList}\small\item\em Implementation of f\+J\+SparseB at the N\+\_\+\+Vector level, this function provides an interface to the model specific routines for the solver implementation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a894cb7158f20a976348caa9d73520d40}{f\+J\+Diag}} (realtype t, N\+\_\+\+Vector J\+Diag, N\+\_\+\+Vector x)
+\begin{DoxyCompactList}\small\item\em Implementation of f\+J\+Diag at the N\+\_\+\+Vector level, this function provides an interface to the model specific routines for the solver implementation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_adaf8ba29af3b621a30e183d7e2f789f5}{f\+J\+Diag}} (realtype t, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&J\+Diag, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx) override
+\begin{DoxyCompactList}\small\item\em Diagonal of the Jacobian (for preconditioning) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a71d5d8f7344a7ef93ae89e07fad5fcb2}{f\+Jv}} (realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xdot, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&v, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&n\+Jv, realtype cj) override
+\begin{DoxyCompactList}\small\item\em Jacobian multiply function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a01252ccb85bec7adbc88d12fce4fde05}{f\+Jv}} (N\+\_\+\+Vector v, N\+\_\+\+Vector Jv, realtype t, N\+\_\+\+Vector x)
+\begin{DoxyCompactList}\small\item\em Implementation of f\+Jv at the N\+\_\+\+Vector level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_af9c1f29040dc3c6c8bca0703676843be}{f\+JvB}} (N\+\_\+\+Vector vB, N\+\_\+\+Vector JvB, realtype t, N\+\_\+\+Vector x, N\+\_\+\+Vector xB)
+\begin{DoxyCompactList}\small\item\em Implementation of f\+JvB at the N\+\_\+\+Vector level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a46fb620204a7cc2198125f714e9e69e1}{froot}} (realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, gsl\+::span$<$ realtype $>$ root) override
+\begin{DoxyCompactList}\small\item\em Root function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_ae7066bdefea6368f5568ca254738f8ec}{froot}} (realtype t, N\+\_\+\+Vector x, gsl\+::span$<$ realtype $>$ root)
+\begin{DoxyCompactList}\small\item\em Implementation of froot at the N\+\_\+\+Vector level This function provides an interface to the model specific routines for the solver implementation aswell as the \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} level implementation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a9afb205ee882a3bd6adc542c98dcd635}{fxdot}} (realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xdot) override
+\begin{DoxyCompactList}\small\item\em Residual function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_aa08f195ec3f1e9ec3d208abfbf27b23a}{fxdot}} (realtype t, N\+\_\+\+Vector x, N\+\_\+\+Vector xdot)
+\begin{DoxyCompactList}\small\item\em Implementation of fxdot at the N\+\_\+\+Vector level, this function provides an interface to the model specific routines for the solver implementation aswell as the \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} level implementation. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a433a0e1e4330ef433823a61f1fc45a5a}{fx\+Bdot}} (realtype t, N\+\_\+\+Vector x, N\+\_\+\+Vector xB, N\+\_\+\+Vector x\+Bdot)
+\begin{DoxyCompactList}\small\item\em Implementation of fx\+Bdot at the N\+\_\+\+Vector level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a9d0e4612af8d7b3c418d000b5e9ba84f}{fq\+Bdot}} (realtype t, N\+\_\+\+Vector x, N\+\_\+\+Vector xB, N\+\_\+\+Vector q\+Bdot)
+\begin{DoxyCompactList}\small\item\em Implementation of fq\+Bdot at the N\+\_\+\+Vector level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_aded6e860d78e62a3b449c06965175e62}{fx\+Bdot\+\_\+ss}} (const realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+Bdot) override
+\begin{DoxyCompactList}\small\item\em Residual function backward when running in steady state mode. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_abf3b921eb5bf1ff596d02ef5477c4087}{fx\+Bdot\+\_\+ss}} (realtype t, N\+\_\+\+Vector xB, N\+\_\+\+Vector x\+Bdot) const
+\begin{DoxyCompactList}\small\item\em Implementation of fx\+Bdot for steady state at the N\+\_\+\+Vector level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a359eadbe5791094c74b3a3301bd7788e}{fq\+Bdot\+\_\+ss}} (realtype t, N\+\_\+\+Vector xB, N\+\_\+\+Vector q\+Bdot) const
+\begin{DoxyCompactList}\small\item\em Implementation of fq\+Bdot for steady state case at the N\+\_\+\+Vector level. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a07ad9ce5492a7bfbbcf5cc327d840852}{f\+J\+Sparse\+B\+\_\+ss}} (S\+U\+N\+Matrix JB) override
+\begin{DoxyCompactList}\small\item\em Sparse Jacobian function backward, steady state case. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a1bfd97f4f4469ae7250ecb281eaaee4a}{write\+Steadystate\+JB}} (const realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dxB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+Bdot) override
+\begin{DoxyCompactList}\small\item\em Computes the sparse backward Jacobian for steadystate integration and writes it to the model member. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a058f15dc1efb9ec2ddd2bdccec53cffb}{fdxdotdw}} (realtype t, const N\+\_\+\+Vector x)
+\begin{DoxyCompactList}\small\item\em Sensitivity of dx/dt wrt model parameters w. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_ab36987125ea3360ae5f03b0019513891}{fdxdotdp}} (realtype t, const N\+\_\+\+Vector x)
+\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a2feef05eaf143813199126109ef64bb3}{fdxdotdp}} (realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx) override
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific sparse implementation of explicit parameter derivative of right hand side. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a320dee9a1de0c38fb49eb1f5826e626c}{fsxdot}} (realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, int ip, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&\mbox{\hyperlink{classamici_1_1_model_ac3288cc7f649605938f1fd1b459d3d8c}{sx}}, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&sdx, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&sxdot) override
+\begin{DoxyCompactList}\small\item\em Sensitivity Residual function. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a786f028681b0928eb431cd44e9bd254a}{fsxdot}} (realtype t, N\+\_\+\+Vector x, int ip, N\+\_\+\+Vector \mbox{\hyperlink{classamici_1_1_model_ac3288cc7f649605938f1fd1b459d3d8c}{sx}}, N\+\_\+\+Vector sxdot)
+\begin{DoxyCompactList}\small\item\em Implementation of fsxdot at the N\+\_\+\+Vector level. \end{DoxyCompactList}\item 
+std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $>$ \mbox{\hyperlink{classamici_1_1_model___o_d_e_aee7564098e889917627afd3c00772f81}{get\+Solver}} () override
+\begin{DoxyCompactList}\small\item\em Retrieves the solver object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_ac54bae43a666231f9f3d2269d279d23f}{fJ}} (realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adba21c578673394a1e31a6d9e8996de4}{J}}, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}}, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a5cd75594c3cac730cba3818717d4802b}{dwdx}})=0
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for fJ. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a5e24787b036793c765b9a99322c85fb2}{f\+JB}} (realtype $\ast$JB, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$xB, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}}, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a5cd75594c3cac730cba3818717d4802b}{dwdx}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+JB. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a47ba7f7da4f20dccaefb0df4561e3549}{f\+J\+Sparse}} (S\+U\+N\+Matrix\+Content\+\_\+\+Sparse J\+Sparse, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}}, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a5cd75594c3cac730cba3818717d4802b}{dwdx}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+Sparse. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_adb121e191d1be15a88d1a8493c5b8f5e}{f\+J\+Sparse}} (realtype $\ast$J\+Sparse, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}}, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a5cd75594c3cac730cba3818717d4802b}{dwdx}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+Sparse, data only. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a5eca51e504e6ac924ed5a7204daf177c}{f\+J\+Sparse\+\_\+colptrs}} (sunindextype $\ast$indexptrs)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+Sparse, column pointers. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a8910541bd5bfe70224a4979987d61488}{f\+J\+Sparse\+\_\+rowvals}} (sunindextype $\ast$indexvals)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+Sparse, row values. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_abb85d35494e6ae92979680ab45a76c0a}{f\+J\+SparseB}} (S\+U\+N\+Matrix\+Content\+\_\+\+Sparse J\+SparseB, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$xB, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}}, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a5cd75594c3cac730cba3818717d4802b}{dwdx}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+SparseB. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a923becb940aa24705305a35f05ce517c}{f\+J\+SparseB}} (realtype $\ast$J\+SparseB, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$xB, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}}, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a5cd75594c3cac730cba3818717d4802b}{dwdx}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+SparseB. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a0977506663e44949382795a2688ea056}{f\+J\+Sparse\+B\+\_\+colptrs}} (sunindextype $\ast$indexptrs)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+Sparse, column pointers. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a94c75a1a59702fc674a71cea67cbb27c}{f\+J\+Sparse\+B\+\_\+rowvals}} (sunindextype $\ast$indexvals)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+Sparse, row values. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a5f34a0dec9bdcacb35cd601b31d8f9a3}{f\+J\+Diag}} (realtype $\ast$J\+Diag, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}}, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a5cd75594c3cac730cba3818717d4802b}{dwdx}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for f\+J\+Diag. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a81c9e95b656140828dd989dbb62f9181}{froot}} (realtype $\ast$root, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for froot. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a05118edcb4a10ffa0aa95afcb3bfb751}{fxdot}} (realtype $\ast$xdot, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}})=0
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for fxdot. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_ac0ddb3c48590dd548289808671f45a65}{fdxdotdp}} (realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a2b64563dfe45f4f8e3750e0af4d9596c}{dxdotdp}}, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, int ip, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}}, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a275f158bbd24255d2334a08e1fdf7716}{dwdp}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdp, with w chainrule (Matlab) \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a32b20065fe81edd046b5e3de1800e0a1}{fdxdotdp\+\_\+explicit}} (realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a67526d52dcdfc8a70b3f6301236952cc}{dxdotdp\+\_\+explicit}}, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdp\+\_\+explicit, no w chainrule (Py) \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a20507511b5a2e75cd877ee89041d6a87}{fdxdotdp\+\_\+explicit\+\_\+colptrs}} (sunindextype $\ast$indexptrs)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdp\+\_\+explicit, colptrs part. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_af32059d3461ce37d7ef27cc2941a9669}{fdxdotdp\+\_\+explicit\+\_\+rowvals}} (sunindextype $\ast$indexvals)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdp\+\_\+explicit, rowvals part. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a0e8c033f8cb2e44b0a2855e723a19940}{fdxdotdp\+\_\+implicit\+\_\+colptrs}} (sunindextype $\ast$indexptrs)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdp\+\_\+implicit, colptrs part. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a3ea1a32f864b84e0c0d3b37ebae349f0}{fdxdotdp\+\_\+implicit\+\_\+rowvals}} (sunindextype $\ast$indexvals)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdp\+\_\+implicit, rowvals part. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a5de7088a336740420703e5d584af794f}{fdxdotdw}} (realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a8a77cf5e3af951b897177f45f73360a9}{dxdotdw}}, realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_adde50e0d8a99d20354c8403bf93fab6f}{k}}, const realtype $\ast$h, const realtype $\ast$\mbox{\hyperlink{classamici_1_1_model_a6b305431617db7966c726f756e819843}{w}})
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdw, data part. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_ab3556c59ab37f9b3c4d3943b95747017}{fdxdotdw\+\_\+colptrs}} (sunindextype $\ast$indexptrs)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdw, colptrs part. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_model___o_d_e_a36b1eeea35309fa75d8464e71039bf14}{fdxdotdw\+\_\+rowvals}} (sunindextype $\ast$indexvals)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdxdotdw, rowvals part. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+
+
+\doxysubsubsection{Detailed Description}
+The model does not contain any data, but represents the state of the model at a specific time t. The states must not always be in sync, but may be updated asynchroneously. 
+
+Definition at line 27 of file model\+\_\+ode.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_afa75ea13c14a0222d1dfd25b2846ecbb}\label{classamici_1_1_model___o_d_e_afa75ea13c14a0222d1dfd25b2846ecbb}} 
+\index{Model\_ODE@{Model\_ODE}!Model\_ODE@{Model\_ODE}}
+\index{Model\_ODE@{Model\_ODE}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{Model\_ODE()}{Model\_ODE()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_model___o_d_e}{Model\+\_\+\+O\+DE}} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [default]}}
+
+default constructor \mbox{\Hypertarget{classamici_1_1_model___o_d_e_af20b2702d68028199dec171ec47b5711}\label{classamici_1_1_model___o_d_e_af20b2702d68028199dec171ec47b5711}} 
+\index{Model\_ODE@{Model\_ODE}!Model\_ODE@{Model\_ODE}}
+\index{Model\_ODE@{Model\_ODE}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{Model\_ODE()}{Model\_ODE()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_model___o_d_e}{Model\+\_\+\+O\+DE}} (\begin{DoxyParamCaption}\item[{const int}]{nx\+\_\+rdata,  }\item[{const int}]{nxtrue\+\_\+rdata,  }\item[{const int}]{nx\+\_\+solver,  }\item[{const int}]{nxtrue\+\_\+solver,  }\item[{const int}]{nx\+\_\+solver\+\_\+reinit,  }\item[{const int}]{ny,  }\item[{const int}]{nytrue,  }\item[{const int}]{nz,  }\item[{const int}]{nztrue,  }\item[{const int}]{ne,  }\item[{const int}]{nJ,  }\item[{const int}]{nw,  }\item[{const int}]{ndwdx,  }\item[{const int}]{ndwdp,  }\item[{const int}]{ndxdotdw,  }\item[{std\+::vector$<$ int $>$}]{nd\+Jydy,  }\item[{const int}]{nnz,  }\item[{const int}]{ubw,  }\item[{const int}]{lbw,  }\item[{const Second\+Order\+Mode}]{o2mode,  }\item[{std\+::vector$<$ realtype $>$ const \&}]{p,  }\item[{std\+::vector$<$ realtype $>$ const \&}]{k,  }\item[{std\+::vector$<$ int $>$ const \&}]{plist,  }\item[{std\+::vector$<$ realtype $>$ const \&}]{idlist,  }\item[{std\+::vector$<$ int $>$ const \&}]{z2event,  }\item[{const bool}]{python\+Generated = {\ttfamily false},  }\item[{const int}]{ndxdotdp\+\_\+explicit = {\ttfamily 0},  }\item[{const int}]{ndxdotdp\+\_\+implicit = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em nx\+\_\+rdata} & number of state variables \\
+\hline
+{\em nxtrue\+\_\+rdata} & number of state variables of the non-\/augmented model \\
+\hline
+{\em nx\+\_\+solver} & number of state variables with conservation laws applied \\
+\hline
+{\em nxtrue\+\_\+solver} & number of state variables of the non-\/augmented model with conservation laws applied \\
+\hline
+{\em nx\+\_\+solver\+\_\+reinit} & number of state variables with conservation laws subject to reinitialization \\
+\hline
+{\em ny} & number of observables \\
+\hline
+{\em nytrue} & number of observables of the non-\/augmented model \\
+\hline
+{\em nz} & number of event observables \\
+\hline
+{\em nztrue} & number of event observables of the non-\/augmented model \\
+\hline
+{\em ne} & number of events \\
+\hline
+{\em nJ} & number of objective functions \\
+\hline
+{\em nw} & number of repeating elements \\
+\hline
+{\em ndwdx} & number of nonzero elements in the x derivative of the repeating elements \\
+\hline
+{\em ndwdp} & number of nonzero elements in the p derivative of the repeating elements \\
+\hline
+{\em ndxdotdw} & number of nonzero elements dxdotdw \\
+\hline
+{\em nd\+Jydy} & number of nonzero elements d\+Jydy \\
+\hline
+{\em nnz} & number of nonzero elements in Jacobian \\
+\hline
+{\em ubw} & upper matrix bandwidth in the Jacobian \\
+\hline
+{\em lbw} & lower matrix bandwidth in the Jacobian \\
+\hline
+{\em o2mode} & second order sensitivity mode \\
+\hline
+{\em p} & parameters \\
+\hline
+{\em k} & constants \\
+\hline
+{\em plist} & indexes wrt to which sensitivities are to be computed \\
+\hline
+{\em idlist} & indexes indicating algebraic components (D\+AE only) \\
+\hline
+{\em z2event} & mapping of event outputs to events \\
+\hline
+{\em python\+Generated} & flag indicating matlab or python wrapping \\
+\hline
+{\em ndxdotdp\+\_\+explicit} & number of nonzero elements dxdotdp\+\_\+explicit \\
+\hline
+{\em ndxdotdp\+\_\+implicit} & number of nonzero elements dxdotdp\+\_\+implicit \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 67 of file model\+\_\+ode.\+h.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_ac0c58a5c04ff52daaa4254becbf18ad6}\label{classamici_1_1_model___o_d_e_ac0c58a5c04ff52daaa4254becbf18ad6}} 
+\index{Model\_ODE@{Model\_ODE}!fJ@{fJ}}
+\index{fJ@{fJ}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJ()}{fJ()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void fJ (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xdot,  }\item[{S\+U\+N\+Matrix}]{J }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xdot} & values of residual function (unused) \\
+\hline
+{\em J} & dense matrix to which values of the jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a2b68a6170cc63310035df66f45538472}{Abstract\+Model}}.
+
+
+
+Definition at line 7 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{classamici_1_1_model___o_d_e_ac0c58a5c04ff52daaa4254becbf18ad6_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=174pt]{classamici_1_1_model___o_d_e_ac0c58a5c04ff52daaa4254becbf18ad6_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a067d153d4e5576a23947c5ca5d0a59ca}\label{classamici_1_1_model___o_d_e_a067d153d4e5576a23947c5ca5d0a59ca}} 
+\index{Model\_ODE@{Model\_ODE}!fJ@{fJ}}
+\index{fJ@{fJ}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJ()}{fJ()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void fJ (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{N\+\_\+\+Vector}]{xdot,  }\item[{S\+U\+N\+Matrix}]{J }\end{DoxyParamCaption})}
+
+This function provides an interface to the model specific routines for the solver implementation as well as the \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} level implementation 
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em xdot} & Vector with the right hand side \\
+\hline
+{\em J} & Matrix to which the Jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 13 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a067d153d4e5576a23947c5ca5d0a59ca_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a93a8eccf4486f48116cb2a9d977ef28b}\label{classamici_1_1_model___o_d_e_a93a8eccf4486f48116cb2a9d977ef28b}} 
+\index{Model\_ODE@{Model\_ODE}!fJB@{fJB}}
+\index{fJB@{fJB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJB()}{fJB()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void f\+JB (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dxB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x\+Bdot,  }\item[{S\+U\+N\+Matrix}]{JB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em dxB} & Vector with the adjoint derivative states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint right hand side (unused) \\
+\hline
+{\em JB} & dense matrix to which values of the jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a22632bb33c7ddf214e64f999b8e3019a}{Abstract\+Model}}.
+
+
+
+Definition at line 304 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{classamici_1_1_model___o_d_e_a93a8eccf4486f48116cb2a9d977ef28b_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=180pt]{classamici_1_1_model___o_d_e_a93a8eccf4486f48116cb2a9d977ef28b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_ae32c409195dda73cf01af3233abb8a53}\label{classamici_1_1_model___o_d_e_ae32c409195dda73cf01af3233abb8a53}} 
+\index{Model\_ODE@{Model\_ODE}!fJB@{fJB}}
+\index{fJB@{fJB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJB()}{fJB()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void f\+JB (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{N\+\_\+\+Vector}]{xB,  }\item[{N\+\_\+\+Vector}]{x\+Bdot,  }\item[{S\+U\+N\+Matrix}]{JB }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint right hand side \\
+\hline
+{\em JB} & Matrix to which the Jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 311 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_ae32c409195dda73cf01af3233abb8a53_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a201dbbf01f1b93592bc9eb1a78ad5d61}\label{classamici_1_1_model___o_d_e_a201dbbf01f1b93592bc9eb1a78ad5d61}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparse@{fJSparse}}
+\index{fJSparse@{fJSparse}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparse()}{fJSparse()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily void f\+J\+Sparse (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xdot,  }\item[{S\+U\+N\+Matrix}]{J }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xdot} & values of residual function (unused) \\
+\hline
+{\em J} & sparse matrix to which values of the Jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_adfedd89cbabb0cb1bdb221e1f2bdbf22}{Abstract\+Model}}.
+
+
+
+Definition at line 22 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=318pt]{classamici_1_1_model___o_d_e_a201dbbf01f1b93592bc9eb1a78ad5d61_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=228pt]{classamici_1_1_model___o_d_e_a201dbbf01f1b93592bc9eb1a78ad5d61_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a34b8cc80bcd4074c2c4be1938f418a27}\label{classamici_1_1_model___o_d_e_a34b8cc80bcd4074c2c4be1938f418a27}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparse@{fJSparse}}
+\index{fJSparse@{fJSparse}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparse()}{fJSparse()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily void f\+J\+Sparse (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{S\+U\+N\+Matrix}]{J }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em J} & Matrix to which the Jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 28 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a34b8cc80bcd4074c2c4be1938f418a27_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_aad4e82ee649196eff3cae36c944a1980}\label{classamici_1_1_model___o_d_e_aad4e82ee649196eff3cae36c944a1980}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparseB@{fJSparseB}}
+\index{fJSparseB@{fJSparseB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparseB()}{fJSparseB()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily void f\+J\+SparseB (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dxB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x\+Bdot,  }\item[{S\+U\+N\+Matrix}]{JB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em dxB} & Vector with the adjoint derivative states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint right hand side (unused) \\
+\hline
+{\em JB} & dense matrix to which values of the jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_acf1f916be16498a8bc23454210562dfc}{Abstract\+Model}}.
+
+
+
+Definition at line 321 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=324pt]{classamici_1_1_model___o_d_e_aad4e82ee649196eff3cae36c944a1980_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=280pt]{classamici_1_1_model___o_d_e_aad4e82ee649196eff3cae36c944a1980_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_aa64bd4d26ed1342671ba6aa255a36434}\label{classamici_1_1_model___o_d_e_aa64bd4d26ed1342671ba6aa255a36434}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparseB@{fJSparseB}}
+\index{fJSparseB@{fJSparseB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparseB()}{fJSparseB()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily void f\+J\+SparseB (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{N\+\_\+\+Vector}]{xB,  }\item[{N\+\_\+\+Vector}]{x\+Bdot,  }\item[{S\+U\+N\+Matrix}]{JB }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint right hand side \\
+\hline
+{\em JB} & Matrix to which the Jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 328 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_aa64bd4d26ed1342671ba6aa255a36434_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a894cb7158f20a976348caa9d73520d40}\label{classamici_1_1_model___o_d_e_a894cb7158f20a976348caa9d73520d40}} 
+\index{Model\_ODE@{Model\_ODE}!fJDiag@{fJDiag}}
+\index{fJDiag@{fJDiag}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJDiag()}{fJDiag()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void f\+J\+Diag (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{J\+Diag,  }\item[{N\+\_\+\+Vector}]{x }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em J\+Diag} & Vector to which the Jacobian diagonal will be written \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 348 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a894cb7158f20a976348caa9d73520d40_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=206pt]{classamici_1_1_model___o_d_e_a894cb7158f20a976348caa9d73520d40_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_adaf8ba29af3b621a30e183d7e2f789f5}\label{classamici_1_1_model___o_d_e_adaf8ba29af3b621a30e183d7e2f789f5}} 
+\index{Model\_ODE@{Model\_ODE}!fJDiag@{fJDiag}}
+\index{fJDiag@{fJDiag}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJDiag()}{fJDiag()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void f\+J\+Diag (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{J\+Diag,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em J\+Diag} & Vector to which the Jacobian diagonal will be written \\
+\hline
+{\em cj} & scaling factor, inverse of the step size \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em dx} & Vector with the derivative states \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_ae98dfb9c36d8b67256d47f08e312c61b}{Abstract\+Model}}.
+
+
+
+Definition at line 85 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_adaf8ba29af3b621a30e183d7e2f789f5_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a71d5d8f7344a7ef93ae89e07fad5fcb2}\label{classamici_1_1_model___o_d_e_a71d5d8f7344a7ef93ae89e07fad5fcb2}} 
+\index{Model\_ODE@{Model\_ODE}!fJv@{fJv}}
+\index{fJv@{fJv}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJv()}{fJv()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void f\+Jv (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xdot,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{v,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{n\+Jv,  }\item[{realtype}]{cj }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xdot} & values of residual function (unused) \\
+\hline
+{\em v} & multiplication vector (unused) \\
+\hline
+{\em n\+Jv} & array to which result of multiplication will be written \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a55f7d66b7153891bd589501847490bae}{Abstract\+Model}}.
+
+
+
+Definition at line 46 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=292pt]{classamici_1_1_model___o_d_e_a71d5d8f7344a7ef93ae89e07fad5fcb2_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a01252ccb85bec7adbc88d12fce4fde05}\label{classamici_1_1_model___o_d_e_a01252ccb85bec7adbc88d12fce4fde05}} 
+\index{Model\_ODE@{Model\_ODE}!fJv@{fJv}}
+\index{fJv@{fJv}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJv()}{fJv()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void f\+Jv (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{v,  }\item[{N\+\_\+\+Vector}]{Jv,  }\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em v} & Vector with which the Jacobian is multiplied \\
+\hline
+{\em Jv} & Vector to which the Jacobian vector product will be written \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 52 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a01252ccb85bec7adbc88d12fce4fde05_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_af9c1f29040dc3c6c8bca0703676843be}\label{classamici_1_1_model___o_d_e_af9c1f29040dc3c6c8bca0703676843be}} 
+\index{Model\_ODE@{Model\_ODE}!fJvB@{fJvB}}
+\index{fJvB@{fJvB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJvB()}{fJvB()}}
+{\footnotesize\ttfamily void f\+JvB (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{vB,  }\item[{N\+\_\+\+Vector}]{JvB,  }\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{N\+\_\+\+Vector}]{xB }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em vB} & Vector with which the Jacobian is multiplied \\
+\hline
+{\em JvB} & Vector to which the Jacobian vector product will be written \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 357 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_af9c1f29040dc3c6c8bca0703676843be_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a46fb620204a7cc2198125f714e9e69e1}\label{classamici_1_1_model___o_d_e_a46fb620204a7cc2198125f714e9e69e1}} 
+\index{Model\_ODE@{Model\_ODE}!froot@{froot}}
+\index{froot@{froot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{froot()}{froot()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void froot (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{gsl\+::span$<$ realtype $>$}]{root }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em root} & array to which values of the root function will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a8e46e425fcbc11df93aebf1c957eb38e}{Abstract\+Model}}.
+
+
+
+Definition at line 58 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=298pt]{classamici_1_1_model___o_d_e_a46fb620204a7cc2198125f714e9e69e1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=188pt]{classamici_1_1_model___o_d_e_a46fb620204a7cc2198125f714e9e69e1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_ae7066bdefea6368f5568ca254738f8ec}\label{classamici_1_1_model___o_d_e_ae7066bdefea6368f5568ca254738f8ec}} 
+\index{Model\_ODE@{Model\_ODE}!froot@{froot}}
+\index{froot@{froot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{froot()}{froot()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void froot (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{gsl\+::span$<$ realtype $>$}]{root }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em root} & array with root function values \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 63 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_ae7066bdefea6368f5568ca254738f8ec_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a9afb205ee882a3bd6adc542c98dcd635}\label{classamici_1_1_model___o_d_e_a9afb205ee882a3bd6adc542c98dcd635}} 
+\index{Model\_ODE@{Model\_ODE}!fxdot@{fxdot}}
+\index{fxdot@{fxdot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fxdot()}{fxdot()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void fxdot (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xdot }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xdot} & array to which values of the residual function will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a8a6bc3080a50b88513f4604d1210f725}{Abstract\+Model}}.
+
+
+
+Definition at line 71 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=300pt]{classamici_1_1_model___o_d_e_a9afb205ee882a3bd6adc542c98dcd635_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=192pt]{classamici_1_1_model___o_d_e_a9afb205ee882a3bd6adc542c98dcd635_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_aa08f195ec3f1e9ec3d208abfbf27b23a}\label{classamici_1_1_model___o_d_e_aa08f195ec3f1e9ec3d208abfbf27b23a}} 
+\index{Model\_ODE@{Model\_ODE}!fxdot@{fxdot}}
+\index{fxdot@{fxdot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fxdot()}{fxdot()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void fxdot (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{N\+\_\+\+Vector}]{xdot }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em xdot} & Vector with the right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 76 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_aa08f195ec3f1e9ec3d208abfbf27b23a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a433a0e1e4330ef433823a61f1fc45a5a}\label{classamici_1_1_model___o_d_e_a433a0e1e4330ef433823a61f1fc45a5a}} 
+\index{Model\_ODE@{Model\_ODE}!fxBdot@{fxBdot}}
+\index{fxBdot@{fxBdot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fxBdot()}{fxBdot()}}
+{\footnotesize\ttfamily void fx\+Bdot (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{N\+\_\+\+Vector}]{xB,  }\item[{N\+\_\+\+Vector}]{x\+Bdot }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 364 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a433a0e1e4330ef433823a61f1fc45a5a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a9d0e4612af8d7b3c418d000b5e9ba84f}\label{classamici_1_1_model___o_d_e_a9d0e4612af8d7b3c418d000b5e9ba84f}} 
+\index{Model\_ODE@{Model\_ODE}!fqBdot@{fqBdot}}
+\index{fqBdot@{fqBdot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fqBdot()}{fqBdot()}}
+{\footnotesize\ttfamily void fq\+Bdot (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{N\+\_\+\+Vector}]{xB,  }\item[{N\+\_\+\+Vector}]{q\+Bdot }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em q\+Bdot} & Vector with the adjoint quadrature right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 370 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a9d0e4612af8d7b3c418d000b5e9ba84f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_aded6e860d78e62a3b449c06965175e62}\label{classamici_1_1_model___o_d_e_aded6e860d78e62a3b449c06965175e62}} 
+\index{Model\_ODE@{Model\_ODE}!fxBdot\_ss@{fxBdot\_ss}}
+\index{fxBdot\_ss@{fxBdot\_ss}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fxBdot\_ss()}{fxBdot\_ss()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void fx\+Bdot\+\_\+ss (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dxB,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x\+Bdot }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em xB} & adjoint state \\
+\hline
+{\em dxB} & time derivative of state (D\+AE only) \\
+\hline
+{\em x\+Bdot} & array to which values of the residual function will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a04b9564fd13b9dc011fed8e940f39b05}{Abstract\+Model}}.
+
+
+
+Definition at line 397 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=323pt]{classamici_1_1_model___o_d_e_aded6e860d78e62a3b449c06965175e62_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_abf3b921eb5bf1ff596d02ef5477c4087}\label{classamici_1_1_model___o_d_e_abf3b921eb5bf1ff596d02ef5477c4087}} 
+\index{Model\_ODE@{Model\_ODE}!fxBdot\_ss@{fxBdot\_ss}}
+\index{fxBdot\_ss@{fxBdot\_ss}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fxBdot\_ss()}{fxBdot\_ss()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void fx\+Bdot\+\_\+ss (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{xB,  }\item[{N\+\_\+\+Vector}]{x\+Bdot }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em xB} & Vector with the states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 402 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{classamici_1_1_model___o_d_e_abf3b921eb5bf1ff596d02ef5477c4087_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a359eadbe5791094c74b3a3301bd7788e}\label{classamici_1_1_model___o_d_e_a359eadbe5791094c74b3a3301bd7788e}} 
+\index{Model\_ODE@{Model\_ODE}!fqBdot\_ss@{fqBdot\_ss}}
+\index{fqBdot\_ss@{fqBdot\_ss}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fqBdot\_ss()}{fqBdot\_ss()}}
+{\footnotesize\ttfamily void fq\+Bdot\+\_\+ss (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{xB,  }\item[{N\+\_\+\+Vector}]{q\+Bdot }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em q\+Bdot} & Vector with the adjoint quadrature right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 409 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a07ad9ce5492a7bfbbcf5cc327d840852}\label{classamici_1_1_model___o_d_e_a07ad9ce5492a7bfbbcf5cc327d840852}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparseB\_ss@{fJSparseB\_ss}}
+\index{fJSparseB\_ss@{fJSparseB\_ss}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparseB\_ss()}{fJSparseB\_ss()}}
+{\footnotesize\ttfamily void f\+J\+Sparse\+B\+\_\+ss (\begin{DoxyParamCaption}\item[{S\+U\+N\+Matrix}]{JB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em JB} & sparse matrix to which values of the Jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a1a664a5c9dfb75b8d314ea72690646fc}{Abstract\+Model}}.
+
+
+
+Definition at line 415 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=344pt]{classamici_1_1_model___o_d_e_a07ad9ce5492a7bfbbcf5cc327d840852_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a1bfd97f4f4469ae7250ecb281eaaee4a}\label{classamici_1_1_model___o_d_e_a1bfd97f4f4469ae7250ecb281eaaee4a}} 
+\index{Model\_ODE@{Model\_ODE}!writeSteadystateJB@{writeSteadystateJB}}
+\index{writeSteadystateJB@{writeSteadystateJB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{writeSteadystateJB()}{writeSteadystateJB()}}
+{\footnotesize\ttfamily void write\+Steadystate\+JB (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dxB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x\+Bdot }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em cj} & scalar in Jacobian \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em dx} & Vector with the derivative states \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em dxB} & Vector with the adjoint derivative states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint state right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a2eb9a2ca94233551bec68625a4d0d550}{Abstract\+Model}}.
+
+
+
+Definition at line 420 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a1bfd97f4f4469ae7250ecb281eaaee4a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a058f15dc1efb9ec2ddd2bdccec53cffb}\label{classamici_1_1_model___o_d_e_a058f15dc1efb9ec2ddd2bdccec53cffb}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdw@{fdxdotdw}}
+\index{fdxdotdw@{fdxdotdw}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdw()}{fdxdotdw()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void fdxdotdw (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{const N\+\_\+\+Vector}]{x }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 93 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a058f15dc1efb9ec2ddd2bdccec53cffb_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=316pt]{classamici_1_1_model___o_d_e_a058f15dc1efb9ec2ddd2bdccec53cffb_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_ab36987125ea3360ae5f03b0019513891}\label{classamici_1_1_model___o_d_e_ab36987125ea3360ae5f03b0019513891}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdp@{fdxdotdp}}
+\index{fdxdotdp@{fdxdotdp}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdp()}{fdxdotdp()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily void fdxdotdp (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{const N\+\_\+\+Vector}]{x }\end{DoxyParamCaption})}
+
+Explicit sensitivity of dx/dt wrt model parameters p 
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 105 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_ab36987125ea3360ae5f03b0019513891_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=224pt]{classamici_1_1_model___o_d_e_ab36987125ea3360ae5f03b0019513891_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a2feef05eaf143813199126109ef64bb3}\label{classamici_1_1_model___o_d_e_a2feef05eaf143813199126109ef64bb3}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdp@{fdxdotdp}}
+\index{fdxdotdp@{fdxdotdp}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdp()}{fdxdotdp()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily void fdxdotdp (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a632846f2c611d74ff33bda5ba2a1acc9}{Abstract\+Model}}.
+
+
+
+Definition at line 141 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a2feef05eaf143813199126109ef64bb3_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a320dee9a1de0c38fb49eb1f5826e626c}\label{classamici_1_1_model___o_d_e_a320dee9a1de0c38fb49eb1f5826e626c}} 
+\index{Model\_ODE@{Model\_ODE}!fsxdot@{fsxdot}}
+\index{fsxdot@{fsxdot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fsxdot()}{fsxdot()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void fsxdot (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{int}]{ip,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{sx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{sdx,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{sxdot }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em ip} & parameter index \\
+\hline
+{\em sx} & sensitivity state \\
+\hline
+{\em sdx} & time derivative of sensitivity state (D\+AE only) \\
+\hline
+{\em sxdot} & array to which values of the sensitivity residual function will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_aea3d695d38744ec4d29c35038b4bcf8e}{Abstract\+Model}}.
+
+
+
+Definition at line 430 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=306pt]{classamici_1_1_model___o_d_e_a320dee9a1de0c38fb49eb1f5826e626c_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a786f028681b0928eb431cd44e9bd254a}\label{classamici_1_1_model___o_d_e_a786f028681b0928eb431cd44e9bd254a}} 
+\index{Model\_ODE@{Model\_ODE}!fsxdot@{fsxdot}}
+\index{fsxdot@{fsxdot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fsxdot()}{fsxdot()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void fsxdot (\begin{DoxyParamCaption}\item[{realtype}]{t,  }\item[{N\+\_\+\+Vector}]{x,  }\item[{int}]{ip,  }\item[{N\+\_\+\+Vector}]{sx,  }\item[{N\+\_\+\+Vector}]{sxdot }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em ip} & parameter index \\
+\hline
+{\em sx} & Vector with the state sensitivities \\
+\hline
+{\em sxdot} & Vector with the sensitivity right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 437 of file model\+\_\+ode.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a786f028681b0928eb431cd44e9bd254a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_aee7564098e889917627afd3c00772f81}\label{classamici_1_1_model___o_d_e_aee7564098e889917627afd3c00772f81}} 
+\index{Model\_ODE@{Model\_ODE}!getSolver@{getSolver}}
+\index{getSolver@{getSolver}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{getSolver()}{getSolver()}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $>$ get\+Solver (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+The \mbox{\hyperlink{classamici_1_1_solver}{Solver}} instance 
+\end{DoxyReturn}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_abstract_model_a61d5b19b2e4d5ffcc73a014d59494344}{Abstract\+Model}}.
+
+
+
+Definition at line 146 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_ac54bae43a666231f9f3d2269d279d23f}\label{classamici_1_1_model___o_d_e_ac54bae43a666231f9f3d2269d279d23f}} 
+\index{Model\_ODE@{Model\_ODE}!fJ@{fJ}}
+\index{fJ@{fJ}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJ()}{fJ()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily virtual void fJ (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{J,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em J} & Matrix to which the Jacobian will be written \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em dwdx} & derivative of w wrt x \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a5e24787b036793c765b9a99322c85fb2}\label{classamici_1_1_model___o_d_e_a5e24787b036793c765b9a99322c85fb2}} 
+\index{Model\_ODE@{Model\_ODE}!fJB@{fJB}}
+\index{fJB@{fJB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJB()}{fJB()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void f\+JB (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{JB,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{xB,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em JB} & Matrix to which the Jacobian will be written \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em dwdx} & derivative of w wrt x \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 150 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a47ba7f7da4f20dccaefb0df4561e3549}\label{classamici_1_1_model___o_d_e_a47ba7f7da4f20dccaefb0df4561e3549}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparse@{fJSparse}}
+\index{fJSparse@{fJSparse}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparse()}{fJSparse()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily void f\+J\+Sparse (\begin{DoxyParamCaption}\item[{S\+U\+N\+Matrix\+Content\+\_\+\+Sparse}]{J\+Sparse,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em J\+Sparse} & Matrix to which the Jacobian will be written \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em dwdx} & derivative of w wrt x \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 160 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_adb121e191d1be15a88d1a8493c5b8f5e}\label{classamici_1_1_model___o_d_e_adb121e191d1be15a88d1a8493c5b8f5e}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparse@{fJSparse}}
+\index{fJSparse@{fJSparse}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparse()}{fJSparse()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily void f\+J\+Sparse (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{J\+Sparse,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em J\+Sparse} & Matrix to which the Jacobian will be written \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em dwdx} & derivative of w wrt x \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 170 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a5eca51e504e6ac924ed5a7204daf177c}\label{classamici_1_1_model___o_d_e_a5eca51e504e6ac924ed5a7204daf177c}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparse\_colptrs@{fJSparse\_colptrs}}
+\index{fJSparse\_colptrs@{fJSparse\_colptrs}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparse\_colptrs()}{fJSparse\_colptrs()}}
+{\footnotesize\ttfamily void f\+J\+Sparse\+\_\+colptrs (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexptrs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexptrs} & column pointers \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 179 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=262pt]{classamici_1_1_model___o_d_e_a5eca51e504e6ac924ed5a7204daf177c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a8910541bd5bfe70224a4979987d61488}\label{classamici_1_1_model___o_d_e_a8910541bd5bfe70224a4979987d61488}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparse\_rowvals@{fJSparse\_rowvals}}
+\index{fJSparse\_rowvals@{fJSparse\_rowvals}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparse\_rowvals()}{fJSparse\_rowvals()}}
+{\footnotesize\ttfamily void f\+J\+Sparse\+\_\+rowvals (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexvals }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexvals} & row values \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 185 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=267pt]{classamici_1_1_model___o_d_e_a8910541bd5bfe70224a4979987d61488_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_abb85d35494e6ae92979680ab45a76c0a}\label{classamici_1_1_model___o_d_e_abb85d35494e6ae92979680ab45a76c0a}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparseB@{fJSparseB}}
+\index{fJSparseB@{fJSparseB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparseB()}{fJSparseB()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily void f\+J\+SparseB (\begin{DoxyParamCaption}\item[{S\+U\+N\+Matrix\+Content\+\_\+\+Sparse}]{J\+SparseB,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{xB,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em J\+SparseB} & Matrix to which the Jacobian will be written \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em dwdx} & derivative of w wrt x \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 191 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a923becb940aa24705305a35f05ce517c}\label{classamici_1_1_model___o_d_e_a923becb940aa24705305a35f05ce517c}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparseB@{fJSparseB}}
+\index{fJSparseB@{fJSparseB}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparseB()}{fJSparseB()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily void f\+J\+SparseB (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{J\+SparseB,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{xB,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em J\+SparseB} & data array \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em dwdx} & derivative of w wrt x \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 201 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a0977506663e44949382795a2688ea056}\label{classamici_1_1_model___o_d_e_a0977506663e44949382795a2688ea056}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparseB\_colptrs@{fJSparseB\_colptrs}}
+\index{fJSparseB\_colptrs@{fJSparseB\_colptrs}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparseB\_colptrs()}{fJSparseB\_colptrs()}}
+{\footnotesize\ttfamily void f\+J\+Sparse\+B\+\_\+colptrs (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexptrs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexptrs} & column pointers \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 211 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=275pt]{classamici_1_1_model___o_d_e_a0977506663e44949382795a2688ea056_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a94c75a1a59702fc674a71cea67cbb27c}\label{classamici_1_1_model___o_d_e_a94c75a1a59702fc674a71cea67cbb27c}} 
+\index{Model\_ODE@{Model\_ODE}!fJSparseB\_rowvals@{fJSparseB\_rowvals}}
+\index{fJSparseB\_rowvals@{fJSparseB\_rowvals}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJSparseB\_rowvals()}{fJSparseB\_rowvals()}}
+{\footnotesize\ttfamily void f\+J\+Sparse\+B\+\_\+rowvals (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexvals }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexvals} & row values \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 217 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=279pt]{classamici_1_1_model___o_d_e_a94c75a1a59702fc674a71cea67cbb27c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a5f34a0dec9bdcacb35cd601b31d8f9a3}\label{classamici_1_1_model___o_d_e_a5f34a0dec9bdcacb35cd601b31d8f9a3}} 
+\index{Model\_ODE@{Model\_ODE}!fJDiag@{fJDiag}}
+\index{fJDiag@{fJDiag}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fJDiag()}{fJDiag()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void f\+J\+Diag (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{J\+Diag,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em J\+Diag} & Matrix to which the Jacobian will be written \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em dwdx} & derivative of w wrt x \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 223 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a81c9e95b656140828dd989dbb62f9181}\label{classamici_1_1_model___o_d_e_a81c9e95b656140828dd989dbb62f9181}} 
+\index{Model\_ODE@{Model\_ODE}!froot@{froot}}
+\index{froot@{froot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{froot()}{froot()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void froot (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{root,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em root} & values of the trigger function \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 232 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a05118edcb4a10ffa0aa95afcb3bfb751}\label{classamici_1_1_model___o_d_e_a05118edcb4a10ffa0aa95afcb3bfb751}} 
+\index{Model\_ODE@{Model\_ODE}!fxdot@{fxdot}}
+\index{fxdot@{fxdot}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fxdot()}{fxdot()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily virtual void fxdot (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{xdot,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em xdot} & residual function \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_ac0ddb3c48590dd548289808671f45a65}\label{classamici_1_1_model___o_d_e_ac0ddb3c48590dd548289808671f45a65}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdp@{fdxdotdp}}
+\index{fdxdotdp@{fdxdotdp}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdp()}{fdxdotdp()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily void fdxdotdp (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dxdotdp,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{int}]{ip,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dxdotdp} & partial derivative xdot wrt p \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em ip} & parameter index \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em dwdp} & derivative of w wrt p \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 240 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a32b20065fe81edd046b5e3de1800e0a1}\label{classamici_1_1_model___o_d_e_a32b20065fe81edd046b5e3de1800e0a1}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdp\_explicit@{fdxdotdp\_explicit}}
+\index{fdxdotdp\_explicit@{fdxdotdp\_explicit}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdp\_explicit()}{fdxdotdp\_explicit()}}
+{\footnotesize\ttfamily void fdxdotdp\+\_\+explicit (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dxdotdp\+\_\+explicit,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dxdotdp\+\_\+explicit} & partial derivative xdot wrt p \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 250 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a32b20065fe81edd046b5e3de1800e0a1_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a20507511b5a2e75cd877ee89041d6a87}\label{classamici_1_1_model___o_d_e_a20507511b5a2e75cd877ee89041d6a87}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdp\_explicit\_colptrs@{fdxdotdp\_explicit\_colptrs}}
+\index{fdxdotdp\_explicit\_colptrs@{fdxdotdp\_explicit\_colptrs}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdp\_explicit\_colptrs()}{fdxdotdp\_explicit\_colptrs()}}
+{\footnotesize\ttfamily void fdxdotdp\+\_\+explicit\+\_\+colptrs (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexptrs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexptrs} & column pointers \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 259 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a20507511b5a2e75cd877ee89041d6a87_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_af32059d3461ce37d7ef27cc2941a9669}\label{classamici_1_1_model___o_d_e_af32059d3461ce37d7ef27cc2941a9669}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdp\_explicit\_rowvals@{fdxdotdp\_explicit\_rowvals}}
+\index{fdxdotdp\_explicit\_rowvals@{fdxdotdp\_explicit\_rowvals}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdp\_explicit\_rowvals()}{fdxdotdp\_explicit\_rowvals()}}
+{\footnotesize\ttfamily void fdxdotdp\+\_\+explicit\+\_\+rowvals (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexvals }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexvals} & row values \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 265 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_af32059d3461ce37d7ef27cc2941a9669_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a0e8c033f8cb2e44b0a2855e723a19940}\label{classamici_1_1_model___o_d_e_a0e8c033f8cb2e44b0a2855e723a19940}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdp\_implicit\_colptrs@{fdxdotdp\_implicit\_colptrs}}
+\index{fdxdotdp\_implicit\_colptrs@{fdxdotdp\_implicit\_colptrs}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdp\_implicit\_colptrs()}{fdxdotdp\_implicit\_colptrs()}}
+{\footnotesize\ttfamily void fdxdotdp\+\_\+implicit\+\_\+colptrs (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexptrs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexptrs} & column pointers \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 271 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a0e8c033f8cb2e44b0a2855e723a19940_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a3ea1a32f864b84e0c0d3b37ebae349f0}\label{classamici_1_1_model___o_d_e_a3ea1a32f864b84e0c0d3b37ebae349f0}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdp\_implicit\_rowvals@{fdxdotdp\_implicit\_rowvals}}
+\index{fdxdotdp\_implicit\_rowvals@{fdxdotdp\_implicit\_rowvals}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdp\_implicit\_rowvals()}{fdxdotdp\_implicit\_rowvals()}}
+{\footnotesize\ttfamily void fdxdotdp\+\_\+implicit\+\_\+rowvals (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexvals }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexvals} & row values \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 277 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a3ea1a32f864b84e0c0d3b37ebae349f0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a5de7088a336740420703e5d584af794f}\label{classamici_1_1_model___o_d_e_a5de7088a336740420703e5d584af794f}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdw@{fdxdotdw}}
+\index{fdxdotdw@{fdxdotdw}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdw()}{fdxdotdw()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void fdxdotdw (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dxdotdw,  }\item[{realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dxdotdw} & partial derivative xdot wrt w \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 283 of file model\+\_\+ode.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_ab3556c59ab37f9b3c4d3943b95747017}\label{classamici_1_1_model___o_d_e_ab3556c59ab37f9b3c4d3943b95747017}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdw\_colptrs@{fdxdotdw\_colptrs}}
+\index{fdxdotdw\_colptrs@{fdxdotdw\_colptrs}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdw\_colptrs()}{fdxdotdw\_colptrs()}}
+{\footnotesize\ttfamily void fdxdotdw\+\_\+colptrs (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexptrs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexptrs} & column pointers \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 292 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_ab3556c59ab37f9b3c4d3943b95747017_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_model___o_d_e_a36b1eeea35309fa75d8464e71039bf14}\label{classamici_1_1_model___o_d_e_a36b1eeea35309fa75d8464e71039bf14}} 
+\index{Model\_ODE@{Model\_ODE}!fdxdotdw\_rowvals@{fdxdotdw\_rowvals}}
+\index{fdxdotdw\_rowvals@{fdxdotdw\_rowvals}!Model\_ODE@{Model\_ODE}}
+\doxyparagraph{\texorpdfstring{fdxdotdw\_rowvals()}{fdxdotdw\_rowvals()}}
+{\footnotesize\ttfamily void fdxdotdw\+\_\+rowvals (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexvals }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [protected]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexvals} & row values \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 298 of file model\+\_\+ode.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_model___o_d_e_a36b1eeea35309fa75d8464e71039bf14_icgraph}
+\end{center}
+\end{figure}

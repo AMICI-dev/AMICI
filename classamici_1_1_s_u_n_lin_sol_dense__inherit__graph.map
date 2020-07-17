@@ -1,0 +1,4 @@
+<map id="SUNLinSolDense" name="SUNLinSolDense">
+<area shape="rect" id="node1" title="SUNDIALS dense direct solver." alt="" coords="10,80,135,107"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_lin_sol_wrapper.html" title="A RAII wrapper for SUNLinearSolver structs." alt="" coords="5,5,140,32"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="readSimulationState" name="readSimulationState">
+<area shape="rect" id="node1" title="sets member variables and model state according to provided simulation state" alt="" coords="5,56,144,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="232,5,340,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="192,56,380,83"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="229,107,343,133"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="428,5,549,32"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="429,56,548,83"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="429,107,548,133"/>
+</map>

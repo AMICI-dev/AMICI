@@ -1,0 +1,6 @@
+<map id="sparse_multiply" name="sparse_multiply">
+<area shape="rect" id="node1" title="Perform matrix matrix multiplication C[:, :] += A * B for sparse A, B, C." alt="" coords="5,56,119,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a564a62656ad1a9b08920e7efcd915a16" title="Get the number of columns." alt="" coords="175,5,245,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a6dada592a68544a40682b99e5261f4c2" title="Get the number of rows." alt="" coords="185,56,235,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a8c068e95d10764ed6d4794fe141e9d12" title="Get the type of sparse matrix." alt="" coords="167,107,253,133"/>
+</map>

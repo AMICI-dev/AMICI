@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classamici_1_1_s_u_n_non_lin_sol_wrapper.html" title="A RAII wrapper for SUNNonLinearSolver structs which solve the nonlinear system F (y) = 0 or G(y) = y." alt="" coords="5,31,164,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_non_lin_sol_fixed_point.html" title="SUNDIALS Fixed point non&#45;linear solver to solve G(y) = y." alt="" coords="212,5,385,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_non_lin_sol_newton.html" title="SUNDIALS Newton non&#45;linear solver to solve F (y) = 0." alt="" coords="221,56,377,83"/>
+</map>

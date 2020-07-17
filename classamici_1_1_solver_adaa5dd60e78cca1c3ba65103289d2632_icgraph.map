@@ -1,0 +1,7 @@
+<map id="getNumRhsEvals" name="getNumRhsEvals">
+<area shape="rect" id="node1" title="Accessor nrhs." alt="" coords="412,71,537,98"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#aed2cf6582516b9977b0922d51ff91d1a" title="extracts results from solver" alt="" coords="228,5,364,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#aa2a0da7d0fc6d769eab4edf5a2c6afd5" title="Stores diagnosis information from solver memory block for forward problem." alt="" coords="241,71,351,98"/>
+<area shape="rect" id="node5" href="$classamici_1_1_solver.html#affdeaaa0e51b7d5159e18df6b07ce4e3" title="Stores diagnosis information from solver memory block for backward problem." alt="" coords="237,122,355,149"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,5,180,47"/>
+</map>

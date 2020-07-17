@@ -1,0 +1,27 @@
+<map id="np" name="np">
+<area shape="rect" id="node1" title="Total number of model parameters." alt="" coords="697,187,736,214"/>
+<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#a3a5bfdd2d265a4fcdc73129097a09ae1" title="Apply condition&#45;specific settings from edata to the constructor&#45;supplied model, not changing the sett..." alt="" coords="255,5,418,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a2bd3836db435507277d0e5c9fa139cb9" title="Reports whether the model has parameter ids set. Also returns true if the number of corresponding var..." alt="" coords="505,187,627,214"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a7b51ed26a01b793c832fe680d9543763" title="Reports whether the model has parameter names set. Also returns true if the number of corresponding v..." alt="" coords="493,314,639,341"/>
+<area shape="rect" id="node13" href="$classamici_1_1_model.html#a9b03cc8dbac85d38ced3f59234ba27d9" title="Require computation of sensitivities for all parameters p [0..np[ in natural order,..." alt="" coords="483,387,649,428"/>
+<area shape="rect" id="node15" href="$classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="513,499,619,526"/>
+<area shape="rect" id="node23" href="$classamici_1_1_model.html#a2afe974183e4bccaf746f6409941fe8f" title="Set the list of parameters for which sensitivities are computed, resets initial state sensitivities." alt="" coords="505,125,627,151"/>
+<area shape="rect" id="node25" href="$classamici_1_1_model.html#af1e95f6479d442fcb4c63d16763d4acd" title="Sets the parameter vector." alt="" coords="513,74,619,101"/>
+<area shape="rect" id="node3" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="17,5,179,47"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a4436bd89ae2cb032cbf13db478d99e15" title="Get value of first model parameter with the specified id." alt="" coords="273,137,400,163"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a995357a19663980279249d4b89a88f7a" title="Set value of first model parameter with the specified id." alt="" coords="273,187,400,214"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#ab66d6b754637ed68449af96f5887a0be" title="Set all values of model parameters with ids matching the specified regex." alt="" coords="251,238,423,265"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a19b349ca9793d45fda7ef8ea7422747a" title="Get value of first model parameter with the specified name,." alt="" coords="261,289,412,315"/>
+<area shape="rect" id="node10" href="$classamici_1_1_model.html#a6c5ceb2ba684cf68a7f21ad865091200" title="Set value of first model parameter with the specified name." alt="" coords="261,339,412,366"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#a1307ed45ccda80e84174d6b495c85d8d" title="Set all values of all model parameters with names matching the specified regex." alt="" coords="239,390,435,417"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model.html#a6dfba36ac3e392b85bb33f84bb778e77" title="Sets model parameters according to the parameter name and mapped values." alt="" coords="23,339,173,366"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6fc7d7ca95d2685dbe94649bc9f2cd7a" title="Constructor with model dimensions." alt="" coords="308,441,365,467"/>
+<area shape="rect" id="node16" href="$classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="267,557,406,599"/>
+<area shape="rect" id="node22" href="$classamici_1_1_model_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original state on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="265,492,408,533"/>
+<area shape="rect" id="node17" href="$classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="11,492,185,533"/>
+<area shape="rect" id="node18" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="17,557,179,599"/>
+<area shape="rect" id="node19" href="$classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="15,623,181,664"/>
+<area shape="rect" id="node20" href="$classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="19,688,177,729"/>
+<area shape="rect" id="node21" href="$classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="5,411,191,467"/>
+<area shape="rect" id="node24" href="$classamici_1_1_condition_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original settings on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="255,71,418,112"/>
+</map>

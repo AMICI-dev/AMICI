@@ -1,0 +1,83 @@
+\hypertarget{classamici_1_1_integration_failure_b}{}\doxysubsection{Integration\+FailureB Class Reference}
+\label{classamici_1_1_integration_failure_b}\index{IntegrationFailureB@{IntegrationFailureB}}
+
+
+Integration failure exception for the backward problem.  
+
+
+
+
+{\ttfamily \#include $<$exception.\+h$>$}
+
+
+
+Inheritance diagram for Integration\+FailureB\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=178pt]{classamici_1_1_integration_failure_b__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_integration_failure_b_ad87179c92d6479d56fb3977efa1dc481}{Integration\+FailureB}} (int code, realtype t)
+\begin{DoxyCompactList}\small\item\em Constructor. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{classamici_1_1_integration_failure_b_a7d16b1c68c87cec009d972e79abfba78}{error\+\_\+code}}
+\item 
+realtype \mbox{\hyperlink{classamici_1_1_integration_failure_b_a6dcdb92539544d894bdc153b3ba8bea6}{time}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+This exception should be thrown when an integration failure occured for this exception we can assume that we can recover from the exception and return a solution struct to the user 
+
+Definition at line 114 of file exception.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_integration_failure_b_ad87179c92d6479d56fb3977efa1dc481}\label{classamici_1_1_integration_failure_b_ad87179c92d6479d56fb3977efa1dc481}} 
+\index{IntegrationFailureB@{IntegrationFailureB}!IntegrationFailureB@{IntegrationFailureB}}
+\index{IntegrationFailureB@{IntegrationFailureB}!IntegrationFailureB@{IntegrationFailureB}}
+\doxyparagraph{\texorpdfstring{IntegrationFailureB()}{IntegrationFailureB()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_integration_failure_b}{Integration\+FailureB}} (\begin{DoxyParamCaption}\item[{int}]{code,  }\item[{realtype}]{t }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em code} & error code returned by cvode/ida \\
+\hline
+{\em t} & time of integration failure \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 42 of file exception.\+cpp.
+
+
+
+\doxysubsubsection{Member Data Documentation}
+\mbox{\Hypertarget{classamici_1_1_integration_failure_b_a7d16b1c68c87cec009d972e79abfba78}\label{classamici_1_1_integration_failure_b_a7d16b1c68c87cec009d972e79abfba78}} 
+\index{IntegrationFailureB@{IntegrationFailureB}!error\_code@{error\_code}}
+\index{error\_code@{error\_code}!IntegrationFailureB@{IntegrationFailureB}}
+\doxyparagraph{\texorpdfstring{error\_code}{error\_code}}
+{\footnotesize\ttfamily int error\+\_\+code}
+
+error code returned by cvode/ida 
+
+Definition at line 124 of file exception.\+h.
+
+\mbox{\Hypertarget{classamici_1_1_integration_failure_b_a6dcdb92539544d894bdc153b3ba8bea6}\label{classamici_1_1_integration_failure_b_a6dcdb92539544d894bdc153b3ba8bea6}} 
+\index{IntegrationFailureB@{IntegrationFailureB}!time@{time}}
+\index{time@{time}!IntegrationFailureB@{IntegrationFailureB}}
+\doxyparagraph{\texorpdfstring{time}{time}}
+{\footnotesize\ttfamily realtype time}
+
+time of integration failure 
+
+Definition at line 127 of file exception.\+h.
+

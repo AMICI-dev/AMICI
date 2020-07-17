@@ -1,0 +1,4 @@
+<map id="NewtonSolverIterative" name="NewtonSolverIterative">
+<area shape="rect" id="node1" title="The NewtonSolverIterative provides access to the iterative linear solver for the Newton method." alt="" coords="5,80,156,107"/>
+<area shape="rect" id="node2" href="$classamici_1_1_newton_solver.html" title="The NewtonSolver class sets up the linear solver for the Newton method." alt="" coords="29,5,133,32"/>
+</map>

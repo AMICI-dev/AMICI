@@ -1,0 +1,7 @@
+<map id="fdJydsigma" name="fdJydsigma">
+<area shape="rect" id="node1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. standard deviation sigma." alt="" coords="572,42,661,69"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a00e6579fcfb0bb339e621cf194b9ee40" title="Compute sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t...." alt="" coords="463,42,524,69"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a988eda03ed572429aa769efc1709daba" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="189,13,415,39"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#ab829ab8d949e9eef10b38e68d4a68526" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, partial derivative (to be used w..." alt="" coords="201,64,403,105"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,5,141,47"/>
+</map>

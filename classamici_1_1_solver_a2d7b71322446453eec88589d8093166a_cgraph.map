@@ -1,0 +1,19 @@
+<map id="writeSolution" name="writeSolution">
+<area shape="rect" id="node1" title="write solution from forward simulation" alt="" coords="5,173,103,200"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a30c98bf8f33d174e936f8a0522085396" title="copies data from another AmiVector" alt="" coords="151,5,308,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector_array.html#aaa979b44841f94510b6481c53d826075" title="copies data from another AmiVectorArray" alt="" coords="153,57,305,98"/>
+<area shape="rect" id="node6" href="$classamici_1_1_solver.html#a65b472423554d7c3c28fde14010d3338" title="Access derivative state solution at time t." alt="" coords="164,123,295,149"/>
+<area shape="rect" id="node8" href="$classamici_1_1_solver.html#afd2378767a1db31c949d9a7d5bbd4e98" title="Access quadrature solution at time t." alt="" coords="177,224,281,251"/>
+<area shape="rect" id="node13" href="$classamici_1_1_solver.html#ac964cec4839a463d816eeae0aca71993" title="Access state solution at time t." alt="" coords="194,173,265,200"/>
+<area shape="rect" id="node14" href="$classamici_1_1_solver.html#a2ce4f693b9a7df86285918d00ab39efa" title="Access state sensitivity solution at time t." alt="" coords="163,300,295,327"/>
+<area shape="rect" id="node17" href="$classamici_1_1_solver.html#a1582a658df3f51a8c88b6f22b4205b3f" title="current solver timepoint" alt="" coords="207,351,251,377"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="356,5,543,32"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector_array.html#a5f00d4dc3e7866d193ce926f35542801" title="length of AmiVectorArray" alt="" coords="373,57,525,98"/>
+<area shape="rect" id="node7" href="$classamici_1_1_solver.html#aed7206cd845eb0ae060060b6dfa3c483" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="417,123,481,149"/>
+<area shape="rect" id="node9" href="$classamici_1_1_solver.html#abe5d3475b73424d44d8231ef074ed929" title="extracts the quadrature at the current timepoint from solver memory and writes it to the xQ member va..." alt="" coords="414,173,485,200"/>
+<area shape="rect" id="node10" href="$classamici_1_1_solver.html#ad1fe8ba815e156ec06657367037c181f" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="402,224,497,251"/>
+<area shape="rect" id="node11" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="370,275,529,301"/>
+<area shape="rect" id="node12" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="591,275,737,301"/>
+<area shape="rect" id="node15" href="$classamici_1_1_solver.html#adb95560b4cc88c3e353fbbb92c843ef5" title="extracts the state sensitivity at the current timepoint from solver memory and writes it to the sx me..." alt="" coords="414,325,485,352"/>
+<area shape="rect" id="node16" href="$classamici_1_1_solver.html#a9c5dfcede005c555593ecad166a31fa0" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="402,376,497,403"/>
+</map>

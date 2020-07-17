@@ -1,0 +1,4 @@
+<map id="quadInit" name="quadInit">
+<area shape="rect" id="node1" title="initializes the quadratures" alt="" coords="177,5,245,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a67f969bc16500a5fa914979b5976c17b" title="Initialises the ami memory for quadrature computation." alt="" coords="5,5,129,32"/>
+</map>

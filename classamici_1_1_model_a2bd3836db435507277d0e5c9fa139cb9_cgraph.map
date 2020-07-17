@@ -1,0 +1,5 @@
+<map id="hasParameterIds" name="hasParameterIds">
+<area shape="rect" id="node1" title="Reports whether the model has parameter ids set. Also returns true if the number of corresponding var..." alt="" coords="5,31,127,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a2c3cf99676168a01fccf6f4217f85297" title="Get ids of the model parameters." alt="" coords="175,5,293,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="215,56,253,83"/>
+</map>

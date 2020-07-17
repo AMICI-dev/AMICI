@@ -1,0 +1,1787 @@
+\hypertarget{classamici_1_1_abstract_model}{}\doxysubsection{Abstract\+Model Class Reference}
+\label{classamici_1_1_abstract_model}\index{AbstractModel@{AbstractModel}}
+
+
+Abstract base class of \mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}} defining functions that need to be implemented in an A\+M\+I\+CI model.  
+
+
+
+
+{\ttfamily \#include $<$abstract\+\_\+model.\+h$>$}
+
+
+
+Inheritance diagram for Abstract\+Model\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=238pt]{classamici_1_1_abstract_model__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_solver}{Solver}} $>$ \mbox{\hyperlink{classamici_1_1_abstract_model_a61d5b19b2e4d5ffcc73a014d59494344}{get\+Solver}} ()=0
+\begin{DoxyCompactList}\small\item\em Retrieves the solver object. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a8e46e425fcbc11df93aebf1c957eb38e}{froot}} (const realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, gsl\+::span$<$ realtype $>$ root)=0
+\begin{DoxyCompactList}\small\item\em Root function. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a8a6bc3080a50b88513f4604d1210f725}{fxdot}} (const realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xdot)=0
+\begin{DoxyCompactList}\small\item\em Residual function. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_aea3d695d38744ec4d29c35038b4bcf8e}{fsxdot}} (const realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, int ip, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&sx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&sdx, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&sxdot)=0
+\begin{DoxyCompactList}\small\item\em Sensitivity Residual function. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a04b9564fd13b9dc011fed8e940f39b05}{fx\+Bdot\+\_\+ss}} (const realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dxB, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+Bdot)=0
+\begin{DoxyCompactList}\small\item\em Residual function backward when running in steady state mode. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a1a664a5c9dfb75b8d314ea72690646fc}{f\+J\+Sparse\+B\+\_\+ss}} (S\+U\+N\+Matrix JB)=0
+\begin{DoxyCompactList}\small\item\em Sparse Jacobian function backward, steady state case. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a2eb9a2ca94233551bec68625a4d0d550}{write\+Steadystate\+JB}} (const realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dxB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+Bdot)=0
+\begin{DoxyCompactList}\small\item\em Computes the sparse backward Jacobian for steadystate integration and writes it to the model member. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a2b68a6170cc63310035df66f45538472}{fJ}} (const realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xdot, S\+U\+N\+Matrix J)=0
+\begin{DoxyCompactList}\small\item\em Dense Jacobian function. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a22632bb33c7ddf214e64f999b8e3019a}{f\+JB}} (const realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dxB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+Bdot, S\+U\+N\+Matrix JB)=0
+\begin{DoxyCompactList}\small\item\em Dense Jacobian function. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_adfedd89cbabb0cb1bdb221e1f2bdbf22}{f\+J\+Sparse}} (const realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xdot, S\+U\+N\+Matrix J)=0
+\begin{DoxyCompactList}\small\item\em Sparse Jacobian function. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_acf1f916be16498a8bc23454210562dfc}{f\+J\+SparseB}} (const realtype t, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dxB, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+Bdot, S\+U\+N\+Matrix JB)=0
+\begin{DoxyCompactList}\small\item\em Sparse Jacobian function. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ae98dfb9c36d8b67256d47f08e312c61b}{f\+J\+Diag}} (const realtype t, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&Jdiag, realtype cj, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx)=0
+\begin{DoxyCompactList}\small\item\em Diagonal Jacobian function. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a632846f2c611d74ff33bda5ba2a1acc9}{fdxdotdp}} (const realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx)=0
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific sparse implementation of explicit parameter derivative of right hand side. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a55f7d66b7153891bd589501847490bae}{f\+Jv}} (const realtype t, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&xdot, const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&v, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&n\+Jv, realtype cj)=0
+\begin{DoxyCompactList}\small\item\em Jacobian multiply function. \end{DoxyCompactList}\item 
+virtual const std\+::string \mbox{\hyperlink{classamici_1_1_abstract_model_ae1d68e13dc35252f74b0a1f2601cd453}{get\+Amici\+Version}} () const
+\begin{DoxyCompactList}\small\item\em Returns the amici version that was used to generate the model. \end{DoxyCompactList}\item 
+virtual const std\+::string \mbox{\hyperlink{classamici_1_1_abstract_model_ab04fc6e12be695c32736b8b36d1e262d}{get\+Amici\+Commit}} () const
+\begin{DoxyCompactList}\small\item\em Returns the amici commit that was used to generate the model. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a9863c3f8901cee9620c78b3065736cf8}{fx0}} (realtype $\ast$x0, const realtype t, const realtype $\ast$p, const realtype $\ast$k)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fx0. \end{DoxyCompactList}\item 
+virtual bool \mbox{\hyperlink{classamici_1_1_abstract_model_ad4a04e564163e190e421f4929b1f5661}{is\+Fixed\+Parameter\+State\+Reinitialization\+Allowed}} () const
+\begin{DoxyCompactList}\small\item\em Function indicating whether reinitialization of states depending on fixed parameters is permissible. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_abd57e962201af613bd4f32f4144d1c42}{fx0\+\_\+fixed\+Parameters}} (realtype $\ast$x0, const realtype t, const realtype $\ast$p, const realtype $\ast$k)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fx0\+\_\+fixed\+Parameters. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a30133c8b76cba326340f9d99469583ae}{fsx0\+\_\+fixed\+Parameters}} (realtype $\ast$sx0, const realtype t, const realtype $\ast$x0, const realtype $\ast$p, const realtype $\ast$k, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fsx0\+\_\+fixed\+Parameters. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a1f167e3c680573ccdd09b60cf2b71a09}{fsx0}} (realtype $\ast$sx0, const realtype t, const realtype $\ast$x0, const realtype $\ast$p, const realtype $\ast$k, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fsx0. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a0d674576b07d2d22e42020f1c6e30cb2}{fdx0}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x0, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&dx0)
+\begin{DoxyCompactList}\small\item\em Initial value for time derivative of states (only necessary for D\+A\+Es) \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a1f9f7838129da37e37179414ba132496}{fstau}} (realtype $\ast$stau, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$sx, int ip, int ie)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fstau. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a7dcc00519ca9bcebc001e8223613deb6}{fy}} (realtype $\ast$y, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$w)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fy. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_aba17e4225977d5954aac4ed75f446fde}{fdydp}} (realtype $\ast$dydp, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, int ip, const realtype $\ast$w, const realtype $\ast$dwdp)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdydp. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ae9b22c56b12ca96f0a8cf9db7d5b270a}{fdydx}} (realtype $\ast$dydx, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$w, const realtype $\ast$dwdx)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdydx. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ab99fc014482802d9a36cebca90c86ec4}{fz}} (realtype $\ast$z, int ie, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a07d5ad2147980ef1c90318c7f392b82f}{fsz}} (realtype $\ast$sz, int ie, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$sx, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fsz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_adc82c6a49600e50a049cb2e01513a471}{frz}} (realtype $\ast$rz, int ie, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of frz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a8413f1ea9f3df6a74a24709651101df0}{fsrz}} (realtype $\ast$srz, int ie, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$sx, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fsrz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a2aa823f41ea0f42ce3fd667223f69aa6}{fdzdp}} (realtype $\ast$dzdp, int ie, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdzdp. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a8306fd9661e8994289246e509cb821a9}{fdzdx}} (realtype $\ast$dzdx, int ie, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdzdx. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a0b964070a83722213cad9247d274ed0f}{fdrzdp}} (realtype $\ast$drzdp, int ie, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdrzdp. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ada9ee9cdadde0163158e42e471890bcb}{fdrzdx}} (realtype $\ast$drzdx, int ie, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdrzdx. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ae4dcf1784ea90714e75ded102ca8f2e2}{fdeltax}} (realtype $\ast$deltax, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, int ie, const realtype $\ast$xdot, const realtype $\ast$xdot\+\_\+old)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdeltax. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a436937d48081c109757cb1039ba6c2bc}{fdeltasx}} (realtype $\ast$deltasx, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$w, int ip, int ie, const realtype $\ast$xdot, const realtype $\ast$xdot\+\_\+old, const realtype $\ast$sx, const realtype $\ast$stau)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdeltasx. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_acb68865f9b4e94a925895e97ec2e31b8}{fdeltaxB}} (realtype $\ast$deltaxB, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, int ie, const realtype $\ast$xdot, const realtype $\ast$xdot\+\_\+old, const realtype $\ast$xB)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdeltaxB. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a1fee57918b64b015cdee56292f30820c}{fdeltaqB}} (realtype $\ast$deltaqB, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, int ip, int ie, const realtype $\ast$xdot, const realtype $\ast$xdot\+\_\+old, const realtype $\ast$xB)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fdeltaqB. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ae5cfe78aa668f7966e3a691b02e03605}{fsigmay}} (realtype $\ast$sigmay, const realtype t, const realtype $\ast$p, const realtype $\ast$k)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fsigmay. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ae1def7a4c6284421deba0a4575e6d2e1}{fdsigmaydp}} (realtype $\ast$dsigmaydp, const realtype t, const realtype $\ast$p, const realtype $\ast$k, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fsigmay. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a98f29422791ee2f51f623fb967c4b3e2}{fsigmaz}} (realtype $\ast$sigmaz, const realtype t, const realtype $\ast$p, const realtype $\ast$k)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fsigmaz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a305a3a2233d7210d9d294352601b7cb1}{fdsigmazdp}} (realtype $\ast$dsigmazdp, const realtype t, const realtype $\ast$p, const realtype $\ast$k, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fsigmaz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a755a3084fbebcd7cdfa830f213f16dff}{f\+Jy}} (realtype $\ast$nllh, int iy, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$y, const realtype $\ast$sigmay, const realtype $\ast$my)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of f\+Jy. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a77895248723f258b368874cab7731fac}{f\+Jz}} (realtype $\ast$nllh, int iz, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$z, const realtype $\ast$sigmaz, const realtype $\ast$mz)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of f\+Jz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a048675587c128c50a43758134af50ec0}{f\+Jrz}} (realtype $\ast$nllh, int iz, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$z, const realtype $\ast$sigmaz)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of f\+Jrz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ad3fe8355aaed30e498fe017050854c17}{fd\+Jydy}} (realtype $\ast$d\+Jydy, int iy, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$y, const realtype $\ast$sigmay, const realtype $\ast$my)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fd\+Jydy. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a49d678e49297bd0b725c8515e6857f7d}{fd\+Jydsigma}} (realtype $\ast$d\+Jydsigma, int iy, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$y, const realtype $\ast$sigmay, const realtype $\ast$my)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fd\+Jydsigma. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_aefce48230d6b6239b6ae77f0a0dabb5d}{fd\+Jzdz}} (realtype $\ast$d\+Jzdz, int iz, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$z, const realtype $\ast$sigmaz, const realtype $\ast$mz)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fd\+Jzdz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_aad7878ff06a7e13374d4fb830c52b9b0}{fd\+Jzdsigma}} (realtype $\ast$d\+Jzdsigma, int iz, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$z, const realtype $\ast$sigmaz, const realtype $\ast$mz)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fd\+Jzdsigma. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ac031e3a2608ea286c6c6491a26ef1b6d}{fd\+Jrzdz}} (realtype $\ast$d\+Jrzdz, int iz, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$rz, const realtype $\ast$sigmaz)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fd\+Jrzdz. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_aa7f0aac5ca0bbf05d1818155984b88d9}{fd\+Jrzdsigma}} (realtype $\ast$d\+Jrzdsigma, int iz, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$rz, const realtype $\ast$sigmaz)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fd\+Jrzdsigma. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a2585711abceff87534bab1260b5c52ef}{fw}} (realtype $\ast$w, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$tcl)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of fw. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_aafe74be1a2f867c558d77c6832ac2e21}{fdwdp}} (realtype $\ast$dwdp, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$w, const realtype $\ast$tcl, const realtype $\ast$stcl)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific sparse implementation of dwdp. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_af01c88fa595b044dfe13b89c38c3e4aa}{fdwdp\+\_\+colptrs}} (sunindextype $\ast$indexptrs)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for dwdp, column pointers. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a7f8f45ae5b3f2edc4c4c64bbe4c6bce4}{fdwdp\+\_\+rowvals}} (sunindextype $\ast$indexvals)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for dwdp, row values. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_acec9e67fe4436a64d0dee4a91dff8588}{fdwdp}} (realtype $\ast$dwdp, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$w, const realtype $\ast$tcl, const realtype $\ast$stcl, int ip)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific sensitivity implementation of dwdp. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_ab88df32c6c55a17ed30e3ede9396cc53}{fdwdx}} (realtype $\ast$dwdx, const realtype t, const realtype $\ast$x, const realtype $\ast$p, const realtype $\ast$k, const realtype $\ast$h, const realtype $\ast$w, const realtype $\ast$tcl)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation of dwdx, data part. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a8d0efa23764dd2210e01f40918be36ae}{fdwdx\+\_\+colptrs}} (sunindextype $\ast$indexptrs)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for dwdx, column pointers. \end{DoxyCompactList}\item 
+virtual void \mbox{\hyperlink{classamici_1_1_abstract_model_a209b18059172ea4286c85931d0231a8a}{fdwdx\+\_\+rowvals}} (sunindextype $\ast$indexvals)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_model}{Model}} specific implementation for dwdx, row values. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+Some functions have empty default implementations or throw. This class shall not have any data members. 
+
+Definition at line 25 of file abstract\+\_\+model.\+h.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a61d5b19b2e4d5ffcc73a014d59494344}\label{classamici_1_1_abstract_model_a61d5b19b2e4d5ffcc73a014d59494344}} 
+\index{AbstractModel@{AbstractModel}!getSolver@{getSolver}}
+\index{getSolver@{getSolver}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{getSolver()}{getSolver()}}
+{\footnotesize\ttfamily virtual std\+::unique\+\_\+ptr$<$\mbox{\hyperlink{classamici_1_1_solver}{Solver}}$>$ get\+Solver (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+\begin{DoxyReturn}{Returns}
+The \mbox{\hyperlink{classamici_1_1_solver}{Solver}} instance 
+\end{DoxyReturn}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_aee7564098e889917627afd3c00772f81}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_aee7564098e889917627afd3c00772f81}{Model\+\_\+\+O\+DE}}.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a8e46e425fcbc11df93aebf1c957eb38e}\label{classamici_1_1_abstract_model_a8e46e425fcbc11df93aebf1c957eb38e}} 
+\index{AbstractModel@{AbstractModel}!froot@{froot}}
+\index{froot@{froot}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{froot()}{froot()}}
+{\footnotesize\ttfamily virtual void froot (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{gsl\+::span$<$ realtype $>$}]{root }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em root} & array to which values of the root function will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_a46fb620204a7cc2198125f714e9e69e1}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_a46fb620204a7cc2198125f714e9e69e1}{Model\+\_\+\+O\+DE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a8e46e425fcbc11df93aebf1c957eb38e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a8a6bc3080a50b88513f4604d1210f725}\label{classamici_1_1_abstract_model_a8a6bc3080a50b88513f4604d1210f725}} 
+\index{AbstractModel@{AbstractModel}!fxdot@{fxdot}}
+\index{fxdot@{fxdot}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fxdot()}{fxdot()}}
+{\footnotesize\ttfamily virtual void fxdot (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xdot }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xdot} & array to which values of the residual function will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_a9afb205ee882a3bd6adc542c98dcd635}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_a9afb205ee882a3bd6adc542c98dcd635}{Model\+\_\+\+O\+DE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a8a6bc3080a50b88513f4604d1210f725_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_aea3d695d38744ec4d29c35038b4bcf8e}\label{classamici_1_1_abstract_model_aea3d695d38744ec4d29c35038b4bcf8e}} 
+\index{AbstractModel@{AbstractModel}!fsxdot@{fsxdot}}
+\index{fsxdot@{fsxdot}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fsxdot()}{fsxdot()}}
+{\footnotesize\ttfamily virtual void fsxdot (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{int}]{ip,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{sx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{sdx,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{sxdot }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em ip} & parameter index \\
+\hline
+{\em sx} & sensitivity state \\
+\hline
+{\em sdx} & time derivative of sensitivity state (D\+AE only) \\
+\hline
+{\em sxdot} & array to which values of the sensitivity residual function will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_a320dee9a1de0c38fb49eb1f5826e626c}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_a320dee9a1de0c38fb49eb1f5826e626c}{Model\+\_\+\+O\+DE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=294pt]{classamici_1_1_abstract_model_aea3d695d38744ec4d29c35038b4bcf8e_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a04b9564fd13b9dc011fed8e940f39b05}\label{classamici_1_1_abstract_model_a04b9564fd13b9dc011fed8e940f39b05}} 
+\index{AbstractModel@{AbstractModel}!fxBdot\_ss@{fxBdot\_ss}}
+\index{fxBdot\_ss@{fxBdot\_ss}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fxBdot\_ss()}{fxBdot\_ss()}}
+{\footnotesize\ttfamily virtual void fx\+Bdot\+\_\+ss (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dxB,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x\+Bdot }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em xB} & adjoint state \\
+\hline
+{\em dxB} & time derivative of state (D\+AE only) \\
+\hline
+{\em x\+Bdot} & array to which values of the residual function will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_ab5ef73b525cf22510f83d021f736f5ac}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_aded6e860d78e62a3b449c06965175e62}{Model\+\_\+\+O\+DE}}.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a1a664a5c9dfb75b8d314ea72690646fc}\label{classamici_1_1_abstract_model_a1a664a5c9dfb75b8d314ea72690646fc}} 
+\index{AbstractModel@{AbstractModel}!fJSparseB\_ss@{fJSparseB\_ss}}
+\index{fJSparseB\_ss@{fJSparseB\_ss}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJSparseB\_ss()}{fJSparseB\_ss()}}
+{\footnotesize\ttfamily virtual void f\+J\+Sparse\+B\+\_\+ss (\begin{DoxyParamCaption}\item[{S\+U\+N\+Matrix}]{JB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em JB} & sparse matrix to which values of the Jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_a07ad9ce5492a7bfbbcf5cc327d840852}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_a07ad9ce5492a7bfbbcf5cc327d840852}{Model\+\_\+\+O\+DE}}.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a2eb9a2ca94233551bec68625a4d0d550}\label{classamici_1_1_abstract_model_a2eb9a2ca94233551bec68625a4d0d550}} 
+\index{AbstractModel@{AbstractModel}!writeSteadystateJB@{writeSteadystateJB}}
+\index{writeSteadystateJB@{writeSteadystateJB}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{writeSteadystateJB()}{writeSteadystateJB()}}
+{\footnotesize\ttfamily virtual void write\+Steadystate\+JB (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dxB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x\+Bdot }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & timepoint \\
+\hline
+{\em cj} & scalar in Jacobian \\
+\hline
+{\em x} & Vector with the states \\
+\hline
+{\em dx} & Vector with the derivative states \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em dxB} & Vector with the adjoint derivative states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint state right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_a1bfd97f4f4469ae7250ecb281eaaee4a}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_a1bfd97f4f4469ae7250ecb281eaaee4a}{Model\+\_\+\+O\+DE}}.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a2b68a6170cc63310035df66f45538472}\label{classamici_1_1_abstract_model_a2b68a6170cc63310035df66f45538472}} 
+\index{AbstractModel@{AbstractModel}!fJ@{fJ}}
+\index{fJ@{fJ}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJ()}{fJ()}}
+{\footnotesize\ttfamily virtual void fJ (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xdot,  }\item[{S\+U\+N\+Matrix}]{J }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xdot} & values of residual function (unused) \\
+\hline
+{\em J} & dense matrix to which values of the jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_ac0c58a5c04ff52daaa4254becbf18ad6}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_ac0c58a5c04ff52daaa4254becbf18ad6}{Model\+\_\+\+O\+DE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a2b68a6170cc63310035df66f45538472_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a22632bb33c7ddf214e64f999b8e3019a}\label{classamici_1_1_abstract_model_a22632bb33c7ddf214e64f999b8e3019a}} 
+\index{AbstractModel@{AbstractModel}!fJB@{fJB}}
+\index{fJB@{fJB}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJB()}{fJB()}}
+{\footnotesize\ttfamily virtual void f\+JB (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dxB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x\+Bdot,  }\item[{S\+U\+N\+Matrix}]{JB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em dxB} & Vector with the adjoint derivative states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint right hand side (unused) \\
+\hline
+{\em JB} & dense matrix to which values of the jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_a93a8eccf4486f48116cb2a9d977ef28b}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_a93a8eccf4486f48116cb2a9d977ef28b}{Model\+\_\+\+O\+DE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=291pt]{classamici_1_1_abstract_model_a22632bb33c7ddf214e64f999b8e3019a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_adfedd89cbabb0cb1bdb221e1f2bdbf22}\label{classamici_1_1_abstract_model_adfedd89cbabb0cb1bdb221e1f2bdbf22}} 
+\index{AbstractModel@{AbstractModel}!fJSparse@{fJSparse}}
+\index{fJSparse@{fJSparse}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJSparse()}{fJSparse()}}
+{\footnotesize\ttfamily virtual void f\+J\+Sparse (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xdot,  }\item[{S\+U\+N\+Matrix}]{J }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xdot} & values of residual function (unused) \\
+\hline
+{\em J} & sparse matrix to which values of the Jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_a201dbbf01f1b93592bc9eb1a78ad5d61}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_a201dbbf01f1b93592bc9eb1a78ad5d61}{Model\+\_\+\+O\+DE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=310pt]{classamici_1_1_abstract_model_adfedd89cbabb0cb1bdb221e1f2bdbf22_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_acf1f916be16498a8bc23454210562dfc}\label{classamici_1_1_abstract_model_acf1f916be16498a8bc23454210562dfc}} 
+\index{AbstractModel@{AbstractModel}!fJSparseB@{fJSparseB}}
+\index{fJSparseB@{fJSparseB}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJSparseB()}{fJSparseB()}}
+{\footnotesize\ttfamily virtual void f\+J\+SparseB (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dxB,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x\+Bdot,  }\item[{S\+U\+N\+Matrix}]{JB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xB} & Vector with the adjoint states \\
+\hline
+{\em dxB} & Vector with the adjoint derivative states \\
+\hline
+{\em x\+Bdot} & Vector with the adjoint right hand side (unused) \\
+\hline
+{\em JB} & dense matrix to which values of the jacobian will be written \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___d_a_e_aad4e82ee649196eff3cae36c944a1980}{Model\+\_\+\+D\+AE}}, and \mbox{\hyperlink{classamici_1_1_model___o_d_e_aad4e82ee649196eff3cae36c944a1980}{Model\+\_\+\+O\+DE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=316pt]{classamici_1_1_abstract_model_acf1f916be16498a8bc23454210562dfc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ae98dfb9c36d8b67256d47f08e312c61b}\label{classamici_1_1_abstract_model_ae98dfb9c36d8b67256d47f08e312c61b}} 
+\index{AbstractModel@{AbstractModel}!fJDiag@{fJDiag}}
+\index{fJDiag@{fJDiag}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJDiag()}{fJDiag()}}
+{\footnotesize\ttfamily virtual void f\+J\+Diag (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{Jdiag,  }\item[{realtype}]{cj,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em Jdiag} & array to which the diagonal of the Jacobian will be written \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___o_d_e_adaf8ba29af3b621a30e183d7e2f789f5}{Model\+\_\+\+O\+DE}}, and \mbox{\hyperlink{classamici_1_1_model___d_a_e_adaf8ba29af3b621a30e183d7e2f789f5}{Model\+\_\+\+D\+AE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=304pt]{classamici_1_1_abstract_model_ae98dfb9c36d8b67256d47f08e312c61b_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a632846f2c611d74ff33bda5ba2a1acc9}\label{classamici_1_1_abstract_model_a632846f2c611d74ff33bda5ba2a1acc9}} 
+\index{AbstractModel@{AbstractModel}!fdxdotdp@{fdxdotdp}}
+\index{fdxdotdp@{fdxdotdp}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdxdotdp()}{fdxdotdp()}}
+{\footnotesize\ttfamily virtual void fdxdotdp (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___o_d_e_a2feef05eaf143813199126109ef64bb3}{Model\+\_\+\+O\+DE}}, and \mbox{\hyperlink{classamici_1_1_model___d_a_e_a063b47198b54603cf42ecf49d1e3e046}{Model\+\_\+\+D\+AE}}.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a632846f2c611d74ff33bda5ba2a1acc9_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a55f7d66b7153891bd589501847490bae}\label{classamici_1_1_abstract_model_a55f7d66b7153891bd589501847490bae}} 
+\index{AbstractModel@{AbstractModel}!fJv@{fJv}}
+\index{fJv@{fJv}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJv()}{fJv()}}
+{\footnotesize\ttfamily virtual void f\+Jv (\begin{DoxyParamCaption}\item[{const realtype}]{t,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{xdot,  }\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{v,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{n\+Jv,  }\item[{realtype}]{cj }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [pure virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & time \\
+\hline
+{\em x} & state \\
+\hline
+{\em dx} & time derivative of state (D\+AE only) \\
+\hline
+{\em xdot} & values of residual function (unused) \\
+\hline
+{\em v} & multiplication vector (unused) \\
+\hline
+{\em n\+Jv} & array to which result of multiplication will be written \\
+\hline
+{\em cj} & scaling factor (inverse of timestep, D\+AE only) \\
+\hline
+\end{DoxyParams}
+
+
+Implemented in \mbox{\hyperlink{classamici_1_1_model___o_d_e_a71d5d8f7344a7ef93ae89e07fad5fcb2}{Model\+\_\+\+O\+DE}}, and \mbox{\hyperlink{classamici_1_1_model___d_a_e_a71d5d8f7344a7ef93ae89e07fad5fcb2}{Model\+\_\+\+D\+AE}}.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ae1d68e13dc35252f74b0a1f2601cd453}\label{classamici_1_1_abstract_model_ae1d68e13dc35252f74b0a1f2601cd453}} 
+\index{AbstractModel@{AbstractModel}!getAmiciVersion@{getAmiciVersion}}
+\index{getAmiciVersion@{getAmiciVersion}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{getAmiciVersion()}{getAmiciVersion()}}
+{\footnotesize\ttfamily const std\+::string get\+Amici\+Version (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+ver amici version string 
+\end{DoxyReturn}
+
+
+Definition at line 6 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ab04fc6e12be695c32736b8b36d1e262d}\label{classamici_1_1_abstract_model_ab04fc6e12be695c32736b8b36d1e262d}} 
+\index{AbstractModel@{AbstractModel}!getAmiciCommit@{getAmiciCommit}}
+\index{getAmiciCommit@{getAmiciCommit}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{getAmiciCommit()}{getAmiciCommit()}}
+{\footnotesize\ttfamily const std\+::string get\+Amici\+Commit (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+ver amici commit string 
+\end{DoxyReturn}
+
+
+Definition at line 12 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a9863c3f8901cee9620c78b3065736cf8}\label{classamici_1_1_abstract_model_a9863c3f8901cee9620c78b3065736cf8}} 
+\index{AbstractModel@{AbstractModel}!fx0@{fx0}}
+\index{fx0@{fx0}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fx0()}{fx0()}}
+{\footnotesize\ttfamily void fx0 (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{x0,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em x0} & initial state \\
+\hline
+{\em t} & initial time \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 18 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ad4a04e564163e190e421f4929b1f5661}\label{classamici_1_1_abstract_model_ad4a04e564163e190e421f4929b1f5661}} 
+\index{AbstractModel@{AbstractModel}!isFixedParameterStateReinitializationAllowed@{isFixedParameterStateReinitializationAllowed}}
+\index{isFixedParameterStateReinitializationAllowed@{isFixedParameterStateReinitializationAllowed}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{isFixedParameterStateReinitializationAllowed()}{isFixedParameterStateReinitializationAllowed()}}
+{\footnotesize\ttfamily bool is\+Fixed\+Parameter\+State\+Reinitialization\+Allowed (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [virtual]}}
+
+\begin{DoxyReturn}{Returns}
+flag inidication whether reinitialization of states depending on fixed parameters is permissible 
+\end{DoxyReturn}
+
+
+Definition at line 29 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_ad4a04e564163e190e421f4929b1f5661_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_abd57e962201af613bd4f32f4144d1c42}\label{classamici_1_1_abstract_model_abd57e962201af613bd4f32f4144d1c42}} 
+\index{AbstractModel@{AbstractModel}!fx0\_fixedParameters@{fx0\_fixedParameters}}
+\index{fx0\_fixedParameters@{fx0\_fixedParameters}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fx0\_fixedParameters()}{fx0\_fixedParameters()}}
+{\footnotesize\ttfamily void fx0\+\_\+fixed\+Parameters (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{x0,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em x0} & initial state \\
+\hline
+{\em t} & initial time \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 35 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a30133c8b76cba326340f9d99469583ae}\label{classamici_1_1_abstract_model_a30133c8b76cba326340f9d99469583ae}} 
+\index{AbstractModel@{AbstractModel}!fsx0\_fixedParameters@{fsx0\_fixedParameters}}
+\index{fsx0\_fixedParameters@{fsx0\_fixedParameters}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fsx0\_fixedParameters()}{fsx0\_fixedParameters()}}
+{\footnotesize\ttfamily void fsx0\+\_\+fixed\+Parameters (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{sx0,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x0,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em sx0} & initial state sensitivities \\
+\hline
+{\em t} & initial time \\
+\hline
+{\em x0} & initial state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 44 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a1f167e3c680573ccdd09b60cf2b71a09}\label{classamici_1_1_abstract_model_a1f167e3c680573ccdd09b60cf2b71a09}} 
+\index{AbstractModel@{AbstractModel}!fsx0@{fsx0}}
+\index{fsx0@{fsx0}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fsx0()}{fsx0()}}
+{\footnotesize\ttfamily void fsx0 (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{sx0,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x0,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em sx0} & initial state sensitivities \\
+\hline
+{\em t} & initial time \\
+\hline
+{\em x0} & initial state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 55 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a0d674576b07d2d22e42020f1c6e30cb2}\label{classamici_1_1_abstract_model_a0d674576b07d2d22e42020f1c6e30cb2}} 
+\index{AbstractModel@{AbstractModel}!fdx0@{fdx0}}
+\index{fdx0@{fdx0}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdx0()}{fdx0()}}
+{\footnotesize\ttfamily void fdx0 (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{x0,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{dx0 }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em x0} & Vector with the initial states \\
+\hline
+{\em dx0} & Vector to which the initial derivative states will be written (only D\+AE) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 68 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a0d674576b07d2d22e42020f1c6e30cb2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a1f9f7838129da37e37179414ba132496}\label{classamici_1_1_abstract_model_a1f9f7838129da37e37179414ba132496}} 
+\index{AbstractModel@{AbstractModel}!fstau@{fstau}}
+\index{fstau@{fstau}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fstau()}{fstau()}}
+{\footnotesize\ttfamily void fstau (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{stau,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{sx,  }\item[{int}]{ip,  }\item[{int}]{ie }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em stau} & total derivative of event timepoint \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em sx} & current state sensitivity \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+{\em ie} & event index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 74 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{classamici_1_1_abstract_model_a1f9f7838129da37e37179414ba132496_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a7dcc00519ca9bcebc001e8223613deb6}\label{classamici_1_1_abstract_model_a7dcc00519ca9bcebc001e8223613deb6}} 
+\index{AbstractModel@{AbstractModel}!fy@{fy}}
+\index{fy@{fy}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fy()}{fy()}}
+{\footnotesize\ttfamily void fy (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{y,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em y} & model output at current timepoint \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & repeating elements vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 90 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_aba17e4225977d5954aac4ed75f446fde}\label{classamici_1_1_abstract_model_aba17e4225977d5954aac4ed75f446fde}} 
+\index{AbstractModel@{AbstractModel}!fdydp@{fdydp}}
+\index{fdydp@{fdydp}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdydp()}{fdydp()}}
+{\footnotesize\ttfamily void fdydp (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dydp,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{int}]{ip,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdp }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dydp} & partial derivative of observables y w.\+r.\+t. model parameters p \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em ip} & parameter index w.\+r.\+t. which the derivative is requested \\
+\hline
+{\em w} & repeating elements vector \\
+\hline
+{\em dwdp} & Recurring terms in xdot, parameter derivative \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 104 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ae9b22c56b12ca96f0a8cf9db7d5b270a}\label{classamici_1_1_abstract_model_ae9b22c56b12ca96f0a8cf9db7d5b270a}} 
+\index{AbstractModel@{AbstractModel}!fdydx@{fdydx}}
+\index{fdydx@{fdydx}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdydx()}{fdydx()}}
+{\footnotesize\ttfamily void fdydx (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dydx,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{dwdx }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dydx} & partial derivative of observables y w.\+r.\+t. model states x \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & repeating elements vector \\
+\hline
+{\em dwdx} & Recurring terms in xdot, state derivative \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 120 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ab99fc014482802d9a36cebca90c86ec4}\label{classamici_1_1_abstract_model_ab99fc014482802d9a36cebca90c86ec4}} 
+\index{AbstractModel@{AbstractModel}!fz@{fz}}
+\index{fz@{fz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fz()}{fz()}}
+{\footnotesize\ttfamily void fz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{z,  }\item[{int}]{ie,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em z} & value of event output \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 135 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a07d5ad2147980ef1c90318c7f392b82f}\label{classamici_1_1_abstract_model_a07d5ad2147980ef1c90318c7f392b82f}} 
+\index{AbstractModel@{AbstractModel}!fsz@{fsz}}
+\index{fsz@{fsz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fsz()}{fsz()}}
+{\footnotesize\ttfamily void fsz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{sz,  }\item[{int}]{ie,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{sx,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em sz} & Sensitivity of rz, total derivative \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em sx} & current state sensitivity \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 149 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a07d5ad2147980ef1c90318c7f392b82f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_adc82c6a49600e50a049cb2e01513a471}\label{classamici_1_1_abstract_model_adc82c6a49600e50a049cb2e01513a471}} 
+\index{AbstractModel@{AbstractModel}!frz@{frz}}
+\index{frz@{frz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{frz()}{frz()}}
+{\footnotesize\ttfamily void frz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{rz,  }\item[{int}]{ie,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em rz} & value of root function at current timepoint (non-\/output events not included) \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 165 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a8413f1ea9f3df6a74a24709651101df0}\label{classamici_1_1_abstract_model_a8413f1ea9f3df6a74a24709651101df0}} 
+\index{AbstractModel@{AbstractModel}!fsrz@{fsrz}}
+\index{fsrz@{fsrz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fsrz()}{fsrz()}}
+{\footnotesize\ttfamily void fsrz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{srz,  }\item[{int}]{ie,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{sx,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em srz} & Sensitivity of rz, total derivative \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em sx} & current state sensitivity \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 179 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a8413f1ea9f3df6a74a24709651101df0_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a2aa823f41ea0f42ce3fd667223f69aa6}\label{classamici_1_1_abstract_model_a2aa823f41ea0f42ce3fd667223f69aa6}} 
+\index{AbstractModel@{AbstractModel}!fdzdp@{fdzdp}}
+\index{fdzdp@{fdzdp}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdzdp()}{fdzdp()}}
+{\footnotesize\ttfamily void fdzdp (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dzdp,  }\item[{int}]{ie,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dzdp} & partial derivative of event-\/resolved output z w.\+r.\+t. model parameters p \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em ip} & parameter index w.\+r.\+t. which the derivative is requested \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 195 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a8306fd9661e8994289246e509cb821a9}\label{classamici_1_1_abstract_model_a8306fd9661e8994289246e509cb821a9}} 
+\index{AbstractModel@{AbstractModel}!fdzdx@{fdzdx}}
+\index{fdzdx@{fdzdx}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdzdx()}{fdzdx()}}
+{\footnotesize\ttfamily void fdzdx (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dzdx,  }\item[{int}]{ie,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dzdx} & partial derivative of event-\/resolved output z w.\+r.\+t. model states x \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 210 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a0b964070a83722213cad9247d274ed0f}\label{classamici_1_1_abstract_model_a0b964070a83722213cad9247d274ed0f}} 
+\index{AbstractModel@{AbstractModel}!fdrzdp@{fdrzdp}}
+\index{fdrzdp@{fdrzdp}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdrzdp()}{fdrzdp()}}
+{\footnotesize\ttfamily void fdrzdp (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{drzdp,  }\item[{int}]{ie,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em drzdp} & partial derivative of root output rz w.\+r.\+t. model parameters p \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em ip} & parameter index w.\+r.\+t. which the derivative is requested \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 224 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ada9ee9cdadde0163158e42e471890bcb}\label{classamici_1_1_abstract_model_ada9ee9cdadde0163158e42e471890bcb}} 
+\index{AbstractModel@{AbstractModel}!fdrzdx@{fdrzdx}}
+\index{fdrzdx@{fdrzdx}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdrzdx()}{fdrzdx()}}
+{\footnotesize\ttfamily void fdrzdx (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{drzdx,  }\item[{int}]{ie,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em drzdx} & partial derivative of root output rz w.\+r.\+t. model states x \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 239 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ae4dcf1784ea90714e75ded102ca8f2e2}\label{classamici_1_1_abstract_model_ae4dcf1784ea90714e75ded102ca8f2e2}} 
+\index{AbstractModel@{AbstractModel}!fdeltax@{fdeltax}}
+\index{fdeltax@{fdeltax}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdeltax()}{fdeltax()}}
+{\footnotesize\ttfamily void fdeltax (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{deltax,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{int}]{ie,  }\item[{const realtype $\ast$}]{xdot,  }\item[{const realtype $\ast$}]{xdot\+\_\+old }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em deltax} & state update \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em xdot} & new model right hand side \\
+\hline
+{\em xdot\+\_\+old} & previous model right hand side \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 253 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=305pt]{classamici_1_1_abstract_model_ae4dcf1784ea90714e75ded102ca8f2e2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a436937d48081c109757cb1039ba6c2bc}\label{classamici_1_1_abstract_model_a436937d48081c109757cb1039ba6c2bc}} 
+\index{AbstractModel@{AbstractModel}!fdeltasx@{fdeltasx}}
+\index{fdeltasx@{fdeltasx}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdeltasx()}{fdeltasx()}}
+{\footnotesize\ttfamily void fdeltasx (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{deltasx,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{int}]{ip,  }\item[{int}]{ie,  }\item[{const realtype $\ast$}]{xdot,  }\item[{const realtype $\ast$}]{xdot\+\_\+old,  }\item[{const realtype $\ast$}]{sx,  }\item[{const realtype $\ast$}]{stau }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em deltasx} & sensitivity update \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & repeating elements vector \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em xdot} & new model right hand side \\
+\hline
+{\em xdot\+\_\+old} & previous model right hand side \\
+\hline
+{\em sx} & state sensitivity \\
+\hline
+{\em stau} & event-\/time sensitivity \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 269 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=330pt]{classamici_1_1_abstract_model_a436937d48081c109757cb1039ba6c2bc_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_acb68865f9b4e94a925895e97ec2e31b8}\label{classamici_1_1_abstract_model_acb68865f9b4e94a925895e97ec2e31b8}} 
+\index{AbstractModel@{AbstractModel}!fdeltaxB@{fdeltaxB}}
+\index{fdeltaxB@{fdeltaxB}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdeltaxB()}{fdeltaxB()}}
+{\footnotesize\ttfamily void fdeltaxB (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{deltaxB,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{int}]{ie,  }\item[{const realtype $\ast$}]{xdot,  }\item[{const realtype $\ast$}]{xdot\+\_\+old,  }\item[{const realtype $\ast$}]{xB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em deltaxB} & adjoint state update \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em xdot} & new model right hand side \\
+\hline
+{\em xdot\+\_\+old} & previous model right hand side \\
+\hline
+{\em xB} & current adjoint state \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 289 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{classamici_1_1_abstract_model_acb68865f9b4e94a925895e97ec2e31b8_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a1fee57918b64b015cdee56292f30820c}\label{classamici_1_1_abstract_model_a1fee57918b64b015cdee56292f30820c}} 
+\index{AbstractModel@{AbstractModel}!fdeltaqB@{fdeltaqB}}
+\index{fdeltaqB@{fdeltaqB}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdeltaqB()}{fdeltaqB()}}
+{\footnotesize\ttfamily void fdeltaqB (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{deltaqB,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{int}]{ip,  }\item[{int}]{ie,  }\item[{const realtype $\ast$}]{xdot,  }\item[{const realtype $\ast$}]{xdot\+\_\+old,  }\item[{const realtype $\ast$}]{xB }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em deltaqB} & sensitivity update \\
+\hline
+{\em t} & current time \\
+\hline
+{\em x} & current state \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+{\em ie} & event index \\
+\hline
+{\em xdot} & new model right hand side \\
+\hline
+{\em xdot\+\_\+old} & previous model right hand side \\
+\hline
+{\em xB} & adjoint state \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 306 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=293pt]{classamici_1_1_abstract_model_a1fee57918b64b015cdee56292f30820c_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ae5cfe78aa668f7966e3a691b02e03605}\label{classamici_1_1_abstract_model_ae5cfe78aa668f7966e3a691b02e03605}} 
+\index{AbstractModel@{AbstractModel}!fsigmay@{fsigmay}}
+\index{fsigmay@{fsigmay}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fsigmay()}{fsigmay()}}
+{\footnotesize\ttfamily void fsigmay (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{sigmay,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em sigmay} & standard deviation of measurements \\
+\hline
+{\em t} & current time \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 324 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ae1def7a4c6284421deba0a4575e6d2e1}\label{classamici_1_1_abstract_model_ae1def7a4c6284421deba0a4575e6d2e1}} 
+\index{AbstractModel@{AbstractModel}!fdsigmaydp@{fdsigmaydp}}
+\index{fdsigmaydp@{fdsigmaydp}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdsigmaydp()}{fdsigmaydp()}}
+{\footnotesize\ttfamily void fdsigmaydp (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dsigmaydp,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dsigmaydp} & partial derivative of standard deviation of measurements \\
+\hline
+{\em t} & current time \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 335 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a98f29422791ee2f51f623fb967c4b3e2}\label{classamici_1_1_abstract_model_a98f29422791ee2f51f623fb967c4b3e2}} 
+\index{AbstractModel@{AbstractModel}!fsigmaz@{fsigmaz}}
+\index{fsigmaz@{fsigmaz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fsigmaz()}{fsigmaz()}}
+{\footnotesize\ttfamily void fsigmaz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{sigmaz,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em sigmaz} & standard deviation of event measurements \\
+\hline
+{\em t} & current time \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 347 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a305a3a2233d7210d9d294352601b7cb1}\label{classamici_1_1_abstract_model_a305a3a2233d7210d9d294352601b7cb1}} 
+\index{AbstractModel@{AbstractModel}!fdsigmazdp@{fdsigmazdp}}
+\index{fdsigmazdp@{fdsigmazdp}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdsigmazdp()}{fdsigmazdp()}}
+{\footnotesize\ttfamily void fdsigmazdp (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dsigmazdp,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dsigmazdp} & partial derivative of standard deviation of event measurements \\
+\hline
+{\em t} & current time \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em ip} & sensitivity index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 358 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a755a3084fbebcd7cdfa830f213f16dff}\label{classamici_1_1_abstract_model_a755a3084fbebcd7cdfa830f213f16dff}} 
+\index{AbstractModel@{AbstractModel}!fJy@{fJy}}
+\index{fJy@{fJy}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJy()}{fJy()}}
+{\footnotesize\ttfamily void f\+Jy (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{nllh,  }\item[{int}]{iy,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{y,  }\item[{const realtype $\ast$}]{sigmay,  }\item[{const realtype $\ast$}]{my }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em nllh} & negative log-\/likelihood for measurements y \\
+\hline
+{\em iy} & output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em y} & model output at timepoint \\
+\hline
+{\em sigmay} & measurement standard deviation at timepoint \\
+\hline
+{\em my} & measurements at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 370 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a77895248723f258b368874cab7731fac}\label{classamici_1_1_abstract_model_a77895248723f258b368874cab7731fac}} 
+\index{AbstractModel@{AbstractModel}!fJz@{fJz}}
+\index{fJz@{fJz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJz()}{fJz()}}
+{\footnotesize\ttfamily void f\+Jz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{nllh,  }\item[{int}]{iz,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{z,  }\item[{const realtype $\ast$}]{sigmaz,  }\item[{const realtype $\ast$}]{mz }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em nllh} & negative log-\/likelihood for event measurements z \\
+\hline
+{\em iz} & event output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em z} & model event output at timepoint \\
+\hline
+{\em sigmaz} & event measurement standard deviation at timepoint \\
+\hline
+{\em mz} & event measurements at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 384 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a048675587c128c50a43758134af50ec0}\label{classamici_1_1_abstract_model_a048675587c128c50a43758134af50ec0}} 
+\index{AbstractModel@{AbstractModel}!fJrz@{fJrz}}
+\index{fJrz@{fJrz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fJrz()}{fJrz()}}
+{\footnotesize\ttfamily void f\+Jrz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{nllh,  }\item[{int}]{iz,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{z,  }\item[{const realtype $\ast$}]{sigmaz }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em nllh} & regularization for event measurements z \\
+\hline
+{\em iz} & event output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em z} & model event output at timepoint \\
+\hline
+{\em sigmaz} & event measurement standard deviation at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 398 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ad3fe8355aaed30e498fe017050854c17}\label{classamici_1_1_abstract_model_ad3fe8355aaed30e498fe017050854c17}} 
+\index{AbstractModel@{AbstractModel}!fdJydy@{fdJydy}}
+\index{fdJydy@{fdJydy}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdJydy()}{fdJydy()}}
+{\footnotesize\ttfamily void fd\+Jydy (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{d\+Jydy,  }\item[{int}]{iy,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{y,  }\item[{const realtype $\ast$}]{sigmay,  }\item[{const realtype $\ast$}]{my }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em d\+Jydy} & partial derivative of time-\/resolved measurement negative log-\/likelihood Jy \\
+\hline
+{\em iy} & output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em y} & model output at timepoint \\
+\hline
+{\em sigmay} & measurement standard deviation at timepoint \\
+\hline
+{\em my} & measurement at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 411 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a49d678e49297bd0b725c8515e6857f7d}\label{classamici_1_1_abstract_model_a49d678e49297bd0b725c8515e6857f7d}} 
+\index{AbstractModel@{AbstractModel}!fdJydsigma@{fdJydsigma}}
+\index{fdJydsigma@{fdJydsigma}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdJydsigma()}{fdJydsigma()}}
+{\footnotesize\ttfamily void fd\+Jydsigma (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{d\+Jydsigma,  }\item[{int}]{iy,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{y,  }\item[{const realtype $\ast$}]{sigmay,  }\item[{const realtype $\ast$}]{my }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em d\+Jydsigma} & Sensitivity of time-\/resolved measurement negative log-\/likelihood Jy w.\+r.\+t. standard deviation sigmay \\
+\hline
+{\em iy} & output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em y} & model output at timepoint \\
+\hline
+{\em sigmay} & measurement standard deviation at timepoint \\
+\hline
+{\em my} & measurement at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 425 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_aefce48230d6b6239b6ae77f0a0dabb5d}\label{classamici_1_1_abstract_model_aefce48230d6b6239b6ae77f0a0dabb5d}} 
+\index{AbstractModel@{AbstractModel}!fdJzdz@{fdJzdz}}
+\index{fdJzdz@{fdJzdz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdJzdz()}{fdJzdz()}}
+{\footnotesize\ttfamily void fd\+Jzdz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{d\+Jzdz,  }\item[{int}]{iz,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{z,  }\item[{const realtype $\ast$}]{sigmaz,  }\item[{const realtype $\ast$}]{mz }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em d\+Jzdz} & partial derivative of event measurement negative log-\/likelihood Jz \\
+\hline
+{\em iz} & event output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em z} & model event output at timepoint \\
+\hline
+{\em sigmaz} & event measurement standard deviation at timepoint \\
+\hline
+{\em mz} & event measurement at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 439 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_aad7878ff06a7e13374d4fb830c52b9b0}\label{classamici_1_1_abstract_model_aad7878ff06a7e13374d4fb830c52b9b0}} 
+\index{AbstractModel@{AbstractModel}!fdJzdsigma@{fdJzdsigma}}
+\index{fdJzdsigma@{fdJzdsigma}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdJzdsigma()}{fdJzdsigma()}}
+{\footnotesize\ttfamily void fd\+Jzdsigma (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{d\+Jzdsigma,  }\item[{int}]{iz,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{z,  }\item[{const realtype $\ast$}]{sigmaz,  }\item[{const realtype $\ast$}]{mz }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em d\+Jzdsigma} & Sensitivity of event measurement negative log-\/likelihood Jz w.\+r.\+t. standard deviation sigmaz \\
+\hline
+{\em iz} & event output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em z} & model event output at timepoint \\
+\hline
+{\em sigmaz} & event measurement standard deviation at timepoint \\
+\hline
+{\em mz} & event measurement at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 453 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ac031e3a2608ea286c6c6491a26ef1b6d}\label{classamici_1_1_abstract_model_ac031e3a2608ea286c6c6491a26ef1b6d}} 
+\index{AbstractModel@{AbstractModel}!fdJrzdz@{fdJrzdz}}
+\index{fdJrzdz@{fdJrzdz}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdJrzdz()}{fdJrzdz()}}
+{\footnotesize\ttfamily void fd\+Jrzdz (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{d\+Jrzdz,  }\item[{int}]{iz,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{rz,  }\item[{const realtype $\ast$}]{sigmaz }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em d\+Jrzdz} & partial derivative of event penalization Jrz \\
+\hline
+{\em iz} & event output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em rz} & model root output at timepoint \\
+\hline
+{\em sigmaz} & event measurement standard deviation at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 467 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_aa7f0aac5ca0bbf05d1818155984b88d9}\label{classamici_1_1_abstract_model_aa7f0aac5ca0bbf05d1818155984b88d9}} 
+\index{AbstractModel@{AbstractModel}!fdJrzdsigma@{fdJrzdsigma}}
+\index{fdJrzdsigma@{fdJrzdsigma}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdJrzdsigma()}{fdJrzdsigma()}}
+{\footnotesize\ttfamily void fd\+Jrzdsigma (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{d\+Jrzdsigma,  }\item[{int}]{iz,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{rz,  }\item[{const realtype $\ast$}]{sigmaz }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em d\+Jrzdsigma} & Sensitivity of event penalization Jrz w.\+r.\+t. standard deviation sigmaz \\
+\hline
+{\em iz} & event output index \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constant vector \\
+\hline
+{\em rz} & model root output at timepoint \\
+\hline
+{\em sigmaz} & event measurement standard deviation at timepoint \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 480 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a2585711abceff87534bab1260b5c52ef}\label{classamici_1_1_abstract_model_a2585711abceff87534bab1260b5c52ef}} 
+\index{AbstractModel@{AbstractModel}!fw@{fw}}
+\index{fw@{fw}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fw()}{fw()}}
+{\footnotesize\ttfamily void fw (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{w,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{tcl }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & Recurring terms in xdot \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em tcl} & total abundances for conservations laws \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 493 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_aafe74be1a2f867c558d77c6832ac2e21}\label{classamici_1_1_abstract_model_aafe74be1a2f867c558d77c6832ac2e21}} 
+\index{AbstractModel@{AbstractModel}!fdwdp@{fdwdp}}
+\index{fdwdp@{fdwdp}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdwdp()}{fdwdp()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily void fdwdp (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dwdp,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{tcl,  }\item[{const realtype $\ast$}]{stcl }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dwdp} & Recurring terms in xdot, parameter derivative \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em tcl} & total abundances for conservations laws \\
+\hline
+{\em stcl} & sensitivities of total abundances for conservations laws \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 505 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_af01c88fa595b044dfe13b89c38c3e4aa}\label{classamici_1_1_abstract_model_af01c88fa595b044dfe13b89c38c3e4aa}} 
+\index{AbstractModel@{AbstractModel}!fdwdp\_colptrs@{fdwdp\_colptrs}}
+\index{fdwdp\_colptrs@{fdwdp\_colptrs}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdwdp\_colptrs()}{fdwdp\_colptrs()}}
+{\footnotesize\ttfamily void fdwdp\+\_\+colptrs (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexptrs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexptrs} & column pointers \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 519 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_af01c88fa595b044dfe13b89c38c3e4aa_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a7f8f45ae5b3f2edc4c4c64bbe4c6bce4}\label{classamici_1_1_abstract_model_a7f8f45ae5b3f2edc4c4c64bbe4c6bce4}} 
+\index{AbstractModel@{AbstractModel}!fdwdp\_rowvals@{fdwdp\_rowvals}}
+\index{fdwdp\_rowvals@{fdwdp\_rowvals}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdwdp\_rowvals()}{fdwdp\_rowvals()}}
+{\footnotesize\ttfamily void fdwdp\+\_\+rowvals (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexvals }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexvals} & row values \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 525 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a7f8f45ae5b3f2edc4c4c64bbe4c6bce4_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_acec9e67fe4436a64d0dee4a91dff8588}\label{classamici_1_1_abstract_model_acec9e67fe4436a64d0dee4a91dff8588}} 
+\index{AbstractModel@{AbstractModel}!fdwdp@{fdwdp}}
+\index{fdwdp@{fdwdp}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdwdp()}{fdwdp()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily void fdwdp (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dwdp,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{tcl,  }\item[{const realtype $\ast$}]{stcl,  }\item[{int}]{ip }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dwdp} & Recurring terms in xdot, parameter derivative \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em tcl} & total abundances for conservations laws \\
+\hline
+{\em stcl} & sensitivities of total abundances for conservations laws \\
+\hline
+{\em ip} & sensitivity parameter index \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 531 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_ab88df32c6c55a17ed30e3ede9396cc53}\label{classamici_1_1_abstract_model_ab88df32c6c55a17ed30e3ede9396cc53}} 
+\index{AbstractModel@{AbstractModel}!fdwdx@{fdwdx}}
+\index{fdwdx@{fdwdx}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdwdx()}{fdwdx()}}
+{\footnotesize\ttfamily void fdwdx (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{dwdx,  }\item[{const realtype}]{t,  }\item[{const realtype $\ast$}]{x,  }\item[{const realtype $\ast$}]{p,  }\item[{const realtype $\ast$}]{k,  }\item[{const realtype $\ast$}]{h,  }\item[{const realtype $\ast$}]{w,  }\item[{const realtype $\ast$}]{tcl }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em dwdx} & Recurring terms in xdot, state derivative \\
+\hline
+{\em t} & timepoint \\
+\hline
+{\em x} & vector with the states \\
+\hline
+{\em p} & parameter vector \\
+\hline
+{\em k} & constants vector \\
+\hline
+{\em h} & heavyside vector \\
+\hline
+{\em w} & vector with helper variables \\
+\hline
+{\em tcl} & total abundances for conservations laws \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 546 of file abstract\+\_\+model.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a8d0efa23764dd2210e01f40918be36ae}\label{classamici_1_1_abstract_model_a8d0efa23764dd2210e01f40918be36ae}} 
+\index{AbstractModel@{AbstractModel}!fdwdx\_colptrs@{fdwdx\_colptrs}}
+\index{fdwdx\_colptrs@{fdwdx\_colptrs}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdwdx\_colptrs()}{fdwdx\_colptrs()}}
+{\footnotesize\ttfamily void fdwdx\+\_\+colptrs (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexptrs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexptrs} & column pointers \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 559 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a8d0efa23764dd2210e01f40918be36ae_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_abstract_model_a209b18059172ea4286c85931d0231a8a}\label{classamici_1_1_abstract_model_a209b18059172ea4286c85931d0231a8a}} 
+\index{AbstractModel@{AbstractModel}!fdwdx\_rowvals@{fdwdx\_rowvals}}
+\index{fdwdx\_rowvals@{fdwdx\_rowvals}!AbstractModel@{AbstractModel}}
+\doxyparagraph{\texorpdfstring{fdwdx\_rowvals()}{fdwdx\_rowvals()}}
+{\footnotesize\ttfamily void fdwdx\+\_\+rowvals (\begin{DoxyParamCaption}\item[{sunindextype $\ast$}]{indexvals }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em indexvals} & row values \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 565 of file abstract\+\_\+model.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_abstract_model_a209b18059172ea4286c85931d0231a8a_icgraph}
+\end{center}
+\end{figure}

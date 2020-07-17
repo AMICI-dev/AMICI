@@ -1,0 +1,10 @@
+<map id="setMaxSteps" name="setMaxSteps">
+<area shape="rect" id="node1" title="sets the maximum number of solver steps for the forward problem" alt="" coords="5,107,104,133"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a89667d5b61c9ad3829415b9cd26baf5e" title="checks whether memory for forward interpolation has been allocated" alt="" coords="170,5,278,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a0f8e994055e37954d7746f3c1af27a5c" title="number of parameters with which the solver was initialized" alt="" coords="346,75,399,101"/>
+<area shape="rect" id="node5" href="$classamici_1_1_solver.html#a5df527ca34def937e6ca2835fc644ec3" title="number of quadratures with which the solver was initialized" alt="" coords="344,191,401,217"/>
+<area shape="rect" id="node7" href="$classamici_1_1_solver.html#ad5665a34d43b7022af0fc096c204ee34" title="number of states with which the solver was initialized" alt="" coords="353,140,392,167"/>
+<area shape="rect" id="node8" href="$classamici_1_1_solver.html#adadf5f53f5e713fdca870877af5563a1" title="resets solverMemory and solverMemoryB" alt="" coords="152,157,296,184"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector_array.html#a5f00d4dc3e7866d193ce926f35542801" title="length of AmiVectorArray" alt="" coords="467,67,619,109"/>
+<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="449,155,636,181"/>
+</map>

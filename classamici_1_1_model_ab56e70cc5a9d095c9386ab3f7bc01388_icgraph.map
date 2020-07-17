@@ -1,0 +1,4 @@
+<map id="getEventRegularizationSensitivity" name="getEventRegularizationSensitivity">
+<area shape="rect" id="node1" title="Sensitivities of regularization for event&#45;resolved observables, total derivative (only forward sensit..." alt="" coords="193,13,412,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,5,145,47"/>
+</map>

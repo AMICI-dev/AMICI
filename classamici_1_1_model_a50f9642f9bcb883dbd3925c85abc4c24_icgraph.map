@@ -1,0 +1,4 @@
+<map id="setTimepoints" name="setTimepoints">
+<area shape="rect" id="node1" title="Set the timepoint vector." alt="" coords="216,13,320,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original settings on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="5,5,168,47"/>
+</map>

@@ -1,0 +1,21 @@
+<map id="fJSparseB" name="fJSparseB">
+<area shape="rect" id="node1" title="Implementation of fJSparseB at the N_Vector level, this function provides an interface to the model s..." alt="" coords="5,257,88,284"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a0259cf8f0b132a25345ddc30c91febe8" title="Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to fa..." alt="" coords="136,81,327,108"/>
+<area shape="rect" id="node6" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="387,158,562,199"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a7afd5fb5b12531657d3536508fd7a066" title="Recurring terms in xdot, state derivative." alt="" coords="162,327,301,353"/>
+<area shape="rect" id="node17" href="$classamici_1_1_model___o_d_e.html#aad4e82ee649196eff3cae36c944a1980" title="Sparse Jacobian function." alt="" coords="190,149,273,176"/>
+<area shape="rect" id="node18" href="$classamici_1_1_model___o_d_e.html#a0977506663e44949382795a2688ea056" title="Model specific implementation for fJSparse, column pointers." alt="" coords="167,377,296,404"/>
+<area shape="rect" id="node19" href="$classamici_1_1_model___o_d_e.html#a94c75a1a59702fc674a71cea67cbb27c" title="Model specific implementation for fJSparse, row values." alt="" coords="164,428,299,455"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="405,5,545,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="381,56,568,83"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="377,107,572,133"/>
+<area shape="rect" id="node8" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="623,309,781,350"/>
+<area shape="rect" id="node10" href="$classamici_1_1_abstract_model.html#a8d0efa23764dd2210e01f40918be36ae" title="Model specific implementation for dwdx, column pointers." alt="" coords="402,275,547,317"/>
+<area shape="rect" id="node11" href="$classamici_1_1_abstract_model.html#a209b18059172ea4286c85931d0231a8a" title="Model specific implementation for dwdx, row values." alt="" coords="402,341,547,382"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="415,407,534,433"/>
+<area shape="rect" id="node13" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="375,457,575,484"/>
+<area shape="rect" id="node14" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="387,509,562,550"/>
+<area shape="rect" id="node15" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="387,574,562,615"/>
+<area shape="rect" id="node16" href="$classamici_1_1_s_u_n_matrix_wrapper.html#ad20897c5c8bd47f5d4005989bead0e55" title="reset data to zeroes" alt="" coords="387,639,562,681"/>
+<area shape="rect" id="node9" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="829,309,988,350"/>
+</map>

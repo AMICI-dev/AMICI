@@ -1,0 +1,7 @@
+<map id="am_xor" name="am_xor">
+<area shape="rect" id="node1" title="am_xor is the amici implementation of the symbolic exclusive or function" alt="" coords="5,31,71,57"/>
+<area shape="rect" id="node2" href="$am__and_8m.html#a28bdd6e5dc114fc35fcf8693146ff875" title="am_and is the amici implementation of the symbolic and function" alt="" coords="119,5,187,32"/>
+<area shape="rect" id="node5" href="$am__or_8m.html#ac2f628eff43d15e946e5553ad154e075" title="am_or is the amici implementation of the symbolic or function" alt="" coords="239,56,298,83"/>
+<area shape="rect" id="node3" href="$am__min_8m.html#aca48d57062ac9406e23573d38c8e0ca5" title="am_min is the amici implementation of the symbolic min function" alt="" coords="235,5,303,32"/>
+<area shape="rect" id="node4" href="$am__max_8m.html#aa63bab78ca3470d2a6710500b2c4607d" title="am_max is the amici implementation of the symbolic max function" alt="" coords="351,31,423,57"/>
+</map>

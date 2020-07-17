@@ -1,0 +1,6 @@
+<map id="NewtonSolver" name="NewtonSolver">
+<area shape="rect" id="node1" title="The NewtonSolver class sets up the linear solver for the Newton method." alt="" coords="195,5,299,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_newton_solver_dense.html" title="The NewtonSolverDense provides access to the dense linear solver for the Newton method." alt="" coords="5,80,148,107"/>
+<area shape="rect" id="node3" href="$classamici_1_1_newton_solver_iterative.html" title="The NewtonSolverIterative provides access to the iterative linear solver for the Newton method." alt="" coords="172,80,323,107"/>
+<area shape="rect" id="node4" href="$classamici_1_1_newton_solver_sparse.html" title="The NewtonSolverSparse provides access to the sparse linear solver for the Newton method." alt="" coords="347,80,492,107"/>
+</map>

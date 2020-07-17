@@ -1,0 +1,7 @@
+<map id="getParameterList" name="getParameterList">
+<area shape="rect" id="node1" title="Get the list of parameters for which sensitivities are computed." alt="" coords="723,46,844,73"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#a8e3a8eeeb0b157da84fe7dac1e0d209b" title="Compute the backward quadratures, which contribute to the gradient (xQB) from the quadrature over the..." alt="" coords="496,39,675,80"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#acace0e4d1a8cd079bf189718db73208a" title="Checks convergence for state and respective sensitivities." alt="" coords="269,5,448,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#ab0b999d56e310b3326d8bcbaa095e86f" title="Computes the quadrature in steady state backward mode by solving the linear system defined by the bac..." alt="" coords="269,71,448,112"/>
+<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="5,71,221,112"/>
+</map>

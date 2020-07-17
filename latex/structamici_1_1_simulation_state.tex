@@ -1,0 +1,84 @@
+\hypertarget{structamici_1_1_simulation_state}{}\doxysubsection{Simulation\+State Struct Reference}
+\label{structamici_1_1_simulation_state}\index{SimulationState@{SimulationState}}
+
+
+implements an exchange format to store and transfer the state of a simulation at a specific timepoint.  
+
+
+
+
+{\ttfamily \#include $<$forwardproblem.\+h$>$}
+
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+realtype \mbox{\hyperlink{structamici_1_1_simulation_state_a9f893f19a3a919f40a183e2a8c257d5d}{t}}
+\item 
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{structamici_1_1_simulation_state_a21d1072c89106111228b3ce4fe82c7a5}{x}}
+\item 
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{structamici_1_1_simulation_state_a17e4770df418fc1f2c4283d7e188d81d}{dx}}
+\item 
+\mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} \mbox{\hyperlink{structamici_1_1_simulation_state_a37fcdc6a646c62bd3c88e2fcbcfcb9b3}{sx}}
+\item 
+\mbox{\hyperlink{structamici_1_1_model_state}{Model\+State}} \mbox{\hyperlink{structamici_1_1_simulation_state_a275969e2d119a8c31fe53a4369fad33e}{state}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+
+
+Definition at line 25 of file forwardproblem.\+h.
+
+
+
+\doxysubsubsection{Member Data Documentation}
+\mbox{\Hypertarget{structamici_1_1_simulation_state_a9f893f19a3a919f40a183e2a8c257d5d}\label{structamici_1_1_simulation_state_a9f893f19a3a919f40a183e2a8c257d5d}} 
+\index{SimulationState@{SimulationState}!t@{t}}
+\index{t@{t}!SimulationState@{SimulationState}}
+\doxyparagraph{\texorpdfstring{t}{t}}
+{\footnotesize\ttfamily realtype t}
+
+timepoint 
+
+Definition at line 27 of file forwardproblem.\+h.
+
+\mbox{\Hypertarget{structamici_1_1_simulation_state_a21d1072c89106111228b3ce4fe82c7a5}\label{structamici_1_1_simulation_state_a21d1072c89106111228b3ce4fe82c7a5}} 
+\index{SimulationState@{SimulationState}!x@{x}}
+\index{x@{x}!SimulationState@{SimulationState}}
+\doxyparagraph{\texorpdfstring{x}{x}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} x}
+
+state variables 
+
+Definition at line 29 of file forwardproblem.\+h.
+
+\mbox{\Hypertarget{structamici_1_1_simulation_state_a17e4770df418fc1f2c4283d7e188d81d}\label{structamici_1_1_simulation_state_a17e4770df418fc1f2c4283d7e188d81d}} 
+\index{SimulationState@{SimulationState}!dx@{dx}}
+\index{dx@{dx}!SimulationState@{SimulationState}}
+\doxyparagraph{\texorpdfstring{dx}{dx}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dx}
+
+state variables 
+
+Definition at line 31 of file forwardproblem.\+h.
+
+\mbox{\Hypertarget{structamici_1_1_simulation_state_a37fcdc6a646c62bd3c88e2fcbcfcb9b3}\label{structamici_1_1_simulation_state_a37fcdc6a646c62bd3c88e2fcbcfcb9b3}} 
+\index{SimulationState@{SimulationState}!sx@{sx}}
+\index{sx@{sx}!SimulationState@{SimulationState}}
+\doxyparagraph{\texorpdfstring{sx}{sx}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} sx}
+
+state variable sensitivity 
+
+Definition at line 33 of file forwardproblem.\+h.
+
+\mbox{\Hypertarget{structamici_1_1_simulation_state_a275969e2d119a8c31fe53a4369fad33e}\label{structamici_1_1_simulation_state_a275969e2d119a8c31fe53a4369fad33e}} 
+\index{SimulationState@{SimulationState}!state@{state}}
+\index{state@{state}!SimulationState@{SimulationState}}
+\doxyparagraph{\texorpdfstring{state}{state}}
+{\footnotesize\ttfamily \mbox{\hyperlink{structamici_1_1_model_state}{Model\+State}} state}
+
+state of the model that was used for simulation 
+
+Definition at line 35 of file forwardproblem.\+h.
+

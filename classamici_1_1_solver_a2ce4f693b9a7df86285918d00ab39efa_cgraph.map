@@ -1,0 +1,5 @@
+<map id="getStateSensitivity" name="getStateSensitivity">
+<area shape="rect" id="node1" title="Access state sensitivity solution at time t." alt="" coords="5,31,137,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#adb95560b4cc88c3e353fbbb92c843ef5" title="extracts the state sensitivity at the current timepoint from solver memory and writes it to the sx me..." alt="" coords="197,5,268,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a9c5dfcede005c555593ecad166a31fa0" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="185,56,280,83"/>
+</map>

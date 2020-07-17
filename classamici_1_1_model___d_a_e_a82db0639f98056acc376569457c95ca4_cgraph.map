@@ -1,0 +1,9 @@
+<map id="fM" name="fM">
+<area shape="rect" id="node1" title="Mass matrix for DAE systems." alt="" coords="5,115,44,141"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a0259cf8f0b132a25345ddc30c91febe8" title="Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to fa..." alt="" coords="97,56,287,83"/>
+<area shape="rect" id="node6" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="105,107,279,149"/>
+<area shape="rect" id="node7" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="92,173,292,200"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="367,5,507,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="344,56,531,83"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="340,107,535,133"/>
+</map>

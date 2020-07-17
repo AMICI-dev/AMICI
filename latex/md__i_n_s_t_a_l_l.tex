@@ -1,0 +1,262 @@
+\hypertarget{md__i_n_s_t_a_l_l_autotoc_md12}{}\doxysubsection{Table of Contents}\label{md__i_n_s_t_a_l_l_autotoc_md12}
+
+\begin{DoxyEnumerate}
+\item \href{\#availability}{\texttt{ Availability}}
+\item \href{\#python}{\texttt{ Python}}
+\item \href{\#matlab}{\texttt{ M\+A\+T\+L\+AB}}
+\item \href{\#cpp}{\texttt{ C++ only}}
+\item \href{\#dependencies}{\texttt{ Dependencies}}
+\end{DoxyEnumerate}
+
+\label{_availability}%
+ \hypertarget{md__i_n_s_t_a_l_l_autotoc_md13}{}\doxysubsection{Availability}\label{md__i_n_s_t_a_l_l_autotoc_md13}
+The sources for A\+M\+I\+CI are available as
+\begin{DoxyItemize}
+\item Source \href{https://github.com/ICB-DCM/AMICI/tarball/master}{\texttt{ tarball}}
+\item Source \href{https://github.com/ICB-DCM/AMICI/zipball/master}{\texttt{ zip}}
+\item G\+IT repository on \href{https://github.com/ICB-DCM/AMICI}{\texttt{ github}}
+\end{DoxyItemize}
+
+A Python package is available on pypi, see below.
+
+If A\+M\+I\+CI was downloaded as a zip, it needs to be unpacked in a convenient directory. If A\+M\+I\+CI was obtained via cloning of the git repository, no further unpacking is necessary.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md14}{}\doxysubsubsection{Obtaining A\+M\+I\+C\+I via the G\+I\+T version control system}\label{md__i_n_s_t_a_l_l_autotoc_md14}
+In order to always stay up-\/to-\/date with the latest A\+M\+I\+CI versions, simply pull it from our G\+IT repository and recompile it when a new release is available. For more information about G\+IT checkout their \href{http://git-scm.com/}{\texttt{ website}}
+
+The G\+IT repository can currently be found at \href{https://github.com/ICB-DCM/AMICI}{\texttt{ https\+://github.\+com/\+I\+C\+B-\/\+D\+C\+M/\+A\+M\+I\+CI}} and a direct clone is possible via \begin{DoxyVerb}git clone https://github.com/ICB-DCM/AMICI.git AMICI
+\end{DoxyVerb}
+
+
+\label{_python}%
+ \hypertarget{md__i_n_s_t_a_l_l_autotoc_md15}{}\doxysubsection{Python}\label{md__i_n_s_t_a_l_l_autotoc_md15}
+To use A\+M\+I\+CI from python, install the module and all other requirements using pip\+: \begin{DoxyVerb}pip3 install amici
+\end{DoxyVerb}
+
+
+You can now import it as python module\+: \begin{DoxyVerb}import amici
+\end{DoxyVerb}
+
+
+For cases where this installation fails, check below for special setups and custom installations. For Python-\/\+A\+M\+I\+CI usage see \href{https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md}{\texttt{ https\+://github.\+com/\+I\+C\+B-\/\+D\+C\+M/\+A\+M\+I\+C\+I/blob/master/documentation/\+P\+Y\+T\+H\+O\+N.\+md}}.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md16}{}\doxysubsubsection{Installation of development versions}\label{md__i_n_s_t_a_l_l_autotoc_md16}
+To install development versions which have not been released to pypi yet, you can install A\+M\+I\+CI with pip directly from Git\+Hub using\+: \begin{DoxyVerb}pip3 install -e git+https://github.com/icb-dcm/amici.git@develop#egg=amici\&subdirectory=python/sdist
+\end{DoxyVerb}
+
+
+Replace {\ttfamily develop} by the branch or commit you want to install.
+
+Note that this will probably not work on Windows which does not support symlinks by default (\href{https://stackoverflow.com/questions/5917249/git-symlinks-in-windows/49913019\#49913019}{\texttt{ https\+://stackoverflow.\+com/questions/5917249/git-\/symlinks-\/in-\/windows/49913019\#49913019}}).\hypertarget{md__i_n_s_t_a_l_l_autotoc_md17}{}\doxysubsubsection{Light installation}\label{md__i_n_s_t_a_l_l_autotoc_md17}
+In case you only want to use the A\+M\+I\+CI Python package for generating model code for use with Matlab or C++ and don\textquotesingle{}t want to bothered with any unnecessary dependencies, you can run \begin{DoxyVerb}pip3 install --install-option --no-clibs amici
+\end{DoxyVerb}
+
+
+Note, however, that you will not be able to compile any model into a Python extension with this installation.
+
+N\+O\+TE\+: If you run into an error with above installation command, install all A\+M\+I\+CI dependencies listed in \href{https://github.com/ICB-DCM/AMICI/blob/master/python/sdist/setup.py}{\texttt{ {\ttfamily setup.\+py}}} manually, and try again. (This is because {\ttfamily pip} {\ttfamily -\/-\/install-\/option}s are applied to {\itshape all} installed packages, including dependencies.)\hypertarget{md__i_n_s_t_a_l_l_autotoc_md18}{}\doxysubsubsection{Anaconda}\label{md__i_n_s_t_a_l_l_autotoc_md18}
+To use an Anaconda installation of python (\href{https://www.anaconda.com/distribution/}{\texttt{ https\+://www.\+anaconda.\+com/distribution/}}, Python$>$=3.\+6), proceed as follows\+:
+
+Since Anaconda provides own versions of some packages which might not work with amici (in particular the gcc compiler), create a minimal virtual environment via\+: \begin{DoxyVerb}conda create --name ENV_NAME pip python
+\end{DoxyVerb}
+
+
+Here, replace E\+N\+V\+\_\+\+N\+A\+ME by some name for the environment. To activate the environment, do\+: \begin{DoxyVerb}source activate ENV_NAME
+\end{DoxyVerb}
+
+
+(and {\ttfamily conda deactivate} later to deactivate it again).
+
+S\+W\+IG must be installed and available in your {\ttfamily P\+A\+TH}, and a C\+B\+L\+A\+S-\/compatible B\+L\+AS must be available. You can also use conda to install the latter locally, using\+: \begin{DoxyVerb}conda install -c conda-forge openblas
+\end{DoxyVerb}
+
+
+To install A\+M\+I\+CI, now do\+: \begin{DoxyVerb}pip install amici
+\end{DoxyVerb}
+
+
+The option {\ttfamily -\/-\/no-\/cache} may be helpful here to make sure the installation is done completely anew.
+
+Now, you are ready to use A\+M\+I\+CI in the virtual environment.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md19}{}\doxyparagraph{Anaconda on Mac}\label{md__i_n_s_t_a_l_l_autotoc_md19}
+If the above installation does not work for you, try installing A\+M\+I\+CI via\+: \begin{DoxyVerb}CFLAGS="-stdlib=libc++" CC=clang CXX=clang pip3 install --verbose amici
+\end{DoxyVerb}
+
+
+This will use the {\ttfamily clang} compiler.
+
+You will have to pass the same options when compiling any model later on. This can be done by inserting the following code before calling {\ttfamily sbml2amici}\+: \begin{DoxyVerb}import os
+os.environ['CC'] = 'clang'
+os.environ['CXX'] = 'clang'
+os.environ['CFLAGS'] = '-stdlib=libc++'
+\end{DoxyVerb}
+
+
+(For further discussion see \href{https://github.com/ICB-DCM/AMICI/issues/357}{\texttt{ https\+://github.\+com/\+I\+C\+B-\/\+D\+C\+M/\+A\+M\+I\+C\+I/issues/357}})\hypertarget{md__i_n_s_t_a_l_l_autotoc_md20}{}\doxysubsubsection{Windows}\label{md__i_n_s_t_a_l_l_autotoc_md20}
+To install A\+M\+I\+CI on Windows using python, you can proceed as follows\+:
+
+Some general remarks\+:
+
+
+\begin{DoxyItemize}
+\item Install all libraries in a path not containing white spaces, e.\+g. directly under C\+:.
+\item Replace the following paths according to your installation.
+\item Slashes can be preferable to backslashes for some environment variables.
+\item See also \href{https://github.com/icb-dcm/amici/issues/425}{\texttt{ \#425}} for further discussion.
+\end{DoxyItemize}
+
+Then, follow these steps\+:
+
+
+\begin{DoxyItemize}
+\item A python environment for Windows is required. We recommend \href{https://www.anaconda.com/distribution/}{\texttt{ Anaconda}} with python $>$=3.\+6.
+\item Install \href{https://sourceforge.net/projects/mingw-w64/files/latest/download}{\texttt{ mingw64}} (32bit will succeed to compile, but fail during linking). During installation, select Version=8.\+1.\+0, Architecture=x64\+\_\+64. Add the following directory to {\ttfamily P\+A\+TH}\+:
+\begin{DoxyItemize}
+\item {\ttfamily C\+:\textbackslash{}mingw-\/w64\textbackslash{}x86\+\_\+64-\/8.\+1.\+0-\/posix-\/sjlj-\/rt\+\_\+v6-\/rev0\textbackslash{}mingw64\textbackslash{}bin}
+\end{DoxyItemize}
+\item Make sure that this is the compiler that is found by the system (e.\+g. {\ttfamily where gcc} in a {\ttfamily cmd} should point to this installation).
+\item Download C\+B\+L\+AS headers and libraries, e.\+g. \href{https://sourceforge.net/projects/openblas/files/v0.2.19/}{\texttt{ Open\+B\+L\+AS}}, binary distribution 0.\+2.\+19. Set the following environment variables\+:
+\begin{DoxyItemize}
+\item {\ttfamily B\+L\+A\+S\+\_\+\+C\+F\+L\+A\+GS=-\/IC\+:/\+Open\+B\+L\+A\+S-\/v0.2.\+19-\/Win64-\/int32/include}
+\item {\ttfamily B\+L\+A\+S\+\_\+\+L\+I\+BS=-\/Wl,-\/Bstatic -\/LC\+:/\+Open\+B\+L\+A\+S-\/v0.2.\+19-\/Win64-\/int32/lib -\/lopenblas -\/Wl,-\/Bdynamic}
+\end{DoxyItemize}
+\item Install \href{http://www.swig.org/download.html}{\texttt{ S\+W\+IG}} (version swigwin-\/3.\+0.\+12 worked) and add the following directory to {\ttfamily P\+A\+TH}\+:
+\begin{DoxyItemize}
+\item {\ttfamily C\+:\textbackslash{}swigwin-\/3.\+0.\+12}
+\end{DoxyItemize}
+\item Install A\+M\+I\+CI using\+:
+
+{\ttfamily pip install -\/-\/global-\/option=\char`\"{}build\+\_\+clib\char`\"{} -\/-\/global-\/option=\char`\"{}-\/-\/compiler=mingw32\char`\"{} -\/-\/global-\/option=\char`\"{}build\+\_\+ext\char`\"{} -\/-\/global-\/option=\char`\"{}-\/-\/compiler=mingw32\char`\"{} amici -\/-\/no-\/cache-\/dir -\/-\/verbose}
+\end{DoxyItemize}
+
+Possible sources of errors\+:
+
+
+\begin{DoxyItemize}
+\item On recent Windows versions, {\ttfamily anaconda3\textbackslash{}Lib\textbackslash{}distutils\textbackslash{}cygwinccompiler.\+py} fails linking {\ttfamily msvcr140.\+dll} with {\ttfamily \mbox{[}...\mbox{]} x86\+\_\+64-\/w64-\/mingw32/bin/ld.\+exe\+: cannot find -\/lmsvcr140}. This is not required for amici, so in {\ttfamily cygwinccompiler.\+py} `return \mbox{[}\textquotesingle{}msvcr140'\mbox{]}{\ttfamily can be changed to}return \mbox{[}\mbox{]}\`{}.
+\item If you use a python version where \href{https://github.com/python/cpython/pull/880}{\texttt{ python/cpython\#880}} has not been fixed yet, you need to disable {\ttfamily define hypot \+\_\+hypot in anaconda3\textbackslash{}include/pyconfig.\+h} yourself.
+\item {\ttfamily import amici} in python resulting in the very informative
+\end{DoxyItemize}
+
+\begin{quote}
+Import\+Error\+: D\+LL load failed\+: The specified module could not be found. \end{quote}
+
+
+means that some amici module dependencies were not found (not the A\+M\+I\+CI module itself). \href{http://www.dependencywalker.com/}{\texttt{ Dependency\+Walker}} will show you which ones.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md21}{}\doxysubsubsection{Custom installation}\label{md__i_n_s_t_a_l_l_autotoc_md21}
+A\+M\+I\+CI Python package installation can be customized using a number of environment variables\+:
+
+\tabulinesep=1mm
+\begin{longtabu}spread 0pt [c]{*{3}{|X[-1]}|}
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Variable }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Purpose }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Example  }\\\cline{1-3}
+\endfirsthead
+\hline
+\endfoot
+\hline
+\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Variable }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Purpose }&\PBS\centering \cellcolor{\tableheadbgcolor}\textbf{ Example  }\\\cline{1-3}
+\endhead
+{\ttfamily CC} &Setting the C(++) compiler &{\ttfamily CC=/usr/bin/g++}  \\\cline{1-3}
+{\ttfamily C\+F\+L\+A\+GS} &Extra compiler flags used in every compiler call &\\\cline{1-3}
+{\ttfamily B\+L\+A\+S\+\_\+\+C\+F\+L\+A\+GS} &Compiler flags for, e.\+g. B\+L\+AS include directories &\\\cline{1-3}
+{\ttfamily B\+L\+A\+S\+\_\+\+L\+I\+BS} &Flags for linking B\+L\+AS &\\\cline{1-3}
+{\ttfamily E\+N\+A\+B\+L\+E\+\_\+\+G\+C\+O\+V\+\_\+\+C\+O\+V\+E\+R\+A\+GE} &Set to build A\+M\+I\+CI to provide code coverage information &{\ttfamily E\+N\+A\+B\+L\+E\+\_\+\+G\+C\+O\+V\+\_\+\+C\+O\+V\+E\+R\+A\+GE=T\+R\+UE}  \\\cline{1-3}
+{\ttfamily E\+N\+A\+B\+L\+E\+\_\+\+A\+M\+I\+C\+I\+\_\+\+D\+E\+B\+U\+G\+G\+I\+NG} &Set to build A\+M\+I\+CI with debugging symbols &{\ttfamily E\+N\+A\+B\+L\+E\+\_\+\+A\+M\+I\+C\+I\+\_\+\+D\+E\+B\+U\+G\+G\+I\+NG=T\+R\+UE}  \\\cline{1-3}
+{\ttfamily A\+M\+I\+C\+I\+\_\+\+P\+A\+R\+A\+L\+L\+E\+L\+\_\+\+C\+O\+M\+P\+I\+LE} &Set to the number of parallel processes to be used for C(++) file compilation (defaults to 1) &{\ttfamily A\+M\+I\+C\+I\+\_\+\+P\+A\+R\+A\+L\+L\+E\+L\+\_\+\+C\+O\+M\+P\+I\+LE=4}  \\\cline{1-3}
+\end{longtabu}
+
+
+\label{_matlab}%
+ \hypertarget{md__i_n_s_t_a_l_l_autotoc_md22}{}\doxysubsection{M\+A\+T\+L\+AB}\label{md__i_n_s_t_a_l_l_autotoc_md22}
+To use A\+M\+I\+CI from M\+A\+T\+L\+AB, start M\+A\+T\+L\+AB and add the {\ttfamily A\+M\+I\+C\+I/matlab} directory to the M\+A\+T\+L\+AB path. To add all toolbox directories to the M\+A\+T\+L\+AB path, execute the matlab script \begin{DoxyVerb}installAMICI.m
+\end{DoxyVerb}
+
+
+To store the installation for further M\+A\+T\+L\+AB session, the path can be saved via \begin{DoxyVerb}savepath
+\end{DoxyVerb}
+
+
+For the compilation of .mex files, M\+A\+T\+L\+AB needs to be configured with a working C++ compiler. The C++ compiler needs to be installed and configured via\+: \begin{DoxyVerb}mex -setup c++
+\end{DoxyVerb}
+
+
+For a list of supported compilers we refer to the mathworks documentation\+: \href{http://mathworks.com/support/compilers/R2018b/index.html}{\texttt{ mathworks.\+com}} Note that Microsoft Visual Studio compilers are currently not supported.
+
+\label{_cpp}%
+ \hypertarget{md__i_n_s_t_a_l_l_autotoc_md23}{}\doxysubsection{C++ only}\label{md__i_n_s_t_a_l_l_autotoc_md23}
+To use A\+M\+I\+CI from C++, run the \begin{DoxyVerb}./scripts/buildSundials.sh
+./scripts/buildSuitesparse.sh
+./scripts/buildAmici.sh
+\end{DoxyVerb}
+
+
+script to compile A\+M\+I\+CI library.
+
+{\bfseries{N\+O\+TE}}\+: On some systems, the C\+Make executable may be named something other than {\ttfamily cmake}. In this case, set the {\ttfamily C\+M\+A\+KE} environment variable to the correct name (e.\+g. {\ttfamily export C\+M\+A\+KE=cmake3}, in case you have C\+Make available as {\ttfamily cmake3}).
+
+The static library file can then be linked from \begin{DoxyVerb}./build/libamici.a
+\end{DoxyVerb}
+
+
+In C\+Make-\/based packages, amici can be linked via \begin{DoxyVerb}find_package(Amici)
+\end{DoxyVerb}
+\hypertarget{md__i_n_s_t_a_l_l_autotoc_md24}{}\doxysubsubsection{Optional Super\+L\+U\+\_\+\+M\+T support}\label{md__i_n_s_t_a_l_l_autotoc_md24}
+To build A\+M\+I\+CI with Super\+L\+U\+\_\+\+MT support, run \begin{DoxyVerb}./scripts/buildSuperLUMT.sh
+./scripts/buildSundials.sh
+cd build/
+cmake -DSUNDIALS_SUPERLUMT_ENABLE=ON ..
+make
+\end{DoxyVerb}
+
+
+\label{_dependencies}%
+ \hypertarget{md__i_n_s_t_a_l_l_autotoc_md25}{}\doxysubsection{Dependencies}\label{md__i_n_s_t_a_l_l_autotoc_md25}
+\hypertarget{md__i_n_s_t_a_l_l_autotoc_md26}{}\doxysubsubsection{General}\label{md__i_n_s_t_a_l_l_autotoc_md26}
+The tools S\+U\+N\+D\+I\+A\+LS and Suite\+Sparse shipped with A\+M\+I\+CI do {\bfseries{not}} require explicit installation.
+
+A\+M\+I\+CI uses the following packages from S\+U\+N\+D\+I\+A\+LS\+:
+
+{\bfseries{C\+V\+O\+D\+ES}}\+: the sensitivity-\/enabled O\+DE solver in S\+U\+N\+D\+I\+A\+LS. Radu Serban and Alan C. Hindmarsh. {\itshape A\+S\+ME 2005 International Design Engineering Technical Conferences and Computers and Information in Engineering Conference.} American Society of Mechanical Engineers, 2005. \href{http://proceedings.asmedigitalcollection.asme.org/proceeding.aspx?articleid=1588657}{\texttt{ P\+DF}}
+
+{\bfseries{I\+D\+AS}}
+
+A\+M\+I\+CI uses the following packages from Suite\+Sparse\+:
+
+{\bfseries{Algorithm 907\+: K\+LU}}, A Direct Sparse Solver for Circuit Simulation Problems. Timothy A. Davis, Ekanathan Palamadai Natarajan, {\itshape A\+CM Transactions on Mathematical Software}, Vol 37, Issue 6, 2010, pp 36\+:1 -\/ 36\+:17. \href{http://dl.acm.org/authorize?305534}{\texttt{ P\+DF}}
+
+{\bfseries{Algorithm 837\+: A\+MD}}, an approximate minimum degree ordering algorithm, Patrick R. Amestoy, Timothy A. Davis, Iain S. Duff, {\itshape A\+CM Transactions on Mathematical Software}, Vol 30, Issue 3, 2004, pp 381 -\/ 388. \href{http://dl.acm.org/authorize?733169}{\texttt{ P\+DF}}
+
+{\bfseries{Algorithm 836\+: C\+O\+L\+A\+MD}}, a column approximate minimum degree ordering algorithm, Timothy A. Davis, John R. Gilbert, Stefan I. Larimore, Esmond G. Ng {\itshape A\+CM Transactions on Mathematical Software}, Vol 30, Issue 3, 2004, pp 377 -\/ 380. \href{http://dl.acm.org/authorize?734450}{\texttt{ P\+DF}}\hypertarget{md__i_n_s_t_a_l_l_autotoc_md27}{}\doxyparagraph{libsbml}\label{md__i_n_s_t_a_l_l_autotoc_md27}
+To import Systems Biology Markup Language (\href{http://sbml.org/}{\texttt{ S\+B\+ML}}) models, A\+M\+I\+CI relies on the Python or M\+A\+T\+L\+AB S\+B\+ML library.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md28}{}\doxyparagraph{Math Kernel Library (\+M\+K\+L)}\label{md__i_n_s_t_a_l_l_autotoc_md28}
+The python and C++ interfaces require a system installation of a {\ttfamily B\+L\+AS}. A\+M\+I\+CI has been tested with various native and general purpose M\+KL implementations such as Accelerate, Intel M\+KL, cblas, openblas, atlas. The matlab interface uses the M\+A\+T\+L\+AB M\+KL, which requires no separate installation.
+
+On Ubuntu, this requirement can be satisfied with \begin{DoxyVerb}apt install libatlas-base-dev
+\end{DoxyVerb}
+\hypertarget{md__i_n_s_t_a_l_l_autotoc_md29}{}\doxyparagraph{C++ compiler}\label{md__i_n_s_t_a_l_l_autotoc_md29}
+All A\+M\+I\+CI installations require a C++11-\/compatible C++ compiler. A\+M\+I\+CI has been tested with g++, mingw, clang and the Intel compiler. Visual C++ is not officially supported, but may work.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md30}{}\doxyparagraph{H\+D\+F5}\label{md__i_n_s_t_a_l_l_autotoc_md30}
+The python and C++ interfaces provide routines to read and write options and results in \href{https://support.hdfgroup.org/HDF5/}{\texttt{ hdf5}} format. For the python interface, the installation of hdf5 is optional, but for the C++ interace it is currently required.
+
+H\+D\+F5 can be installed using package managers such as \href{https://brew.sh}{\texttt{ brew}} or \href{https://wiki.debian.org/Apt}{\texttt{ apt}}\+: \begin{DoxyVerb}brew install hdf5
+\end{DoxyVerb}
+
+
+or \begin{DoxyVerb}apt-get install libhdf5-serial-dev
+\end{DoxyVerb}
+\hypertarget{md__i_n_s_t_a_l_l_autotoc_md31}{}\doxyparagraph{S\+W\+IG}\label{md__i_n_s_t_a_l_l_autotoc_md31}
+The python interface requires \href{http://www.swig.org}{\texttt{ S\+W\+IG}}, which has to be installed by the user. As root user, S\+W\+IG can be installed using package managers such as \href{https://brew.sh}{\texttt{ brew}} or \href{https://wiki.debian.org/Apt}{\texttt{ apt}}\+: \begin{DoxyVerb}brew install swig
+\end{DoxyVerb}
+
+
+or \begin{DoxyVerb}apt-get install swig3.0
+\end{DoxyVerb}
+
+
+Or by non-\/root users, using {\ttfamily scripts/download\+And\+Build\+Swig.\+sh} from the A\+M\+I\+CI repository (not included in the Py\+PI package). The binary directory has to be added to the {\ttfamily P\+A\+TH} environment variable, or {\ttfamily S\+W\+IG} has to be set as described in the following section.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md32}{}\doxysubparagraph{Using a non-\/default S\+W\+I\+G executable}\label{md__i_n_s_t_a_l_l_autotoc_md32}
+We note here that some linux package managers may provide swig executables as {\ttfamily swig3.\+0}, but installation as {\ttfamily swig} is required. This can be fixed as root user using, e.\+g., symbolic links\+: \begin{DoxyVerb}mkdir -p ~/bin/ && ln -s $(which swig3.0) ~/bin/swig && export PATH=~/bin/:$PATH
+\end{DoxyVerb}
+
+
+Non-\/root users can set the {\ttfamily S\+W\+IG} environment variable to the full path of the desired S\+W\+IG executable. This variable has be set during A\+M\+I\+CI package installation as well as during model compilation.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md33}{}\doxysubsubsection{Matlab}\label{md__i_n_s_t_a_l_l_autotoc_md33}
+The M\+A\+T\+L\+AB interface requires the Mathworks Symbolic Toolbox for model generation via {\ttfamily amiwrap(...)}, but not for execution of precompiled models. Currently M\+A\+T\+L\+AB R2018a or newer is not supported (see \href{https://github.com/ICB-DCM/AMICI/issues/307}{\texttt{ https\+://github.\+com/\+I\+C\+B-\/\+D\+C\+M/\+A\+M\+I\+C\+I/issues/307}}).
+
+The Symbolic Toolbox requirement can be circumvented by performing model import using the Python interface. The result code can then be used from Matlab.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md34}{}\doxysubsubsection{Python}\label{md__i_n_s_t_a_l_l_autotoc_md34}
+The python interface requires python 3.\+6 or newer and a cblas-\/compatible B\+L\+AS library to be installed. Windows installations via pip are currently not supported, but users may try to install amici using the build scripts provided for the C++ interface (these will by default automatically install the python module).
+
+The python interface depends on some additional packages, e.\+g. {\ttfamily numpy}. They are automatically installed when installing the python package.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md35}{}\doxysubsubsection{C++}\label{md__i_n_s_t_a_l_l_autotoc_md35}
+The C++ interface requires {\ttfamily cmake} and a cblas-\/compatible B\+L\+AS to be installed.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md36}{}\doxysubsubsection{Optional}\label{md__i_n_s_t_a_l_l_autotoc_md36}
+{\bfseries{Super\+L\+U\+\_\+\+MT}}, \char`\"{}a general purpose library for the direct solution of large,
+sparse, nonsymmetric systems of linear equations\char`\"{} (\href{https://crd-legacy.lbl.gov/~xiaoye/SuperLU/\#superlu_mt}{\texttt{ https\+://crd-\/legacy.\+lbl.\+gov/$\sim$xiaoye/\+Super\+L\+U/\#superlu\+\_\+mt}}). Super\+L\+U\+\_\+\+MT is optional and is so far only available from the C++ interface. 

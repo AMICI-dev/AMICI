@@ -1,0 +1,4 @@
+<map id="addEventObjectiveSensitivity" name="addEventObjectiveSensitivity">
+<area shape="rect" id="node1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="193,13,387,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,5,145,47"/>
+</map>

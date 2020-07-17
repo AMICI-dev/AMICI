@@ -1,0 +1,6 @@
+<map id="getEventRegularization" name="getEventRegularization">
+<area shape="rect" id="node1" title="Regularization for event&#45;resolved observables." alt="" coords="5,31,163,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a74340e771fd77e724bf1461dc9518769" title="Event root function of events (equal to froot but does not include non&#45;output events)" alt="" coords="248,5,287,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a2054555e8d40c4ea6e7f562c335ab984" title="Writes part of a slice to a buffer according to indices specified in z2event." alt="" coords="211,56,324,83"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="372,5,527,32"/>
+</map>

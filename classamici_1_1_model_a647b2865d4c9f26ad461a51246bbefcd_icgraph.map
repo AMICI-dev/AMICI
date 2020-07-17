@@ -1,0 +1,9 @@
+<map id="fsx0" name="fsx0">
+<area shape="rect" id="node1" title="Initial value for initial state sensitivities." alt="" coords="664,42,711,69"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a1d8b7271972a7882f18e1c9ea3308e38" title="Get the initial states sensitivities." alt="" coords="443,15,616,42"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#ac4044c8b06d92618b69d0d4fcc083811" title="Initialization of initial state sensitivities." alt="" coords="444,67,615,94"/>
+<area shape="rect" id="node3" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="232,5,395,47"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a76f3aa67bb6232cce1f56cc1ec9c9c4e" title="Initialization of model properties." alt="" coords="279,71,348,98"/>
+<area shape="rect" id="node6" href="$classamici_1_1_forward_problem.html#a4ef001eef23bc48270159d6193036858" title="Solve the forward problem." alt="" coords="17,31,173,72"/>
+<area shape="rect" id="node7" href="$classamici_1_1_steadystate_problem.html#a0b71cc4193afae24ae5890094e210682" title="Handles steady state computation in the forward case: tries to determine the steady state of the ODE ..." alt="" coords="5,96,184,137"/>
+</map>

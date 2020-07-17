@@ -1,0 +1,5 @@
+<map id="invalidate" name="invalidate">
+<area shape="rect" id="node1" title="Set likelihood, state variables, outputs and respective sensitivities to NaN (typically after integra..." alt="" coords="5,31,83,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a03e88745280c032d3b59fd7235665e17" title="Set likelihood and chi2 to NaN (typically after integration failure)" alt="" coords="135,5,237,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#ae0c35d3a9e0f0d4d0903b795bc6e222f" title="Set likelihood sensitivities to NaN (typically after integration failure)" alt="" coords="131,56,241,83"/>
+</map>

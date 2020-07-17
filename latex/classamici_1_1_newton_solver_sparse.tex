@@ -1,0 +1,152 @@
+\hypertarget{classamici_1_1_newton_solver_sparse}{}\doxysubsection{Newton\+Solver\+Sparse Class Reference}
+\label{classamici_1_1_newton_solver_sparse}\index{NewtonSolverSparse@{NewtonSolverSparse}}
+
+
+The \mbox{\hyperlink{classamici_1_1_newton_solver_sparse}{Newton\+Solver\+Sparse}} provides access to the sparse linear solver for the Newton method.  
+
+
+
+
+{\ttfamily \#include $<$newton\+\_\+solver.\+h$>$}
+
+
+
+Inheritance diagram for Newton\+Solver\+Sparse\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=189pt]{classamici_1_1_newton_solver_sparse__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_newton_solver_sparse_a60b338b3f3f55cd65d397a2737b90797}{Newton\+Solver\+Sparse}} (realtype $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_ad94d61da9b85c1a151ffd8e228758c7c}{t}}, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_af64268982dd7b9be1690573763982e0b}{x}}, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_a7b56c3ca57dde73bdbc8dbe9772bca19}{model}})
+\begin{DoxyCompactList}\small\item\em Constructor, initializes all members with the provided objects, initializes temporary storage objects and the klu solver. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_newton_solver_sparse_ab46a7b328bc1be64b6b9e4ee8213626a}{solve\+Linear\+System}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&rhs) override
+\begin{DoxyCompactList}\small\item\em Solves the linear system for the Newton step. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_newton_solver_sparse_a0b900656d018299b08d0f027e95bd347}{prepare\+Linear\+System}} (int ntry, int nnewt) override
+\begin{DoxyCompactList}\small\item\em Writes the Jacobian for the Newton iteration and passes it to the linear solver. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_newton_solver_sparse_aaa73aa6ff400b0a59dc47a586bd2024a}{prepare\+Linear\+SystemB}} (int ntry, int nnewt) override
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+
+
+\doxysubsubsection{Detailed Description}
+
+
+Definition at line 197 of file newton\+\_\+solver.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_sparse_a60b338b3f3f55cd65d397a2737b90797}\label{classamici_1_1_newton_solver_sparse_a60b338b3f3f55cd65d397a2737b90797}} 
+\index{NewtonSolverSparse@{NewtonSolverSparse}!NewtonSolverSparse@{NewtonSolverSparse}}
+\index{NewtonSolverSparse@{NewtonSolverSparse}!NewtonSolverSparse@{NewtonSolverSparse}}
+\doxyparagraph{\texorpdfstring{NewtonSolverSparse()}{NewtonSolverSparse()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_newton_solver_sparse}{Newton\+Solver\+Sparse}} (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{t,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$}]{x,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & pointer to time variable \\
+\hline
+{\em x} & pointer to state variables \\
+\hline
+{\em model} & pointer to the model object \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 192 of file newton\+\_\+solver.\+cpp.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_sparse_ab46a7b328bc1be64b6b9e4ee8213626a}\label{classamici_1_1_newton_solver_sparse_ab46a7b328bc1be64b6b9e4ee8213626a}} 
+\index{NewtonSolverSparse@{NewtonSolverSparse}!solveLinearSystem@{solveLinearSystem}}
+\index{solveLinearSystem@{solveLinearSystem}!NewtonSolverSparse@{NewtonSolverSparse}}
+\doxyparagraph{\texorpdfstring{solveLinearSystem()}{solveLinearSystem()}}
+{\footnotesize\ttfamily void solve\+Linear\+System (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{rhs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em rhs} & containing the R\+HS of the linear system, will be overwritten by solution to the linear system \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_newton_solver_addfdd7afbe1eff3d47b0f28b6191793f}{Newton\+Solver}}.
+
+
+
+Definition at line 223 of file newton\+\_\+solver.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_newton_solver_sparse_ab46a7b328bc1be64b6b9e4ee8213626a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_sparse_a0b900656d018299b08d0f027e95bd347}\label{classamici_1_1_newton_solver_sparse_a0b900656d018299b08d0f027e95bd347}} 
+\index{NewtonSolverSparse@{NewtonSolverSparse}!prepareLinearSystem@{prepareLinearSystem}}
+\index{prepareLinearSystem@{prepareLinearSystem}!NewtonSolverSparse@{NewtonSolverSparse}}
+\doxyparagraph{\texorpdfstring{prepareLinearSystem()}{prepareLinearSystem()}}
+{\footnotesize\ttfamily void prepare\+Linear\+System (\begin{DoxyParamCaption}\item[{int}]{ntry,  }\item[{int}]{nnewt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em ntry} & integer newton\+\_\+try integer start number of Newton solver (1 or 2) \\
+\hline
+{\em nnewt} & integer number of current Newton step \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_newton_solver_a4aed46b0343374f171f9b4b51fa009e7}{Newton\+Solver}}.
+
+
+
+Definition at line 203 of file newton\+\_\+solver.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_newton_solver_sparse_a0b900656d018299b08d0f027e95bd347_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_sparse_aaa73aa6ff400b0a59dc47a586bd2024a}\label{classamici_1_1_newton_solver_sparse_aaa73aa6ff400b0a59dc47a586bd2024a}} 
+\index{NewtonSolverSparse@{NewtonSolverSparse}!prepareLinearSystemB@{prepareLinearSystemB}}
+\index{prepareLinearSystemB@{prepareLinearSystemB}!NewtonSolverSparse@{NewtonSolverSparse}}
+\doxyparagraph{\texorpdfstring{prepareLinearSystemB()}{prepareLinearSystemB()}}
+{\footnotesize\ttfamily void prepare\+Linear\+SystemB (\begin{DoxyParamCaption}\item[{int}]{ntry,  }\item[{int}]{nnewt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Writes the Jacobian (JB) for the Newton iteration and passes it to the linear solver
+
+
+\begin{DoxyParams}{Parameters}
+{\em ntry} & integer newton\+\_\+try integer start number of Newton solver (1 or 2) \\
+\hline
+{\em nnewt} & integer number of current Newton step \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_newton_solver_a522e8e16d023d90584a0666e5cff9862}{Newton\+Solver}}.
+
+
+
+Definition at line 213 of file newton\+\_\+solver.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_newton_solver_sparse_aaa73aa6ff400b0a59dc47a586bd2024a_cgraph}
+\end{center}
+\end{figure}

@@ -1,0 +1,7 @@
+<map id="getEventTimeSensitivity" name="getEventTimeSensitivity">
+<area shape="rect" id="node1" title="Sensitivity of event timepoint, total derivative (only forward sensi)" alt="" coords="5,93,169,120"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="217,5,372,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_abstract_model.html#a1f9f7838129da37e37179414ba132496" title="Model specific implementation of fstau." alt="" coords="222,57,367,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="268,123,321,149"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="271,173,318,200"/>
+</map>

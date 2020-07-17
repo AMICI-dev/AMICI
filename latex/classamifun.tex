@@ -1,0 +1,423 @@
+\hypertarget{classamifun}{}\doxysubsection{amifun Class Reference}
+\label{classamifun}\index{amifun@{amifun}}
+
+
+A\+M\+I\+F\+UN defines functions which later on will be transformed into appropriate C code.  
+
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamifun_a609e744c18813bc24f360b8cc5150344}{amifun}} (matlabtypesubstitute \mbox{\hyperlink{classamifun_a484b54379bc8b29b6ce65d84966ea4c4}{funstr}}, matlabtypesubstitute model)
+\begin{DoxyCompactList}\small\item\em amievent constructs an amifun object from the provided input. \end{DoxyCompactList}\item 
+noret\+::substitute \mbox{\hyperlink{classamifun_a7845c1193d9a963f7bb9802f1eeefac7}{write\+Ccode\+\_\+sensi}} (\+::\mbox{\hyperlink{classamimodel}{amimodel}} model,\+::fileid fid)
+\begin{DoxyCompactList}\small\item\em write\+Ccode\+\_\+sensi is a wrapper for write\+Ccode which loops over parameters and reduces overhead by check nonzero values \end{DoxyCompactList}\item 
+noret\+::substitute \mbox{\hyperlink{classamifun_a8e48f2842268ff64ca32db8eb4b69377}{write\+Ccode}} (\+::\mbox{\hyperlink{classamimodel}{amimodel}} model,\+::fileid fid)
+\begin{DoxyCompactList}\small\item\em write\+Ccode is a wrapper for gccode which initialises data and reduces overhead by check nonzero values \end{DoxyCompactList}\item 
+noret\+::substitute \mbox{\hyperlink{classamifun_a9b041ce0ffcfab125b5db3ed5ca847a2}{write\+Mcode}} (\+::\mbox{\hyperlink{classamimodel}{amimodel}} model)
+\begin{DoxyCompactList}\small\item\em write\+Mcode generates matlab evaluable code for specific model functions \end{DoxyCompactList}\item 
+noret\+::substitute \mbox{\hyperlink{classamifun_a05444f498e657a0010f6b539bc9c6596}{gccode}} (\+::\mbox{\hyperlink{classamimodel}{amimodel}} model,\+::fileid fid)
+\begin{DoxyCompactList}\small\item\em gccode transforms symbolic expressions into c code and writes the respective expression into a specified file \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamifun_a1cb97b695ab609e1655ec1067b140b70}{get\+Deps}} (\+::\mbox{\hyperlink{classamimodel}{amimodel}} model)
+\begin{DoxyCompactList}\small\item\em get\+Deps populates the sensiflag for the requested function \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamifun_a4b16e7670c0d60e530545e58628bde3f}{get\+Args}} (\+::\mbox{\hyperlink{classamimodel}{amimodel}} model)
+\begin{DoxyCompactList}\small\item\em get\+F\+Args populates the fargstr property with the argument string of the respective model function (if applicable). model functions are not wrapped versions of functions which have a model specific name and for which the call is solver specific. \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamifun_a3ae210044df5eb51e2f9280d03b86c3c}{get\+N\+Vecs}} ()
+\begin{DoxyCompactList}\small\item\em getfunargs populates the nvecs property with the names of the N\+\_\+\+Vector elements which are required in the execution of the function (if applicable). the information is directly extracted from the argument string \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamifun_a969775839d9d32ff4a0ba70395117ca7}{get\+C\+Var}} ()
+\begin{DoxyCompactList}\small\item\em get\+C\+Var populates the cvar property \end{DoxyCompactList}\item 
+mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$ \mbox{\hyperlink{classamifun_ac60147b051aa541057d0da18a78582a8}{get\+Sensi\+Flag}} ()
+\begin{DoxyCompactList}\small\item\em get\+Sensi\+Flag populates the sensiflag property \end{DoxyCompactList}\item 
+mlhs\+Subst$<$ mlhs\+Inner\+Subst$<$ matlabtypesubstitute $>$,mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamimodel}{amimodel}} $>$ $>$ \mbox{\hyperlink{classamifun_a44e49602645d85f94841f38e4673fa1a}{get\+Syms}} (\+::\mbox{\hyperlink{classamimodel}{amimodel}} model)
+\begin{DoxyCompactList}\small\item\em get\+Syms computes the symbolic expression for the requested function \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\+::symbolic \mbox{\hyperlink{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}{sym}} = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em symbolic definition struct \end{DoxyCompactList}\item 
+\+::symbolic \mbox{\hyperlink{classamifun_a653c7ed7ae2eeb18b7cb2f0a6be8ab5b}{sym\+\_\+noopt}} = \mbox{\hyperlink{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}{sym}}(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em symbolic definition which was not optimized (no dependencies on w) \end{DoxyCompactList}\item 
+\+::symbolic \mbox{\hyperlink{classamifun_a4814315a739f43461b003c1c1ef6f550}{strsym}} = \mbox{\hyperlink{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}{sym}}(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em short symbolic string which can be used for the reuse of precomputed values \end{DoxyCompactList}\item 
+\+::symbolic \mbox{\hyperlink{classamifun_ac42759baa6575c9d39f487be5a2e01a1}{strsym\+\_\+old}} = \mbox{\hyperlink{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}{sym}}(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})
+\begin{DoxyCompactList}\small\item\em short symbolic string which can be used for the reuse of old values \end{DoxyCompactList}\item 
+\+::char \mbox{\hyperlink{classamifun_a484b54379bc8b29b6ce65d84966ea4c4}{funstr}} = char.\+empty(\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em name of the model \end{DoxyCompactList}\item 
+\+::char \mbox{\hyperlink{classamifun_a716c1ceb8235bc1005b606f777530ede}{cvar}} = char.\+empty(\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em name of the c variable \end{DoxyCompactList}\item 
+\+::char \mbox{\hyperlink{classamifun_aa3914760f4131288b95f0f23d0fdfa6d}{argstr}} = char.\+empty(\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em argument string (solver specific) \end{DoxyCompactList}\item 
+\+::cell \mbox{\hyperlink{classamifun_a69ffe5c24686ceb79ed44399e6be556c}{deps}} = cell.\+empty(\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em dependencies on other functions \end{DoxyCompactList}\item 
+matlabtypesubstitute \mbox{\hyperlink{classamifun_a019d960f3d1c1c819a7f3fc90f952c4b}{nvecs}} = cell.\+empty(\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em nvec dependencies \end{DoxyCompactList}\item 
+matlabtypesubstitute \mbox{\hyperlink{classamifun_ad8930a02bca1d5facc6203b722d5349d}{sensiflag}} = logical.\+empty(\char`\"{}\char`\"{})
+\begin{DoxyCompactList}\small\item\em indicates whether the function is a sensitivity or derivative with respect to parameters \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+
+
+Definition at line 17 of file amifun.\+m.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamifun_a609e744c18813bc24f360b8cc5150344}\label{classamifun_a609e744c18813bc24f360b8cc5150344}} 
+\index{amifun@{amifun}!amifun@{amifun}}
+\index{amifun@{amifun}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{amifun()}{amifun()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamifun}{amifun}} (\begin{DoxyParamCaption}\item[{matlabtypesubstitute}]{funstr,  }\item[{matlabtypesubstitute}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em funstr} & name of the requested function \\
+\hline
+{\em model} & amimodel object which carries all symbolic definitions to construct the function \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 111 of file amifun.\+m.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamifun_a7845c1193d9a963f7bb9802f1eeefac7}\label{classamifun_a7845c1193d9a963f7bb9802f1eeefac7}} 
+\index{amifun@{amifun}!writeCcode\_sensi@{writeCcode\_sensi}}
+\index{writeCcode\_sensi@{writeCcode\_sensi}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{writeCcode\_sensi()}{writeCcode\_sensi()}}
+{\footnotesize\ttfamily noret\+::substitute write\+Ccode\+\_\+sensi (\begin{DoxyParamCaption}\item[{\+::\mbox{\hyperlink{classamimodel}{amimodel}}}]{model,  }\item[{\+::fileid}]{fid }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em model} & model defintion object \\
+\hline
+{\em fid} & file id in which the final expression is written\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em fid} & void \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file write\+Ccode\+\_\+sensi.\+m.
+
+\mbox{\Hypertarget{classamifun_a8e48f2842268ff64ca32db8eb4b69377}\label{classamifun_a8e48f2842268ff64ca32db8eb4b69377}} 
+\index{amifun@{amifun}!writeCcode@{writeCcode}}
+\index{writeCcode@{writeCcode}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{writeCcode()}{writeCcode()}}
+{\footnotesize\ttfamily noret\+::substitute write\+Ccode (\begin{DoxyParamCaption}\item[{\+::\mbox{\hyperlink{classamimodel}{amimodel}}}]{model,  }\item[{\+::fileid}]{fid }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em model} & model defintion object \\
+\hline
+{\em fid} & file id in which the final expression is written\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em fid} & void \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file write\+Ccode.\+m.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=230pt]{classamifun_a8e48f2842268ff64ca32db8eb4b69377_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamifun_a9b041ce0ffcfab125b5db3ed5ca847a2}\label{classamifun_a9b041ce0ffcfab125b5db3ed5ca847a2}} 
+\index{amifun@{amifun}!writeMcode@{writeMcode}}
+\index{writeMcode@{writeMcode}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{writeMcode()}{writeMcode()}}
+{\footnotesize\ttfamily noret\+::substitute write\+Mcode (\begin{DoxyParamCaption}\item[{\+::\mbox{\hyperlink{classamimodel}{amimodel}}}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em model} & model defintion object\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em model} & void \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file write\+Mcode.\+m.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamifun_a9b041ce0ffcfab125b5db3ed5ca847a2_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamifun_a05444f498e657a0010f6b539bc9c6596}\label{classamifun_a05444f498e657a0010f6b539bc9c6596}} 
+\index{amifun@{amifun}!gccode@{gccode}}
+\index{gccode@{gccode}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{gccode()}{gccode()}}
+{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamifun}{amifun}} $>$ gccode (\begin{DoxyParamCaption}\item[{\+::\mbox{\hyperlink{classamimodel}{amimodel}}}]{model,  }\item[{\+::fileid}]{fid }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em model} & model definition object \\
+\hline
+{\em fid} & file id in which the expression should be written\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & function definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file gccode.\+m.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=230pt]{classamifun_a05444f498e657a0010f6b539bc9c6596_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamifun_a1cb97b695ab609e1655ec1067b140b70}\label{classamifun_a1cb97b695ab609e1655ec1067b140b70}} 
+\index{amifun@{amifun}!getDeps@{getDeps}}
+\index{getDeps@{getDeps}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{getDeps()}{getDeps()}}
+{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamifun}{amifun}} $>$ get\+Deps (\begin{DoxyParamCaption}\item[{\+::\mbox{\hyperlink{classamimodel}{amimodel}}}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em model} & model definition object\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated function definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Deps.\+m.
+
+\mbox{\Hypertarget{classamifun_a4b16e7670c0d60e530545e58628bde3f}\label{classamifun_a4b16e7670c0d60e530545e58628bde3f}} 
+\index{amifun@{amifun}!getArgs@{getArgs}}
+\index{getArgs@{getArgs}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{getArgs()}{getArgs()}}
+{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamifun}{amifun}} $>$ get\+Args (\begin{DoxyParamCaption}\item[{\+::\mbox{\hyperlink{classamimodel}{amimodel}}}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em model} & model definition object\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated function definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Args.\+m.
+
+\mbox{\Hypertarget{classamifun_a3ae210044df5eb51e2f9280d03b86c3c}\label{classamifun_a3ae210044df5eb51e2f9280d03b86c3c}} 
+\index{amifun@{amifun}!getNVecs@{getNVecs}}
+\index{getNVecs@{getNVecs}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{getNVecs()}{getNVecs()}}
+{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamifun}{amifun}} $>$ get\+N\+Vecs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated function definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+N\+Vecs.\+m.
+
+\mbox{\Hypertarget{classamifun_a969775839d9d32ff4a0ba70395117ca7}\label{classamifun_a969775839d9d32ff4a0ba70395117ca7}} 
+\index{amifun@{amifun}!getCVar@{getCVar}}
+\index{getCVar@{getCVar}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{getCVar()}{getCVar()}}
+{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamifun}{amifun}} $>$ get\+C\+Var (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated function definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+C\+Var.\+m.
+
+\mbox{\Hypertarget{classamifun_ac60147b051aa541057d0da18a78582a8}\label{classamifun_ac60147b051aa541057d0da18a78582a8}} 
+\index{amifun@{amifun}!getSensiFlag@{getSensiFlag}}
+\index{getSensiFlag@{getSensiFlag}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{getSensiFlag()}{getSensiFlag()}}
+{\footnotesize\ttfamily mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamifun}{amifun}} $>$ get\+Sensi\+Flag (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated function definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Sensi\+Flag.\+m.
+
+\mbox{\Hypertarget{classamifun_a44e49602645d85f94841f38e4673fa1a}\label{classamifun_a44e49602645d85f94841f38e4673fa1a}} 
+\index{amifun@{amifun}!getSyms@{getSyms}}
+\index{getSyms@{getSyms}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{getSyms()}{getSyms()}}
+{\footnotesize\ttfamily mlhs\+Subst$<$ mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamifun}{amifun}} $>$,mlhs\+Inner\+Subst$<$\+::\mbox{\hyperlink{classamimodel}{amimodel}} $>$ $>$ get\+Syms (\begin{DoxyParamCaption}\item[{\+::\mbox{\hyperlink{classamimodel}{amimodel}}}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em model} & model definition object\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyRetVals}{Return values}
+{\em this} & updated function definition object \\
+\hline
+{\em model} & updated model definition object \\
+\hline
+\end{DoxyRetVals}
+
+
+Definition at line 18 of file get\+Syms.\+m.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=288pt]{classamifun_a44e49602645d85f94841f38e4673fa1a_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsubsection{Member Data Documentation}
+\mbox{\Hypertarget{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}\label{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}} 
+\index{amifun@{amifun}!sym@{sym}}
+\index{sym@{sym}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{sym}{sym}}
+{\footnotesize\ttfamily sym = sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 27 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_a653c7ed7ae2eeb18b7cb2f0a6be8ab5b}\label{classamifun_a653c7ed7ae2eeb18b7cb2f0a6be8ab5b}} 
+\index{amifun@{amifun}!sym\_noopt@{sym\_noopt}}
+\index{sym\_noopt@{sym\_noopt}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{sym\_noopt}{sym\_noopt}}
+{\footnotesize\ttfamily sym\+\_\+noopt = \mbox{\hyperlink{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}{sym}}(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 35 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_a4814315a739f43461b003c1c1ef6f550}\label{classamifun_a4814315a739f43461b003c1c1ef6f550}} 
+\index{amifun@{amifun}!strsym@{strsym}}
+\index{strsym@{strsym}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{strsym}{strsym}}
+{\footnotesize\ttfamily strsym = \mbox{\hyperlink{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}{sym}}(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 43 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_ac42759baa6575c9d39f487be5a2e01a1}\label{classamifun_ac42759baa6575c9d39f487be5a2e01a1}} 
+\index{amifun@{amifun}!strsym\_old@{strsym\_old}}
+\index{strsym\_old@{strsym\_old}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{strsym\_old}{strsym\_old}}
+{\footnotesize\ttfamily strsym\+\_\+old = \mbox{\hyperlink{classamifun_a3c48fff3d28406486a4f1b5e18da7ca6}{sym}}(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} sym(\char`\"{}\mbox{[}$\,$\mbox{]}\char`\"{}) 
+
+Definition at line 51 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_a484b54379bc8b29b6ce65d84966ea4c4}\label{classamifun_a484b54379bc8b29b6ce65d84966ea4c4}} 
+\index{amifun@{amifun}!funstr@{funstr}}
+\index{funstr@{funstr}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{funstr}{funstr}}
+{\footnotesize\ttfamily funstr = char.\+empty(\char`\"{}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} char.\+empty(\char`\"{}\char`\"{}) 
+
+Definition at line 59 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_a716c1ceb8235bc1005b606f777530ede}\label{classamifun_a716c1ceb8235bc1005b606f777530ede}} 
+\index{amifun@{amifun}!cvar@{cvar}}
+\index{cvar@{cvar}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{cvar}{cvar}}
+{\footnotesize\ttfamily cvar = char.\+empty(\char`\"{}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} char.\+empty(\char`\"{}\char`\"{}) 
+
+Definition at line 67 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_aa3914760f4131288b95f0f23d0fdfa6d}\label{classamifun_aa3914760f4131288b95f0f23d0fdfa6d}} 
+\index{amifun@{amifun}!argstr@{argstr}}
+\index{argstr@{argstr}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{argstr}{argstr}}
+{\footnotesize\ttfamily argstr = char.\+empty(\char`\"{}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} char.\+empty(\char`\"{}\char`\"{}) 
+
+Definition at line 75 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_a69ffe5c24686ceb79ed44399e6be556c}\label{classamifun_a69ffe5c24686ceb79ed44399e6be556c}} 
+\index{amifun@{amifun}!deps@{deps}}
+\index{deps@{deps}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{deps}{deps}}
+{\footnotesize\ttfamily deps = cell.\+empty(\char`\"{}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} cell.\+empty(\char`\"{}\char`\"{}) 
+
+Definition at line 83 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_a019d960f3d1c1c819a7f3fc90f952c4b}\label{classamifun_a019d960f3d1c1c819a7f3fc90f952c4b}} 
+\index{amifun@{amifun}!nvecs@{nvecs}}
+\index{nvecs@{nvecs}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{nvecs}{nvecs}}
+{\footnotesize\ttfamily nvecs = cell.\+empty(\char`\"{}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} cell.\+empty(\char`\"{}\char`\"{}) 
+
+Definition at line 91 of file amifun.\+m.
+
+\mbox{\Hypertarget{classamifun_ad8930a02bca1d5facc6203b722d5349d}\label{classamifun_ad8930a02bca1d5facc6203b722d5349d}} 
+\index{amifun@{amifun}!sensiflag@{sensiflag}}
+\index{sensiflag@{sensiflag}!amifun@{amifun}}
+\doxyparagraph{\texorpdfstring{sensiflag}{sensiflag}}
+{\footnotesize\ttfamily sensiflag = logical.\+empty(\char`\"{}\char`\"{})}
+
+~\newline
+{\bfseries{Default\+:}} logical.\+empty(\char`\"{}\char`\"{}) 
+
+Definition at line 99 of file amifun.\+m.
+

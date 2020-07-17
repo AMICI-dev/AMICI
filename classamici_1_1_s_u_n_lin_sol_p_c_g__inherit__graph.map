@@ -1,0 +1,4 @@
+<map id="SUNLinSolPCG" name="SUNLinSolPCG">
+<area shape="rect" id="node1" title="SUNDIALS scaled preconditioned CG (Conjugate Gradient method) (PCG) solver." alt="" coords="15,80,131,107"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_lin_sol_wrapper.html" title="A RAII wrapper for SUNLinearSolver structs." alt="" coords="5,5,140,32"/>
+</map>

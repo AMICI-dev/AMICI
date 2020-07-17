@@ -1,0 +1,378 @@
+\hypertarget{interface__matlab_8cpp}{}\doxysubsection{interface\+\_\+matlab.\+cpp File Reference}
+\label{interface__matlab_8cpp}\index{interface\_matlab.cpp@{interface\_matlab.cpp}}
+
+
+core routines for mex interface  
+
+
+{\ttfamily \#include \char`\"{}amici/interface\+\_\+matlab.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amici/model.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amici/exception.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amici/edata.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}amici/returndata\+\_\+matlab.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$assert.\+h$>$}\newline
+{\ttfamily \#include $<$blas.\+h$>$}\newline
+{\ttfamily \#include $<$cstring$>$}\newline
+{\ttfamily \#include $<$memory$>$}\newline
+Include dependency graph for interface\+\_\+matlab.\+cpp\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{interface__matlab_8cpp__incl}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{interface__matlab_8cpp_a21e434b9deb0ebd129f5b554336b8268}\label{interface__matlab_8cpp_a21e434b9deb0ebd129f5b554336b8268}} 
+enum \mbox{\hyperlink{interface__matlab_8cpp_a21e434b9deb0ebd129f5b554336b8268}{mex\+Rhs\+Arguments}} \{ \newline
+{\bfseries R\+H\+S\+\_\+\+T\+I\+M\+E\+P\+O\+I\+N\+TS}, 
+{\bfseries R\+H\+S\+\_\+\+P\+A\+R\+A\+M\+E\+T\+E\+RS}, 
+{\bfseries R\+H\+S\+\_\+\+C\+O\+N\+S\+T\+A\+N\+TS}, 
+{\bfseries R\+H\+S\+\_\+\+O\+P\+T\+I\+O\+NS}, 
+\newline
+{\bfseries R\+H\+S\+\_\+\+P\+L\+I\+ST}, 
+{\bfseries R\+H\+S\+\_\+\+X\+S\+C\+A\+L\+E\+\_\+\+U\+N\+U\+S\+ED}, 
+{\bfseries R\+H\+S\+\_\+\+I\+N\+I\+T\+I\+A\+L\+I\+Z\+A\+T\+I\+ON}, 
+{\bfseries R\+H\+S\+\_\+\+D\+A\+TA}, 
+\newline
+{\bfseries R\+H\+S\+\_\+\+N\+U\+M\+A\+R\+G\+S\+\_\+\+R\+E\+Q\+U\+I\+R\+ED} = R\+H\+S\+\_\+\+D\+A\+TA, 
+{\bfseries R\+H\+S\+\_\+\+N\+U\+M\+A\+R\+GS}
+ \}
+\begin{DoxyCompactList}\small\item\em The mex\+Rhs\+Arguments enum takes care of the ordering of mex file arguments (indexing in prhs) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{interface__matlab_8cpp_a204c68962100d0020a37392fef2e95e2}{dbl2int}} (const double x)
+\item 
+char \mbox{\hyperlink{interface__matlab_8cpp_a800e4c3e12f712281a4355e765402260}{amici\+\_\+blas\+C\+Blas\+Trans\+To\+Blas\+Trans}} (B\+L\+A\+S\+Transpose trans)
+\item 
+void {\bfseries amici\+\_\+dgemm} (B\+L\+A\+S\+Layout layout, B\+L\+A\+S\+Transpose TransA, B\+L\+A\+S\+Transpose TransB, int M, int N, int K, double alpha, const double $\ast$A, int lda, const double $\ast$B, int ldb, double beta, double $\ast$C, int ldc)
+\item 
+void {\bfseries amici\+\_\+dgemv} (B\+L\+A\+S\+Layout layout, B\+L\+A\+S\+Transpose TransA, int M, int N, double alpha, const double $\ast$A, int lda, const double $\ast$X, int incX, double beta, double $\ast$Y, int incY)
+\item 
+void {\bfseries amici\+\_\+daxpy} (int n, double alpha, const double $\ast$x, int incx, double $\ast$y, int incy)
+\begin{DoxyCompactList}\small\item\em Compute y = a$\ast$x + y. \end{DoxyCompactList}\item 
+std\+::vector$<$ realtype $>$ \mbox{\hyperlink{interface__matlab_8cpp_af8f91dbb6a395a9907c59dd92991ec18}{mx\+Array\+To\+Vector}} (const mx\+Array $\ast$array, int length)
+\item 
+std\+::unique\+\_\+ptr$<$ Exp\+Data $>$ {\bfseries exp\+Data\+From\+Matlab\+Call} (const mx\+Array $\ast$prhs\mbox{[}$\,$\mbox{]}, const Model \&model)
+\begin{DoxyCompactList}\small\item\em exp\+Data\+From\+Matlab\+Call parses the experimental data from the matlab call and writes it to an \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} class object \end{DoxyCompactList}\item 
+void {\bfseries set\+Solver\+Options} (const mx\+Array $\ast$prhs\mbox{[}$\,$\mbox{]}, int nrhs, Solver \&solver)
+\begin{DoxyCompactList}\small\item\em set\+Solver\+Options solver options from the matlab call to a solver object \end{DoxyCompactList}\item 
+void {\bfseries set\+Model\+Data} (const mx\+Array $\ast$prhs\mbox{[}$\,$\mbox{]}, int nrhs, Model \&model)
+\begin{DoxyCompactList}\small\item\em set\+Model\+Data sets data from the matlab call to the model object \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{interface__matlab_8cpp_a6a215cbfde54f82a3ce599228fc3fce5}{mex\+Function}} (int nlhs, mx\+Array $\ast$plhs\mbox{[}$\,$\mbox{]}, int nrhs, const mx\+Array $\ast$prhs\mbox{[}$\,$\mbox{]})
+\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+This file defines the function {\ttfamily mex\+Function} which is executed upon calling the {\ttfamily .mex} file from Matlab. 
+
+\doxysubsubsection{Function Documentation}
+\mbox{\Hypertarget{interface__matlab_8cpp_a204c68962100d0020a37392fef2e95e2}\label{interface__matlab_8cpp_a204c68962100d0020a37392fef2e95e2}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!dbl2int@{dbl2int}}
+\index{dbl2int@{dbl2int}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{dbl2int()}{dbl2int()}}
+{\footnotesize\ttfamily int dbl2int (\begin{DoxyParamCaption}\item[{const double}]{x }\end{DoxyParamCaption})}
+
+conversion from double to int with checking for loss of data 
+\begin{DoxyParams}{Parameters}
+{\em x} & input \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+int\+\_\+x casted value 
+\end{DoxyReturn}
+
+
+Definition at line 242 of file interface\+\_\+matlab.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=125pt]{interface__matlab_8cpp_a204c68962100d0020a37392fef2e95e2_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=125pt]{interface__matlab_8cpp_a204c68962100d0020a37392fef2e95e2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{interface__matlab_8cpp_a800e4c3e12f712281a4355e765402260}\label{interface__matlab_8cpp_a800e4c3e12f712281a4355e765402260}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!amici\_blasCBlasTransToBlasTrans@{amici\_blasCBlasTransToBlasTrans}}
+\index{amici\_blasCBlasTransToBlasTrans@{amici\_blasCBlasTransToBlasTrans}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{amici\_blasCBlasTransToBlasTrans()}{amici\_blasCBlasTransToBlasTrans()}}
+{\footnotesize\ttfamily char amici\+::amici\+\_\+blas\+C\+Blas\+Trans\+To\+Blas\+Trans (\begin{DoxyParamCaption}\item[{B\+L\+A\+S\+Transpose}]{trans }\end{DoxyParamCaption})}
+
+Translates A\+M\+I\+C\+I\+\_\+\+B\+L\+A\+S\+\_\+\+T\+R\+A\+N\+S\+P\+O\+SE values to C\+B\+L\+AS readable strings
+
+
+\begin{DoxyParams}{Parameters}
+{\em trans} & flag indicating transposition and complex conjugation\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+cblastrans C\+Blas readable C\+H\+AR indicating transposition and complex conjugation 
+\end{DoxyReturn}
+
+
+Definition at line 51 of file interface\+\_\+matlab.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=225pt]{interface__matlab_8cpp_a800e4c3e12f712281a4355e765402260_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=225pt]{interface__matlab_8cpp_a800e4c3e12f712281a4355e765402260_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{cblas_8h_a1e23c7855010fa95b35bc376ba1f9999}\label{cblas_8h_a1e23c7855010fa95b35bc376ba1f9999}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!amici\_dgemm@{amici\_dgemm}}
+\index{amici\_dgemm@{amici\_dgemm}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{amici\_dgemm()}{amici\_dgemm()}}
+{\footnotesize\ttfamily void amici\+\_\+dgemm (\begin{DoxyParamCaption}\item[{B\+L\+A\+S\+Layout}]{layout,  }\item[{B\+L\+A\+S\+Transpose}]{TransA,  }\item[{B\+L\+A\+S\+Transpose}]{TransB,  }\item[{int}]{M,  }\item[{int}]{N,  }\item[{int}]{K,  }\item[{double}]{alpha,  }\item[{const double $\ast$}]{A,  }\item[{int}]{lda,  }\item[{const double $\ast$}]{B,  }\item[{int}]{ldb,  }\item[{double}]{beta,  }\item[{double $\ast$}]{C,  }\item[{int}]{ldc }\end{DoxyParamCaption})}
+
+amici\+\_\+dgemm provides an interface to the C\+Blas matrix matrix multiplication routine dgemm. This routines computes C = alpha$\ast$\+A$\ast$B + beta$\ast$C with A\+: \mbox{[}MxK\mbox{]} B\+:\mbox{[}KxN\mbox{]} C\+:\mbox{[}MxN\mbox{]}
+
+
+\begin{DoxyParams}{Parameters}
+{\em layout} & memory layout. \\
+\hline
+{\em TransA} & flag indicating whether A should be transposed before multiplication \\
+\hline
+{\em TransB} & flag indicating whether B should be transposed before multiplication \\
+\hline
+{\em M} & number of rows in A/C \\
+\hline
+{\em N} & number of columns in B/C \\
+\hline
+{\em K} & number of rows in B, number of columns in A \\
+\hline
+{\em alpha} & coefficient alpha \\
+\hline
+{\em A} & matrix A \\
+\hline
+{\em lda} & leading dimension of A (m or k) \\
+\hline
+{\em B} & matrix B \\
+\hline
+{\em ldb} & leading dimension of B (k or n) \\
+\hline
+{\em beta} & coefficient beta \\
+\hline
+{\em C} & matrix C \\
+\hline
+{\em ldc} & leading dimension of C (m or n) \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 22 of file cblas.\+cpp.
+
+\mbox{\Hypertarget{cblas_8h_aa75b712257b2598fd92cc40407954690}\label{cblas_8h_aa75b712257b2598fd92cc40407954690}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!amici\_dgemv@{amici\_dgemv}}
+\index{amici\_dgemv@{amici\_dgemv}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{amici\_dgemv()}{amici\_dgemv()}}
+{\footnotesize\ttfamily void amici\+\_\+dgemv (\begin{DoxyParamCaption}\item[{B\+L\+A\+S\+Layout}]{layout,  }\item[{B\+L\+A\+S\+Transpose}]{TransA,  }\item[{int}]{M,  }\item[{int}]{N,  }\item[{double}]{alpha,  }\item[{const double $\ast$}]{A,  }\item[{int}]{lda,  }\item[{const double $\ast$}]{X,  }\item[{int}]{incX,  }\item[{double}]{beta,  }\item[{double $\ast$}]{Y,  }\item[{int}]{incY }\end{DoxyParamCaption})}
+
+amici\+\_\+dgemm provides an interface to the C\+Blas matrix vector multiplication routine dgemv. This routines computes y = alpha$\ast$\+A$\ast$x + beta$\ast$y with A\+: \mbox{[}MxN\mbox{]} x\+:\mbox{[}Nx1\mbox{]} y\+:\mbox{[}Mx1\mbox{]}
+
+
+\begin{DoxyParams}{Parameters}
+{\em layout} & always needs to be A\+M\+I\+C\+I\+\_\+\+B\+L\+A\+S\+\_\+\+Col\+Major. \\
+\hline
+{\em TransA} & flag indicating whether A should be transposed before multiplication \\
+\hline
+{\em M} & number of rows in A \\
+\hline
+{\em N} & number of columns in A \\
+\hline
+{\em alpha} & coefficient alpha \\
+\hline
+{\em A} & matrix A \\
+\hline
+{\em lda} & leading dimension of A (m or n) \\
+\hline
+{\em X} & vector X \\
+\hline
+{\em incX} & increment for entries of X \\
+\hline
+{\em beta} & coefficient beta \\
+\hline
+{\em Y} & vector Y \\
+\hline
+{\em incY} & increment for entries of Y \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 32 of file cblas.\+cpp.
+
+\mbox{\Hypertarget{cblas_8h_a3c93e9131a1466a175b1d096c21bcf79}\label{cblas_8h_a3c93e9131a1466a175b1d096c21bcf79}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!amici\_daxpy@{amici\_daxpy}}
+\index{amici\_daxpy@{amici\_daxpy}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{amici\_daxpy()}{amici\_daxpy()}}
+{\footnotesize\ttfamily void amici\+\_\+daxpy (\begin{DoxyParamCaption}\item[{int}]{n,  }\item[{double}]{alpha,  }\item[{const double $\ast$}]{x,  }\item[{int}]{incx,  }\item[{double $\ast$}]{y,  }\item[{int}]{incy }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em n} & number of elements in y \\
+\hline
+{\em alpha} & scalar coefficient of x \\
+\hline
+{\em x} & vector of length n$\ast$incx \\
+\hline
+{\em incx} & x stride \\
+\hline
+{\em y} & vector of length n$\ast$incy \\
+\hline
+{\em incy} & y stride \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 40 of file cblas.\+cpp.
+
+\mbox{\Hypertarget{interface__matlab_8cpp_af8f91dbb6a395a9907c59dd92991ec18}\label{interface__matlab_8cpp_af8f91dbb6a395a9907c59dd92991ec18}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!mxArrayToVector@{mxArrayToVector}}
+\index{mxArrayToVector@{mxArrayToVector}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{mxArrayToVector()}{mxArrayToVector()}}
+{\footnotesize\ttfamily std\+::vector$<$realtype$>$ amici\+::mx\+Array\+To\+Vector (\begin{DoxyParamCaption}\item[{const mx\+Array $\ast$}]{array,  }\item[{int}]{length }\end{DoxyParamCaption})}
+
+conversion from mx\+Array to vector$<$realtype$>$ 
+\begin{DoxyParams}{Parameters}
+{\em array} & Matlab array to create vector from \\
+\hline
+{\em length} & Number of elements in array \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+std\+::vector with data from array 
+\end{DoxyReturn}
+
+
+Definition at line 114 of file interface\+\_\+matlab.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=172pt]{interface__matlab_8cpp_af8f91dbb6a395a9907c59dd92991ec18_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=172pt]{interface__matlab_8cpp_af8f91dbb6a395a9907c59dd92991ec18_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{interface__matlab_8h_a186dd3debfe185669f305464f161e4bb}\label{interface__matlab_8h_a186dd3debfe185669f305464f161e4bb}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!expDataFromMatlabCall@{expDataFromMatlabCall}}
+\index{expDataFromMatlabCall@{expDataFromMatlabCall}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{expDataFromMatlabCall()}{expDataFromMatlabCall()}}
+{\footnotesize\ttfamily std\+::unique\+\_\+ptr$<$ Exp\+Data $>$ exp\+Data\+From\+Matlab\+Call (\begin{DoxyParamCaption}\item[{const mx\+Array $\ast$}]{prhs\mbox{[}$\,$\mbox{]},  }\item[{const \mbox{\hyperlink{classamici_1_1_model}{Model}} \&}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em prhs} & pointer to the array of input arguments \\
+\hline
+{\em model} & pointer to the model object, this is necessary to perform dimension checks ~\newline
+{\bfseries{Type}}\+: $\ast$mx\+Array \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+edata pointer to experimental data object ~\newline
+{\bfseries{Type}}\+: $\ast$\+Exp\+Data 
+\end{DoxyReturn}
+
+
+Definition at line 118 of file interface\+\_\+matlab.\+cpp.
+
+\mbox{\Hypertarget{interface__matlab_8h_aab6be0027d918715e2ba50828088110b}\label{interface__matlab_8h_aab6be0027d918715e2ba50828088110b}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!setSolverOptions@{setSolverOptions}}
+\index{setSolverOptions@{setSolverOptions}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{setSolverOptions()}{setSolverOptions()}}
+{\footnotesize\ttfamily void set\+Solver\+Options (\begin{DoxyParamCaption}\item[{const mx\+Array $\ast$}]{prhs\mbox{[}$\,$\mbox{]},  }\item[{int}]{nrhs,  }\item[{\mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&}]{solver }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em prhs} & pointer to the array of input arguments ~\newline
+{\bfseries{Type}}\+: mx\+Array \\
+\hline
+{\em nrhs} & number of elements in prhs \\
+\hline
+{\em solver} & solver to update \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 248 of file interface\+\_\+matlab.\+cpp.
+
+\mbox{\Hypertarget{interface__matlab_8h_aacdc2fc7895f234ad13713d2bd99870d}\label{interface__matlab_8h_aacdc2fc7895f234ad13713d2bd99870d}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!setModelData@{setModelData}}
+\index{setModelData@{setModelData}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{setModelData()}{setModelData()}}
+{\footnotesize\ttfamily void set\+Model\+Data (\begin{DoxyParamCaption}\item[{const mx\+Array $\ast$}]{prhs\mbox{[}$\,$\mbox{]},  }\item[{int}]{nrhs,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} \&}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em prhs} & pointer to the array of input arguments ~\newline
+{\bfseries{Type}}\+: mx\+Array \\
+\hline
+{\em nrhs} & number of elements in prhs \\
+\hline
+{\em model} & model to update \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 338 of file interface\+\_\+matlab.\+cpp.
+
+\mbox{\Hypertarget{interface__matlab_8cpp_a6a215cbfde54f82a3ce599228fc3fce5}\label{interface__matlab_8cpp_a6a215cbfde54f82a3ce599228fc3fce5}} 
+\index{interface\_matlab.cpp@{interface\_matlab.cpp}!mexFunction@{mexFunction}}
+\index{mexFunction@{mexFunction}!interface\_matlab.cpp@{interface\_matlab.cpp}}
+\doxyparagraph{\texorpdfstring{mexFunction()}{mexFunction()}}
+{\footnotesize\ttfamily void mex\+Function (\begin{DoxyParamCaption}\item[{int}]{nlhs,  }\item[{mx\+Array $\ast$}]{plhs\mbox{[}$\,$\mbox{]},  }\item[{int}]{nrhs,  }\item[{const mx\+Array $\ast$}]{prhs\mbox{[}$\,$\mbox{]} }\end{DoxyParamCaption})}
+
+mex\+Function is the main interface function for the M\+A\+T\+L\+AB interface. It reads in input data (udata and edata) and creates output data compound (rdata) and then calls the A\+M\+I\+CI simulation routine to carry out numerical integration.
+
+
+\begin{DoxyParams}{Parameters}
+{\em nlhs} & number of output arguments of the matlab call \\
+\hline
+{\em plhs} & pointer to the array of output arguments \\
+\hline
+{\em nrhs} & number of input arguments of the matlab call \\
+\hline
+{\em prhs} & pointer to the array of input arguments \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 477 of file interface\+\_\+matlab.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=308pt]{interface__matlab_8cpp_a6a215cbfde54f82a3ce599228fc3fce5_cgraph}
+\end{center}
+\end{figure}

@@ -1,0 +1,5 @@
+<map id="scale" name="scale">
+<area shape="rect" id="node1" title="multiply with a scalar (in&#45;place)" alt="" coords="308,31,361,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model___o_d_e.html#a1bfd97f4f4469ae7250ecb281eaaee4a" title="Computes the sparse backward Jacobian for steadystate integration and writes it to the model member." alt="" coords="5,5,260,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model___d_a_e.html#a1bfd97f4f4469ae7250ecb281eaaee4a" title="Computes the sparse backward Jacobian for steadystate integration and writes it to the model member." alt="" coords="6,56,259,83"/>
+</map>

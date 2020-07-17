@@ -1,0 +1,7 @@
+<map id="setParameterList" name="setParameterList">
+<area shape="rect" id="node1" title="Set the list of parameters for which sensitivities are computed, resets initial state sensitivities." alt="" coords="5,56,127,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a01b01e15d5cac9cec911a30f65e327f8" title="Set the nplist&#45;dependent vectors to their proper sizes." alt="" coords="175,5,288,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="212,56,251,83"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="208,107,255,133"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="336,5,389,32"/>
+</map>

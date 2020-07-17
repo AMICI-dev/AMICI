@@ -1,0 +1,4 @@
+<map id="getAdjointQuadrature" name="getAdjointQuadrature">
+<area shape="rect" id="node1" title="Access adjoint quadrature solution at time t." alt="" coords="160,5,304,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#af892618e72c2824035f019a4fa3af7b3" title="write solution from forward simulation" alt="" coords="5,5,112,32"/>
+</map>

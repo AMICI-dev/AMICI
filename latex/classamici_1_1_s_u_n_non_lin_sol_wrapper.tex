@@ -1,0 +1,373 @@
+\hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper}{}\doxysubsection{S\+U\+N\+Non\+Lin\+Sol\+Wrapper Class Reference}
+\label{classamici_1_1_s_u_n_non_lin_sol_wrapper}\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+
+
+A R\+A\+II wrapper for S\+U\+N\+Non\+Linear\+Solver structs which solve the nonlinear system F (y) = 0 or G(y) = y.  
+
+
+
+
+{\ttfamily \#include $<$sundials\+\_\+linsol\+\_\+wrapper.\+h$>$}
+
+
+
+Inheritance diagram for S\+U\+N\+Non\+Lin\+Sol\+Wrapper\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=346pt]{classamici_1_1_s_u_n_non_lin_sol_wrapper__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_aa7f2a715931af66756d8f4ad6383965a}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} (S\+U\+N\+Nonlinear\+Solver sol)
+\begin{DoxyCompactList}\small\item\em \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} from existing S\+U\+N\+Nonlinear\+Solver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_afe79929d0a082da68050d14c2db2f0fa}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} (const \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \&other)=delete
+\begin{DoxyCompactList}\small\item\em Copy constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_aa677d0c0c5a8771c297dce72e43adec8}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} (\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \&\&other) noexcept
+\begin{DoxyCompactList}\small\item\em Move constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \& \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a54bb5548dcaa7168a2f739979e255c8e}{operator=}} (const \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \&other)=delete
+\begin{DoxyCompactList}\small\item\em Copy assignment. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \& \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_afe63ff75d2296677804a8c94dd0d8040}{operator=}} (\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \&\&other) noexcept
+\begin{DoxyCompactList}\small\item\em Move assignment. \end{DoxyCompactList}\item 
+S\+U\+N\+Nonlinear\+Solver \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_add3abcabc59737fed51b3369e54a5eee}{get}} () const
+\begin{DoxyCompactList}\small\item\em Get the wrapped S\+U\+N\+Nonlinear\+Solver. \end{DoxyCompactList}\item 
+S\+U\+N\+Nonlinear\+Solver\+\_\+\+Type \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a853d7b4501388511bd35845ced00ea5a}{get\+Type}} () const
+\begin{DoxyCompactList}\small\item\em Get type ID of the solver. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a8b11b999632f09f682fd536c3f5a5231}{setup}} (N\+\_\+\+Vector y, void $\ast$mem)
+\begin{DoxyCompactList}\small\item\em Setup solver. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_ad574cb67c09f939b07181c43632ab339}{Solve}} (N\+\_\+\+Vector y0, N\+\_\+\+Vector y, N\+\_\+\+Vector w, realtype tol, booleantype call\+L\+Setup, void $\ast$mem)
+\begin{DoxyCompactList}\small\item\em Solve the nonlinear system F (y) = 0 or G(y) = y. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a96d9ce36c94b8dae87395beb5234e281}{set\+Sys\+Fn}} (S\+U\+N\+Nonlin\+Sol\+Sys\+Fn Sys\+Fn)
+\begin{DoxyCompactList}\small\item\em Set function to evaluate the nonlinear residual function F(y) = 0 or the fixed point function G(y) = y. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a62db7451865addbba310fbad13eccee3}{set\+L\+Setup\+Fn}} (S\+U\+N\+Nonlin\+Sol\+L\+Setup\+Fn Setup\+Fn)
+\begin{DoxyCompactList}\small\item\em Set linear solver setup function. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_af0c733c60db6b81aac3f95a6cdc1b0de}{set\+L\+Solve\+Fn}} (S\+U\+N\+Nonlin\+Sol\+L\+Solve\+Fn Solve\+Fn)
+\begin{DoxyCompactList}\small\item\em Set linear solver solve function. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_ac4dba03e54e1f442813810b4a6a64740}{set\+Conv\+Test\+Fn}} (S\+U\+N\+Nonlin\+Sol\+Conv\+Test\+Fn C\+Test\+Fn, void $\ast$ctest\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Set function to test for convergence. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_ae62f0bbaa7001ec0a7d9d13270092415}{set\+Max\+Iters}} (int maxiters)
+\begin{DoxyCompactList}\small\item\em Set maximum number of non-\/linear iterations. \end{DoxyCompactList}\item 
+long int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_ae4723aba2a9b99442c375b0cf107b0a2}{get\+Num\+Iters}} () const
+\begin{DoxyCompactList}\small\item\em get\+Num\+Iters \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_aed190560c593a67a50d56da224338756}{get\+Cur\+Iter}} () const
+\begin{DoxyCompactList}\small\item\em get\+Cur\+Iter \end{DoxyCompactList}\item 
+long int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a01341d76e337b4468d0c2a0e941da6a6}{get\+Num\+Conv\+Fails}} () const
+\begin{DoxyCompactList}\small\item\em get\+Num\+Conv\+Fails \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a25a40b6614565f755233080a384c35f1}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a25a40b6614565f755233080a384c35f1}} 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a25a40b6614565f755233080a384c35f1}{initialize}} ()
+\begin{DoxyCompactList}\small\item\em initialize \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+S\+U\+N\+Nonlinear\+Solver \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a45ad7ae4f42611a080847567501a6de6}{solver}} = nullptr
+\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+
+
+Definition at line 659 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_aa7f2a715931af66756d8f4ad6383965a}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_aa7f2a715931af66756d8f4ad6383965a}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{SUNNonLinSolWrapper()}{SUNNonLinSolWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} (\begin{DoxyParamCaption}\item[{S\+U\+N\+Nonlinear\+Solver}]{sol }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em sol} & \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 56 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_afe79929d0a082da68050d14c2db2f0fa}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_afe79929d0a082da68050d14c2db2f0fa}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{SUNNonLinSolWrapper()}{SUNNonLinSolWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [delete]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_aa677d0c0c5a8771c297dce72e43adec8}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_aa677d0c0c5a8771c297dce72e43adec8}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{SUNNonLinSolWrapper()}{SUNNonLinSolWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \&\&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [noexcept]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 64 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a54bb5548dcaa7168a2f739979e255c8e}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a54bb5548dcaa7168a2f739979e255c8e}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!operator=@{operator=}}
+\index{operator=@{operator=}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}}\& operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [delete]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_afe63ff75d2296677804a8c94dd0d8040}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_afe63ff75d2296677804a8c94dd0d8040}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!operator=@{operator=}}
+\index{operator=@{operator=}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \& operator= (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper}{S\+U\+N\+Non\+Lin\+Sol\+Wrapper}} \&\&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [noexcept]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 69 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_add3abcabc59737fed51b3369e54a5eee}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_add3abcabc59737fed51b3369e54a5eee}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!get@{get}}
+\index{get@{get}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{get()}{get()}}
+{\footnotesize\ttfamily S\+U\+N\+Nonlinear\+Solver get (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+S\+U\+N\+Nonlinear\+Solver 
+\end{DoxyReturn}
+
+
+Definition at line 74 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a853d7b4501388511bd35845ced00ea5a}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a853d7b4501388511bd35845ced00ea5a}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!getType@{getType}}
+\index{getType@{getType}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{getType()}{getType()}}
+{\footnotesize\ttfamily S\+U\+N\+Nonlinear\+Solver\+\_\+\+Type get\+Type (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 76 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a8b11b999632f09f682fd536c3f5a5231}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a8b11b999632f09f682fd536c3f5a5231}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!setup@{setup}}
+\index{setup@{setup}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{setup()}{setup()}}
+{\footnotesize\ttfamily int setup (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{y,  }\item[{void $\ast$}]{mem }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em y} & the initial iteration passed to the nonlinear solver. \\
+\hline
+{\em mem} & the sundials integrator memory structure. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 80 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_ad574cb67c09f939b07181c43632ab339}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_ad574cb67c09f939b07181c43632ab339}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!Solve@{Solve}}
+\index{Solve@{Solve}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{Solve()}{Solve()}}
+{\footnotesize\ttfamily int Solve (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{y0,  }\item[{N\+\_\+\+Vector}]{y,  }\item[{N\+\_\+\+Vector}]{w,  }\item[{realtype}]{tol,  }\item[{booleantype}]{call\+L\+Setup,  }\item[{void $\ast$}]{mem }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em y0} & the initial iterate for the nonlinear solve. This must remain unchanged throughout the solution process. \\
+\hline
+{\em y} & the solution to the nonlinear system \\
+\hline
+{\em w} & the solution error weight vector used for computing weighted error norms. \\
+\hline
+{\em tol} & the requested solution tolerance in the weighted root-\/mean-\/ squared norm. \\
+\hline
+{\em call\+L\+Setup} & a flag indicating that the integrator recommends for the linear solver setup function to be called. \\
+\hline
+{\em mem} & the sundials integrator memory structure. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 87 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a96d9ce36c94b8dae87395beb5234e281}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a96d9ce36c94b8dae87395beb5234e281}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!setSysFn@{setSysFn}}
+\index{setSysFn@{setSysFn}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{setSysFn()}{setSysFn()}}
+{\footnotesize\ttfamily int set\+Sys\+Fn (\begin{DoxyParamCaption}\item[{S\+U\+N\+Nonlin\+Sol\+Sys\+Fn}]{Sys\+Fn }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em Sys\+Fn} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 92 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a62db7451865addbba310fbad13eccee3}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a62db7451865addbba310fbad13eccee3}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!setLSetupFn@{setLSetupFn}}
+\index{setLSetupFn@{setLSetupFn}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{setLSetupFn()}{setLSetupFn()}}
+{\footnotesize\ttfamily int set\+L\+Setup\+Fn (\begin{DoxyParamCaption}\item[{S\+U\+N\+Nonlin\+Sol\+L\+Setup\+Fn}]{Setup\+Fn }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em Setup\+Fn} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 96 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_af0c733c60db6b81aac3f95a6cdc1b0de}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_af0c733c60db6b81aac3f95a6cdc1b0de}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!setLSolveFn@{setLSolveFn}}
+\index{setLSolveFn@{setLSolveFn}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{setLSolveFn()}{setLSolveFn()}}
+{\footnotesize\ttfamily int set\+L\+Solve\+Fn (\begin{DoxyParamCaption}\item[{S\+U\+N\+Nonlin\+Sol\+L\+Solve\+Fn}]{Solve\+Fn }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em Solve\+Fn} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 100 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_ac4dba03e54e1f442813810b4a6a64740}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_ac4dba03e54e1f442813810b4a6a64740}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!setConvTestFn@{setConvTestFn}}
+\index{setConvTestFn@{setConvTestFn}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{setConvTestFn()}{setConvTestFn()}}
+{\footnotesize\ttfamily int set\+Conv\+Test\+Fn (\begin{DoxyParamCaption}\item[{S\+U\+N\+Nonlin\+Sol\+Conv\+Test\+Fn}]{C\+Test\+Fn,  }\item[{void $\ast$}]{ctest\+\_\+data }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em C\+Test\+Fn} & \\
+\hline
+{\em ctest\+\_\+data} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 104 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_ae62f0bbaa7001ec0a7d9d13270092415}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_ae62f0bbaa7001ec0a7d9d13270092415}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!setMaxIters@{setMaxIters}}
+\index{setMaxIters@{setMaxIters}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{setMaxIters()}{setMaxIters()}}
+{\footnotesize\ttfamily int set\+Max\+Iters (\begin{DoxyParamCaption}\item[{int}]{maxiters }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em maxiters} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 109 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_ae4723aba2a9b99442c375b0cf107b0a2}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_ae4723aba2a9b99442c375b0cf107b0a2}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!getNumIters@{getNumIters}}
+\index{getNumIters@{getNumIters}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{getNumIters()}{getNumIters()}}
+{\footnotesize\ttfamily long get\+Num\+Iters (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 113 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_aed190560c593a67a50d56da224338756}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_aed190560c593a67a50d56da224338756}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!getCurIter@{getCurIter}}
+\index{getCurIter@{getCurIter}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{getCurIter()}{getCurIter()}}
+{\footnotesize\ttfamily int get\+Cur\+Iter (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 122 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a01341d76e337b4468d0c2a0e941da6a6}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a01341d76e337b4468d0c2a0e941da6a6}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!getNumConvFails@{getNumConvFails}}
+\index{getNumConvFails@{getNumConvFails}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{getNumConvFails()}{getNumConvFails()}}
+{\footnotesize\ttfamily long get\+Num\+Conv\+Fails (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 131 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+
+
+\doxysubsubsection{Member Data Documentation}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a45ad7ae4f42611a080847567501a6de6}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a45ad7ae4f42611a080847567501a6de6}} 
+\index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!solver@{solver}}
+\index{solver@{solver}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
+\doxyparagraph{\texorpdfstring{solver}{solver}}
+{\footnotesize\ttfamily S\+U\+N\+Nonlinear\+Solver solver = nullptr\hspace{0.3cm}{\ttfamily [protected]}}
+
+the wrapper solver 
+
+Definition at line 794 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
+

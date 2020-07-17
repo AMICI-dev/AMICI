@@ -1,0 +1,193 @@
+\hypertarget{classamici_1_1_newton_solver_iterative}{}\doxysubsection{Newton\+Solver\+Iterative Class Reference}
+\label{classamici_1_1_newton_solver_iterative}\index{NewtonSolverIterative@{NewtonSolverIterative}}
+
+
+The \mbox{\hyperlink{classamici_1_1_newton_solver_iterative}{Newton\+Solver\+Iterative}} provides access to the iterative linear solver for the Newton method.  
+
+
+
+
+{\ttfamily \#include $<$newton\+\_\+solver.\+h$>$}
+
+
+
+Inheritance diagram for Newton\+Solver\+Iterative\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=193pt]{classamici_1_1_newton_solver_iterative__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_newton_solver_iterative_a9f704a56ffb27bb914b80ba3476cfe5b}{Newton\+Solver\+Iterative}} (realtype $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_ad94d61da9b85c1a151ffd8e228758c7c}{t}}, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_af64268982dd7b9be1690573763982e0b}{x}}, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_a7b56c3ca57dde73bdbc8dbe9772bca19}{model}})
+\begin{DoxyCompactList}\small\item\em Constructor, initializes all members with the provided objects. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_newton_solver_iterative_ab46a7b328bc1be64b6b9e4ee8213626a}{solve\+Linear\+System}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&rhs) override
+\begin{DoxyCompactList}\small\item\em Solves the linear system for the Newton step by passing it to linsolve\+S\+P\+B\+CG. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_newton_solver_iterative_a0b900656d018299b08d0f027e95bd347}{prepare\+Linear\+System}} (int ntry, int nnewt) override
+\item 
+void \mbox{\hyperlink{classamici_1_1_newton_solver_iterative_aaa73aa6ff400b0a59dc47a586bd2024a}{prepare\+Linear\+SystemB}} (int ntry, int nnewt) override
+\item 
+void \mbox{\hyperlink{classamici_1_1_newton_solver_iterative_ab68ad71ea2f99072fc98845c2c360030}{linsolve\+S\+P\+B\+CG}} (int ntry, int nnewt, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&ns\+\_\+delta)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+
+
+\doxysubsubsection{Detailed Description}
+
+
+Definition at line 252 of file newton\+\_\+solver.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_iterative_a9f704a56ffb27bb914b80ba3476cfe5b}\label{classamici_1_1_newton_solver_iterative_a9f704a56ffb27bb914b80ba3476cfe5b}} 
+\index{NewtonSolverIterative@{NewtonSolverIterative}!NewtonSolverIterative@{NewtonSolverIterative}}
+\index{NewtonSolverIterative@{NewtonSolverIterative}!NewtonSolverIterative@{NewtonSolverIterative}}
+\doxyparagraph{\texorpdfstring{NewtonSolverIterative()}{NewtonSolverIterative()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_newton_solver_iterative}{Newton\+Solver\+Iterative}} (\begin{DoxyParamCaption}\item[{realtype $\ast$}]{t,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$}]{x,  }\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em t} & pointer to time variable \\
+\hline
+{\em x} & pointer to state variables \\
+\hline
+{\em model} & pointer to the model object \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 244 of file newton\+\_\+solver.\+cpp.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_iterative_ab46a7b328bc1be64b6b9e4ee8213626a}\label{classamici_1_1_newton_solver_iterative_ab46a7b328bc1be64b6b9e4ee8213626a}} 
+\index{NewtonSolverIterative@{NewtonSolverIterative}!solveLinearSystem@{solveLinearSystem}}
+\index{solveLinearSystem@{solveLinearSystem}!NewtonSolverIterative@{NewtonSolverIterative}}
+\doxyparagraph{\texorpdfstring{solveLinearSystem()}{solveLinearSystem()}}
+{\footnotesize\ttfamily void solve\+Linear\+System (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{rhs }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em rhs} & containing the R\+HS of the linear system, will be overwritten by solution to the linear system \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_newton_solver_addfdd7afbe1eff3d47b0f28b6191793f}{Newton\+Solver}}.
+
+
+
+Definition at line 305 of file newton\+\_\+solver.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_newton_solver_iterative_ab46a7b328bc1be64b6b9e4ee8213626a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_iterative_a0b900656d018299b08d0f027e95bd347}\label{classamici_1_1_newton_solver_iterative_a0b900656d018299b08d0f027e95bd347}} 
+\index{NewtonSolverIterative@{NewtonSolverIterative}!prepareLinearSystem@{prepareLinearSystem}}
+\index{prepareLinearSystem@{prepareLinearSystem}!NewtonSolverIterative@{NewtonSolverIterative}}
+\doxyparagraph{\texorpdfstring{prepareLinearSystem()}{prepareLinearSystem()}}
+{\footnotesize\ttfamily void prepare\+Linear\+System (\begin{DoxyParamCaption}\item[{int}]{ntry,  }\item[{int}]{nnewt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Writes the Jacobian (J) for the Newton iteration and passes it to the linear solver. Also wraps around get\+Sensis for iterative linear solver.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ntry} & integer newton\+\_\+try integer start number of Newton solver (1 or 2) \\
+\hline
+{\em nnewt} & integer number of current Newton step \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_newton_solver_a4aed46b0343374f171f9b4b51fa009e7}{Newton\+Solver}}.
+
+
+
+Definition at line 256 of file newton\+\_\+solver.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_newton_solver_iterative_a0b900656d018299b08d0f027e95bd347_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_iterative_aaa73aa6ff400b0a59dc47a586bd2024a}\label{classamici_1_1_newton_solver_iterative_aaa73aa6ff400b0a59dc47a586bd2024a}} 
+\index{NewtonSolverIterative@{NewtonSolverIterative}!prepareLinearSystemB@{prepareLinearSystemB}}
+\index{prepareLinearSystemB@{prepareLinearSystemB}!NewtonSolverIterative@{NewtonSolverIterative}}
+\doxyparagraph{\texorpdfstring{prepareLinearSystemB()}{prepareLinearSystemB()}}
+{\footnotesize\ttfamily void prepare\+Linear\+SystemB (\begin{DoxyParamCaption}\item[{int}]{ntry,  }\item[{int}]{nnewt }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [override]}, {\ttfamily [virtual]}}
+
+Writes the Jacobian (JB) for the Newton iteration and passes it to the linear solver. Also wraps around get\+Sensis for iterative linear solver.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ntry} & integer newton\+\_\+try integer start number of Newton solver (1 or 2) \\
+\hline
+{\em nnewt} & integer number of current Newton step \\
+\hline
+\end{DoxyParams}
+
+
+Implements \mbox{\hyperlink{classamici_1_1_newton_solver_a522e8e16d023d90584a0666e5cff9862}{Newton\+Solver}}.
+
+
+
+Definition at line 279 of file newton\+\_\+solver.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_newton_solver_iterative_aaa73aa6ff400b0a59dc47a586bd2024a_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_iterative_ab68ad71ea2f99072fc98845c2c360030}\label{classamici_1_1_newton_solver_iterative_ab68ad71ea2f99072fc98845c2c360030}} 
+\index{NewtonSolverIterative@{NewtonSolverIterative}!linsolveSPBCG@{linsolveSPBCG}}
+\index{linsolveSPBCG@{linsolveSPBCG}!NewtonSolverIterative@{NewtonSolverIterative}}
+\doxyparagraph{\texorpdfstring{linsolveSPBCG()}{linsolveSPBCG()}}
+{\footnotesize\ttfamily void linsolve\+S\+P\+B\+CG (\begin{DoxyParamCaption}\item[{int}]{ntry,  }\item[{int}]{nnewt,  }\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{ns\+\_\+delta }\end{DoxyParamCaption})}
+
+Iterative linear solver created from S\+P\+I\+LS Bi\+C\+G-\/\+Stab. Solves the linear system within each Newton step if iterative solver is chosen.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ntry} & integer newton\+\_\+try integer start number of Newton solver (1 or 2) \\
+\hline
+{\em nnewt} & integer number of current Newton step \\
+\hline
+{\em ns\+\_\+delta} & Newton step \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 312 of file newton\+\_\+solver.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_newton_solver_iterative_ab68ad71ea2f99072fc98845c2c360030_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=301pt]{classamici_1_1_newton_solver_iterative_ab68ad71ea2f99072fc98845c2c360030_icgraph}
+\end{center}
+\end{figure}

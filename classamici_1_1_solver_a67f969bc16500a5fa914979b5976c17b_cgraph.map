@@ -1,0 +1,7 @@
+<map id="setupSteadystate" name="setupSteadystate">
+<area shape="rect" id="node1" title="Initialises the ami memory for quadrature computation." alt="" coords="5,56,129,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a2ac567fb6bd58a04efc85bd9525bb730" title="updates quadrature solver tolerances according to the currently specified member variables" alt="" coords="177,5,324,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a3bbddf0d9833b792a45ae4b2a69e10e2" title="Initialises the states at the specified initial timepoint." alt="" coords="196,56,305,83"/>
+<area shape="rect" id="node5" href="$classamici_1_1_solver.html#adb8e998a35349e0c2bbd34fa898f26d1" title="initializes the quadratures" alt="" coords="217,107,285,133"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#aad482982b51f42c19163cf1cd2063ba0" title="checks whether memory for quadratures has been allocated" alt="" coords="372,5,492,32"/>
+</map>

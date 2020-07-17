@@ -1,0 +1,10 @@
+<map id="addEventObjectiveRegularization" name="addEventObjectiveRegularization">
+<area shape="rect" id="node1" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="5,104,220,131"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a4c330baa70af09f9cef7be3d4da674c7" title="Regularization of negative log&#45;likelihood with roots of event&#45;resolved measurements rz." alt="" coords="280,28,324,55"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a74340e771fd77e724bf1461dc9518769" title="Event root function of events (equal to froot but does not include non&#45;output events)" alt="" coords="283,79,321,105"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="268,129,336,156"/>
+<area shape="rect" id="node7" href="$classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="384,187,591,229"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="410,5,565,32"/>
+<area shape="rect" id="node6" href="$classamici_1_1_exp_data.html#aabab4dfc080fdf961b6a3bbf1aebd631" title="get function that returns a pointer to standard deviation of observed event data at ieth occurence" alt="" coords="390,57,585,98"/>
+<area shape="rect" id="node8" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="384,122,591,163"/>
+</map>

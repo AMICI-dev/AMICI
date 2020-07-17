@@ -1,0 +1,6 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classamici_1_1_context_manager.html" title="Generic implementation for a context manager, explicitely deletes copy and move operators for derived..." alt="" coords="5,56,124,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html" title="The ConditionContext class applies condition&#45;specific amici::Model settings and restores them when go..." alt="" coords="172,5,295,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_final_state_storer.html" title="stores the stimulation state when it goes out of scope" alt="" coords="175,56,291,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model_context.html" title="The ModelContext temporarily stores amici::Model::state and restores it when going out of scope." alt="" coords="182,107,285,133"/>
+</map>

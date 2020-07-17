@@ -1,0 +1,6 @@
+<map id="augmento2" name="augmento2">
+<area shape="rect" id="node1" title="augmento2 augments the system equation to also include equations for sensitivity equation...." alt="" coords="5,31,92,57"/>
+<area shape="rect" id="node2" href="$classamimodel.html#a05d52506788717b3d482845748446a60" title="amimodel initializes the model object based on the provided symfun and modelname" alt="" coords="140,5,219,32"/>
+<area shape="rect" id="node3" href="$classamimodel.html#a08d58ae650e5ff9310760f6d3f08015c" title="getFun generates symbolic expressions for the requested function." alt="" coords="148,56,211,83"/>
+<area shape="rect" id="node4" href="$classamimodel.html#ab566026e57f6cbce21a2a2c72b9f7f2b" title="checkDeps checks the dependencies of functions and populates sym fields if necessary" alt="" coords="267,56,355,83"/>
+</map>

@@ -1,0 +1,19 @@
+<map id="fJB" name="fJB">
+<area shape="rect" id="node1" title="Implementation of fJB at the N_Vector level, this function provides an interface to the model specifi..." alt="" coords="5,139,48,165"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a0259cf8f0b132a25345ddc30c91febe8" title="Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to fa..." alt="" coords="96,57,287,84"/>
+<area shape="rect" id="node6" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="347,158,522,199"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a7afd5fb5b12531657d3536508fd7a066" title="Recurring terms in xdot, state derivative." alt="" coords="122,377,261,404"/>
+<area shape="rect" id="node17" href="$classamici_1_1_model___o_d_e.html#a93a8eccf4486f48116cb2a9d977ef28b" title="Dense Jacobian function." alt="" coords="170,109,213,136"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="365,5,505,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="341,56,528,83"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="337,107,532,133"/>
+<area shape="rect" id="node8" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="583,309,741,350"/>
+<area shape="rect" id="node10" href="$classamici_1_1_abstract_model.html#a8d0efa23764dd2210e01f40918be36ae" title="Model specific implementation for dwdx, column pointers." alt="" coords="362,275,507,317"/>
+<area shape="rect" id="node11" href="$classamici_1_1_abstract_model.html#a209b18059172ea4286c85931d0231a8a" title="Model specific implementation for dwdx, row values." alt="" coords="362,341,507,382"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="375,407,494,433"/>
+<area shape="rect" id="node13" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="335,457,535,484"/>
+<area shape="rect" id="node14" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="347,509,522,550"/>
+<area shape="rect" id="node15" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="347,574,522,615"/>
+<area shape="rect" id="node16" href="$classamici_1_1_s_u_n_matrix_wrapper.html#ad20897c5c8bd47f5d4005989bead0e55" title="reset data to zeroes" alt="" coords="347,639,522,681"/>
+<area shape="rect" id="node9" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="789,309,948,350"/>
+</map>

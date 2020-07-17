@@ -1,0 +1,5 @@
+<map id="multiply" name="multiply">
+<area shape="rect" id="node1" title="Perform matrix vector multiplication c += A*b." alt="" coords="5,31,72,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a564a62656ad1a9b08920e7efcd915a16" title="Get the number of columns." alt="" coords="120,5,191,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a6dada592a68544a40682b99e5261f4c2" title="Get the number of rows." alt="" coords="130,56,181,83"/>
+</map>

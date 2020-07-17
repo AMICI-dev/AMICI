@@ -1,0 +1,10 @@
+<map id="prepareLinearSystemB" name="prepareLinearSystemB">
+<area shape="rect" id="node1" title=" " alt="" coords="5,173,160,200"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="231,5,385,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_abstract_model.html#a22632bb33c7ddf214e64f999b8e3019a" title="Dense Jacobian function." alt="" coords="221,56,395,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_abstract_model.html#ae98dfb9c36d8b67256d47f08e312c61b" title="Diagonal Jacobian function." alt="" coords="235,107,381,149"/>
+<area shape="rect" id="node5" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="208,173,408,200"/>
+<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="215,224,401,251"/>
+<area shape="rect" id="node7" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="211,275,405,301"/>
+<area shape="rect" id="node8" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="235,325,381,352"/>
+</map>

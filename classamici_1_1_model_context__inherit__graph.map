@@ -1,0 +1,4 @@
+<map id="ModelContext" name="ModelContext">
+<area shape="rect" id="node1" title="The ModelContext temporarily stores amici::Model::state and restores it when going out of scope." alt="" coords="13,80,116,107"/>
+<area shape="rect" id="node2" href="$classamici_1_1_context_manager.html" title="Generic implementation for a context manager, explicitely deletes copy and move operators for derived..." alt="" coords="5,5,124,32"/>
+</map>

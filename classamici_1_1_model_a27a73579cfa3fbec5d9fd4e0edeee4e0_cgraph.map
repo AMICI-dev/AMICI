@@ -1,0 +1,8 @@
+<map id="getObservable" name="getObservable">
+<area shape="rect" id="node1" title="Time&#45;resolved observables,." alt="" coords="5,24,112,50"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="160,24,199,50"/>
+<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="449,16,608,58"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="247,24,401,50"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="305,74,343,101"/>
+<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="656,16,815,58"/>
+</map>

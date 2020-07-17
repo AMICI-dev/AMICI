@@ -1,0 +1,6 @@
+<map id="computeX_pos" name="computeX_pos">
+<area shape="rect" id="node1" title="Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to fa..." alt="" coords="5,56,115,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="190,5,330,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="167,56,353,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="163,107,357,133"/>
+</map>

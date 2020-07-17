@@ -1,0 +1,6 @@
+<map id="hasFixedParameterIds" name="hasFixedParameterIds">
+<area shape="rect" id="node1" title="Reports whether the model has fixed parameter ids set. Also returns true if the number of correspondi..." alt="" coords="257,56,411,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#acc647ebbeaf0be737c7c165fa77eeca5" title="Get value of fixed parameter with the specified Id." alt="" coords="28,5,187,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#adc0d24343c6fed2e797fb402f7c2d256" title="Set value of first fixed parameter with the specified id." alt="" coords="28,56,187,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#acda9b9debfd3d6ac77e2d27a48bfb5d6" title="Set values of all fixed parameters with the id matching the specified regex." alt="" coords="5,107,209,133"/>
+</map>

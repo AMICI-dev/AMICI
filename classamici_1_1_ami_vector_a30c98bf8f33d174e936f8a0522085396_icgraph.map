@@ -1,0 +1,9 @@
+<map id="copy" name="copy">
+<area shape="rect" id="node1" title="copies data from another AmiVector" alt="" coords="792,101,843,127"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#ab0b999d56e310b3326d8bcbaa095e86f" title="Computes the quadrature in steady state backward mode by solving the linear system defined by the bac..." alt="" coords="559,7,738,48"/>
+<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#a6b871b5be8dfa63fc4bb5bd0bd7ff052" title="Initialize backward computation by setting state, time, adjoint state and checking for preequilibrati..." alt="" coords="306,71,489,112"/>
+<area shape="rect" id="node6" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="558,126,739,153"/>
+<area shape="rect" id="node7" href="$classamici_1_1_solver.html#af892618e72c2824035f019a4fa3af7b3" title="write solution from forward simulation" alt="" coords="553,177,744,203"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="289,5,505,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#a4b4624b422c1f6c070a5bde7168a5cbf" title=" " alt="" coords="5,39,241,80"/>
+</map>

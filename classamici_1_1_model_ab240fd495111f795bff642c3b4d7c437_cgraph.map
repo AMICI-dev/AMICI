@@ -1,0 +1,7 @@
+<map id="fsigmay" name="fsigmay">
+<area shape="rect" id="node1" title="Standard deviation of measurements." alt="" coords="5,97,73,123"/>
+<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="141,5,336,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="190,71,287,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="121,122,356,149"/>
+<area shape="rect" id="node5" href="$classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="135,173,342,215"/>
+</map>

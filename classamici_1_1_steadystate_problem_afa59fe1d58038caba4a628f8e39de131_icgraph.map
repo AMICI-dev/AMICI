@@ -1,0 +1,7 @@
+<map id="hasQuadrature" name="hasQuadrature">
+<area shape="rect" id="node1" title="Accessor for hasQuadrature_." alt="" coords="537,35,644,61"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="281,5,489,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="298,57,473,98"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#a4b4624b422c1f6c070a5bde7168a5cbf" title=" " alt="" coords="5,5,233,32"/>
+<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="32,57,207,98"/>
+</map>

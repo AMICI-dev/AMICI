@@ -1,0 +1,7 @@
+<map id="getQuadrature" name="getQuadrature">
+<area shape="rect" id="node1" title="Access quadrature solution at time t." alt="" coords="5,56,109,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#abe5d3475b73424d44d8231ef074ed929" title="extracts the quadrature at the current timepoint from solver memory and writes it to the xQ member va..." alt="" coords="201,5,272,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#ad1fe8ba815e156ec06657367037c181f" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="189,56,284,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="157,107,316,133"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="364,107,511,133"/>
+</map>

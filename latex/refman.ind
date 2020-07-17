@@ -1,0 +1,3220 @@
+\begin{theindex}
+
+  \item {$\sim$Model}
+    \subitem {Model}, \hyperpage{139}
+
+  \indexspace
+
+  \item {AbstractModel}, \hyperpage{30}
+    \subitem {fdeltaqB}, \hyperpage{51}
+    \subitem {fdeltasx}, \hyperpage{50}
+    \subitem {fdeltax}, \hyperpage{49}
+    \subitem {fdeltaxB}, \hyperpage{51}
+    \subitem {fdJrzdsigma}, \hyperpage{57}
+    \subitem {fdJrzdz}, \hyperpage{56}
+    \subitem {fdJydsigma}, \hyperpage{55}
+    \subitem {fdJydy}, \hyperpage{55}
+    \subitem {fdJzdsigma}, \hyperpage{56}
+    \subitem {fdJzdz}, \hyperpage{55}
+    \subitem {fdrzdp}, \hyperpage{48}
+    \subitem {fdrzdx}, \hyperpage{49}
+    \subitem {fdsigmaydp}, \hyperpage{53}
+    \subitem {fdsigmazdp}, \hyperpage{53}
+    \subitem {fdwdp}, \hyperpage{57}, \hyperpage{59}
+    \subitem {fdwdp\_colptrs}, \hyperpage{58}
+    \subitem {fdwdp\_rowvals}, \hyperpage{58}
+    \subitem {fdwdx}, \hyperpage{59}
+    \subitem {fdwdx\_colptrs}, \hyperpage{60}
+    \subitem {fdwdx\_rowvals}, \hyperpage{61}
+    \subitem {fdx0}, \hyperpage{43}
+    \subitem {fdxdotdp}, \hyperpage{40}
+    \subitem {fdydp}, \hyperpage{44}
+    \subitem {fdydx}, \hyperpage{45}
+    \subitem {fdzdp}, \hyperpage{47}
+    \subitem {fdzdx}, \hyperpage{48}
+    \subitem {fJ}, \hyperpage{36}
+    \subitem {fJB}, \hyperpage{37}
+    \subitem {fJDiag}, \hyperpage{39}
+    \subitem {fJrz}, \hyperpage{54}
+    \subitem {fJSparse}, \hyperpage{38}
+    \subitem {fJSparseB}, \hyperpage{38}
+    \subitem {fJSparseB\_ss}, \hyperpage{35}
+    \subitem {fJv}, \hyperpage{40}
+    \subitem {fJy}, \hyperpage{53}
+    \subitem {fJz}, \hyperpage{54}
+    \subitem {froot}, \hyperpage{33}
+    \subitem {frz}, \hyperpage{46}
+    \subitem {fsigmay}, \hyperpage{52}
+    \subitem {fsigmaz}, \hyperpage{53}
+    \subitem {fsrz}, \hyperpage{47}
+    \subitem {fstau}, \hyperpage{43}
+    \subitem {fsx0}, \hyperpage{42}
+    \subitem {fsx0\_fixedParameters}, \hyperpage{42}
+    \subitem {fsxdot}, \hyperpage{34}
+    \subitem {fsz}, \hyperpage{46}
+    \subitem {fw}, \hyperpage{57}
+    \subitem {fx0}, \hyperpage{41}
+    \subitem {fx0\_fixedParameters}, \hyperpage{42}
+    \subitem {fxBdot\_ss}, \hyperpage{35}
+    \subitem {fxdot}, \hyperpage{34}
+    \subitem {fy}, \hyperpage{44}
+    \subitem {fz}, \hyperpage{45}
+    \subitem {getAmiciCommit}, \hyperpage{41}
+    \subitem {getAmiciVersion}, \hyperpage{41}
+    \subitem {getSolver}, \hyperpage{33}
+    \subitem {isFixedParameterStateReinitializationAllowed}, 
+		\hyperpage{41}
+    \subitem {writeSteadystateJB}, \hyperpage{36}
+  \item {addAdjointQuadratureEventUpdate}
+    \subitem {Model}, \hyperpage{199}
+  \item {addAdjointStateEventUpdate}
+    \subitem {Model}, \hyperpage{198}
+  \item {addEventObjective}
+    \subitem {Model}, \hyperpage{192}
+  \item {addEventObjectiveRegularization}
+    \subitem {Model}, \hyperpage{193}
+  \item {addEventObjectiveSensitivity}
+    \subitem {Model}, \hyperpage{194}
+  \item {addObservableObjective}
+    \subitem {Model}, \hyperpage{182}
+  \item {addObservableObjectiveSensitivity}
+    \subitem {Model}, \hyperpage{183}
+  \item {addPartialEventObjectiveSensitivity}
+    \subitem {Model}, \hyperpage{195}
+  \item {addPartialObservableObjectiveSensitivity}
+    \subitem {Model}, \hyperpage{184}
+  \item {addStateEventUpdate}
+    \subitem {Model}, \hyperpage{197}
+  \item {addStateSensitivityEventUpdate}
+    \subitem {Model}, \hyperpage{198}
+  \item {adjoint}
+    \subitem {amimodel}, \hyperpage{552}
+  \item {allocateSolverB}
+    \subitem {Solver}, \hyperpage{448}
+  \item {alwaysCheckFinite}
+    \subitem {Model}, \hyperpage{260}
+  \item {am\_and}
+    \subitem {am\_and.m}, \hyperpage{569}
+  \item {am\_and.m}, \hyperpage{569}
+    \subitem {am\_and}, \hyperpage{569}
+  \item {am\_eq}
+    \subitem {am\_eq.m}, \hyperpage{570}
+  \item {am\_eq.m}, \hyperpage{570}
+    \subitem {am\_eq}, \hyperpage{570}
+  \item {am\_ge}
+    \subitem {am\_ge.m}, \hyperpage{571}
+  \item {am\_ge.m}, \hyperpage{570}
+    \subitem {am\_ge}, \hyperpage{571}
+  \item {am\_gt}
+    \subitem {am\_gt.m}, \hyperpage{571}
+  \item {am\_gt.m}, \hyperpage{571}
+    \subitem {am\_gt}, \hyperpage{571}
+  \item {am\_if}
+    \subitem {am\_if.m}, \hyperpage{572}
+  \item {am\_if.m}, \hyperpage{572}
+    \subitem {am\_if}, \hyperpage{572}
+  \item {am\_le}
+    \subitem {am\_le.m}, \hyperpage{573}
+  \item {am\_le.m}, \hyperpage{573}
+    \subitem {am\_le}, \hyperpage{573}
+  \item {am\_lt}
+    \subitem {am\_lt.m}, \hyperpage{574}
+  \item {am\_lt.m}, \hyperpage{573}
+    \subitem {am\_lt}, \hyperpage{574}
+  \item {am\_max}
+    \subitem {am\_max.m}, \hyperpage{574}
+  \item {am\_max.m}, \hyperpage{574}
+    \subitem {am\_max}, \hyperpage{574}
+  \item {am\_min}
+    \subitem {am\_min.m}, \hyperpage{575}
+  \item {am\_min.m}, \hyperpage{575}
+    \subitem {am\_min}, \hyperpage{575}
+  \item {am\_or}
+    \subitem {am\_or.m}, \hyperpage{576}
+  \item {am\_or.m}, \hyperpage{576}
+    \subitem {am\_or}, \hyperpage{576}
+  \item {am\_piecewise}
+    \subitem {am\_piecewise.m}, \hyperpage{577}
+  \item {am\_piecewise.m}, \hyperpage{577}
+    \subitem {am\_piecewise}, \hyperpage{577}
+  \item {am\_stepfun}
+    \subitem {am\_stepfun.m}, \hyperpage{578}
+  \item {am\_stepfun.m}, \hyperpage{578}
+    \subitem {am\_stepfun}, \hyperpage{578}
+  \item {am\_xor}
+    \subitem {am\_xor.m}, \hyperpage{579}
+  \item {am\_xor.m}, \hyperpage{578}
+    \subitem {am\_xor}, \hyperpage{579}
+  \item {amici.cpp}, \hyperpage{579}
+    \subitem {printErrMsgIdAndTxt}, \hyperpage{580}
+    \subitem {printWarnMsgIdAndTxt}, \hyperpage{581}
+    \subitem {runAmiciSimulation}, \hyperpage{580}
+    \subitem {runAmiciSimulations}, \hyperpage{581}
+  \item {amici\_blasCBlasTransToBlasTrans}
+    \subitem {interface\_matlab.cpp}, \hyperpage{587}
+  \item {amici\_daxpy}
+    \subitem {cblas.cpp}, \hyperpage{585}
+    \subitem {interface\_matlab.cpp}, \hyperpage{589}
+  \item {amici\_dgemm}
+    \subitem {cblas.cpp}, \hyperpage{584}
+    \subitem {interface\_matlab.cpp}, \hyperpage{588}
+  \item {amici\_dgemv}
+    \subitem {cblas.cpp}, \hyperpage{584}
+    \subitem {interface\_matlab.cpp}, \hyperpage{589}
+  \item {AmiciApplication}, \hyperpage{61}
+    \subitem {checkFinite}, \hyperpage{65}
+    \subitem {error}, \hyperpage{66}
+    \subitem {errorF}, \hyperpage{64}
+    \subitem {runAmiciSimulation}, \hyperpage{62}
+    \subitem {runAmiciSimulations}, \hyperpage{62}
+    \subitem {warning}, \hyperpage{66}
+    \subitem {warningF}, \hyperpage{63}
+  \item {amidata}, \hyperpage{527}
+    \subitem {amidata}, \hyperpage{528}
+    \subitem {condition}, \hyperpage{530}
+    \subitem {conditionPreequilibration}, \hyperpage{530}
+    \subitem {ne}, \hyperpage{529}
+    \subitem {nk}, \hyperpage{529}
+    \subitem {nt}, \hyperpage{529}
+    \subitem {ny}, \hyperpage{529}
+    \subitem {nz}, \hyperpage{529}
+    \subitem {reinitializeStates}, \hyperpage{531}
+    \subitem {Sigma\_Y}, \hyperpage{530}
+    \subitem {Sigma\_Z}, \hyperpage{530}
+    \subitem {t}, \hyperpage{529}
+    \subitem {Y}, \hyperpage{530}
+    \subitem {Z}, \hyperpage{530}
+  \item {amievent}, \hyperpage{531}
+    \subitem {amievent}, \hyperpage{531}
+    \subitem {bolus}, \hyperpage{532}
+    \subitem {hflag}, \hyperpage{533}
+    \subitem {setHflag}, \hyperpage{532}
+    \subitem {trigger}, \hyperpage{532}
+    \subitem {z}, \hyperpage{532}
+  \item {AmiException}, \hyperpage{66}
+    \subitem {AmiException}, \hyperpage{67, 68}
+    \subitem {getBacktrace}, \hyperpage{68}
+    \subitem {storeBacktrace}, \hyperpage{68}
+    \subitem {what}, \hyperpage{68}
+  \item {amifun}, \hyperpage{533}
+    \subitem {amifun}, \hyperpage{534}
+    \subitem {argstr}, \hyperpage{538}
+    \subitem {cvar}, \hyperpage{538}
+    \subitem {deps}, \hyperpage{539}
+    \subitem {funstr}, \hyperpage{538}
+    \subitem {gccode}, \hyperpage{536}
+    \subitem {getArgs}, \hyperpage{536}
+    \subitem {getCVar}, \hyperpage{537}
+    \subitem {getDeps}, \hyperpage{536}
+    \subitem {getNVecs}, \hyperpage{537}
+    \subitem {getSensiFlag}, \hyperpage{537}
+    \subitem {getSyms}, \hyperpage{537}
+    \subitem {nvecs}, \hyperpage{539}
+    \subitem {sensiflag}, \hyperpage{539}
+    \subitem {strsym}, \hyperpage{538}
+    \subitem {strsym\_old}, \hyperpage{538}
+    \subitem {sym}, \hyperpage{538}
+    \subitem {sym\_noopt}, \hyperpage{538}
+    \subitem {writeCcode}, \hyperpage{535}
+    \subitem {writeCcode\_sensi}, \hyperpage{534}
+    \subitem {writeMcode}, \hyperpage{535}
+  \item {amimodel}, \hyperpage{539}
+    \subitem {adjoint}, \hyperpage{552}
+    \subitem {amimodel}, \hyperpage{542}
+    \subitem {augmento2}, \hyperpage{548}
+    \subitem {augmento2vec}, \hyperpage{549}
+    \subitem {cfun}, \hyperpage{558}
+    \subitem {checkDeps}, \hyperpage{547}
+    \subitem {colptrs}, \hyperpage{556}
+    \subitem {colptrsB}, \hyperpage{556}
+    \subitem {compileAndLinkModel}, \hyperpage{549}
+    \subitem {compileC}, \hyperpage{544}
+    \subitem {coptim}, \hyperpage{557}
+    \subitem {debug}, \hyperpage{552}
+    \subitem {event}, \hyperpage{551}
+    \subitem {forward}, \hyperpage{552}
+    \subitem {fun}, \hyperpage{551}
+    \subitem {funs}, \hyperpage{557}
+    \subitem {generateC}, \hyperpage{544}
+    \subitem {generateM}, \hyperpage{545}
+    \subitem {generateMatlabWrapper}, \hyperpage{550}
+    \subitem {getFun}, \hyperpage{545}
+    \subitem {HTable}, \hyperpage{551}
+    \subitem {id}, \hyperpage{555}
+    \subitem {lbw}, \hyperpage{555}
+    \subitem {loadOldHashes}, \hyperpage{548}
+    \subitem {makeEvents}, \hyperpage{546}
+    \subitem {makeSyms}, \hyperpage{547}
+    \subitem {maxflag}, \hyperpage{559}
+    \subitem {mfuns}, \hyperpage{557}
+    \subitem {minflag}, \hyperpage{558}
+    \subitem {modelname}, \hyperpage{551}
+    \subitem {ndwdp}, \hyperpage{559}
+    \subitem {ndwdx}, \hyperpage{559}
+    \subitem {nevent}, \hyperpage{554}
+    \subitem {ng}, \hyperpage{554}
+    \subitem {nk}, \hyperpage{554}
+    \subitem {nnz}, \hyperpage{555}
+    \subitem {np}, \hyperpage{553}
+    \subitem {nw}, \hyperpage{559}
+    \subitem {nx}, \hyperpage{553}
+    \subitem {nxtrue}, \hyperpage{553}
+    \subitem {ny}, \hyperpage{553}
+    \subitem {nytrue}, \hyperpage{553}
+    \subitem {nz}, \hyperpage{554}
+    \subitem {nztrue}, \hyperpage{554}
+    \subitem {o2flag}, \hyperpage{558}
+    \subitem {param}, \hyperpage{557}
+    \subitem {parseModel}, \hyperpage{544}
+    \subitem {recompile}, \hyperpage{558}
+    \subitem {rowvals}, \hyperpage{556}
+    \subitem {rowvalsB}, \hyperpage{556}
+    \subitem {sparseidx}, \hyperpage{555}
+    \subitem {sparseidxB}, \hyperpage{556}
+    \subitem {splineflag}, \hyperpage{558}
+    \subitem {sym}, \hyperpage{551}
+    \subitem {t0}, \hyperpage{552}
+    \subitem {ubw}, \hyperpage{555}
+    \subitem {updateModelName}, \hyperpage{543}
+    \subitem {updateRHS}, \hyperpage{543}
+    \subitem {updateWrapPath}, \hyperpage{544}
+    \subitem {wrap\_path}, \hyperpage{557}
+    \subitem {wtype}, \hyperpage{552}
+    \subitem {z2event}, \hyperpage{558}
+  \item {amioption}, \hyperpage{559}
+    \subitem {amioption}, \hyperpage{561}
+    \subitem {atol}, \hyperpage{561}
+    \subitem {interpType}, \hyperpage{563}
+    \subitem {ism}, \hyperpage{563}
+    \subitem {iter}, \hyperpage{562}
+    \subitem {linsol}, \hyperpage{562}
+    \subitem {lmm}, \hyperpage{562}
+    \subitem {maxsteps}, \hyperpage{561}
+    \subitem {maxstepsB}, \hyperpage{562}
+    \subitem {newton\_maxlinsteps}, \hyperpage{564}
+    \subitem {newton\_maxsteps}, \hyperpage{564}
+    \subitem {newton\_preeq}, \hyperpage{564}
+    \subitem {nmaxevent}, \hyperpage{563}
+    \subitem {ordering}, \hyperpage{563}
+    \subitem {pscale}, \hyperpage{564}
+    \subitem {quad\_atol}, \hyperpage{561}
+    \subitem {quad\_rtol}, \hyperpage{562}
+    \subitem {rtol}, \hyperpage{561}
+    \subitem {sens\_ind}, \hyperpage{562}
+    \subitem {sensi}, \hyperpage{563}
+    \subitem {sensi\_meth}, \hyperpage{563}
+    \subitem {sensi\_meth\_preeq}, \hyperpage{563}
+    \subitem {ss}, \hyperpage{564}
+    \subitem {ss\_atol}, \hyperpage{562}
+    \subitem {ss\_rtol}, \hyperpage{562}
+    \subitem {steadyStateSensitivityMode}, \hyperpage{565}
+    \subitem {stldet}, \hyperpage{563}
+    \subitem {sx0}, \hyperpage{564}
+    \subitem {tstart}, \hyperpage{562}
+    \subitem {x0}, \hyperpage{564}
+    \subitem {z2event}, \hyperpage{564}
+  \item {amised}, \hyperpage{565}
+    \subitem {amised}, \hyperpage{566}
+    \subitem {datasym}, \hyperpage{567}
+    \subitem {model}, \hyperpage{566}
+    \subitem {modelname}, \hyperpage{566}
+    \subitem {outputcount}, \hyperpage{567}
+    \subitem {sedml}, \hyperpage{566}
+    \subitem {varidx}, \hyperpage{567}
+    \subitem {varsym}, \hyperpage{567}
+  \item {AmiVector}, \hyperpage{69}
+    \subitem {AmiVector}, \hyperpage{70}
+    \subitem {at}, \hyperpage{76, 77}
+    \subitem {copy}, \hyperpage{77}
+    \subitem {data}, \hyperpage{71}
+    \subitem {getLength}, \hyperpage{74}
+    \subitem {getNVector}, \hyperpage{72, 73}
+    \subitem {getVector}, \hyperpage{73}
+    \subitem {operator=}, \hyperpage{71}
+    \subitem {operator[]}, \hyperpage{76}
+    \subitem {set}, \hyperpage{75}
+  \item {AmiVectorArray}, \hyperpage{78}
+    \subitem {AmiVectorArray}, \hyperpage{79}
+    \subitem {at}, \hyperpage{81, 82}
+    \subitem {copy}, \hyperpage{85}
+    \subitem {data}, \hyperpage{80, 81}
+    \subitem {flatten\_to\_vector}, \hyperpage{84}
+    \subitem {getLength}, \hyperpage{84}
+    \subitem {getNVector}, \hyperpage{82, 83}
+    \subitem {getNVectorArray}, \hyperpage{82}
+    \subitem {operator=}, \hyperpage{80}
+    \subitem {operator[]}, \hyperpage{83}
+  \item {amiwrap}
+    \subitem {amiwrap.m}, \hyperpage{581}
+  \item {amiwrap.m}, \hyperpage{581}
+    \subitem {amiwrap}, \hyperpage{581}
+  \item {anyStateNonNegative}
+    \subitem {Model}, \hyperpage{259}
+  \item {app}
+    \subitem {Model}, \hyperpage{255}
+    \subitem {Solver}, \hyperpage{458}
+  \item {applyChainRuleFactorToSimulationResults}
+    \subitem {ReturnData}, \hyperpage{367}
+  \item {applyCondition}
+    \subitem {ConditionContext}, \hyperpage{90}
+  \item {applyNewtonsMethod}
+    \subitem {SteadystateProblem}, \hyperpage{471}
+  \item {applyQuadTolerancesASA}
+    \subitem {Solver}, \hyperpage{456}
+  \item {applyTolerancesASA}
+    \subitem {Solver}, \hyperpage{456}
+  \item {argstr}
+    \subitem {amifun}, \hyperpage{538}
+  \item {at}
+    \subitem {AmiVector}, \hyperpage{76, 77}
+    \subitem {AmiVectorArray}, \hyperpage{81, 82}
+  \item {atol}
+    \subitem {amioption}, \hyperpage{561}
+    \subitem {NewtonSolver}, \hyperpage{340}
+  \item {augmento2}
+    \subitem {amimodel}, \hyperpage{548}
+  \item {augmento2vec}
+    \subitem {amimodel}, \hyperpage{549}
+
+  \indexspace
+
+  \item {BackwardProblem}, \hyperpage{85}
+    \subitem {BackwardProblem}, \hyperpage{86}
+    \subitem {getAdjointQuadrature}, \hyperpage{88}
+    \subitem {getAdjointState}, \hyperpage{87}
+    \subitem {getdJydx}, \hyperpage{87}
+    \subitem {gett}, \hyperpage{87}
+    \subitem {getwhich}, \hyperpage{87}
+    \subitem {getwhichptr}, \hyperpage{87}
+    \subitem {workBackwardProblem}, \hyperpage{86}
+  \item {binit}
+    \subitem {Solver}, \hyperpage{439}
+  \item {bolus}
+    \subitem {amievent}, \hyperpage{532}
+
+  \indexspace
+
+  \item {calcIC}
+    \subitem {Solver}, \hyperpage{398}
+  \item {calcICB}
+    \subitem {Solver}, \hyperpage{398}
+  \item {cblas.cpp}, \hyperpage{583}
+    \subitem {amici\_daxpy}, \hyperpage{585}
+    \subitem {amici\_dgemm}, \hyperpage{584}
+    \subitem {amici\_dgemv}, \hyperpage{584}
+  \item {cfun}
+    \subitem {amimodel}, \hyperpage{558}
+  \item {checkConvergence}
+    \subitem {SteadystateProblem}, \hyperpage{470}
+  \item {checkDataDimension}
+    \subitem {ExpData}, \hyperpage{112}
+  \item {checkDeps}
+    \subitem {amimodel}, \hyperpage{547}
+  \item {checkEventsDimension}
+    \subitem {ExpData}, \hyperpage{112}
+  \item {checkFinite}
+    \subitem {AmiciApplication}, \hyperpage{65}
+    \subitem {Model}, \hyperpage{200}
+  \item {checkLLHBufferSize}
+    \subitem {Model}, \hyperpage{209}
+  \item {checkSensitivityMethod}
+    \subitem {Solver}, \hyperpage{457}
+  \item {checkSteadyStateSuccess}
+    \subitem {SteadystateProblem}, \hyperpage{481}
+  \item {chi2}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {clone}
+    \subitem {Model}, \hyperpage{139}
+    \subitem {Solver}, \hyperpage{392}
+  \item {colptrs}
+    \subitem {amimodel}, \hyperpage{556}
+  \item {colptrsB}
+    \subitem {amimodel}, \hyperpage{556}
+  \item {columns}
+    \subitem {SUNMatrixWrapper}, \hyperpage{512}
+  \item {compileAndLinkModel}
+    \subitem {amimodel}, \hyperpage{549}
+  \item {compileC}
+    \subitem {amimodel}, \hyperpage{544}
+  \item {computeNewtonSensis}
+    \subitem {NewtonSolver}, \hyperpage{337}
+  \item {computeQBfromQ}
+    \subitem {SteadystateProblem}, \hyperpage{474}
+  \item {computeSteadyStateQuadrature}
+    \subitem {SteadystateProblem}, \hyperpage{465}
+  \item {computeX\_pos}
+    \subitem {Model}, \hyperpage{240}
+  \item {computingASA}
+    \subitem {Solver}, \hyperpage{429}
+  \item {computingFSA}
+    \subitem {ReturnData}, \hyperpage{368}
+    \subitem {Solver}, \hyperpage{429}
+  \item {condition}
+    \subitem {amidata}, \hyperpage{530}
+  \item {ConditionContext}, \hyperpage{88}
+    \subitem {applyCondition}, \hyperpage{90}
+    \subitem {ConditionContext}, \hyperpage{89}
+  \item {conditionPreequilibration}
+    \subitem {amidata}, \hyperpage{530}
+  \item {ContextManager}, \hyperpage{91}
+  \item {coptim}
+    \subitem {amimodel}, \hyperpage{557}
+  \item {copy}
+    \subitem {AmiVector}, \hyperpage{77}
+    \subitem {AmiVectorArray}, \hyperpage{85}
+  \item {cpu\_time}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {cpu\_timeB}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {createSteadystateSimSolver}
+    \subitem {SteadystateProblem}, \hyperpage{472}
+  \item {cvar}
+    \subitem {amifun}, \hyperpage{538}
+  \item {CvodeException}, \hyperpage{92}
+    \subitem {CvodeException}, \hyperpage{92}
+
+  \indexspace
+
+  \item {dampingFactorLowerBound}
+    \subitem {NewtonSolver}, \hyperpage{340}
+  \item {dampingFactorMode}
+    \subitem {NewtonSolver}, \hyperpage{340}
+  \item {data}
+    \subitem {AmiVector}, \hyperpage{71}
+    \subitem {AmiVectorArray}, \hyperpage{80, 81}
+    \subitem {SUNMatrixWrapper}, \hyperpage{509}
+  \item {datasym}
+    \subitem {amised}, \hyperpage{567}
+  \item {dbl2int}
+    \subitem {interface\_matlab.cpp}, \hyperpage{586}
+  \item {DDspline}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{602}
+  \item {DDspline\_pos}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{603}
+  \item {debug}
+    \subitem {amimodel}, \hyperpage{552}
+  \item {deltaqB}
+    \subitem {Model}, \hyperpage{259}
+  \item {deltasx}
+    \subitem {Model}, \hyperpage{259}
+  \item {deltax}
+    \subitem {Model}, \hyperpage{258}
+  \item {deltaxB}
+    \subitem {Model}, \hyperpage{259}
+  \item {deps}
+    \subitem {amifun}, \hyperpage{539}
+  \item {diagB}
+    \subitem {Solver}, \hyperpage{454}
+  \item {dirac}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{598}
+  \item {dJrzdsigma}
+    \subitem {Model}, \hyperpage{257}
+  \item {dJrzdz}
+    \subitem {Model}, \hyperpage{257}
+  \item {dJydp}
+    \subitem {Model}, \hyperpage{256}
+  \item {dJydsigma}
+    \subitem {Model}, \hyperpage{256}
+  \item {dJydx}
+    \subitem {Model}, \hyperpage{256}
+  \item {dJydy}
+    \subitem {Model}, \hyperpage{256}
+  \item {dJydy\_matlab}
+    \subitem {Model}, \hyperpage{256}
+  \item {dJzdp}
+    \subitem {Model}, \hyperpage{257}
+  \item {dJzdsigma}
+    \subitem {Model}, \hyperpage{256}
+  \item {dJzdx}
+    \subitem {Model}, \hyperpage{257}
+  \item {dJzdz}
+    \subitem {Model}, \hyperpage{256}
+  \item {dky}
+    \subitem {Solver}, \hyperpage{459}
+  \item {Dmax}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{600}
+  \item {Dmin}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{600}
+  \item {drzdp}
+    \subitem {Model}, \hyperpage{257}
+  \item {drzdx}
+    \subitem {Model}, \hyperpage{257}
+  \item {dsigmaydp}
+    \subitem {Model}, \hyperpage{258}
+  \item {dsigmazdp}
+    \subitem {Model}, \hyperpage{258}
+  \item {Dspline}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{601}
+  \item {Dspline\_pos}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{602}
+  \item {dwdp}
+    \subitem {Model}, \hyperpage{255}
+  \item {dwdx}
+    \subitem {Model}, \hyperpage{256}
+  \item {dx}
+    \subitem {NewtonSolver}, \hyperpage{341}
+    \subitem {SimulationState}, \hyperpage{383}
+    \subitem {Solver}, \hyperpage{459}
+  \item {dx\_solver}
+    \subitem {ReturnData}, \hyperpage{381}
+  \item {dxB}
+    \subitem {NewtonSolver}, \hyperpage{341}
+    \subitem {Solver}, \hyperpage{460}
+  \item {dxdotdp}
+    \subitem {Model}, \hyperpage{255}
+  \item {dxdotdp\_explicit}
+    \subitem {Model}, \hyperpage{255}
+  \item {dxdotdp\_implicit}
+    \subitem {Model}, \hyperpage{255}
+  \item {dxdotdw}
+    \subitem {Model}, \hyperpage{255}
+  \item {dydp}
+    \subitem {Model}, \hyperpage{257}
+  \item {dydx}
+    \subitem {Model}, \hyperpage{257}
+  \item {dzdp}
+    \subitem {Model}, \hyperpage{257}
+  \item {dzdx}
+    \subitem {Model}, \hyperpage{257}
+
+  \indexspace
+
+  \item {edata}
+    \subitem {ForwardProblem}, \hyperpage{122}
+  \item {error}
+    \subitem {AmiciApplication}, \hyperpage{66}
+  \item {error\_code}
+    \subitem {IntegrationFailure}, \hyperpage{124}
+    \subitem {IntegrationFailureB}, \hyperpage{126}
+    \subitem {NewtonFailure}, \hyperpage{333}
+  \item {errorF}
+    \subitem {AmiciApplication}, \hyperpage{64}
+  \item {event}
+    \subitem {amimodel}, \hyperpage{551}
+  \item {ExpData}, \hyperpage{92}
+    \subitem {checkDataDimension}, \hyperpage{112}
+    \subitem {checkEventsDimension}, \hyperpage{112}
+    \subitem {ExpData}, \hyperpage{95--99}
+    \subitem {getObservedData}, \hyperpage{103}
+    \subitem {getObservedDataPtr}, \hyperpage{103}
+    \subitem {getObservedDataStdDev}, \hyperpage{106}
+    \subitem {getObservedDataStdDevPtr}, \hyperpage{106}
+    \subitem {getObservedEvents}, \hyperpage{108}
+    \subitem {getObservedEventsPtr}, \hyperpage{108}
+    \subitem {getObservedEventsStdDev}, \hyperpage{111}
+    \subitem {getObservedEventsStdDevPtr}, \hyperpage{111}
+    \subitem {getTimepoint}, \hyperpage{101}
+    \subitem {getTimepoints}, \hyperpage{101}
+    \subitem {isSetObservedData}, \hyperpage{102}
+    \subitem {isSetObservedDataStdDev}, \hyperpage{106}
+    \subitem {isSetObservedEvents}, \hyperpage{108}
+    \subitem {isSetObservedEventsStdDev}, \hyperpage{110}
+    \subitem {nmaxevent}, \hyperpage{100}
+    \subitem {nt}, \hyperpage{100}
+    \subitem {nytrue}, \hyperpage{99}
+    \subitem {nztrue}, \hyperpage{99}
+    \subitem {reinitializeFixedParameterInitialStates}, \hyperpage{113}
+    \subitem {setObservedData}, \hyperpage{101, 102}
+    \subitem {setObservedDataStdDev}, \hyperpage{104, 105}
+    \subitem {setObservedEvents}, \hyperpage{107}
+    \subitem {setObservedEventsStdDev}, \hyperpage{109, 110}
+    \subitem {setTimepoints}, \hyperpage{100}
+  \item {expDataFromMatlabCall}
+    \subitem {interface\_matlab.cpp}, \hyperpage{591}
+
+  \indexspace
+
+  \item {fchi2}
+    \subitem {ReturnData}, \hyperpage{364}
+  \item {fdeltaqB}
+    \subitem {AbstractModel}, \hyperpage{51}
+    \subitem {Model}, \hyperpage{241}
+  \item {fdeltasx}
+    \subitem {AbstractModel}, \hyperpage{50}
+    \subitem {Model}, \hyperpage{241}
+  \item {fdeltax}
+    \subitem {AbstractModel}, \hyperpage{49}
+    \subitem {Model}, \hyperpage{242}
+  \item {fdeltaxB}
+    \subitem {AbstractModel}, \hyperpage{51}
+    \subitem {Model}, \hyperpage{242}
+  \item {fdJrzdsigma}
+    \subitem {AbstractModel}, \hyperpage{57}
+    \subitem {Model}, \hyperpage{232}, \hyperpage{243}
+  \item {fdJrzdz}
+    \subitem {AbstractModel}, \hyperpage{56}
+    \subitem {Model}, \hyperpage{232}, \hyperpage{243}
+  \item {fdJydp}
+    \subitem {Model}, \hyperpage{218}
+  \item {fdJydsigma}
+    \subitem {AbstractModel}, \hyperpage{55}
+    \subitem {Model}, \hyperpage{217}, \hyperpage{243}
+  \item {fdJydx}
+    \subitem {Model}, \hyperpage{219}
+  \item {fdJydy}
+    \subitem {AbstractModel}, \hyperpage{55}
+    \subitem {Model}, \hyperpage{216}, \hyperpage{243}
+  \item {fdJydy\_colptrs}
+    \subitem {Model}, \hyperpage{215}
+  \item {fdJydy\_rowvals}
+    \subitem {Model}, \hyperpage{215}
+  \item {fdJzdp}
+    \subitem {Model}, \hyperpage{229}
+  \item {fdJzdsigma}
+    \subitem {AbstractModel}, \hyperpage{56}
+    \subitem {Model}, \hyperpage{228}, \hyperpage{244}
+  \item {fdJzdx}
+    \subitem {Model}, \hyperpage{230}
+  \item {fdJzdz}
+    \subitem {AbstractModel}, \hyperpage{55}
+    \subitem {Model}, \hyperpage{227}, \hyperpage{244}
+  \item {fdrzdp}
+    \subitem {AbstractModel}, \hyperpage{48}
+    \subitem {Model}, \hyperpage{224}, \hyperpage{244}
+  \item {fdrzdx}
+    \subitem {AbstractModel}, \hyperpage{49}
+    \subitem {Model}, \hyperpage{224}, \hyperpage{245}
+  \item {fdsigmaydp}
+    \subitem {AbstractModel}, \hyperpage{53}
+    \subitem {Model}, \hyperpage{213}, \hyperpage{245}
+  \item {fdsigmazdp}
+    \subitem {AbstractModel}, \hyperpage{53}
+    \subitem {Model}, \hyperpage{226}, \hyperpage{245}
+  \item {fdwdp}
+    \subitem {AbstractModel}, \hyperpage{57}, \hyperpage{59}
+    \subitem {Model}, \hyperpage{234}, \hyperpage{245, 246}
+  \item {fdwdp\_colptrs}
+    \subitem {AbstractModel}, \hyperpage{58}
+    \subitem {Model}, \hyperpage{246}
+  \item {fdwdp\_rowvals}
+    \subitem {AbstractModel}, \hyperpage{58}
+    \subitem {Model}, \hyperpage{246}
+  \item {fdwdx}
+    \subitem {AbstractModel}, \hyperpage{59}
+    \subitem {Model}, \hyperpage{235}, \hyperpage{246}
+  \item {fdwdx\_colptrs}
+    \subitem {AbstractModel}, \hyperpage{60}
+    \subitem {Model}, \hyperpage{247}
+  \item {fdwdx\_rowvals}
+    \subitem {AbstractModel}, \hyperpage{61}
+    \subitem {Model}, \hyperpage{247}
+  \item {fdx0}
+    \subitem {AbstractModel}, \hyperpage{43}
+  \item {fdxdotdp}
+    \subitem {AbstractModel}, \hyperpage{40}
+    \subitem {Model\_DAE}, \hyperpage{282, 283}, \hyperpage{291}
+    \subitem {Model\_ODE}, \hyperpage{316, 317}, \hyperpage{326}
+  \item {fdxdotdp\_explicit}
+    \subitem {Model\_ODE}, \hyperpage{327}
+  \item {fdxdotdp\_explicit\_colptrs}
+    \subitem {Model\_ODE}, \hyperpage{327}
+  \item {fdxdotdp\_explicit\_rowvals}
+    \subitem {Model\_ODE}, \hyperpage{328}
+  \item {fdxdotdp\_implicit\_colptrs}
+    \subitem {Model\_ODE}, \hyperpage{328}
+  \item {fdxdotdp\_implicit\_rowvals}
+    \subitem {Model\_ODE}, \hyperpage{329}
+  \item {fdxdotdw}
+    \subitem {Model\_ODE}, \hyperpage{315}, \hyperpage{329}
+  \item {fdxdotdw\_colptrs}
+    \subitem {Model\_ODE}, \hyperpage{330}
+  \item {fdxdotdw\_rowvals}
+    \subitem {Model\_ODE}, \hyperpage{330}
+  \item {fdydp}
+    \subitem {AbstractModel}, \hyperpage{44}
+    \subitem {Model}, \hyperpage{210}, \hyperpage{247}
+  \item {fdydx}
+    \subitem {AbstractModel}, \hyperpage{45}
+    \subitem {Model}, \hyperpage{211}, \hyperpage{247}
+  \item {fdzdp}
+    \subitem {AbstractModel}, \hyperpage{47}
+    \subitem {Model}, \hyperpage{221}, \hyperpage{248}
+  \item {fdzdx}
+    \subitem {AbstractModel}, \hyperpage{48}
+    \subitem {Model}, \hyperpage{222}, \hyperpage{248}
+  \item {fFIM}
+    \subitem {ReturnData}, \hyperpage{365}
+  \item {FIM}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {FinalStateStorer}, \hyperpage{113}
+    \subitem {FinalStateStorer}, \hyperpage{114}
+    \subitem {ForwardProblem}, \hyperpage{122}
+  \item {findSteadyState}
+    \subitem {SteadystateProblem}, \hyperpage{464}
+  \item {findSteadyStateByNewtonsMethod}
+    \subitem {SteadystateProblem}, \hyperpage{464}
+  \item {findSteadyStateBySimulation}
+    \subitem {SteadystateProblem}, \hyperpage{465}
+  \item {fixedParameters}
+    \subitem {ModelState}, \hyperpage{332}
+  \item {fJ}
+    \subitem {AbstractModel}, \hyperpage{36}
+    \subitem {Model\_DAE}, \hyperpage{264, 265}, \hyperpage{287}
+    \subitem {Model\_ODE}, \hyperpage{297}, \hyperpage{320}
+  \item {fJB}
+    \subitem {AbstractModel}, \hyperpage{37}
+    \subitem {Model\_DAE}, \hyperpage{266, 267}, \hyperpage{287}
+    \subitem {Model\_ODE}, \hyperpage{298, 299}, \hyperpage{321}
+  \item {fJDiag}
+    \subitem {AbstractModel}, \hyperpage{39}
+    \subitem {Model\_DAE}, \hyperpage{272}, \hyperpage{289}
+    \subitem {Model\_ODE}, \hyperpage{304, 305}, \hyperpage{325}
+  \item {fJrz}
+    \subitem {AbstractModel}, \hyperpage{54}
+    \subitem {Model}, \hyperpage{231}, \hyperpage{248}
+  \item {fJSparse}
+    \subitem {AbstractModel}, \hyperpage{38}
+    \subitem {Model\_DAE}, \hyperpage{268, 269}, \hyperpage{288}
+    \subitem {Model\_ODE}, \hyperpage{300, 301}, \hyperpage{321, 322}
+  \item {fJSparse\_colptrs}
+    \subitem {Model\_ODE}, \hyperpage{322}
+  \item {fJSparse\_rowvals}
+    \subitem {Model\_ODE}, \hyperpage{323}
+  \item {fJSparseB}
+    \subitem {AbstractModel}, \hyperpage{38}
+    \subitem {Model\_DAE}, \hyperpage{270, 271}, \hyperpage{288}
+    \subitem {Model\_ODE}, \hyperpage{302, 303}, \hyperpage{323, 324}
+  \item {fJSparseB\_colptrs}
+    \subitem {Model\_ODE}, \hyperpage{324}
+  \item {fJSparseB\_rowvals}
+    \subitem {Model\_ODE}, \hyperpage{324}
+  \item {fJSparseB\_ss}
+    \subitem {AbstractModel}, \hyperpage{35}
+    \subitem {Model\_DAE}, \hyperpage{281}
+    \subitem {Model\_ODE}, \hyperpage{313}
+  \item {fJv}
+    \subitem {AbstractModel}, \hyperpage{40}
+    \subitem {Model\_DAE}, \hyperpage{273, 274}
+    \subitem {Model\_ODE}, \hyperpage{306, 307}
+  \item {fJvB}
+    \subitem {Model\_DAE}, \hyperpage{274}, \hyperpage{290}
+    \subitem {Model\_ODE}, \hyperpage{307}
+  \item {fJy}
+    \subitem {AbstractModel}, \hyperpage{53}
+    \subitem {Model}, \hyperpage{214}, \hyperpage{248}
+  \item {fJz}
+    \subitem {AbstractModel}, \hyperpage{54}
+    \subitem {Model}, \hyperpage{227}, \hyperpage{249}
+  \item {flatten\_to\_vector}
+    \subitem {AmiVectorArray}, \hyperpage{84}
+  \item {fM}
+    \subitem {Model\_DAE}, \hyperpage{286}, \hyperpage{292}
+  \item {forceReInitPostProcessB}
+    \subitem {Solver}, \hyperpage{460}
+  \item {forceReInitPostProcessF}
+    \subitem {Solver}, \hyperpage{460}
+  \item {forward}
+    \subitem {amimodel}, \hyperpage{552}
+  \item {ForwardProblem}, \hyperpage{114}
+    \subitem {edata}, \hyperpage{122}
+    \subitem {FinalStateStorer}, \hyperpage{122}
+    \subitem {ForwardProblem}, \hyperpage{115}
+    \subitem {getAdjointUpdates}, \hyperpage{116}
+    \subitem {getCurrentTimeIteration}, \hyperpage{119}
+    \subitem {getDiscontinuities}, \hyperpage{118}
+    \subitem {getDJydx}, \hyperpage{118}
+    \subitem {getDJzdx}, \hyperpage{118}
+    \subitem {getEventCounter}, \hyperpage{120}
+    \subitem {getFinalSimulationState}, \hyperpage{122}
+    \subitem {getFinalTime}, \hyperpage{119}
+    \subitem {getInitialSimulationState}, \hyperpage{121}
+    \subitem {getNumberOfRoots}, \hyperpage{118}
+    \subitem {getRHSAtDiscontinuities}, \hyperpage{117}
+    \subitem {getRHSBeforeDiscontinuities}, \hyperpage{118}
+    \subitem {getRootCounter}, \hyperpage{120}
+    \subitem {getRootIndexes}, \hyperpage{118}
+    \subitem {getSimulationStateEvent}, \hyperpage{121}
+    \subitem {getSimulationStateTimepoint}, \hyperpage{120}
+    \subitem {getState}, \hyperpage{117}
+    \subitem {getStateDerivative}, \hyperpage{117}
+    \subitem {getStateDerivativePointer}, \hyperpage{119}
+    \subitem {getStateDerivativeSensitivityPointer}, \hyperpage{119}
+    \subitem {getStatePointer}, \hyperpage{119}
+    \subitem {getStatesAtDiscontinuities}, \hyperpage{117}
+    \subitem {getStateSensitivity}, \hyperpage{117}
+    \subitem {getStateSensitivityPointer}, \hyperpage{119}
+    \subitem {getTime}, \hyperpage{117}
+    \subitem {model}, \hyperpage{122}
+    \subitem {solver}, \hyperpage{122}
+    \subitem {workForwardProblem}, \hyperpage{116}
+  \item {fqBdot}
+    \subitem {Model\_DAE}, \hyperpage{278}
+    \subitem {Model\_ODE}, \hyperpage{311}
+  \item {fqBdot\_ss}
+    \subitem {Model\_DAE}, \hyperpage{280}
+    \subitem {Model\_ODE}, \hyperpage{313}
+  \item {fres}
+    \subitem {ReturnData}, \hyperpage{363}
+  \item {froot}
+    \subitem {AbstractModel}, \hyperpage{33}
+    \subitem {Model\_DAE}, \hyperpage{275, 276}, \hyperpage{290}
+    \subitem {Model\_ODE}, \hyperpage{308}, \hyperpage{325}
+  \item {frz}
+    \subitem {AbstractModel}, \hyperpage{46}
+    \subitem {Model}, \hyperpage{223}, \hyperpage{249}
+  \item {fsigmay}
+    \subitem {AbstractModel}, \hyperpage{52}
+    \subitem {Model}, \hyperpage{212}, \hyperpage{249}
+  \item {fsigmaz}
+    \subitem {AbstractModel}, \hyperpage{53}
+    \subitem {Model}, \hyperpage{225}, \hyperpage{250}
+  \item {fsres}
+    \subitem {ReturnData}, \hyperpage{364}
+  \item {fsrz}
+    \subitem {AbstractModel}, \hyperpage{47}
+    \subitem {Model}, \hyperpage{250}
+  \item {fstau}
+    \subitem {AbstractModel}, \hyperpage{43}
+    \subitem {Model}, \hyperpage{250}
+  \item {fstotal\_cl}
+    \subitem {Model}, \hyperpage{239}
+  \item {fsx0}
+    \subitem {AbstractModel}, \hyperpage{42}
+    \subitem {Model}, \hyperpage{203}, \hyperpage{250}
+  \item {fsx0\_fixedParameters}
+    \subitem {AbstractModel}, \hyperpage{42}
+    \subitem {Model}, \hyperpage{204}, \hyperpage{251}
+  \item {fsx\_rdata}
+    \subitem {Model}, \hyperpage{206}, \hyperpage{237}
+  \item {fsx\_solver}
+    \subitem {Model}, \hyperpage{238}
+  \item {fsxdot}
+    \subitem {AbstractModel}, \hyperpage{34}
+    \subitem {Model\_DAE}, \hyperpage{284, 285}
+    \subitem {Model\_ODE}, \hyperpage{318, 319}
+  \item {fsz}
+    \subitem {AbstractModel}, \hyperpage{46}
+    \subitem {Model}, \hyperpage{251}
+  \item {ftotal\_cl}
+    \subitem {Model}, \hyperpage{238}
+  \item {fun}
+    \subitem {amimodel}, \hyperpage{551}
+  \item {funs}
+    \subitem {amimodel}, \hyperpage{557}
+  \item {funstr}
+    \subitem {amifun}, \hyperpage{538}
+  \item {fw}
+    \subitem {AbstractModel}, \hyperpage{57}
+    \subitem {Model}, \hyperpage{233}, \hyperpage{251}
+  \item {fx0}
+    \subitem {AbstractModel}, \hyperpage{41}
+    \subitem {Model}, \hyperpage{201}, \hyperpage{252}
+  \item {fx0\_fixedParameters}
+    \subitem {AbstractModel}, \hyperpage{42}
+    \subitem {Model}, \hyperpage{202}, \hyperpage{252}
+  \item {fx\_rdata}
+    \subitem {Model}, \hyperpage{205}, \hyperpage{236}
+  \item {fx\_solver}
+    \subitem {Model}, \hyperpage{237}
+  \item {fxBdot}
+    \subitem {Model\_DAE}, \hyperpage{278}
+    \subitem {Model\_ODE}, \hyperpage{310}
+  \item {fxBdot\_ss}
+    \subitem {AbstractModel}, \hyperpage{35}
+    \subitem {Model\_DAE}, \hyperpage{279, 280}
+    \subitem {Model\_ODE}, \hyperpage{312, 313}
+  \item {fxdot}
+    \subitem {AbstractModel}, \hyperpage{34}
+    \subitem {Model\_DAE}, \hyperpage{276, 277}, \hyperpage{291}
+    \subitem {Model\_ODE}, \hyperpage{309, 310}, \hyperpage{326}
+  \item {fy}
+    \subitem {AbstractModel}, \hyperpage{44}
+    \subitem {Model}, \hyperpage{209}, \hyperpage{252}
+  \item {fz}
+    \subitem {AbstractModel}, \hyperpage{45}
+    \subitem {Model}, \hyperpage{220}, \hyperpage{252}
+
+  \indexspace
+
+  \item {gccode}
+    \subitem {amifun}, \hyperpage{536}
+  \item {generateC}
+    \subitem {amimodel}, \hyperpage{544}
+  \item {generateM}
+    \subitem {amimodel}, \hyperpage{545}
+  \item {generateMatlabWrapper}
+    \subitem {amimodel}, \hyperpage{550}
+  \item {get}
+    \subitem {SUNLinSolWrapper}, \hyperpage{503}
+    \subitem {SUNMatrixWrapper}, \hyperpage{510}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{524}
+  \item {getAbsoluteTolerance}
+    \subitem {Solver}, \hyperpage{403}
+  \item {getAbsoluteToleranceB}
+    \subitem {Solver}, \hyperpage{406}
+  \item {getAbsoluteToleranceFSA}
+    \subitem {Solver}, \hyperpage{405}
+  \item {getAbsoluteToleranceQuadratures}
+    \subitem {Solver}, \hyperpage{407}
+  \item {getAbsoluteToleranceSteadyState}
+    \subitem {Solver}, \hyperpage{408}
+  \item {getAbsoluteToleranceSteadyStateSensi}
+    \subitem {Solver}, \hyperpage{409}
+  \item {getAdjBmem}
+    \subitem {Solver}, \hyperpage{455}
+  \item {getAdjInitDone}
+    \subitem {Solver}, \hyperpage{453}
+  \item {getAdjointDerivativeState}
+    \subitem {Solver}, \hyperpage{421}
+  \item {getAdjointQuadrature}
+    \subitem {BackwardProblem}, \hyperpage{88}
+    \subitem {Solver}, \hyperpage{422}
+    \subitem {SteadystateProblem}, \hyperpage{480}
+  \item {getAdjointState}
+    \subitem {BackwardProblem}, \hyperpage{87}
+    \subitem {Solver}, \hyperpage{420}
+  \item {getAdjointStateEventUpdate}
+    \subitem {Model}, \hyperpage{196}
+  \item {getAdjointStateObservableUpdate}
+    \subitem {Model}, \hyperpage{185}
+  \item {getAdjointUpdates}
+    \subitem {ForwardProblem}, \hyperpage{116}
+    \subitem {SteadystateProblem}, \hyperpage{479}
+  \item {getAlwaysCheckFinite}
+    \subitem {Model}, \hyperpage{201}
+  \item {getAmiciCommit}
+    \subitem {AbstractModel}, \hyperpage{41}
+  \item {getAmiciVersion}
+    \subitem {AbstractModel}, \hyperpage{41}
+  \item {getArgs}
+    \subitem {amifun}, \hyperpage{536}
+  \item {getB}
+    \subitem {Solver}, \hyperpage{436}
+  \item {getBacktrace}
+    \subitem {AmiException}, \hyperpage{68}
+  \item {getCPUTime}
+    \subitem {SteadystateProblem}, \hyperpage{478}
+  \item {getCpuTime}
+    \subitem {Solver}, \hyperpage{425}
+  \item {getCPUTimeB}
+    \subitem {SteadystateProblem}, \hyperpage{478}
+  \item {getCpuTimeB}
+    \subitem {Solver}, \hyperpage{426}
+  \item {getCurIter}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{527}
+  \item {getCurrentTimeIteration}
+    \subitem {ForwardProblem}, \hyperpage{119}
+  \item {getCVar}
+    \subitem {amifun}, \hyperpage{537}
+  \item {getDataOutput}
+    \subitem {ReturnData}, \hyperpage{368}
+  \item {getDataSensisFSA}
+    \subitem {ReturnData}, \hyperpage{369}
+  \item {getDeps}
+    \subitem {amifun}, \hyperpage{536}
+  \item {getDerivativeState}
+    \subitem {Solver}, \hyperpage{419}
+  \item {getDiscontinuities}
+    \subitem {ForwardProblem}, \hyperpage{118}
+  \item {getDJydx}
+    \subitem {ForwardProblem}, \hyperpage{118}
+    \subitem {SteadystateProblem}, \hyperpage{477}
+  \item {getdJydx}
+    \subitem {BackwardProblem}, \hyperpage{87}
+  \item {getDJzdx}
+    \subitem {ForwardProblem}, \hyperpage{118}
+  \item {getDky}
+    \subitem {Solver}, \hyperpage{445}
+  \item {getDkyB}
+    \subitem {Solver}, \hyperpage{446}
+  \item {getEquilibrationQuadratures}
+    \subitem {SteadystateProblem}, \hyperpage{476}
+  \item {getEvent}
+    \subitem {Model}, \hyperpage{186}
+  \item {getEventCounter}
+    \subitem {ForwardProblem}, \hyperpage{120}
+  \item {getEventOutput}
+    \subitem {ReturnData}, \hyperpage{370}
+  \item {getEventRegularization}
+    \subitem {Model}, \hyperpage{189}
+  \item {getEventRegularizationSensitivity}
+    \subitem {Model}, \hyperpage{190}
+  \item {getEventSensisFSA}
+    \subitem {ReturnData}, \hyperpage{371}
+  \item {getEventSensitivity}
+    \subitem {Model}, \hyperpage{187}
+  \item {getEventSigma}
+    \subitem {Model}, \hyperpage{191}
+  \item {getEventSigmaSensitivity}
+    \subitem {Model}, \hyperpage{191}
+  \item {getEventTimeSensitivity}
+    \subitem {Model}, \hyperpage{196}
+  \item {getExpression}
+    \subitem {Model}, \hyperpage{178}
+  \item {getFinalSimulationState}
+    \subitem {ForwardProblem}, \hyperpage{122}
+    \subitem {SteadystateProblem}, \hyperpage{476}
+  \item {getFinalTime}
+    \subitem {ForwardProblem}, \hyperpage{119}
+  \item {getFixedParameterById}
+    \subitem {Model}, \hyperpage{155}
+  \item {getFixedParameterByName}
+    \subitem {Model}, \hyperpage{155}
+  \item {getFixedParameterIds}
+    \subitem {Model}, \hyperpage{165}
+  \item {getFixedParameterNames}
+    \subitem {Model}, \hyperpage{161}
+  \item {getFixedParameters}
+    \subitem {Model}, \hyperpage{155}
+  \item {getFun}
+    \subitem {amimodel}, \hyperpage{545}
+  \item {getInitDone}
+    \subitem {Solver}, \hyperpage{452}
+  \item {getInitDoneB}
+    \subitem {Solver}, \hyperpage{453}
+  \item {getInitialSimulationState}
+    \subitem {ForwardProblem}, \hyperpage{121}
+  \item {getInitialStates}
+    \subitem {Model}, \hyperpage{173}
+  \item {getInitialStateSensitivities}
+    \subitem {Model}, \hyperpage{174}
+  \item {getInternalSensitivityMethod}
+    \subitem {Solver}, \hyperpage{416}
+  \item {getInterpolationType}
+    \subitem {Solver}, \hyperpage{413}
+  \item {getLastFlag}
+    \subitem {SUNLinSolWrapper}, \hyperpage{505}
+  \item {getLastOrder}
+    \subitem {Solver}, \hyperpage{434}, \hyperpage{450}
+  \item {getLength}
+    \subitem {AmiVector}, \hyperpage{74}
+    \subitem {AmiVectorArray}, \hyperpage{84}
+  \item {getLinearMultistepMethod}
+    \subitem {Solver}, \hyperpage{411}
+  \item {getLinearSolver}
+    \subitem {Solver}, \hyperpage{415}
+  \item {getMatrix}
+    \subitem {SUNLinSolBand}, \hyperpage{482}
+    \subitem {SUNLinSolDense}, \hyperpage{484}
+    \subitem {SUNLinSolKLU}, \hyperpage{486}
+    \subitem {SUNLinSolWrapper}, \hyperpage{505}
+  \item {getMaxSteps}
+    \subitem {Solver}, \hyperpage{410}
+  \item {getMaxStepsBackwardProblem}
+    \subitem {Solver}, \hyperpage{411}
+  \item {getModel}
+    \subitem {Solver}, \hyperpage{452}
+  \item {getModelState}
+    \subitem {Model}, \hyperpage{169}
+  \item {getName}
+    \subitem {Model}, \hyperpage{158}
+  \item {getNaN}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{598}
+  \item {getNewtonDampingFactorLowerBound}
+    \subitem {Solver}, \hyperpage{401}
+  \item {getNewtonDampingFactorMode}
+    \subitem {Solver}, \hyperpage{401}
+  \item {getNewtonMaxLinearSteps}
+    \subitem {Solver}, \hyperpage{401}
+  \item {getNewtonMaxSteps}
+    \subitem {Solver}, \hyperpage{400}
+  \item {getNonlinearSolverIteration}
+    \subitem {Solver}, \hyperpage{413}
+  \item {getNumberOfRoots}
+    \subitem {ForwardProblem}, \hyperpage{118}
+  \item {getNumConvFails}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{527}
+  \item {getNumErrTestFails}
+    \subitem {Solver}, \hyperpage{432}, \hyperpage{450}
+  \item {getNumErrTestFailsB}
+    \subitem {Solver}, \hyperpage{433}
+  \item {getNumIters}
+    \subitem {SUNLinSolPCG}, \hyperpage{489}
+    \subitem {SUNLinSolSPBCGS}, \hyperpage{492}
+    \subitem {SUNLinSolSPFGMR}, \hyperpage{494}
+    \subitem {SUNLinSolSPGMR}, \hyperpage{497}
+    \subitem {SUNLinSolSPTFQMR}, \hyperpage{500}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{527}
+  \item {getNumLinSteps}
+    \subitem {NewtonSolver}, \hyperpage{338}
+    \subitem {SteadystateProblem}, \hyperpage{479}
+  \item {getNumNonlinSolvConvFails}
+    \subitem {Solver}, \hyperpage{433}, \hyperpage{450}
+  \item {getNumNonlinSolvConvFailsB}
+    \subitem {Solver}, \hyperpage{434}
+  \item {getNumRhsEvals}
+    \subitem {Solver}, \hyperpage{432}, \hyperpage{449}
+  \item {getNumRhsEvalsB}
+    \subitem {Solver}, \hyperpage{432}
+  \item {getNumSteps}
+    \subitem {Solver}, \hyperpage{431}, \hyperpage{449}
+    \subitem {SteadystateProblem}, \hyperpage{479}
+  \item {getNumStepsB}
+    \subitem {Solver}, \hyperpage{431}
+    \subitem {SteadystateProblem}, \hyperpage{479}
+  \item {getNVecs}
+    \subitem {amifun}, \hyperpage{537}
+  \item {getNVector}
+    \subitem {AmiVector}, \hyperpage{72, 73}
+    \subitem {AmiVectorArray}, \hyperpage{82, 83}
+  \item {getNVectorArray}
+    \subitem {AmiVectorArray}, \hyperpage{82}
+  \item {getObservable}
+    \subitem {Model}, \hyperpage{179}
+  \item {getObservableIds}
+    \subitem {Model}, \hyperpage{166}
+  \item {getObservableNames}
+    \subitem {Model}, \hyperpage{162}
+  \item {getObservableSensitivity}
+    \subitem {Model}, \hyperpage{180}
+  \item {getObservableSigma}
+    \subitem {Model}, \hyperpage{181}
+  \item {getObservableSigmaSensitivity}
+    \subitem {Model}, \hyperpage{182}
+  \item {getObservedData}
+    \subitem {ExpData}, \hyperpage{103}
+  \item {getObservedDataPtr}
+    \subitem {ExpData}, \hyperpage{103}
+  \item {getObservedDataStdDev}
+    \subitem {ExpData}, \hyperpage{106}
+  \item {getObservedDataStdDevPtr}
+    \subitem {ExpData}, \hyperpage{106}
+  \item {getObservedEvents}
+    \subitem {ExpData}, \hyperpage{108}
+  \item {getObservedEventsPtr}
+    \subitem {ExpData}, \hyperpage{108}
+  \item {getObservedEventsStdDev}
+    \subitem {ExpData}, \hyperpage{111}
+  \item {getObservedEventsStdDevPtr}
+    \subitem {ExpData}, \hyperpage{111}
+  \item {getoptimized}
+    \subitem {optsym}, \hyperpage{568}
+  \item {getParameterById}
+    \subitem {Model}, \hyperpage{150}
+  \item {getParameterByName}
+    \subitem {Model}, \hyperpage{151}
+  \item {getParameterIds}
+    \subitem {Model}, \hyperpage{163}
+  \item {getParameterList}
+    \subitem {Model}, \hyperpage{170}
+  \item {getParameterNames}
+    \subitem {Model}, \hyperpage{159}
+  \item {getParameters}
+    \subitem {Model}, \hyperpage{150}
+  \item {getParameterScale}
+    \subitem {Model}, \hyperpage{149}
+  \item {getPreequilibration}
+    \subitem {Solver}, \hyperpage{400}
+  \item {getQuad}
+    \subitem {Solver}, \hyperpage{437}
+  \item {getQuadB}
+    \subitem {Solver}, \hyperpage{437}
+  \item {getQuadDky}
+    \subitem {Solver}, \hyperpage{447}
+  \item {getQuadDkyB}
+    \subitem {Solver}, \hyperpage{447}
+  \item {getQuadInitDone}
+    \subitem {Solver}, \hyperpage{454}
+  \item {getQuadInitDoneB}
+    \subitem {Solver}, \hyperpage{453}
+  \item {getQuadrature}
+    \subitem {Solver}, \hyperpage{423}
+  \item {getQuadratureByLinSolve}
+    \subitem {SteadystateProblem}, \hyperpage{466}
+  \item {getQuadratureBySimulation}
+    \subitem {SteadystateProblem}, \hyperpage{467}
+  \item {getReinitializeFixedParameterInitialStates}
+    \subitem {Model}, \hyperpage{178}
+  \item {getRelativeTolerance}
+    \subitem {Solver}, \hyperpage{403}
+  \item {getRelativeToleranceB}
+    \subitem {Solver}, \hyperpage{405}
+  \item {getRelativeToleranceFSA}
+    \subitem {Solver}, \hyperpage{404}
+  \item {getRelativeToleranceQuadratures}
+    \subitem {Solver}, \hyperpage{406}
+  \item {getRelativeToleranceSteadyState}
+    \subitem {Solver}, \hyperpage{408}
+  \item {getRelativeToleranceSteadyStateSensi}
+    \subitem {Solver}, \hyperpage{409}
+  \item {getResid}
+    \subitem {SUNLinSolPCG}, \hyperpage{489}
+    \subitem {SUNLinSolSPBCGS}, \hyperpage{492}
+    \subitem {SUNLinSolSPFGMR}, \hyperpage{495}
+    \subitem {SUNLinSolSPGMR}, \hyperpage{497}
+    \subitem {SUNLinSolSPTFQMR}, \hyperpage{500}
+  \item {getResidualNorm}
+    \subitem {SteadystateProblem}, \hyperpage{479}
+  \item {getResNorm}
+    \subitem {SUNLinSolPCG}, \hyperpage{489}
+    \subitem {SUNLinSolSPBCGS}, \hyperpage{492}
+    \subitem {SUNLinSolSPFGMR}, \hyperpage{495}
+    \subitem {SUNLinSolSPGMR}, \hyperpage{497}
+    \subitem {SUNLinSolSPTFQMR}, \hyperpage{500}
+  \item {getReturnDataReportingMode}
+    \subitem {Solver}, \hyperpage{416}
+  \item {getRHSAtDiscontinuities}
+    \subitem {ForwardProblem}, \hyperpage{117}
+  \item {getRHSBeforeDiscontinuities}
+    \subitem {ForwardProblem}, \hyperpage{118}
+  \item {getRootCounter}
+    \subitem {ForwardProblem}, \hyperpage{120}
+  \item {getRootIndexes}
+    \subitem {ForwardProblem}, \hyperpage{118}
+  \item {getRootInfo}
+    \subitem {Solver}, \hyperpage{398}
+  \item {getSensDky}
+    \subitem {Solver}, \hyperpage{446}
+  \item {getSensiFlag}
+    \subitem {amifun}, \hyperpage{537}
+  \item {getSensInitDone}
+    \subitem {Solver}, \hyperpage{452}
+  \item {getSensitivityFlag}
+    \subitem {SteadystateProblem}, \hyperpage{469}
+  \item {getSensitivityMethod}
+    \subitem {Solver}, \hyperpage{399}
+  \item {getSensitivityMethodPreequilibration}
+    \subitem {Solver}, \hyperpage{399}
+  \item {getSensitivityOrder}
+    \subitem {Solver}, \hyperpage{402}
+  \item {getSimulationStateEvent}
+    \subitem {ForwardProblem}, \hyperpage{121}
+  \item {getSimulationStateTimepoint}
+    \subitem {ForwardProblem}, \hyperpage{120}
+  \item {getSolver}
+    \subitem {AbstractModel}, \hyperpage{33}
+    \subitem {Model\_DAE}, \hyperpage{287}
+    \subitem {Model\_ODE}, \hyperpage{320}
+    \subitem {NewtonSolver}, \hyperpage{335}
+  \item {getStabilityLimitFlag}
+    \subitem {Solver}, \hyperpage{414}
+  \item {getState}
+    \subitem {ForwardProblem}, \hyperpage{117}
+    \subitem {Solver}, \hyperpage{418}
+    \subitem {SteadystateProblem}, \hyperpage{476}
+  \item {getStateDerivative}
+    \subitem {ForwardProblem}, \hyperpage{117}
+  \item {getStateDerivativePointer}
+    \subitem {ForwardProblem}, \hyperpage{119}
+  \item {getStateDerivativeSensitivityPointer}
+    \subitem {ForwardProblem}, \hyperpage{119}
+  \item {getStateIds}
+    \subitem {Model}, \hyperpage{164}
+  \item {getStateIsNonNegative}
+    \subitem {Model}, \hyperpage{168}
+  \item {getStateNames}
+    \subitem {Model}, \hyperpage{160}
+  \item {getStateOrdering}
+    \subitem {Solver}, \hyperpage{414}
+  \item {getStatePointer}
+    \subitem {ForwardProblem}, \hyperpage{119}
+  \item {getStatesAtDiscontinuities}
+    \subitem {ForwardProblem}, \hyperpage{117}
+  \item {getStateSensitivity}
+    \subitem {ForwardProblem}, \hyperpage{117}
+    \subitem {Solver}, \hyperpage{419}
+    \subitem {SteadystateProblem}, \hyperpage{477}
+  \item {getStateSensitivityPointer}
+    \subitem {ForwardProblem}, \hyperpage{119}
+  \item {getSteadyStateSensitivityMode}
+    \subitem {Model}, \hyperpage{177}
+  \item {getSteadyStateStatus}
+    \subitem {SteadystateProblem}, \hyperpage{478}
+  \item {getSteadyStateTime}
+    \subitem {SteadystateProblem}, \hyperpage{478}
+  \item {getStep}
+    \subitem {NewtonSolver}, \hyperpage{336}
+  \item {getSyms}
+    \subitem {amifun}, \hyperpage{537}
+  \item {getSysFn}
+    \subitem {SUNNonLinSolFixedPoint}, \hyperpage{520}
+    \subitem {SUNNonLinSolNewton}, \hyperpage{522}
+  \item {gett}
+    \subitem {BackwardProblem}, \hyperpage{87}
+    \subitem {Solver}, \hyperpage{425}
+  \item {getTime}
+    \subitem {ForwardProblem}, \hyperpage{117}
+  \item {getTimepoint}
+    \subitem {ExpData}, \hyperpage{101}
+    \subitem {Model}, \hyperpage{166}
+  \item {getTimepoints}
+    \subitem {ExpData}, \hyperpage{101}
+    \subitem {Model}, \hyperpage{166}
+  \item {getType}
+    \subitem {SUNLinSolWrapper}, \hyperpage{503}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{524}
+  \item {getUnobservedEventSensitivity}
+    \subitem {Model}, \hyperpage{188}
+  \item {getUnscaledParameters}
+    \subitem {Model}, \hyperpage{150}
+  \item {getVector}
+    \subitem {AmiVector}, \hyperpage{73}
+  \item {getwhich}
+    \subitem {BackwardProblem}, \hyperpage{87}
+  \item {getwhichptr}
+    \subitem {BackwardProblem}, \hyperpage{87}
+  \item {getWrmsNorm}
+    \subitem {SteadystateProblem}, \hyperpage{469}
+
+  \indexspace
+
+  \item {h}
+    \subitem {ModelState}, \hyperpage{332}
+  \item {handleSteadyStateFailure}
+    \subitem {SteadystateProblem}, \hyperpage{468}
+  \item {handleSx0Backward}
+    \subitem {ReturnData}, \hyperpage{372}
+  \item {handleSx0Forward}
+    \subitem {ReturnData}, \hyperpage{373}
+  \item {hasCustomInitialStates}
+    \subitem {Model}, \hyperpage{174}
+  \item {hasCustomInitialStateSensitivities}
+    \subitem {Model}, \hyperpage{176}
+  \item {hasFixedParameterIds}
+    \subitem {Model}, \hyperpage{164}
+  \item {hasFixedParameterNames}
+    \subitem {Model}, \hyperpage{160}
+  \item {hasObservableIds}
+    \subitem {Model}, \hyperpage{165}
+  \item {hasObservableNames}
+    \subitem {Model}, \hyperpage{161}
+  \item {hasParameterIds}
+    \subitem {Model}, \hyperpage{162}
+  \item {hasParameterNames}
+    \subitem {Model}, \hyperpage{158}
+  \item {hasQuadrature}
+    \subitem {SteadystateProblem}, \hyperpage{480}
+  \item {hasStateIds}
+    \subitem {Model}, \hyperpage{163}
+  \item {hasStateNames}
+    \subitem {Model}, \hyperpage{159}
+  \item {heaviside}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{599}
+  \item {hflag}
+    \subitem {amievent}, \hyperpage{533}
+  \item {HTable}
+    \subitem {amimodel}, \hyperpage{551}
+
+  \indexspace
+
+  \item {id}
+    \subitem {amimodel}, \hyperpage{555}
+  \item {IDAException}, \hyperpage{122}
+    \subitem {IDAException}, \hyperpage{123}
+  \item {idlist}
+    \subitem {Model}, \hyperpage{255}
+  \item {indexptrs}
+    \subitem {SUNMatrixWrapper}, \hyperpage{513}
+  \item {indexvals}
+    \subitem {SUNMatrixWrapper}, \hyperpage{512}
+  \item {init}
+    \subitem {Solver}, \hyperpage{437}
+  \item {initHeaviside}
+    \subitem {Model}, \hyperpage{143}
+  \item {initialize}
+    \subitem {Model}, \hyperpage{140}
+    \subitem {SUNLinSolWrapper}, \hyperpage{505}
+  \item {initializeB}
+    \subitem {Model}, \hyperpage{141}
+  \item {initializeBackwardProblem}
+    \subitem {SteadystateProblem}, \hyperpage{473}
+  \item {initializeLinearSolver}
+    \subitem {Solver}, \hyperpage{450}
+  \item {initializeLinearSolverB}
+    \subitem {Solver}, \hyperpage{451}
+  \item {initializeNonLinearSolverB}
+    \subitem {Solver}, \hyperpage{451}
+  \item {initializeNonLinearSolverSens}
+    \subitem {Solver}, \hyperpage{440}
+  \item {initializeStates}
+    \subitem {Model}, \hyperpage{141}
+  \item {initializeStateSensitivities}
+    \subitem {Model}, \hyperpage{142}
+  \item {initSteadystate}
+    \subitem {Solver}, \hyperpage{438}
+  \item {IntegrationFailure}, \hyperpage{123}
+    \subitem {error\_code}, \hyperpage{124}
+    \subitem {IntegrationFailure}, \hyperpage{124}
+    \subitem {time}, \hyperpage{125}
+  \item {IntegrationFailureB}, \hyperpage{125}
+    \subitem {error\_code}, \hyperpage{126}
+    \subitem {IntegrationFailureB}, \hyperpage{125}
+    \subitem {time}, \hyperpage{126}
+  \item {interface\_matlab.cpp}, \hyperpage{585}
+    \subitem {amici\_blasCBlasTransToBlasTrans}, \hyperpage{587}
+    \subitem {amici\_daxpy}, \hyperpage{589}
+    \subitem {amici\_dgemm}, \hyperpage{588}
+    \subitem {amici\_dgemv}, \hyperpage{589}
+    \subitem {dbl2int}, \hyperpage{586}
+    \subitem {expDataFromMatlabCall}, \hyperpage{591}
+    \subitem {mexFunction}, \hyperpage{592}
+    \subitem {mxArrayToVector}, \hyperpage{590}
+    \subitem {setModelData}, \hyperpage{591}
+    \subitem {setSolverOptions}, \hyperpage{591}
+  \item {interpType}
+    \subitem {amioption}, \hyperpage{563}
+    \subitem {Solver}, \hyperpage{458}
+  \item {invalidate}
+    \subitem {ReturnData}, \hyperpage{366}
+  \item {isFixedParameterStateReinitializationAllowed}
+    \subitem {AbstractModel}, \hyperpage{41}
+  \item {isInf}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{598}
+  \item {ism}
+    \subitem {amioption}, \hyperpage{563}
+    \subitem {Solver}, \hyperpage{458}
+  \item {isNaN}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{597}
+  \item {isSetObservedData}
+    \subitem {ExpData}, \hyperpage{102}
+  \item {isSetObservedDataStdDev}
+    \subitem {ExpData}, \hyperpage{106}
+  \item {isSetObservedEvents}
+    \subitem {ExpData}, \hyperpage{108}
+  \item {isSetObservedEventsStdDev}
+    \subitem {ExpData}, \hyperpage{110}
+  \item {iter}
+    \subitem {amioption}, \hyperpage{562}
+    \subitem {Solver}, \hyperpage{458}
+
+  \indexspace
+
+  \item {J}
+    \subitem {Model}, \hyperpage{255}
+    \subitem {ReturnData}, \hyperpage{374}
+
+  \indexspace
+
+  \item {k}
+    \subitem {Model}, \hyperpage{148}
+
+  \indexspace
+
+  \item {lbw}
+    \subitem {amimodel}, \hyperpage{555}
+    \subitem {Model}, \hyperpage{254}
+  \item {linearSolver}
+    \subitem {Solver}, \hyperpage{459}
+  \item {linearSolverB}
+    \subitem {Solver}, \hyperpage{459}
+  \item {linsol}
+    \subitem {amioption}, \hyperpage{562}
+  \item {linsolveSPBCG}
+    \subitem {NewtonSolverIterative}, \hyperpage{347}
+  \item {llh}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {lmm}
+    \subitem {amioption}, \hyperpage{562}
+    \subitem {Solver}, \hyperpage{458}
+  \item {loadOldHashes}
+    \subitem {amimodel}, \hyperpage{548}
+  \item {log}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{598}
+
+  \indexspace
+
+  \item {M}
+    \subitem {Model}, \hyperpage{256}
+  \item {makeEvents}
+    \subitem {amimodel}, \hyperpage{546}
+  \item {makeSyms}
+    \subitem {amimodel}, \hyperpage{547}
+  \item {max}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{599}
+  \item {maxflag}
+    \subitem {amimodel}, \hyperpage{559}
+  \item {maxlinsteps}
+    \subitem {NewtonSolver}, \hyperpage{340}
+  \item {maxsteps}
+    \subitem {amioption}, \hyperpage{561}
+    \subitem {NewtonSolver}, \hyperpage{340}
+    \subitem {Solver}, \hyperpage{458}
+  \item {maxstepsB}
+    \subitem {amioption}, \hyperpage{562}
+  \item {mexFunction}
+    \subitem {interface\_matlab.cpp}, \hyperpage{592}
+  \item {mfuns}
+    \subitem {amimodel}, \hyperpage{557}
+  \item {min}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{599}
+  \item {minflag}
+    \subitem {amimodel}, \hyperpage{558}
+  \item {Model}, \hyperpage{126}
+    \subitem {$\sim$Model}, \hyperpage{139}
+    \subitem {addAdjointQuadratureEventUpdate}, \hyperpage{199}
+    \subitem {addAdjointStateEventUpdate}, \hyperpage{198}
+    \subitem {addEventObjective}, \hyperpage{192}
+    \subitem {addEventObjectiveRegularization}, \hyperpage{193}
+    \subitem {addEventObjectiveSensitivity}, \hyperpage{194}
+    \subitem {addObservableObjective}, \hyperpage{182}
+    \subitem {addObservableObjectiveSensitivity}, \hyperpage{183}
+    \subitem {addPartialEventObjectiveSensitivity}, \hyperpage{195}
+    \subitem {addPartialObservableObjectiveSensitivity}, 
+		\hyperpage{184}
+    \subitem {addStateEventUpdate}, \hyperpage{197}
+    \subitem {addStateSensitivityEventUpdate}, \hyperpage{198}
+    \subitem {alwaysCheckFinite}, \hyperpage{260}
+    \subitem {anyStateNonNegative}, \hyperpage{259}
+    \subitem {app}, \hyperpage{255}
+    \subitem {checkFinite}, \hyperpage{200}
+    \subitem {checkLLHBufferSize}, \hyperpage{209}
+    \subitem {clone}, \hyperpage{139}
+    \subitem {computeX\_pos}, \hyperpage{240}
+    \subitem {deltaqB}, \hyperpage{259}
+    \subitem {deltasx}, \hyperpage{259}
+    \subitem {deltax}, \hyperpage{258}
+    \subitem {deltaxB}, \hyperpage{259}
+    \subitem {dJrzdsigma}, \hyperpage{257}
+    \subitem {dJrzdz}, \hyperpage{257}
+    \subitem {dJydp}, \hyperpage{256}
+    \subitem {dJydsigma}, \hyperpage{256}
+    \subitem {dJydx}, \hyperpage{256}
+    \subitem {dJydy}, \hyperpage{256}
+    \subitem {dJydy\_matlab}, \hyperpage{256}
+    \subitem {dJzdp}, \hyperpage{257}
+    \subitem {dJzdsigma}, \hyperpage{256}
+    \subitem {dJzdx}, \hyperpage{257}
+    \subitem {dJzdz}, \hyperpage{256}
+    \subitem {drzdp}, \hyperpage{257}
+    \subitem {drzdx}, \hyperpage{257}
+    \subitem {dsigmaydp}, \hyperpage{258}
+    \subitem {dsigmazdp}, \hyperpage{258}
+    \subitem {dwdp}, \hyperpage{255}
+    \subitem {dwdx}, \hyperpage{256}
+    \subitem {dxdotdp}, \hyperpage{255}
+    \subitem {dxdotdp\_explicit}, \hyperpage{255}
+    \subitem {dxdotdp\_implicit}, \hyperpage{255}
+    \subitem {dxdotdw}, \hyperpage{255}
+    \subitem {dydp}, \hyperpage{257}
+    \subitem {dydx}, \hyperpage{257}
+    \subitem {dzdp}, \hyperpage{257}
+    \subitem {dzdx}, \hyperpage{257}
+    \subitem {fdeltaqB}, \hyperpage{241}
+    \subitem {fdeltasx}, \hyperpage{241}
+    \subitem {fdeltax}, \hyperpage{242}
+    \subitem {fdeltaxB}, \hyperpage{242}
+    \subitem {fdJrzdsigma}, \hyperpage{232}, \hyperpage{243}
+    \subitem {fdJrzdz}, \hyperpage{232}, \hyperpage{243}
+    \subitem {fdJydp}, \hyperpage{218}
+    \subitem {fdJydsigma}, \hyperpage{217}, \hyperpage{243}
+    \subitem {fdJydx}, \hyperpage{219}
+    \subitem {fdJydy}, \hyperpage{216}, \hyperpage{243}
+    \subitem {fdJydy\_colptrs}, \hyperpage{215}
+    \subitem {fdJydy\_rowvals}, \hyperpage{215}
+    \subitem {fdJzdp}, \hyperpage{229}
+    \subitem {fdJzdsigma}, \hyperpage{228}, \hyperpage{244}
+    \subitem {fdJzdx}, \hyperpage{230}
+    \subitem {fdJzdz}, \hyperpage{227}, \hyperpage{244}
+    \subitem {fdrzdp}, \hyperpage{224}, \hyperpage{244}
+    \subitem {fdrzdx}, \hyperpage{224}, \hyperpage{245}
+    \subitem {fdsigmaydp}, \hyperpage{213}, \hyperpage{245}
+    \subitem {fdsigmazdp}, \hyperpage{226}, \hyperpage{245}
+    \subitem {fdwdp}, \hyperpage{234}, \hyperpage{245, 246}
+    \subitem {fdwdp\_colptrs}, \hyperpage{246}
+    \subitem {fdwdp\_rowvals}, \hyperpage{246}
+    \subitem {fdwdx}, \hyperpage{235}, \hyperpage{246}
+    \subitem {fdwdx\_colptrs}, \hyperpage{247}
+    \subitem {fdwdx\_rowvals}, \hyperpage{247}
+    \subitem {fdydp}, \hyperpage{210}, \hyperpage{247}
+    \subitem {fdydx}, \hyperpage{211}, \hyperpage{247}
+    \subitem {fdzdp}, \hyperpage{221}, \hyperpage{248}
+    \subitem {fdzdx}, \hyperpage{222}, \hyperpage{248}
+    \subitem {fJrz}, \hyperpage{231}, \hyperpage{248}
+    \subitem {fJy}, \hyperpage{214}, \hyperpage{248}
+    \subitem {fJz}, \hyperpage{227}, \hyperpage{249}
+    \subitem {frz}, \hyperpage{223}, \hyperpage{249}
+    \subitem {fsigmay}, \hyperpage{212}, \hyperpage{249}
+    \subitem {fsigmaz}, \hyperpage{225}, \hyperpage{250}
+    \subitem {fsrz}, \hyperpage{250}
+    \subitem {fstau}, \hyperpage{250}
+    \subitem {fstotal\_cl}, \hyperpage{239}
+    \subitem {fsx0}, \hyperpage{203}, \hyperpage{250}
+    \subitem {fsx0\_fixedParameters}, \hyperpage{204}, \hyperpage{251}
+    \subitem {fsx\_rdata}, \hyperpage{206}, \hyperpage{237}
+    \subitem {fsx\_solver}, \hyperpage{238}
+    \subitem {fsz}, \hyperpage{251}
+    \subitem {ftotal\_cl}, \hyperpage{238}
+    \subitem {fw}, \hyperpage{233}, \hyperpage{251}
+    \subitem {fx0}, \hyperpage{201}, \hyperpage{252}
+    \subitem {fx0\_fixedParameters}, \hyperpage{202}, \hyperpage{252}
+    \subitem {fx\_rdata}, \hyperpage{205}, \hyperpage{236}
+    \subitem {fx\_solver}, \hyperpage{237}
+    \subitem {fy}, \hyperpage{209}, \hyperpage{252}
+    \subitem {fz}, \hyperpage{220}, \hyperpage{252}
+    \subitem {getAdjointStateEventUpdate}, \hyperpage{196}
+    \subitem {getAdjointStateObservableUpdate}, \hyperpage{185}
+    \subitem {getAlwaysCheckFinite}, \hyperpage{201}
+    \subitem {getEvent}, \hyperpage{186}
+    \subitem {getEventRegularization}, \hyperpage{189}
+    \subitem {getEventRegularizationSensitivity}, \hyperpage{190}
+    \subitem {getEventSensitivity}, \hyperpage{187}
+    \subitem {getEventSigma}, \hyperpage{191}
+    \subitem {getEventSigmaSensitivity}, \hyperpage{191}
+    \subitem {getEventTimeSensitivity}, \hyperpage{196}
+    \subitem {getExpression}, \hyperpage{178}
+    \subitem {getFixedParameterById}, \hyperpage{155}
+    \subitem {getFixedParameterByName}, \hyperpage{155}
+    \subitem {getFixedParameterIds}, \hyperpage{165}
+    \subitem {getFixedParameterNames}, \hyperpage{161}
+    \subitem {getFixedParameters}, \hyperpage{155}
+    \subitem {getInitialStates}, \hyperpage{173}
+    \subitem {getInitialStateSensitivities}, \hyperpage{174}
+    \subitem {getModelState}, \hyperpage{169}
+    \subitem {getName}, \hyperpage{158}
+    \subitem {getObservable}, \hyperpage{179}
+    \subitem {getObservableIds}, \hyperpage{166}
+    \subitem {getObservableNames}, \hyperpage{162}
+    \subitem {getObservableSensitivity}, \hyperpage{180}
+    \subitem {getObservableSigma}, \hyperpage{181}
+    \subitem {getObservableSigmaSensitivity}, \hyperpage{182}
+    \subitem {getParameterById}, \hyperpage{150}
+    \subitem {getParameterByName}, \hyperpage{151}
+    \subitem {getParameterIds}, \hyperpage{163}
+    \subitem {getParameterList}, \hyperpage{170}
+    \subitem {getParameterNames}, \hyperpage{159}
+    \subitem {getParameters}, \hyperpage{150}
+    \subitem {getParameterScale}, \hyperpage{149}
+    \subitem {getReinitializeFixedParameterInitialStates}, 
+		\hyperpage{178}
+    \subitem {getStateIds}, \hyperpage{164}
+    \subitem {getStateIsNonNegative}, \hyperpage{168}
+    \subitem {getStateNames}, \hyperpage{160}
+    \subitem {getSteadyStateSensitivityMode}, \hyperpage{177}
+    \subitem {getTimepoint}, \hyperpage{166}
+    \subitem {getTimepoints}, \hyperpage{166}
+    \subitem {getUnobservedEventSensitivity}, \hyperpage{188}
+    \subitem {getUnscaledParameters}, \hyperpage{150}
+    \subitem {hasCustomInitialStates}, \hyperpage{174}
+    \subitem {hasCustomInitialStateSensitivities}, \hyperpage{176}
+    \subitem {hasFixedParameterIds}, \hyperpage{164}
+    \subitem {hasFixedParameterNames}, \hyperpage{160}
+    \subitem {hasObservableIds}, \hyperpage{165}
+    \subitem {hasObservableNames}, \hyperpage{161}
+    \subitem {hasParameterIds}, \hyperpage{162}
+    \subitem {hasParameterNames}, \hyperpage{158}
+    \subitem {hasStateIds}, \hyperpage{163}
+    \subitem {hasStateNames}, \hyperpage{159}
+    \subitem {idlist}, \hyperpage{255}
+    \subitem {initHeaviside}, \hyperpage{143}
+    \subitem {initialize}, \hyperpage{140}
+    \subitem {initializeB}, \hyperpage{141}
+    \subitem {initializeStates}, \hyperpage{141}
+    \subitem {initializeStateSensitivities}, \hyperpage{142}
+    \subitem {J}, \hyperpage{255}
+    \subitem {k}, \hyperpage{148}
+    \subitem {lbw}, \hyperpage{254}
+    \subitem {M}, \hyperpage{256}
+    \subitem {Model}, \hyperpage{137, 138}
+    \subitem {my}, \hyperpage{256}
+    \subitem {mz}, \hyperpage{256}
+    \subitem {ncl}, \hyperpage{147}
+    \subitem {ndJydy}, \hyperpage{254}
+    \subitem {ndwdp}, \hyperpage{254}
+    \subitem {ndwdx}, \hyperpage{254}
+    \subitem {ndxdotdp\_explicit}, \hyperpage{254}
+    \subitem {ndxdotdp\_implicit}, \hyperpage{254}
+    \subitem {ndxdotdw}, \hyperpage{254}
+    \subitem {ne}, \hyperpage{253}
+    \subitem {nJ}, \hyperpage{254}
+    \subitem {nk}, \hyperpage{146}
+    \subitem {nMaxEvent}, \hyperpage{148}
+    \subitem {nmaxevent}, \hyperpage{260}
+    \subitem {nnz}, \hyperpage{254}
+    \subitem {np}, \hyperpage{145}
+    \subitem {nplist}, \hyperpage{144}
+    \subitem {nt}, \hyperpage{148}
+    \subitem {nw}, \hyperpage{253}
+    \subitem {nx\_rdata}, \hyperpage{253}
+    \subitem {nx\_reinit}, \hyperpage{147}
+    \subitem {nx\_solver}, \hyperpage{253}
+    \subitem {nx\_solver\_reinit}, \hyperpage{253}
+    \subitem {nxtrue\_rdata}, \hyperpage{253}
+    \subitem {nxtrue\_solver}, \hyperpage{253}
+    \subitem {ny}, \hyperpage{253}
+    \subitem {nytrue}, \hyperpage{253}
+    \subitem {nz}, \hyperpage{253}
+    \subitem {nztrue}, \hyperpage{253}
+    \subitem {o2mode}, \hyperpage{255}
+    \subitem {operator=}, \hyperpage{139}
+    \subitem {originalParameters}, \hyperpage{259}
+    \subitem {plist}, \hyperpage{170}
+    \subitem {pscale}, \hyperpage{260}
+    \subitem {pythonGenerated}, \hyperpage{254}
+    \subitem {reinitializeFixedParameterInitialStates}, \hyperpage{260}
+    \subitem {rz}, \hyperpage{258}
+    \subitem {setAlwaysCheckFinite}, \hyperpage{201}
+    \subitem {setFixedParameterById}, \hyperpage{157}
+    \subitem {setFixedParameterByName}, \hyperpage{157}
+    \subitem {setFixedParameters}, \hyperpage{156}
+    \subitem {setFixedParametersByIdRegex}, \hyperpage{157}
+    \subitem {setFixedParametersByNameRegex}, \hyperpage{158}
+    \subitem {setInitialStates}, \hyperpage{174}
+    \subitem {setInitialStateSensitivities}, \hyperpage{175}
+    \subitem {setModelState}, \hyperpage{169}
+    \subitem {setNMaxEvent}, \hyperpage{148}
+    \subitem {setParameterById}, \hyperpage{152}
+    \subitem {setParameterByName}, \hyperpage{153, 154}
+    \subitem {setParameterList}, \hyperpage{172}
+    \subitem {setParameters}, \hyperpage{151}
+    \subitem {setParametersByIdRegex}, \hyperpage{153}
+    \subitem {setParametersByNameRegex}, \hyperpage{154}
+    \subitem {setParameterScale}, \hyperpage{149, 150}
+    \subitem {setReinitializeFixedParameterInitialStates}, 
+		\hyperpage{177}
+    \subitem {setStateIsNonNegative}, \hyperpage{168}
+    \subitem {setSteadyStateSensitivityMode}, \hyperpage{177}
+    \subitem {setT0}, \hyperpage{168}
+    \subitem {setTimepoints}, \hyperpage{167}
+    \subitem {setUnscaledInitialStateSensitivities}, \hyperpage{176}
+    \subitem {sigmay}, \hyperpage{258}
+    \subitem {sigmaz}, \hyperpage{258}
+    \subitem {state}, \hyperpage{255}
+    \subitem {stateIsNonNegative}, \hyperpage{259}
+    \subitem {steadyStateSensitivityMode}, \hyperpage{260}
+    \subitem {sx}, \hyperpage{258}
+    \subitem {sx0data}, \hyperpage{259}
+    \subitem {sx\_rdata}, \hyperpage{258}
+    \subitem {t0}, \hyperpage{167}
+    \subitem {ts}, \hyperpage{259}
+    \subitem {tstart}, \hyperpage{260}
+    \subitem {ubw}, \hyperpage{254}
+    \subitem {updateHeaviside}, \hyperpage{200}
+    \subitem {updateHeavisideB}, \hyperpage{200}
+    \subitem {w}, \hyperpage{257}
+    \subitem {writeLLHSensitivitySlice}, \hyperpage{208}
+    \subitem {writeSensitivitySliceEvent}, \hyperpage{207}
+    \subitem {writeSliceEvent}, \hyperpage{207}
+    \subitem {x0data}, \hyperpage{259}
+    \subitem {x\_pos\_tmp}, \hyperpage{259}
+    \subitem {x\_rdata}, \hyperpage{258}
+    \subitem {y}, \hyperpage{258}
+    \subitem {z}, \hyperpage{258}
+    \subitem {z2event}, \hyperpage{259}
+  \item {model}
+    \subitem {amised}, \hyperpage{566}
+    \subitem {ForwardProblem}, \hyperpage{122}
+    \subitem {NewtonSolver}, \hyperpage{340}
+  \item {Model\_DAE}, \hyperpage{260}
+    \subitem {fdxdotdp}, \hyperpage{282, 283}, \hyperpage{291}
+    \subitem {fJ}, \hyperpage{264, 265}, \hyperpage{287}
+    \subitem {fJB}, \hyperpage{266, 267}, \hyperpage{287}
+    \subitem {fJDiag}, \hyperpage{272}, \hyperpage{289}
+    \subitem {fJSparse}, \hyperpage{268, 269}, \hyperpage{288}
+    \subitem {fJSparseB}, \hyperpage{270, 271}, \hyperpage{288}
+    \subitem {fJSparseB\_ss}, \hyperpage{281}
+    \subitem {fJv}, \hyperpage{273, 274}
+    \subitem {fJvB}, \hyperpage{274}, \hyperpage{290}
+    \subitem {fM}, \hyperpage{286}, \hyperpage{292}
+    \subitem {fqBdot}, \hyperpage{278}
+    \subitem {fqBdot\_ss}, \hyperpage{280}
+    \subitem {froot}, \hyperpage{275, 276}, \hyperpage{290}
+    \subitem {fsxdot}, \hyperpage{284, 285}
+    \subitem {fxBdot}, \hyperpage{278}
+    \subitem {fxBdot\_ss}, \hyperpage{279, 280}
+    \subitem {fxdot}, \hyperpage{276, 277}, \hyperpage{291}
+    \subitem {getSolver}, \hyperpage{287}
+    \subitem {Model\_DAE}, \hyperpage{263}
+    \subitem {writeSteadystateJB}, \hyperpage{281}
+  \item {Model\_ODE}, \hyperpage{292}
+    \subitem {fdxdotdp}, \hyperpage{316, 317}, \hyperpage{326}
+    \subitem {fdxdotdp\_explicit}, \hyperpage{327}
+    \subitem {fdxdotdp\_explicit\_colptrs}, \hyperpage{327}
+    \subitem {fdxdotdp\_explicit\_rowvals}, \hyperpage{328}
+    \subitem {fdxdotdp\_implicit\_colptrs}, \hyperpage{328}
+    \subitem {fdxdotdp\_implicit\_rowvals}, \hyperpage{329}
+    \subitem {fdxdotdw}, \hyperpage{315}, \hyperpage{329}
+    \subitem {fdxdotdw\_colptrs}, \hyperpage{330}
+    \subitem {fdxdotdw\_rowvals}, \hyperpage{330}
+    \subitem {fJ}, \hyperpage{297}, \hyperpage{320}
+    \subitem {fJB}, \hyperpage{298, 299}, \hyperpage{321}
+    \subitem {fJDiag}, \hyperpage{304, 305}, \hyperpage{325}
+    \subitem {fJSparse}, \hyperpage{300, 301}, \hyperpage{321, 322}
+    \subitem {fJSparse\_colptrs}, \hyperpage{322}
+    \subitem {fJSparse\_rowvals}, \hyperpage{323}
+    \subitem {fJSparseB}, \hyperpage{302, 303}, \hyperpage{323, 324}
+    \subitem {fJSparseB\_colptrs}, \hyperpage{324}
+    \subitem {fJSparseB\_rowvals}, \hyperpage{324}
+    \subitem {fJSparseB\_ss}, \hyperpage{313}
+    \subitem {fJv}, \hyperpage{306, 307}
+    \subitem {fJvB}, \hyperpage{307}
+    \subitem {fqBdot}, \hyperpage{311}
+    \subitem {fqBdot\_ss}, \hyperpage{313}
+    \subitem {froot}, \hyperpage{308}, \hyperpage{325}
+    \subitem {fsxdot}, \hyperpage{318, 319}
+    \subitem {fxBdot}, \hyperpage{310}
+    \subitem {fxBdot\_ss}, \hyperpage{312, 313}
+    \subitem {fxdot}, \hyperpage{309, 310}, \hyperpage{326}
+    \subitem {getSolver}, \hyperpage{320}
+    \subitem {Model\_ODE}, \hyperpage{295}
+    \subitem {writeSteadystateJB}, \hyperpage{314}
+  \item {ModelContext}, \hyperpage{331}
+    \subitem {ModelContext}, \hyperpage{331}
+  \item {modelname}
+    \subitem {amimodel}, \hyperpage{551}
+    \subitem {amised}, \hyperpage{566}
+  \item {ModelState}, \hyperpage{332}
+    \subitem {fixedParameters}, \hyperpage{332}
+    \subitem {h}, \hyperpage{332}
+    \subitem {plist}, \hyperpage{332}
+    \subitem {stotal\_cl}, \hyperpage{332}
+    \subitem {total\_cl}, \hyperpage{332}
+    \subitem {unscaledParameters}, \hyperpage{332}
+  \item {multiply}
+    \subitem {SUNMatrixWrapper}, \hyperpage{515--517}
+  \item {mxArrayToVector}
+    \subitem {interface\_matlab.cpp}, \hyperpage{590}
+  \item {my}
+    \subitem {Model}, \hyperpage{256}
+  \item {mz}
+    \subitem {Model}, \hyperpage{256}
+
+  \indexspace
+
+  \item {ncl}
+    \subitem {Model}, \hyperpage{147}
+  \item {ndJydy}
+    \subitem {Model}, \hyperpage{254}
+  \item {ndwdp}
+    \subitem {amimodel}, \hyperpage{559}
+    \subitem {Model}, \hyperpage{254}
+  \item {ndwdx}
+    \subitem {amimodel}, \hyperpage{559}
+    \subitem {Model}, \hyperpage{254}
+  \item {ndxdotdp\_explicit}
+    \subitem {Model}, \hyperpage{254}
+  \item {ndxdotdp\_implicit}
+    \subitem {Model}, \hyperpage{254}
+  \item {ndxdotdw}
+    \subitem {Model}, \hyperpage{254}
+  \item {ne}
+    \subitem {amidata}, \hyperpage{529}
+    \subitem {Model}, \hyperpage{253}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nevent}
+    \subitem {amimodel}, \hyperpage{554}
+  \item {newton\_maxlinsteps}
+    \subitem {amioption}, \hyperpage{564}
+  \item {newton\_maxsteps}
+    \subitem {amioption}, \hyperpage{564}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {newton\_preeq}
+    \subitem {amioption}, \hyperpage{564}
+  \item {NewtonFailure}, \hyperpage{333}
+    \subitem {error\_code}, \hyperpage{333}
+    \subitem {NewtonFailure}, \hyperpage{333}
+  \item {NewtonSolver}, \hyperpage{334}
+    \subitem {atol}, \hyperpage{340}
+    \subitem {computeNewtonSensis}, \hyperpage{337}
+    \subitem {dampingFactorLowerBound}, \hyperpage{340}
+    \subitem {dampingFactorMode}, \hyperpage{340}
+    \subitem {dx}, \hyperpage{341}
+    \subitem {dxB}, \hyperpage{341}
+    \subitem {getNumLinSteps}, \hyperpage{338}
+    \subitem {getSolver}, \hyperpage{335}
+    \subitem {getStep}, \hyperpage{336}
+    \subitem {maxlinsteps}, \hyperpage{340}
+    \subitem {maxsteps}, \hyperpage{340}
+    \subitem {model}, \hyperpage{340}
+    \subitem {NewtonSolver}, \hyperpage{335}
+    \subitem {numlinsteps}, \hyperpage{341}
+    \subitem {prepareLinearSystem}, \hyperpage{338}
+    \subitem {prepareLinearSystemB}, \hyperpage{339}
+    \subitem {rtol}, \hyperpage{340}
+    \subitem {solveLinearSystem}, \hyperpage{339}
+    \subitem {t}, \hyperpage{340}
+    \subitem {x}, \hyperpage{341}
+    \subitem {xB}, \hyperpage{341}
+    \subitem {xdot}, \hyperpage{340}
+  \item {NewtonSolverDense}, \hyperpage{341}
+    \subitem {NewtonSolverDense}, \hyperpage{342}
+    \subitem {prepareLinearSystem}, \hyperpage{342}
+    \subitem {prepareLinearSystemB}, \hyperpage{343}
+    \subitem {solveLinearSystem}, \hyperpage{342}
+  \item {NewtonSolverIterative}, \hyperpage{343}
+    \subitem {linsolveSPBCG}, \hyperpage{347}
+    \subitem {NewtonSolverIterative}, \hyperpage{344}
+    \subitem {prepareLinearSystem}, \hyperpage{345}
+    \subitem {prepareLinearSystemB}, \hyperpage{346}
+    \subitem {solveLinearSystem}, \hyperpage{344}
+  \item {NewtonSolverSparse}, \hyperpage{348}
+    \subitem {NewtonSolverSparse}, \hyperpage{349}
+    \subitem {prepareLinearSystem}, \hyperpage{349}
+    \subitem {prepareLinearSystemB}, \hyperpage{350}
+    \subitem {solveLinearSystem}, \hyperpage{349}
+  \item {ng}
+    \subitem {amimodel}, \hyperpage{554}
+  \item {nJ}
+    \subitem {Model}, \hyperpage{254}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {nk}
+    \subitem {amidata}, \hyperpage{529}
+    \subitem {amimodel}, \hyperpage{554}
+    \subitem {Model}, \hyperpage{146}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nMaxEvent}
+    \subitem {Model}, \hyperpage{148}
+  \item {nmaxevent}
+    \subitem {amioption}, \hyperpage{563}
+    \subitem {ExpData}, \hyperpage{100}
+    \subitem {Model}, \hyperpage{260}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {nnz}
+    \subitem {amimodel}, \hyperpage{555}
+    \subitem {Model}, \hyperpage{254}
+  \item {nonLinearSolver}
+    \subitem {Solver}, \hyperpage{459}
+  \item {nonLinearSolverB}
+    \subitem {Solver}, \hyperpage{459}
+  \item {nonLinearSolverSens}
+    \subitem {Solver}, \hyperpage{459}
+  \item {nonzeros}
+    \subitem {SUNMatrixWrapper}, \hyperpage{512}
+  \item {np}
+    \subitem {amimodel}, \hyperpage{553}
+    \subitem {Model}, \hyperpage{145}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nplist}
+    \subitem {Model}, \hyperpage{144}
+    \subitem {ReturnData}, \hyperpage{380}
+    \subitem {Solver}, \hyperpage{427}
+  \item {nquad}
+    \subitem {Solver}, \hyperpage{428}
+  \item {nroots}
+    \subitem {ReturnData}, \hyperpage{381}
+  \item {nt}
+    \subitem {amidata}, \hyperpage{529}
+    \subitem {ExpData}, \hyperpage{100}
+    \subitem {Model}, \hyperpage{148}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {numerrtestfails}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {numerrtestfailsB}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {numlinsteps}
+    \subitem {NewtonSolver}, \hyperpage{341}
+  \item {numnonlinsolvconvfails}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {numnonlinsolvconvfailsB}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {numrhsevals}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {numrhsevalsB}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {numsteps}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {numstepsB}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {nvecs}
+    \subitem {amifun}, \hyperpage{539}
+  \item {nw}
+    \subitem {amimodel}, \hyperpage{559}
+    \subitem {Model}, \hyperpage{253}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {nx}
+    \subitem {amimodel}, \hyperpage{553}
+    \subitem {ReturnData}, \hyperpage{379}
+    \subitem {Solver}, \hyperpage{426}
+  \item {nx\_rdata}
+    \subitem {Model}, \hyperpage{253}
+  \item {nx\_reinit}
+    \subitem {Model}, \hyperpage{147}
+  \item {nx\_solver}
+    \subitem {Model}, \hyperpage{253}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nx\_solver\_reinit}
+    \subitem {Model}, \hyperpage{253}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nxtrue}
+    \subitem {amimodel}, \hyperpage{553}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nxtrue\_rdata}
+    \subitem {Model}, \hyperpage{253}
+  \item {nxtrue\_solver}
+    \subitem {Model}, \hyperpage{253}
+  \item {ny}
+    \subitem {amidata}, \hyperpage{529}
+    \subitem {amimodel}, \hyperpage{553}
+    \subitem {Model}, \hyperpage{253}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nytrue}
+    \subitem {amimodel}, \hyperpage{553}
+    \subitem {ExpData}, \hyperpage{99}
+    \subitem {Model}, \hyperpage{253}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nz}
+    \subitem {amidata}, \hyperpage{529}
+    \subitem {amimodel}, \hyperpage{554}
+    \subitem {Model}, \hyperpage{253}
+    \subitem {ReturnData}, \hyperpage{379}
+  \item {nztrue}
+    \subitem {amimodel}, \hyperpage{554}
+    \subitem {ExpData}, \hyperpage{99}
+    \subitem {Model}, \hyperpage{253}
+    \subitem {ReturnData}, \hyperpage{379}
+
+  \indexspace
+
+  \item {o2flag}
+    \subitem {amimodel}, \hyperpage{558}
+  \item {o2mode}
+    \subitem {Model}, \hyperpage{255}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {operator=}
+    \subitem {AmiVector}, \hyperpage{71}
+    \subitem {AmiVectorArray}, \hyperpage{80}
+    \subitem {Model}, \hyperpage{139}
+    \subitem {SUNLinSolWrapper}, \hyperpage{502, 503}
+    \subitem {SUNMatrixWrapper}, \hyperpage{509}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{524}
+  \item {operator[]}
+    \subitem {AmiVector}, \hyperpage{76}
+    \subitem {AmiVectorArray}, \hyperpage{83}
+  \item {optsym}, \hyperpage{568}
+    \subitem {getoptimized}, \hyperpage{568}
+    \subitem {optsym}, \hyperpage{568}
+  \item {order}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {ordering}
+    \subitem {amioption}, \hyperpage{563}
+  \item {originalParameters}
+    \subitem {Model}, \hyperpage{259}
+  \item {outputcount}
+    \subitem {amised}, \hyperpage{567}
+
+  \indexspace
+
+  \item {param}
+    \subitem {amimodel}, \hyperpage{557}
+  \item {parseModel}
+    \subitem {amimodel}, \hyperpage{544}
+  \item {plist}
+    \subitem {Model}, \hyperpage{170}
+    \subitem {ModelState}, \hyperpage{332}
+  \item {pos\_pow}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{600}
+  \item {posteq\_cpu\_time}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {posteq\_cpu\_timeB}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {posteq\_numlinsteps}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {posteq\_numsteps}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {posteq\_numstepsB}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {posteq\_status}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {posteq\_t}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {posteq\_wrms}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {preeq\_cpu\_time}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {preeq\_cpu\_timeB}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {preeq\_numlinsteps}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {preeq\_numsteps}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {preeq\_numstepsB}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {preeq\_status}
+    \subitem {ReturnData}, \hyperpage{376}
+  \item {preeq\_t}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {preeq\_wrms}
+    \subitem {ReturnData}, \hyperpage{377}
+  \item {prepareLinearSystem}
+    \subitem {NewtonSolver}, \hyperpage{338}
+    \subitem {NewtonSolverDense}, \hyperpage{342}
+    \subitem {NewtonSolverIterative}, \hyperpage{345}
+    \subitem {NewtonSolverSparse}, \hyperpage{349}
+  \item {prepareLinearSystemB}
+    \subitem {NewtonSolver}, \hyperpage{339}
+    \subitem {NewtonSolverDense}, \hyperpage{343}
+    \subitem {NewtonSolverIterative}, \hyperpage{346}
+    \subitem {NewtonSolverSparse}, \hyperpage{350}
+  \item {printErrMsgIdAndTxt}
+    \subitem {amici.cpp}, \hyperpage{580}
+  \item {printWarnMsgIdAndTxt}
+    \subitem {amici.cpp}, \hyperpage{581}
+  \item {processBackwardProblem}
+    \subitem {ReturnData}, \hyperpage{359}
+  \item {processForwardProblem}
+    \subitem {ReturnData}, \hyperpage{358}
+  \item {processPostEquilibration}
+    \subitem {ReturnData}, \hyperpage{357}
+  \item {processPreEquilibration}
+    \subitem {ReturnData}, \hyperpage{356}
+  \item {processSimulationObjects}
+    \subitem {ReturnData}, \hyperpage{355}
+  \item {processSolver}
+    \subitem {ReturnData}, \hyperpage{360}
+  \item {pscale}
+    \subitem {amioption}, \hyperpage{564}
+    \subitem {Model}, \hyperpage{260}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {pythonGenerated}
+    \subitem {Model}, \hyperpage{254}
+
+  \indexspace
+
+  \item {qbinit}
+    \subitem {Solver}, \hyperpage{439}
+  \item {quad\_atol}
+    \subitem {amioption}, \hyperpage{561}
+  \item {quad\_rtol}
+    \subitem {amioption}, \hyperpage{562}
+  \item {quadInit}
+    \subitem {Solver}, \hyperpage{448}
+  \item {quadReInitB}
+    \subitem {Solver}, \hyperpage{425}
+  \item {quadSStolerances}
+    \subitem {Solver}, \hyperpage{449}
+  \item {quadSStolerancesB}
+    \subitem {Solver}, \hyperpage{449}
+
+  \indexspace
+
+  \item {rdata\_reporting}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {readSimulationState}
+    \subitem {ReturnData}, \hyperpage{362}
+  \item {recompile}
+    \subitem {amimodel}, \hyperpage{558}
+  \item {reInit}
+    \subitem {Solver}, \hyperpage{424}
+    \subitem {SUNLinSolKLU}, \hyperpage{486}
+  \item {reInitB}
+    \subitem {Solver}, \hyperpage{424}
+  \item {reinitializeFixedParameterInitialStates}
+    \subitem {ExpData}, \hyperpage{113}
+    \subitem {Model}, \hyperpage{260}
+  \item {reinitializeStates}
+    \subitem {amidata}, \hyperpage{531}
+  \item {reInitPostProcessB}
+    \subitem {Solver}, \hyperpage{436}
+  \item {reInitPostProcessF}
+    \subitem {Solver}, \hyperpage{436}
+  \item {res}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {resetMutableMemory}
+    \subitem {Solver}, \hyperpage{454}
+  \item {ReturnData}, \hyperpage{350}
+    \subitem {applyChainRuleFactorToSimulationResults}, \hyperpage{367}
+    \subitem {chi2}, \hyperpage{378}
+    \subitem {computingFSA}, \hyperpage{368}
+    \subitem {cpu\_time}, \hyperpage{376}
+    \subitem {cpu\_timeB}, \hyperpage{376}
+    \subitem {dx\_solver}, \hyperpage{381}
+    \subitem {fchi2}, \hyperpage{364}
+    \subitem {fFIM}, \hyperpage{365}
+    \subitem {FIM}, \hyperpage{375}
+    \subitem {fres}, \hyperpage{363}
+    \subitem {fsres}, \hyperpage{364}
+    \subitem {getDataOutput}, \hyperpage{368}
+    \subitem {getDataSensisFSA}, \hyperpage{369}
+    \subitem {getEventOutput}, \hyperpage{370}
+    \subitem {getEventSensisFSA}, \hyperpage{371}
+    \subitem {handleSx0Backward}, \hyperpage{372}
+    \subitem {handleSx0Forward}, \hyperpage{373}
+    \subitem {invalidate}, \hyperpage{366}
+    \subitem {J}, \hyperpage{374}
+    \subitem {llh}, \hyperpage{378}
+    \subitem {ne}, \hyperpage{379}
+    \subitem {newton\_maxsteps}, \hyperpage{380}
+    \subitem {nJ}, \hyperpage{380}
+    \subitem {nk}, \hyperpage{379}
+    \subitem {nmaxevent}, \hyperpage{380}
+    \subitem {np}, \hyperpage{379}
+    \subitem {nplist}, \hyperpage{380}
+    \subitem {nroots}, \hyperpage{381}
+    \subitem {nt}, \hyperpage{380}
+    \subitem {numerrtestfails}, \hyperpage{376}
+    \subitem {numerrtestfailsB}, \hyperpage{376}
+    \subitem {numnonlinsolvconvfails}, \hyperpage{376}
+    \subitem {numnonlinsolvconvfailsB}, \hyperpage{376}
+    \subitem {numrhsevals}, \hyperpage{375}
+    \subitem {numrhsevalsB}, \hyperpage{375}
+    \subitem {numsteps}, \hyperpage{375}
+    \subitem {numstepsB}, \hyperpage{375}
+    \subitem {nw}, \hyperpage{380}
+    \subitem {nx}, \hyperpage{379}
+    \subitem {nx\_solver}, \hyperpage{379}
+    \subitem {nx\_solver\_reinit}, \hyperpage{379}
+    \subitem {nxtrue}, \hyperpage{379}
+    \subitem {ny}, \hyperpage{379}
+    \subitem {nytrue}, \hyperpage{379}
+    \subitem {nz}, \hyperpage{379}
+    \subitem {nztrue}, \hyperpage{379}
+    \subitem {o2mode}, \hyperpage{380}
+    \subitem {order}, \hyperpage{376}
+    \subitem {posteq\_cpu\_time}, \hyperpage{377}
+    \subitem {posteq\_cpu\_timeB}, \hyperpage{377}
+    \subitem {posteq\_numlinsteps}, \hyperpage{377}
+    \subitem {posteq\_numsteps}, \hyperpage{377}
+    \subitem {posteq\_numstepsB}, \hyperpage{377}
+    \subitem {posteq\_status}, \hyperpage{376}
+    \subitem {posteq\_t}, \hyperpage{378}
+    \subitem {posteq\_wrms}, \hyperpage{378}
+    \subitem {preeq\_cpu\_time}, \hyperpage{376}
+    \subitem {preeq\_cpu\_timeB}, \hyperpage{376}
+    \subitem {preeq\_numlinsteps}, \hyperpage{377}
+    \subitem {preeq\_numsteps}, \hyperpage{377}
+    \subitem {preeq\_numstepsB}, \hyperpage{377}
+    \subitem {preeq\_status}, \hyperpage{376}
+    \subitem {preeq\_t}, \hyperpage{377}
+    \subitem {preeq\_wrms}, \hyperpage{377}
+    \subitem {processBackwardProblem}, \hyperpage{359}
+    \subitem {processForwardProblem}, \hyperpage{358}
+    \subitem {processPostEquilibration}, \hyperpage{357}
+    \subitem {processPreEquilibration}, \hyperpage{356}
+    \subitem {processSimulationObjects}, \hyperpage{355}
+    \subitem {processSolver}, \hyperpage{360}
+    \subitem {pscale}, \hyperpage{380}
+    \subitem {rdata\_reporting}, \hyperpage{380}
+    \subitem {readSimulationState}, \hyperpage{362}
+    \subitem {res}, \hyperpage{375}
+    \subitem {ReturnData}, \hyperpage{354, 355}
+    \subitem {rz}, \hyperpage{374}
+    \subitem {s2llh}, \hyperpage{378}
+    \subitem {s2rz}, \hyperpage{374}
+    \subitem {sensi}, \hyperpage{380}
+    \subitem {sensi\_meth}, \hyperpage{380}
+    \subitem {sigmay}, \hyperpage{375}
+    \subitem {sigmaz}, \hyperpage{374}
+    \subitem {sllh}, \hyperpage{378}
+    \subitem {sres}, \hyperpage{375}
+    \subitem {srz}, \hyperpage{374}
+    \subitem {ssigmay}, \hyperpage{375}
+    \subitem {ssigmaz}, \hyperpage{374}
+    \subitem {status}, \hyperpage{378}
+    \subitem {storeJacobianAndDerivativeInReturnData}, \hyperpage{362}
+    \subitem {sx}, \hyperpage{374}
+    \subitem {sx0}, \hyperpage{378}
+    \subitem {sx\_rdata}, \hyperpage{381}
+    \subitem {sx\_solver}, \hyperpage{381}
+    \subitem {sx\_ss}, \hyperpage{378}
+    \subitem {sy}, \hyperpage{375}
+    \subitem {sz}, \hyperpage{374}
+    \subitem {t}, \hyperpage{381}
+    \subitem {ts}, \hyperpage{373}
+    \subitem {w}, \hyperpage{374}
+    \subitem {x}, \hyperpage{374}
+    \subitem {x0}, \hyperpage{378}
+    \subitem {x\_rdata}, \hyperpage{381}
+    \subitem {x\_solver}, \hyperpage{381}
+    \subitem {x\_ss}, \hyperpage{378}
+    \subitem {xdot}, \hyperpage{373}
+    \subitem {y}, \hyperpage{375}
+    \subitem {z}, \hyperpage{374}
+  \item {rootInit}
+    \subitem {Solver}, \hyperpage{439}
+  \item {rows}
+    \subitem {SUNMatrixWrapper}, \hyperpage{511}
+  \item {rowvals}
+    \subitem {amimodel}, \hyperpage{556}
+  \item {rowvalsB}
+    \subitem {amimodel}, \hyperpage{556}
+  \item {rtol}
+    \subitem {amioption}, \hyperpage{561}
+    \subitem {NewtonSolver}, \hyperpage{340}
+  \item {run}
+    \subitem {Solver}, \hyperpage{393}
+  \item {runAmiciSimulation}
+    \subitem {amici.cpp}, \hyperpage{580}
+    \subitem {AmiciApplication}, \hyperpage{62}
+  \item {runAmiciSimulations}
+    \subitem {amici.cpp}, \hyperpage{581}
+    \subitem {AmiciApplication}, \hyperpage{62}
+  \item {runB}
+    \subitem {Solver}, \hyperpage{394}
+  \item {runSteadystateSimulation}
+    \subitem {SteadystateProblem}, \hyperpage{472}
+  \item {rz}
+    \subitem {Model}, \hyperpage{258}
+    \subitem {ReturnData}, \hyperpage{374}
+
+  \indexspace
+
+  \item {s2llh}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {s2rz}
+    \subitem {ReturnData}, \hyperpage{374}
+  \item {SBML2AMICI}
+    \subitem {SBML2AMICI.m}, \hyperpage{592}
+  \item {SBML2AMICI.m}, \hyperpage{592}
+    \subitem {SBML2AMICI}, \hyperpage{592}
+  \item {scale}
+    \subitem {SUNMatrixWrapper}, \hyperpage{515}
+  \item {sdx}
+    \subitem {Solver}, \hyperpage{460}
+  \item {sedml}
+    \subitem {amised}, \hyperpage{566}
+  \item {sens\_ind}
+    \subitem {amioption}, \hyperpage{562}
+  \item {sensi}
+    \subitem {amioption}, \hyperpage{563}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {sensi\_meth}
+    \subitem {amioption}, \hyperpage{563}
+    \subitem {ReturnData}, \hyperpage{380}
+  \item {sensi\_meth\_preeq}
+    \subitem {amioption}, \hyperpage{563}
+  \item {sensiflag}
+    \subitem {amifun}, \hyperpage{539}
+  \item {sensInit1}
+    \subitem {Solver}, \hyperpage{438}
+  \item {sensReInit}
+    \subitem {Solver}, \hyperpage{424}
+  \item {set}
+    \subitem {AmiVector}, \hyperpage{75}
+  \item {setAbsoluteTolerance}
+    \subitem {Solver}, \hyperpage{404}
+  \item {setAbsoluteToleranceB}
+    \subitem {Solver}, \hyperpage{406}
+  \item {setAbsoluteToleranceFSA}
+    \subitem {Solver}, \hyperpage{405}
+  \item {setAbsoluteToleranceQuadratures}
+    \subitem {Solver}, \hyperpage{407}
+  \item {setAbsoluteToleranceSteadyState}
+    \subitem {Solver}, \hyperpage{409}
+  \item {setAbsoluteToleranceSteadyStateSensi}
+    \subitem {Solver}, \hyperpage{410}
+  \item {setAlwaysCheckFinite}
+    \subitem {Model}, \hyperpage{201}
+  \item {setATimes}
+    \subitem {SUNLinSolPCG}, \hyperpage{488}
+    \subitem {SUNLinSolSPBCGS}, \hyperpage{491}
+    \subitem {SUNLinSolSPFGMR}, \hyperpage{494}
+    \subitem {SUNLinSolSPGMR}, \hyperpage{496}
+    \subitem {SUNLinSolSPTFQMR}, \hyperpage{499}
+  \item {setBandJacFnB}
+    \subitem {Solver}, \hyperpage{440}
+  \item {setConvTestFn}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{526}
+  \item {setDenseJacFnB}
+    \subitem {Solver}, \hyperpage{440}
+  \item {setErrHandlerFn}
+    \subitem {Solver}, \hyperpage{442}
+  \item {setFixedParameterById}
+    \subitem {Model}, \hyperpage{157}
+  \item {setFixedParameterByName}
+    \subitem {Model}, \hyperpage{157}
+  \item {setFixedParameters}
+    \subitem {Model}, \hyperpage{156}
+  \item {setFixedParametersByIdRegex}
+    \subitem {Model}, \hyperpage{157}
+  \item {setFixedParametersByNameRegex}
+    \subitem {Model}, \hyperpage{158}
+  \item {setHflag}
+    \subitem {amievent}, \hyperpage{532}
+  \item {setId}
+    \subitem {Solver}, \hyperpage{445}
+  \item {setInitDoneB}
+    \subitem {Solver}, \hyperpage{457}
+  \item {setInitialStates}
+    \subitem {Model}, \hyperpage{174}
+  \item {setInitialStateSensitivities}
+    \subitem {Model}, \hyperpage{175}
+  \item {setInternalSensitivityMethod}
+    \subitem {Solver}, \hyperpage{416}
+  \item {setInterpolationType}
+    \subitem {Solver}, \hyperpage{414}
+  \item {setJacTimesVecFnB}
+    \subitem {Solver}, \hyperpage{441}
+  \item {setLinearMultistepMethod}
+    \subitem {Solver}, \hyperpage{411}
+  \item {setLinearSolver}
+    \subitem {Solver}, \hyperpage{415}
+  \item {setLinearSolverB}
+    \subitem {Solver}, \hyperpage{450}
+  \item {setLSetupFn}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{526}
+  \item {setLSolveFn}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{526}
+  \item {setMaxIters}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{526}
+  \item {setMaxNumSteps}
+    \subitem {Solver}, \hyperpage{443}
+  \item {setMaxNumStepsB}
+    \subitem {Solver}, \hyperpage{443}
+  \item {setMaxSteps}
+    \subitem {Solver}, \hyperpage{410}
+  \item {setMaxStepsBackwardProblem}
+    \subitem {Solver}, \hyperpage{411}
+  \item {setModelData}
+    \subitem {interface\_matlab.cpp}, \hyperpage{591}
+  \item {setModelState}
+    \subitem {Model}, \hyperpage{169}
+  \item {setNewtonDampingFactorLowerBound}
+    \subitem {Solver}, \hyperpage{402}
+  \item {setNewtonDampingFactorMode}
+    \subitem {Solver}, \hyperpage{401}
+  \item {setNewtonMaxLinearSteps}
+    \subitem {Solver}, \hyperpage{401}
+  \item {setNewtonMaxSteps}
+    \subitem {Solver}, \hyperpage{400}
+  \item {setNMaxEvent}
+    \subitem {Model}, \hyperpage{148}
+  \item {setNonLinearSolverB}
+    \subitem {Solver}, \hyperpage{451}
+  \item {setNonlinearSolverIteration}
+    \subitem {Solver}, \hyperpage{413}
+  \item {setObservedData}
+    \subitem {ExpData}, \hyperpage{101, 102}
+  \item {setObservedDataStdDev}
+    \subitem {ExpData}, \hyperpage{104, 105}
+  \item {setObservedEvents}
+    \subitem {ExpData}, \hyperpage{107}
+  \item {setObservedEventsStdDev}
+    \subitem {ExpData}, \hyperpage{109, 110}
+  \item {setOrdering}
+    \subitem {SUNLinSolKLU}, \hyperpage{487}
+  \item {setParameterById}
+    \subitem {Model}, \hyperpage{152}
+  \item {setParameterByName}
+    \subitem {Model}, \hyperpage{153, 154}
+  \item {setParameterList}
+    \subitem {Model}, \hyperpage{172}
+  \item {setParameters}
+    \subitem {Model}, \hyperpage{151}
+  \item {setParametersByIdRegex}
+    \subitem {Model}, \hyperpage{153}
+  \item {setParametersByNameRegex}
+    \subitem {Model}, \hyperpage{154}
+  \item {setParameterScale}
+    \subitem {Model}, \hyperpage{149, 150}
+  \item {setPreconditioner}
+    \subitem {SUNLinSolPCG}, \hyperpage{488}
+    \subitem {SUNLinSolSPBCGS}, \hyperpage{491}
+    \subitem {SUNLinSolSPFGMR}, \hyperpage{494}
+    \subitem {SUNLinSolSPGMR}, \hyperpage{496}
+    \subitem {SUNLinSolSPTFQMR}, \hyperpage{499}
+  \item {setPreequilibration}
+    \subitem {Solver}, \hyperpage{401}
+  \item {setQuadErrCon}
+    \subitem {Solver}, \hyperpage{442}
+  \item {setQuadErrConB}
+    \subitem {Solver}, \hyperpage{442}
+  \item {setQuadInitDoneB}
+    \subitem {Solver}, \hyperpage{457}
+  \item {setReinitializeFixedParameterInitialStates}
+    \subitem {Model}, \hyperpage{177}
+  \item {setRelativeTolerance}
+    \subitem {Solver}, \hyperpage{403}
+  \item {setRelativeToleranceB}
+    \subitem {Solver}, \hyperpage{405}
+  \item {setRelativeToleranceFSA}
+    \subitem {Solver}, \hyperpage{404}
+  \item {setRelativeToleranceQuadratures}
+    \subitem {Solver}, \hyperpage{407}
+  \item {setRelativeToleranceSteadyState}
+    \subitem {Solver}, \hyperpage{408}
+  \item {setRelativeToleranceSteadyStateSensi}
+    \subitem {Solver}, \hyperpage{409}
+  \item {setReturnDataReportingMode}
+    \subitem {Solver}, \hyperpage{416}
+  \item {setScalingVectors}
+    \subitem {SUNLinSolPCG}, \hyperpage{489}
+    \subitem {SUNLinSolSPBCGS}, \hyperpage{492}
+    \subitem {SUNLinSolSPFGMR}, \hyperpage{494}
+    \subitem {SUNLinSolSPGMR}, \hyperpage{497}
+    \subitem {SUNLinSolSPTFQMR}, \hyperpage{500}
+  \item {setSensErrCon}
+    \subitem {Solver}, \hyperpage{441}
+  \item {setSensitivityMethod}
+    \subitem {Solver}, \hyperpage{399}
+  \item {setSensitivityMethodPreequilibration}
+    \subitem {Solver}, \hyperpage{400}
+  \item {setSensitivityOrder}
+    \subitem {Solver}, \hyperpage{402}
+  \item {setSensParams}
+    \subitem {Solver}, \hyperpage{445}
+  \item {setSensSStolerances}
+    \subitem {Solver}, \hyperpage{441}
+  \item {setSolverOptions}
+    \subitem {interface\_matlab.cpp}, \hyperpage{591}
+  \item {setSparseJacFnB}
+    \subitem {Solver}, \hyperpage{440}
+  \item {setSStolerances}
+    \subitem {Solver}, \hyperpage{441}
+  \item {setSStolerancesB}
+    \subitem {Solver}, \hyperpage{448}
+  \item {setStabilityLimitFlag}
+    \subitem {Solver}, \hyperpage{414}
+  \item {setStabLimDet}
+    \subitem {Solver}, \hyperpage{444}
+  \item {setStabLimDetB}
+    \subitem {Solver}, \hyperpage{444}
+  \item {setStateIsNonNegative}
+    \subitem {Model}, \hyperpage{168}
+  \item {setStateOrdering}
+    \subitem {Solver}, \hyperpage{414}
+  \item {setSteadyStateSensitivityMode}
+    \subitem {Model}, \hyperpage{177}
+  \item {setStopTime}
+    \subitem {Solver}, \hyperpage{434}
+  \item {setSuppressAlg}
+    \subitem {Solver}, \hyperpage{445}
+  \item {setSysFn}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{525}
+  \item {setT0}
+    \subitem {Model}, \hyperpage{168}
+  \item {setTimepoints}
+    \subitem {ExpData}, \hyperpage{100}
+    \subitem {Model}, \hyperpage{167}
+  \item {setUnscaledInitialStateSensitivities}
+    \subitem {Model}, \hyperpage{176}
+  \item {setup}
+    \subitem {Solver}, \hyperpage{394}
+    \subitem {SUNLinSolWrapper}, \hyperpage{503, 504}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{525}
+  \item {setupB}
+    \subitem {Solver}, \hyperpage{395}
+  \item {SetupFailure}, \hyperpage{381}
+    \subitem {SetupFailure}, \hyperpage{382}
+  \item {setupSteadystate}
+    \subitem {Solver}, \hyperpage{396}
+  \item {setUserData}
+    \subitem {Solver}, \hyperpage{442}
+  \item {setUserDataB}
+    \subitem {Solver}, \hyperpage{443}
+  \item {seval}
+    \subitem {spline.cpp}, \hyperpage{595}
+  \item {Sigma\_Y}
+    \subitem {amidata}, \hyperpage{530}
+  \item {Sigma\_Z}
+    \subitem {amidata}, \hyperpage{530}
+  \item {sigmay}
+    \subitem {Model}, \hyperpage{258}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {sigmaz}
+    \subitem {Model}, \hyperpage{258}
+    \subitem {ReturnData}, \hyperpage{374}
+  \item {sign}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{599}
+  \item {SimulationState}, \hyperpage{382}
+    \subitem {dx}, \hyperpage{383}
+    \subitem {state}, \hyperpage{383}
+    \subitem {sx}, \hyperpage{383}
+    \subitem {t}, \hyperpage{383}
+    \subitem {x}, \hyperpage{383}
+  \item {sinteg}
+    \subitem {spline.cpp}, \hyperpage{596}
+  \item {sllh}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {Solve}
+    \subitem {SUNLinSolWrapper}, \hyperpage{504}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{525}
+  \item {solve}
+    \subitem {Solver}, \hyperpage{435}
+  \item {solveB}
+    \subitem {Solver}, \hyperpage{398}
+  \item {solveF}
+    \subitem {Solver}, \hyperpage{435}
+  \item {solveLinearSystem}
+    \subitem {NewtonSolver}, \hyperpage{339}
+    \subitem {NewtonSolverDense}, \hyperpage{342}
+    \subitem {NewtonSolverIterative}, \hyperpage{344}
+    \subitem {NewtonSolverSparse}, \hyperpage{349}
+  \item {Solver}, \hyperpage{383}
+    \subitem {allocateSolverB}, \hyperpage{448}
+    \subitem {app}, \hyperpage{458}
+    \subitem {applyQuadTolerancesASA}, \hyperpage{456}
+    \subitem {applyTolerancesASA}, \hyperpage{456}
+    \subitem {binit}, \hyperpage{439}
+    \subitem {calcIC}, \hyperpage{398}
+    \subitem {calcICB}, \hyperpage{398}
+    \subitem {checkSensitivityMethod}, \hyperpage{457}
+    \subitem {clone}, \hyperpage{392}
+    \subitem {computingASA}, \hyperpage{429}
+    \subitem {computingFSA}, \hyperpage{429}
+    \subitem {diagB}, \hyperpage{454}
+    \subitem {dky}, \hyperpage{459}
+    \subitem {dx}, \hyperpage{459}
+    \subitem {dxB}, \hyperpage{460}
+    \subitem {forceReInitPostProcessB}, \hyperpage{460}
+    \subitem {forceReInitPostProcessF}, \hyperpage{460}
+    \subitem {getAbsoluteTolerance}, \hyperpage{403}
+    \subitem {getAbsoluteToleranceB}, \hyperpage{406}
+    \subitem {getAbsoluteToleranceFSA}, \hyperpage{405}
+    \subitem {getAbsoluteToleranceQuadratures}, \hyperpage{407}
+    \subitem {getAbsoluteToleranceSteadyState}, \hyperpage{408}
+    \subitem {getAbsoluteToleranceSteadyStateSensi}, \hyperpage{409}
+    \subitem {getAdjBmem}, \hyperpage{455}
+    \subitem {getAdjInitDone}, \hyperpage{453}
+    \subitem {getAdjointDerivativeState}, \hyperpage{421}
+    \subitem {getAdjointQuadrature}, \hyperpage{422}
+    \subitem {getAdjointState}, \hyperpage{420}
+    \subitem {getB}, \hyperpage{436}
+    \subitem {getCpuTime}, \hyperpage{425}
+    \subitem {getCpuTimeB}, \hyperpage{426}
+    \subitem {getDerivativeState}, \hyperpage{419}
+    \subitem {getDky}, \hyperpage{445}
+    \subitem {getDkyB}, \hyperpage{446}
+    \subitem {getInitDone}, \hyperpage{452}
+    \subitem {getInitDoneB}, \hyperpage{453}
+    \subitem {getInternalSensitivityMethod}, \hyperpage{416}
+    \subitem {getInterpolationType}, \hyperpage{413}
+    \subitem {getLastOrder}, \hyperpage{434}, \hyperpage{450}
+    \subitem {getLinearMultistepMethod}, \hyperpage{411}
+    \subitem {getLinearSolver}, \hyperpage{415}
+    \subitem {getMaxSteps}, \hyperpage{410}
+    \subitem {getMaxStepsBackwardProblem}, \hyperpage{411}
+    \subitem {getModel}, \hyperpage{452}
+    \subitem {getNewtonDampingFactorLowerBound}, \hyperpage{401}
+    \subitem {getNewtonDampingFactorMode}, \hyperpage{401}
+    \subitem {getNewtonMaxLinearSteps}, \hyperpage{401}
+    \subitem {getNewtonMaxSteps}, \hyperpage{400}
+    \subitem {getNonlinearSolverIteration}, \hyperpage{413}
+    \subitem {getNumErrTestFails}, \hyperpage{432}, \hyperpage{450}
+    \subitem {getNumErrTestFailsB}, \hyperpage{433}
+    \subitem {getNumNonlinSolvConvFails}, \hyperpage{433}, 
+		\hyperpage{450}
+    \subitem {getNumNonlinSolvConvFailsB}, \hyperpage{434}
+    \subitem {getNumRhsEvals}, \hyperpage{432}, \hyperpage{449}
+    \subitem {getNumRhsEvalsB}, \hyperpage{432}
+    \subitem {getNumSteps}, \hyperpage{431}, \hyperpage{449}
+    \subitem {getNumStepsB}, \hyperpage{431}
+    \subitem {getPreequilibration}, \hyperpage{400}
+    \subitem {getQuad}, \hyperpage{437}
+    \subitem {getQuadB}, \hyperpage{437}
+    \subitem {getQuadDky}, \hyperpage{447}
+    \subitem {getQuadDkyB}, \hyperpage{447}
+    \subitem {getQuadInitDone}, \hyperpage{454}
+    \subitem {getQuadInitDoneB}, \hyperpage{453}
+    \subitem {getQuadrature}, \hyperpage{423}
+    \subitem {getRelativeTolerance}, \hyperpage{403}
+    \subitem {getRelativeToleranceB}, \hyperpage{405}
+    \subitem {getRelativeToleranceFSA}, \hyperpage{404}
+    \subitem {getRelativeToleranceQuadratures}, \hyperpage{406}
+    \subitem {getRelativeToleranceSteadyState}, \hyperpage{408}
+    \subitem {getRelativeToleranceSteadyStateSensi}, \hyperpage{409}
+    \subitem {getReturnDataReportingMode}, \hyperpage{416}
+    \subitem {getRootInfo}, \hyperpage{398}
+    \subitem {getSensDky}, \hyperpage{446}
+    \subitem {getSensInitDone}, \hyperpage{452}
+    \subitem {getSensitivityMethod}, \hyperpage{399}
+    \subitem {getSensitivityMethodPreequilibration}, \hyperpage{399}
+    \subitem {getSensitivityOrder}, \hyperpage{402}
+    \subitem {getStabilityLimitFlag}, \hyperpage{414}
+    \subitem {getState}, \hyperpage{418}
+    \subitem {getStateOrdering}, \hyperpage{414}
+    \subitem {getStateSensitivity}, \hyperpage{419}
+    \subitem {gett}, \hyperpage{425}
+    \subitem {init}, \hyperpage{437}
+    \subitem {initializeLinearSolver}, \hyperpage{450}
+    \subitem {initializeLinearSolverB}, \hyperpage{451}
+    \subitem {initializeNonLinearSolverB}, \hyperpage{451}
+    \subitem {initializeNonLinearSolverSens}, \hyperpage{440}
+    \subitem {initSteadystate}, \hyperpage{438}
+    \subitem {interpType}, \hyperpage{458}
+    \subitem {ism}, \hyperpage{458}
+    \subitem {iter}, \hyperpage{458}
+    \subitem {linearSolver}, \hyperpage{459}
+    \subitem {linearSolverB}, \hyperpage{459}
+    \subitem {lmm}, \hyperpage{458}
+    \subitem {maxsteps}, \hyperpage{458}
+    \subitem {nonLinearSolver}, \hyperpage{459}
+    \subitem {nonLinearSolverB}, \hyperpage{459}
+    \subitem {nonLinearSolverSens}, \hyperpage{459}
+    \subitem {nplist}, \hyperpage{427}
+    \subitem {nquad}, \hyperpage{428}
+    \subitem {nx}, \hyperpage{426}
+    \subitem {qbinit}, \hyperpage{439}
+    \subitem {quadInit}, \hyperpage{448}
+    \subitem {quadReInitB}, \hyperpage{425}
+    \subitem {quadSStolerances}, \hyperpage{449}
+    \subitem {quadSStolerancesB}, \hyperpage{449}
+    \subitem {reInit}, \hyperpage{424}
+    \subitem {reInitB}, \hyperpage{424}
+    \subitem {reInitPostProcessB}, \hyperpage{436}
+    \subitem {reInitPostProcessF}, \hyperpage{436}
+    \subitem {resetMutableMemory}, \hyperpage{454}
+    \subitem {rootInit}, \hyperpage{439}
+    \subitem {run}, \hyperpage{393}
+    \subitem {runB}, \hyperpage{394}
+    \subitem {sdx}, \hyperpage{460}
+    \subitem {sensInit1}, \hyperpage{438}
+    \subitem {sensReInit}, \hyperpage{424}
+    \subitem {setAbsoluteTolerance}, \hyperpage{404}
+    \subitem {setAbsoluteToleranceB}, \hyperpage{406}
+    \subitem {setAbsoluteToleranceFSA}, \hyperpage{405}
+    \subitem {setAbsoluteToleranceQuadratures}, \hyperpage{407}
+    \subitem {setAbsoluteToleranceSteadyState}, \hyperpage{409}
+    \subitem {setAbsoluteToleranceSteadyStateSensi}, \hyperpage{410}
+    \subitem {setBandJacFnB}, \hyperpage{440}
+    \subitem {setDenseJacFnB}, \hyperpage{440}
+    \subitem {setErrHandlerFn}, \hyperpage{442}
+    \subitem {setId}, \hyperpage{445}
+    \subitem {setInitDoneB}, \hyperpage{457}
+    \subitem {setInternalSensitivityMethod}, \hyperpage{416}
+    \subitem {setInterpolationType}, \hyperpage{414}
+    \subitem {setJacTimesVecFnB}, \hyperpage{441}
+    \subitem {setLinearMultistepMethod}, \hyperpage{411}
+    \subitem {setLinearSolver}, \hyperpage{415}
+    \subitem {setLinearSolverB}, \hyperpage{450}
+    \subitem {setMaxNumSteps}, \hyperpage{443}
+    \subitem {setMaxNumStepsB}, \hyperpage{443}
+    \subitem {setMaxSteps}, \hyperpage{410}
+    \subitem {setMaxStepsBackwardProblem}, \hyperpage{411}
+    \subitem {setNewtonDampingFactorLowerBound}, \hyperpage{402}
+    \subitem {setNewtonDampingFactorMode}, \hyperpage{401}
+    \subitem {setNewtonMaxLinearSteps}, \hyperpage{401}
+    \subitem {setNewtonMaxSteps}, \hyperpage{400}
+    \subitem {setNonLinearSolverB}, \hyperpage{451}
+    \subitem {setNonlinearSolverIteration}, \hyperpage{413}
+    \subitem {setPreequilibration}, \hyperpage{401}
+    \subitem {setQuadErrCon}, \hyperpage{442}
+    \subitem {setQuadErrConB}, \hyperpage{442}
+    \subitem {setQuadInitDoneB}, \hyperpage{457}
+    \subitem {setRelativeTolerance}, \hyperpage{403}
+    \subitem {setRelativeToleranceB}, \hyperpage{405}
+    \subitem {setRelativeToleranceFSA}, \hyperpage{404}
+    \subitem {setRelativeToleranceQuadratures}, \hyperpage{407}
+    \subitem {setRelativeToleranceSteadyState}, \hyperpage{408}
+    \subitem {setRelativeToleranceSteadyStateSensi}, \hyperpage{409}
+    \subitem {setReturnDataReportingMode}, \hyperpage{416}
+    \subitem {setSensErrCon}, \hyperpage{441}
+    \subitem {setSensitivityMethod}, \hyperpage{399}
+    \subitem {setSensitivityMethodPreequilibration}, \hyperpage{400}
+    \subitem {setSensitivityOrder}, \hyperpage{402}
+    \subitem {setSensParams}, \hyperpage{445}
+    \subitem {setSensSStolerances}, \hyperpage{441}
+    \subitem {setSparseJacFnB}, \hyperpage{440}
+    \subitem {setSStolerances}, \hyperpage{441}
+    \subitem {setSStolerancesB}, \hyperpage{448}
+    \subitem {setStabilityLimitFlag}, \hyperpage{414}
+    \subitem {setStabLimDet}, \hyperpage{444}
+    \subitem {setStabLimDetB}, \hyperpage{444}
+    \subitem {setStateOrdering}, \hyperpage{414}
+    \subitem {setStopTime}, \hyperpage{434}
+    \subitem {setSuppressAlg}, \hyperpage{445}
+    \subitem {setup}, \hyperpage{394}
+    \subitem {setupB}, \hyperpage{395}
+    \subitem {setupSteadystate}, \hyperpage{396}
+    \subitem {setUserData}, \hyperpage{442}
+    \subitem {setUserDataB}, \hyperpage{443}
+    \subitem {solve}, \hyperpage{435}
+    \subitem {solveB}, \hyperpage{398}
+    \subitem {solveF}, \hyperpage{435}
+    \subitem {Solver}, \hyperpage{392}
+    \subitem {solverMemory}, \hyperpage{458}
+    \subitem {solverMemoryB}, \hyperpage{458}
+    \subitem {solverWasCalledB}, \hyperpage{459}
+    \subitem {solverWasCalledF}, \hyperpage{459}
+    \subitem {step}, \hyperpage{393}
+    \subitem {storeDiagnosisB}, \hyperpage{430}
+    \subitem {sx}, \hyperpage{460}
+    \subitem {t}, \hyperpage{460}
+    \subitem {updateAndReinitStatesAndSensitivities}, \hyperpage{397}
+    \subitem {writeSolution}, \hyperpage{417}
+    \subitem {writeSolutionB}, \hyperpage{417}
+    \subitem {x}, \hyperpage{459}
+    \subitem {xB}, \hyperpage{460}
+    \subitem {xQ}, \hyperpage{460}
+    \subitem {xQB}, \hyperpage{460}
+  \item {solver}
+    \subitem {ForwardProblem}, \hyperpage{122}
+    \subitem {SUNLinSolWrapper}, \hyperpage{505}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{527}
+  \item {solverMemory}
+    \subitem {Solver}, \hyperpage{458}
+  \item {solverMemoryB}
+    \subitem {Solver}, \hyperpage{458}
+  \item {solverWasCalledB}
+    \subitem {Solver}, \hyperpage{459}
+  \item {solverWasCalledF}
+    \subitem {Solver}, \hyperpage{459}
+  \item {space}
+    \subitem {SUNLinSolWrapper}, \hyperpage{505}
+  \item {sparse\_multiply}
+    \subitem {SUNMatrixWrapper}, \hyperpage{518}
+  \item {sparseidx}
+    \subitem {amimodel}, \hyperpage{555}
+  \item {sparseidxB}
+    \subitem {amimodel}, \hyperpage{556}
+  \item {sparsetype}
+    \subitem {SUNMatrixWrapper}, \hyperpage{514}
+  \item {spline}
+    \subitem {spline.cpp}, \hyperpage{593}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{601}
+  \item {spline.cpp}, \hyperpage{593}
+    \subitem {seval}, \hyperpage{595}
+    \subitem {sinteg}, \hyperpage{596}
+    \subitem {spline}, \hyperpage{593}
+  \item {spline\_pos}
+    \subitem {symbolic\_functions.cpp}, \hyperpage{601}
+  \item {splineflag}
+    \subitem {amimodel}, \hyperpage{558}
+  \item {sres}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {srz}
+    \subitem {ReturnData}, \hyperpage{374}
+  \item {ss}
+    \subitem {amioption}, \hyperpage{564}
+  \item {ss\_atol}
+    \subitem {amioption}, \hyperpage{562}
+  \item {ss\_rtol}
+    \subitem {amioption}, \hyperpage{562}
+  \item {ssigmay}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {ssigmaz}
+    \subitem {ReturnData}, \hyperpage{374}
+  \item {state}
+    \subitem {Model}, \hyperpage{255}
+    \subitem {SimulationState}, \hyperpage{383}
+  \item {stateIsNonNegative}
+    \subitem {Model}, \hyperpage{259}
+  \item {StateOrdering}
+    \subitem {SUNLinSolKLU}, \hyperpage{485}
+  \item {status}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {SteadystateProblem}, \hyperpage{460}
+    \subitem {applyNewtonsMethod}, \hyperpage{471}
+    \subitem {checkConvergence}, \hyperpage{470}
+    \subitem {checkSteadyStateSuccess}, \hyperpage{481}
+    \subitem {computeQBfromQ}, \hyperpage{474}
+    \subitem {computeSteadyStateQuadrature}, \hyperpage{465}
+    \subitem {createSteadystateSimSolver}, \hyperpage{472}
+    \subitem {findSteadyState}, \hyperpage{464}
+    \subitem {findSteadyStateByNewtonsMethod}, \hyperpage{464}
+    \subitem {findSteadyStateBySimulation}, \hyperpage{465}
+    \subitem {getAdjointQuadrature}, \hyperpage{480}
+    \subitem {getAdjointUpdates}, \hyperpage{479}
+    \subitem {getCPUTime}, \hyperpage{478}
+    \subitem {getCPUTimeB}, \hyperpage{478}
+    \subitem {getDJydx}, \hyperpage{477}
+    \subitem {getEquilibrationQuadratures}, \hyperpage{476}
+    \subitem {getFinalSimulationState}, \hyperpage{476}
+    \subitem {getNumLinSteps}, \hyperpage{479}
+    \subitem {getNumSteps}, \hyperpage{479}
+    \subitem {getNumStepsB}, \hyperpage{479}
+    \subitem {getQuadratureByLinSolve}, \hyperpage{466}
+    \subitem {getQuadratureBySimulation}, \hyperpage{467}
+    \subitem {getResidualNorm}, \hyperpage{479}
+    \subitem {getSensitivityFlag}, \hyperpage{469}
+    \subitem {getState}, \hyperpage{476}
+    \subitem {getStateSensitivity}, \hyperpage{477}
+    \subitem {getSteadyStateStatus}, \hyperpage{478}
+    \subitem {getSteadyStateTime}, \hyperpage{478}
+    \subitem {getWrmsNorm}, \hyperpage{469}
+    \subitem {handleSteadyStateFailure}, \hyperpage{468}
+    \subitem {hasQuadrature}, \hyperpage{480}
+    \subitem {initializeBackwardProblem}, \hyperpage{473}
+    \subitem {runSteadystateSimulation}, \hyperpage{472}
+    \subitem {SteadystateProblem}, \hyperpage{462}
+    \subitem {storeSimulationState}, \hyperpage{475}
+    \subitem {workSteadyStateBackwardProblem}, \hyperpage{463}
+    \subitem {workSteadyStateProblem}, \hyperpage{463}
+    \subitem {writeErrorString}, \hyperpage{468}
+  \item {steadyStateSensitivityMode}
+    \subitem {amioption}, \hyperpage{565}
+    \subitem {Model}, \hyperpage{260}
+  \item {step}
+    \subitem {Solver}, \hyperpage{393}
+  \item {stldet}
+    \subitem {amioption}, \hyperpage{563}
+  \item {storeBacktrace}
+    \subitem {AmiException}, \hyperpage{68}
+  \item {storeDiagnosisB}
+    \subitem {Solver}, \hyperpage{430}
+  \item {storeJacobianAndDerivativeInReturnData}
+    \subitem {ReturnData}, \hyperpage{362}
+  \item {storeSimulationState}
+    \subitem {SteadystateProblem}, \hyperpage{475}
+  \item {stotal\_cl}
+    \subitem {ModelState}, \hyperpage{332}
+  \item {strsym}
+    \subitem {amifun}, \hyperpage{538}
+  \item {strsym\_old}
+    \subitem {amifun}, \hyperpage{538}
+  \item {SUNLinSolBand}, \hyperpage{481}
+    \subitem {getMatrix}, \hyperpage{482}
+    \subitem {SUNLinSolBand}, \hyperpage{481, 482}
+  \item {SUNLinSolDense}, \hyperpage{482}
+    \subitem {getMatrix}, \hyperpage{484}
+    \subitem {SUNLinSolDense}, \hyperpage{483}
+  \item {SUNLinSolKLU}, \hyperpage{484}
+    \subitem {getMatrix}, \hyperpage{486}
+    \subitem {reInit}, \hyperpage{486}
+    \subitem {setOrdering}, \hyperpage{487}
+    \subitem {StateOrdering}, \hyperpage{485}
+    \subitem {SUNLinSolKLU}, \hyperpage{485}
+  \item {SUNLinSolPCG}, \hyperpage{487}
+    \subitem {getNumIters}, \hyperpage{489}
+    \subitem {getResid}, \hyperpage{489}
+    \subitem {getResNorm}, \hyperpage{489}
+    \subitem {setATimes}, \hyperpage{488}
+    \subitem {setPreconditioner}, \hyperpage{488}
+    \subitem {setScalingVectors}, \hyperpage{489}
+    \subitem {SUNLinSolPCG}, \hyperpage{488}
+  \item {SUNLinSolSPBCGS}, \hyperpage{490}
+    \subitem {getNumIters}, \hyperpage{492}
+    \subitem {getResid}, \hyperpage{492}
+    \subitem {getResNorm}, \hyperpage{492}
+    \subitem {setATimes}, \hyperpage{491}
+    \subitem {setPreconditioner}, \hyperpage{491}
+    \subitem {setScalingVectors}, \hyperpage{492}
+    \subitem {SUNLinSolSPBCGS}, \hyperpage{490, 491}
+  \item {SUNLinSolSPFGMR}, \hyperpage{492}
+    \subitem {getNumIters}, \hyperpage{494}
+    \subitem {getResid}, \hyperpage{495}
+    \subitem {getResNorm}, \hyperpage{495}
+    \subitem {setATimes}, \hyperpage{494}
+    \subitem {setPreconditioner}, \hyperpage{494}
+    \subitem {setScalingVectors}, \hyperpage{494}
+    \subitem {SUNLinSolSPFGMR}, \hyperpage{493}
+  \item {SUNLinSolSPGMR}, \hyperpage{495}
+    \subitem {getNumIters}, \hyperpage{497}
+    \subitem {getResid}, \hyperpage{497}
+    \subitem {getResNorm}, \hyperpage{497}
+    \subitem {setATimes}, \hyperpage{496}
+    \subitem {setPreconditioner}, \hyperpage{496}
+    \subitem {setScalingVectors}, \hyperpage{497}
+    \subitem {SUNLinSolSPGMR}, \hyperpage{496}
+  \item {SUNLinSolSPTFQMR}, \hyperpage{497}
+    \subitem {getNumIters}, \hyperpage{500}
+    \subitem {getResid}, \hyperpage{500}
+    \subitem {getResNorm}, \hyperpage{500}
+    \subitem {setATimes}, \hyperpage{499}
+    \subitem {setPreconditioner}, \hyperpage{499}
+    \subitem {setScalingVectors}, \hyperpage{500}
+    \subitem {SUNLinSolSPTFQMR}, \hyperpage{498, 499}
+  \item {SUNLinSolWrapper}, \hyperpage{500}
+    \subitem {get}, \hyperpage{503}
+    \subitem {getLastFlag}, \hyperpage{505}
+    \subitem {getMatrix}, \hyperpage{505}
+    \subitem {getType}, \hyperpage{503}
+    \subitem {initialize}, \hyperpage{505}
+    \subitem {operator=}, \hyperpage{502, 503}
+    \subitem {setup}, \hyperpage{503, 504}
+    \subitem {Solve}, \hyperpage{504}
+    \subitem {solver}, \hyperpage{505}
+    \subitem {space}, \hyperpage{505}
+    \subitem {SUNLinSolWrapper}, \hyperpage{502}
+  \item {SUNMatrixWrapper}, \hyperpage{505}
+    \subitem {columns}, \hyperpage{512}
+    \subitem {data}, \hyperpage{509}
+    \subitem {get}, \hyperpage{510}
+    \subitem {indexptrs}, \hyperpage{513}
+    \subitem {indexvals}, \hyperpage{512}
+    \subitem {multiply}, \hyperpage{515--517}
+    \subitem {nonzeros}, \hyperpage{512}
+    \subitem {operator=}, \hyperpage{509}
+    \subitem {rows}, \hyperpage{511}
+    \subitem {scale}, \hyperpage{515}
+    \subitem {sparse\_multiply}, \hyperpage{518}
+    \subitem {sparsetype}, \hyperpage{514}
+    \subitem {SUNMatrixWrapper}, \hyperpage{507, 508}
+  \item {SUNNonLinSolFixedPoint}, \hyperpage{519}
+    \subitem {getSysFn}, \hyperpage{520}
+    \subitem {SUNNonLinSolFixedPoint}, \hyperpage{519, 520}
+  \item {SUNNonLinSolNewton}, \hyperpage{520}
+    \subitem {getSysFn}, \hyperpage{522}
+    \subitem {SUNNonLinSolNewton}, \hyperpage{521}
+  \item {SUNNonLinSolWrapper}, \hyperpage{522}
+    \subitem {get}, \hyperpage{524}
+    \subitem {getCurIter}, \hyperpage{527}
+    \subitem {getNumConvFails}, \hyperpage{527}
+    \subitem {getNumIters}, \hyperpage{527}
+    \subitem {getType}, \hyperpage{524}
+    \subitem {operator=}, \hyperpage{524}
+    \subitem {setConvTestFn}, \hyperpage{526}
+    \subitem {setLSetupFn}, \hyperpage{526}
+    \subitem {setLSolveFn}, \hyperpage{526}
+    \subitem {setMaxIters}, \hyperpage{526}
+    \subitem {setSysFn}, \hyperpage{525}
+    \subitem {setup}, \hyperpage{525}
+    \subitem {Solve}, \hyperpage{525}
+    \subitem {solver}, \hyperpage{527}
+    \subitem {SUNNonLinSolWrapper}, \hyperpage{523, 524}
+  \item {sx}
+    \subitem {Model}, \hyperpage{258}
+    \subitem {ReturnData}, \hyperpage{374}
+    \subitem {SimulationState}, \hyperpage{383}
+    \subitem {Solver}, \hyperpage{460}
+  \item {sx0}
+    \subitem {amioption}, \hyperpage{564}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {sx0data}
+    \subitem {Model}, \hyperpage{259}
+  \item {sx\_rdata}
+    \subitem {Model}, \hyperpage{258}
+    \subitem {ReturnData}, \hyperpage{381}
+  \item {sx\_solver}
+    \subitem {ReturnData}, \hyperpage{381}
+  \item {sx\_ss}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {sy}
+    \subitem {ReturnData}, \hyperpage{375}
+  \item {sym}
+    \subitem {amifun}, \hyperpage{538}
+    \subitem {amimodel}, \hyperpage{551}
+  \item {sym\_noopt}
+    \subitem {amifun}, \hyperpage{538}
+  \item {symbolic\_functions.cpp}, \hyperpage{596}
+    \subitem {DDspline}, \hyperpage{602}
+    \subitem {DDspline\_pos}, \hyperpage{603}
+    \subitem {dirac}, \hyperpage{598}
+    \subitem {Dmax}, \hyperpage{600}
+    \subitem {Dmin}, \hyperpage{600}
+    \subitem {Dspline}, \hyperpage{601}
+    \subitem {Dspline\_pos}, \hyperpage{602}
+    \subitem {getNaN}, \hyperpage{598}
+    \subitem {heaviside}, \hyperpage{599}
+    \subitem {isInf}, \hyperpage{598}
+    \subitem {isNaN}, \hyperpage{597}
+    \subitem {log}, \hyperpage{598}
+    \subitem {max}, \hyperpage{599}
+    \subitem {min}, \hyperpage{599}
+    \subitem {pos\_pow}, \hyperpage{600}
+    \subitem {sign}, \hyperpage{599}
+    \subitem {spline}, \hyperpage{601}
+    \subitem {spline\_pos}, \hyperpage{601}
+  \item {sz}
+    \subitem {ReturnData}, \hyperpage{374}
+
+  \indexspace
+
+  \item {t}
+    \subitem {amidata}, \hyperpage{529}
+    \subitem {NewtonSolver}, \hyperpage{340}
+    \subitem {ReturnData}, \hyperpage{381}
+    \subitem {SimulationState}, \hyperpage{383}
+    \subitem {Solver}, \hyperpage{460}
+  \item {t0}
+    \subitem {amimodel}, \hyperpage{552}
+    \subitem {Model}, \hyperpage{167}
+  \item {time}
+    \subitem {IntegrationFailure}, \hyperpage{125}
+    \subitem {IntegrationFailureB}, \hyperpage{126}
+  \item {total\_cl}
+    \subitem {ModelState}, \hyperpage{332}
+  \item {trigger}
+    \subitem {amievent}, \hyperpage{532}
+  \item {ts}
+    \subitem {Model}, \hyperpage{259}
+    \subitem {ReturnData}, \hyperpage{373}
+  \item {tstart}
+    \subitem {amioption}, \hyperpage{562}
+    \subitem {Model}, \hyperpage{260}
+
+  \indexspace
+
+  \item {ubw}
+    \subitem {amimodel}, \hyperpage{555}
+    \subitem {Model}, \hyperpage{254}
+  \item {unscaledParameters}
+    \subitem {ModelState}, \hyperpage{332}
+  \item {updateAndReinitStatesAndSensitivities}
+    \subitem {Solver}, \hyperpage{397}
+  \item {updateHeaviside}
+    \subitem {Model}, \hyperpage{200}
+  \item {updateHeavisideB}
+    \subitem {Model}, \hyperpage{200}
+  \item {updateModelName}
+    \subitem {amimodel}, \hyperpage{543}
+  \item {updateRHS}
+    \subitem {amimodel}, \hyperpage{543}
+  \item {updateWrapPath}
+    \subitem {amimodel}, \hyperpage{544}
+
+  \indexspace
+
+  \item {varidx}
+    \subitem {amised}, \hyperpage{567}
+  \item {varsym}
+    \subitem {amised}, \hyperpage{567}
+
+  \indexspace
+
+  \item {w}
+    \subitem {Model}, \hyperpage{257}
+    \subitem {ReturnData}, \hyperpage{374}
+  \item {warning}
+    \subitem {AmiciApplication}, \hyperpage{66}
+  \item {warningF}
+    \subitem {AmiciApplication}, \hyperpage{63}
+  \item {what}
+    \subitem {AmiException}, \hyperpage{68}
+  \item {workBackwardProblem}
+    \subitem {BackwardProblem}, \hyperpage{86}
+  \item {workForwardProblem}
+    \subitem {ForwardProblem}, \hyperpage{116}
+  \item {workSteadyStateBackwardProblem}
+    \subitem {SteadystateProblem}, \hyperpage{463}
+  \item {workSteadyStateProblem}
+    \subitem {SteadystateProblem}, \hyperpage{463}
+  \item {wrap\_path}
+    \subitem {amimodel}, \hyperpage{557}
+  \item {writeCcode}
+    \subitem {amifun}, \hyperpage{535}
+  \item {writeCcode\_sensi}
+    \subitem {amifun}, \hyperpage{534}
+  \item {writeErrorString}
+    \subitem {SteadystateProblem}, \hyperpage{468}
+  \item {writeLLHSensitivitySlice}
+    \subitem {Model}, \hyperpage{208}
+  \item {writeMcode}
+    \subitem {amifun}, \hyperpage{535}
+  \item {writeSensitivitySliceEvent}
+    \subitem {Model}, \hyperpage{207}
+  \item {writeSliceEvent}
+    \subitem {Model}, \hyperpage{207}
+  \item {writeSolution}
+    \subitem {Solver}, \hyperpage{417}
+  \item {writeSolutionB}
+    \subitem {Solver}, \hyperpage{417}
+  \item {writeSteadystateJB}
+    \subitem {AbstractModel}, \hyperpage{36}
+    \subitem {Model\_DAE}, \hyperpage{281}
+    \subitem {Model\_ODE}, \hyperpage{314}
+  \item {wtype}
+    \subitem {amimodel}, \hyperpage{552}
+
+  \indexspace
+
+  \item {x}
+    \subitem {NewtonSolver}, \hyperpage{341}
+    \subitem {ReturnData}, \hyperpage{374}
+    \subitem {SimulationState}, \hyperpage{383}
+    \subitem {Solver}, \hyperpage{459}
+  \item {x0}
+    \subitem {amioption}, \hyperpage{564}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {x0data}
+    \subitem {Model}, \hyperpage{259}
+  \item {x\_pos\_tmp}
+    \subitem {Model}, \hyperpage{259}
+  \item {x\_rdata}
+    \subitem {Model}, \hyperpage{258}
+    \subitem {ReturnData}, \hyperpage{381}
+  \item {x\_solver}
+    \subitem {ReturnData}, \hyperpage{381}
+  \item {x\_ss}
+    \subitem {ReturnData}, \hyperpage{378}
+  \item {xB}
+    \subitem {NewtonSolver}, \hyperpage{341}
+    \subitem {Solver}, \hyperpage{460}
+  \item {xdot}
+    \subitem {NewtonSolver}, \hyperpage{340}
+    \subitem {ReturnData}, \hyperpage{373}
+  \item {xQ}
+    \subitem {Solver}, \hyperpage{460}
+  \item {xQB}
+    \subitem {Solver}, \hyperpage{460}
+
+  \indexspace
+
+  \item {Y}
+    \subitem {amidata}, \hyperpage{530}
+  \item {y}
+    \subitem {Model}, \hyperpage{258}
+    \subitem {ReturnData}, \hyperpage{375}
+
+  \indexspace
+
+  \item {Z}
+    \subitem {amidata}, \hyperpage{530}
+  \item {z}
+    \subitem {amievent}, \hyperpage{532}
+    \subitem {Model}, \hyperpage{258}
+    \subitem {ReturnData}, \hyperpage{374}
+  \item {z2event}
+    \subitem {amimodel}, \hyperpage{558}
+    \subitem {amioption}, \hyperpage{564}
+    \subitem {Model}, \hyperpage{259}
+
+\end{theindex}

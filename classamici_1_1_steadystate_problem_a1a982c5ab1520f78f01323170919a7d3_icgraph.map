@@ -1,0 +1,6 @@
+<map id="getFinalSimulationState" name="getFinalSimulationState">
+<area shape="rect" id="node1" title="Returns the stored SimulationState." alt="" coords="443,46,603,73"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="228,5,395,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="232,71,391,112"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,39,180,80"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="setInitialStates" name="setInitialStates">
+<area shape="rect" id="node1" title="Set the initial states." alt="" coords="427,46,536,73"/>
+<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#a3a5bfdd2d265a4fcdc73129097a09ae1" title="Apply condition&#45;specific settings from edata to the constructor&#45;supplied model, not changing the sett..." alt="" coords="216,5,379,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_condition_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original settings on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="216,71,379,112"/>
+<area shape="rect" id="node3" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="5,5,168,47"/>
+</map>

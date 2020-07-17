@@ -1,0 +1,9 @@
+<map id="fdJzdz" name="fdJzdz">
+<area shape="rect" id="node1" title="Partial derivative of event measurement negative log&#45;likelihood Jz." alt="" coords="544,71,605,98"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="435,46,496,73"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#aa4c825912365c05bf472568ef1adb929" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. state variables." alt="" coords="435,97,496,123"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#ad39fc588eb292abfbe6d820f8cf179e1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="193,71,387,98"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#aac922fea8ccc5edc05c9647c437e158f" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, partial derivative (to be used w..." alt="" coords="205,5,375,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,64,145,105"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a6ad52765b87568f131a18db39939105b" title="State sensitivity of the negative loglikelihood Jz, partial derivative (to be used with adjoint senst..." alt="" coords="197,122,383,149"/>
+</map>

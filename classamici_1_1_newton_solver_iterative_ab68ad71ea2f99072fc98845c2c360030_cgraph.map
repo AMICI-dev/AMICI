@@ -1,0 +1,8 @@
+<map id="linsolveSPBCG" name="linsolveSPBCG">
+<area shape="rect" id="node1" title=" " alt="" coords="5,85,119,112"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="167,5,361,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a19ad39a609bfc430ed6f7992e841b024" title="changes the sign of data elements" alt="" coords="182,56,346,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_s_u_n_matrix_wrapper.html#af2c987388fcb260819e5279e0ab3d556" title="N_Vector interface for multiply." alt="" coords="177,107,351,149"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="185,173,343,200"/>
+<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="409,173,556,200"/>
+</map>

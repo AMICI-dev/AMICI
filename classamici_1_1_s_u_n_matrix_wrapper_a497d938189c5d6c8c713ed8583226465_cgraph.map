@@ -1,0 +1,4 @@
+<map id="scale" name="scale">
+<area shape="rect" id="node1" title="multiply with a scalar (in&#45;place)" alt="" coords="5,5,59,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a647d7f21efc1f284942e48a3715c145f" title="Get the number of non&#45;zero elements (sparse matrices only)" alt="" coords="107,5,181,32"/>
+</map>

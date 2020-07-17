@@ -1,0 +1,4 @@
+<map id="runAmiciSimulation" name="runAmiciSimulation">
+<area shape="rect" id="node1" title="Core integration routine. Initializes the solver and runs the forward and backward problem." alt="" coords="195,5,329,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a8f9dcb693a4bba91fe1b4fdd47e96ed9" title="Same as runAmiciSimulation, but for multiple ExpData instances." alt="" coords="5,5,147,32"/>
+</map>

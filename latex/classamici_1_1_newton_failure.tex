@@ -1,0 +1,71 @@
+\hypertarget{classamici_1_1_newton_failure}{}\doxysubsection{Newton\+Failure Class Reference}
+\label{classamici_1_1_newton_failure}\index{NewtonFailure@{NewtonFailure}}
+
+
+Newton failure exception.  
+
+
+
+
+{\ttfamily \#include $<$exception.\+h$>$}
+
+
+
+Inheritance diagram for Newton\+Failure\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=160pt]{classamici_1_1_newton_failure__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_newton_failure_abb7a5bc514c646f2411344f71c2f7e6f}{Newton\+Failure}} (int code, const char $\ast$function)
+\begin{DoxyCompactList}\small\item\em Constructor, simply calls \mbox{\hyperlink{classamici_1_1_ami_exception}{Ami\+Exception}} constructor. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{classamici_1_1_newton_failure_a7d16b1c68c87cec009d972e79abfba78}{error\+\_\+code}}
+\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+This exception should be thrown when the steady state computation failed to converge for this exception we can assume that we can recover from the exception and return a solution struct to the user 
+
+Definition at line 155 of file exception.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_newton_failure_abb7a5bc514c646f2411344f71c2f7e6f}\label{classamici_1_1_newton_failure_abb7a5bc514c646f2411344f71c2f7e6f}} 
+\index{NewtonFailure@{NewtonFailure}!NewtonFailure@{NewtonFailure}}
+\index{NewtonFailure@{NewtonFailure}!NewtonFailure@{NewtonFailure}}
+\doxyparagraph{\texorpdfstring{NewtonFailure()}{NewtonFailure()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_newton_failure}{Newton\+Failure}} (\begin{DoxyParamCaption}\item[{int}]{code,  }\item[{const char $\ast$}]{function }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em function} & name of the function in which the error occured \\
+\hline
+{\em code} & error code \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 46 of file exception.\+cpp.
+
+
+
+\doxysubsubsection{Member Data Documentation}
+\mbox{\Hypertarget{classamici_1_1_newton_failure_a7d16b1c68c87cec009d972e79abfba78}\label{classamici_1_1_newton_failure_a7d16b1c68c87cec009d972e79abfba78}} 
+\index{NewtonFailure@{NewtonFailure}!error\_code@{error\_code}}
+\index{error\_code@{error\_code}!NewtonFailure@{NewtonFailure}}
+\doxyparagraph{\texorpdfstring{error\_code}{error\_code}}
+{\footnotesize\ttfamily int error\+\_\+code}
+
+error code returned by solver 
+
+Definition at line 165 of file exception.\+h.
+

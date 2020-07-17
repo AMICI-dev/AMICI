@@ -1,0 +1,5 @@
+<map id="getAdjointStateObservableUpdate" name="getAdjointStateObservableUpdate">
+<area shape="rect" id="node1" title="State sensitivity of the negative loglikelihood Jy, partial derivative (to be used with adjoint senst..." alt="" coords="232,39,409,80"/>
+<area shape="rect" id="node2" href="$classamici_1_1_forward_problem.html#a8dbb2ec401605a1ecac13a9313659404" title="computes adjoint updates dJydx according to provided model and expdata" alt="" coords="17,5,173,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#a8dbb2ec401605a1ecac13a9313659404" title="computes adjoint updates dJydx according to provided model and expdata" alt="" coords="5,71,184,112"/>
+</map>

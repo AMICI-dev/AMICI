@@ -1,0 +1,6 @@
+<map id="getFixedParameterById" name="getFixedParameterById">
+<area shape="rect" id="node1" title="Get value of fixed parameter with the specified Id." alt="" coords="5,31,164,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa9278a175bc86b5b020df35dd2581734" title="Get ids of the fixed model parameters." alt="" coords="413,5,564,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#af50d86316e6930bc98e82afc3893e2ff" title="Reports whether the model has fixed parameter ids set. Also returns true if the number of correspondi..." alt="" coords="212,56,365,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="469,56,508,83"/>
+</map>

@@ -1,0 +1,21 @@
+<map id="multiply" name="multiply">
+<area shape="rect" id="node1" title="N_Vector interface for multiply." alt="" coords="755,382,821,409"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#a8e3a8eeeb0b157da84fe7dac1e0d209b" title="Compute the backward quadratures, which contribute to the gradient (xQB) from the quadrature over the..." alt="" coords="518,37,697,79"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model___d_a_e.html#a7a3565abc7cb0372df38aec43e764275" title="Matrix vector product of J with a vector v (for iterative solvers)" alt="" coords="529,103,686,130"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model___o_d_e.html#a01252ccb85bec7adbc88d12fce4fde05" title="Implementation of fJv at the N_Vector level." alt="" coords="528,154,687,181"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model___o_d_e.html#af9c1f29040dc3c6c8bca0703676843be" title="Implementation of fJvB at the N_Vector level." alt="" coords="524,205,691,231"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model___d_a_e.html#a837e1b2b4f0e13b64180040a9cb8e6b2" title="Matrix vector product of JB with a vector v (for iterative solvers)" alt="" coords="524,255,691,282"/>
+<area shape="rect" id="node10" href="$classamici_1_1_model___o_d_e.html#a9d0e4612af8d7b3c418d000b5e9ba84f" title="Implementation of fqBdot at the N_Vector level." alt="" coords="518,306,697,333"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model___o_d_e.html#a786f028681b0928eb431cd44e9bd254a" title="Implementation of fsxdot at the N_Vector level." alt="" coords="519,357,695,383"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model___d_a_e.html#a26e76f86f173a718466c9cc19d68550a" title="Right hand side of differential equation for state sensitivities sx." alt="" coords="520,407,695,434"/>
+<area shape="rect" id="node13" href="$classamici_1_1_model___o_d_e.html#a433a0e1e4330ef433823a61f1fc45a5a" title="Implementation of fxBdot at the N_Vector level." alt="" coords="518,458,697,485"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model___d_a_e.html#acc0b085abdde1955773d61f3e3bac21b" title="Right hand side of differential equation for adjoint state xB." alt="" coords="519,509,696,535"/>
+<area shape="rect" id="node15" href="$classamici_1_1_model___o_d_e.html#abf3b921eb5bf1ff596d02ef5477c4087" title="Implementation of fxBdot for steady state at the N_Vector level." alt="" coords="508,559,707,586"/>
+<area shape="rect" id="node16" href="$classamici_1_1_model___d_a_e.html#a708370f133e8408b10c4b1e4e2350ed2" title="Implementation of fxBdot for steady state case at the N_Vector level." alt="" coords="508,610,707,637"/>
+<area shape="rect" id="node17" href="$classamici_1_1_newton_solver_iterative.html#ab68ad71ea2f99072fc98845c2c360030" title=" " alt="" coords="512,661,703,703"/>
+<area shape="rect" id="node19" href="$classamici_1_1_s_u_n_matrix_wrapper.html#aab1c4ef6afa45bc7c624078daba2ed00" title="Perform reordered matrix vector multiplication c += A[:,cols]*b." alt="" coords="574,727,641,754"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#acace0e4d1a8cd079bf189718db73208a" title="Checks convergence for state and respective sensitivities." alt="" coords="275,5,454,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#ab0b999d56e310b3326d8bcbaa095e86f" title="Computes the quadrature in steady state backward mode by solving the linear system defined by the bac..." alt="" coords="275,71,454,112"/>
+<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="5,71,221,112"/>
+<area shape="rect" id="node18" href="$classamici_1_1_newton_solver_iterative.html#ab46a7b328bc1be64b6b9e4ee8213626a" title="Solves the linear system for the Newton step by passing it to linsolveSPBCG." alt="" coords="269,661,460,703"/>
+</map>

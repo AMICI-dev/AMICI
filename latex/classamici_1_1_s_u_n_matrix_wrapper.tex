@@ -1,0 +1,592 @@
+\hypertarget{classamici_1_1_s_u_n_matrix_wrapper}{}\doxysubsection{S\+U\+N\+Matrix\+Wrapper Class Reference}
+\label{classamici_1_1_s_u_n_matrix_wrapper}\index{SUNMatrixWrapper@{SUNMatrixWrapper}}
+
+
+A R\+A\+II wrapper for S\+U\+N\+Matrix structs.  
+
+
+
+
+{\ttfamily \#include $<$sundials\+\_\+matrix\+\_\+wrapper.\+h$>$}
+
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_ae32499212e960dc318e88574b8d4ff61}{S\+U\+N\+Matrix\+Wrapper}} (int M, int N, int N\+NZ, int \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a8c068e95d10764ed6d4794fe141e9d12}{sparsetype}})
+\begin{DoxyCompactList}\small\item\em Create sparse matrix. See S\+U\+N\+Sparse\+Matrix in sunmatrix\+\_\+sparse.\+h. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_ababade549fa2e4f1a7df84d6407e902f}{S\+U\+N\+Matrix\+Wrapper}} (int M, int N)
+\begin{DoxyCompactList}\small\item\em Create dense matrix. See S\+U\+N\+Dense\+Matrix in sunmatrix\+\_\+dense.\+h. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a33b18b5579ebcad952511c4ad8c9c157}{S\+U\+N\+Matrix\+Wrapper}} (int M, int ubw, int lbw)
+\begin{DoxyCompactList}\small\item\em Create banded matrix. See S\+U\+N\+Band\+Matrix in sunmatrix\+\_\+band.\+h. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a3e35eb95abcc114bae9ce31629710e6f}{S\+U\+N\+Matrix\+Wrapper}} (const \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&A, realtype droptol, int \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a8c068e95d10764ed6d4794fe141e9d12}{sparsetype}})
+\begin{DoxyCompactList}\small\item\em Create sparse matrix from dense or banded matrix. See S\+U\+N\+Sparse\+From\+Dense\+Matrix and S\+U\+N\+Sparse\+From\+Band\+Matrix in sunmatrix\+\_\+sparse.\+h. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a1ddb2c1e9fbdc457153beb1df34fcdef}{S\+U\+N\+Matrix\+Wrapper}} (S\+U\+N\+Matrix mat)
+\begin{DoxyCompactList}\small\item\em Wrap existing S\+U\+N\+Matrix. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a1986b0a3dbd0d32cfa623bbd3a3c8d79}{S\+U\+N\+Matrix\+Wrapper}} (const \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&other)
+\begin{DoxyCompactList}\small\item\em Copy constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a401c2cfe970e650eff8a4d062f1373a6}{S\+U\+N\+Matrix\+Wrapper}} (\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&\&other)
+\begin{DoxyCompactList}\small\item\em Move constructor. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \& \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a4108325066931a446b90673050e09532}{operator=}} (const \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&other)
+\begin{DoxyCompactList}\small\item\em Copy assignment. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \& \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a5d71c31a0b1248e7a33df302a3d684c5}{operator=}} (\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&\&other)
+\begin{DoxyCompactList}\small\item\em Move assignment. \end{DoxyCompactList}\item 
+realtype $\ast$ \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a9866d3a5b39aed664f3aa03ddb0ee6ed}{data}} () const
+\begin{DoxyCompactList}\small\item\em Access raw data. \end{DoxyCompactList}\item 
+S\+U\+N\+Matrix \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a1ca28c3e6e0513fd7f8410421eec6c7a}{get}} () const
+\begin{DoxyCompactList}\small\item\em Get the wrapped S\+U\+N\+Matrix. \end{DoxyCompactList}\item 
+sunindextype \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a6dada592a68544a40682b99e5261f4c2}{rows}} () const
+\begin{DoxyCompactList}\small\item\em Get the number of rows. \end{DoxyCompactList}\item 
+sunindextype \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a564a62656ad1a9b08920e7efcd915a16}{columns}} () const
+\begin{DoxyCompactList}\small\item\em Get the number of columns. \end{DoxyCompactList}\item 
+sunindextype \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a647d7f21efc1f284942e48a3715c145f}{nonzeros}} () const
+\begin{DoxyCompactList}\small\item\em Get the number of non-\/zero elements (sparse matrices only) \end{DoxyCompactList}\item 
+sunindextype $\ast$ \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a581defaa886b657a7406183136258394}{indexvals}} () const
+\begin{DoxyCompactList}\small\item\em Get the index values of a sparse matrix. \end{DoxyCompactList}\item 
+sunindextype $\ast$ \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a2a374dfbeb60fe99206775c456030583}{indexptrs}} () const
+\begin{DoxyCompactList}\small\item\em Get the index pointers of a sparse matrix. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a8c068e95d10764ed6d4794fe141e9d12}{sparsetype}} () const
+\begin{DoxyCompactList}\small\item\em Get the type of sparse matrix. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_ad20897c5c8bd47f5d4005989bead0e55}\label{classamici_1_1_s_u_n_matrix_wrapper_ad20897c5c8bd47f5d4005989bead0e55}} 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_ad20897c5c8bd47f5d4005989bead0e55}{reset}} ()
+\begin{DoxyCompactList}\small\item\em reset data to zeroes \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a497d938189c5d6c8c713ed8583226465}{scale}} (realtype a)
+\begin{DoxyCompactList}\small\item\em multiply with a scalar (in-\/place) \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_af2c987388fcb260819e5279e0ab3d556}{multiply}} (N\+\_\+\+Vector c, const\+\_\+\+N\+\_\+\+Vector b) const
+\begin{DoxyCompactList}\small\item\em N\+\_\+\+Vector interface for multiply. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a886b96fde5c5d4caf09286d59666a731}{multiply}} (gsl\+::span$<$ realtype $>$ c, gsl\+::span$<$ const realtype $>$ b) const
+\begin{DoxyCompactList}\small\item\em Perform matrix vector multiplication c += A$\ast$b. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_aab1c4ef6afa45bc7c624078daba2ed00}{multiply}} (N\+\_\+\+Vector c, const N\+\_\+\+Vector b, gsl\+::span$<$ const int $>$ cols, bool transpose) const
+\begin{DoxyCompactList}\small\item\em Perform reordered matrix vector multiplication c += A\mbox{[}\+:,cols\mbox{]}$\ast$b. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a11136ec9b9f1fc32464f8677e46e8355}{multiply}} (gsl\+::span$<$ realtype $>$ c, gsl\+::span$<$ const realtype $>$ b, gsl\+::span$<$ const int $>$ cols, bool transpose) const
+\begin{DoxyCompactList}\small\item\em Perform reordered matrix vector multiplication c += A\mbox{[}\+:,cols\mbox{]}$\ast$b. \end{DoxyCompactList}\item 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a991ac2bbf070c02955140ceb328d8864}{sparse\+\_\+multiply}} (\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} $\ast$C, \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} $\ast$B) const
+\begin{DoxyCompactList}\small\item\em Perform matrix matrix multiplication C\mbox{[}\+:, \+:\mbox{]} += A $\ast$ B for sparse A, B, C. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a0c4493a5d4723940d60164428f11adc3}\label{classamici_1_1_s_u_n_matrix_wrapper_a0c4493a5d4723940d60164428f11adc3}} 
+void \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper_a0c4493a5d4723940d60164428f11adc3}{zero}} ()
+\begin{DoxyCompactList}\small\item\em Set to 0.\+0. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+This can create dense, sparse, or banded matrices using the respective constructor. 
+
+Definition at line 22 of file sundials\+\_\+matrix\+\_\+wrapper.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_ae32499212e960dc318e88574b8d4ff61}\label{classamici_1_1_s_u_n_matrix_wrapper_ae32499212e960dc318e88574b8d4ff61}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{SUNMatrixWrapper()}{SUNMatrixWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [1/7]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} (\begin{DoxyParamCaption}\item[{int}]{M,  }\item[{int}]{N,  }\item[{int}]{N\+NZ,  }\item[{int}]{sparsetype }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em M} & Number of rows \\
+\hline
+{\em N} & Number of columns \\
+\hline
+{\em N\+NZ} & Number of nonzeros \\
+\hline
+{\em sparsetype} & Sparse type \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 11 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{classamici_1_1_s_u_n_matrix_wrapper_ae32499212e960dc318e88574b8d4ff61_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_ababade549fa2e4f1a7df84d6407e902f}\label{classamici_1_1_s_u_n_matrix_wrapper_ababade549fa2e4f1a7df84d6407e902f}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{SUNMatrixWrapper()}{SUNMatrixWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [2/7]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} (\begin{DoxyParamCaption}\item[{int}]{M,  }\item[{int}]{N }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em M} & Number of rows \\
+\hline
+{\em N} & Number of columns \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 24 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a33b18b5579ebcad952511c4ad8c9c157}\label{classamici_1_1_s_u_n_matrix_wrapper_a33b18b5579ebcad952511c4ad8c9c157}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{SUNMatrixWrapper()}{SUNMatrixWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [3/7]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} (\begin{DoxyParamCaption}\item[{int}]{M,  }\item[{int}]{ubw,  }\item[{int}]{lbw }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em M} & Number of rows and columns \\
+\hline
+{\em ubw} & Upper bandwidth \\
+\hline
+{\em lbw} & Lower bandwidth \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 32 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a3e35eb95abcc114bae9ce31629710e6f}\label{classamici_1_1_s_u_n_matrix_wrapper_a3e35eb95abcc114bae9ce31629710e6f}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{SUNMatrixWrapper()}{SUNMatrixWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [4/7]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&}]{A,  }\item[{realtype}]{droptol,  }\item[{int}]{sparsetype }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em A} & Wrapper for dense matrix \\
+\hline
+{\em droptol} & tolerance for dropping entries \\
+\hline
+{\em sparsetype} & Sparse type \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 40 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=282pt]{classamici_1_1_s_u_n_matrix_wrapper_a3e35eb95abcc114bae9ce31629710e6f_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a1ddb2c1e9fbdc457153beb1df34fcdef}\label{classamici_1_1_s_u_n_matrix_wrapper_a1ddb2c1e9fbdc457153beb1df34fcdef}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{SUNMatrixWrapper()}{SUNMatrixWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [5/7]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} (\begin{DoxyParamCaption}\item[{S\+U\+N\+Matrix}]{mat }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em mat} & \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 64 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a1986b0a3dbd0d32cfa623bbd3a3c8d79}\label{classamici_1_1_s_u_n_matrix_wrapper_a1986b0a3dbd0d32cfa623bbd3a3c8d79}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{SUNMatrixWrapper()}{SUNMatrixWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [6/7]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&}]{other }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 73 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a401c2cfe970e650eff8a4d062f1373a6}\label{classamici_1_1_s_u_n_matrix_wrapper_a401c2cfe970e650eff8a4d062f1373a6}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{SUNMatrixWrapper()}{SUNMatrixWrapper()}\hspace{0.1cm}{\footnotesize\ttfamily [7/7]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&\&}]{other }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 85 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a4108325066931a446b90673050e09532}\label{classamici_1_1_s_u_n_matrix_wrapper_a4108325066931a446b90673050e09532}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!operator=@{operator=}}
+\index{operator=@{operator=}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \& operator= (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&}]{other }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 90 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a5d71c31a0b1248e7a33df302a3d684c5}\label{classamici_1_1_s_u_n_matrix_wrapper_a5d71c31a0b1248e7a33df302a3d684c5}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!operator=@{operator=}}
+\index{operator=@{operator=}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{operator=()}{operator=()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \& operator= (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} \&\&}]{other }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 97 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a9866d3a5b39aed664f3aa03ddb0ee6ed}\label{classamici_1_1_s_u_n_matrix_wrapper_a9866d3a5b39aed664f3aa03ddb0ee6ed}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!data@{data}}
+\index{data@{data}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{data()}{data()}}
+{\footnotesize\ttfamily realtype $\ast$ data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+raw data pointer 
+\end{DoxyReturn}
+
+
+Definition at line 103 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_a9866d3a5b39aed664f3aa03ddb0ee6ed_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a1ca28c3e6e0513fd7f8410421eec6c7a}\label{classamici_1_1_s_u_n_matrix_wrapper_a1ca28c3e6e0513fd7f8410421eec6c7a}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!get@{get}}
+\index{get@{get}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{get()}{get()}}
+{\footnotesize\ttfamily S\+U\+N\+Matrix get (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+Sls\+Mat 
+\end{DoxyReturn}
+
+
+Definition at line 417 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=550pt]{classamici_1_1_s_u_n_matrix_wrapper_a1ca28c3e6e0513fd7f8410421eec6c7a_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a6dada592a68544a40682b99e5261f4c2}\label{classamici_1_1_s_u_n_matrix_wrapper_a6dada592a68544a40682b99e5261f4c2}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!rows@{rows}}
+\index{rows@{rows}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{rows()}{rows()}}
+{\footnotesize\ttfamily sunindextype rows (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+number 
+\end{DoxyReturn}
+
+
+Definition at line 107 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_a6dada592a68544a40682b99e5261f4c2_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a564a62656ad1a9b08920e7efcd915a16}\label{classamici_1_1_s_u_n_matrix_wrapper_a564a62656ad1a9b08920e7efcd915a16}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!columns@{columns}}
+\index{columns@{columns}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{columns()}{columns()}}
+{\footnotesize\ttfamily sunindextype columns (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+number 
+\end{DoxyReturn}
+
+
+Definition at line 126 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_a564a62656ad1a9b08920e7efcd915a16_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a647d7f21efc1f284942e48a3715c145f}\label{classamici_1_1_s_u_n_matrix_wrapper_a647d7f21efc1f284942e48a3715c145f}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!nonzeros@{nonzeros}}
+\index{nonzeros@{nonzeros}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{nonzeros()}{nonzeros()}}
+{\footnotesize\ttfamily sunindextype nonzeros (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+number 
+\end{DoxyReturn}
+
+
+Definition at line 145 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_a647d7f21efc1f284942e48a3715c145f_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a581defaa886b657a7406183136258394}\label{classamici_1_1_s_u_n_matrix_wrapper_a581defaa886b657a7406183136258394}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!indexvals@{indexvals}}
+\index{indexvals@{indexvals}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{indexvals()}{indexvals()}}
+{\footnotesize\ttfamily sunindextype $\ast$ indexvals (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+index array 
+\end{DoxyReturn}
+
+
+Definition at line 158 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_a581defaa886b657a7406183136258394_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a2a374dfbeb60fe99206775c456030583}\label{classamici_1_1_s_u_n_matrix_wrapper_a2a374dfbeb60fe99206775c456030583}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!indexptrs@{indexptrs}}
+\index{indexptrs@{indexptrs}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{indexptrs()}{indexptrs()}}
+{\footnotesize\ttfamily sunindextype $\ast$ indexptrs (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+index array 
+\end{DoxyReturn}
+
+
+Definition at line 162 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_a2a374dfbeb60fe99206775c456030583_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a8c068e95d10764ed6d4794fe141e9d12}\label{classamici_1_1_s_u_n_matrix_wrapper_a8c068e95d10764ed6d4794fe141e9d12}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!sparsetype@{sparsetype}}
+\index{sparsetype@{sparsetype}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{sparsetype()}{sparsetype()}}
+{\footnotesize\ttfamily int sparsetype (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+\begin{DoxyReturn}{Returns}
+index array 
+\end{DoxyReturn}
+
+
+Definition at line 166 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_a8c068e95d10764ed6d4794fe141e9d12_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a497d938189c5d6c8c713ed8583226465}\label{classamici_1_1_s_u_n_matrix_wrapper_a497d938189c5d6c8c713ed8583226465}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!scale@{scale}}
+\index{scale@{scale}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{scale()}{scale()}}
+{\footnotesize\ttfamily void scale (\begin{DoxyParamCaption}\item[{realtype}]{a }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em a} & scalar value to multiply matrix \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 177 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=212pt]{classamici_1_1_s_u_n_matrix_wrapper_a497d938189c5d6c8c713ed8583226465_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=347pt]{classamici_1_1_s_u_n_matrix_wrapper_a497d938189c5d6c8c713ed8583226465_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_af2c987388fcb260819e5279e0ab3d556}\label{classamici_1_1_s_u_n_matrix_wrapper_af2c987388fcb260819e5279e0ab3d556}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!multiply@{multiply}}
+\index{multiply@{multiply}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{multiply()}{multiply()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+{\footnotesize\ttfamily void multiply (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{c,  }\item[{const\+\_\+\+N\+\_\+\+Vector}]{b }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & output vector, may already contain values \\
+\hline
+{\em b} & multiplication vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 185 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_af2c987388fcb260819e5279e0ab3d556_icgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a886b96fde5c5d4caf09286d59666a731}\label{classamici_1_1_s_u_n_matrix_wrapper_a886b96fde5c5d4caf09286d59666a731}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!multiply@{multiply}}
+\index{multiply@{multiply}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{multiply()}{multiply()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+{\footnotesize\ttfamily void multiply (\begin{DoxyParamCaption}\item[{gsl\+::span$<$ realtype $>$}]{c,  }\item[{gsl\+::span$<$ const realtype $>$}]{b }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & output vector, may already contain values \\
+\hline
+{\em b} & multiplication vector \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 190 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=219pt]{classamici_1_1_s_u_n_matrix_wrapper_a886b96fde5c5d4caf09286d59666a731_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_aab1c4ef6afa45bc7c624078daba2ed00}\label{classamici_1_1_s_u_n_matrix_wrapper_aab1c4ef6afa45bc7c624078daba2ed00}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!multiply@{multiply}}
+\index{multiply@{multiply}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{multiply()}{multiply()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+{\footnotesize\ttfamily void multiply (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{c,  }\item[{const N\+\_\+\+Vector}]{b,  }\item[{gsl\+::span$<$ const int $>$}]{cols,  }\item[{bool}]{transpose }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & output vector, may already contain values \\
+\hline
+{\em b} & multiplication vector \\
+\hline
+{\em cols} & int vector for column reordering \\
+\hline
+{\em transpose} & bool transpose A before multiplication \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 251 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=216pt]{classamici_1_1_s_u_n_matrix_wrapper_aab1c4ef6afa45bc7c624078daba2ed00_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a11136ec9b9f1fc32464f8677e46e8355}\label{classamici_1_1_s_u_n_matrix_wrapper_a11136ec9b9f1fc32464f8677e46e8355}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!multiply@{multiply}}
+\index{multiply@{multiply}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{multiply()}{multiply()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+{\footnotesize\ttfamily void multiply (\begin{DoxyParamCaption}\item[{gsl\+::span$<$ realtype $>$}]{c,  }\item[{gsl\+::span$<$ const realtype $>$}]{b,  }\item[{gsl\+::span$<$ const int $>$}]{cols,  }\item[{bool}]{transpose }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em c} & output vector, may already contain values \\
+\hline
+{\em b} & multiplication vector \\
+\hline
+{\em cols} & int vector for column reordering \\
+\hline
+{\em transpose} & bool transpose A before multiplication \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 260 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=231pt]{classamici_1_1_s_u_n_matrix_wrapper_a11136ec9b9f1fc32464f8677e46e8355_cgraph}
+\end{center}
+\end{figure}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_matrix_wrapper_a991ac2bbf070c02955140ceb328d8864}\label{classamici_1_1_s_u_n_matrix_wrapper_a991ac2bbf070c02955140ceb328d8864}} 
+\index{SUNMatrixWrapper@{SUNMatrixWrapper}!sparse\_multiply@{sparse\_multiply}}
+\index{sparse\_multiply@{sparse\_multiply}!SUNMatrixWrapper@{SUNMatrixWrapper}}
+\doxyparagraph{\texorpdfstring{sparse\_multiply()}{sparse\_multiply()}}
+{\footnotesize\ttfamily void sparse\+\_\+multiply (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} $\ast$}]{C,  }\item[{\mbox{\hyperlink{classamici_1_1_s_u_n_matrix_wrapper}{S\+U\+N\+Matrix\+Wrapper}} $\ast$}]{B }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em C} & output matrix, may already contain values \\
+\hline
+{\em B} & multiplication matrix \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 319 of file sundials\+\_\+matrix\+\_\+wrapper.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=266pt]{classamici_1_1_s_u_n_matrix_wrapper_a991ac2bbf070c02955140ceb328d8864_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_s_u_n_matrix_wrapper_a991ac2bbf070c02955140ceb328d8864_icgraph}
+\end{center}
+\end{figure}

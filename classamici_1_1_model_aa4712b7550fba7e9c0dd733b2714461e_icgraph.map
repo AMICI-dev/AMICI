@@ -1,0 +1,12 @@
+<map id="fx_rdata" name="fx_rdata">
+<area shape="rect" id="node1" title="Expands conservation law for states." alt="" coords="663,107,732,133"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ae7e44973e14be3f1575c3356f3dc8e2e" title="Model specific implementation of fsx_solver." alt="" coords="505,5,581,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a137d6ba3f54998477871f0387c01628c" title="Sets only those initial states that are specified via fixedParmeters." alt="" coords="472,56,615,83"/>
+<area shape="rect" id="node6" href="$classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="475,158,611,199"/>
+<area shape="rect" id="node7" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="249,99,411,141"/>
+<area shape="rect" id="node10" href="$classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="251,230,409,271"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a866aff1e4eed9246aa2b8d18e40853c0" title="Reinitializes state and respective sensitivities (if necessary) according to changes in fixedParamete..." alt="" coords="236,34,424,75"/>
+<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#a6b871b5be8dfa63fc4bb5bd0bd7ff052" title="Initialize backward computation by setting state, time, adjoint state and checking for preequilibrati..." alt="" coords="5,34,188,75"/>
+<area shape="rect" id="node9" href="$classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="247,165,413,206"/>
+<area shape="rect" id="node8" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="9,165,184,206"/>
+</map>

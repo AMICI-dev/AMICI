@@ -1,0 +1,13 @@
+<map id="findSteadyStateByNewtonsMethod" name="findSteadyStateByNewtonsMethod">
+<area shape="rect" id="node1" title="Tries to determine the steady state by using Newton&#39;s method." alt="" coords="5,115,188,156"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#aca32c27fbd6b2eef05fc01f0cb85d536" title="Runs the Newton solver iterations and checks for convergence to steady state." alt="" coords="236,122,384,149"/>
+<area shape="rect" id="node3" href="$classamici_1_1_abstract_model.html#a8a6bc3080a50b88513f4604d1210f725" title="Residual function." alt="" coords="439,5,584,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="639,71,833,98"/>
+<area shape="rect" id="node5" href="$classamici_1_1_newton_solver.html#a5d7771aef57a9dd773fedb39323b3a04" title="Computes the solution of one Newton iteration." alt="" coords="440,173,583,215"/>
+<area shape="rect" id="node9" href="$classamici_1_1_steadystate_problem.html#a1235c7def8fc10df5600ae84759230cb" title="Computes the weighted root mean square of xdot the weights are computed according to x: w_i = 1 / ( r..." alt="" coords="458,122,565,149"/>
+<area shape="rect" id="node10" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="432,271,591,298"/>
+<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#a19ad39a609bfc430ed6f7992e841b024" title="changes the sign of data elements" alt="" coords="654,122,818,149"/>
+<area shape="rect" id="node7" href="$classamici_1_1_newton_solver.html#a4aed46b0343374f171f9b4b51fa009e7" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="659,173,813,215"/>
+<area shape="rect" id="node8" href="$classamici_1_1_newton_solver.html#addfdd7afbe1eff3d47b0f28b6191793f" title="Solves the linear system for the Newton step." alt="" coords="665,239,807,280"/>
+<area shape="rect" id="node11" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="663,305,809,331"/>
+</map>

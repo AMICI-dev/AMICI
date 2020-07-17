@@ -1,0 +1,6 @@
+<map id="handleSteadyStateFailure" name="handleSteadyStateFailure">
+<area shape="rect" id="node1" title="Stores state and throws an exception if equilibration failed." alt="" coords="5,42,176,69"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#affde3089fec2a1cca40d6cc0c4c2cf1d" title="Get sensitvity order." alt="" coords="224,5,409,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#af78ddb4a1ac2298676dae66e99d9c082" title="Store carbon copy of current simulation state variables as SimulationState." alt="" coords="245,71,388,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#add78de4f68b4e981e9dd8d9f842ea709" title="retrieves the current model state" alt="" coords="457,71,645,98"/>
+</map>

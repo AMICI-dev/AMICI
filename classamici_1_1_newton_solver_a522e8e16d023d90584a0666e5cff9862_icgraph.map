@@ -1,0 +1,6 @@
+<map id="prepareLinearSystemB" name="prepareLinearSystemB">
+<area shape="rect" id="node1" title=" " alt="" coords="780,13,935,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#ab0b999d56e310b3326d8bcbaa095e86f" title="Computes the quadrature in steady state backward mode by solving the linear system defined by the bac..." alt="" coords="553,5,732,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="289,5,505,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#a4b4624b422c1f6c070a5bde7168a5cbf" title=" " alt="" coords="5,5,241,47"/>
+</map>

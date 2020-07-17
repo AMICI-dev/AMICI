@@ -1,0 +1,15 @@
+<map id="getSensitivityOrder" name="getSensitivityOrder">
+<area shape="rect" id="node1" title="Get sensitvity order." alt="" coords="764,221,897,247"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#ac90ebf01f586436cf1402912bc8da598" title="check if ASA is being computed" alt="" coords="572,13,681,39"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="check if FSA is being computed" alt="" coords="573,63,681,90"/>
+<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#a760e800c6f910a835b9235ce389a6331" title="Checks depending on the status of the Newton solver, solver settings, and the model,..." alt="" coords="537,115,716,156"/>
+<area shape="rect" id="node7" href="$classamici_1_1_steadystate_problem.html#aa32c3c07543307c7d146db5e8a10bfbd" title="Stores state and throws an exception if equilibration failed." alt="" coords="537,180,716,221"/>
+<area shape="rect" id="node8" href="$classamici_1_1_solver.html#a866aff1e4eed9246aa2b8d18e40853c0" title="Reinitializes state and respective sensitivities (if necessary) according to changes in fixedParamete..." alt="" coords="537,245,716,287"/>
+<area shape="rect" id="node11" href="$classamici_1_1_backward_problem.html#a4a17093ee76348cce97b06c94bf518bd" title="Solve the backward problem." alt="" coords="543,311,710,352"/>
+<area shape="rect" id="node12" href="$classamici_1_1_forward_problem.html#a4ef001eef23bc48270159d6193036858" title="Solve the forward problem." alt="" coords="549,376,705,417"/>
+<area shape="rect" id="node13" href="$classamici_1_1_steadystate_problem.html#a0b71cc4193afae24ae5890094e210682" title="Handles steady state computation in the forward case: tries to determine the steady state of the ODE ..." alt="" coords="537,441,716,483"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="302,5,477,47"/>
+<area shape="rect" id="node6" href="$classamici_1_1_steadystate_problem.html#a72e578eb6c847a599352b10f1c5856d7" title="Tries to determine the steady state by using forward simulation." alt="" coords="289,115,489,156"/>
+<area shape="rect" id="node9" href="$classamici_1_1_steadystate_problem.html#a6b871b5be8dfa63fc4bb5bd0bd7ff052" title="Initialize backward computation by setting state, time, adjoint state and checking for preequilibrati..." alt="" coords="298,245,481,287"/>
+<area shape="rect" id="node10" href="$classamici_1_1_steadystate_problem.html#a4b4624b422c1f6c070a5bde7168a5cbf" title=" " alt="" coords="5,245,241,287"/>
+</map>

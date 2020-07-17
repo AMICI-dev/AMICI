@@ -1,0 +1,9 @@
+<map id="Model" name="Model">
+<area shape="rect" id="node1" title="Constructor with model dimensions." alt="" coords="5,56,63,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#adde50e0d8a99d20354c8403bf93fab6f" title="Fixed parameters." alt="" coords="175,5,213,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="171,56,217,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a9b03cc8dbac85d38ced3f59234ba27d9" title="Require computation of sensitivities for all parameters p [0..np[ in natural order,..." alt="" coords="111,107,277,149"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a01b01e15d5cac9cec911a30f65e327f8" title="Set the nplist&#45;dependent vectors to their proper sizes." alt="" coords="325,89,439,116"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="363,140,401,167"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="487,89,540,116"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="fsx_rdata" name="fsx_rdata">
+<area shape="rect" id="node1" title="Expands conservation law for state sensitivities." alt="" coords="439,64,515,91"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a79d8a1d0d4ef31605f9c21e2f6828ae0" title="Sets only those initial states sensitivities that are affected from fx0 fixedParmeters." alt="" coords="235,5,384,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="241,57,377,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="228,122,391,163"/>
+<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,122,180,163"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="applyCondition" name="applyCondition">
+<area shape="rect" id="node1" title="Apply condition&#45;specific settings from edata to the constructor&#45;supplied model, not changing the sett..." alt="" coords="5,166,113,193"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="428,6,547,33"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="611,174,745,201"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#ada7cb3dadf4cee4b8fd6f092fee54b3c" title="Set the initial states." alt="" coords="186,276,339,318"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a82941b121d9db31d357642092a2cd41d" title="Set the initial state sensitivities." alt="" coords="186,159,339,200"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a2afe974183e4bccaf746f6409941fe8f" title="Set the list of parameters for which sensitivities are computed, resets initial state sensitivities." alt="" coords="161,108,364,134"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#af1e95f6479d442fcb4c63d16763d4acd" title="Sets the parameter vector." alt="" coords="168,57,357,84"/>
+<area shape="rect" id="node10" href="$classamici_1_1_model.html#a7e25febbfd9db80f64a4f73a2718bda7" title="Set ParameterScale for each parameter, resets initial state sensitivities." alt="" coords="171,342,354,383"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="423,124,551,150"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a01b01e15d5cac9cec911a30f65e327f8" title="Set the nplist&#45;dependent vectors to their proper sizes." alt="" coords="412,58,563,99"/>
+</map>

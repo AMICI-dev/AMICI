@@ -1,0 +1,11 @@
+<map id="computeQBfromQ" name="computeQBfromQ">
+<area shape="rect" id="node1" title="Compute the backward quadratures, which contribute to the gradient (xQB) from the quadrature over the..." alt="" coords="5,189,132,215"/>
+<area shape="rect" id="node2" href="$classamici_1_1_abstract_model.html#a632846f2c611d74ff33bda5ba2a1acc9" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="209,5,354,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="184,71,379,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector_array.html#a387bfb58f20388d99da7f946a3a27ab8" title="accessor to NVector element" alt="" coords="205,123,357,164"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a94b6dfdb4883c916627b287e4d7b9b44" title="Get the list of parameters for which sensitivities are computed." alt="" coords="180,189,383,215"/>
+<area shape="rect" id="node6" href="$classamici_1_1_s_u_n_matrix_wrapper.html#af2c987388fcb260819e5279e0ab3d556" title="N_Vector interface for multiply." alt="" coords="194,240,369,281"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="214,306,349,333"/>
+<area shape="rect" id="node8" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="202,357,361,383"/>
+<area shape="rect" id="node9" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="431,357,577,383"/>
+</map>

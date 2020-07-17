@@ -1,0 +1,9 @@
+<map id="BackwardProblem" name="BackwardProblem">
+<area shape="rect" id="node1" title="Construct backward problem from forward problem." alt="" coords="5,137,133,163"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#afb4ec4e3a67624dddea0cd64fca29ae9" title="Accessor for dJydx." alt="" coords="187,5,366,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#aeeb77382d64bd0b953b7de583cf59c9a" title="Returns the quadratures from pre&#45; or postequilibration." alt="" coords="181,71,372,112"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="187,137,366,163"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="Get number of timepoints." alt="" coords="219,187,334,214"/>
+<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="197,238,356,265"/>
+<area shape="rect" id="node7" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="420,238,567,265"/>
+</map>

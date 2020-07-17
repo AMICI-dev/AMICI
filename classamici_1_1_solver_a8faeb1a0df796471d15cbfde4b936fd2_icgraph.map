@@ -1,0 +1,4 @@
+<map id="setStopTime" name="setStopTime">
+<area shape="rect" id="node1" title="Sets a timepoint at which the simulation will be stopped." alt="" coords="93,5,189,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a59922504af5d337cbdddcb72b6f75a99" title="runs a forward simulation until the specified timepoint" alt="" coords="5,5,45,32"/>
+</map>

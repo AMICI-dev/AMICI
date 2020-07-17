@@ -1,0 +1,102 @@
+\hypertarget{classamici_1_1_s_u_n_non_lin_sol_fixed_point}{}\doxysubsection{S\+U\+N\+Non\+Lin\+Sol\+Fixed\+Point Class Reference}
+\label{classamici_1_1_s_u_n_non_lin_sol_fixed_point}\index{SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}}
+
+
+S\+U\+N\+D\+I\+A\+LS Fixed point non-\/linear solver to solve G(y) = y.  
+
+
+
+
+{\ttfamily \#include $<$sundials\+\_\+linsol\+\_\+wrapper.\+h$>$}
+
+
+
+Inheritance diagram for S\+U\+N\+Non\+Lin\+Sol\+Fixed\+Point\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=210pt]{classamici_1_1_s_u_n_non_lin_sol_fixed_point__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_fixed_point_ae89d9a126d14a92e71960a7dedb42b35}{S\+U\+N\+Non\+Lin\+Sol\+Fixed\+Point}} (const\+\_\+\+N\+\_\+\+Vector x, int m=0)
+\begin{DoxyCompactList}\small\item\em Create fixed-\/point solver. \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_fixed_point_adb5fa08294e0dc6fb9acb1e8c15985cb}{S\+U\+N\+Non\+Lin\+Sol\+Fixed\+Point}} (int count, const\+\_\+\+N\+\_\+\+Vector x, int m=0)
+\begin{DoxyCompactList}\small\item\em Create fixed-\/point solver for use with sensitivity analysis. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_fixed_point_a9f4c2b679f6bb3f469645fd5ae8859ce}{get\+Sys\+Fn}} (S\+U\+N\+Nonlin\+Sol\+Sys\+Fn $\ast$Sys\+Fn) const
+\begin{DoxyCompactList}\small\item\em Get function to evaluate the fixed point function G(y) = y. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+
+
+\doxysubsubsection{Detailed Description}
+
+
+Definition at line 831 of file sundials\+\_\+linsol\+\_\+wrapper.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_fixed_point_ae89d9a126d14a92e71960a7dedb42b35}\label{classamici_1_1_s_u_n_non_lin_sol_fixed_point_ae89d9a126d14a92e71960a7dedb42b35}} 
+\index{SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}!SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}}
+\index{SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}!SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}}
+\doxyparagraph{\texorpdfstring{SUNNonLinSolFixedPoint()}{SUNNonLinSolFixedPoint()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_fixed_point}{S\+U\+N\+Non\+Lin\+Sol\+Fixed\+Point}} (\begin{DoxyParamCaption}\item[{const\+\_\+\+N\+\_\+\+Vector}]{x,  }\item[{int}]{m = {\ttfamily 0} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & template for cloning vectors needed within the solver. \\
+\hline
+{\em m} & number of acceleration vectors to use \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 362 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_fixed_point_adb5fa08294e0dc6fb9acb1e8c15985cb}\label{classamici_1_1_s_u_n_non_lin_sol_fixed_point_adb5fa08294e0dc6fb9acb1e8c15985cb}} 
+\index{SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}!SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}}
+\index{SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}!SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}}
+\doxyparagraph{\texorpdfstring{SUNNonLinSolFixedPoint()}{SUNNonLinSolFixedPoint()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_fixed_point}{S\+U\+N\+Non\+Lin\+Sol\+Fixed\+Point}} (\begin{DoxyParamCaption}\item[{int}]{count,  }\item[{const\+\_\+\+N\+\_\+\+Vector}]{x,  }\item[{int}]{m = {\ttfamily 0} }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em count} & Number of vectors in the nonlinear solve. When integrating a system containing Ns sensitivities the value of count is\+:
+\begin{DoxyItemize}
+\item Ns+1 if using a simultaneous corrector approach.
+\item Ns if using a staggered corrector approach. 
+\end{DoxyItemize}\\
+\hline
+{\em x} & template for cloning vectors needed within the solver. \\
+\hline
+{\em m} & number of acceleration vectors to use \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 366 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_fixed_point_a9f4c2b679f6bb3f469645fd5ae8859ce}\label{classamici_1_1_s_u_n_non_lin_sol_fixed_point_a9f4c2b679f6bb3f469645fd5ae8859ce}} 
+\index{SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}!getSysFn@{getSysFn}}
+\index{getSysFn@{getSysFn}!SUNNonLinSolFixedPoint@{SUNNonLinSolFixedPoint}}
+\doxyparagraph{\texorpdfstring{getSysFn()}{getSysFn()}}
+{\footnotesize\ttfamily int get\+Sys\+Fn (\begin{DoxyParamCaption}\item[{S\+U\+N\+Nonlin\+Sol\+Sys\+Fn $\ast$}]{Sys\+Fn }\end{DoxyParamCaption}) const}
+
+
+\begin{DoxyParams}{Parameters}
+{\em Sys\+Fn} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+Definition at line 370 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
+

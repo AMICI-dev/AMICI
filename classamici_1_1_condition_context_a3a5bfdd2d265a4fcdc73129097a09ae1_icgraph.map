@@ -1,0 +1,4 @@
+<map id="applyCondition" name="applyCondition">
+<area shape="rect" id="node1" title="Apply condition&#45;specific settings from edata to the constructor&#45;supplied model, not changing the sett..." alt="" coords="176,5,284,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="5,5,128,32"/>
+</map>

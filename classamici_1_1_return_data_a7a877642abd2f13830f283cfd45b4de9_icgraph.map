@@ -1,0 +1,9 @@
+<map id="readSimulationState" name="readSimulationState">
+<area shape="rect" id="node1" title="sets member variables and model state according to provided simulation state" alt="" coords="461,107,600,133"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="233,5,408,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="239,56,402,83"/>
+<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="237,107,404,133"/>
+<area shape="rect" id="node6" href="$classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="241,157,400,184"/>
+<area shape="rect" id="node7" href="$classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="228,209,413,250"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,107,180,133"/>
+</map>

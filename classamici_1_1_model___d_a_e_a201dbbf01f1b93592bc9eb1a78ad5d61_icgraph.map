@@ -1,0 +1,6 @@
+<map id="fJSparse" name="fJSparse">
+<area shape="rect" id="node1" title="Sparse Jacobian function." alt="" coords="128,56,203,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model___d_a_e.html#add6365696a699381f4a3a9b96094b63b" title="J in sparse form (for sparse solvers from the SuiteSparse Package)" alt="" coords="5,5,80,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model___d_a_e.html#a7a3565abc7cb0372df38aec43e764275" title="Matrix vector product of J with a vector v (for iterative solvers)" alt="" coords="23,56,63,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model___d_a_e.html#a26e76f86f173a718466c9cc19d68550a" title="Right hand side of differential equation for state sensitivities sx." alt="" coords="13,107,72,133"/>
+</map>

@@ -1,0 +1,107 @@
+\hypertarget{classamici_1_1_condition_context}{}\doxysubsection{Condition\+Context Class Reference}
+\label{classamici_1_1_condition_context}\index{ConditionContext@{ConditionContext}}
+
+
+The \mbox{\hyperlink{classamici_1_1_condition_context}{Condition\+Context}} class applies condition-\/specific \mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}} settings and restores them when going out of scope.  
+
+
+
+
+{\ttfamily \#include $<$edata.\+h$>$}
+
+
+
+Inheritance diagram for Condition\+Context\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=172pt]{classamici_1_1_condition_context__inherit__graph}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classamici_1_1_condition_context_a278af8aaa098bec301b13f622b369b5c}{Condition\+Context}} (\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model, const \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$edata=nullptr, Fixed\+Parameter\+Context fpc=Fixed\+Parameter\+Context\+::simulation)
+\begin{DoxyCompactList}\small\item\em Apply condition-\/specific settings from edata to model while keeping a backup of the original values. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classamici_1_1_condition_context_af46c162db2c7b19ffc8d2f792b58f75e}\label{classamici_1_1_condition_context_af46c162db2c7b19ffc8d2f792b58f75e}} 
+\mbox{\hyperlink{classamici_1_1_condition_context}{Condition\+Context}} \& {\bfseries operator=} (const \mbox{\hyperlink{classamici_1_1_condition_context}{Condition\+Context}} \&other)=delete
+\item 
+void \mbox{\hyperlink{classamici_1_1_condition_context_a3a5bfdd2d265a4fcdc73129097a09ae1}{apply\+Condition}} (const \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$edata, Fixed\+Parameter\+Context fpc)
+\begin{DoxyCompactList}\small\item\em Apply condition-\/specific settings from edata to the constructor-\/supplied model, not changing the settings which were backed-\/up in the constructor call. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classamici_1_1_condition_context_afd3595051be2709847c2de4352f27cf5}\label{classamici_1_1_condition_context_afd3595051be2709847c2de4352f27cf5}} 
+void \mbox{\hyperlink{classamici_1_1_condition_context_afd3595051be2709847c2de4352f27cf5}{restore}} ()
+\begin{DoxyCompactList}\small\item\em Restore original settings on constructor-\/supplied \mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}}. Will be called during destruction. Explicit call is generally not necessary. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\doxysubsubsection{Detailed Description}
+
+
+Definition at line 524 of file edata.\+h.
+
+
+
+\doxysubsubsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classamici_1_1_condition_context_a278af8aaa098bec301b13f622b369b5c}\label{classamici_1_1_condition_context_a278af8aaa098bec301b13f622b369b5c}} 
+\index{ConditionContext@{ConditionContext}!ConditionContext@{ConditionContext}}
+\index{ConditionContext@{ConditionContext}!ConditionContext@{ConditionContext}}
+\doxyparagraph{\texorpdfstring{ConditionContext()}{ConditionContext()}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_condition_context}{Condition\+Context}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$}]{model,  }\item[{const \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$}]{edata = {\ttfamily nullptr},  }\item[{Fixed\+Parameter\+Context}]{fpc = {\ttfamily FixedParameterContext\+:\+:simulation} }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em model} & \\
+\hline
+{\em edata} & \\
+\hline
+{\em fpc} & flag indicating which fixed\+Parmeter from edata to apply \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 326 of file edata.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_condition_context_a278af8aaa098bec301b13f622b369b5c_cgraph}
+\end{center}
+\end{figure}
+
+
+\doxysubsubsection{Member Function Documentation}
+\mbox{\Hypertarget{classamici_1_1_condition_context_a3a5bfdd2d265a4fcdc73129097a09ae1}\label{classamici_1_1_condition_context_a3a5bfdd2d265a4fcdc73129097a09ae1}} 
+\index{ConditionContext@{ConditionContext}!applyCondition@{applyCondition}}
+\index{applyCondition@{applyCondition}!ConditionContext@{ConditionContext}}
+\doxyparagraph{\texorpdfstring{applyCondition()}{applyCondition()}}
+{\footnotesize\ttfamily void apply\+Condition (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} $\ast$}]{edata,  }\item[{Fixed\+Parameter\+Context}]{fpc }\end{DoxyParamCaption})}
+
+
+\begin{DoxyParams}{Parameters}
+{\em edata} & \\
+\hline
+{\em fpc} & flag indicating which fixed\+Parmeter from edata to apply \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 351 of file edata.\+cpp.
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classamici_1_1_condition_context_a3a5bfdd2d265a4fcdc73129097a09ae1_cgraph}
+\end{center}
+\end{figure}
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=289pt]{classamici_1_1_condition_context_a3a5bfdd2d265a4fcdc73129097a09ae1_icgraph}
+\end{center}
+\end{figure}

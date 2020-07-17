@@ -1,0 +1,4 @@
+<map id="getUnobservedEventSensitivity" name="getUnobservedEventSensitivity">
+<area shape="rect" id="node1" title="Sensitivity of z at final timepoint (ignores sensitivity of timepoint), total derivative." alt="" coords="193,13,399,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,5,145,47"/>
+</map>

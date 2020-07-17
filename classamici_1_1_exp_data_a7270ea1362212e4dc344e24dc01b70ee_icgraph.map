@@ -1,0 +1,19 @@
+<map id="isSetObservedEvents" name="isSetObservedEvents">
+<area shape="rect" id="node1" title="get function that checks whether event data at specified indices has been set" alt="" coords="1108,224,1257,251"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ace9763a0ecf7efeb69ead8a721da6916" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="647,5,861,32"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a5b274a170d0e0564dcb39dcb9dd10b2f" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="647,57,861,98"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a9863a7dcd8e1385435c00a29939a8bae" title="Sensitivity of event measurement negative log&#45;likelihood Jz w.r.t. standard deviation sigmaz." alt="" coords="667,123,841,149"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a3c192b268face826f5adc0eff0395a27" title="Partial derivative of event measurement negative log&#45;likelihood Jz." alt="" coords="681,224,827,251"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="456,325,599,352"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#aaa7bf3bdc44879d66b3821a095039898" title="Sensitivity of event measurement negative log&#45;likelihood Jz w.r.t. standard deviation sigmaz." alt="" coords="669,275,839,301"/>
+<area shape="rect" id="node13" href="$classamici_1_1_model.html#aa4c825912365c05bf472568ef1adb929" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. state variables." alt="" coords="456,401,599,428"/>
+<area shape="rect" id="node15" href="$classamici_1_1_model.html#a0c44c0a2afed13fbc92f449789566fad" title="Partial derivative of event measurement negative log&#45;likelihood Jz." alt="" coords="683,376,825,403"/>
+<area shape="rect" id="node16" href="$classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="909,173,1060,200"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="459,57,595,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="219,57,382,98"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#ad39fc588eb292abfbe6d820f8cf179e1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="193,343,408,385"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model.html#aac922fea8ccc5edc05c9647c437e158f" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, partial derivative (to be used w..." alt="" coords="215,278,387,319"/>
+<area shape="rect" id="node10" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,343,145,385"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6ad52765b87568f131a18db39939105b" title="State sensitivity of the negative loglikelihood Jz, partial derivative (to be used with adjoint senst..." alt="" coords="219,409,382,450"/>
+<area shape="rect" id="node17" href="$classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="657,173,851,200"/>
+</map>

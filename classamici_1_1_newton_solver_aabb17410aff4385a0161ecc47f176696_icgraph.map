@@ -1,0 +1,4 @@
+<map id="getSolver" name="getSolver">
+<area shape="rect" id="node1" title="Factory method to create a NewtonSolver based on linsolType." alt="" coords="289,13,367,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#a4b4624b422c1f6c070a5bde7168a5cbf" title=" " alt="" coords="5,5,241,47"/>
+</map>
