@@ -36,6 +36,8 @@ class Model_ODE : public Model {
      * @param nx_solver number of state variables with conservation laws applied
      * @param nxtrue_solver number of state variables of the non-augmented model
      with conservation laws applied
+     * @param nx_solver_reinit number of state variables with conservation laws
+     * subject to reinitialization
      * @param ny number of observables
      * @param nytrue number of observables of the non-augmented model
      * @param nz number of event observables
@@ -63,7 +65,7 @@ class Model_ODE : public Model {
      * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model_ODE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-              const int nxtrue_solver, const int ny, const int nytrue,
+              const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
               const int nz, const int nztrue, const int ne, const int nJ,
               const int nw, const int ndwdx, const int ndwdp,
               const int ndxdotdw, std::vector<int> ndJydy,
@@ -73,7 +75,7 @@ class Model_ODE : public Model {
               std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0, const int ndxdotdp_implicit=0)
-        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
+        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, nx_solver_reinit, ny, nytrue,
                 nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
                 nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
                 pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {}
@@ -94,8 +96,13 @@ class Model_ODE : public Model {
      **/
     void fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J);
 
-    /** implementation of fJB at the N_Vector level, this function provides an
-     *interface to the model specific routines for the solver implementation
+    void fJB(const realtype t, realtype cj, const AmiVector &x,
+             const AmiVector &dx, const AmiVector &xB, const AmiVector &dxB,
+             const AmiVector &xBdot, SUNMatrix JB) override;
+
+    /**
+     * @brief Implementation of fJB at the N_Vector level, this function provides
+     * an interface to the model specific routines for the solver implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
@@ -109,17 +116,22 @@ class Model_ODE : public Model {
                   SUNMatrix J) override;
 
     /**
-     * Implementation of fJSparse at the N_Vector level, this function
-     * provides
-     * an interface to the model specific routines for the solver implementation
-     * aswell as the AmiVector level implementation
+     * @brief Implementation of fJSparse at the N_Vector level, this function
+     * provides an interface to the model specific routines for the solver
+     * implementation aswell as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param J Matrix to which the Jacobian will be written
      */
     void fJSparse(realtype t, N_Vector x, SUNMatrix J);
 
-    /** implementation of fJSparseB at the N_Vector level, this function
+    void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                   const AmiVector &dx, const AmiVector &xB,
+                   const AmiVector &dxB, const AmiVector &xBdot,
+                   SUNMatrix JB) override;
+
+    /**
+     * @brief Implementation of fJSparseB at the N_Vector level, this function
      * provides an interface to the model specific routines for the solver
      * implementation
      * @param t timepoint
@@ -131,8 +143,9 @@ class Model_ODE : public Model {
     void fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                    SUNMatrix JB);
 
-    /** implementation of fJDiag at the N_Vector level, this function provides
-     *an interface to the model specific routines for the solver implementation
+    /**
+     * @brief Implementation of fJDiag at the N_Vector level, this function provides
+     * an interface to the model specific routines for the solver implementation
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
      * @param x Vector with the states
@@ -140,7 +153,7 @@ class Model_ODE : public Model {
     void fJDiag(realtype t, N_Vector JDiag, N_Vector x);
 
     /**
-     * @brief diagonalized Jacobian (for preconditioning)
+     * @brief Diagonal of the Jacobian (for preconditioning)
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
      * @param cj scaling factor, inverse of the step size
@@ -154,7 +167,8 @@ class Model_ODE : public Model {
              const AmiVector &xdot, const AmiVector &v, AmiVector &nJv,
              realtype cj) override;
 
-    /** implementation of fJv at the N_Vector level.
+    /**
+     * @brief Implementation of fJv at the N_Vector level.
      * @param t timepoint
      * @param x Vector with the states
      * @param v Vector with which the Jacobian is multiplied
@@ -164,7 +178,7 @@ class Model_ODE : public Model {
     void fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x);
 
     /**
-     * @brief implementation of fJvB at the N_Vector level
+     * @brief Implementation of fJvB at the N_Vector level
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
@@ -177,8 +191,7 @@ class Model_ODE : public Model {
                gsl::span<realtype> root) override;
 
     /**
-     * @brief implementation of froot at the N_Vector level
-     *
+     * @brief Implementation of froot at the N_Vector level
      * This function provides an interface to the model specific routines for
      * the solver implementation aswell as the AmiVector level implementation
      * @param t timepoint
@@ -190,16 +203,18 @@ class Model_ODE : public Model {
     void fxdot(realtype t, const AmiVector &x, const AmiVector &dx,
                AmiVector &xdot) override;
 
-    /** implementation of fxdot at the N_Vector level, this function provides an
-     * interface to the model specific routines for the solver implementation
-     * aswell as the AmiVector level implementation
+    /**
+     * @brief Implementation of fxdot at the N_Vector level, this function
+     * provides an interface to the model specific routines for the solver
+     * implementation aswell as the AmiVector level implementation
      * @param t timepoint
      * @param x Vector with the states
      * @param xdot Vector with the right hand side
      */
     void fxdot(realtype t, N_Vector x, N_Vector xdot);
 
-    /** implementation of fxBdot at the N_Vector level
+    /**
+     * @brief Implementation of fxBdot at the N_Vector level
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
@@ -207,7 +222,8 @@ class Model_ODE : public Model {
      */
     void fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot);
 
-    /** implementation of fqBdot at the N_Vector level
+    /**
+     * @brief Implementation of fqBdot at the N_Vector level
      * @param t timepoint
      * @param x Vector with the states
      * @param xB Vector with the adjoint states
@@ -215,17 +231,57 @@ class Model_ODE : public Model {
      */
     void fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot);
 
-    /** Sensitivity of dx/dt wrt model parameters w
+    void fxBdot_ss(const realtype t, const AmiVector &xB,
+                   const AmiVector & /*dxB*/, AmiVector &xBdot) override;
+
+    /**
+     * @brief Implementation of fxBdot for steady state at the N_Vector level
+     * @param t timepoint
+     * @param xB Vector with the states
+     * @param xBdot Vector with the adjoint right hand side
+     */
+    void fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot) const;
+
+    /**
+     * @brief Implementation of fqBdot for steady state case at the N_Vector level
+     * @param t timepoint
+     * @param xB Vector with the adjoint states
+     * @param qBdot Vector with the adjoint quadrature right hand side
+     */
+    void fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot) const;
+
+    /**
+     * @brief Sparse Jacobian function backward, steady state case
+     * @param JB sparse matrix to which values of the Jacobian will be written
+     */
+    void fJSparseB_ss(SUNMatrix JB) override;
+
+    /**
+     * @brief Computes the sparse backward Jacobian for steadystate integration
+     * and writes it to the model member
+     * @param t timepoint
+     * @param cj scalar in Jacobian
+     * @param x Vector with the states
+     * @param dx Vector with the derivative states
+     * @param xB Vector with the adjoint states
+     * @param dxB Vector with the adjoint derivative states
+     * @param xBdot Vector with the adjoint state right hand side
+     */
+    void writeSteadystateJB(const realtype t, realtype cj,
+                            const AmiVector &x, const AmiVector &dx,
+                            const AmiVector &xB, const AmiVector &dxB,
+                            const AmiVector &xBdot) override;
+
+    /**
+     * @brief Sensitivity of dx/dt wrt model parameters w
      * @param t timepoint
      * @param x Vector with the states
-     * @return status flag indicating successful execution
      */
     void fdxdotdw(realtype t, const N_Vector x);
 
     /** Explicit sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states
-     * @return status flag indicating successful execution
      */
     void fdxdotdp(realtype t, const N_Vector x);
 
@@ -236,7 +292,7 @@ class Model_ODE : public Model {
                 AmiVector &sxdot) override;
 
     /**
-     * @brief implementation of fsxdot at the N_Vector level
+     * @brief Implementation of fsxdot at the N_Vector level
      * @param t timepoint
      * @param x Vector with the states
      * @param ip parameter index
@@ -248,7 +304,8 @@ class Model_ODE : public Model {
     std::unique_ptr<Solver> getSolver() override;
 
   protected:
-    /** model specific implementation for fJ
+    /**
+     * @brief Model specific implementation for fJ
      * @param J Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -262,7 +319,8 @@ class Model_ODE : public Model {
                     const realtype *p, const realtype *k, const realtype *h,
                     const realtype *w, const realtype *dwdx) = 0;
 
-    /** model specific implementation for fJB
+    /**
+     * @brief Model specific implementation for fJB
      * @param JB Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -278,7 +336,8 @@ class Model_ODE : public Model {
                      const realtype *xB, const realtype *w,
                      const realtype *dwdx);
 
-    /** model specific implementation for fJSparse
+    /**
+     * @brief Model specific implementation for fJSparse
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -293,7 +352,8 @@ class Model_ODE : public Model {
                           const realtype *k, const realtype *h,
                           const realtype *w, const realtype *dwdx);
 
-    /** model specific implementation for fJSparse, data only
+    /**
+     * @brief Model specific implementation for fJSparse, data only
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -309,7 +369,7 @@ class Model_ODE : public Model {
                           const realtype *dwdx);
 
     /**
-     * @brief model specific implementation for fJSparse, column pointers
+     * @brief Model specific implementation for fJSparse, column pointers
      * @param indexptrs column pointers
      **/
     virtual void fJSparse_colptrs(sunindextype *indexptrs);
@@ -338,7 +398,8 @@ class Model_ODE : public Model {
                            const realtype *xB, const realtype *w,
                            const realtype *dwdx);
 
-    /** model specific implementation for fJSparseB
+    /**
+     * @brief Model specific implementation for fJSparseB
      * @param JSparseB data array
      * @param t timepoint
      * @param x Vector with the states
@@ -382,7 +443,7 @@ class Model_ODE : public Model {
                         const realtype *w, const realtype *dwdx);
 
     /**
-     * @brief model specific implementation for froot
+     * @brief Model specific implementation for froot
      * @param root values of the trigger function
      * @param t timepoint
      * @param x Vector with the states
@@ -393,7 +454,8 @@ class Model_ODE : public Model {
     virtual void froot(realtype *root, realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h);
 
-    /** model specific implementation for fxdot
+    /**
+     * @brief Model specific implementation for fxdot
      * @param xdot residual function
      * @param t timepoint
      * @param x Vector with the states
@@ -406,7 +468,8 @@ class Model_ODE : public Model {
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w) = 0;
 
-    /** model specific implementation of fdxdotdp, with w chainrule (Matlab)
+    /**
+     * @brief Model specific implementation of fdxdotdp, with w chainrule (Matlab)
      * @param dxdotdp partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -422,7 +485,8 @@ class Model_ODE : public Model {
                           const realtype *h, int ip, const realtype *w,
                           const realtype *dwdp);
 
-    /** model specific implementation of fdxdotdp_explicit, no w chainrule (Py)
+    /**
+     * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule (Py)
      * @param dxdotdp_explicit partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -436,27 +500,32 @@ class Model_ODE : public Model {
                                    const realtype *k, const realtype *h,
                                    const realtype *w);
 
-    /** model specific implementation of fdxdotdp_explicit, colptrs part
+    /**
+     * @brief Model specific implementation of fdxdotdp_explicit, colptrs part
      * @param indexptrs column pointers
      */
     virtual void fdxdotdp_explicit_colptrs(sunindextype *indexptrs);
 
-    /** model specific implementation of fdxdotdp_explicit, rowvals part
+    /**
+     * @brief Model specific implementation of fdxdotdp_explicit, rowvals part
      * @param indexvals row values
      */
     virtual void fdxdotdp_explicit_rowvals(sunindextype *indexvals);
 
-    /** model specific implementation of fdxdotdp_implicit, colptrs part
+    /**
+     * @brief Model specific implementation of fdxdotdp_implicit, colptrs part
      * @param indexptrs column pointers
      */
     virtual void fdxdotdp_implicit_colptrs(sunindextype *indexptrs);
 
-    /** model specific implementation of fdxdotdp_implicit, rowvals part
+    /**
+     * @brief Model specific implementation of fdxdotdp_implicit, rowvals part
      * @param indexvals row values
      */
     virtual void fdxdotdp_implicit_rowvals(sunindextype *indexvals);
 
-    /** model specific implementation of fdxdotdw, data part
+    /**
+     * @brief Model specific implementation of fdxdotdw, data part
      * @param dxdotdw partial derivative xdot wrt w
      * @param t timepoint
      * @param x Vector with the states
@@ -469,12 +538,14 @@ class Model_ODE : public Model {
                           const realtype *p, const realtype *k,
                           const realtype *h, const realtype *w);
 
-    /** model specific implementation of fdxdotdw, colptrs part
+    /**
+     * @brief Model specific implementation of fdxdotdw, colptrs part
      * @param indexptrs column pointers
      */
     virtual void fdxdotdw_colptrs(sunindextype *indexptrs);
 
-    /** model specific implementation of fdxdotdw, rowvals part
+    /**
+     * @brief Model specific implementation of fdxdotdw, rowvals part
      * @param indexvals row values
      */
     virtual void fdxdotdw_rowvals(sunindextype *indexvals);

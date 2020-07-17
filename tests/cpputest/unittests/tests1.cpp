@@ -41,13 +41,7 @@ testSolverGetterSetters(CVodeSolver solver,
                         double tol,
                         double badtol);
 
-TEST_GROUP(amici){ void setup(){
-
-}
-
-                   void teardown(){
-
-                   } };
+TEST_GROUP(amici){};
 
 TEST_GROUP(model)
 {
@@ -61,6 +55,7 @@ TEST_GROUP(model)
                                   nx,
                                   nx,
                                   nx,
+                                  0,
                                   ny,
                                   ny,
                                   nz,
@@ -294,6 +289,7 @@ TEST_GROUP(edata)
                                       nx,
                                       nx,
                                       nx,
+                                      0,
                                       ny,
                                       ny,
                                       nz,
@@ -599,6 +595,7 @@ TEST_GROUP(solver)
                                       nx,
                                       nx,
                                       nx,
+                                      0,
                                       ny,
                                       ny,
                                       nz,

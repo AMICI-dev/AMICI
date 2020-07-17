@@ -195,6 +195,7 @@ class SbmlImporter:
                    allow_reinit_fixpar_initcond: bool = True,
                    compile: bool = True,
                    compute_conservation_laws: bool = True,
+                   simplify: Callable = lambda x: sp.powsimp(x, deep=True),
                    **kwargs) -> None:
         """
         Generate AMICI C++ files for the model provided to the constructor.
@@ -253,7 +254,10 @@ class SbmlImporter:
             if set to true, conservation laws are automatically computed and
             applied such that the state-jacobian of the ODE right-hand-side has
             full rank. This option should be set to True when using the newton
-            algorithm to compute steadystate sensititivities.
+            algorithm to compute steadystate sensitivities.
+
+        :param simplify:
+            see :meth:`ODEModel._simplify`
         """
         set_log_level(logger, verbose)
 
@@ -308,7 +312,7 @@ class SbmlImporter:
         self._clean_reserved_symbols()
         self._replace_special_constants()
 
-        ode_model = ODEModel(simplify=sp.powsimp)
+        ode_model = ODEModel(simplify=simplify)
         ode_model.import_from_sbml_importer(
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(
@@ -1030,15 +1034,18 @@ class SbmlImporter:
                 for nested_rule in rules:
 
                     nested_formula = sp.sympify(
-                        sbml.formulaToL3String(nested_rule.getMath()),
+                        _parse_logical_operators(sbml.formulaToL3String(nested_rule.getMath())),
                         locals=self.local_symbols).subs(variable, formula)
+                    nested_formula = _parse_special_functions(nested_formula)
+                    _check_unsupported_functions(nested_formula, 'Rule')
 
                     nested_rule_math_ml = mathml(nested_formula)
                     nested_rule_math_ml_ast_node = sbml.readMathMLFromString(nested_rule_math_ml)
 
                     if nested_rule_math_ml_ast_node is None:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
-                                            f' cannot be parsed to valid MathML by SymPy!')
+                                            f' cannot be correctly read by SymPy'
+                                            f' or cannot be converted to valid MathML by SymPy!')
 
                     elif nested_rule.setMath(nested_rule_math_ml_ast_node) != sbml.LIBSBML_OPERATION_SUCCESS:
                         raise SBMLException(f'Formula {sbml.formulaToL3String(nested_rule.getMath())}'
@@ -1157,10 +1164,13 @@ class SbmlImporter:
             for s in formula.free_symbols:
                 r = self.sbml.getAssignmentRuleByVariable(str(s))
                 if r is not None:
-                    formula = formula.replace(s, sp.sympify(
-                        sbml.formulaToL3String(r.getMath()),
-                        locals=self.local_symbols
-                    ))
+                    rule_formula = _parse_logical_operators(
+                        sbml.formulaToL3String(r.getMath()))
+                    rule_formula = sp.sympify(
+                        rule_formula, locals=self.local_symbols)
+                    rule_formula = _parse_special_functions(rule_formula)
+                    _check_unsupported_functions(rule_formula, 'Rule')
+                    formula = formula.replace(s, rule_formula)
             return formula
 
         # add user-provided observables or make all species, and compartments
@@ -1237,8 +1247,7 @@ class SbmlImporter:
         # set user-provided sigmas
         for iy, obs_name in enumerate(observables):
             if obs_name in sigmas:
-                sigma_y_values[iy] = sp.sympify(sigmas[obs_name],
-                                                locals=self.local_symbols)
+                sigma_y_values[iy] = replace_assignments(sigmas[obs_name])
 
         measurement_y_syms = sp.Matrix(
             [sp.symbols(f'm{symbol}', real=True) for symbol in observable_syms]

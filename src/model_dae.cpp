@@ -184,6 +184,14 @@ void Model_DAE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
                        __func__);
 }
 
+void Model_DAE::fJB(const realtype t, realtype cj, const AmiVector &x,
+                     const AmiVector &dx, const AmiVector &xB,
+                     const AmiVector &dxB, const AmiVector & /*xBdot*/,
+                     SUNMatrix JB) {
+    fJB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(), dx.getNVector(), JB);
+}
+
+
 void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                     N_Vector xB, N_Vector dxB, SUNMatrix JB) {
     auto x_pos = computeX_pos(x);
@@ -193,6 +201,13 @@ void Model_DAE::fJB(realtype t, realtype cj, N_Vector x, N_Vector dx,
         state.unscaledParameters.data(), state.fixedParameters.data(),
         state.h.data(), cj, N_VGetArrayPointer(xB), N_VGetArrayPointer(dx),
         N_VGetArrayPointer(dxB), w.data(), dwdx.data());
+}
+
+void Model_DAE::fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                          const AmiVector &dx, const AmiVector &xB,
+                          const AmiVector &dxB, const AmiVector & /*xBdot*/,
+                          SUNMatrix JB) {
+    fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(), dxB.getNVector(), JB);
 }
 
 void Model_DAE::fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
@@ -236,6 +251,44 @@ void Model_DAE::fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                     NV_Ith_S(xB, ix) * dxdotdp.at(ix + iJ * nxtrue_solver, ip) +
                     NV_Ith_S(xB, ix + iJ * nxtrue_solver) * dxdotdp.at(ix, ip);
     }
+}
+
+void Model_DAE::fxBdot_ss(const realtype t, const AmiVector &xB,
+                          const AmiVector &dxB, AmiVector &xBdot) {
+    fxBdot_ss(t, xB.getNVector(), dxB.getNVector(), xBdot.getNVector());
+}
+
+void Model_DAE::fxBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
+                          N_Vector xBdot) const {
+    /* Right hande side of the adjoint state for steady state computations.
+     J is fixed (as x remeins in steady state), so the RHS becomes simple. */
+    N_VConst(0.0, xBdot);
+    J.multiply(xBdot, xB);
+    /* Mind the minus sign... */
+    N_VScale(-1.0, xBdot, xBdot);
+}
+
+void Model_DAE::fqBdot_ss(realtype /*t*/, N_Vector xB, N_Vector /*dxB*/,
+                          N_Vector qBdot) const {
+    /* Quadratures when computing adjoints for steady state. The integrand is
+     just the adjoint state itself. */
+    N_VScale(1.0, xB, qBdot);
+}
+
+void Model_DAE::fJSparseB_ss(SUNMatrix JB) {
+    /* Just pass the model Jacobian on to JB */
+    SUNMatCopy(J.get(), JB);
+}
+
+void Model_DAE::writeSteadystateJB(const realtype t, realtype cj,
+                                   const AmiVector &x, const AmiVector & dx,
+                                   const AmiVector &xB, const AmiVector & dxB,
+                                   const AmiVector &xBdot) {
+    /* Get backward Jacobian */
+    fJSparseB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(),
+              dxB.getNVector(), J.get());
+    /* Switch sign, as we integrate forward in time, not backward */
+    J.scale(-1);
 }
 
 void Model_DAE::fsxdot(const realtype t, const AmiVector &x,

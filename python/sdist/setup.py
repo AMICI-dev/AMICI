@@ -67,6 +67,7 @@ from amici.setuptools import (
     get_hdf5_config,
     add_coverage_flags_if_required,
     add_debug_flags_if_required,
+    add_openmp_flags,
 )
 
 
@@ -80,6 +81,8 @@ def main():
     cxx_flags = []
     amici_module_linker_flags = []
     define_macros = []
+
+    add_openmp_flags(cxx_flags=cxx_flags, ldflags=amici_module_linker_flags)
 
     blaspkgcfg = get_blas_config()
     amici_module_linker_flags.extend(blaspkgcfg['extra_link_args'])
@@ -134,7 +137,8 @@ def main():
 
     # Readme as long package description to go on PyPi
     # (https://pypi.org/project/amici/)
-    with open("README.md", "r", encoding="utf-8") as fh:
+    with open(os.path.join(os.path.dirname(__file__), "README.md"),
+              "r", encoding="utf-8") as fh:
         long_description = fh.read()
 
     # Build shared object

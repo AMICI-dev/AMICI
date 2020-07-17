@@ -72,17 +72,7 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
                              std::string const &regex,
                              const char *variable_name, const char *id_name) {
     try {
-        /* For unknown reasons, the Intel compiler fails to compile patterns
-         * such as p[\d]+, which work with g++ and clang.
-         * Using std::regex_constants::extended fixes Intel issues, but g++
-         * seems to not match the pattern correctly.
-         * This is the best solution I was able to come up with...
-         */
-#ifdef __INTEL_COMPILER
-        std::regex pattern(regex, std::regex_constants::extended);
-#else
         std::regex pattern(regex);
-#endif
         int n_found = 0;
         for (const auto &id : ids) {
             if (std::regex_match(id, pattern)) {
@@ -104,23 +94,21 @@ static int setValueByIdRegex(std::vector<std::string> const &ids,
     }
 }
 
-Model::Model() : dxdotdp(0, 0), x_pos_tmp(0) {}
-
 Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-             const int nxtrue_solver, const int ny, const int nytrue,
-             const int nz, const int nztrue, const int ne, const int nJ,
-             const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
-             std::vector<int> ndJydy, const int nnz, const int ubw,
-             const int lbw, SecondOrderMode o2mode,
+             const int nxtrue_solver, const int nx_solver_reinit, const int ny, 
+             const int nytrue, const int nz, const int nztrue, const int ne, 
+             const int nJ, const int nw, const int ndwdx, const int ndwdp, 
+             const int ndxdotdw, std::vector<int> ndJydy, const int nnz, 
+             const int ubw, const int lbw, SecondOrderMode o2mode,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
              std::vector<int> z2event, const bool pythonGenerated,
              const int ndxdotdp_explicit, const int ndxdotdp_implicit)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
-      nxtrue_solver(nxtrue_solver), ny(ny), nytrue(nytrue), nz(nz),
-      nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), ndwdp(ndwdp),
-      ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz), nJ(nJ), ubw(ubw),
-      lbw(lbw), pythonGenerated(pythonGenerated),
+      nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny), 
+      nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx), 
+      ndwdp(ndwdp), ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz), 
+      nJ(nJ), ubw(ubw), lbw(lbw), pythonGenerated(pythonGenerated),
       ndxdotdp_explicit(ndxdotdp_explicit),
       ndxdotdp_implicit(ndxdotdp_implicit), o2mode(o2mode),
       idlist(std::move(idlist)), J(nx_solver, nx_solver, nnz, CSC_MAT),
@@ -178,7 +166,8 @@ bool operator==(const Model &a, const Model &b) {
 
     return (a.nx_rdata == b.nx_rdata) && (a.nxtrue_rdata == b.nxtrue_rdata) &&
            (a.nx_solver == b.nx_solver) &&
-           (a.nxtrue_solver == b.nxtrue_solver) && (a.ny == b.ny) &&
+           (a.nxtrue_solver == b.nxtrue_solver) && 
+           (a.nx_solver_reinit == b.nx_solver_reinit) && (a.ny == b.ny) &&
            (a.nytrue == b.nytrue) && (a.nz == b.nz) && (a.nztrue == b.nztrue) &&
            (a.ne == b.ne) && (a.nw == b.nw) && (a.ndwdx == b.ndwdx) &&
            (a.ndwdp == b.ndwdp) && (a.ndxdotdw == b.ndxdotdw) &&
@@ -212,10 +201,12 @@ void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
         initHeaviside(x, dx);
 }
 
-void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB) {
+void Model::initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB,
+                        bool posteq) const {
     xB.reset();
     dxB.reset();
-    xQB.reset();
+    if (!posteq)
+        xQB.reset();
 }
 
 void Model::initializeStates(AmiVector &x) {
@@ -225,9 +216,7 @@ void Model::initializeStates(AmiVector &x) {
         std::vector<realtype> x0_solver(nx_solver, 0.0);
         ftotal_cl(state.total_cl.data(), x0data.data());
         fx_solver(x0_solver.data(), x0data.data());
-        for (int ix = 0; ix < nx_solver; ix++) {
-            x[ix] = (realtype)x0_solver.at(ix);
-        }
+        std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
 }
 
@@ -244,7 +233,7 @@ void Model::initializeStateSensitivities(AmiVectorArray &sx,
             fstotal_cl(stcl, &sx0data.at(ip * nx_rdata), plist(ip));
             fsx_solver(sx0_solver_slice.data(), &sx0data.at(ip * nx_rdata));
             for (int ix = 0; ix < nx_solver; ix++) {
-                sx.at(ix, ip) = (realtype)sx0_solver_slice.at(ix);
+                sx.at(ix, ip) = sx0_solver_slice.at(ix);
             }
         }
     }
@@ -275,6 +264,8 @@ int Model::np() const { return static_cast<int>(originalParameters.size()); }
 int Model::nk() const { return static_cast<int>(state.fixedParameters.size()); }
 
 int Model::ncl() const { return nx_rdata - nx_solver; }
+
+int Model::nx_reinit() const { return nx_solver_reinit; }
 
 const double *Model::k() const { return state.fixedParameters.data(); }
 
@@ -342,7 +333,7 @@ void Model::setParameterById(const std::map<std::string, realtype> &p,
     for (auto& kv : p) {
         try {
             setParameterById(kv.first, kv.second);
-        } catch (AmiException&) {
+        } catch (AmiException const&) {
             if(!ignoreErrors)
                 throw;
         }
@@ -386,7 +377,7 @@ void Model::setParameterByName(const std::map<std::string, realtype> &p,
     for (auto& kv : p) {
         try {
             setParameterByName(kv.first, kv.second);
-        } catch (AmiException&) {
+        } catch (AmiException const&) {
             if(!ignoreErrors)
                 throw;
         }
@@ -1235,8 +1226,8 @@ void Model::writeLLHSensitivitySlice(const std::vector<realtype> &dLLhdp,
                     nJ - 1);
 }
 
-void Model::checkLLHBufferSize(std::vector<realtype> &sllh,
-                               std::vector<realtype> &s2llh) {
+void Model::checkLLHBufferSize(std::vector<realtype> const &sllh,
+                               std::vector<realtype> const &s2llh) const {
     if (sllh.size() != static_cast<unsigned>(nplist()))
         throw AmiException("Incorrect sllh buffer size! Was %u, expected %i.",
                            sllh.size(), nplist());

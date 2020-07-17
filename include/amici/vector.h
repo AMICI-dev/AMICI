@@ -29,7 +29,7 @@ class AmiVector {
      * Using N_VMake_Serial ensures that the N_Vector
      * module does not try to deallocate the data vector
      * when calling N_VDestroy_Serial
-     * @brief emmpty constructor
+     * @brief empty constructor
      * @param length number of elements in vector
      */
     explicit AmiVector(const long int length)
@@ -44,6 +44,13 @@ class AmiVector {
     explicit AmiVector(std::vector<realtype> rvec)
         : vec(std::move(rvec)),
           nvec(N_VMake_Serial(static_cast<long int>(vec.size()), vec.data())) {}
+
+    /** Copy data from gsl::span and constructs a vector
+     * @brief constructor from gsl::span,
+     * @param rvec vector from which the data will be copied
+     */
+    explicit AmiVector(gsl::span<realtype> rvec)
+        : AmiVector(std::vector<realtype>(rvec.begin(), rvec.end())) {}
 
     /**
      * @brief copy constructor

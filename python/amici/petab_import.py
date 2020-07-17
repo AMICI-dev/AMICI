@@ -185,10 +185,13 @@ def species_to_parameters(species_ids: List[str],
         for species_id in transformables:
             # loop, since removeX only removes one instance
             while reaction.removeReactant(species_id):
+                # remove from reactants
                 pass
             while reaction.removeProduct(species_id):
+                # remove from products
                 pass
             while reaction.removeModifier(species_id):
+                # remove from modifiers
                 pass
 
     return transformables
@@ -471,7 +474,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
                            key=lambda symbol: symbol.name)
         for free_sym in free_syms:
             sym = str(free_sym)
-            if sbml_model.getElementBySId(sym) is None:
+            if sbml_model.getElementBySId(sym) is None and sym != 'time':
                 output_parameters[sym] = None
     logger.debug(f"Adding output parameters to model: {output_parameters}")
     for par in output_parameters.keys():

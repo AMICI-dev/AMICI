@@ -204,16 +204,16 @@ class ForwardProblem {
      * @brief Accessor for it
      * @return it
      */
-    int getCurrentTimeIteration() {
+    int getCurrentTimeIteration() const {
         return it;
     }
 
     /**
-     * @brief Returns maximal time point index for which simulations are available
-     * @return index
+     * @brief Returns final time point for which simulations are available
+     * @return time point
      */
-    int getTimepointCounter() const {
-        return static_cast<int>(timepoint_states.size() - 1);
+    realtype getFinalTime() const {
+        return final_state.t;
     }
 
     /**
@@ -239,7 +239,9 @@ class ForwardProblem {
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
-        return timepoint_states.at(it);
+        if (model->getTimepoint(it) == initial_state.t)
+            return getInitialSimulationState();
+        return timepoint_states.find(model->getTimepoint(it))->second;
     };
 
     /**
@@ -319,8 +321,9 @@ class ForwardProblem {
      *
      * @param nmaxevent maximal number of events
      */
-    bool checkEventsToFill(int nmaxevent) {
-        return std::any_of(nroots.cbegin(), nroots.cend(), [&](int curNRoots) {
+    bool checkEventsToFill(int nmaxevent) const {
+        return std::any_of(nroots.cbegin(), nroots.cend(),
+                           [nmaxevent](int curNRoots) {
                 return curNRoots < nmaxevent;
         });
     };
@@ -399,7 +402,7 @@ class ForwardProblem {
     std::vector<int> rootsfound;
 
     /** simulation states history at timepoints  */
-    std::vector<SimulationState> timepoint_states;
+    std::map<realtype, SimulationState> timepoint_states;
 
     /** simulation state history at events*/
     std::vector<SimulationState> event_states;
@@ -458,8 +461,7 @@ class FinalStateStorer : public ContextManager {
      * @brief constructor, attaches problem pointer
      * @param fwd problem from which the simulation state is to be stored
      */
-    explicit FinalStateStorer(ForwardProblem *fwd) {
-        this->fwd = fwd;
+    explicit FinalStateStorer(ForwardProblem *fwd) : fwd(fwd) {
     }
 
     FinalStateStorer &operator=(const FinalStateStorer &other) = delete;

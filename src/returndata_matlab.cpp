@@ -101,7 +101,7 @@ mxArray *initMatlabReturnFields(ReturnData const *rdata) {
 }
 
 mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
-    const int numFields = 23;
+    const int numFields = 27;
     const char *field_names_sol[numFields] = {"xdot",
                                               "J",
                                               "numsteps",
@@ -115,14 +115,18 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
                                               "numnonlinsolvconvfailsB",
                                               "preeq_status",
                                               "preeq_numsteps",
+                                              "preeq_numstepsB",
                                               "preeq_numlinsteps",
                                               "preeq_cpu_time",
+                                              "preeq_cpu_timeB",
                                               "preeq_t",
                                               "preeq_wrms",
                                               "posteq_status",
                                               "posteq_numsteps",
+                                              "posteq_numstepsB",
                                               "posteq_numlinsteps",
                                               "posteq_cpu_time",
+                                              "posteq_cpu_timeB",
                                               "posteq_t",
                                               "posteq_wrms"};
 
@@ -132,43 +136,51 @@ mxArray *initMatlabDiagnosisFields(ReturnData const *rdata) {
         mxCreateStructMatrix(1, 1, numFields, field_names_sol);
 
     std::vector<int> perm1 = {0, 1};
+    int finite_nt = 0;
+    for (int it = 0; it < rdata->nt; it++)
+        if (!std::isinf(rdata->ts[it]))
+            finite_nt++;
 
-    writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numrhsevals", rdata->numrhsevals, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numerrtestfails", rdata->numerrtestfails, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, rdata->nt);
-    writeMatlabField1(matlabDiagnosisStruct, "order", rdata->order, rdata->nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numsteps", rdata->numsteps, finite_nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numrhsevals", rdata->numrhsevals, finite_nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numerrtestfails", rdata->numerrtestfails, finite_nt);
+    writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfails", rdata->numnonlinsolvconvfails, finite_nt);
+    writeMatlabField1(matlabDiagnosisStruct, "order", rdata->order, finite_nt);
 
     if (rdata->nx > 0) {
-        writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx);
-        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx, rdata->nx, perm1);
+        writeMatlabField1(matlabDiagnosisStruct, "xdot", rdata->xdot, rdata->nx_solver);
+        writeMatlabField2(matlabDiagnosisStruct, "J", rdata->J, rdata->nx_solver, rdata->nx_solver, perm1);
 
-        writeMatlabField0(matlabDiagnosisStruct, "preeq_status", rdata->preeq_status);
+        writeMatlabField1(matlabDiagnosisStruct, "preeq_status", rdata->preeq_status, 3);
         writeMatlabField1(matlabDiagnosisStruct, "preeq_numsteps", rdata->preeq_numsteps, 3);
         writeMatlabField2(matlabDiagnosisStruct, "preeq_numlinsteps",
                           rdata->preeq_numlinsteps,
                           rdata->preeq_numlinsteps.size() > 0
                               ? rdata->newton_maxsteps : 0, 2, perm1);
+        writeMatlabField0(matlabDiagnosisStruct, "preeq_numstepsB", rdata->preeq_numstepsB);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_cpu_time", rdata->preeq_cpu_time);
+        writeMatlabField0(matlabDiagnosisStruct, "preeq_cpu_timeB", rdata->preeq_cpu_timeB);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_t", rdata->preeq_t);
         writeMatlabField0(matlabDiagnosisStruct, "preeq_wrms", rdata->preeq_wrms);
 
-        writeMatlabField0(matlabDiagnosisStruct, "posteq_status", rdata->posteq_status);
+        writeMatlabField1(matlabDiagnosisStruct, "posteq_status", rdata->posteq_status, 3);
         writeMatlabField1(matlabDiagnosisStruct, "posteq_numsteps", rdata->posteq_numsteps, 3);
         writeMatlabField2(matlabDiagnosisStruct, "posteq_numlinsteps",
                           rdata->posteq_numlinsteps,
                           rdata->posteq_numlinsteps.size() > 0
                               ? rdata->newton_maxsteps : 0, 2, perm1);
+        writeMatlabField0(matlabDiagnosisStruct, "posteq_numstepsB", rdata->posteq_numstepsB);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_cpu_time", rdata->posteq_cpu_time);
+        writeMatlabField0(matlabDiagnosisStruct, "posteq_cpu_timeB", rdata->posteq_cpu_timeB);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_t", rdata->posteq_t);
         writeMatlabField0(matlabDiagnosisStruct, "posteq_wrms", rdata->posteq_wrms);
     }
     if (rdata->sensi >= SensitivityOrder::first) {
         if (rdata->sensi_meth == SensitivityMethod::adjoint) {
-            writeMatlabField1(matlabDiagnosisStruct, "numstepsB", rdata->numstepsB, rdata->nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numrhsevalsB", rdata->numrhsevalsB, rdata->nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numerrtestfailsB, rdata->nt);
-            writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfailsB", rdata->numnonlinsolvconvfailsB, rdata->nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numstepsB", rdata->numstepsB, finite_nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numrhsevalsB", rdata->numrhsevalsB, finite_nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numerrtestfailsB", rdata->numerrtestfailsB, finite_nt);
+            writeMatlabField1(matlabDiagnosisStruct, "numnonlinsolvconvfailsB", rdata->numnonlinsolvconvfailsB, finite_nt);
         }
     }
 

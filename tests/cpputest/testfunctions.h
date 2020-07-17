@@ -65,20 +65,20 @@ public:
    * @param z2event mapping of event outputs to events
    */
   Model_Test(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-             const int nxtrue_solver, const int ny, const int nytrue,
-             const int nz, const int nztrue, const int ne, const int nJ,
-             const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
-             const int nnz, const int ubw, const int lbw,
+             const int nxtrue_solver, const int nx_solver_reinit, const int ny, 
+             const int nytrue, const int nz, const int nztrue, const int ne, 
+             const int nJ, const int nw, const int ndwdx, const int ndwdp, 
+             const int ndxdotdw, const int nnz, const int ubw, const int lbw,
              const SecondOrderMode o2mode, const std::vector<realtype> p,
              const std::vector<realtype> k, const std::vector<int> plist,
              const std::vector<realtype> idlist, const std::vector<int> z2event)
-      : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue, nz,
+      : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, nx_solver_reinit, ny, nytrue, nz,
               nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, {}, nnz, ubw, lbw, o2mode,
               p, k, plist, idlist, z2event) {}
 
   /** default constructor */
   Model_Test()
-      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, 0, 0, 0,
+      : Model(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {}, 0, 0, 0,
               SecondOrderMode::none, std::vector<realtype>(),
               std::vector<realtype>(), std::vector<int>(),
               std::vector<realtype>(), std::vector<int>()) {}
@@ -111,6 +111,20 @@ public:
                           const AmiVector &xdot, SUNMatrix J) override {
         throw AmiException("not implemented");
     }
+    virtual void fJB(const realtype t, realtype cj, const AmiVector &x,
+                     const AmiVector &dx, const AmiVector &xB, 
+                     const AmiVector &dxB, const AmiVector &xBdot, 
+                     SUNMatrix JB)
+    override {
+        throw AmiException("not implemented");
+    }
+    virtual void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                           const AmiVector &dx, const AmiVector &xB,
+                           const AmiVector &dxB, const AmiVector &xBdot,
+                           SUNMatrix JB) 
+    override {
+        throw AmiException("not implemented");
+    }
     virtual void fJDiag(const realtype t, AmiVector &Jdiag,
                         const realtype cj, const AmiVector &x,
                         const AmiVector &dx) override {
@@ -123,6 +137,22 @@ public:
     virtual void fJv(const realtype t, const AmiVector &x, const AmiVector &dx,
                      const AmiVector &xdot,const AmiVector &v, AmiVector &nJv,
                      const realtype cj) override {
+        throw AmiException("not implemented");
+    }
+
+    virtual void fxBdot_ss(const realtype t, const AmiVector &xB,
+                           const AmiVector &dxB, AmiVector &xBdot) override {
+        throw AmiException("not implemented");
+    }
+
+    virtual void fJSparseB_ss(SUNMatrix JB) override {
+        throw AmiException("not implemented");
+    }
+
+    virtual void writeSteadystateJB(const realtype t, realtype cj, 
+                                    const AmiVector &x, const AmiVector &dx, 
+                                    const AmiVector &xB, const AmiVector &dxB, 
+                                    const AmiVector &xBdot) override {
         throw AmiException("not implemented");
     }
 
@@ -173,7 +203,7 @@ void simulateWithDefaultOptions();
 
 void simulateVerifyWrite(const std::string& path);
 
-void simulateVerifyWrite(std::string path, double atol, double rtol);
+void simulateVerifyWrite(std::string const& path, double atol, double rtol);
 
 void simulateVerifyWrite(const std::string& hdffileOptions, const std::string& hdffileResults,
                          const std::string& hdffilewrite, const std::string& path,

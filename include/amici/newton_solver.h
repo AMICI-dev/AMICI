@@ -71,14 +71,24 @@ class NewtonSolver {
     }
 
     /**
-     * @brief Writes the Jacobian for the Newton iteration and passes it to the linear
-     * solver
+     * @brief Writes the Jacobian for the Newton iteration and passes it to the
+     * linear solver
      *
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
      */
     virtual void prepareLinearSystem(int ntry, int nnewt) = 0;
+
+    /**
+     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
+     * solver
+     *
+     * @param ntry integer newton_try integer start number of Newton solver
+     * (1 or 2)
+     * @param nnewt integer number of current Newton step
+     */
+    virtual void prepareLinearSystemB(int ntry, int nnewt) = 0;
 
     /**
      * @brief Solves the linear system for the Newton step
@@ -115,9 +125,12 @@ class NewtonSolver {
     AmiVector *x;
     /** current state time derivative (DAE) */
     AmiVector dx;
-    
     /** history of number of linear steps */
     std::vector<int> numlinsteps;
+    /** current adjoint state */
+    AmiVector xB;
+    /** current adjoint state time derivative (DAE) */
+    AmiVector dxB;
 };
 
 /**
@@ -149,14 +162,24 @@ class NewtonSolverDense : public NewtonSolver {
     void solveLinearSystem(AmiVector &rhs) override;
 
     /**
-     * @brief Writes the Jacobian for the Newton iteration and passes it to the linear
-     * solver
+     * @brief Writes the Jacobian for the Newton iteration and passes it to the
+     * linear solver
      *
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
      */
     void prepareLinearSystem(int ntry, int nnewt) override;
+
+    /**
+     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
+     * solver
+     *
+     * @param ntry integer newton_try integer start number of Newton solver
+     * (1 or 2)
+     * @param nnewt integer number of current Newton step
+     */
+    void prepareLinearSystemB(int ntry, int nnewt) override;
 
   private:
     /** temporary storage of Jacobian */
@@ -194,14 +217,24 @@ class NewtonSolverSparse : public NewtonSolver {
     void solveLinearSystem(AmiVector &rhs) override;
 
     /**
-     * @brief Writes the Jacobian for the Newton iteration and passes it to the linear
-     * solver
+     * @brief Writes the Jacobian for the Newton iteration and passes it to the
+     * linear solver
      *
      * @param ntry integer newton_try integer start number of Newton solver
      * (1 or 2)
      * @param nnewt integer number of current Newton step
      */
     void prepareLinearSystem(int ntry, int nnewt) override;
+
+    /**
+     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
+     * solver
+     *
+     * @param ntry integer newton_try integer start number of Newton solver
+     * (1 or 2)
+     * @param nnewt integer number of current Newton step
+     */
+    void prepareLinearSystemB(int ntry, int nnewt) override;
 
   private:
     /** temporary storage of Jacobian */
@@ -238,7 +271,7 @@ class NewtonSolverIterative : public NewtonSolver {
     void solveLinearSystem(AmiVector &rhs) override;
 
     /**
-     * Writes the Jacobian for the Newton iteration and passes it to the linear
+     * Writes the Jacobian (J) for the Newton iteration and passes it to the linear
      * solver.
      * Also wraps around getSensis for iterative linear solver.
      *
@@ -247,6 +280,17 @@ class NewtonSolverIterative : public NewtonSolver {
      * @param nnewt integer number of current Newton step
      */
     void prepareLinearSystem(int ntry, int nnewt) override;
+
+    /**
+     * Writes the Jacobian (JB) for the Newton iteration and passes it to the linear
+     * solver.
+     * Also wraps around getSensis for iterative linear solver.
+     *
+     * @param ntry integer newton_try integer start number of Newton solver
+     * (1 or 2)
+     * @param nnewt integer number of current Newton step
+     */
+    void prepareLinearSystemB(int ntry, int nnewt) override;
 
     /**
      * Iterative linear solver created from SPILS BiCG-Stab.
@@ -285,6 +329,8 @@ class NewtonSolverIterative : public NewtonSolver {
     AmiVector ns_tmp;
     /** ???  */
     AmiVector ns_Jdiag;
+    /** temporary storage of Jacobian */
+    SUNMatrixWrapper ns_J;
 };
 
 

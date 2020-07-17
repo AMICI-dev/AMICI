@@ -74,32 +74,6 @@ matrix:
       language: minimal
       compiler: clang
       env:
-        - CI_BUILD=TRUE
-        - CI_CPPUTEST=TRUE
-        - CI_ARCHIVE=TRUE
-        - CI_CPPCHECK=TRUE
-        - CI_PYTHON=TRUE
-        - CI_NOTEBOOK=TRUE
-      addons:
-        homebrew:
-          packages:
-            - hdf5
-            - swig
-            - gcc
-            - cppcheck
-          update: true
-      before_install:
-        - travis_wait brew link --overwrite gcc # fix linker warning regarding /usr/local/include/c++
-        - brew link --overwrite python # https://github.com/ICB-DCM/AMICI/issues/894
-        - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-      after_success:
-        - cd $BASE_DIR # cd to base dir for correct relative path in deploy
-
-    - os: osx
-      osx_image: xcode11
-      language: minimal
-      compiler: clang
-      env:
         - CI_DOC=TRUE
       addons:
         homebrew:

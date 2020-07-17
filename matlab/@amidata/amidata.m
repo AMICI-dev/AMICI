@@ -34,6 +34,8 @@ classdef amidata < handle
         condition = double.empty();
         % experimental condition for preequilibration
         conditionPreequilibration = double.empty();
+        % reinitialize states based on fixed parameters after preeq.?
+        reinitializeStates = false;
     end
     
     methods
@@ -121,6 +123,15 @@ classdef amidata < handle
                     assert(D.nk == numel(varargin{1}.conditionPreequilibration));
                     D.conditionPreequilibration = varargin{1}.conditionPreequilibration;
                 end
+                if(isfield(varargin{1},'reinitializeStates'))
+                    if islogical(varargin{1}.reinitializeStates)
+                        D.reinitializeStates = varargin{1}.reinitializeStates;
+                    elseif isnumeric(varargin{1}.reinitializeStates)
+                        D.reinitializeStates = logical(varargin{1}.reinitializeStates);
+                    else
+                        error('Assignment error: Value for field reinitializeStates must be logical.');
+                    end
+                end    
             elseif(nargin == 5)
                 D.nt = varargin{1};
                 D.ny = varargin{2};

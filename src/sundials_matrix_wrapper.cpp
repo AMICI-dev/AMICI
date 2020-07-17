@@ -174,6 +174,14 @@ void SUNMatrixWrapper::reset() {
         SUNMatZero(matrix);
 }
 
+void SUNMatrixWrapper::scale(realtype a) {
+    if (matrix) {
+        int nonzeros_ = static_cast<int>(nonzeros());
+        for (int i = 0; i < nonzeros_; ++i)
+            data_ptr[i] *= a;
+    }
+}
+
 void SUNMatrixWrapper::multiply(N_Vector c, const_N_Vector b) const {
     multiply(gsl::make_span<realtype>(NV_DATA_S(c), NV_LENGTH_S(c)),
              gsl::make_span<const realtype>(NV_DATA_S(b), NV_LENGTH_S(b)));

@@ -26,7 +26,7 @@ jobs:
       run: |
         cd python/sdist && /usr/bin/python3 setup.py sdist
 
-    - name: Archive sdist
+    - name: "Upload artifact: sdist"
       uses: actions/upload-artifact@v1
       with:
         name: sdist

@@ -14,14 +14,14 @@ class Solver;
 
 namespace model_TPL_MODELNAME {
 
-extern std::array<std::string, TPL_NP> parameterNames;
-extern std::array<std::string, TPL_NK> fixedParameterNames;
-extern std::array<std::string, TPL_NX_RDATA> stateNames;
-extern std::array<std::string, TPL_NY> observableNames;
-extern std::array<std::string, TPL_NP> parameterIds;
-extern std::array<std::string, TPL_NK> fixedParameterIds;
-extern std::array<std::string, TPL_NX_RDATA> stateIds;
-extern std::array<std::string, TPL_NY> observableIds;
+extern std::array<const char*, TPL_NP> parameterNames;
+extern std::array<const char*, TPL_NK> fixedParameterNames;
+extern std::array<const char*, TPL_NX_RDATA> stateNames;
+extern std::array<const char*, TPL_NY> observableNames;
+extern std::array<const char*, TPL_NP> parameterIds;
+extern std::array<const char*, TPL_NK> fixedParameterIds;
+extern std::array<const char*, TPL_NX_RDATA> stateIds;
+extern std::array<const char*, TPL_NY> observableIds;
 
 
 extern void J_TPL_MODELNAME(realtype *J, const realtype t, const realtype *x,
@@ -119,6 +119,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               TPL_NXTRUE_RDATA,                            // nxtrue_rdata
               TPL_NX_SOLVER,                               // nx_solver
               TPL_NXTRUE_SOLVER,                           // nxtrue_solver
+              TPL_NX_SOLVER_REINIT,                        // nx_solver_reinit
               TPL_NY,                                      // ny
               TPL_NYTRUE,                                  // nytrue
               TPL_NZ,                                      // nz

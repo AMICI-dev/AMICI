@@ -15,6 +15,7 @@ from .swig import find_swig, get_swig_version
 
 try:
     import pkgconfig  # optional
+
     # pkgconfig python module might be installed without pkg-config binary
     # being available
     pkgconfig.exists('somePackageName')
@@ -69,7 +70,7 @@ def get_blas_config() -> PackageInfo:
             blaspkgcfg['extra_link_args'].extend(
                 shlex.split(os.environ['MKL_LIB'])
             )
-        blaspkgcfg['define_macros'].append(('AMICI_BLAS_MKL', None),)
+        blaspkgcfg['define_macros'].append(('AMICI_BLAS_MKL', None), )
         return blaspkgcfg
 
     # Try pkgconfig
@@ -193,8 +194,8 @@ def add_coverage_flags_if_required(cxx_flags: List[str],
     if 'ENABLE_GCOV_COVERAGE' in os.environ and \
             os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
         log.info("ENABLE_GCOV_COVERAGE was set to TRUE."
-              " Building AMICI with coverage symbols.")
-        cxx_flags.extend(['-g', '-O0',  '--coverage'])
+                 " Building AMICI with coverage symbols.")
+        cxx_flags.extend(['-g', '-O0', '--coverage'])
         linker_flags.extend(['--coverage', '-g'])
 
 
@@ -213,7 +214,7 @@ def add_debug_flags_if_required(cxx_flags: List[str],
     if 'ENABLE_AMICI_DEBUGGING' in os.environ \
             and os.environ['ENABLE_AMICI_DEBUGGING'] == 'TRUE':
         log.info("ENABLE_AMICI_DEBUGGING was set to TRUE."
-              " Building AMICI with debug symbols.")
+                 " Building AMICI with debug symbols.")
         cxx_flags.extend(['-g', '-O0'])
         linker_flags.extend(['-g'])
 
@@ -271,3 +272,22 @@ def generate_swig_interface_files() -> None:
     if not sp.returncode == 0:
         raise AssertionError('Swigging AMICI failed:\n'
                              + sp.stdout.decode('utf-8'))
+
+
+def add_openmp_flags(cxx_flags: List, ldflags: List) -> None:
+    """Add OpenMP flags to lists for compiler/linker flags (in-place)"""
+
+    # Enable OpenMP support for Linux / OSX:
+    if sys.platform == 'linux':
+        log.info("Adding OpenMP flags...")
+        cxx_flags.append("-fopenmp")
+        ldflags.append("-fopenmp")
+    elif sys.platform == 'darwin':
+        if os.path.exists('/usr/local/lib/libomp.a'):
+            log.info("Adding OpenMP flags...")
+            cxx_flags.extend(["-Xpreprocessor", "-fopenmp"])
+            ldflags.extend(["-Xpreprocessor", "-fopenmp", "-lomp"])
+        else:
+            log.info("Not adding OpenMP flags, because /usr/local/lib/libomp.a"
+                     " does not exist. To enable, run `brew install libomp` "
+                     "or add flags manually.")

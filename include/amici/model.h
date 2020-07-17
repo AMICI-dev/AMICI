@@ -70,7 +70,7 @@ struct ModelState {
 class Model : public AbstractModel {
   public:
     /** default constructor */
-    Model();
+    Model() = default;
 
     /**
      * @brief Constructor with model dimensions
@@ -79,6 +79,8 @@ class Model : public AbstractModel {
      * @param nx_solver number of state variables with conservation laws applied
      * @param nxtrue_solver number of state variables of the non-augmented model
      * with conservation laws applied
+     * @param nx_solver_reinit number of state variables with conservation laws
+     * subject to reinitialization
      * @param ny number of observables
      * @param nytrue number of observables of the non-augmented model
      * @param nz number of event observables
@@ -107,9 +109,10 @@ class Model : public AbstractModel {
      * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
-          int ny, int nytrue, int nz, int nztrue, int ne, int nJ, int nw,
-          int ndwdx, int ndwdp, int ndxdotdw, std::vector<int> ndJydy, int nnz,
-          int ubw, int lbw, amici::SecondOrderMode o2mode,
+          int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
+          int nJ, int nw, int ndwdx, int ndwdp, int ndxdotdw,
+          std::vector<int> ndJydy, int nnz, int ubw, int lbw,
+          amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
@@ -208,8 +211,10 @@ class Model : public AbstractModel {
      * @param xB adjoint state variables
      * @param dxB time derivative of adjoint states (DAE only)
      * @param xQB adjoint quadratures
+     * @param posteq flag indicating whether postequilibration was performed
      */
-    void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB);
+    void initializeB(AmiVector &xB, AmiVector &dxB, AmiVector &xQB,
+                     bool posteq) const;
 
     /**
      * @brief Initialization of initial states
@@ -255,6 +260,12 @@ class Model : public AbstractModel {
      * @return difference between nx_rdata and nx_solver
      */
     int ncl() const;
+
+    /**
+     * @brief Number of solver states subject to reinitialization
+     * @return model member nx_solver_reinit
+     */
+    int nx_reinit() const;
 
     /**
      * @brief Fixed parameters
@@ -1175,6 +1186,9 @@ class Model : public AbstractModel {
      */
     int nxtrue_solver{0};
 
+    /** number of solver states subject to reinitialization */
+    int nx_solver_reinit{0};
+
     /** number of observables */
     int ny{0};
 
@@ -1250,7 +1264,7 @@ class Model : public AbstractModel {
      * temporary storage of dxdotdp data across functions, Matlab only
      * (dimension: nplist x nx_solver, row-major)
      */
-    AmiVectorArray dxdotdp;
+    AmiVectorArray dxdotdp {0, 0};
     /** AMICI context */
     AmiciApplication *app = &defaultContext;
 
@@ -1291,8 +1305,8 @@ class Model : public AbstractModel {
      * @param sllh first order buffer
      * @param s2llh second order buffer
      */
-    void checkLLHBufferSize(std::vector<realtype> &sllh,
-                            std::vector<realtype> &s2llh);
+    void checkLLHBufferSize(const std::vector<realtype> &sllh,
+                            const std::vector<realtype> &s2llh) const;
 
     /**
      * @brief Set the nplist-dependent vectors to their proper sizes
@@ -1813,7 +1827,7 @@ class Model : public AbstractModel {
 
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: nx_solver) */
-    mutable AmiVector x_pos_tmp;
+    mutable AmiVector x_pos_tmp {0};
 
     /** orignal user-provided, possibly scaled parameter array (dimension: np)
      */

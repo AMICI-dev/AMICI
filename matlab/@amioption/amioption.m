@@ -41,6 +41,8 @@ classdef amioption < matlab.mixin.CustomDisplay
         ism = 1;
         % sensitivity method
         sensi_meth = 1;
+        % sensitivity method for preequilibration
+        sensi_meth_preeq = 1;
         % sensitivity order
         sensi = 0;
         % number of reported events
@@ -67,6 +69,8 @@ classdef amioption < matlab.mixin.CustomDisplay
         % unscaled parameters p.
         % Use [] for default as specified in the model (fallback: 'lin').
         pscale = [];
+        % Mode for for computing sensitivities ({0: Newton}, 1: Simulation)
+        steadyStateSensitivityMode = 0;
     end
     
     methods

@@ -42,7 +42,7 @@ def test_pandas_import_export(sbml_example_presimulation_module, case):
     for fp in ['fixedParameters', 'fixedParametersPreequilibration',
                'fixedParametersPresimulation']:
 
-        if fp != 'fixedParameters' or case[fp] is not ():
+        if fp != 'fixedParameters' or case[fp] != ():
             assert getattr(edata[0], fp) == getattr(edata_reconstructed[0], fp)
 
             assert case[fp] == getattr(edata_reconstructed[0], fp)

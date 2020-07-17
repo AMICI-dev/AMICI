@@ -79,6 +79,14 @@ static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
 static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                   void *user_data);
 
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot, void *user_data);
+
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot, void *user_data);
+
+static int fJSparseB_ss(realtype t, N_Vector x, N_Vector xBdot,
+                        SUNMatrix JB, void *user_data, N_Vector tmp1,
+                        N_Vector tmp2, N_Vector tmp3);
+
 static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector xdot, int ip,
                   N_Vector sx, N_Vector sxdot, void *user_data,
                   N_Vector tmp1, N_Vector tmp2);
@@ -101,6 +109,15 @@ void CVodeSolver::init(const realtype t0, const AmiVector &x0,
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeInit");
+}
+
+void CVodeSolver::initSteadystate(const realtype t0, const AmiVector &x0,
+                                  const AmiVector &dx0) const {
+    /* We need to set the steadystate rhs function. SUndials doesn't have this
+       in its public api, so we have to change it in the solver memory,
+       as re-calling init would unset solver settings. */
+    auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
+    cv_mem->cv_f = fxBdot_ss;
 }
 
 void CVodeSolver::sensInit1(const AmiVectorArray &sx0,
@@ -211,6 +228,12 @@ void CVodeSolver::setJacTimesVecFnB(int which) const {
         throw CvodeException(status, "CVodeSetJacTimesB");
 }
 
+void CVodeSolver::setSparseJacFn_ss() const {
+    int status = CVodeSetJacFn(solverMemory.get(), fJSparseB_ss);
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetJacFn");
+}
+
 Solver *CVodeSolver::clone() const { return new CVodeSolver(*this); }
 
 void CVodeSolver::allocateSolver() const {
@@ -244,6 +267,12 @@ void CVodeSolver::setQuadErrConB(const int which, const bool flag) const {
     int status = CVodeSetQuadErrConB(solverMemory.get(), which, flag);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeSetQuadErrConB");
+}
+
+void CVodeSolver::setQuadErrCon(const bool flag) const {
+    int status = CVodeSetQuadErrCon(solverMemory.get(), flag);
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeSetQuadErrCon");
 }
 
 void CVodeSolver::getRootInfo(int *rootsfound) const {
@@ -553,12 +582,25 @@ void CVodeSolver::getQuadB(int which) const {
         throw CvodeException(status, "CVodeGetQuadB");
 }
 
+void CVodeSolver::getQuad(realtype &t) const {
+    int status = CVodeGetQuad(solverMemory.get(), &t, xQ.getNVector());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeGetQuad");
+}
+
 void CVodeSolver::getQuadDkyB(const realtype t, const int k, int which) const {
     int status =
         CVodeGetQuadDky(CVodeGetAdjCVodeBmem(solverMemory.get(), which), t, k,
                         xQB.getNVector());
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeGetQuadDkyB");
+}
+
+void CVodeSolver::getQuadDky(const realtype t, const int k) const {
+    int status =
+    CVodeGetQuadDky(solverMemory.get(), t, k, xQ.getNVector());
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeGetQuadDky");
 }
 
 void CVodeSolver::adjInit() const {
@@ -572,6 +614,19 @@ void CVodeSolver::adjInit() const {
     }
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeAdjInit");
+}
+
+void CVodeSolver::quadInit(const AmiVector &xQ0) const {
+    int status;
+    xQ.copy(xQ0);
+    if (getQuadInitDone()) {
+        status = CVodeQuadReInit(solverMemory.get(), xQ0.getNVector());
+    } else {
+        status = CVodeQuadInit(solverMemory.get(), fqBdot_ss, xQ.getNVector());
+        setQuadInitDone();
+    }
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeQuadInit");
 }
 
 void CVodeSolver::allocateSolverB(int *which) const {
@@ -603,6 +658,14 @@ void CVodeSolver::quadSStolerancesB(const int which, const realtype reltolQB,
         CVodeQuadSStolerancesB(solverMemory.get(), which, reltolQB, abstolQB);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeQuadSStolerancesB");
+}
+
+void CVodeSolver::quadSStolerances(const realtype reltolQB,
+                                   const realtype abstolQB) const {
+    int status =
+    CVodeQuadSStolerances(solverMemory.get(), reltolQB, abstolQB);
+    if (status != CV_SUCCESS)
+        throw CvodeException(status, "CVodeQuadSStolerances");
 }
 
 void CVodeSolver::getB(const int which) const {
@@ -710,11 +773,13 @@ void CVodeSolver::setStopTime(const realtype tstop) const {
         throw CvodeException(status, "CVodeSetStopTime");
 }
 
+
 void CVodeSolver::turnOffRootFinding() const {
     int status = CVodeRootInit(solverMemory.get(), 0, nullptr);
     if (status != CV_SUCCESS)
         throw CvodeException(status, "CVodeRootInit");
 }
+
 
 const Model *CVodeSolver::getModel() const {
     if (!solverMemory)
@@ -723,6 +788,7 @@ const Model *CVodeSolver::getModel() const {
     auto cv_mem = static_cast<CVodeMem>(solverMemory.get());
     return static_cast<Model *>(cv_mem->cv_user_data);
 }
+
 
 /**
  * @brief Jacobian of xdot with respect to states x
@@ -737,13 +803,14 @@ const Model *CVodeSolver::getModel() const {
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  **/
-int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
                     void *user_data, N_Vector /*tmp1*/, N_Vector /*tmp2*/,
                     N_Vector /*tmp3*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJ(t, x, xdot, J);
     return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
+
 
 /**
  * @brief Jacobian of xBdot with respect to adjoint state xB
@@ -759,13 +826,14 @@ int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  **/
-int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                      SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
                      N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJB(t, x, xB, xBdot, JB);
     return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
+
 
 /**
  * @brief J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -779,13 +847,14 @@ int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
+static int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
                           SUNMatrix J, void *user_data, N_Vector /*tmp1*/,
                           N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJSparse(t, x, J);
     return model->checkFinite(gsl::make_span(J), "Jacobian");
 }
+
 
 /**
  * @brief JB in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -800,13 +869,14 @@ int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  */
-int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                            SUNMatrix JB, void *user_data, N_Vector /*tmp1B*/,
                            N_Vector /*tmp2B*/, N_Vector /*tmp3B*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJSparseB(t, x, xB, xBdot, JB);
     return model->checkFinite(gsl::make_span(JB), "Jacobian");
 }
+
 
 /**
  * @brief J in banded form (for banded solvers)
@@ -823,10 +893,11 @@ int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
+static int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
            void *user_data, N_Vector tmp1, N_Vector tmp2, N_Vector tmp3) {
     return fJ(t, x, xdot, J, user_data, tmp1, tmp2, tmp3);
 }
+
 
 /**
  * @brief JB in banded form (for banded solvers)
@@ -844,11 +915,12 @@ int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
  * @param tmp3B temporary storage vector
  * @return status flag indicating successful execution
  */
-int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                          SUNMatrix JB, void *user_data, N_Vector tmp1B,
                          N_Vector tmp2B, N_Vector tmp3B) {
     return fJB(t, x, xB, xBdot, JB, user_data, tmp1B, tmp2B, tmp3B);
 }
+
 
 /**
  * @brief Matrix vector product of J with a vector v (for iterative solvers)
@@ -862,12 +934,13 @@ int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param tmp temporary storage vector
  * @return status flag indicating successful execution
  **/
-int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
+static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
         N_Vector /*xdot*/, void *user_data, N_Vector /*tmp*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJv(v, Jv, t, x);
     return model->checkFinite(gsl::make_span(Jv), "Jacobian");
 }
+
 
 /**
  * @brief Matrix vector product of JB with a vector v (for iterative solvers)
@@ -882,13 +955,14 @@ int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
  * @param tmpB temporary storage vector
  * @return status flag indicating successful execution
  **/
-int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
+static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
          N_Vector xB, N_Vector /*xBdot*/, void *user_data,
          N_Vector /*tmpB*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fJvB(vB, JvB, t, x, xB);
     return model->checkFinite(gsl::make_span(JvB), "Jacobian");
 }
+
 
 /**
  * @brief Event trigger function for events
@@ -898,13 +972,14 @@ int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
  * @param user_data object with user input @type Model_ODE
  * @return status flag indicating successful execution
  */
-int froot(realtype t, N_Vector x, realtype *root,
+static int froot(realtype t, N_Vector x, realtype *root,
                        void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->froot(t, x, gsl::make_span<realtype>(root, model->ne));
     return model->checkFinite(gsl::make_span<realtype>(root, model->ne),
                               "root function");
 }
+
 
 /**
  * @brief residual function of the ODE
@@ -914,7 +989,7 @@ int froot(realtype t, N_Vector x, realtype *root,
  * @param user_data object with user input @type Model_ODE
  * @return status flag indicating successful execution
  */
-int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
+static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
 
     if (t > 1e200 && !model->checkFinite(gsl::make_span(x), "fxdot")) {
@@ -929,6 +1004,7 @@ int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
     return model->checkFinite(gsl::make_span(xdot), "fxdot");
 }
 
+
 /**
  * @brief Right hand side of differential equation for adjoint state xB
  * @param t timepoint
@@ -938,12 +1014,13 @@ int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
  * @param user_data object with user input @type Model_ODE
  * @return status flag indicating successful execution
  */
-int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
+static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
                         void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fxBdot(t, x, xB, xBdot);
     return model->checkFinite(gsl::make_span(xBdot), "fxBdot");
 }
+
 
 /**
  * @brief Right hand side of integral equation for quadrature states qB
@@ -954,12 +1031,67 @@ int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param user_data pointer to temp data object
  * @return status flag indicating successful execution
  */
-int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
+static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
                         void *user_data) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fqBdot(t, x, xB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot");
 }
+
+
+/**
+ * @brief Right hand side of differential equation for adjoint state xB
+ * when simulating in steadystate mode
+ * @param t timepoint
+ * @param xB Vector with the adjoint states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param user_data object with user input @type Model_ODE
+ * @return status flag indicating successful execution
+ */
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
+                     void *user_data) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fxBdot_ss(t, xB, xBdot);
+    return model->checkFinite(gsl::make_span(xBdot), "fxBdot_ss");
+}
+
+
+/**
+ * @brief Right hand side of integral equation for quadrature states qB
+ * when simulating in steadystate mode
+ * @param t timepoint
+ * @param xB Vector with the adjoint states
+ * @param qBdot Vector with the adjoint quadrature right hand side
+ * @param user_data pointer to temp data object
+ * @return status flag indicating successful execution
+ */
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
+                     void *user_data) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fqBdot_ss(t, xB, qBdot);
+    return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
+}
+
+/**
+ * @brief JB in sparse form for steady state case
+ * @param t timepoint
+ * @param x Vector with the states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param JB Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_ODE
+ * @param tmp1B temporary storage vector
+ * @param tmp2B temporary storage vector
+ * @param tmp3B temporary storage vector
+ * @return status flag indicating successful execution
+ */
+static int fJSparseB_ss(realtype /*t*/, N_Vector /*x*/, N_Vector xBdot,
+                        SUNMatrix JB, void *user_data, N_Vector /*tmp1*/,
+                        N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
+    auto model = static_cast<Model_ODE *>(user_data);
+    model->fJSparseB_ss(JB);
+    return model->checkFinite(gsl::make_span(xBdot), "JSparseB_ss");
+}
+
 
 /**
  * @brief Right hand side of differential equation for state sensitivities sx
@@ -976,13 +1108,14 @@ int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
  * @param tmp3 temporary storage vector
  * @return status flag indicating successful execution
  */
-int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
+static int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
                         int ip, N_Vector sx, N_Vector sxdot, void *user_data,
                         N_Vector /*tmp1*/, N_Vector /*tmp2*/) {
     auto model = static_cast<Model_ODE *>(user_data);
     model->fsxdot(t, x, ip, sx, sxdot);
     return model->checkFinite(gsl::make_span(sxdot), "sxdot");
 }
+
 
 bool operator==(const CVodeSolver &a, const CVodeSolver &b) {
     return static_cast<Solver const &>(a) == static_cast<Solver const &>(b);

@@ -159,11 +159,13 @@ InterpolationType = enum('InterpolationType')
 LinearMultistepMethod = enum('LinearMultistepMethod')
 NonlinearSolverIteration = enum('NonlinearSolverIteration')
 SteadyStateSensitivityMode = enum('SteadyStateSensitivityMode')
-NewtonStatus = enum('NewtonStatus')
+SteadyStateStatus = enum('SteadyStateStatus')
 NewtonDampingFactorMode = enum('NewtonDampingFactorMode')
 FixedParameterContext = enum('FixedParameterContext')
 RDataReporting = enum('RDataReporting')
 %}
+
+%template(SteadyStateStatusVector) std::vector<amici::SteadyStateStatus>;
 
 // add module docstring and import additional types for typehints
 %pythonbegin %{

@@ -1059,8 +1059,8 @@ class ODEModel:
                 for s in self._states
             ].index(state)
         except ValueError:
-            raise Exception(f'Specified state {state} was not found in the '
-                            f'model states.')
+            raise ValueError(f'Specified state {state} was not found in the '
+                             f'model states.')
 
         state_id = self._states[ix].get_id()
 
@@ -1104,6 +1104,18 @@ class ODEModel:
             number of conservation laws
         """
         return self.nx_rdata()-self.nx_solver()
+
+    def nx_solver_reinit(self) -> int:
+        """
+        Number of solver states which would be reinitialized after
+        preequilibraiton
+
+        :return:
+            number of state variable symbols with reinitialization
+        """
+        reinit_states = self.eq('x0_fixedParameters')
+        solver_states = self.eq('x_solver')
+        return sum([1 for ix in reinit_states if ix in solver_states])
 
     def ny(self) -> int:
         """
@@ -1172,7 +1184,7 @@ class ODEModel:
 
         """
         if name not in sparse_functions:
-            raise Exception(f'{name} is not marked as sparse')
+            raise ValueError(f'{name} is not marked as sparse')
         if name not in self._sparsesyms:
             self._generate_sparse_symbol(name)
         return self._sparsesyms[name]
@@ -1207,12 +1219,13 @@ class ODEModel:
 
         """
         if name not in sparse_functions:
-            raise Exception(f'{name} is not marked as sparse')
+            raise ValueError(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generate_sparse_symbol(name)
         return self._sparseeqs[name]
 
-    def colptrs(self, name: str) -> List[sp.Number]:
+    def colptrs(self, name: str) -> Union[List[sp.Number],
+                                          List[List[sp.Number]]]:
         """
         Returns (and constructs if necessary) the column pointers for
         a sparsified symbolic variable.
@@ -1225,12 +1238,13 @@ class ODEModel:
 
         """
         if name not in sparse_functions:
-            raise Exception(f'{name} is not marked as sparse')
+            raise ValueError(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generate_sparse_symbol(name)
         return self._colptrs[name]
 
-    def rowvals(self, name: str) -> List[sp.Number]:
+    def rowvals(self, name: str) -> Union[List[sp.Number],
+                                          List[List[sp.Number]]]:
         """
         Returns (and constructs if necessary) the row values for a
         sparsified symbolic variable.
@@ -1243,7 +1257,7 @@ class ODEModel:
 
         """
         if name not in sparse_functions:
-            raise Exception(f'{name} is not marked as sparse')
+            raise ValueError(f'{name} is not marked as sparse')
         if name not in self._sparseeqs:
             self._generate_sparse_symbol(name)
         return self._rowvals[name]
@@ -1554,7 +1568,7 @@ class ODEModel:
             self._derivative(match_deriv.group(1), match_deriv.group(2))
 
         else:
-            raise Exception(f'Unknown equation {name}')
+            raise ValueError(f'Unknown equation {name}')
 
         if name in ['Jy', 'dydx']:
             # do not transpose if we compute the partial derivative as part of
@@ -1563,7 +1577,7 @@ class ODEModel:
                 self._eqs[name] = self._eqs[name].transpose()
 
         if self._simplify:
-            self._eqs[name] = self._simplify(self._eqs[name])
+            self._eqs[name] = self._eqs[name].applyfunc(self._simplify)
 
     def sym_names(self) -> List[str]:
         """
@@ -1811,7 +1825,7 @@ class ODEModel:
         if name in self._value_prototype:
             component = self._value_prototype[name]
         else:
-            raise Exception(f'No values for {name}')
+            raise ValueError(f'No values for {name}')
 
         self._vals[name] = [comp.get_val()
                             for comp in getattr(self, component)]
@@ -1830,7 +1844,7 @@ class ODEModel:
         elif name in self._equation_prototype:
             component = self._equation_prototype[name]
         else:
-            raise Exception(f'No names for {name}')
+            raise ValueError(f'No names for {name}')
 
         self._names[name] = [comp.get_name()
                              for comp in getattr(self, component)]
@@ -1916,7 +1930,7 @@ def _print_with_exception(math: sp.Basic) -> str:
         ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
         return ret
     except TypeError as e:
-        raise Exception(
+        raise ValueError(
             f'Encountered unsupported function in expression "{math}": '
             f'{e}!'
         )
@@ -2311,8 +2325,8 @@ class ODEExporter:
         elif indextype == 'rowvals':
             values = self.model.rowvals(function)
         else:
-            raise ValueError('Invalid value for type, must be colptr or '
-                             'rowval')
+            raise ValueError('Invalid value for indextype, must be colptrs or '
+                             f'rowvals: {indextype}')
 
         # function signature
         if function in multiobs_functions:
@@ -2323,33 +2337,58 @@ class ODEExporter:
         lines = [
             '#include "sundials/sundials_types.h"',
             '',
+            '#include <array>',
+            '#include <algorithm>',
+            '',
             'namespace amici {',
             f'namespace model_{self.model_name} {{',
             '',
-            f'void {function}_{indextype}_{self.model_name}{signature}{{',
         ]
-        if function in multiobs_functions:
-            # list of index vectors
-            cases = {switch_case: [' ' * 4 + f'{indextype}[{index}] = {value};'
-                     for index, value in enumerate(idx_vector)]
-                     for switch_case, idx_vector in enumerate(values)}
-            lines.extend(get_switch_statement('index', cases, 1))
-        else:
-            # single index vector
-            lines.extend(
-                [' ' * 4 + f'{indextype}[{index}] = {value};'
-                 for index, value in enumerate(values)]
-            )
+
+        # Generate static array with indices
+        if len(values):
+            static_array_name = f"{function}_{indextype}_{self.model_name}_"
+            if function in multiobs_functions:
+                # list of index vectors
+                lines.append("static constexpr std::array<std::array<int, "
+                             f"{len(values[0])}>, {len(values)}> "
+                             f"{static_array_name} = {{{{")
+                lines.extend(['    {'
+                              + ', '.join(map(str, index_vector)) + '}, '
+                              for index_vector in values])
+                lines.append("}};")
+            else:
+                # single index vector
+                lines.append("static constexpr std::array<int, "
+                             f"{len(values)}> {static_array_name} = {{")
+                lines.append('    ' + ', '.join(map(str, values)))
+                lines.append("};")
+
+        lines.extend([
+            '',
+            f'void {function}_{indextype}_{self.model_name}{signature}{{',
+        ])
+
+        if len(values):
+            if function in multiobs_functions:
+                lines.append(f"    std::copy({static_array_name}[index]"
+                             f".begin(), {static_array_name}[index].end(), "
+                             f"{indextype});")
+            else:
+                lines.append(f"    std::copy({static_array_name}.begin(), "
+                             f"{static_array_name}.end(), {indextype});")
+
         lines.extend([
             '}'
             '',
             '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
         ])
-        with open(os.path.join(
-                self.model_path,
-                f'{self.model_name}_{function}_{indextype}.cpp'
-        ), 'w') as fileout:
+
+        filename = f'{self.model_name}_{function}_{indextype}.cpp'
+        filename = os.path.join(self.model_path, filename)
+
+        with open(filename, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
     def _get_function_body(self,
@@ -2459,6 +2498,7 @@ class ODEExporter:
             'NXTRUE_RDATA': str(self.model.nx_rdata()),
             'NX_SOLVER': str(self.model.nx_solver()),
             'NXTRUE_SOLVER': str(self.model.nx_solver()),
+            'NX_SOLVER_REINIT': str(self.model.nx_solver_reinit()),
             'NY': str(self.model.ny()),
             'NYTRUE': str(self.model.ny()),
             'NZ': '0',
@@ -2692,7 +2732,7 @@ def get_symbolic_diagonal(matrix: sp.Matrix) -> sp.Matrix:
         A Symbolic matrix with the diagonal of `matrix`.
     """
     if not matrix.cols == matrix.rows:
-        raise Exception('Provided matrix is not square!')
+        raise ValueError('Provided matrix is not square!')
 
     diagonal = [matrix[index, index] for index in range(matrix.cols)]
 

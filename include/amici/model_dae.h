@@ -36,6 +36,8 @@ class Model_DAE : public Model {
      * @param nx_solver number of state variables with conservation laws applied
      * @param nxtrue_solver number of state variables of the non-augmented model
      with conservation laws applied
+     * @param nx_solver_reinit number of state variables with conservation laws
+     * subject to reinitialization
      * @param ny number of observables
      * @param nytrue number of observables of the non-augmented model
      * @param nz number of event observables
@@ -63,7 +65,7 @@ class Model_DAE : public Model {
      * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model_DAE(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
-              const int nxtrue_solver, const int ny, const int nytrue,
+              const int nxtrue_solver, const int nx_solver_reinit, const int ny, const int nytrue,
               const int nz, const int nztrue, const int ne, const int nJ,
               const int nw, const int ndwdx, const int ndwdp, const int ndxdotdw,
               std::vector<int> ndJydy, const int nnz, const int ubw,
@@ -72,7 +74,7 @@ class Model_DAE : public Model {
               std::vector<int> const &plist, std::vector<realtype> const &idlist,
               std::vector<int> const &z2event, const bool pythonGenerated=false,
               const int ndxdotdp_explicit=0, const int ndxdotdp_implicit=0)
-        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, ny, nytrue,
+        : Model(nx_rdata, nxtrue_rdata, nx_solver, nxtrue_solver, nx_solver_reinit, ny, nytrue,
                 nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
                 nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
                 pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {
@@ -94,6 +96,10 @@ class Model_DAE : public Model {
     void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot,
             SUNMatrix J);
 
+    void fJB(const realtype t, realtype cj, const AmiVector &x,
+             const AmiVector &dx, const AmiVector &xB, const AmiVector &dxB,
+             const AmiVector &xBdot, SUNMatrix JB) override;
+
     /**
      * @brief Jacobian of xBdot with respect to adjoint state xB
      * @param t timepoint
@@ -104,7 +110,6 @@ class Model_DAE : public Model {
      * @param dxB Vector with the adjoint derivative states
      * @param JB Matrix to which the Jacobian will be written
      **/
-
     void fJB(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xB,
              N_Vector dxB, SUNMatrix JB);
 
@@ -123,7 +128,13 @@ class Model_DAE : public Model {
     void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
                   SUNMatrix J);
 
-    /** JB in sparse form (for sparse solvers from the SuiteSparse Package)
+    void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
+                   const AmiVector &dx, const AmiVector &xB,
+                   const AmiVector &dxB, const AmiVector &xBdot,
+                   SUNMatrix JB) override;
+
+    /**
+     * @brief JB in sparse form (for sparse solvers from the SuiteSparse Package)
      * @param t timepoint
      * @param cj scalar in Jacobian
      * @param x Vector with the states
@@ -135,7 +146,8 @@ class Model_DAE : public Model {
     void fJSparseB(realtype t, realtype cj, N_Vector x, N_Vector dx,
                    N_Vector xB, N_Vector dxB, SUNMatrix JB);
 
-    /** diagonalized Jacobian (for preconditioning)
+    /**
+     * @brief Diagonal of the Jacobian (for preconditioning)
      * @param t timepoint
      * @param JDiag Vector to which the Jacobian diagonal will be written
      * @param cj scaling factor, inverse of the step size
@@ -150,7 +162,8 @@ class Model_DAE : public Model {
              const AmiVector &xdot, const AmiVector &v, AmiVector &nJv,
              realtype cj) override;
 
-    /** Matrix vector product of J with a vector v (for iterative solvers)
+    /**
+     * @brief Matrix vector product of J with a vector v (for iterative solvers)
      * @param t timepoint
      * @param cj scaling factor, inverse of the step size
      * @param x Vector with the states
@@ -162,7 +175,8 @@ class Model_DAE : public Model {
     void fJv(realtype t, N_Vector x, N_Vector dx, N_Vector v, N_Vector Jv,
              realtype cj);
 
-    /** Matrix vector product of JB with a vector v (for iterative solvers)
+    /**
+     * @brief Matrix vector product of JB with a vector v (for iterative solvers)
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -180,7 +194,8 @@ class Model_DAE : public Model {
     void froot(realtype t, const AmiVector &x, const AmiVector &dx,
                gsl::span<realtype> root) override;
 
-    /** Event trigger function for events
+    /**
+     * @brief Event trigger function for events
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -200,7 +215,8 @@ class Model_DAE : public Model {
      */
     void fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot);
 
-    /** Right hand side of differential equation for adjoint state xB
+    /**
+     * @brief Right hand side of differential equation for adjoint state xB
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -211,7 +227,8 @@ class Model_DAE : public Model {
     void fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
                 N_Vector xBdot);
 
-    /** Right hand side of integral equation for quadrature states qB
+    /**
+     * @brief Right hand side of integral equation for quadrature states qB
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -222,7 +239,51 @@ class Model_DAE : public Model {
     void fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB, N_Vector dxB,
                 N_Vector qBdot);
 
-    /** Sensitivity of dx/dt wrt model parameters p
+    void fxBdot_ss(const realtype t, const AmiVector &xB,
+                   const AmiVector &dxB, AmiVector &xBdot) override;
+
+    /**
+     * @brief Implementation of fxBdot for steady state case at the N_Vector level
+     * @param t timepoint
+     * @param xB Vector with the adjoint state
+     * @param dxB Vector with the adjoint derivative states
+     * @param xBdot Vector with the adjoint right hand side
+     */
+    void fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot) const;
+
+    /**
+     * @brief Implementation of fqBdot for steady state at the N_Vector level
+     * @param t timepoint
+     * @param xB Vector with the adjoint states
+     * @param dxB Vector with the adjoint derivative states
+     * @param qBdot Vector with the adjoint quadrature right hand side
+     */
+    void fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot) const;
+
+    /**
+     * @brief Sparse Jacobian function backward, steady state case
+     * @param JB sparse matrix to which values of the Jacobian will be written
+     */
+    void fJSparseB_ss(SUNMatrix JB) override;
+
+    /**
+     * @brief Computes the sparse backward Jacobian for steadystate integration
+     * and writes it to the model member
+     * @param t timepoint
+     * @param cj scalar in Jacobian
+     * @param x Vector with the states
+     * @param dx Vector with the derivative states
+     * @param xB Vector with the adjoint states
+     * @param dxB Vector with the adjoint derivative states
+     * @param xBdot Vector with the adjoint state right hand side
+     */
+    void writeSteadystateJB(const realtype t, realtype cj,
+                            const AmiVector &x, const AmiVector &dx,
+                            const AmiVector &xB, const AmiVector &dxB,
+                            const AmiVector &xBdot) override;
+
+    /**
+     * @brief Sensitivity of dx/dt wrt model parameters p
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -236,7 +297,8 @@ class Model_DAE : public Model {
     void fsxdot(realtype t, const AmiVector &x, const AmiVector &dx, int ip,
                 const AmiVector &sx, const AmiVector &sdx,
                 AmiVector &sxdot) override;
-    /** Right hand side of differential equation for state sensitivities sx
+    /**
+     * @brief Right hand side of differential equation for state sensitivities sx
      * @param t timepoint
      * @param x Vector with the states
      * @param dx Vector with the derivative states
@@ -277,7 +339,7 @@ class Model_DAE : public Model {
                     const realtype *dwdx) = 0;
 
     /**
-     * @brief model specific implementation for fJB
+     * @brief Model specific implementation for fJB
      * @param JB Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -298,7 +360,7 @@ class Model_DAE : public Model {
                      const realtype *dwdx);
 
     /**
-     * @brief model specific implementation for fJSparse
+     * @brief Model specific implementation for fJSparse
      * @param JSparse Matrix to which the Jacobian will be written
      * @param t timepoint
      * @param x Vector with the states
@@ -356,7 +418,7 @@ class Model_DAE : public Model {
                         const realtype *dwdx);
 
     /**
-     * Model specific implementation for fJvB
+     * @brief Model specific implementation for fJvB
      * @param JvB Matrix vector product of JB with a vector v
      * @param t timepoint
      * @param x Vector with the states
@@ -407,7 +469,7 @@ class Model_DAE : public Model {
                        const realtype *dx, const realtype *w) = 0;
 
     /**
-     * @brief model specific implementation of fdxdotdp
+     * @brief Model specific implementation of fdxdotdp
      * @param dxdotdp partial derivative xdot wrt p
      * @param t timepoint
      * @param x Vector with the states
@@ -425,7 +487,7 @@ class Model_DAE : public Model {
                           const realtype *w, const realtype *dwdp);
 
     /**
-     * @brief model specific implementation of fM
+     * @brief Model specific implementation of fM
      * @param M mass matrix
      * @param t timepoint
      * @param x Vector with the states
