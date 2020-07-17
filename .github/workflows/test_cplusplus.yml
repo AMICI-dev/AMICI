@@ -1,9 +1,9 @@
-name: C++ testsuite / Ubuntu
+name: C++/Python testsuite / Ubuntu
 on: [push]
 
 jobs:
   build:
-    name: _
+    name: Ubuntu
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest

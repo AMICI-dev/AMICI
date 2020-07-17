@@ -34,20 +34,14 @@ jobs:
       run: |
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
-    - run: pip3 install pytest shyaml pytest-cov
+    - run: pip3 install pytest shyaml pytest-cov pysb petab
     - run: |
         echo ::add-path::${HOME}/.local/bin/
         echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
     # install AMICI
-    - name: Create AMICI sdist
-      run: |
-        cd python/sdist \
-          && check_time.sh create_sdist /usr/bin/python3 setup.py sdist
-    - name: Install AMICI sdist
-      run: |
-        AMICI_PARALLEL_COMPILE=2 check_time.sh \
-            install_sdist pip3 install -v --user \
-            $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb]
+    - name: Install python package
+    run: |
+      scripts/installAmiciSource.sh
 
     - name: Run PEtab-related unit tests
       run: |

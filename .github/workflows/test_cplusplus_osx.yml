@@ -1,9 +1,9 @@
-name: C++ testsuite / OSX
+name: C++/Python testsuite / OSX
 on: [push]
 
 jobs:
   build:
-    name: tests_osx
+    name: OSX
 
     runs-on: macos-latest
 
