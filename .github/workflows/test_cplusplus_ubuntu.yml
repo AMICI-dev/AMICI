@@ -98,12 +98,36 @@ jobs:
           --cov-append \
           ${AMICI_DIR}/python/tests
     
-    - name: Codecov
+    - name: Codecov Python
       uses: codecov/codecov-action@v1.0.6
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./build/coverage_py.xml
         flags: python
+        fail_ci_if_error: true
+        
+    - name: lcov cpputest
+      run: |
+        lcov --compat-libtool --no-external \
+        --directory "${AMICI_DIR}/build/CMakeFiles/amici.dir/src" \
+        --base-directory ${AMICI_DIR} --capture --output-file coverage_cpp.info
+        
+    - name: lcov pytest
+      run: |
+        lcov --compat-libtool --no-external \
+        --directory "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
+        --base-directory ${AMICI_DIR} --capture --output-file coverage_py.info
+      
+    - name: lcov combine
+      run: |
+        lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+        
+    - name: Codecov CPP
+      uses: codecov/codecov-action@v1.0.6
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.info
+        flags: cpp
         fail_ci_if_error: true
 
     - name: Run sonar-scanner
