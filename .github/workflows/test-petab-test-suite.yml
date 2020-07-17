@@ -52,6 +52,7 @@ jobs:
     - name: Download and run petab test suite
       run: |
         git clone --depth 1 https://github.com/petab-dev/petab_test_suite \
+          && source ./build/venv/bin/activate
           && cd petab_test_suite; pip3 install -e .; cd .. \
           && AMICI_PARALLEL_COMPILE=2 pytest -v \
             --cov-report=xml --cov-append --cov=amici tests/petab_test_suite/
