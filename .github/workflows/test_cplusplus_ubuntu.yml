@@ -48,7 +48,8 @@ jobs:
             libboost-serialization-dev \
             libhdf5-serial-dev \
             python3-dev \
-            swig
+            swig \
+            lcov
 
     - name: Build suitesparse
       run: |
