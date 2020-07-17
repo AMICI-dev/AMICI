@@ -1577,7 +1577,7 @@ class ODEModel:
                 self._eqs[name] = self._eqs[name].transpose()
 
         if self._simplify:
-            self._eqs[name] = self._simplify(self._eqs[name])
+            self._eqs[name] = self._eqs[name].applyfunc(self._simplify)
 
     def sym_names(self) -> List[str]:
         """

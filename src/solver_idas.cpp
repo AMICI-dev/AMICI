@@ -70,6 +70,16 @@ static int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
 static int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
                   N_Vector dxB, N_Vector qBdot, void *user_data);
 
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot,
+                     void *user_data);
+
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
+                     void *user_data);
+
+static int fJSparseB_ss(realtype t, realtype cj, N_Vector x, N_Vector dx,
+                        N_Vector xBdot, SUNMatrix JB, void *user_data,
+                        N_Vector tmp1, N_Vector tmp2, N_Vector tmp3);
+
 static int fsxdot(int Ns, realtype t, N_Vector x, N_Vector dx,
                   N_Vector xdot, N_Vector *sx, N_Vector *sdx,
                   N_Vector *sxdot, void *user_data, N_Vector tmp1,
@@ -95,6 +105,15 @@ void IDASolver::init(const realtype t0, const AmiVector &x0,
     }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAInit");
+}
+
+void IDASolver::initSteadystate(const realtype t0, const AmiVector &x0,
+                                const AmiVector &dx0) const {
+    /* We need to set the steadystate rhs function. SUndials doesn't have this
+       in its public api, so we have to change it in the solver memory,
+       as re-calling init would unset solver settings. */
+    auto ida_mem = static_cast<IDAMem>(solverMemory.get());
+    ida_mem->ida_res = fxBdot_ss;
 }
 
 void IDASolver::sensInit1(const AmiVectorArray &sx0,
@@ -206,6 +225,12 @@ void IDASolver::setJacTimesVecFnB(const int which) const {
         throw IDAException(status, "IDASpilsSetJacTimesVecFnB");
 }
 
+void IDASolver::setSparseJacFn_ss() const {
+    int status = IDASetJacFn(solverMemory.get(), fJSparseB_ss);
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetJacFn");
+}
+
 Solver *IDASolver::clone() const { return new IDASolver(*this); }
 
 void IDASolver::allocateSolver() const {
@@ -238,6 +263,12 @@ void IDASolver::setQuadErrConB(const int which, const bool flag) const {
     int status = IDASetQuadErrConB(solverMemory.get(), which, flag);
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDASetQuadErrConB");
+}
+
+void IDASolver::setQuadErrCon(const bool flag) const {
+    int status = IDASetQuadErrCon(solverMemory.get(), flag);
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDASetQuadErrCon");
 }
 
 void IDASolver::getRootInfo(int *rootsfound) const {
@@ -494,11 +525,23 @@ void IDASolver::getQuadB(int which) const {
         throw IDAException(status, "IDAGetQuadB");
 }
 
+void IDASolver::getQuad(realtype &t) const {
+    int status = IDAGetQuad(solverMemory.get(), &t, xQ.getNVector());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDAGetQuad");
+}
+
 void IDASolver::getQuadDkyB(const realtype t, int k, const int which) const {
     int status = IDAGetQuadDky(IDAGetAdjIDABmem(solverMemory.get(), which), t,
                                k, xQB.getNVector());
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAGetB");
+}
+
+void IDASolver::getQuadDky(const realtype t, const int k) const {
+    int status = IDAGetQuadDky(solverMemory.get(), t, k, xQ.getNVector());
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDAGetQuadDky");
 }
 
 void IDASolver::adjInit() const {
@@ -512,6 +555,19 @@ void IDASolver::adjInit() const {
     }
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAAdjInit");
+}
+
+void IDASolver::quadInit(const AmiVector &xQ0) const {
+    int status;
+    xQ.copy(xQ0);
+    if (getQuadInitDone()) {
+        status = IDAQuadReInit(solverMemory.get(), xQ0.getNVector());
+    } else {
+        status = IDAQuadInit(solverMemory.get(), fqBdot_ss, xQ.getNVector());
+        setQuadInitDone();
+    }
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDAQuadInit");
 }
 
 void IDASolver::allocateSolverB(int *which) const {
@@ -543,6 +599,14 @@ void IDASolver::quadSStolerancesB(const int which, const realtype reltolQB,
     if (status != IDA_SUCCESS)
         throw IDAException(status, "IDAQuadSStolerancesB");
 }
+
+void IDASolver::quadSStolerances(const realtype reltolQB,
+                                 const realtype abstolQB) const {
+    int status = IDAQuadSStolerances(solverMemory.get(), reltolQB, abstolQB);
+    if (status != IDA_SUCCESS)
+        throw IDAException(status, "IDAQuadSStolerances");
+}
+
 
 int IDASolver::solve(const realtype tout, const int itask) const {
     if (forceReInitPostProcessF)
@@ -975,7 +1039,7 @@ int fxdot(realtype t, N_Vector x, N_Vector dx, N_Vector xdot,
  * @return status flag indicating successful execution
  */
 int fxBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
-                      N_Vector dxB, N_Vector xBdot, void *user_data) {
+           N_Vector dxB, N_Vector xBdot, void *user_data) {
 
     auto model = static_cast<Model_DAE *>(user_data);
     model->fxBdot(t, x, dx, xB, dxB, xBdot);
@@ -1000,6 +1064,65 @@ int fqBdot(realtype t, N_Vector x, N_Vector dx, N_Vector xB,
     model->fqBdot(t, x, dx, xB, dxB, qBdot);
     return model->checkFinite(gsl::make_span(qBdot), "qBdot");
 
+}
+
+
+/**
+ * @brief Right hand side of differential equation for adjoint state xB
+ * when simulating in steadystate mode
+ * @param t timepoint
+ * @param xB Vector with the adjoint states
+ * @param dxB Vector with the adjoint derivative states
+ * @param xBdot Vector with the adjoint right hand side
+ * @param user_data object with user input @type Model_DAE
+ * @return status flag indicating successful execution
+ */
+static int fxBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector xBdot,
+                     void *user_data) {
+    auto model = static_cast<Model_DAE *>(user_data);
+    model->fxBdot_ss(t, xB, dxB, xBdot);
+    return model->checkFinite(gsl::make_span(xBdot), "xBdot_ss");
+}
+
+
+/**
+ * @brief Right hand side of integral equation for quadrature states qB
+ * when simulating in steadystate mode
+ * @param t timepoint
+ * @param xB Vector with the adjoint states
+ * @param dxB Vector with the adjoint derivative states
+ * @param qBdot Vector with the adjoint quadrature right hand side
+ * @param user_data pointer to temp data object
+ * @return status flag indicating successful execution
+ */
+static int fqBdot_ss(realtype t, N_Vector xB, N_Vector dxB, N_Vector qBdot,
+                     void *user_data) {
+    auto model = static_cast<Model_DAE *>(user_data);
+    model->fqBdot_ss(t, xB, dxB, qBdot);
+    return model->checkFinite(gsl::make_span(qBdot), "qBdot_ss");
+}
+
+/**
+ * @brief JB in sparse form for steady state case
+ * @param t timepoint
+ * @param cj scalar in Jacobian (inverse stepsize)
+ * @param x Vector with the states
+ * @param dx Vector with the derivative states
+ * @param xdot Vector with the right hand side
+ * @param J Matrix to which the Jacobian will be written
+ * @param user_data object with user input @type Model_DAE
+ * @param tmp1 temporary storage vector
+ * @param tmp2 temporary storage vector
+ * @param tmp3 temporary storage vector
+ * @return status flag indicating successful execution
+ */
+    static int fJSparseB_ss(realtype /*t*/, realtype /*cj*/, N_Vector /*x*/,
+                            N_Vector /*dx*/, N_Vector xBdot, SUNMatrix JB,
+                            void *user_data, N_Vector /*tmp1*/,
+                            N_Vector /*tmp2*/, N_Vector /*tmp3*/) {
+    auto model = static_cast<Model_DAE *>(user_data);
+    model->fJSparseB_ss(JB);
+    return model->checkFinite(gsl::make_span(xBdot), "JSparseB_ss");
 }
 
 /**
