@@ -40,8 +40,8 @@ jobs:
         echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
     # install AMICI
     - name: Install python package
-    run: |
-      scripts/installAmiciSource.sh
+      run: |
+        scripts/installAmiciSource.sh
 
     - name: Run PEtab-related unit tests
       run: |
