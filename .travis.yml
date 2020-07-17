@@ -39,8 +39,6 @@ matrix:
         - lcov --compat-libtool --no-external --directory ${BASE_DIR}/python/sdist/build/temp.linux-x86_64-${TRAVIS_PYTHON_VERSION}/amici/src --base-directory ${BASE_DIR} --capture --output-file coverage_py.info
         - lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
         - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
-        # py coverage py
-        - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
       before_deploy:
         - cd $BASE_DIR
       deploy:

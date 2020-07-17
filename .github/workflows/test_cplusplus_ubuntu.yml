@@ -3,7 +3,7 @@ on: [push]
 
 jobs:
   build:
-    name: Ubuntu
+    name: _
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest
@@ -97,6 +97,14 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           ${AMICI_DIR}/python/tests
+    
+    - name: Codecov
+      uses: codecov/codecov-action@v1.0.6
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./build/coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
 
     - name: Run sonar-scanner
       env:

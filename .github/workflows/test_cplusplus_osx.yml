@@ -3,7 +3,7 @@ on: [push]
 
 jobs:
   build:
-    name: OSX
+    name: _
 
     runs-on: macos-latest
 
