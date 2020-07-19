@@ -19,7 +19,7 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent)
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts_)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts_))
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts_(std::move(ts_))
 {
     applyDimensions();
 }
@@ -28,7 +28,7 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts_,
                  std::vector<realtype> fixedParameters_
                  )
-    : fixedParameters(std::move(fixedParameters_)), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts_))
+    : fixedParameters(std::move(fixedParameters_)), nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts_(std::move(ts_))
 {
     applyDimensions();
 }
@@ -39,7 +39,7 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> const& observedDataStdDev,
                  std::vector<realtype> const& observedEvents,
                  std::vector<realtype> const& observedEventsStdDev)
-    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts(std::move(ts_))
+    : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts_(std::move(ts_))
 {
     applyDimensions();
     setObservedData(observedData);
@@ -80,8 +80,8 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
         for (int it = 0; it < nt(); ++it) {
             sigma = sigma_y.size() == (unsigned) nytrue_ ? sigma_y.at(iy) : sigma_y.at(iy + nytrue_ * it);
             std::normal_distribution<> e{0, sigma};
-            observedData.at(iy + nytrue_ * it) = rdata.y.at(iy + rdata.ny * it) + e(gen);
-            observedDataStdDev.at(iy + nytrue_ * it) = sigma;
+            observed_data_.at(iy + nytrue_ * it) = rdata.y.at(iy + rdata.ny * it) + e(gen);
+            observed_data_std_dev_.at(iy + nytrue_ * it) = sigma;
         }
     }
 
@@ -89,8 +89,8 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
         for (int ie = 0; ie < nmaxevent_; ++ie) {
             sigma = sigma_z.size() == (unsigned) nztrue_ ? sigma_z.at(iz) : sigma_z.at(iz + nztrue_ * ie);
             std::normal_distribution<> e{0, sigma};
-            observedEvents.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie) + e(gen);
-            observedDataStdDev.at(iz + rdata.nztrue * ie) = sigma;
+            observed_events_.at(iz + rdata.nztrue * ie) = rdata.z.at(iz + rdata.nz * ie) + e(gen);
+            observed_data_std_dev_.at(iz + rdata.nztrue * ie) = sigma;
         }
         }
 }
@@ -98,29 +98,29 @@ ExpData::ExpData(ReturnData const& rdata, std::vector<realtype> sigma_y,
 void ExpData::setTimepoints(const std::vector<realtype> &ts) {
     if (!std::is_sorted(ts.begin(), ts.end()))
         throw AmiException("Encountered non-monotonic timepoints, please order timepoints such that they are monotonically increasing!");
-    this->ts = ts;
+    ts_ = ts;
     applyDataDimension();
 }
 
 std::vector<realtype> const& ExpData::getTimepoints() const {
-    return ts;
+    return ts_;
 }
 
 int ExpData::nt() const {
-    return static_cast<int>(ts.size());
+    return static_cast<int>(ts_.size());
 }
 
 realtype ExpData::getTimepoint(int it) const {
-    return ts.at(it);
+    return ts_.at(it);
 }
 
 void ExpData::setObservedData(const std::vector<realtype> &observedData) {
     checkDataDimension(observedData, "observedData");
 
     if (observedData.size() == (unsigned) nt()*nytrue_)
-        this->observedData = observedData;
+        this->observed_data_ = observedData;
     else if (observedData.empty())
-        this->observedData.clear();
+        this->observed_data_.clear();
 }
 
 void ExpData::setObservedData(const std::vector<realtype> &observedData, int iy) {
@@ -128,20 +128,20 @@ void ExpData::setObservedData(const std::vector<realtype> &observedData, int iy)
         throw AmiException("Input observedData did not match dimensions nt (%i), was %i", nt(), observedData.size());
 
     for (int it = 0; it < nt(); ++it)
-        this->observedData.at(iy + it*nytrue_) = observedData.at(it);
+        this->observed_data_.at(iy + it*nytrue_) = observedData.at(it);
 }
 
 bool ExpData::isSetObservedData(int it, int iy) const {
-    return !observedData.empty() && !isNaN(observedData.at(it * nytrue_ + iy));
+    return !observed_data_.empty() && !isNaN(observed_data_.at(it * nytrue_ + iy));
 }
 
 std::vector<realtype> const& ExpData::getObservedData() const {
-    return observedData;
+    return observed_data_;
 }
 
 const realtype *ExpData::getObservedDataPtr(int it) const {
-    if (!observedData.empty())
-        return &observedData.at(it*nytrue_);
+    if (!observed_data_.empty())
+        return &observed_data_.at(it*nytrue_);
 
     return nullptr;
 }
@@ -151,14 +151,14 @@ void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStd
     checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
 
     if (observedDataStdDev.size() == (unsigned) nt()*nytrue_)
-        this->observedDataStdDev = observedDataStdDev;
+        this->observed_data_std_dev_ = observedDataStdDev;
     else if (observedDataStdDev.empty())
-        this->observedDataStdDev.clear();
+        this->observed_data_std_dev_.clear();
 }
 
 void ExpData::setObservedDataStdDev(const realtype stdDev) {
     checkSigmaPositivity(stdDev, "stdDev");
-    std::fill(observedDataStdDev.begin() ,observedDataStdDev.end(), stdDev);
+    std::fill(observed_data_std_dev_.begin() ,observed_data_std_dev_.end(), stdDev);
 }
 
 void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev, int iy) {
@@ -167,26 +167,26 @@ void ExpData::setObservedDataStdDev(const std::vector<realtype> &observedDataStd
     checkSigmaPositivity(observedDataStdDev, "observedDataStdDev");
 
     for (int it = 0; it < nt(); ++it)
-        this->observedDataStdDev.at(iy + it*nytrue_) = observedDataStdDev.at(it);
+        this->observed_data_std_dev_.at(iy + it*nytrue_) = observedDataStdDev.at(it);
 }
 
 void ExpData::setObservedDataStdDev(const realtype stdDev, int iy) {
     checkSigmaPositivity(stdDev, "stdDev");
     for (int it = 0; it < nt(); ++it)
-        observedDataStdDev.at(iy + it*nytrue_) = stdDev;
+        observed_data_std_dev_.at(iy + it*nytrue_) = stdDev;
 }
 
 bool ExpData::isSetObservedDataStdDev(int it, int iy) const {
-    return !observedDataStdDev.empty() && !isNaN(observedDataStdDev.at(it * nytrue_ + iy));
+    return !observed_data_std_dev_.empty() && !isNaN(observed_data_std_dev_.at(it * nytrue_ + iy));
 }
 
 std::vector<realtype> const& ExpData::getObservedDataStdDev() const {
-    return observedDataStdDev;
+    return observed_data_std_dev_;
 }
 
 const realtype *ExpData::getObservedDataStdDevPtr(int it) const {
-    if (!observedDataStdDev.empty())
-        return &observedDataStdDev.at(it*nytrue_);
+    if (!observed_data_std_dev_.empty())
+        return &observed_data_std_dev_.at(it*nytrue_);
 
     return nullptr;
 }
@@ -195,9 +195,9 @@ void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents) {
     checkEventsDimension(observedEvents, "observedEvents");
 
     if (observedEvents.size() == (unsigned) nmaxevent_*nztrue_)
-        this->observedEvents = observedEvents;
+        this->observed_events_ = observedEvents;
     else if (observedEvents.empty())
-        this->observedEvents.clear();
+        this->observed_events_.clear();
 }
 
 void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents, int iz) {
@@ -206,20 +206,20 @@ void ExpData::setObservedEvents(const std::vector<realtype> &observedEvents, int
     }
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        this->observedEvents.at(iz + ie*nztrue_) = observedEvents.at(ie);
+        this->observed_events_.at(iz + ie*nztrue_) = observedEvents.at(ie);
 }
 
 bool ExpData::isSetObservedEvents(int ie, int iz) const {
-    return !observedEvents.empty() && !isNaN(observedEvents.at(ie * nztrue_ + iz));
+    return !observed_events_.empty() && !isNaN(observed_events_.at(ie * nztrue_ + iz));
 }
 
 std::vector<realtype> const& ExpData::getObservedEvents() const {
-    return observedEvents;
+    return observed_events_;
 }
 
 const realtype *ExpData::getObservedEventsPtr(int ie) const {
-    if (!observedEvents.empty())
-        return &observedEvents.at(ie*nztrue_);
+    if (!observed_events_.empty())
+        return &observed_events_.at(ie*nztrue_);
 
     return nullptr;
 }
@@ -229,14 +229,14 @@ void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEvent
     checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
 
     if (observedEventsStdDev.size() == (unsigned) nmaxevent_*nztrue_)
-        this->observedEventsStdDev = observedEventsStdDev;
+        this->observed_events_std_dev_ = observedEventsStdDev;
     else if (observedEventsStdDev.empty())
-        this->observedEventsStdDev.clear();
+        this->observed_events_std_dev_.clear();
 }
 
 void ExpData::setObservedEventsStdDev(const realtype stdDev) {
     checkSigmaPositivity(stdDev, "stdDev");
-    std::fill(observedEventsStdDev.begin() ,observedEventsStdDev.end(), stdDev);
+    std::fill(observed_events_std_dev_.begin() ,observed_events_std_dev_.end(), stdDev);
 }
 
 void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev, int iz) {
@@ -245,30 +245,30 @@ void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEvent
     checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        this->observedEventsStdDev.at(iz + ie*nztrue_) = observedEventsStdDev.at(ie);
+        this->observed_events_std_dev_.at(iz + ie*nztrue_) = observedEventsStdDev.at(ie);
 }
 
 void ExpData::setObservedEventsStdDev(const realtype stdDev, int iz) {
     checkSigmaPositivity(stdDev, "stdDev");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        observedEventsStdDev.at(iz + ie*nztrue_) = stdDev;
+        observed_events_std_dev_.at(iz + ie*nztrue_) = stdDev;
 }
 
 bool ExpData::isSetObservedEventsStdDev(int ie, int iz) const {
-    if (!observedEventsStdDev.empty()) // avoid out of bound memory access
-        return !isNaN(observedEventsStdDev.at(ie * nztrue_ + iz));
+    if (!observed_events_std_dev_.empty()) // avoid out of bound memory access
+        return !isNaN(observed_events_std_dev_.at(ie * nztrue_ + iz));
 
     return false;
 }
 
 std::vector<realtype> const& ExpData::getObservedEventsStdDev() const {
-    return observedEventsStdDev;
+    return observed_events_std_dev_;
 }
 
 const realtype *ExpData::getObservedEventsStdDevPtr(int ie) const {
-    if (!observedEventsStdDev.empty())
-        return &observedEventsStdDev.at(ie*nztrue_);
+    if (!observed_events_std_dev_.empty())
+        return &observed_events_std_dev_.at(ie*nztrue_);
 
     return nullptr;
 }
@@ -279,13 +279,13 @@ void ExpData::applyDimensions() {
 }
 
 void ExpData::applyDataDimension() {
-    observedData.resize(nt()*nytrue_, getNaN());
-    observedDataStdDev.resize(nt()*nytrue_, getNaN());
+    observed_data_.resize(nt()*nytrue_, getNaN());
+    observed_data_std_dev_.resize(nt()*nytrue_, getNaN());
 }
 
 void ExpData::applyEventDimension() {
-    observedEvents.resize(nmaxevent_*nztrue_, getNaN());
-    observedEventsStdDev.resize(nmaxevent_*nztrue_, getNaN());
+    observed_events_.resize(nmaxevent_*nztrue_, getNaN());
+    observed_events_std_dev_.resize(nmaxevent_*nztrue_, getNaN());
 }
 
 void ExpData::checkDataDimension(std::vector<realtype> const& input, const char *fieldname) const {
@@ -325,20 +325,20 @@ int ExpData::nmaxevent() const
 
 ConditionContext::ConditionContext(Model *model, const ExpData *edata,
                                    FixedParameterContext fpc)
-    : model(model),
-      originalParameters(model->getParameters()),
-      originalFixedParameters(model->getFixedParameters()),
-      originalTimepoints(model->getTimepoints()),
-      originalParameterList(model->getParameterList()),
-      originalScaling(model->getParameterScale()),
-      originalReinitializeFixedParameterInitialStates(
+    : model_(model),
+      original_parameters_(model->getParameters()),
+      original_fixed_parameters_(model->getFixedParameters()),
+      original_timepoints_(model->getTimepoints()),
+      original_parameter_list_(model->getParameterList()),
+      original_scaling_(model->getParameterScale()),
+      original_reinitialize_fixed_parameter_initial_states_(
           model->getReinitializeFixedParameterInitialStates())
 {
     if(model->hasCustomInitialStates())
-        originalx0 = model->getInitialStates();
+        original_x0_ = model->getInitialStates();
 
     if(model->hasCustomInitialStateSensitivities())
-        originalsx0 = model->getInitialStateSensitivities();
+        original_sx0_ = model->getInitialStateSensitivities();
 
     applyCondition(edata, fpc);
 }
@@ -357,41 +357,41 @@ void ConditionContext::applyCondition(const ExpData *edata,
     // this needs to go first, otherwise nplist will not have the right
     // dimension for all other fields that depend on Model::nplist
     if(!edata->plist.empty())
-        model->setParameterList(edata->plist);
+        model_->setParameterList(edata->plist);
 
     // this needs to go second as setParameterScale will reset sx0
     if(!edata->pscale.empty()) {
-        if(edata->pscale.size() != (unsigned) model->np())
+        if(edata->pscale.size() != (unsigned) model_->np())
             throw AmiException("Number of parameters (%d) in model does not"
                                " match ExpData (%zd).",
-                               model->np(), edata->pscale.size());
-        model->setParameterScale(edata->pscale);
+                               model_->np(), edata->pscale.size());
+        model_->setParameterScale(edata->pscale);
 
     }
 
     if(!edata->x0.empty()) {
-        if(edata->x0.size() != (unsigned) model->nx_rdata)
+        if(edata->x0.size() != (unsigned) model_->nx_rdata)
             throw AmiException("Number of initial conditions (%d) in model does"
                                " not match ExpData (%zd).",
-                               model->nx_rdata, edata->x0.size());
-        model->setInitialStates(edata->x0);
+                               model_->nx_rdata, edata->x0.size());
+        model_->setInitialStates(edata->x0);
     }
 
     if(!edata->sx0.empty()) {
-        if(edata->sx0.size() != (unsigned) model->nx_rdata * model->nplist())
+        if(edata->sx0.size() != (unsigned) model_->nx_rdata * model_->nplist())
             throw AmiException("Number of initial conditions sensitivities (%d)"
                                " in model does not match ExpData (%zd).",
-                               model->nx_rdata * model->nplist(),
+                               model_->nx_rdata * model_->nplist(),
                                edata->sx0.size());
-        model->setInitialStateSensitivities(edata->sx0);
+        model_->setInitialStateSensitivities(edata->sx0);
     }
 
     if(!edata->parameters.empty()) {
-        if(edata->parameters.size() != (unsigned) model->np())
+        if(edata->parameters.size() != (unsigned) model_->np())
             throw AmiException("Number of parameters (%d) in model does not"
                                " match ExpData (%zd).",
-                               model->np(), edata->parameters.size());
-        model->setParameters(edata->parameters);
+                               model_->np(), edata->parameters.size());
+        model_->setParameters(edata->parameters);
     }
 
     switch (fpc) {
@@ -400,11 +400,11 @@ void ConditionContext::applyCondition(const ExpData *edata,
           // fixed parameter in model are superseded by those provided in
           // edata
           if (edata->fixedParameters.size()
-              != (unsigned)model->nk())
+              != (unsigned)model_->nk())
               throw AmiException("Number of fixed parameters (%d) in model does"
                                  "not match ExpData (%zd).",
-                                 model->nk(), edata->fixedParameters.size());
-          model->setFixedParameters(edata->fixedParameters);
+                                 model_->nk(), edata->fixedParameters.size());
+          model_->setFixedParameters(edata->fixedParameters);
       }
     break;
     case FixedParameterContext::preequilibration:
@@ -412,12 +412,12 @@ void ConditionContext::applyCondition(const ExpData *edata,
           // fixed parameter in model are superseded by those provided in
           // edata
           if (edata->fixedParametersPreequilibration.size() !=
-              (unsigned)model->nk())
+              (unsigned)model_->nk())
               throw AmiException("Number of fixed parameters (%d) in model does"
                                  "not match ExpData (preequilibration) (%zd).",
-                                 model->nk(),
+                                 model_->nk(),
                                  edata->fixedParametersPreequilibration.size());
-          model->setFixedParameters(edata->fixedParametersPreequilibration);
+          model_->setFixedParameters(edata->fixedParametersPreequilibration);
       }
       break;
     case FixedParameterContext::presimulation:
@@ -425,43 +425,43 @@ void ConditionContext::applyCondition(const ExpData *edata,
           // fixed parameter in model are superseded by those provided in
           // edata
           if (edata->fixedParametersPresimulation.size()
-              != (unsigned)model->nk())
+              != (unsigned)model_->nk())
               throw AmiException("Number of fixed parameters (%d) in model does"
                                  " not match ExpData (presimulation) (%zd).",
-                                 model->nk(),
+                                 model_->nk(),
                                  edata->fixedParametersPresimulation.size());
-          model->setFixedParameters(edata->fixedParametersPresimulation);
+          model_->setFixedParameters(edata->fixedParametersPresimulation);
       }
       break;
     }
 
     if(edata->nt()) {
         // fixed parameter in model are superseded by those provided in edata
-        model->setTimepoints(edata->getTimepoints());
+        model_->setTimepoints(edata->getTimepoints());
     }
 
-    model->setReinitializeFixedParameterInitialStates(
+    model_->setReinitializeFixedParameterInitialStates(
         edata->reinitializeFixedParameterInitialStates);
 }
 
 void ConditionContext::restore()
 {
     // parameter list has to be set before initial state sensitivities
-    model->setParameterList(originalParameterList);
+    model_->setParameterList(original_parameter_list_);
     // parameter scale has to be set before initial state sensitivities
-    model->setParameterScale(originalScaling);
+    model_->setParameterScale(original_scaling_);
 
-    if(!originalx0.empty())
-        model->setInitialStates(originalx0);
+    if(!original_x0_.empty())
+        model_->setInitialStates(original_x0_);
 
-    if(!originalsx0.empty())
-        model->setUnscaledInitialStateSensitivities(originalsx0);
+    if(!original_sx0_.empty())
+        model_->setUnscaledInitialStateSensitivities(original_sx0_);
 
-    model->setParameters(originalParameters);
-    model->setFixedParameters(originalFixedParameters);
-    model->setTimepoints(originalTimepoints);
-    model->setReinitializeFixedParameterInitialStates(
-        originalReinitializeFixedParameterInitialStates);
+    model_->setParameters(original_parameters_);
+    model_->setFixedParameters(original_fixed_parameters_);
+    model_->setTimepoints(original_timepoints_);
+    model_->setReinitializeFixedParameterInitialStates(
+        original_reinitialize_fixed_parameter_initial_states_);
 
 }
 

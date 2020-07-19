@@ -43,7 +43,7 @@ BackwardProblem::BackwardProblem(const ForwardProblem &fwd,
                 /* copy adjoint update to postequilibration */
                 writeSlice(slice(posteq->getDJydx(), it,
                                  fwd.model->nx_solver * fwd.model->nJ),
-                           slice(this->dJydx_, it,
+                           slice(dJydx_, it,
                                  fwd.model->nx_solver * fwd.model->nJ));
 
                 /* If adjoint sensis were computed, copy also quadratures */
@@ -85,7 +85,7 @@ void BackwardProblem::workBackwardProblem() {
 
             if (tnext < t_) {
                 solver_->runB(tnext);
-                solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, this->which);
+                solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
             }
 
             /* handle discontinuity */
@@ -109,19 +109,19 @@ void BackwardProblem::workBackwardProblem() {
     if (t_ > model_->t0()) {
         /* solve for backward problems */
         solver_->runB(model_->t0());
-        solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, this->which);
+        solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
     }
 
     if (edata_ && edata_->t_presim > 0) {
         ConditionContext cc(model_, edata_, FixedParameterContext::presimulation);
         solver_->runB(model_->t0() - edata_->t_presim);
-        solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, this->which);
+        solver_->writeSolutionB(&t_, xB_, dxB_, xQB_, which);
     }
 }
 
 
 void BackwardProblem::handleEventB() {
-    auto rootidx = this->root_idx_.back();
+    auto rootidx = root_idx_.back();
     this->root_idx_.pop_back();
 
     auto x_disc = this->x_disc_.back();
@@ -163,7 +163,7 @@ void BackwardProblem::handleEventB() {
 }
 
 void BackwardProblem::handleDataPointB(const int it) {
-    solver_->storeDiagnosisB(this->which);
+    solver_->storeDiagnosisB(which);
 
     for (int ix = 0; ix < model_->nxtrue_solver; ix++) {
         for (int iJ = 0; iJ < model_->nJ; iJ++)

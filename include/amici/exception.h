@@ -47,8 +47,8 @@ public:
     void storeBacktrace(int nMaxFrames);
 
 private:
-    std::array<char, 500> msg;
-    std::array<char, 500> trace;
+    std::array<char, 500> msg_;
+    std::array<char, 500> trace_;
 };
 
 

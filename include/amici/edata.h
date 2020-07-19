@@ -47,7 +47,7 @@ class ExpData {
      * @param nmaxevent            (dimension: scalar)
      * @param ts                   (dimension: nt)
      */
-    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts);
+    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts_);
 
     /**
      * @brief constructor that initializes timepoints and fixed parameters from
@@ -59,7 +59,7 @@ class ExpData {
      * @param ts                   (dimension: nt)
      * @param fixedParameters      (dimension: nk)
      */
-    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
+    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts_,
             std::vector<realtype> fixedParameters);
 
     /**
@@ -74,11 +74,11 @@ class ExpData {
      * @param observedEvents       (dimension: nmaxevent x nztrue, row-major)
      * @param observedEventsStdDev (dimension: nmaxevent x nztrue, row-major)
      */
-    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-            std::vector<realtype> const &observedData,
-            std::vector<realtype> const &observedDataStdDev,
-            std::vector<realtype> const &observedEvents,
-            std::vector<realtype> const &observedEventsStdDev);
+    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts_,
+            std::vector<realtype> const &observed_data_,
+            std::vector<realtype> const &observed_data_std_dev_,
+            std::vector<realtype> const &observed_events_,
+            std::vector<realtype> const &observed_events_std_dev_);
 
     /**
      * @brief constructor that initializes with Model
@@ -145,7 +145,7 @@ class ExpData {
      *
      * @param ts timepoints
      */
-    void setTimepoints(const std::vector<realtype> &ts);
+    void setTimepoints(const std::vector<realtype> &ts_);
 
     /**
      * @brief get function that copies data from ExpData::ts to output
@@ -168,7 +168,7 @@ class ExpData {
      *
      * @param observedData observed data (dimension: nt x nytrue, row-major)
      */
-    void setObservedData(const std::vector<realtype> &observedData);
+    void setObservedData(const std::vector<realtype> &observed_data_);
 
     /**
      * @brief set function that copies observed data for specific observable
@@ -176,7 +176,7 @@ class ExpData {
      * @param observedData observed data (dimension: nt)
      * @param iy oberved data index
      */
-    void setObservedData(const std::vector<realtype> &observedData, int iy);
+    void setObservedData(const std::vector<realtype> &observed_data_, int iy);
 
     /**
      * @brief get function that checks whether data at specified indices has
@@ -212,7 +212,7 @@ class ExpData {
      * @param observedDataStdDev standard deviation of observed data (dimension:
      * nt x nytrue, row-major)
      */
-    void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev);
+    void setObservedDataStdDev(const std::vector<realtype> &observed_data_std_dev_);
 
     /**
      * @brief set function that sets all ExpData::observedDataStdDev to the
@@ -230,7 +230,7 @@ class ExpData {
      * nt)
      * @param iy observed data index
      */
-    void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev,
+    void setObservedDataStdDev(const std::vector<realtype> &observed_data_std_dev_,
                                int iy);
 
     /**
@@ -276,7 +276,7 @@ class ExpData {
      * @param observedEvents observed data (dimension: nmaxevent x nztrue,
      * row-major)
      */
-    void setObservedEvents(const std::vector<realtype> &observedEvents);
+    void setObservedEvents(const std::vector<realtype> &observed_events_);
 
     /**
      * @brief set function that copies observed event data for specific event
@@ -285,7 +285,7 @@ class ExpData {
      * @param observedEvents observed data (dimension: nmaxevent)
      * @param iz observed event data index
      */
-    void setObservedEvents(const std::vector<realtype> &observedEvents, int iz);
+    void setObservedEvents(const std::vector<realtype> &observed_events_, int iz);
 
     /**
      * @brief get function that checks whether event data at specified indices
@@ -321,7 +321,7 @@ class ExpData {
      * @param observedEventsStdDev standard deviation of observed event data
      */
     void
-    setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev);
+    setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev_);
 
     /**
      * @brief set function that sets all ExpData::observedDataStdDev to the
@@ -340,7 +340,7 @@ class ExpData {
      * @param iz observed data index
      */
     void
-    setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev,
+    setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev_,
                             int iz);
 
     /**
@@ -479,25 +479,25 @@ class ExpData {
     int nmaxevent_{0};
 
     /** @brief observation timepoints (dimension: nt) */
-    std::vector<realtype> ts;
+    std::vector<realtype> ts_;
 
     /** @brief observed data (dimension: nt x nytrue, row-major) */
-    std::vector<realtype> observedData;
+    std::vector<realtype> observed_data_;
     /**
      * @brief standard deviation of observed data (dimension: nt x nytrue,
      * row-major)
      */
-    std::vector<realtype> observedDataStdDev;
+    std::vector<realtype> observed_data_std_dev_;
 
     /**
      * @brief observed events (dimension: nmaxevents x nztrue, row-major)
      */
-    std::vector<realtype> observedEvents;
+    std::vector<realtype> observed_events_;
     /**
      * @brief standard deviation of observed events/roots
      * (dimension: nmaxevents x nztrue, row-major)
      */
-    std::vector<realtype> observedEventsStdDev;
+    std::vector<realtype> observed_events_std_dev_;
 };
 
 /**
@@ -532,7 +532,7 @@ class ConditionContext : public ContextManager {
      * @param fpc flag indicating which fixedParmeter from edata to apply
      */
     explicit ConditionContext(
-        Model *model, const ExpData *edata = nullptr,
+        Model *model_, const ExpData *edata = nullptr,
         FixedParameterContext fpc = FixedParameterContext::simulation);
 
     ConditionContext &operator=(const ConditionContext &other) = delete;
@@ -558,15 +558,15 @@ class ConditionContext : public ContextManager {
     void restore();
 
   private:
-    Model *model = nullptr;
-    std::vector<realtype> originalx0;
-    std::vector<realtype> originalsx0;
-    std::vector<realtype> originalParameters;
-    std::vector<realtype> originalFixedParameters;
-    std::vector<realtype> originalTimepoints;
-    std::vector<int> originalParameterList;
-    std::vector<amici::ParameterScaling> originalScaling;
-    bool originalReinitializeFixedParameterInitialStates;
+    Model *model_ = nullptr;
+    std::vector<realtype> original_x0_;
+    std::vector<realtype> original_sx0_;
+    std::vector<realtype> original_parameters_;
+    std::vector<realtype> original_fixed_parameters_;
+    std::vector<realtype> original_timepoints_;
+    std::vector<int> original_parameter_list_;
+    std::vector<amici::ParameterScaling> original_scaling_;
+    bool original_reinitialize_fixed_parameter_initial_states_;
 };
 
 } // namespace amici

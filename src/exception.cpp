@@ -11,21 +11,21 @@ namespace amici {
 AmiException::AmiException(const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    vsnprintf(msg.data(), msg.size(), fmt, ap);
+    vsnprintf(msg_.data(), msg_.size(), fmt, ap);
     va_end(ap);
     storeBacktrace(12);
 }
 
 const char *AmiException::what() const noexcept {
-    return msg.data();
+    return msg_.data();
 }
 
 const char *AmiException::getBacktrace() const {
-    return trace.data();
+    return trace_.data();
 }
 
 void AmiException::storeBacktrace(const int nMaxFrames) {
-    snprintf(trace.data(), trace.size(), "%s",
+    snprintf(trace_.data(), trace_.size(), "%s",
              backtraceString(nMaxFrames).c_str());
 }
 
