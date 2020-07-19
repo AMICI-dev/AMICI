@@ -61,6 +61,16 @@ class AmiVector {
             N_VMake_Serial(static_cast<long int>(vold.vec_.size()), vec_.data());
     }
 
+    AmiVector(AmiVector&& other) noexcept : nvec_(nullptr) {
+        vec_ = std::move(other.vec_);
+        synchroniseNVector();
+    }
+
+    /**
+     * @brief destructor
+     */
+    ~AmiVector();
+
     /**
      * @brief copy assignment operator
      * @param other right hand side
@@ -145,11 +155,6 @@ class AmiVector {
      * @param other data source
      */
     void copy(const AmiVector &other);
-
-    /**
-     * @brief destructor
-     */
-    ~AmiVector();
 
   private:
     /** main data storage */
