@@ -10,7 +10,7 @@ AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 runNotebook () {
     set +e
     tempfile=$(mktemp)
-    if [[ -f "${AMICI_PATH}build/venv/bin/activate"]]; then
+    if [ -f "${AMICI_PATH}build/venv/bin/activate"]; then
         jupyter nbconvert --debug --stdout --execute --ExecutePreprocessor.timeout=300 --to markdown $@ &> $tempfile
     else
         python3 -m jupyter nbconvert --debug --stdout --execute --ExecutePreprocessor.timeout=300 --to markdown $@ &> $tempfile
