@@ -75,10 +75,10 @@ class ExpData {
      * @param observedEventsStdDev (dimension: nmaxevent x nztrue, row-major)
      */
     ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
-            std::vector<realtype> const &observed_data,
-            std::vector<realtype> const &observed_data_std_dev,
-            std::vector<realtype> const &observed_events,
-            std::vector<realtype> const &observed_events_std_dev);
+            std::vector<realtype> const &observedData,
+            std::vector<realtype> const &observedDataStdDev,
+            std::vector<realtype> const &observedEvents,
+            std::vector<realtype> const &observedEventsStdDev);
 
     /**
      * @brief constructor that initializes with Model

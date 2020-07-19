@@ -123,12 +123,12 @@ void ExpData::setObservedData(const std::vector<realtype> &observedData) {
         observed_data_.clear();
 }
 
-void ExpData::setObservedData(const std::vector<realtype> &observed_data, int iy) {
-    if (observed_data.size() != (unsigned) nt())
-        throw AmiException("Input observedData did not match dimensions nt (%i), was %i", nt(), observed_data.size());
+void ExpData::setObservedData(const std::vector<realtype> &observedData, int iy) {
+    if (observedData.size() != (unsigned) nt())
+        throw AmiException("Input observedData did not match dimensions nt (%i), was %i", nt(), observedData.size());
 
     for (int it = 0; it < nt(); ++it)
-        observed_data_.at(iy + it*nytrue_) = observed_data.at(it);
+        observed_data_.at(iy + it*nytrue_) = observedData.at(it);
 }
 
 bool ExpData::isSetObservedData(int it, int iy) const {

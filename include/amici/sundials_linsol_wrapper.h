@@ -146,7 +146,7 @@ class SUNLinSolBand : public SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      * @param A square matrix
      */
-    SUNLinSolBand(N_Vector x, SUNMatrix A_);
+    SUNLinSolBand(N_Vector x, SUNMatrix A);
 
     /**
      * @brief Create new band solver and matrix A.
@@ -200,7 +200,7 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      * @param A sparse matrix
      */
-    SUNLinSolKLU(N_Vector x, SUNMatrix A_);
+    SUNLinSolKLU(N_Vector x, SUNMatrix A);
 
     /**
      * @brief Create KLU solver and matrix to operate on
