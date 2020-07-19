@@ -110,11 +110,11 @@ jobs:
     - name: lcov
       run: |
         lcov --compat-libtool --no-external \
-        --directory "${AMICI_DIR}/build/CMakeFiles/amici.dir/src" \
-        --base-directory ${AMICI_DIR} --capture --output-file coverage_cpp.info \
+        -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
+        -b ${AMICI_DIR} -c -o coverage_cpp.info \
         && lcov --compat-libtool --no-external \
-        --directory "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
-        --base-directory ${AMICI_DIR} --capture --output-file coverage_py.info \
+        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src \
+        -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
         
     - name: Codecov CPP
