@@ -64,5 +64,5 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.xml
-        flags: python
+        flags: petab
         fail_ci_if_error: true

@@ -36,3 +36,11 @@ jobs:
       with:
         name: amici-semantic-results
         path: tests/amici-semantic-results
+        
+    - name: Codecov SBMLSuite
+      uses: codecov/codecov-action@v1.0.6
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage_SBMLSuite.xml
+        flags: sbmlsuite
+        fail_ci_if_error: true
