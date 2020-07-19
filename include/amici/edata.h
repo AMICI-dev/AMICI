@@ -74,11 +74,11 @@ class ExpData {
      * @param observedEvents       (dimension: nmaxevent x nztrue, row-major)
      * @param observedEventsStdDev (dimension: nmaxevent x nztrue, row-major)
      */
-    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts_,
-            std::vector<realtype> const &observed_data_,
-            std::vector<realtype> const &observed_data_std_dev_,
-            std::vector<realtype> const &observed_events_,
-            std::vector<realtype> const &observed_events_std_dev_);
+    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
+            std::vector<realtype> const &observed_data,
+            std::vector<realtype> const &observed_data_std_dev,
+            std::vector<realtype> const &observed_events,
+            std::vector<realtype> const &observed_events_std_dev);
 
     /**
      * @brief constructor that initializes with Model
@@ -145,7 +145,7 @@ class ExpData {
      *
      * @param ts timepoints
      */
-    void setTimepoints(const std::vector<realtype> &ts_);
+    void setTimepoints(const std::vector<realtype> &ts);
 
     /**
      * @brief get function that copies data from ExpData::ts to output
@@ -168,7 +168,7 @@ class ExpData {
      *
      * @param observedData observed data (dimension: nt x nytrue, row-major)
      */
-    void setObservedData(const std::vector<realtype> &observed_data);
+    void setObservedData(const std::vector<realtype> &observedData);
 
     /**
      * @brief set function that copies observed data for specific observable
@@ -176,7 +176,7 @@ class ExpData {
      * @param observedData observed data (dimension: nt)
      * @param iy oberved data index
      */
-    void setObservedData(const std::vector<realtype> &observed_data, int iy);
+    void setObservedData(const std::vector<realtype> &observedData, int iy);
 
     /**
      * @brief get function that checks whether data at specified indices has
@@ -212,7 +212,7 @@ class ExpData {
      * @param observedDataStdDev standard deviation of observed data (dimension:
      * nt x nytrue, row-major)
      */
-    void setObservedDataStdDev(const std::vector<realtype> &observed_data_std_dev);
+    void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev);
 
     /**
      * @brief set function that sets all ExpData::observedDataStdDev to the
@@ -230,7 +230,7 @@ class ExpData {
      * nt)
      * @param iy observed data index
      */
-    void setObservedDataStdDev(const std::vector<realtype> &observed_data_std_dev,
+    void setObservedDataStdDev(const std::vector<realtype> &observedDataStdDev,
                                int iy);
 
     /**
@@ -276,7 +276,7 @@ class ExpData {
      * @param observedEvents observed data (dimension: nmaxevent x nztrue,
      * row-major)
      */
-    void setObservedEvents(const std::vector<realtype> &observed_events);
+    void setObservedEvents(const std::vector<realtype> &observedEvents);
 
     /**
      * @brief set function that copies observed event data for specific event
@@ -285,7 +285,7 @@ class ExpData {
      * @param observedEvents observed data (dimension: nmaxevent)
      * @param iz observed event data index
      */
-    void setObservedEvents(const std::vector<realtype> &observed_events, int iz);
+    void setObservedEvents(const std::vector<realtype> &observedEvents, int iz);
 
     /**
      * @brief get function that checks whether event data at specified indices
@@ -321,7 +321,7 @@ class ExpData {
      * @param observedEventsStdDev standard deviation of observed event data
      */
     void
-    setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev);
+    setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev);
 
     /**
      * @brief set function that sets all ExpData::observedDataStdDev to the
@@ -340,7 +340,7 @@ class ExpData {
      * @param iz observed data index
      */
     void
-    setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev,
+    setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev,
                             int iz);
 
     /**

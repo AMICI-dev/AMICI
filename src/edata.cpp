@@ -35,17 +35,17 @@ ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
 
 ExpData::ExpData(int nytrue, int nztrue, int nmaxevent,
                  std::vector<realtype> ts,
-                 std::vector<realtype> const& observedData,
-                 std::vector<realtype> const& observedDataStdDev,
-                 std::vector<realtype> const& observedEvents,
-                 std::vector<realtype> const& observedEventsStdDev)
+                 std::vector<realtype> const& observed_data,
+                 std::vector<realtype> const& observed_data_std_dev,
+                 std::vector<realtype> const& observed_events,
+                 std::vector<realtype> const& observed_events_std_dev)
     : nytrue_(nytrue), nztrue_(nztrue), nmaxevent_(nmaxevent), ts_(std::move(ts))
 {
     applyDimensions();
-    setObservedData(observedData);
-    setObservedDataStdDev(observedDataStdDev);
-    setObservedEvents(observedEvents);
-    setObservedEventsStdDev(observedEventsStdDev);
+    setObservedData(observed_data);
+    setObservedDataStdDev(observed_data_std_dev);
+    setObservedEvents(observed_events);
+    setObservedEventsStdDev(observed_events_std_dev);
 }
 
 ExpData::ExpData(Model const &model)
@@ -114,7 +114,7 @@ realtype ExpData::getTimepoint(int it) const {
     return ts_.at(it);
 }
 
-void ExpData::setObservedData(const std::vector<realtype> &observed_data) {
+void ExpData::setObservedData(const std::vector<realtype> &observedData) {
     checkDataDimension(observed_data, "observedData");
 
     if (observed_data.size() == (unsigned) nt() * nytrue_)
@@ -224,14 +224,14 @@ const realtype *ExpData::getObservedEventsPtr(int ie) const {
     return nullptr;
 }
 
-void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEventsStdDev) {
-    checkEventsDimension(observedEventsStdDev, "observedEventsStdDev");
-    checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
+void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev) {
+    checkEventsDimension(observed_events_std_dev, "observedEventsStdDev");
+    checkSigmaPositivity(observed_events_std_dev, "observedEventsStdDev");
 
-    if (observedEventsStdDev.size() == (unsigned) nmaxevent_*nztrue_)
-        this->observed_events_std_dev_ = observedEventsStdDev;
-    else if (observedEventsStdDev.empty())
-        this->observed_events_std_dev_.clear();
+    if (observed_events_std_dev.size() == (unsigned) nmaxevent_*nztrue_)
+        observed_events_std_dev_ = observed_events_std_dev;
+    else if (observed_events_std_dev.empty())
+        observed_events_std_dev_.clear();
 }
 
 void ExpData::setObservedEventsStdDev(const realtype stdDev) {
@@ -245,7 +245,7 @@ void ExpData::setObservedEventsStdDev(const std::vector<realtype> &observedEvent
     checkSigmaPositivity(observedEventsStdDev, "observedEventsStdDev");
 
     for (int ie = 0; ie < nmaxevent_; ++ie)
-        this->observed_events_std_dev_.at(iz + ie*nztrue_) = observedEventsStdDev.at(ie);
+        observed_events_std_dev_.at(iz + ie*nztrue_) = observedEventsStdDev.at(ie);
 }
 
 void ExpData::setObservedEventsStdDev(const realtype stdDev, int iz) {

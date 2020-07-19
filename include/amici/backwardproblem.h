@@ -87,9 +87,6 @@ class BackwardProblem {
         return xQB_;
     }
 
-    std::vector<realtype> getDJydx() const;
-    void setDJydx(const std::vector<realtype> &value);
-
 private:
     /**
      * @brief Execute everything necessary for the handling of events
