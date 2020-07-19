@@ -45,7 +45,7 @@ jobs:
     - name: Python tests
       run: |
         pip3 install pytest \
-          && pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
+          && python -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
 
     - name: notebooks
       run: |
