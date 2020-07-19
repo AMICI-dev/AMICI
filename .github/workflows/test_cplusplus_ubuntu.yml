@@ -91,7 +91,6 @@ jobs:
       run: |
         source build/venv/bin/activate \
         && pip3 install coverage pytest pytest-cov \
-        && printenv \
         && pytest \
           --ignore-glob=*petab* \
           --cov=amici \
