@@ -1,4 +1,4 @@
-name: C++/Python testsuite / Ubuntu
+name: Python tests / Ubuntu
 on:
   push:
     branches:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-  name: Benchmark collection
+  name: python version matrix
 
   runs-on: ubuntu-latest
   strategy:
