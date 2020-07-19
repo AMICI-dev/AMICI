@@ -27,6 +27,7 @@ def assert_fun(x):
     assert x
 
 
+@pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS') == 'TRUE')
 @pytest.mark.parametrize("sub_test,case", model_cases)
 def test_pregenerated_model(sub_test, case):
     """Tests models that were pregenerated using the the matlab code

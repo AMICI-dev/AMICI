@@ -15,6 +15,10 @@ jobs:
     name: python version matrix
 
     runs-on: ubuntu-latest
+    
+    env:
+      AMICI_SKIP_CMAKE_TESTS: "TRUE"
+    
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
@@ -59,10 +63,7 @@ jobs:
       run: |
         pip3 install pytest \
           && pip3 install git+https://github.com/pysb/pysb \
-          && python3 -m pytest --ignore-glob=*petab* \
-          --ignore-glob=*test_pregenerated* \
-          --ignore-glob=*test_cmake* \
-          ${AMICI_DIR}/python/tests
+          && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
 
     - name: notebooks
       run: |

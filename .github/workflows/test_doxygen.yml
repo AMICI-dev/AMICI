@@ -20,7 +20,7 @@ jobs:
           bison \
           ragel \
           graphviz \
-          texlive-latex-recommended
+          texlive-latex-extra
 
     - name: Build doxygen
       run: |
