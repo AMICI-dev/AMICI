@@ -38,85 +38,85 @@ void archiveVector(Archive &ar, T **p, int size) {
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::Solver &u, const unsigned int /*version*/) {
-    ar &u.sensi_;
-    ar &u.atol_;
-    ar &u.rtol_;
-    ar &u.atolB_;
-    ar &u.rtolB_;
-    ar &u.atol_fsa_;
-    ar &u.rtol_fsa_;
-    ar &u.quad_atol_;
-    ar &u.quad_rtol_;
-    ar &u.ss_atol_;
-    ar &u.ss_rtol_;
-    ar &u.ss_atol_sensi_;
-    ar &u.ss_rtol_sensi_;
-    ar &u.maxsteps_;
-    ar &u.maxstepsB_;
-    ar &u.requires_preequilibration_;
-    ar &u.newton_maxsteps_;
-    ar &u.newton_maxlinsteps_;
-    ar &u.newton_damping_factor_mode_;
-    ar &u.newton_damping_factor_lower_bound_;
-    ar &u.ism_;
-    ar &u.sensi_meth_;
-    ar &u.linsol_;
-    ar &u.interp_type_;
-    ar &u.lmm_;
-    ar &u.iter_;
-    ar &u.stldet_;
-    ar &u.ordering_;
-    ar &u.cpu_time_;
-    ar &u.cpu_timeB_;
-    ar &u.rdata_mode_;
+void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
+    ar &s.sensi_;
+    ar &s.atol_;
+    ar &s.rtol_;
+    ar &s.atolB_;
+    ar &s.rtolB_;
+    ar &s.atol_fsa_;
+    ar &s.rtol_fsa_;
+    ar &s.quad_atol_;
+    ar &s.quad_rtol_;
+    ar &s.ss_atol_;
+    ar &s.ss_rtol_;
+    ar &s.ss_atol_sensi_;
+    ar &s.ss_rtol_sensi_;
+    ar &s.maxsteps_;
+    ar &s.maxstepsB_;
+    ar &s.requires_preequilibration_;
+    ar &s.newton_maxsteps_;
+    ar &s.newton_maxlinsteps_;
+    ar &s.newton_damping_factor_mode_;
+    ar &s.newton_damping_factor_lower_bound_;
+    ar &s.ism_;
+    ar &s.sensi_meth_;
+    ar &s.linsol_;
+    ar &s.interp_type_;
+    ar &s.lmm_;
+    ar &s.iter_;
+    ar &s.stldet_;
+    ar &s.ordering_;
+    ar &s.cpu_time_;
+    ar &s.cpu_timeB_;
+    ar &s.rdata_mode_;
 }
 
 
 template <class Archive>
-void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int /*version*/) {
-    ar & static_cast<amici::Solver&>(u);
+void serialize(Archive &ar, amici::CVodeSolver &s, const unsigned int /*version*/) {
+    ar & static_cast<amici::Solver&>(s);
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::Model &u, const unsigned int /*version*/) {
-    ar &u.nx_rdata;
-    ar &u.nxtrue_rdata;
-    ar &u.nx_solver;
-    ar &u.nxtrue_solver;
-    ar &u.nx_solver_reinit;
-    ar &u.ny;
-    ar &u.nytrue;
-    ar &u.nz;
-    ar &u.nztrue;
-    ar &u.ne;
-    ar &u.nw;
-    ar &u.ndwdx;
-    ar &u.ndwdp;
-    ar &u.ndxdotdw;
-    ar &u.nnz;
-    ar &u.nJ;
-    ar &u.ubw;
-    ar &u.lbw;
-    ar &u.o2mode;
-    ar &u.z2event_;
-    ar &u.idlist;
-    ar &u.state_.h;
-    ar &u.state_.unscaledParameters;
-    ar &u.original_parameters_;
-    ar &u.state_.fixedParameters;
-    ar &u.reinitialize_fixed_parameter_initial_states_;
-    ar &u.state_.plist;
-    ar &u.x0data_;
-    ar &u.sx0data_;
-    ar &u.ts_;
-    ar &u.nmaxevent_;
-    ar &u.pscale_;
-    ar &u.tstart_;
-    ar &u.state_is_non_negative_;
-    ar &u.pythonGenerated;
-    ar &u.ndxdotdp_explicit;
-    ar &u.ndxdotdp_implicit;
+void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
+    ar &m.nx_rdata;
+    ar &m.nxtrue_rdata;
+    ar &m.nx_solver;
+    ar &m.nxtrue_solver;
+    ar &m.nx_solver_reinit;
+    ar &m.ny;
+    ar &m.nytrue;
+    ar &m.nz;
+    ar &m.nztrue;
+    ar &m.ne;
+    ar &m.nw;
+    ar &m.ndwdx;
+    ar &m.ndwdp;
+    ar &m.ndxdotdw;
+    ar &m.nnz;
+    ar &m.nJ;
+    ar &m.ubw;
+    ar &m.lbw;
+    ar &m.o2mode;
+    ar &m.z2event_;
+    ar &m.idlist;
+    ar &m.state_.h;
+    ar &m.state_.unscaledParameters;
+    ar &m.original_parameters_;
+    ar &m.state_.fixedParameters;
+    ar &m.reinitialize_fixed_parameter_initial_states_;
+    ar &m.state_.plist;
+    ar &m.x0data_;
+    ar &m.sx0data_;
+    ar &m.ts_;
+    ar &m.nmaxevent_;
+    ar &m.pscale_;
+    ar &m.tstart_;
+    ar &m.state_is_non_negative_;
+    ar &m.pythonGenerated;
+    ar &m.ndxdotdp_explicit;
+    ar &m.ndxdotdp_implicit;
 }
 
 
