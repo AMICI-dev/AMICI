@@ -20,6 +20,8 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
 
     steps:
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    
     - uses: actions/checkout@v1
       with:
         fetch-depth: 20
