@@ -25,8 +25,8 @@ jobs:
     - name: apt
       run: |
         sudo apt-get update \
-          && sudo apt-get install -y swig3.0 libatlas-base-dev \
-          && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+          && sudo apt-get install -y swig3.0 libatlas-base-dev
+          
     - name: pip
       run: |
         pip3 install --upgrade --user wheel \

@@ -55,10 +55,6 @@ jobs:
       run: |
         scripts/run-cppcheck.sh
         
-    - name: notebooks
-      run: |
-        scripts/runNotebook.sh python/examples/example_*/
-        
     - name: Python tests
       run: |
         scripts/run-python-tests.sh
