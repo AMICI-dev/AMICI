@@ -21,6 +21,7 @@ jobs:
 
     steps:
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
     
     - uses: actions/checkout@v1
       with:
@@ -37,13 +38,16 @@ jobs:
           && pip3 install --upgrade --user setuptools
 
     # install AMICI
+    - name: Build BNGL
+      run: |
+        scripts/buildBNGL.sh
     - name: Create AMICI sdist
       run: |
         cd python/sdist && python3 setup.py sdist
     - name: Install AMICI sdist
       run: |
-        pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
-
+        pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb]
+        
     - name: Python tests
       run: |
         pip3 install pytest \
