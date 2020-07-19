@@ -47,7 +47,7 @@ class ExpData {
      * @param nmaxevent            (dimension: scalar)
      * @param ts                   (dimension: nt)
      */
-    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts_);
+    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts);
 
     /**
      * @brief constructor that initializes timepoints and fixed parameters from
@@ -59,7 +59,7 @@ class ExpData {
      * @param ts                   (dimension: nt)
      * @param fixedParameters      (dimension: nk)
      */
-    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts_,
+    ExpData(int nytrue, int nztrue, int nmaxevent, std::vector<realtype> ts,
             std::vector<realtype> fixedParameters);
 
     /**
@@ -168,7 +168,7 @@ class ExpData {
      *
      * @param observedData observed data (dimension: nt x nytrue, row-major)
      */
-    void setObservedData(const std::vector<realtype> &observed_data_);
+    void setObservedData(const std::vector<realtype> &observed_data);
 
     /**
      * @brief set function that copies observed data for specific observable
@@ -176,7 +176,7 @@ class ExpData {
      * @param observedData observed data (dimension: nt)
      * @param iy oberved data index
      */
-    void setObservedData(const std::vector<realtype> &observed_data_, int iy);
+    void setObservedData(const std::vector<realtype> &observed_data, int iy);
 
     /**
      * @brief get function that checks whether data at specified indices has
@@ -212,7 +212,7 @@ class ExpData {
      * @param observedDataStdDev standard deviation of observed data (dimension:
      * nt x nytrue, row-major)
      */
-    void setObservedDataStdDev(const std::vector<realtype> &observed_data_std_dev_);
+    void setObservedDataStdDev(const std::vector<realtype> &observed_data_std_dev);
 
     /**
      * @brief set function that sets all ExpData::observedDataStdDev to the
@@ -230,7 +230,7 @@ class ExpData {
      * nt)
      * @param iy observed data index
      */
-    void setObservedDataStdDev(const std::vector<realtype> &observed_data_std_dev_,
+    void setObservedDataStdDev(const std::vector<realtype> &observed_data_std_dev,
                                int iy);
 
     /**
@@ -276,7 +276,7 @@ class ExpData {
      * @param observedEvents observed data (dimension: nmaxevent x nztrue,
      * row-major)
      */
-    void setObservedEvents(const std::vector<realtype> &observed_events_);
+    void setObservedEvents(const std::vector<realtype> &observed_events);
 
     /**
      * @brief set function that copies observed event data for specific event
@@ -285,7 +285,7 @@ class ExpData {
      * @param observedEvents observed data (dimension: nmaxevent)
      * @param iz observed event data index
      */
-    void setObservedEvents(const std::vector<realtype> &observed_events_, int iz);
+    void setObservedEvents(const std::vector<realtype> &observed_events, int iz);
 
     /**
      * @brief get function that checks whether event data at specified indices
@@ -321,7 +321,7 @@ class ExpData {
      * @param observedEventsStdDev standard deviation of observed event data
      */
     void
-    setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev_);
+    setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev);
 
     /**
      * @brief set function that sets all ExpData::observedDataStdDev to the
@@ -340,7 +340,7 @@ class ExpData {
      * @param iz observed data index
      */
     void
-    setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev_,
+    setObservedEventsStdDev(const std::vector<realtype> &observed_events_std_dev,
                             int iz);
 
     /**
@@ -532,7 +532,7 @@ class ConditionContext : public ContextManager {
      * @param fpc flag indicating which fixedParmeter from edata to apply
      */
     explicit ConditionContext(
-        Model *model_, const ExpData *edata = nullptr,
+        Model *model, const ExpData *edata = nullptr,
         FixedParameterContext fpc = FixedParameterContext::simulation);
 
     ConditionContext &operator=(const ConditionContext &other) = delete;
