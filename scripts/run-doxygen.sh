@@ -62,7 +62,6 @@ cd ${AMICI_PATH}/doc/latex
 make
 
 cat refman.log
-cat refman.out
 
 cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
