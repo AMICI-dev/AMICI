@@ -78,11 +78,11 @@ class Model_DAE : public Model {
                 nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
                 nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
                 pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {
-            M = SUNMatrixWrapper(nx_solver, nx_solver);
+            M_ = SUNMatrixWrapper(nx_solver, nx_solver);
         }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
-            const AmiVector &xdot, SUNMatrix J) override;
+            const AmiVector &xdot, SUNMatrix J_) override;
 
     /**
      * @brief Jacobian of xdot with respect to states x
@@ -94,7 +94,7 @@ class Model_DAE : public Model {
      * @param J Matrix to which the Jacobian will be written
      **/
     void fJ(realtype t, realtype cj, N_Vector x, N_Vector dx, N_Vector xdot,
-            SUNMatrix J);
+            SUNMatrix J_);
 
     void fJB(const realtype t, realtype cj, const AmiVector &x,
              const AmiVector &dx, const AmiVector &xB, const AmiVector &dxB,
@@ -115,7 +115,7 @@ class Model_DAE : public Model {
 
     void fJSparse(realtype t, realtype cj, const AmiVector &x,
                   const AmiVector &dx, const AmiVector &xdot,
-                  SUNMatrix J) override;
+                  SUNMatrix J_) override;
 
     /**
      * @brief J in sparse form (for sparse solvers from the SuiteSparse Package)
@@ -126,7 +126,7 @@ class Model_DAE : public Model {
      * @param J Matrix to which the Jacobian will be written
      */
     void fJSparse(realtype t, realtype cj, N_Vector x, N_Vector dx,
-                  SUNMatrix J);
+                  SUNMatrix J_);
 
     void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
                    const AmiVector &dx, const AmiVector &xB,
@@ -295,7 +295,7 @@ class Model_DAE : public Model {
     };
 
     void fsxdot(realtype t, const AmiVector &x, const AmiVector &dx, int ip,
-                const AmiVector &sx, const AmiVector &sdx,
+                const AmiVector &sx_, const AmiVector &sdx,
                 AmiVector &sxdot) override;
     /**
      * @brief Right hand side of differential equation for state sensitivities sx
@@ -307,7 +307,7 @@ class Model_DAE : public Model {
      * @param sdx Vector with the derivative state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
      */
-    void fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx,
+    void fsxdot(realtype t, N_Vector x, N_Vector dx, int ip, N_Vector sx_,
                 N_Vector sdx, N_Vector sxdot);
 
     /**
@@ -333,10 +333,10 @@ class Model_DAE : public Model {
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
-    virtual void fJ(realtype *J, realtype t, const realtype *x, const double *p,
+    virtual void fJ(realtype *J_, realtype t, const realtype *x, const double *p,
                     const double *k, const realtype *h, realtype cj,
-                    const realtype *dx, const realtype *w,
-                    const realtype *dwdx) = 0;
+                    const realtype *dx, const realtype *w_,
+                    const realtype *dwdx_) = 0;
 
     /**
      * @brief Model specific implementation for fJB
@@ -356,8 +356,8 @@ class Model_DAE : public Model {
     virtual void fJB(realtype *JB, realtype t, const realtype *x,
                      const double *p, const double *k, const realtype *h,
                      realtype cj, const realtype *xB, const realtype *dx,
-                     const realtype *dxB, const realtype *w,
-                     const realtype *dwdx);
+                     const realtype *dxB, const realtype *w_,
+                     const realtype *dwdx_);
 
     /**
      * @brief Model specific implementation for fJSparse
@@ -375,7 +375,7 @@ class Model_DAE : public Model {
     virtual void fJSparse(SUNMatrixContent_Sparse JSparse, realtype t,
                           const realtype *x, const double *p, const double *k,
                           const realtype *h, realtype cj, const realtype *dx,
-                          const realtype *w, const realtype *dwdx) = 0;
+                          const realtype *w_, const realtype *dwdx_) = 0;
 
     /**
      * @brief Model specific implementation for fJSparseB
@@ -396,8 +396,8 @@ class Model_DAE : public Model {
                            const realtype *x, const double *p, const double *k,
                            const realtype *h, const realtype cj,
                            const realtype *xB, const realtype *dx,
-                           const realtype *dxB, const realtype *w,
-                           const realtype *dwdx);
+                           const realtype *dxB, const realtype *w_,
+                           const realtype *dwdx_);
 
     /**
      * @brief Model specific implementation for fJDiag
@@ -414,8 +414,8 @@ class Model_DAE : public Model {
      **/
     virtual void fJDiag(realtype *JDiag, realtype t, const realtype *x,
                         const realtype *p, const realtype *k, const realtype *h,
-                        realtype cj, const realtype *dx, const realtype *w,
-                        const realtype *dwdx);
+                        realtype cj, const realtype *dx, const realtype *w_,
+                        const realtype *dwdx_);
 
     /**
      * @brief Model specific implementation for fJvB
@@ -437,7 +437,7 @@ class Model_DAE : public Model {
                       const double *p, const double *k, const realtype *h,
                       realtype cj, const realtype *xB, const realtype *dx,
                       const realtype *dxB, const realtype *vB,
-                      const realtype *w, const realtype *dwdx);
+                      const realtype *w_, const realtype *dwdx_);
 
     /**
      * @brief Model specific implementation for froot
@@ -466,7 +466,7 @@ class Model_DAE : public Model {
      **/
     virtual void fxdot(realtype *xdot, realtype t, const realtype *x,
                        const double *p, const double *k, const realtype *h,
-                       const realtype *dx, const realtype *w) = 0;
+                       const realtype *dx, const realtype *w_) = 0;
 
     /**
      * @brief Model specific implementation of fdxdotdp
@@ -484,7 +484,7 @@ class Model_DAE : public Model {
     virtual void fdxdotdp(realtype *dxdotdp, realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
                           const realtype *h, int ip, const realtype *dx,
-                          const realtype *w, const realtype *dwdp);
+                          const realtype *w_, const realtype *dwdp_);
 
     /**
      * @brief Model specific implementation of fM
