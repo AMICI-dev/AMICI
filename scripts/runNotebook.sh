@@ -30,7 +30,7 @@ if [ $# -eq 0 ]; then
 fi
 
 source ${AMICI_PATH}/build/venv/bin/activate || echo "${AMICI_PATH}build/venv/bin/activate not available, running without virtualenv"
-pip3 show ipython || (pip3 install --upgrade jupyter jupyter_contrib_nbextensions && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
+pip3 show ipython || (pip3 install --upgrade jupyter jupyter_contrib_nbextensions nbconvert && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
 
 for arg in "$@"; do
     if [ -d $arg ]; then
