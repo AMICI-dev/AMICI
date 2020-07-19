@@ -107,18 +107,15 @@ jobs:
         flags: python
         fail_ci_if_error: true
         
-    - name: gcov & lcov cpputest
+    - name: lcov cpputest
       run: |
-        gcov build/CMakeFiles/amici.dir/src/*.o \
-        && lcov --compat-libtool --no-external \
+        lcov --compat-libtool --no-external \
         --directory "${AMICI_DIR}/build/CMakeFiles/amici.dir/src" \
-        --base-directory ${AMICI_DIR} --capture --output-file coverage.info
+        --base-directory ${AMICI_DIR} --capture --output-file coverage_cpp.info
         
-    - name: gcov & lcov cpputest
+    - name: lcov pytest
       run: |
-        gcov ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src/*.o \
-        && ls "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
-        && lcov --compat-libtool --no-external \
+        lcov --compat-libtool --no-external \
         --directory "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
         --base-directory ${AMICI_DIR} --capture --output-file coverage_py.info
         
