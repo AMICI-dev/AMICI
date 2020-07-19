@@ -12,42 +12,42 @@ on:
 
 jobs:
   build:
-  name: python version matrix
+    name: python version matrix
 
-  runs-on: ubuntu-latest
-  strategy:
-    matrix:
-      python-version: [3.6, 3.7, 3.8]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
 
-  steps:
-  - uses: actions/checkout@v1
-    with:
-      fetch-depth: 20
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 20
 
-  # install dependencies
-  - name: apt
-    run: |
-      sudo apt-get update \
-        && sudo apt-get install -y swig3.0 libatlas-base-dev
-  - name: pip
-    run: |
-      pip3 install --upgrade --user wheel \
-        && pip3 install --upgrade --user setuptools
-      
-  # install AMICI
-  - name: Create AMICI sdist
-    run: |
-      cd python/sdist && python3 setup.py sdist
-  - name: Install AMICI sdist
-    run: |
-      pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
+    # install dependencies
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y swig3.0 libatlas-base-dev
+    - name: pip
+      run: |
+        pip3 install --upgrade --user wheel \
+          && pip3 install --upgrade --user setuptools
 
-  - name: Python tests
-    run: |
-      source build/venv/bin/activate \
-      && pip3 install pytest \
-      && pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
-          
-  - name: notebooks
-    run: |
-      scripts/runNotebook.sh python/examples/example_*/
+    # install AMICI
+    - name: Create AMICI sdist
+      run: |
+        cd python/sdist && python3 setup.py sdist
+    - name: Install AMICI sdist
+      run: |
+        pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
+
+    - name: Python tests
+      run: |
+        source build/venv/bin/activate \
+        && pip3 install pytest \
+        && pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
+
+    - name: notebooks
+      run: |
+        scripts/runNotebook.sh python/examples/example_*/
