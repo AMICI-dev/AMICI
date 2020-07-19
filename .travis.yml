@@ -10,40 +10,6 @@ branches:
 matrix:
   fast_finish: true
   include:
-    - os: osx
-      osx_image: xcode11
-      language: minimal
-      compiler: clang
-      env:
-        - CI_DOC=TRUE
-      addons:
-        homebrew:
-          casks:
-            - mactex
-          packages:
-            # - doxygen # disabled because current 1.8.16 does not work with recent ghostscript
-            - bison # doxygen build
-            - ragel
-            - graphviz
-          update: true
-      before_install:
-        - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
-        - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-        - brew link --overwrite python # https://github.com/ICB-DCM/AMICI/issues/894
-      before_cache:
-        - brew cleanup
-      after_success:
-        - cd $BASE_DIR # cd to base dir for correct relative path in deploy
-      deploy:
-        provider: pages
-        local-dir: doc
-        skip-cleanup: true
-        github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
-        keep-history: false
-        verbose: true
-        on:
-          branch: master
-
     - os: windows
       # language python currently not supported on Windows
       language: cpp
@@ -66,22 +32,19 @@ matrix:
         - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
         # run BLAS installation script
-        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS; fi
+        - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS
         # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
-        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib libopenblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-0.3.6-x64\\include'; fi
+        - export BLAS_LIBS='/LIBPATH:C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib libopenblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-0.3.6-x64\\include'
 
 install:
     - export BASE_DIR=`pwd`
-    - if [[ "$CI_DOC" == "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
-    - if [[ "$CI_DOC" == "TRUE" ]]; then export PATH="/usr/local/opt/bison/bin:$PATH"; LDFLAGS="-L/usr/local/opt/bison/lib" scripts/downloadAndBuildDoxygen.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install -v $(ls -t dist/amici-*.tar.gz | head -1); fi
+    - cd python/sdist && python setup.py sdist
+    - pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-    - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
 
 after_failure:
     - $FOLD ls -alR

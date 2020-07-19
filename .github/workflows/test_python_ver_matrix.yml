@@ -59,7 +59,9 @@ jobs:
       run: |
         pip3 install pytest \
           && pip3 install git+https://github.com/pysb/pysb \
-          && python3 -m pytest --ignore-glob=*petab* --ignore-glob=*test_pregenerated* \
+          && python3 -m pytest --ignore-glob=*petab* \
+          --ignore-glob=*test_pregenerated* \
+          --ignore-glob=*test_cmake* \
           ${AMICI_DIR}/python/tests
 
     - name: notebooks
