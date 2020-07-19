@@ -38,48 +38,48 @@ void archiveVector(Archive &ar, T **p, int size) {
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
-    ar &u.sensi;
-    ar &u.atol;
-    ar &u.rtol;
-    ar &u.atolB;
-    ar &u.rtolB;
-    ar &u.atol_fsa;
-    ar &u.rtol_fsa;
-    ar &u.quad_atol;
-    ar &u.quad_rtol;
-    ar &u.ss_atol;
-    ar &u.ss_rtol;
-    ar &u.ss_atol_sensi;
-    ar &u.ss_rtol_sensi;
-    ar &u.maxsteps;
-    ar &u.maxstepsB;
-    ar &u.requires_preequilibration;
-    ar &u.newton_maxsteps;
-    ar &u.newton_maxlinsteps;
-    ar &u.newton_damping_factor_mode;
-    ar &u.newton_damping_factor_lower_bound;
-    ar &u.ism;
-    ar &u.sensi_meth;
-    ar &u.linsol;
-    ar &u.interpType;
-    ar &u.lmm;
-    ar &u.iter;
-    ar &u.stldet;
-    ar &u.ordering;
-    ar &u.cpu_time;
-    ar &u.cpu_timeB;
-    ar &u.rdata_mode;
+void serialize(Archive &ar, amici::Solver &u, const unsigned int /*version*/) {
+    ar &u.sensi_;
+    ar &u.atol_;
+    ar &u.rtol_;
+    ar &u.atolB_;
+    ar &u.rtolB_;
+    ar &u.atol_fsa_;
+    ar &u.rtol_fsa_;
+    ar &u.quad_atol_;
+    ar &u.quad_rtol_;
+    ar &u.ss_atol_;
+    ar &u.ss_rtol_;
+    ar &u.ss_atol_sensi_;
+    ar &u.ss_rtol_sensi_;
+    ar &u.maxsteps_;
+    ar &u.maxstepsB_;
+    ar &u.requires_preequilibration_;
+    ar &u.newton_maxsteps_;
+    ar &u.newton_maxlinsteps_;
+    ar &u.newton_damping_factor_mode_;
+    ar &u.newton_damping_factor_lower_bound_;
+    ar &u.ism_;
+    ar &u.sensi_meth_;
+    ar &u.linsol_;
+    ar &u.interp_type_;
+    ar &u.lmm_;
+    ar &u.iter_;
+    ar &u.stldet_;
+    ar &u.ordering_;
+    ar &u.cpu_time_;
+    ar &u.cpu_timeB_;
+    ar &u.rdata_mode_;
 }
 
 
 template <class Archive>
-void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version) {
+void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int /*version*/) {
     ar & static_cast<amici::Solver&>(u);
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
+void serialize(Archive &ar, amici::Model &u, const unsigned int /*version*/) {
     ar &u.nx_rdata;
     ar &u.nxtrue_rdata;
     ar &u.nx_solver;
@@ -99,21 +99,21 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
     ar &u.ubw;
     ar &u.lbw;
     ar &u.o2mode;
-    ar &u.z2event;
+    ar &u.z2event_;
     ar &u.idlist;
-    ar &u.state.h;
-    ar &u.state.unscaledParameters;
-    ar &u.originalParameters;
-    ar &u.state.fixedParameters;
-    ar &u.reinitializeFixedParameterInitialStates;
-    ar &u.state.plist;
-    ar &u.x0data;
-    ar &u.sx0data;
-    ar &u.ts;
-    ar &u.nmaxevent;
-    ar &u.pscale;
-    ar &u.tstart;
-    ar &u.stateIsNonNegative;
+    ar &u.state_.h;
+    ar &u.state_.unscaledParameters;
+    ar &u.original_parameters_;
+    ar &u.state_.fixedParameters;
+    ar &u.reinitialize_fixed_parameter_initial_states_;
+    ar &u.state_.plist;
+    ar &u.x0data_;
+    ar &u.sx0data_;
+    ar &u.ts_;
+    ar &u.nmaxevent_;
+    ar &u.pscale_;
+    ar &u.tstart_;
+    ar &u.state_is_non_negative_;
     ar &u.pythonGenerated;
     ar &u.ndxdotdp_explicit;
     ar &u.ndxdotdp_implicit;
@@ -121,7 +121,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
 
 
 template <class Archive>
-void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
+void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/) {
     ar &r.np;
     ar &r.nk;
     ar &r.nx;
