@@ -25,7 +25,7 @@ if [ $# -eq 0 ]; then
     exit 1
 fi
 
-source ${AMICI_PATH}/build/venv/bin/activate
+source ${AMICI_PATH}/build/venv/bin/activate || echo "./build/venv/bin/activate not available, running without virtualenv"
 pip3 show ipython || (pip3 install --upgrade jupyter jupyter_contrib_nbextensions && python3 -m ipykernel install --user --name amici --display-name "Python (amici)")
 
 for arg in "$@"; do
