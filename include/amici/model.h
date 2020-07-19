@@ -643,7 +643,7 @@ class Model : public AbstractModel {
             throw AmiException("Mismatch in conservation law size");
         if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
             throw AmiException("Mismatch in conservation law sensitivity size");
-        this->state_ = state;
+        state_ = state;
     };
 
     /**

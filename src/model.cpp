@@ -271,7 +271,7 @@ const double *Model::k() const { return state_.fixedParameters.data(); }
 
 int Model::nMaxEvent() const { return nmaxevent_; }
 
-void Model::setNMaxEvent(int nmaxevent) { this->nmaxevent_ = nmaxevent; }
+void Model::setNMaxEvent(int nmaxevent) { nmaxevent_ = nmaxevent; }
 
 int Model::nt() const { return static_cast<int>(ts_.size()); }
 
@@ -280,17 +280,17 @@ const std::vector<ParameterScaling> &Model::getParameterScale() const {
 }
 
 void Model::setParameterScale(ParameterScaling pscale) {
-    this->pscale_.assign(this->pscale_.size(), pscale);
-    scaleParameters(state_.unscaledParameters, this->pscale_, original_parameters_);
+    pscale_.assign(pscale_.size(), pscale);
+    scaleParameters(state_.unscaledParameters, pscale_, original_parameters_);
     sx0data_.clear();
 }
 
 void Model::setParameterScale(std::vector<ParameterScaling> const &pscaleVec) {
-    if (pscaleVec.size() != this->original_parameters_.size())
+    if (pscaleVec.size() != original_parameters_.size())
         throw AmiException("Dimension mismatch. Size of parameter scaling does "
                            "not match number of model parameters.");
-    this->pscale_ = pscaleVec;
-    scaleParameters(state_.unscaledParameters, this->pscale_, original_parameters_);
+    pscale_ = pscaleVec;
+    scaleParameters(state_.unscaledParameters, pscale_, original_parameters_);
     sx0data_.clear();
 }
 
@@ -322,8 +322,8 @@ void Model::setParameters(const std::vector<realtype> &p) {
     if (p.size() != (unsigned)np())
         throw AmiException("Dimension mismatch. Size of parameters does not "
                            "match number of model parameters.");
-    this->original_parameters_ = p;
-    this->state_.unscaledParameters.resize(original_parameters_.size());
+    original_parameters_ = p;
+    state_.unscaledParameters.resize(original_parameters_.size());
     unscaleParameters(original_parameters_, pscale_, state_.unscaledParameters);
 }
 
@@ -424,7 +424,7 @@ void Model::setFixedParameters(const std::vector<realtype> &k) {
     if (k.size() != (unsigned)nk())
         throw AmiException("Dimension mismatch. Size of fixedParameters does "
                            "not match number of fixed model parameters.");
-    this->state_.fixedParameters = k;
+    state_.fixedParameters = k;
 }
 
 void Model::setFixedParameterById(std::string const &par_id, realtype value) {
@@ -543,7 +543,7 @@ void Model::setTimepoints(const std::vector<realtype> &ts) {
         throw AmiException("Encountered non-monotonic timepoints, please order"
                            " timepoints such that they are monotonically"
                            " increasing!");
-    this->ts_ = ts;
+    ts_ = ts;
 }
 
 double Model::t0() const { return tstart_; }
@@ -584,7 +584,7 @@ void Model::setParameterList(const std::vector<int> &plist) {
                     [&np](int idx) { return idx < 0 || idx >= np; })) {
         throw AmiException("Indices in plist must be in [0..np]");
     }
-    this->state_.plist = plist;
+    state_.plist = plist;
 
     initializeVectors();
 }
@@ -729,13 +729,13 @@ void Model::requireSensitivitiesForAllParameters() {
 void Model::getExpression(gsl::span<realtype> w, const realtype t, const AmiVector &x)
 {
     fw(t, x.data());
-    writeSlice(this->w_, w);
+    writeSlice(w_, w);
 }
 
 void Model::getObservable(gsl::span<realtype> y, const realtype t,
                           const AmiVector &x) {
     fy(t, x);
-    writeSlice(this->y_, y);
+    writeSlice(y_, y);
 }
 
 void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
@@ -747,8 +747,8 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     fdydx(t, x);
     fdydp(t, x);
 
-    this->sx_.resize(nx_solver * nplist());
-    sx.flatten_to_vector(this->sx_);
+    sx_.resize(nx_solver * nplist());
+    sx.flatten_to_vector(sx_);
 
     // compute sy = 1.0*dydx*sx + 1.0*sy
     // dydx A[ny,nx_solver] * sx B[nx_solver,nplist] = sy C[ny,nplist]
@@ -756,7 +756,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
     //        lda                  ldb                      ldc
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, ny, nplist(), nx_solver, 1.0,
-                dydx_.data(), ny, this->sx_.data(), nx_solver, 1.0, dydp_.data(),
+                dydx_.data(), ny, sx_.data(), nx_solver, 1.0, dydp_.data(),
                 ny);
 
     writeSlice(dydp_, sy);
@@ -768,7 +768,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
 void Model::getObservableSigma(gsl::span<realtype> sigmay, const int it,
                                const ExpData *edata) {
     fsigmay(it, edata);
-    writeSlice(this->sigmay_, sigmay);
+    writeSlice(sigmay_, sigmay);
 }
 
 void Model::getObservableSigmaSensitivity(gsl::span<realtype> ssigmay,
@@ -808,13 +808,13 @@ void Model::addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
     // Compute dJydx*sx for current 'it'
     // dJydx        rdata->nt x nJ        x nx_solver
     // sx           rdata->nt x nx_solver x nplist()
-    this->sx_.resize(nx_solver * nplist());
-    sx.flatten_to_vector(this->sx_);
+    sx_.resize(nx_solver * nplist());
+    sx.flatten_to_vector(sx_);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
-                dJydx_.data(), nJ, this->sx_.data(), nx_solver, 1.0, dJydp_.data(),
+                dJydx_.data(), nJ, sx_.data(), nx_solver, 1.0, dJydp_.data(),
                 nJ);
 
     writeLLHSensitivitySlice(dJydp_, sllh, s2llh);
@@ -835,13 +835,13 @@ void Model::getAdjointStateObservableUpdate(gsl::span<realtype> dJydx,
                                             const int it, const AmiVector &x,
                                             const ExpData &edata) {
     fdJydx(it, x, edata);
-    writeSlice(this->dJydx_, dJydx);
+    writeSlice(dJydx_, dJydx);
 }
 
 void Model::getEvent(gsl::span<realtype> z, const int ie, const realtype t,
                      const AmiVector &x) {
     fz(ie, t, x);
-    writeSliceEvent(this->z_, z, ie);
+    writeSliceEvent(z_, z, ie);
 }
 
 void Model::getEventSensitivity(gsl::span<realtype> sz, const int ie,
@@ -867,7 +867,7 @@ void Model::getUnobservedEventSensitivity(gsl::span<realtype> sz,
 void Model::getEventRegularization(gsl::span<realtype> rz, const int ie,
                                    const realtype t, const AmiVector &x) {
     frz(ie, t, x);
-    writeSliceEvent(this->rz_, rz, ie);
+    writeSliceEvent(rz_, rz, ie);
 }
 
 void Model::getEventRegularizationSensitivity(gsl::span<realtype> srz,
@@ -885,7 +885,7 @@ void Model::getEventSigma(gsl::span<realtype> sigmaz, const int ie,
                           const int nroots, const realtype t,
                           const ExpData *edata) {
     fsigmaz(ie, nroots, t, edata);
-    writeSliceEvent(this->sigmaz_, sigmaz, ie);
+    writeSliceEvent(sigmaz_, sigmaz, ie);
 }
 
 void Model::getEventSigmaSensitivity(gsl::span<realtype> ssigmaz, const int ie,
@@ -952,12 +952,12 @@ void Model::addEventObjectiveSensitivity(std::vector<realtype> &sllh,
     // Compute dJzdx*sx for current 'ie'
     // dJzdx        rdata->nt x nJ        x nx_solver
     // sx           rdata->nt x nx_solver x nplist()
-    sx.flatten_to_vector(this->sx_);
+    sx.flatten_to_vector(sx_);
 
     // C := alpha*op(A)*op(B) + beta*C,
     amici_dgemm(BLASLayout::colMajor, BLASTranspose::noTrans,
                 BLASTranspose::noTrans, nJ, nplist(), nx_solver, 1.0,
-                dJzdx_.data(), nJ, this->sx_.data(), nx_solver, 1.0, dJzdp_.data(),
+                dJzdx_.data(), nJ, sx_.data(), nx_solver, 1.0, dJzdp_.data(),
                 nJ);
 
     // sJy += multResult + dJydp
@@ -969,7 +969,7 @@ void Model::getAdjointStateEventUpdate(gsl::span<realtype> dJzdx, const int ie,
                                        const AmiVector &x,
                                        const ExpData &edata) {
     fdJzdx(ie, nroots, t, x, edata);
-    writeSlice(this->dJzdx_, dJzdx);
+    writeSlice(dJzdx_, dJzdx);
 }
 
 void Model::addPartialEventObjectiveSensitivity(std::vector<realtype> &sllh,

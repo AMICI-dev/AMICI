@@ -492,10 +492,10 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
     x_old = x;
     xdot_old = xdot;
 
-    wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
-                       newtonSolver->rtol, ewt_);
+    wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol_,
+                       newtonSolver->rtol_, ewt_);
     bool converged = wrms < RCONST(1.0);
-    while (!converged && i_newtonstep < newtonSolver->maxsteps) {
+    while (!converged && i_newtonstep < newtonSolver->max_steps) {
 
         /* If Newton steps are necessary, compute the inital search direction */
         if (compNewStep) {
@@ -514,8 +514,8 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
 
         /* Compute new xdot and residuals */
         model->fxdot(t, x, dx, xdot);
-        realtype wrms_tmp = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
-                                        newtonSolver->rtol, ewt_);
+        realtype wrms_tmp = getWrmsNorm(x_newton, xdot, newtonSolver->atol_,
+                                        newtonSolver->rtol_, ewt_);
 
         if (wrms_tmp < wrms) {
             /* If new residuals are smaller than old ones, update state */
@@ -539,18 +539,18 @@ void SteadystateProblem::applyNewtonsMethod(Model *model,
                 }
                 if (recheck_convergence) {
                   model->fxdot(t, x, dx, xdot);
-                  wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol,
-                                     newtonSolver->rtol, ewt_);
+                  wrms = getWrmsNorm(x_newton, xdot, newtonSolver->atol_,
+                                     newtonSolver->rtol_, ewt_);
                   converged = wrms < RCONST(1.0);
                 }
-            } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
+            } else if (newtonSolver->damping_factor_mode_==NewtonDampingFactorMode::on) {
                 /* increase dampening factor (superfluous, if converged) */
                 gamma = fmin(1.0, 2.0 * gamma);
             }
-        } else if (newtonSolver->dampingFactorMode==NewtonDampingFactorMode::on) {
+        } else if (newtonSolver->damping_factor_mode_==NewtonDampingFactorMode::on) {
             /* Reduce dampening factor and raise an error when becomes too small */
             gamma = gamma / 4.0;
-            if (gamma < newtonSolver->dampingFactorLowerBound)
+            if (gamma < newtonSolver->damping_factor_lower_bound)
               throw NewtonFailure(AMICI_DAMPING_FACTOR_ERROR,
                                   "Newton solver failed: the damping factor "
                                   "reached its lower bound");
