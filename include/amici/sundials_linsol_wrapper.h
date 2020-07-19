@@ -727,7 +727,7 @@ class SUNNonLinSolWrapper {
      * @return
      */
     int Solve(N_Vector y0, N_Vector y, N_Vector w, realtype tol,
-              booleantype callLSetup, void *mem);
+              bool callLSetup, void *mem);
 
     /**
      * @brief Set function to evaluate the nonlinear residual function F(y) = 0

@@ -863,13 +863,9 @@ void Solver::setStateOrdering(int ordering) {
 #endif
 }
 
-int Solver::getStabilityLimitFlag() const { return stldet_; }
+bool Solver::getStabilityLimitFlag() const { return stldet_; }
 
-void Solver::setStabilityLimitFlag(const int stldet) {
-    if (stldet != static_cast<int>(true) && stldet != static_cast<int>(false))
-        throw AmiException("Invalid stldet flag, valid values are %i or %i",
-                           true, false);
-
+void Solver::setStabilityLimitFlag(const bool stldet) {
     stldet_ = stldet;
     if (solver_memory_) {
         setStabLimDet(stldet);

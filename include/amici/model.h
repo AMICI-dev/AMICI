@@ -25,7 +25,7 @@ extern AmiciApplication defaultContext;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::Model &u, unsigned int version);
+void serialize(Archive &ar, amici::Model &m, unsigned int version);
 }
 } // namespace boost
 
@@ -137,11 +137,11 @@ class Model : public AbstractModel {
     /**
      * @brief Serialize Model (see boost::serialization::serialize)
      * @param ar Archive to serialize to
-     * @param u Data to serialize
+     * @param s Data to serialize
      * @param version Version number
      */
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, Model &u,
+    friend void boost::serialization::serialize(Archive &ar, Model &m,
                                                 unsigned int version);
 
     /**
