@@ -36,6 +36,7 @@ jobs:
       run: |
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
+          
 
     # install AMICI
     - name: Build BNGL
@@ -48,9 +49,11 @@ jobs:
       run: |
         pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb]
         
+    
     - name: Python tests
       run: |
         pip3 install pytest \
+          && pip3 install git+https://github.com/pysb/pysb \
           && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
 
     - name: notebooks
