@@ -40,7 +40,8 @@ jobs:
           libatlas-base-dev \
           libhdf5-serial-dev \
           cmake \
-          g++
+          g++ \
+          pandoc
     - name: pip
       run: |
         pip3 install --upgrade --user wheel \
