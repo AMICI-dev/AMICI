@@ -1,6 +1,6 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
 <area shape="rect" id="node1" href="$classamici_1_1_abstract_model.html" title="Abstract base class of amici::Model defining functions that need to be implemented in an AMICI model." alt="" coords="5,31,112,57"/>
 <area shape="rect" id="node2" href="$classamici_1_1_model.html" title="The Model class represents an AMICI ODE/DAE model. The model can compute various model related quanti..." alt="" coords="160,31,217,57"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model___d_a_e.html" title="The Model class represents an AMICI DAE model." alt="" coords="266,5,358,32"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model___o_d_e.html" title="The Model class represents an AMICI ODE model." alt="" coords="265,56,359,83"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model___d_a_e.html" title="The Model class represents an AMICI DAE model." alt="" coords="266,5,357,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model___o_d_e.html" title="The Model class represents an AMICI ODE model." alt="" coords="265,56,357,83"/>
 </map>

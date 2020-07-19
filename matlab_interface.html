@@ -136,7 +136,7 @@ model.sym.f(3) = [ param4*state2 ];
                 0, 1, 0;...
                 0, 0, 0];
 </pre><p>The specification of M may depend on parameters and constants.</p>
-<p>For ODEs the integrator will solve the equation <img class="formulaInl" alt="$ \dot{x} = f $" src="form_0.png"/> and for DAEs the equations <img class="formulaInl" alt="$ M \cdot \dot{x} = f $" src="form_1.png"/>. AMICI will decide whether to use CVODES (for ODEs) or IDAS (for DAEs) based on whether the mass matrix is defined or not.</p>
+<p>For ODEs the integrator will solve the equation <img class="formulaInl" alt="$ \dot{x} = f $" src="form_0.png" width="33" height="13"/> and for DAEs the equations <img class="formulaInl" alt="$ M \cdot \dot{x} = f $" src="form_1.png" width="54" height="13"/>. AMICI will decide whether to use CVODES (for ODEs) or IDAS (for DAEs) based on whether the mass matrix is defined or not.</p>
 <p>In the definition of the differential equation you can use certain symbolic functions. For a full list of available functions see <code><a class="el" href="symbolic__functions_8cpp.html" title="definition of symbolic functions">src/symbolic_functions.cpp</a></code>.</p>
 <p>Dirac functions can be used to cause a jump in the respective states at the specified time-point. This is typically used to model injections, or other external stimuli. Spline functions can be used to model time/state dependent response with unkown time/state dependence.</p>
 <h2><a class="anchor" id="autotoc_md51"></a>
@@ -220,7 +220,7 @@ D.Sigma_T = NaN;
 </pre><p>The integration status will be indicated by the sol.status flag. Negative values indicate failed integration. The log-likelihood will then be available as <code>sol.llh</code> and the derivative with respect to the parameters in <code>sol.sllh</code>. Notice that for adjoint sensitivities no state, observable and event sensitivities will be available. Yet this approach can be expected to be significantly faster for systems with a large number of parameters.</p>
 <h2><a class="anchor" id="autotoc_md64"></a>
 Steady State Sensitivities</h2>
-<p>This will compute state sensitivities according to the formula <img class="formulaInl" alt="$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $" src="form_2.png"/></p>
+<p>This will compute state sensitivities according to the formula <img class="formulaInl" alt="$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $" src="form_2.png" width="104" height="26"/></p>
 <p>In the current implementation this formulation does not allow for conservation laws as this would result in a singular Jacobian.</p>
 <p>Set the final timepoint as infinity, this will indicate the solver to compute the steadystate: </p><pre class="fragment">t = Inf;
 </pre><p>Set the sensitivity computation to steady state sensitivities: </p><pre class="fragment">options.sensi = 1;
@@ -232,7 +232,7 @@ Steady State Sensitivities</h2>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Fri Jul 17 2020 00:34:59 for AMICI by
+    <li class="footer">Generated on Sun Jul 19 2020 20:54:20 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

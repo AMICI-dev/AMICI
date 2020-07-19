@@ -1,4 +1,4 @@
 <map id="compileAndLinkModel" name="compileAndLinkModel">
-<area shape="rect" id="node1" title="compileAndLinkModel compiles the mex simulation file. It does not check if the model files have chang..." alt="" coords="131,5,280,32"/>
-<area shape="rect" id="node2" href="$classamimodel.html#abf720a0c3104977029538e3b19d429bb" title="compileC compiles the mex simulation file" alt="" coords="5,5,83,32"/>
+<area shape="rect" id="node1" title="compileAndLinkModel compiles the mex simulation file. It does not check if the model files have chang..." alt="" coords="129,5,279,32"/>
+<area shape="rect" id="node2" href="$classamimodel.html#abf720a0c3104977029538e3b19d429bb" title="compileC compiles the mex simulation file" alt="" coords="5,5,81,32"/>
 </map>

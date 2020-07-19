@@ -1,5 +1,5 @@
 <map id="getQuadInitDone" name="getQuadInitDone">
-<area shape="rect" id="node1" title="checks whether memory for quadratures has been allocated" alt="" coords="372,5,492,32"/>
+<area shape="rect" id="node1" title="checks whether memory for quadratures has been allocated" alt="" coords="372,5,491,32"/>
 <area shape="rect" id="node2" href="$classamici_1_1_solver.html#a2ac567fb6bd58a04efc85bd9525bb730" title="updates quadrature solver tolerances according to the currently specified member variables" alt="" coords="177,5,324,32"/>
 <area shape="rect" id="node3" href="$classamici_1_1_solver.html#a67f969bc16500a5fa914979b5976c17b" title="Initialises the ami memory for quadrature computation." alt="" coords="5,5,129,32"/>
 </map>

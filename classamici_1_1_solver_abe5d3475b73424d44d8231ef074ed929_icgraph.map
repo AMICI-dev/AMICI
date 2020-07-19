@@ -1,5 +1,5 @@
 <map id="getQuad" name="getQuad">
-<area shape="rect" id="node1" title="extracts the quadrature at the current timepoint from solver memory and writes it to the xQ member va..." alt="" coords="303,5,373,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#afd2378767a1db31c949d9a7d5bbd4e98" title="Access quadrature solution at time t." alt="" coords="151,5,255,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="5,5,103,32"/>
+<area shape="rect" id="node1" title="extracts the quadrature at the current timepoint from solver memory and writes it to the xQ member va..." alt="" coords="301,5,372,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#afd2378767a1db31c949d9a7d5bbd4e98" title="Access quadrature solution at time t." alt="" coords="149,5,253,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="5,5,101,32"/>
 </map>

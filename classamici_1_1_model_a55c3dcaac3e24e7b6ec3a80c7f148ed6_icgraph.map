@@ -1,4 +1,4 @@
 <map id="setUnscaledInitialStateSensitivities" name="setUnscaledInitialStateSensitivities">
-<area shape="rect" id="node1" title="Set the initial state sensitivities." alt="" coords="216,13,444,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original settings on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="5,5,168,47"/>
+<area shape="rect" id="node1" title="Set the initial state sensitivities." alt="" coords="213,13,440,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#afd3595051be2709847c2de4352f27cf5" title="Restore original settings on constructor&#45;supplied amici::Model. Will be called during destruction...." alt="" coords="5,5,165,47"/>
 </map>

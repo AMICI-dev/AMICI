@@ -1,8 +1,8 @@
 <map id="fdsigmazdp" name="fdsigmazdp">
 <area shape="rect" id="node1" title="Sensitivity of standard deviation of events measurements w.r.t. model parameters p." alt="" coords="5,107,95,134"/>
-<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="167,5,325,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="143,71,349,112"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="219,137,273,163"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="223,187,269,214"/>
-<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="397,5,556,47"/>
+<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="166,5,325,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="143,71,348,112"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="219,137,272,163"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="222,187,269,214"/>
+<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="396,5,555,47"/>
 </map>

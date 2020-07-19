@@ -1,5 +1,5 @@
 <map id="hasFixedParameterNames" name="hasFixedParameterNames">
-<area shape="rect" id="node1" title="Reports whether the model has fixed parameter names set. Also returns true if the number of correspon..." alt="" coords="5,31,183,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#abdfc1bad63f4c3b927aac8c3422d639a" title="Get names of the fixed model parameters." alt="" coords="231,5,405,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="299,56,337,83"/>
+<area shape="rect" id="node1" title="Reports whether the model has fixed parameter names set. Also returns true if the number of correspon..." alt="" coords="5,31,181,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#abdfc1bad63f4c3b927aac8c3422d639a" title="Get names of the fixed model parameters." alt="" coords="229,5,403,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="297,56,335,83"/>
 </map>

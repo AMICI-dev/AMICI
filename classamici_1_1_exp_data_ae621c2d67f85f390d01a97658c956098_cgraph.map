@@ -1,4 +1,4 @@
 <map id="setObservedEvents" name="setObservedEvents">
 <area shape="rect" id="node1" title="set function that copies observed event data from input to ExpData::observedEvents" alt="" coords="5,5,143,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#a6049771289d4eb666e72771be9228f53" title="checker for dimensions of input observedEvents or observedEventsStdDev" alt="" coords="191,5,351,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#a6049771289d4eb666e72771be9228f53" title="checker for dimensions of input observedEvents or observedEventsStdDev" alt="" coords="191,5,349,32"/>
 </map>

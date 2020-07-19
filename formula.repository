@@ -1,3 +1,3 @@
-\_form#0:$ \dot{x} = f $
-\_form#1:$ M \cdot \dot{x} = f $
-\_form#2:$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $
+\_form#0=33x13:$ \dot{x} = f $
+\_form#1=54x13:$ M \cdot \dot{x} = f $
+\_form#2=104x26:$ s_k^x = -\left(\frac{\partial f}{\partial x} \right)^{-1}\frac{\partial f}{\partial \theta_k} $

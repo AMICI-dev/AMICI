@@ -1,11 +1,12 @@
 <map id="fsx0" name="fsx0">
-<area shape="rect" id="node1" title="Initial value for initial state sensitivities." alt="" coords="5,132,52,159"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="100,5,255,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#ac112075ad7c01dac4588496c47b00e86" title="Model specific implementation of fstotal_cl." alt="" coords="140,56,215,83"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#acaa80cbfc886abd3a0f038f5ff9f54e3" title="Model specific implementation of fsx_solver." alt="" coords="136,107,219,133"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="158,157,197,184"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="151,208,204,235"/>
-<area shape="rect" id="node9" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="154,259,201,285"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#ab7c357d92ab37cfe9728a31e4232cfe9" title="Model specific implementation of ftotal_cl." alt="" coords="306,56,374,83"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#ac08ad3aa4016a5a3ff89d601e15971cc" title="Model specific implementation of fx_solver." alt="" coords="303,107,377,133"/>
+<area shape="rect" id="node1" title="Initial value for initial state sensitivities." alt="" coords="5,173,52,200"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="100,5,255,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="101,57,253,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#ac112075ad7c01dac4588496c47b00e86" title="Model specific implementation of fstotal_cl." alt="" coords="140,123,215,149"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#acaa80cbfc886abd3a0f038f5ff9f54e3" title="Model specific implementation of fsx_solver." alt="" coords="136,173,219,200"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="158,224,197,251"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="151,275,204,301"/>
+<area shape="rect" id="node10" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="154,325,201,352"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#ab7c357d92ab37cfe9728a31e4232cfe9" title="Model specific implementation of ftotal_cl." alt="" coords="306,123,374,149"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#ac08ad3aa4016a5a3ff89d601e15971cc" title="Model specific implementation of fx_solver." alt="" coords="303,173,377,200"/>
 </map>

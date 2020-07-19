@@ -20,15 +20,15 @@
 \begin{DoxyCompactList}\small\item\em copy constructor \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \& \mbox{\hyperlink{classamici_1_1_ami_vector_a0c1227daab2e0edd01359e36252d030c}{operator=}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&other)
 \begin{DoxyCompactList}\small\item\em copy assignment operator \end{DoxyCompactList}\item 
-realtype $\ast$ \mbox{\hyperlink{classamici_1_1_ami_vector_a69be01da2132057196a1bfbb8a94b695}{data}} ()
+realtype $\ast$ \mbox{\hyperlink{classamici_1_1_ami_vector_ace31bbb9df6dd42f70286108ecafa01b}{data}} ()
 \begin{DoxyCompactList}\small\item\em data accessor \end{DoxyCompactList}\item 
-const realtype $\ast$ \mbox{\hyperlink{classamici_1_1_ami_vector_a8045bd641b2f456cdbf99d0c12bb9218}{data}} () const
+const realtype $\ast$ \mbox{\hyperlink{classamici_1_1_ami_vector_ac15115ec28d4f8167310194331226d4e}{data}} () const
 \begin{DoxyCompactList}\small\item\em const data accessor \end{DoxyCompactList}\item 
-N\+\_\+\+Vector \mbox{\hyperlink{classamici_1_1_ami_vector_a831a0391e277bda7766d7ee9638a9eb9}{get\+N\+Vector}} ()
+N\+\_\+\+Vector \mbox{\hyperlink{classamici_1_1_ami_vector_a3e1efd4f449f6a618dcbce7df70689d0}{get\+N\+Vector}} ()
 \begin{DoxyCompactList}\small\item\em N\+\_\+\+Vector accessor. \end{DoxyCompactList}\item 
 const\+\_\+\+N\+\_\+\+Vector \mbox{\hyperlink{classamici_1_1_ami_vector_a806bc1cf1e4f8f235f426ebf2b274e15}{get\+N\+Vector}} () const
 \begin{DoxyCompactList}\small\item\em N\+\_\+\+Vector accessor. \end{DoxyCompactList}\item 
-const std\+::vector$<$ realtype $>$ \& \mbox{\hyperlink{classamici_1_1_ami_vector_a822a8fbee44aaca671b6bb2d61a13c19}{get\+Vector}} () const
+std\+::vector$<$ realtype $>$ const  \& \mbox{\hyperlink{classamici_1_1_ami_vector_afdb3c2eb08d4ab5ba29fc4819df6def7}{get\+Vector}} () const
 \begin{DoxyCompactList}\small\item\em Vector accessor. \end{DoxyCompactList}\item 
 int \mbox{\hyperlink{classamici_1_1_ami_vector_a5f00d4dc3e7866d193ce926f35542801}{get\+Length}} () const
 \begin{DoxyCompactList}\small\item\em returns the length of the vector \end{DoxyCompactList}\item 
@@ -142,11 +142,11 @@ left hand side
 
 Definition at line 7 of file vector.\+cpp.
 
-\mbox{\Hypertarget{classamici_1_1_ami_vector_a69be01da2132057196a1bfbb8a94b695}\label{classamici_1_1_ami_vector_a69be01da2132057196a1bfbb8a94b695}} 
+\mbox{\Hypertarget{classamici_1_1_ami_vector_ace31bbb9df6dd42f70286108ecafa01b}\label{classamici_1_1_ami_vector_ace31bbb9df6dd42f70286108ecafa01b}} 
 \index{AmiVector@{AmiVector}!data@{data}}
 \index{data@{data}!AmiVector@{AmiVector}}
 \doxyparagraph{\texorpdfstring{data()}{data()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily const realtype $\ast$ data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily realtype $\ast$ data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
 \begin{DoxyReturn}{Returns}
 pointer to data array 
@@ -160,23 +160,27 @@ Here is the caller graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=350pt]{classamici_1_1_ami_vector_a69be01da2132057196a1bfbb8a94b695_icgraph}
+\includegraphics[width=350pt]{classamici_1_1_ami_vector_ace31bbb9df6dd42f70286108ecafa01b_icgraph}
 \end{center}
 \end{figure}
-\mbox{\Hypertarget{classamici_1_1_ami_vector_a8045bd641b2f456cdbf99d0c12bb9218}\label{classamici_1_1_ami_vector_a8045bd641b2f456cdbf99d0c12bb9218}} 
+\mbox{\Hypertarget{classamici_1_1_ami_vector_ac15115ec28d4f8167310194331226d4e}\label{classamici_1_1_ami_vector_ac15115ec28d4f8167310194331226d4e}} 
 \index{AmiVector@{AmiVector}!data@{data}}
 \index{data@{data}!AmiVector@{AmiVector}}
 \doxyparagraph{\texorpdfstring{data()}{data()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
-{\footnotesize\ttfamily const realtype$\ast$ data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily const realtype $\ast$ data (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 const pointer to data array 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classamici_1_1_ami_vector_a831a0391e277bda7766d7ee9638a9eb9}\label{classamici_1_1_ami_vector_a831a0391e277bda7766d7ee9638a9eb9}} 
+
+
+Definition at line 15 of file vector.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_ami_vector_a3e1efd4f449f6a618dcbce7df70689d0}\label{classamici_1_1_ami_vector_a3e1efd4f449f6a618dcbce7df70689d0}} 
 \index{AmiVector@{AmiVector}!getNVector@{getNVector}}
 \index{getNVector@{getNVector}!AmiVector@{AmiVector}}
 \doxyparagraph{\texorpdfstring{getNVector()}{getNVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
-{\footnotesize\ttfamily const\+\_\+\+N\+\_\+\+Vector get\+N\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily N\+\_\+\+Vector get\+N\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
 
 \begin{DoxyReturn}{Returns}
 N\+\_\+\+Vector 
@@ -190,7 +194,7 @@ Here is the caller graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[height=550pt]{classamici_1_1_ami_vector_a831a0391e277bda7766d7ee9638a9eb9_icgraph}
+\includegraphics[height=550pt]{classamici_1_1_ami_vector_a3e1efd4f449f6a618dcbce7df70689d0_icgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamici_1_1_ami_vector_a806bc1cf1e4f8f235f426ebf2b274e15}\label{classamici_1_1_ami_vector_a806bc1cf1e4f8f235f426ebf2b274e15}} 
@@ -202,11 +206,15 @@ Here is the caller graph for this function\+:
 \begin{DoxyReturn}{Returns}
 N\+\_\+\+Vector 
 \end{DoxyReturn}
-\mbox{\Hypertarget{classamici_1_1_ami_vector_a822a8fbee44aaca671b6bb2d61a13c19}\label{classamici_1_1_ami_vector_a822a8fbee44aaca671b6bb2d61a13c19}} 
+
+
+Definition at line 19 of file vector.\+cpp.
+
+\mbox{\Hypertarget{classamici_1_1_ami_vector_afdb3c2eb08d4ab5ba29fc4819df6def7}\label{classamici_1_1_ami_vector_afdb3c2eb08d4ab5ba29fc4819df6def7}} 
 \index{AmiVector@{AmiVector}!getVector@{getVector}}
 \index{getVector@{getVector}!AmiVector@{AmiVector}}
 \doxyparagraph{\texorpdfstring{getVector()}{getVector()}}
-{\footnotesize\ttfamily const std\+::vector$<$ realtype $>$ \& get\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily std\+::vector$<$ realtype $>$ const  \& get\+Vector (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
 Vector 
@@ -220,7 +228,7 @@ Here is the caller graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=350pt]{classamici_1_1_ami_vector_a822a8fbee44aaca671b6bb2d61a13c19_icgraph}
+\includegraphics[width=350pt]{classamici_1_1_ami_vector_afdb3c2eb08d4ab5ba29fc4819df6def7_icgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamici_1_1_ami_vector_a5f00d4dc3e7866d193ce926f35542801}\label{classamici_1_1_ami_vector_a5f00d4dc3e7866d193ce926f35542801}} 

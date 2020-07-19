@@ -111,7 +111,7 @@ $(document).ready(function(){initNavTree('backwardproblem_8h_source.html',''); i
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classamici_1_1_backward_problem.html#a4a17093ee76348cce97b06c94bf518bd">workBackwardProblem</a>();</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
 <div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="classamici_1_1_backward_problem.html#a1582a658df3f51a8c88b6f22b4205b3f">   46</a></span>&#160;    realtype <a class="code" href="classamici_1_1_backward_problem.html#a1582a658df3f51a8c88b6f22b4205b3f">gett</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keywordflow">return</span> t;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;        <span class="keywordflow">return</span> t_;</div>
 <div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    }</div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
 <div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classamici_1_1_backward_problem.html#ac337bf2284c1febeb302019b06c54c3e">   54</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classamici_1_1_backward_problem.html#ac337bf2284c1febeb302019b06c54c3e">getwhich</a>()<span class="keyword"> const </span>{</div>
@@ -123,18 +123,18 @@ $(document).ready(function(){initNavTree('backwardproblem_8h_source.html',''); i
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    }</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
 <div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="classamici_1_1_backward_problem.html#aaa2f33176422b55808979bfc7ceb2573">   70</a></span>&#160;    std::vector&lt;realtype&gt; <span class="keyword">const</span>&amp; <a class="code" href="classamici_1_1_backward_problem.html#aaa2f33176422b55808979bfc7ceb2573">getdJydx</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordflow">return</span> dJydx;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        <span class="keywordflow">return</span> dJydx_;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    }</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    </div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
 <div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="classamici_1_1_backward_problem.html#a3976f923e3097682e9cf32920149876a">   78</a></span>&#160;    <a class="code" href="classamici_1_1_ami_vector.html">AmiVector</a> <span class="keyword">const</span>&amp; <a class="code" href="classamici_1_1_backward_problem.html#a3976f923e3097682e9cf32920149876a">getAdjointState</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="keywordflow">return</span> xB;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <span class="keywordflow">return</span> xB_;</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    }</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
 <div class="line"><a name="l00086"></a><span class="lineno"><a class="line" href="classamici_1_1_backward_problem.html#ad9244b5f79d36e988083b9428db4c586">   86</a></span>&#160;    <a class="code" href="classamici_1_1_ami_vector.html">AmiVector</a> <span class="keyword">const</span>&amp; <a class="code" href="classamici_1_1_backward_problem.html#ad9244b5f79d36e988083b9428db4c586">getAdjointQuadrature</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordflow">return</span> xQB;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordflow">return</span> xQB_;</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    }</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;<span class="keyword">private</span>:</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    <span class="keywordtype">void</span> handleEventB();</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordtype">void</span> handleDataPointB(<span class="keywordtype">int</span> it);</div>
@@ -142,31 +142,30 @@ $(document).ready(function(){initNavTree('backwardproblem_8h_source.html',''); i
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    realtype getTnext(<span class="keywordtype">int</span> it);</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160; </div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <a class="code" href="classamici_1_1_model.html">Model</a> *model;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <a class="code" href="classamici_1_1_solver.html">Solver</a> *solver;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keyword">const</span> <a class="code" href="classamici_1_1_exp_data.html">ExpData</a> *edata;</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <a class="code" href="classamici_1_1_model.html">Model</a> *model_;</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <a class="code" href="classamici_1_1_solver.html">Solver</a> *solver_;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keyword">const</span> <a class="code" href="classamici_1_1_exp_data.html">ExpData</a> *edata_;</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    realtype t;</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    std::vector&lt;realtype&gt; llhS0;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <a class="code" href="classamici_1_1_ami_vector.html">AmiVector</a> xB;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    <a class="code" href="classamici_1_1_ami_vector.html">AmiVector</a> dxB;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <a class="code" href="classamici_1_1_ami_vector.html">AmiVector</a> xQB;</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    std::vector&lt;AmiVector&gt; x_disc;</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    std::vector&lt;AmiVector&gt; xdot_disc;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    std::vector&lt;AmiVector&gt; xdot_old_disc;</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    <a class="code" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a> sx0;</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    std::vector&lt;int&gt; nroots;</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    std::vector&lt;realtype&gt; discs;</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    <span class="keywordtype">int</span> which = 0;</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    std::vector&lt;std::vector&lt;int&gt;&gt; rootidx;</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160; </div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    std::vector&lt;realtype&gt; dJydx;</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keyword">const</span> std::vector&lt;realtype&gt; dJzdx;</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;};</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    realtype t_;</div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <a class="code" href="classamici_1_1_ami_vector.html">AmiVector</a> xB_;</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    <a class="code" href="classamici_1_1_ami_vector.html">AmiVector</a> dxB_;</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    <a class="code" href="classamici_1_1_ami_vector.html">AmiVector</a> xQB_;</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    std::vector&lt;AmiVector&gt; x_disc_;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    std::vector&lt;AmiVector&gt; xdot_disc_;</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    std::vector&lt;AmiVector&gt; xdot_old_disc_;</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <a class="code" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a> sx0_;</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;    std::vector&lt;int&gt; nroots_;</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    std::vector&lt;realtype&gt; discs_;</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    <span class="keywordtype">int</span> which = 0;</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;    std::vector&lt;std::vector&lt;int&gt;&gt; root_idx_;</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160; </div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    std::vector&lt;realtype&gt; dJydx_;</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    <span class="keyword">const</span> std::vector&lt;realtype&gt; dJzdx_;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;};</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160; </div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;} <span class="comment">// namespace amici</span></div>
 <div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160; </div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;} <span class="comment">// namespace amici</span></div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160; </div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<span class="preprocessor">#endif // BACKWARDPROBLEM_H</span></div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;<span class="preprocessor">#endif // BACKWARDPROBLEM_H</span></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <div class="ttc" id="aclassamici_1_1_backward_problem_html"><div class="ttname"><a href="classamici_1_1_backward_problem.html">amici::BackwardProblem</a></div><div class="ttdoc">class to solve backwards problems.</div><div class="ttdef"><b>Definition:</b> <a href="backwardproblem_8h_source.html#l00023">backwardproblem.h:23</a></div></div>
@@ -189,7 +188,7 @@ $(document).ready(function(){initNavTree('backwardproblem_8h_source.html',''); i
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_2b2d9eac6b11e4f3bc68cafa95b49fcf.html">amici</a></li><li class="navelem"><b>backwardproblem.h</b></li>
-    <li class="footer">Generated on Fri Jul 17 2020 00:34:57 for AMICI by
+    <li class="footer">Generated on Sun Jul 19 2020 20:54:19 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

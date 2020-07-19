@@ -1,7 +1,8 @@
 <map id="fsx_rdata" name="fsx_rdata">
-<area shape="rect" id="node1" title="Model specific implementation of fsx_solver." alt="" coords="5,38,81,65"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="129,38,199,65"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="279,13,369,39"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="247,63,401,90"/>
-<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="449,5,608,47"/>
+<area shape="rect" id="node1" title="Model specific implementation of fsx_solver." alt="" coords="5,63,81,90"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="129,63,199,90"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="294,13,383,39"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="261,63,416,90"/>
+<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#afdb3c2eb08d4ab5ba29fc4819df6def7" title="Vector accessor." alt="" coords="247,114,431,141"/>
+<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="479,5,637,47"/>
 </map>

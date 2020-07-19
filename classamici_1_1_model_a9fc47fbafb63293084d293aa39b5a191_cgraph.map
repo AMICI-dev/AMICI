@@ -1,7 +1,8 @@
 <map id="getEventSensitivity" name="getEventSensitivity">
-<area shape="rect" id="node1" title="Sensitivities of event&#45;resolved observables, total derivative, total derivative (only forward sensiti..." alt="" coords="5,81,140,108"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="196,5,351,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_abstract_model.html#a07d5ad2147980ef1c90318c7f392b82f" title="Model specific implementation of fsz." alt="" coords="188,56,359,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="247,107,300,133"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="250,157,297,184"/>
+<area shape="rect" id="node1" title="Sensitivities of event&#45;resolved observables, total derivative, total derivative (only forward sensiti..." alt="" coords="5,123,140,149"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="196,5,351,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="197,57,349,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_abstract_model.html#a07d5ad2147980ef1c90318c7f392b82f" title="Model specific implementation of fsz." alt="" coords="188,123,359,149"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="247,173,300,200"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="250,224,297,251"/>
 </map>

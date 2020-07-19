@@ -124,8 +124,8 @@ $(document).ready(function(){initNavTree('_a_m_i_c_i2_d2_d_8m_source.html',''); 
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; ODES\n &quot;</span>);</div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    tmp = strjoin(cellfun(@(x) [<span class="stringliteral">&quot; &#39; &quot;</span> <span class="keywordtype">char</span>(x) <span class="stringliteral">&quot; &#39;\n &quot;</span>],num2cell(model.sym.xdot),<span class="stringliteral">&quot; UniformOutput &quot;</span>,<span class="keyword">false</span>),);</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    tmp = regexprep(tmp,<span class="stringliteral">&quot; heaviside\(t - ([0-9/]*)\) &quot;</span>,<span class="stringliteral">&quot; step1(t,0.0,$1,1.0) &quot;</span>);</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    tmp = regexprep(tmp,<span class="stringliteral">&quot; heaviside\(([0-9/]*) - t\) &quot;</span>,<span class="stringliteral">&quot; step1(t,1.0,$1,0.0) &quot;</span>);</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    tmp = regexprep(tmp,<span class="stringliteral">&quot; heaviside\&zwj;(t - ([0-9/]*)\&zwj;) &quot;</span>,<span class="stringliteral">&quot; step1(t,0.0,$1,1.0) &quot;</span>);</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    tmp = regexprep(tmp,<span class="stringliteral">&quot; heaviside\&zwj;(([0-9/]*) - t\&zwj;) &quot;</span>,<span class="stringliteral">&quot; step1(t,1.0,$1,0.0) &quot;</span>);</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;    fprintf(fid,tmp);</div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; \n &quot;</span>);</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    fprintf(fid,<span class="stringliteral">&quot; DERIVED\n &quot;</span>);</div>
@@ -149,7 +149,7 @@ $(document).ready(function(){initNavTree('_a_m_i_c_i2_d2_d_8m_source.html',''); 
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_363c7dd63633bc0b67762e7ff7b5a8f6.html">matlab</a></li><li class="navelem"><b>AMICI2D2D.m</b></li>
-    <li class="footer">Generated on Fri Jul 17 2020 00:34:57 for AMICI by
+    <li class="footer">Generated on Sun Jul 19 2020 20:54:19 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

@@ -1,6 +1,6 @@
 <map id="getAdjointQuadrature" name="getAdjointQuadrature">
-<area shape="rect" id="node1" title="Accessor for xQB." alt="" coords="640,13,784,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#abef834938ca9c2486395f117bd8f2567" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="451,5,592,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="228,5,403,47"/>
+<area shape="rect" id="node1" title="Accessor for xQB." alt="" coords="637,13,781,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#abef834938ca9c2486395f117bd8f2567" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="449,5,589,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="228,5,401,47"/>
 <area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,5,180,47"/>
 </map>

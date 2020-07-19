@@ -1,8 +1,8 @@
 <map id="writeSliceEvent" name="writeSliceEvent">
-<area shape="rect" id="node1" title="Writes part of a slice to a buffer according to indices specified in z2event." alt="" coords="605,56,719,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#ac0c041886a527c0517aac6312d59185d" title="Event&#45;resolved observables." alt="" coords="441,5,516,32"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#a2c8c64a4176f95eb0615762b4ac2dcef" title="Regularization for event&#45;resolved observables." alt="" coords="400,56,557,83"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="423,107,534,133"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="216,49,352,90"/>
+<area shape="rect" id="node1" title="Writes part of a slice to a buffer according to indices specified in z2event." alt="" coords="603,56,715,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ac0c041886a527c0517aac6312d59185d" title="Event&#45;resolved observables." alt="" coords="439,5,514,32"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a2c8c64a4176f95eb0615762b4ac2dcef" title="Regularization for event&#45;resolved observables." alt="" coords="399,56,555,83"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="421,107,532,133"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="216,49,351,90"/>
 <area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="5,49,168,90"/>
 </map>

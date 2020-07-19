@@ -348,10 +348,10 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <tr class="memitem:a7e902c3f8091ce1983f10fe5ad2c0486"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486">getDataSensisFSA</a> (int it, <a class="el" href="classamici_1_1_model.html">Model</a> &amp;model, <a class="el" href="classamici_1_1_exp_data.html">ExpData</a> const *edata)</td></tr>
 <tr class="memdesc:a7e902c3f8091ce1983f10fe5ad2c0486"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were were set appropriately.  <a href="classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486">More...</a><br /></td></tr>
 <tr class="separator:a7e902c3f8091ce1983f10fe5ad2c0486"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d06470f4fb85ccce8ad05ca37182802"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802">getEventOutput</a> (int iroot, realtype <a class="el" href="classamici_1_1_return_data.html#a9f893f19a3a919f40a183e2a8c257d5d">t</a>, const std::vector&lt; int &gt; rootidx, <a class="el" href="classamici_1_1_model.html">Model</a> &amp;model, <a class="el" href="classamici_1_1_exp_data.html">ExpData</a> const *edata)</td></tr>
+<tr class="memitem:a5d06470f4fb85ccce8ad05ca37182802"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802">getEventOutput</a> (int iroot, realtype t, const std::vector&lt; int &gt; rootidx, <a class="el" href="classamici_1_1_model.html">Model</a> &amp;model, <a class="el" href="classamici_1_1_exp_data.html">ExpData</a> const *edata)</td></tr>
 <tr class="memdesc:a5d06470f4fb85ccce8ad05ca37182802"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts output information for events, expects that x_solver and sx_solver were were set appropriately.  <a href="classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802">More...</a><br /></td></tr>
 <tr class="separator:a5d06470f4fb85ccce8ad05ca37182802"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a847ce1ad5d7326342887d3401cf8785f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f">getEventSensisFSA</a> (int iroot, int ie, realtype <a class="el" href="classamici_1_1_return_data.html#a9f893f19a3a919f40a183e2a8c257d5d">t</a>, <a class="el" href="classamici_1_1_model.html">Model</a> &amp;model, <a class="el" href="classamici_1_1_exp_data.html">ExpData</a> const *edata)</td></tr>
+<tr class="memitem:a847ce1ad5d7326342887d3401cf8785f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f">getEventSensisFSA</a> (int iroot, int ie, realtype t, <a class="el" href="classamici_1_1_model.html">Model</a> &amp;model, <a class="el" href="classamici_1_1_exp_data.html">ExpData</a> const *edata)</td></tr>
 <tr class="memdesc:a847ce1ad5d7326342887d3401cf8785f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were set appropriately.  <a href="classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f">More...</a><br /></td></tr>
 <tr class="separator:a847ce1ad5d7326342887d3401cf8785f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abef834938ca9c2486395f117bd8f2567"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#abef834938ca9c2486395f117bd8f2567">handleSx0Backward</a> (const <a class="el" href="classamici_1_1_model.html">Model</a> &amp;model, <a class="el" href="classamici_1_1_steadystate_problem.html">SteadystateProblem</a> const &amp;preeq, <a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a> &amp;xQB) const</td></tr>
@@ -363,20 +363,20 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:a9f893f19a3a919f40a183e2a8c257d5d"><td class="memItemLeft" align="right" valign="top">realtype&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a9f893f19a3a919f40a183e2a8c257d5d">t</a></td></tr>
-<tr class="separator:a9f893f19a3a919f40a183e2a8c257d5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9fc74073500947cae3237cafe8777dfa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a9fc74073500947cae3237cafe8777dfa">x_solver</a></td></tr>
-<tr class="separator:a9fc74073500947cae3237cafe8777dfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a81068da8d287b420046d0fcb036b1897"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a81068da8d287b420046d0fcb036b1897">dx_solver</a></td></tr>
-<tr class="separator:a81068da8d287b420046d0fcb036b1897"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5cfd247a3618c2ae58d090889cc0642a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a5cfd247a3618c2ae58d090889cc0642a">sx_solver</a></td></tr>
-<tr class="separator:a5cfd247a3618c2ae58d090889cc0642a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6701add7ed0ff05a8713363e63fcf9db"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a6701add7ed0ff05a8713363e63fcf9db">x_rdata</a></td></tr>
-<tr class="separator:a6701add7ed0ff05a8713363e63fcf9db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adafaf0a1cac1243303f1a06ec917b533"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#adafaf0a1cac1243303f1a06ec917b533">sx_rdata</a></td></tr>
-<tr class="separator:adafaf0a1cac1243303f1a06ec917b533"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e8f5b98c0913d6b8cc53f455f178df9"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a8e8f5b98c0913d6b8cc53f455f178df9">nroots</a></td></tr>
-<tr class="separator:a8e8f5b98c0913d6b8cc53f455f178df9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a272f814453a1e4874d288835b8f6a0e2"><td class="memItemLeft" align="right" valign="top">realtype&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a272f814453a1e4874d288835b8f6a0e2">t_</a></td></tr>
+<tr class="separator:a272f814453a1e4874d288835b8f6a0e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac79830d33f42672c1d545677256b9801"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#ac79830d33f42672c1d545677256b9801">x_solver_</a></td></tr>
+<tr class="separator:ac79830d33f42672c1d545677256b9801"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4445ce4e91c1e471d1a828ec1ce2660"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#af4445ce4e91c1e471d1a828ec1ce2660">dx_solver_</a></td></tr>
+<tr class="separator:af4445ce4e91c1e471d1a828ec1ce2660"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad20828f0dfad2d3e65ea13e77dbd2d85"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#ad20828f0dfad2d3e65ea13e77dbd2d85">sx_solver_</a></td></tr>
+<tr class="separator:ad20828f0dfad2d3e65ea13e77dbd2d85"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4799b536157fd26afef2ce34bc9a1615"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a4799b536157fd26afef2ce34bc9a1615">x_rdata_</a></td></tr>
+<tr class="separator:a4799b536157fd26afef2ce34bc9a1615"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a898da7d0e74354aeadddf70aa4376574"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#a898da7d0e74354aeadddf70aa4376574">sx_rdata_</a></td></tr>
+<tr class="separator:a898da7d0e74354aeadddf70aa4376574"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0f3d73d98357b2857e29f596e5117f7"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classamici_1_1_return_data.html#ab0f3d73d98357b2857e29f596e5117f7">nroots_</a></td></tr>
+<tr class="separator:ab0f3d73d98357b2857e29f596e5117f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>NOTE: multidimensional arrays are stored in row-major order (FORTRAN-style) </p>
@@ -536,7 +536,7 @@ Protected Attributes</h2></td></tr>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ts</td><td>see <a class="el" href="classamici_1_1_model.html#aa7014a80e7b102f85a10e3b9a480e8e5">amici::Model::ts</a> </td></tr>
+    <tr><td class="paramname">ts</td><td>see amici::Model::ts </td></tr>
     <tr><td class="paramname">np</td><td>see <a class="el" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters.">amici::Model::np</a> </td></tr>
     <tr><td class="paramname">nk</td><td>see <a class="el" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants.">amici::Model::nk</a> </td></tr>
     <tr><td class="paramname">nx</td><td>see <a class="el" href="classamici_1_1_model.html#a0946b3ca4e0896973b4c72cb859d31bd">amici::Model::nx_rdata</a> </td></tr>
@@ -550,11 +550,11 @@ Protected Attributes</h2></td></tr>
     <tr><td class="paramname">ne</td><td>see <a class="el" href="classamici_1_1_model.html#a3bf1137663f19e5c361c845cf4dfb7db">amici::Model::ne</a> </td></tr>
     <tr><td class="paramname">nJ</td><td>see <a class="el" href="classamici_1_1_model.html#ac34193c02e086a579a1b04039ace096b">amici::Model::nJ</a> </td></tr>
     <tr><td class="paramname">nplist</td><td>see <a class="el" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed.">amici::Model::nplist</a> </td></tr>
-    <tr><td class="paramname">nmaxevent</td><td>see <a class="el" href="classamici_1_1_model.html#aff0f3f25d886279a90dbf0571956885c">amici::Model::nmaxevent</a> </td></tr>
+    <tr><td class="paramname">nmaxevent</td><td>see amici::Model::nmaxevent </td></tr>
     <tr><td class="paramname">nt</td><td>see <a class="el" href="classamici_1_1_model.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="Get number of timepoints.">amici::Model::nt</a> </td></tr>
     <tr><td class="paramname">newton_maxsteps</td><td>see amici::Solver::newton_maxsteps </td></tr>
     <tr><td class="paramname">nw</td><td>see <a class="el" href="classamici_1_1_model.html#a5f1f313510bc2ed23b768a182d874b04">amici::Model::nw</a> </td></tr>
-    <tr><td class="paramname">pscale</td><td>see <a class="el" href="classamici_1_1_model.html#a5d1c7237dc998202fe1b3393b50f77ce">amici::Model::pscale</a> </td></tr>
+    <tr><td class="paramname">pscale</td><td>see amici::Model::pscale </td></tr>
     <tr><td class="paramname">o2mode</td><td>see <a class="el" href="classamici_1_1_model.html#a3a3feb0696a3b0183439810c5f6f17e9">amici::Model::o2mode</a> </td></tr>
     <tr><td class="paramname">sensi</td><td>see amici::Solver::sensi </td></tr>
     <tr><td class="paramname">sensi_meth</td><td>see amici::Solver::sensi_meth </td></tr>
@@ -682,79 +682,81 @@ Protected Attributes</h2></td></tr>
 <div class="center"><img src="classamici_1_1_return_data_a45d3f48eada305f23798146e724c73ea_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a45d3f48eada305f23798146e724c73ea_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a45d3f48eada305f23798146e724c73ea_cgraph" id="classamici_1_1_return_data_a45d3f48eada305f23798146e724c73ea_cgraph">
 <area shape="rect" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,789,180,816"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a3a3470e764e1e0f4772cd458d2bb2dd2" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="228,57,455,98"/>
-<area shape="rect" href="classamici_1_1_solver.html#ac90ebf01f586436cf1402912bc8da598" title="check if ASA is being computed" alt="" coords="245,133,438,160"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a78ae977c00827cfb6dad1b576b45cf7c" title="Set likelihood, state variables, outputs and respective sensitivities to NaN (typically after integra..." alt="" coords="563,589,640,616"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ae0c35d3a9e0f0d4d0903b795bc6e222f" title="Set likelihood sensitivities to NaN (typically after integration failure)" alt="" coords="812,188,923,215"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="254,480,429,507"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="260,1019,423,1045"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="258,1619,425,1645"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="262,1427,421,1453"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aed2cf6582516b9977b0922d51ff91d1a" title="extracts results from solver" alt="" coords="289,2376,394,2403"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="249,1817,434,1858"/>
-<area shape="rect" href="classamici_1_1_model.html#a76604eceacc5c0e8b4293ac5d65bfd60" title="Get the parameter vector." alt="" coords="507,5,696,32"/>
-<area shape="rect" href="classamici_1_1_model.html#ab14620b22a79748a09a88b9311a7f6d5" title="Get ParameterScale for each parameter." alt="" coords="510,57,693,98"/>
-<area shape="rect" href="classamici_1_1_solver.html#affde3089fec2a1cca40d6cc0c4c2cf1d" title="Get sensitvity order." alt="" coords="509,122,694,163"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a03e88745280c032d3b59fd7235665e17" title="Set likelihood and chi2 to NaN (typically after integration failure)" alt="" coords="817,589,918,616"/>
-<area shape="rect" href="classamici_1_1_backward_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="518,290,685,331"/>
-<area shape="rect" href="classamici_1_1_backward_problem.html#a3976f923e3097682e9cf32920149876a" title="Accessor for xB." alt="" coords="518,355,685,397"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#ae7a51d698c0762500308576c3813268e" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="782,742,953,783"/>
-<area shape="rect" href="classamici_1_1_return_data.html#abef834938ca9c2486395f117bd8f2567" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="531,239,672,265"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="800,455,935,481"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a75ac7721fb3493fad52eb770f4e71c59" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="536,539,667,565"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#afa59fe1d58038caba4a628f8e39de131" title="Accessor for hasQuadrature_." alt="" coords="512,473,691,514"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="532,1376,671,1403"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="778,239,957,281"/>
-<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="782,539,953,565"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="813,1397,921,1424"/>
-<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="773,1347,961,1373"/>
-<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="810,1448,925,1475"/>
-<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="1068,993,1189,1020"/>
-<area shape="rect" href="classamici_1_1_model.html#a904836d6ff6f1414ddffd5e8f39d1754" title="Expands conservation law for state sensitivities." alt="" coords="522,640,681,667"/>
-<area shape="rect" href="classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="792,1499,943,1525"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="548,1528,655,1555"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#a5b390dd8ff2b3fd953a4e42471562385" title="Returns maximal event index for which simulations are available." alt="" coords="523,1158,679,1199"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="545,1325,658,1352"/>
-<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="778,1027,957,1053"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#ae17dd6aa916d07ce78853dbec8ce6978" title="Returns final time point for which simulations are available." alt="" coords="523,793,679,834"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#af2c5d78fef5c100312d030ded489d4a3" title="Accessor for rootidx." alt="" coords="523,858,679,899"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#acee64e6e29f62a05406e9202e1fcbe91" title="Retrieves the carbon copy of the simulation state variables at the specified event index." alt="" coords="514,923,689,965"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#aaa838b8a9c5e6e5ecf4bf7a95d9430df" title="Retrieves the carbon copy of the simulation state variables at the specified timepoint index." alt="" coords="503,1041,700,1082"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a014198f2b584ac5b1a2b8a5dea13e411" title="initialize values for chi2 and llh and derivatives" alt="" coords="514,989,689,1016"/>
-<area shape="rect" href="classamici_1_1_model.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="Get number of timepoints." alt="" coords="544,1107,659,1133"/>
-<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="803,691,931,717"/>
-<area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="1043,1499,1214,1525"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="1051,1549,1206,1576"/>
-<area shape="rect" href="classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="772,1601,963,1642"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ad032427217a4624f681d274f9f69f5aa" title="Chi&#45;squared function." alt="" coords="842,1667,893,1693"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="845,1768,889,1795"/>
-<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="1035,1739,1223,1765"/>
-<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="1035,1801,1223,1842"/>
-<area shape="rect" href="classamici_1_1_model.html#aaea446f38ab699c7f343ce656c70115f" title="Time&#45;resolved w,." alt="" coords="774,1549,961,1576"/>
-<area shape="rect" href="classamici_1_1_model.html#ace9763a0ecf7efeb69ead8a721da6916" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="760,1229,975,1256"/>
-<area shape="rect" href="classamici_1_1_model.html#a5b274a170d0e0564dcb39dcb9dd10b2f" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="760,1281,975,1322"/>
-<area shape="rect" href="classamici_1_1_model.html#ac0c041886a527c0517aac6312d59185d" title="Event&#45;resolved observables." alt="" coords="789,1077,945,1104"/>
-<area shape="rect" href="classamici_1_1_model.html#a2c8c64a4176f95eb0615762b4ac2dcef" title="Regularization for event&#45;resolved observables." alt="" coords="748,1128,987,1155"/>
-<area shape="rect" href="classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="771,1179,964,1205"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#adea50b83240e3dd99641a3d0e7ce63b3" title="Accessor for run_time of the forward problem." alt="" coords="512,1710,691,1751"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#affaad444d59c9b86e734144434487a64" title="Accessor for run_time of the backward problem." alt="" coords="512,1775,691,1817"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#a1a982c5ab1520f78f01323170919a7d3" title="Returns the stored SimulationState." alt="" coords="512,1579,691,1621"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#ad4f74aad5a36aebcb1f38f1ac4b9c766" title="Accessor for numstepsB." alt="" coords="512,1841,691,1882"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#ac490bf8c607d1eaf7715dc0097a9ba05" title="Accessor for wrms." alt="" coords="512,1906,691,1947"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#a022a2bce957f1533e15f9b456b971768" title="Accessor for steady_state_status." alt="" coords="512,1645,691,1686"/>
-<area shape="rect" href="classamici_1_1_solver.html#ae158f88df1e5da5324a0e89d2f35d9cd" title="Reads out the cpu time needed for forward solve." alt="" coords="513,2452,690,2479"/>
-<area shape="rect" href="classamici_1_1_solver.html#a6a257ce6dfbe64b77dd6531f6e1cdcf0" title="Reads out the cpu time needed for bavkward solve." alt="" coords="508,2503,695,2529"/>
-<area shape="rect" href="classamici_1_1_solver.html#a415002ab37910340a264b26e1130484f" title="Accessor order." alt="" coords="511,2553,692,2580"/>
-<area shape="rect" href="classamici_1_1_solver.html#aa0931152e97fdc5b537686cf7cc1af36" title="Accessor netf." alt="" coords="517,2605,686,2646"/>
-<area shape="rect" href="classamici_1_1_solver.html#aa55f8bcf195d2534e755f646a7a4766e" title="Accessor netfB." alt="" coords="517,2670,686,2711"/>
-<area shape="rect" href="classamici_1_1_solver.html#aa54e7564abf32a5dfbb3dfc70fa35ffb" title="Accessor nnlscf." alt="" coords="507,2089,696,2130"/>
-<area shape="rect" href="classamici_1_1_solver.html#ad0973916093982b7698e837300d5ee2c" title="Accessor nnlscfB." alt="" coords="507,2154,696,2195"/>
-<area shape="rect" href="classamici_1_1_solver.html#adaa5dd60e78cca1c3ba65103289d2632" title="Accessor nrhs." alt="" coords="513,2219,689,2261"/>
-<area shape="rect" href="classamici_1_1_solver.html#a8c140574115a64559de455d625e1289d" title="Accessor nrhsB." alt="" coords="513,2285,689,2326"/>
-<area shape="rect" href="classamici_1_1_solver.html#ac3ddfaa90701a8b5da5b2a7b4738f289" title="Accessor ns." alt="" coords="508,2351,695,2377"/>
-<area shape="rect" href="classamici_1_1_solver.html#ac17006d774540528372db14909b3d7c3" title="Accessor nsB." alt="" coords="504,2401,699,2428"/>
-<area shape="rect" href="classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="519,1972,683,1999"/>
-<area shape="rect" href="classamici_1_1_abstract_model.html#a8a6bc3080a50b88513f4604d1210f725" title="Residual function." alt="" coords="529,2023,674,2065"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a3a3470e764e1e0f4772cd458d2bb2dd2" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="228,57,452,98"/>
+<area shape="rect" href="classamici_1_1_solver.html#ac90ebf01f586436cf1402912bc8da598" title="check if ASA is being computed" alt="" coords="243,133,437,160"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a78ae977c00827cfb6dad1b576b45cf7c" title="Set likelihood, state variables, outputs and respective sensitivities to NaN (typically after integra..." alt="" coords="560,589,637,616"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ae0c35d3a9e0f0d4d0903b795bc6e222f" title="Set likelihood sensitivities to NaN (typically after integration failure)" alt="" coords="810,188,919,215"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="253,480,427,507"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="259,1019,421,1045"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="257,1619,423,1645"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="261,1452,419,1479"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aed2cf6582516b9977b0922d51ff91d1a" title="extracts results from solver" alt="" coords="287,2376,393,2403"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="248,1817,432,1858"/>
+<area shape="rect" href="classamici_1_1_model.html#a1bb7ee08df1e2e42da7dceb2100b6131" title="Get the parameter vector." alt="" coords="504,5,693,32"/>
+<area shape="rect" href="classamici_1_1_model.html#ab14620b22a79748a09a88b9311a7f6d5" title="Get ParameterScale for each parameter." alt="" coords="507,57,690,98"/>
+<area shape="rect" href="classamici_1_1_solver.html#affde3089fec2a1cca40d6cc0c4c2cf1d" title="Get sensitvity order." alt="" coords="506,122,691,163"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a03e88745280c032d3b59fd7235665e17" title="Set likelihood and chi2 to NaN (typically after integration failure)" alt="" coords="815,589,915,616"/>
+<area shape="rect" href="classamici_1_1_backward_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="515,290,682,331"/>
+<area shape="rect" href="classamici_1_1_backward_problem.html#a3976f923e3097682e9cf32920149876a" title="Accessor for xB." alt="" coords="515,355,682,397"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#ae7a51d698c0762500308576c3813268e" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="779,809,950,850"/>
+<area shape="rect" href="classamici_1_1_return_data.html#abef834938ca9c2486395f117bd8f2567" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="529,239,669,265"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="797,455,932,481"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a75ac7721fb3493fad52eb770f4e71c59" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="534,539,663,565"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a9bf93870e0c77fd1f2efaf6cf4df4686" title="Accessor for hasQuadrature_." alt="" coords="509,473,688,514"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="529,1477,668,1504"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="775,239,954,281"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="779,539,950,565"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="811,1528,919,1555"/>
+<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="771,1376,959,1403"/>
+<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="807,1477,922,1504"/>
+<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="1065,1041,1187,1068"/>
+<area shape="rect" href="classamici_1_1_model.html#a904836d6ff6f1414ddffd5e8f39d1754" title="Expands conservation law for state sensitivities." alt="" coords="519,640,678,667"/>
+<area shape="rect" href="classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="789,1427,940,1453"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="545,1528,652,1555"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#a5b390dd8ff2b3fd953a4e42471562385" title="Returns maximal event index for which simulations are available." alt="" coords="521,1158,676,1199"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="542,1325,655,1352"/>
+<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="775,1056,954,1083"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#ae17dd6aa916d07ce78853dbec8ce6978" title="Returns final time point for which simulations are available." alt="" coords="521,793,676,834"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#af2c5d78fef5c100312d030ded489d4a3" title="Accessor for rootidx." alt="" coords="521,858,676,899"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#acee64e6e29f62a05406e9202e1fcbe91" title="Retrieves the carbon copy of the simulation state variables at the specified event index." alt="" coords="511,923,686,965"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#aaa838b8a9c5e6e5ecf4bf7a95d9430df" title="Retrieves the carbon copy of the simulation state variables at the specified timepoint index." alt="" coords="500,1041,697,1082"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a014198f2b584ac5b1a2b8a5dea13e411" title="initialize values for chi2 and llh and derivatives" alt="" coords="511,989,686,1016"/>
+<area shape="rect" href="classamici_1_1_model.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="Get number of timepoints." alt="" coords="541,1107,656,1133"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="789,691,941,733"/>
+<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="801,640,929,667"/>
+<area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="1041,1401,1211,1428"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="1049,1528,1203,1555"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#afdb3c2eb08d4ab5ba29fc4819df6def7" title="Vector accessor." alt="" coords="1034,1452,1218,1479"/>
+<area shape="rect" href="classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="769,1731,960,1773"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ad032427217a4624f681d274f9f69f5aa" title="Chi&#45;squared function." alt="" coords="839,1797,890,1824"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="843,1680,887,1707"/>
+<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="1032,1655,1220,1681"/>
+<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="1032,1786,1220,1827"/>
+<area shape="rect" href="classamici_1_1_model.html#aaea446f38ab699c7f343ce656c70115f" title="Time&#45;resolved w,." alt="" coords="771,1579,958,1605"/>
+<area shape="rect" href="classamici_1_1_model.html#ace9763a0ecf7efeb69ead8a721da6916" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="757,1107,972,1133"/>
+<area shape="rect" href="classamici_1_1_model.html#a5b274a170d0e0564dcb39dcb9dd10b2f" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="757,1158,972,1199"/>
+<area shape="rect" href="classamici_1_1_model.html#ac0c041886a527c0517aac6312d59185d" title="Event&#45;resolved observables." alt="" coords="787,1224,943,1251"/>
+<area shape="rect" href="classamici_1_1_model.html#a2c8c64a4176f95eb0615762b4ac2dcef" title="Regularization for event&#45;resolved observables." alt="" coords="745,1275,984,1301"/>
+<area shape="rect" href="classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="768,1325,961,1352"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#adea50b83240e3dd99641a3d0e7ce63b3" title="Accessor for run_time of the forward problem." alt="" coords="509,1710,688,1751"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#affaad444d59c9b86e734144434487a64" title="Accessor for run_time of the backward problem." alt="" coords="509,1775,688,1817"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a1a982c5ab1520f78f01323170919a7d3" title="Returns the stored SimulationState." alt="" coords="509,1579,688,1621"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a5044a56e26451622be9a59f8e02e8d9d" title="Accessor for numstepsB." alt="" coords="509,1841,688,1882"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#ac490bf8c607d1eaf7715dc0097a9ba05" title="Accessor for wrms." alt="" coords="509,1906,688,1947"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a022a2bce957f1533e15f9b456b971768" title="Accessor for steady_state_status." alt="" coords="509,1645,688,1686"/>
+<area shape="rect" href="classamici_1_1_solver.html#ae158f88df1e5da5324a0e89d2f35d9cd" title="Reads out the cpu time needed for forward solve." alt="" coords="511,2452,687,2479"/>
+<area shape="rect" href="classamici_1_1_solver.html#a6a257ce6dfbe64b77dd6531f6e1cdcf0" title="Reads out the cpu time needed for bavkward solve." alt="" coords="506,2503,691,2529"/>
+<area shape="rect" href="classamici_1_1_solver.html#a415002ab37910340a264b26e1130484f" title="Accessor order." alt="" coords="508,2553,689,2580"/>
+<area shape="rect" href="classamici_1_1_solver.html#aa0931152e97fdc5b537686cf7cc1af36" title="Accessor netf." alt="" coords="515,2605,683,2646"/>
+<area shape="rect" href="classamici_1_1_solver.html#aa55f8bcf195d2534e755f646a7a4766e" title="Accessor netfB." alt="" coords="515,2670,683,2711"/>
+<area shape="rect" href="classamici_1_1_solver.html#aa54e7564abf32a5dfbb3dfc70fa35ffb" title="Accessor nnlscf." alt="" coords="505,2089,692,2130"/>
+<area shape="rect" href="classamici_1_1_solver.html#ad0973916093982b7698e837300d5ee2c" title="Accessor nnlscfB." alt="" coords="505,2154,692,2195"/>
+<area shape="rect" href="classamici_1_1_solver.html#adaa5dd60e78cca1c3ba65103289d2632" title="Accessor nrhs." alt="" coords="511,2219,686,2261"/>
+<area shape="rect" href="classamici_1_1_solver.html#a8c140574115a64559de455d625e1289d" title="Accessor nrhsB." alt="" coords="511,2285,686,2326"/>
+<area shape="rect" href="classamici_1_1_solver.html#ac3ddfaa90701a8b5da5b2a7b4738f289" title="Accessor ns." alt="" coords="506,2351,691,2377"/>
+<area shape="rect" href="classamici_1_1_solver.html#ac17006d774540528372db14909b3d7c3" title="Accessor nsB." alt="" coords="501,2401,696,2428"/>
+<area shape="rect" href="classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="517,1972,681,1999"/>
+<area shape="rect" href="classamici_1_1_abstract_model.html#a8a6bc3080a50b88513f4604d1210f725" title="Residual function." alt="" coords="526,2023,671,2065"/>
 </map>
 </div>
 
@@ -809,19 +811,20 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-1-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a442927f9528eaee97a1620128abb277d_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a442927f9528eaee97a1620128abb277d_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a442927f9528eaee97a1620128abb277d_cgraph" id="classamici_1_1_return_data_a442927f9528eaee97a1620128abb277d_cgraph">
-<area shape="rect" title="extracts data from a preequilibration steadystateproblem" alt="" coords="5,114,164,141"/>
-<area shape="rect" href="classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="226,55,377,82"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#a1a982c5ab1520f78f01323170919a7d3" title="Returns the stored SimulationState." alt="" coords="212,107,391,148"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="232,173,371,199"/>
+<area shape="rect" title="extracts data from a preequilibration steadystateproblem" alt="" coords="5,131,164,158"/>
+<area shape="rect" href="classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="226,69,377,95"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a1a982c5ab1520f78f01323170919a7d3" title="Returns the stored SimulationState." alt="" coords="212,124,391,165"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="232,198,371,225"/>
 <area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="447,13,618,39"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="455,63,610,90"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="455,63,610,90"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#afdb3c2eb08d4ab5ba29fc4819df6def7" title="Vector accessor." alt="" coords="441,114,625,141"/>
 <area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="675,5,833,47"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="479,122,587,149"/>
-<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="439,173,627,199"/>
-<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="475,223,590,250"/>
-<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="693,122,815,149"/>
-<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="695,173,813,199"/>
-<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="695,223,813,250"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="479,165,587,191"/>
+<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="439,215,627,242"/>
+<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="475,266,590,293"/>
+<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="693,165,815,191"/>
+<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="695,215,813,242"/>
+<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="695,266,813,293"/>
 </map>
 </div>
 <div id="dynsection-2" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -894,39 +897,40 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-3-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a2c631dd2d9f9ebd61d37db92882d3b98_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a2c631dd2d9f9ebd61d37db92882d3b98_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a2c631dd2d9f9ebd61d37db92882d3b98_cgraph" id="classamici_1_1_return_data_a2c631dd2d9f9ebd61d37db92882d3b98_cgraph">
-<area shape="rect" title="extracts data from a preequilibration steadystateproblem" alt="" coords="5,560,172,586"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#adea50b83240e3dd99641a3d0e7ce63b3" title="Accessor for run_time of the forward problem." alt="" coords="220,227,399,268"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#affaad444d59c9b86e734144434487a64" title="Accessor for run_time of the backward problem." alt="" coords="220,292,399,334"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="256,358,363,385"/>
-<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="1192,449,1371,476"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#a1a982c5ab1520f78f01323170919a7d3" title="Returns the stored SimulationState." alt="" coords="220,552,399,594"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#ad4f74aad5a36aebcb1f38f1ac4b9c766" title="Accessor for numstepsB." alt="" coords="220,618,399,659"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#ac490bf8c607d1eaf7715dc0097a9ba05" title="Accessor for wrms." alt="" coords="220,683,399,724"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#a022a2bce957f1533e15f9b456b971768" title="Accessor for steady_state_status." alt="" coords="220,748,399,790"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="240,814,379,841"/>
-<area shape="rect" href="classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="683,216,873,258"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ad032427217a4624f681d274f9f69f5aa" title="Chi&#45;squared function." alt="" coords="515,434,566,461"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="519,333,563,360"/>
-<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="684,165,872,192"/>
-<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="684,435,872,476"/>
-<area shape="rect" href="classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="465,37,616,64"/>
-<area shape="rect" href="classamici_1_1_model.html#aaea446f38ab699c7f343ce656c70115f" title="Time&#45;resolved w,." alt="" coords="925,26,1112,53"/>
-<area shape="rect" href="classamici_1_1_model.html#a84e41a50252a3a84b922730fa77bc6d4" title="Negative log&#45;likelihood of measurements y." alt="" coords="957,178,1080,205"/>
-<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="943,420,1094,446"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="1164,346,1399,373"/>
-<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="961,77,1076,104"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="921,280,1116,322"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="921,229,1116,256"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="1204,26,1359,53"/>
-<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="1222,77,1341,104"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="700,384,856,410"/>
-<area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="693,37,863,64"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="487,764,595,790"/>
-<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="447,814,635,841"/>
-<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="483,865,598,892"/>
-<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="717,764,839,790"/>
-<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="719,814,837,841"/>
-<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="719,865,837,892"/>
+<area shape="rect" title="extracts data from a preequilibration steadystateproblem" alt="" coords="5,603,172,629"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#adea50b83240e3dd99641a3d0e7ce63b3" title="Accessor for run_time of the forward problem." alt="" coords="220,205,399,246"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#affaad444d59c9b86e734144434487a64" title="Accessor for run_time of the backward problem." alt="" coords="220,270,399,311"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="256,336,363,363"/>
+<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="1191,511,1369,537"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a1a982c5ab1520f78f01323170919a7d3" title="Returns the stored SimulationState." alt="" coords="220,595,399,637"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a5044a56e26451622be9a59f8e02e8d9d" title="Accessor for numstepsB." alt="" coords="220,661,399,702"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#ac490bf8c607d1eaf7715dc0097a9ba05" title="Accessor for wrms." alt="" coords="220,726,399,767"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a022a2bce957f1533e15f9b456b971768" title="Accessor for steady_state_status." alt="" coords="220,791,399,833"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="240,857,379,884"/>
+<area shape="rect" href="classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="683,259,873,301"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ad032427217a4624f681d274f9f69f5aa" title="Chi&#45;squared function." alt="" coords="515,56,566,83"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="519,361,563,388"/>
+<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="684,208,872,235"/>
+<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="684,478,872,519"/>
+<area shape="rect" href="classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="465,107,616,133"/>
+<area shape="rect" href="classamici_1_1_model.html#aaea446f38ab699c7f343ce656c70115f" title="Time&#45;resolved w,." alt="" coords="925,107,1112,133"/>
+<area shape="rect" href="classamici_1_1_model.html#a84e41a50252a3a84b922730fa77bc6d4" title="Negative log&#45;likelihood of measurements y." alt="" coords="957,208,1080,235"/>
+<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="943,481,1094,508"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="1164,427,1396,453"/>
+<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="961,157,1076,184"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="922,361,1115,402"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="921,259,1116,285"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="1203,107,1357,133"/>
+<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="1221,157,1339,184"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="701,376,855,403"/>
+<area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="693,5,863,32"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#afdb3c2eb08d4ab5ba29fc4819df6def7" title="Vector accessor." alt="" coords="686,107,870,133"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="487,857,595,884"/>
+<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="447,908,635,935"/>
+<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="483,807,598,833"/>
+<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="717,908,839,935"/>
+<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="719,959,837,985"/>
+<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="719,857,837,884"/>
 </map>
 </div>
 <div id="dynsection-4" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -999,62 +1003,64 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-5-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a70e2bb790623cf0af7d3f93c6b4b2b40_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a70e2bb790623cf0af7d3f93c6b4b2b40_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a70e2bb790623cf0af7d3f93c6b4b2b40_cgraph" id="classamici_1_1_return_data_a70e2bb790623cf0af7d3f93c6b4b2b40_cgraph">
-<area shape="rect" title="extracts results from forward problem" alt="" coords="5,1372,168,1399"/>
-<area shape="rect" href="classamici_1_1_model.html#a904836d6ff6f1414ddffd5e8f39d1754" title="Expands conservation law for state sensitivities." alt="" coords="235,269,394,296"/>
-<area shape="rect" href="classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="480,345,631,372"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="261,531,368,557"/>
-<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="1255,1237,1433,1264"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#a5b390dd8ff2b3fd953a4e42471562385" title="Returns maximal event index for which simulations are available." alt="" coords="237,1423,393,1465"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="499,993,612,1020"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#ae17dd6aa916d07ce78853dbec8ce6978" title="Returns final time point for which simulations are available." alt="" coords="237,1489,393,1530"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#ae7a51d698c0762500308576c3813268e" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="470,1365,641,1406"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#af2c5d78fef5c100312d030ded489d4a3" title="Accessor for rootidx." alt="" coords="237,1554,393,1595"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#acee64e6e29f62a05406e9202e1fcbe91" title="Retrieves the carbon copy of the simulation state variables at the specified event index." alt="" coords="227,1619,402,1661"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#aaa838b8a9c5e6e5ecf4bf7a95d9430df" title="Retrieves the carbon copy of the simulation state variables at the specified timepoint index." alt="" coords="216,1306,413,1347"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a014198f2b584ac5b1a2b8a5dea13e411" title="initialize values for chi2 and llh and derivatives" alt="" coords="227,1685,402,1712"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a78ae977c00827cfb6dad1b576b45cf7c" title="Set likelihood, state variables, outputs and respective sensitivities to NaN (typically after integra..." alt="" coords="276,1736,353,1763"/>
-<area shape="rect" href="classamici_1_1_model.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="Get number of timepoints." alt="" coords="257,1787,372,1813"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="245,117,384,144"/>
-<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="756,136,877,163"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="488,295,623,321"/>
-<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="491,244,619,271"/>
-<area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="1259,201,1429,228"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="1267,353,1421,380"/>
-<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="1509,245,1668,286"/>
-<area shape="rect" href="classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="721,498,912,539"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ad032427217a4624f681d274f9f69f5aa" title="Chi&#45;squared function." alt="" coords="530,556,581,583"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="533,611,577,637"/>
-<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="723,447,911,473"/>
-<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="723,717,911,758"/>
-<area shape="rect" href="classamici_1_1_model.html#aaea446f38ab699c7f343ce656c70115f" title="Time&#45;resolved w,." alt="" coords="988,252,1175,279"/>
-<area shape="rect" href="classamici_1_1_model.html#a84e41a50252a3a84b922730fa77bc6d4" title="Negative log&#45;likelihood of measurements y." alt="" coords="1020,455,1143,481"/>
-<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="1006,673,1157,700"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="1227,623,1461,649"/>
-<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="1024,303,1139,329"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="984,557,1179,598"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="984,404,1179,431"/>
-<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="1285,252,1403,279"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="739,615,895,641"/>
-<area shape="rect" href="classamici_1_1_model.html#ace9763a0ecf7efeb69ead8a721da6916" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="709,1044,924,1071"/>
-<area shape="rect" href="classamici_1_1_model.html#a5b274a170d0e0564dcb39dcb9dd10b2f" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="709,855,924,897"/>
-<area shape="rect" href="classamici_1_1_model.html#ac0c041886a527c0517aac6312d59185d" title="Event&#45;resolved observables." alt="" coords="739,993,895,1020"/>
-<area shape="rect" href="classamici_1_1_model.html#a2c8c64a4176f95eb0615762b4ac2dcef" title="Regularization for event&#45;resolved observables." alt="" coords="697,804,936,831"/>
-<area shape="rect" href="classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="720,943,913,969"/>
-<area shape="rect" href="classamici_1_1_model.html#a82817440c349939c45697c874128aa8c" title="Negative log&#45;likelihood of event&#45;resolved measurements z." alt="" coords="1020,1095,1143,1121"/>
-<area shape="rect" href="classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="1006,943,1157,969"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="1241,935,1447,977"/>
-<area shape="rect" href="classamici_1_1_model.html#a171bc1e22a0829aff5fd16f6d6bffa5a" title="Event&#45;resolved output." alt="" coords="1024,993,1139,1020"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a95ab3fe91af62612f202fdc6cd033d2a" title="get function that returns a pointer to observed data at ieth occurence" alt="" coords="984,1146,1179,1187"/>
-<area shape="rect" href="classamici_1_1_model.html#a4c330baa70af09f9cef7be3d4da674c7" title="Regularization of negative log&#45;likelihood with roots of event&#45;resolved measurements rz." alt="" coords="1018,775,1145,801"/>
-<area shape="rect" href="classamici_1_1_model.html#a74340e771fd77e724bf1461dc9518769" title="Event root function of events (equal to froot but does not include non&#45;output events)" alt="" coords="1022,724,1141,751"/>
-<area shape="rect" href="classamici_1_1_model.html#a2054555e8d40c4ea6e7f562c335ab984" title="Writes part of a slice to a buffer according to indices specified in z2event." alt="" coords="1001,877,1162,918"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a03e88745280c032d3b59fd7235665e17" title="Set likelihood and chi2 to NaN (typically after integration failure)" alt="" coords="505,1761,606,1788"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ae0c35d3a9e0f0d4d0903b795bc6e222f" title="Set likelihood sensitivities to NaN (typically after integration failure)" alt="" coords="500,1711,611,1737"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="501,92,609,119"/>
-<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="461,41,649,68"/>
-<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="498,143,613,169"/>
-<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="757,5,876,32"/>
-<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="757,56,876,83"/>
+<area shape="rect" title="extracts results from forward problem" alt="" coords="5,1521,168,1547"/>
+<area shape="rect" href="classamici_1_1_model.html#a904836d6ff6f1414ddffd5e8f39d1754" title="Expands conservation law for state sensitivities." alt="" coords="235,122,394,149"/>
+<area shape="rect" href="classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="480,401,631,427"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="261,629,368,655"/>
+<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="1253,1386,1432,1413"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#a5b390dd8ff2b3fd953a4e42471562385" title="Returns maximal event index for which simulations are available." alt="" coords="237,1572,392,1613"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="499,1142,612,1169"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#ae17dd6aa916d07ce78853dbec8ce6978" title="Returns final time point for which simulations are available." alt="" coords="237,1637,392,1679"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#ae7a51d698c0762500308576c3813268e" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="470,1513,641,1555"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#af2c5d78fef5c100312d030ded489d4a3" title="Accessor for rootidx." alt="" coords="237,1703,392,1744"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#acee64e6e29f62a05406e9202e1fcbe91" title="Retrieves the carbon copy of the simulation state variables at the specified event index." alt="" coords="227,1768,402,1809"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#aaa838b8a9c5e6e5ecf4bf7a95d9430df" title="Retrieves the carbon copy of the simulation state variables at the specified timepoint index." alt="" coords="216,1455,413,1496"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a014198f2b584ac5b1a2b8a5dea13e411" title="initialize values for chi2 and llh and derivatives" alt="" coords="227,1834,402,1861"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a78ae977c00827cfb6dad1b576b45cf7c" title="Set likelihood, state variables, outputs and respective sensitivities to NaN (typically after integra..." alt="" coords="276,1885,353,1911"/>
+<area shape="rect" href="classamici_1_1_model.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="Get number of timepoints." alt="" coords="257,1935,372,1962"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="245,299,384,326"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="479,5,631,47"/>
+<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="756,109,877,135"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="488,122,623,149"/>
+<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="491,173,619,199"/>
+<area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="1257,350,1428,377"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="1265,502,1420,529"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#afdb3c2eb08d4ab5ba29fc4819df6def7" title="Vector accessor." alt="" coords="725,299,909,326"/>
+<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="1507,393,1665,435"/>
+<area shape="rect" href="classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="721,705,912,747"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ad032427217a4624f681d274f9f69f5aa" title="Chi&#45;squared function." alt="" coords="530,654,581,681"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="533,603,577,630"/>
+<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="723,451,911,478"/>
+<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="723,771,911,812"/>
+<area shape="rect" href="classamici_1_1_model.html#aaea446f38ab699c7f343ce656c70115f" title="Time&#45;resolved w,." alt="" coords="988,502,1175,529"/>
+<area shape="rect" href="classamici_1_1_model.html#a84e41a50252a3a84b922730fa77bc6d4" title="Negative log&#45;likelihood of measurements y." alt="" coords="1020,771,1143,798"/>
+<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="1006,822,1157,849"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="1227,670,1459,697"/>
+<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="1024,451,1139,478"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="985,604,1178,645"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="984,721,1179,747"/>
+<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="1284,451,1401,478"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="739,603,894,630"/>
+<area shape="rect" href="classamici_1_1_model.html#ace9763a0ecf7efeb69ead8a721da6916" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="709,1193,924,1219"/>
+<area shape="rect" href="classamici_1_1_model.html#a5b274a170d0e0564dcb39dcb9dd10b2f" title="Event&#45;resolved observable negative log&#45;likelihood,." alt="" coords="709,996,924,1037"/>
+<area shape="rect" href="classamici_1_1_model.html#ac0c041886a527c0517aac6312d59185d" title="Event&#45;resolved observables." alt="" coords="739,1142,895,1169"/>
+<area shape="rect" href="classamici_1_1_model.html#a2c8c64a4176f95eb0615762b4ac2dcef" title="Regularization for event&#45;resolved observables." alt="" coords="697,945,936,971"/>
+<area shape="rect" href="classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="720,1091,913,1118"/>
+<area shape="rect" href="classamici_1_1_model.html#a82817440c349939c45697c874128aa8c" title="Negative log&#45;likelihood of event&#45;resolved measurements z." alt="" coords="1020,1243,1143,1270"/>
+<area shape="rect" href="classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="1006,1091,1157,1118"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="1240,1084,1445,1125"/>
+<area shape="rect" href="classamici_1_1_model.html#a171bc1e22a0829aff5fd16f6d6bffa5a" title="Event&#45;resolved output." alt="" coords="1024,1142,1139,1169"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a95ab3fe91af62612f202fdc6cd033d2a" title="get function that returns a pointer to observed data at ieth occurence" alt="" coords="985,1295,1178,1336"/>
+<area shape="rect" href="classamici_1_1_model.html#a4c330baa70af09f9cef7be3d4da674c7" title="Regularization of negative log&#45;likelihood with roots of event&#45;resolved measurements rz." alt="" coords="1018,923,1145,950"/>
+<area shape="rect" href="classamici_1_1_model.html#a74340e771fd77e724bf1461dc9518769" title="Event root function of events (equal to froot but does not include non&#45;output events)" alt="" coords="1022,873,1141,899"/>
+<area shape="rect" href="classamici_1_1_model.html#a2054555e8d40c4ea6e7f562c335ab984" title="Writes part of a slice to a buffer according to indices specified in z2event." alt="" coords="1001,1025,1161,1067"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a03e88745280c032d3b59fd7235665e17" title="Set likelihood and chi2 to NaN (typically after integration failure)" alt="" coords="505,1859,605,1886"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ae0c35d3a9e0f0d4d0903b795bc6e222f" title="Set likelihood sensitivities to NaN (typically after integration failure)" alt="" coords="501,1910,610,1937"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="501,325,609,351"/>
+<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="461,274,649,301"/>
+<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="498,223,613,250"/>
+<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="757,249,876,275"/>
+<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="757,198,876,225"/>
 </map>
 </div>
 <div id="dynsection-6" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -1134,23 +1140,23 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-7-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_aaf09c9e22da7cbbb4af3b026154388d0_cgraph.png" border="0" usemap="#classamici_1_1_return_data_aaf09c9e22da7cbbb4af3b026154388d0_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_aaf09c9e22da7cbbb4af3b026154388d0_cgraph" id="classamici_1_1_return_data_aaf09c9e22da7cbbb4af3b026154388d0_cgraph">
-<area shape="rect" title="extracts results from backward problem" alt="" coords="5,227,180,254"/>
-<area shape="rect" href="classamici_1_1_backward_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="234,5,401,47"/>
-<area shape="rect" href="classamici_1_1_backward_problem.html#a3976f923e3097682e9cf32920149876a" title="Accessor for xB." alt="" coords="234,71,401,112"/>
-<area shape="rect" href="classamici_1_1_forward_problem.html#ae7a51d698c0762500308576c3813268e" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="232,136,403,177"/>
-<area shape="rect" href="classamici_1_1_return_data.html#abef834938ca9c2486395f117bd8f2567" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="247,202,388,229"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="481,253,616,279"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a75ac7721fb3493fad52eb770f4e71c59" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="252,303,383,330"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#afa59fe1d58038caba4a628f8e39de131" title="Accessor for hasQuadrature_." alt="" coords="228,355,407,396"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="248,421,387,447"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="459,187,638,228"/>
-<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="463,303,634,330"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="495,370,603,397"/>
-<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="455,421,643,447"/>
-<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="491,471,606,498"/>
-<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="691,370,812,397"/>
-<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="692,421,811,447"/>
-<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="692,471,811,498"/>
+<area shape="rect" title="extracts results from backward problem" alt="" coords="5,227,179,254"/>
+<area shape="rect" href="classamici_1_1_backward_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="233,5,399,47"/>
+<area shape="rect" href="classamici_1_1_backward_problem.html#a3976f923e3097682e9cf32920149876a" title="Accessor for xB." alt="" coords="233,71,399,112"/>
+<area shape="rect" href="classamici_1_1_forward_problem.html#ae7a51d698c0762500308576c3813268e" title="Retrieves the carbon copy of the simulation state variables at the initial timepoint." alt="" coords="231,136,401,177"/>
+<area shape="rect" href="classamici_1_1_return_data.html#abef834938ca9c2486395f117bd8f2567" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="246,202,386,229"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="480,253,615,279"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a75ac7721fb3493fad52eb770f4e71c59" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="251,303,381,330"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#a9bf93870e0c77fd1f2efaf6cf4df4686" title="Accessor for hasQuadrature_." alt="" coords="227,355,405,396"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="247,421,385,447"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="458,187,637,228"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="462,303,633,330"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="493,370,601,397"/>
+<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="453,421,641,447"/>
+<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="490,471,605,498"/>
+<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="689,370,811,397"/>
+<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="691,421,809,447"/>
+<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="691,471,809,498"/>
 </map>
 </div>
 <div id="dynsection-8" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -1160,7 +1166,7 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-8-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_aaf09c9e22da7cbbb4af3b026154388d0_icgraph.png" border="0" usemap="#classamici_1_1_return_data_aaf09c9e22da7cbbb4af3b026154388d0_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_aaf09c9e22da7cbbb4af3b026154388d0_icgraph" id="classamici_1_1_return_data_aaf09c9e22da7cbbb4af3b026154388d0_icgraph">
-<area shape="rect" title="extracts results from backward problem" alt="" coords="228,5,403,32"/>
+<area shape="rect" title="extracts results from backward problem" alt="" coords="228,5,401,32"/>
 <area shape="rect" href="classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,5,180,32"/>
 </map>
 </div>
@@ -1206,15 +1212,15 @@ Protected Attributes</h2></td></tr>
 <div class="center"><img src="classamici_1_1_return_data_aed2cf6582516b9977b0922d51ff91d1a_cgraph.png" border="0" usemap="#classamici_1_1_return_data_aed2cf6582516b9977b0922d51ff91d1a_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_aed2cf6582516b9977b0922d51ff91d1a_cgraph" id="classamici_1_1_return_data_aed2cf6582516b9977b0922d51ff91d1a_cgraph">
 <area shape="rect" title="extracts results from solver" alt="" coords="5,296,111,323"/>
-<area shape="rect" href="classamici_1_1_solver.html#ae158f88df1e5da5324a0e89d2f35d9cd" title="Reads out the cpu time needed for forward solve." alt="" coords="167,5,345,32"/>
+<area shape="rect" href="classamici_1_1_solver.html#ae158f88df1e5da5324a0e89d2f35d9cd" title="Reads out the cpu time needed for forward solve." alt="" coords="168,5,344,32"/>
 <area shape="rect" href="classamici_1_1_solver.html#a6a257ce6dfbe64b77dd6531f6e1cdcf0" title="Reads out the cpu time needed for bavkward solve." alt="" coords="163,56,349,83"/>
 <area shape="rect" href="classamici_1_1_solver.html#a415002ab37910340a264b26e1130484f" title="Accessor order." alt="" coords="165,107,347,133"/>
-<area shape="rect" href="classamici_1_1_solver.html#aa0931152e97fdc5b537686cf7cc1af36" title="Accessor netf." alt="" coords="171,158,341,199"/>
-<area shape="rect" href="classamici_1_1_solver.html#aa55f8bcf195d2534e755f646a7a4766e" title="Accessor netfB." alt="" coords="171,223,341,265"/>
-<area shape="rect" href="classamici_1_1_solver.html#aa54e7564abf32a5dfbb3dfc70fa35ffb" title="Accessor nnlscf." alt="" coords="161,289,351,330"/>
-<area shape="rect" href="classamici_1_1_solver.html#ad0973916093982b7698e837300d5ee2c" title="Accessor nnlscfB." alt="" coords="161,354,351,395"/>
-<area shape="rect" href="classamici_1_1_solver.html#adaa5dd60e78cca1c3ba65103289d2632" title="Accessor nrhs." alt="" coords="168,419,344,461"/>
-<area shape="rect" href="classamici_1_1_solver.html#a8c140574115a64559de455d625e1289d" title="Accessor nrhsB." alt="" coords="168,485,344,526"/>
+<area shape="rect" href="classamici_1_1_solver.html#aa0931152e97fdc5b537686cf7cc1af36" title="Accessor netf." alt="" coords="172,158,340,199"/>
+<area shape="rect" href="classamici_1_1_solver.html#aa55f8bcf195d2534e755f646a7a4766e" title="Accessor netfB." alt="" coords="172,223,340,265"/>
+<area shape="rect" href="classamici_1_1_solver.html#aa54e7564abf32a5dfbb3dfc70fa35ffb" title="Accessor nnlscf." alt="" coords="163,289,349,330"/>
+<area shape="rect" href="classamici_1_1_solver.html#ad0973916093982b7698e837300d5ee2c" title="Accessor nnlscfB." alt="" coords="163,354,349,395"/>
+<area shape="rect" href="classamici_1_1_solver.html#adaa5dd60e78cca1c3ba65103289d2632" title="Accessor nrhs." alt="" coords="169,419,343,461"/>
+<area shape="rect" href="classamici_1_1_solver.html#a8c140574115a64559de455d625e1289d" title="Accessor nrhsB." alt="" coords="169,485,343,526"/>
 <area shape="rect" href="classamici_1_1_solver.html#ac3ddfaa90701a8b5da5b2a7b4738f289" title="Accessor ns." alt="" coords="163,551,349,577"/>
 <area shape="rect" href="classamici_1_1_solver.html#ac17006d774540528372db14909b3d7c3" title="Accessor nsB." alt="" coords="159,601,353,628"/>
 </map>
@@ -1282,16 +1288,16 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-11-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a770adda3b9a87b02ba6caf90d63cdc9d_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a770adda3b9a87b02ba6caf90d63cdc9d_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a770adda3b9a87b02ba6caf90d63cdc9d_cgraph" id="classamici_1_1_return_data_a770adda3b9a87b02ba6caf90d63cdc9d_cgraph">
-<area shape="rect" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="5,57,191,98"/>
-<area shape="rect" href="classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="239,5,403,32"/>
-<area shape="rect" href="classamici_1_1_abstract_model.html#a8a6bc3080a50b88513f4604d1210f725" title="Residual function." alt="" coords="248,57,393,98"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="251,123,390,149"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="491,72,599,99"/>
-<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="451,123,639,149"/>
-<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="487,173,602,200"/>
-<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="687,72,808,99"/>
-<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="688,123,807,149"/>
-<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="688,173,807,200"/>
+<area shape="rect" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="5,57,189,98"/>
+<area shape="rect" href="classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="237,5,401,32"/>
+<area shape="rect" href="classamici_1_1_abstract_model.html#a8a6bc3080a50b88513f4604d1210f725" title="Residual function." alt="" coords="247,57,392,98"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="250,123,389,149"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ac57b4b4fc2e0f1687a75e3d26436c30b" title="Checks whether forward sensitivity analysis is performed." alt="" coords="489,72,597,99"/>
+<area shape="rect" href="classamici_1_1_model.html#a9b482dc43e387c48de0cfd9639c67085" title="sets the current model state" alt="" coords="449,123,637,149"/>
+<area shape="rect" href="classamici_1_1_model.html#a223e567004c82b5facc2fe98cdd16855" title="get simulation start time" alt="" coords="486,173,601,200"/>
+<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="685,72,807,99"/>
+<area shape="rect" href="classamici_1_1_model.html#a3d4130da64883565a06a86e7d6029da1" title="Number of constants." alt="" coords="687,123,805,149"/>
+<area shape="rect" href="classamici_1_1_model.html#ae296546c9fd4d7c4ad3b7000aa9e22ef" title="Total number of model parameters." alt="" coords="687,173,805,200"/>
 </map>
 </div>
 <div id="dynsection-12" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -1301,7 +1307,7 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-12-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a770adda3b9a87b02ba6caf90d63cdc9d_icgraph.png" border="0" usemap="#classamici_1_1_return_data_a770adda3b9a87b02ba6caf90d63cdc9d_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a770adda3b9a87b02ba6caf90d63cdc9d_icgraph" id="classamici_1_1_return_data_a770adda3b9a87b02ba6caf90d63cdc9d_icgraph">
-<area shape="rect" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="228,5,413,47"/>
+<area shape="rect" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="228,5,412,47"/>
 <area shape="rect" href="classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,13,180,39"/>
 </map>
 </div>
@@ -1373,12 +1379,12 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-14-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a7a877642abd2f13830f283cfd45b4de9_icgraph.png" border="0" usemap="#classamici_1_1_return_data_a7a877642abd2f13830f283cfd45b4de9_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a7a877642abd2f13830f283cfd45b4de9_icgraph" id="classamici_1_1_return_data_a7a877642abd2f13830f283cfd45b4de9_icgraph">
-<area shape="rect" title="sets member variables and model state according to provided simulation state" alt="" coords="461,107,600,133"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="233,5,408,32"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="239,56,402,83"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="237,107,404,133"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="241,157,400,184"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="228,209,413,250"/>
+<area shape="rect" title="sets member variables and model state according to provided simulation state" alt="" coords="460,107,599,133"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="233,5,407,32"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="239,56,401,83"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="237,107,403,133"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="241,157,399,184"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="228,209,412,250"/>
 <area shape="rect" href="classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,107,180,133"/>
 </map>
 </div>
@@ -1442,19 +1448,19 @@ Protected Attributes</h2></td></tr>
 <div class="center"><img src="classamici_1_1_return_data_aa2cc907b5a8b9267eccdbce89831f041_cgraph.png" border="0" usemap="#classamici_1_1_return_data_aa2cc907b5a8b9267eccdbce89831f041_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_aa2cc907b5a8b9267eccdbce89831f041_cgraph" id="classamici_1_1_return_data_aa2cc907b5a8b9267eccdbce89831f041_cgraph">
 <area shape="rect" title="Residual function." alt="" coords="5,285,49,312"/>
-<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="101,113,289,140"/>
-<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="101,219,289,261"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="539,315,773,341"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="97,337,292,378"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="117,403,273,429"/>
-<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="358,55,473,81"/>
-<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="821,22,980,63"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="579,29,733,56"/>
-<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="597,80,715,107"/>
-<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="340,227,491,253"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="559,131,753,173"/>
-<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="567,197,745,224"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="553,249,759,290"/>
+<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="100,113,288,140"/>
+<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="100,219,288,261"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="537,315,769,341"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="97,337,291,378"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="117,403,271,429"/>
+<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="357,55,471,81"/>
+<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="817,22,976,63"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="576,29,731,56"/>
+<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="595,80,712,107"/>
+<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="339,227,489,253"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="557,131,750,173"/>
+<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="564,197,743,224"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="551,249,756,290"/>
 </map>
 </div>
 <div id="dynsection-16" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -1578,30 +1584,32 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-18-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_cgraph.png" border="0" usemap="#classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_cgraph" id="classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_cgraph">
-<area shape="rect" title="Residual sensitivity function." alt="" coords="5,648,56,674"/>
-<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="107,258,295,285"/>
-<area shape="rect" href="classamici_1_1_model.html#a23f9b1f2f061cc04f42fe32e1549bf80" title="Sensitivity of time&#45;resolved observables, total derivative sy = dydx * sx + dydp (only for forward se..." alt="" coords="107,479,295,520"/>
-<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="107,640,295,682"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="565,785,800,812"/>
-<area shape="rect" href="classamici_1_1_model.html#a438cbd56ad9ee77f9ee2a8a5d919584b" title="Sensitivity of time&#45;resolved observable standard deviation, total derivative (can be used with both a..." alt="" coords="107,562,295,603"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="104,758,299,799"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="123,824,279,850"/>
-<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="375,18,489,45"/>
-<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="1071,188,1229,230"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="605,94,760,121"/>
-<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="876,145,995,172"/>
-<area shape="rect" href="classamici_1_1_model.html#a3d49dd3885ecf07f14e3fde288450be1" title="Partial derivative of observables y w.r.t. model parameters p." alt="" coords="364,373,500,400"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="615,500,750,526"/>
-<area shape="rect" href="classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="364,145,500,172"/>
-<area shape="rect" href="classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="848,247,1023,288"/>
-<area shape="rect" href="classamici_1_1_model.html#aa6c5486532d5e6da745ff545bf64182f" title="Recurring terms in xdot, parameter derivative." alt="" coords="613,297,752,324"/>
-<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="619,449,747,476"/>
-<area shape="rect" href="classamici_1_1_model.html#a7afd5fb5b12531657d3536508fd7a066" title="Recurring terms in xdot, state derivative." alt="" coords="613,196,752,222"/>
-<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="357,656,507,682"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="585,719,780,760"/>
-<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="593,668,772,694"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="579,602,786,643"/>
-<area shape="rect" href="classamici_1_1_model.html#a635d31c36e49ca982b244b4789b9aeeb" title="Partial derivative of standard deviation of measurements w.r.t. model." alt="" coords="347,557,517,584"/>
+<area shape="rect" title="Residual sensitivity function." alt="" coords="5,717,56,743"/>
+<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="107,229,295,255"/>
+<area shape="rect" href="classamici_1_1_model.html#a23f9b1f2f061cc04f42fe32e1549bf80" title="Sensitivity of time&#45;resolved observables, total derivative sy = dydx * sx + dydp (only for forward se..." alt="" coords="107,465,295,507"/>
+<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="107,709,295,751"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="564,858,796,885"/>
+<area shape="rect" href="classamici_1_1_model.html#a438cbd56ad9ee77f9ee2a8a5d919584b" title="Sensitivity of time&#45;resolved observable standard deviation, total derivative (can be used with both a..." alt="" coords="107,639,295,680"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="104,827,297,868"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="123,893,278,919"/>
+<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="373,17,488,43"/>
+<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="1064,161,1223,203"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="603,118,757,145"/>
+<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="871,169,989,195"/>
+<area shape="rect" href="classamici_1_1_model.html#a3d49dd3885ecf07f14e3fde288450be1" title="Partial derivative of observables y w.r.t. model parameters p." alt="" coords="363,397,499,423"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="613,473,747,499"/>
+<area shape="rect" href="classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="363,143,499,170"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#ab084098fb95a107daadc484ee7b5dd76" title="flattens the AmiVectorArray to a vector in row&#45;major format" alt="" coords="355,541,507,583"/>
+<area shape="rect" href="classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="844,237,1016,279"/>
+<area shape="rect" href="classamici_1_1_model.html#aa6c5486532d5e6da745ff545bf64182f" title="Recurring terms in xdot, parameter derivative." alt="" coords="611,321,749,347"/>
+<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="616,523,744,550"/>
+<area shape="rect" href="classamici_1_1_model.html#a7afd5fb5b12531657d3536508fd7a066" title="Recurring terms in xdot, state derivative." alt="" coords="611,67,749,94"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="595,574,765,601"/>
+<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="355,725,506,751"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="583,792,777,833"/>
+<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="591,675,769,702"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="577,727,783,768"/>
+<area shape="rect" href="classamici_1_1_model.html#a635d31c36e49ca982b244b4789b9aeeb" title="Partial derivative of standard deviation of measurements w.r.t. model." alt="" coords="345,642,516,669"/>
 </map>
 </div>
 <div id="dynsection-19" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -1611,8 +1619,8 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-19-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_icgraph.png" border="0" usemap="#classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_icgraph" id="classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_icgraph">
-<area shape="rect" title="Residual sensitivity function." alt="" coords="188,5,239,32"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,5,140,32"/>
+<area shape="rect" title="Residual sensitivity function." alt="" coords="187,5,237,32"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,5,139,32"/>
 </map>
 </div>
 
@@ -1674,29 +1682,31 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-20-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_cgraph.png" border="0" usemap="#classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_cgraph" id="classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_cgraph">
-<area shape="rect" title="Fisher information matrix function." alt="" coords="5,585,55,612"/>
-<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="106,261,294,288"/>
-<area shape="rect" href="classamici_1_1_model.html#a23f9b1f2f061cc04f42fe32e1549bf80" title="Sensitivity of time&#45;resolved observables, total derivative sy = dydx * sx + dydp (only for forward se..." alt="" coords="106,482,294,523"/>
-<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="106,628,294,670"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="564,785,799,812"/>
-<area shape="rect" href="classamici_1_1_model.html#a438cbd56ad9ee77f9ee2a8a5d919584b" title="Sensitivity of time&#45;resolved observable standard deviation, total derivative (can be used with both a..." alt="" coords="106,556,294,598"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="103,763,297,804"/>
-<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="373,18,488,45"/>
-<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="1069,188,1228,230"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="604,94,759,121"/>
-<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="875,145,993,172"/>
-<area shape="rect" href="classamici_1_1_model.html#a3d49dd3885ecf07f14e3fde288450be1" title="Partial derivative of observables y w.r.t. model parameters p." alt="" coords="363,373,499,400"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="614,500,749,526"/>
-<area shape="rect" href="classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="363,145,499,172"/>
-<area shape="rect" href="classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="847,247,1021,288"/>
-<area shape="rect" href="classamici_1_1_model.html#aa6c5486532d5e6da745ff545bf64182f" title="Recurring terms in xdot, parameter derivative." alt="" coords="612,297,751,324"/>
-<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="617,449,745,476"/>
-<area shape="rect" href="classamici_1_1_model.html#a7afd5fb5b12531657d3536508fd7a066" title="Recurring terms in xdot, state derivative." alt="" coords="612,196,751,222"/>
-<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="355,661,506,688"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="584,719,779,760"/>
-<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="592,668,771,694"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="578,602,785,643"/>
-<area shape="rect" href="classamici_1_1_model.html#a635d31c36e49ca982b244b4789b9aeeb" title="Partial derivative of standard deviation of measurements w.r.t. model." alt="" coords="345,556,516,582"/>
+<area shape="rect" title="Fisher information matrix function." alt="" coords="5,654,55,681"/>
+<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="105,229,293,255"/>
+<area shape="rect" href="classamici_1_1_model.html#a23f9b1f2f061cc04f42fe32e1549bf80" title="Sensitivity of time&#45;resolved observables, total derivative sy = dydx * sx + dydp (only for forward se..." alt="" coords="105,465,293,507"/>
+<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="105,697,293,739"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="563,858,795,885"/>
+<area shape="rect" href="classamici_1_1_model.html#a438cbd56ad9ee77f9ee2a8a5d919584b" title="Sensitivity of time&#45;resolved observable standard deviation, total derivative (can be used with both a..." alt="" coords="105,629,293,671"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="103,832,296,873"/>
+<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="372,17,487,43"/>
+<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="1063,161,1221,203"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="601,118,756,145"/>
+<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="870,169,987,195"/>
+<area shape="rect" href="classamici_1_1_model.html#a3d49dd3885ecf07f14e3fde288450be1" title="Partial derivative of observables y w.r.t. model parameters p." alt="" coords="361,397,497,423"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="611,473,746,499"/>
+<area shape="rect" href="classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="361,143,497,170"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#ab084098fb95a107daadc484ee7b5dd76" title="flattens the AmiVectorArray to a vector in row&#45;major format" alt="" coords="353,541,505,583"/>
+<area shape="rect" href="classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="843,237,1015,279"/>
+<area shape="rect" href="classamici_1_1_model.html#aa6c5486532d5e6da745ff545bf64182f" title="Recurring terms in xdot, parameter derivative." alt="" coords="609,321,748,347"/>
+<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="615,523,743,550"/>
+<area shape="rect" href="classamici_1_1_model.html#a7afd5fb5b12531657d3536508fd7a066" title="Recurring terms in xdot, state derivative." alt="" coords="609,67,748,94"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="593,574,764,601"/>
+<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="354,730,505,757"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="582,792,775,833"/>
+<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="589,675,768,702"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="576,727,781,768"/>
+<area shape="rect" href="classamici_1_1_model.html#a635d31c36e49ca982b244b4789b9aeeb" title="Partial derivative of standard deviation of measurements w.r.t. model." alt="" coords="344,634,515,661"/>
 </map>
 </div>
 <div id="dynsection-21" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -1706,8 +1716,8 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-21-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_icgraph.png" border="0" usemap="#classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_icgraph" id="classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_icgraph">
-<area shape="rect" title="Fisher information matrix function." alt="" coords="188,5,237,32"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,5,140,32"/>
+<area shape="rect" title="Fisher information matrix function." alt="" coords="187,5,236,32"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,5,139,32"/>
 </map>
 </div>
 
@@ -1752,8 +1762,8 @@ Protected Attributes</h2></td></tr>
 <div class="center"><img src="classamici_1_1_return_data_a78ae977c00827cfb6dad1b576b45cf7c_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a78ae977c00827cfb6dad1b576b45cf7c_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a78ae977c00827cfb6dad1b576b45cf7c_cgraph" id="classamici_1_1_return_data_a78ae977c00827cfb6dad1b576b45cf7c_cgraph">
 <area shape="rect" title="Set likelihood, state variables, outputs and respective sensitivities to NaN (typically after integra..." alt="" coords="5,31,83,57"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a03e88745280c032d3b59fd7235665e17" title="Set likelihood and chi2 to NaN (typically after integration failure)" alt="" coords="135,5,237,32"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ae0c35d3a9e0f0d4d0903b795bc6e222f" title="Set likelihood sensitivities to NaN (typically after integration failure)" alt="" coords="131,56,241,83"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a03e88745280c032d3b59fd7235665e17" title="Set likelihood and chi2 to NaN (typically after integration failure)" alt="" coords="135,5,235,32"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ae0c35d3a9e0f0d4d0903b795bc6e222f" title="Set likelihood sensitivities to NaN (typically after integration failure)" alt="" coords="131,56,240,83"/>
 </map>
 </div>
 <div id="dynsection-23" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -1809,9 +1819,9 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-24-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a3a3470e764e1e0f4772cd458d2bb2dd2_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a3a3470e764e1e0f4772cd458d2bb2dd2_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a3a3470e764e1e0f4772cd458d2bb2dd2_cgraph" id="classamici_1_1_return_data_a3a3470e764e1e0f4772cd458d2bb2dd2_cgraph">
-<area shape="rect" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="5,27,232,69"/>
-<area shape="rect" href="classamici_1_1_model.html#a76604eceacc5c0e8b4293ac5d65bfd60" title="Get the parameter vector." alt="" coords="280,5,469,32"/>
-<area shape="rect" href="classamici_1_1_model.html#ab14620b22a79748a09a88b9311a7f6d5" title="Get ParameterScale for each parameter." alt="" coords="283,57,466,98"/>
+<area shape="rect" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="5,27,229,69"/>
+<area shape="rect" href="classamici_1_1_model.html#a1bb7ee08df1e2e42da7dceb2100b6131" title="Get the parameter vector." alt="" coords="277,5,467,32"/>
+<area shape="rect" href="classamici_1_1_model.html#ab14620b22a79748a09a88b9311a7f6d5" title="Get ParameterScale for each parameter." alt="" coords="281,57,463,98"/>
 </map>
 </div>
 <div id="dynsection-25" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -1821,7 +1831,7 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-25-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a3a3470e764e1e0f4772cd458d2bb2dd2_icgraph.png" border="0" usemap="#classamici_1_1_return_data_a3a3470e764e1e0f4772cd458d2bb2dd2_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a3a3470e764e1e0f4772cd458d2bb2dd2_icgraph" id="classamici_1_1_return_data_a3a3470e764e1e0f4772cd458d2bb2dd2_icgraph">
-<area shape="rect" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="228,5,455,47"/>
+<area shape="rect" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="228,5,452,47"/>
 <area shape="rect" href="classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,13,180,39"/>
 </map>
 </div>
@@ -1860,13 +1870,13 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-26-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_ac57b4b4fc2e0f1687a75e3d26436c30b_icgraph.png" border="0" usemap="#classamici_1_1_return_data_ac57b4b4fc2e0f1687a75e3d26436c30b_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_ac57b4b4fc2e0f1687a75e3d26436c30b_icgraph" id="classamici_1_1_return_data_ac57b4b4fc2e0f1687a75e3d26436c30b_icgraph">
-<area shape="rect" title="Checks whether forward sensitivity analysis is performed." alt="" coords="648,107,756,133"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="461,107,600,133"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="233,5,408,32"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="239,56,402,83"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="237,107,404,133"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="241,157,400,184"/>
-<area shape="rect" href="classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="228,209,413,250"/>
+<area shape="rect" title="Checks whether forward sensitivity analysis is performed." alt="" coords="647,107,755,133"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a7a877642abd2f13830f283cfd45b4de9" title="sets member variables and model state according to provided simulation state" alt="" coords="460,107,599,133"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="233,5,407,32"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="239,56,401,83"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="237,107,403,133"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a442927f9528eaee97a1620128abb277d" title="extracts data from a preequilibration steadystateproblem" alt="" coords="241,157,399,184"/>
+<area shape="rect" href="classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="228,209,412,250"/>
 <area shape="rect" href="classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,107,180,133"/>
 </map>
 </div>
@@ -1939,18 +1949,19 @@ Protected Attributes</h2></td></tr>
 <area shape="rect" href="classamici_1_1_model.html#aaea446f38ab699c7f343ce656c70115f" title="Time&#45;resolved w,." alt="" coords="501,485,688,511"/>
 <area shape="rect" href="classamici_1_1_model.html#a84e41a50252a3a84b922730fa77bc6d4" title="Negative log&#45;likelihood of measurements y." alt="" coords="533,122,656,149"/>
 <area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="519,71,670,98"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="740,223,975,250"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="740,223,972,250"/>
 <area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="537,434,652,461"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="497,275,692,316"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="498,275,691,316"/>
 <area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="497,173,692,199"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="760,5,955,47"/>
-<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="768,71,947,98"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="754,123,961,164"/>
-<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="1023,427,1181,468"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="780,485,935,511"/>
-<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="798,434,917,461"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="276,383,432,410"/>
-<area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="772,535,943,562"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ad0ca0d6d8d5b6bb5587570d70bd3a4fc" title="get function that returns a pointer to standard deviation of observed data at index" alt="" coords="759,5,953,47"/>
+<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="767,71,945,98"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a75808a32f77afa60bb736a1dfbce9aba" title="get function that checks whether standard deviation of data at specified indices has been set" alt="" coords="753,123,959,164"/>
+<area shape="rect" href="classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="1020,427,1179,468"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="779,485,933,511"/>
+<area shape="rect" href="classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="797,434,915,461"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="277,383,431,410"/>
+<area shape="rect" href="classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="771,586,941,613"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#afdb3c2eb08d4ab5ba29fc4819df6def7" title="Vector accessor." alt="" coords="764,535,948,562"/>
 </map>
 </div>
 <div id="dynsection-28" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -2025,31 +2036,34 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-29-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a7e902c3f8091ce1983f10fe5ad2c0486_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a7e902c3f8091ce1983f10fe5ad2c0486_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a7e902c3f8091ce1983f10fe5ad2c0486_cgraph" id="classamici_1_1_return_data_a7e902c3f8091ce1983f10fe5ad2c0486_cgraph">
-<area shape="rect" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,678,140,705"/>
-<area shape="rect" href="classamici_1_1_model.html#a988eda03ed572429aa769efc1709daba" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="188,607,379,648"/>
-<area shape="rect" href="classamici_1_1_return_data.html#ae14af17c97c07d4d2ba3cb11ba67891c" title="Fisher information matrix function." alt="" coords="259,553,308,579"/>
-<area shape="rect" href="classamici_1_1_model.html#a23f9b1f2f061cc04f42fe32e1549bf80" title="Sensitivity of time&#45;resolved observables, total derivative sy = dydx * sx + dydp (only for forward se..." alt="" coords="427,721,615,763"/>
-<area shape="rect" href="classamici_1_1_return_data.html#abc6748b3ff26fac3301f7e56842fd540" title="Residual sensitivity function." alt="" coords="258,729,309,755"/>
-<area shape="rect" href="classamici_1_1_model.html#a904836d6ff6f1414ddffd5e8f39d1754" title="Expands conservation law for state sensitivities." alt="" coords="669,910,827,937"/>
-<area shape="rect" href="classamici_1_1_model.html#a00e6579fcfb0bb339e621cf194b9ee40" title="Compute sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t...." alt="" coords="449,607,592,634"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="911,783,1046,810"/>
-<area shape="rect" href="classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="449,454,592,481"/>
-<area shape="rect" href="classamici_1_1_model.html#abb22422c569ab3fac8a439cb25c1f65d" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. standard deviation sigma." alt="" coords="663,403,833,430"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="1124,302,1359,329"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="881,454,1076,481"/>
-<area shape="rect" href="classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="677,302,819,329"/>
-<area shape="rect" href="classamici_1_1_model.html#a635d31c36e49ca982b244b4789b9aeeb" title="Partial derivative of standard deviation of measurements w.r.t. model." alt="" coords="663,859,833,886"/>
-<area shape="rect" href="classamici_1_1_model.html#a3d49dd3885ecf07f14e3fde288450be1" title="Partial derivative of observables y w.r.t. model parameters p." alt="" coords="680,758,816,785"/>
-<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="903,302,1054,329"/>
-<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="921,353,1036,379"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="881,135,1076,176"/>
-<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="915,859,1043,886"/>
-<area shape="rect" href="classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="680,555,816,582"/>
-<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="427,553,615,579"/>
-<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="427,197,615,239"/>
-<area shape="rect" href="classamici_1_1_model.html#a438cbd56ad9ee77f9ee2a8a5d919584b" title="Sensitivity of time&#45;resolved observable standard deviation, total derivative (can be used with both a..." alt="" coords="427,787,615,828"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="443,853,599,879"/>
-<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="918,910,1039,937"/>
+<area shape="rect" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,664,139,691"/>
+<area shape="rect" href="classamici_1_1_model.html#a988eda03ed572429aa769efc1709daba" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="187,657,377,698"/>
+<area shape="rect" href="classamici_1_1_return_data.html#ae14af17c97c07d4d2ba3cb11ba67891c" title="Fisher information matrix function." alt="" coords="257,596,307,623"/>
+<area shape="rect" href="classamici_1_1_model.html#a23f9b1f2f061cc04f42fe32e1549bf80" title="Sensitivity of time&#45;resolved observables, total derivative sy = dydx * sx + dydp (only for forward se..." alt="" coords="425,723,613,765"/>
+<area shape="rect" href="classamici_1_1_return_data.html#abc6748b3ff26fac3301f7e56842fd540" title="Residual sensitivity function." alt="" coords="257,245,307,272"/>
+<area shape="rect" href="classamici_1_1_model.html#a904836d6ff6f1414ddffd5e8f39d1754" title="Expands conservation law for state sensitivities." alt="" coords="667,992,826,1019"/>
+<area shape="rect" href="classamici_1_1_model.html#a00e6579fcfb0bb339e621cf194b9ee40" title="Compute sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t...." alt="" coords="448,444,591,471"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="910,672,1045,699"/>
+<area shape="rect" href="classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="448,520,591,547"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#ab084098fb95a107daadc484ee7b5dd76" title="flattens the AmiVectorArray to a vector in row&#45;major format" alt="" coords="671,875,823,917"/>
+<area shape="rect" href="classamici_1_1_model.html#abb22422c569ab3fac8a439cb25c1f65d" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. standard deviation sigma." alt="" coords="661,267,832,293"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="1123,368,1355,395"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="880,469,1075,496"/>
+<area shape="rect" href="classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="675,368,818,395"/>
+<area shape="rect" href="classamici_1_1_model.html#a635d31c36e49ca982b244b4789b9aeeb" title="Partial derivative of standard deviation of measurements w.r.t. model." alt="" coords="661,621,832,648"/>
+<area shape="rect" href="classamici_1_1_model.html#a3d49dd3885ecf07f14e3fde288450be1" title="Partial derivative of observables y w.r.t. model parameters p." alt="" coords="679,723,815,749"/>
+<area shape="rect" href="classamici_1_1_model.html#ab240fd495111f795bff642c3b4d7c437" title="Standard deviation of measurements." alt="" coords="902,368,1053,395"/>
+<area shape="rect" href="classamici_1_1_model.html#a50bf3da6e8796026853b5faec49095d0" title="Observables / measurements." alt="" coords="920,317,1035,344"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a8839910b831f8c55976d880df081fb3e" title="get function that returns a pointer to observed data at index" alt="" coords="881,201,1074,242"/>
+<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="913,723,1041,749"/>
+<area shape="rect" href="classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="679,773,815,800"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="892,883,1063,909"/>
+<area shape="rect" href="classamici_1_1_model.html#a27a73579cfa3fbec5d9fd4e0edeee4e0" title="Time&#45;resolved observables,." alt="" coords="425,216,613,243"/>
+<area shape="rect" href="classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="425,267,613,309"/>
+<area shape="rect" href="classamici_1_1_model.html#a438cbd56ad9ee77f9ee2a8a5d919584b" title="Sensitivity of time&#45;resolved observable standard deviation, total derivative (can be used with both a..." alt="" coords="425,589,613,630"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#ac2657ffc58ee1ea80d6c4db40010e942" title="number of observables of the non&#45;augmented model" alt="" coords="442,39,597,65"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="901,1043,1053,1085"/>
+<area shape="rect" href="classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="917,992,1038,1019"/>
 </map>
 </div>
 
@@ -2132,17 +2146,17 @@ Protected Attributes</h2></td></tr>
 <area shape="rect" href="classamici_1_1_model.html#a2c8c64a4176f95eb0615762b4ac2dcef" title="Regularization for event&#45;resolved observables." alt="" coords="167,384,405,411"/>
 <area shape="rect" href="classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="189,283,383,309"/>
 <area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="197,435,375,461"/>
-<area shape="rect" href="classamici_1_1_model.html#a82817440c349939c45697c874128aa8c" title="Negative log&#45;likelihood of event&#45;resolved measurements z." alt="" coords="489,5,612,32"/>
-<area shape="rect" href="classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="475,275,626,301"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="696,166,903,207"/>
-<area shape="rect" href="classamici_1_1_model.html#a171bc1e22a0829aff5fd16f6d6bffa5a" title="Event&#45;resolved output." alt="" coords="493,325,608,352"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a95ab3fe91af62612f202fdc6cd033d2a" title="get function that returns a pointer to observed data at ieth occurence" alt="" coords="453,57,648,98"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#aabab4dfc080fdf961b6a3bbf1aebd631" title="get function that returns a pointer to standard deviation of observed event data at ieth occurence" alt="" coords="702,299,897,341"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="696,234,903,275"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="722,372,877,399"/>
-<area shape="rect" href="classamici_1_1_model.html#a4c330baa70af09f9cef7be3d4da674c7" title="Regularization of negative log&#45;likelihood with roots of event&#45;resolved measurements rz." alt="" coords="487,224,614,251"/>
-<area shape="rect" href="classamici_1_1_model.html#a74340e771fd77e724bf1461dc9518769" title="Event root function of events (equal to froot but does not include non&#45;output events)" alt="" coords="491,376,610,403"/>
-<area shape="rect" href="classamici_1_1_model.html#a2054555e8d40c4ea6e7f562c335ab984" title="Writes part of a slice to a buffer according to indices specified in z2event." alt="" coords="470,427,631,469"/>
+<area shape="rect" href="classamici_1_1_model.html#a82817440c349939c45697c874128aa8c" title="Negative log&#45;likelihood of event&#45;resolved measurements z." alt="" coords="489,5,611,32"/>
+<area shape="rect" href="classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="475,275,625,301"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="695,166,900,207"/>
+<area shape="rect" href="classamici_1_1_model.html#a171bc1e22a0829aff5fd16f6d6bffa5a" title="Event&#45;resolved output." alt="" coords="493,325,607,352"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a95ab3fe91af62612f202fdc6cd033d2a" title="get function that returns a pointer to observed data at ieth occurence" alt="" coords="453,57,647,98"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#aabab4dfc080fdf961b6a3bbf1aebd631" title="get function that returns a pointer to standard deviation of observed event data at ieth occurence" alt="" coords="701,299,894,341"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="695,234,900,275"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="720,372,875,399"/>
+<area shape="rect" href="classamici_1_1_model.html#a4c330baa70af09f9cef7be3d4da674c7" title="Regularization of negative log&#45;likelihood with roots of event&#45;resolved measurements rz." alt="" coords="487,224,613,251"/>
+<area shape="rect" href="classamici_1_1_model.html#a74340e771fd77e724bf1461dc9518769" title="Event root function of events (equal to froot but does not include non&#45;output events)" alt="" coords="491,376,609,403"/>
+<area shape="rect" href="classamici_1_1_model.html#a2054555e8d40c4ea6e7f562c335ab984" title="Writes part of a slice to a buffer according to indices specified in z2event." alt="" coords="470,427,630,469"/>
 </map>
 </div>
 <div id="dynsection-31" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -2230,27 +2244,30 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-32-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a847ce1ad5d7326342887d3401cf8785f_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a847ce1ad5d7326342887d3401cf8785f_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a847ce1ad5d7326342887d3401cf8785f_cgraph" id="classamici_1_1_return_data_a847ce1ad5d7326342887d3401cf8785f_cgraph">
-<area shape="rect" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,473,145,500"/>
-<area shape="rect" href="classamici_1_1_model.html#ad39fc588eb292abfbe6d820f8cf179e1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="193,267,408,309"/>
-<area shape="rect" href="classamici_1_1_model.html#ab56e70cc5a9d095c9386ab3f7bc01388" title="Sensitivities of regularization for event&#45;resolved observables, total derivative (only forward sensit..." alt="" coords="696,503,935,545"/>
-<area shape="rect" href="classamici_1_1_model.html#a9fc47fbafb63293084d293aa39b5a191" title="Sensitivities of event&#45;resolved observables, total derivative, total derivative (only forward sensiti..." alt="" coords="707,351,924,377"/>
-<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="211,575,390,601"/>
-<area shape="rect" href="classamici_1_1_model.html#a6108459cb07d306418e90a73e5c71eac" title="Sensitivity of z at final timepoint (ignores sensitivity of timepoint), total derivative." alt="" coords="456,550,648,591"/>
-<area shape="rect" href="classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="481,275,623,301"/>
-<area shape="rect" href="classamici_1_1_model.html#aa4c825912365c05bf472568ef1adb929" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. state variables." alt="" coords="481,123,623,149"/>
-<area shape="rect" href="classamici_1_1_model.html#aaa7bf3bdc44879d66b3821a095039898" title="Sensitivity of event measurement negative log&#45;likelihood Jz w.r.t. standard deviation sigmaz." alt="" coords="730,300,901,327"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="983,191,1189,233"/>
-<area shape="rect" href="classamici_1_1_model.html#a0c44c0a2afed13fbc92f449789566fad" title="Partial derivative of event measurement negative log&#45;likelihood Jz." alt="" coords="744,148,887,175"/>
-<area shape="rect" href="classamici_1_1_model.html#aa3eda4b933956ecd898a14b7d46f37ae" title="Sensitivity of standard deviation of events measurements w.r.t. model parameters p." alt="" coords="730,452,901,479"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="1019,477,1153,504"/>
-<area shape="rect" href="classamici_1_1_model.html#a3564a48408fdd80f51b0a24a216f40fe" title="Partial derivative of event&#45;resolved output z w.r.t. to model parameters p." alt="" coords="747,401,883,428"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="718,97,913,124"/>
-<area shape="rect" href="classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="750,199,881,225"/>
-<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="1022,427,1150,453"/>
-<area shape="rect" href="classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="1009,376,1163,403"/>
-<area shape="rect" href="classamici_1_1_model.html#a1449de2b0a762697c2d8f39efb3f405f" title="Partial derivative of event&#45;resolved output z w.r.t. to model states x." alt="" coords="747,47,883,73"/>
-<area shape="rect" href="classamici_1_1_abstract_model.html#a8413f1ea9f3df6a74a24709651101df0" title="Model specific implementation of fsrz." alt="" coords="1013,529,1159,570"/>
-<area shape="rect" href="classamici_1_1_abstract_model.html#a07d5ad2147980ef1c90318c7f392b82f" title="Model specific implementation of fsz." alt="" coords="1001,325,1171,352"/>
+<area shape="rect" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,612,145,638"/>
+<area shape="rect" href="classamici_1_1_model.html#ad39fc588eb292abfbe6d820f8cf179e1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="193,415,408,456"/>
+<area shape="rect" href="classamici_1_1_model.html#ab56e70cc5a9d095c9386ab3f7bc01388" title="Sensitivities of regularization for event&#45;resolved observables, total derivative (only forward sensit..." alt="" coords="656,604,895,646"/>
+<area shape="rect" href="classamici_1_1_model.html#a9fc47fbafb63293084d293aa39b5a191" title="Sensitivities of event&#45;resolved observables, total derivative, total derivative (only forward sensiti..." alt="" coords="667,670,884,697"/>
+<area shape="rect" href="classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="211,713,390,740"/>
+<area shape="rect" href="classamici_1_1_model.html#a6108459cb07d306418e90a73e5c71eac" title="Sensitivity of z at final timepoint (ignores sensitivity of timepoint), total derivative." alt="" coords="205,546,396,587"/>
+<area shape="rect" href="classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="461,300,603,326"/>
+<area shape="rect" href="classamici_1_1_model.html#aa4c825912365c05bf472568ef1adb929" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. state variables." alt="" coords="461,122,603,149"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#ab084098fb95a107daadc484ee7b5dd76" title="flattens the AmiVectorArray to a vector in row&#45;major format" alt="" coords="456,418,608,459"/>
+<area shape="rect" href="classamici_1_1_model.html#aaa7bf3bdc44879d66b3821a095039898" title="Sensitivity of event measurement negative log&#45;likelihood Jz w.r.t. standard deviation sigmaz." alt="" coords="690,300,861,326"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="943,166,1148,207"/>
+<area shape="rect" href="classamici_1_1_model.html#a0c44c0a2afed13fbc92f449789566fad" title="Partial derivative of event measurement negative log&#45;likelihood Jz." alt="" coords="704,97,847,124"/>
+<area shape="rect" href="classamici_1_1_model.html#aa3eda4b933956ecd898a14b7d46f37ae" title="Sensitivity of standard deviation of events measurements w.r.t. model parameters p." alt="" coords="690,452,861,478"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="978,457,1113,484"/>
+<area shape="rect" href="classamici_1_1_model.html#a3564a48408fdd80f51b0a24a216f40fe" title="Partial derivative of event&#45;resolved output z w.r.t. to model parameters p." alt="" coords="707,350,843,377"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="678,198,873,225"/>
+<area shape="rect" href="classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="710,148,841,174"/>
+<area shape="rect" href="classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="981,518,1109,545"/>
+<area shape="rect" href="classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="968,376,1123,402"/>
+<area shape="rect" href="classamici_1_1_model.html#a1449de2b0a762697c2d8f39efb3f405f" title="Partial derivative of event&#45;resolved output z w.r.t. to model states x." alt="" coords="707,46,843,73"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="690,502,861,529"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="969,656,1121,698"/>
+<area shape="rect" href="classamici_1_1_abstract_model.html#a8413f1ea9f3df6a74a24709651101df0" title="Model specific implementation of fsrz." alt="" coords="973,591,1118,632"/>
+<area shape="rect" href="classamici_1_1_abstract_model.html#a07d5ad2147980ef1c90318c7f392b82f" title="Model specific implementation of fsz." alt="" coords="960,722,1131,749"/>
 </map>
 </div>
 
@@ -2312,9 +2329,9 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-33-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567_cgraph.png" border="0" usemap="#classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567_cgraph" id="classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567_cgraph">
-<area shape="rect" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="5,42,147,69"/>
-<area shape="rect" href="classamici_1_1_steadystate_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="195,5,373,47"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="217,71,351,98"/>
+<area shape="rect" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="5,42,145,69"/>
+<area shape="rect" href="classamici_1_1_steadystate_problem.html#ad9244b5f79d36e988083b9428db4c586" title="Accessor for xQB." alt="" coords="193,5,372,47"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="215,71,350,98"/>
 </map>
 </div>
 <div id="dynsection-34" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -2324,8 +2341,8 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-34-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567_icgraph.png" border="0" usemap="#classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567_icgraph" id="classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567_icgraph">
-<area shape="rect" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="451,5,592,32"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="228,5,403,32"/>
+<area shape="rect" title="Updates contribution to likelihood from quadratures (xQB), if preequilibration was run in adjoint mod..." alt="" coords="449,5,589,32"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="228,5,401,32"/>
 <area shape="rect" href="classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,5,180,32"/>
 </map>
 </div>
@@ -2388,9 +2405,9 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-35-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_cgraph.png" border="0" usemap="#classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_cgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_cgraph" id="classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_cgraph">
-<area shape="rect" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="5,31,136,57"/>
-<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="184,5,355,32"/>
-<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="202,56,337,83"/>
+<area shape="rect" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="5,31,135,57"/>
+<area shape="rect" href="classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="183,5,353,32"/>
+<area shape="rect" href="classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="201,56,335,83"/>
 </map>
 </div>
 <div id="dynsection-36" onclick="return toggleVisibility(this)" class="dynheader closed" style="cursor:pointer;">
@@ -2400,8 +2417,8 @@ Protected Attributes</h2></td></tr>
 <div id="dynsection-36-content" class="dyncontent" style="display:none;">
 <div class="center"><img src="classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_icgraph.png" border="0" usemap="#classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_icgraph" alt=""/></div>
 <map name="classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_icgraph" id="classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_icgraph">
-<area shape="rect" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="451,5,581,32"/>
-<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="228,5,403,32"/>
+<area shape="rect" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="449,5,579,32"/>
+<area shape="rect" href="classamici_1_1_return_data.html#aaf09c9e22da7cbbb4af3b026154388d0" title="extracts results from backward problem" alt="" coords="228,5,401,32"/>
 <area shape="rect" href="classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,5,180,32"/>
 </map>
 </div>
@@ -3735,8 +3752,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a9f893f19a3a919f40a183e2a8c257d5d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f893f19a3a919f40a183e2a8c257d5d">&#9670;&nbsp;</a></span>t</h2>
+<a id="a272f814453a1e4874d288835b8f6a0e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a272f814453a1e4874d288835b8f6a0e2">&#9670;&nbsp;</a></span>t_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3745,7 +3762,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">realtype t</td>
+          <td class="memname">realtype t_</td>
         </tr>
       </table>
   </td>
@@ -3760,8 +3777,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a9fc74073500947cae3237cafe8777dfa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9fc74073500947cae3237cafe8777dfa">&#9670;&nbsp;</a></span>x_solver</h2>
+<a id="ac79830d33f42672c1d545677256b9801"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac79830d33f42672c1d545677256b9801">&#9670;&nbsp;</a></span>x_solver_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3770,7 +3787,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a> x_solver</td>
+          <td class="memname"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a> x_solver_</td>
         </tr>
       </table>
   </td>
@@ -3785,8 +3802,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a81068da8d287b420046d0fcb036b1897"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a81068da8d287b420046d0fcb036b1897">&#9670;&nbsp;</a></span>dx_solver</h2>
+<a id="af4445ce4e91c1e471d1a828ec1ce2660"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4445ce4e91c1e471d1a828ec1ce2660">&#9670;&nbsp;</a></span>dx_solver_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3795,7 +3812,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a> dx_solver</td>
+          <td class="memname"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a> dx_solver_</td>
         </tr>
       </table>
   </td>
@@ -3810,8 +3827,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a5cfd247a3618c2ae58d090889cc0642a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5cfd247a3618c2ae58d090889cc0642a">&#9670;&nbsp;</a></span>sx_solver</h2>
+<a id="ad20828f0dfad2d3e65ea13e77dbd2d85"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad20828f0dfad2d3e65ea13e77dbd2d85">&#9670;&nbsp;</a></span>sx_solver_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3820,7 +3837,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a> sx_solver</td>
+          <td class="memname"><a class="el" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a> sx_solver_</td>
         </tr>
       </table>
   </td>
@@ -3835,8 +3852,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a6701add7ed0ff05a8713363e63fcf9db"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6701add7ed0ff05a8713363e63fcf9db">&#9670;&nbsp;</a></span>x_rdata</h2>
+<a id="a4799b536157fd26afef2ce34bc9a1615"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4799b536157fd26afef2ce34bc9a1615">&#9670;&nbsp;</a></span>x_rdata_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3845,7 +3862,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a> x_rdata</td>
+          <td class="memname"><a class="el" href="classamici_1_1_ami_vector.html">AmiVector</a> x_rdata_</td>
         </tr>
       </table>
   </td>
@@ -3860,8 +3877,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="adafaf0a1cac1243303f1a06ec917b533"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adafaf0a1cac1243303f1a06ec917b533">&#9670;&nbsp;</a></span>sx_rdata</h2>
+<a id="a898da7d0e74354aeadddf70aa4376574"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a898da7d0e74354aeadddf70aa4376574">&#9670;&nbsp;</a></span>sx_rdata_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3870,7 +3887,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a> sx_rdata</td>
+          <td class="memname"><a class="el" href="classamici_1_1_ami_vector_array.html">AmiVectorArray</a> sx_rdata_</td>
         </tr>
       </table>
   </td>
@@ -3885,8 +3902,8 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a8e8f5b98c0913d6b8cc53f455f178df9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8e8f5b98c0913d6b8cc53f455f178df9">&#9670;&nbsp;</a></span>nroots</h2>
+<a id="ab0f3d73d98357b2857e29f596e5117f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab0f3d73d98357b2857e29f596e5117f7">&#9670;&nbsp;</a></span>nroots_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -3895,7 +3912,7 @@ Protected Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;int&gt; nroots</td>
+          <td class="memname">std::vector&lt;int&gt; nroots_</td>
         </tr>
       </table>
   </td>
@@ -3916,7 +3933,7 @@ Protected Attributes</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><b>amici</b></li><li class="navelem"><a class="el" href="classamici_1_1_return_data.html">ReturnData</a></li>
-    <li class="footer">Generated on Fri Jul 17 2020 00:35:02 for AMICI by
+    <li class="footer">Generated on Sun Jul 19 2020 20:54:21 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

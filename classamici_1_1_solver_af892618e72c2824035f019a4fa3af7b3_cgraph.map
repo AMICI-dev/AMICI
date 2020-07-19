@@ -1,15 +1,15 @@
 <map id="writeSolutionB" name="writeSolutionB">
-<area shape="rect" id="node1" title="write solution from forward simulation" alt="" coords="5,132,112,159"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a30c98bf8f33d174e936f8a0522085396" title="copies data from another AmiVector" alt="" coords="167,19,324,45"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a6954ec01ccea10a0313b20b6156acd23" title="Access adjoint derivative solution at time t." alt="" coords="160,132,331,159"/>
-<area shape="rect" id="node9" href="$classamici_1_1_solver.html#a38b593eacf28433f2417c83133982d06" title="Access adjoint quadrature solution at time t." alt="" coords="173,183,317,209"/>
-<area shape="rect" id="node12" href="$classamici_1_1_solver.html#a9168eb08135dfbbc2f43b6ad1dd33db6" title="Access adjoint solution at time t." alt="" coords="190,81,301,108"/>
-<area shape="rect" id="node13" href="$classamici_1_1_solver.html#a1582a658df3f51a8c88b6f22b4205b3f" title="current solver timepoint" alt="" coords="223,233,267,260"/>
-<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="379,5,565,32"/>
-<area shape="rect" id="node5" href="$classamici_1_1_solver.html#ad163a84312e826f10956defa51070b06" title="extracts the adjoint state at the current timepoint from solver memory and writes it to the xB member..." alt="" coords="447,56,497,83"/>
-<area shape="rect" id="node6" href="$classamici_1_1_solver.html#a0b4bb25aa4bde0d88e41c3e3b9eacf0d" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="435,107,509,133"/>
-<area shape="rect" id="node7" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="393,157,551,184"/>
-<area shape="rect" id="node8" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="613,157,760,184"/>
-<area shape="rect" id="node10" href="$classamici_1_1_solver.html#a68595a451b9a53d7babc886e71b27d00" title="extracts the adjoint quadrature state at the current timepoint from solver memory and writes it to th..." alt="" coords="432,208,512,235"/>
-<area shape="rect" id="node11" href="$classamici_1_1_solver.html#a815b4f92e4dd31c1fe89db33238d6871" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="420,259,524,285"/>
+<area shape="rect" id="node1" title="write solution from forward simulation" alt="" coords="5,132,111,159"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a30c98bf8f33d174e936f8a0522085396" title="copies data from another AmiVector" alt="" coords="165,19,322,45"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a6954ec01ccea10a0313b20b6156acd23" title="Access adjoint derivative solution at time t." alt="" coords="159,132,328,159"/>
+<area shape="rect" id="node9" href="$classamici_1_1_solver.html#a38b593eacf28433f2417c83133982d06" title="Access adjoint quadrature solution at time t." alt="" coords="171,183,315,209"/>
+<area shape="rect" id="node12" href="$classamici_1_1_solver.html#a9168eb08135dfbbc2f43b6ad1dd33db6" title="Access adjoint solution at time t." alt="" coords="188,81,299,108"/>
+<area shape="rect" id="node13" href="$classamici_1_1_solver.html#a1582a658df3f51a8c88b6f22b4205b3f" title="current solver timepoint" alt="" coords="221,233,265,260"/>
+<area shape="rect" id="node3" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="376,5,563,32"/>
+<area shape="rect" id="node5" href="$classamici_1_1_solver.html#ad163a84312e826f10956defa51070b06" title="extracts the adjoint state at the current timepoint from solver memory and writes it to the xB member..." alt="" coords="445,56,494,83"/>
+<area shape="rect" id="node6" href="$classamici_1_1_solver.html#a0b4bb25aa4bde0d88e41c3e3b9eacf0d" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="433,107,505,133"/>
+<area shape="rect" id="node7" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="390,157,549,184"/>
+<area shape="rect" id="node8" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="611,157,757,184"/>
+<area shape="rect" id="node10" href="$classamici_1_1_solver.html#a68595a451b9a53d7babc886e71b27d00" title="extracts the adjoint quadrature state at the current timepoint from solver memory and writes it to th..." alt="" coords="429,208,509,235"/>
+<area shape="rect" id="node11" href="$classamici_1_1_solver.html#a815b4f92e4dd31c1fe89db33238d6871" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="418,259,521,285"/>
 </map>

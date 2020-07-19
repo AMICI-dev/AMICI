@@ -1,7 +1,7 @@
 <map id="fJSparseB" name="fJSparseB">
-<area shape="rect" id="node1" title="Sparse Jacobian function." alt="" coords="189,81,272,108"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model___o_d_e.html#aa64bd4d26ed1342671ba6aa255a36434" title="Implementation of fJSparseB at the N_Vector level, this function provides an interface to the model s..." alt="" coords="32,5,115,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model___o_d_e.html#af9c1f29040dc3c6c8bca0703676843be" title="Implementation of fJvB at the N_Vector level." alt="" coords="49,56,98,83"/>
+<area shape="rect" id="node1" title="Sparse Jacobian function." alt="" coords="188,81,271,108"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model___o_d_e.html#aa64bd4d26ed1342671ba6aa255a36434" title="Implementation of fJSparseB at the N_Vector level, this function provides an interface to the model s..." alt="" coords="31,5,114,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model___o_d_e.html#af9c1f29040dc3c6c8bca0703676843be" title="Implementation of fJvB at the N_Vector level." alt="" coords="48,56,97,83"/>
 <area shape="rect" id="node4" href="$classamici_1_1_model___o_d_e.html#a433a0e1e4330ef433823a61f1fc45a5a" title="Implementation of fxBdot at the N_Vector level." alt="" coords="43,107,103,133"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model___o_d_e.html#a1bfd97f4f4469ae7250ecb281eaaee4a" title="Computes the sparse backward Jacobian for steadystate integration and writes it to the model member." alt="" coords="5,157,141,184"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model___o_d_e.html#a1bfd97f4f4469ae7250ecb281eaaee4a" title="Computes the sparse backward Jacobian for steadystate integration and writes it to the model member." alt="" coords="5,157,140,184"/>
 </map>

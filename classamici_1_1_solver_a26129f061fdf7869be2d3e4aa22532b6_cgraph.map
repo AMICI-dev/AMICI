@@ -1,7 +1,7 @@
 <map id="setSensitivityOrder" name="setSensitivityOrder">
 <area shape="rect" id="node1" title="Set the sensitvity order." alt="" coords="5,132,139,159"/>
 <area shape="rect" id="node2" href="$classamici_1_1_solver.html#afaf648266a045d246ff24e38b8ba3077" title="updates all senstivivity solver tolerances according to the currently specified member variables" alt="" coords="187,5,364,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#aea8f6f9bb1b00f58ea0ae27faf11b65f" title="checks whether memory for the forward problem has been allocated" alt="" coords="231,56,320,83"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#aea8f6f9bb1b00f58ea0ae27faf11b65f" title="checks whether memory for the forward problem has been allocated" alt="" coords="231,56,319,83"/>
 <area shape="rect" id="node4" href="$classamici_1_1_solver.html#a0f8e994055e37954d7746f3c1af27a5c" title="number of parameters with which the solver was initialized" alt="" coords="414,120,467,147"/>
 <area shape="rect" id="node6" href="$classamici_1_1_solver.html#a5df527ca34def937e6ca2835fc644ec3" title="number of quadratures with which the solver was initialized" alt="" coords="412,233,469,260"/>
 <area shape="rect" id="node8" href="$classamici_1_1_solver.html#ad5665a34d43b7022af0fc096c204ee34" title="number of states with which the solver was initialized" alt="" coords="421,183,460,209"/>

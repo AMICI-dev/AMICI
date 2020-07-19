@@ -1,8 +1,8 @@
 <map id="fxdot" name="fxdot">
-<area shape="rect" id="node1" title="Residual function." alt="" coords="521,78,572,105"/>
-<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#aca32c27fbd6b2eef05fc01f0cb85d536" title="Runs the Newton solver iterations and checks for convergence to steady state." alt="" coords="291,5,470,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#acace0e4d1a8cd079bf189718db73208a" title="Checks convergence for state and respective sensitivities." alt="" coords="291,71,470,112"/>
-<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="288,137,473,193"/>
-<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#ad62b1882c1bc397bcda7a9fcfc7456f1" title="Tries to determine the steady state by using Newton&#39;s method." alt="" coords="5,5,240,47"/>
-<area shape="rect" id="node6" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="35,144,210,185"/>
+<area shape="rect" id="node1" title="Residual function." alt="" coords="517,78,568,105"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#aca32c27fbd6b2eef05fc01f0cb85d536" title="Runs the Newton solver iterations and checks for convergence to steady state." alt="" coords="288,5,467,47"/>
+<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#acace0e4d1a8cd079bf189718db73208a" title="Checks convergence for state and respective sensitivities." alt="" coords="288,71,467,112"/>
+<area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a770adda3b9a87b02ba6caf90d63cdc9d" title="Evaluates and stores the Jacobian and right hand side at final timepoint." alt="" coords="285,137,469,193"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#ad62b1882c1bc397bcda7a9fcfc7456f1" title="Tries to determine the steady state by using Newton&#39;s method." alt="" coords="5,5,237,47"/>
+<area shape="rect" id="node6" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="34,144,209,185"/>
 </map>

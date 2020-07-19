@@ -1,6 +1,6 @@
 <map id="hasParameterIds" name="hasParameterIds">
-<area shape="rect" id="node1" title="Reports whether the model has parameter ids set. Also returns true if the number of corresponding var..." alt="" coords="225,56,347,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a4436bd89ae2cb032cbf13db478d99e15" title="Get value of first model parameter with the specified id." alt="" coords="28,5,155,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a995357a19663980279249d4b89a88f7a" title="Set value of first model parameter with the specified id." alt="" coords="28,56,155,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#ab66d6b754637ed68449af96f5887a0be" title="Set all values of model parameters with ids matching the specified regex." alt="" coords="5,107,177,133"/>
+<area shape="rect" id="node1" title="Reports whether the model has parameter ids set. Also returns true if the number of corresponding var..." alt="" coords="224,56,345,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a4436bd89ae2cb032cbf13db478d99e15" title="Get value of first model parameter with the specified id." alt="" coords="27,5,154,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a995357a19663980279249d4b89a88f7a" title="Set value of first model parameter with the specified id." alt="" coords="27,56,154,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#ab66d6b754637ed68449af96f5887a0be" title="Set all values of model parameters with ids matching the specified regex." alt="" coords="5,107,176,133"/>
 </map>

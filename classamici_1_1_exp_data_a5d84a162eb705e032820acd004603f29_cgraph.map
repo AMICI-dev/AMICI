@@ -1,5 +1,5 @@
 <map id="setObservedDataStdDev" name="setObservedDataStdDev">
-<area shape="rect" id="node1" title="set function that copies data from input to ExpData::observedDataStdDev" alt="" coords="5,31,173,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#aafed26d24a9ff2c6548e44ba51868b8f" title="checker for dimensions of input observedData or observedDataStdDev" alt="" coords="221,5,368,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="416,31,455,57"/>
+<area shape="rect" id="node1" title="set function that copies data from input to ExpData::observedDataStdDev" alt="" coords="5,31,172,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#aafed26d24a9ff2c6548e44ba51868b8f" title="checker for dimensions of input observedData or observedDataStdDev" alt="" coords="220,5,365,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="413,31,452,57"/>
 </map>

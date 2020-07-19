@@ -1,10 +1,11 @@
 <map id="addStateSensitivityEventUpdate" name="addStateSensitivityEventUpdate">
-<area shape="rect" id="node1" title="Update state sensitivity after event." alt="" coords="5,113,175,154"/>
-<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="425,58,584,100"/>
-<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="223,32,377,59"/>
-<area shape="rect" id="node5" href="$classamici_1_1_abstract_model.html#a436937d48081c109757cb1039ba6c2bc" title="Model specific implementation of fdeltasx." alt="" coords="227,84,373,125"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="281,150,319,176"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="273,200,327,227"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="277,251,323,278"/>
-<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="632,58,791,100"/>
+<area shape="rect" id="node1" title="Update state sensitivity after event." alt="" coords="5,153,175,194"/>
+<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="425,96,584,137"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="223,36,377,63"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="224,88,376,129"/>
+<area shape="rect" id="node6" href="$classamici_1_1_abstract_model.html#a436937d48081c109757cb1039ba6c2bc" title="Model specific implementation of fdeltasx." alt="" coords="227,153,373,194"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="281,219,319,246"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="273,270,327,296"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="277,320,323,347"/>
+<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="632,96,791,137"/>
 </map>

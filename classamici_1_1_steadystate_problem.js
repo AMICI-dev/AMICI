@@ -31,10 +31,10 @@ var classamici_1_1_steadystate_problem =
     [ "getSteadyStateTime", "classamici_1_1_steadystate_problem.html#a00611f9c3470baae41775eeb7793e88a", null ],
     [ "getResidualNorm", "classamici_1_1_steadystate_problem.html#ac490bf8c607d1eaf7715dc0097a9ba05", null ],
     [ "getNumSteps", "classamici_1_1_steadystate_problem.html#a00cb3548807a26965134af0f146c98ba", null ],
-    [ "getNumStepsB", "classamici_1_1_steadystate_problem.html#ad4f74aad5a36aebcb1f38f1ac4b9c766", null ],
+    [ "getNumStepsB", "classamici_1_1_steadystate_problem.html#a5044a56e26451622be9a59f8e02e8d9d", null ],
     [ "getNumLinSteps", "classamici_1_1_steadystate_problem.html#a528485b9baf6dfda4348cc5a22d89a13", null ],
     [ "getAdjointUpdates", "classamici_1_1_steadystate_problem.html#a8dbb2ec401605a1ecac13a9313659404", null ],
     [ "getAdjointQuadrature", "classamici_1_1_steadystate_problem.html#ad9244b5f79d36e988083b9428db4c586", null ],
-    [ "hasQuadrature", "classamici_1_1_steadystate_problem.html#afa59fe1d58038caba4a628f8e39de131", null ],
+    [ "hasQuadrature", "classamici_1_1_steadystate_problem.html#a9bf93870e0c77fd1f2efaf6cf4df4686", null ],
     [ "checkSteadyStateSuccess", "classamici_1_1_steadystate_problem.html#a726d2723bea960aebfd89aca755d5ba6", null ]
 ];

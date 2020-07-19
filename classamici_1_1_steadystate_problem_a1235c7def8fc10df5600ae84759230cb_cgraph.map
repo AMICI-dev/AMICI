@@ -1,4 +1,4 @@
 <map id="getWrmsNorm" name="getWrmsNorm">
-<area shape="rect" id="node1" title="Computes the weighted root mean square of xdot the weights are computed according to x: w_i = 1 / ( r..." alt="" coords="5,5,112,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="160,5,355,32"/>
+<area shape="rect" id="node1" title="Computes the weighted root mean square of xdot the weights are computed according to x: w_i = 1 / ( r..." alt="" coords="5,5,111,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a3e1efd4f449f6a618dcbce7df70689d0" title="N_Vector accessor." alt="" coords="159,5,352,32"/>
 </map>

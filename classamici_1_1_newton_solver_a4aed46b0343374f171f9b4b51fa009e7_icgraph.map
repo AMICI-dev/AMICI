@@ -1,7 +1,7 @@
 <map id="prepareLinearSystem" name="prepareLinearSystem">
-<area shape="rect" id="node1" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="720,31,865,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_newton_solver.html#a8061901935161d3cbd563daae8fa4e9f" title="Computes steady state sensitivities." alt="" coords="515,5,672,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_newton_solver.html#a5d7771aef57a9dd773fedb39323b3a04" title="Computes the solution of one Newton iteration." alt="" coords="560,56,627,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#aca32c27fbd6b2eef05fc01f0cb85d536" title="Runs the Newton solver iterations and checks for convergence to steady state." alt="" coords="288,49,467,90"/>
-<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#ad62b1882c1bc397bcda7a9fcfc7456f1" title="Tries to determine the steady state by using Newton&#39;s method." alt="" coords="5,49,240,90"/>
+<area shape="rect" id="node1" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="715,31,860,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_newton_solver.html#a8061901935161d3cbd563daae8fa4e9f" title="Computes steady state sensitivities." alt="" coords="512,5,667,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_newton_solver.html#a5d7771aef57a9dd773fedb39323b3a04" title="Computes the solution of one Newton iteration." alt="" coords="556,56,623,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#aca32c27fbd6b2eef05fc01f0cb85d536" title="Runs the Newton solver iterations and checks for convergence to steady state." alt="" coords="285,49,464,90"/>
+<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#ad62b1882c1bc397bcda7a9fcfc7456f1" title="Tries to determine the steady state by using Newton&#39;s method." alt="" coords="5,49,237,90"/>
 </map>

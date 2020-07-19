@@ -1,4 +1,4 @@
 <map id="ExpData" name="ExpData">
-<area shape="rect" id="node1" title="constructor that initializes with Model" alt="" coords="5,13,79,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a09f372616ff7bf8073c732801b666f7e" title="Get whether initial states depending on fixedParmeters are to be reinitialized after preequilibration..." alt="" coords="127,5,313,47"/>
+<area shape="rect" id="node1" title="constructor that initializes with Model" alt="" coords="5,13,77,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a09f372616ff7bf8073c732801b666f7e" title="Get whether initial states depending on fixedParmeters are to be reinitialized after preequilibration..." alt="" coords="125,5,311,47"/>
 </map>

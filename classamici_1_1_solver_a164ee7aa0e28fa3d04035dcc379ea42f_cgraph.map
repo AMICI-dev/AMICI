@@ -1,4 +1,4 @@
 <map id="setMaxStepsBackwardProblem" name="setMaxStepsBackwardProblem">
-<area shape="rect" id="node1" title="sets the maximum number of solver steps for the backward problem" alt="" coords="5,5,211,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a2a9ffb6a2338f474b724170bdd616f05" title="specifies the maximum number of steps for the forward problem" alt="" coords="259,5,395,32"/>
+<area shape="rect" id="node1" title="sets the maximum number of solver steps for the backward problem" alt="" coords="5,5,209,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a2a9ffb6a2338f474b724170bdd616f05" title="specifies the maximum number of steps for the forward problem" alt="" coords="257,5,392,32"/>
 </map>

@@ -59,9 +59,9 @@ var classamici_1_1_exp_data =
     [ "nytrue_", "classamici_1_1_exp_data.html#ad7e81d1df451bdfcc55008fa06f2f389", null ],
     [ "nztrue_", "classamici_1_1_exp_data.html#a8913df548ec3837f9179a5ab63b32d13", null ],
     [ "nmaxevent_", "classamici_1_1_exp_data.html#af1bb7f9e32c45f8f3c34c9c4a7e5b1ac", null ],
-    [ "ts", "classamici_1_1_exp_data.html#aa7014a80e7b102f85a10e3b9a480e8e5", null ],
-    [ "observedData", "classamici_1_1_exp_data.html#a6acedf749a3c5e4c4dcbc822f58a565d", null ],
-    [ "observedDataStdDev", "classamici_1_1_exp_data.html#aa097568cebb4be48c4c1dfaab0c2a159", null ],
-    [ "observedEvents", "classamici_1_1_exp_data.html#a629e6085839e16bac95ef0eba580f7f0", null ],
-    [ "observedEventsStdDev", "classamici_1_1_exp_data.html#abb12a8f75b4e6c936ae6c0be770628c9", null ]
+    [ "ts_", "classamici_1_1_exp_data.html#a916101635c069389a3c912fa6a5babab", null ],
+    [ "observed_data_", "classamici_1_1_exp_data.html#a6c0fe78df7a0df7c28bf83f24098247c", null ],
+    [ "observed_data_std_dev_", "classamici_1_1_exp_data.html#aabe16cf27f34e87fec30471c270b270f", null ],
+    [ "observed_events_", "classamici_1_1_exp_data.html#a8f742f3dda81a75125df37b165c96cb6", null ],
+    [ "observed_events_std_dev_", "classamici_1_1_exp_data.html#a1409afc4b9844e0ee12c4533f9bdb6ac", null ]
 ];

@@ -1,4 +1,4 @@
 <map id="setStateIsNonNegative" name="setStateIsNonNegative">
-<area shape="rect" id="node1" title="sets flags indicating whether states should be treated as non&#45;negative" alt="" coords="223,5,381,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa7e0ea3a94ef60800aa3fb532f11e97f" title="sets flags indicating that all states should be treated as non&#45;negative" alt="" coords="5,5,175,32"/>
+<area shape="rect" id="node1" title="sets flags indicating whether states should be treated as non&#45;negative" alt="" coords="220,5,376,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa7e0ea3a94ef60800aa3fb532f11e97f" title="sets flags indicating that all states should be treated as non&#45;negative" alt="" coords="5,5,172,32"/>
 </map>

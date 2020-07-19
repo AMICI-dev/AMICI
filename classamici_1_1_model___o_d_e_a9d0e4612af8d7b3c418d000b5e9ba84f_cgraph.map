@@ -1,36 +1,36 @@
 <map id="fqBdot" name="fqBdot">
 <area shape="rect" id="node1" title="Implementation of fqBdot at the N_Vector level." alt="" coords="5,707,65,734"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="115,631,286,658"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model___o_d_e.html#ab36987125ea3360ae5f03b0019513891" title=" " alt="" coords="165,682,237,709"/>
-<area shape="rect" id="node28" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="356,1062,491,1089"/>
-<area shape="rect" id="node34" href="$classamici_1_1_s_u_n_matrix_wrapper.html#af2c987388fcb260819e5279e0ab3d556" title="N_Vector interface for multiply." alt="" coords="113,784,288,825"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#a0259cf8f0b132a25345ddc30c91febe8" title="Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to fa..." alt="" coords="563,929,754,955"/>
-<area shape="rect" id="node8" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="571,487,746,528"/>
-<area shape="rect" id="node9" href="$classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="347,489,499,531"/>
-<area shape="rect" id="node10" href="$classamici_1_1_model.html#aa6c5486532d5e6da745ff545bf64182f" title="Recurring terms in xdot, parameter derivative." alt="" coords="354,387,493,414"/>
-<area shape="rect" id="node16" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="571,552,746,593"/>
-<area shape="rect" id="node17" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="571,617,746,659"/>
-<area shape="rect" id="node18" href="$classamici_1_1_s_u_n_matrix_wrapper.html#ad20897c5c8bd47f5d4005989bead0e55" title="reset data to zeroes" alt="" coords="571,683,746,724"/>
-<area shape="rect" id="node19" href="$classamici_1_1_model___o_d_e.html#a32b20065fe81edd046b5e3de1800e0a1" title="Model specific implementation of fdxdotdp_explicit, no w chainrule (Py)" alt="" coords="363,758,483,785"/>
-<area shape="rect" id="node20" href="$classamici_1_1_model___o_d_e.html#a20507511b5a2e75cd877ee89041d6a87" title="Model specific implementation of fdxdotdp_explicit, colptrs part." alt="" coords="340,809,507,835"/>
-<area shape="rect" id="node21" href="$classamici_1_1_model___o_d_e.html#af32059d3461ce37d7ef27cc2941a9669" title="Model specific implementation of fdxdotdp_explicit, rowvals part." alt="" coords="337,859,509,886"/>
-<area shape="rect" id="node22" href="$classamici_1_1_model___o_d_e.html#a0e8c033f8cb2e44b0a2855e723a19940" title="Model specific implementation of fdxdotdp_implicit, colptrs part." alt="" coords="340,910,507,937"/>
-<area shape="rect" id="node23" href="$classamici_1_1_model___o_d_e.html#a3ea1a32f864b84e0c0d3b37ebae349f0" title="Model specific implementation of fdxdotdp_implicit, rowvals part." alt="" coords="337,961,509,987"/>
-<area shape="rect" id="node24" href="$classamici_1_1_model___o_d_e.html#a058f15dc1efb9ec2ddd2bdccec53cffb" title="Sensitivity of dx/dt wrt model parameters w." alt="" coords="386,657,461,683"/>
-<area shape="rect" id="node27" href="$classamici_1_1_ami_vector_array.html#a387bfb58f20388d99da7f946a3a27ab8" title="accessor to NVector element" alt="" coords="347,109,499,151"/>
-<area shape="rect" id="node29" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="359,175,487,202"/>
-<area shape="rect" id="node30" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a991ac2bbf070c02955140ceb328d8864" title="Perform matrix matrix multiplication C[:, :] += A * B for sparse A, B, C." alt="" coords="336,227,511,268"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="834,979,974,1006"/>
-<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="811,878,997,905"/>
-<area shape="rect" id="node7" href="$classamici_1_1_ami_vector.html#a831a0391e277bda7766d7ee9638a9eb9" title="N_Vector accessor." alt="" coords="807,929,1001,955"/>
-<area shape="rect" id="node11" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="825,287,983,328"/>
-<area shape="rect" id="node12" href="$classamici_1_1_abstract_model.html#af01c88fa595b044dfe13b89c38c3e4aa" title="Model specific implementation for dwdp, column pointers." alt="" coords="586,253,731,295"/>
-<area shape="rect" id="node13" href="$classamici_1_1_abstract_model.html#a7f8f45ae5b3f2edc4c4c64bbe4c6bce4" title="Model specific implementation for dwdp, row values." alt="" coords="586,319,731,360"/>
-<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="599,202,718,229"/>
-<area shape="rect" id="node15" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="559,435,759,462"/>
-<area shape="rect" id="node25" href="$classamici_1_1_model___o_d_e.html#ab3556c59ab37f9b3c4d3943b95747017" title="Model specific implementation of fdxdotdw, colptrs part." alt="" coords="598,799,719,826"/>
-<area shape="rect" id="node26" href="$classamici_1_1_model___o_d_e.html#a36b1eeea35309fa75d8464e71039bf14" title="Model specific implementation of fdxdotdw, rowvals part." alt="" coords="595,749,722,775"/>
-<area shape="rect" id="node31" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a564a62656ad1a9b08920e7efcd915a16" title="Get the number of columns." alt="" coords="571,5,746,47"/>
-<area shape="rect" id="node32" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a6dada592a68544a40682b99e5261f4c2" title="Get the number of rows." alt="" coords="571,71,746,112"/>
-<area shape="rect" id="node33" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a8c068e95d10764ed6d4794fe141e9d12" title="Get the type of sparse matrix." alt="" coords="571,136,746,177"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="114,631,285,658"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model___o_d_e.html#ab36987125ea3360ae5f03b0019513891" title=" " alt="" coords="163,682,235,709"/>
+<area shape="rect" id="node28" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="352,1062,487,1089"/>
+<area shape="rect" id="node34" href="$classamici_1_1_s_u_n_matrix_wrapper.html#af2c987388fcb260819e5279e0ab3d556" title="N_Vector interface for multiply." alt="" coords="113,784,285,825"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a0259cf8f0b132a25345ddc30c91febe8" title="Computes nonnegative state vector according to stateIsNonNegative if anyStateNonNegative is set to fa..." alt="" coords="557,929,748,955"/>
+<area shape="rect" id="node8" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="567,487,739,528"/>
+<area shape="rect" id="node9" href="$classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="343,489,495,531"/>
+<area shape="rect" id="node10" href="$classamici_1_1_model.html#aa6c5486532d5e6da745ff545bf64182f" title="Recurring terms in xdot, parameter derivative." alt="" coords="350,387,489,414"/>
+<area shape="rect" id="node16" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="567,552,739,593"/>
+<area shape="rect" id="node17" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="567,617,739,659"/>
+<area shape="rect" id="node18" href="$classamici_1_1_s_u_n_matrix_wrapper.html#ad20897c5c8bd47f5d4005989bead0e55" title="reset data to zeroes" alt="" coords="567,683,739,724"/>
+<area shape="rect" id="node19" href="$classamici_1_1_model___o_d_e.html#a32b20065fe81edd046b5e3de1800e0a1" title="Model specific implementation of fdxdotdp_explicit, no w chainrule (Py)" alt="" coords="359,758,479,785"/>
+<area shape="rect" id="node20" href="$classamici_1_1_model___o_d_e.html#a20507511b5a2e75cd877ee89041d6a87" title="Model specific implementation of fdxdotdp_explicit, colptrs part." alt="" coords="336,809,503,835"/>
+<area shape="rect" id="node21" href="$classamici_1_1_model___o_d_e.html#af32059d3461ce37d7ef27cc2941a9669" title="Model specific implementation of fdxdotdp_explicit, rowvals part." alt="" coords="334,859,505,886"/>
+<area shape="rect" id="node22" href="$classamici_1_1_model___o_d_e.html#a0e8c033f8cb2e44b0a2855e723a19940" title="Model specific implementation of fdxdotdp_implicit, colptrs part." alt="" coords="336,910,503,937"/>
+<area shape="rect" id="node23" href="$classamici_1_1_model___o_d_e.html#a3ea1a32f864b84e0c0d3b37ebae349f0" title="Model specific implementation of fdxdotdp_implicit, rowvals part." alt="" coords="334,961,505,987"/>
+<area shape="rect" id="node24" href="$classamici_1_1_model___o_d_e.html#a058f15dc1efb9ec2ddd2bdccec53cffb" title="Sensitivity of dx/dt wrt model parameters w." alt="" coords="382,657,457,683"/>
+<area shape="rect" id="node27" href="$classamici_1_1_ami_vector_array.html#a387bfb58f20388d99da7f946a3a27ab8" title="accessor to NVector element" alt="" coords="343,109,495,151"/>
+<area shape="rect" id="node29" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="355,175,483,202"/>
+<area shape="rect" id="node30" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a991ac2bbf070c02955140ceb328d8864" title="Perform matrix matrix multiplication C[:, :] += A * B for sparse A, B, C." alt="" coords="333,227,505,268"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="827,979,967,1006"/>
+<area shape="rect" id="node6" href="$classamici_1_1_ami_vector.html#a5f00d4dc3e7866d193ce926f35542801" title="returns the length of the vector" alt="" coords="803,878,990,905"/>
+<area shape="rect" id="node7" href="$classamici_1_1_ami_vector.html#a3e1efd4f449f6a618dcbce7df70689d0" title="N_Vector accessor." alt="" coords="800,929,993,955"/>
+<area shape="rect" id="node11" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="817,287,976,328"/>
+<area shape="rect" id="node12" href="$classamici_1_1_abstract_model.html#af01c88fa595b044dfe13b89c38c3e4aa" title="Model specific implementation for dwdp, column pointers." alt="" coords="580,253,725,295"/>
+<area shape="rect" id="node13" href="$classamici_1_1_abstract_model.html#a7f8f45ae5b3f2edc4c4c64bbe4c6bce4" title="Model specific implementation for dwdp, row values." alt="" coords="580,319,725,360"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="594,202,711,229"/>
+<area shape="rect" id="node15" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="553,435,752,462"/>
+<area shape="rect" id="node25" href="$classamici_1_1_model___o_d_e.html#ab3556c59ab37f9b3c4d3943b95747017" title="Model specific implementation of fdxdotdw, colptrs part." alt="" coords="593,799,713,826"/>
+<area shape="rect" id="node26" href="$classamici_1_1_model___o_d_e.html#a36b1eeea35309fa75d8464e71039bf14" title="Model specific implementation of fdxdotdw, rowvals part." alt="" coords="590,749,715,775"/>
+<area shape="rect" id="node31" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a564a62656ad1a9b08920e7efcd915a16" title="Get the number of columns." alt="" coords="567,5,739,47"/>
+<area shape="rect" id="node32" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a6dada592a68544a40682b99e5261f4c2" title="Get the number of rows." alt="" coords="567,71,739,112"/>
+<area shape="rect" id="node33" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a8c068e95d10764ed6d4794fe141e9d12" title="Get the type of sparse matrix." alt="" coords="567,136,739,177"/>
 </map>

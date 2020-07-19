@@ -1,5 +1,5 @@
 <map id="isSetObservedEventsStdDev" name="isSetObservedEventsStdDev">
-<area shape="rect" id="node1" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="940,152,1133,178"/>
+<area shape="rect" id="node1" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="940,152,1132,178"/>
 <area shape="rect" id="node2" href="$classamici_1_1_model.html#aa3eda4b933956ecd898a14b7d46f37ae" title="Sensitivity of standard deviation of events measurements w.r.t. model parameters p." alt="" coords="721,42,892,69"/>
 <area shape="rect" id="node7" href="$classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="731,232,882,258"/>
 <area shape="rect" id="node3" href="$classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="268,101,411,128"/>
@@ -13,6 +13,6 @@
 <area shape="rect" id="node13" href="$classamici_1_1_model.html#aaa7bf3bdc44879d66b3821a095039898" title="Sensitivity of event measurement negative log&#45;likelihood Jz w.r.t. standard deviation sigmaz." alt="" coords="481,101,651,128"/>
 <area shape="rect" id="node14" href="$classamici_1_1_model.html#a0c44c0a2afed13fbc92f449789566fad" title="Partial derivative of event measurement negative log&#45;likelihood Jz." alt="" coords="495,152,637,178"/>
 <area shape="rect" id="node16" href="$classamici_1_1_model.html#ae365d77c1eb06d0cbe2303ed3627f7ed" title="Event&#45;resolved observable standard deviations." alt="" coords="469,320,663,346"/>
-<area shape="rect" id="node9" href="$classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="271,254,407,295"/>
+<area shape="rect" id="node9" href="$classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="272,254,407,295"/>
 <area shape="rect" id="node15" href="$classamici_1_1_model.html#aa4c825912365c05bf472568ef1adb929" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. state variables." alt="" coords="268,152,411,178"/>
 </map>

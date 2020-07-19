@@ -1,8 +1,8 @@
 <map id="getReinitializeFixedParameterInitialStates" name="getReinitializeFixedParameterInitialStates">
-<area shape="rect" id="node1" title="Get whether initial states depending on fixedParmeters are to be reinitialized after preequilibration..." alt="" coords="691,49,887,90"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#af4ce16765488e3857131aa5aea0c38b4" title="constructor that initializes with Model" alt="" coords="472,5,643,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a79d8a1d0d4ef31605f9c21e2f6828ae0" title="Sets only those initial states sensitivities that are affected from fx0 fixedParmeters." alt="" coords="483,56,632,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#a137d6ba3f54998477871f0387c01628c" title="Sets only those initial states that are specified via fixedParmeters." alt="" coords="486,107,629,133"/>
-<area shape="rect" id="node5" href="$classamici_1_1_solver.html#a866aff1e4eed9246aa2b8d18e40853c0" title="Reinitializes state and respective sensitivities (if necessary) according to changes in fixedParamete..." alt="" coords="236,99,424,141"/>
+<area shape="rect" id="node1" title="Get whether initial states depending on fixedParmeters are to be reinitialized after preequilibration..." alt="" coords="688,49,883,90"/>
+<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#af4ce16765488e3857131aa5aea0c38b4" title="constructor that initializes with Model" alt="" coords="471,5,640,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a79d8a1d0d4ef31605f9c21e2f6828ae0" title="Sets only those initial states sensitivities that are affected from fx0 fixedParmeters." alt="" coords="481,56,630,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a137d6ba3f54998477871f0387c01628c" title="Sets only those initial states that are specified via fixedParmeters." alt="" coords="484,107,627,133"/>
+<area shape="rect" id="node5" href="$classamici_1_1_solver.html#a866aff1e4eed9246aa2b8d18e40853c0" title="Reinitializes state and respective sensitivities (if necessary) according to changes in fixedParamete..." alt="" coords="236,99,423,141"/>
 <area shape="rect" id="node6" href="$classamici_1_1_steadystate_problem.html#a6b871b5be8dfa63fc4bb5bd0bd7ff052" title="Initialize backward computation by setting state, time, adjoint state and checking for preequilibrati..." alt="" coords="5,99,188,141"/>
 </map>

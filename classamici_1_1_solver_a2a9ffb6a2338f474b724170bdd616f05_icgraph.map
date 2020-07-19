@@ -1,5 +1,5 @@
 <map id="setMaxNumStepsB" name="setMaxNumStepsB">
-<area shape="rect" id="node1" title="specifies the maximum number of steps for the forward problem" alt="" coords="259,31,395,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a164ee7aa0e28fa3d04035dcc379ea42f" title="sets the maximum number of solver steps for the backward problem" alt="" coords="5,5,211,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a24382c0c42c9c60990ce2019fa2c0062" title="Initialises the AMI memory object for the backwards problem." alt="" coords="77,56,139,83"/>
+<area shape="rect" id="node1" title="specifies the maximum number of steps for the forward problem" alt="" coords="257,31,392,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a164ee7aa0e28fa3d04035dcc379ea42f" title="sets the maximum number of solver steps for the backward problem" alt="" coords="5,5,209,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a24382c0c42c9c60990ce2019fa2c0062" title="Initialises the AMI memory object for the backwards problem." alt="" coords="76,56,139,83"/>
 </map>

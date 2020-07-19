@@ -4,7 +4,7 @@
 <area shape="rect" id="node3" href="$classamici_1_1_ami_vector_array.html#aaa979b44841f94510b6481c53d826075" title="copies data from another AmiVectorArray" alt="" coords="549,187,599,213"/>
 <area shape="rect" id="node5" href="$classamici_1_1_solver.html#a0f8e994055e37954d7746f3c1af27a5c" title="number of parameters with which the solver was initialized" alt="" coords="505,237,643,264"/>
 <area shape="rect" id="node15" href="$classamici_1_1_ami_vector_array.html#a23230d5d1a33509594cd2d2aad1f0368" title="copy assignment operator" alt="" coords="535,288,613,315"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="276,5,457,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="277,5,457,32"/>
 <area shape="rect" id="node6" href="$classamici_1_1_solver.html#adadf5f53f5e713fdca870877af5563a1" title="resets solverMemory and solverMemoryB" alt="" coords="276,259,457,301"/>
 <area shape="rect" id="node7" href="$classamici_1_1_solver.html#ab114a079f23232a521ad2e81a0a30e36" title="sets the internal sensitivity method" alt="" coords="33,230,200,271"/>
 <area shape="rect" id="node8" href="$classamici_1_1_solver.html#a9d9a0a5f8cdfdb993960706c646e240f" title="sets the interpolation of the forward solution that is used for the backwards problem" alt="" coords="5,296,228,323"/>

@@ -1,4 +1,4 @@
 <map id="addObservableObjectiveSensitivity" name="addObservableObjectiveSensitivity">
-<area shape="rect" id="node1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="189,13,415,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,5,141,47"/>
+<area shape="rect" id="node1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="188,13,413,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="5,5,140,47"/>
 </map>

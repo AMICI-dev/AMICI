@@ -1,6 +1,6 @@
 <map id="fsigmaz" name="fsigmaz">
 <area shape="rect" id="node1" title="Standard deviation of events." alt="" coords="5,78,73,105"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#aabab4dfc080fdf961b6a3bbf1aebd631" title="get function that returns a pointer to standard deviation of observed event data at ieth occurence" alt="" coords="127,5,322,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="121,71,328,112"/>
-<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="121,136,328,177"/>
+<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#aabab4dfc080fdf961b6a3bbf1aebd631" title="get function that returns a pointer to standard deviation of observed event data at ieth occurence" alt="" coords="127,5,321,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="121,71,327,112"/>
+<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="121,136,327,177"/>
 </map>

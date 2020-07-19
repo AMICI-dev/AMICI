@@ -22,7 +22,7 @@ Inheritance diagram for Newton\+Solver\+:
 \doxysubsubsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-\mbox{\hyperlink{classamici_1_1_newton_solver_a5326d5b9704845cb30e6953c0977d486}{Newton\+Solver}} (realtype $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_ad94d61da9b85c1a151ffd8e228758c7c}{t}}, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_af64268982dd7b9be1690573763982e0b}{x}}, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_a7b56c3ca57dde73bdbc8dbe9772bca19}{model}})
+\mbox{\hyperlink{classamici_1_1_newton_solver_a5326d5b9704845cb30e6953c0977d486}{Newton\+Solver}} (realtype $\ast$t, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$x, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model)
 \begin{DoxyCompactList}\small\item\em Initializes all members with the provided objects. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_newton_solver_a5d7771aef57a9dd773fedb39323b3a04}{get\+Step}} (int ntry, int nnewt, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&delta)
 \begin{DoxyCompactList}\small\item\em Computes the solution of one Newton iteration. \end{DoxyCompactList}\item 
@@ -39,41 +39,41 @@ virtual void \mbox{\hyperlink{classamici_1_1_newton_solver_addfdd7afbe1eff3d47b0
 \doxysubsubsection*{Static Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-static std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} $>$ \mbox{\hyperlink{classamici_1_1_newton_solver_aabb17410aff4385a0161ecc47f176696}{get\+Solver}} (realtype $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_ad94d61da9b85c1a151ffd8e228758c7c}{t}}, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_af64268982dd7b9be1690573763982e0b}{x}}, \mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&simulation\+Solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$\mbox{\hyperlink{classamici_1_1_newton_solver_a7b56c3ca57dde73bdbc8dbe9772bca19}{model}})
+static std\+::unique\+\_\+ptr$<$ \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} $>$ \mbox{\hyperlink{classamici_1_1_newton_solver_aabb17410aff4385a0161ecc47f176696}{get\+Solver}} (realtype $\ast$t, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$x, \mbox{\hyperlink{classamici_1_1_solver}{Solver}} \&simulation\+Solver, \mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$model)
 \begin{DoxyCompactList}\small\item\em Factory method to create a \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} based on linsol\+Type. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \doxysubsubsection*{Public Attributes}
 \begin{DoxyCompactItemize}
 \item 
-int \mbox{\hyperlink{classamici_1_1_newton_solver_a60fddefccade5b1c083c6803c4c49707}{maxlinsteps}} = 0
+int \mbox{\hyperlink{classamici_1_1_newton_solver_ad9e2ba694d1457cae7498937530f9f54}{max\+\_\+lin\+\_\+steps\+\_\+}} \{0\}
 \item 
-int \mbox{\hyperlink{classamici_1_1_newton_solver_a029415ebe024ac6281fd9f190aefb2ee}{maxsteps}} = 0
+int \mbox{\hyperlink{classamici_1_1_newton_solver_a116aef95381445a950272034d8499148}{max\+\_\+steps}} \{0\}
 \item 
-double \mbox{\hyperlink{classamici_1_1_newton_solver_a60c6dfc476dd9596072f61c2ec8d58ed}{atol}} = 1e-\/16
+realtype \mbox{\hyperlink{classamici_1_1_newton_solver_a68019908a9fb211b5a2d55f7eb8383c9}{atol\+\_\+}} \{1e-\/16\}
 \item 
-double \mbox{\hyperlink{classamici_1_1_newton_solver_a4587afeee8941ba7c208b3690a3eeaa7}{rtol}} = 1e-\/8
+realtype \mbox{\hyperlink{classamici_1_1_newton_solver_ac55ab7e1486cd66790c4ddcabb1d6eb8}{rtol\+\_\+}} \{1e-\/8\}
 \item 
-Newton\+Damping\+Factor\+Mode \mbox{\hyperlink{classamici_1_1_newton_solver_a08751ab9559fec767f56549942f69308}{damping\+Factor\+Mode}} = Newton\+Damping\+Factor\+Mode\+::on
+Newton\+Damping\+Factor\+Mode \mbox{\hyperlink{classamici_1_1_newton_solver_a518c798a9d396750741222bc26974814}{damping\+\_\+factor\+\_\+mode\+\_\+}} \{Newton\+Damping\+Factor\+Mode\+::on\}
 \item 
-double \mbox{\hyperlink{classamici_1_1_newton_solver_a13f68c2d25ab1679464e1e91d60fee06}{damping\+Factor\+Lower\+Bound}} = 1e-\/8
+realtype \mbox{\hyperlink{classamici_1_1_newton_solver_afb0d68b59c03b5a4355038725814cb6d}{damping\+\_\+factor\+\_\+lower\+\_\+bound}} \{1e-\/8\}
 \end{DoxyCompactItemize}
 \doxysubsubsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
 \item 
-realtype $\ast$ \mbox{\hyperlink{classamici_1_1_newton_solver_ad94d61da9b85c1a151ffd8e228758c7c}{t}}
+realtype $\ast$ \mbox{\hyperlink{classamici_1_1_newton_solver_a5b5eb13dffd983df227825c8f0d19e61}{t\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$ \mbox{\hyperlink{classamici_1_1_newton_solver_a7b56c3ca57dde73bdbc8dbe9772bca19}{model}}
+\mbox{\hyperlink{classamici_1_1_model}{Model}} $\ast$ \mbox{\hyperlink{classamici_1_1_newton_solver_a33868065bc07a9c94fba332fd89fc502}{model\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_newton_solver_a6329150d913cecfe54dad5fd03214ce8}{xdot}}
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_newton_solver_afcad9bb5bfcedf61440a1ce88009c843}{xdot\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$ \mbox{\hyperlink{classamici_1_1_newton_solver_af64268982dd7b9be1690573763982e0b}{x}}
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} $\ast$ \mbox{\hyperlink{classamici_1_1_newton_solver_a7e65310766ff4cb00d0ff73a08806a21}{x\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_newton_solver_a17e4770df418fc1f2c4283d7e188d81d}{dx}}
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_newton_solver_ae1ad9d9ad7aeb7b016ef8ed53a190225}{dx\+\_\+}}
 \item 
-std\+::vector$<$ int $>$ \mbox{\hyperlink{classamici_1_1_newton_solver_ab97d5deab3899131598e763561902f46}{numlinsteps}}
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classamici_1_1_newton_solver_a8ac7f632eb8b48670c9689df2f488eeb}{num\+\_\+lin\+\_\+steps\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_newton_solver_aaa046d3820a590533edd62dafaa1710e}{xB}}
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_newton_solver_a4a6b05eb97cebaa4c969e5ceb8b2f523}{x\+B\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_newton_solver_afd83b3cc30524aff2a992ea9805b9719}{dxB}}
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_newton_solver_a89cf07c5aa93ead8a7e60b7d7b771349}{dx\+B\+\_\+}}
 \end{DoxyCompactItemize}
 
 
@@ -129,7 +129,7 @@ solver \mbox{\hyperlink{classamici_1_1_newton_solver}{Newton\+Solver}} according
 \end{DoxyReturn}
 
 
-Definition at line 27 of file newton\+\_\+solver.\+cpp.
+Definition at line 25 of file newton\+\_\+solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -164,7 +164,7 @@ Here is the caller graph for this function\+:
 \end{DoxyParams}
 
 
-Definition at line 87 of file newton\+\_\+solver.\+cpp.
+Definition at line 85 of file newton\+\_\+solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -195,7 +195,7 @@ Here is the caller graph for this function\+:
 \end{DoxyParams}
 
 
-Definition at line 96 of file newton\+\_\+solver.\+cpp.
+Definition at line 94 of file newton\+\_\+solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -296,141 +296,141 @@ Here is the caller graph for this function\+:
 
 
 \doxysubsubsection{Member Data Documentation}
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a60fddefccade5b1c083c6803c4c49707}\label{classamici_1_1_newton_solver_a60fddefccade5b1c083c6803c4c49707}} 
-\index{NewtonSolver@{NewtonSolver}!maxlinsteps@{maxlinsteps}}
-\index{maxlinsteps@{maxlinsteps}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{maxlinsteps}{maxlinsteps}}
-{\footnotesize\ttfamily int maxlinsteps = 0}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_ad9e2ba694d1457cae7498937530f9f54}\label{classamici_1_1_newton_solver_ad9e2ba694d1457cae7498937530f9f54}} 
+\index{NewtonSolver@{NewtonSolver}!max\_lin\_steps\_@{max\_lin\_steps\_}}
+\index{max\_lin\_steps\_@{max\_lin\_steps\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{max\_lin\_steps\_}{max\_lin\_steps\_}}
+{\footnotesize\ttfamily int max\+\_\+lin\+\_\+steps\+\_\+ \{0\}}
 
 maximum number of allowed linear steps per Newton step for steady state computation 
 
 Definition at line 105 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a029415ebe024ac6281fd9f190aefb2ee}\label{classamici_1_1_newton_solver_a029415ebe024ac6281fd9f190aefb2ee}} 
-\index{NewtonSolver@{NewtonSolver}!maxsteps@{maxsteps}}
-\index{maxsteps@{maxsteps}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{maxsteps}{maxsteps}}
-{\footnotesize\ttfamily int maxsteps = 0}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a116aef95381445a950272034d8499148}\label{classamici_1_1_newton_solver_a116aef95381445a950272034d8499148}} 
+\index{NewtonSolver@{NewtonSolver}!max\_steps@{max\_steps}}
+\index{max\_steps@{max\_steps}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{max\_steps}{max\_steps}}
+{\footnotesize\ttfamily int max\+\_\+steps \{0\}}
 
 maximum number of allowed Newton steps for steady state computation 
 
 Definition at line 107 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a60c6dfc476dd9596072f61c2ec8d58ed}\label{classamici_1_1_newton_solver_a60c6dfc476dd9596072f61c2ec8d58ed}} 
-\index{NewtonSolver@{NewtonSolver}!atol@{atol}}
-\index{atol@{atol}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{atol}{atol}}
-{\footnotesize\ttfamily double atol = 1e-\/16}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a68019908a9fb211b5a2d55f7eb8383c9}\label{classamici_1_1_newton_solver_a68019908a9fb211b5a2d55f7eb8383c9}} 
+\index{NewtonSolver@{NewtonSolver}!atol\_@{atol\_}}
+\index{atol\_@{atol\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{atol\_}{atol\_}}
+{\footnotesize\ttfamily realtype atol\+\_\+ \{1e-\/16\}}
 
 absolute tolerance 
 
 Definition at line 109 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a4587afeee8941ba7c208b3690a3eeaa7}\label{classamici_1_1_newton_solver_a4587afeee8941ba7c208b3690a3eeaa7}} 
-\index{NewtonSolver@{NewtonSolver}!rtol@{rtol}}
-\index{rtol@{rtol}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{rtol}{rtol}}
-{\footnotesize\ttfamily double rtol = 1e-\/8}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_ac55ab7e1486cd66790c4ddcabb1d6eb8}\label{classamici_1_1_newton_solver_ac55ab7e1486cd66790c4ddcabb1d6eb8}} 
+\index{NewtonSolver@{NewtonSolver}!rtol\_@{rtol\_}}
+\index{rtol\_@{rtol\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{rtol\_}{rtol\_}}
+{\footnotesize\ttfamily realtype rtol\+\_\+ \{1e-\/8\}}
 
 relative tolerance 
 
 Definition at line 111 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a08751ab9559fec767f56549942f69308}\label{classamici_1_1_newton_solver_a08751ab9559fec767f56549942f69308}} 
-\index{NewtonSolver@{NewtonSolver}!dampingFactorMode@{dampingFactorMode}}
-\index{dampingFactorMode@{dampingFactorMode}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{dampingFactorMode}{dampingFactorMode}}
-{\footnotesize\ttfamily Newton\+Damping\+Factor\+Mode damping\+Factor\+Mode = Newton\+Damping\+Factor\+Mode\+::on}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a518c798a9d396750741222bc26974814}\label{classamici_1_1_newton_solver_a518c798a9d396750741222bc26974814}} 
+\index{NewtonSolver@{NewtonSolver}!damping\_factor\_mode\_@{damping\_factor\_mode\_}}
+\index{damping\_factor\_mode\_@{damping\_factor\_mode\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{damping\_factor\_mode\_}{damping\_factor\_mode\_}}
+{\footnotesize\ttfamily Newton\+Damping\+Factor\+Mode damping\+\_\+factor\+\_\+mode\+\_\+ \{Newton\+Damping\+Factor\+Mode\+::on\}}
 
 damping factor flag 
 
 Definition at line 113 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a13f68c2d25ab1679464e1e91d60fee06}\label{classamici_1_1_newton_solver_a13f68c2d25ab1679464e1e91d60fee06}} 
-\index{NewtonSolver@{NewtonSolver}!dampingFactorLowerBound@{dampingFactorLowerBound}}
-\index{dampingFactorLowerBound@{dampingFactorLowerBound}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{dampingFactorLowerBound}{dampingFactorLowerBound}}
-{\footnotesize\ttfamily double damping\+Factor\+Lower\+Bound = 1e-\/8}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_afb0d68b59c03b5a4355038725814cb6d}\label{classamici_1_1_newton_solver_afb0d68b59c03b5a4355038725814cb6d}} 
+\index{NewtonSolver@{NewtonSolver}!damping\_factor\_lower\_bound@{damping\_factor\_lower\_bound}}
+\index{damping\_factor\_lower\_bound@{damping\_factor\_lower\_bound}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{damping\_factor\_lower\_bound}{damping\_factor\_lower\_bound}}
+{\footnotesize\ttfamily realtype damping\+\_\+factor\+\_\+lower\+\_\+bound \{1e-\/8\}}
 
 damping factor lower bound 
 
 Definition at line 115 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_ad94d61da9b85c1a151ffd8e228758c7c}\label{classamici_1_1_newton_solver_ad94d61da9b85c1a151ffd8e228758c7c}} 
-\index{NewtonSolver@{NewtonSolver}!t@{t}}
-\index{t@{t}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{t}{t}}
-{\footnotesize\ttfamily realtype$\ast$ t\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a5b5eb13dffd983df227825c8f0d19e61}\label{classamici_1_1_newton_solver_a5b5eb13dffd983df227825c8f0d19e61}} 
+\index{NewtonSolver@{NewtonSolver}!t\_@{t\_}}
+\index{t\_@{t\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{t\_}{t\_}}
+{\footnotesize\ttfamily realtype$\ast$ t\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 time variable 
 
 Definition at line 119 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a7b56c3ca57dde73bdbc8dbe9772bca19}\label{classamici_1_1_newton_solver_a7b56c3ca57dde73bdbc8dbe9772bca19}} 
-\index{NewtonSolver@{NewtonSolver}!model@{model}}
-\index{model@{model}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{model}{model}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_model}{Model}}$\ast$ model\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a33868065bc07a9c94fba332fd89fc502}\label{classamici_1_1_newton_solver_a33868065bc07a9c94fba332fd89fc502}} 
+\index{NewtonSolver@{NewtonSolver}!model\_@{model\_}}
+\index{model\_@{model\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{model\_}{model\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_model}{Model}}$\ast$ model\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 pointer to the model object 
 
 Definition at line 121 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a6329150d913cecfe54dad5fd03214ce8}\label{classamici_1_1_newton_solver_a6329150d913cecfe54dad5fd03214ce8}} 
-\index{NewtonSolver@{NewtonSolver}!xdot@{xdot}}
-\index{xdot@{xdot}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{xdot}{xdot}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} xdot\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_afcad9bb5bfcedf61440a1ce88009c843}\label{classamici_1_1_newton_solver_afcad9bb5bfcedf61440a1ce88009c843}} 
+\index{NewtonSolver@{NewtonSolver}!xdot\_@{xdot\_}}
+\index{xdot\_@{xdot\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{xdot\_}{xdot\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} xdot\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 right hand side \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} 
 
 Definition at line 123 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_af64268982dd7b9be1690573763982e0b}\label{classamici_1_1_newton_solver_af64268982dd7b9be1690573763982e0b}} 
-\index{NewtonSolver@{NewtonSolver}!x@{x}}
-\index{x@{x}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{x}{x}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}}$\ast$ x\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a7e65310766ff4cb00d0ff73a08806a21}\label{classamici_1_1_newton_solver_a7e65310766ff4cb00d0ff73a08806a21}} 
+\index{NewtonSolver@{NewtonSolver}!x\_@{x\_}}
+\index{x\_@{x\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{x\_}{x\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}}$\ast$ x\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 current state 
 
 Definition at line 125 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_a17e4770df418fc1f2c4283d7e188d81d}\label{classamici_1_1_newton_solver_a17e4770df418fc1f2c4283d7e188d81d}} 
-\index{NewtonSolver@{NewtonSolver}!dx@{dx}}
-\index{dx@{dx}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{dx}{dx}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dx\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_ae1ad9d9ad7aeb7b016ef8ed53a190225}\label{classamici_1_1_newton_solver_ae1ad9d9ad7aeb7b016ef8ed53a190225}} 
+\index{NewtonSolver@{NewtonSolver}!dx\_@{dx\_}}
+\index{dx\_@{dx\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{dx\_}{dx\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dx\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 current state time derivative (D\+AE) 
 
 Definition at line 127 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_ab97d5deab3899131598e763561902f46}\label{classamici_1_1_newton_solver_ab97d5deab3899131598e763561902f46}} 
-\index{NewtonSolver@{NewtonSolver}!numlinsteps@{numlinsteps}}
-\index{numlinsteps@{numlinsteps}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{numlinsteps}{numlinsteps}}
-{\footnotesize\ttfamily std\+::vector$<$int$>$ numlinsteps\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a8ac7f632eb8b48670c9689df2f488eeb}\label{classamici_1_1_newton_solver_a8ac7f632eb8b48670c9689df2f488eeb}} 
+\index{NewtonSolver@{NewtonSolver}!num\_lin\_steps\_@{num\_lin\_steps\_}}
+\index{num\_lin\_steps\_@{num\_lin\_steps\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{num\_lin\_steps\_}{num\_lin\_steps\_}}
+{\footnotesize\ttfamily std\+::vector$<$int$>$ num\+\_\+lin\+\_\+steps\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 history of number of linear steps 
 
 Definition at line 129 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_aaa046d3820a590533edd62dafaa1710e}\label{classamici_1_1_newton_solver_aaa046d3820a590533edd62dafaa1710e}} 
-\index{NewtonSolver@{NewtonSolver}!xB@{xB}}
-\index{xB@{xB}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{xB}{xB}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} xB\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a4a6b05eb97cebaa4c969e5ceb8b2f523}\label{classamici_1_1_newton_solver_a4a6b05eb97cebaa4c969e5ceb8b2f523}} 
+\index{NewtonSolver@{NewtonSolver}!xB\_@{xB\_}}
+\index{xB\_@{xB\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{xB\_}{xB\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} x\+B\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 current adjoint state 
 
 Definition at line 131 of file newton\+\_\+solver.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_newton_solver_afd83b3cc30524aff2a992ea9805b9719}\label{classamici_1_1_newton_solver_afd83b3cc30524aff2a992ea9805b9719}} 
-\index{NewtonSolver@{NewtonSolver}!dxB@{dxB}}
-\index{dxB@{dxB}!NewtonSolver@{NewtonSolver}}
-\doxyparagraph{\texorpdfstring{dxB}{dxB}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dxB\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_newton_solver_a89cf07c5aa93ead8a7e60b7d7b771349}\label{classamici_1_1_newton_solver_a89cf07c5aa93ead8a7e60b7d7b771349}} 
+\index{NewtonSolver@{NewtonSolver}!dxB\_@{dxB\_}}
+\index{dxB\_@{dxB\_}!NewtonSolver@{NewtonSolver}}
+\doxyparagraph{\texorpdfstring{dxB\_}{dxB\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dx\+B\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 current adjoint state time derivative (D\+AE) 
 

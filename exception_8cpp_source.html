@@ -99,21 +99,21 @@ $(document).ready(function(){initNavTree('exception_8cpp_source.html',''); initR
 <div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="classamici_1_1_ami_exception.html#a002ee872acedd472df0550357a67393c">   11</a></span>&#160;<a class="code" href="classamici_1_1_ami_exception.html#a002ee872acedd472df0550357a67393c">AmiException::AmiException</a>(<span class="keyword">const</span> <span class="keywordtype">char</span> *fmt, ...) {</div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;    va_list ap;</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;    va_start(ap, fmt);</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    vsnprintf(msg.data(), msg.size(), fmt, ap);</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    vsnprintf(msg_.data(), msg_.size(), fmt, ap);</div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    va_end(ap);</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;    <a class="code" href="classamici_1_1_ami_exception.html#abe5c15906f4291bad376c2e2245dfc4a">storeBacktrace</a>(12);</div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;}</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
 <div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="classamici_1_1_ami_exception.html#abf843cbb29dec939d0731e491bab6f70">   19</a></span>&#160;<span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code" href="classamici_1_1_ami_exception.html#abf843cbb29dec939d0731e491bab6f70">AmiException::what</a>() const noexcept {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keywordflow">return</span> msg.data();</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <span class="keywordflow">return</span> msg_.data();</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;}</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classamici_1_1_ami_exception.html#af39d1951aaa964b373590ff5a00f9d31">   23</a></span>&#160;<span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code" href="classamici_1_1_ami_exception.html#af39d1951aaa964b373590ff5a00f9d31">AmiException::getBacktrace</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keywordflow">return</span> trace.data();</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keywordflow">return</span> trace_.data();</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
 <div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="classamici_1_1_ami_exception.html#abe5c15906f4291bad376c2e2245dfc4a">   27</a></span>&#160;<span class="keywordtype">void</span> <a class="code" href="classamici_1_1_ami_exception.html#abe5c15906f4291bad376c2e2245dfc4a">AmiException::storeBacktrace</a>(<span class="keyword">const</span> <span class="keywordtype">int</span> nMaxFrames) {</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    snprintf(trace.data(), trace.size(), <span class="stringliteral">&quot;%s&quot;</span>,</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    snprintf(trace_.data(), trace_.size(), <span class="stringliteral">&quot;%s&quot;</span>,</div>
 <div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;             backtraceString(nMaxFrames).c_str());</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;}</div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
@@ -154,7 +154,7 @@ $(document).ready(function(){initNavTree('exception_8cpp_source.html',''); initR
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><b>exception.cpp</b></li>
-    <li class="footer">Generated on Fri Jul 17 2020 00:34:57 for AMICI by
+    <li class="footer">Generated on Sun Jul 19 2020 20:54:19 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

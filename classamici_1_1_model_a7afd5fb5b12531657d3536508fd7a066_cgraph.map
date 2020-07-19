@@ -1,13 +1,13 @@
 <map id="fdwdx" name="fdwdx">
-<area shape="rect" id="node1" title="Recurring terms in xdot, state derivative." alt="" coords="5,246,63,272"/>
-<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="359,114,517,156"/>
-<area shape="rect" id="node4" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="123,49,298,90"/>
-<area shape="rect" id="node5" href="$classamici_1_1_abstract_model.html#a8d0efa23764dd2210e01f40918be36ae" title="Model specific implementation for dwdx, column pointers." alt="" coords="138,114,283,156"/>
-<area shape="rect" id="node6" href="$classamici_1_1_abstract_model.html#a209b18059172ea4286c85931d0231a8a" title="Model specific implementation for dwdx, row values." alt="" coords="138,180,283,221"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="191,246,230,272"/>
-<area shape="rect" id="node8" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="111,296,311,323"/>
-<area shape="rect" id="node9" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="123,348,298,389"/>
-<area shape="rect" id="node10" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="123,413,298,454"/>
-<area shape="rect" id="node11" href="$classamici_1_1_s_u_n_matrix_wrapper.html#ad20897c5c8bd47f5d4005989bead0e55" title="reset data to zeroes" alt="" coords="123,478,298,520"/>
-<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="565,114,724,156"/>
+<area shape="rect" id="node1" title="Recurring terms in xdot, state derivative." alt="" coords="5,245,61,272"/>
+<area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="356,114,515,155"/>
+<area shape="rect" id="node4" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="123,49,295,90"/>
+<area shape="rect" id="node5" href="$classamici_1_1_abstract_model.html#a8d0efa23764dd2210e01f40918be36ae" title="Model specific implementation for dwdx, column pointers." alt="" coords="136,114,281,155"/>
+<area shape="rect" id="node6" href="$classamici_1_1_abstract_model.html#a209b18059172ea4286c85931d0231a8a" title="Model specific implementation for dwdx, row values." alt="" coords="136,179,281,221"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a6806017c602b7dcfa09339b93d612910" title="Recurring terms in xdot." alt="" coords="189,245,228,272"/>
+<area shape="rect" id="node8" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="109,296,308,323"/>
+<area shape="rect" id="node9" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="123,347,295,389"/>
+<area shape="rect" id="node10" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="123,413,295,454"/>
+<area shape="rect" id="node11" href="$classamici_1_1_s_u_n_matrix_wrapper.html#ad20897c5c8bd47f5d4005989bead0e55" title="reset data to zeroes" alt="" coords="123,478,295,519"/>
+<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="563,114,721,155"/>
 </map>

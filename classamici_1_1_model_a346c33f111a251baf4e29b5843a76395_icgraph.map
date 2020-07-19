@@ -1,5 +1,5 @@
 <map id="fdJydy_rowvals" name="fdJydy_rowvals">
-<area shape="rect" id="node1" title="Model specific implementation of fdJydy row vals." alt="" coords="497,71,611,98"/>
+<area shape="rect" id="node1" title="Model specific implementation of fdJydy row vals." alt="" coords="497,71,609,98"/>
 <area shape="rect" id="node2" href="$classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="388,71,449,98"/>
 <area shape="rect" id="node3" href="$classamici_1_1_model.html#a00e6579fcfb0bb339e621cf194b9ee40" title="Compute sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t...." alt="" coords="279,46,340,73"/>
 <area shape="rect" id="node6" href="$classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="279,97,340,123"/>

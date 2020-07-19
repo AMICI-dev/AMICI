@@ -1,16 +1,16 @@
 <map id="nt" name="nt">
-<area shape="rect" id="node1" title="number of timepoints" alt="" coords="651,183,689,209"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#ae0f51d05d7fbaf7f61e0795301bad084" title="resizes observedData and observedDataStdDev" alt="" coords="458,31,601,57"/>
-<area shape="rect" id="node6" href="$classamici_1_1_exp_data.html#aafed26d24a9ff2c6548e44ba51868b8f" title="checker for dimensions of input observedData or observedDataStdDev" alt="" coords="456,132,603,159"/>
-<area shape="rect" id="node7" href="$classamici_1_1_exp_data.html#a85ca23791c279fe94e5d9f8e528ca63e" title="set function that copies data from input to ExpData::my" alt="" coords="239,113,363,140"/>
-<area shape="rect" id="node9" href="$classamici_1_1_exp_data.html#a5d84a162eb705e032820acd004603f29" title="set function that copies data from input to ExpData::observedDataStdDev" alt="" coords="217,164,385,191"/>
-<area shape="rect" id="node10" href="$classamici_1_1_exp_data.html#ac1cf98522f4ac1b25f33b6b3fdd69d95" title="constructor that initializes with returnData, adds noise according to specified sigmas" alt="" coords="493,233,566,260"/>
-<area shape="rect" id="node11" href="$classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="458,284,601,311"/>
-<area shape="rect" id="node15" href="$classamici_1_1_model.html#aa4c825912365c05bf472568ef1adb929" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. state variables." alt="" coords="458,335,601,361"/>
-<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#a81a6a21cd5d905d5b6199f3a97030f61" title="resizes observedData, observedDataStdDev, observedEvents and observedEventsStdDev" alt="" coords="239,5,362,32"/>
+<area shape="rect" id="node1" title="number of timepoints" alt="" coords="649,183,688,209"/>
+<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#ae0f51d05d7fbaf7f61e0795301bad084" title="resizes observedData and observedDataStdDev" alt="" coords="458,31,599,57"/>
+<area shape="rect" id="node6" href="$classamici_1_1_exp_data.html#aafed26d24a9ff2c6548e44ba51868b8f" title="checker for dimensions of input observedData or observedDataStdDev" alt="" coords="456,132,601,159"/>
+<area shape="rect" id="node7" href="$classamici_1_1_exp_data.html#a85ca23791c279fe94e5d9f8e528ca63e" title="set function that copies data from input to ExpData::my" alt="" coords="239,113,362,140"/>
+<area shape="rect" id="node9" href="$classamici_1_1_exp_data.html#a5d84a162eb705e032820acd004603f29" title="set function that copies data from input to ExpData::observedDataStdDev" alt="" coords="217,164,384,191"/>
+<area shape="rect" id="node10" href="$classamici_1_1_exp_data.html#ac1cf98522f4ac1b25f33b6b3fdd69d95" title="constructor that initializes with returnData, adds noise according to specified sigmas" alt="" coords="493,233,565,260"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="457,284,600,311"/>
+<area shape="rect" id="node15" href="$classamici_1_1_model.html#aa4c825912365c05bf472568ef1adb929" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. state variables." alt="" coords="457,335,600,361"/>
+<area shape="rect" id="node3" href="$classamici_1_1_exp_data.html#a81a6a21cd5d905d5b6199f3a97030f61" title="resizes observedData, observedDataStdDev, observedEvents and observedEventsStdDev" alt="" coords="240,5,361,32"/>
 <area shape="rect" id="node5" href="$classamici_1_1_exp_data.html#a058fb6c96339b5116b1af937bc77c2e4" title="set function that copies data from input to ExpData::ts" alt="" coords="249,56,353,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#af2322d528ad31a4335b0e5178b373649" title="constructor that only initializes dimensions" alt="" coords="39,5,112,32"/>
-<area shape="rect" id="node8" href="$classamici_1_1_exp_data.html#a7e70d4539123fe541fb9318e2933810e" title="constructor that initializes timepoints and data from vectors" alt="" coords="39,139,112,165"/>
+<area shape="rect" id="node4" href="$classamici_1_1_exp_data.html#af2322d528ad31a4335b0e5178b373649" title="constructor that only initializes dimensions" alt="" coords="39,5,111,32"/>
+<area shape="rect" id="node8" href="$classamici_1_1_exp_data.html#a7e70d4539123fe541fb9318e2933810e" title="constructor that initializes timepoints and data from vectors" alt="" coords="39,139,111,165"/>
 <area shape="rect" id="node12" href="$classamici_1_1_model.html#ad39fc588eb292abfbe6d820f8cf179e1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="193,294,408,335"/>
 <area shape="rect" id="node14" href="$classamici_1_1_model.html#aac922fea8ccc5edc05c9647c437e158f" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, partial derivative (to be used w..." alt="" coords="215,229,387,270"/>
 <area shape="rect" id="node13" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="5,294,145,335"/>

@@ -1,4 +1,4 @@
 <map id="getState" name="getState">
-<area shape="rect" id="node1" title="Access state solution at time t." alt="" coords="151,5,221,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="5,5,103,32"/>
+<area shape="rect" id="node1" title="Access state solution at time t." alt="" coords="149,5,220,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="5,5,101,32"/>
 </map>

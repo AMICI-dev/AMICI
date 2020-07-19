@@ -1,5 +1,5 @@
 <map id="applyChainRuleFactorToSimulationResults" name="applyChainRuleFactorToSimulationResults">
-<area shape="rect" id="node1" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="5,27,232,69"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a76604eceacc5c0e8b4293ac5d65bfd60" title="Get the parameter vector." alt="" coords="280,5,469,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#ab14620b22a79748a09a88b9311a7f6d5" title="Get ParameterScale for each parameter." alt="" coords="283,57,466,98"/>
+<area shape="rect" id="node1" title="applies the chain rule to account for parameter transformation in the sensitivities of simulation res..." alt="" coords="5,27,229,69"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a1bb7ee08df1e2e42da7dceb2100b6131" title="Get the parameter vector." alt="" coords="277,5,467,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#ab14620b22a79748a09a88b9311a7f6d5" title="Get ParameterScale for each parameter." alt="" coords="281,57,463,98"/>
 </map>

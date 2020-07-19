@@ -1,5 +1,5 @@
 <map id="setStabLimDetB" name="setStabLimDetB">
-<area shape="rect" id="node1" title="activates stability limit detection for the backward problem" alt="" coords="193,31,312,57"/>
+<area shape="rect" id="node1" title="activates stability limit detection for the backward problem" alt="" coords="193,31,311,57"/>
 <area shape="rect" id="node2" href="$classamici_1_1_solver.html#a618a94f1d84f9c71230d476f9a0205ce" title="set stability limit detection mode" alt="" coords="5,5,145,32"/>
 <area shape="rect" id="node3" href="$classamici_1_1_solver.html#a24382c0c42c9c60990ce2019fa2c0062" title="Initialises the AMI memory object for the backwards problem." alt="" coords="44,56,107,83"/>
 </map>

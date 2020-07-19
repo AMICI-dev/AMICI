@@ -1,13 +1,13 @@
 <map id="computeNewtonSensis" name="computeNewtonSensis">
-<area shape="rect" id="node1" title="Computes steady state sensitivities." alt="" coords="5,293,163,320"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="213,5,383,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="211,57,385,98"/>
-<area shape="rect" id="node4" href="$classamici_1_1_abstract_model.html#a632846f2c611d74ff33bda5ba2a1acc9" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="225,122,371,163"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector_array.html#a387bfb58f20388d99da7f946a3a27ab8" title="accessor to NVector element" alt="" coords="222,187,374,229"/>
-<area shape="rect" id="node6" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="211,253,385,294"/>
-<area shape="rect" id="node7" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="211,318,385,359"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="231,384,365,411"/>
-<area shape="rect" id="node9" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="234,435,362,461"/>
-<area shape="rect" id="node10" href="$classamici_1_1_newton_solver.html#a4aed46b0343374f171f9b4b51fa009e7" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="225,485,371,512"/>
-<area shape="rect" id="node11" href="$classamici_1_1_newton_solver.html#addfdd7afbe1eff3d47b0f28b6191793f" title="Solves the linear system for the Newton step." alt="" coords="231,536,365,563"/>
+<area shape="rect" id="node1" title="Computes steady state sensitivities." alt="" coords="5,293,160,320"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="209,5,379,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a9866d3a5b39aed664f3aa03ddb0ee6ed" title="Access raw data." alt="" coords="208,57,380,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_abstract_model.html#a632846f2c611d74ff33bda5ba2a1acc9" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="221,122,367,163"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector_array.html#a387bfb58f20388d99da7f946a3a27ab8" title="accessor to NVector element" alt="" coords="218,187,370,229"/>
+<area shape="rect" id="node6" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a2a374dfbeb60fe99206775c456030583" title="Get the index pointers of a sparse matrix." alt="" coords="208,253,380,294"/>
+<area shape="rect" id="node7" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a581defaa886b657a7406183136258394" title="Get the index values of a sparse matrix." alt="" coords="208,318,380,359"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="227,384,361,411"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="230,435,358,461"/>
+<area shape="rect" id="node10" href="$classamici_1_1_newton_solver.html#a4aed46b0343374f171f9b4b51fa009e7" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="221,485,367,512"/>
+<area shape="rect" id="node11" href="$classamici_1_1_newton_solver.html#addfdd7afbe1eff3d47b0f28b6191793f" title="Solves the linear system for the Newton step." alt="" coords="227,536,361,563"/>
 </map>

@@ -16,5 +16,5 @@ var classamici_1_1_s_u_n_lin_sol_wrapper =
     [ "space", "classamici_1_1_s_u_n_lin_sol_wrapper.html#ac145f5c7da49228985f0f22b8fbaaa0e", null ],
     [ "getMatrix", "classamici_1_1_s_u_n_lin_sol_wrapper.html#afc453d52914c43f55b0086da4eeb778b", null ],
     [ "initialize", "classamici_1_1_s_u_n_lin_sol_wrapper.html#a03aede8ff91764482bb5e9accfae9b4f", null ],
-    [ "solver", "classamici_1_1_s_u_n_lin_sol_wrapper.html#ad459e2c1ba4baabd95493c80449e882e", null ]
+    [ "solver_", "classamici_1_1_s_u_n_lin_sol_wrapper.html#a7d0fbc4b2210399344e95d1f53545154", null ]
 ];

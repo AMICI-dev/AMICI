@@ -2,6 +2,6 @@
 <area shape="rect" id="node1" title="sets scalar relative and absolute tolerances for the forward problem" alt="" coords="364,56,483,83"/>
 <area shape="rect" id="node2" href="$classamici_1_1_solver.html#a61eeb2f4cd6bb29b4042340f756fdbe0" title="updates solver tolerances according to the currently specified member variables" alt="" coords="200,56,316,83"/>
 <area shape="rect" id="node3" href="$classamici_1_1_solver.html#afe0fd2fad6ce110ad8421f5979945f90" title="Sets the absolute tolerances for the forward problem." alt="" coords="5,5,152,32"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#afb5f0c48f24e4bc3efad8ef599adde56" title="Sets the relative tolerances for the forward problem." alt="" coords="7,56,151,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#afb5f0c48f24e4bc3efad8ef599adde56" title="Sets the relative tolerances for the forward problem." alt="" coords="7,56,150,83"/>
 <area shape="rect" id="node5" href="$classamici_1_1_solver.html#add1a21548bb13b646662836fb51933f1" title="Initialises the ami memory object and applies specified options." alt="" coords="51,107,106,133"/>
 </map>

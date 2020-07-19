@@ -1,13 +1,13 @@
 <map id="getAdjointUpdates" name="getAdjointUpdates">
-<area shape="rect" id="node1" title="computes adjoint updates dJydx according to provided model and expdata" alt="" coords="5,152,135,179"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#ac66f4b4fe55ee5a1e6527b4fb743d215" title="State sensitivity of the negative loglikelihood Jy, partial derivative (to be used with adjoint senst..." alt="" coords="191,61,353,102"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="183,127,361,153"/>
-<area shape="rect" id="node9" href="$classamici_1_1_model.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="Get number of timepoints." alt="" coords="215,177,329,204"/>
-<area shape="rect" id="node10" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="193,228,351,255"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="411,68,554,95"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="604,43,747,69"/>
-<area shape="rect" id="node5" href="$classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="815,5,1009,32"/>
-<area shape="rect" id="node6" href="$classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="795,68,1029,95"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="607,144,743,171"/>
-<area shape="rect" id="node11" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="409,228,556,255"/>
+<area shape="rect" id="node1" title="computes adjoint updates dJydx according to provided model and expdata" alt="" coords="5,152,133,179"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ac66f4b4fe55ee5a1e6527b4fb743d215" title="State sensitivity of the negative loglikelihood Jy, partial derivative (to be used with adjoint senst..." alt="" coords="189,61,352,102"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a8e09d89b5ae9c916cf031eaf8c806440" title="get simulation timepoint for time index it" alt="" coords="181,127,360,153"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="Get number of timepoints." alt="" coords="213,177,328,204"/>
+<area shape="rect" id="node10" href="$classamici_1_1_ami_vector.html#ad20897c5c8bd47f5d4005989bead0e55" title="resets the Vector by filling with zero values" alt="" coords="191,228,350,255"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="410,68,553,95"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="603,43,745,69"/>
+<area shape="rect" id="node5" href="$classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="812,5,1007,32"/>
+<area shape="rect" id="node6" href="$classamici_1_1_exp_data.html#aedcda756b6356d6e147f2f4eb7658500" title="get function that checks whether data at specified indices has been set" alt="" coords="793,68,1025,95"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a4c5dcc630cd7c535b0003b29d9f37603" title="Partial derivative of observables y w.r.t. state variables x." alt="" coords="606,144,742,171"/>
+<area shape="rect" id="node11" href="$classamici_1_1_ami_vector.html#a11418c829db7c2891d63491cf12d29b4" title="sets all data elements to a specific value" alt="" coords="408,228,555,255"/>
 </map>

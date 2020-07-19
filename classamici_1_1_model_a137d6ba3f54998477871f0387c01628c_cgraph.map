@@ -1,10 +1,11 @@
 <map id="fx0_fixedParameters" name="fx0_fixedParameters">
-<area shape="rect" id="node1" title="Sets only those initial states that are specified via fixedParmeters." alt="" coords="5,86,148,113"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="440,10,595,37"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#ab7c357d92ab37cfe9728a31e4232cfe9" title="Model specific implementation of ftotal_cl." alt="" coords="260,35,328,62"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="259,86,329,113"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#ac08ad3aa4016a5a3ff89d601e15971cc" title="Model specific implementation of fx_solver." alt="" coords="257,137,331,163"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#a09f372616ff7bf8073c732801b666f7e" title="Get whether initial states depending on fixedParmeters are to be reinitialized after preequilibration..." alt="" coords="196,188,392,229"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="473,86,562,113"/>
-<area shape="rect" id="node6" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="643,79,801,120"/>
+<area shape="rect" id="node1" title="Sets only those initial states that are specified via fixedParmeters." alt="" coords="5,93,148,120"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="453,5,608,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#ab7c357d92ab37cfe9728a31e4232cfe9" title="Model specific implementation of ftotal_cl." alt="" coords="259,43,327,69"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#aa4712b7550fba7e9c0dd733b2714461e" title="Expands conservation law for states." alt="" coords="259,93,328,120"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#ac08ad3aa4016a5a3ff89d601e15971cc" title="Model specific implementation of fx_solver." alt="" coords="256,144,331,171"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model.html#a09f372616ff7bf8073c732801b666f7e" title="Get whether initial states depending on fixedParmeters are to be reinitialized after preequilibration..." alt="" coords="196,195,391,237"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a5ae78606b252253dbe24ea999bcbdf40" title="Check if the given array has only finite elements. If not try to give hints by which other fields thi..." alt="" coords="486,81,575,108"/>
+<area shape="rect" id="node7" href="$classamici_1_1_ami_vector.html#afdb3c2eb08d4ab5ba29fc4819df6def7" title="Vector accessor." alt="" coords="439,132,623,159"/>
+<area shape="rect" id="node6" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="671,74,829,115"/>
 </map>

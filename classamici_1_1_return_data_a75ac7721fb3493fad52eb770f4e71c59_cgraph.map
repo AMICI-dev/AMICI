@@ -1,5 +1,5 @@
 <map id="handleSx0Forward" name="handleSx0Forward">
-<area shape="rect" id="node1" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="5,31,136,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="184,5,355,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="202,56,337,83"/>
+<area shape="rect" id="node1" title="Updates contribution to likelihood for inital state sensitivities (llhS0), if no preequilibration was..." alt="" coords="5,31,135,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector_array.html#a226f482ef20be9a0213730d2ec7cce76" title="accessor to elements of AmiVector elements" alt="" coords="183,5,353,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="201,56,335,83"/>
 </map>

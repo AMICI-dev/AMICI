@@ -110,11 +110,11 @@ var classamici_1_1_return_data =
     [ "sensi", "classamici_1_1_return_data.html#a8447336540e0f72b7e5f234bd3285183", null ],
     [ "sensi_meth", "classamici_1_1_return_data.html#a9d02c33d3a0856af7eedba38e18eeec1", null ],
     [ "rdata_reporting", "classamici_1_1_return_data.html#aee736be122b45f46d93324a127b0eb7a", null ],
-    [ "t", "classamici_1_1_return_data.html#a9f893f19a3a919f40a183e2a8c257d5d", null ],
-    [ "x_solver", "classamici_1_1_return_data.html#a9fc74073500947cae3237cafe8777dfa", null ],
-    [ "dx_solver", "classamici_1_1_return_data.html#a81068da8d287b420046d0fcb036b1897", null ],
-    [ "sx_solver", "classamici_1_1_return_data.html#a5cfd247a3618c2ae58d090889cc0642a", null ],
-    [ "x_rdata", "classamici_1_1_return_data.html#a6701add7ed0ff05a8713363e63fcf9db", null ],
-    [ "sx_rdata", "classamici_1_1_return_data.html#adafaf0a1cac1243303f1a06ec917b533", null ],
-    [ "nroots", "classamici_1_1_return_data.html#a8e8f5b98c0913d6b8cc53f455f178df9", null ]
+    [ "t_", "classamici_1_1_return_data.html#a272f814453a1e4874d288835b8f6a0e2", null ],
+    [ "x_solver_", "classamici_1_1_return_data.html#ac79830d33f42672c1d545677256b9801", null ],
+    [ "dx_solver_", "classamici_1_1_return_data.html#af4445ce4e91c1e471d1a828ec1ce2660", null ],
+    [ "sx_solver_", "classamici_1_1_return_data.html#ad20828f0dfad2d3e65ea13e77dbd2d85", null ],
+    [ "x_rdata_", "classamici_1_1_return_data.html#a4799b536157fd26afef2ce34bc9a1615", null ],
+    [ "sx_rdata_", "classamici_1_1_return_data.html#a898da7d0e74354aeadddf70aa4376574", null ],
+    [ "nroots_", "classamici_1_1_return_data.html#ab0f3d73d98357b2857e29f596e5117f7", null ]
 ];

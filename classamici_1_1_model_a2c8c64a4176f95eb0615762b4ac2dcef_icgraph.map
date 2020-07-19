@@ -1,6 +1,6 @@
 <map id="getEventRegularization" name="getEventRegularization">
-<area shape="rect" id="node1" title="Regularization for event&#45;resolved observables." alt="" coords="623,13,780,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="439,5,575,47"/>
+<area shape="rect" id="node1" title="Regularization for event&#45;resolved observables." alt="" coords="621,13,777,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_return_data.html#a5d06470f4fb85ccce8ad05ca37182802" title="Extracts output information for events, expects that x_solver and sx_solver were were set appropriate..." alt="" coords="439,5,573,47"/>
 <area shape="rect" id="node3" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="228,5,391,47"/>
 <area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,5,180,47"/>
 </map>

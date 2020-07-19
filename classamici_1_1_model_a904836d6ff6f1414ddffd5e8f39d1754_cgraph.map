@@ -1,6 +1,7 @@
 <map id="fsx_rdata" name="fsx_rdata">
-<area shape="rect" id="node1" title="Expands conservation law for state sensitivities." alt="" coords="5,56,81,83"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="137,5,175,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="129,56,183,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="133,107,179,133"/>
+<area shape="rect" id="node1" title="Expands conservation law for state sensitivities." alt="" coords="5,97,81,123"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector_array.html#a713ae03eb6d61d0437d956f7848795b8" title="accessor to data of AmiVector elements" alt="" coords="129,5,281,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#a158b8a049de50ecddfe5cd120ff549ac" title="Number of conservation laws." alt="" coords="186,71,225,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="179,122,232,149"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="182,173,229,199"/>
 </map>

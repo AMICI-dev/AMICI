@@ -1,5 +1,5 @@
 <map id="prepareLinearSystem" name="prepareLinearSystem">
 <area shape="rect" id="node1" title="Writes the Jacobian for the Newton iteration and passes it to the linear solver." alt="" coords="5,31,151,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="217,5,381,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="199,56,399,83"/>
+<area shape="rect" id="node2" href="$classamici_1_1_abstract_model.html#a2b68a6170cc63310035df66f45538472" title="Dense Jacobian function." alt="" coords="216,5,380,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_s_u_n_matrix_wrapper.html#a1ca28c3e6e0513fd7f8410421eec6c7a" title="Get the wrapped SUNMatrix." alt="" coords="199,56,397,83"/>
 </map>

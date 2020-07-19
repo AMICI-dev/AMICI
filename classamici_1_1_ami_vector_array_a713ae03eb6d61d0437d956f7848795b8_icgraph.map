@@ -1,11 +1,26 @@
 <map id="data" name="data">
-<area shape="rect" id="node1" title="accessor to data of AmiVector elements" alt="" coords="483,145,529,172"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model___o_d_e.html#ab36987125ea3360ae5f03b0019513891" title=" " alt="" coords="244,95,435,121"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model___d_a_e.html#a8620db421a61b89420be89f9b2d8306b" title="Sensitivity of dx/dt wrt model parameters p." alt="" coords="245,171,434,197"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model___o_d_e.html#a2feef05eaf143813199126109ef64bb3" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="5,5,196,32"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model___o_d_e.html#a9d0e4612af8d7b3c418d000b5e9ba84f" title="Implementation of fqBdot at the N_Vector level." alt="" coords="11,56,190,83"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model___o_d_e.html#a786f028681b0928eb431cd44e9bd254a" title="Implementation of fsxdot at the N_Vector level." alt="" coords="13,107,189,133"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model___d_a_e.html#a063b47198b54603cf42ecf49d1e3e046" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="6,157,195,184"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model___d_a_e.html#ae3dc4629c9c56a4af01350b8c49f49a8" title="Right hand side of integral equation for quadrature states qB." alt="" coords="12,208,189,235"/>
-<area shape="rect" id="node9" href="$classamici_1_1_model___d_a_e.html#a26e76f86f173a718466c9cc19d68550a" title="Right hand side of differential equation for state sensitivities sx." alt="" coords="13,259,188,285"/>
+<area shape="rect" id="node1" title="accessor to data of AmiVector elements" alt="" coords="752,441,799,468"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#abc67e0ac06b3391efec41e0b5c8fc3c3" title="Update state sensitivity after event." alt="" coords="476,41,693,82"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model___o_d_e.html#ab36987125ea3360ae5f03b0019513891" title=" " alt="" coords="490,107,679,133"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model___d_a_e.html#a8620db421a61b89420be89f9b2d8306b" title="Sensitivity of dx/dt wrt model parameters p." alt="" coords="491,233,679,260"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model.html#a647b2865d4c9f26ad461a51246bbefcd" title="Initial value for initial state sensitivities." alt="" coords="520,383,649,409"/>
+<area shape="rect" id="node16" href="$classamici_1_1_model.html#a79d8a1d0d4ef31605f9c21e2f6828ae0" title="Sets only those initial states sensitivities that are affected from fx0 fixedParmeters." alt="" coords="258,441,387,482"/>
+<area shape="rect" id="node17" href="$classamici_1_1_model.html#a904836d6ff6f1414ddffd5e8f39d1754" title="Expands conservation law for state sensitivities." alt="" coords="505,492,664,519"/>
+<area shape="rect" id="node21" href="$classamici_1_1_model.html#ab56e70cc5a9d095c9386ab3f7bc01388" title="Sensitivities of regularization for event&#45;resolved observables, total derivative (only forward sensit..." alt="" coords="465,543,704,585"/>
+<area shape="rect" id="node23" href="$classamici_1_1_model.html#a9fc47fbafb63293084d293aa39b5a191" title="Sensitivities of event&#45;resolved observables, total derivative, total derivative (only forward sensiti..." alt="" coords="476,609,693,636"/>
+<area shape="rect" id="node24" href="$classamici_1_1_model.html#a72c88f010184733141e3feccd765ea04" title="Sensitivity of event timepoint, total derivative (only forward sensi)" alt="" coords="492,661,677,702"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model___o_d_e.html#a2feef05eaf143813199126109ef64bb3" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="228,5,417,32"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model___o_d_e.html#a9d0e4612af8d7b3c418d000b5e9ba84f" title="Implementation of fqBdot at the N_Vector level." alt="" coords="234,56,411,83"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model___o_d_e.html#a786f028681b0928eb431cd44e9bd254a" title="Implementation of fsxdot at the N_Vector level." alt="" coords="235,107,410,133"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model___d_a_e.html#a063b47198b54603cf42ecf49d1e3e046" title="Model specific sparse implementation of explicit parameter derivative of right hand side." alt="" coords="229,157,417,184"/>
+<area shape="rect" id="node9" href="$classamici_1_1_model___d_a_e.html#ae3dc4629c9c56a4af01350b8c49f49a8" title="Right hand side of integral equation for quadrature states qB." alt="" coords="235,208,411,235"/>
+<area shape="rect" id="node10" href="$classamici_1_1_model___d_a_e.html#a26e76f86f173a718466c9cc19d68550a" title="Right hand side of differential equation for state sensitivities sx." alt="" coords="235,259,410,285"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#a1d8b7271972a7882f18e1c9ea3308e38" title="Get the initial states sensitivities." alt="" coords="246,310,399,351"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model.html#ac4044c8b06d92618b69d0d4fcc083811" title="Initialization of initial state sensitivities." alt="" coords="247,375,398,417"/>
+<area shape="rect" id="node13" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="13,310,173,351"/>
+<area shape="rect" id="node15" href="$classamici_1_1_model.html#a76f3aa67bb6232cce1f56cc1ec9c9c4e" title="Initialization of model properties." alt="" coords="17,383,168,409"/>
+<area shape="rect" id="node18" href="$classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="255,506,390,547"/>
+<area shape="rect" id="node19" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="241,571,404,613"/>
+<area shape="rect" id="node20" href="$classamici_1_1_return_data.html#a45d3f48eada305f23798146e724c73ea" title="constructor that uses information from model and solver to appropriately initialize fields" alt="" coords="5,571,180,613"/>
+<area shape="rect" id="node22" href="$classamici_1_1_return_data.html#a847ce1ad5d7326342887d3401cf8785f" title="Extracts event information for forward sensitivity analysis, expects that x_solver and sx_solver were..." alt="" coords="253,637,393,678"/>
 </map>

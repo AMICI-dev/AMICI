@@ -1,4 +1,4 @@
 <map id="ExpData" name="ExpData">
-<area shape="rect" id="node1" title="constructor that initializes with returnData, adds noise according to specified sigmas" alt="" coords="5,5,79,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="127,5,165,32"/>
+<area shape="rect" id="node1" title="constructor that initializes with returnData, adds noise according to specified sigmas" alt="" coords="5,5,77,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="125,5,164,32"/>
 </map>

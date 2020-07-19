@@ -1,4 +1,4 @@
 <map id="setOrdering" name="setOrdering">
-<area shape="rect" id="node1" title="Sets the ordering used by KLU for reducing fill in the linear solve." alt="" coords="167,5,256,32"/>
-<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_lin_sol_k_l_u.html#afb237071f248e08df33dbda7f08bcabd" title="Create KLU solver and matrix to operate on." alt="" coords="5,5,119,32"/>
+<area shape="rect" id="node1" title="Sets the ordering used by KLU for reducing fill in the linear solve." alt="" coords="164,5,253,32"/>
+<area shape="rect" id="node2" href="$classamici_1_1_s_u_n_lin_sol_k_l_u.html#afb237071f248e08df33dbda7f08bcabd" title="Create KLU solver and matrix to operate on." alt="" coords="5,5,116,32"/>
 </map>

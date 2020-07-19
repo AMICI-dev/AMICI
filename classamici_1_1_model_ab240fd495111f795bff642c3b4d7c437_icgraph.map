@@ -1,19 +1,19 @@
 <map id="fsigmay" name="fsigmay">
-<area shape="rect" id="node1" title="Standard deviation of measurements." alt="" coords="912,181,980,207"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="700,341,864,367"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#abb22422c569ab3fac8a439cb25c1f65d" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. standard deviation sigma." alt="" coords="737,71,827,98"/>
-<area shape="rect" id="node11" href="$classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="751,122,813,149"/>
-<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="711,239,853,266"/>
-<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="265,333,401,375"/>
+<area shape="rect" id="node1" title="Standard deviation of measurements." alt="" coords="909,181,977,207"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#a9c35c337e4c9568d94fb8ad985cc500d" title="Time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="697,341,861,367"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#abb22422c569ab3fac8a439cb25c1f65d" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. standard deviation sigma." alt="" coords="735,71,824,98"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model.html#ac45aff20b906c9a9ec7abb5b1a1d3116" title="Partial derivative of time&#45;resolved measurement negative log&#45;likelihood Jy." alt="" coords="749,122,810,149"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6d69e9d069a75dc6f2856a16ddf01e0c" title="Time&#45;resolved observable standard deviations." alt="" coords="708,239,851,266"/>
+<area shape="rect" id="node3" href="$classamici_1_1_return_data.html#ad6eabe6ee2abac42fb33cb2391a23eca" title="Extracts output information for data&#45;points, expects that x_solver and sx_solver were were set approp..." alt="" coords="265,333,400,375"/>
 <area shape="rect" id="node4" href="$classamici_1_1_return_data.html#a70e2bb790623cf0af7d3f93c6b4b2b40" title="extracts results from forward problem" alt="" coords="7,300,170,341"/>
 <area shape="rect" id="node5" href="$classamici_1_1_return_data.html#a2c631dd2d9f9ebd61d37db92882d3b98" title="extracts data from a preequilibration steadystateproblem" alt="" coords="5,365,172,407"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#a00e6579fcfb0bb339e621cf194b9ee40" title="Compute sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t...." alt="" coords="542,71,603,98"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a00e6579fcfb0bb339e621cf194b9ee40" title="Compute sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t...." alt="" coords="541,71,602,98"/>
 <area shape="rect" id="node8" href="$classamici_1_1_model.html#a988eda03ed572429aa769efc1709daba" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, total derivative (to be used wit..." alt="" coords="220,71,445,98"/>
 <area shape="rect" id="node10" href="$classamici_1_1_model.html#ab829ab8d949e9eef10b38e68d4a68526" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, partial derivative (to be used w..." alt="" coords="232,5,433,47"/>
-<area shape="rect" id="node9" href="$classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="21,181,157,223"/>
-<area shape="rect" id="node12" href="$classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="542,122,603,149"/>
+<area shape="rect" id="node9" href="$classamici_1_1_return_data.html#a7e902c3f8091ce1983f10fe5ad2c0486" title="Extracts data information for forward sensitivity analysis, expects that x_solver and sx_solver were ..." alt="" coords="21,181,156,223"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#a8c8c787118aab8354f41a60ba41849c3" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy w.r.t. state variables." alt="" coords="541,122,602,149"/>
 <area shape="rect" id="node13" href="$classamici_1_1_model.html#ac66f4b4fe55ee5a1e6527b4fb743d215" title="State sensitivity of the negative loglikelihood Jy, partial derivative (to be used with adjoint senst..." alt="" coords="244,123,421,164"/>
-<area shape="rect" id="node15" href="$classamici_1_1_return_data.html#ae14af17c97c07d4d2ba3cb11ba67891c" title="Fisher information matrix function." alt="" coords="251,239,414,266"/>
-<area shape="rect" id="node16" href="$classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="493,341,652,367"/>
-<area shape="rect" id="node17" href="$classamici_1_1_return_data.html#abc6748b3ff26fac3301f7e56842fd540" title="Residual sensitivity function." alt="" coords="505,173,641,215"/>
+<area shape="rect" id="node15" href="$classamici_1_1_return_data.html#ae14af17c97c07d4d2ba3cb11ba67891c" title="Fisher information matrix function." alt="" coords="252,239,413,266"/>
+<area shape="rect" id="node16" href="$classamici_1_1_return_data.html#aa2cc907b5a8b9267eccdbce89831f041" title="Residual function." alt="" coords="493,341,649,367"/>
+<area shape="rect" id="node17" href="$classamici_1_1_return_data.html#abc6748b3ff26fac3301f7e56842fd540" title="Residual sensitivity function." alt="" coords="504,173,639,215"/>
 </map>

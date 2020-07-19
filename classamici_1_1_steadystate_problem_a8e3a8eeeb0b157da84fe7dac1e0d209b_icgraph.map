@@ -1,7 +1,7 @@
 <map id="computeQBfromQ" name="computeQBfromQ">
-<area shape="rect" id="node1" title="Compute the backward quadratures, which contribute to the gradient (xQB) from the quadrature over the..." alt="" coords="756,31,883,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#acace0e4d1a8cd079bf189718db73208a" title="Checks convergence for state and respective sensitivities." alt="" coords="555,5,690,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#ab0b999d56e310b3326d8bcbaa095e86f" title="Computes the quadrature in steady state backward mode by solving the linear system defined by the bac..." alt="" coords="537,56,708,83"/>
-<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="281,56,489,83"/>
-<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#a4b4624b422c1f6c070a5bde7168a5cbf" title=" " alt="" coords="5,56,233,83"/>
+<area shape="rect" id="node1" title="Compute the backward quadratures, which contribute to the gradient (xQB) from the quadrature over the..." alt="" coords="755,31,881,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#acace0e4d1a8cd079bf189718db73208a" title="Checks convergence for state and respective sensitivities." alt="" coords="555,5,688,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#ab0b999d56e310b3326d8bcbaa095e86f" title="Computes the quadrature in steady state backward mode by solving the linear system defined by the bac..." alt="" coords="536,56,707,83"/>
+<area shape="rect" id="node4" href="$classamici_1_1_steadystate_problem.html#a57d59940a343a7a6753f4f374beb933b" title="Handles the computation of quadratures in adjoint mode." alt="" coords="280,56,488,83"/>
+<area shape="rect" id="node5" href="$classamici_1_1_steadystate_problem.html#a4b4624b422c1f6c070a5bde7168a5cbf" title=" " alt="" coords="5,56,232,83"/>
 </map>

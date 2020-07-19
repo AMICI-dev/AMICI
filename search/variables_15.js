@@ -1,14 +1,16 @@
 var searchData=
 [
-  ['x_1907',['x',['../structamici_1_1_simulation_state.html#a21d1072c89106111228b3ce4fe82c7a5',1,'amici::SimulationState::x()'],['../classamici_1_1_newton_solver.html#af64268982dd7b9be1690573763982e0b',1,'amici::NewtonSolver::x()'],['../classamici_1_1_return_data.html#a7ca297ad69affe8b20e8f81b9eb38cd1',1,'amici::ReturnData::x()'],['../classamici_1_1_solver.html#a21d1072c89106111228b3ce4fe82c7a5',1,'amici::Solver::x()']]],
-  ['x0_1908',['x0',['../classamici_1_1_exp_data.html#a9089beccffa9671a052e3065166dce53',1,'amici::ExpData::x0()'],['../classamici_1_1_return_data.html#a9089beccffa9671a052e3065166dce53',1,'amici::ReturnData::x0()'],['../classamioption.html#aa48da42c617fdb7cf84e9a3f80aa04e8',1,'amioption::x0()']]],
-  ['x0data_1909',['x0data',['../classamici_1_1_model.html#ac305126c59aab952182f851679df24f9',1,'amici::Model']]],
-  ['x_5fpos_5ftmp_1910',['x_pos_tmp',['../classamici_1_1_model.html#a2dc43104a5b25d9689d827fc51f04346',1,'amici::Model']]],
-  ['x_5frdata_1911',['x_rdata',['../classamici_1_1_model.html#a297a15f378087de3c782f5af7f29510b',1,'amici::Model::x_rdata()'],['../classamici_1_1_return_data.html#a6701add7ed0ff05a8713363e63fcf9db',1,'amici::ReturnData::x_rdata()']]],
-  ['x_5fsolver_1912',['x_solver',['../classamici_1_1_return_data.html#a9fc74073500947cae3237cafe8777dfa',1,'amici::ReturnData']]],
-  ['x_5fss_1913',['x_ss',['../classamici_1_1_return_data.html#a0507393d3010570a9740eb50287f83eb',1,'amici::ReturnData']]],
-  ['xb_1914',['xB',['../classamici_1_1_newton_solver.html#aaa046d3820a590533edd62dafaa1710e',1,'amici::NewtonSolver::xB()'],['../classamici_1_1_solver.html#aaa046d3820a590533edd62dafaa1710e',1,'amici::Solver::xB()']]],
-  ['xdot_1915',['xdot',['../classamici_1_1_newton_solver.html#a6329150d913cecfe54dad5fd03214ce8',1,'amici::NewtonSolver::xdot()'],['../classamici_1_1_return_data.html#a40cb7399c56187d0b119e89a82d9f4ac',1,'amici::ReturnData::xdot()']]],
-  ['xq_1916',['xQ',['../classamici_1_1_solver.html#abe994b810b9778db4338f67ab951cccd',1,'amici::Solver']]],
-  ['xqb_1917',['xQB',['../classamici_1_1_solver.html#ad96ec05ea6a4ad978082537c5a76d5db',1,'amici::Solver']]]
+  ['x_1960',['x',['../structamici_1_1_simulation_state.html#a21d1072c89106111228b3ce4fe82c7a5',1,'amici::SimulationState::x()'],['../classamici_1_1_return_data.html#a7ca297ad69affe8b20e8f81b9eb38cd1',1,'amici::ReturnData::x()']]],
+  ['x0_1961',['x0',['../classamici_1_1_exp_data.html#a9089beccffa9671a052e3065166dce53',1,'amici::ExpData::x0()'],['../classamici_1_1_return_data.html#a9089beccffa9671a052e3065166dce53',1,'amici::ReturnData::x0()'],['../classamioption.html#aa48da42c617fdb7cf84e9a3f80aa04e8',1,'amioption::x0()']]],
+  ['x0data_5f_1962',['x0data_',['../classamici_1_1_model.html#ac672f2b47c675c548ba0a5149fee218b',1,'amici::Model']]],
+  ['x_5f_1963',['x_',['../classamici_1_1_newton_solver.html#a7e65310766ff4cb00d0ff73a08806a21',1,'amici::NewtonSolver::x_()'],['../classamici_1_1_solver.html#ab73749701075178419a8bd439e65a5f5',1,'amici::Solver::x_()']]],
+  ['x_5fpos_5ftmp_5f_1964',['x_pos_tmp_',['../classamici_1_1_model.html#ab9c5ab240fce621c2ccd2de6292c9260',1,'amici::Model']]],
+  ['x_5frdata_5f_1965',['x_rdata_',['../classamici_1_1_model.html#a1d1d968addb2a1b37626bdb9122491a0',1,'amici::Model::x_rdata_()'],['../classamici_1_1_return_data.html#a4799b536157fd26afef2ce34bc9a1615',1,'amici::ReturnData::x_rdata_()']]],
+  ['x_5fsolver_5f_1966',['x_solver_',['../classamici_1_1_return_data.html#ac79830d33f42672c1d545677256b9801',1,'amici::ReturnData']]],
+  ['x_5fss_1967',['x_ss',['../classamici_1_1_return_data.html#a0507393d3010570a9740eb50287f83eb',1,'amici::ReturnData']]],
+  ['xb_5f_1968',['xB_',['../classamici_1_1_newton_solver.html#a4a6b05eb97cebaa4c969e5ceb8b2f523',1,'amici::NewtonSolver::xB_()'],['../classamici_1_1_solver.html#a4a6b05eb97cebaa4c969e5ceb8b2f523',1,'amici::Solver::xB_()']]],
+  ['xdot_1969',['xdot',['../classamici_1_1_return_data.html#a40cb7399c56187d0b119e89a82d9f4ac',1,'amici::ReturnData']]],
+  ['xdot_5f_1970',['xdot_',['../classamici_1_1_newton_solver.html#afcad9bb5bfcedf61440a1ce88009c843',1,'amici::NewtonSolver']]],
+  ['xq_5f_1971',['xQ_',['../classamici_1_1_solver.html#a198d339d31bbaa78deca99d3442db8a1',1,'amici::Solver']]],
+  ['xqb_5f_1972',['xQB_',['../classamici_1_1_solver.html#af6a1b158622812c5ebc5239dc829e55a',1,'amici::Solver']]]
 ];

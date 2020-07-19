@@ -233,9 +233,9 @@ void \mbox{\hyperlink{classamici_1_1_return_data_ad6eabe6ee2abac42fb33cb2391a23e
 \begin{DoxyCompactList}\small\item\em Extracts output information for data-\/points, expects that x\+\_\+solver and sx\+\_\+solver were were set appropriately. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_return_data_a7e902c3f8091ce1983f10fe5ad2c0486}{get\+Data\+Sensis\+F\+SA}} (int it, \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model, \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} const $\ast$edata)
 \begin{DoxyCompactList}\small\item\em Extracts data information for forward sensitivity analysis, expects that x\+\_\+solver and sx\+\_\+solver were were set appropriately. \end{DoxyCompactList}\item 
-void \mbox{\hyperlink{classamici_1_1_return_data_a5d06470f4fb85ccce8ad05ca37182802}{get\+Event\+Output}} (int iroot, realtype \mbox{\hyperlink{classamici_1_1_return_data_a9f893f19a3a919f40a183e2a8c257d5d}{t}}, const std\+::vector$<$ int $>$ rootidx, \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model, \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} const $\ast$edata)
+void \mbox{\hyperlink{classamici_1_1_return_data_a5d06470f4fb85ccce8ad05ca37182802}{get\+Event\+Output}} (int iroot, realtype t, const std\+::vector$<$ int $>$ rootidx, \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model, \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} const $\ast$edata)
 \begin{DoxyCompactList}\small\item\em Extracts output information for events, expects that x\+\_\+solver and sx\+\_\+solver were were set appropriately. \end{DoxyCompactList}\item 
-void \mbox{\hyperlink{classamici_1_1_return_data_a847ce1ad5d7326342887d3401cf8785f}{get\+Event\+Sensis\+F\+SA}} (int iroot, int ie, realtype \mbox{\hyperlink{classamici_1_1_return_data_a9f893f19a3a919f40a183e2a8c257d5d}{t}}, \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model, \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} const $\ast$edata)
+void \mbox{\hyperlink{classamici_1_1_return_data_a847ce1ad5d7326342887d3401cf8785f}{get\+Event\+Sensis\+F\+SA}} (int iroot, int ie, realtype t, \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model, \mbox{\hyperlink{classamici_1_1_exp_data}{Exp\+Data}} const $\ast$edata)
 \begin{DoxyCompactList}\small\item\em Extracts event information for forward sensitivity analysis, expects that x\+\_\+solver and sx\+\_\+solver were set appropriately. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_return_data_abef834938ca9c2486395f117bd8f2567}{handle\+Sx0\+Backward}} (const \mbox{\hyperlink{classamici_1_1_model}{Model}} \&model, \mbox{\hyperlink{classamici_1_1_steadystate_problem}{Steadystate\+Problem}} const \&preeq, \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&x\+QB) const
 \begin{DoxyCompactList}\small\item\em Updates contribution to likelihood from quadratures (x\+QB), if preequilibration was run in adjoint mode. \end{DoxyCompactList}\item 
@@ -244,19 +244,19 @@ void \mbox{\hyperlink{classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c
 \doxysubsubsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
 \item 
-realtype \mbox{\hyperlink{classamici_1_1_return_data_a9f893f19a3a919f40a183e2a8c257d5d}{t}}
+realtype \mbox{\hyperlink{classamici_1_1_return_data_a272f814453a1e4874d288835b8f6a0e2}{t\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_return_data_a9fc74073500947cae3237cafe8777dfa}{x\+\_\+solver}}
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_return_data_ac79830d33f42672c1d545677256b9801}{x\+\_\+solver\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_return_data_a81068da8d287b420046d0fcb036b1897}{dx\+\_\+solver}}
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_return_data_af4445ce4e91c1e471d1a828ec1ce2660}{dx\+\_\+solver\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} \mbox{\hyperlink{classamici_1_1_return_data_a5cfd247a3618c2ae58d090889cc0642a}{sx\+\_\+solver}}
+\mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} \mbox{\hyperlink{classamici_1_1_return_data_ad20828f0dfad2d3e65ea13e77dbd2d85}{sx\+\_\+solver\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_return_data_a6701add7ed0ff05a8713363e63fcf9db}{x\+\_\+rdata}}
+\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \mbox{\hyperlink{classamici_1_1_return_data_a4799b536157fd26afef2ce34bc9a1615}{x\+\_\+rdata\+\_\+}}
 \item 
-\mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} \mbox{\hyperlink{classamici_1_1_return_data_adafaf0a1cac1243303f1a06ec917b533}{sx\+\_\+rdata}}
+\mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} \mbox{\hyperlink{classamici_1_1_return_data_a898da7d0e74354aeadddf70aa4376574}{sx\+\_\+rdata\+\_\+}}
 \item 
-std\+::vector$<$ int $>$ \mbox{\hyperlink{classamici_1_1_return_data_a8e8f5b98c0913d6b8cc53f455f178df9}{nroots}}
+std\+::vector$<$ int $>$ \mbox{\hyperlink{classamici_1_1_return_data_ab0f3d73d98357b2857e29f596e5117f7}{nroots\+\_\+}}
 \end{DoxyCompactItemize}
 
 
@@ -276,7 +276,7 @@ Definition at line 36 of file rdata.\+h.
 
 
 \begin{DoxyParams}{Parameters}
-{\em ts} & see \mbox{\hyperlink{classamici_1_1_model_aa7014a80e7b102f85a10e3b9a480e8e5}{amici\+::\+Model\+::ts}} \\
+{\em ts} & see amici\+::\+Model\+::ts \\
 \hline
 {\em np} & see \mbox{\hyperlink{classamici_1_1_model_ae296546c9fd4d7c4ad3b7000aa9e22ef}{amici\+::\+Model\+::np}} \\
 \hline
@@ -304,7 +304,7 @@ Definition at line 36 of file rdata.\+h.
 \hline
 {\em nplist} & see \mbox{\hyperlink{classamici_1_1_model_a0f8e994055e37954d7746f3c1af27a5c}{amici\+::\+Model\+::nplist}} \\
 \hline
-{\em nmaxevent} & see \mbox{\hyperlink{classamici_1_1_model_aff0f3f25d886279a90dbf0571956885c}{amici\+::\+Model\+::nmaxevent}} \\
+{\em nmaxevent} & see amici\+::\+Model\+::nmaxevent \\
 \hline
 {\em nt} & see \mbox{\hyperlink{classamici_1_1_model_a4c23d300cbe15b0afb1ee3731d47cc93}{amici\+::\+Model\+::nt}} \\
 \hline
@@ -312,7 +312,7 @@ Definition at line 36 of file rdata.\+h.
 \hline
 {\em nw} & see \mbox{\hyperlink{classamici_1_1_model_a5f1f313510bc2ed23b768a182d874b04}{amici\+::\+Model\+::nw}} \\
 \hline
-{\em pscale} & see \mbox{\hyperlink{classamici_1_1_model_a5d1c7237dc998202fe1b3393b50f77ce}{amici\+::\+Model\+::pscale}} \\
+{\em pscale} & see amici\+::\+Model\+::pscale \\
 \hline
 {\em o2mode} & see \mbox{\hyperlink{classamici_1_1_model_a3a3feb0696a3b0183439810c5f6f17e9}{amici\+::\+Model\+::o2mode}} \\
 \hline
@@ -709,7 +709,7 @@ Here is the caller graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=255pt]{classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_icgraph}
+\includegraphics[width=254pt]{classamici_1_1_return_data_abc6748b3ff26fac3301f7e56842fd540_icgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c}\label{classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c}} 
@@ -744,7 +744,7 @@ Here is the caller graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=254pt]{classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_icgraph}
+\includegraphics[width=253pt]{classamici_1_1_return_data_ae14af17c97c07d4d2ba3cb11ba67891c_icgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamici_1_1_return_data_a78ae977c00827cfb6dad1b576b45cf7c}\label{classamici_1_1_return_data_a78ae977c00827cfb6dad1b576b45cf7c}} 
@@ -767,7 +767,7 @@ Here is the call graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=257pt]{classamici_1_1_return_data_a78ae977c00827cfb6dad1b576b45cf7c_cgraph}
+\includegraphics[width=256pt]{classamici_1_1_return_data_a78ae977c00827cfb6dad1b576b45cf7c_cgraph}
 \end{center}
 \end{figure}
 Here is the caller graph for this function\+:
@@ -1021,7 +1021,7 @@ Here is the call graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=342pt]{classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_cgraph}
+\includegraphics[width=341pt]{classamici_1_1_return_data_a75ac7721fb3493fad52eb770f4e71c59_cgraph}
 \end{center}
 \end{figure}
 Here is the caller graph for this function\+:
@@ -1815,71 +1815,71 @@ reporting mode
 
 Definition at line 412 of file rdata.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_return_data_a9f893f19a3a919f40a183e2a8c257d5d}\label{classamici_1_1_return_data_a9f893f19a3a919f40a183e2a8c257d5d}} 
-\index{ReturnData@{ReturnData}!t@{t}}
-\index{t@{t}!ReturnData@{ReturnData}}
-\doxyparagraph{\texorpdfstring{t}{t}}
-{\footnotesize\ttfamily realtype t\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_return_data_a272f814453a1e4874d288835b8f6a0e2}\label{classamici_1_1_return_data_a272f814453a1e4874d288835b8f6a0e2}} 
+\index{ReturnData@{ReturnData}!t\_@{t\_}}
+\index{t\_@{t\_}!ReturnData@{ReturnData}}
+\doxyparagraph{\texorpdfstring{t\_}{t\_}}
+{\footnotesize\ttfamily realtype t\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 timepoint for model evaluation 
 
 Definition at line 427 of file rdata.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_return_data_a9fc74073500947cae3237cafe8777dfa}\label{classamici_1_1_return_data_a9fc74073500947cae3237cafe8777dfa}} 
-\index{ReturnData@{ReturnData}!x\_solver@{x\_solver}}
-\index{x\_solver@{x\_solver}!ReturnData@{ReturnData}}
-\doxyparagraph{\texorpdfstring{x\_solver}{x\_solver}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} x\+\_\+solver\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_return_data_ac79830d33f42672c1d545677256b9801}\label{classamici_1_1_return_data_ac79830d33f42672c1d545677256b9801}} 
+\index{ReturnData@{ReturnData}!x\_solver\_@{x\_solver\_}}
+\index{x\_solver\_@{x\_solver\_}!ReturnData@{ReturnData}}
+\doxyparagraph{\texorpdfstring{x\_solver\_}{x\_solver\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} x\+\_\+solver\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 partial state vector, excluding states eliminated from conservation laws 
 
 Definition at line 430 of file rdata.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_return_data_a81068da8d287b420046d0fcb036b1897}\label{classamici_1_1_return_data_a81068da8d287b420046d0fcb036b1897}} 
-\index{ReturnData@{ReturnData}!dx\_solver@{dx\_solver}}
-\index{dx\_solver@{dx\_solver}!ReturnData@{ReturnData}}
-\doxyparagraph{\texorpdfstring{dx\_solver}{dx\_solver}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dx\+\_\+solver\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_return_data_af4445ce4e91c1e471d1a828ec1ce2660}\label{classamici_1_1_return_data_af4445ce4e91c1e471d1a828ec1ce2660}} 
+\index{ReturnData@{ReturnData}!dx\_solver\_@{dx\_solver\_}}
+\index{dx\_solver\_@{dx\_solver\_}!ReturnData@{ReturnData}}
+\doxyparagraph{\texorpdfstring{dx\_solver\_}{dx\_solver\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} dx\+\_\+solver\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 partial time derivative of state vector, excluding states eliminated from conservation laws 
 
 Definition at line 433 of file rdata.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_return_data_a5cfd247a3618c2ae58d090889cc0642a}\label{classamici_1_1_return_data_a5cfd247a3618c2ae58d090889cc0642a}} 
-\index{ReturnData@{ReturnData}!sx\_solver@{sx\_solver}}
-\index{sx\_solver@{sx\_solver}!ReturnData@{ReturnData}}
-\doxyparagraph{\texorpdfstring{sx\_solver}{sx\_solver}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} sx\+\_\+solver\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_return_data_ad20828f0dfad2d3e65ea13e77dbd2d85}\label{classamici_1_1_return_data_ad20828f0dfad2d3e65ea13e77dbd2d85}} 
+\index{ReturnData@{ReturnData}!sx\_solver\_@{sx\_solver\_}}
+\index{sx\_solver\_@{sx\_solver\_}!ReturnData@{ReturnData}}
+\doxyparagraph{\texorpdfstring{sx\_solver\_}{sx\_solver\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} sx\+\_\+solver\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 partial sensitivity state vector array, excluding states eliminated from conservation laws 
 
 Definition at line 437 of file rdata.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_return_data_a6701add7ed0ff05a8713363e63fcf9db}\label{classamici_1_1_return_data_a6701add7ed0ff05a8713363e63fcf9db}} 
-\index{ReturnData@{ReturnData}!x\_rdata@{x\_rdata}}
-\index{x\_rdata@{x\_rdata}!ReturnData@{ReturnData}}
-\doxyparagraph{\texorpdfstring{x\_rdata}{x\_rdata}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} x\+\_\+rdata\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_return_data_a4799b536157fd26afef2ce34bc9a1615}\label{classamici_1_1_return_data_a4799b536157fd26afef2ce34bc9a1615}} 
+\index{ReturnData@{ReturnData}!x\_rdata\_@{x\_rdata\_}}
+\index{x\_rdata\_@{x\_rdata\_}!ReturnData@{ReturnData}}
+\doxyparagraph{\texorpdfstring{x\_rdata\_}{x\_rdata\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} x\+\_\+rdata\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 full state vector, including states eliminated from conservation laws 
 
 Definition at line 440 of file rdata.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_return_data_adafaf0a1cac1243303f1a06ec917b533}\label{classamici_1_1_return_data_adafaf0a1cac1243303f1a06ec917b533}} 
-\index{ReturnData@{ReturnData}!sx\_rdata@{sx\_rdata}}
-\index{sx\_rdata@{sx\_rdata}!ReturnData@{ReturnData}}
-\doxyparagraph{\texorpdfstring{sx\_rdata}{sx\_rdata}}
-{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} sx\+\_\+rdata\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_return_data_a898da7d0e74354aeadddf70aa4376574}\label{classamici_1_1_return_data_a898da7d0e74354aeadddf70aa4376574}} 
+\index{ReturnData@{ReturnData}!sx\_rdata\_@{sx\_rdata\_}}
+\index{sx\_rdata\_@{sx\_rdata\_}!ReturnData@{ReturnData}}
+\doxyparagraph{\texorpdfstring{sx\_rdata\_}{sx\_rdata\_}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector_array}{Ami\+Vector\+Array}} sx\+\_\+rdata\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 full sensitivity state vector array, including states eliminated from conservation laws 
 
 Definition at line 444 of file rdata.\+h.
 
-\mbox{\Hypertarget{classamici_1_1_return_data_a8e8f5b98c0913d6b8cc53f455f178df9}\label{classamici_1_1_return_data_a8e8f5b98c0913d6b8cc53f455f178df9}} 
-\index{ReturnData@{ReturnData}!nroots@{nroots}}
-\index{nroots@{nroots}!ReturnData@{ReturnData}}
-\doxyparagraph{\texorpdfstring{nroots}{nroots}}
-{\footnotesize\ttfamily std\+::vector$<$int$>$ nroots\hspace{0.3cm}{\ttfamily [protected]}}
+\mbox{\Hypertarget{classamici_1_1_return_data_ab0f3d73d98357b2857e29f596e5117f7}\label{classamici_1_1_return_data_ab0f3d73d98357b2857e29f596e5117f7}} 
+\index{ReturnData@{ReturnData}!nroots\_@{nroots\_}}
+\index{nroots\_@{nroots\_}!ReturnData@{ReturnData}}
+\doxyparagraph{\texorpdfstring{nroots\_}{nroots\_}}
+{\footnotesize\ttfamily std\+::vector$<$int$>$ nroots\+\_\+\hspace{0.3cm}{\ttfamily [protected]}}
 
 array of number of found roots for a certain event type (dimension\+: ne) 
 

@@ -1,10 +1,10 @@
 <map id="getEventSigmaSensitivity" name="getEventSigmaSensitivity">
 <area shape="rect" id="node1" title="Sensitivities of event&#45;resolved observable standard deviations, total derivative (only forward sensit..." alt="" coords="5,162,177,189"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa3eda4b933956ecd898a14b7d46f37ae" title="Sensitivity of standard deviation of events measurements w.r.t. model parameters p." alt="" coords="268,137,357,163"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#acb122a34e836b05e7ae405e9fb59528e" title="Writes part of a sensitivity slice to a buffer according to indices specified in z2event." alt="" coords="225,187,400,214"/>
-<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="472,5,631,47"/>
-<area shape="rect" id="node5" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="448,71,655,112"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="525,187,578,214"/>
-<area shape="rect" id="node7" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="528,137,575,163"/>
-<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="703,5,861,47"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#aa3eda4b933956ecd898a14b7d46f37ae" title="Sensitivity of standard deviation of events measurements w.r.t. model parameters p." alt="" coords="267,137,357,163"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#acb122a34e836b05e7ae405e9fb59528e" title="Writes part of a sensitivity slice to a buffer according to indices specified in z2event." alt="" coords="225,187,399,214"/>
+<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="470,5,629,47"/>
+<area shape="rect" id="node5" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="447,71,652,112"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="523,187,576,214"/>
+<area shape="rect" id="node7" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="526,137,573,163"/>
+<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="700,5,859,47"/>
 </map>

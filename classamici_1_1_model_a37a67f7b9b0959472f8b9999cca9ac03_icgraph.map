@@ -1,4 +1,4 @@
 <map id="hasCustomInitialStates" name="hasCustomInitialStates">
-<area shape="rect" id="node1" title="Returns whether custom initial states have been set." alt="" coords="216,13,375,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="5,5,168,47"/>
+<area shape="rect" id="node1" title="Returns whether custom initial states have been set." alt="" coords="213,13,371,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_condition_context.html#a278af8aaa098bec301b13f622b369b5c" title="Apply condition&#45;specific settings from edata to model while keeping a backup of the original values." alt="" coords="5,5,165,47"/>
 </map>

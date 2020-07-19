@@ -1,8 +1,8 @@
 <map id="addAdjointStateEventUpdate" name="addAdjointStateEventUpdate">
-<area shape="rect" id="node1" title="Update adjoint state after event." alt="" coords="5,93,196,120"/>
-<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="253,5,393,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="244,57,403,98"/>
-<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="246,123,401,149"/>
-<area shape="rect" id="node6" href="$classamici_1_1_abstract_model.html#acb68865f9b4e94a925895e97ec2e31b8" title="Model specific implementation of fdeltaxB." alt="" coords="251,174,396,215"/>
-<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="451,57,609,98"/>
+<area shape="rect" id="node1" title="Update adjoint state after event." alt="" coords="5,93,195,120"/>
+<area shape="rect" id="node2" href="$classamici_1_1_ami_vector.html#aa1f33dc2530301e51e2077a5576d99d0" title="accessor to data elements of the vector" alt="" coords="252,5,392,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="243,57,401,98"/>
+<area shape="rect" id="node5" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="245,123,399,149"/>
+<area shape="rect" id="node6" href="$classamici_1_1_abstract_model.html#acb68865f9b4e94a925895e97ec2e31b8" title="Model specific implementation of fdeltaxB." alt="" coords="249,174,395,215"/>
+<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="449,57,608,98"/>
 </map>

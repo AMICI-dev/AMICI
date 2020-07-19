@@ -1,5 +1,5 @@
 <map id="setAbsoluteToleranceFSA" name="setAbsoluteToleranceFSA">
 <area shape="rect" id="node1" title="Sets the absolute tolerances for the forward sensitivity problem." alt="" coords="5,31,179,57"/>
 <area shape="rect" id="node2" href="$classamici_1_1_solver.html#afaf648266a045d246ff24e38b8ba3077" title="updates all senstivivity solver tolerances according to the currently specified member variables" alt="" coords="227,5,404,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#aea8f6f9bb1b00f58ea0ae27faf11b65f" title="checks whether memory for the forward problem has been allocated" alt="" coords="271,56,360,83"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#aea8f6f9bb1b00f58ea0ae27faf11b65f" title="checks whether memory for the forward problem has been allocated" alt="" coords="271,56,359,83"/>
 </map>

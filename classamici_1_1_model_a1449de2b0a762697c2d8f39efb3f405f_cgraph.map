@@ -1,6 +1,6 @@
 <map id="fdzdx" name="fdzdx">
 <area shape="rect" id="node1" title="Partial derivative of event&#45;resolved output z w.r.t. to model states x." alt="" coords="5,42,60,69"/>
 <area shape="rect" id="node2" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="108,5,267,47"/>
-<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="110,71,265,98"/>
+<area shape="rect" id="node4" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="110,71,265,98"/>
 <area shape="rect" id="node3" href="$classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873" title="printf interface to warning()" alt="" coords="315,5,473,47"/>
 </map>

@@ -5,10 +5,10 @@
 <area shape="rect" id="node5" href="$classamici_1_1_solver.html#ac4719da01affd1bb5e47a90903a95387" title="updates ASA solver tolerances according to the currently specified member variables" alt="" coords="132,107,275,133"/>
 <area shape="rect" id="node6" href="$classamici_1_1_solver.html#a025e9f7d8a3d10d953baebbfa113ddce" title="Initialise the adjoint states at the specified final timepoint." alt="" coords="180,157,227,184"/>
 <area shape="rect" id="node7" href="$classamici_1_1_solver.html#aa23eeca5d8eecbfe15c3e803da1ae464" title="Initializes the linear solver for the backward problem." alt="" coords="128,208,279,235"/>
-<area shape="rect" id="node8" href="$classamici_1_1_solver.html#a7320aa6293ad7d8e9bb77973909be1a9" title="Initializes the non&#45;linear solver for the backward problem." alt="" coords="116,259,291,285"/>
+<area shape="rect" id="node8" href="$classamici_1_1_solver.html#a7320aa6293ad7d8e9bb77973909be1a9" title="Initializes the non&#45;linear solver for the backward problem." alt="" coords="117,259,290,285"/>
 <area shape="rect" id="node9" href="$classamici_1_1_solver.html#a06633a426a3bae879acdb7ab72dbc0a2" title="Initialise the quadrature states at the specified final timepoint." alt="" coords="177,309,230,336"/>
-<area shape="rect" id="node10" href="$classamici_1_1_solver.html#a2a9ffb6a2338f474b724170bdd616f05" title="specifies the maximum number of steps for the forward problem" alt="" coords="135,360,271,387"/>
-<area shape="rect" id="node11" href="$classamici_1_1_solver.html#aec8a73079ae66d08f34ad7144af42bf9" title="activates stability limit detection for the backward problem" alt="" coords="144,411,263,437"/>
-<area shape="rect" id="node12" href="$classamici_1_1_solver.html#a89e895963731d840a0a9c06cd64d1335" title="attaches the user data instance (here this is a Model) to the backward problem" alt="" coords="151,461,256,488"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a89667d5b61c9ad3829415b9cd26baf5e" title="checks whether memory for forward interpolation has been allocated" alt="" coords="339,81,447,108"/>
+<area shape="rect" id="node10" href="$classamici_1_1_solver.html#a2a9ffb6a2338f474b724170bdd616f05" title="specifies the maximum number of steps for the forward problem" alt="" coords="136,360,271,387"/>
+<area shape="rect" id="node11" href="$classamici_1_1_solver.html#aec8a73079ae66d08f34ad7144af42bf9" title="activates stability limit detection for the backward problem" alt="" coords="145,411,262,437"/>
+<area shape="rect" id="node12" href="$classamici_1_1_solver.html#a89e895963731d840a0a9c06cd64d1335" title="attaches the user data instance (here this is a Model) to the backward problem" alt="" coords="152,461,255,488"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#a89667d5b61c9ad3829415b9cd26baf5e" title="checks whether memory for forward interpolation has been allocated" alt="" coords="339,81,445,108"/>
 </map>

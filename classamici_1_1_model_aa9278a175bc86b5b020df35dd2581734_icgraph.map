@@ -1,8 +1,8 @@
 <map id="getFixedParameterIds" name="getFixedParameterIds">
-<area shape="rect" id="node1" title="Get ids of the fixed model parameters." alt="" coords="496,93,647,120"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#acc647ebbeaf0be737c7c165fa77eeca5" title="Get value of fixed parameter with the specified Id." alt="" coords="28,5,187,32"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#af50d86316e6930bc98e82afc3893e2ff" title="Reports whether the model has fixed parameter ids set. Also returns true if the number of correspondi..." alt="" coords="276,93,429,120"/>
-<area shape="rect" id="node4" href="$classamici_1_1_model.html#adc0d24343c6fed2e797fb402f7c2d256" title="Set value of first fixed parameter with the specified id." alt="" coords="28,81,187,108"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#acda9b9debfd3d6ac77e2d27a48bfb5d6" title="Set values of all fixed parameters with the id matching the specified regex." alt="" coords="5,132,209,159"/>
-<area shape="rect" id="node6" href="$classamici_1_1_model.html#a4802f7d56264e3b592c167da8166cb73" title="Set value of all fixed parameters with name matching the specified regex,." alt="" coords="257,195,448,237"/>
+<area shape="rect" id="node1" title="Get ids of the fixed model parameters." alt="" coords="493,93,644,120"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#acc647ebbeaf0be737c7c165fa77eeca5" title="Get value of fixed parameter with the specified Id." alt="" coords="27,5,186,32"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#af50d86316e6930bc98e82afc3893e2ff" title="Reports whether the model has fixed parameter ids set. Also returns true if the number of correspondi..." alt="" coords="274,93,427,120"/>
+<area shape="rect" id="node4" href="$classamici_1_1_model.html#adc0d24343c6fed2e797fb402f7c2d256" title="Set value of first fixed parameter with the specified id." alt="" coords="27,81,186,108"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#acda9b9debfd3d6ac77e2d27a48bfb5d6" title="Set values of all fixed parameters with the id matching the specified regex." alt="" coords="5,132,208,159"/>
+<area shape="rect" id="node6" href="$classamici_1_1_model.html#a4802f7d56264e3b592c167da8166cb73" title="Set value of all fixed parameters with name matching the specified regex,." alt="" coords="256,195,445,237"/>
 </map>

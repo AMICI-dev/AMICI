@@ -1,6 +1,6 @@
 <map id="getDky" name="getDky">
-<area shape="rect" id="node1" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="329,31,393,57"/>
-<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a65b472423554d7c3c28fde14010d3338" title="Access derivative state solution at time t." alt="" coords="151,5,281,32"/>
-<area shape="rect" id="node4" href="$classamici_1_1_solver.html#ac964cec4839a463d816eeae0aca71993" title="Access state solution at time t." alt="" coords="181,56,251,83"/>
-<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="5,31,103,57"/>
+<area shape="rect" id="node1" title="interpolates the (derivative of the) solution at the requested timepoint" alt="" coords="327,31,389,57"/>
+<area shape="rect" id="node2" href="$classamici_1_1_solver.html#a65b472423554d7c3c28fde14010d3338" title="Access derivative state solution at time t." alt="" coords="149,5,279,32"/>
+<area shape="rect" id="node4" href="$classamici_1_1_solver.html#ac964cec4839a463d816eeae0aca71993" title="Access state solution at time t." alt="" coords="179,56,249,83"/>
+<area shape="rect" id="node3" href="$classamici_1_1_solver.html#a2d7b71322446453eec88589d8093166a" title="write solution from forward simulation" alt="" coords="5,31,101,57"/>
 </map>

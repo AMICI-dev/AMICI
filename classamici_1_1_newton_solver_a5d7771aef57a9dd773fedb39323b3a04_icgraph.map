@@ -1,5 +1,5 @@
 <map id="getStep" name="getStep">
-<area shape="rect" id="node1" title="Computes the solution of one Newton iteration." alt="" coords="515,13,581,39"/>
-<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#aca32c27fbd6b2eef05fc01f0cb85d536" title="Runs the Newton solver iterations and checks for convergence to steady state." alt="" coords="288,5,467,47"/>
-<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#ad62b1882c1bc397bcda7a9fcfc7456f1" title="Tries to determine the steady state by using Newton&#39;s method." alt="" coords="5,5,240,47"/>
+<area shape="rect" id="node1" title="Computes the solution of one Newton iteration." alt="" coords="512,13,579,39"/>
+<area shape="rect" id="node2" href="$classamici_1_1_steadystate_problem.html#aca32c27fbd6b2eef05fc01f0cb85d536" title="Runs the Newton solver iterations and checks for convergence to steady state." alt="" coords="285,5,464,47"/>
+<area shape="rect" id="node3" href="$classamici_1_1_steadystate_problem.html#ad62b1882c1bc397bcda7a9fcfc7456f1" title="Tries to determine the steady state by using Newton&#39;s method." alt="" coords="5,5,237,47"/>
 </map>

@@ -1,21 +1,21 @@
 <map id="addPartialEventObjectiveSensitivity" name="addPartialEventObjectiveSensitivity">
 <area shape="rect" id="node1" title="Sensitivity of time&#45;resolved measurement negative log&#45;likelihood Jy, partial derivative (to be used w..." alt="" coords="5,117,175,159"/>
-<area shape="rect" id="node2" href="$classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="274,226,335,253"/>
-<area shape="rect" id="node18" href="$classamici_1_1_model.html#a1416f0dc348c39f150f323bd5d533260" title="Seperates first and second order objective sensitivity information and writes them into the respectiv..." alt="" coords="223,23,387,50"/>
-<area shape="rect" id="node3" href="$classamici_1_1_model.html#aaa7bf3bdc44879d66b3821a095039898" title="Sensitivity of event measurement negative log&#45;likelihood Jz w.r.t. standard deviation sigmaz." alt="" coords="487,327,577,354"/>
-<area shape="rect" id="node6" href="$classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="920,420,1127,461"/>
-<area shape="rect" id="node11" href="$classamici_1_1_model.html#a0c44c0a2afed13fbc92f449789566fad" title="Partial derivative of event measurement negative log&#45;likelihood Jz." alt="" coords="501,378,563,405"/>
-<area shape="rect" id="node12" href="$classamici_1_1_model.html#aa3eda4b933956ecd898a14b7d46f37ae" title="Sensitivity of standard deviation of events measurements w.r.t. model parameters p." alt="" coords="487,175,577,202"/>
-<area shape="rect" id="node13" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="748,23,801,50"/>
-<area shape="rect" id="node15" href="$classamici_1_1_model.html#a3564a48408fdd80f51b0a24a216f40fe" title="Partial derivative of event&#45;resolved output z w.r.t. to model parameters p." alt="" coords="505,125,559,151"/>
-<area shape="rect" id="node16" href="$classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="435,226,629,253"/>
-<area shape="rect" id="node17" href="$classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="467,277,597,303"/>
-<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="695,227,854,268"/>
-<area shape="rect" id="node5" href="$classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="741,343,809,370"/>
-<area shape="rect" id="node8" href="$classamici_1_1_model.html#a171bc1e22a0829aff5fd16f6d6bffa5a" title="Event&#45;resolved output." alt="" coords="755,293,794,319"/>
-<area shape="rect" id="node10" href="$classamici_1_1_exp_data.html#a95ab3fe91af62612f202fdc6cd033d2a" title="get function that returns a pointer to observed data at ieth occurence" alt="" coords="677,445,872,487"/>
-<area shape="rect" id="node7" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="920,304,1127,345"/>
-<area shape="rect" id="node9" href="$classamici_1_1_ami_vector.html#a69be01da2132057196a1bfbb8a94b695" title="data accessor" alt="" coords="946,147,1101,174"/>
-<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="751,125,798,151"/>
-<area shape="rect" id="node19" href="$classamici_1_1_model.html#ac69ba69e1f65bb23004cb88408c69bb2" title="Verifies that the provided buffers have the expected size." alt="" coords="461,23,603,50"/>
+<area shape="rect" id="node2" href="$classamici_1_1_model.html#ab59ce7dce76df68b92b0b7404f9f8a19" title="Sensitivity of event&#45;resolved measurement negative log&#45;likelihood Jz w.r.t. parameters." alt="" coords="273,226,335,253"/>
+<area shape="rect" id="node18" href="$classamici_1_1_model.html#a1416f0dc348c39f150f323bd5d533260" title="Seperates first and second order objective sensitivity information and writes them into the respectiv..." alt="" coords="223,23,385,50"/>
+<area shape="rect" id="node3" href="$classamici_1_1_model.html#aaa7bf3bdc44879d66b3821a095039898" title="Sensitivity of event measurement negative log&#45;likelihood Jz w.r.t. standard deviation sigmaz." alt="" coords="486,327,575,354"/>
+<area shape="rect" id="node6" href="$classamici_1_1_exp_data.html#a7270ea1362212e4dc344e24dc01b70ee" title="get function that checks whether event data at specified indices has been set" alt="" coords="917,420,1123,461"/>
+<area shape="rect" id="node11" href="$classamici_1_1_model.html#a0c44c0a2afed13fbc92f449789566fad" title="Partial derivative of event measurement negative log&#45;likelihood Jz." alt="" coords="500,378,561,405"/>
+<area shape="rect" id="node12" href="$classamici_1_1_model.html#aa3eda4b933956ecd898a14b7d46f37ae" title="Sensitivity of standard deviation of events measurements w.r.t. model parameters p." alt="" coords="486,175,575,202"/>
+<area shape="rect" id="node13" href="$classamici_1_1_model.html#a0f8e994055e37954d7746f3c1af27a5c" title="Number of parameters wrt to which sensitivities are computed." alt="" coords="746,23,799,50"/>
+<area shape="rect" id="node15" href="$classamici_1_1_model.html#a3564a48408fdd80f51b0a24a216f40fe" title="Partial derivative of event&#45;resolved output z w.r.t. to model parameters p." alt="" coords="503,125,558,151"/>
+<area shape="rect" id="node16" href="$classamici_1_1_exp_data.html#abee92d90cb7fe75fa39fb98c2ab0fd0a" title="get function that returns timepoint at index" alt="" coords="433,226,628,253"/>
+<area shape="rect" id="node17" href="$classamici_1_1_exp_data.html#a4c23d300cbe15b0afb1ee3731d47cc93" title="number of timepoints" alt="" coords="465,277,596,303"/>
+<area shape="rect" id="node4" href="$classamici_1_1_amici_application.html#a7f48f4919daa680eb35a4a03b427e717" title="Checks the values in an array for NaNs and Infs." alt="" coords="693,227,852,268"/>
+<area shape="rect" id="node5" href="$classamici_1_1_model.html#a33ebc7e2d021c9d8fd0aa4ee136da6c7" title="Standard deviation of events." alt="" coords="739,343,807,370"/>
+<area shape="rect" id="node8" href="$classamici_1_1_model.html#a171bc1e22a0829aff5fd16f6d6bffa5a" title="Event&#45;resolved output." alt="" coords="753,293,792,319"/>
+<area shape="rect" id="node10" href="$classamici_1_1_exp_data.html#a95ab3fe91af62612f202fdc6cd033d2a" title="get function that returns a pointer to observed data at ieth occurence" alt="" coords="676,445,869,487"/>
+<area shape="rect" id="node7" href="$classamici_1_1_exp_data.html#a29530529cf50b9fa791e02fed620ea7a" title="get function that checks whether standard deviation of even data at specified indices has been set" alt="" coords="917,304,1123,345"/>
+<area shape="rect" id="node9" href="$classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b" title="data accessor" alt="" coords="943,147,1097,174"/>
+<area shape="rect" id="node14" href="$classamici_1_1_model.html#a6ac0de1b7dfddbb4a480657f62573563" title="entry in parameter list" alt="" coords="749,125,796,151"/>
+<area shape="rect" id="node19" href="$classamici_1_1_model.html#ac69ba69e1f65bb23004cb88408c69bb2" title="Verifies that the provided buffers have the expected size." alt="" coords="460,23,601,50"/>
 </map>
