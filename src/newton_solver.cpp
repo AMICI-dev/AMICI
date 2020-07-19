@@ -18,8 +18,8 @@ namespace amici {
 NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model)
     : model_(model), xdot_(model->nx_solver), dx_(model->nx_solver),
       xB_(model->nx_solver), dxB_(model->nx_solver) {
-    this->t_ = t;
-    this->x_ = x;
+    t_ = t;
+    x_ = x;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -85,10 +85,10 @@ std::unique_ptr<NewtonSolver> NewtonSolver::getSolver(realtype *t, AmiVector *x,
 /* ------------------------------------------------------------------------- */
 
 void NewtonSolver::getStep(int ntry, int nnewt, AmiVector &delta) {
-    this->prepareLinearSystem(ntry, nnewt);
+    prepareLinearSystem(ntry, nnewt);
 
     delta.minus();
-    this->solveLinearSystem(delta);
+    solveLinearSystem(delta);
 }
 
 /* ------------------------------------------------------------------------- */

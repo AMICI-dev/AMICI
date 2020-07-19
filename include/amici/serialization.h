@@ -38,7 +38,7 @@ void archiveVector(Archive &ar, T **p, int size) {
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
+void serialize(Archive &ar, amici::Solver &u, const unsigned int /*version*/) {
     ar &u.sensi;
     ar &u.atol;
     ar &u.rtol;
@@ -74,12 +74,12 @@ void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
 
 
 template <class Archive>
-void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version) {
+void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int /*version*/) {
     ar & static_cast<amici::Solver&>(u);
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
+void serialize(Archive &ar, amici::Model &u, const unsigned int /*version*/) {
     ar &u.nx_rdata;
     ar &u.nxtrue_rdata;
     ar &u.nx_solver;
@@ -121,7 +121,7 @@ void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
 
 
 template <class Archive>
-void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
+void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/) {
     ar &r.np;
     ar &r.nk;
     ar &r.nx;

@@ -424,28 +424,28 @@ class ReturnData {
   protected:
 
     /** timepoint for model evaluation*/
-    realtype t;
+    realtype t_;
 
     /** partial state vector, excluding states eliminated from conservation laws */
-    AmiVector x_solver;
+    AmiVector x_solver_;
 
     /** partial time derivative of state vector, excluding states eliminated from conservation laws */
-    AmiVector dx_solver;
+    AmiVector dx_solver_;
 
     /** partial sensitivity state vector array, excluding states eliminated from
      * conservation laws */
-    AmiVectorArray sx_solver;
+    AmiVectorArray sx_solver_;
 
     /** full state vector, including states eliminated from conservation laws */
-    AmiVector x_rdata;
+    AmiVector x_rdata_;
 
     /** full sensitivity state vector array, including states eliminated from
      * conservation laws */
-    AmiVectorArray sx_rdata;
+    AmiVectorArray sx_rdata_;
 
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
-    std::vector<int> nroots;
+    std::vector<int> nroots_;
 
     /**
      * @brief initializes storage for likelihood reporting mode
@@ -527,14 +527,14 @@ class ReturnData {
 
         AmiVector xdot(nx_solver);
         if (!this->xdot.empty() || !this->J.empty())
-            model.fxdot(t, x_solver, dx_solver, xdot);
+            model.fxdot(t_, x_solver_, dx_solver_, xdot);
 
         if (!this->xdot.empty())
             writeSlice(xdot, this->xdot);
 
         if (!this->J.empty()) {
             SUNMatrixWrapper J(nx_solver, nx_solver);
-            model.fJ(t, 0.0, x_solver, dx_solver, xdot, J.get());
+            model.fJ(t_, 0.0, x_solver_, dx_solver_, xdot, J.get());
             // CVODES uses colmajor, so we need to transform to rowmajor
             for (int ix = 0; ix < model.nx_solver; ix++)
                 for (int jx = 0; jx < model.nx_solver; jx++)
@@ -642,7 +642,7 @@ class ReturnData {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventOutput(int iroot, realtype t, const std::vector<int> rootidx,
+    void getEventOutput(int iroot, realtype t_, const std::vector<int> rootidx,
                         Model &model, ExpData const *edata);
 
     /**
@@ -654,7 +654,7 @@ class ReturnData {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
+    void getEventSensisFSA(int iroot, int ie, realtype t_, Model &model,
                            ExpData const *edata);
 
     /**
@@ -691,7 +691,7 @@ class ModelContext : public ContextManager {
      *
      * @param model
      */
-    explicit ModelContext(Model *model);
+    explicit ModelContext(Model *model_);
 
     ModelContext &operator=(const ModelContext &other) = delete;
 
@@ -705,8 +705,8 @@ class ModelContext : public ContextManager {
     void restore();
 
   private:
-    Model *model = nullptr;
-    ModelState original_state;
+    Model *model_ {nullptr};
+    ModelState original_state_;
 };
 
 
