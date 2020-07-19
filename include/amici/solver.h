@@ -539,15 +539,15 @@ class Solver {
 
     /**
      * @brief returns stability limit detection mode
-     * @return stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
+     * @return stldet can be false (deactivated) or true (activated)
      */
-    booleantype getStabilityLimitFlag() const;
+    bool getStabilityLimitFlag() const;
 
     /**
      * @brief set stability limit detection mode
-     * @param stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
+     * @param stldet can be false (deactivated) or true (activated)
      */
-    void setStabilityLimitFlag(booleantype stldet);
+    void setStabilityLimitFlag(bool stldet);
 
     /**
      * @brief getLinearSolver
