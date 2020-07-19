@@ -42,14 +42,12 @@ jobs:
     run: |
       pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
 
-    - name: Python tests
-      run: |
-        source build/venv/bin/activate \
-        && pip3 install pytest \
-        && pytest \
-          --ignore-glob=*petab* \
-          ${AMICI_DIR}/python/tests
+  - name: Python tests
+    run: |
+      source build/venv/bin/activate \
+      && pip3 install pytest \
+      && pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
           
-    - name: notebooks
-      run: |
-        scripts/runNotebook.sh python/examples/example_*/
+  - name: notebooks
+    run: |
+      scripts/runNotebook.sh python/examples/example_*/

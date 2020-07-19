@@ -38,12 +38,10 @@ jobs:
     # install AMICI
     - name: Create AMICI sdist
       run: |
-        cd python/sdist \
-          && check_time.sh create_sdist /usr/bin/python3 setup.py sdist
+        cd python/sdist && /usr/bin/python3 setup.py sdist
     - name: Install AMICI sdist
       run: |
-        AMICI_PARALLEL_COMPILE=2 check_time.sh \
-            install_sdist pip3 install -v --user \
+        AMICI_PARALLEL_COMPILE=2 pip3 install -v --user \
             $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab]
 
     # retrieve test models
