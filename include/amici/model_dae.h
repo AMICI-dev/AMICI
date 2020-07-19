@@ -494,8 +494,8 @@ class Model_DAE : public Model {
      * @param p parameter vector
      * @param k constants vector
      */
-    virtual void fM(realtype */*M*/, const realtype /*t*/, const realtype */*x*/,
-                    const realtype */*p*/, const realtype */*k*/){};
+    virtual void fM(realtype *M, const realtype t, const realtype *x,
+                    const realtype *p, const realtype *k);
 };
 } // namespace amici
 

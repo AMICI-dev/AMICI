@@ -184,9 +184,12 @@ void Model_DAE::fdxdotdp(realtype * /*dxdotdp*/, const realtype /*t*/,
                        __func__);
 }
 
+void Model_DAE::fM(realtype */*M*/, const realtype /*t*/, const realtype */*x*/,
+                   const realtype */*p*/, const realtype */*k*/){}
+
 void Model_DAE::fJB(const realtype t, realtype cj, const AmiVector &x,
-                     const AmiVector &dx, const AmiVector &xB,
-                     const AmiVector &dxB, const AmiVector & /*xBdot*/,
+                    const AmiVector &dx, const AmiVector &xB,
+                     const AmiVector &/*dxB*/, const AmiVector & /*xBdot*/,
                      SUNMatrix JB) {
     fJB(t, cj, x.getNVector(), dx.getNVector(), xB.getNVector(), dx.getNVector(), JB);
 }
