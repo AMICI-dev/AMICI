@@ -24,7 +24,7 @@ jobs:
 
     - name: Build doxygen
       run: |
-        scripts/downloadAndBuildDoxygen.sh
+        sudo scripts/downloadAndBuildDoxygen.sh
 
     - name: Run doxygen
       run: |

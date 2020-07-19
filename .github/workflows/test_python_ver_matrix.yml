@@ -31,7 +31,12 @@ jobs:
     - name: apt
       run: |
         sudo apt-get update \
-          && sudo apt-get install -y swig3.0 libatlas-base-dev
+          && sudo apt-get install -y \
+          swig \
+          libatlas-base-dev \
+          libhdf5-serial-dev \
+          cmake \
+          g++
     - name: pip
       run: |
         pip3 install --upgrade --user wheel \
