@@ -38,10 +38,7 @@ jobs:
           && sudo apt-get install -y \
           swig \
           libatlas-base-dev \
-          libhdf5-serial-dev \
-          cmake \
-          g++ \
-          pandoc
+          libhdf5-serial-dev
     - name: pip
       run: |
         pip3 install --upgrade --user wheel \
@@ -52,17 +49,14 @@ jobs:
     - name: Build BNGL
       run: |
         scripts/buildBNGL.sh
-    - name: Create AMICI sdist
-      run: |
-        cd python/sdist && python3 setup.py sdist
-    - name: Install AMICI sdist
-      run: |
-        pip3 install -v --user $(ls -t python/sdist/dist/amici-*.tar.gz | head -1)[petab,pysb]
+    - name: Install python package
+    run: |
+      scripts/installAmiciSource.sh
         
-    
     - name: Python tests
       run: |
-        pip3 install pytest \
+        source build/venv/bin/activate \
+          && pip3 install pytest \
           && pip3 install git+https://github.com/pysb/pysb \
           && python3 -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests
 
