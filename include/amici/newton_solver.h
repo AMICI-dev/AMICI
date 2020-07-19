@@ -60,14 +60,14 @@ class NewtonSolver {
      * @param sx pointer to state variable sensitivities
      */
     void computeNewtonSensis(AmiVectorArray &sx);
-    
+
     /**
      * @brief Accessor for numlinsteps
      *
      * @return numlinsteps
      */
     const std::vector<int> &getNumLinSteps() const {
-        return numlinsteps;
+        return num_lin_steps_;
     }
 
     /**
@@ -102,35 +102,35 @@ class NewtonSolver {
 
     /** maximum number of allowed linear steps per Newton step for steady state
      * computation */
-    int maxlinsteps = 0;
+    int max_lin_steps_ {0};
     /** maximum number of allowed Newton steps for steady state computation */
-    int maxsteps = 0;
+    int max_steps {0};
     /** absolute tolerance */
-    double atol = 1e-16;
+    realtype atol_ {1e-16};
     /** relative tolerance */
-    double rtol = 1e-8;
+    realtype rtol_ {1e-8};
     /** damping factor flag */
-    NewtonDampingFactorMode dampingFactorMode = NewtonDampingFactorMode::on;
+    NewtonDampingFactorMode damping_factor_mode_ {NewtonDampingFactorMode::on};
     /** damping factor lower bound */
-    double dampingFactorLowerBound = 1e-8;
+    realtype damping_factor_lower_bound {1e-8};
 
   protected:
     /** time variable */
-    realtype *t;
+    realtype *t_;
     /** pointer to the model object */
-    Model *model;
+    Model *model_;
     /** right hand side AmiVector */
-    AmiVector xdot;
+    AmiVector xdot_;
     /** current state */
-    AmiVector *x;
+    AmiVector *x_;
     /** current state time derivative (DAE) */
-    AmiVector dx;
+    AmiVector dx_;
     /** history of number of linear steps */
-    std::vector<int> numlinsteps;
+    std::vector<int> num_lin_steps_;
     /** current adjoint state */
-    AmiVector xB;
+    AmiVector xB_;
     /** current adjoint state time derivative (DAE) */
-    AmiVector dxB;
+    AmiVector dxB_;
 };
 
 /**
@@ -183,10 +183,10 @@ class NewtonSolverDense : public NewtonSolver {
 
   private:
     /** temporary storage of Jacobian */
-    SUNMatrixWrapper Jtmp;
+    SUNMatrixWrapper Jtmp_;
 
     /** dense linear solver */
-    SUNLinearSolver linsol = nullptr;
+    SUNLinearSolver linsol_ {nullptr};
 };
 
 /**
@@ -238,10 +238,10 @@ class NewtonSolverSparse : public NewtonSolver {
 
   private:
     /** temporary storage of Jacobian */
-    SUNMatrixWrapper Jtmp;
+    SUNMatrixWrapper Jtmp_;
 
     /** sparse linear solver */
-    SUNLinearSolver linsol = nullptr;
+    SUNLinearSolver linsol_ {nullptr};
 };
 
 /**
@@ -306,31 +306,31 @@ class NewtonSolverIterative : public NewtonSolver {
 
   private:
     /** number of tries  */
-    int newton_try = 0;
+    int newton_try_ {0};
     /** number of iterations  */
-    int i_newton = 0;
+    int i_newton_ {0};
     /** ???  */
-    AmiVector ns_p;
+    AmiVector ns_p_;
     /** ???  */
-    AmiVector ns_h;
+    AmiVector ns_h_;
     /** ???  */
-    AmiVector ns_t;
+    AmiVector ns_t_;
     /** ???  */
-    AmiVector ns_s;
+    AmiVector ns_s_;
     /** ???  */
-    AmiVector ns_r;
+    AmiVector ns_r_;
     /** ???  */
-    AmiVector ns_rt;
+    AmiVector ns_rt_;
     /** ???  */
-    AmiVector ns_v;
+    AmiVector ns_v_;
     /** ???  */
-    AmiVector ns_Jv;
+    AmiVector ns_Jv_;
     /** ???  */
-    AmiVector ns_tmp;
+    AmiVector ns_tmp_;
     /** ???  */
-    AmiVector ns_Jdiag;
+    AmiVector ns_Jdiag_;
     /** temporary storage of Jacobian */
-    SUNMatrixWrapper ns_J;
+    SUNMatrixWrapper ns_J_;
 };
 
 

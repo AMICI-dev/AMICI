@@ -625,7 +625,7 @@ class Model : public AbstractModel {
      * @return current model state
      */
     ModelState const &getModelState() const {
-        return state;
+        return state_;
     };
 
     /**
@@ -643,7 +643,7 @@ class Model : public AbstractModel {
             throw AmiException("Mismatch in conservation law size");
         if (static_cast<int>(state.stotal_cl.size()) != ncl() * np() )
             throw AmiException("Mismatch in conservation law sensitivity size");
-        this->state = state;
+        state_ = state;
     };
 
     /**
@@ -1663,218 +1663,217 @@ class Model : public AbstractModel {
     N_Vector computeX_pos(const_N_Vector x);
 
     /** all variables necessary for function evaluation */
-    ModelState state;
+    ModelState state_;
 
     /** Sparse Jacobian (dimension: nnz)*/
-    mutable SUNMatrixWrapper J;
+    mutable SUNMatrixWrapper J_;
 
     /** Sparse dxdotdw temporary storage (dimension: ndxdotdw) */
-    mutable SUNMatrixWrapper dxdotdw;
+    mutable SUNMatrixWrapper dxdotdw_;
 
     /** Sparse dwdp temporary storage (dimension: ndwdp) */
-    mutable SUNMatrixWrapper dwdp;
+    mutable SUNMatrixWrapper dwdp_;
 
     /** Sparse dwdx temporary storage (dimension: ndwdx) */
-    mutable SUNMatrixWrapper dwdx;
+    mutable SUNMatrixWrapper dwdx_;
 
     /** Dense Mass matrix (dimension: nx_solver x nx_solver) */
-    mutable SUNMatrixWrapper M;
+    mutable SUNMatrixWrapper M_;
 
     /** current observable (dimension: nytrue) */
-    mutable std::vector<realtype> my;
+    mutable std::vector<realtype> my_;
 
     /** current event measurement (dimension: nztrue) */
-    mutable std::vector<realtype> mz;
+    mutable std::vector<realtype> mz_;
 
     /** Sparse observable derivative of data likelihood, only used if
      * pythonGenerated==true (dimension nytrue, nJ x ny, row-major) */
-    mutable std::vector<SUNMatrixWrapper> dJydy;
+    mutable std::vector<SUNMatrixWrapper> dJydy_;
 
     /** observable derivative of data likelihood, only used if
      * pythonGenerated==false (dimension nJ x ny x nytrue, row-major)
      */
-    mutable std::vector<realtype> dJydy_matlab;
+    mutable std::vector<realtype> dJydy_matlab_;
 
     /** observable sigma derivative of data likelihood
      * (dimension nJ x ny x nytrue, row-major)
      */
-    mutable std::vector<realtype> dJydsigma;
+    mutable std::vector<realtype> dJydsigma_;
 
     /** state derivative of data likelihood
      * (dimension nJ x nx_solver, row-major)
      */
-    mutable std::vector<realtype> dJydx;
+    mutable std::vector<realtype> dJydx_;
 
     /** parameter derivative of data likelihood for current timepoint
      * (dimension: nJ x nplist, row-major)
      */
-    mutable std::vector<realtype> dJydp;
+    mutable std::vector<realtype> dJydp_;
 
     /** event output derivative of event likelihood
      * (dimension nJ x nz x nztrue, row-major)
      */
-    mutable std::vector<realtype> dJzdz;
+    mutable std::vector<realtype> dJzdz_;
 
     /** event sigma derivative of event likelihood
      * (dimension nJ x nz x nztrue, row-major)
      */
-    mutable std::vector<realtype> dJzdsigma;
+    mutable std::vector<realtype> dJzdsigma_;
 
     /** event output derivative of event likelihood at final timepoint
      * (dimension nJ x nz x nztrue, row-major)
      */
-    mutable std::vector<realtype> dJrzdz;
+    mutable std::vector<realtype> dJrzdz_;
 
     /** event sigma derivative of event likelihood at final timepoint
      * (dimension nJ x nz x nztrue, row-major)
      */
-    mutable std::vector<realtype> dJrzdsigma;
+    mutable std::vector<realtype> dJrzdsigma_;
 
     /** state derivative of event likelihood
      * (dimension nJ x nx_solver, row-major)
      */
-    mutable std::vector<realtype> dJzdx;
+    mutable std::vector<realtype> dJzdx_;
 
     /** parameter derivative of event likelihood for current timepoint
      * (dimension: nJ x nplist x, row-major)
      */
-    mutable std::vector<realtype> dJzdp;
+    mutable std::vector<realtype> dJzdp_;
 
     /** state derivative of event output
      * (dimension: nz x nx_solver, row-major)
      */
-    mutable std::vector<realtype> dzdx;
+    mutable std::vector<realtype> dzdx_;
 
     /** parameter derivative of event output
      * (dimension: nz x nplist, row-major)
      */
-    mutable std::vector<realtype> dzdp;
+    mutable std::vector<realtype> dzdp_;
 
     /** state derivative of event regularization variable
      * (dimension: nz x nx_solver, row-major)
      */
-    mutable std::vector<realtype> drzdx;
+    mutable std::vector<realtype> drzdx_;
 
     /** parameter derivative of event regularization variable
      * (dimension: nz x nplist, row-major)
      */
-    mutable std::vector<realtype> drzdp;
+    mutable std::vector<realtype> drzdp_;
 
     /** parameter derivative of observable
      * (dimension: ny x nplist, row-major)
      */
-    mutable std::vector<realtype> dydp;
+    mutable std::vector<realtype> dydp_;
 
     /** state derivative of time-resolved observable
      * (dimension: nx_solver x ny, row-major)
      */
-    mutable std::vector<realtype> dydx;
+    mutable std::vector<realtype> dydx_;
 
     /** tempory storage of w data across functions (dimension: nw) */
-    mutable std::vector<realtype> w;
+    mutable std::vector<realtype> w_;
 
     /** tempory storage for flattened sx,
      * (dimension: nx_solver x nplist, row-major)
      */
-    mutable std::vector<realtype> sx;
+    mutable std::vector<realtype> sx_;
 
     /** tempory storage for x_rdata (dimension: nx_rdata) */
-    mutable std::vector<realtype> x_rdata;
+    mutable std::vector<realtype> x_rdata_;
 
     /** tempory storage for sx_rdata slice (dimension: nx_rdata) */
-    mutable std::vector<realtype> sx_rdata;
+    mutable std::vector<realtype> sx_rdata_;
 
     /** temporary storage for time-resolved observable (dimension: ny) */
-    mutable std::vector<realtype> y;
+    mutable std::vector<realtype> y_;
 
     /** data standard deviation for current timepoint (dimension: ny) */
-    mutable std::vector<realtype> sigmay;
+    mutable std::vector<realtype> sigmay_;
 
     /** temporary storage for  parameter derivative of data standard deviation,
      * (dimension: ny x nplist, row-major)
      */
-    mutable std::vector<realtype> dsigmaydp;
+    mutable std::vector<realtype> dsigmaydp_;
 
     /** temporary storage for event-resolved observable (dimension: nz) */
-    mutable std::vector<realtype> z;
+    mutable std::vector<realtype> z_;
 
     /** temporary storage for event regularization (dimension: nz) */
-    mutable std::vector<realtype> rz;
+    mutable std::vector<realtype> rz_;
 
     /** temporary storage for event standard deviation (dimension: nz) */
-    mutable std::vector<realtype> sigmaz;
+    mutable std::vector<realtype> sigmaz_;
 
     /** temporary storage for  parameter derivative of event standard deviation,
      * (dimension: nz x nplist, row-major)
      */
-    mutable std::vector<realtype> dsigmazdp;
+    mutable std::vector<realtype> dsigmazdp_;
 
     /** temporary storage for change in x after event (dimension: nx_solver) */
-    mutable std::vector<realtype> deltax;
+    mutable std::vector<realtype> deltax_;
 
     /** temporary storage for change in sx after event
      * (dimension: nx_solver x nplist, row-major)
      */
-    mutable std::vector<realtype> deltasx;
+    mutable std::vector<realtype> deltasx_;
 
     /** temporary storage for change in xB after event (dimension: nx_solver) */
-    mutable std::vector<realtype> deltaxB;
+    mutable std::vector<realtype> deltaxB_;
 
     /** temporary storage for change in qB after event
      * (dimension: nJ x nplist, row-major)
      */
-    mutable std::vector<realtype> deltaqB;
+    mutable std::vector<realtype> deltaqB_;
 
     /** temporary storage of positified state variables according to
      * stateIsNonNegative (dimension: nx_solver) */
-    mutable AmiVector x_pos_tmp {0};
+    mutable AmiVector x_pos_tmp_ {0};
 
     /** orignal user-provided, possibly scaled parameter array (dimension: np)
      */
-    std::vector<realtype> originalParameters;
+    std::vector<realtype> original_parameters_;
 
     /** index indicating to which event an event output belongs */
-    std::vector<int> z2event;
+    std::vector<int> z2event_;
 
     /** state initialisation (size nx_solver) */
-    std::vector<double> x0data;
+    std::vector<realtype> x0data_;
 
     /** sensitivity initialisation (size nx_rdata x nplist, row-major) */
-    std::vector<realtype> sx0data;
+    std::vector<realtype> sx0data_;
 
     /** timepoints (size nt) */
-    std::vector<realtype> ts;
+    std::vector<realtype> ts_;
 
     /** vector of bools indicating whether state variables are to be assumed to
      * be positive */
-    std::vector<bool> stateIsNonNegative;
+    std::vector<bool> state_is_non_negative_;
 
     /** boolean indicating whether any entry in stateIsNonNegative is `true` */
-    bool anyStateNonNegative = false;
+    bool any_state_non_negative_ {false};
 
     /** maximal number of events to track */
-    int nmaxevent = 10;
+    int nmaxevent_ {10};
 
     /** parameter transformation of `originalParameters` (dimension np) */
-    std::vector<ParameterScaling> pscale;
+    std::vector<ParameterScaling> pscale_;
 
     /** starting time */
-    double tstart = 0.0;
+    realtype tstart_ {0.0};
 
     /** flag indicating whether steadystate sensivities are to be computed
      *  via FSA when steadyStateSimulation is used
      */
-    SteadyStateSensitivityMode steadyStateSensitivityMode =
-        SteadyStateSensitivityMode::newtonOnly;
+    SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::newtonOnly};
 
     /** flag indicating whether reinitialization of states depending on
      *  fixed parameters is activated
      */
-    bool reinitializeFixedParameterInitialStates = false;
+    bool reinitialize_fixed_parameter_initial_states_ {false};
 
     /** Indicates whether the result of every call to Model::f* should be
      * checked for finiteness */
-    bool alwaysCheckFinite = false;
+    bool always_check_finite_ {false};
 };
 
 bool operator==(const Model &a, const Model &b);

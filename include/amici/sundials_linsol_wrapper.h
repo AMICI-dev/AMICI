@@ -131,7 +131,7 @@ class SUNLinSolWrapper {
     int initialize();
 
     /** Wrapped solver */
-    SUNLinearSolver solver = nullptr;
+    SUNLinearSolver solver_ {nullptr};
 };
 
 
@@ -160,7 +160,7 @@ class SUNLinSolBand : public SUNLinSolWrapper {
 
   private:
     /** Matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A;
+    SUNMatrixWrapper A_;
 };
 
 
@@ -179,7 +179,7 @@ class SUNLinSolDense : public SUNLinSolWrapper {
 
   private:
     /** Matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A;
+    SUNMatrixWrapper A_;
 };
 
 
@@ -233,7 +233,7 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
 
   private:
     /** Sparse matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A;
+    SUNMatrixWrapper A_;
 };
 
 #ifdef SUNDIALS_SUPERLUMT
