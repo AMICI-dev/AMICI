@@ -50,18 +50,18 @@ class CVodeSolver : public Solver {
     int solve(realtype tout, int itask) const override;
 
     int solveF(realtype tout, int itask,
-               int *ncheckPtr) const override;
+               int *ncheckPtr_) const override;
 
     void solveB(realtype tBout, int itaskB) const override;
 
-    void getDky(realtype t, int k) const override;
+    void getDky(realtype t_, int k) const override;
 
-    void getSensDky(realtype t, int k) const override;
+    void getSensDky(realtype t_, int k) const override;
 
-    void getQuadDkyB(realtype t, int k,
+    void getQuadDkyB(realtype t_, int k,
                      int which) const override;
 
-    void getDkyB(realtype t, int k, int which) const override;
+    void getDkyB(realtype t_, int k, int which) const override;
 
     void getRootInfo(int *rootsfound) const override;
 
@@ -97,23 +97,23 @@ class CVodeSolver : public Solver {
 
     void getQuadB(int which) const override;
 
-    void getQuad(realtype &t) const override;
+    void getQuad(realtype &t_) const override;
 
-    void getQuadDky(realtype t, int k) const override;
+    void getQuadDky(realtype t_, int k) const override;
 
     void reInitPostProcessF(realtype tnext) const override;
 
     void reInitPostProcessB(realtype tnext) const override;
 
-    void reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
+    void reInitPostProcess(void *ami_mem, realtype *t_, AmiVector *yout,
                            realtype tout) const;
 
     void allocateSolver() const override;
 
-    void setSStolerances(double rtol, double atol) const override;
+    void setSStolerances(double rtol_, double atol_) const override;
 
-    void setSensSStolerances(double rtol,
-                             const double *atol) const override;
+    void setSensSStolerances(double rtol_,
+                             const double *atol_) const override;
 
     void setSensErrCon(bool error_corr) const override;
 
@@ -129,9 +129,9 @@ class CVodeSolver : public Solver {
 
     void setMaxNumSteps(long int mxsteps) const override;
 
-    void setStabLimDet(int stldet) const override;
+    void setStabLimDet(int stldet_) const override;
 
-    void setStabLimDetB(int which, int stldet) const override;
+    void setStabLimDetB(int which, int stldet_) const override;
 
     void setId(const Model *model) const override;
 
@@ -174,7 +174,7 @@ class CVodeSolver : public Solver {
     getNumNonlinSolvConvFails(const void *ami_mem,
                               long int *numnonlinsolvconvfails) const override;
 
-    void getLastOrder(const void *ami_ami_mem, int *order) const override;
+    void getLastOrder(const void *ami_ami_mem, int *order_) const override;
 
     void *getAdjBmem(void *ami_mem, int which) const override;
 
