@@ -516,7 +516,7 @@ class Solver {
      * the backwards problem
      * @param interpType interpolation type
      */
-    void setInterpolationType(InterpolationType interp_type);
+    void setInterpolationType(InterpolationType interpType);
 
     /**
      * @brief Gets KLU / SuperLUMT state ordering mode
@@ -895,7 +895,7 @@ class Solver {
      * checkpoints
      * @return status flag indicating success of execution
      */
-    virtual int solveF(realtype tout, int itask, int *ncheckPtr_) const = 0;
+    virtual int solveF(realtype tout, int itask, int *ncheckPtr) const = 0;
 
     /**
      * @brief reInitPostProcessF postprocessing of the solver memory after a
@@ -937,7 +937,7 @@ class Solver {
      *
      * @param t timepoint for quadrature extraction
      */
-    virtual void getQuad(realtype &t_) const = 0;
+    virtual void getQuad(realtype &t) const = 0;
 
     /**
      * @brief Initialises the states at the specified initial timepoint
@@ -1065,7 +1065,7 @@ class Solver {
      * @param rtol relative tolerances
      * @param atol absolute tolerances
      */
-    virtual void setSStolerances(double rtol_, double atol_) const = 0;
+    virtual void setSStolerances(double rtol, double atol) const = 0;
 
     /**
      * @brief activates sets scalar relative and absolute tolerances for the
@@ -1074,7 +1074,7 @@ class Solver {
      * @param rtol relative tolerances
      * @param atol array of absolute tolerances for every sensitivy variable
      */
-    virtual void setSensSStolerances(double rtol_, const double *atol_) const = 0;
+    virtual void setSensSStolerances(double rtol, const double *atol) const = 0;
 
     /**
      * SetSensErrCon specifies whether error control is also enforced for
@@ -1149,7 +1149,7 @@ class Solver {
      * @param stldet flag for stability limit detection (TRUE or FALSE)
      *
      */
-    virtual void setStabLimDet(int stldet_) const = 0;
+    virtual void setStabLimDet(int stldet) const = 0;
 
     /**
      * @brief activates stability limit detection for the backward
@@ -1159,7 +1159,7 @@ class Solver {
      * @param stldet flag for stability limit detection (TRUE or FALSE)
      *
      */
-    virtual void setStabLimDetB(int which, int stldet_) const = 0;
+    virtual void setStabLimDetB(int which, int stldet) const = 0;
 
     /**
      * @brief specify algebraic/differential components (DAE only)
@@ -1193,7 +1193,7 @@ class Solver {
      * @param t timepoint
      * @param k derivative order
      */
-    virtual void getDky(realtype t_, int k) const = 0;
+    virtual void getDky(realtype t, int k) const = 0;
 
     /**
      * @brief interpolates the (derivative of the) solution at the requested
@@ -1203,7 +1203,7 @@ class Solver {
      * @param k derivative order
      * @param which index of backward problem
      */
-    virtual void getDkyB(realtype t_, int k, int which) const = 0;
+    virtual void getDkyB(realtype t, int k, int which) const = 0;
 
     /**
      * @brief interpolates the (derivative of the) solution at the requested
@@ -1212,7 +1212,7 @@ class Solver {
      * @param t timepoint
      * @param k derivative order
      */
-    virtual void getSensDky(realtype t_, int k) const = 0;
+    virtual void getSensDky(realtype t, int k) const = 0;
 
     /**
      * @brief interpolates the (derivative of the) solution at the requested
@@ -1222,7 +1222,7 @@ class Solver {
      * @param k derivative order
      * @param which index of backward problem
      */
-    virtual void getQuadDkyB(realtype t_, int k, int which) const = 0;
+    virtual void getQuadDkyB(realtype t, int k, int which) const = 0;
 
     /**
      * @brief interpolates the (derivative of the) solution at the requested
@@ -1231,7 +1231,7 @@ class Solver {
      * @param t timepoint
      * @param k derivative order
      */
-    virtual void getQuadDky(realtype t_, int k) const = 0;
+    virtual void getQuadDky(realtype t, int k) const = 0;
 
     /**
      * @brief initializes the adjoint problem
@@ -1331,7 +1331,7 @@ class Solver {
      * forward or backward problem)
      * @param order output array
      */
-    virtual void getLastOrder(const void *ami_mem, int *order_) const = 0;
+    virtual void getLastOrder(const void *ami_mem, int *order) const = 0;
 
     /**
      * @brief Initializes and sets the linear solver for the forward problem
@@ -1597,7 +1597,7 @@ class Solver {
      * @param sensi_meth new value for sensi_meth[_preeq]
      * @param preequilibration flag indicating preequilibration or simulation
      */
-    void checkSensitivityMethod(const SensitivityMethod sensi_meth_,
+    void checkSensitivityMethod(const SensitivityMethod sensi_meth,
                                 bool preequilibration) const;
 
     /** state (dimension: nx_solver) */

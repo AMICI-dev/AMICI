@@ -63,23 +63,23 @@ class IDASolver : public Solver {
 
     void getRootInfo(int *rootsfound) const override;
 
-    void getDky(realtype t_, int k) const override;
+    void getDky(realtype t, int k) const override;
 
     void getSens() const override;
 
-    void getSensDky(realtype t_, int k) const override;
+    void getSensDky(realtype t, int k) const override;
 
     void getB(int which) const override;
 
-    void getDkyB(realtype t_, int k, int which) const override;
+    void getDkyB(realtype t, int k, int which) const override;
 
     void getQuadB(int which) const override;
 
-    void getQuadDkyB(realtype t_, int k, int which) const override;
+    void getQuadDkyB(realtype t, int k, int which) const override;
 
-    void getQuad(realtype &t_) const override;
+    void getQuad(realtype &t) const override;
 
-    void getQuadDky(realtype t_, int k) const override;
+    void getQuadDky(realtype t, int k) const override;
 
     void calcIC(realtype tout1) const override;
 
@@ -102,16 +102,16 @@ class IDASolver : public Solver {
     void setNonLinearSolverB(int which) const override;
 
   protected:
-    void reInitPostProcess(void *ami_mem, realtype *t_, AmiVector *yout,
+    void reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
                            AmiVector *ypout, realtype tout) const;
 
     void allocateSolver() const override;
 
-    void setSStolerances(realtype rtol_,
-                         realtype atol_) const override;
+    void setSStolerances(realtype rtol,
+                         realtype atol) const override;
 
-    void setSensSStolerances(realtype rtol_,
-                             const realtype *atol_) const override;
+    void setSensSStolerances(realtype rtol,
+                             const realtype *atol) const override;
 
     void setSensErrCon(bool error_corr) const override;
 
@@ -127,9 +127,9 @@ class IDASolver : public Solver {
 
     void setMaxNumSteps(long int mxsteps) const override;
 
-    void setStabLimDet(int stldet_) const override;
+    void setStabLimDet(int stldet) const override;
 
-    void setStabLimDetB(int which, int stldet_) const override;
+    void setStabLimDetB(int which, int stldet) const override;
 
     void setId(const Model *model) const override;
 
