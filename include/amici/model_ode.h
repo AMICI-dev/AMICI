@@ -81,7 +81,7 @@ class Model_ODE : public Model {
                 pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {}
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
-            const AmiVector &xdot, SUNMatrix J_) override;
+            const AmiVector &xdot, SUNMatrix J) override;
 
     /**
      * @brief Implementation of fJ at the N_Vector level
@@ -113,7 +113,7 @@ class Model_ODE : public Model {
 
     void fJSparse(realtype t, realtype cj, const AmiVector &x,
                   const AmiVector &dx, const AmiVector &xdot,
-                  SUNMatrix J_) override;
+                  SUNMatrix J) override;
 
     /**
      * @brief Implementation of fJSparse at the N_Vector level, this function
@@ -288,7 +288,7 @@ class Model_ODE : public Model {
     void fdxdotdp(realtype t, const AmiVector &x, const AmiVector &dx) override;
 
     void fsxdot(realtype t, const AmiVector &x, const AmiVector &dx, int ip,
-                const AmiVector &sx_, const AmiVector &sdx,
+                const AmiVector &sx, const AmiVector &sdx,
                 AmiVector &sxdot) override;
 
     /**
@@ -299,7 +299,7 @@ class Model_ODE : public Model {
      * @param sx Vector with the state sensitivities
      * @param sxdot Vector with the sensitivity right hand side
      */
-    void fsxdot(realtype t, N_Vector x, int ip, N_Vector sx_, N_Vector sxdot);
+    void fsxdot(realtype t, N_Vector x, int ip, N_Vector sx, N_Vector sxdot);
 
     std::unique_ptr<Solver> getSolver() override;
 
@@ -315,9 +315,9 @@ class Model_ODE : public Model {
      * @param w vector with helper variables
      * @param dwdx derivative of w wrt x
      **/
-    virtual void fJ(realtype *J_, realtype t, const realtype *x,
+    virtual void fJ(realtype *J, realtype t, const realtype *x,
                     const realtype *p, const realtype *k, const realtype *h,
-                    const realtype *w_, const realtype *dwdx_) = 0;
+                    const realtype *w, const realtype *dwdx) = 0;
 
     /**
      * @brief Model specific implementation for fJB

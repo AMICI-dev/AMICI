@@ -82,7 +82,7 @@ class Model_DAE : public Model {
         }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
-            const AmiVector &xdot, SUNMatrix J_) override;
+            const AmiVector &xdot, SUNMatrix J) override;
 
     /**
      * @brief Jacobian of xdot with respect to states x

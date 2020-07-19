@@ -29,7 +29,7 @@ class NewtonSolver {
      * @param x pointer to state variables
      * @param model pointer to the model object
      */
-    NewtonSolver(realtype *t_, AmiVector *x_, Model *model_);
+    NewtonSolver(realtype *t, AmiVector *x, Model *model);
 
     /**
      * @brief Factory method to create a NewtonSolver based on linsolType
@@ -41,7 +41,7 @@ class NewtonSolver {
      * @return solver NewtonSolver according to the specified linsolType
      */
     static std::unique_ptr<NewtonSolver> getSolver(
-    realtype *t_, AmiVector *x_, Solver &simulationSolver, Model *model_);
+    realtype *t, AmiVector *x, Solver &simulationSolver, Model *model);
 
     /**
      * @brief Computes the solution of one Newton iteration
@@ -150,7 +150,7 @@ class NewtonSolverDense : public NewtonSolver {
      * @param model pointer to the model object
      */
 
-    NewtonSolverDense(realtype *t_, AmiVector *x_, Model *model_);
+    NewtonSolverDense(realtype *t, AmiVector *x, Model *model);
     ~NewtonSolverDense() override;
 
     /**
@@ -205,7 +205,7 @@ class NewtonSolverSparse : public NewtonSolver {
      * @param x pointer to state variables
      * @param model pointer to the model object
      */
-    NewtonSolverSparse(realtype *t_, AmiVector *x_, Model *model_);
+    NewtonSolverSparse(realtype *t, AmiVector *x, Model *model);
     ~NewtonSolverSparse() override;
 
     /**
@@ -258,7 +258,7 @@ class NewtonSolverIterative : public NewtonSolver {
      * @param x pointer to state variables
      * @param model pointer to the model object
      */
-    NewtonSolverIterative(realtype *t_, AmiVector *x_, Model *model_);
+    NewtonSolverIterative(realtype *t, AmiVector *x, Model *model);
     ~NewtonSolverIterative() override = default;
 
     /**

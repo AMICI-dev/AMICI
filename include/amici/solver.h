@@ -191,7 +191,7 @@ class Solver {
      * @brief Set sensitivity method
      * @param sensi_meth
      */
-    void setSensitivityMethod(SensitivityMethod sensi_meth_);
+    void setSensitivityMethod(SensitivityMethod sensi_meth);
 
     /**
      * @brief Return current sensitivity method during preequilibration
@@ -203,7 +203,7 @@ class Solver {
      * @brief Set sensitivity method for preequilibration
      * @param sensi_meth_preeq
      */
-    void setSensitivityMethodPreequilibration(SensitivityMethod sensi_meth_preeq_);
+    void setSensitivityMethodPreequilibration(SensitivityMethod sensi_meth_preeq);
 
     /**
      * @brief Disable forward sensitivity integration (used in steady state sim)
@@ -222,7 +222,7 @@ class Solver {
      * computation
      * @param newton_maxsteps
      */
-    void setNewtonMaxSteps(int newton_maxsteps_);
+    void setNewtonMaxSteps(int newton_maxsteps);
 
     /**
      * @brief Get if model preequilibration is enabled
@@ -248,7 +248,7 @@ class Solver {
      * steady state computation
      * @param newton_maxlinsteps
      */
-    void setNewtonMaxLinearSteps(int newton_maxlinsteps_);
+    void setNewtonMaxLinearSteps(int newton_maxlinsteps);
 
     /**
      * @brief Get a state of the damping factor used in the Newton solver
@@ -284,7 +284,7 @@ class Solver {
      * @brief Set the sensitvity order
      * @param sensi sensitivity order
      */
-    void setSensitivityOrder(SensitivityOrder sensi_);
+    void setSensitivityOrder(SensitivityOrder sensi);
 
     /**
      * @brief Get the relative tolerances for the forward problem
@@ -304,7 +304,7 @@ class Solver {
      *
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeTolerance(double rtol_);
+    void setRelativeTolerance(double rtol);
 
     /**
      * @brief Get the absolute tolerances for the forward problem
@@ -324,7 +324,7 @@ class Solver {
      *
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteTolerance(double atol_);
+    void setAbsoluteTolerance(double atol);
 
     /**
      * @brief Returns the relative tolerances for the forward sensitivity
@@ -337,7 +337,7 @@ class Solver {
      * @brief Sets the relative tolerances for the forward sensitivity problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceFSA(double rtol_);
+    void setRelativeToleranceFSA(double rtol);
 
     /**
      * @brief Returns the absolute tolerances for the forward sensitivity
@@ -350,7 +350,7 @@ class Solver {
      * @brief Sets the absolute tolerances for the forward sensitivity problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceFSA(double atol_);
+    void setAbsoluteToleranceFSA(double atol);
 
     /**
      * @brief Returns the relative tolerances for the adjoint sensitivity
@@ -363,7 +363,7 @@ class Solver {
      * @brief Sets the relative tolerances for the adjoint sensitivity problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceB(double rtol_);
+    void setRelativeToleranceB(double rtol);
 
     /**
      * @brief Returns the absolute tolerances for the backward problem for
@@ -377,7 +377,7 @@ class Solver {
      * adjoint sensitivity analysis
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceB(double atol_);
+    void setAbsoluteToleranceB(double atol);
 
     /**
      * @brief Returns the relative tolerance for the quadrature problem
@@ -389,7 +389,7 @@ class Solver {
      * @brief sets the relative tolerance for the quadrature problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceQuadratures(double rtol_);
+    void setRelativeToleranceQuadratures(double rtol);
 
     /**
      * @brief returns the absolute tolerance for the quadrature problem
@@ -401,7 +401,7 @@ class Solver {
      * @brief sets the absolute tolerance for the quadrature problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceQuadratures(double atol_);
+    void setAbsoluteToleranceQuadratures(double atol);
 
     /**
      * @brief returns the relative tolerance for the steady state problem
@@ -413,7 +413,7 @@ class Solver {
      * @brief sets the relative tolerance for the steady state problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceSteadyState(double rtol_);
+    void setRelativeToleranceSteadyState(double rtol);
 
     /**
      * @brief returns the absolute tolerance for the steady state problem
@@ -425,7 +425,7 @@ class Solver {
      * @brief sets the absolute tolerance for the steady state problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceSteadyState(double atol_);
+    void setAbsoluteToleranceSteadyState(double atol);
 
     /**
      * @brief returns the relative tolerance for the sensitivities of the
@@ -439,7 +439,7 @@ class Solver {
      * steady state problem
      * @param rtol relative tolerance (non-negative number)
      */
-    void setRelativeToleranceSteadyStateSensi(double rtol_);
+    void setRelativeToleranceSteadyStateSensi(double rtol);
 
     /**
      * @brief returns the absolute tolerance for the sensitivities of the
@@ -453,7 +453,7 @@ class Solver {
      * steady state problem
      * @param atol absolute tolerance (non-negative number)
      */
-    void setAbsoluteToleranceSteadyStateSensi(double atol_);
+    void setAbsoluteToleranceSteadyStateSensi(double atol);
 
     /**
      * @brief returns the maximum number of solver steps for the forward
@@ -466,7 +466,7 @@ class Solver {
      * @brief sets the maximum number of solver steps for the forward problem
      * @param maxsteps maximum number of solver steps (non-negative number)
      */
-    void setMaxSteps(long int maxsteps_);
+    void setMaxSteps(long int maxsteps);
 
     /**
      * @brief returns the maximum number of solver steps for the backward
@@ -479,7 +479,7 @@ class Solver {
      * @brief sets the maximum number of solver steps for the backward problem
      * @param maxsteps maximum number of solver steps (non-negative number)
      */
-    void setMaxStepsBackwardProblem(long int maxsteps_);
+    void setMaxStepsBackwardProblem(long int maxsteps);
 
     /**
      * @brief returns the linear system multistep method
@@ -491,7 +491,7 @@ class Solver {
      * @brief sets the linear system multistep method
      * @param lmm linear system multistep method
      */
-    void setLinearMultistepMethod(LinearMultistepMethod lmm_);
+    void setLinearMultistepMethod(LinearMultistepMethod lmm);
 
     /**
      * @brief returns the nonlinear system solution method
@@ -503,7 +503,7 @@ class Solver {
      * @brief sets the nonlinear system solution method
      * @param iter nonlinear system solution method
      */
-    void setNonlinearSolverIteration(NonlinearSolverIteration iter_);
+    void setNonlinearSolverIteration(NonlinearSolverIteration iter);
 
     /**
      * @brief getInterpolationType
@@ -516,7 +516,7 @@ class Solver {
      * the backwards problem
      * @param interpType interpolation type
      */
-    void setInterpolationType(InterpolationType interp_type_);
+    void setInterpolationType(InterpolationType interp_type);
 
     /**
      * @brief Gets KLU / SuperLUMT state ordering mode
@@ -535,7 +535,7 @@ class Solver {
      * SUNLinSolKLU::StateOrdering and SUNLinSolSuperLUMT::StateOrdering.
      * @param ordering state ordering
      */
-    void setStateOrdering(int ordering_);
+    void setStateOrdering(int ordering);
 
     /**
      * @brief returns stability limit detection mode
@@ -547,7 +547,7 @@ class Solver {
      * @brief set stability limit detection mode
      * @param stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
      */
-    void setStabilityLimitFlag(booleantype stldet_);
+    void setStabilityLimitFlag(booleantype stldet);
 
     /**
      * @brief getLinearSolver
@@ -559,7 +559,7 @@ class Solver {
      * @brief setLinearSolver
      * @param linsol
      */
-    void setLinearSolver(LinearSolver linsol_);
+    void setLinearSolver(LinearSolver linsol);
 
     /**
      * @brief returns the internal sensitivity method
@@ -571,7 +571,7 @@ class Solver {
      * @brief sets the internal sensitivity method
      * @param ism internal sensitivity method
      */
-    void setInternalSensitivityMethod(InternalSensitivityMethod ism_);
+    void setInternalSensitivityMethod(InternalSensitivityMethod ism);
 
     /**
      * @brief returns the ReturnData reporting mode
@@ -593,8 +593,8 @@ class Solver {
      * @param sx state sensitivity
      * @param xQ quadrature
      */
-    void writeSolution(realtype *t_, AmiVector &x_, AmiVector &dx_,
-                       AmiVectorArray &sx_, AmiVector &xQ_) const;
+    void writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
+                       AmiVectorArray &sx, AmiVector &xQ) const;
 
     /**
      * @brief write solution from forward simulation
@@ -604,29 +604,29 @@ class Solver {
      * @param xQB adjoint quadrature
      * @param which index of adjoint problem
      */
-    void writeSolutionB(realtype *t_, AmiVector &xB_, AmiVector &dxB_,
-                        AmiVector &xQB_, int which) const;
+    void writeSolutionB(realtype *t, AmiVector &xB, AmiVector &dxB,
+                        AmiVector &xQB, int which) const;
 
     /**
      * @brief Access state solution at time t
      * @param t time
      * @return x or interpolated solution dky
      */
-    const AmiVector &getState(realtype t_) const;
+    const AmiVector &getState(realtype t) const;
 
     /**
      * @brief Access derivative state solution at time t
      * @param t time
      * @return dx or interpolated solution dky
      */
-    const AmiVector &getDerivativeState(realtype t_) const;
+    const AmiVector &getDerivativeState(realtype t) const;
 
     /**
      * @brief Access state sensitivity solution at time t
      * @param t time
      * @return (interpolated) solution sx
      */
-    const AmiVectorArray &getStateSensitivity(realtype t_) const;
+    const AmiVectorArray &getStateSensitivity(realtype t) const;
 
     /**
      * @brief Access adjoint solution at time t
@@ -634,7 +634,7 @@ class Solver {
      * @param t time
      * @return (interpolated) solution xB
      */
-    const AmiVector &getAdjointState(int which, realtype t_) const;
+    const AmiVector &getAdjointState(int which, realtype t) const;
 
     /**
      * @brief Access adjoint derivative solution at time t
@@ -642,7 +642,7 @@ class Solver {
      * @param t time
      * @return (interpolated) solution dxB
      */
-    const AmiVector &getAdjointDerivativeState(int which, realtype t_) const;
+    const AmiVector &getAdjointDerivativeState(int which, realtype t) const;
 
     /**
      * @brief Access adjoint quadrature solution at time t
@@ -650,14 +650,14 @@ class Solver {
      * @param t time
      * @return (interpolated) solution xQB
      */
-    const AmiVector &getAdjointQuadrature(int which, realtype t_) const;
+    const AmiVector &getAdjointQuadrature(int which, realtype t) const;
 
     /**
      * @brief Access quadrature solution at time t
      * @param t time
      * @return (interpolated) solution xQ
      */
-    const AmiVector &getQuadrature(realtype t_) const;
+    const AmiVector &getQuadrature(realtype t) const;
 
     /**
      * @brief Reinitializes the states in the solver after an event occurence

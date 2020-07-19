@@ -642,7 +642,7 @@ class ReturnData {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventOutput(int iroot, realtype t_, const std::vector<int> rootidx,
+    void getEventOutput(int iroot, realtype t, const std::vector<int> rootidx,
                         Model &model, ExpData const *edata);
 
     /**
@@ -654,7 +654,7 @@ class ReturnData {
      * @param model model that was used in forward solve
      * @param edata ExpData instance carrying experimental data
      */
-    void getEventSensisFSA(int iroot, int ie, realtype t_, Model &model,
+    void getEventSensisFSA(int iroot, int ie, realtype t, Model &model,
                            ExpData const *edata);
 
     /**
@@ -691,7 +691,7 @@ class ModelContext : public ContextManager {
      *
      * @param model
      */
-    explicit ModelContext(Model *model_);
+    explicit ModelContext(Model *model);
 
     ModelContext &operator=(const ModelContext &other) = delete;
 
