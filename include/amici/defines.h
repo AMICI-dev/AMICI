@@ -43,7 +43,7 @@ constexpr int AMICI_ONE_STEP=                  2;
 constexpr int AMICI_PREEQUILIBRATE=           -1;
 
 #ifndef booleantype
-#define booleantype int
+using booleantype = int;
 #endif
 
 /** defines variable type for simulation variables
