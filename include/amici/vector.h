@@ -199,6 +199,8 @@ class AmiVectorArray {
      */
     AmiVectorArray(const AmiVectorArray &vaold);
 
+    ~AmiVectorArray() = default;
+
     /**
      * @brief copy assignment operator
      * @param other right hand side
@@ -293,8 +295,6 @@ class AmiVectorArray {
      * @param other data source
      */
     void copy(const AmiVectorArray &other);
-
-    ~AmiVectorArray() = default;
 
   private:
     /** main data storage */
