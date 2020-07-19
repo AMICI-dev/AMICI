@@ -1,15 +1,11 @@
-name: C++/Python testsuite / OSX
+name: C++/Python testsuite
 on: [push]
 
 jobs:
   build:
-    name: _
+    name: OSX
 
     runs-on: macos-latest
-
-    env:
-      ENABLE_GCOV_COVERAGE: FALSE
-      CI_SONARCLOUD: FALSE
 
     steps:
     - uses: actions/checkout@master

@@ -1,0 +1,24 @@
+name: Doxygen
+on: [push]
+
+jobs:
+  build:
+    name: Ubuntu
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+
+    # install amici dependencies
+
+    - name: Build doxygen
+      run: |
+        scripts/downloadAndBuildDoxygen.sh
+
+    - name: Run doxygen
+      run: |
+        scripts/run-doxygen.sh

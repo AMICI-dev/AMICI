@@ -10,7 +10,7 @@ cd "${AMICI_PATH}"/ThirdParty
 if [[ ! -d ${DOXYGEN_DIR} ]]; then
   # git clone --depth 1 https://github.com/doxygen/doxygen.git "${DOXYGEN_DIR}"
   # https://github.com/doxygen/doxygen/pull/7483
-  git clone --single-branch --branch fix7411 --depth 1 https://github.com/lelegard/doxygen.git "${DOXYGEN_DIR}"
+  git clone --single-branch --branch Release_1_8_18 --depth 1 https://github.com/lelegard/doxygen.git "${DOXYGEN_DIR}"
 fi
 
 cd "${DOXYGEN_DIR}"

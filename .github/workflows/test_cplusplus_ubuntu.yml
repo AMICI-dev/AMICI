@@ -1,16 +1,16 @@
-name: C++/Python testsuite / Ubuntu
+name: C++/Python testsuite
 on: [push]
 
 jobs:
   build:
-    name: _
+    name: Ubuntu
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest
 
     env:
-      ENABLE_GCOV_COVERAGE: TRUE
-      CI_SONARCLOUD: TRUE
+      ENABLE_GCOV_COVERAGE: "TRUE"
+      CI_SONARCLOUD: "TRUE"
 
     steps:
     - uses: actions/checkout@master
