@@ -115,7 +115,7 @@ class Model : public AbstractModel {
           amici::SecondOrderMode o2mode,
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
-          std::vector<int> z2event_, bool pythonGenerated = false,
+          std::vector<int> z2event, bool pythonGenerated = false,
           int ndxdotdp_explicit = 0, int ndxdotdp_implicit = 0);
 
     /** destructor */
@@ -203,7 +203,7 @@ class Model : public AbstractModel {
      * @param computeSensitivities flag indicating whether sensitivities are to
      * be computed
      */
-    void initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx_,
+    void initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
                     AmiVectorArray &sdx, bool computeSensitivities);
 
     /**
@@ -227,7 +227,7 @@ class Model : public AbstractModel {
      * @param sx pointer to state variable sensititivies
      * @param x pointer to state variables
      */
-    void initializeStateSensitivities(AmiVectorArray &sx_, const AmiVector &x);
+    void initializeStateSensitivities(AmiVectorArray &sx, const AmiVector &x);
 
     /**
      * @brief Initialises the heaviside variables h at the intial time t0
@@ -283,7 +283,7 @@ class Model : public AbstractModel {
      * @brief Set nmaxevent
      * @param nmaxevent maximum number of events that may occur for each type
      */
-    void setNMaxEvent(int nmaxevent_);
+    void setNMaxEvent(int nmaxevent);
 
     /**
      * @brief Get number of timepoints
@@ -302,7 +302,7 @@ class Model : public AbstractModel {
      * sensitivities
      * @param pscale scalar parameter scale for all parameters
      */
-    void setParameterScale(ParameterScaling pscale_);
+    void setParameterScale(ParameterScaling pscale);
 
     /**
      * @brief Set ParameterScale for each parameter, resets initial state
@@ -586,7 +586,7 @@ class Model : public AbstractModel {
      * @brief Set the timepoint vector
      * @param ts timepoint vector
      */
-    void setTimepoints(std::vector<realtype> const &ts_);
+    void setTimepoints(std::vector<realtype> const &ts);
 
     /**
      * @brief get simulation start time
@@ -612,7 +612,7 @@ class Model : public AbstractModel {
      * non-negative
      * @param stateIsNonNegative vector of flags
      */
-    void setStateIsNonNegative(std::vector<bool> const &state_is_non_negative_);
+    void setStateIsNonNegative(std::vector<bool> const &stateIsNonNegative);
 
     /**
      * @brief sets flags indicating that all states should be treated as
@@ -750,7 +750,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void getExpression(gsl::span<realtype> w_, const realtype t, const AmiVector &x);
+    void getExpression(gsl::span<realtype> w, const realtype t, const AmiVector &x);
 
     /**
      * @brief Time-resolved observables,
@@ -758,7 +758,7 @@ class Model : public AbstractModel {
      * @param t current timepoint
      * @param x current state
      */
-    void getObservable(gsl::span<realtype> y_, const realtype t,
+    void getObservable(gsl::span<realtype> y, const realtype t,
                        const AmiVector &x);
 
     /**
@@ -770,7 +770,7 @@ class Model : public AbstractModel {
      * @param sx state sensitivities
      */
     void getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
-                                  const AmiVector &x, const AmiVectorArray &sx_);
+                                  const AmiVector &x, const AmiVectorArray &sx);
 
     /**
      * @brief Time-resolved observable standard deviations
@@ -779,7 +779,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance (optional, pass
      * nullptr to ignore)
      */
-    void getObservableSigma(gsl::span<realtype> sigmay_, const int it,
+    void getObservableSigma(gsl::span<realtype> sigmay, const int it,
                             const ExpData *edata);
 
     /**
@@ -816,7 +816,7 @@ class Model : public AbstractModel {
     void addObservableObjectiveSensitivity(std::vector<realtype> &sllh,
                                            std::vector<realtype> &s2llh,
                                            const int it, const AmiVector &x,
-                                           const AmiVectorArray &sx_,
+                                           const AmiVectorArray &sx,
                                            const ExpData &edata);
 
     /**
@@ -842,7 +842,7 @@ class Model : public AbstractModel {
      * @param x state variables
      * @param edata experimental data instance
      */
-    void getAdjointStateObservableUpdate(gsl::span<realtype> dJydx_,
+    void getAdjointStateObservableUpdate(gsl::span<realtype> dJydx,
                                          const int it, const AmiVector &x,
                                          const ExpData &edata);
 
@@ -853,7 +853,7 @@ class Model : public AbstractModel {
      * @param t timepoint
      * @param x state variables
      */
-    void getEvent(gsl::span<realtype> z_, const int ie, const realtype t,
+    void getEvent(gsl::span<realtype> z, const int ie, const realtype t,
                   const AmiVector &x);
     /**
      * @brief Sensitivities of event-resolved observables, total derivative,
@@ -866,7 +866,7 @@ class Model : public AbstractModel {
      */
     void getEventSensitivity(gsl::span<realtype> sz, const int ie,
                              const realtype t, const AmiVector &x,
-                             const AmiVectorArray &sx_);
+                             const AmiVectorArray &sx);
 
     /**
      * @brief Sensitivity of z at final timepoint (ignores sensitivity of
@@ -883,7 +883,7 @@ class Model : public AbstractModel {
      * @param t timepoint
      * @param x state variables
      */
-    void getEventRegularization(gsl::span<realtype> rz_, const int ie,
+    void getEventRegularization(gsl::span<realtype> rz, const int ie,
                                 const realtype t, const AmiVector &x);
 
     /**
@@ -898,7 +898,7 @@ class Model : public AbstractModel {
     void getEventRegularizationSensitivity(gsl::span<realtype> srz,
                                            const int ie, const realtype t,
                                            const AmiVector &x,
-                                           const AmiVectorArray &sx_);
+                                           const AmiVectorArray &sx);
     /**
      * @brief Event-resolved observable standard deviations
      * @param sigmaz buffer (dimension: nz)
@@ -908,7 +908,7 @@ class Model : public AbstractModel {
      * @param edata pointer to experimental data instance (optional, pass
      * nullptr to ignore)
      */
-    void getEventSigma(gsl::span<realtype> sigmaz_, const int ie,
+    void getEventSigma(gsl::span<realtype> sigmaz, const int ie,
                        const int nroots, const realtype t,
                        const ExpData *edata);
 
@@ -969,7 +969,7 @@ class Model : public AbstractModel {
                                       std::vector<realtype> &s2llh,
                                       const int ie, const int nroots,
                                       const realtype t, const AmiVector &x,
-                                      const AmiVectorArray &sx_,
+                                      const AmiVectorArray &sx,
                                       const ExpData &edata);
 
     /**
@@ -1000,7 +1000,7 @@ class Model : public AbstractModel {
      * @param x state variables
      * @param edata experimental data instance
      */
-    void getAdjointStateEventUpdate(gsl::span<realtype> dJzdx_, const int ie,
+    void getAdjointStateEventUpdate(gsl::span<realtype> dJzdx, const int ie,
                                     const int nroots, const realtype t,
                                     const AmiVector &x, const ExpData &edata);
 
@@ -1015,7 +1015,7 @@ class Model : public AbstractModel {
      */
     void getEventTimeSensitivity(std::vector<realtype> &stau, const realtype t,
                                  const int ie, const AmiVector &x,
-                                 const AmiVectorArray &sx_);
+                                 const AmiVectorArray &sx);
 
     /**
      * @brief Update state variables after event
@@ -1039,7 +1039,7 @@ class Model : public AbstractModel {
      * @param stau timepoint sensitivity, to be computed with
      * Model::getEventTimeSensitivity
      */
-    void addStateSensitivityEventUpdate(AmiVectorArray &sx_, const int ie,
+    void addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
                                         const realtype t,
                                         const AmiVector &x_old,
                                         const AmiVector &xdot,
@@ -1137,7 +1137,7 @@ class Model : public AbstractModel {
      * @param sx pointer to state sensitivity variables
      * @param x pointer to state variables
      */
-    void fsx0(AmiVectorArray &sx_, const AmiVector &x);
+    void fsx0(AmiVectorArray &sx, const AmiVector &x);
 
     /**
      * @brief Sets only those initial states sensitivities that are affected
@@ -1145,7 +1145,7 @@ class Model : public AbstractModel {
      * @param sx pointer to state sensitivity variables
      * @param x pointer to state variables
      */
-    void fsx0_fixedParameters(AmiVectorArray &sx_, const AmiVector &x);
+    void fsx0_fixedParameters(AmiVectorArray &sx, const AmiVector &x);
 
     /**
      * @brief Sensitivity of derivative initial states sensitivities sdx0 (only
@@ -1160,7 +1160,7 @@ class Model : public AbstractModel {
      * @param x_solver pointer to state variables with conservation laws applied
      * (solver returns this)
      */
-    void fx_rdata(AmiVector &x_rdata_, const AmiVector &x_solver);
+    void fx_rdata(AmiVector &x_rdata, const AmiVector &x_solver);
 
     /**
      * @brief Expands conservation law for state sensitivities
@@ -1169,7 +1169,7 @@ class Model : public AbstractModel {
      * @param sx_solver pointer to state variable sensitivities with
      * conservation laws applied (solver returns this)
      */
-    void fsx_rdata(AmiVectorArray &sx_rdata_, const AmiVectorArray &sx_solver);
+    void fsx_rdata(AmiVectorArray &sx_rdata, const AmiVectorArray &sx_solver);
 
     /** number of states */
     int nx_rdata{0};
@@ -1356,7 +1356,7 @@ class Model : public AbstractModel {
      * @param y simulated observable
      * @param edata pointer to experimental data instance
      */
-    void fJy(realtype &Jy, int it, const AmiVector &y_, const ExpData &edata);
+    void fJy(realtype &Jy, int it, const AmiVector &y, const ExpData &edata);
 
     /**
      * @brief Model specific implementation of fdJydy colptrs
@@ -1489,7 +1489,7 @@ class Model : public AbstractModel {
      * @param z simulated event
      * @param edata pointer to experimental data instance
      */
-    void fJz(realtype &Jz, int nroots, const AmiVector &z_,
+    void fJz(realtype &Jz, int nroots, const AmiVector &z,
              const ExpData &edata);
 
     /**
@@ -1600,7 +1600,7 @@ class Model : public AbstractModel {
      * @param x_solver state variables with conservation laws applied
      * @param tcl total abundances for conservation laws
      */
-    virtual void fx_rdata(realtype *x_rdata_, const realtype *x_solver,
+    virtual void fx_rdata(realtype *x_rdata, const realtype *x_solver,
                           const realtype *tcl);
 
     /**
@@ -1612,7 +1612,7 @@ class Model : public AbstractModel {
      * @param stcl sensitivities of total abundances for conservation laws
      * @param ip sensitivity index
      */
-    virtual void fsx_rdata(realtype *sx_rdata_, const realtype *sx_solver,
+    virtual void fsx_rdata(realtype *sx_rdata, const realtype *sx_solver,
                            const realtype *stcl, int ip);
 
     /**
@@ -1620,7 +1620,7 @@ class Model : public AbstractModel {
      * @param x_solver state variables with conservation laws applied
      * @param x_rdata state variables with conservation laws expanded
      */
-    virtual void fx_solver(realtype *x_solver, const realtype *x_rdata_);
+    virtual void fx_solver(realtype *x_solver, const realtype *x_rdata);
 
     /**
      * @brief Model specific implementation of fsx_solver
@@ -1629,14 +1629,14 @@ class Model : public AbstractModel {
      * @param sx_solver state sensitivity variables with conservation laws
      * applied
      */
-    virtual void fsx_solver(realtype *sx_solver, const realtype *sx_rdata_);
+    virtual void fsx_solver(realtype *sx_solver, const realtype *sx_rdata);
 
     /**
      * @brief Model specific implementation of ftotal_cl
      * @param total_cl total abundances of conservation laws
      * @param x_rdata state variables with conservation laws expanded
      */
-    virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata_);
+    virtual void ftotal_cl(realtype *total_cl, const realtype *x_rdata);
 
     /**
      * @brief Model specific implementation of fstotal_cl
@@ -1646,7 +1646,7 @@ class Model : public AbstractModel {
      * expanded
      * @param ip sensitivity index
      */
-    virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata_,
+    virtual void fstotal_cl(realtype *stotal_cl, const realtype *sx_rdata,
                             int ip);
 
     /**
