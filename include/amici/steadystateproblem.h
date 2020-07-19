@@ -389,7 +389,7 @@ class SteadystateProblem {
     SimulationState state_;
 
     /** stores diagnostic information about employed number of steps */
-    std::vector<int> numsteps_ {3, 0};
+    std::vector<int> numsteps_ {std::vector<int>(3, 0)};
 
     /** stores diagnostic information about employed number of linear steps */
     std::vector<int> numlinsteps_;
