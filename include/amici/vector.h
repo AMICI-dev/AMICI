@@ -33,8 +33,8 @@ class AmiVector {
      * @param length number of elements in vector
      */
     explicit AmiVector(const long int length)
-        : vec(static_cast<decltype(vec)::size_type>(length), 0.0),
-          nvec(N_VMake_Serial(length, vec.data())) {}
+        : vec_(static_cast<decltype(vec_)::size_type>(length), 0.0),
+          nvec_(N_VMake_Serial(length, vec_.data())) {}
 
     /** Moves data from std::vector and constructs an nvec that points to the
      * data
@@ -42,8 +42,8 @@ class AmiVector {
      * @param rvec vector from which the data will be moved
      */
     explicit AmiVector(std::vector<realtype> rvec)
-        : vec(std::move(rvec)),
-          nvec(N_VMake_Serial(static_cast<long int>(vec.size()), vec.data())) {}
+        : vec_(std::move(rvec)),
+          nvec_(N_VMake_Serial(static_cast<long int>(vec_.size()), vec_.data())) {}
 
     /** Copy data from gsl::span and constructs a vector
      * @brief constructor from gsl::span,
@@ -56,9 +56,9 @@ class AmiVector {
      * @brief copy constructor
      * @param vold vector from which the data will be copied
      */
-    AmiVector(const AmiVector &vold) : vec(vold.vec) {
-        nvec =
-            N_VMake_Serial(static_cast<long int>(vold.vec.size()), vec.data());
+    AmiVector(const AmiVector &vold) : vec_(vold.vec_) {
+        nvec_ =
+            N_VMake_Serial(static_cast<long int>(vold.vec_.size()), vec_.data());
     }
 
     /**
@@ -153,10 +153,10 @@ class AmiVector {
 
   private:
     /** main data storage */
-    std::vector<realtype> vec;
+    std::vector<realtype> vec_;
 
     /** N_Vector, will be synchronised such that it points to data in vec */
-    N_Vector nvec = nullptr;
+    N_Vector nvec_ {nullptr};
 
     /**
      * @brief reconstructs nvec such that data pointer points to vec data array
@@ -187,7 +187,7 @@ class AmiVectorArray {
      * @param length_outer number of vectors
      */
     AmiVectorArray(long int length_inner, long int length_outer);
-    
+
     /**
      * @brief copy constructor
      * @param vaold object to copy from
@@ -293,13 +293,13 @@ class AmiVectorArray {
 
   private:
     /** main data storage */
-    std::vector<AmiVector> vec_array;
+    std::vector<AmiVector> vec_array_;
 
     /**
      * N_Vector array, will be synchronised such that it points to
      * respective elements in the vec_array
      */
-    std::vector<N_Vector> nvec_array;
+    std::vector<N_Vector> nvec_array_;
 };
 
 } // namespace amici

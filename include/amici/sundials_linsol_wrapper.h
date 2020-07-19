@@ -131,7 +131,7 @@ class SUNLinSolWrapper {
     int initialize();
 
     /** Wrapped solver */
-    SUNLinearSolver solver = nullptr;
+    SUNLinearSolver solver_ {nullptr};
 };
 
 
@@ -146,7 +146,7 @@ class SUNLinSolBand : public SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      * @param A square matrix
      */
-    SUNLinSolBand(N_Vector x, SUNMatrix A);
+    SUNLinSolBand(N_Vector x, SUNMatrix A_);
 
     /**
      * @brief Create new band solver and matrix A.
@@ -160,7 +160,7 @@ class SUNLinSolBand : public SUNLinSolWrapper {
 
   private:
     /** Matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A;
+    SUNMatrixWrapper A_;
 };
 
 
@@ -179,7 +179,7 @@ class SUNLinSolDense : public SUNLinSolWrapper {
 
   private:
     /** Matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A;
+    SUNMatrixWrapper A_;
 };
 
 
@@ -200,7 +200,7 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
      * @param x A template for cloning vectors needed within the solver.
      * @param A sparse matrix
      */
-    SUNLinSolKLU(N_Vector x, SUNMatrix A);
+    SUNLinSolKLU(N_Vector x, SUNMatrix A_);
 
     /**
      * @brief Create KLU solver and matrix to operate on
@@ -233,7 +233,7 @@ class SUNLinSolKLU : public SUNLinSolWrapper {
 
   private:
     /** Sparse matrix A for solver, only if created by here. */
-    SUNMatrixWrapper A;
+    SUNMatrixWrapper A_;
 };
 
 #ifdef SUNDIALS_SUPERLUMT
