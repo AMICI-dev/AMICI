@@ -16,10 +16,8 @@
 namespace amici {
 
 NewtonSolver::NewtonSolver(realtype *t, AmiVector *x, Model *model)
-    : model_(model), xdot_(model->nx_solver), dx_(model->nx_solver),
-      xB_(model->nx_solver), dxB_(model->nx_solver) {
-    t_ = t;
-    x_ = x;
+    : t_(t), model_(model), xdot_(model->nx_solver), x_(x),
+      dx_(model->nx_solver), xB_(model->nx_solver), dxB_(model->nx_solver) {
 }
 
 /* ------------------------------------------------------------------------- */

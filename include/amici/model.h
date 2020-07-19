@@ -1873,7 +1873,7 @@ class Model : public AbstractModel {
 
     /** Indicates whether the result of every call to Model::f* should be
      * checked for finiteness */
-    bool always_check_finite {false};
+    bool always_check_finite_ {false};
 };
 
 bool operator==(const Model &a, const Model &b);

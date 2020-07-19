@@ -761,7 +761,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
 
     writeSlice(dydp_, sy);
 
-    if (always_check_finite)
+    if (always_check_finite_)
         checkFinite(sy, "sy");
 }
 
@@ -1011,7 +1011,7 @@ void Model::addStateEventUpdate(AmiVector &x, const int ie, const realtype t,
             state_.fixedParameters.data(), state_.h.data(), ie, xdot.data(),
             xdot_old.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(deltax_, "deltax");
     }
 
@@ -1037,7 +1037,7 @@ void Model::addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
                  state_.h.data(), w_.data(), plist(ip), ie, xdot.data(),
                  xdot_old.data(), sx.data(ip), &stau.at(ip));
 
-        if (always_check_finite) {
+        if (always_check_finite_) {
             app->checkFinite(deltasx_, "deltasx");
         }
 
@@ -1057,7 +1057,7 @@ void Model::addAdjointStateEventUpdate(AmiVector &xB, const int ie,
              state_.fixedParameters.data(), state_.h.data(), ie, xdot.data(),
              xdot_old.data(), xB.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(deltaxB_, "deltaxB");
     }
 
@@ -1082,7 +1082,7 @@ void Model::addAdjointQuadratureEventUpdate(
             xQB.at(iJ) += deltaqB_.at(iJ);
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(deltaqB_, "deltaqB");
     }
 }
@@ -1113,10 +1113,10 @@ int Model::checkFinite(gsl::span<const realtype> array, const char *fun) const {
 }
 
 void Model::setAlwaysCheckFinite(bool alwaysCheck) {
-    always_check_finite = alwaysCheck;
+    always_check_finite_ = alwaysCheck;
 }
 
-bool Model::getAlwaysCheckFinite() const { return always_check_finite; }
+bool Model::getAlwaysCheckFinite() const { return always_check_finite_; }
 
 void Model::fx0(AmiVector &x) {
     std::fill(x_rdata_.begin(), x_rdata_.end(), 0.0);
@@ -1126,7 +1126,7 @@ void Model::fx0(AmiVector &x) {
     fx_solver(x.data(), x_rdata_.data());
     ftotal_cl(state_.total_cl.data(), x_rdata_.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         checkFinite(x_rdata_, "x0 x_rdata");
         checkFinite(x.getVector(), "x0 x");
     }
@@ -1182,7 +1182,7 @@ void Model::fsdx0() {}
 
 void Model::fx_rdata(AmiVector &x_rdata, const AmiVector &x) {
     fx_rdata(x_rdata.data(), x.data(), state_.total_cl.data());
-    if (always_check_finite)
+    if (always_check_finite_)
         checkFinite(x_rdata.getVector(), "x_rdata");
 }
 
@@ -1254,7 +1254,7 @@ void Model::fy(const realtype t, const AmiVector &x) {
        state_.fixedParameters.data(),
        state_.h.data(), w_.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(gsl::make_span(y_.data(), ny), "y");
     }
 }
@@ -1273,7 +1273,7 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
               state_.fixedParameters.data(), state_.h.data(), plist(ip), w_.data(),
               dwdp_.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dydp_, "dydp");
     }
 }
@@ -1289,7 +1289,7 @@ void Model::fdydx(const realtype t, const AmiVector &x) {
     fdydx(dydx_.data(), t, x.data(), state_.unscaledParameters.data(),
           state_.fixedParameters.data(), state_.h.data(), w_.data(), dwdx_.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dydx_, "dydx");
     }
 }
@@ -1348,7 +1348,7 @@ void Model::fdsigmaydp(const int it, const ExpData *edata) {
         }
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dsigmaydp_, "dsigmaydp");
     }
 }
@@ -1384,7 +1384,7 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                    state_.fixedParameters.data(), y_.data(), sigmay_.data(),
                    edata.getObservedDataPtr(it));
 
-            if (always_check_finite) {
+            if (always_check_finite_) {
                 app->checkFinite(gsl::make_span(dJydy_[iyt].get()), "dJydy");
             }
         }
@@ -1398,7 +1398,7 @@ void Model::fdJydy(const int it, const AmiVector &x, const ExpData &edata) {
                    state_.fixedParameters.data(), y_.data(), sigmay_.data(),
                    edata.getObservedDataPtr(it));
         }
-        if (always_check_finite) {
+        if (always_check_finite_) {
             // get dJydy slice (ny) for current timepoint and observable
             app->checkFinite(dJydy_matlab_, "dJydy");
         }
@@ -1421,7 +1421,7 @@ void Model::fdJydsigma(const int it, const AmiVector &x, const ExpData &edata) {
                        edata.getObservedDataPtr(it));
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dJydsigma_, "dJydsigma");
     }
 }
@@ -1497,7 +1497,7 @@ void Model::fdJydx(const int it, const AmiVector &x, const ExpData &edata) {
         }
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dJydx_, "dJydx");
     }
 }
@@ -1519,7 +1519,7 @@ void Model::fdzdp(const int ie, const realtype t, const AmiVector &x) {
               state_.fixedParameters.data(), state_.h.data(), plist(ip));
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dzdp_, "dzdp");
     }
 }
@@ -1531,7 +1531,7 @@ void Model::fdzdx(const int ie, const realtype t, const AmiVector &x) {
     fdzdx(dzdx_.data(), ie, t, x.data(), state_.unscaledParameters.data(),
           state_.fixedParameters.data(), state_.h.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dzdx_, "dzdx");
     }
 }
@@ -1553,7 +1553,7 @@ void Model::fdrzdp(const int ie, const realtype t, const AmiVector &x) {
                state_.fixedParameters.data(), state_.h.data(), plist(ip));
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(drzdp_, "drzdp");
     }
 }
@@ -1565,7 +1565,7 @@ void Model::fdrzdx(const int ie, const realtype t, const AmiVector &x) {
     fdrzdx(drzdx_.data(), ie, t, x.data(), state_.unscaledParameters.data(),
            state_.fixedParameters.data(), state_.h.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(drzdx_, "drzdx");
     }
 }
@@ -1624,7 +1624,7 @@ void Model::fdsigmazdp(const int ie, const int nroots, const realtype t,
         }
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dsigmazdp_, "dsigmazdp");
     }
 }
@@ -1646,7 +1646,7 @@ void Model::fdJzdz(const int ie, const int nroots, const realtype t,
         }
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dJzdz_, "dJzdz");
     }
 }
@@ -1668,7 +1668,7 @@ void Model::fdJzdsigma(const int ie, const int nroots, const realtype t,
         }
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dJzdsigma_, "dJzdsigma");
     }
 }
@@ -1771,7 +1771,7 @@ void Model::fdJrzdz(const int ie, const int nroots, const realtype t,
         }
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dJrzdz_, "dJrzdz");
     }
 }
@@ -1792,7 +1792,7 @@ void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
         }
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(dJrzdsigma_, "dJrzdsigma");
     }
 }
@@ -1802,7 +1802,7 @@ void Model::fw(const realtype t, const realtype *x) {
     fw(w_.data(), t, x, state_.unscaledParameters.data(),
        state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(w_, "w");
     }
 }
@@ -1829,7 +1829,7 @@ void Model::fdwdp(const realtype t, const realtype *x) {
               state_.total_cl.data(), state_.stotal_cl.data());
     }
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(gsl::make_span(dwdp_.get()), "dwdp");
     }
 }
@@ -1844,7 +1844,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
           state_.fixedParameters.data(), state_.h.data(), w_.data(),
           state_.total_cl.data());
 
-    if (always_check_finite) {
+    if (always_check_finite_) {
         app->checkFinite(gsl::make_span(dwdx_.get()), "dwdx");
     }
 }
