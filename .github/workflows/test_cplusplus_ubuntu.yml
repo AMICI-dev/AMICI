@@ -116,7 +116,7 @@ jobs:
         
     - name: lcov pytest
       run: |
-        ls "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6" \
+        ls "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
         && lcov --compat-libtool --no-external \
         --directory "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
         --base-directory ${AMICI_DIR} --capture --output-file coverage_py.info
