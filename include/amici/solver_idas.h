@@ -57,7 +57,7 @@ class IDASolver : public Solver {
     int solve(realtype tout, int itask) const override;
 
     int solveF(realtype tout, int itask,
-               int *ncheckPtr_) const override;
+               int *ncheckPtr) const override;
 
     void solveB(realtype tBout, int itaskB) const override;
 
@@ -169,7 +169,7 @@ class IDASolver : public Solver {
     getNumNonlinSolvConvFails(const void *ami_mem,
                               long int *numnonlinsolvconvfails) const override;
 
-    void getLastOrder(const void *ami_mem, int *order_) const override;
+    void getLastOrder(const void *ami_mem, int *order) const override;
 
     void *getAdjBmem(void *ami_mem, int which) const override;
 

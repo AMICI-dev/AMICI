@@ -151,8 +151,8 @@ class SteadystateProblem {
      * @param ewt error weight vector
      * @return root-mean-square norm
      */
-    realtype getWrmsNorm(AmiVector const &x_,
-                         AmiVector const &xdot_,
+    realtype getWrmsNorm(AmiVector const &x,
+                         AmiVector const &xdot,
                          realtype atol,
                          realtype rtol,
                          AmiVector &ewt) const;
