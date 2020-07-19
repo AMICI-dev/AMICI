@@ -1547,7 +1547,7 @@ class Model : public AbstractModel {
      * @param rz regularization variable
      * @param edata pointer to experimental data instance
      */
-    void fJrz(realtype &Jrz, int nroots, const AmiVector &rz_,
+    void fJrz(realtype &Jrz, int nroots, const AmiVector &rz,
               const ExpData &edata);
 
     /**

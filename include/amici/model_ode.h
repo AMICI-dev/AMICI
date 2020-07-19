@@ -94,7 +94,7 @@ class Model_ODE : public Model {
      * @param xdot Vector with the right hand side
      * @param J Matrix to which the Jacobian will be written
      **/
-    void fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J_);
+    void fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J);
 
     void fJB(const realtype t, realtype cj, const AmiVector &x,
              const AmiVector &dx, const AmiVector &xB, const AmiVector &dxB,
@@ -123,7 +123,7 @@ class Model_ODE : public Model {
      * @param x Vector with the states
      * @param J Matrix to which the Jacobian will be written
      */
-    void fJSparse(realtype t, N_Vector x, SUNMatrix J_);
+    void fJSparse(realtype t, N_Vector x, SUNMatrix J);
 
     void fJSparseB(const realtype t, realtype cj, const AmiVector &x,
                    const AmiVector &dx, const AmiVector &xB,
@@ -333,8 +333,8 @@ class Model_ODE : public Model {
      **/
     virtual void fJB(realtype *JB, realtype t, const realtype *x,
                      const realtype *p, const realtype *k, const realtype *h,
-                     const realtype *xB, const realtype *w_,
-                     const realtype *dwdx_);
+                     const realtype *xB, const realtype *w,
+                     const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for fJSparse
@@ -350,7 +350,7 @@ class Model_ODE : public Model {
     virtual void fJSparse(SUNMatrixContent_Sparse JSparse, realtype t,
                           const realtype *x, const realtype *p,
                           const realtype *k, const realtype *h,
-                          const realtype *w_, const realtype *dwdx_);
+                          const realtype *w, const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for fJSparse, data only
@@ -365,8 +365,8 @@ class Model_ODE : public Model {
      **/
     virtual void fJSparse(realtype *JSparse, realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
-                          const realtype *h, const realtype *w_,
-                          const realtype *dwdx_);
+                          const realtype *h, const realtype *w,
+                          const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for fJSparse, column pointers
@@ -395,8 +395,8 @@ class Model_ODE : public Model {
     virtual void fJSparseB(SUNMatrixContent_Sparse JSparseB, realtype t,
                            const realtype *x, const realtype *p,
                            const realtype *k, const realtype *h,
-                           const realtype *xB, const realtype *w_,
-                           const realtype *dwdx_);
+                           const realtype *xB, const realtype *w,
+                           const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for fJSparseB
@@ -413,7 +413,7 @@ class Model_ODE : public Model {
     virtual void fJSparseB(realtype *JSparseB, realtype t, const realtype *x,
                            const realtype *p, const realtype *k,
                            const realtype *h, const realtype *xB,
-                           const realtype *w_, const realtype *dwdx_);
+                           const realtype *w, const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for fJSparse, column pointers
@@ -440,7 +440,7 @@ class Model_ODE : public Model {
      **/
     virtual void fJDiag(realtype *JDiag, realtype t, const realtype *x,
                         const realtype *p, const realtype *k, const realtype *h,
-                        const realtype *w_, const realtype *dwdx_);
+                        const realtype *w, const realtype *dwdx);
 
     /**
      * @brief Model specific implementation for froot
@@ -466,7 +466,7 @@ class Model_ODE : public Model {
      **/
     virtual void fxdot(realtype *xdot, realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *w_) = 0;
+                       const realtype *w) = 0;
 
     /**
      * @brief Model specific implementation of fdxdotdp, with w chainrule (Matlab)
@@ -482,8 +482,8 @@ class Model_ODE : public Model {
      */
     virtual void fdxdotdp(realtype *dxdotdp, realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
-                          const realtype *h, int ip, const realtype *w_,
-                          const realtype *dwdp_);
+                          const realtype *h, int ip, const realtype *w,
+                          const realtype *dwdp);
 
     /**
      * @brief Model specific implementation of fdxdotdp_explicit, no w chainrule (Py)
@@ -498,7 +498,7 @@ class Model_ODE : public Model {
     virtual void fdxdotdp_explicit(realtype *dxdotdp_explicit, realtype t,
                                    const realtype *x, const realtype *p,
                                    const realtype *k, const realtype *h,
-                                   const realtype *w_);
+                                   const realtype *w);
 
     /**
      * @brief Model specific implementation of fdxdotdp_explicit, colptrs part
@@ -534,9 +534,9 @@ class Model_ODE : public Model {
      * @param h heavyside vector
      * @param w vector with helper variables
      */
-    virtual void fdxdotdw(realtype *dxdotdw_, realtype t, const realtype *x,
+    virtual void fdxdotdw(realtype *dxdotdw, realtype t, const realtype *x,
                           const realtype *p, const realtype *k,
-                          const realtype *h, const realtype *w_);
+                          const realtype *h, const realtype *w);
 
     /**
      * @brief Model specific implementation of fdxdotdw, colptrs part
