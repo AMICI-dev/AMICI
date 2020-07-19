@@ -83,16 +83,15 @@ jobs:
       run: |
         scripts/run-cpputest.sh
 
-    - name: gcov
-      run: cd build && gcov CMakeFiles/amici.dir/src/*.o
-
     - name: Install python package
-      run: scripts/installAmiciSource.sh
+      run: |
+        scripts/installAmiciSource.sh
 
     - name: Python tests
       run: |
         source build/venv/bin/activate \
         && pip3 install coverage pytest pytest-cov \
+        && printenv \
         && pytest \
           --ignore-glob=*petab* \
           --cov=amici \
@@ -118,7 +117,7 @@ jobs:
     - name: gcov & lcov cpputest
       run: |
         gcov ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src/*.o \
-        ls "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
+        && ls "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
         && lcov --compat-libtool --no-external \
         --directory "${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src" \
         --base-directory ${AMICI_DIR} --capture --output-file coverage_py.info
