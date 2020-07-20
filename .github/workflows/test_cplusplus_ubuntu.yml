@@ -1,16 +1,16 @@
-name: C++ testsuite / Ubuntu
+name: C++/Python testsuite
 on: [push]
 
 jobs:
   build:
-    name: _
+    name: Ubuntu
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest
 
     env:
-      ENABLE_GCOV_COVERAGE: TRUE
-      CI_SONARCLOUD: TRUE
+      ENABLE_GCOV_COVERAGE: "TRUE"
+      CI_SONARCLOUD: "TRUE"
 
     steps:
     - uses: actions/checkout@master
@@ -48,7 +48,9 @@ jobs:
             libboost-serialization-dev \
             libhdf5-serial-dev \
             python3-dev \
-            swig
+            python3-venv \
+            swig \
+            lcov
 
     - name: Build suitesparse
       run: |
@@ -62,7 +64,7 @@ jobs:
       run: |
         scripts/buildCpputest.sh
 
-    - name: Build cpputest
+    - name: Build BNGL
       run: |
         scripts/buildBNGL.sh
 
@@ -81,11 +83,9 @@ jobs:
       run: |
         scripts/run-cpputest.sh
 
-    - name: gcov
-      run: cd build && gcov CMakeFiles/amici.dir/src/*.o
-
     - name: Install python package
-      run: scripts/installAmiciSource.sh
+      run: |
+        scripts/installAmiciSource.sh
 
     - name: Python tests
       run: |
@@ -97,6 +97,32 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           ${AMICI_DIR}/python/tests
+    
+    - name: Codecov Python
+      uses: codecov/codecov-action@v1.0.6
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./build/coverage_py.xml
+        flags: python
+        fail_ci_if_error: true
+        
+    - name: lcov
+      run: |
+        lcov --compat-libtool --no-external \
+        -d ${AMICI_DIR}/build/CMakeFiles/amici.dir/src \
+        -b ${AMICI_DIR} -c -o coverage_cpp.info \
+        && lcov --compat-libtool --no-external \
+        -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src \
+        -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
+        && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
+        
+    - name: Codecov CPP
+      uses: codecov/codecov-action@v1.0.11
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.info
+        flags: cpp
+        fail_ci_if_error: true
 
     - name: Run sonar-scanner
       env:

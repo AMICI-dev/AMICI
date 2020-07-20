@@ -61,6 +61,10 @@ class AmiVector {
             N_VMake_Serial(static_cast<long int>(vold.vec_.size()), vec_.data());
     }
 
+    /**
+     * @brief move constructor
+     * @param other vector from which the data will be moved
+     */
     AmiVector(AmiVector&& other) noexcept : nvec_(nullptr) {
         vec_ = std::move(other.vec_);
         synchroniseNVector();

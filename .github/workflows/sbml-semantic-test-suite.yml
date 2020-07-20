@@ -27,8 +27,7 @@ jobs:
     - name: apt
       run: |
         sudo apt-get update \
-          && sudo apt-get install -y swig3.0 libatlas-base-dev \
-          && sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+          && sudo apt-get install -y swig3.0 libatlas-base-dev
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/installAmiciSource.sh
     - run: AMICI_PARALLEL_COMPILE=2 ./scripts/run-SBMLTestsuite.sh
 
@@ -37,3 +36,11 @@ jobs:
       with:
         name: amici-semantic-results
         path: tests/amici-semantic-results
+        
+    - name: Codecov SBMLSuite
+      uses: codecov/codecov-action@v1.0.11
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage_SBMLSuite.xml
+        flags: sbmlsuite
+        fail_ci_if_error: true
