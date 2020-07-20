@@ -72,6 +72,8 @@ def test_hill_function_dwdx():
     _ = str(res)
 
 
+@pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
+                    reason='skipping cmake based test')
 def test_cmake_compilation(sbml_example_presimulation_module):
     """Check that CMake build succeeds for one of the models generated during
     Python tests"""

@@ -10,97 +10,6 @@ branches:
 matrix:
   fast_finish: true
   include:
-    - os: linux
-      dist: bionic
-      language: python
-      python: 3.8
-      compiler: gcc
-      addons:
-        apt:
-          packages:
-            - libhdf5-serial-dev
-            - zlib1g-dev
-            - libatlas-base-dev
-            - lcov
-            - libboost-serialization-dev
-            - g++-5
-            - libc6-dbg
-      env:
-        - ENABLE_GCOV_COVERAGE=TRUE
-        - CI_BUILD=TRUE
-        - CI_CPPUTEST=TRUE
-        - CI_PYTHON=TRUE
-        - CI_ARCHIVE=TRUE
-        - CI_NOTEBOOK=TRUE
-      after_script:
-        # cpputest coverage cpp
-        - lcov --compat-libtool --no-external --directory ${BASE_DIR}/build/CMakeFiles/amici.dir/src --base-directory ${BASE_DIR} --capture --output-file coverage_cpp.info
-        # py coverage cpp
-        - lcov --compat-libtool --no-external --directory ${BASE_DIR}/python/sdist/build/temp.linux-x86_64-${TRAVIS_PYTHON_VERSION}/amici/src --base-directory ${BASE_DIR} --capture --output-file coverage_py.info
-        - lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
-        - bash <(curl -s https://codecov.io/bash) -f coverage.info -X fix -F cpp
-        # py coverage py
-        - bash <(curl -s https://codecov.io/bash) -f coverage_py.xml -F python
-      before_deploy:
-        - cd $BASE_DIR
-      deploy:
-        skip_cleanup: true
-        provider: script
-        script: scripts/deployPyPi.sh
-        on:
-          branch: master
-          tags: true
-
-    - os: linux
-      dist: bionic
-      language: python
-      python: 3.7
-      compiler: gcc
-      addons:
-        apt:
-          packages:
-            - libhdf5-serial-dev
-            - zlib1g-dev
-            - libatlas-base-dev
-            - g++-5
-            - libc6-dbg
-      env:
-        - CI_BUILD=TRUE
-        - CI_PYTHON=TRUE
-        - CI_NOTEBOOK=TRUE
-
-    - os: osx
-      osx_image: xcode11
-      language: minimal
-      compiler: clang
-      env:
-        - CI_DOC=TRUE
-      addons:
-        homebrew:
-          casks:
-            - mactex
-          packages:
-            # - doxygen # disabled because current 1.8.16 does not work with recent ghostscript
-            - bison # doxygen build
-            - ragel
-            - graphviz
-          update: true
-      before_install:
-        - export PATH=/Users/travis/Library/Python/3.7/bin:/Library/TeX/texbin:$PATH
-        - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
-        - brew link --overwrite python # https://github.com/ICB-DCM/AMICI/issues/894
-      after_success:
-        - cd $BASE_DIR # cd to base dir for correct relative path in deploy
-      deploy:
-        provider: pages
-        local-dir: doc
-        skip-cleanup: true
-        github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
-        keep-history: false
-        verbose: true
-        on:
-          branch: master
-
     - os: windows
       # language python currently not supported on Windows
       language: cpp
@@ -123,40 +32,19 @@ matrix:
         - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
         # run BLAS installation script
-        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS; fi
+        - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS
         # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
-        - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then export BLAS_LIBS='/LIBPATH:C:\\BLAS\\lib openblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-v0.3.10\\OpenBLAS-0.3.10'; fi
+        - export BLAS_LIBS='/LIBPATH:C:\\BLAS\\lib openblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-v0.3.10\\OpenBLAS-0.3.10'
 
 install:
     - export BASE_DIR=`pwd`
-    # Build swig4.0 (not yet available with apt) to include pydoc in source distribution for pypi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then scripts/downloadAndBuildSwig.sh && export PATH=${BASE_DIR}/ThirdParty/swig-4.0.1/install/bin:${PATH}; fi
-    - if [[ "$CI_DOC" == "TRUE" ]]; then pip3 install --user --upgrade pip==9.0.3 doxypypy; fi # pinning pip because of https://github.com/pypa/pip/issues/5240
-    - if [[ "$CI_DOC" == "TRUE" ]]; then export PATH="/usr/local/opt/bison/bin:$PATH"; LDFLAGS="-L/usr/local/opt/bison/lib" scripts/downloadAndBuildDoxygen.sh; fi
-    - if [[ "$CI_BUILD" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" == "linux" ]]; then pip3 install --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
-    - if [[ "$CI_BUILD" == "TRUE" ]] && [[ "$TRAVIS_OS_NAME" != "linux" ]]; then pip3 install --user --upgrade pip==9.0.3 setuptools wheel pkgconfig scipy; fi
-    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildSuiteSparse.sh; fi
-    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildSundials.sh; fi
-    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildCpputest.sh; fi
-    - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/buildBNGL.sh; fi
-    - if [[ "$CI_BUILD" == "TRUE" ]]; then ./scripts/buildAmici.sh; fi
-    - if [[ "$CI_ARCHIVE" == "TRUE" ]]; then ./scripts/installAmiciArchive.sh; fi
-    - if [[ "$CI_PYTHON" == "TRUE" ]]; then ./scripts/installAmiciSource.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then cd python/sdist && python setup.py sdist; fi
-    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then pip install -v $(ls -t dist/amici-*.tar.gz | head -1); fi
+    - cd python/sdist && python setup.py sdist
+    - pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
 
 script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-    - if [[ "$CI_CPPCHECK" == "TRUE" ]]; then $FOLD cppcheck ./scripts/run-cppcheck.sh; fi
-    - if [[ "$CI_NOTEBOOK" == "TRUE" ]]; then $FOLD notebooks "cd $BASE_DIR && scripts/runNotebook.sh python/examples/example_*/"; fi
-    - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" == "TRUE" ]]; then $FOLD codecov ./scripts/run-codecov.sh; fi
-    - if [[ "$CI_PYTHON" == "TRUE" ]] && [[ "$ENABLE_GCOV_COVERAGE" != "TRUE" ]]; then $FOLD python-tests ./scripts/run-python-tests.sh; fi
-    # needs to be run after python tests
-    - if [[ "$CI_CPPUTEST" == "TRUE" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
-    - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
-    - if [[ "$CI_PYTHON" == "TRUE" ]]; then $FOLD sphinx ./scripts/run-sphinx.sh; fi
 
 after_failure:
     - $FOLD ls -alR
@@ -168,6 +56,3 @@ cache:
     - $HOME/Library/Caches/pip
     - $HOME/.cache/pip
   timeout: 1200
-
-before_cache:
-  - brew cleanup

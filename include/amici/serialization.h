@@ -38,90 +38,90 @@ void archiveVector(Archive &ar, T **p, int size) {
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::Solver &u, const unsigned int version) {
-    ar &u.sensi;
-    ar &u.atol;
-    ar &u.rtol;
-    ar &u.atolB;
-    ar &u.rtolB;
-    ar &u.atol_fsa;
-    ar &u.rtol_fsa;
-    ar &u.quad_atol;
-    ar &u.quad_rtol;
-    ar &u.ss_atol;
-    ar &u.ss_rtol;
-    ar &u.ss_atol_sensi;
-    ar &u.ss_rtol_sensi;
-    ar &u.maxsteps;
-    ar &u.maxstepsB;
-    ar &u.requires_preequilibration;
-    ar &u.newton_maxsteps;
-    ar &u.newton_maxlinsteps;
-    ar &u.newton_damping_factor_mode;
-    ar &u.newton_damping_factor_lower_bound;
-    ar &u.ism;
-    ar &u.sensi_meth;
-    ar &u.linsol;
-    ar &u.interpType;
-    ar &u.lmm;
-    ar &u.iter;
-    ar &u.stldet;
-    ar &u.ordering;
-    ar &u.cpu_time;
-    ar &u.cpu_timeB;
-    ar &u.rdata_mode;
+void serialize(Archive &ar, amici::Solver &s, const unsigned int /*version*/) {
+    ar &s.sensi_;
+    ar &s.atol_;
+    ar &s.rtol_;
+    ar &s.atolB_;
+    ar &s.rtolB_;
+    ar &s.atol_fsa_;
+    ar &s.rtol_fsa_;
+    ar &s.quad_atol_;
+    ar &s.quad_rtol_;
+    ar &s.ss_atol_;
+    ar &s.ss_rtol_;
+    ar &s.ss_atol_sensi_;
+    ar &s.ss_rtol_sensi_;
+    ar &s.maxsteps_;
+    ar &s.maxstepsB_;
+    ar &s.requires_preequilibration_;
+    ar &s.newton_maxsteps_;
+    ar &s.newton_maxlinsteps_;
+    ar &s.newton_damping_factor_mode_;
+    ar &s.newton_damping_factor_lower_bound_;
+    ar &s.ism_;
+    ar &s.sensi_meth_;
+    ar &s.linsol_;
+    ar &s.interp_type_;
+    ar &s.lmm_;
+    ar &s.iter_;
+    ar &s.stldet_;
+    ar &s.ordering_;
+    ar &s.cpu_time_;
+    ar &s.cpu_timeB_;
+    ar &s.rdata_mode_;
 }
 
 
 template <class Archive>
-void serialize(Archive &ar, amici::CVodeSolver &u, const unsigned int version) {
-    ar & static_cast<amici::Solver&>(u);
+void serialize(Archive &ar, amici::CVodeSolver &s, const unsigned int /*version*/) {
+    ar & static_cast<amici::Solver&>(s);
 }
 
 template <class Archive>
-void serialize(Archive &ar, amici::Model &u, const unsigned int version) {
-    ar &u.nx_rdata;
-    ar &u.nxtrue_rdata;
-    ar &u.nx_solver;
-    ar &u.nxtrue_solver;
-    ar &u.nx_solver_reinit;
-    ar &u.ny;
-    ar &u.nytrue;
-    ar &u.nz;
-    ar &u.nztrue;
-    ar &u.ne;
-    ar &u.nw;
-    ar &u.ndwdx;
-    ar &u.ndwdp;
-    ar &u.ndxdotdw;
-    ar &u.nnz;
-    ar &u.nJ;
-    ar &u.ubw;
-    ar &u.lbw;
-    ar &u.o2mode;
-    ar &u.z2event;
-    ar &u.idlist;
-    ar &u.state.h;
-    ar &u.state.unscaledParameters;
-    ar &u.originalParameters;
-    ar &u.state.fixedParameters;
-    ar &u.reinitializeFixedParameterInitialStates;
-    ar &u.state.plist;
-    ar &u.x0data;
-    ar &u.sx0data;
-    ar &u.ts;
-    ar &u.nmaxevent;
-    ar &u.pscale;
-    ar &u.tstart;
-    ar &u.stateIsNonNegative;
-    ar &u.pythonGenerated;
-    ar &u.ndxdotdp_explicit;
-    ar &u.ndxdotdp_implicit;
+void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
+    ar &m.nx_rdata;
+    ar &m.nxtrue_rdata;
+    ar &m.nx_solver;
+    ar &m.nxtrue_solver;
+    ar &m.nx_solver_reinit;
+    ar &m.ny;
+    ar &m.nytrue;
+    ar &m.nz;
+    ar &m.nztrue;
+    ar &m.ne;
+    ar &m.nw;
+    ar &m.ndwdx;
+    ar &m.ndwdp;
+    ar &m.ndxdotdw;
+    ar &m.nnz;
+    ar &m.nJ;
+    ar &m.ubw;
+    ar &m.lbw;
+    ar &m.o2mode;
+    ar &m.z2event_;
+    ar &m.idlist;
+    ar &m.state_.h;
+    ar &m.state_.unscaledParameters;
+    ar &m.original_parameters_;
+    ar &m.state_.fixedParameters;
+    ar &m.reinitialize_fixed_parameter_initial_states_;
+    ar &m.state_.plist;
+    ar &m.x0data_;
+    ar &m.sx0data_;
+    ar &m.ts_;
+    ar &m.nmaxevent_;
+    ar &m.pscale_;
+    ar &m.tstart_;
+    ar &m.state_is_non_negative_;
+    ar &m.pythonGenerated;
+    ar &m.ndxdotdp_explicit;
+    ar &m.ndxdotdp_implicit;
 }
 
 
 template <class Archive>
-void serialize(Archive &ar, amici::ReturnData &r, const unsigned int version) {
+void serialize(Archive &ar, amici::ReturnData &r, const unsigned int /*version*/) {
     ar &r.np;
     ar &r.nk;
     ar &r.nx;

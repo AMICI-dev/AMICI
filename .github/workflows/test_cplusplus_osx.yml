@@ -1,15 +1,11 @@
-name: C++ testsuite / OSX
+name: C++/Python testsuite
 on: [push]
 
 jobs:
   build:
-    name: tests_osx
+    name: OSX
 
     runs-on: macos-latest
-
-    env:
-      ENABLE_GCOV_COVERAGE: FALSE
-      CI_SONARCLOUD: FALSE
 
     steps:
     - uses: actions/checkout@master
@@ -54,10 +50,6 @@ jobs:
     - name: cppcheck
       run: |
         scripts/run-cppcheck.sh
-        
-    - name: notebooks
-      run: |
-        scripts/runNotebook.sh python/examples/example_*/
         
     - name: Python tests
       run: |
