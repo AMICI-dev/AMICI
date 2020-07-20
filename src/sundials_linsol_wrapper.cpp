@@ -85,7 +85,7 @@ int SUNNonLinSolWrapper::setup(N_Vector y, void *mem) {
 }
 
 int SUNNonLinSolWrapper::Solve(N_Vector y0, N_Vector y, N_Vector w,
-                               realtype tol, int callLSetup, void *mem) {
+                               realtype tol, bool callLSetup, void *mem) {
     return SUNNonlinSolSolve(solver, y0, y, w, tol, callLSetup, mem);
 }
 

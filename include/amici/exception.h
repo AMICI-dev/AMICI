@@ -23,12 +23,6 @@ public:
     explicit AmiException(char const* fmt, ...);
 
     /**
-     * @brief Move constructor
-     * @param old object to move from
-     */
-    AmiException(AmiException&& old) noexcept;
-
-    /**
      * @brief Override of default error message function
      * @return msg error message
      */

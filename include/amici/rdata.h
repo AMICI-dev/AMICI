@@ -21,7 +21,7 @@ class SteadystateProblem;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::ReturnData &u, unsigned int version);
+void serialize(Archive &ar, amici::ReturnData &r, unsigned int version);
 }
 } // namespace boost
 

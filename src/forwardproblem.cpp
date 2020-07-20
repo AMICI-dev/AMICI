@@ -287,7 +287,7 @@ void ForwardProblem::storeEvent() {
     }
 }
 
-void ForwardProblem::handleDataPoint(int it) {
+void ForwardProblem::handleDataPoint(int /*it*/) {
     /* We only store the simulation state if it's not the initial state, as the
        initial state is stored anyway and we want to avoid storing it twice */
     if (t_ != model->t0() && timepoint_states_.count(t_) == 0)

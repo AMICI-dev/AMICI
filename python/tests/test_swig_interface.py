@@ -70,9 +70,7 @@ def get_val(obj, attr):
 
 
 def get_mod_val(val, attr):
-    if attr == 'getStabilityLimitFlag':
-        return val - 1
-    elif attr == 'getReturnDataReportingMode':
+    if attr == 'getReturnDataReportingMode':
         return amici.RDataReporting.likelihood
     elif attr == 'getParameterList':
         return tuple(get_mod_val(val[0], '') for _ in val)

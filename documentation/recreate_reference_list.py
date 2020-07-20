@@ -40,14 +40,14 @@ def get_sub_bibliography(year, by_year, bibfile):
     """Get HTML bibliography for the given year"""
 
     entries = ','.join(['@' + x for x in by_year[year]])
-    input = '---\n' \
-            f'bibliography: {bibfile}\n' \
-            f'nocite: "{entries}"\n...\n' \
-            f'# {year}'
+    stdin_input = '---\n' \
+                  f'bibliography: {bibfile}\n' \
+                  f'nocite: "{entries}"\n...\n' \
+                  f'# {year}'
 
     out = subprocess.run(['pandoc', '--filter=pandoc-citeproc',
                           '-f', 'markdown'],
-                         input=input, capture_output=True,
+                         input=stdin_input, capture_output=True,
                          encoding='utf-8')
     if out.returncode != 0:
         raise AssertionError(out.stderr)

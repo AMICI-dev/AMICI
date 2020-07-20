@@ -151,6 +151,9 @@ class NewtonSolverDense : public NewtonSolver {
      */
 
     NewtonSolverDense(realtype *t, AmiVector *x, Model *model);
+
+    NewtonSolverDense(const NewtonSolverDense&) = delete;
+
     ~NewtonSolverDense() override;
 
     /**
@@ -206,6 +209,9 @@ class NewtonSolverSparse : public NewtonSolver {
      * @param model pointer to the model object
      */
     NewtonSolverSparse(realtype *t, AmiVector *x, Model *model);
+
+    NewtonSolverSparse(const NewtonSolverSparse&) = delete;
+
     ~NewtonSolverSparse() override;
 
     /**
@@ -259,6 +265,7 @@ class NewtonSolverIterative : public NewtonSolver {
      * @param model pointer to the model object
      */
     NewtonSolverIterative(realtype *t, AmiVector *x, Model *model);
+
     ~NewtonSolverIterative() override = default;
 
     /**

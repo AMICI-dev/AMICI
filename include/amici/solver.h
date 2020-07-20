@@ -27,7 +27,7 @@ extern AmiciApplication defaultContext;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::Solver &u, unsigned int version);
+void serialize(Archive &ar, amici::Solver &s, unsigned int version);
 }
 } // namespace boost::serialization
 
@@ -539,15 +539,15 @@ class Solver {
 
     /**
      * @brief returns stability limit detection mode
-     * @return stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
+     * @return stldet can be false (deactivated) or true (activated)
      */
-    booleantype getStabilityLimitFlag() const;
+    bool getStabilityLimitFlag() const;
 
     /**
      * @brief set stability limit detection mode
-     * @param stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
+     * @param stldet can be false (deactivated) or true (activated)
      */
-    void setStabilityLimitFlag(booleantype stldet);
+    void setStabilityLimitFlag(bool stldet);
 
     /**
      * @brief getLinearSolver
@@ -850,11 +850,11 @@ class Solver {
     /**
      * @brief Serialize Solver (see boost::serialization::serialize)
      * @param ar Archive to serialize to
-     * @param r Data to serialize
+     * @param s Data to serialize
      * @param version Version number
      */
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, Solver &r,
+    friend void boost::serialization::serialize(Archive &ar, Solver &s,
                                                 unsigned int version);
 
     /**
