@@ -61,8 +61,6 @@ cd ${AMICI_PATH}/doc/latex
 
 make
 
-cat refman.log
-
 cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 # suppress doxygen warnings about status badges
