@@ -1,4 +1,4 @@
-name: Doxygen
+name: Doxygen / gh-pages
 on:
   push:
     branches:
