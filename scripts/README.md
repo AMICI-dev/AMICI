@@ -12,17 +12,13 @@ This directory contains a number of build, installation, and CI scripts.
 
 * `buildBNGL.sh`
 
-   Download nad build 
+   Download and build 
    [BioNetGen](https://www.csb.pitt.edu/Faculty/Faeder/?page_id=409) (required for some tests)
 
 * `buildCpputest.sh`
 
    Download and build [CppUTest](https://cpputest.github.io/)
    (required for C++ test suite)
-
-* `buildModel.sh`
-
-   @review: is this used anywhere?
    
 * `buildSuiteSparse.sh`
 
@@ -56,11 +52,6 @@ This directory contains a number of build, installation, and CI scripts.
 
   Download and build [SWIG](http://www.swig.org/) 
 
-* `doxyfilter_python.py`
-
-  Doxygen input filter for Python used for generating documentation.
-
-
 * `installAmiciArchive.sh`
 
   Create a Python virtual environment and do an AMICI development installation
@@ -68,11 +59,6 @@ This directory contains a number of build, installation, and CI scripts.
 * `installAmiciSource.sh`
   
   Create a Python virtual environment and do a regular AMICI installation
-
-
-* `py_filter`
-
-  Doxygen filter file for Python
 
 * `run-codecov.sh`
 
@@ -112,18 +98,3 @@ This directory contains a number of build, installation, and CI scripts.
 * `travis_wrap.sh`
 
   Wrapper script for Travis CI to enable output folding in Travis CI logs
-  
-
-## Unused
-
-* `patch-hdf5.sh`, `hdf5-1.8.7-mingw.patch`
-
-  Probably outdated HDF5 patch for Windows
-
-* `build-mingw.ps1`
-
-  Outdated Windows build script
-
-* `build-msvs.ps1`
-
-  Outdated Windows build script
