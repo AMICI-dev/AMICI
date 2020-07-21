@@ -1,6 +1,6 @@
 name: Deploy Python
 on:
-  branch:
+  branches:
     - master
 
 jobs:
