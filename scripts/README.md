@@ -44,10 +44,6 @@ This directory contains a number of build, installation, and CI scripts.
 
    Build AMICI and C++ test models and test with XCode
 
-* `deployPyPi.sh`
-
-  Script for PyPi deployment (currently unused)
-
 * `downloadAndBuildSwig.sh`
 
   Download and build [SWIG](http://www.swig.org/) 

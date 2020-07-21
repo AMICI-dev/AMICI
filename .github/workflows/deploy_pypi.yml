@@ -1,9 +1,12 @@
 name: Deploy
-on: push
+on:
+  push:
+    branches:
+      - master
 
 jobs:
   build:
-    name: Python source distribution
+    name: pypi
 
     runs-on: ubuntu-latest
 
@@ -23,10 +26,13 @@ jobs:
 
     - name: Create AMICI sdist
       run: |
-        cd python/sdist && /usr/bin/python3 setup.py sdist
+        cd python/sdist && python3 setup.py sdist
 
-    - name: "Upload artifact: sdist"
-      uses: actions/upload-artifact@v1
+    - name: Publish a Python distribution to PyPI
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      uses: pypa/gh-action-pypi-publish@master
       with:
-        name: sdist
-        path: python/sdist/dist
+        user: __token__
+        password: ${{ secrets.pypi_password }}
+        packages_dir: ./build/python
+        
