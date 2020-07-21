@@ -1,9 +1,9 @@
 # https://github.com/marketplace/actions/publish-docker
-name: Deploy to dockerhub
+name: Deploy
 on: [push]
 jobs:
   build:
-    name: Deploy to dockerhub
+    name: dockerhub
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
