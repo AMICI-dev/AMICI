@@ -1,11 +1,12 @@
-name: Deploy Python
+name: Deploy
 on:
-  branches:
-    - master
+  push:
+    branches:
+      - master
 
 jobs:
   build:
-    name: pypi package
+    name: pypi
 
     runs-on: ubuntu-latest
 
