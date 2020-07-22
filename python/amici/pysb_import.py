@@ -17,7 +17,7 @@ import sympy as sp
 import numpy as np
 import itertools
 
-from typing import List, Union, Dict, Tuple, Set, Iterable, Any
+from typing import List, Union, Dict, Tuple, Set, Iterable, Any, Callable
 
 CL_Prototype = Dict[str, Dict[str, Any]]
 ConservationLaw = Dict[str, Union[str, sp.Basic]]
@@ -39,6 +39,7 @@ def pysb2amici(model: pysb.Model,
                compiler: str = None,
                compute_conservation_laws: bool = True,
                compile: bool = True,
+               simplify: Callable = lambda x: sp.powsimp(x, deep=True),
                ):
     """
     Generate AMICI C++ files for the model provided to the constructor.
@@ -82,6 +83,9 @@ def pysb2amici(model: pysb.Model,
     :param compile:
         If true, build the python module for the generated model. If false,
         just generate the source code.
+
+    :param simplify:
+        see :attr:`ODEModel._simplify`
     """
     if observables is None:
         observables = []
@@ -98,6 +102,7 @@ def pysb2amici(model: pysb.Model,
         model, constant_parameters=constant_parameters,
         observables=observables, sigmas=sigmas,
         compute_conservation_laws=compute_conservation_laws,
+        simplify=simplify
     )
     exporter = ODEExporter(
         ode_model,
@@ -115,11 +120,14 @@ def pysb2amici(model: pysb.Model,
 
 
 @log_execution_time('creating ODE model', logger)
-def ode_model_from_pysb_importer(model: pysb.Model,
-                                 constant_parameters: List[str] = None,
-                                 observables: List[str] = None,
-                                 sigmas: Dict[str, str] = None,
-                                 compute_conservation_laws=True) -> ODEModel:
+def ode_model_from_pysb_importer(
+        model: pysb.Model,
+        constant_parameters: List[str] = None,
+        observables: List[str] = None,
+        sigmas: Dict[str, str] = None,
+        compute_conservation_laws: bool = True,
+        simplify: Callable = sp.powsimp,
+) -> ODEModel:
     """
     Creates an ODEModel instance from a pysb.Model instance.
 
@@ -139,11 +147,14 @@ def ode_model_from_pysb_importer(model: pysb.Model,
     :param compute_conservation_laws:
         see :func:`amici.pysb_import.pysb2amici`
 
+    :param simplify:
+            see :attr:`ODEModel._simplify`
+
     :return:
         New ODEModel instance according to pysbModel
     """
 
-    ode = ODEModel(simplify=None)
+    ode = ODEModel(simplify=simplify)
 
     if constant_parameters is None:
         constant_parameters = []
