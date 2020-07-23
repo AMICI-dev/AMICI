@@ -184,6 +184,8 @@ script:
     - if [[ "$CI_CPPUTEST" == "TRUE" ]]; then $FOLD cpputest ./scripts/run-cpputest.sh; fi
     - if [[ "$CI_DOC" == "TRUE" ]]; then $FOLD doxygen ./scripts/run-doxygen.sh; fi
     - if [[ "$CI_PYTHON" == "TRUE" ]]; then $FOLD sphinx ./scripts/run-sphinx.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then AMICI_SKIP_CMAKE_TESTS=TRUE; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then python3 -m pytest --ignore-glob=*petab* ./python/tests; fi
 
 after_failure:
     - $FOLD ls -alR
