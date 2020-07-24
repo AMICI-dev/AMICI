@@ -45,6 +45,8 @@ script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then AMICI_SKIP_CMAKE_TESTS=TRUE; fi
+    - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then python3 -m pytest --ignore-glob=*petab* ./python/tests; fi
 
 after_failure:
     - $FOLD ls -alR
