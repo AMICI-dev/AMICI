@@ -777,7 +777,6 @@ class ODEModel:
         If not None, this function will be used to simplify symbolic
         derivative expressions. Receives sympy expressions as only argument.
         To apply multiple simplifications, wrap them in a lambda expression.
-        NOTE: This does currently not work with PySB symbols.
 
     :ivar _x0_fixedParameters_idx:
         Index list of subset of states for which x0_fixedParameters was

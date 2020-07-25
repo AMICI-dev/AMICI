@@ -257,7 +257,7 @@ class SbmlImporter:
             algorithm to compute steadystate sensitivities.
 
         :param simplify:
-            see :meth:`ODEModel._simplify`
+            see :attr:`ODEModel._simplify`
         """
         set_log_level(logger, verbose)
 
