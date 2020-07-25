@@ -99,7 +99,7 @@ jobs:
           ${AMICI_DIR}/python/tests
     
     - name: Codecov Python
-      uses: codecov/codecov-action@v1.0.11
+      uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./build/coverage_py.xml
@@ -117,7 +117,7 @@ jobs:
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
         
     - name: Codecov CPP
-      uses: codecov/codecov-action@v1.0.11
+      uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./coverage.info
