@@ -27,7 +27,7 @@ matrix:
         # stick to python 3.7 until there is a 3.8 wheel for windows
         # as installation from sdist fails because of reasons...
         - choco install python --version 3.7.5
-        - choco install swig
+        - choco install -y swig --version=4.0.1
         - python -m pip install --upgrade pip
         - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
@@ -45,8 +45,8 @@ script:
     - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-    # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then AMICI_SKIP_CMAKE_TESTS=TRUE; fi
-    # - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then python3 -m pytest --ignore-glob=*petab* ./python/tests; fi
+    - AMICI_SKIP_CMAKE_TESTS=TRUE
+    - python3 -m pytest --ignore-glob=*petab* ./python/tests
 
 after_failure:
     - $FOLD ls -alR
