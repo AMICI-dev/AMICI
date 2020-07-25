@@ -27,7 +27,7 @@ matrix:
         # stick to python 3.7 until there is a 3.8 wheel for windows
         # as installation from sdist fails because of reasons...
         - choco install python --version 3.7.5
-        - choco install swig
+        - choco install -y swig --version 4.0.1
         - python -m pip install --upgrade pip
         - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
