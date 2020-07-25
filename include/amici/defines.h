@@ -42,10 +42,6 @@ constexpr int AMICI_ONE_STEP=                  2;
 
 constexpr int AMICI_PREEQUILIBRATE=           -1;
 
-#ifndef booleantype
-#define booleantype int
-#endif
-
 /** defines variable type for simulation variables
  * (determines numerical accuracy) */
 using realtype = double;
@@ -150,9 +146,9 @@ enum class SteadyStateStatus {
 
 /** Context for which the sensitivity flag should be computed */
 enum class SteadyStateContext {
-    newton = 0,
-    storage = 1,
-    integration = 2
+    newtonSensi = 0,
+    sensiStorage = 1,
+    solverCreation = 2
 };
 
 /** Damping factor flag for the Newton method */

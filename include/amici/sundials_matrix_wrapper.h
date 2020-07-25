@@ -146,6 +146,12 @@ class SUNMatrixWrapper {
     void reset();
 
     /**
+     * @brief multiply with a scalar (in-place)
+     * @param a scalar value to multiply matrix
+     */
+    void scale(realtype a);
+
+    /**
      * @brief N_Vector interface for multiply
      * @param c output vector, may already contain values
      * @param b multiplication vector
@@ -204,10 +210,10 @@ class SUNMatrixWrapper {
     /**
      * @brief CSC matrix to which all methods are applied
      */
-    SUNMatrix matrix = nullptr;
-    realtype *data_ptr = nullptr;
-    sunindextype *indexptrs_ptr = nullptr;
-    sunindextype *indexvals_ptr = nullptr;
+    SUNMatrix matrix_ {nullptr};
+    realtype *data_ptr_ {nullptr};
+    sunindextype *indexptrs_ptr_ {nullptr};
+    sunindextype *indexvals_ptr_ {nullptr};
 };
 
 } // namespace amici

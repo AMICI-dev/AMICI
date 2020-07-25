@@ -23,12 +23,6 @@ public:
     explicit AmiException(char const* fmt, ...);
 
     /**
-     * @brief Move constructor
-     * @param old object to move from
-     */
-    AmiException(AmiException&& old) noexcept;
-
-    /**
      * @brief Override of default error message function
      * @return msg error message
      */
@@ -47,8 +41,8 @@ public:
     void storeBacktrace(int nMaxFrames);
 
 private:
-    std::array<char, 500> msg;
-    std::array<char, 500> trace;
+    std::array<char, 500> msg_;
+    std::array<char, 500> trace_;
 };
 
 

@@ -195,6 +195,7 @@ class SbmlImporter:
                    allow_reinit_fixpar_initcond: bool = True,
                    compile: bool = True,
                    compute_conservation_laws: bool = True,
+                   simplify: Callable = lambda x: sp.powsimp(x, deep=True),
                    **kwargs) -> None:
         """
         Generate AMICI C++ files for the model provided to the constructor.
@@ -253,7 +254,10 @@ class SbmlImporter:
             if set to true, conservation laws are automatically computed and
             applied such that the state-jacobian of the ODE right-hand-side has
             full rank. This option should be set to True when using the newton
-            algorithm to compute steadystate sensititivities.
+            algorithm to compute steadystate sensitivities.
+
+        :param simplify:
+            see :meth:`ODEModel._simplify`
         """
         set_log_level(logger, verbose)
 
@@ -308,7 +312,7 @@ class SbmlImporter:
         self._clean_reserved_symbols()
         self._replace_special_constants()
 
-        ode_model = ODEModel(simplify=sp.powsimp)
+        ode_model = ODEModel(simplify=simplify)
         ode_model.import_from_sbml_importer(
             self, compute_cls=compute_conservation_laws)
         exporter = ODEExporter(

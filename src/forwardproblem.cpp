@@ -19,27 +19,27 @@ ForwardProblem::ForwardProblem(const ExpData *edata, Model *model,
     : model(model),
       solver(solver),
       edata(edata),
-      nroots(static_cast<decltype (nroots)::size_type>(model->ne), 0),
-      rootvals(static_cast<decltype (rootvals)::size_type>(model->ne), 0.0),
-      rvaltmp(static_cast<decltype (rvaltmp)::size_type>(model->ne), 0.0),
-      dJydx(model->nJ * model->nx_solver * model->nt(), 0.0),
-      dJzdx(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
-      t(model->t0()),
-      rootsfound(model->ne, 0),
-      x(model->nx_solver),
-      x_old(model->nx_solver),
-      dx(model->nx_solver),
-      dx_old(model->nx_solver),
-      xdot(model->nx_solver),
-      xdot_old(model->nx_solver),
-      sx(model->nx_solver,model->nplist()),
-      sdx(model->nx_solver,model->nplist()),
-      stau(model->nplist())
+      nroots_(static_cast<decltype (nroots_)::size_type>(model->ne), 0),
+      rootvals_(static_cast<decltype (rootvals_)::size_type>(model->ne), 0.0),
+      rval_tmp_(static_cast<decltype (rval_tmp_)::size_type>(model->ne), 0.0),
+      dJydx_(model->nJ * model->nx_solver * model->nt(), 0.0),
+      dJzdx_(model->nJ * model->nx_solver * model->nMaxEvent(), 0.0),
+      t_(model->t0()),
+      roots_found_(model->ne, 0),
+      x_(model->nx_solver),
+      x_old_(model->nx_solver),
+      dx_(model->nx_solver),
+      dx_old_(model->nx_solver),
+      xdot_(model->nx_solver),
+      xdot_old_(model->nx_solver),
+      sx_(model->nx_solver,model->nplist()),
+      sdx_(model->nx_solver,model->nplist()),
+      stau_(model->nplist())
 {
     if (preeq) {
-        x = preeq->getState();
-        sx = preeq->getStateSensitivity();
-        preequilibrated = true;
+        x_ = preeq->getState();
+        sx_ = preeq->getStateSensitivity();
+        preequilibrated_ = true;
     }
 }
 
@@ -52,8 +52,8 @@ void ForwardProblem::workForwardProblem() {
     auto presimulate = edata && edata->t_presim > 0;
 
     /* if preequilibration was done, model was already initialized */
-    if (!preequilibrated)
-        model->initialize(x, dx, sx, sdx,
+    if (!preequilibrated_)
+        model->initialize(x_, dx_, sx_, sdx_,
                           solver->getSensitivityOrder() >=
                           SensitivityOrder::first);
 
@@ -61,7 +61,7 @@ void ForwardProblem::workForwardProblem() {
     auto t0 = model->t0();
     if (presimulate)
         t0 -= edata->t_presim;
-    solver->setup(t0, model, x, dx, sx, sdx);
+    solver->setup(t0, model, x_, dx_, sx_, sdx_);
 
     /* perform presimulation if necessary */
     if (presimulate) {
@@ -69,55 +69,55 @@ void ForwardProblem::workForwardProblem() {
             throw AmiException("Presimulation with adjoint sensitivities"
                                " is currently not implemented.");
         handlePresimulation();
-        t = model->t0();
+        t_ = model->t0();
     }
     /* when computing adjoint sensitivity analysis with presimulation,
      we need to store sx after the reinitialization after preequilibration
      but before reinitialization after presimulation. As presimulation with ASA
      will not update sx, we can simply extract the values here.*/
     if (solver->computingASA() && presimulate)
-        sx = solver->getStateSensitivity(model->t0());
-    
-    if (presimulate || preequilibrated)
+        sx_ = solver->getStateSensitivity(model->t0());
+
+    if (presimulate || preequilibrated_)
         solver->updateAndReinitStatesAndSensitivities(model);
 
     // update x0 after computing consistence IC/reinitialization
-    x = solver->getState(model->t0());
+    x_ = solver->getState(model->t0());
     /* when computing forward sensitivities, we generally want to update sx
      after presimulation/preequilibration, and if we didn't do either this also
      wont harm. when computing ASA, we only want to update here, if we didn't
      update before presimulation (if applicable).
     */
     if (solver->computingFSA() || (solver->computingASA() && !presimulate ))
-        sx = solver->getStateSensitivity(model->t0());
-    
+        sx_ = solver->getStateSensitivity(model->t0());
+
 
     /* store initial state and sensitivity*/
-    initial_state = getSimulationState();
+    initial_state_ = getSimulationState();
 
     /* loop over timepoints */
-    for (it = 0; it < model->nt(); it++) {
-        auto nextTimepoint = model->getTimepoint(it);
+    for (it_ = 0; it_ < model->nt(); it_++) {
+        auto nextTimepoint = model->getTimepoint(it_);
 
         if (std::isinf(nextTimepoint))
             break;
 
         if (nextTimepoint > model->t0()) {
             // Solve for nextTimepoint
-            while (t < nextTimepoint) {
+            while (t_ < nextTimepoint) {
                 int status = solver->run(nextTimepoint);
-                solver->writeSolution(&t, x, dx, sx);
+                solver->writeSolution(&t_, x_, dx_, sx_, dx_);
                 /* sx will be copied from solver on demand if sensitivities
                  are computed */
                 if (status == AMICI_ILL_INPUT) {
                     /* clustering of roots => turn off rootfinding */
                     solver->turnOffRootFinding();
                 } else if (status == AMICI_ROOT_RETURN) {
-                    handleEvent(&tlastroot, false);
+                    handleEvent(&tlastroot_, false);
                 }
             }
         }
-        handleDataPoint(it);
+        handleDataPoint(it_);
     }
 
     /* fill events */
@@ -133,34 +133,34 @@ void ForwardProblem::handlePresimulation()
     solver->updateAndReinitStatesAndSensitivities(model);
 
     solver->run(model->t0());
-    solver->writeSolution(&t, x, dx, sx);
+    solver->writeSolution(&t_, x_, dx_, sx_, dx_);
 }
 
 
 void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
     /* store heaviside information at event occurence */
-    model->froot(t, x, dx, rootvals);
+    model->froot(t_, x_, dx_, rootvals_);
 
     /* store timepoint at which the event occured*/
-    discs.push_back(t);
+    discs_.push_back(t_);
 
     /* extract and store which events occured */
     if (!seflag) {
-        solver->getRootInfo(rootsfound.data());
+        solver->getRootInfo(roots_found_.data());
     }
-    rootidx.push_back(rootsfound);
+    root_idx_.push_back(roots_found_);
 
-    rvaltmp = rootvals;
+    rval_tmp_ = rootvals_;
 
     if (!seflag) {
         /* only check this in the first event fired, otherwise this will always
          * be true */
-        if (t == *tlastroot) {
+        if (t_ == *tlastroot) {
             throw AmiException("AMICI is stuck in an event, as the initial"
                                "step-size after the event is too small. To fix "
                                "this, increase absolute and relative tolerances!");
         }
-        *tlastroot = t;
+        *tlastroot = t_;
     }
 
     if(model->nz>0)
@@ -170,62 +170,62 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
      * x and the old xdot */
     if (solver->getSensitivityOrder() >= SensitivityOrder::first) {
         /* store x and xdot to compute jump in sensitivities */
-        x_old = x;
+        x_old_ = x_;
     }
     if (solver->computingFSA()) {
-        model->fxdot(t, x, dx, xdot);
-        xdot_old = xdot;
-        dx_old = dx;
+        model->fxdot(t_, x_, dx_, xdot_);
+        xdot_old_ = xdot_;
+        dx_old_ = dx_;
         /* compute event-time derivative only for primary events, we get
          * into trouble with multiple simultaneously firing events here (but
          * is this really well defined then?), in that case just use the
          * last ie and hope for the best. */
         if (!seflag) {
             for (int ie = 0; ie < model->ne; ie++) {
-                if (rootsfound.at(ie) == 1) {
+                if (roots_found_.at(ie) == 1) {
                     /* only consider transitions false -> true */
-                    model->getEventTimeSensitivity(stau, t, ie, x, sx);
+                    model->getEventTimeSensitivity(stau_, t_, ie, x_, sx_);
                 }
             }
         }
     } else if (solver->computingASA()) {
         /* store x to compute jump in discontinuity */
-        x_disc.push_back(x);
-        xdot_disc.push_back(xdot);
-        xdot_old_disc.push_back(xdot_old);
+        x_disc_.push_back(x_);
+        xdot_disc_.push_back(xdot_);
+        xdot_old_disc_.push_back(xdot_old_);
     }
 
-    model->updateHeaviside(rootsfound);
+    model->updateHeaviside(roots_found_);
 
     applyEventBolus();
 
     if (solver->computingFSA()) {
         /* compute the new xdot  */
-        model->fxdot(t, x, dx, xdot);
+        model->fxdot(t_, x_, dx_, xdot_);
         applyEventSensiBolusFSA();
     }
 
     int secondevent = 0;
 
     /* check whether we need to fire a secondary event */
-    model->froot(t, x, dx, rootvals);
+    model->froot(t_, x_, dx_, rootvals_);
     for (int ie = 0; ie < model->ne; ie++) {
         /* the same event should not trigger itself */
-        if (rootsfound.at(ie) == 0) {
+        if (roots_found_.at(ie) == 0) {
             /* check whether there was a zero-crossing */
-            if (0 > rvaltmp.at(ie) * rootvals.at(ie)) {
-                if (rvaltmp.at(ie) < rootvals.at(ie)) {
-                    rootsfound.at(ie) = 1;
+            if (0 > rval_tmp_.at(ie) * rootvals_.at(ie)) {
+                if (rval_tmp_.at(ie) < rootvals_.at(ie)) {
+                    roots_found_.at(ie) = 1;
                 } else {
-                    rootsfound.at(ie) = -1;
+                    roots_found_.at(ie) = -1;
                 }
                 secondevent++;
             } else {
-                rootsfound.at(ie) = 0;
+                roots_found_.at(ie) = 0;
             }
         } else {
             /* don't fire the same event again */
-            rootsfound.at(ie) = 0;
+            roots_found_.at(ie) = 0;
         }
     }
     /* fire the secondary event */
@@ -235,75 +235,79 @@ void ForwardProblem::handleEvent(realtype *tlastroot, const bool seflag) {
 
     /* only reinitialise in the first event fired */
     if (!seflag) {
-        solver->reInit(t, x, dx);
+        solver->reInit(t_, x_, dx_);
         if (solver->computingFSA()) {
-            solver->sensReInit(sx, sdx);
+            solver->sensReInit(sx_, sdx_);
         }
     }
 }
 
 void ForwardProblem::storeEvent() {
-    if (t == model->getTimepoint(model->nt() - 1)) {
+    if (t_ == model->getTimepoint(model->nt() - 1)) {
         // call from fillEvent at last timepoint
-        model->froot(t, x, dx, rootvals);
+        model->froot(t_, x_, dx_, rootvals_);
         for (int ie = 0; ie < model->ne; ie++) {
-            rootsfound.at(ie) = (nroots.at(ie) < model->nMaxEvent()) ? 1 : 0;
+            roots_found_.at(ie) = (nroots_.at(ie) < model->nMaxEvent()) ? 1 : 0;
         }
-        rootidx.push_back(rootsfound);
+        root_idx_.push_back(roots_found_);
     }
 
     if (getRootCounter() < getEventCounter()) {
         /* update stored state (sensi) */
-        event_states.at(getRootCounter()) = getSimulationState();
+        event_states_.at(getRootCounter()) = getSimulationState();
     } else {
         /* add stored state (sensi) */
-        event_states.push_back(getSimulationState());
+        event_states_.push_back(getSimulationState());
     }
 
     /* EVENT OUTPUT */
     for (int ie = 0; ie < model->ne; ie++) {
         /* only look for roots of the rootfunction not discontinuities */
-        if (nroots.at(ie) >= model->nMaxEvent())
+        if (nroots_.at(ie) >= model->nMaxEvent())
             continue;
 
         /* only consider transitions false -> true or event filling */
-        if (rootsfound.at(ie) != 1 &&
-            t != model->getTimepoint(model->nt() - 1)) {
+        if (roots_found_.at(ie) != 1 &&
+            t_ != model->getTimepoint(model->nt() - 1)) {
             continue;
         }
 
         if (edata && solver->computingASA())
-            model->getAdjointStateEventUpdate(slice(dJzdx, nroots.at(ie),
+            model->getAdjointStateEventUpdate(slice(dJzdx_, nroots_.at(ie),
                                                     model->nx_solver * model->nJ),
-                                              ie, nroots.at(ie), t, x, *edata);
+                                              ie, nroots_.at(ie), t_, x_, *edata);
 
-        nroots.at(ie)++;
+        nroots_.at(ie)++;
     }
 
-    if (t == model->getTimepoint(model->nt() - 1)) {
+    if (t_ == model->getTimepoint(model->nt() - 1)) {
         // call from fillEvent at last timepoint
         // loop until all events are filled
         fillEvents(model->nMaxEvent());
     }
 }
 
-void ForwardProblem::handleDataPoint(int it) {
-    timepoint_states.push_back(getSimulationState());
+void ForwardProblem::handleDataPoint(int /*it*/) {
+    /* We only store the simulation state if it's not the initial state, as the
+       initial state is stored anyway and we want to avoid storing it twice */
+    if (t_ != model->t0() && timepoint_states_.count(t_) == 0)
+        timepoint_states_[t_] = getSimulationState();
+    /* store diagnosis information for debugging */
     solver->storeDiagnosis();
 }
 
 void ForwardProblem::applyEventBolus() {
     for (int ie = 0; ie < model->ne; ie++)
-        if (rootsfound.at(ie) == 1) // only consider transitions false -> true
-            model->addStateEventUpdate(x, ie, t, xdot, xdot_old);
+        if (roots_found_.at(ie) == 1) // only consider transitions false -> true
+            model->addStateEventUpdate(x_, ie, t_, xdot_, xdot_old_);
 }
 
 void ForwardProblem::applyEventSensiBolusFSA() {
     for (int ie = 0; ie < model->ne; ie++)
-        if (rootsfound.at(ie) == 1) // only consider transitions false -> true
+        if (roots_found_.at(ie) == 1) // only consider transitions false -> true
             /*  */
-            model->addStateSensitivityEventUpdate(sx, ie, t, x_old, xdot,
-                                                  xdot_old, stau);
+            model->addStateSensitivityEventUpdate(sx_, ie, t_, x_old_, xdot_,
+                                                  xdot_old_, stau_);
 }
 
 void ForwardProblem::getAdjointUpdates(Model &model,
@@ -312,19 +316,19 @@ void ForwardProblem::getAdjointUpdates(Model &model,
         if (std::isinf(model.getTimepoint(it)))
             return;
         model.getAdjointStateObservableUpdate(
-            slice(dJydx, it, model.nx_solver * model.nJ), it,
-            timepoint_states.at(it).x, edata
+            slice(dJydx_, it, model.nx_solver * model.nJ), it,
+            getSimulationStateTimepoint(it).x, edata
         );
     }
 }
 
 SimulationState ForwardProblem::getSimulationState() const {
     auto state = SimulationState();
-    state.t = t;
-    state.x = x;
-    state.dx = dx;
-    if (solver->computingFSA() || t == model->t0())
-        state.sx = sx;
+    state.t = t_;
+    state.x = x_;
+    state.dx = dx_;
+    if (solver->computingFSA() || t_ == model->t0())
+        state.sx = sx_;
     state.state = model->getModelState();
     return state;
 }

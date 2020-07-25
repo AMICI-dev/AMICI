@@ -56,7 +56,7 @@ def test_hill_function_dwdx():
     if involved states are zero if not properly arranged symbolically.
     Test that what we are applying the right sympy simplification."""
 
-    w = sp.sympify('Pow(x1, p1) / (Pow(x1, p1) + a)')
+    w = sp.Matrix([[sp.sympify('Pow(x1, p1) / (Pow(x1, p1) + a)')]])
     dwdx = w.diff(sp.Symbol('x1'))
 
     # Verify that without simplification we fail
@@ -66,12 +66,14 @@ def test_hill_function_dwdx():
         _ = str(res)
 
     # Test that powsimp does the job
-    dwdx = sp.powsimp(dwdx)
+    dwdx = dwdx.applyfunc(lambda x: sp.powsimp(x, deep=True))
     with sp.evaluate(False):
         res = dwdx.subs({'x1': 0.0})
     _ = str(res)
 
 
+@pytest.mark.skipif(os.environ.get('AMICI_SKIP_CMAKE_TESTS', '') == 'TRUE',
+                    reason='skipping cmake based test')
 def test_cmake_compilation(sbml_example_presimulation_module):
     """Check that CMake build succeeds for one of the models generated during
     Python tests"""

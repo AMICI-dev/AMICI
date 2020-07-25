@@ -27,7 +27,7 @@ extern AmiciApplication defaultContext;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::Solver &u, unsigned int version);
+void serialize(Archive &ar, amici::Solver &s, unsigned int version);
 }
 } // namespace boost::serialization
 
@@ -120,6 +120,21 @@ class Solver {
                 const AmiVector &dxB0, const AmiVector &xQB0) const;
 
     /**
+     * @brief Initialises the ami memory for quadrature computation
+     * @param t0 initial timepoint
+     * @param model pointer to the model instance
+     * @param x0 initial states
+     * @param dx0 initial derivative states
+     * @param xB0 initial adjoint states
+     * @param dxB0 initial derivative adjoint states
+     * @param xQ0 initial quadrature vector
+     */
+
+    void setupSteadystate(const realtype t0, Model *model, const AmiVector &x0,
+                          const AmiVector &dx0, const AmiVector &xB0,
+                          const AmiVector &dxB0, const AmiVector &xQ0) const;
+
+    /**
      * @brief Reinitializes state and respective sensitivities (if necessary) according
      * to changes in fixedParameters
      *
@@ -173,7 +188,7 @@ class Solver {
     SensitivityMethod getSensitivityMethod() const;
 
     /**
-     * @brief Set sensitivity method (wrapper for sensitivityMethod())
+     * @brief Set sensitivity method
      * @param sensi_meth
      */
     void setSensitivityMethod(SensitivityMethod sensi_meth);
@@ -185,7 +200,7 @@ class Solver {
     SensitivityMethod getSensitivityMethodPreequilibration() const;
 
     /**
-     * @brief Set sensitivity method for preequilibration (wrapper for sensitivityMethod())
+     * @brief Set sensitivity method for preequilibration
      * @param sensi_meth_preeq
      */
     void setSensitivityMethodPreequilibration(SensitivityMethod sensi_meth_preeq);
@@ -524,15 +539,15 @@ class Solver {
 
     /**
      * @brief returns stability limit detection mode
-     * @return stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
+     * @return stldet can be false (deactivated) or true (activated)
      */
-    booleantype getStabilityLimitFlag() const;
+    bool getStabilityLimitFlag() const;
 
     /**
      * @brief set stability limit detection mode
-     * @param stldet can be amici.FALSE (deactivated) or amici.TRUE (activated)
+     * @param stldet can be false (deactivated) or true (activated)
      */
-    void setStabilityLimitFlag(booleantype stldet);
+    void setStabilityLimitFlag(bool stldet);
 
     /**
      * @brief getLinearSolver
@@ -576,9 +591,10 @@ class Solver {
      * @param x state
      * @param dx derivative state
      * @param sx state sensitivity
+     * @param xQ quadrature
      */
     void writeSolution(realtype *t, AmiVector &x, AmiVector &dx,
-                       AmiVectorArray &sx) const;
+                       AmiVectorArray &sx, AmiVector &xQ) const;
 
     /**
      * @brief write solution from forward simulation
@@ -635,6 +651,13 @@ class Solver {
      * @return (interpolated) solution xQB
      */
     const AmiVector &getAdjointQuadrature(int which, realtype t) const;
+
+    /**
+     * @brief Access quadrature solution at time t
+     * @param t time
+     * @return (interpolated) solution xQ
+     */
+    const AmiVector &getQuadrature(realtype t) const;
 
     /**
      * @brief Reinitializes the states in the solver after an event occurence
@@ -757,7 +780,7 @@ class Solver {
      * @return ns
      */
     std::vector<int> const& getNumSteps() const {
-        return ns;
+        return ns_;
     }
 
     /**
@@ -765,7 +788,7 @@ class Solver {
      * @return nsB
      */
     std::vector<int> const& getNumStepsB() const {
-        return nsB;
+        return nsB_;
     }
 
     /**
@@ -773,7 +796,7 @@ class Solver {
      * @return nrhs
      */
     std::vector<int> const& getNumRhsEvals() const {
-        return nrhs;
+        return nrhs_;
     }
 
     /**
@@ -781,7 +804,7 @@ class Solver {
      * @return nrhsB
      */
     std::vector<int> const& getNumRhsEvalsB() const {
-        return nrhsB;
+        return nrhsB_;
     }
 
     /**
@@ -789,7 +812,7 @@ class Solver {
      * @return netf
      */
     std::vector<int> const& getNumErrTestFails() const {
-        return netf;
+        return netf_;
     }
 
     /**
@@ -797,7 +820,7 @@ class Solver {
      * @return netfB
      */
     std::vector<int> const& getNumErrTestFailsB() const {
-        return netfB;
+        return netfB_;
     }
 
     /**
@@ -805,7 +828,7 @@ class Solver {
      * @return nnlscf
      */
     std::vector<int> const& getNumNonlinSolvConvFails() const {
-        return nnlscf;
+        return nnlscf_;
     }
 
     /**
@@ -813,7 +836,7 @@ class Solver {
      * @return nnlscfB
      */
     std::vector<int> const& getNumNonlinSolvConvFailsB() const {
-        return nnlscfB;
+        return nnlscfB_;
     }
 
     /**
@@ -821,17 +844,17 @@ class Solver {
      * @return order
      */
     std::vector<int> const& getLastOrder() const {
-        return order;
+        return order_;
     }
 
     /**
      * @brief Serialize Solver (see boost::serialization::serialize)
      * @param ar Archive to serialize to
-     * @param r Data to serialize
+     * @param s Data to serialize
      * @param version Version number
      */
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, Solver &r,
+    friend void boost::serialization::serialize(Archive &ar, Solver &s,
                                                 unsigned int version);
 
     /**
@@ -909,6 +932,14 @@ class Solver {
     virtual void getQuadB(int which) const = 0;
 
     /**
+     * @brief extracts the quadrature at the current timepoint from solver
+     * memory and writes it to the xQ member variable
+     *
+     * @param t timepoint for quadrature extraction
+     */
+    virtual void getQuad(realtype &t) const = 0;
+
+    /**
      * @brief Initialises the states at the specified initial timepoint
      *
      * @param t0 initial timepoint
@@ -917,6 +948,16 @@ class Solver {
      */
     virtual void init(realtype t0, const AmiVector &x0,
                       const AmiVector &dx0) const = 0;
+
+    /**
+     * @brief Initialises the states at the specified initial timepoint
+     *
+     * @param t0 initial timepoint
+     * @param x0 initial states
+     * @param dx0 initial derivative states
+     */
+    virtual void initSteadystate(realtype t0, const AmiVector &x0,
+                                 const AmiVector &dx0) const = 0;
 
     /**
      * @brief initialises the forward sensitivities
@@ -1007,6 +1048,11 @@ class Solver {
     virtual void setJacTimesVecFnB(int which) const = 0;
 
     /**
+     * @brief sets the sparse Jacobian function for backward steady state case
+     */
+    virtual void setSparseJacFn_ss() const = 0;
+
+    /**
      * @brief Create specifies solver method and initializes solver memory for
      * the forward problem
      */
@@ -1046,6 +1092,14 @@ class Solver {
      * @param flag activation flag
      */
     virtual void setQuadErrConB(int which, bool flag) const = 0;
+
+    /**
+     * @brief Specifies whether error control is also enforced for the
+     * forward quadrature problem
+     *
+     * @param flag activation flag
+     */
+    virtual void setQuadErrCon(bool flag) const = 0;
 
     /**
      * @brief Attaches the error handler function (errMsgIdAndTxt)
@@ -1171,10 +1225,24 @@ class Solver {
     virtual void getQuadDkyB(realtype t, int k, int which) const = 0;
 
     /**
-     * @brief initializes the adjoint problem
+     * @brief interpolates the (derivative of the) solution at the requested
+     * timepoint
      *
+     * @param t timepoint
+     * @param k derivative order
+     */
+    virtual void getQuadDky(realtype t, int k) const = 0;
+
+    /**
+     * @brief initializes the adjoint problem
      */
     virtual void adjInit() const = 0;
+
+    /**
+     * @brief initializes the quadratures
+     * @param xQ0 vector with initial values for xQ
+     */
+    virtual void quadInit(const AmiVector &xQ0) const = 0;
 
     /**
      * @brief Specifies solver method and initializes solver memory for the
@@ -1205,6 +1273,15 @@ class Solver {
      */
     virtual void quadSStolerancesB(int which, realtype reltolQB,
                                    realtype abstolQB) const = 0;
+
+    /**
+     * @brief sets relative and absolute tolerances for the quadrature problem
+     *
+     * @param reltolQB relative tolerances
+     * @param abstolQB absolute tolerances
+     */
+    virtual void quadSStolerances(realtype reltolQB,
+                                  realtype abstolQB) const = 0;
 
     /**
      * @brief reports the number of solver steps
@@ -1353,6 +1430,12 @@ class Solver {
     bool getQuadInitDoneB(int which) const;
 
     /**
+     * @brief checks whether memory for quadratures has been allocated
+     * @return proxy for solverMemory->(cv|ida)_QuadMallocDone
+     */
+    bool getQuadInitDone() const;
+
+    /**
      * @brief attaches a diagonal linear solver to the forward problem
      */
     virtual void diag() const = 0;
@@ -1412,59 +1495,65 @@ class Solver {
     void applyQuadTolerancesASA(int which) const;
 
     /**
+     * @brief updates quadrature solver tolerances according to the
+     * currently specified member variables
+     */
+    void applyQuadTolerances() const;
+
+    /**
      * @brief updates all senstivivity solver tolerances according to the
      * currently specified member variables
      */
     void applySensitivityTolerances() const;
 
     /** pointer to solver memory block */
-    mutable std::unique_ptr<void, std::function<void(void *)>> solverMemory;
+    mutable std::unique_ptr<void, std::function<void(void *)>> solver_memory_;
 
     /** pointer to solver memory block */
     mutable std::vector<std::unique_ptr<void, std::function<void(void *)>>>
-        solverMemoryB;
+        solver_memory_B_;
 
     /** internal sensitivity method flag used to select the sensitivity solution
      * method. Only applies for Forward Sensitivities. */
-    InternalSensitivityMethod ism = InternalSensitivityMethod::simultaneous;
+    InternalSensitivityMethod ism_ {InternalSensitivityMethod::simultaneous};
 
     /** specifies the linear multistep method.
      */
-    LinearMultistepMethod lmm = LinearMultistepMethod::BDF;
+    LinearMultistepMethod lmm_ {LinearMultistepMethod::BDF};
 
     /**
      * specifies the type of nonlinear solver iteration
      */
-    NonlinearSolverIteration iter = NonlinearSolverIteration::newton;
+    NonlinearSolverIteration iter_ {NonlinearSolverIteration::newton};
 
     /** interpolation type for the forward problem solution which
      * is then used for the backwards problem.
      */
-    InterpolationType interpType = InterpolationType::hermite;
+    InterpolationType interp_type_ {InterpolationType::hermite};
 
     /** maximum number of allowed integration steps */
-    long int maxsteps = 10000;
+    long int maxsteps_ {10000};
 
     /** linear solver for the forward problem */
-    mutable std::unique_ptr<SUNLinSolWrapper> linearSolver;
+    mutable std::unique_ptr<SUNLinSolWrapper> linear_solver_;
 
     /** linear solver for the backward problem */
-    mutable std::unique_ptr<SUNLinSolWrapper> linearSolverB;
+    mutable std::unique_ptr<SUNLinSolWrapper> linear_solver_B_;
 
     /** non-linear solver for the forward problem */
-    mutable std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolver;
+    mutable std::unique_ptr<SUNNonLinSolWrapper> non_linear_solver_;
 
     /** non-linear solver for the backward problem */
-    mutable std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverB;
+    mutable std::unique_ptr<SUNNonLinSolWrapper> non_linear_solver_B_;
 
     /** non-linear solver for the sensitivities */
-    mutable std::unique_ptr<SUNNonLinSolWrapper> nonLinearSolverSens;
+    mutable std::unique_ptr<SUNNonLinSolWrapper> non_linear_solver_sens_;
 
     /** flag indicating whether the forward solver has been called */
-    mutable bool solverWasCalledF = false;
+    mutable bool solver_was_called_F_ {false};
 
     /** flag indicating whether the backward solver has been called */
-    mutable bool solverWasCalledB = false;
+    mutable bool solver_was_called_B_ {false};
 
     /**
      * @brief sets that memory for the forward problem has been allocated
@@ -1499,183 +1588,191 @@ class Solver {
     void setQuadInitDoneB(int which) const;
 
     /**
-     * @brief Sets sensitivity method (for simulation or preequilibration)
-     * @param member pointer class member sensi_meth[_preeq]
-     * @param value user input for new value of class member sensi_meth[_preeq]
+     * @brief sets that memory for quadratures has been allocated
      */
-    void sensitivityMethod(SensitivityMethod *member,
-                           const SensitivityMethod value);
+    void setQuadInitDone() const;
+
+    /**
+     * @brief Sets sensitivity method (for simulation or preequilibration)
+     * @param sensi_meth new value for sensi_meth[_preeq]
+     * @param preequilibration flag indicating preequilibration or simulation
+     */
+    void checkSensitivityMethod(const SensitivityMethod sensi_meth,
+                                bool preequilibration) const;
 
     /** state (dimension: nx_solver) */
-    mutable AmiVector x = AmiVector(0);
+    mutable AmiVector x_ {0};
 
     /** state interface variable (dimension: nx_solver) */
-    mutable AmiVector dky = AmiVector(0);
+    mutable AmiVector dky_ {0};
 
     /** state derivative dummy (dimension: nx_solver) */
-    mutable AmiVector dx = AmiVector(0);
+    mutable AmiVector dx_ {0};
 
     /** state sensititivities interface variable (dimension: nx_solver x nplist)
      */
-    mutable AmiVectorArray sx = AmiVectorArray(0, 0);
+    mutable AmiVectorArray sx_ {0, 0};
     /** state derivative sensititivities dummy (dimension: nx_solver x nplist)
      */
-    mutable AmiVectorArray sdx = AmiVectorArray(0, 0);
+    mutable AmiVectorArray sdx_ {0, 0};
 
     /** adjoint state interface variable (dimension: nx_solver) */
-    mutable AmiVector xB = AmiVector(0);
+    mutable AmiVector xB_ {0};
 
     /** adjoint derivative dummy variable (dimension: nx_solver) */
-    mutable AmiVector dxB = AmiVector(0);
+    mutable AmiVector dxB_ {0};
 
     /** adjoint quadrature interface variable (dimension: nJ x nplist) */
-    mutable AmiVector xQB = AmiVector(0);
+    mutable AmiVector xQB_ {0};
+
+    /** forward quadrature interface variable (dimension: nx_solver) */
+    mutable AmiVector xQ_ {0};
 
     /** integration time of the forward problem */
-    mutable realtype t = std::nan("");
+    mutable realtype t_ {std::nan("")};
 
     /** flag to force reInitPostProcessF before next call to solve */
-    mutable bool forceReInitPostProcessF = false;
+    mutable bool force_reinit_postprocess_F_ {false};
 
     /** flag to force reInitPostProcessB before next call to solveB */
-    mutable bool forceReInitPostProcessB = false;
+    mutable bool force_reinit_postprocess_B_ {false};
 
   private:
     /** method for sensitivity computation */
-    SensitivityMethod sensi_meth = SensitivityMethod::forward;
+    SensitivityMethod sensi_meth_ {SensitivityMethod::forward};
 
     /** method for sensitivity computation in preequilibration */
-    SensitivityMethod sensi_meth_preeq = SensitivityMethod::forward;
-
-    /** Use possibly the Newton solver in the adjoint problem. */
-    bool newton_solver_backward = true;
+    SensitivityMethod sensi_meth_preeq_ {SensitivityMethod::forward};
 
     /** flag controlling stability limit detection */
-    booleantype stldet = true;
+    booleantype stldet_ {true};
 
     /** state ordering */
-    int ordering = static_cast<int>(SUNLinSolKLU::StateOrdering::AMD);
+    int ordering_ {static_cast<int>(SUNLinSolKLU::StateOrdering::AMD)};
 
     /** maximum number of allowed Newton steps for steady state computation */
-    long int newton_maxsteps = 0;
+    long int newton_maxsteps_ {0L};
 
     /** maximum number of allowed linear steps per Newton step for steady state
      * computation */
-    long int newton_maxlinsteps = 0;
+    long int newton_maxlinsteps_ {0L};
 
     /** Damping factor state used int the Newton method */
-    NewtonDampingFactorMode newton_damping_factor_mode =
-        NewtonDampingFactorMode::on;
+    NewtonDampingFactorMode newton_damping_factor_mode_
+        {NewtonDampingFactorMode::on};
 
     /** Lower bound of the damping factor. */
-    double newton_damping_factor_lower_bound = 1e-8;
+    realtype newton_damping_factor_lower_bound_ {1e-8};
 
     /** Enable model preequilibration */
-    bool requires_preequilibration = false;
+    bool requires_preequilibration_ {false};
 
     /** linear solver specification */
-    LinearSolver linsol = LinearSolver::KLU;
+    LinearSolver linsol_ {LinearSolver::KLU};
 
     /** absolute tolerances for integration */
-    realtype atol = 1e-16;
+    realtype atol_ {1e-16};
 
     /** relative tolerances for integration */
-    realtype rtol = 1e-8;
+    realtype rtol_ {1e-8};
 
     /** absolute tolerances for forward sensitivity integration */
-    realtype atol_fsa = NAN;
+    realtype atol_fsa_ {NAN};
 
     /** relative tolerances for forward sensitivity integration */
-    realtype rtol_fsa = NAN;
+    realtype rtol_fsa_ {NAN};
 
     /** absolute tolerances for adjoint sensitivity integration */
-    realtype atolB = NAN;
+    realtype atolB_ {NAN};
 
     /** relative tolerances for adjoint sensitivity integration */
-    realtype rtolB = NAN;
+    realtype rtolB_ {NAN};
 
     /** absolute tolerances for backward quadratures */
-    realtype quad_atol = 1e-12;
+    realtype quad_atol_ {1e-12};
 
     /** relative tolerances for backward quadratures */
-    realtype quad_rtol = 1e-8;
+    realtype quad_rtol_ {1e-8};
 
     /** absolute tolerances for steadystate computation */
-    realtype ss_atol = NAN;
+    realtype ss_atol_ {NAN};
 
     /** relative tolerances for steadystate computation */
-    realtype ss_rtol = NAN;
+    realtype ss_rtol_ {NAN};
 
     /** absolute tolerances for steadystate computation */
-    realtype ss_atol_sensi = NAN;
+    realtype ss_atol_sensi_ {NAN};
 
     /** relative tolerances for steadystate computation */
-    realtype ss_rtol_sensi = NAN;
+    realtype ss_rtol_sensi_ {NAN};
 
-    RDataReporting rdata_mode = RDataReporting::full;
+    RDataReporting rdata_mode_ {RDataReporting::full};
 
     /** CPU time, forward solve */
-    mutable realtype cpu_time = 0.0;
+    mutable realtype cpu_time_ {0.0};
 
     /** CPU time, backward solve */
-    mutable realtype cpu_timeB = 0.0;
+    mutable realtype cpu_timeB_ {0.0};
 
     /** maximum number of allowed integration steps for backward problem */
-    long int maxstepsB = 0;
+    long int maxstepsB_ {0L};
 
     /** flag indicating whether sensitivities are supposed to be computed */
-    SensitivityOrder sensi = SensitivityOrder::none;
+    SensitivityOrder sensi_ {SensitivityOrder::none};
 
     /** flag indicating whether init was called */
-    mutable bool initialized = false;
+    mutable bool initialized_ {false};
 
     /** flag indicating whether sensInit1 was called */
-    mutable bool sensInitialized = false;
+    mutable bool sens_initialized_ {false};
 
     /** flag indicating whether adjInit was called */
-    mutable bool adjInitialized = false;
+    mutable bool adj_initialized_ {false};
+
+    /** flag indicating whether (forward) quadInit was called */
+    mutable bool quad_initialized_ {false};
 
     /** vector of flags indicating whether binit was called for respective
      which */
-    mutable std::vector<bool> initializedB{false};
+    mutable std::vector<bool> initializedB_{false};
 
     /** vector of flags indicating whether qbinit was called for respective
      which */
-    mutable std::vector<bool> initializedQB{false};
+    mutable std::vector<bool> initializedQB_{false};
 
     /** number of checkpoints in the forward problem */
-    mutable int ncheckPtr = 0;
+    mutable int ncheckPtr_ {0};
 
     /** number of integration steps forward problem (dimension: nt) */
-    mutable std::vector<int> ns;
+    mutable std::vector<int> ns_;
 
     /** number of integration steps backward problem (dimension: nt) */
-    mutable std::vector<int> nsB;
+    mutable std::vector<int> nsB_;
 
     /** number of right hand side evaluations forward problem (dimension: nt) */
-    mutable std::vector<int> nrhs;
+    mutable std::vector<int> nrhs_;
 
     /** number of right hand side evaluations backward problem (dimension: nt) */
-    mutable std::vector<int> nrhsB;
+    mutable std::vector<int> nrhsB_;
 
     /** number of error test failures forward problem (dimension: nt) */
-    mutable std::vector<int> netf;
+    mutable std::vector<int> netf_;
 
     /** number of error test failures backward problem (dimension: nt) */
-    mutable std::vector<int> netfB;
+    mutable std::vector<int> netfB_;
 
     /**
      * number of linear solver convergence failures forward problem (dimension:
      * nt) */
-    mutable std::vector<int> nnlscf;
+    mutable std::vector<int> nnlscf_;
 
     /**
      * number of linear solver convergence failures backward problem (dimension:
      * nt) */
-    mutable std::vector<int> nnlscfB;
+    mutable std::vector<int> nnlscfB_;
 
     /** employed order forward problem (dimension: nt) */
-    mutable std::vector<int> order;
+    mutable std::vector<int> order_;
 };
 
 bool operator==(const Solver &a, const Solver &b);

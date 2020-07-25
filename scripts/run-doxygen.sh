@@ -60,6 +60,7 @@ rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 cd ${AMICI_PATH}/doc/latex
 
 make
+
 cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 # suppress doxygen warnings about status badges

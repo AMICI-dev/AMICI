@@ -77,7 +77,7 @@ class ForwardProblem {
      * @return t
      */
     realtype getTime() const {
-        return t;
+        return t_;
     }
 
     /**
@@ -85,7 +85,7 @@ class ForwardProblem {
      * @return x
      */
     AmiVector const& getState() const {
-        return x;
+        return x_;
     }
 
     /**
@@ -93,7 +93,7 @@ class ForwardProblem {
      * @return dx
      */
     AmiVector const& getStateDerivative() const {
-        return dx;
+        return dx_;
     }
 
     /**
@@ -101,7 +101,7 @@ class ForwardProblem {
      * @return sx
      */
     AmiVectorArray const& getStateSensitivity() const {
-        return sx;
+        return sx_;
     }
 
     /**
@@ -109,7 +109,7 @@ class ForwardProblem {
      * @return x_disc
      */
     std::vector<AmiVector> const& getStatesAtDiscontinuities() const {
-        return x_disc;
+        return x_disc_;
     }
 
     /**
@@ -117,7 +117,7 @@ class ForwardProblem {
      * @return xdot_disc
      */
     std::vector<AmiVector> const& getRHSAtDiscontinuities() const {
-        return xdot_disc;
+        return xdot_disc_;
     }
 
     /**
@@ -125,7 +125,7 @@ class ForwardProblem {
      * @return xdot_old_disc
      */
     std::vector<AmiVector> const& getRHSBeforeDiscontinuities() const {
-        return xdot_old_disc;
+        return xdot_old_disc_;
     }
 
     /**
@@ -133,7 +133,7 @@ class ForwardProblem {
      * @return nroots
      */
     std::vector<int> const& getNumberOfRoots() const {
-        return nroots;
+        return nroots_;
     }
 
     /**
@@ -141,7 +141,7 @@ class ForwardProblem {
      * @return discs
      */
     std::vector<realtype> const& getDiscontinuities() const {
-        return discs;
+        return discs_;
     }
 
     /**
@@ -149,7 +149,7 @@ class ForwardProblem {
      * @return rootidx
      */
     std::vector<std::vector<int>> const& getRootIndexes() const {
-        return rootidx;
+        return root_idx_;
     }
 
     /**
@@ -157,7 +157,7 @@ class ForwardProblem {
      * @return dJydx
      */
    std::vector<realtype> const& getDJydx() const {
-        return dJydx;
+        return dJydx_;
     }
 
     /**
@@ -165,7 +165,7 @@ class ForwardProblem {
      * @return dJzdx
      */
     std::vector<realtype> const& getDJzdx() const {
-        return dJzdx;
+        return dJzdx_;
     }
 
     /**
@@ -173,7 +173,7 @@ class ForwardProblem {
      * @return &x
      */
     AmiVector *getStatePointer() {
-        return &x;
+        return &x_;
     }
 
     /**
@@ -181,7 +181,7 @@ class ForwardProblem {
      * @return &dx
      */
     AmiVector *getStateDerivativePointer() {
-        return &dx;
+        return &dx_;
     }
 
     /**
@@ -189,7 +189,7 @@ class ForwardProblem {
      * @return &sx
      */
     AmiVectorArray *getStateSensitivityPointer() {
-        return &sx;
+        return &sx_;
     }
 
     /**
@@ -197,7 +197,7 @@ class ForwardProblem {
      * @return &sdx
      */
     AmiVectorArray *getStateDerivativeSensitivityPointer() {
-        return &sdx;
+        return &sdx_;
     }
 
     /**
@@ -205,15 +205,15 @@ class ForwardProblem {
      * @return it
      */
     int getCurrentTimeIteration() const {
-        return it;
+        return it_;
     }
 
     /**
-     * @brief Returns maximal time point index for which simulations are available
-     * @return index
+     * @brief Returns final time point for which simulations are available
+     * @return time point
      */
-    int getTimepointCounter() const {
-        return static_cast<int>(timepoint_states.size() - 1);
+    realtype getFinalTime() const {
+        return final_state_.t;
     }
 
     /**
@@ -221,7 +221,7 @@ class ForwardProblem {
      * @return index
      */
     int getEventCounter() const {
-        return static_cast<int>(event_states.size() - 1);
+        return static_cast<int>(event_states_.size() - 1);
     }
 
     /**
@@ -229,7 +229,7 @@ class ForwardProblem {
      * @return index
      */
     int getRootCounter() const {
-        return static_cast<int>(discs.size() - 1);
+        return static_cast<int>(discs_.size() - 1);
     }
 
     /**
@@ -239,7 +239,9 @@ class ForwardProblem {
      * @return state
      */
     const SimulationState &getSimulationStateTimepoint(int it) const {
-        return timepoint_states.at(it);
+        if (model->getTimepoint(it) == initial_state_.t)
+            return getInitialSimulationState();
+        return timepoint_states_.find(model->getTimepoint(it))->second;
     };
 
     /**
@@ -249,7 +251,7 @@ class ForwardProblem {
      * @return SimulationState
      */
     const SimulationState &getSimulationStateEvent(int iroot) const {
-        return event_states.at(iroot);
+        return event_states_.at(iroot);
     };
 
     /**
@@ -258,7 +260,7 @@ class ForwardProblem {
      * @return SimulationState
      */
     const SimulationState &getInitialSimulationState() const {
-        return initial_state;
+        return initial_state_;
     };
 
     /**
@@ -267,7 +269,7 @@ class ForwardProblem {
      * @return SimulationState
      */
     const SimulationState &getFinalSimulationState() const {
-        return final_state;
+        return final_state_;
     };
 
     /** pointer to model instance */
@@ -278,6 +280,7 @@ class ForwardProblem {
 
     /** pointer to experimental data instance */
     const ExpData *edata;
+
   private:
 
     void handlePresimulation();
@@ -288,7 +291,7 @@ class ForwardProblem {
      * @param tlastroot pointer to the timepoint of the last event
      */
 
-    void handleEvent(realtype *tlastroot,bool seflag);
+    void handleEvent(realtype *tlastroot_,bool seflag);
 
     /**
      * @brief Extract output information for events
@@ -300,7 +303,7 @@ class ForwardProblem {
      *
      * @param it index of data point
      */
-    void handleDataPoint(int it);
+    void handleDataPoint(int it_);
 
     /**
      * @brief Applies the event bolus to the current state
@@ -320,7 +323,7 @@ class ForwardProblem {
      * @param nmaxevent maximal number of events
      */
     bool checkEventsToFill(int nmaxevent) const {
-        return std::any_of(nroots.cbegin(), nroots.cend(),
+        return std::any_of(nroots_.cbegin(), nroots_.cend(),
                            [nmaxevent](int curNRoots) {
                 return curNRoots < nmaxevent;
         });
@@ -333,7 +336,7 @@ class ForwardProblem {
      */
     void fillEvents(int nmaxevent) {
         if (checkEventsToFill(nmaxevent)) {
-            discs.push_back(t);
+            discs_.push_back(t_);
             storeEvent();
         }
     }
@@ -347,49 +350,49 @@ class ForwardProblem {
     /** array of index vectors (dimension ne) indicating whether the respective
      * root has been detected for all so far encountered discontinuities,
      * extended as needed (dimension: dynamic) */
-    std::vector<std::vector<int>> rootidx;
+    std::vector<std::vector<int>> root_idx_;
 
     /** array of number of found roots for a certain event type
      * (dimension: ne) */
-    std::vector<int> nroots;
+    std::vector<int> nroots_;
 
     /** array of values of the root function (dimension: ne) */
-    std::vector<realtype> rootvals;
+    std::vector<realtype> rootvals_;
 
     /** temporary rootval storage to check crossing in secondary event
      * (dimension: ne) */
-    std::vector<realtype> rvaltmp;
+    std::vector<realtype> rval_tmp_;
 
     /** array containing the time-points of discontinuities
      * (dimension: nmaxevent x ne, ordering = ?) */
-    std::vector<realtype> discs;
+    std::vector<realtype> discs_;
 
     /** array containing the index of discontinuities
      * (dimension: nmaxevent x ne, ordering = ?) */
-    std::vector<realtype> irdiscs;
+    std::vector<realtype> irdiscs_;
 
     /** array of state vectors (dimension nx) for all so far encountered
      * discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> x_disc;
+    std::vector<AmiVector> x_disc_;
 
     /** array of differential state vectors (dimension nx) for all so far
      * encountered discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> xdot_disc;
+    std::vector<AmiVector> xdot_disc_;
 
     /** array of old differential state vectors (dimension nx) for all so far
      * encountered discontinuities, extended as needed (dimension dynamic) */
-    std::vector<AmiVector> xdot_old_disc;
+    std::vector<AmiVector> xdot_old_disc_;
 
     /** state derivative of data likelihood
      * (dimension nJ x nx x nt, ordering =?) */
-    std::vector<realtype> dJydx;
+    std::vector<realtype> dJydx_;
 
     /** state derivative of event likelihood
      * (dimension nJ x nx x nMaxEvent, ordering =?) */
-    std::vector<realtype> dJzdx;
+    std::vector<realtype> dJzdx_;
 
     /** current time */
-    realtype t;
+    realtype t_;
 
     /**
      * @brief Array of flags indicating which root has beend found.
@@ -397,56 +400,56 @@ class ForwardProblem {
      * Array of length nr (ne) with the indices of the user functions gi found
      * to have a root. For i = 0, . . . ,nr 1 if gi has a root, and = 0 if not.
      */
-    std::vector<int> rootsfound;
+    std::vector<int> roots_found_;
 
     /** simulation states history at timepoints  */
-    std::vector<SimulationState> timepoint_states;
+    std::map<realtype, SimulationState> timepoint_states_;
 
     /** simulation state history at events*/
-    std::vector<SimulationState> event_states;
+    std::vector<SimulationState> event_states_;
 
     /** simulation state after initialization*/
-    SimulationState initial_state;
+    SimulationState initial_state_;
 
     /** simulation state after simulation*/
-    SimulationState final_state;
+    SimulationState final_state_;
 
     /** state vector (dimension: nx_solver) */
-    AmiVector x;
+    AmiVector x_;
 
     /** old state vector (dimension: nx_solver) */
-    AmiVector x_old;
+    AmiVector x_old_;
 
     /** differential state vector (dimension: nx_solver) */
-    AmiVector dx;
+    AmiVector dx_;
 
     /** old differential state vector (dimension: nx_solver) */
-    AmiVector dx_old;
+    AmiVector dx_old_;
 
     /** time derivative state vector (dimension: nx_solver) */
-    AmiVector xdot;
+    AmiVector xdot_;
 
     /** old time derivative state vector (dimension: nx_solver) */
-    AmiVector xdot_old;
+    AmiVector xdot_old_;
 
     /** sensitivity state vector array (dimension: nx_cl x nplist, row-major) */
-    AmiVectorArray sx;
+    AmiVectorArray sx_;
 
     /** differential sensitivity state vector array
      * (dimension: nx_cl x nplist, row-major) */
-    AmiVectorArray sdx;
+    AmiVectorArray sdx_;
 
     /** sensitivity of the event timepoint (dimension: nplist) */
-    std::vector<realtype> stau;
+    std::vector<realtype> stau_;
 
     /** storage for last found root */
-    realtype tlastroot = 0.0;
+    realtype tlastroot_ {0.0};
 
     /** flag to indicate wheter solver was preeinitialized via preequilibration */
-    bool preequilibrated = false;
+    bool preequilibrated_ {false};
 
     /** current iteration number for time index */
-    int it;
+    int it_;
 
 };
 
@@ -459,7 +462,7 @@ class FinalStateStorer : public ContextManager {
      * @brief constructor, attaches problem pointer
      * @param fwd problem from which the simulation state is to be stored
      */
-    explicit FinalStateStorer(ForwardProblem *fwd) : fwd(fwd) {
+    explicit FinalStateStorer(ForwardProblem *fwd) : fwd_(fwd) {
     }
 
     FinalStateStorer &operator=(const FinalStateStorer &other) = delete;
@@ -468,11 +471,11 @@ class FinalStateStorer : public ContextManager {
      * @brief destructor, stores simulation state
      */
     ~FinalStateStorer() {
-        if(fwd)
-            fwd->final_state = fwd->getSimulationState();
+        if(fwd_)
+            fwd_->final_state_ = fwd_->getSimulationState();
     }
   private:
-    ForwardProblem *fwd;
+    ForwardProblem *fwd_;
 };
 
 } // namespace amici
