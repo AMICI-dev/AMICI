@@ -29,6 +29,7 @@ def _modify_solver_attrs(solver):
         getattr(solver, attr)(cval)
 
 
+@pytest.mark.skipif(not amici.hdf5_enabled, 'AMICI was compiled without HDF5')
 def test_solver_hdf5_roundtrip(sbml_example_presimulation_module):
     """TestCase class for AMICI HDF5 I/O"""
 
