@@ -43,20 +43,8 @@ install:
     - pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
 
 script:
-    - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
     - AMICI_SKIP_CMAKE_TESTS=TRUE
-    - pip install pytest pysb
+    - pip install pytest pysb petab
     - python -m pytest --ignore-glob=*petab* --ignore-glob=*pysb* ./python/tests
-
-after_failure:
-    - $FOLD ls -alR
-
-# cache dependencies
-cache:
-  directories:
-    - $HOME/Library/Caches/Homebrew
-    - $HOME/Library/Caches/pip
-    - $HOME/.cache/pip
-  timeout: 1200
