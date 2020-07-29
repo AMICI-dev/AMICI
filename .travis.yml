@@ -45,6 +45,6 @@ install:
 script:
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-    - AMICI_SKIP_CMAKE_TESTS=TRUE
+    - export AMICI_SKIP_CMAKE_TESTS=TRUE
     - pip install pytest pysb petab
     - python -m pytest --ignore-glob=*petab* --ignore-glob=*pysb* ./python/tests
