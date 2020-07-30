@@ -153,7 +153,7 @@ def ode_model_from_pysb_importer(
             see :attr:`ODEModel._simplify`
 
     :param verbose: verbosity level for logging, True/False default to
-        :attr:`logging.ERROR`/:attr:`logging.DEBUG`
+        :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
     :return:
         New ODEModel instance according to pysbModel
