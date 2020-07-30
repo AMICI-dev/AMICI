@@ -516,7 +516,7 @@ def create_edata_for_condition(
     # measurements and sigmas
     y, sigma_y = _get_measurements_and_sigmas(
         df_for_condition=measurement_df, timepoints_w_reps=timepoints_w_reps,
-        observable_ids=observable_ids)
+        observable_ids=observable_ids, observable_df=petab_problem.observable_df)
     edata.setObservedData(y.flatten())
     edata.setObservedDataStdDev(sigma_y.flatten())
 
@@ -571,7 +571,9 @@ def _get_timepoints_with_replicates(
 def _get_measurements_and_sigmas(
         df_for_condition: pd.DataFrame,
         timepoints_w_reps: Sequence[numbers.Number],
-        observable_ids: Sequence[str]) -> Tuple[np.array, np.array]:
+        observable_ids: Sequence[str],
+        observable_df: pd.DataFrame,
+    ) -> Tuple[np.array, np.array]:
     """
     Get measurements and sigmas
 
@@ -624,6 +626,10 @@ def _get_measurements_and_sigmas(
                           numbers.Number):
                 sigma_y[time_ix_for_obs_ix[observable_ix],
                         observable_ix] = measurement[NOISE_PARAMETERS]
+            elif isinstance(observable_df.loc[measurement[OBSERVABLE_ID], NOISE_FORMULA],
+                          numbers.Number):
+                sigma_y[time_ix_for_obs_ix[observable_ix],
+                        observable_ix] = observable_df.loc[measurement[OBSERVABLE_ID], NOISE_FORMULA]
     return y, sigma_y
 
 

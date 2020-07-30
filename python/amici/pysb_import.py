@@ -16,6 +16,9 @@ from .logging import get_logger, log_execution_time, set_log_level
 import sympy as sp
 import numpy as np
 import itertools
+import os
+import sys
+from importlib import import_module
 
 from typing import List, Union, Dict, Tuple, Set, Iterable, Any, Callable
 
@@ -89,7 +92,6 @@ def pysb2amici(model: pysb.Model,
     """
     if observables is None:
         observables = []
-
     if constant_parameters is None:
         constant_parameters = []
 
@@ -304,7 +306,7 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
                 LogLikelihood(
                     sp.Symbol(f'llh_{exp.name}'),
                     f'llh_{exp.name}',
-                    0.5*sp.log(2*pi*sy**2) + 0.5*((y - my)/sy)**2
+                    0.5 * sp.log(2 * pi * sy ** 2) + 0.5 * ((y - my) / sy) ** 2
                 )
             )
 
@@ -338,7 +340,7 @@ def _get_sigma_name_and_value(
     if obs_name in sigmas:
         if sigmas[obs_name] not in pysb_model.expressions:
             raise ValueError(f'value of sigma {obs_name} is not a '
-                            f'valid expression.')
+                             f'valid expression.')
         sigma_name = pysb_model.expressions[sigmas[obs_name]].name
         sigma_value = pysb_model.expressions[sigmas[obs_name]].expand_expr()
     else:
@@ -514,7 +516,7 @@ def _compute_possible_indices(cl_prototypes: CL_Prototype,
                 ix
                 for ix, specie in enumerate(pysb_model.species)
                 if monomer.name in extract_monomers(specie)
-                and not ode_model.state_is_constant(ix)
+                   and not ode_model.state_is_constant(ix)
             ]
 
             prototype['species_count'] = len(
@@ -642,8 +644,8 @@ def _cl_prototypes_are_valid(cl_prototypes: CL_Prototype) -> bool:
         return False
     # conservation law dependencies are cycle free
     if any(
-        _cl_has_cycle(monomer, cl_prototypes)
-        for monomer in cl_prototypes
+            _cl_has_cycle(monomer, cl_prototypes)
+            for monomer in cl_prototypes
     ):
         return False
 
@@ -792,8 +794,8 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
             prototype['diff_fillin'] = -1
 
     if all(
-        prototype['diff_fillin'] == -1
-        for prototype in cl_prototypes.values()
+            prototype['diff_fillin'] == -1
+            for prototype in cl_prototypes.values()
     ):
         raise RuntimeError('Could not compute a valid set of conservation '
                            'laws for this model!')
@@ -820,8 +822,8 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
         if prototype['diff_fillin'] > -1 \
                 and (
                 _get_target_indices(cl_prototypes).count(
-                        prototype['target_index']
-                    ) > 1
+                    prototype['target_index']
+                ) > 1
                 or _cl_has_cycle(monomer, cl_prototypes)
         ):
             prototype['fillin'] = prototype['alternate_fillin']
@@ -881,8 +883,8 @@ def _construct_conservation_from_prototypes(
             for ix, specie in enumerate(pysb_model.species)
             if ix != target_index
         ) / extract_monomers(pysb_model.species[
-            target_index
-        ]).count(monomer_name)
+                                 target_index
+                             ]).count(monomer_name)
         # normalize by the stoichiometry of the target species
         target_state = sp.Symbol(f'__s{target_index}')
         # = x_j
@@ -908,7 +910,7 @@ def _construct_conservation_from_prototypes(
 
 def _add_conservation_for_constant_species(
         ode_model: ODEModel,
-        conservation_laws:  List[ConservationLaw]
+        conservation_laws: List[ConservationLaw]
 ) -> None:
     """
     Computes the algebraic expression for the total amount of a given
@@ -936,7 +938,7 @@ def _add_conservation_for_constant_species(
 
 
 def _flatten_conservation_laws(
-        conservation_laws:  List[ConservationLaw]) -> None:
+        conservation_laws: List[ConservationLaw]) -> None:
     """
     Flatten the conservation laws such that the state_expr not longer
     depend on any states that are replaced by conservation laws
@@ -1192,3 +1194,21 @@ def _get_changed_stoichiometries(
             changed_stoichiometries.add(monomer)
 
     return changed_stoichiometries
+
+
+def pysb_model_from_path(pysb_model_file: str) -> pysb.Model:
+    """Load a pysb model module and return the Model object
+
+    :param pysb_model_file: Full or relative path to the PySB model module
+    :return: The pysb Model instance
+    """
+    pysb_model_module_name = \
+        os.path.splitext(os.path.split(pysb_model_file)[-1])[0]
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        pysb_model_module_name, pysb_model_file)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[pysb_model_module_name] = module
+    spec.loader.exec_module(module)
+
+    return module.model

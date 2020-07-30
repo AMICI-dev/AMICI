@@ -13,7 +13,7 @@ import pytest
 from _pytest.outcomes import Skipped
 from amici.gradient_check import check_derivatives as amici_check_derivatives
 from amici.logging import get_logger, set_log_level
-from amici.petab_import import import_petab_problem
+from amici.petab_import import import_petab_problem, PysbPetabProblem
 from amici.petab_objective import (
     simulate_petab, rdatas_to_measurement_df, create_parameterized_edatas)
 from amici import SteadyStateSensitivityMode_simulationFSA
@@ -24,10 +24,10 @@ stream_handler = logging.StreamHandler()
 logger.addHandler(stream_handler)
 
 
-def test_case(case):
+def test_case(case, model_type):
     """Wrapper for _test_case for handling test outcomes"""
     try:
-        _test_case(case)
+        _test_case(case, model_type)
     except Exception as e:
         if isinstance(e, NotImplementedError) \
                 or "Timepoint-specific parameter overrides" in str(e):
@@ -39,17 +39,29 @@ def test_case(case):
             raise e
 
 
-def _test_case(case):
+def _test_case(case, model_type):
     """Run a single PEtab test suite case"""
     case = petabtests.test_id_str(case)
-    logger.debug(f"Case {case}")
+    logger.debug(f"Case {case} [{model_type}]")
 
     # load
-    case_dir = os.path.join(petabtests.CASES_DIR, case)
+    if model_type == "sbml":
+        case_dir = os.path.join(petabtests.SBML_DIR, case)
+        # import petab problem
+        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+        problem = petab.Problem.from_yaml(yaml_file)
+    elif model_type == "pysb":
+        import pysb
+        pysb.SelfExporter.cleanup()
+        pysb.SelfExporter.do_export = True
+        case_dir = os.path.join(petabtests.PYSB_DIR, case)
+        # import petab problem
+        yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
+        problem = PysbPetabProblem.from_yaml(yaml_file)
+    else:
+        raise ValueError()
 
-    # import petab problem
-    yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
-    problem = petab.Problem.from_yaml(yaml_file)
+
 
     # compile amici model
     model_output_dir = f'amici_models/model_{case}'
@@ -69,7 +81,7 @@ def _test_case(case):
     simulation_df = simulation_df.rename(
         columns={petab.MEASUREMENT: petab.SIMULATION})
     simulation_df[petab.TIME] = simulation_df[petab.TIME].astype(int)
-    solution = petabtests.load_solution(case)
+    solution = petabtests.load_solution(case, model_type)
     gt_chi2 = solution[petabtests.CHI2]
     gt_llh = solution[petabtests.LLH]
     gt_simulation_dfs = solution[petabtests.SIMULATION_DFS]

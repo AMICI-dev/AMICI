@@ -15,22 +15,188 @@ import sys
 import tempfile
 from _collections import OrderedDict
 from itertools import chain
-from typing import List, Dict, Union, Optional, Tuple
+from typing import List, Dict, Union, Optional, Tuple, Iterable
 
 import amici
 import libsbml
 import pandas as pd
 import petab
 import sympy as sp
+
 from amici.logging import get_logger, log_execution_time, set_log_level
 from petab.C import *
+from amici.pysb_import import pysb2amici
 
 logger = get_logger(__name__, logging.WARNING)
-
 
 # ID of model parameter that is to be added to SBML model to indicate
 #  preequilibration
 PREEQ_INDICATOR_ID = 'preequilibration_indicator'
+
+
+class PysbPetabProblem(petab.Problem):
+    def __init__(self, pysb_model_module: 'pysb.Model' = None,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pysb_model_module = pysb_model_module
+
+        if self.pysb_model_module is not None:
+            self.sbml_document, self.sbml_model = create_dummy_sbml(
+                self.pysb_model_module,
+                observable_ids=self.observable_df.index.values
+                if self.observable_df is not None else None
+            )
+
+    @staticmethod
+    def from_files(sbml_file: str = None,
+                   condition_file: str = None,
+                   measurement_file: Union[str, Iterable[str]] = None,
+                   parameter_file: Union[str, List[str]] = None,
+                   visualization_files: Union[str, Iterable[str]] = None,
+                   observable_files: Union[str, Iterable[str]] = None,
+                   pysb_model_file: str = None,
+                   ) -> 'PysbPetabProblem':
+        """
+        Factory method to load model and tables from files.
+
+        Arguments:
+            sbml_file: PEtab SBML model
+            condition_file: PEtab condition table
+            measurement_file: PEtab measurement table
+            parameter_file: PEtab parameter table
+            visualization_files: PEtab visualization tables
+            observable_files: PEtab observables tables
+            pysb_model_file: PySB model file
+        """
+
+        sbml_model = sbml_document = sbml_reader = None
+        condition_df = measurement_df = parameter_df = visualization_df = None
+        observable_df = None
+
+        if condition_file:
+            condition_df = petab.conditions.get_condition_df(condition_file)
+
+        if measurement_file:
+            # If there are multiple tables, we will merge them
+            measurement_df = petab.core.concat_tables(
+                measurement_file, petab.measurements.get_measurement_df)
+
+        if parameter_file:
+            parameter_df = petab.parameters.get_parameter_df(parameter_file)
+
+        if sbml_file:
+            sbml_reader = libsbml.SBMLReader()
+            sbml_document = sbml_reader.readSBML(sbml_file)
+            sbml_model = sbml_document.getModel()
+
+        if visualization_files:
+            # If there are multiple tables, we will merge them
+            visualization_df = petab.core.concat_tables(
+                visualization_files, petab.core.get_visualization_df)
+
+        if observable_files:
+            # If there are multiple tables, we will merge them
+            observable_df = petab.core.concat_tables(
+                observable_files, petab.observables.get_observable_df)
+        from amici.pysb_import import pysb_model_from_path
+        return PysbPetabProblem(
+            pysb_model_module=pysb_model_from_path(
+                pysb_model_file=pysb_model_file),
+            condition_df=condition_df,
+            measurement_df=measurement_df,
+            parameter_df=parameter_df,
+            observable_df=observable_df,
+            sbml_model=sbml_model,
+            sbml_document=sbml_document,
+            sbml_reader=sbml_reader,
+            visualization_df=visualization_df)
+
+    @staticmethod
+    def from_yaml(yaml_config: Union[Dict, str]) -> 'PysbPetabProblem':
+        """
+        Factory method to load model and tables as specified by YAML file.
+
+        Arguments:
+            yaml_config: PEtab configuration as dictionary or YAML file name
+        """
+        from petab.yaml import (load_yaml, is_composite_problem,
+                                assert_single_condition_and_sbml_file)
+        if isinstance(yaml_config, str):
+            path_prefix = os.path.dirname(yaml_config)
+            yaml_config = load_yaml(yaml_config)
+        else:
+            path_prefix = ""
+
+        if is_composite_problem(yaml_config):
+            raise ValueError('petab.Problem.from_yaml() can only be used for '
+                             'yaml files comprising a single model. '
+                             'Consider using '
+                             'petab.CompositeProblem.from_yaml() instead.')
+
+        if yaml_config[FORMAT_VERSION] != petab.__format_version__:
+            raise ValueError("Provided PEtab files are of unsupported version"
+                             f"{yaml_config[FORMAT_VERSION]}. Expected "
+                             f"{petab.__format_version__}.")
+
+        problem0 = yaml_config['problems'][0]
+
+        assert_single_condition_and_sbml_file(problem0)
+
+        if isinstance(yaml_config[PARAMETER_FILE], list):
+            parameter_file = [
+                os.path.join(path_prefix, f)
+                for f in yaml_config[PARAMETER_FILE]
+            ]
+        else:
+            parameter_file = os.path.join(
+                path_prefix, yaml_config[PARAMETER_FILE])
+
+        return PysbPetabProblem.from_files(
+            pysb_model_file=os.path.join(
+                path_prefix, problem0[SBML_FILES][0]),
+            measurement_file=[os.path.join(path_prefix, f)
+                              for f in problem0[MEASUREMENT_FILES]],
+            condition_file=os.path.join(
+                path_prefix, problem0[CONDITION_FILES][0]),
+            parameter_file=parameter_file,
+            visualization_files=[
+                os.path.join(path_prefix, f)
+                for f in problem0.get(VISUALIZATION_FILES, [])],
+            observable_files=[
+                os.path.join(path_prefix, f)
+                for f in problem0.get(OBSERVABLE_FILES, [])]
+        )
+
+
+def create_dummy_sbml(pysb_model: 'pysb.Model', observable_ids=None
+                      ) -> Tuple['libsbml.Model', 'libsbml.SBMLDocument']:
+    """Create SBML dummy model for to use pysb Models with PEtab.
+
+    Model must at least contain petab problem parameter and noise parameters
+    for observables.
+    """
+
+    import libsbml
+
+    document = libsbml.SBMLDocument(3, 1)
+    dummy_sbml_model = document.createModel()
+    dummy_sbml_model.setTimeUnits("second")
+    dummy_sbml_model.setExtentUnits("mole")
+    dummy_sbml_model.setSubstanceUnits('mole')
+
+    for species in pysb_model.parameters:
+        p = dummy_sbml_model.createParameter()
+        p.setId(species.name)
+        p.setConstant(True)
+        p.setValue(0.0)
+
+    for observable_id in observable_ids:
+        p = dummy_sbml_model.createParameter()
+        p.setId(f"noiseParameter1_{observable_id}")
+        p.setConstant(True)
+        p.setValue(0.0)
+
+    return document, dummy_sbml_model
 
 
 def get_fixed_parameters(
@@ -255,12 +421,21 @@ def import_petab_problem(
     """
     # generate folder and model name if necessary
     if model_output_dir is None:
+        if isinstance(petab_problem, PysbPetabProblem):
+            raise ValueError("Parameter `model_output_dir` is required.")
+
         model_output_dir = \
             _create_model_output_dir_name(petab_problem.sbml_model)
     else:
         model_output_dir = os.path.abspath(model_output_dir)
 
-    if model_name is None:
+    if isinstance(petab_problem, PysbPetabProblem):
+        if model_name is None:
+            model_name = petab_problem.pysb_model_module.name
+        else:
+            raise ValueError(
+                "Argument model_name currently not allowed for pysb models")
+    elif model_name is None:
         model_name = _create_model_name(model_output_dir)
 
     # create folder
@@ -268,8 +443,8 @@ def import_petab_problem(
         os.makedirs(model_output_dir)
 
     # add to path
-    if model_output_dir not in sys.path:
-        sys.path.insert(0, model_output_dir)
+    #if model_output_dir not in sys.path:
+    sys.path.insert(0, model_output_dir)
 
     # check if compilation necessary
     if not _can_import_model(model_name) or force_compile:
@@ -284,15 +459,23 @@ def import_petab_problem(
             shutil.rmtree(model_output_dir)
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
-
         # compile the model
-        import_model(sbml_model=petab_problem.sbml_model,
-                     condition_table=petab_problem.condition_df,
-                     observable_table=petab_problem.observable_df,
-                     measurement_table=petab_problem.measurement_df,
-                     model_name=model_name,
-                     model_output_dir=model_output_dir,
-                     **kwargs)
+        if isinstance(petab_problem, PysbPetabProblem):
+            import_model_pysb(
+                petab_problem.pysb_model_module,
+                observable_table=petab_problem.observable_df,
+                model_output_dir=model_output_dir,
+                **kwargs)
+        else:
+            import_model(
+                sbml_model=petab_problem.sbml_model,
+                condition_table=petab_problem.condition_df,
+                observable_table=petab_problem.observable_df,
+                measurement_table=petab_problem.measurement_df,
+                model_name=model_name,
+                model_output_dir=model_output_dir,
+                **kwargs)
+
         # ensure we will find the newly created module
         importlib.invalidate_caches()
 
@@ -351,12 +534,12 @@ def _can_import_model(model_name: str) -> bool:
     """
     # try to import (in particular checks version)
     try:
-        importlib.import_module(model_name)
+        model_module = importlib.import_module(model_name)
     except ModuleNotFoundError:
         return False
 
     # no need to (re-)compile
-    return True
+    return hasattr(model_module, "getModel")
 
 
 @log_execution_time('Importing PEtab model', logger)
@@ -366,7 +549,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
                  measurement_table: Optional[Union[str, pd.DataFrame]] = None,
                  model_name: Optional[str] = None,
                  model_output_dir: Optional[str] = None,
-                 verbose: Optional[Union[bool,int]] = True,
+                 verbose: Optional[Union[bool, int]] = True,
                  allow_reinit_fixpar_initcond: bool = True,
                  **kwargs) -> None:
     """
@@ -520,7 +703,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
             init_par.setName(init_par_id)
         assignment = sbml_model.createInitialAssignment()
         assignment.setSymbol(assignee_id)
-        formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} '\
+        formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} ' \
                   f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
         math_ast = libsbml.parseL3Formula(formula)
         assignment.setMath(math_ast)
@@ -546,6 +729,66 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         noise_distributions=noise_distrs,
         verbose=verbose,
         **kwargs)
+
+
+import_model_sbml = import_model
+
+
+@log_execution_time('Importing PEtab model', logger)
+def import_model_pysb(
+        pysb_model_module: 'pysb.Model',
+        observable_table: Optional[Union[str, pd.DataFrame]] = None,
+        model_output_dir: Optional[str] = None,
+        verbose: Optional[Union[bool, int]] = True,
+        **kwargs
+) -> None:
+    """
+    Create AMICI model from PEtab problem
+
+    :param sbml_model:
+        PEtab SBML model or SBML file name.
+
+    :param condition_table:
+        PEtab condition table. If provided, parameters from there will be
+        turned into AMICI constant parameters (i.e. parameters w.r.t. which
+        no sensitivities will be computed).
+
+    :param observable_table:
+        PEtab observable table.
+
+    :param measurement_table:
+        PEtab measurement table.
+
+    :param model_output_dir:
+        Directory to write the model code to. Will be created if doesn't
+        exist. Defaults to current directory.
+
+    :param verbose:
+        Print/log extra information.
+
+    :param kwargs:
+        Additional keyword arguments to be passed to
+        :meth:`amici.sbml_import.SbmlImporter.sbml2amici`.
+    """
+
+    set_log_level(logger, verbose)
+
+    logger.info(f"Importing model ...")
+
+    # TODO constant_parameters
+    constant_parameters = None
+
+    if observable_table is None:
+        observables = None
+    else:
+        observables = [expr.name for expr in pysb_model_module.expressions
+                       if expr.name in observable_table.index]
+
+    pysb2amici(pysb_model_module, model_output_dir, verbose=True,
+               observables=observables,
+               constant_parameters=constant_parameters,
+               # compute_conservation_laws=False,
+               **kwargs)
 
 
 def get_observation_model(observable_df: pd.DataFrame
@@ -675,7 +918,7 @@ def parse_cli_args():
                         help='Observable table')
 
     parser.add_argument('-y', '--yaml', dest='yaml_file_name',
-                       help='PEtab YAML problem filename')
+                        help='PEtab YAML problem filename')
 
     parser.add_argument('-n', '--model-name', dest='model_name',
                         help='Name of the python module generated for the '
