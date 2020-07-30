@@ -63,7 +63,7 @@ def pysb2amici(model: pysb.Model,
         parameter
 
     :param verbose: verbosity level for logging, True/False default to
-        :attr:`logging.ERROR`/:attr:`logging.DEBUG`
+        :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
     :param assume_pow_positivity:
         if set to true, a special pow function is used to avoid problems
