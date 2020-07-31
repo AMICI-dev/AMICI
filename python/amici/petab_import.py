@@ -1,7 +1,7 @@
 """
 PEtab Import
 ------------
-Import a model in the :mod:`petab` (https://github.com/ICB-DCM/PEtab/) format
+Import a model in the :mod:`petab` (https://github.com/PEtab-dev/PEtab) format
 into AMICI.
 """
 
@@ -11,7 +11,6 @@ import logging
 import math
 import os
 import shutil
-import sys
 import tempfile
 from _collections import OrderedDict
 from itertools import chain
@@ -23,10 +22,10 @@ import pandas as pd
 import petab
 import sympy as sp
 from amici.logging import get_logger, log_execution_time, set_log_level
+from amici.petab_import_pysb import PysbPetabProblem, import_model_pysb
 from petab.C import *
 
 logger = get_logger(__name__, logging.WARNING)
-
 
 # ID of model parameter that is to be added to SBML model to indicate
 #  preequilibration
@@ -255,21 +254,26 @@ def import_petab_problem(
     """
     # generate folder and model name if necessary
     if model_output_dir is None:
+        if isinstance(petab_problem, PysbPetabProblem):
+            raise ValueError("Parameter `model_output_dir` is required.")
+
         model_output_dir = \
             _create_model_output_dir_name(petab_problem.sbml_model)
     else:
         model_output_dir = os.path.abspath(model_output_dir)
 
-    if model_name is None:
+    if isinstance(petab_problem, PysbPetabProblem):
+        if model_name is None:
+            model_name = petab_problem.pysb_model.name
+        else:
+            raise ValueError(
+                "Argument model_name currently not allowed for pysb models")
+    elif model_name is None:
         model_name = _create_model_name(model_output_dir)
 
     # create folder
     if not os.path.exists(model_output_dir):
         os.makedirs(model_output_dir)
-
-    # add to path
-    if model_output_dir not in sys.path:
-        sys.path.insert(0, model_output_dir)
 
     # check if compilation necessary
     if not _can_import_model(model_name) or force_compile:
@@ -284,27 +288,24 @@ def import_petab_problem(
             shutil.rmtree(model_output_dir)
 
         logger.info(f"Compiling model {model_name} to {model_output_dir}.")
-
         # compile the model
-        import_model(sbml_model=petab_problem.sbml_model,
-                     condition_table=petab_problem.condition_df,
-                     observable_table=petab_problem.observable_df,
-                     measurement_table=petab_problem.measurement_df,
-                     model_name=model_name,
-                     model_output_dir=model_output_dir,
-                     **kwargs)
-        # ensure we will find the newly created module
-        importlib.invalidate_caches()
-
-    # load module
-    if model_name in sys.modules:
-        # reload, because may just have been created
-        importlib.reload(sys.modules[model_name])
-        model_module = sys.modules[model_name]
-    else:
-        model_module = importlib.import_module(model_name)
+        if isinstance(petab_problem, PysbPetabProblem):
+            import_model_pysb(
+                petab_problem,
+                model_output_dir=model_output_dir,
+                **kwargs)
+        else:
+            import_model_sbml(
+                sbml_model=petab_problem.sbml_model,
+                condition_table=petab_problem.condition_df,
+                observable_table=petab_problem.observable_df,
+                measurement_table=petab_problem.measurement_df,
+                model_name=model_name,
+                model_output_dir=model_output_dir,
+                **kwargs)
 
     # import model
+    model_module = amici.import_model_module(model_name, model_output_dir)
     model = model_module.getModel()
 
     logger.info(f"Successfully loaded model {model_name} "
@@ -351,22 +352,22 @@ def _can_import_model(model_name: str) -> bool:
     """
     # try to import (in particular checks version)
     try:
-        importlib.import_module(model_name)
+        model_module = importlib.import_module(model_name)
     except ModuleNotFoundError:
         return False
 
     # no need to (re-)compile
-    return True
+    return hasattr(model_module, "getModel")
 
 
 @log_execution_time('Importing PEtab model', logger)
-def import_model(sbml_model: Union[str, 'libsbml.Model'],
+def import_model_sbml(sbml_model: Union[str, 'libsbml.Model'],
                  condition_table: Optional[Union[str, pd.DataFrame]] = None,
                  observable_table: Optional[Union[str, pd.DataFrame]] = None,
                  measurement_table: Optional[Union[str, pd.DataFrame]] = None,
                  model_name: Optional[str] = None,
                  model_output_dir: Optional[str] = None,
-                 verbose: Optional[Union[bool,int]] = True,
+                 verbose: Optional[Union[bool, int]] = True,
                  allow_reinit_fixpar_initcond: bool = True,
                  **kwargs) -> None:
     """
@@ -520,7 +521,7 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
             init_par.setName(init_par_id)
         assignment = sbml_model.createInitialAssignment()
         assignment.setSymbol(assignee_id)
-        formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} '\
+        formula = f'{PREEQ_INDICATOR_ID} * {init_par_id_preeq} ' \
                   f'+ (1 - {PREEQ_INDICATOR_ID}) * {init_par_id_sim}'
         math_ast = libsbml.parseL3Formula(formula)
         assignment.setMath(math_ast)
@@ -546,6 +547,10 @@ def import_model(sbml_model: Union[str, 'libsbml.Model'],
         noise_distributions=noise_distrs,
         verbose=verbose,
         **kwargs)
+
+
+# for backwards compatibility
+import_model = import_model_sbml
 
 
 def get_observation_model(observable_df: pd.DataFrame
@@ -675,7 +680,7 @@ def parse_cli_args():
                         help='Observable table')
 
     parser.add_argument('-y', '--yaml', dest='yaml_file_name',
-                       help='PEtab YAML problem filename')
+                        help='PEtab YAML problem filename')
 
     parser.add_argument('-n', '--model-name', dest='model_name',
                         help='Name of the python module generated for the '
