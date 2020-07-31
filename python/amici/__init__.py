@@ -281,29 +281,27 @@ def import_model_module(module_name: str,
     """
     Import Python module of an AMICI model
 
-    :param module_name: Name of the python package for the model
-    :param module_path: Absolute path of the package directory
+    :param module_name: Name of the python package of the model
+    :param module_path: Absolute or relative path of the package directory
     :return: The model module
     """
 
     # ensure we will find the newly created module
     importlib.invalidate_caches()
 
-    # TODO: cleanup, add test, reload? with pathcheck?
+    # module already loaded?
+    if module_name in sys.modules:
+        # if a module with that name is already in sys.modules, we remove it,
+        # along with all other modules from that package. otherwise, there
+        # will be trouble if two different models with the same name are to
+        # be imported.
+        del sys.modules[module_name]
+        # collect first, don't delete while iterating
+        to_unload = {loaded_module_name for loaded_module_name in
+                     sys.modules.keys() if
+                     loaded_module_name.startswith(f"{module_name}.")}
+        for m in to_unload:
+            del sys.modules[m]
 
     with add_path(module_path):
-        # module already loaded?
-        # if module_name in sys.modules:
-        #     # reload, because may just have been created
-        #     importlib.reload(sys.modules[module_name])
-        #     return sys.modules[module_name]
-        if module_name in sys.modules:
-            del sys.modules[module_name]
-            to_unload = {loaded_module_name for loaded_module_name in
-                         sys.modules.keys() if
-                         loaded_module_name.startswith(f"{module_name}.")}
-            for m in to_unload:
-                del sys.modules[m]
-
-
         return importlib.import_module(module_name)
