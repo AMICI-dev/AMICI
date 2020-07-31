@@ -25,7 +25,6 @@ import sympy as sp
 
 from amici.logging import get_logger, log_execution_time, set_log_level
 from petab.C import *
-from amici.pysb_import import pysb2amici
 
 logger = get_logger(__name__, logging.WARNING)
 
@@ -821,6 +820,7 @@ def import_model_pysb(
                     return expr
         sigmas = {obs_id: get_expr(f"{obs_id}_sigma") for obs_id in observables}
 
+    from amici.pysb_import import pysb2amici
     pysb2amici(pysb_model_module, model_output_dir, verbose=True,
                observables=observables,
                sigmas=sigmas,
