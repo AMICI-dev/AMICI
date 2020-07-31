@@ -289,6 +289,11 @@ def import_model_module(module_name: str,
     # ensure we will find the newly created module
     importlib.invalidate_caches()
 
+    if not os.path.isdir(module_path):
+        raise ValueError(f"module_path '{module_path}' is not a directory.")
+
+    module_path = os.path.abspath(module_path)
+
     # module already loaded?
     if module_name in sys.modules:
         # if a module with that name is already in sys.modules, we remove it,
