@@ -790,6 +790,21 @@ def import_model_pysb(
     observable_table = petab_problem.observable_df
     pysb_model_module = petab_problem.pysb_model_module
 
+    # For pysb, we only allow parameters in the condition table
+    # those must be pysb model parameters (either natively, or output
+    # parameters from measurement or condition table that have been added in
+    # PysbPetabProblem
+    model_parameters = [p.name for p in pysb_model_module.parameters]
+    for x in petab_problem.condition_df.columns:
+        if x == petab.CONDITION_NAME: continue
+        if x not in model_parameters:
+            raise NotImplementedError(
+                "For PySB PEtab import, only model parameters, but no states "
+                "or compartments are allowed in the condition table."
+                f"Offending column: {x}"
+            )
+
+
     constant_parameters = get_fixed_parameters(petab_problem.sbml_model,
                                                petab_problem.condition_df)
 
