@@ -571,7 +571,8 @@ def _get_timepoints_with_replicates(
 def _get_measurements_and_sigmas(
         df_for_condition: pd.DataFrame,
         timepoints_w_reps: Sequence[numbers.Number],
-        observable_ids: Sequence[str]) -> Tuple[np.array, np.array]:
+        observable_ids: Sequence[str],
+    ) -> Tuple[np.array, np.array]:
     """
     Get measurements and sigmas
 
