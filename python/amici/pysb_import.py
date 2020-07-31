@@ -1196,20 +1196,15 @@ def _get_changed_stoichiometries(
 
 
 def pysb_model_from_path(pysb_model_file: str) -> pysb.Model:
-    """Load a pysb model module and return the Model object
+    """Load a pysb model module and return the :class:`pysb.Model` instance
 
     :param pysb_model_file: Full or relative path to the PySB model module
     :return: The pysb Model instance
     """
-    pysb.SelfExporter.cleanup()
-    pysb.SelfExporter.do_export = True
-
-    module_name = os.path.split(os.path.split(pysb_model_file)[-1])
-    if module_name in sys.modules:
-        del sys.modules[module_name]
 
     pysb_model_module_name = \
         os.path.splitext(os.path.split(pysb_model_file)[-1])[0]
+
     import importlib.util
     spec = importlib.util.spec_from_file_location(
         pysb_model_module_name, pysb_model_file)
