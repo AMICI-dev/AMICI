@@ -63,16 +63,16 @@ class PysbPetabProblem(petab.Problem):
         import pysb
 
         # add any required output parameters
-        locals = {sp.Symbol.__str__(comp): comp for comp in
-                  self.pysb_model.components if
-                  isinstance(comp, sp.Symbol)}
+        local_syms = {sp.Symbol.__str__(comp): comp for comp in
+                      self.pysb_model.components if
+                      isinstance(comp, sp.Symbol)}
         for formula in [*self.observable_df[petab.OBSERVABLE_FORMULA],
                         *self.observable_df[petab.NOISE_FORMULA]]:
-            sym = sp.sympify(formula, locals=locals)
+            sym = sp.sympify(formula, locals=local_syms)
             for s in sym.free_symbols:
                 if not isinstance(s, pysb.Component):
                     p = pysb.Parameter(str(s), 1.0)
-                    locals[sp.Symbol.__str__(p)] = p
+                    local_syms[sp.Symbol.__str__(p)] = p
 
         # add observables and sigmas to pysb model
         for (observable_id, observable_formula, noise_formula) \
@@ -87,17 +87,17 @@ class PysbPetabProblem(petab.Problem):
                     raise NotImplementedError(
                         "Observable transformation currently unsupported "
                         "for PySB models")
-            obs_symbol = sp.sympify(observable_formula, locals=locals)
+            obs_symbol = sp.sympify(observable_formula, locals=local_syms)
             obs_expr = pysb.Expression(observable_id, obs_symbol)
-            locals[observable_id] = obs_expr
+            local_syms[observable_id] = obs_expr
 
             sigma_id = f"{observable_id}_sigma"
             sigma_symbol = sp.sympify(
                 noise_formula,
-                locals=locals
+                locals=local_syms
             )
             sigma_expr = pysb.Expression(sigma_id, sigma_symbol)
-            locals[sigma_id] = sigma_expr
+            local_syms[sigma_id] = sigma_expr
 
     @staticmethod
     def from_files(condition_file: str = None,
