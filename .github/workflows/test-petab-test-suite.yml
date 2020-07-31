@@ -41,6 +41,7 @@ jobs:
       run: |
         scripts/buildBNGL.sh
     - run: |
+        echo "::set-env name=AMICI_DIR::$(pwd)"
         echo "::add-path::${HOME}/.local/bin/"
         echo "::add-path::${GITHUB_WORKSPACE}/tests/performance/"
         echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
