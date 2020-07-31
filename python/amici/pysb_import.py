@@ -58,11 +58,12 @@ def pysb2amici(model: pysb.Model,
         observables
 
     :param sigmas:
-        dict of :class:`pysb.core.Expression` names that should be mapped to sigmas
+        dict of :class:`pysb.core.Expression` names that should be mapped to
+        sigmas
 
     :param constant_parameters:
-        list of :class:`pysb.core.Parameter` names that should be mapped as fixed
-        parameter
+        list of :class:`pysb.core.Parameter` names that should be mapped as
+        fixed parameters
 
     :param verbose: verbosity level for logging, True/False default to
         :attr:`logging.ERROR`/:attr:`logging.DEBUG`
@@ -329,18 +330,23 @@ def _get_sigma_name_and_value(
         name of the observable
 
     :param sigmas:
-        list of names of Expressions that are to be mapped to sigmas
+        dict of :class:`pysb.core.Expression` names that should be mapped to
+        sigmas
 
     :return:
         tuple containing symbolic identifier and formula for the specified
         observable
     """
     if obs_name in sigmas:
-        if sigmas[obs_name] not in pysb_model.expressions:
+        sigma_name = sigmas[obs_name]
+        try:
+            # find corresponding Expression instance
+            sigma_expr = next(x for x in pysb_model.expressions
+                              if x.name == sigma_name)
+        except StopIteration:
             raise ValueError(f'value of sigma {obs_name} is not a '
                              f'valid expression.')
-        sigma_name = pysb_model.expressions[sigmas[obs_name].name].name
-        sigma_value = pysb_model.expressions[sigmas[obs_name].name].expand_expr()
+        sigma_value = sigma_expr.expand_expr()
     else:
         sigma_name = f'sigma_{obs_name}'
         sigma_value = sp.sympify(1.0)

@@ -310,14 +310,7 @@ def import_model_pysb(
         observables = [expr.name for expr in pysb_model.expressions
                        if expr.name in observable_table.index]
 
-        def get_expr(x):
-            """Get pysb model expression by name"""
-            for expr in pysb_model.expressions:
-                if expr.name == x:
-                    return expr
-
-        sigmas = {obs_id: get_expr(f"{obs_id}_sigma") for obs_id in
-                  observables}
+        sigmas = {obs_id: f"{obs_id}_sigma" for obs_id in observables}
 
     from amici.pysb_import import pysb2amici
     pysb2amici(pysb_model, model_output_dir, verbose=True,
