@@ -295,7 +295,7 @@ def import_petab_problem(
                 model_output_dir=model_output_dir,
                 **kwargs)
         else:
-            import_model(
+            import_model_sbml(
                 sbml_model=petab_problem.sbml_model,
                 condition_table=petab_problem.condition_df,
                 observable_table=petab_problem.observable_df,
