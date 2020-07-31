@@ -497,8 +497,7 @@ def import_petab_problem(
         # compile the model
         if isinstance(petab_problem, PysbPetabProblem):
             import_model_pysb(
-                petab_problem.pysb_model_module,
-                observable_table=petab_problem.observable_df,
+                petab_problem,
                 model_output_dir=model_output_dir,
                 **kwargs)
         else:
@@ -761,8 +760,7 @@ import_model_sbml = import_model
 
 @log_execution_time('Importing PEtab model', logger)
 def import_model_pysb(
-        pysb_model_module: 'pysb.Model',
-        observable_table: Optional[Union[str, pd.DataFrame]] = None,
+        petab_problem: PysbPetabProblem,
         model_output_dir: Optional[str] = None,
         verbose: Optional[Union[bool, int]] = True,
         **kwargs
@@ -770,19 +768,8 @@ def import_model_pysb(
     """
     Create AMICI model from PEtab problem
 
-    :param sbml_model:
-        PEtab SBML model or SBML file name.
-
-    :param condition_table:
-        PEtab condition table. If provided, parameters from there will be
-        turned into AMICI constant parameters (i.e. parameters w.r.t. which
-        no sensitivities will be computed).
-
-    :param observable_table:
-        PEtab observable table.
-
-    :param measurement_table:
-        PEtab measurement table.
+    :param petab_problem:
+        PySB PEtab problem
 
     :param model_output_dir:
         Directory to write the model code to. Will be created if doesn't
@@ -800,8 +787,11 @@ def import_model_pysb(
 
     logger.info(f"Importing model ...")
 
-    # TODO constant_parameters
-    constant_parameters = None
+    observable_table = petab_problem.observable_df
+    pysb_model_module = petab_problem.pysb_model_module
+
+    constant_parameters = get_fixed_parameters(petab_problem.sbml_model,
+                                               petab_problem.condition_df)
 
     if observable_table is None:
         observables = None
