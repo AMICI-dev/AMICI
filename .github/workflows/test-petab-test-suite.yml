@@ -41,9 +41,9 @@ jobs:
       run: |
         scripts/buildBNGL.sh
     - run: |
-        echo "::add-path::${HOME}/.local/bin/"
-        echo "::add-path::${GITHUB_WORKSPACE}/tests/performance/"
-        echo "::set-env name=BNGPATH::${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.3.2"
+        echo ::add-path::${HOME}/.local/bin/
+        echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
+        echo ::set-env name=BNGPATH::${GITHUB_WORKSPACE}/ThirdParty/BioNetGen-2.3.2
     # install AMICI
     - name: Install python package
       run: |
