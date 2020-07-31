@@ -61,15 +61,13 @@ def _test_case(case, model_type):
     else:
         raise ValueError()
 
-
-
     # compile amici model
     model_output_dir = f'amici_models/model_{case}'
     model = import_petab_problem(
-        problem, model_output_dir=model_output_dir)
+        problem, model_output_dir=model_output_dir,
+        force_compile=True)
 
     # simulate
-    chi2s_match = llhs_match = simulations_match = False
     ret = simulate_petab(problem, model, log_level=logging.DEBUG)
 
     rdatas = ret['rdatas']
