@@ -99,7 +99,6 @@ def pysb2amici(model: pysb.Model,
         sigmas = {}
 
     set_log_level(logger, verbose)
-
     ode_model = ode_model_from_pysb_importer(
         model, constant_parameters=constant_parameters,
         observables=observables, sigmas=sigmas,
@@ -341,8 +340,8 @@ def _get_sigma_name_and_value(
         if sigmas[obs_name] not in pysb_model.expressions:
             raise ValueError(f'value of sigma {obs_name} is not a '
                              f'valid expression.')
-        sigma_name = pysb_model.expressions[sigmas[obs_name]].name
-        sigma_value = pysb_model.expressions[sigmas[obs_name]].expand_expr()
+        sigma_name = pysb_model.expressions[sigmas[obs_name].name].name
+        sigma_value = pysb_model.expressions[sigmas[obs_name].name].expand_expr()
     else:
         sigma_name = f'sigma_{obs_name}'
         sigma_value = sp.sympify(1.0)
@@ -1202,6 +1201,13 @@ def pysb_model_from_path(pysb_model_file: str) -> pysb.Model:
     :param pysb_model_file: Full or relative path to the PySB model module
     :return: The pysb Model instance
     """
+    pysb.SelfExporter.cleanup()
+    pysb.SelfExporter.do_export = True
+
+    module_name = os.path.split(os.path.split(pysb_model_file)[-1])
+    if module_name in sys.modules:
+        del sys.modules[module_name]
+
     pysb_model_module_name = \
         os.path.splitext(os.path.split(pysb_model_file)[-1])[0]
     import importlib.util
