@@ -63,7 +63,7 @@ def pysb2amici(model: pysb.Model,
         parameter
 
     :param verbose: verbosity level for logging, True/False default to
-        :attr:`logging.ERROR`/:attr:`logging.DEBUG`
+        :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
     :param assume_pow_positivity:
         if set to true, a special pow function is used to avoid problems
@@ -102,7 +102,8 @@ def pysb2amici(model: pysb.Model,
         model, constant_parameters=constant_parameters,
         observables=observables, sigmas=sigmas,
         compute_conservation_laws=compute_conservation_laws,
-        simplify=simplify
+        simplify=simplify,
+        verbose=verbose,
     )
     exporter = ODEExporter(
         ode_model,
@@ -127,6 +128,7 @@ def ode_model_from_pysb_importer(
         sigmas: Dict[str, str] = None,
         compute_conservation_laws: bool = True,
         simplify: Callable = sp.powsimp,
+        verbose: Union[int, bool] = False,
 ) -> ODEModel:
     """
     Creates an ODEModel instance from a pysb.Model instance.
@@ -150,6 +152,9 @@ def ode_model_from_pysb_importer(
     :param simplify:
             see :attr:`ODEModel._simplify`
 
+    :param verbose: verbosity level for logging, True/False default to
+        :attr:`logging.DEBUG`/:attr:`logging.ERROR`
+
     :return:
         New ODEModel instance according to pysbModel
     """
@@ -165,7 +170,7 @@ def ode_model_from_pysb_importer(
     if sigmas is None:
         sigmas = {}
 
-    pysb.bng.generate_equations(model)
+    pysb.bng.generate_equations(model, verbose=verbose)
 
     _process_pysb_species(model, ode)
     _process_pysb_parameters(model, ode, constant_parameters)
