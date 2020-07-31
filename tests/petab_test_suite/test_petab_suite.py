@@ -59,7 +59,7 @@ def _test_case(case, model_type):
         yaml_file = os.path.join(case_dir, petabtests.problem_yaml_name(case))
         problem = PysbPetabProblem.from_yaml(yaml_file)
     else:
-        raise ValueError()
+        raise ValueError(f"Unsupported model_type: {model_type}")
 
     # compile amici model
     model_output_dir = f'amici_models/model_{case}'
