@@ -37,6 +37,9 @@ jobs:
         pip3 install --upgrade --user wheel \
           && pip3 install --upgrade --user setuptools
     - run: pip3 install pytest shyaml pytest-cov pysb petab
+    - name: Build BNGL
+      run: |
+        scripts/buildBNGL.sh
     - run: |
         echo ::add-path::${HOME}/.local/bin/
         echo ::add-path::${GITHUB_WORKSPACE}/tests/performance/
