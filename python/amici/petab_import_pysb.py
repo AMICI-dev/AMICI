@@ -100,8 +100,7 @@ class PysbPetabProblem(petab.Problem):
             locals[sigma_id] = sigma_expr
 
     @staticmethod
-    def from_files(sbml_file: str = None,
-                   condition_file: str = None,
+    def from_files(condition_file: str = None,
                    measurement_file: Union[str, Iterable[str]] = None,
                    parameter_file: Union[str, List[str]] = None,
                    visualization_files: Union[str, Iterable[str]] = None,
@@ -112,7 +111,6 @@ class PysbPetabProblem(petab.Problem):
         Factory method to load model and tables from files.
 
         Arguments:
-            sbml_file: PEtab SBML model
             condition_file: PEtab condition table
             measurement_file: PEtab measurement table
             parameter_file: PEtab parameter table
@@ -121,7 +119,6 @@ class PysbPetabProblem(petab.Problem):
             pysb_model_file: PySB model file
         """
 
-        sbml_model = sbml_document = sbml_reader = None
         condition_df = measurement_df = parameter_df = visualization_df = None
         observable_df = None
 
@@ -135,11 +132,6 @@ class PysbPetabProblem(petab.Problem):
 
         if parameter_file:
             parameter_df = petab.parameters.get_parameter_df(parameter_file)
-
-        if sbml_file:
-            sbml_reader = libsbml.SBMLReader()
-            sbml_document = sbml_reader.readSBML(sbml_file)
-            sbml_model = sbml_document.getModel()
 
         if visualization_files:
             # If there are multiple tables, we will merge them
@@ -158,9 +150,6 @@ class PysbPetabProblem(petab.Problem):
             measurement_df=measurement_df,
             parameter_df=parameter_df,
             observable_df=observable_df,
-            sbml_model=sbml_model,
-            sbml_document=sbml_document,
-            sbml_reader=sbml_reader,
             visualization_df=visualization_df)
 
     @staticmethod
