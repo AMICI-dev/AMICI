@@ -12,7 +12,10 @@ from typing import List, Dict, Union, Optional, Tuple, Iterable
 import libsbml
 import petab
 import sympy as sp
-from petab.C import *
+from petab.C import (CONDITION_NAME, OBSERVABLE_TRANSFORMATION, LIN,
+                     OBSERVABLE_FORMULA, NOISE_FORMULA, FORMAT_VERSION,
+                     PARAMETER_FILE, SBML_FILES, CONDITION_FILES,
+                     MEASUREMENT_FILES, VISUALIZATION_FILES, OBSERVABLE_FILES)
 
 from .logging import get_logger, log_execution_time, set_log_level
 from . import petab_import
@@ -66,8 +69,8 @@ class PysbPetabProblem(petab.Problem):
         local_syms = {sp.Symbol.__str__(comp): comp for comp in
                       self.pysb_model.components if
                       isinstance(comp, sp.Symbol)}
-        for formula in [*self.observable_df[petab.OBSERVABLE_FORMULA],
-                        *self.observable_df[petab.NOISE_FORMULA]]:
+        for formula in [*self.observable_df[OBSERVABLE_FORMULA],
+                        *self.observable_df[NOISE_FORMULA]]:
             sym = sp.sympify(formula, locals=local_syms)
             for s in sym.free_symbols:
                 if not isinstance(s, pysb.Component):
@@ -77,13 +80,13 @@ class PysbPetabProblem(petab.Problem):
         # add observables and sigmas to pysb model
         for (observable_id, observable_formula, noise_formula) \
                 in zip(self.observable_df.index,
-                       self.observable_df[petab.OBSERVABLE_FORMULA],
-                       self.observable_df[petab.NOISE_FORMULA]):
+                       self.observable_df[OBSERVABLE_FORMULA],
+                       self.observable_df[NOISE_FORMULA]):
             # No observableTransformation so far
-            if petab.OBSERVABLE_TRANSFORMATION in self.observable_df:
+            if OBSERVABLE_TRANSFORMATION in self.observable_df:
                 trafo = self.observable_df.loc[observable_id,
-                                               petab.OBSERVABLE_TRANSFORMATION]
-                if trafo and trafo != petab.LIN:
+                                               OBSERVABLE_TRANSFORMATION]
+                if trafo and trafo != LIN:
                     raise NotImplementedError(
                         "Observable transformation currently unsupported "
                         "for PySB models")
@@ -287,7 +290,9 @@ def import_model_pysb(
     # PysbPetabProblem
     model_parameters = [p.name for p in pysb_model.parameters]
     for x in petab_problem.condition_df.columns:
-        if x == petab.CONDITION_NAME: continue
+        if x == CONDITION_NAME:
+            continue
+
         if x not in model_parameters:
             raise NotImplementedError(
                 "For PySB PEtab import, only model parameters, but no states "
