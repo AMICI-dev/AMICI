@@ -39,6 +39,45 @@ class PysbPetabProblem(petab.Problem):
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pysb_model_module = pysb_model_module
+        import pysb
+
+        # add any required output parameters
+        # sp.Symbol.__str__(comp)
+        locals = {sp.Symbol.__str__(comp): comp for comp in
+                  pysb_model_module.components if
+                  isinstance(comp, sp.Symbol)}
+        for formula in [*self.observable_df[petab.OBSERVABLE_FORMULA],
+                       *self.observable_df[petab.NOISE_FORMULA]]:
+            sym = sp.sympify(formula, locals=locals)
+            for s in sym.free_symbols:
+                if not isinstance(s, pysb.Component):
+                    p = pysb.Parameter(str(s), 1.0)
+                    locals[sp.Symbol.__str__(p)] = p
+
+
+        # add observables and sigmas to pysb model
+        for (observable_id, observable_formula, noise_formula) \
+                in zip(self.observable_df.index,
+                       self.observable_df[petab.OBSERVABLE_FORMULA],
+                       self.observable_df[petab.NOISE_FORMULA]):
+            if petab.OBSERVABLE_TRANSFORMATION in self.observable_df:
+                trafo = self.observable_df.loc[observable_id, petab.OBSERVABLE_TRANSFORMATION]
+                if trafo and trafo != petab.LIN:
+                    raise NotImplementedError("Observable transformation currently unsupported for PySB models")
+            obs_symbol = sp.sympify(
+                    observable_formula,
+                    locals=locals
+                )
+            ex = pysb.Expression(observable_id, obs_symbol)
+            locals[observable_id] = ex
+
+            sigma_id = f"{observable_id}_sigma"  # TODO naming?
+            sigma_symbol = sp.sympify(
+                    noise_formula,
+                    locals=locals
+                )
+            ex = pysb.Expression(sigma_id, sigma_symbol)
+            locals[sigma_id] = ex
 
         if self.pysb_model_module is not None:
             self.sbml_document, self.sbml_model = create_dummy_sbml(
@@ -442,10 +481,6 @@ def import_petab_problem(
     if not os.path.exists(model_output_dir):
         os.makedirs(model_output_dir)
 
-    # add to path
-    #if model_output_dir not in sys.path:
-    sys.path.insert(0, model_output_dir)
-
     # check if compilation necessary
     if not _can_import_model(model_name) or force_compile:
         # check if folder exists
@@ -476,18 +511,8 @@ def import_petab_problem(
                 model_output_dir=model_output_dir,
                 **kwargs)
 
-        # ensure we will find the newly created module
-        importlib.invalidate_caches()
-
-    # load module
-    if model_name in sys.modules:
-        # reload, because may just have been created
-        importlib.reload(sys.modules[model_name])
-        model_module = sys.modules[model_name]
-    else:
-        model_module = importlib.import_module(model_name)
-
     # import model
+    model_module = amici.import_model_module(model_name, model_output_dir)
     model = model_module.getModel()
 
     logger.info(f"Successfully loaded model {model_name} "
@@ -780,12 +805,20 @@ def import_model_pysb(
 
     if observable_table is None:
         observables = None
+        sigmas = None
     else:
         observables = [expr.name for expr in pysb_model_module.expressions
                        if expr.name in observable_table.index]
 
+        def get_expr(x):
+            for expr in pysb_model_module.expressions:
+                if expr.name == x:
+                    return expr
+        sigmas = {obs_id: get_expr(f"{obs_id}_sigma") for obs_id in observables}
+
     pysb2amici(pysb_model_module, model_output_dir, verbose=True,
                observables=observables,
+               sigmas=sigmas,
                constant_parameters=constant_parameters,
                # compute_conservation_laws=False,
                **kwargs)
