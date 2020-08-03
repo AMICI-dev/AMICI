@@ -589,6 +589,7 @@ class SbmlImporter:
                 locals=self.local_symbols)
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
+            formula = self._replace_reactions_in_rule_formula(rule, formula)
             ###
 
             # Species rules are processed first, to avoid processing
@@ -989,6 +990,7 @@ class SbmlImporter:
                 locals=self.local_symbols)
             formula = _parse_special_functions(formula)
             _check_unsupported_functions(formula, 'Rule')
+            formula = self._replace_reactions_in_rule_formula(rule, formula)
 
             if variable in stoichvars:
                 self.stoichiometric_matrix = \
@@ -1498,6 +1500,54 @@ class SbmlImporter:
                 raise SBMLException(
                     f'Encountered currently unsupported element id {constant}!'
                 )
+
+    def _replace_reactions_in_rule_formula(self, rule, formula):
+        """
+        SBML allows reaction IDs in rules, which should be interpreted as the
+        reaction rate. However, an assignment or rate "...rule cannot be
+        defined for a species that is created or destroyed in a reaction,
+        unless that species is defined as a boundary condition in the model."
+
+        Here, valid SBML is assumed, so the above restriction is not checked.
+
+        :param rule:
+            The rule, (e.g. an element of the object returned by
+            `self.sbml.getListOfRules()`).
+
+        :param formula:
+            A rule formula that has already been parsed.
+            TODO create a function to parse rule formulae, as this logic is
+                 repeated a few times.
+
+        :param rule_type:
+            'assignment' for assignment rules, 'rate' for rate rules.
+
+        :return:
+            The rule, with the reaction replaced with the flux vector symbol
+            that will be generated in `ode_export.py`.
+        """
+        reaction_ids = [r.getId()
+                        for r in list(self.sbml.getListOfReactions())]
+        reactions_in_rule_formula = {s
+                                     for s in formula.free_symbols
+                                     if str(s) in reaction_ids}
+        if reactions_in_rule_formula:
+            if rule.getTypeCode() not in (sbml.SBML_ASSIGNMENT_RULE,
+                                          sbml.SBML_RATE_RULE):
+                raise SBMLException('Currently, only assignment and rate'
+                                    ' rules have reaction replacement'
+                                    ' implemented.')
+
+        # Reactions are assigned indices in
+        # `sbml_import.py:_process_reactions()`, and these indices are used to
+        # generate flux variables in
+        # `ode_export.py:import_from_sbml_importer()`.
+        # These flux variables are anticipated here, as the symbols that
+        # represent the rates of reactions in the model.
+        subs = {r_sym: sp.Symbol(f'flux_r{reaction_ids.index(str(r_sym))}',
+                                 real=True)
+                for r_sym in reactions_in_rule_formula}
+        return formula.subs(subs)
 
 
 def get_rule_vars(rules: List[sbml.Rule],
