@@ -1519,12 +1519,8 @@ class SbmlImporter:
             TODO create a function to parse rule formulae, as this logic is
                  repeated a few times.
 
-        :param rule_type:
-            'assignment' for assignment rules, 'rate' for rate rules.
-
         :return:
-            The rule, with the reaction replaced with the flux vector symbol
-            that will be generated in `ode_export.py`.
+            The substituted formula.
         """
         reaction_ids = [r.getId()
                         for r in list(self.sbml.getListOfReactions())]
