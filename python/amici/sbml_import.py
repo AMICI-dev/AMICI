@@ -1501,29 +1501,31 @@ class SbmlImporter:
                     f'Encountered currently unsupported element id {constant}!'
                 )
 
-    def _replace_reactions_in_rule_formula(self, rule, formula):
+    def _replace_reactions_in_rule_formula(self,
+                                           rule: sbml.Rule,
+                                           formula: sp.Expr):
         """
         SBML allows reaction IDs in rules, which should be interpreted as the
-        reaction rate. However, an assignment or rate "...rule cannot be
-        defined for a species that is created or destroyed in a reaction,
-        unless that species is defined as a boundary condition in the model."
+        reaction rate.
 
-        Here, valid SBML is assumed, so the above restriction is not checked.
+        An assignment or rate "...rule cannot be defined for a species that is
+        created or destroyed in a reaction, unless that species is defined as
+        a boundary condition in the model." Here, valid SBML is assumed, so
+        this restriction is not checked.
 
         :param rule:
-            The rule, (e.g. an element of the object returned by
-            `self.sbml.getListOfRules()`).
+            The SBML rule.
 
         :param formula:
-            A rule formula that has already been parsed.
+            The `rule` formula that has already been parsed.
             TODO create a function to parse rule formulae, as this logic is
                  repeated a few times.
 
         :return:
-            The substituted formula.
+            The formula, but reaction IDs are replaced with respective
+            reaction rate symbols.
         """
-        reaction_ids = [r.getId()
-                        for r in list(self.sbml.getListOfReactions())]
+        reaction_ids = [r.getId() for r in self.sbml.getListOfReactions()]
         reactions_in_rule_formula = {s
                                      for s in formula.free_symbols
                                      if str(s) in reaction_ids}
