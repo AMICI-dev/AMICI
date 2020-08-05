@@ -81,7 +81,7 @@ def get_extension() -> Extension:
     if hdf5_enabled:
         libraries.extend(['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'])
 
-    sources = ['swig/TPL_MODELNAME.i', *get_model_sources()]
+    sources = [os.path.join("swig", "TPL_MODELNAME.i"), *get_model_sources()]
 
     # compiler and linker flags for libamici
     if 'AMICI_CXXFLAGS' in os.environ:
@@ -92,9 +92,9 @@ def get_extension() -> Extension:
     ext_include_dirs = [
         os.getcwd(),
         os.path.join(amici_path, 'include'),
-        os.path.join(amici_path, 'ThirdParty/gsl'),
-        os.path.join(amici_path, 'ThirdParty/sundials/include'),
-        os.path.join(amici_path, 'ThirdParty/SuiteSparse/include'),
+        os.path.join(amici_path, "ThirdParty", "gsl"),
+        os.path.join(amici_path, "ThirdParty", "sundials" "include"),
+        os.path.join(amici_path, "ThirdParty", "SuiteSparse", "include"),
         *h5pkgcfg['include_dirs'],
         *blaspkgcfg['include_dirs']
     ]

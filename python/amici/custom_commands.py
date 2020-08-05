@@ -296,7 +296,7 @@ class AmiciSDist(sdist):
         Returns:
 
         """
-        with open("amici/git_version.txt", "w") as f:
+        with open(os.path.join("amici", "git_version.txt"), "w") as f:
             try:
                 cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
                        '--always', '--tags']
@@ -369,17 +369,22 @@ def remove_swig_wrappers(extensions: 'setuptools.Extension',
     """Remove swig wrapper files not needed by the built extensions"""
 
     # remove swig-python-wrapper files
-    unused_swig_wrappers = {'amici/amici_wrap.cxx',
-                            'amici/amici_wrap_without_hdf5.cxx'}
+    unused_swig_wrappers = {
+        os.path.join("amici", "amici_wrap.cxx"),
+        os.path.join("amici", "amici_wrap_without_hdf5.cxx")
+    }
+
     if not no_clibs:
         # check for used c++ interface files
         for ext in extensions:
             unused_swig_wrappers -= set(ext.sources)
 
-    if 'amici/amici_wrap.cxx' in unused_swig_wrappers:
-        unused_swig_wrappers.add('amici/amici.py')
-    if 'amici/amici_wrap_without_hdf5.cxx' in unused_swig_wrappers:
-        unused_swig_wrappers.add('amici/amici_without_hdf5.py')
+    if os.path.join("amici", "amici_wrap.cxx") in unused_swig_wrappers:
+        unused_swig_wrappers.add(os.path.join("amici", "amici.py"))
+    if os.path.join("amici", "amici_wrap_without_hdf5.cxx") \
+            in unused_swig_wrappers:
+        unused_swig_wrappers.add(
+            os.path.join("amici", "amici_without_hdf5.py"))
 
     for filename in unused_swig_wrappers:
         with contextlib.suppress(FileNotFoundError):
