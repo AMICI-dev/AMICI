@@ -371,12 +371,13 @@ def remove_swig_wrappers(extensions: 'setuptools.Extension',
     # remove swig-python-wrapper files
     unused_swig_wrappers = {
         os.path.join("amici", "amici_wrap.cxx"),
-        os.path.join("amici", "amici_wrap_without_hdf5.cxx")
+        # os.path.join("amici", "amici_wrap_without_hdf5.cxx")
     }
 
     if not no_clibs:
         # check for used c++ interface files
         for ext in extensions:
+            print("XXX", set(ext.sources))
             unused_swig_wrappers -= set(ext.sources)
 
     if os.path.join("amici", "amici_wrap.cxx") in unused_swig_wrappers:
