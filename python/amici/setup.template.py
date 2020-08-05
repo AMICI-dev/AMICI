@@ -93,7 +93,7 @@ def get_extension() -> Extension:
         os.getcwd(),
         os.path.join(amici_path, 'include'),
         os.path.join(amici_path, "ThirdParty", "gsl"),
-        os.path.join(amici_path, "ThirdParty", "sundials" "include"),
+        os.path.join(amici_path, "ThirdParty", "sundials", "include"),
         os.path.join(amici_path, "ThirdParty", "SuiteSparse", "include"),
         *h5pkgcfg['include_dirs'],
         *blaspkgcfg['include_dirs']
