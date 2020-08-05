@@ -34,7 +34,7 @@ matrix:
         # run BLAS installation script
         - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS
         # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
-        - export BLAS_LIBS='/LIBPATH:C:\\BLAS\\lib openblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-v0.3.10\\OpenBLAS-0.3.10'
+        - export BLAS_LIBS='/LIBPATH:C:\\BLAS\\lib openblas.lib' BLAS_CFLAGS='-IC:\\BLAS\\OpenBLAS-v0.3.10\\OpenBLAS-0.3.10'
         - export PATH=${PATH}:C:\\BLAS\\bin
 
 install:
