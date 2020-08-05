@@ -47,4 +47,5 @@ script:
     - cd $BASE_DIR
     - export AMICI_SKIP_CMAKE_TESTS=TRUE
     - pip install pytest pysb petab
+    - export AMICI_PARALLEL_COMPILE=1
     - python -m pytest --ignore-glob=*petab* --ignore-glob=*pysb* ./python/tests

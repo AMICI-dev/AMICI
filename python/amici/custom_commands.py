@@ -79,6 +79,17 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
         for obj in objects:
             _single_compile(obj)
 
+    ### REMOVE ME
+    print(os.getcwd())
+    print(output_dir)
+    for x in sources:
+        print(x)
+    for x in objects:
+        print(x)
+    for x in os.listdir(output_dir):
+        print(x)
+    ### END REMOVE ME
+
     return objects
 
 
