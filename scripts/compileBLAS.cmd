@@ -9,5 +9,5 @@ cmake -G "Ninja" ^
     -DCMAKE_BUILD_TYPE=Release ^
     -DCMAKE_MAKE_PROGRAM=ninja ^
     "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10"
-cmake --build --parallel 2 "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10"
+cmake --build "C:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10" --parallel 2
 echo compileBLAS.cmd completed
