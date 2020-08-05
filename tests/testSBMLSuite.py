@@ -82,8 +82,7 @@ def test_sbml_testsuite_case(test_number, result_path):
         write_result_file(simulated_x, model, test_id, result_path, x_ids)
 
     except amici.sbml_import.SBMLException as err:
-        #assert False, f"Skipped {test_id}: {err}"
-        print(f'TestCase {test_id} was skipped: {err}')
+        pytest.skip(str(err))
 
 
 def verify_results(settings, rdata, results, wrapper,
