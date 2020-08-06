@@ -1,0 +1,71 @@
+name: Documentation Tests
+on:
+  push:
+    branches:
+      - develop
+      - master
+  pull_request:
+    branches:
+      - develop
+      - master
+
+jobs:
+  doxygen:
+    name: Test Doxygen
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y \
+          bison \
+          ragel \
+          graphviz \
+          texlive-latex-extra
+
+    - name: Build doxygen
+      run: |
+        sudo scripts/downloadAndBuildDoxygen.sh
+
+    - name: Run doxygen
+      run: |
+        scripts/run-doxygen.sh
+        
+  sphinx:
+    name: Test Sphinx
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - run: git fetch --prune --unshallow
+      
+      # install amici dependencies
+      - name: apt
+        run: |
+          sudo apt-get update \
+            && sudo apt-get install -y \
+              cmake \
+              g++ \
+              libatlas-base-dev \
+              libboost-serialization-dev \
+              libhdf5-serial-dev \
+              python3-dev \
+              python3-venv \
+              swig \
+              lcov
+      
+      - name: Install python package
+        run: |
+          scripts/installAmiciSource.sh
+      
+      - name: sphinx
+        run: |
+          scripts/run-sphinx.sh

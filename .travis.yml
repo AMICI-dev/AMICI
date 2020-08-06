@@ -27,14 +27,14 @@ matrix:
         # stick to python 3.7 until there is a 3.8 wheel for windows
         # as installation from sdist fails because of reasons...
         - choco install python --version 3.7.5
-        - choco install -y swig --version 4.0.1
+        - choco install -y swig --version=4.0.1
         - python -m pip install --upgrade pip
         - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
         # run BLAS installation script
-        - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS
-        # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
-        - export BLAS_LIBS='/LIBPATH:C:\\BLAS\\OpenBLAS-0.3.6-x64\\lib libopenblas.lib' BLAS_CFLAGS='/IC:\\BLAS\\OpenBLAS-0.3.6-x64\\include'
+        - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1'
+        - export BLAS_LIBS='/LIBPATH:C:\\BLAS\\lib openblas.lib' BLAS_CFLAGS='-IC:\\BLAS\\OpenBLAS-v0.3.10\\OpenBLAS-0.3.10'
+        - export PATH=${PATH}:C:\\BLAS\\bin
 
 install:
     - export BASE_DIR=`pwd`
@@ -42,17 +42,8 @@ install:
     - pip install -v $(ls -t dist/amici-*.tar.gz | head -1)
 
 script:
-    - export -f travis_fold travis_nanoseconds travis_time_start travis_time_finish
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
-
-after_failure:
-    - $FOLD ls -alR
-
-# cache dependencies
-cache:
-  directories:
-    - $HOME/Library/Caches/Homebrew
-    - $HOME/Library/Caches/pip
-    - $HOME/.cache/pip
-  timeout: 1200
+    - export AMICI_SKIP_CMAKE_TESTS=TRUE
+    - pip install pytest petab
+    - python -m pytest --ignore-glob=*petab* ./python/tests

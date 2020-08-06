@@ -1,4 +1,4 @@
-name: SBML semantic test suite
+name: SBML
 on:
   push:
     branches:
@@ -6,7 +6,7 @@ on:
       - master
   pull_request:
     paths:
-      - .github/workflows/sbml-semantic-test-suite.yml
+      - .github/workflows/test_sbml_semantic_test_suite.yml
       - python/amici/ode_export.py
       - python/amici/sbml_import.py
       - scripts/run-SBMLTestsuite.sh
@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    name: SBML semantic test suite
+    name: SBML Semantic Test Suite
 
     runs-on: ubuntu-latest
 

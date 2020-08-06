@@ -1,4 +1,4 @@
-name: Performance test
+name: Performance Test
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: Performance test
+    name: Performance Test
 
     runs-on: ubuntu-latest
 

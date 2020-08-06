@@ -1,20 +1,18 @@
-name: C++ testsuite / Valgrind / Ubuntu
-on:
-  push:
-    branches:
-      - develop
-      - master
+name: Installation
+on: [push]
 
 jobs:
   build:
-    name: _
+    name: Archive Install
 
-    # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
+
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
 
     # install amici dependencies
     - name: apt
@@ -26,8 +24,7 @@ jobs:
             libatlas-base-dev \
             libboost-serialization-dev \
             libhdf5-serial-dev \
-            swig \
-            valgrind
+            swig
 
     - name: Build suitesparse
       run: |
@@ -41,12 +38,15 @@ jobs:
       run: |
         scripts/buildCpputest.sh
 
+    - name: Build cpputest
+      run: |
+        scripts/buildBNGL.sh
+
     - name: Build AMICI
-      # TODO: should get rid of having to install numpy before
       run: |
         pip3 install numpy \
         && scripts/buildAmici.sh
-
-    - name: C++ tests / Valgrind
+    
+    - name: Install python archive
       run: |
-        scripts/run-valgrind.sh
+        scripts/installAmiciArchive.sh

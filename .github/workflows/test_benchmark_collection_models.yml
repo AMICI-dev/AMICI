@@ -1,4 +1,4 @@
-name: Benchmark collection
+name: Benchmark Collection
 on:
   push:
     branches:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: Benchmark collection
+    name: Benchmark Collection
 
     runs-on: ubuntu-latest
 

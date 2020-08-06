@@ -1,0 +1,76 @@
+name: Deploy
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  pages:
+    name: Deploy GH-Pages
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y \
+          bison \
+          ragel \
+          graphviz \
+          texlive-latex-extra
+
+    - name: Build doxygen
+      run: |
+        sudo scripts/downloadAndBuildDoxygen.sh
+
+    - name: Run doxygen
+      run: |
+        scripts/run-doxygen.sh
+        
+    - name: Deploy 🚀
+      uses: JamesIves/github-pages-deploy-action@3.5.7
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        BRANCH: gh-pages # The branch the action should deploy to.
+        FOLDER: doc # The folder the action should deploy.
+
+  pypi:
+    name: Deploy PyPI
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 20
+
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y swig3.0
+    - name: pip
+      run: |
+        pip3 install --upgrade --user wheel \
+          && pip3 install --upgrade --user setuptools
+
+    - name: Create AMICI sdist
+      run: |
+        cd python/sdist && python3 setup.py sdist
+        
+    - name: Check build
+      run: |
+        ls ./build/python
+
+    - name: Publish a Python distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_password }}
+        packages_dir: ./build/python
+        
