@@ -2136,8 +2136,10 @@ class ODEExporter:
         module_dir = self.model_path
         script_args = [sys.executable, os.path.join(module_dir, 'setup.py')]
 
-        script_args.append('--verbose')
-
+        if verbose:
+            script_args.append('--verbose')
+        else:
+            script_args.append('--quiet')
 
         script_args.extend(['build_ext', f'--build-lib={module_dir}'])
 
