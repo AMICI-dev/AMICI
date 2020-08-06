@@ -12,7 +12,6 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
 
     # install amici dependencies
     - name: apt
@@ -44,7 +43,6 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
 
     # install amici dependencies
     - name: apt
