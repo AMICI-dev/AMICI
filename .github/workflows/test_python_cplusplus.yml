@@ -161,7 +161,7 @@ jobs:
       run: |
         scripts/buildCpputest.sh
 
-    - name: Build cpputest
+    - name: Build BNG
       run: |
         scripts/buildBNGL.sh
 
