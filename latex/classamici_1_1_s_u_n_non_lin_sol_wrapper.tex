@@ -38,7 +38,7 @@ S\+U\+N\+Nonlinear\+Solver\+\_\+\+Type \mbox{\hyperlink{classamici_1_1_s_u_n_non
 \begin{DoxyCompactList}\small\item\em Get type ID of the solver. \end{DoxyCompactList}\item 
 int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a8b11b999632f09f682fd536c3f5a5231}{setup}} (N\+\_\+\+Vector y, void $\ast$mem)
 \begin{DoxyCompactList}\small\item\em Setup solver. \end{DoxyCompactList}\item 
-int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_ad574cb67c09f939b07181c43632ab339}{Solve}} (N\+\_\+\+Vector y0, N\+\_\+\+Vector y, N\+\_\+\+Vector w, realtype tol, booleantype call\+L\+Setup, void $\ast$mem)
+int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a5463d78148fb682d99267d699b8902c1}{Solve}} (N\+\_\+\+Vector y0, N\+\_\+\+Vector y, N\+\_\+\+Vector w, realtype tol, bool call\+L\+Setup, void $\ast$mem)
 \begin{DoxyCompactList}\small\item\em Solve the nonlinear system F (y) = 0 or G(y) = y. \end{DoxyCompactList}\item 
 int \mbox{\hyperlink{classamici_1_1_s_u_n_non_lin_sol_wrapper_a96d9ce36c94b8dae87395beb5234e281}{set\+Sys\+Fn}} (S\+U\+N\+Nonlin\+Sol\+Sys\+Fn Sys\+Fn)
 \begin{DoxyCompactList}\small\item\em Set function to evaluate the nonlinear residual function F(y) = 0 or the fixed point function G(y) = y. \end{DoxyCompactList}\item 
@@ -199,11 +199,11 @@ Definition at line 76 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 
 Definition at line 80 of file sundials\+\_\+linsol\+\_\+wrapper.\+cpp.
 
-\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_ad574cb67c09f939b07181c43632ab339}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_ad574cb67c09f939b07181c43632ab339}} 
+\mbox{\Hypertarget{classamici_1_1_s_u_n_non_lin_sol_wrapper_a5463d78148fb682d99267d699b8902c1}\label{classamici_1_1_s_u_n_non_lin_sol_wrapper_a5463d78148fb682d99267d699b8902c1}} 
 \index{SUNNonLinSolWrapper@{SUNNonLinSolWrapper}!Solve@{Solve}}
 \index{Solve@{Solve}!SUNNonLinSolWrapper@{SUNNonLinSolWrapper}}
 \doxyparagraph{\texorpdfstring{Solve()}{Solve()}}
-{\footnotesize\ttfamily int Solve (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{y0,  }\item[{N\+\_\+\+Vector}]{y,  }\item[{N\+\_\+\+Vector}]{w,  }\item[{realtype}]{tol,  }\item[{booleantype}]{call\+L\+Setup,  }\item[{void $\ast$}]{mem }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily int Solve (\begin{DoxyParamCaption}\item[{N\+\_\+\+Vector}]{y0,  }\item[{N\+\_\+\+Vector}]{y,  }\item[{N\+\_\+\+Vector}]{w,  }\item[{realtype}]{tol,  }\item[{bool}]{call\+L\+Setup,  }\item[{void $\ast$}]{mem }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}

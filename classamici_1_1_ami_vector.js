@@ -5,6 +5,7 @@ var classamici_1_1_ami_vector =
     [ "AmiVector", "classamici_1_1_ami_vector.html#a8ef9433b11b0d14c32e2e4ce18fe055e", null ],
     [ "AmiVector", "classamici_1_1_ami_vector.html#ad87966d6533259cc321aa4cc321c3ee5", null ],
     [ "AmiVector", "classamici_1_1_ami_vector.html#a3202c4cf34466ec28baece9cf1eae880", null ],
+    [ "AmiVector", "classamici_1_1_ami_vector.html#a26bae112973f9f12e588175b90d1c2a9", null ],
     [ "~AmiVector", "classamici_1_1_ami_vector.html#aeb4c977c93997952967051a26daa98bf", null ],
     [ "operator=", "classamici_1_1_ami_vector.html#a0c1227daab2e0edd01359e36252d030c", null ],
     [ "data", "classamici_1_1_ami_vector.html#ace31bbb9df6dd42f70286108ecafa01b", null ],

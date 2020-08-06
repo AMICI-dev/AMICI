@@ -145,9 +145,9 @@ int \mbox{\hyperlink{classamici_1_1_solver_a20514331a4368101654e4027640313a0}{ge
 \begin{DoxyCompactList}\small\item\em Gets K\+LU / Super\+L\+U\+MT state ordering mode. \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_solver_a3e9dfd8bfca1b7bc1c37243624dbf82c}{set\+State\+Ordering}} (int ordering)
 \begin{DoxyCompactList}\small\item\em Sets K\+LU / Super\+L\+U\+MT state ordering mode. \end{DoxyCompactList}\item 
-booleantype \mbox{\hyperlink{classamici_1_1_solver_ae1e9c3c5e59413ae25fb67c29983e3f3}{get\+Stability\+Limit\+Flag}} () const
+bool \mbox{\hyperlink{classamici_1_1_solver_ac63ab245eb7175e9f1d0ca4998eecf64}{get\+Stability\+Limit\+Flag}} () const
 \begin{DoxyCompactList}\small\item\em returns stability limit detection mode \end{DoxyCompactList}\item 
-void \mbox{\hyperlink{classamici_1_1_solver_a618a94f1d84f9c71230d476f9a0205ce}{set\+Stability\+Limit\+Flag}} (booleantype stldet)
+void \mbox{\hyperlink{classamici_1_1_solver_aa524afad3c500982abd29b4e9798c390}{set\+Stability\+Limit\+Flag}} (bool stldet)
 \begin{DoxyCompactList}\small\item\em set stability limit detection mode \end{DoxyCompactList}\item 
 Linear\+Solver \mbox{\hyperlink{classamici_1_1_solver_aa5cde2d316aae1d60d6eaf94ce7a854f}{get\+Linear\+Solver}} () const
 \begin{DoxyCompactList}\small\item\em get\+Linear\+Solver \end{DoxyCompactList}\item 
@@ -1754,28 +1754,28 @@ This only applies when linsol is set to Linear\+Solver\+::\+K\+LU or Linear\+Sol
 
 Definition at line 846 of file solver.\+cpp.
 
-\mbox{\Hypertarget{classamici_1_1_solver_ae1e9c3c5e59413ae25fb67c29983e3f3}\label{classamici_1_1_solver_ae1e9c3c5e59413ae25fb67c29983e3f3}} 
+\mbox{\Hypertarget{classamici_1_1_solver_ac63ab245eb7175e9f1d0ca4998eecf64}\label{classamici_1_1_solver_ac63ab245eb7175e9f1d0ca4998eecf64}} 
 \index{Solver@{Solver}!getStabilityLimitFlag@{getStabilityLimitFlag}}
 \index{getStabilityLimitFlag@{getStabilityLimitFlag}!Solver@{Solver}}
 \doxyparagraph{\texorpdfstring{getStabilityLimitFlag()}{getStabilityLimitFlag()}}
-{\footnotesize\ttfamily int get\+Stability\+Limit\+Flag (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+{\footnotesize\ttfamily bool get\+Stability\+Limit\+Flag (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
 
 \begin{DoxyReturn}{Returns}
-stldet can be amici.\+F\+A\+L\+SE (deactivated) or amici.\+T\+R\+UE (activated) 
+stldet can be false (deactivated) or true (activated) 
 \end{DoxyReturn}
 
 
 Definition at line 866 of file solver.\+cpp.
 
-\mbox{\Hypertarget{classamici_1_1_solver_a618a94f1d84f9c71230d476f9a0205ce}\label{classamici_1_1_solver_a618a94f1d84f9c71230d476f9a0205ce}} 
+\mbox{\Hypertarget{classamici_1_1_solver_aa524afad3c500982abd29b4e9798c390}\label{classamici_1_1_solver_aa524afad3c500982abd29b4e9798c390}} 
 \index{Solver@{Solver}!setStabilityLimitFlag@{setStabilityLimitFlag}}
 \index{setStabilityLimitFlag@{setStabilityLimitFlag}!Solver@{Solver}}
 \doxyparagraph{\texorpdfstring{setStabilityLimitFlag()}{setStabilityLimitFlag()}}
-{\footnotesize\ttfamily void set\+Stability\+Limit\+Flag (\begin{DoxyParamCaption}\item[{booleantype}]{stldet }\end{DoxyParamCaption})}
+{\footnotesize\ttfamily void set\+Stability\+Limit\+Flag (\begin{DoxyParamCaption}\item[{bool}]{stldet }\end{DoxyParamCaption})}
 
 
 \begin{DoxyParams}{Parameters}
-{\em stldet} & can be amici.\+F\+A\+L\+SE (deactivated) or amici.\+T\+R\+UE (activated) \\
+{\em stldet} & can be false (deactivated) or true (activated) \\
 \hline
 \end{DoxyParams}
 
@@ -1787,7 +1787,7 @@ Here is the call graph for this function\+:
 \begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[width=309pt]{classamici_1_1_solver_a618a94f1d84f9c71230d476f9a0205ce_cgraph}
+\includegraphics[width=309pt]{classamici_1_1_solver_aa524afad3c500982abd29b4e9798c390_cgraph}
 \end{center}
 \end{figure}
 \mbox{\Hypertarget{classamici_1_1_solver_aa5cde2d316aae1d60d6eaf94ce7a854f}\label{classamici_1_1_solver_aa5cde2d316aae1d60d6eaf94ce7a854f}} 
@@ -1801,7 +1801,7 @@ Here is the call graph for this function\+:
 \end{DoxyReturn}
 
 
-Definition at line 882 of file solver.\+cpp.
+Definition at line 878 of file solver.\+cpp.
 
 Here is the caller graph for this function\+:
 \nopagebreak
@@ -1824,7 +1824,7 @@ Here is the caller graph for this function\+:
 \end{DoxyParams}
 
 
-Definition at line 884 of file solver.\+cpp.
+Definition at line 880 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -1845,7 +1845,7 @@ internal sensitivity method
 \end{DoxyReturn}
 
 
-Definition at line 890 of file solver.\+cpp.
+Definition at line 886 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_ab114a079f23232a521ad2e81a0a30e36}\label{classamici_1_1_solver_ab114a079f23232a521ad2e81a0a30e36}} 
 \index{Solver@{Solver}!setInternalSensitivityMethod@{setInternalSensitivityMethod}}
@@ -1860,7 +1860,7 @@ Definition at line 890 of file solver.\+cpp.
 \end{DoxyParams}
 
 
-Definition at line 894 of file solver.\+cpp.
+Definition at line 890 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -1881,7 +1881,7 @@ Here is the call graph for this function\+:
 \end{DoxyReturn}
 
 
-Definition at line 900 of file solver.\+cpp.
+Definition at line 896 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_a9ef49e0345b6a9171fa43cd4575d74a6}\label{classamici_1_1_solver_a9ef49e0345b6a9171fa43cd4575d74a6}} 
 \index{Solver@{Solver}!setReturnDataReportingMode@{setReturnDataReportingMode}}
@@ -1896,7 +1896,7 @@ Definition at line 900 of file solver.\+cpp.
 \end{DoxyParams}
 
 
-Definition at line 904 of file solver.\+cpp.
+Definition at line 900 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_a2d7b71322446453eec88589d8093166a}\label{classamici_1_1_solver_a2d7b71322446453eec88589d8093166a}} 
 \index{Solver@{Solver}!writeSolution@{writeSolution}}
@@ -1919,7 +1919,7 @@ Definition at line 904 of file solver.\+cpp.
 \end{DoxyParams}
 
 
-Definition at line 1038 of file solver.\+cpp.
+Definition at line 1034 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -1950,7 +1950,7 @@ Here is the call graph for this function\+:
 \end{DoxyParams}
 
 
-Definition at line 1049 of file solver.\+cpp.
+Definition at line 1045 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -1976,7 +1976,7 @@ x or interpolated solution dky
 \end{DoxyReturn}
 
 
-Definition at line 1057 of file solver.\+cpp.
+Definition at line 1053 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2010,7 +2010,7 @@ dx or interpolated solution dky
 \end{DoxyReturn}
 
 
-Definition at line 1067 of file solver.\+cpp.
+Definition at line 1063 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2044,7 +2044,7 @@ Here is the caller graph for this function\+:
 \end{DoxyReturn}
 
 
-Definition at line 1077 of file solver.\+cpp.
+Definition at line 1073 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2080,7 +2080,7 @@ Here is the caller graph for this function\+:
 \end{DoxyReturn}
 
 
-Definition at line 1088 of file solver.\+cpp.
+Definition at line 1084 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2116,7 +2116,7 @@ Here is the caller graph for this function\+:
 \end{DoxyReturn}
 
 
-Definition at line 1104 of file solver.\+cpp.
+Definition at line 1100 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2152,7 +2152,7 @@ Here is the caller graph for this function\+:
 \end{DoxyReturn}
 
 
-Definition at line 1120 of file solver.\+cpp.
+Definition at line 1116 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2186,7 +2186,7 @@ Here is the caller graph for this function\+:
 \end{DoxyReturn}
 
 
-Definition at line 1136 of file solver.\+cpp.
+Definition at line 1132 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2281,7 +2281,7 @@ t
 \end{DoxyReturn}
 
 
-Definition at line 1152 of file solver.\+cpp.
+Definition at line 1148 of file solver.\+cpp.
 
 Here is the caller graph for this function\+:
 \nopagebreak
@@ -2302,7 +2302,7 @@ cpu\+\_\+time
 \end{DoxyReturn}
 
 
-Definition at line 1005 of file solver.\+cpp.
+Definition at line 1001 of file solver.\+cpp.
 
 Here is the caller graph for this function\+:
 \nopagebreak
@@ -2323,7 +2323,7 @@ cpu\+\_\+timeB
 \end{DoxyReturn}
 
 
-Definition at line 1009 of file solver.\+cpp.
+Definition at line 1005 of file solver.\+cpp.
 
 Here is the caller graph for this function\+:
 \nopagebreak
@@ -2344,7 +2344,7 @@ x.\+get\+Length()
 \end{DoxyReturn}
 
 
-Definition at line 956 of file solver.\+cpp.
+Definition at line 952 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2373,7 +2373,7 @@ sx.\+get\+Length()
 \end{DoxyReturn}
 
 
-Definition at line 954 of file solver.\+cpp.
+Definition at line 950 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2402,7 +2402,7 @@ x\+Q\+B.\+get\+Length()
 \end{DoxyReturn}
 
 
-Definition at line 958 of file solver.\+cpp.
+Definition at line 954 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -2967,7 +2967,7 @@ Here is the caller graph for this function\+:
 \end{DoxyParams}
 
 
-Definition at line 912 of file solver.\+cpp.
+Definition at line 908 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_a8928688a023e1fdc388828f7eea407a7}\label{classamici_1_1_solver_a8928688a023e1fdc388828f7eea407a7}} 
 \index{Solver@{Solver}!setDenseJacFnB@{setDenseJacFnB}}
@@ -3625,7 +3625,7 @@ proxy for solver\+Memory-\/$>$(cv$\vert$ida)\+\_\+\+Malloc\+Done
 \end{DoxyReturn}
 
 
-Definition at line 960 of file solver.\+cpp.
+Definition at line 956 of file solver.\+cpp.
 
 Here is the caller graph for this function\+:
 \nopagebreak
@@ -3646,7 +3646,7 @@ proxy for solver\+Memory-\/$>$(cv$\vert$ida)\+\_\+\+Sens\+Malloc\+Done
 \end{DoxyReturn}
 
 
-Definition at line 962 of file solver.\+cpp.
+Definition at line 958 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_a89667d5b61c9ad3829415b9cd26baf5e}\label{classamici_1_1_solver_a89667d5b61c9ad3829415b9cd26baf5e}} 
 \index{Solver@{Solver}!getAdjInitDone@{getAdjInitDone}}
@@ -3659,7 +3659,7 @@ proxy for solver\+Memory-\/$>$(cv$\vert$ida)\+\_\+adj\+Malloc\+Done
 \end{DoxyReturn}
 
 
-Definition at line 964 of file solver.\+cpp.
+Definition at line 960 of file solver.\+cpp.
 
 Here is the caller graph for this function\+:
 \nopagebreak
@@ -3685,7 +3685,7 @@ proxy for solver\+Memory\+B-\/$>$(cv$\vert$ida)\+\_\+\+Malloc\+Done
 \end{DoxyReturn}
 
 
-Definition at line 966 of file solver.\+cpp.
+Definition at line 962 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_ac03918fdee12e36c17cdc612120dbd41}\label{classamici_1_1_solver_ac03918fdee12e36c17cdc612120dbd41}} 
 \index{Solver@{Solver}!getQuadInitDoneB@{getQuadInitDoneB}}
@@ -3703,7 +3703,7 @@ proxy for solver\+Memory\+B-\/$>$(cv$\vert$ida)\+\_\+\+Quad\+Malloc\+Done
 \end{DoxyReturn}
 
 
-Definition at line 971 of file solver.\+cpp.
+Definition at line 967 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_aad482982b51f42c19163cf1cd2063ba0}\label{classamici_1_1_solver_aad482982b51f42c19163cf1cd2063ba0}} 
 \index{Solver@{Solver}!getQuadInitDone@{getQuadInitDone}}
@@ -3716,7 +3716,7 @@ proxy for solver\+Memory-\/$>$(cv$\vert$ida)\+\_\+\+Quad\+Malloc\+Done
 \end{DoxyReturn}
 
 
-Definition at line 976 of file solver.\+cpp.
+Definition at line 972 of file solver.\+cpp.
 
 Here is the caller graph for this function\+:
 \nopagebreak
@@ -3754,7 +3754,7 @@ Here is the caller graph for this function\+:
 \end{DoxyParams}
 
 
-Definition at line 1013 of file solver.\+cpp.
+Definition at line 1009 of file solver.\+cpp.
 
 Here is the call graph for this function\+:
 \nopagebreak
@@ -3863,7 +3863,7 @@ Here is the caller graph for this function\+:
 \end{DoxyParams}
 
 
-Definition at line 986 of file solver.\+cpp.
+Definition at line 982 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_a99991f6dd1784ebce5af4fd0c51422a3}\label{classamici_1_1_solver_a99991f6dd1784ebce5af4fd0c51422a3}} 
 \index{Solver@{Solver}!setQuadInitDoneB@{setQuadInitDoneB}}
@@ -3878,7 +3878,7 @@ Definition at line 986 of file solver.\+cpp.
 \end{DoxyParams}
 
 
-Definition at line 992 of file solver.\+cpp.
+Definition at line 988 of file solver.\+cpp.
 
 \mbox{\Hypertarget{classamici_1_1_solver_a2a2acf7c97ee294d4ff4b6ddfc39ca23}\label{classamici_1_1_solver_a2a2acf7c97ee294d4ff4b6ddfc39ca23}} 
 \index{Solver@{Solver}!checkSensitivityMethod@{checkSensitivityMethod}}

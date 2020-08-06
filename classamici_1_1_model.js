@@ -205,7 +205,7 @@ var classamici_1_1_model =
     [ "fx0_fixedParameters", "classamici_1_1_model.html#abd57e962201af613bd4f32f4144d1c42", null ],
     [ "fy", "classamici_1_1_model.html#a7dcc00519ca9bcebc001e8223613deb6", null ],
     [ "fz", "classamici_1_1_model.html#ab99fc014482802d9a36cebca90c86ec4", null ],
-    [ "boost::serialization::serialize", "classamici_1_1_model.html#acf1d37da78fd03ddccd22eafe39165df", null ],
+    [ "boost::serialization::serialize", "classamici_1_1_model.html#ad2b00db33598f25b0b119173c9fc0c69", null ],
     [ "operator==", "classamici_1_1_model.html#ad5a9ae5abc63d6c24c64506c0f9aed6d", null ],
     [ "nx_rdata", "classamici_1_1_model.html#a0946b3ca4e0896973b4c72cb859d31bd", null ],
     [ "nxtrue_rdata", "classamici_1_1_model.html#af578efed4eb15c4441b91933f3c67a96", null ],

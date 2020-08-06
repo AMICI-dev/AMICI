@@ -1,5 +1,7 @@
 var NAVTREEINDEX5 =
 {
+"classamici_1_1_solver.html#affde3089fec2a1cca40d6cc0c4c2cf1d":[15,0,0,28,32],
+"classamici_1_1_solver.html#affdeaaa0e51b7d5159e18df6b07ce4e3":[15,0,0,28,102],
 "classamici_1_1_steadystate_problem.html":[15,0,0,29],
 "classamici_1_1_steadystate_problem.html#a00611f9c3470baae41775eeb7793e88a":[15,0,0,29,28],
 "classamici_1_1_steadystate_problem.html#a00cb3548807a26965134af0f146c98ba":[15,0,0,29,30],
@@ -247,7 +249,5 @@ var NAVTREEINDEX5 =
 "functions_s.html":[15,2,0,18],
 "functions_t.html":[15,2,0,19],
 "functions_u.html":[15,2,0,20],
-"functions_v.html":[15,2,0,21],
-"functions_vars.html":[15,2,2,0],
-"functions_vars.html":[15,2,2]
+"functions_v.html":[15,2,0,21]
 };

@@ -126,85 +126,85 @@ $(document).ready(function(){initNavTree('serialization_8h_source.html',''); ini
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;}</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive&gt;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keywordtype">void</span> serialize(Archive &amp;ar, <a class="code" href="classamici_1_1_solver.html">amici::Solver</a> &amp;u, <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <span class="comment">/*version*/</span>) {</div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    ar &amp;u.sensi_;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    ar &amp;u.atol_;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    ar &amp;u.rtol_;</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    ar &amp;u.atolB_;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    ar &amp;u.rtolB_;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    ar &amp;u.atol_fsa_;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    ar &amp;u.rtol_fsa_;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    ar &amp;u.quad_atol_;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    ar &amp;u.quad_rtol_;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    ar &amp;u.ss_atol_;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    ar &amp;u.ss_rtol_;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    ar &amp;u.ss_atol_sensi_;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    ar &amp;u.ss_rtol_sensi_;</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_solver.html#a07348f7fff65e7e50feac7a3f76e33a6">maxsteps_</a>;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    ar &amp;u.maxstepsB_;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    ar &amp;u.requires_preequilibration_;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    ar &amp;u.newton_maxsteps_;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    ar &amp;u.newton_maxlinsteps_;</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    ar &amp;u.newton_damping_factor_mode_;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    ar &amp;u.newton_damping_factor_lower_bound_;</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_solver.html#ae9e8bcfb6d2741a57729ce250c0c2f41">ism_</a>;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    ar &amp;u.sensi_meth_;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    ar &amp;u.linsol_;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_solver.html#a6523f60627c89aa2f9128aafd9e765d1">interp_type_</a>;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_solver.html#acaf3b7a5e443a10331555fb99565bf77">lmm_</a>;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_solver.html#a3a5c4ae794fa28b929009b65901c5602">iter_</a>;</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    ar &amp;u.stldet_;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    ar &amp;u.ordering_;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    ar &amp;u.cpu_time_;</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    ar &amp;u.cpu_timeB_;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    ar &amp;u.rdata_mode_;</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keywordtype">void</span> serialize(Archive &amp;ar, <a class="code" href="classamici_1_1_solver.html">amici::Solver</a> &amp;s, <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <span class="comment">/*version*/</span>) {</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;    ar &amp;s.sensi_;</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    ar &amp;s.atol_;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    ar &amp;s.rtol_;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    ar &amp;s.atolB_;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    ar &amp;s.rtolB_;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    ar &amp;s.atol_fsa_;</div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    ar &amp;s.rtol_fsa_;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    ar &amp;s.quad_atol_;</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    ar &amp;s.quad_rtol_;</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    ar &amp;s.ss_atol_;</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;    ar &amp;s.ss_rtol_;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    ar &amp;s.ss_atol_sensi_;</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;    ar &amp;s.ss_rtol_sensi_;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    ar &amp;s.<a class="code" href="classamici_1_1_solver.html#a07348f7fff65e7e50feac7a3f76e33a6">maxsteps_</a>;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    ar &amp;s.maxstepsB_;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    ar &amp;s.requires_preequilibration_;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    ar &amp;s.newton_maxsteps_;</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    ar &amp;s.newton_maxlinsteps_;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    ar &amp;s.newton_damping_factor_mode_;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    ar &amp;s.newton_damping_factor_lower_bound_;</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    ar &amp;s.<a class="code" href="classamici_1_1_solver.html#ae9e8bcfb6d2741a57729ce250c0c2f41">ism_</a>;</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    ar &amp;s.sensi_meth_;</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    ar &amp;s.linsol_;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    ar &amp;s.<a class="code" href="classamici_1_1_solver.html#a6523f60627c89aa2f9128aafd9e765d1">interp_type_</a>;</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    ar &amp;s.<a class="code" href="classamici_1_1_solver.html#acaf3b7a5e443a10331555fb99565bf77">lmm_</a>;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    ar &amp;s.<a class="code" href="classamici_1_1_solver.html#a3a5c4ae794fa28b929009b65901c5602">iter_</a>;</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    ar &amp;s.stldet_;</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    ar &amp;s.ordering_;</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    ar &amp;s.cpu_time_;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    ar &amp;s.cpu_timeB_;</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    ar &amp;s.rdata_mode_;</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;}</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive&gt;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keywordtype">void</span> serialize(Archive &amp;ar, amici::CVodeSolver &amp;u, <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <span class="comment">/*version*/</span>) {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    ar &amp; <span class="keyword">static_cast&lt;</span><a class="code" href="classamici_1_1_solver.html">amici::Solver</a>&amp;<span class="keyword">&gt;</span>(u);</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<span class="keywordtype">void</span> serialize(Archive &amp;ar, amici::CVodeSolver &amp;s, <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <span class="comment">/*version*/</span>) {</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    ar &amp; <span class="keyword">static_cast&lt;</span><a class="code" href="classamici_1_1_solver.html">amici::Solver</a>&amp;<span class="keyword">&gt;</span>(s);</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;}</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
 <div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive&gt;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">void</span> serialize(Archive &amp;ar, <a class="code" href="classamici_1_1_model.html">amici::Model</a> &amp;u, <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <span class="comment">/*version*/</span>) {</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a0946b3ca4e0896973b4c72cb859d31bd">nx_rdata</a>;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#af578efed4eb15c4441b91933f3c67a96">nxtrue_rdata</a>;</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a2babf7eded5fda4881efb9d9c6a28ee5">nx_solver</a>;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ac0c32ae3d00ba4cbba7ccf7d03d6da1b">nxtrue_solver</a>;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a02462970bfe618f70b58d03895c2b693">nx_solver_reinit</a>;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a9f4e20a91b26459133b83992e9d8d381">ny</a>;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a2179f7f0a75c20d53cde0bc0784b11d7">nytrue</a>;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ac2eda98bb6d7e89cc3239973db2800cf">nz</a>;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a497ab69923c4edc945a506fff241e73e">nztrue</a>;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a3bf1137663f19e5c361c845cf4dfb7db">ne</a>;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a5f1f313510bc2ed23b768a182d874b04">nw</a>;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a5d72e4fbc565bf6c368d133970c4fa42">ndwdx</a>;</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a7c494626b8b05a385a07968b9bf9c10b">ndwdp</a>;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a9417818cd9de07bbc7a34006df96c3ef">ndxdotdw</a>;</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ab2361e558c5db00957746267e430bd8a">nnz</a>;</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ac34193c02e086a579a1b04039ace096b">nJ</a>;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a06d233a8791c550cfddeb67cb3bee726">ubw</a>;</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a679eba46cc7aaef273b9d7910e62c754">lbw</a>;</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a3a3feb0696a3b0183439810c5f6f17e9">o2mode</a>;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a44a6a19a563403eedee0b794d9d6c71b">z2event_</a>;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ab789f70300a5fedfb3b86e9d518da402">idlist</a>;</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ad6ddfc3df5bb0ae3e29f9e429a9e2b27">state_</a>.<a class="code" href="structamici_1_1_model_state.html#a0e4df9c10406b35bd54f6f839322ca87">h</a>;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ad6ddfc3df5bb0ae3e29f9e429a9e2b27">state_</a>.<a class="code" href="structamici_1_1_model_state.html#a2f57f75ff99d8bfcabb33c8cda86308d">unscaledParameters</a>;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a0a831b9e53efc02bfa0b5ba54ec56297">original_parameters_</a>;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ad6ddfc3df5bb0ae3e29f9e429a9e2b27">state_</a>.<a class="code" href="structamici_1_1_model_state.html#ac1d5115134ec1c839f1e913724ceb2b4">fixedParameters</a>;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a81789bd5c3675d85b7087face1b20962">reinitialize_fixed_parameter_initial_states_</a>;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ad6ddfc3df5bb0ae3e29f9e429a9e2b27">state_</a>.<a class="code" href="structamici_1_1_model_state.html#a59e920ed8cfd8077f566f31255f3edb1">plist</a>;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ac672f2b47c675c548ba0a5149fee218b">x0data_</a>;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#aeca9e59f19321defe98c410f26cf3e1d">sx0data_</a>;</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a916101635c069389a3c912fa6a5babab">ts_</a>;</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#af1bb7f9e32c45f8f3c34c9c4a7e5b1ac">nmaxevent_</a>;</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a1541abc429c1f1f20e38d783bd0bfd03">pscale_</a>;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a5c516159aa7efea7bb5455ea2eb61355">tstart_</a>;</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a702192d6b3d9748a31f5f3ea38e45acb">state_is_non_negative_</a>;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ac041fc130fcc27b7b144cef27a94f6bd">pythonGenerated</a>;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#ab66f5b6f18c3e8ce287693b8711cb472">ndxdotdp_explicit</a>;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    ar &amp;u.<a class="code" href="classamici_1_1_model.html#a473747682b5be1d4e146486b457d7d82">ndxdotdp_implicit</a>;</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">void</span> serialize(Archive &amp;ar, <a class="code" href="classamici_1_1_model.html">amici::Model</a> &amp;m, <span class="keyword">const</span> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <span class="comment">/*version*/</span>) {</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a0946b3ca4e0896973b4c72cb859d31bd">nx_rdata</a>;</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#af578efed4eb15c4441b91933f3c67a96">nxtrue_rdata</a>;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a2babf7eded5fda4881efb9d9c6a28ee5">nx_solver</a>;</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ac0c32ae3d00ba4cbba7ccf7d03d6da1b">nxtrue_solver</a>;</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a02462970bfe618f70b58d03895c2b693">nx_solver_reinit</a>;</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a9f4e20a91b26459133b83992e9d8d381">ny</a>;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a2179f7f0a75c20d53cde0bc0784b11d7">nytrue</a>;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ac2eda98bb6d7e89cc3239973db2800cf">nz</a>;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a497ab69923c4edc945a506fff241e73e">nztrue</a>;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a3bf1137663f19e5c361c845cf4dfb7db">ne</a>;</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a5f1f313510bc2ed23b768a182d874b04">nw</a>;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a5d72e4fbc565bf6c368d133970c4fa42">ndwdx</a>;</div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a7c494626b8b05a385a07968b9bf9c10b">ndwdp</a>;</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a9417818cd9de07bbc7a34006df96c3ef">ndxdotdw</a>;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ab2361e558c5db00957746267e430bd8a">nnz</a>;</div>
+<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ac34193c02e086a579a1b04039ace096b">nJ</a>;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a06d233a8791c550cfddeb67cb3bee726">ubw</a>;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a679eba46cc7aaef273b9d7910e62c754">lbw</a>;</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a3a3feb0696a3b0183439810c5f6f17e9">o2mode</a>;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a44a6a19a563403eedee0b794d9d6c71b">z2event_</a>;</div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ab789f70300a5fedfb3b86e9d518da402">idlist</a>;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ad6ddfc3df5bb0ae3e29f9e429a9e2b27">state_</a>.<a class="code" href="structamici_1_1_model_state.html#a0e4df9c10406b35bd54f6f839322ca87">h</a>;</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ad6ddfc3df5bb0ae3e29f9e429a9e2b27">state_</a>.<a class="code" href="structamici_1_1_model_state.html#a2f57f75ff99d8bfcabb33c8cda86308d">unscaledParameters</a>;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a0a831b9e53efc02bfa0b5ba54ec56297">original_parameters_</a>;</div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ad6ddfc3df5bb0ae3e29f9e429a9e2b27">state_</a>.<a class="code" href="structamici_1_1_model_state.html#ac1d5115134ec1c839f1e913724ceb2b4">fixedParameters</a>;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a81789bd5c3675d85b7087face1b20962">reinitialize_fixed_parameter_initial_states_</a>;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ad6ddfc3df5bb0ae3e29f9e429a9e2b27">state_</a>.<a class="code" href="structamici_1_1_model_state.html#a59e920ed8cfd8077f566f31255f3edb1">plist</a>;</div>
+<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ac672f2b47c675c548ba0a5149fee218b">x0data_</a>;</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#aeca9e59f19321defe98c410f26cf3e1d">sx0data_</a>;</div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a916101635c069389a3c912fa6a5babab">ts_</a>;</div>
+<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#af1bb7f9e32c45f8f3c34c9c4a7e5b1ac">nmaxevent_</a>;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a1541abc429c1f1f20e38d783bd0bfd03">pscale_</a>;</div>
+<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a5c516159aa7efea7bb5455ea2eb61355">tstart_</a>;</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a702192d6b3d9748a31f5f3ea38e45acb">state_is_non_negative_</a>;</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ac041fc130fcc27b7b144cef27a94f6bd">pythonGenerated</a>;</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#ab66f5b6f18c3e8ce287693b8711cb472">ndxdotdp_explicit</a>;</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    ar &amp;m.<a class="code" href="classamici_1_1_model.html#a473747682b5be1d4e146486b457d7d82">ndxdotdp_implicit</a>;</div>
 <div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;}</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160; </div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
@@ -506,7 +506,7 @@ $(document).ready(function(){initNavTree('serialization_8h_source.html',''); ini
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_2b2d9eac6b11e4f3bc68cafa95b49fcf.html">amici</a></li><li class="navelem"><b>serialization.h</b></li>
-    <li class="footer">Generated on Sun Jul 19 2020 21:05:41 for AMICI by
+    <li class="footer">Generated on Thu Aug 6 2020 00:12:19 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

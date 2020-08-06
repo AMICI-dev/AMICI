@@ -109,7 +109,7 @@ $(document).ready(function(){initNavTree('rdata_8h_source.html',''); initResizab
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span>boost {</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="keyword">namespace </span>serialization {</div>
 <div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">class</span> Archive&gt;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keywordtype">void</span> serialize(Archive &amp;ar, <a class="code" href="classamici_1_1_return_data.html">amici::ReturnData</a> &amp;u, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> version);</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keywordtype">void</span> serialize(Archive &amp;ar, <a class="code" href="classamici_1_1_return_data.html">amici::ReturnData</a> &amp;r, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> version);</div>
 <div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;}</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;} <span class="comment">// namespace boost</span></div>
 <div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
@@ -454,7 +454,7 @@ $(document).ready(function(){initNavTree('rdata_8h_source.html',''); initResizab
 <div class="ttc" id="aclassamici_1_1_return_data_html_aecce69eac38460bb35b6876add1a8870"><div class="ttname"><a href="classamici_1_1_return_data.html#aecce69eac38460bb35b6876add1a8870">amici::ReturnData::preeq_numstepsB</a></div><div class="ttdeci">int preeq_numstepsB</div><div class="ttdef"><b>Definition:</b> <a href="rdata_8h_source.html#l00272">rdata.h:272</a></div></div>
 <div class="ttc" id="aclassamici_1_1_return_data_html_a6737111ff08adf823eb1a626c75751a0"><div class="ttname"><a href="classamici_1_1_return_data.html#a6737111ff08adf823eb1a626c75751a0">amici::ReturnData::posteq_numlinsteps</a></div><div class="ttdeci">std::vector&lt; int &gt; posteq_numlinsteps</div><div class="ttdef"><b>Definition:</b> <a href="rdata_8h_source.html#l00285">rdata.h:285</a></div></div>
 <div class="ttc" id="aclassamici_1_1_return_data_html_ad20828f0dfad2d3e65ea13e77dbd2d85"><div class="ttname"><a href="classamici_1_1_return_data.html#ad20828f0dfad2d3e65ea13e77dbd2d85">amici::ReturnData::sx_solver_</a></div><div class="ttdeci">AmiVectorArray sx_solver_</div><div class="ttdef"><b>Definition:</b> <a href="rdata_8h_source.html#l00437">rdata.h:437</a></div></div>
-<div class="ttc" id="aclassamici_1_1_ami_vector_array_html"><div class="ttname"><a href="classamici_1_1_ami_vector_array.html">amici::AmiVectorArray</a></div><div class="ttdoc">AmiVectorArray class.</div><div class="ttdef"><b>Definition:</b> <a href="vector_8h_source.html#l00172">vector.h:172</a></div></div>
+<div class="ttc" id="aclassamici_1_1_ami_vector_array_html"><div class="ttname"><a href="classamici_1_1_ami_vector_array.html">amici::AmiVectorArray</a></div><div class="ttdoc">AmiVectorArray class.</div><div class="ttdef"><b>Definition:</b> <a href="vector_8h_source.html#l00181">vector.h:181</a></div></div>
 <div class="ttc" id="aclassamici_1_1_return_data_html_a7a8085d13686e18d9575fabf3a289e10"><div class="ttname"><a href="classamici_1_1_return_data.html#a7a8085d13686e18d9575fabf3a289e10">amici::ReturnData::ssigmay</a></div><div class="ttdeci">std::vector&lt; realtype &gt; ssigmay</div><div class="ttdef"><b>Definition:</b> <a href="rdata_8h_source.html#l00185">rdata.h:185</a></div></div>
 <div class="ttc" id="aclassamici_1_1_return_data_html_a49d9a1f62e1964f3a5b6096ad16d6c94"><div class="ttname"><a href="classamici_1_1_return_data.html#a49d9a1f62e1964f3a5b6096ad16d6c94">amici::ReturnData::initializeFullReporting</a></div><div class="ttdeci">void initializeFullReporting()</div><div class="ttdoc">initializes storage for full reporting mode</div><div class="ttdef"><b>Definition:</b> <a href="rdata_8cpp_source.html#l00085">rdata.cpp:85</a></div></div>
 <div class="ttc" id="aclassamici_1_1_return_data_html_ac79830d33f42672c1d545677256b9801"><div class="ttname"><a href="classamici_1_1_return_data.html#ac79830d33f42672c1d545677256b9801">amici::ReturnData::x_solver_</a></div><div class="ttdeci">AmiVector x_solver_</div><div class="ttdef"><b>Definition:</b> <a href="rdata_8h_source.html#l00430">rdata.h:430</a></div></div>
@@ -563,7 +563,7 @@ $(document).ready(function(){initNavTree('rdata_8h_source.html',''); initResizab
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_2b2d9eac6b11e4f3bc68cafa95b49fcf.html">amici</a></li><li class="navelem"><b>rdata.h</b></li>
-    <li class="footer">Generated on Sun Jul 19 2020 21:05:41 for AMICI by
+    <li class="footer">Generated on Thu Aug 6 2020 00:12:19 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

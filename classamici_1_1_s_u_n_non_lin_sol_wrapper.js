@@ -9,7 +9,7 @@ var classamici_1_1_s_u_n_non_lin_sol_wrapper =
     [ "get", "classamici_1_1_s_u_n_non_lin_sol_wrapper.html#add3abcabc59737fed51b3369e54a5eee", null ],
     [ "getType", "classamici_1_1_s_u_n_non_lin_sol_wrapper.html#a853d7b4501388511bd35845ced00ea5a", null ],
     [ "setup", "classamici_1_1_s_u_n_non_lin_sol_wrapper.html#a8b11b999632f09f682fd536c3f5a5231", null ],
-    [ "Solve", "classamici_1_1_s_u_n_non_lin_sol_wrapper.html#ad574cb67c09f939b07181c43632ab339", null ],
+    [ "Solve", "classamici_1_1_s_u_n_non_lin_sol_wrapper.html#a5463d78148fb682d99267d699b8902c1", null ],
     [ "setSysFn", "classamici_1_1_s_u_n_non_lin_sol_wrapper.html#a96d9ce36c94b8dae87395beb5234e281", null ],
     [ "setLSetupFn", "classamici_1_1_s_u_n_non_lin_sol_wrapper.html#a62db7451865addbba310fbad13eccee3", null ],
     [ "setLSolveFn", "classamici_1_1_s_u_n_non_lin_sol_wrapper.html#af0c733c60db6b81aac3f95a6cdc1b0de", null ],

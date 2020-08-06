@@ -18,6 +18,11 @@
 \begin{DoxyCompactList}\small\item\em constructor from gsl\+::span, \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classamici_1_1_ami_vector_a3202c4cf34466ec28baece9cf1eae880}{Ami\+Vector}} (const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&vold)
 \begin{DoxyCompactList}\small\item\em copy constructor \end{DoxyCompactList}\item 
+\mbox{\hyperlink{classamici_1_1_ami_vector_a26bae112973f9f12e588175b90d1c2a9}{Ami\+Vector}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&\&other) noexcept
+\begin{DoxyCompactList}\small\item\em move constructor \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classamici_1_1_ami_vector_aeb4c977c93997952967051a26daa98bf}\label{classamici_1_1_ami_vector_aeb4c977c93997952967051a26daa98bf}} 
+\mbox{\hyperlink{classamici_1_1_ami_vector_aeb4c977c93997952967051a26daa98bf}{$\sim$\+Ami\+Vector}} ()
+\begin{DoxyCompactList}\small\item\em destructor \end{DoxyCompactList}\item 
 \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \& \mbox{\hyperlink{classamici_1_1_ami_vector_a0c1227daab2e0edd01359e36252d030c}{operator=}} (\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} const \&other)
 \begin{DoxyCompactList}\small\item\em copy assignment operator \end{DoxyCompactList}\item 
 realtype $\ast$ \mbox{\hyperlink{classamici_1_1_ami_vector_ace31bbb9df6dd42f70286108ecafa01b}{data}} ()
@@ -47,10 +52,7 @@ realtype \& \mbox{\hyperlink{classamici_1_1_ami_vector_aa1f33dc2530301e51e2077a5
 const realtype \& \mbox{\hyperlink{classamici_1_1_ami_vector_af675c0b736acfdc94a21b7378c3a801d}{at}} (int pos) const
 \begin{DoxyCompactList}\small\item\em accessor to data elements of the vector \end{DoxyCompactList}\item 
 void \mbox{\hyperlink{classamici_1_1_ami_vector_a30c98bf8f33d174e936f8a0522085396}{copy}} (const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&other)
-\begin{DoxyCompactList}\small\item\em copies data from another \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \end{DoxyCompactList}\item 
-\mbox{\Hypertarget{classamici_1_1_ami_vector_aeb4c977c93997952967051a26daa98bf}\label{classamici_1_1_ami_vector_aeb4c977c93997952967051a26daa98bf}} 
-\mbox{\hyperlink{classamici_1_1_ami_vector_aeb4c977c93997952967051a26daa98bf}{$\sim$\+Ami\+Vector}} ()
-\begin{DoxyCompactList}\small\item\em destructor \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em copies data from another \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \doxysubsubsection{Detailed Description}
@@ -64,7 +66,7 @@ Definition at line 20 of file vector.\+h.
 \mbox{\Hypertarget{classamici_1_1_ami_vector_a843c8e8dfc2642218e9f42d86d42c28c}\label{classamici_1_1_ami_vector_a843c8e8dfc2642218e9f42d86d42c28c}} 
 \index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
 \index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
-\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/4]}}
+\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [1/5]}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} (\begin{DoxyParamCaption}\item[{const long int}]{length }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 Creates an std\+::vector$<$realtype$>$ and attaches the data pointer to a newly created N\+\_\+\+Vector\+\_\+\+Serial. Using N\+\_\+\+V\+Make\+\_\+\+Serial ensures that the N\+\_\+\+Vector module does not try to deallocate the data vector when calling N\+\_\+\+V\+Destroy\+\_\+\+Serial 
@@ -79,7 +81,7 @@ Definition at line 35 of file vector.\+h.
 \mbox{\Hypertarget{classamici_1_1_ami_vector_a8ef9433b11b0d14c32e2e4ce18fe055e}\label{classamici_1_1_ami_vector_a8ef9433b11b0d14c32e2e4ce18fe055e}} 
 \index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
 \index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
-\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/4]}}
+\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [2/5]}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} (\begin{DoxyParamCaption}\item[{std\+::vector$<$ realtype $>$}]{rvec }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 Moves data from std\+::vector and constructs an nvec that points to the data 
@@ -94,7 +96,7 @@ Definition at line 44 of file vector.\+h.
 \mbox{\Hypertarget{classamici_1_1_ami_vector_ad87966d6533259cc321aa4cc321c3ee5}\label{classamici_1_1_ami_vector_ad87966d6533259cc321aa4cc321c3ee5}} 
 \index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
 \index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
-\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [3/4]}}
+\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [3/5]}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} (\begin{DoxyParamCaption}\item[{gsl\+::span$<$ realtype $>$}]{rvec }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [explicit]}}
 
 Copy data from gsl\+::span and constructs a vector 
@@ -109,7 +111,7 @@ Definition at line 52 of file vector.\+h.
 \mbox{\Hypertarget{classamici_1_1_ami_vector_a3202c4cf34466ec28baece9cf1eae880}\label{classamici_1_1_ami_vector_a3202c4cf34466ec28baece9cf1eae880}} 
 \index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
 \index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
-\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [4/4]}}
+\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [4/5]}}
 {\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} (\begin{DoxyParamCaption}\item[{const \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&}]{vold }\end{DoxyParamCaption})}
 
 
@@ -120,6 +122,21 @@ Definition at line 52 of file vector.\+h.
 
 
 Definition at line 59 of file vector.\+h.
+
+\mbox{\Hypertarget{classamici_1_1_ami_vector_a26bae112973f9f12e588175b90d1c2a9}\label{classamici_1_1_ami_vector_a26bae112973f9f12e588175b90d1c2a9}} 
+\index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
+\index{AmiVector@{AmiVector}!AmiVector@{AmiVector}}
+\doxyparagraph{\texorpdfstring{AmiVector()}{AmiVector()}\hspace{0.1cm}{\footnotesize\ttfamily [5/5]}}
+{\footnotesize\ttfamily \mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} (\begin{DoxyParamCaption}\item[{\mbox{\hyperlink{classamici_1_1_ami_vector}{Ami\+Vector}} \&\&}]{other }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [noexcept]}}
+
+
+\begin{DoxyParams}{Parameters}
+{\em other} & vector from which the data will be moved \\
+\hline
+\end{DoxyParams}
+
+
+Definition at line 68 of file vector.\+h.
 
 
 

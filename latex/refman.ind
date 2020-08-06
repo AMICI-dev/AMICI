@@ -192,7 +192,7 @@
     \subitem {trigger}, \hyperpage{533}
     \subitem {z}, \hyperpage{533}
   \item {AmiException}, \hyperpage{67}
-    \subitem {AmiException}, \hyperpage{68, 69}
+    \subitem {AmiException}, \hyperpage{68}
     \subitem {getBacktrace}, \hyperpage{69}
     \subitem {storeBacktrace}, \hyperpage{69}
     \subitem {what}, \hyperpage{69}
@@ -322,8 +322,8 @@
     \subitem {sedml}, \hyperpage{568}
     \subitem {varidx}, \hyperpage{568}
     \subitem {varsym}, \hyperpage{568}
-  \item {AmiVector}, \hyperpage{70}
-    \subitem {AmiVector}, \hyperpage{71}
+  \item {AmiVector}, \hyperpage{69}
+    \subitem {AmiVector}, \hyperpage{70, 71}
     \subitem {at}, \hyperpage{77, 78}
     \subitem {copy}, \hyperpage{78}
     \subitem {data}, \hyperpage{72}

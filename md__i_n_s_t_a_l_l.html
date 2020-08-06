@@ -250,6 +250,7 @@ libsbml</h3>
 Math Kernel Library (MKL)</h3>
 <p>The python and C++ interfaces require a system installation of a <code>BLAS</code>. AMICI has been tested with various native and general purpose MKL implementations such as Accelerate, Intel MKL, cblas, openblas, atlas. The matlab interface uses the MATLAB MKL, which requires no separate installation.</p>
 <p>On Ubuntu, this requirement can be satisfied with </p><pre class="fragment">apt install libatlas-base-dev
+</pre><p>On Fedora (32): </p><pre class="fragment">sudo dnf install blas-devel
 </pre><h3><a class="anchor" id="autotoc_md29"></a>
 C++ compiler</h3>
 <p>All AMICI installations require a C++11-compatible C++ compiler. AMICI has been tested with g++, mingw, clang and the Intel compiler. Visual C++ is not officially supported, but may work.</p>
@@ -288,7 +289,7 @@ sparse, nonsymmetric systems of linear equations" (<a href="https://crd-legacy.l
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Sun Jul 19 2020 21:05:41 for AMICI by
+    <li class="footer">Generated on Thu Aug 6 2020 00:12:19 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>
