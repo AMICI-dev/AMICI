@@ -192,7 +192,7 @@ def add_coverage_flags_if_required(cxx_flags: List[str],
         list of existing linker flags
     """
     if 'ENABLE_GCOV_COVERAGE' in os.environ and \
-            os.environ['ENABLE_GCOV_COVERAGE'] == 'TRUE':
+            os.environ['ENABLE_GCOV_COVERAGE'].upper() == 'TRUE':
         log.info("ENABLE_GCOV_COVERAGE was set to TRUE."
                  " Building AMICI with coverage symbols.")
         cxx_flags.extend(['-g', '-O0', '--coverage'])

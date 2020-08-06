@@ -16,8 +16,10 @@ from .logging import get_logger, log_execution_time, set_log_level
 import sympy as sp
 import numpy as np
 import itertools
+import os
+import sys
 
-from typing import List, Union, Dict, Tuple, Set, Iterable, Any
+from typing import List, Union, Dict, Tuple, Set, Iterable, Any, Callable
 
 CL_Prototype = Dict[str, Dict[str, Any]]
 ConservationLaw = Dict[str, Union[str, sp.Basic]]
@@ -39,6 +41,7 @@ def pysb2amici(model: pysb.Model,
                compiler: str = None,
                compute_conservation_laws: bool = True,
                compile: bool = True,
+               simplify: Callable = lambda x: sp.powsimp(x, deep=True),
                ):
     """
     Generate AMICI C++ files for the model provided to the constructor.
@@ -55,14 +58,15 @@ def pysb2amici(model: pysb.Model,
         observables
 
     :param sigmas:
-        dict of :class:`pysb.core.Expression` names that should be mapped to sigmas
+        dict of :class:`pysb.core.Expression` names that should be mapped to
+        sigmas
 
     :param constant_parameters:
-        list of :class:`pysb.core.Parameter` names that should be mapped as fixed
-        parameter
+        list of :class:`pysb.core.Parameter` names that should be mapped as
+        fixed parameters
 
     :param verbose: verbosity level for logging, True/False default to
-        :attr:`logging.ERROR`/:attr:`logging.DEBUG`
+        :attr:`logging.DEBUG`/:attr:`logging.ERROR`
 
     :param assume_pow_positivity:
         if set to true, a special pow function is used to avoid problems
@@ -82,10 +86,12 @@ def pysb2amici(model: pysb.Model,
     :param compile:
         If true, build the python module for the generated model. If false,
         just generate the source code.
+
+    :param simplify:
+        see :attr:`ODEModel._simplify`
     """
     if observables is None:
         observables = []
-
     if constant_parameters is None:
         constant_parameters = []
 
@@ -93,11 +99,12 @@ def pysb2amici(model: pysb.Model,
         sigmas = {}
 
     set_log_level(logger, verbose)
-
     ode_model = ode_model_from_pysb_importer(
         model, constant_parameters=constant_parameters,
         observables=observables, sigmas=sigmas,
         compute_conservation_laws=compute_conservation_laws,
+        simplify=simplify,
+        verbose=verbose,
     )
     exporter = ODEExporter(
         ode_model,
@@ -115,11 +122,15 @@ def pysb2amici(model: pysb.Model,
 
 
 @log_execution_time('creating ODE model', logger)
-def ode_model_from_pysb_importer(model: pysb.Model,
-                                 constant_parameters: List[str] = None,
-                                 observables: List[str] = None,
-                                 sigmas: Dict[str, str] = None,
-                                 compute_conservation_laws=True) -> ODEModel:
+def ode_model_from_pysb_importer(
+        model: pysb.Model,
+        constant_parameters: List[str] = None,
+        observables: List[str] = None,
+        sigmas: Dict[str, str] = None,
+        compute_conservation_laws: bool = True,
+        simplify: Callable = sp.powsimp,
+        verbose: Union[int, bool] = False,
+) -> ODEModel:
     """
     Creates an ODEModel instance from a pysb.Model instance.
 
@@ -139,11 +150,17 @@ def ode_model_from_pysb_importer(model: pysb.Model,
     :param compute_conservation_laws:
         see :func:`amici.pysb_import.pysb2amici`
 
+    :param simplify:
+            see :attr:`ODEModel._simplify`
+
+    :param verbose: verbosity level for logging, True/False default to
+        :attr:`logging.DEBUG`/:attr:`logging.ERROR`
+
     :return:
         New ODEModel instance according to pysbModel
     """
 
-    ode = ODEModel(simplify=None)
+    ode = ODEModel(simplify=simplify)
 
     if constant_parameters is None:
         constant_parameters = []
@@ -154,7 +171,7 @@ def ode_model_from_pysb_importer(model: pysb.Model,
     if sigmas is None:
         sigmas = {}
 
-    pysb.bng.generate_equations(model)
+    pysb.bng.generate_equations(model, verbose=verbose)
 
     _process_pysb_species(model, ode)
     _process_pysb_parameters(model, ode, constant_parameters)
@@ -293,7 +310,7 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
                 LogLikelihood(
                     sp.Symbol(f'llh_{exp.name}'),
                     f'llh_{exp.name}',
-                    0.5*sp.log(2*pi*sy**2) + 0.5*((y - my)/sy)**2
+                    0.5 * sp.log(2 * pi * sy ** 2) + 0.5 * ((y - my) / sy) ** 2
                 )
             )
 
@@ -318,18 +335,23 @@ def _get_sigma_name_and_value(
         name of the observable
 
     :param sigmas:
-        list of names of Expressions that are to be mapped to sigmas
+        dict of :class:`pysb.core.Expression` names that should be mapped to
+        sigmas
 
     :return:
         tuple containing symbolic identifier and formula for the specified
         observable
     """
     if obs_name in sigmas:
-        if sigmas[obs_name] not in pysb_model.expressions:
+        sigma_name = sigmas[obs_name]
+        try:
+            # find corresponding Expression instance
+            sigma_expr = next(x for x in pysb_model.expressions
+                              if x.name == sigma_name)
+        except StopIteration:
             raise ValueError(f'value of sigma {obs_name} is not a '
-                            f'valid expression.')
-        sigma_name = pysb_model.expressions[sigmas[obs_name]].name
-        sigma_value = pysb_model.expressions[sigmas[obs_name]].expand_expr()
+                             f'valid expression.')
+        sigma_value = sigma_expr.expand_expr()
     else:
         sigma_name = f'sigma_{obs_name}'
         sigma_value = sp.sympify(1.0)
@@ -503,7 +525,7 @@ def _compute_possible_indices(cl_prototypes: CL_Prototype,
                 ix
                 for ix, specie in enumerate(pysb_model.species)
                 if monomer.name in extract_monomers(specie)
-                and not ode_model.state_is_constant(ix)
+                   and not ode_model.state_is_constant(ix)
             ]
 
             prototype['species_count'] = len(
@@ -631,8 +653,8 @@ def _cl_prototypes_are_valid(cl_prototypes: CL_Prototype) -> bool:
         return False
     # conservation law dependencies are cycle free
     if any(
-        _cl_has_cycle(monomer, cl_prototypes)
-        for monomer in cl_prototypes
+            _cl_has_cycle(monomer, cl_prototypes)
+            for monomer in cl_prototypes
     ):
         return False
 
@@ -781,8 +803,8 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
             prototype['diff_fillin'] = -1
 
     if all(
-        prototype['diff_fillin'] == -1
-        for prototype in cl_prototypes.values()
+            prototype['diff_fillin'] == -1
+            for prototype in cl_prototypes.values()
     ):
         raise RuntimeError('Could not compute a valid set of conservation '
                            'laws for this model!')
@@ -809,8 +831,8 @@ def _greedy_target_index_update(cl_prototypes: CL_Prototype) -> None:
         if prototype['diff_fillin'] > -1 \
                 and (
                 _get_target_indices(cl_prototypes).count(
-                        prototype['target_index']
-                    ) > 1
+                    prototype['target_index']
+                ) > 1
                 or _cl_has_cycle(monomer, cl_prototypes)
         ):
             prototype['fillin'] = prototype['alternate_fillin']
@@ -870,8 +892,8 @@ def _construct_conservation_from_prototypes(
             for ix, specie in enumerate(pysb_model.species)
             if ix != target_index
         ) / extract_monomers(pysb_model.species[
-            target_index
-        ]).count(monomer_name)
+                                 target_index
+                             ]).count(monomer_name)
         # normalize by the stoichiometry of the target species
         target_state = sp.Symbol(f'__s{target_index}')
         # = x_j
@@ -897,7 +919,7 @@ def _construct_conservation_from_prototypes(
 
 def _add_conservation_for_constant_species(
         ode_model: ODEModel,
-        conservation_laws:  List[ConservationLaw]
+        conservation_laws: List[ConservationLaw]
 ) -> None:
     """
     Computes the algebraic expression for the total amount of a given
@@ -925,7 +947,7 @@ def _add_conservation_for_constant_species(
 
 
 def _flatten_conservation_laws(
-        conservation_laws:  List[ConservationLaw]) -> None:
+        conservation_laws: List[ConservationLaw]) -> None:
     """
     Flatten the conservation laws such that the state_expr not longer
     depend on any states that are replaced by conservation laws
@@ -1181,3 +1203,23 @@ def _get_changed_stoichiometries(
             changed_stoichiometries.add(monomer)
 
     return changed_stoichiometries
+
+
+def pysb_model_from_path(pysb_model_file: str) -> pysb.Model:
+    """Load a pysb model module and return the :class:`pysb.Model` instance
+
+    :param pysb_model_file: Full or relative path to the PySB model module
+    :return: The pysb Model instance
+    """
+
+    pysb_model_module_name = \
+        os.path.splitext(os.path.split(pysb_model_file)[-1])[0]
+
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        pysb_model_module_name, pysb_model_file)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[pysb_model_module_name] = module
+    spec.loader.exec_module(module)
+
+    return module.model

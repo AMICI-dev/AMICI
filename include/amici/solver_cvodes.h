@@ -18,7 +18,7 @@ class CVodeSolver;
 namespace boost {
 namespace serialization {
 template <class Archive>
-void serialize(Archive &ar, amici::CVodeSolver &u, unsigned int version);
+void serialize(Archive &ar, amici::CVodeSolver &s, unsigned int version);
 }
 } // namespace boost::serialization
 
@@ -145,7 +145,7 @@ class CVodeSolver : public Solver {
     void adjInit() const override;
 
     void quadInit(const AmiVector &xQ0) const override;
-    
+
     void allocateSolverB(int *which) const override;
 
     void setSStolerancesB(int which, realtype relTolB,
@@ -179,7 +179,7 @@ class CVodeSolver : public Solver {
     void *getAdjBmem(void *ami_mem, int which) const override;
 
     template <class Archive>
-    friend void boost::serialization::serialize(Archive &ar, CVodeSolver &r,
+    friend void boost::serialization::serialize(Archive &ar, CVodeSolver &s,
                                                 unsigned int version);
 
     friend bool operator==(const CVodeSolver &a, const CVodeSolver &b);

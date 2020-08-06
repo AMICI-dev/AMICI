@@ -78,7 +78,7 @@ class Model_DAE : public Model {
                 nz, nztrue, ne, nJ, nw, ndwdx, ndwdp, ndxdotdw, std::move(ndJydy),
                 nnz, ubw, lbw, o2mode, p, k, plist, idlist, z2event,
                 pythonGenerated, ndxdotdp_explicit, ndxdotdp_implicit) {
-            M = SUNMatrixWrapper(nx_solver, nx_solver);
+            M_ = SUNMatrixWrapper(nx_solver, nx_solver);
         }
 
     void fJ(realtype t, realtype cj, const AmiVector &x, const AmiVector &dx,
@@ -495,7 +495,7 @@ class Model_DAE : public Model {
      * @param k constants vector
      */
     virtual void fM(realtype *M, const realtype t, const realtype *x,
-                    const realtype *p, const realtype *k){};
+                    const realtype *p, const realtype *k);
 };
 } // namespace amici
 

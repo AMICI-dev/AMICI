@@ -326,6 +326,10 @@ On Ubuntu, this requirement can be satisfied with
 
     apt install libatlas-base-dev
 
+On Fedora (32):
+
+    sudo dnf install blas-devel
+
 #### C++ compiler
 
 All AMICI installations require a C++11-compatible C++ compiler.

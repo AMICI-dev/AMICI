@@ -31,13 +31,18 @@ def parse_selection(selection_str: str) -> List[int]:
 def pytest_addoption(parser):
     """Add pytest CLI options"""
     parser.addoption("--petab-cases", help="Test cases to run")
+    parser.addoption("--only-pysb", help="Run only PySB tests",
+                     action="store_true")
+    parser.addoption("--only-sbml", help="Run only SBML tests",
+                     action="store_true", )
 
 
 def pytest_generate_tests(metafunc):
     """Parameterize tests"""
 
     # Run for all PEtab test suite cases
-    if "case" in metafunc.fixturenames:
+    if "case" in metafunc.fixturenames \
+            and "model_type" in metafunc.fixturenames:
         # Get CLI option
         cases = metafunc.config.getoption("--petab-cases")
         if cases:
@@ -47,4 +52,13 @@ def pytest_generate_tests(metafunc):
             # Run all tests
             test_numbers = petabtests.CASES_LIST
 
-        metafunc.parametrize("case", test_numbers)
+        if metafunc.config.getoption("--only-sbml"):
+            model_types = ['sbml']
+        elif metafunc.config.getoption("--only-pysb"):
+            model_types = ['pysb']
+        else:
+            model_types = ['sbml', 'pysb']
+
+        argvalues = [(case, model_type) for model_type in model_types
+                     for case in test_numbers]
+        metafunc.parametrize("case,model_type", argvalues)
