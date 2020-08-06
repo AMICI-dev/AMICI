@@ -47,7 +47,19 @@ jobs:
       - uses: actions/checkout@master
       - run: git fetch --prune --unshallow
       
-      - name: install Amici
+      # install amici dependencies
+      - name: apt
+        run: |
+          sudo apt-get update \
+            && sudo apt-get install -y \
+              g++ \
+              libatlas-base-dev \
+              libboost-serialization-dev \
+              libhdf5-serial-dev \
+              python3-venv \
+              swig \
+      
+      - name: Install python package
         run: |
           scripts/installAmiciSource.sh
       
