@@ -62,7 +62,7 @@ def get_amici_libs() -> List[str]:
 def get_extension() -> Extension:
     """Get distutils extension object for this AMICI model package"""
 
-    cxx_flags = ['-std=c++14']
+    cxx_flags = []
     linker_flags = []
 
     if compiledWithOpenMP():
@@ -121,6 +121,12 @@ def get_extension() -> Extension:
         extra_compile_args=cxx_flags,
         extra_link_args=linker_flags
     )
+
+    # see `set_compiler_specific_extension_options`
+    ext.extra_compile_args_mingw32 = ['-std=c++14']
+    ext.extra_compile_args_unix = ['-std=c++14']
+    ext.extra_compile_args_msvc = ['/std:c++14']
+
     return ext
 
 
