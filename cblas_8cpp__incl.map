@@ -1,8 +1,8 @@
 <map id="cblas.cpp" name="cblas.cpp">
-<area shape="rect" id="node1" title="BLAS routines required by AMICI." alt="" coords="89,5,167,32"/>
-<area shape="rect" id="node2" href="$cblas_8h_source.html" title=" " alt="" coords="79,80,177,107"/>
-<area shape="rect" id="node3" href="$defines_8h_source.html" title=" " alt="" coords="73,155,183,181"/>
-<area shape="rect" id="node4" title=" " alt="" coords="5,229,64,256"/>
-<area shape="rect" id="node5" title=" " alt="" coords="89,229,167,256"/>
-<area shape="rect" id="node6" title=" " alt="" coords="191,229,246,256"/>
+<area shape="rect" id="node1" title="BLAS routines required by AMICI." alt="" coords="96,5,175,32"/>
+<area shape="rect" id="node2" href="$cblas_8h_source.html" title=" " alt="" coords="86,80,185,107"/>
+<area shape="rect" id="node3" href="$defines_8h_source.html" title=" " alt="" coords="80,155,191,181"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,229,84,256"/>
+<area shape="rect" id="node5" title=" " alt="" coords="108,229,163,256"/>
+<area shape="rect" id="node6" title=" " alt="" coords="187,229,246,256"/>
 </map>
