@@ -1,6 +1,7 @@
 """AMICI model package setup"""
 
 import os
+import sys
 from typing import List
 
 from amici import amici_path, hdf5_enabled, compiledWithOpenMP
@@ -24,10 +25,14 @@ class ModelBuildExt(build_ext):
         set_compiler_specific_extension_options(
             ext, self.compiler.compiler_type)
 
+
         # Monkey-patch compiler instance method for parallel compilation
-        import distutils.ccompiler
-        self.compiler.compile = compile_parallel.__get__(
-            self.compiler, distutils.ccompiler.CCompiler)
+        #  except for Windows, where this seems to be incompatible with
+        #  providing swig files. Not investigated further...
+        if sys.platform != 'win32':
+            import distutils.ccompiler
+            self.compiler.compile = compile_parallel.__get__(
+                self.compiler, distutils.ccompiler.CCompiler)
 
         build_ext.build_extension(self, ext)
 
@@ -61,7 +66,7 @@ def get_amici_libs() -> List[str]:
 def get_extension() -> Extension:
     """Get distutils extension object for this AMICI model package"""
 
-    cxx_flags = ['-std=c++14']
+    cxx_flags = []
     linker_flags = []
 
     if compiledWithOpenMP():
@@ -81,7 +86,7 @@ def get_extension() -> Extension:
     if hdf5_enabled:
         libraries.extend(['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5'])
 
-    sources = ['swig/TPL_MODELNAME.i', *get_model_sources()]
+    sources = [os.path.join("swig", "TPL_MODELNAME.i"), *get_model_sources()]
 
     # compiler and linker flags for libamici
     if 'AMICI_CXXFLAGS' in os.environ:
@@ -92,9 +97,9 @@ def get_extension() -> Extension:
     ext_include_dirs = [
         os.getcwd(),
         os.path.join(amici_path, 'include'),
-        os.path.join(amici_path, 'ThirdParty/gsl'),
-        os.path.join(amici_path, 'ThirdParty/sundials/include'),
-        os.path.join(amici_path, 'ThirdParty/SuiteSparse/include'),
+        os.path.join(amici_path, "ThirdParty", "gsl"),
+        os.path.join(amici_path, "ThirdParty", "sundials", "include"),
+        os.path.join(amici_path, "ThirdParty", "SuiteSparse", "include"),
         *h5pkgcfg['include_dirs'],
         *blaspkgcfg['include_dirs']
     ]
@@ -120,6 +125,12 @@ def get_extension() -> Extension:
         extra_compile_args=cxx_flags,
         extra_link_args=linker_flags
     )
+
+    # see `set_compiler_specific_extension_options`
+    ext.extra_compile_args_mingw32 = ['-std=c++14']
+    ext.extra_compile_args_unix = ['-std=c++14']
+    ext.extra_compile_args_msvc = ['/std:c++14']
+
     return ext
 
 
@@ -139,7 +150,7 @@ CLASSIFIERS = [
 ]
 
 CMDCLASS = {
-    # For parallel compilation
+    # For parallel compilation and custom swig finder
     'build_ext': ModelBuildExt,
 }
 

@@ -7,9 +7,6 @@ import sys
 
 import amici
 import pytest
-from amici.pysb_import import pysb2amici
-
-pysb = pytest.importorskip("pysb")
 
 
 @pytest.fixture(scope="session")
@@ -48,6 +45,8 @@ def sbml_example_presimulation_module():
 def pysb_example_presimulation_module():
     """PySB example_presimulation model module fixture"""
 
+    pysb = pytest.importorskip("pysb")
+
     constant_parameters = ['DRUG_0', 'KIN_0']
 
     pysb.SelfExporter.cleanup()  # reset pysb
@@ -66,6 +65,9 @@ def pysb_example_presimulation_module():
 
     model.name = 'test_model_presimulation_pysb'
     outdir = model.name
+
+    from amici.pysb_import import pysb2amici
+
     pysb2amici(model, outdir, verbose=True,
                observables=['pPROT_obs'],
                constant_parameters=constant_parameters)
