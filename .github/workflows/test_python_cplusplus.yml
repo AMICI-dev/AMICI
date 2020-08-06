@@ -52,21 +52,9 @@ jobs:
             swig \
             lcov
 
-    - name: Build suitesparse
-      run: |
-        scripts/buildSuiteSparse.sh
-
-    - name: Build sundials
-      run: |
-        scripts/buildSundials.sh
-
-    - name: Build cpputest
-      run: |
-        scripts/buildCpputest.sh
-
     - name: Build BNGL
       run: |
-        scripts/buildBNGL.sh
+        scripts/buildDependencies.sh
 
     - name: Build AMICI
       run: |
@@ -149,25 +137,9 @@ jobs:
       run: |
         brew install hdf5 swig gcc cppcheck libomp
 
-    - name: Build suitesparse
-      run: |
-        scripts/buildSuiteSparse.sh
-
-    - name: Build sundials
-      run: |
-        scripts/buildSundials.sh
-
-    - name: Build cpputest
-      run: |
-        scripts/buildCpputest.sh
-
-    - name: Build BNG
-      run: |
-        scripts/buildBNGL.sh
-
     - name: Build AMICI
       run: |
-        scripts/buildAmici.sh
+        scripts/buildAll.sh
         
     - name: Install python package
       run: |
