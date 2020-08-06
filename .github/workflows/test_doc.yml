@@ -47,6 +47,11 @@ jobs:
       - uses: actions/checkout@master
       - run: git fetch --prune --unshallow
       
+      - name: pip
+        run: |
+          pip3 install --upgrade --user wheel \
+            && pip3 install --upgrade --user setuptools
+      
       - name: sphinx
         run: |
           scripts/run-sphinx.sh
