@@ -26,12 +26,12 @@ jobs:
             swig
 
     - name: Build suitesparse
-       run: |
-         scripts/buildSuiteSparse.sh
+      run: |
+        scripts/buildSuiteSparse.sh
         
-     - name: Build sundials
-       run: |
-         scripts/buildSundials.sh
+    - name: Build sundials
+      run: |
+        scripts/buildSundials.sh
 
     - name: Build AMICI
       run: |
