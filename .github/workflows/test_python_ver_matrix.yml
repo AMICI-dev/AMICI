@@ -1,4 +1,4 @@
-name: Python tests
+name: Python Tests
 on:
   push:
     branches:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: Python version matrix
+    name: Python Version Matrix
 
     runs-on: ubuntu-latest
     
