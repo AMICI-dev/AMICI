@@ -47,10 +47,9 @@ jobs:
       - uses: actions/checkout@master
       - run: git fetch --prune --unshallow
       
-      - name: pip
+      - name: install Amici
         run: |
-          pip3 install --upgrade --user wheel \
-            && pip3 install --upgrade --user setuptools
+          scripts/installAmiciSource.sh
       
       - name: sphinx
         run: |
