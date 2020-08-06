@@ -388,6 +388,13 @@ def remove_swig_wrappers(extensions: 'setuptools.Extension',
         unused_swig_wrappers.add(
             os.path.join("amici", "amici_without_hdf5.py"))
 
+    # Path matching may go wrong. If we remove all, we will run into trouble.
+    # Let's detect it here instead of running into AttributeErrors later on...
+    max_num_wrappers = 4
+    if not no_clibs and len(unused_swig_wrappers) == max_num_wrappers:
+        raise RuntimeError("Removing all SWIG wrappers. "
+                           "This shouldn't happen.")
+
     for filename in unused_swig_wrappers:
         with contextlib.suppress(FileNotFoundError):
             log.info(f"Removing unused SWIG wrapper {os.path.realpath(filename)}")
