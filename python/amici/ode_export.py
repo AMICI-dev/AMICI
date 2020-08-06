@@ -438,6 +438,7 @@ class State(ModelQuantity):
     def get_free_symbols(self) -> Set[sp.Basic]:
         """
         Gets the set of free symbols in time derivative and inital conditions
+
         :return:
             free symbols
         """
