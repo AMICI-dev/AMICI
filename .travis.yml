@@ -50,4 +50,4 @@ script:
     # INSTALL BNG OR REMOVE - pip install git+https://github.com/pysb/pysb
     - pip install pytest petab
     - export AMICI_PARALLEL_COMPILE=1
-    - python -m pytest --maxfail=2 --ignore-glob=*petab* --ignore-glob=*pysb* ./python/tests
+    - python -m pytest --ignore-glob=*petab* ./python/tests

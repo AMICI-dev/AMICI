@@ -1,13 +1,14 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
 
-#include <cmath>
 #include <functional>
 #include <string>
 
+#define _USE_MATH_DEFINES
+#include <cmath>
+
 namespace amici {
 
-#define _USE_MATH_DEFINES
 #ifdef M_PI
 /** pi definition from MATH_DEFINES */
 constexpr double pi = M_PI;
