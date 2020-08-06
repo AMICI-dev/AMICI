@@ -32,6 +32,10 @@ jobs:
     - name: Build sundials
       run: |
         scripts/buildSundials.sh
+    
+    - name: Build cpputest
+    run: |
+      scripts/buildCpputest.sh
 
     - name: Build AMICI
       run: |
