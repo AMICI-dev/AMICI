@@ -248,7 +248,7 @@ def _process_pysb_parameters(pysb_model: pysb.Model,
         )
 
 
-@log_execution_time('processing PySB observables', logger)
+@log_execution_time('processing PySB expressions', logger)
 def _process_pysb_expressions(pysb_model: pysb.Model,
                               ode_model: ODEModel,
                               observables: List[str],
@@ -275,7 +275,8 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
     for exp in pysb_model.expressions:
         # we can skip some expressions that are no longer necessary after
         # full expansion of expressions
-        if exp.name not in observables and exp not in required_symbols:
+        if exp.name not in observables and exp not in required_symbols and \
+                sp.Symbol(exp.name) not in required_symbols:
             continue
 
         ode_model.add_component(
