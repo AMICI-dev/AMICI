@@ -2255,8 +2255,6 @@ class ODEExporter:
             '#include "amici/symbolic_functions.h"',
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
-            '#define _USE_MATH_DEFINES'
-            '#include <cmath>',
         ]
 
         # function signature

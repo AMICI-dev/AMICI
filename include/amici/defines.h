@@ -1,10 +1,12 @@
 #ifndef AMICI_DEFINES_H
 #define AMICI_DEFINES_H
 
+#if !defined(_USE_MATH_DEFINES)
+#define _USE_MATH_DEFINES
+#endif
+
 #include <functional>
 #include <string>
-
-#define _USE_MATH_DEFINES
 #include <cmath>
 
 /* Math constants in case _USE_MATH_DEFINES is not supported */
