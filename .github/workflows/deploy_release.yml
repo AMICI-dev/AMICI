@@ -1,8 +1,8 @@
 name: Deploy
 on:
-  push:
-    branches:
-      - master
+  release:
+    types:
+      - published
 
 jobs:
   pages:
@@ -62,6 +62,10 @@ jobs:
     - name: Create AMICI sdist
       run: |
         cd python/sdist && python3 setup.py sdist
+        
+    - name: Check build
+      run: |
+        ls ./build/python
 
     - name: Publish a Python distribution to PyPI
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
