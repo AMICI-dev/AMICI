@@ -25,9 +25,17 @@ jobs:
             libhdf5-serial-dev \
             swig
 
+    - name: Build suitesparse
+       run: |
+         scripts/buildSuiteSparse.sh
+        
+     - name: Build sundials
+       run: |
+         scripts/buildSundials.sh
+
     - name: Build AMICI
       run: |
-        scripts/buildAll.sh
+        scripts/buildAMICI.sh
     
     - name: Install python archive
       run: |
