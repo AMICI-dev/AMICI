@@ -117,9 +117,10 @@ class AmiciBuildCLib(build_clib):
         if no_clibs:
             return
 
-        # Override for parallel compilation
-        import distutils.ccompiler
-        distutils.ccompiler.CCompiler.compile = compile_parallel
+        if sys.platform != "win32":
+            # Override for parallel compilation
+            import distutils.ccompiler
+            distutils.ccompiler.CCompiler.compile = compile_parallel
 
         # Work-around for compiler-specific build options
         set_compiler_specific_library_options(
