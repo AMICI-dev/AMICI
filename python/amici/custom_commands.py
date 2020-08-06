@@ -214,7 +214,7 @@ class AmiciBuildExt(build_ext):
 
         lib_dir = "" if self.inplace \
             else self.get_finalized_command('build_py').build_lib
-
+        print("XXX-", no_clibs)
         remove_swig_wrappers(self.extensions, no_clibs, lib_dir)
 
         if no_clibs:
@@ -372,8 +372,9 @@ def remove_swig_wrappers(extensions: 'setuptools.Extension',
 
     # remove swig-python-wrapper files
     unused_swig_wrappers = {
-        os.path.join("amici", "amici_wrap.cxx"),
-        # os.path.join("amici", "amici_wrap_without_hdf5.cxx")
+        # they will also have '/' on windows!
+        "amici/amici_wrap.cxx",
+        "amici/amici_wrap_without_hdf5.cxx"
     }
 
     if not no_clibs:

@@ -24,11 +24,12 @@ class ModelBuildExt(build_ext):
         set_compiler_specific_extension_options(
             ext, self.compiler.compiler_type)
 
+        '''
         # Monkey-patch compiler instance method for parallel compilation
         import distutils.ccompiler
         self.compiler.compile = compile_parallel.__get__(
             self.compiler, distutils.ccompiler.CCompiler)
-
+        '''
         build_ext.build_extension(self, ext)
 
     def find_swig(self) -> str:
