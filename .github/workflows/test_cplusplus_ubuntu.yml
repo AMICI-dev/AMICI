@@ -3,7 +3,7 @@ on: [push]
 
 jobs:
   build:
-    name: Ubuntu
+    name: Tests Ubuntu
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest

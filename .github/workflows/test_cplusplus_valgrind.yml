@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    name: _
+    name: Tests Valgrind
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest
