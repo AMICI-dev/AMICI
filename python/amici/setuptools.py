@@ -223,7 +223,7 @@ def generate_swig_interface_files() -> None:
     """
     Compile the swig python interface to amici
     """
-    swig_outdir = '%s/amici' % os.path.abspath(os.getcwd())
+    swig_outdir = os.path.join(os.path.abspath(os.getcwd()), "amici")
     swig_exe = find_swig()
     swig_version = get_swig_version(swig_exe)
 
@@ -232,7 +232,8 @@ def generate_swig_interface_files() -> None:
         '-python',
         '-py3',
         '-threads',
-        '-Iamici/swig', '-Iamici/include',
+        f'-Iamici{os.sep}swig',
+        f'-Iamici{os.sep}include',
     ]
 
     log.info(f"Found SWIG version {swig_version}")
@@ -242,8 +243,8 @@ def generate_swig_interface_files() -> None:
                 *swig_args,
                 '-DAMICI_SWIG_WITHOUT_HDF5',
                 '-outdir', swig_outdir,
-                '-o', 'amici/amici_wrap_without_hdf5.cxx',
-                'amici/swig/amici.i']
+                '-o', os.path.join("amici", "amici_wrap_without_hdf5.cxx"),
+                os.path.join("amici", "swig", "amici.i")]
 
     # Do we have -doxygen?
     if swig_version >= (4, 0, 0):
@@ -262,8 +263,8 @@ def generate_swig_interface_files() -> None:
     swig_cmd = [swig_exe,
                 *swig_args,
                 '-outdir', swig_outdir,
-                '-o', 'amici/amici_wrap.cxx',
-                'amici/swig/amici.i']
+                '-o', os.path.join("amici", "amici_wrap.cxx"),
+                os.path.join("amici", "swig", "amici.i")]
     if swig_version >= (4, 0, 0):
         swig_cmd.insert(1, '-doxygen')
     log.info(f"Running SWIG: {' '.join(swig_cmd)}")

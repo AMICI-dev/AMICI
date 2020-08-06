@@ -7,9 +7,9 @@ import numpy as np
 import pytest
 from test_pysb import get_data
 
-
 @pytest.fixture
 def preeq_fixture(pysb_example_presimulation_module):
+
     model = pysb_example_presimulation_module.getModel()
     model.setReinitializeFixedParameterInitialStates(True)
 
@@ -252,7 +252,7 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     # this also needs to fail
     y = edata.getObservedData()
     stdy = edata.getObservedDataStdDev()
-    
+
     # add infty timepoint
     ts = np.hstack([*edata.getTimepoints(), np.inf])
     edata.setTimepoints(sorted(ts))
@@ -260,12 +260,12 @@ def test_raise_presimulation_with_adjoints(preeq_fixture):
     edata.setObservedDataStdDev(np.hstack([stdy, stdy[0]]))
     edata.t_presim = 0
     edata.fixedParametersPresimulation = ()
-    
+
     # no presim any more, this should work
     rdata = amici.runAmiciSimulation(model, solver, edata)
     assert rdata['status'] == amici.AMICI_SUCCESS
-    
-    
+
+
 def test_equilibration_methods_with_adjoints(preeq_fixture):
     """Test data replicates"""
 
@@ -373,5 +373,5 @@ def test_newton_solver_equilibration(preeq_fixture):
     solver.setNewtonMaxSteps(10)
     solver.setNewtonMaxLinearSteps(10)
     rdata_spbcg = amici.runAmiciSimulation(model, solver, edata)
-    
+
     assert rdata_spbcg['status'] == amici.AMICI_ERROR
