@@ -140,7 +140,7 @@ CLASSIFIERS = [
 ]
 
 CMDCLASS = {
-    # For parallel compilation
+    # For parallel compilation and custom swig finder
     'build_ext': ModelBuildExt,
 }
 
