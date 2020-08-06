@@ -52,7 +52,7 @@ jobs:
             swig \
             lcov
 
-    - name: Build BNGL
+    - name: Build AMICI dependencies
       run: |
         scripts/buildDependencies.sh
 
