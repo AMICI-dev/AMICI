@@ -1,6 +1,7 @@
 """AMICI model package setup"""
 
 import os
+import sys
 from typing import List
 
 from amici import amici_path, hdf5_enabled, compiledWithOpenMP
@@ -24,9 +25,11 @@ class ModelBuildExt(build_ext):
         set_compiler_specific_extension_options(
             ext, self.compiler.compiler_type)
 
-        import sys
+
+        # Monkey-patch compiler instance method for parallel compilation
+        #  except for Windows, where this seems to be incompatible with
+        #  providing swig files. Not investigated further...
         if sys.platform != 'win32':
-            # Monkey-patch compiler instance method for parallel compilation
             import distutils.ccompiler
             self.compiler.compile = compile_parallel.__get__(
                 self.compiler, distutils.ccompiler.CCompiler)
