@@ -57,14 +57,13 @@ jobs:
       run: |
         sudo apt-get update \
           && sudo apt-get install -y \
-            cmake \
             g++ \
             libatlas-base-dev \
             libboost-serialization-dev \
             libhdf5-serial-dev \
             swig
 
-    - name: Build AMICI
+    - name: Create AMICI sdist
       run: |
         scripts/buildSdist.sh
     
