@@ -32,9 +32,10 @@ matrix:
         - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
         # run BLAS installation script
-        - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1';export BLAS_LIBS BLAS_CFLAGS
+        #- powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1' && export BLAS_LIBS BLAS_CFLAGS
+        - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1'
         # define Windows environment variables in BLAS because PowerShell definition didn't do the trick
-        - export BLAS_LIBS='/LIBPATH:C:\\BLAS\\lib openblas.lib' BLAS_CFLAGS='-IC:\\BLAS\\OpenBLAS-v0.3.10\\OpenBLAS-0.3.10'
+        #- export BLAS_LIBS='/LIBPATH:C:\\BLAS\\lib openblas.lib' BLAS_CFLAGS='-IC:\\BLAS\\OpenBLAS-v0.3.10\\OpenBLAS-0.3.10'
         - export PATH=${PATH}:C:\\BLAS\\bin
 
 install:
