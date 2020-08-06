@@ -196,6 +196,8 @@ Possible sources of errors:
   AMICI module itself).
   [DependencyWalker](http://www.dependencywalker.com/) will show you
   which ones.
+  
+  Support for msvc is experimental. [installOpenBLAS.ps1](https://github.com/ICB-DCM/AMICI/blob/master/scripts/installOpenBLAS.ps1) and [compileBLAS.cmd](https://github.com/ICB-DCM/AMICI/blob/master/scripts/compileBLAS.cmd) may serve as guidance on how to install openBLAS using msvc.
 
 ### Custom installation
 
