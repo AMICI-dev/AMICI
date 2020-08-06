@@ -214,7 +214,6 @@ class AmiciBuildExt(build_ext):
 
         lib_dir = "" if self.inplace \
             else self.get_finalized_command('build_py').build_lib
-        print("XXX-", no_clibs)
         remove_swig_wrappers(self.extensions, no_clibs, lib_dir)
 
         if no_clibs:
@@ -379,15 +378,13 @@ def remove_swig_wrappers(extensions: 'setuptools.Extension',
 
     if not no_clibs:
         # check for used c++ interface files
-        print("YYY", extensions)
         for ext in extensions:
             print("XXX", ext, set(ext.sources))
             unused_swig_wrappers -= set(ext.sources)
 
-    if os.path.join("amici", "amici_wrap.cxx") in unused_swig_wrappers:
+    if "amici/amici_wrap.cxx" in unused_swig_wrappers:
         unused_swig_wrappers.add(os.path.join("amici", "amici.py"))
-    if os.path.join("amici", "amici_wrap_without_hdf5.cxx") \
-            in unused_swig_wrappers:
+    if "amici/amici_wrap_without_hdf5.cxx" in unused_swig_wrappers:
         unused_swig_wrappers.add(
             os.path.join("amici", "amici_without_hdf5.py"))
 
