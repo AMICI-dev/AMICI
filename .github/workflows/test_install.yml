@@ -28,15 +28,15 @@ jobs:
     - name: Build suitesparse
       run: |
         scripts/buildSuiteSparse.sh
-        
+     
     - name: Build sundials
       run: |
         scripts/buildSundials.sh
-    
+
     - name: Build cpputest
       run: |
         scripts/buildCpputest.sh
-        
+
     - name: pip
       run: |
         pip3 install numpy
@@ -44,7 +44,7 @@ jobs:
     - name: Build AMICI
       run: |
         scripts/buildAmici.sh
-    
+
     - name: Install python archive
       run: |
         scripts/installAmiciArchive.sh
