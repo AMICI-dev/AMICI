@@ -1,0 +1,50 @@
+name: Deploy Branch
+on: [push]
+jobs:
+  dockerhub:
+    # https://github.com/marketplace/actions/publish-docker
+    name: Deploy dockerhub
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@master
+    - run: git archive -o docker/amici.tar.gz --format=tar.gz HEAD
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@2.8
+      with:
+        name: dweindl/amici
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        workdir: docker/
+        dockerfile: Dockerfile
+        tag_names: true
+
+  sdist:
+    name: Deploy python source distribution
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 20
+
+    - name: apt
+      run: |
+        sudo apt-get update \
+          && sudo apt-get install -y swig3.0
+    - name: pip
+      run: |
+        pip3 install --upgrade --user wheel \
+          && pip3 install --upgrade --user setuptools
+
+    - name: Create AMICI sdist
+      run: |
+        cd python/sdist && /usr/bin/python3 setup.py sdist
+
+    - name: "Upload artifact: sdist"
+      uses: actions/upload-artifact@v1
+      with:
+        name: sdist
+        path: python/sdist/dist
