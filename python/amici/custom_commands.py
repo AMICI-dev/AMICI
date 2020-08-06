@@ -80,6 +80,8 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
             _single_compile(obj)
 
     ### REMOVE ME
+    import traceback
+    traceback.print_stack()
     print(os.getcwd())
     print(output_dir)
     for x in sources:
@@ -117,11 +119,9 @@ class AmiciBuildCLib(build_clib):
         if no_clibs:
             return
 
-        print("ZZZ", sys.platform)
-        if False:
-            # Override for parallel compilation
-            import distutils.ccompiler
-            distutils.ccompiler.CCompiler.compile = compile_parallel
+        # Override for parallel compilation
+        import distutils.ccompiler
+        distutils.ccompiler.CCompiler.compile = compile_parallel
 
         # Work-around for compiler-specific build options
         set_compiler_specific_library_options(
