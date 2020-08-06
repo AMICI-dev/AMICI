@@ -25,12 +25,14 @@ except ImportError:
     pysb = None
 
 from typing import (
-    Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence
+    Callable, Optional, Union, List, Dict, Tuple, SupportsFloat, Sequence,
+    Set
 )
 from string import Template
 import sympy.printing.cxxcode as cxxcode
 from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.matrices.dense import MutableDenseMatrix
+from itertools import chain
 
 from . import (
     amiciSwigPath, amiciSrcPath, amiciModulePath, __version__, __commit__,
@@ -432,6 +434,19 @@ class State(ModelQuantity):
             time derivative
         """
         return self._dt
+
+    def get_free_symbols(self) -> Set[sp.Basic]:
+        """
+        Gets the set of free symbols in time derivative and inital conditions
+
+        :return:
+            free symbols
+        """
+        symbols = self._dt.free_symbols
+        if isinstance(self._value, sp.Basic):
+            symbols = symbols.union(self._value.free_symbols)
+
+        return symbols
 
 
 class ConservationLaw(ModelQuantity):
@@ -1292,6 +1307,16 @@ class ODEModel:
         if name not in self._names:
             self._generate_name(name)
         return self._names[name]
+
+    def free_symbols(self) -> Set[sp.Basic]:
+        """
+        Returns list of free symbols that appear in ODE rhs and initial
+        conditions.
+        """
+        return set(chain.from_iterable(
+            state.get_free_symbols()
+            for state in self._states
+        ))
 
     def _generate_symbol(self, name: str) -> None:
         """

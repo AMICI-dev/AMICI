@@ -271,7 +271,13 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
     :param ode_model:
         ODEModel instance
     """
+    required_symbols = ode_model.free_symbols()
     for exp in pysb_model.expressions:
+        # we can skip some expressions that are no longer necessary after
+        # full expansion of expressions
+        if exp.name not in observables and exp not in required_symbols:
+            continue
+
         ode_model.add_component(
             Expression(
                 exp,
