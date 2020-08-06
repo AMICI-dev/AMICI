@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get update \
             && sudo apt-get install -y \
-            swig3.0 \
+            swig \
             libatlas-base-dev \
             python3-venv
 
