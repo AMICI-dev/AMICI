@@ -1,11 +1,11 @@
-name: C++/Python testsuite
+name: Installation
 on: [push]
 
 jobs:
   build:
-    name: OSX
+    name: Archive Install
 
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@master
@@ -15,9 +15,16 @@ jobs:
     - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
 
     # install amici dependencies
-    - name: homebrew
+    - name: apt
       run: |
-        brew install hdf5 swig gcc cppcheck libomp
+        sudo apt-get update \
+          && sudo apt-get install -y \
+            cmake \
+            g++ \
+            libatlas-base-dev \
+            libboost-serialization-dev \
+            libhdf5-serial-dev \
+            swig
 
     - name: Build suitesparse
       run: |
@@ -37,28 +44,9 @@ jobs:
 
     - name: Build AMICI
       run: |
-        scripts/buildAmici.sh
+        pip3 install numpy \
+        && scripts/buildAmici.sh
     
     - name: Install python archive
       run: |
         scripts/installAmiciArchive.sh
-        
-    - name: Install python package
-      run: |
-        scripts/installAmiciSource.sh
-        
-    - name: cppcheck
-      run: |
-        scripts/run-cppcheck.sh
-        
-    - name: Python tests
-      run: |
-        scripts/run-python-tests.sh
-
-    - name: C++ tests
-      run: |
-        scripts/run-cpputest.sh
-        
-    - name: sphinx
-      run: |
-        scripts/run-sphinx.sh

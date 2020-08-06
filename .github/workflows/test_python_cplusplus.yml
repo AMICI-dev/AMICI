@@ -1,9 +1,9 @@
-name: C++/Python testsuite
+name: C++/Python Tests
 on: [push]
 
 jobs:
   build:
-    name: Ubuntu
+    name: Tests Ubuntu
 
     # TODO: prepare image with more deps preinstalled
     runs-on: ubuntu-latest
@@ -19,7 +19,7 @@ jobs:
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
     - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
 
-      # sonar cloud
+    # sonar cloud
     - run: echo "::set-env name=SONAR_SCANNER_VERSION::4.2.0.1873"
     - run: echo "::set-env name=SONAR_SCANNER_HOME::$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION-linux"
     - run: echo "::set-env name=SONAR_SCANNER_OPTS::-server"
@@ -97,7 +97,7 @@ jobs:
           --cov-report=xml:"${AMICI_DIR}/build/coverage_py.xml" \
           --cov-append \
           ${AMICI_DIR}/python/tests
-    
+
     - name: Codecov Python
       uses: codecov/codecov-action@v1
       with:
@@ -105,7 +105,7 @@ jobs:
         file: ./build/coverage_py.xml
         flags: python
         fail_ci_if_error: true
-        
+      
     - name: lcov
       run: |
         lcov --compat-libtool --no-external \
@@ -115,7 +115,7 @@ jobs:
         -d ${AMICI_DIR}/python/sdist/build/temp.linux-x86_64-3.6/amici/src \
         -b ${AMICI_DIR}/python/sdist -c -o coverage_py.info \
         && lcov -a coverage_cpp.info -a coverage_py.info -o coverage.info
-        
+      
     - name: Codecov CPP
       uses: codecov/codecov-action@v1
       with:
@@ -131,3 +131,56 @@ jobs:
         sonar-scanner \
          -Dsonar.cfamily.build-wrapper-output=bw-output \
          -Dsonar.projectVersion="$(git describe --abbrev=4 --dirty=-dirty --always --tags | tr -d '\n')"
+
+  osx:
+    name: Tests OSX
+
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@master
+    - run: git fetch --prune --unshallow
+
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
+
+    # install amici dependencies
+    - name: homebrew
+      run: |
+        brew install hdf5 swig gcc cppcheck libomp
+
+    - name: Build suitesparse
+      run: |
+        scripts/buildSuiteSparse.sh
+
+    - name: Build sundials
+      run: |
+        scripts/buildSundials.sh
+
+    - name: Build cpputest
+      run: |
+        scripts/buildCpputest.sh
+
+    - name: Build BNG
+      run: |
+        scripts/buildBNGL.sh
+
+    - name: Build AMICI
+      run: |
+        scripts/buildAmici.sh
+        
+    - name: Install python package
+      run: |
+        scripts/installAmiciSource.sh
+        
+    - name: cppcheck
+      run: |
+        scripts/run-cppcheck.sh
+        
+    - name: Python tests
+      run: |
+        scripts/run-python-tests.sh
+
+    - name: C++ tests
+      run: |
+        scripts/run-cpputest.sh

@@ -1,4 +1,4 @@
-name: PEtab testsuite
+name: PEtab
 on:
   push:
     branches:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    name: PEtab testsuite
+    name: PEtab Testsuite
 
     runs-on: ubuntu-latest
 
