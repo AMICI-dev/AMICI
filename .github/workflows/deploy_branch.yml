@@ -3,7 +3,7 @@ on: [push]
 jobs:
   dockerhub:
     # https://github.com/marketplace/actions/publish-docker
-    name: Deploy dockerhub
+    name: Deploy Dockerhub
     
     runs-on: ubuntu-latest
     
@@ -21,7 +21,7 @@ jobs:
         tag_names: true
 
   sdist:
-    name: Deploy python source distribution
+    name: Deploy Python Source Distribution
 
     runs-on: ubuntu-latest
 

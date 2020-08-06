@@ -6,7 +6,7 @@ on:
 
 jobs:
   pages:
-    name: Deploy gh-pages
+    name: Deploy GH-Pages
 
     runs-on: ubuntu-latest
 
@@ -41,7 +41,7 @@ jobs:
         FOLDER: doc # The folder the action should deploy.
 
   pypi:
-    name: Deploy pypi
+    name: Deploy PyPI
 
     runs-on: ubuntu-latest
 
