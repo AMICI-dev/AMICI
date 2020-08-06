@@ -1,4 +1,4 @@
-name: C++ testsuite / Valgrind / Ubuntu
+name: C++ testsuite
 on:
   push:
     branches:
