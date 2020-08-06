@@ -1,4 +1,4 @@
-name: C++ testsuite
+name: C++ Tests
 on:
   push:
     branches:
