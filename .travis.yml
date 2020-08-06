@@ -47,7 +47,7 @@ script:
     - export FOLD=$BASE_DIR/scripts/travis_wrap.sh
     - cd $BASE_DIR
     - export AMICI_SKIP_CMAKE_TESTS=TRUE
-    - pip install git+https://github.com/pysb/pysb
+    # INSTALL BNG OR REMOVE - pip install git+https://github.com/pysb/pysb
     - pip install pytest petab
     - export AMICI_PARALLEL_COMPILE=1
     - python -m pytest --maxfail=2 --ignore-glob=*petab* --ignore-glob=*pysb* ./python/tests
