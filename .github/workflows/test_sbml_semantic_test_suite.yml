@@ -1,4 +1,4 @@
-name: SBML semantic test suite
+name: SBML
 on:
   push:
     branches:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    name: SBML semantic test suite
+    name: SBML Semantic Test Suite
 
     runs-on: ubuntu-latest
 

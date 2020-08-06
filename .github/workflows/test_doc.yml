@@ -3,7 +3,7 @@ on: [push]
 
 jobs:
   doxygen:
-    name: Doxygen
+    name: Test Doxygen
 
     runs-on: ubuntu-latest
 
@@ -31,7 +31,7 @@ jobs:
         scripts/run-doxygen.sh
         
   sphinx:
-    name: Sphinx
+    name: Test Sphinx
 
     runs-on: ubuntu-latest
 

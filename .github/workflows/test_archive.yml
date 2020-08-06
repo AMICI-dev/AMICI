@@ -1,4 +1,4 @@
-name: Archive Installation
+name: Installation
 on: [push]
 
 jobs:
