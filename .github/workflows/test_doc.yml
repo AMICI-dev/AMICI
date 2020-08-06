@@ -1,4 +1,4 @@
-name: Documentation
+name: Documentation Tests
 on: [push]
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
         scripts/run-doxygen.sh
         
   sphinx:
-    name: sphinx
+    name: Sphinx
 
     runs-on: ubuntu-latest
 

@@ -1,4 +1,4 @@
-name: C++/Python testsuite
+name: C++/Python tests
 on: [push]
 
 jobs:
