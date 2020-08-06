@@ -1,5 +1,12 @@
 name: Documentation Tests
-on: [push]
+on:
+  push:
+    branches:
+      - develop
+      - master
+    pull_request:
+      - develop
+      - master
 
 jobs:
   doxygen:
