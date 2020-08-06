@@ -33,15 +33,11 @@ jobs:
     - name: apt
       run: |
         sudo apt-get update \
-          && sudo apt-get install -y swig3.0
-    - name: pip
-      run: |
-        pip3 install --upgrade --user wheel \
-          && pip3 install --upgrade --user setuptools
+          && sudo apt-get install -y swig
 
     - name: Create AMICI sdist
       run: |
-        cd python/sdist && /usr/bin/python3 setup.py sdist
+        scripts/buildSdist.sh
 
     - name: "Upload artifact: sdist"
       uses: actions/upload-artifact@v1
