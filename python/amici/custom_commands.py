@@ -79,19 +79,6 @@ def compile_parallel(self, sources, output_dir=None, macros=None,
         for obj in objects:
             _single_compile(obj)
 
-    ### REMOVE ME
-    import traceback
-    traceback.print_stack()
-    print(os.getcwd())
-    print(output_dir)
-    for x in sources:
-        print(x)
-    for x in objects:
-        print(x)
-    for x in os.listdir(output_dir):
-        print(x)
-    ### END REMOVE ME
-
     return objects
 
 
@@ -214,6 +201,7 @@ class AmiciBuildExt(build_ext):
 
         lib_dir = "" if self.inplace \
             else self.get_finalized_command('build_py').build_lib
+
         remove_swig_wrappers(self.extensions, no_clibs, lib_dir)
 
         if no_clibs:
@@ -379,7 +367,6 @@ def remove_swig_wrappers(extensions: 'setuptools.Extension',
     if not no_clibs:
         # check for used c++ interface files
         for ext in extensions:
-            print("XXX", ext, set(ext.sources))
             unused_swig_wrappers -= set(ext.sources)
 
     if "amici/amici_wrap.cxx" in unused_swig_wrappers:

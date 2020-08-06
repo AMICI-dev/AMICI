@@ -7,7 +7,7 @@ import platform
 import shutil
 import sys
 import pytest
-pysb = pytest.importorskip("pyssb")
+pysb = pytest.importorskip("pysb")
 
 import amici
 import numpy as np
