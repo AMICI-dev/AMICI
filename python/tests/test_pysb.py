@@ -98,6 +98,8 @@ custom_models = [
 
 @pytest.mark.parametrize('example', pysb_models + custom_models)
 def test_compare_to_pysb_simulation(example):
+    pysb = pytest.importorskip("pysb")
+
     atol = 1e-8
     rtol = 1e-8
 
