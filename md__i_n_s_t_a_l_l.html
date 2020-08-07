@@ -99,32 +99,32 @@ Table of Contents</h1>
 <h1><a class="anchor" id="autotoc_md13"></a>
 Availability</h1>
 <p>The sources for AMICI are available as</p><ul>
-<li>Source <a href="https://github.com/ICB-DCM/AMICI/tarball/master">tarball</a></li>
-<li>Source <a href="https://github.com/ICB-DCM/AMICI/zipball/master">zip</a></li>
-<li>GIT repository on <a href="https://github.com/ICB-DCM/AMICI">github</a></li>
+<li>Source <a href="https://github.com/AMICI-dev/AMICI/tarball/master">tarball</a></li>
+<li>Source <a href="https://github.com/AMICI-dev/AMICI/zipball/master">zip</a></li>
+<li>GIT repository on <a href="https://github.com/AMICI-dev/AMICI">github</a></li>
 </ul>
 <p>A Python package is available on pypi, see below.</p>
 <p>If AMICI was downloaded as a zip, it needs to be unpacked in a convenient directory. If AMICI was obtained via cloning of the git repository, no further unpacking is necessary.</p>
 <h2><a class="anchor" id="autotoc_md14"></a>
 Obtaining AMICI via the GIT version control system</h2>
 <p>In order to always stay up-to-date with the latest AMICI versions, simply pull it from our GIT repository and recompile it when a new release is available. For more information about GIT checkout their <a href="http://git-scm.com/">website</a></p>
-<p>The GIT repository can currently be found at <a href="https://github.com/ICB-DCM/AMICI">https://github.com/ICB-DCM/AMICI</a> and a direct clone is possible via </p><pre class="fragment">git clone https://github.com/ICB-DCM/AMICI.git AMICI
+<p>The GIT repository can currently be found at <a href="https://github.com/AMICI-dev/AMICI">https://github.com/AMICI-dev/AMICI</a> and a direct clone is possible via </p><pre class="fragment">git clone https://github.com/AMICI-dev/AMICI.git AMICI
 </pre><p><a class="anchor" id="python"></a> </p>
 <h1><a class="anchor" id="autotoc_md15"></a>
 Python</h1>
 <p>To use AMICI from python, install the module and all other requirements using pip: </p><pre class="fragment">pip3 install amici
 </pre><p>You can now import it as python module: </p><pre class="fragment">import amici
-</pre><p>For cases where this installation fails, check below for special setups and custom installations. For Python-AMICI usage see <a href="https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md">https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md</a>.</p>
+</pre><p>For cases where this installation fails, check below for special setups and custom installations. For Python-AMICI usage see <a href="https://github.com/AMICI-dev/AMICI/blob/master/documentation/PYTHON.md">https://github.com/AMICI-dev/AMICI/blob/master/documentation/PYTHON.md</a>.</p>
 <h2><a class="anchor" id="autotoc_md16"></a>
 Installation of development versions</h2>
-<p>To install development versions which have not been released to pypi yet, you can install AMICI with pip directly from GitHub using: </p><pre class="fragment">pip3 install -e git+https://github.com/icb-dcm/amici.git@develop#egg=amici\&amp;subdirectory=python/sdist
+<p>To install development versions which have not been released to pypi yet, you can install AMICI with pip directly from GitHub using: </p><pre class="fragment">pip3 install -e git+https://github.com/AMICI-dev/amici.git@develop#egg=amici\&amp;subdirectory=python/sdist
 </pre><p>Replace <code>develop</code> by the branch or commit you want to install.</p>
 <p>Note that this will probably not work on Windows which does not support symlinks by default (<a href="https://stackoverflow.com/questions/5917249/git-symlinks-in-windows/49913019#49913019">https://stackoverflow.com/questions/5917249/git-symlinks-in-windows/49913019#49913019</a>).</p>
 <h2><a class="anchor" id="autotoc_md17"></a>
 Light installation</h2>
 <p>In case you only want to use the AMICI Python package for generating model code for use with Matlab or C++ and don't want to bothered with any unnecessary dependencies, you can run </p><pre class="fragment">pip3 install --install-option --no-clibs amici
 </pre><p>Note, however, that you will not be able to compile any model into a Python extension with this installation.</p>
-<p>NOTE: If you run into an error with above installation command, install all AMICI dependencies listed in <a href="https://github.com/ICB-DCM/AMICI/blob/master/python/sdist/setup.py"><code>setup.py</code></a> manually, and try again. (This is because <code>pip</code> <code>--install-option</code>s are applied to <em>all</em> installed packages, including dependencies.)</p>
+<p>NOTE: If you run into an error with above installation command, install all AMICI dependencies listed in <a href="https://github.com/AMICI-dev/AMICI/blob/master/python/sdist/setup.py"><code>setup.py</code></a> manually, and try again. (This is because <code>pip</code> <code>--install-option</code>s are applied to <em>all</em> installed packages, including dependencies.)</p>
 <h2><a class="anchor" id="autotoc_md18"></a>
 Anaconda</h2>
 <p>To use an Anaconda installation of python (<a href="https://www.anaconda.com/distribution/">https://www.anaconda.com/distribution/</a>, Python&gt;=3.6), proceed as follows:</p>
@@ -143,7 +143,7 @@ Anaconda on Mac</h3>
 os.environ['CC'] = 'clang'
 os.environ['CXX'] = 'clang'
 os.environ['CFLAGS'] = '-stdlib=libc++'
-</pre><p>(For further discussion see <a href="https://github.com/ICB-DCM/AMICI/issues/357">https://github.com/ICB-DCM/AMICI/issues/357</a>)</p>
+</pre><p>(For further discussion see <a href="https://github.com/AMICI-dev/AMICI/issues/357">https://github.com/AMICI-dev/AMICI/issues/357</a>)</p>
 <h2><a class="anchor" id="autotoc_md20"></a>
 Windows</h2>
 <p>To install AMICI on Windows using python, you can proceed as follows:</p>
@@ -152,7 +152,7 @@ Windows</h2>
 <li>Install all libraries in a path not containing white spaces, e.g. directly under C:.</li>
 <li>Replace the following paths according to your installation.</li>
 <li>Slashes can be preferable to backslashes for some environment variables.</li>
-<li>See also <a href="https://github.com/icb-dcm/amici/issues/425">#425</a> for further discussion.</li>
+<li>See also <a href="https://github.com/AMICI-dev/amici/issues/425">#425</a> for further discussion.</li>
 </ul>
 <p>Then, follow these steps:</p>
 <ul>
@@ -185,7 +185,7 @@ Windows</h2>
 <p>ImportError: DLL load failed: The specified module could not be found. </p>
 </blockquote>
 <p>means that some amici module dependencies were not found (not the AMICI module itself). <a href="http://www.dependencywalker.com/">DependencyWalker</a> will show you which ones.</p>
-<p>Support for msvc is experimental. <a href="https://github.com/ICB-DCM/AMICI/blob/master/scripts/installOpenBLAS.ps1">installOpenBLAS.ps1</a> and <a href="https://github.com/ICB-DCM/AMICI/blob/master/scripts/compileBLAS.cmd">compileBLAS.cmd</a> may serve as guidance on how to install openBLAS using msvc.</p>
+<p>Support for msvc is experimental. <a href="https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1">installOpenBLAS.ps1</a> and <a href="https://github.com/AMICI-dev/AMICI/blob/master/scripts/compileBLAS.cmd">compileBLAS.cmd</a> may serve as guidance on how to install openBLAS using msvc.</p>
 <h2><a class="anchor" id="autotoc_md21"></a>
 Custom installation</h2>
 <p>AMICI Python package installation can be customized using a number of environment variables:</p>
@@ -271,7 +271,7 @@ Using a non-default SWIG executable</h4>
 </pre><p>Non-root users can set the <code>SWIG</code> environment variable to the full path of the desired SWIG executable. This variable has be set during AMICI package installation as well as during model compilation.</p>
 <h2><a class="anchor" id="autotoc_md33"></a>
 Matlab</h2>
-<p>The MATLAB interface requires the Mathworks Symbolic Toolbox for model generation via <code>amiwrap(...)</code>, but not for execution of precompiled models. Currently MATLAB R2018a or newer is not supported (see <a href="https://github.com/ICB-DCM/AMICI/issues/307">https://github.com/ICB-DCM/AMICI/issues/307</a>).</p>
+<p>The MATLAB interface requires the Mathworks Symbolic Toolbox for model generation via <code>amiwrap(...)</code>, but not for execution of precompiled models. Currently MATLAB R2018a or newer is not supported (see <a href="https://github.com/AMICI-dev/AMICI/issues/307">https://github.com/AMICI-dev/AMICI/issues/307</a>).</p>
 <p>The Symbolic Toolbox requirement can be circumvented by performing model import using the Python interface. The result code can then be used from Matlab.</p>
 <h2><a class="anchor" id="autotoc_md34"></a>
 Python</h2>
@@ -290,7 +290,7 @@ sparse, nonsymmetric systems of linear equations" (<a href="https://crd-legacy.l
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Thu Aug 6 2020 20:07:04 for AMICI by
+    <li class="footer">Generated on Fri Aug 7 2020 23:28:14 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

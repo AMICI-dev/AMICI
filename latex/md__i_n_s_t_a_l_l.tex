@@ -12,9 +12,9 @@
  \hypertarget{md__i_n_s_t_a_l_l_autotoc_md13}{}\doxysubsection{Availability}\label{md__i_n_s_t_a_l_l_autotoc_md13}
 The sources for A\+M\+I\+CI are available as
 \begin{DoxyItemize}
-\item Source \href{https://github.com/ICB-DCM/AMICI/tarball/master}{\texttt{ tarball}}
-\item Source \href{https://github.com/ICB-DCM/AMICI/zipball/master}{\texttt{ zip}}
-\item G\+IT repository on \href{https://github.com/ICB-DCM/AMICI}{\texttt{ github}}
+\item Source \href{https://github.com/AMICI-dev/AMICI/tarball/master}{\texttt{ tarball}}
+\item Source \href{https://github.com/AMICI-dev/AMICI/zipball/master}{\texttt{ zip}}
+\item G\+IT repository on \href{https://github.com/AMICI-dev/AMICI}{\texttt{ github}}
 \end{DoxyItemize}
 
 A Python package is available on pypi, see below.
@@ -22,7 +22,7 @@ A Python package is available on pypi, see below.
 If A\+M\+I\+CI was downloaded as a zip, it needs to be unpacked in a convenient directory. If A\+M\+I\+CI was obtained via cloning of the git repository, no further unpacking is necessary.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md14}{}\doxysubsubsection{Obtaining A\+M\+I\+C\+I via the G\+I\+T version control system}\label{md__i_n_s_t_a_l_l_autotoc_md14}
 In order to always stay up-\/to-\/date with the latest A\+M\+I\+CI versions, simply pull it from our G\+IT repository and recompile it when a new release is available. For more information about G\+IT checkout their \href{http://git-scm.com/}{\texttt{ website}}
 
-The G\+IT repository can currently be found at \href{https://github.com/ICB-DCM/AMICI}{\texttt{ https\+://github.\+com/\+I\+C\+B-\/\+D\+C\+M/\+A\+M\+I\+CI}} and a direct clone is possible via \begin{DoxyVerb}git clone https://github.com/ICB-DCM/AMICI.git AMICI
+The G\+IT repository can currently be found at \href{https://github.com/AMICI-dev/AMICI}{\texttt{ https\+://github.\+com/\+A\+M\+I\+C\+I-\/dev/\+A\+M\+I\+CI}} and a direct clone is possible via \begin{DoxyVerb}git clone https://github.com/AMICI-dev/AMICI.git AMICI
 \end{DoxyVerb}
 
 
@@ -36,8 +36,8 @@ You can now import it as python module\+: \begin{DoxyVerb}import amici
 \end{DoxyVerb}
 
 
-For cases where this installation fails, check below for special setups and custom installations. For Python-\/\+A\+M\+I\+CI usage see \href{https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md}{\texttt{ https\+://github.\+com/\+I\+C\+B-\/\+D\+C\+M/\+A\+M\+I\+C\+I/blob/master/documentation/\+P\+Y\+T\+H\+O\+N.\+md}}.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md16}{}\doxysubsubsection{Installation of development versions}\label{md__i_n_s_t_a_l_l_autotoc_md16}
-To install development versions which have not been released to pypi yet, you can install A\+M\+I\+CI with pip directly from Git\+Hub using\+: \begin{DoxyVerb}pip3 install -e git+https://github.com/icb-dcm/amici.git@develop#egg=amici\&subdirectory=python/sdist
+For cases where this installation fails, check below for special setups and custom installations. For Python-\/\+A\+M\+I\+CI usage see \href{https://github.com/AMICI-dev/AMICI/blob/master/documentation/PYTHON.md}{\texttt{ https\+://github.\+com/\+A\+M\+I\+C\+I-\/dev/\+A\+M\+I\+C\+I/blob/master/documentation/\+P\+Y\+T\+H\+O\+N.\+md}}.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md16}{}\doxysubsubsection{Installation of development versions}\label{md__i_n_s_t_a_l_l_autotoc_md16}
+To install development versions which have not been released to pypi yet, you can install A\+M\+I\+CI with pip directly from Git\+Hub using\+: \begin{DoxyVerb}pip3 install -e git+https://github.com/AMICI-dev/amici.git@develop#egg=amici\&subdirectory=python/sdist
 \end{DoxyVerb}
 
 
@@ -50,7 +50,7 @@ In case you only want to use the A\+M\+I\+CI Python package for generating model
 
 Note, however, that you will not be able to compile any model into a Python extension with this installation.
 
-N\+O\+TE\+: If you run into an error with above installation command, install all A\+M\+I\+CI dependencies listed in \href{https://github.com/ICB-DCM/AMICI/blob/master/python/sdist/setup.py}{\texttt{ {\ttfamily setup.\+py}}} manually, and try again. (This is because {\ttfamily pip} {\ttfamily -\/-\/install-\/option}s are applied to {\itshape all} installed packages, including dependencies.)\hypertarget{md__i_n_s_t_a_l_l_autotoc_md18}{}\doxysubsubsection{Anaconda}\label{md__i_n_s_t_a_l_l_autotoc_md18}
+N\+O\+TE\+: If you run into an error with above installation command, install all A\+M\+I\+CI dependencies listed in \href{https://github.com/AMICI-dev/AMICI/blob/master/python/sdist/setup.py}{\texttt{ {\ttfamily setup.\+py}}} manually, and try again. (This is because {\ttfamily pip} {\ttfamily -\/-\/install-\/option}s are applied to {\itshape all} installed packages, including dependencies.)\hypertarget{md__i_n_s_t_a_l_l_autotoc_md18}{}\doxysubsubsection{Anaconda}\label{md__i_n_s_t_a_l_l_autotoc_md18}
 To use an Anaconda installation of python (\href{https://www.anaconda.com/distribution/}{\texttt{ https\+://www.\+anaconda.\+com/distribution/}}, Python$>$=3.\+6), proceed as follows\+:
 
 Since Anaconda provides own versions of some packages which might not work with amici (in particular the gcc compiler), create a minimal virtual environment via\+: \begin{DoxyVerb}conda create --name ENV_NAME pip python
@@ -87,7 +87,7 @@ os.environ['CFLAGS'] = '-stdlib=libc++'
 \end{DoxyVerb}
 
 
-(For further discussion see \href{https://github.com/ICB-DCM/AMICI/issues/357}{\texttt{ https\+://github.\+com/\+I\+C\+B-\/\+D\+C\+M/\+A\+M\+I\+C\+I/issues/357}})\hypertarget{md__i_n_s_t_a_l_l_autotoc_md20}{}\doxysubsubsection{Windows}\label{md__i_n_s_t_a_l_l_autotoc_md20}
+(For further discussion see \href{https://github.com/AMICI-dev/AMICI/issues/357}{\texttt{ https\+://github.\+com/\+A\+M\+I\+C\+I-\/dev/\+A\+M\+I\+C\+I/issues/357}})\hypertarget{md__i_n_s_t_a_l_l_autotoc_md20}{}\doxysubsubsection{Windows}\label{md__i_n_s_t_a_l_l_autotoc_md20}
 To install A\+M\+I\+CI on Windows using python, you can proceed as follows\+:
 
 Some general remarks\+:
@@ -97,7 +97,7 @@ Some general remarks\+:
 \item Install all libraries in a path not containing white spaces, e.\+g. directly under C\+:.
 \item Replace the following paths according to your installation.
 \item Slashes can be preferable to backslashes for some environment variables.
-\item See also \href{https://github.com/icb-dcm/amici/issues/425}{\texttt{ \#425}} for further discussion.
+\item See also \href{https://github.com/AMICI-dev/amici/issues/425}{\texttt{ \#425}} for further discussion.
 \end{DoxyItemize}
 
 Then, follow these steps\+:
@@ -139,7 +139,7 @@ Import\+Error\+: D\+LL load failed\+: The specified module could not be found. \
 
 means that some amici module dependencies were not found (not the A\+M\+I\+CI module itself). \href{http://www.dependencywalker.com/}{\texttt{ Dependency\+Walker}} will show you which ones.
 
-Support for msvc is experimental. \href{https://github.com/ICB-DCM/AMICI/blob/master/scripts/installOpenBLAS.ps1}{\texttt{ install\+Open\+B\+L\+A\+S.\+ps1}} and \href{https://github.com/ICB-DCM/AMICI/blob/master/scripts/compileBLAS.cmd}{\texttt{ compile\+B\+L\+A\+S.\+cmd}} may serve as guidance on how to install open\+B\+L\+AS using msvc.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md21}{}\doxysubsubsection{Custom installation}\label{md__i_n_s_t_a_l_l_autotoc_md21}
+Support for msvc is experimental. \href{https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1}{\texttt{ install\+Open\+B\+L\+A\+S.\+ps1}} and \href{https://github.com/AMICI-dev/AMICI/blob/master/scripts/compileBLAS.cmd}{\texttt{ compile\+B\+L\+A\+S.\+cmd}} may serve as guidance on how to install open\+B\+L\+AS using msvc.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md21}{}\doxysubsubsection{Custom installation}\label{md__i_n_s_t_a_l_l_autotoc_md21}
 A\+M\+I\+CI Python package installation can be customized using a number of environment variables\+:
 
 \tabulinesep=1mm
@@ -257,7 +257,7 @@ We note here that some linux package managers may provide swig executables as {\
 
 
 Non-\/root users can set the {\ttfamily S\+W\+IG} environment variable to the full path of the desired S\+W\+IG executable. This variable has be set during A\+M\+I\+CI package installation as well as during model compilation.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md33}{}\doxysubsubsection{Matlab}\label{md__i_n_s_t_a_l_l_autotoc_md33}
-The M\+A\+T\+L\+AB interface requires the Mathworks Symbolic Toolbox for model generation via {\ttfamily amiwrap(...)}, but not for execution of precompiled models. Currently M\+A\+T\+L\+AB R2018a or newer is not supported (see \href{https://github.com/ICB-DCM/AMICI/issues/307}{\texttt{ https\+://github.\+com/\+I\+C\+B-\/\+D\+C\+M/\+A\+M\+I\+C\+I/issues/307}}).
+The M\+A\+T\+L\+AB interface requires the Mathworks Symbolic Toolbox for model generation via {\ttfamily amiwrap(...)}, but not for execution of precompiled models. Currently M\+A\+T\+L\+AB R2018a or newer is not supported (see \href{https://github.com/AMICI-dev/AMICI/issues/307}{\texttt{ https\+://github.\+com/\+A\+M\+I\+C\+I-\/dev/\+A\+M\+I\+C\+I/issues/307}}).
 
 The Symbolic Toolbox requirement can be circumvented by performing model import using the Python interface. The result code can then be used from Matlab.\hypertarget{md__i_n_s_t_a_l_l_autotoc_md34}{}\doxysubsubsection{Python}\label{md__i_n_s_t_a_l_l_autotoc_md34}
 The python interface requires python 3.\+6 or newer and a cblas-\/compatible B\+L\+AS library to be installed. Windows installations via pip are currently not supported, but users may try to install amici using the build scripts provided for the C++ interface (these will by default automatically install the python module).
