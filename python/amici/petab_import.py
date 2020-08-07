@@ -700,7 +700,7 @@ def parse_cli_args():
 def main():
     """
     Command line interface to import a model in the PEtab
-    (https://github.com/ICB-DCM/PEtab/) format into AMICI.
+    (https://github.com/PEtab-dev/PEtab/) format into AMICI.
     """
     args = parse_cli_args()
 

@@ -12,9 +12,9 @@
 ## Availability
 
 The sources for AMICI are available as
-- Source  [tarball](https://github.com/ICB-DCM/AMICI/tarball/master)
-- Source  [zip](https://github.com/ICB-DCM/AMICI/zipball/master)
-- GIT repository on  [github](https://github.com/ICB-DCM/AMICI)
+- Source [tarball](https://github.com/AMICI-dev/AMICI/tarball/master)
+- Source [zip](https://github.com/AMICI-dev/AMICI/zipball/master)
+- GIT repository on [github](https://github.com/AMICI-dev/AMICI)
 
 A Python package is available on pypi, see below.
 
@@ -29,10 +29,10 @@ release is available. For more information about GIT checkout their
 [website](http://git-scm.com/)
 
 The GIT repository can currently be found at 
-[https://github.com/ICB-DCM/AMICI](https://github.com/ICB-DCM/AMICI)
+[https://github.com/AMICI-dev/AMICI](https://github.com/AMICI-dev/AMICI)
 and a direct clone is possible via
 
-    git clone https://github.com/ICB-DCM/AMICI.git AMICI
+    git clone https://github.com/AMICI-dev/AMICI.git AMICI
 
 
 <a name="python"></a>
@@ -50,7 +50,7 @@ You can now import it as python module:
 For cases where this installation fails, check below for special setups
 and custom installations.
 For Python-AMICI usage see 
-[https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md](https://github.com/ICB-DCM/AMICI/blob/master/documentation/PYTHON.md).
+[https://github.com/AMICI-dev/AMICI/blob/master/documentation/PYTHON.md](https://github.com/AMICI-dev/AMICI/blob/master/documentation/PYTHON.md).
 
 
 ### Installation of development versions
@@ -58,7 +58,7 @@ For Python-AMICI usage see
 To install development versions which have not been released to pypi yet,
 you can install AMICI with pip directly from GitHub using:
 
-    pip3 install -e git+https://github.com/icb-dcm/amici.git@develop#egg=amici\&subdirectory=python/sdist
+    pip3 install -e git+https://github.com/AMICI-dev/amici.git@develop#egg=amici\&subdirectory=python/sdist
 
 Replace `develop` by the branch or commit you want to install.
 
@@ -79,7 +79,7 @@ Python extension with this installation.
 
 NOTE: If you run into an error with above installation command, install
 all AMICI dependencies listed in 
-[`setup.py`](https://github.com/ICB-DCM/AMICI/blob/master/python/sdist/setup.py)
+[`setup.py`](https://github.com/AMICI-dev/AMICI/blob/master/python/sdist/setup.py)
 manually, and try again. (This is because `pip` `--install-option`s are
 applied to *all* installed packages, including dependencies.)
 
@@ -135,7 +135,7 @@ on. This can be done by inserting the following code before calling
     os.environ['CXX'] = 'clang'
     os.environ['CFLAGS'] = '-stdlib=libc++'
 
-(For further discussion see https://github.com/ICB-DCM/AMICI/issues/357)
+(For further discussion see https://github.com/AMICI-dev/AMICI/issues/357)
 
 
 ### Windows
@@ -149,7 +149,7 @@ Some general remarks:
 * Replace the following paths according to your installation.
 * Slashes can be preferable to backslashes for some environment
   variables.
-* See also [#425](https://github.com/icb-dcm/amici/issues/425) for
+* See also [#425](https://github.com/AMICI-dev/amici/issues/425) for
   further discussion.
 
 Then, follow these steps:
@@ -197,7 +197,10 @@ Possible sources of errors:
   [DependencyWalker](http://www.dependencywalker.com/) will show you
   which ones.
   
-  Support for msvc is experimental. [installOpenBLAS.ps1](https://github.com/ICB-DCM/AMICI/blob/master/scripts/installOpenBLAS.ps1) and [compileBLAS.cmd](https://github.com/ICB-DCM/AMICI/blob/master/scripts/compileBLAS.cmd) may serve as guidance on how to install openBLAS using msvc.
+  Support for msvc is experimental.
+  [installOpenBLAS.ps1](https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1)
+  and [compileBLAS.cmd](https://github.com/AMICI-dev/AMICI/blob/master/scripts/compileBLAS.cmd)
+  may serve as guidance on how to install openBLAS using msvc.
 
 ### Custom installation
 
@@ -390,7 +393,7 @@ AMICI package installation as well as during model compilation.
 The MATLAB interface requires the Mathworks Symbolic Toolbox for model
 generation via `amiwrap(...)`, but not for execution of precompiled
 models. Currently MATLAB R2018a or newer is not supported (see 
-[https://github.com/ICB-DCM/AMICI/issues/307](https://github.com/ICB-DCM/AMICI/issues/307)).
+[https://github.com/AMICI-dev/AMICI/issues/307](https://github.com/AMICI-dev/AMICI/issues/307)).
 
 The Symbolic Toolbox requirement can be circumvented by performing model
 import using the Python interface. The result code can then be used from

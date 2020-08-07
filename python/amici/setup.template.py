@@ -160,7 +160,7 @@ setup(
     cmdclass=CMDCLASS,
     version='TPL_PACKAGE_VERSION',
     description='AMICI-generated module for model TPL_MODELNAME',
-    url='https://github.com/ICB-DCM/AMICI',
+    url='https://github.com/AMICI-dev/AMICI',
     author='model-author-todo',
     author_email='model-author-todo',
     # license = 'BSD',
