@@ -6,7 +6,16 @@ import mock
 
 from sphinx.transforms.post_transforms import ReferencesResolver
 
-sys.path.insert(0, os.path.abspath('..'))
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
+
+amici_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python', 'sdist'))
+sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python'))
 
 import amici
 
@@ -45,16 +54,6 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
         'python', '-m', 'pip', 'install', '--verbose', '-e',
         os.path.join(amici_dir, 'python', 'sdist')
     ])
-
-# -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
-
-sys.path.insert(0, os.path.abspath('../python/sdist'))
-sys.path.insert(0, os.path.abspath('../'))
 
 # -- Mock out some problematic modules-------------------------------------
 
