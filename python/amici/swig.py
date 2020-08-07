@@ -25,17 +25,19 @@ def find_swig() -> str:
         if swig_works(candidate):
             return candidate
 
-    raise RuntimeError("Unable to find SWIG executable with default names. "
-                       "Ensure you have SWIG installed, e.g. by "
-                       "`sudo apt install swig3.0` or `brew install swig`. "
-                       "As non-root user, you can install SWIG using "
-                       "https://github.com/ICB-DCM/AMICI/blob/master/scripts/"
-                       "downloadAndBuildSwig.sh, or by following the "
-                       "instructions at http://www.swig.org/Doc4.0/"
-                       "SWIGDocumentation.html#Preface_installation. "
-                       "If was not found despite being installed, set the SWIG"
-                       " environment variable to the full path of the correct "
-                       "executable.")
+    raise RuntimeError(
+        "Unable to find SWIG executable with default names. "
+        "Ensure you have SWIG installed, e.g. by "
+        "`sudo apt install swig` or `brew install swig`. "
+        "As non-root user, you can install SWIG using "
+        "https://github.com/AMICI-dev/AMICI/blob/master/scripts/"
+        "downloadAndBuildSwig.sh, or by following the "
+        "instructions at http://www.swig.org/Doc4.0/"
+        "SWIGDocumentation.html#Preface_installation. "
+        "If was not found despite being installed, set the SWIG"
+        " environment variable to the full path of the correct "
+        "executable."
+    )
 
 
 def swig_works(swig: str, verbose: bool = True) -> bool:
