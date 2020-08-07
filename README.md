@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/ICB-DCM/AMICI/master/documentation/gfx/banner.png" height="60" align="left">
+<img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/banner.png" height="60" align="left">
 
 ## Advanced Multilanguage Interface for CVODES and IDAS
 
@@ -73,32 +73,32 @@ are derived symbolically and C++ code is generated. This code is then
 compiled into a C++ library, a Python module, or a Matlab `.mex` file and
 is then used for model simulation.
 
-![AMICI workflow](https://raw.githubusercontent.com/ICB-DCM/AMICI/master/documentation/gfx/amici_workflow.png)
+![AMICI workflow](https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/amici_workflow.png)
 
 ## Getting started
 
-The AMICI source code is available at https://github.com/ICB-DCM/AMICI/.
+The AMICI source code is available at https://github.com/AMICI-dev/AMICI/.
 To install AMICI, first read the
-[installation instructions](http://icb-dcm.github.io/AMICI/md__i_n_s_t_a_l_l.html).
+[installation instructions](http://amici-dev.github.io/AMICI/md__i_n_s_t_a_l_l.html).
 
 To get you started with Python-AMICI, the best way might be checking out this
-[Jupyter notebook](https://github.com/ICB-DCM/AMICI/blob/master/python/examples/example_steadystate/ExampleSteadystate.ipynb).
+[Jupyter notebook](https://github.com/AMICI-dev/AMICI/blob/master/python/examples/example_steadystate/ExampleSteadystate.ipynb).
 
 To get started with Matlab-AMICI, various examples are available
-in [matlab/examples/](https://github.com/ICB-DCM/AMICI/tree/master/matlab/examples).
+in [matlab/examples/](https://github.com/AMICI-dev/AMICI/tree/master/matlab/examples).
 
 Comprehensive documentation on installation and usage of AMICI is available
 online for the [python](https://amici.readthedocs.io/en/latest/) and 
-[MATLAB/C++](http://icb-dcm.github.io/AMICI/) interfaces.
+[MATLAB/C++](http://amici-dev.github.io/AMICI/) interfaces.
 
-Any [contributions](http://icb-dcm.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g.html)
+Any [contributions](http://amici-dev.github.io/AMICI/md__c_o_n_t_r_i_b_u_t_i_n_g.html)
 to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 
 
 ### Getting help
 
 In case of questions or problems with using AMICI, feel free to post an
-[issue](https://github.com/ICB-DCM/AMICI/issues) on Github. We are trying to
+[issue](https://github.com/AMICI-dev/AMICI/issues) on Github. We are trying to
 get back to you quickly.
 
 ## Publications
@@ -122,10 +122,13 @@ and/or
   doi:[10.1093/bioinformatics/btw764](https://doi.org/10.1093/bioinformatics/btw764)
   
 When presenting work that employs AMICI, feel free to use one of the icons in 
-[documentation/gfx/](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx), which are available under a [CC0](https://github.com/ICB-DCM/AMICI/tree/master/documentation/gfx/LICENSE.md) license:
+[documentation/gfx/](https://github.com/AMICI-dev/AMICI/tree/master/documentation/gfx),
+which are available under a
+[CC0](https://github.com/AMICI-dev/AMICI/tree/master/documentation/gfx/LICENSE.md)
+license:
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/ICB-DCM/AMICI/master/documentation/gfx/logo_text.png" height="75">
+  <img src="https://raw.githubusercontent.com/AMICI-dev/AMICI/master/documentation/gfx/logo_text.png" height="75">
 </p>
 
 ## Status of SBML support in Python-AMICI
@@ -133,7 +136,7 @@ When presenting work that employs AMICI, feel free to use one of the icons in
 Python-AMICI currently passes 696 out of the 1780 (~39%) test cases from
 the semantic
 [SBML Test Suite](https://github.com/sbmlteam/sbml-test-suite/)
-([current status](https://github.com/ICB-DCM/AMICI/actions)).
+([current status](https://github.com/AMICI-dev/AMICI/actions)).
 
 In addition, we currently plan to add support for the following features
 (see corresponding issues for details and progress):

@@ -53,24 +53,16 @@ jobs:
     - name: apt
       run: |
         sudo apt-get update \
-          && sudo apt-get install -y swig3.0
-    - name: pip
+          && sudo apt-get install -y swig
+          
+    - name: sdist
       run: |
-        pip3 install --upgrade --user wheel \
-          && pip3 install --upgrade --user setuptools
-
-    - name: Create AMICI sdist
-      run: |
-        cd python/sdist && python3 setup.py sdist
-        
-    - name: Check build
-      run: |
-        ls ./build/python
+        scripts/buildSdist.sh
 
     - name: Publish a Python distribution to PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
         user: __token__
         password: ${{ secrets.pypi_password }}
-        packages_dir: ./build/python
+        packages_dir: python/sdist/dist
         

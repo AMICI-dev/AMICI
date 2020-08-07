@@ -7,15 +7,12 @@ Welcome to AMICI's documentation!
 =================================
 
 
-.. image:: https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master
-   :target: https://travis-ci.com/ICB-DCM/AMICI
+.. image:: https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master
+   :target: https://travis-ci.com/AMICI-dev/AMICI
    :alt: Build status
-.. image:: https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/ICB-DCM/AMICI
+.. image:: https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/AMICI-dev/AMICI
    :alt: Code coverage
-.. image:: https://api.codacy.com/project/badge/Grade/945235766e344a7fa36278feab915ff6
-   :target: https://www.codacy.com/app/FFroehlich/AMICI
-   :alt: Codacy
 .. image:: https://readthedocs.org/projects/amici/badge/?version=latest
    :target: https://amici.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation status
@@ -24,7 +21,7 @@ Welcome to AMICI's documentation!
    :alt: DOI
 
 | Version: |version|
-| Source code: https://github.com/icb-dcm/amici
+| Source code: https://github.com/AMICI-dev/amici
 
 
 .. toctree::

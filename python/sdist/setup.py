@@ -187,7 +187,7 @@ def main():
         description='Advanced multi-language Interface to CVODES and IDAS',
         long_description=long_description,
         long_description_content_type="text/markdown",
-        url='https://github.com/ICB-DCM/AMICI',
+        url='https://github.com/AMICI-dev/AMICI',
         author='Fabian Froehlich, Jan Hasenauer, Daniel Weindl and '
                'Paul Stapor',
         author_email='fabian_froehlich@hms.harvard.edu',

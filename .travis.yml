@@ -29,7 +29,7 @@ matrix:
         - choco install python --version 3.7.5
         - choco install -y swig --version=4.0.1
         - python -m pip install --upgrade pip
-        - git clone -c core.symlinks=true https://github.com/ICB-DCM/AMICI.git && cd AMICI
+        - git clone -c core.symlinks=true https://github.com/AMICI-dev/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
         # run BLAS installation script
         - powershell -File 'C:\Users\travis\build\AMICI\scripts\installOpenBLAS.ps1'
