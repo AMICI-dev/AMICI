@@ -13,7 +13,7 @@ from sphinx.transforms.post_transforms import ReferencesResolver
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-amici_dir = os.path.dirname(os.path.realpath(__file__))
+amici_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python', 'sdist'))
 sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python'))
 
