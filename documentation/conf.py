@@ -14,8 +14,8 @@ from sphinx.transforms.post_transforms import ReferencesResolver
 #
 
 amici_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python', 'sdist'))
-sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python'))
+sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python', 'sdist')))
+sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python')))
 
 import amici
 
