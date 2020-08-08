@@ -439,7 +439,6 @@ def skip_member(app, what, name, obj, skip, options):
 
     return None
 
-version
 def setup(app):
     app.connect('autodoc-process-docstring', process_docstring)
     app.connect('autodoc-process-signature', process_signature)
