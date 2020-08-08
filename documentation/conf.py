@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+#
+# Configuration file for the Sphinx documentation builder.
+#
+# This file does only contain a selection of the most common options. For a
+# full list see the documentation:
+# http://www.sphinx-doc.org/en/stable/config
+
 import os
 import sys
 import re
@@ -14,26 +22,6 @@ from sphinx.transforms.post_transforms import ReferencesResolver
 #
 
 amici_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python', 'sdist')))
-sys.path.insert(0, os.path.abspath(os.path.join(amici_dir, 'python')))
-
-import amici
-
-# The short X.Y version
-version = amici.__version__
-# The full version, including alpha/beta/rc tags
-release = version
-
-del amici
-
-
-# -*- coding: utf-8 -*-
-#
-# Configuration file for the Sphinx documentation builder.
-#
-# This file does only contain a selection of the most common options. For a
-# full list see the documentation:
-# http://www.sphinx-doc.org/en/stable/config
 
 # -- RTD custom build --------------------------------------------------------
 
@@ -55,19 +43,25 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
         os.path.join(amici_dir, 'python', 'sdist')
     ])
 
+# -- Project information -----------------------------------------------------
+import amici
+
+# The short X.Y version
+version = amici.__version__
+# The full version, including alpha/beta/rc tags
+release = version
+
+project = 'AMICI'
+copyright = '2020, The AMICI developers'
+author = 'The AMICI developers'
+title = 'AMICI Documentation'
+
 # -- Mock out some problematic modules-------------------------------------
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
 autodoc_mock_imports = ['_amici', 'amici._amici']
 for mod_name in autodoc_mock_imports:
     sys.modules[mod_name] = mock.MagicMock()
-
-# -- Project information -----------------------------------------------------
-
-project = 'AMICI'
-copyright = '2020, The AMICI developers'
-author = 'The AMICI developers'
-title = 'AMICI Documentation'
 
 # -- General configuration ---------------------------------------------------
 
@@ -445,7 +439,7 @@ def skip_member(app, what, name, obj, skip, options):
 
     return None
 
-
+version
 def setup(app):
     app.connect('autodoc-process-docstring', process_docstring)
     app.connect('autodoc-process-signature', process_signature)
