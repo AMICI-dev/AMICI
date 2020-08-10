@@ -30,15 +30,16 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
     # cblas
-    cblas_installer = os.path.join(amici_dir, 'ThirdParty', 'installCBLAS.sh')
-    subprocess.run(['wget', '-O', cblas_installer,
-                    'https://raw.githubusercontent.com/ICB-DCM/parPE/master/'
-                    'ThirdParty/installCBLAS.sh'], check=True)
-    subprocess.run(['bash', cblas_installer], check=True)
-    cblas_root = os.path.join(amici_dir, 'ThirdParty', 'CBLAS')
+    cblas_root = os.path.join(amici_dir, 'ThirdParty', 'libatlas-base-dev',
+                              'usr')
     cblas_inc_dir = os.path.join(cblas_root, "include")
-    cblas_lib = os.path.join(cblas_root, "lib", "cblas_LINUX.a")
-
+    cblas_lib = os.path.join(cblas_root, "lib", "libcblas.a")
+    cmd = (f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
+           "&& apt download libatlas-base-dev && mkdir libatlas-base-dev "
+           "&& ar x --output libatlas-base-dev libatlas-base-dev* "
+           "&& cd libatlas-base-dev && tar -xJf data.tar.xz "
+           f"&& ln -s {cblas_inc_dir}/cblas-atlas.h {cblas_inc_dir}/cblas.h")
+    subprocess.run(cmd, shell=True, check=True)
     os.environ['BLAS_CFLAGS'] = f'-I{cblas_inc_dir}'
     os.environ['BLAS_LIBS'] = f'-l{cblas_lib}'
 
