@@ -61,6 +61,9 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
         os.path.join(amici_dir, 'python', 'sdist')
     ], check=True)
 
+    from importlib import invalidate_caches
+    invalidate_caches()
+
 # -- Project information -----------------------------------------------------
 import amici
 
