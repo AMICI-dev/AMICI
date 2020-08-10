@@ -44,7 +44,7 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
            )
     subprocess.run(cmd, shell=True, check=True)
     os.environ['BLAS_CFLAGS'] = f'-I{cblas_inc_dir}'
-    os.environ['BLAS_LIBS'] = f'-L{cblas_lib_dir} -lcblas'
+    os.environ['BLAS_LIBS'] = f'-L{cblas_lib_dir}/atlas -L{cblas_lib_dir} -lcblas'
 
     # build swig4.0
     subprocess.run(os.path.join(amici_dir, 'scripts',
