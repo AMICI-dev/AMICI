@@ -29,7 +29,7 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-    # cblas
+    # cblas -- manually install ubuntu deb package
     cblas_root = os.path.join(amici_dir, 'ThirdParty', 'libatlas-base-dev',
                               'usr')
     cblas_inc_dir = os.path.join(cblas_root, "include", "x86_64-linux-gnu")
@@ -45,8 +45,6 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     subprocess.run(cmd, shell=True, check=True)
     os.environ['BLAS_CFLAGS'] = f'-I{cblas_inc_dir}'
     os.environ['BLAS_LIBS'] = f'-L{cblas_lib_dir}/atlas -L{cblas_lib_dir} -lcblas -latlas -lblas -lm'
-    llp = os.environ["LD_LIBRARY_PATH"] + ':' if "LD_LIBRARY_PATH" in os.environ else ''
-    os.environ['LD_LIBRARY_PATH'] = f'{llp}{cblas_lib_dir}/atlas:{cblas_lib_dir}'
 
     # build swig4.0
     subprocess.run(os.path.join(amici_dir, 'scripts',
@@ -62,8 +60,6 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
         'python', '-m', 'pip', 'install', '--verbose', '-e',
         os.path.join(amici_dir, 'python', 'sdist')
     ], check=True)
-
-    subprocess.run(f"ls -Rl {os.path.join(amici_dir, 'python', 'sdist')}; ldd {os.path.join(amici_dir, 'python', 'sdist', 'amici', '_amici.cpython-37m-x86_64-linux-gnu.so')}", shell=True)
 
     from importlib import invalidate_caches
     invalidate_caches()
@@ -86,7 +82,7 @@ title = 'AMICI Documentation'
 # -- Mock out some problematic modules-------------------------------------
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
-autodoc_mock_imports = ['_amici', 'amici._amici']
+autodoc_mock_imports = [] # '_amici', 'amici._amici']
 for mod_name in autodoc_mock_imports:
     sys.modules[mod_name] = mock.MagicMock()
 
