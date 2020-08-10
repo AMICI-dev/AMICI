@@ -350,7 +350,6 @@ def process_docstring(app, what, name, obj, options, lines):
             r':func:`amici\.amici\.\1`',
             lines[i]
         )
-        print(lines[i])
 
 
 def fix_typehints(sig: str) -> str:
@@ -381,6 +380,7 @@ def fix_typehints(sig: str) -> str:
 
     # fix garbled output
     sig = sig.replace(' >', '')
+    print(sig)
     return sig
 
 
