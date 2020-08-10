@@ -67,6 +67,13 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     # invalidate_caches()
     sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
 
+# -- Mock out some problematic modules-------------------------------------
+
+# Note that for sub-modules, all parent modules must be listed explicitly.
+autodoc_mock_imports = ['_amici', 'amici._amici']
+for mod_name in autodoc_mock_imports:
+    sys.modules[mod_name] = mock.MagicMock()
+
 # -- Project information -----------------------------------------------------
 import amici
 
@@ -80,12 +87,6 @@ copyright = '2020, The AMICI developers'
 author = 'The AMICI developers'
 title = 'AMICI Documentation'
 
-# -- Mock out some problematic modules-------------------------------------
-
-# Note that for sub-modules, all parent modules must be listed explicitly.
-autodoc_mock_imports = ['_amici', 'amici._amici']
-for mod_name in autodoc_mock_imports:
-    sys.modules[mod_name] = mock.MagicMock()
 
 # -- General configuration ---------------------------------------------------
 
