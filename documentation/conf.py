@@ -307,7 +307,7 @@ def process_docstring(app, what, name, obj, options, lines):
 
     if name == 'amici.amici.ParameterScalingVector':
         lines.append(
-            'Swig-Generated class, which ,in contrast to other Vector '
+            'Swig-Generated class, which, in contrast to other Vector '
             'classes, does not allow for simple interoperability with common '
             'python types, but must be created using '
             ':func:`amici.amici.parameterScalingFromIntVector`'
@@ -350,6 +350,7 @@ def process_docstring(app, what, name, obj, options, lines):
             r':func:`amici\.amici\.\1`',
             lines[i]
         )
+        print(lines[i])
 
 
 def fix_typehints(sig: str) -> str:
@@ -449,15 +450,15 @@ def skip_member(app, what, name, obj, skip, options):
     if name.startswith('_') and name != '__init__':
         return True
 
-    # igore various functions for std::vector<> types
+    # ignore various functions for std::vector<> types
     if re.match(r'^<function [\w]+Vector\.', str(obj)):
         return True
 
-    # igore various functions for smart pointer types
+    # ignore various functions for smart pointer types
     if re.match(r'^<function [\w]+Ptr\.', str(obj)):
         return True
 
-    # igore various functions for StringDoubleMap
+    # ignore various functions for StringDoubleMap
     if str(obj).startswith('<function StringDoubleMap'):
         return True
 
