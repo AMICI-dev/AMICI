@@ -465,11 +465,12 @@ def skip_member(app, what, name, obj, skip, options):
 
     return None
 
-def setup(app):
-    app.connect('autodoc-process-docstring', process_docstring)
-    app.connect('autodoc-process-signature', process_signature)
-    app.connect('missing-reference', process_missing_ref)
-    app.connect('autodoc-skip-member', skip_member)
+
+def setup(app: 'sphinx.application.Sphinx'):
+    app.connect('autodoc-process-docstring', process_docstring, priority=0)
+    app.connect('autodoc-process-signature', process_signature, priority=0)
+    app.connect('missing-reference', process_missing_ref, priority=0)
+    app.connect('autodoc-skip-member', skip_member, priority=0)
     app.config.intersphinx_mapping = intersphinx_mapping
     app.config.autosummary_generate = True
     app.config.autodoc_mock_imports = autodoc_mock_imports
