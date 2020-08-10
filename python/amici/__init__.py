@@ -133,7 +133,10 @@ if not _imported_from_setup():
             from .amici import *
         else:
             from . import amici_without_hdf5 as amici
-            from .amici_without_hdf5 import *
+
+            if not 'READTHEDOCS' in os.environ \
+                    or not os.environ['READTHEDOCS']:
+                from .amici_without_hdf5 import *
 
         # These module require the swig interface and other dependencies
         from .numpy import ReturnDataView, ExpDataView
