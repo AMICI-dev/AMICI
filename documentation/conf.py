@@ -37,7 +37,7 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     cmd = (f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
            "&& apt download libatlas-base-dev && mkdir libatlas-base-dev "
            "&& cd libatlas-base-dev "
-           "&& ar x ../libatlas-base-dev_3.10.3-8ubuntu7_amd64.deb "
+           "&& ar x ../libatlas-base-dev_3.10.3-5_amd64.deb "
            "&& tar -xJf data.tar.xz "
            f"&& ln -s {cblas_inc_dir}/cblas-atlas.h {cblas_inc_dir}/cblas.h")
     subprocess.run(cmd, shell=True, check=True)
