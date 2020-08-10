@@ -28,8 +28,20 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     # cblas
-    subprocess.run(['apt-get', 'install', '-y', 'libatlas-base-dev'], check=True)
+    cblas_installer = os.path.join(amici_dir, 'ThirdParty', 'installCBLAS.sh')
+    subprocess.run(['wget', '-o', cblas_installer,
+                    'https://raw.githubusercontent.com/ICB-DCM/parPE/master/'
+                    'ThirdParty/installCBLAS.sh'], check=True)
+    subprocess.run(['bash', cblas_installer], check=True)
+    cblas_root = os.path.join(amici_dir, 'ThirdParty', 'CBLAS')
+    cblas_inc_dir = os.path.join(cblas_root, "include")
+    cblas_lib = os.path.join(cblas_root, "lib", "cblas_LINUX.a")
+
+    os.environ['BLAS_CFLAGS'] = f'-I{cblas_inc_dir}'
+    os.environ['BLAS_LIBS'] = f'-l{cblas_lib}'
+
     # build swig4.0
     subprocess.run(os.path.join(amici_dir, 'scripts',
                                 'downloadAndBuildSwig.sh'), check=True)
