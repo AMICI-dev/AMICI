@@ -32,14 +32,15 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     # cblas
     cblas_root = os.path.join(amici_dir, 'ThirdParty', 'libatlas-base-dev',
                               'usr')
-    cblas_inc_dir = os.path.join(cblas_root, "include")
+    cblas_inc_dir = os.path.join(cblas_root, "include", "x86_64-linux-gnu")
     cblas_lib = os.path.join(cblas_root, "lib", "libcblas.a")
     cmd = (f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
            "&& apt download libatlas-base-dev && mkdir libatlas-base-dev "
            "&& cd libatlas-base-dev "
            "&& ar x ../libatlas-base-dev_3.10.3-5_amd64.deb "
            "&& tar -xJf data.tar.xz "
-           f"&& ln -s {cblas_inc_dir}/cblas-atlas.h {cblas_inc_dir}/cblas.h")
+           f"&& ln -s {cblas_inc_dir}/cblas-atlas.h {cblas_inc_dir}/cblas.h "
+           )
     subprocess.run(cmd, shell=True, check=True)
     os.environ['BLAS_CFLAGS'] = f'-I{cblas_inc_dir}'
     os.environ['BLAS_LIBS'] = f'-l{cblas_lib}'
