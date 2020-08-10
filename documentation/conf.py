@@ -41,6 +41,7 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
            "&& ar x ../libatlas-base-dev_3.10.3-5_amd64.deb "
            "&& tar -xJf data.tar.xz "
            f"&& ln -s {cblas_inc_dir}/cblas-atlas.h {cblas_inc_dir}/cblas.h "
+           "&& ls -Rl"
            )
     subprocess.run(cmd, shell=True, check=True)
     os.environ['BLAS_CFLAGS'] = f'-I{cblas_inc_dir}'
