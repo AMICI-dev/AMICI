@@ -31,7 +31,7 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
 
     # cblas
     cblas_installer = os.path.join(amici_dir, 'ThirdParty', 'installCBLAS.sh')
-    subprocess.run(['wget', '-o', cblas_installer,
+    subprocess.run(['wget', '-O', cblas_installer,
                     'https://raw.githubusercontent.com/ICB-DCM/parPE/master/'
                     'ThirdParty/installCBLAS.sh'], check=True)
     subprocess.run(['bash', cblas_installer], check=True)
