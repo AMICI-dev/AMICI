@@ -279,8 +279,8 @@ def process_docstring(app, what, name, obj, options, lines):
     print(name)
     print(lines)
     # only apply in the amici.amici module
-    if len(name.split('.')) < 2 or name.split('.')[1] not in ['amici', 'amici_without_hdf5']:
-        return
+    #if len(name.split('.')) < 2 or name.split('.')[1] not in ['amici', 'amici_without_hdf5']:
+    #    return
 
     # add custom doc to swig generated classes
     if len(name.split('.')) == 3 and name.split('.')[2] in \
