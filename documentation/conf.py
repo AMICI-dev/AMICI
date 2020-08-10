@@ -29,7 +29,7 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # cblas
-    subprocess.run(['apt', 'install', 'libatlas-base-dev'], check=True)
+    subprocess.run(['sudo', 'apt', 'install', 'libatlas-base-dev'], check=True)
     # build swig4.0
     subprocess.run(os.path.join(amici_dir, 'scripts',
                                 'downloadAndBuildSwig.sh'), check=True)
