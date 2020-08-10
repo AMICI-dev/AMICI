@@ -323,7 +323,7 @@ def process_docstring(app, what, name, obj, options, lines):
         )
         return
 
-    # add linebreaks before argument/return defintions
+    # add linebreaks before argument/return definitions
     lines_clean = []
 
     while len(lines):
@@ -391,8 +391,8 @@ def process_signature(app, what: str, name: str, obj, options, signature,
         return
 
     # only apply in the amici.amici module
-    if name.split('.')[1] != 'amici':
-        return
+    #if name.split('.')[1] != 'amici':
+    #    return
 
     signature = fix_typehints(signature)
     if hasattr(obj, '__annotations__'):
