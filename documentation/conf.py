@@ -28,9 +28,11 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # cblas
+    subprocess.run(['apt', 'install', 'libatlas-base-dev'], check=True)
     # build swig4.0
     subprocess.run(os.path.join(amici_dir, 'scripts',
-                                'downloadAndBuildSwig.sh'))
+                                'downloadAndBuildSwig.sh'), check=True)
 
     # add swig to path
     swig_dir = os.path.join(amici_dir, 'ThirdParty', 'swig-4.0.1', 'install',
@@ -41,7 +43,7 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     subprocess.run([
         'python', '-m', 'pip', 'install', '--verbose', '-e',
         os.path.join(amici_dir, 'python', 'sdist')
-    ])
+    ], check=True)
 
 # -- Project information -----------------------------------------------------
 import amici
