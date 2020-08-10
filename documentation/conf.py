@@ -44,7 +44,7 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
            )
     subprocess.run(cmd, shell=True, check=True)
     os.environ['BLAS_CFLAGS'] = f'-I{cblas_inc_dir}'
-    os.environ['BLAS_LIBS'] = f'-L{cblas_lib_dir}/atlas -L{cblas_lib_dir} -lcblas'
+    os.environ['BLAS_LIBS'] = f'-Wl,-Bdynamic -L{cblas_lib_dir}/atlas -L{cblas_lib_dir} -lcblas'
     llp = os.environ["LD_LIBRARY_PATH"] + ':' if "LD_LIBRARY_PATH" in os.environ else ''
     os.environ['LD_LIBRARY_PATH'] = f'{llp}{cblas_lib_dir}/atlas:{cblas_lib_dir}'
 
