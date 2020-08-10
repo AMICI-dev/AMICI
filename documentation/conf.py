@@ -61,6 +61,8 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
         os.path.join(amici_dir, 'python', 'sdist')
     ], check=True)
 
+    subprocess.run(f"ls -Rl {os.path.join(amici_dir, 'python', 'sdist')}; ldd {os.path.join(amici_dir, 'python', 'sdist', 'amici', '_amici.cpython-37m-x86_64-linux-gnu.so')}", shell=True)
+
     # from importlib import invalidate_caches
     # invalidate_caches()
     sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
