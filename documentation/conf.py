@@ -353,7 +353,7 @@ def process_docstring(app, what, name, obj, options, lines):
 def fix_typehints(sig: str) -> str:
     # cleanup types
     if not isinstance(sig, str):
-        return
+        return sig
 
     for old, new in typemaps.items():
         sig = sig.replace(old, new)

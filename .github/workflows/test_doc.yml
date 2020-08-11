@@ -58,6 +58,10 @@ jobs:
               libhdf5-serial-dev \
               python3-venv \
               swig \
+              
+      - name: pip
+        run: |
+          pip3 install setuptools
       
       - name: sphinx
         run: |
