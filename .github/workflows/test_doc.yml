@@ -29,6 +29,10 @@ jobs:
           ragel \
           graphviz \
           texlive-latex-extra
+          
+    - name: remove swig 3.0
+      run: |
+        sudo apt-get --purge remove swig
 
     - name: Build doxygen
       run: |
@@ -57,6 +61,10 @@ jobs:
               libboost-serialization-dev \
               libhdf5-serial-dev \
               python3-venv \
+              
+      - name: remove swig 3.0
+        run: |
+          sudo apt-get --purge remove swig
 
       - name: Build swig
         run: |
