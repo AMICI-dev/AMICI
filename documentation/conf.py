@@ -56,14 +56,15 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
     # in source install, this fails to compile the c extensions but we don't
     # care since we replace it by a mock import later on
-    subprocess.run([
-        'python', '-m', 'pip', 'install', '--verbose', '-e',
-        os.path.join(amici_dir, 'python', 'sdist')
-    ], check=True)
 
-    from importlib import invalidate_caches
-    invalidate_caches()
-    sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
+subprocess.run([
+    'python', '-m', 'pip', 'install', '--verbose', '-e',
+    os.path.join(amici_dir, 'python', 'sdist')
+], check=True)
+
+from importlib import invalidate_caches
+invalidate_caches()
+sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
 
 
 # -- Project information -----------------------------------------------------
