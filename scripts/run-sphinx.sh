@@ -5,7 +5,8 @@ SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
 
 cd ${AMICI_PATH}/documentation
-source ../build/venv/bin/activate
+python3 -m venv ${AMICI_PATH}/doc-venv --clear
+source ${AMICI_PATH}/doc-ven/bin/activate
 pip3 install -r ${AMICI_PATH}/documentation/rtd_requirements.txt
 
 sphinx-build -T -E -W -D language=en -b html . _build
