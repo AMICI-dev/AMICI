@@ -57,7 +57,10 @@ jobs:
               libboost-serialization-dev \
               libhdf5-serial-dev \
               python3-venv \
-              swig \
+
+      - name: Build swig
+        run: |
+          sudo scripts/downloadAndBuildSwig.sh
               
       - name: pip
         run: |
