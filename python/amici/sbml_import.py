@@ -1563,7 +1563,8 @@ def get_rule_vars(rules: List[sbml.Rule],
         Tuple of free symbolic variables in the formulas all provided rules
     """
     return sp.Matrix(
-        [sp.sympify(sbml.formulaToL3String(rule.getMath()),
+        [sp.sympify(_parse_logical_operators(
+                    sbml.formulaToL3String(rule.getMath())),
                     locals=local_symbols)
          for rule in rules if rule.getFormula() != '']
     ).free_symbols
