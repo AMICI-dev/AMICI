@@ -23,6 +23,9 @@ from sympy.logic.boolalg import BooleanTrue as spTrue
 from sympy.logic.boolalg import BooleanFalse as spFalse
 from sympy.printing.mathml import MathMLContentPrinter
 
+# the following import can be removed if sympy PR #19958 is merged
+from mpmath.libmp import repr_dps, to_str as mlib_to_str
+
 
 class SBMLException(Exception):
     pass
@@ -1891,6 +1894,12 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         ci = self.dom.createElement(self.mathml_tag(sym))
         ci.appendChild(self.dom.createTextNode(sym.name))
         return ci
+    # _print_Float can be removed if sympy PR #19958 is merged 
+    def _print_Float(self, expr):
+        x = self.dom.createElement(self.mathml_tag(expr))
+        repr_expr = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
+        x.appendChild(self.dom.createTextNode(repr_expr))
+        return x
     def doprint(self, expr):
         mathml = super().doprint(expr)
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">' + mathml + '</math>'
