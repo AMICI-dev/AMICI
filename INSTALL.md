@@ -206,40 +206,59 @@ Possible sources of errors:
 
 #### Visual Studio
 We assume that Visual Studio (not to be confused with Visual Studio Code) is already installed. Using Visual Studio Installer, the following components need to be included:
+
 * Microsoft Visual C++ (MSVC). This is part of multiple packages, including Desktop Development with C++.
 * Windows Universal C Runtime. This is an individual component and installs some DLLs that we need.
 
 #### openBLAS
 To install open BLAS, download the following scripts from AMICI:
+
 https://github.com/ICB-DCM/AMICI/blob/master/scripts/installOpenBLAS.ps1
 https://github.com/ICB-DCM/AMICI/blob/master/scripts/compileBLAS.cmd
+
 The first script needs to be called in Powershell, and it needs to call compileBLAS.cmd, so you will need to modify line 11:
-`C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd`
+
+    `C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd`
+
 so that it matches your directory structure.
-This will download openBLAS in compile it, creating
-`C:\BLAS\lib\openblas.lib`
-`C:\BLAS\bin\openblas.dll`
+This will download openBLAS and compile it, creating
+
+    `C:\BLAS\lib\openblas.lib`
+    `C:\BLAS\bin\openblas.dll`
+
 You will also need to define two environment variables:
-`BLAS_LIBS="/LIBPATH:C:\BLAS\lib openblas.lib"`
-`BLAS_CFLAGS="/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10"`
+
+    `BLAS_LIBS="/LIBPATH:C:\BLAS\lib openblas.lib"`
+    `BLAS_CFLAGS="/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10"`
+    
 One way to do that is to run a PowerShell script with the following commands:
-`[System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::User)`
-`[System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::Process)`
-`[System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::User)`
-`[System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Process)`
+
+    `[System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::User)`
+    `[System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::Process)`
+    `[System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::User)`
+    `[System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Process)`
 
 #### PATH
 Now we need to make sure that all required DLLs are within the scope of the PATH variable. In particular, the following directories need to be included in PATH:
-`C:\BLAS\bin`
-`C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64`
+
+    `C:\BLAS\bin`
+    `C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64`
+
 The first one is needed for openblas.dll and the second is needed for the Windows Universal C Runtime.
 If any DLLs are missing in the PATH variable, Python will return the following error:
-`ImportError: DLL load failed: The specified module could not be found.`
+
+    `ImportError: DLL load failed: The specified module could not be found.`
+
 This can be tested using the "where" command. For example
-`where openblas.dll`
+
+    `where openblas.dll`
+
 should return
-`C:\BLAS\bin\openblas.dll`
+
+    `C:\BLAS\bin\openblas.dll`
+
 Almost all of the DLLs are standard Windows DLLs and should be included in either Windows or Visual Studio. But, in case it is necessary to test this, here is a list of some DLLs required by AMICI (when compiled with MSVC):
+
 * `openblas.dll`
 * `python37.dll`
 * `MSVCP140.dll`
