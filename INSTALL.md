@@ -275,7 +275,7 @@ Almost all of the DLLs are standard Windows DLLs and should be included in eithe
 * `api-ms-win-crt-time-l1-1-0.dll`
 * `api-ms-win-crt-math-l1-1-0.dll`
 
-`MSVCP140.dll`, `VCRUNTIME.dll`, and `VCRUNTIME_1.dll` are needed by MSVC (see Visual Studio above). `KERNEL32.dll` is part of Windows and in `C:\Windows\System32`. The `api-ms-win-crt-XXX-l1-1-0-dll` are needed by `openblas.dll` and are part of the Windows Universal C Runtime (see Visual Studio above).
+`MSVCP140.dll`, `VCRUNTIME140.dll`, and `VCRUNTIME140_1.dll` are needed by MSVC (see Visual Studio above). `KERNEL32.dll` is part of Windows and in `C:\Windows\System32`. The `api-ms-win-crt-XXX-l1-1-0.dll` are needed by `openblas.dll` and are part of the Windows Universal C Runtime (see Visual Studio above).
 
 ### Custom installation
 
