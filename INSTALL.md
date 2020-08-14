@@ -155,11 +155,11 @@ Some general remarks:
 Then, follow these steps:
 
 * A python environment for Windows is required. We recommend
-  [Anaconda](https://www.anaconda.com/distribution/) with python >=3.6.
-* Install [mingw64](https://sourceforge.net/projects/mingw-w64/files/latest/download)
+  [Anaconda](https://www.anaconda.com/distribution/) with python >=3.7.
+* Install [MinGW-W64](https://sourceforge.net/projects/mingw-w64/files/)
   (32bit will succeed to compile, but fail during linking).
-  During installation, select Version=8.1.0, Architecture=x64_64.
-  Add the following directory to `PATH`:
+  MinGW-W64 GCC-8.1.0 for `x86_64-posix-sjlj` ([direct link](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z/download) has been shown to work on Windows 7 and 10 test systems.
+* Add the following directory to `PATH`:
     + `C:\mingw-w64\x86_64-8.1.0-posix-sjlj-rt_v6-rev0\mingw64\bin`
 * Make sure that this is the compiler that is found by the system
   (e.g. `where gcc` in a `cmd` should point to this installation).
