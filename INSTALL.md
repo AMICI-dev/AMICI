@@ -238,7 +238,7 @@ One way to do that is to run a PowerShell script with the following commands:
     [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::User)
     [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Process)
 
-The call ending in `::Process` sets the environment variable in the current process, and it is no longer in effect in the next process. The call ending in `::User` is permanent, and takes effect the next time the user logs on.
+The call ending in `Process` sets the environment variable in the current process, and it is no longer in effect in the next process. The call ending in `User` is permanent, and takes effect the next time the user logs on.
 
 #### PATH
 Now we need to make sure that all required DLLs are within the scope of the PATH variable. In particular, the following directories need to be included in PATH:
