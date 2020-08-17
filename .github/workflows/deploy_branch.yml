@@ -4,9 +4,9 @@ jobs:
   dockerhub:
     # https://github.com/marketplace/actions/publish-docker
     name: Deploy Dockerhub
-    
+
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@master
     - run: git archive -o docker/amici.tar.gz --format=tar.gz HEAD
@@ -30,10 +30,12 @@ jobs:
       with:
         fetch-depth: 20
 
-    - name: apt
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo ::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig
+
+    - name: Build swig4
       run: |
-        sudo apt-get update \
-          && sudo apt-get install -y swig
+        sudo scripts/downloadAndBuildSwig.sh
 
     - name: Create AMICI sdist
       run: |
