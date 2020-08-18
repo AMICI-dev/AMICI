@@ -33,10 +33,10 @@ constrained optimization problems.
 
 <a href="https://badge.fury.io/py/amici" alt="PyPI version">
   <img src="https://badge.fury.io/py/amici.svg"></a>
-<a href="https://travis-ci.com/ICB-DCM/AMICI" alt="Build Status">
-  <img src="https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master"></a>
-<a href="https://codecov.io/gh/ICB-DCM/AMICI" alt="CodeCov">
-  <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
+<a href="https://travis-ci.com/AMICI-dev/AMICI" alt="Build Status">
+  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master"></a>
+<a href="https://codecov.io/gh/AMICI-dev/AMICI" alt="CodeCov">
+  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg"></a>
 <a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master" alt="SonarCloud">
   <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index"></a>
 <a href="https://zenodo.org/badge/latestdoi/43677177" alt="Zenodo">
