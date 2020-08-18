@@ -19,9 +19,6 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
-
     - name: apt
       run: |
         sudo apt-get update \
@@ -48,6 +45,9 @@ jobs:
       - uses: actions/checkout@master
       - run: git fetch --prune --unshallow
       
+      - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+      - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
+      
       # install amici dependencies
       - name: apt
         run: |
@@ -58,10 +58,6 @@ jobs:
               libboost-serialization-dev \
               libhdf5-serial-dev \
               python3-venv \
-              
-      - name: remove swig 3.0
-        run: |
-          sudo apt-get --purge remove swig
 
       - name: Build swig
         run: |
