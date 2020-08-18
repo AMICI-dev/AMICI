@@ -20,6 +20,7 @@ jobs:
     - run: git fetch --prune --unshallow
 
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
 
     - name: apt
       run: |
@@ -29,10 +30,6 @@ jobs:
           ragel \
           graphviz \
           texlive-latex-extra
-          
-    - name: remove swig 3.0
-      run: |
-        sudo apt-get --purge remove swig
 
     - name: Build doxygen
       run: |

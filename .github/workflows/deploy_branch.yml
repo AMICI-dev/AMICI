@@ -31,7 +31,7 @@ jobs:
         fetch-depth: 20
 
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-    - run: echo ::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig
+    - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
 
     - name: Build swig4
       run: |
