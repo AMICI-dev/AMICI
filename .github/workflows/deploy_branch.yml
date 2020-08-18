@@ -1,5 +1,5 @@
 name: Deploy Branch
-on: [push]
+on: [push, pull_request]
 jobs:
   dockerhub:
     # https://github.com/marketplace/actions/publish-docker
