@@ -1,5 +1,10 @@
 name: C++/Python Tests
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+      - develop
 
 jobs:
   build:
