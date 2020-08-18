@@ -138,7 +138,7 @@ on. This can be done by inserting the following code before calling
 (For further discussion see https://github.com/AMICI-dev/AMICI/issues/357)
 
 
-### Windows
+### Windows using GCC (mingw)
 
 To install AMICI on Windows using python, you can proceed as follows:
 
@@ -201,6 +201,81 @@ Possible sources of errors:
   [installOpenBLAS.ps1](https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1)
   and [compileBLAS.cmd](https://github.com/AMICI-dev/AMICI/blob/master/scripts/compileBLAS.cmd)
   may serve as guidance on how to install openBLAS using msvc.
+
+### Windows using MSVC (Visual Studio)
+
+#### Visual Studio
+We assume that Visual Studio (not to be confused with Visual Studio Code) is already installed. Using Visual Studio Installer, the following components need to be included:
+
+* Microsoft Visual C++ (MSVC). This is part of multiple packages, including Desktop Development with C++.
+* Windows Universal C Runtime. This is an individual component and installs some DLLs that we need.
+
+#### openBLAS
+To install open BLAS, download the following scripts from AMICI:
+
+https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1
+https://github.com/AMICI-dev/AMICI/blob/master/scripts/compileBLAS.cmd
+
+The first script needs to be called in Powershell, and it needs to call `compileBLAS.cmd`, so you will need to modify line 11:
+
+    C:\Users\travis\build\AMICI\scripts\compileBLAS.cmd
+
+so that it matches your directory structure.
+This will download openBLAS and compile it, creating
+
+    C:\BLAS\lib\openblas.lib
+    C:\BLAS\bin\openblas.dll
+
+You will also need to define two environment variables:
+
+    BLAS_LIBS="/LIBPATH:C:\BLAS\lib openblas.lib"
+    BLAS_CFLAGS="/IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10"
+    
+One way to do that is to run a PowerShell script with the following commands:
+
+    [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::User)
+    [System.Environment]::SetEnvironmentVariable("BLAS_LIBS", "/LIBPATH:C:\BLAS\lib openblas.lib", [System.EnvironmentVariableTarget]::Process)
+    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::User)
+    [System.Environment]::SetEnvironmentVariable("BLAS_CFLAGS", "-IC:\BLAS\OpenBLAS-v0.3.10\OpenBLAS-0.3.10", [System.EnvironmentVariableTarget]::Process)
+
+The call ending in `Process` sets the environment variable in the current process, and it is no longer in effect in the next process. The call ending in `User` is permanent, and takes effect the next time the user logs on.
+
+#### PATH
+Now we need to make sure that all required DLLs are within the scope of the PATH variable. In particular, the following directories need to be included in PATH:
+
+    C:\BLAS\bin
+    C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x64
+
+The first one is needed for `openblas.dll` and the second is needed for the Windows Universal C Runtime.
+If any DLLs are missing in the PATH variable, Python will return the following error:
+
+    ImportError: DLL load failed: The specified module could not be found.
+
+This can be tested using the "where" command. For example
+
+    where openblas.dll
+
+should return
+
+    C:\BLAS\bin\openblas.dll
+
+Almost all of the DLLs are standard Windows DLLs and should be included in either Windows or Visual Studio. But, in case it is necessary to test this, here is a list of some DLLs required by AMICI (when compiled with MSVC):
+
+* `openblas.dll`
+* `python37.dll`
+* `MSVCP140.dll`
+* `KERNEL32.dll`
+* `VCRUNTIME140_1.dll`
+* `VCRUNTIME140.dll`
+* `api-ms-win-crt-convert-l1-1-0.dll`
+* `api-ms-win-crt-heap-l1-1-0.dll`
+* `api-ms-win-crt-stdio-l1-1-0.dll`
+* `api-ms-win-crt-string-l1-1-0.dll`
+* `api-ms-win-crt-runtime-l1-1-0.dll`
+* `api-ms-win-crt-time-l1-1-0.dll`
+* `api-ms-win-crt-math-l1-1-0.dll`
+
+`MSVCP140.dll`, `VCRUNTIME140.dll`, and `VCRUNTIME140_1.dll` are needed by MSVC (see Visual Studio above). `KERNEL32.dll` is part of Windows and in `C:\Windows\System32`. The `api-ms-win-crt-XXX-l1-1-0.dll` are needed by `openblas.dll` and are part of the Windows Universal C Runtime (see Visual Studio above).
 
 ### Custom installation
 
