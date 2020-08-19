@@ -103,8 +103,6 @@ def main():
             [f'-l{lib}' for lib in
              ['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']])
         define_macros.extend(h5pkgcfg['define_macros'])
-        define_macros.append(('AMICI_SWIG_WITH_HDF5', None))
-
     else:
         print("HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
         define_macros.append(('AMICI_SWIG_WITHOUT_HDF5', None))
