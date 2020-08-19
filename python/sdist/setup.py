@@ -53,7 +53,6 @@ except ImportError:
     try_install('setuptools')
     from setuptools import find_packages, setup, Extension
 
-
 # Add current directory to path, as we need some modules from the AMICI
 # package already for installation
 sys.path.insert(0, os.getcwd())
@@ -69,7 +68,6 @@ from amici.setuptools import (
     add_debug_flags_if_required,
     add_openmp_flags,
 )
-
 
 # Python version check. We need >= 3.6 due to e.g. f-strings
 if sys.version_info < (3, 6):
@@ -90,6 +88,10 @@ def main():
         f'-l{lib}' for lib in blaspkgcfg['libraries'])
     define_macros.extend(blaspkgcfg['define_macros'])
 
+    extension_sources = [
+        'amici/amici_wrap.cxx',  # swig interface
+    ]
+
     h5pkgcfg = get_hdf5_config()
 
     if h5pkgcfg['found']:
@@ -100,15 +102,12 @@ def main():
         amici_module_linker_flags.extend(
             [f'-l{lib}' for lib in
              ['hdf5_hl_cpp', 'hdf5_hl', 'hdf5_cpp', 'hdf5']])
-        extension_sources = [
-            'amici/amici_wrap.cxx',  # swig interface
-        ]
         define_macros.extend(h5pkgcfg['define_macros'])
+        define_macros.append(('AMICI_SWIG_WITH_HDF5', None))
+
     else:
         print("HDF5 library NOT found. Building AMICI WITHOUT HDF5 support.")
-        extension_sources = [
-            'amici/amici_wrap_without_hdf5.cxx',  # swig interface
-        ]
+        define_macros.append(('AMICI_SWIG_WITHOUT_HDF5', None))
 
     add_coverage_flags_if_required(
         cxx_flags,
@@ -194,9 +193,10 @@ def main():
         license='BSD',
         libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
-        py_modules=['amici/amici',  # the swig interface
-                    'amici/amici_without_hdf5',  # the swig interface
-                    ],
+        py_modules=[
+            # the swig interface
+            'amici/amici',
+        ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
         entry_points={
@@ -224,7 +224,6 @@ def main():
                       'swig/*',
                       'libs/*',
                       'amici.py',
-                      'amici_without_hdf5.py',
                       'setup.py.template',
                       ],
         },
