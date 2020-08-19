@@ -78,6 +78,10 @@ except ModuleNotFoundError:
 
     from importlib import invalidate_caches
     invalidate_caches()
+
+    sys.path.insert(0, amici_dir)
+    sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
+
     import amici
 
 # -- Project information -----------------------------------------------------
