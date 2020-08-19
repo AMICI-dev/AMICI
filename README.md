@@ -67,8 +67,9 @@ constrained optimization problems.
 ## Interfaces & workflow
 
 The AMICI workflow starts with importing a model from either
-[SBML](http://sbml.org/) (Matlab, Python) or a Matlab definition of the
-model (Matlab-only). From this input, all equations for model simulation
+[SBML](http://sbml.org/) (Matlab, Python), [PySB](http://pysb.org/) (Python),
+or a Matlab definition of the model (Matlab-only). From this input,
+all equations for model simulation
 are derived symbolically and C++ code is generated. This code is then
 compiled into a C++ library, a Python module, or a Matlab `.mex` file and
 is then used for model simulation.
@@ -100,6 +101,20 @@ to AMICI are welcome (code, bug reports, suggestions for improvements, ...).
 In case of questions or problems with using AMICI, feel free to post an
 [issue](https://github.com/AMICI-dev/AMICI/issues) on Github. We are trying to
 get back to you quickly.
+
+## Projects using AMICI
+
+There are several tools for parameter estimation offering good integration
+with AMICI:
+
+* [pyPESTO](https://github.com/ICB-DCM/pyPESTO): Python library for
+  optimization, sampling and uncertainty analysis
+* [pyABC](https://github.com/ICB-DCM/pyABC): Python library for
+  parallel and scalable ABC-SMC (Approximate Bayesian Computation - Sequential
+  Monte Carlo)
+* [parPE](https://github.com/ICB-DCM/parPE): C++ library for parameter
+  estimation of ODE models offering distributed memory parallelism with focus
+  on problems with many simulation conditions.
 
 ## Publications
 
