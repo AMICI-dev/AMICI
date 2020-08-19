@@ -1,5 +1,6 @@
 #ifndef amici_symbolic_functions_h
 #define amici_symbolic_functions_h
+#include "amici/splinefunctions.h"
 
 namespace amici {
 

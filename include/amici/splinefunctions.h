@@ -83,7 +83,7 @@ class SplineFunction {
      * on or off 
      * @param logarithmic_paraterization flag for logarithmic parametrization
      */
-    void set_node_derivative_by_FD(bool logarithmic_paraterization) {
+    void set_logarithmic_paraterization(bool logarithmic_paraterization) {
         logarithmic_paraterization_ = logarithmic_paraterization;
     }    
     
@@ -106,6 +106,10 @@ class SplineFunction {
     
 
 }; // class SplineFunction
+
+
+
+class HermiteSpline : splineFunction()
 
 } // namespace amici
 
