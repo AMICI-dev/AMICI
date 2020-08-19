@@ -1,5 +1,5 @@
 #!/bin/bash
-# generate code documentation via sphinx and upload to rtd
+# generate code documentation via sphinx for upload to rtd
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
