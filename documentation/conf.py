@@ -76,9 +76,11 @@ except ModuleNotFoundError:
         os.path.join(amici_dir, 'python', 'sdist')
     ], check=True)
 
-# -- Project information -----------------------------------------------------
-import amici
+    from importlib import invalidate_caches
+    invalidate_caches()
+    import amici
 
+# -- Project information -----------------------------------------------------
 # The short X.Y version
 version = amici.__version__
 # The full version, including alpha/beta/rc tags
