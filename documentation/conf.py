@@ -23,14 +23,12 @@ from sphinx.transforms.post_transforms import ReferencesResolver
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-amici_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # -- RTD custom build --------------------------------------------------------
 
 # only execute those commands when running from RTD
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
-    amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
     # cblas -- manually install ubuntu deb package
     cblas_root = os.path.join(amici_dir, 'ThirdParty', 'libatlas-base-dev',
                               'usr')
@@ -66,6 +64,7 @@ subprocess.run([
 
 from importlib import invalidate_caches
 invalidate_caches()
+sys.path.insert(0, amici_dir)
 sys.path.insert(0, os.path.join(amici_dir, 'python', 'sdist'))
 
 
@@ -141,8 +140,7 @@ language = None
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store',
-                    '**.ipynb_checkpoints', 'numpy.py', 'MATLAB.md', 'gfx',
-                    'generated', '_templates']
+                    '**.ipynb_checkpoints', 'numpy.py', 'MATLAB.md', 'gfx']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
