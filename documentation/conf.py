@@ -584,6 +584,16 @@ if 'READTHEDOCS' not in os.environ:
     else:
         html_context = context
 
+    # Add custom RTD extension
+    if 'extensions' in globals():
+        # Insert at the beginning because it can interfere
+        # with other extensions.
+        # See https://github.com/rtfd/readthedocs.org/pull/4054
+        extensions.insert(0, "readthedocs_ext.readthedocs")
+    else:
+        extensions = ["readthedocs_ext.readthedocs"]
+
+
     # Add External version warning banner to the external version documentation
     if 'branch' == 'external':
         extensions.insert(1, "readthedocs_ext.external_version_warning")
