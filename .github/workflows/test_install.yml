@@ -1,5 +1,10 @@
 name: Installation
-on: [push]
+on:
+  push:
+  pull_request:
+    branches:
+      - master
+      - develop
 
 jobs:
   archive:
