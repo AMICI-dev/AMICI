@@ -12,26 +12,22 @@ import re
 import subprocess
 import mock
 
-print(os.getcwd())
-
 from sphinx.transforms.post_transforms import ReferencesResolver
 
-# -- Path setup --------------------------------------------------------------
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
+def install_amici_deps_rtd():
+    """Install AMICI dependencies and set up environment for use on RTD"""
 
-amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# -- RTD custom build --------------------------------------------------------
-
-# only execute those commands when running from RTD
-if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     # cblas -- manually install ubuntu deb package
     cblas_root = os.path.join(amici_dir, 'ThirdParty', 'libatlas-base-dev',
                               'usr')
+
+    if os.path.isdir(cblas_root):
+        # If this exists, it means this has been run before. On RTD, sphinx is
+        #  being run several times and we don't want to reinstall dependencies
+        #  every time.
+        return
+
     cblas_inc_dir = os.path.join(cblas_root, "include", "x86_64-linux-gnu")
     cblas_lib_dir = os.path.join(cblas_root, "lib", "x86_64-linux-gnu")
     cmd = (f"cd '{os.path.join(amici_dir, 'ThirdParty')}' "
@@ -54,13 +50,31 @@ if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     swig_dir = os.path.join(amici_dir, 'ThirdParty', 'swig-4.0.1', 'install',
                             'bin')
     os.environ['SWIG'] = os.path.join(swig_dir, 'swig')
-    # in source install, this fails to compile the c extensions but we don't
-    # care since we replace it by a mock import later on
 
-subprocess.run([
-    'python', '-m', 'pip', 'install', '--verbose', '-e',
-    os.path.join(amici_dir, 'python', 'sdist')
-], check=True)
+
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
+
+amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# -- RTD custom build --------------------------------------------------------
+
+# only execute those commands when running from RTD
+if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
+    install_amici_deps_rtd()
+
+# Install AMICI if not already present
+try:
+    import amici
+except ModuleNotFoundError:
+    subprocess.run([
+        'python', '-m', 'pip', 'install', '--verbose', '-e',
+        os.path.join(amici_dir, 'python', 'sdist')
+    ], check=True)
 
 from importlib import invalidate_caches
 invalidate_caches()
