@@ -6,6 +6,8 @@ import mock
 
 from sphinx.transforms.post_transforms import ReferencesResolver
 
+sys.path.insert(0, os.path.abspath('..'))
+
 import amici
 
 # The short X.Y version

@@ -16,8 +16,8 @@ Welcome to AMICI's documentation!
 .. image:: https://readthedocs.org/projects/amici/badge/?version=latest
    :target: https://amici.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation status
-.. image:: https://zenodo.org/badge/43677177.svg
-   :target: https://zenodo.org/badge/latestdoi/43677177
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3976250.svg
+   :target: https://doi.org/10.5281/zenodo.3976250
    :alt: DOI
 
 | Version: |version|
