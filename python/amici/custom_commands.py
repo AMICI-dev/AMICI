@@ -199,9 +199,6 @@ class AmiciBuildExt(build_ext):
         no_clibs |= 'install' in self.distribution.command_obj \
                     and self.get_finalized_command('install').no_clibs
 
-        lib_dir = "" if self.inplace \
-            else self.get_finalized_command('build_py').build_lib
-
         if no_clibs:
             # Nothing to build
             return
