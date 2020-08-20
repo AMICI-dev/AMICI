@@ -1,6 +1,6 @@
 %module hdf5
 
-%ignore "";
+%rename("$ignore", regextarget=1, fullname=1) "amici::hdf5::.*$";
 %rename("%s") amici;
 %rename("%s") amici::hdf5;
 %rename("%s") amici::hdf5::readModelDataFromHDF5;
