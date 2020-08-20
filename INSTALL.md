@@ -158,7 +158,8 @@ Then, follow these steps:
   [Anaconda](https://www.anaconda.com/distribution/) with python >=3.7.
 * Install [MinGW-W64](https://sourceforge.net/projects/mingw-w64/files/)
   (32bit will succeed to compile, but fail during linking).
-  MinGW-W64 GCC-8.1.0 for `x86_64-posix-sjlj` ([direct link](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z/download) has been shown to work on Windows 7 and 10 test systems.
+  MinGW-W64 GCC-8.1.0 for `x86_64-posix-sjlj` 
+  ([direct link](https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/8.1.0/threads-posix/sjlj/x86_64-8.1.0-release-posix-sjlj-rt_v6-rev0.7z/download) has been shown to work on Windows 7 and 10 test systems.
 * Add the following directory to `PATH`:
     + `C:\mingw-w64\x86_64-8.1.0-posix-sjlj-rt_v6-rev0\mingw64\bin`
 * Make sure that this is the compiler that is found by the system
@@ -174,7 +175,9 @@ Then, follow these steps:
     + `C:\swigwin-3.0.12`
 * Install AMICI using:
 
-    `pip install --global-option="build_clib" --global-option="--compiler=mingw32" --global-option="build_ext" --global-option="--compiler=mingw32" amici --no-cache-dir --verbose`
+    `pip install --global-option="build_clib" --global-option="--compiler=mingw32" \
+        --global-option="build_ext" --global-option="--compiler=mingw32" \
+        amici --no-cache-dir --verbose`
 
 Possible sources of errors:
 

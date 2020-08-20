@@ -254,6 +254,13 @@ multiobs_functions = [
     if 'const int iy' in functions[function]['signature']
 ]
 
+# custom c++ function replacements
+CUSTOM_FUNCTIONS = [
+    {'sympy': 'polygamma',
+     'c++': 'boost::math::polygamma',
+     'include': '#include <boost/math/special_functions/polygamma.hpp>'}
+]
+
 # python log manager
 logger = get_logger(__name__, logging.ERROR)
 
@@ -1949,8 +1956,11 @@ def _print_with_exception(math: sp.Basic) -> str:
     :return:
         C++ code for the specified expression
     """
+    # get list of custom replacements
+    user_functions = {fun['sympy']: fun['c++'] for fun in CUSTOM_FUNCTIONS}
+
     try:
-        ret = cxxcode(math, standard='c++11')
+        ret = cxxcode(math, standard='c++11', user_functions=user_functions)
         ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
         return ret
     except TypeError as e:
@@ -2324,6 +2334,12 @@ class ODEExporter:
             '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
         ])
+
+        # check custom functions
+        for fun in CUSTOM_FUNCTIONS:
+            if 'include' in fun and any(fun['c++'] in line for line in lines):
+                lines.insert(0, fun['include'])
+
         # if not body is None:
         with open(os.path.join(
                 self.model_path, f'{self.model_name}_{function}.cpp'), 'w'

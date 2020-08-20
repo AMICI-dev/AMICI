@@ -1874,6 +1874,13 @@ def noise_distribution_to_cost_function(
             return f'log(2*sigma{str_symbol}*m{str_symbol}*log(10)) ' \
                 f'+ Abs(log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
                 f'/ sigma{str_symbol}'
+    elif noise_distribution in ['binomial', 'lin-binomial']:
+        def nllh_y_string(str_symbol):
+            return f'- loggamma({str_symbol}+1) ' \
+                f'+ loggamma(m{str_symbol}+1) ' \
+                f'+ loggamma({str_symbol}-m{str_symbol}+1) ' \
+                f'- m{str_symbol} * log(sigma{str_symbol}) ' \
+                f'- ({str_symbol} - m{str_symbol}) * log(1-sigma{str_symbol})'
     else:
         raise ValueError(
             f"Cost identifier {noise_distribution} not recognized.")

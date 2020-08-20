@@ -1,0 +1,2 @@
+observableId	observableFormula	noiseFormula	noiseDistribution
+obs_a	A	0.5	binomial
