@@ -241,55 +241,34 @@ class AmiciBuildExt(build_ext):
 
 
 class AmiciSDist(sdist):
-    """Custom sdist to run swig and add the interface files to the source
-    distribution
-
-    Could have relied on letting build_ext run swig. However, that would
-    require any user having swig installed during package installation. This
-    way we can postpone that until the  package is used to compile generated
-    models.
-    """
+    """Customized creation of source distribution"""
 
     def run(self):
-        """Setuptools entry-point
-
-        Returns:
-
-        """
+        """Setuptools entry-point"""
 
         log.debug("running AmiciSDist")
 
-        self.run_swig()
-        self.save_git_version()
+        save_git_version()
+
         sdist.run(self)
 
-    def run_swig(self):
-        """Run swig
 
-        Returns:
+def save_git_version():
+    """Create file with extended version string
 
-        """
+    This requires git. We assume that whoever creates the sdist will work
+    inside a valid git repository.
 
-        if not self.dry_run:  # --dry-run
-            # We create two SWIG interfaces, one with HDF5 support, one without
-            generate_swig_interface_files()
+    Returns:
 
-    def save_git_version(self):
-        """Create file with extended version string
-
-        This requires git. We assume that whoever creates the sdist will work
-        inside a valid git repository.
-
-        Returns:
-
-        """
-        with open(os.path.join("amici", "git_version.txt"), "w") as f:
-            try:
-                cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
-                       '--always', '--tags']
-                subprocess.run(cmd, stdout=f)
-            except Exception as e:
-                print(e)
+    """
+    with open(os.path.join("amici", "git_version.txt"), "w") as f:
+        try:
+            cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
+                   '--always', '--tags']
+            subprocess.run(cmd, stdout=f)
+        except Exception as e:
+            log.warn(e)
 
 
 def set_compiler_specific_library_options(

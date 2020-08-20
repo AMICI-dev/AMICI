@@ -18,14 +18,5 @@ using namespace amici;
 #endif
 %}
 
-%wrapper %{
-#ifndef AMICI_SWIG_WITHOUT_HDF5
-%}
-
 // Process symbols in header
 %include "amici/hdf5.h"
-
-%wrapper %{
-#endif // AMICI_SWIG_WITHOUT_HDF5
-%}
-
