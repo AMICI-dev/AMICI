@@ -26,6 +26,11 @@ jobs:
     - run: echo "::set-env name=AMICI_DIR::$(pwd)"
     - run: echo "::set-env name=BNGPATH::${AMICI_DIR}/ThirdParty/BioNetGen-2.3.2"
     
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    
     - uses: actions/checkout@v1
       with:
         fetch-depth: 20
