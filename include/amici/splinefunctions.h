@@ -5,9 +5,6 @@
 #include "amici/vector.h"
 
 namespace amici {
-
-class Model;
-
 /**
  * @brief The spline class is an AMICI-own implementation. Instances of this 
  * class are created upon solver setup and the needed splines are set up 
@@ -30,11 +27,11 @@ class SplineFunction {
     
     virtual void computeCoefficients() = 0;
     
-    virtual void computeCoefficientsParamDeriv() = 0;
+    virtual void computeCoefficientsSensi() = 0;
     
     virtual double getValue(const double t) = 0;
     
-    virtual double getParametricDerivative(const double t, const int ip) = 0;
+    virtual double getSensitivity(const double t, const int ip) = 0;
 
     /**
      * @brief Accessor to equidistant_spacing_ member
@@ -74,18 +71,18 @@ class SplineFunction {
     void set_logarithmic_paraterization(bool logarithmic_paraterization) {
         logarithmic_paraterization_ = logarithmic_paraterization;
     }
-    
+
+    std::vector<realtype> nodes;
+
+    std::vector<realtype> node_values;
+
+    std::vector<realtype> coefficients;
+
+    std::vector<std::vector<realtype>> coefficients_sensi;
+
     const int n_nodes() { return n_nodes; }
     
   private:
-    std::vector<realtype> nodes;
-    
-    std::vector<realtype> node_values;
-    
-    AmiVector coeffictions;
-    
-    AmiVectorArray coeffictions_sensi;
-    
     bool equidistant_spacing_ = false;
     
     bool logarithmic_paraterization_ = false;
@@ -109,6 +106,16 @@ class HermiteSpline : splineFunction() {
                   bool equidistant_spacing,
                   bool logarithmic_paraterization);
 
+    ~HermiteSpline(){};
+    
+    void computeCoefficients() override;
+    
+    void computeCoefficientsSensi() override;
+    
+    double getValue(const double t) override;
+    
+    double getSensitivity(const double t, const int ip) override;
+    
     /**
      * @brief Accessor to node_derivative_by_FD_ member
      * @return node_derivative_by_FD flag
