@@ -40,11 +40,6 @@ class AmiciInstall(install):
             self.no_clibs = True
         install.finalize_options(self)
 
-    def run(self):
-        if not self.no_clibs:
-            generate_swig_interface_files()
-        install.run(self)
-
 
 def compile_parallel(self, sources, output_dir=None, macros=None,
                      include_dirs=None, debug=0, extra_preargs=None,
@@ -227,6 +222,8 @@ class AmiciBuildExt(build_ext):
                 dest = os.path.join(target_dir, os.path.basename(src))
                 log.info(f"copying {src} -> {dest}")
                 copyfile(src, dest)
+
+            generate_swig_interface_files()
 
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
