@@ -89,7 +89,7 @@ class SbmlImporter:
     :ivar species_conversion_factor:
         conversion factors for every species
 
-    :ivar compartment_symbols
+    :ivar compartment_symbols:
         compartment ids
 
     :ivar compartment_volume:
@@ -1894,7 +1894,7 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         ci = self.dom.createElement(self.mathml_tag(sym))
         ci.appendChild(self.dom.createTextNode(sym.name))
         return ci
-    # _print_Float can be removed if sympy PR #19958 is merged 
+    # _print_Float can be removed if sympy PR #19958 is merged
     def _print_Float(self, expr):
         x = self.dom.createElement(self.mathml_tag(expr))
         repr_expr = mlib_to_str(expr._mpf_, repr_dps(expr._prec))
