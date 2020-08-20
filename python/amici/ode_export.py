@@ -258,7 +258,11 @@ multiobs_functions = [
 CUSTOM_FUNCTIONS = [
     {'sympy': 'polygamma',
      'c++': 'boost::math::polygamma',
-     'include': '#include <boost/math/special_functions/polygamma.hpp>'}
+     'include': '#include <boost/math/special_functions/polygamma.hpp>'},
+    {'sympy': 'Heaviside',
+     'c++': 'amici::heaviside'},
+    {'sympy': 'DiracDelta',
+     'c++': 'amici::dirac'}
 ]
 
 # python log manager

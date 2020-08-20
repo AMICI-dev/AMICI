@@ -1849,42 +1849,42 @@ def noise_distribution_to_cost_function(
     """
     if noise_distribution in ['normal', 'lin-normal']:
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2) ' \
-                f'+ 0.5*(({str_symbol} - m{str_symbol}) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+            return f'0.5*log(2*pi*{sigma}**2) ' \
+                f'+ 0.5*(({y} - {m}) / {sigma})**2'
     elif noise_distribution == 'log-normal':
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2*m{str_symbol}**2) ' \
-                f'+ 0.5*((log({str_symbol}) - log(m{str_symbol})) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+            return f'0.5*log(2*pi*{sigma}**2*{m}**2) ' \
+                f'+ 0.5*((log({y}) - log({m})) / {sigma})**2'
     elif noise_distribution == 'log10-normal':
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2' \
-                f'*m{str_symbol}**2*log(10)**2) ' \
-                f'+ 0.5*((log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+            return f'0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
+                f'+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
     elif noise_distribution in ['laplace', 'lin-laplace']:
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}) ' \
-                f'+ Abs({str_symbol} - m{str_symbol}) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+            return f'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
     elif noise_distribution == 'log-laplace':
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}*m{str_symbol}) ' \
-                f'+ Abs(log({str_symbol}) - log(m{str_symbol})) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+            return f'log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}'
     elif noise_distribution == 'log10-laplace':
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}*m{str_symbol}*log(10)) ' \
-                f'+ Abs(log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+            return f'log(2*{sigma}*{m}*log(10)) ' \
+                f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
     elif noise_distribution in ['binomial', 'lin-binomial']:
         def nllh_y_string(str_symbol):
-            return f'- loggamma({str_symbol}+1) ' \
-                f'+ loggamma(m{str_symbol}+1) ' \
-                f'+ loggamma({str_symbol}-m{str_symbol}+1) ' \
-                f'- m{str_symbol} * log(sigma{str_symbol}) ' \
-                f'- ({str_symbol} - m{str_symbol}) * log(1-sigma{str_symbol})'
+            y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+            return f'Max(({m}-{y})*oo,0.) ' \
+                f'- loggamma({y}+1) + loggamma({m}+1) + loggamma({y}-{m}+1) ' \
+                f'- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
+    elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
+        def nllh_y_string(str_symbol):
+            y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+            return f''
     else:
         raise ValueError(
             f"Cost identifier {noise_distribution} not recognized.")

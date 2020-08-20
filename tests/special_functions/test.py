@@ -32,6 +32,8 @@ def test_binomial():
 
 def binomial_llh(simu, meas, p):
     """Compute a binomial llh."""
+    if any(meas > simu):
+        return - np.inf
     llhs = loggamma(simu+1) - loggamma(meas+1) - loggamma(simu-meas+1) \
         + meas * np.log(p) + (simu-meas) * np.log(1-p)
     return sum(llhs)
