@@ -1891,6 +1891,7 @@ def noise_distribution_to_cost_function(
 
     return nllh_y_string
 
+
 class MathMLSbmlPrinter(MathMLContentPrinter):
     """Prints a SymPy expression to a MathML expression parsable by libSBML.
     Differences from `sympy.MathMLContentPrinter`:
@@ -1912,6 +1913,7 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">' + mathml + '</math>'
         mathml = mathml.replace(f'<ci>time</ci>', '<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>')
         return mathml
+
 
 def mathml(expr, **settings):
     return MathMLSbmlPrinter(settings).doprint(expr)
