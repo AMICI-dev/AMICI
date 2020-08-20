@@ -110,7 +110,6 @@ amiciSwigPath = os.path.join(amici_path, 'swig')
 amiciSrcPath = os.path.join(amici_path, 'src')
 amiciModulePath = os.path.dirname(__file__)
 
-hdf5_enabled = os.path.isfile(os.path.join(amici_path, 'amici.py'))
 has_clibs = any([os.path.isfile(os.path.join(amici_path, wrapper))
                  for wrapper in ['amici.py', 'amici_without_hdf5.py']])
 
@@ -128,12 +127,8 @@ __commit__ = _get_commit_hash()
 # Import SWIG module and swig-dependent submodules if required and available
 if not _imported_from_setup():
     if has_clibs:
-        if hdf5_enabled:
-            from . import amici
-            from .amici import *
-        else:
-            from . import amici_without_hdf5 as amici
-            from .amici_without_hdf5 import *
+        from . import amici
+        from .amici import *
 
         # These module require the swig interface and other dependencies
         from .numpy import ReturnDataView, ExpDataView
@@ -148,6 +143,8 @@ if not _imported_from_setup():
     # These modules don't require the swig interface
     from .sbml_import import SbmlImporter, assignmentRules2observables
     from .ode_export import ODEModel, ODEExporter
+
+hdf5_enabled = 'readSolverSettingsFromHDF5' in dir()
 
 
 def runAmiciSimulation(

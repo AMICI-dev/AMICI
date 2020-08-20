@@ -32,7 +32,7 @@ jobs:
     - name: Run doxygen
       run: |
         scripts/run-doxygen.sh
-        
+
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@3.5.7
       with:
@@ -50,11 +50,13 @@ jobs:
       with:
         fetch-depth: 20
 
-    - name: apt
+    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+    - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
+
+    - name: Build swig4
       run: |
-        sudo apt-get update \
-          && sudo apt-get install -y swig
-          
+        sudo scripts/downloadAndBuildSwig.sh
+
     - name: sdist
       run: |
         scripts/buildSdist.sh
@@ -65,4 +67,4 @@ jobs:
         user: __token__
         password: ${{ secrets.pypi_password }}
         packages_dir: python/sdist/dist
-        
+

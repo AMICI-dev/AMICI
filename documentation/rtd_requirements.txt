@@ -1,4 +1,4 @@
-sphinx>=2.4.3
+sphinx>=3.2.1
 mock>=4.0.1
 setuptools>=45.2.0
 pysb>=1.11.0

@@ -419,13 +419,13 @@ def _get_names_or_ids(model: AmiciModel,
     """
     Obtains a unique list of identifiers for the specified variable.
     First tries model.getVariableNames and then uses model.getVariableIds.
-    
+
     :param model:
         Model instance.
-        
+
     :param variable:
         variable name.
-        
+
     :param by_id:
         If True, ids are used as identifiers, otherwise first the possibly
         more descriptive names are used.
