@@ -344,17 +344,17 @@ $(document).ready(function(){initNavTree('amici_8cpp_source.html',''); initResiz
 <div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> idx = 0; idx &lt; (int)array.size(); idx++) {</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;        <span class="keywordflow">if</span> (isNaN(array[idx])) {</div>
 <div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;            <a class="code" href="classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873">warningF</a>(<span class="stringliteral">&quot;AMICI:NaN&quot;</span>,</div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                     <span class="stringliteral">&quot;AMICI encountered a NaN value at index %i of %i in %s!&quot;</span>,</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                     <span class="stringliteral">&quot;AMICI encountered a NaN value at index %i/%i in %s!&quot;</span>,</div>
 <div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;                     idx,</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;                     (<span class="keywordtype">int</span>)array.size(),</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;                     (<span class="keywordtype">int</span>)array.size()-1,</div>
 <div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;                     fun);</div>
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;            <span class="keywordflow">return</span> AMICI_RECOVERABLE_ERROR;</div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;        }</div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;        <span class="keywordflow">if</span> (isInf(array[idx])) {</div>
 <div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;            <a class="code" href="classamici_1_1_amici_application.html#adf3072bba7da1cf35c33dd0770e5b873">warningF</a>(<span class="stringliteral">&quot;AMICI:Inf&quot;</span>,</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;                     <span class="stringliteral">&quot;AMICI encountered an Inf value at index %i of %i in %s!&quot;</span>,</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;                     <span class="stringliteral">&quot;AMICI encountered an Inf value at index %i/%i in %s!&quot;</span>,</div>
 <div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;                     idx,</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;                     (<span class="keywordtype">int</span>)array.size(),</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;                     (<span class="keywordtype">int</span>)array.size()-1,</div>
 <div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;                     fun);</div>
 <div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;            <span class="keywordflow">return</span> AMICI_RECOVERABLE_ERROR;</div>
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        }</div>
@@ -397,7 +397,7 @@ $(document).ready(function(){initNavTree('amici_8cpp_source.html',''); initResiz
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="dir_68267d1309a1af8e8297ef4c3efbcdba.html">src</a></li><li class="navelem"><a class="el" href="amici_8cpp.html">amici.cpp</a></li>
-    <li class="footer">Generated on Fri Aug 7 2020 23:28:13 for AMICI by
+    <li class="footer">Generated on Thu Aug 20 2020 12:44:46 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

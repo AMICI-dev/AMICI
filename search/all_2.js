@@ -36,7 +36,8 @@ var searchData=
   ['createsteadystatesimsolver_117',['createSteadystateSimSolver',['../classamici_1_1_steadystate_problem.html#a0a473db2e23c6a94ccd16150a4aa93ea',1,'amici::SteadystateProblem']]],
   ['cvar_118',['cvar',['../classamifun.html#a716c1ceb8235bc1005b606f777530ede',1,'amifun']]],
   ['cvodeexception_119',['CvodeException',['../classamici_1_1_cvode_exception.html',1,'CvodeException'],['../classamici_1_1_cvode_exception.html#a60a9726af149df0de23870dbe4e9f193',1,'amici::CvodeException::CvodeException()']]],
-  ['continuous_20integration_20_28ci_29_20and_20tests_120',['Continuous integration (CI) and tests',['../md_documentation__c_i.html',1,'']]],
-  ['code_20review_121',['Code review',['../md_documentation_code_review_guide.html',1,'']]],
-  ['c_2b_2b_20interface_122',['C++ Interface',['../md_documentation__c_p_p.html',1,'']]]
+  ['contributor_20covenant_20code_20of_20conduct_120',['Contributor Covenant Code of Conduct',['../md__c_o_d_e__o_f__c_o_n_d_u_c_t.html',1,'']]],
+  ['continuous_20integration_20_28ci_29_20and_20tests_121',['Continuous integration (CI) and tests',['../md_documentation__c_i.html',1,'']]],
+  ['code_20review_122',['Code review',['../md_documentation_code_review_guide.html',1,'']]],
+  ['c_2b_2b_20interface_123',['C++ Interface',['../md_documentation__c_p_p.html',1,'']]]
 ];

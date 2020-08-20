@@ -87,7 +87,7 @@ $(document).ready(function(){initNavTree('md_documentation__c_p_p.html',''); ini
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>The <a class="el" href="python_interface.html">Python Interface</a> and <a class="el" href="matlab_interface.html">MATLAB Interface</a> can translate the model definition into C++ code, which is then compiled into a <code>.mex</code> file or a Python module. Advanced users can also use this code within stand-alone C/C++ application for use in other environments (e.g. on high performance computing systems). This section will give a short overview over the generated files and provide a brief introduction of how this code can be included in other applications. For more details see the function level documentation, e.g. in <a href="http://icb-dcm.github.io/AMICI/amici_8cpp.html">http://icb-dcm.github.io/AMICI/amici_8cpp.html</a>.</p>
-<h1><a class="anchor" id="autotoc_md66"></a>
+<h1><a class="anchor" id="autotoc_md75"></a>
 Generation of C++ model files</h1>
 <p><code><a class="el" href="amiwrap_8m.html" title="AMIWRAP generates c++ mex files for the simulation of systems of differential equations via CVODES an...">amiwrap.m</a></code> (Matlab) and <code>amici.SbmlImporter.sbml2amici</code> (Python) import a model and create C++ code for various model functions. The model source files are written to <code>${AMICI_ROOT_DIR}/models/${MODEL_NAME}</code> by default.</p>
 <p>The content of a model source directory might look something like this (given <code>MODEL_NAME=model_steadystate</code>):</p>
@@ -101,13 +101,13 @@ Generation of C++ model files</h1>
 <div class="line">wrapfunctions.h </div>
 <div class="line">model_steadystate.h </div>
 </div><!-- fragment --><p>These files provide the implementation of a model-specific subclass of <code><a class="el" href="classamici_1_1_model.html" title="The Model class represents an AMICI ODE/DAE model. The model can compute various model related quanti...">amici::Model</a></code>. The <code>CMakeLists.txt</code> file can be used to build the library. <code>main.cpp</code> contains a simple scaffold for running a model simulation from C++. See next section for more details on these files.</p>
-<h1><a class="anchor" id="autotoc_md67"></a>
+<h1><a class="anchor" id="autotoc_md76"></a>
 Compiling and linking</h1>
 <p>In your application, you need to compile and link every model <code>${AMICI_ROOT_DIR}/models/${MODEL_NAME}/*.cpp</code>, <code>${AMICI_ROOT_DIR}/src/*.cpp</code>, the SUNDIALS and the SuiteSparse library. The simplest and recommended way is using the CMake package configuration from the build directory (<code>AmiciConfig.cmake</code> for use with <a href="https://cmake.org/cmake/help/latest/command/find_package.html"><code>find_package</code></a> which tells CMake about all AMICI dependencies.</p>
 <p>During model import a <a href="https://cmake.org/">CMake</a> file (<code>CMakeLists.txt</code>) will be generated automatically. The CMake file shows the above-mentioned library dependencies. <code>CMakeLists.txt</code>, together with <code>main.cpp</code>, provides a scaffold for a standalone simulation program. The required numerical libraries are shipped with AMICI. To compile them, run <code>${AMICI_ROOT_DIR}/scripts/buildAll.sh</code> once. HDF5 libraries and header files need to be installed separately (see AMICI installation instructions).</p>
 <p>More information on how to run the compiled sample program is provided in <code>main.cpp</code>.</p>
 <p>The file <code>wrapfunctions.h</code> exports some functions with generic names e.g. to create a model instance. These functions are meant to be used by applications which may be linked to single, potentially changing model to avoid hard-coding the model name. Including multiple <code>wrapfunctions.h</code> files from different models at once is not possible.</p>
-<h1><a class="anchor" id="autotoc_md68"></a>
+<h1><a class="anchor" id="autotoc_md77"></a>
 Running a simulation</h1>
 <p>The complete AMICI API is available through <code><a class="el" href="amici_8h_source.html">amici/amici.h</a></code>; this is the only header file that needs to be included for basic usage. Additionally, <code><a class="el" href="hdf5_8h_source.html">amici/hdf5.h</a></code> may be helpful. This file provides some functions for reading and writing <a href="https://support.hdfgroup.org/">HDF5</a> files). All functions are declared within the <code>amici</code> namespace.</p>
 <p>The entry function for running an AMICI simulation is <code>amici::runAmiciSimulation(...)</code>, declared in <code><a class="el" href="amici_8h_source.html">amici/amici.h</a></code>.</p>
@@ -119,7 +119,7 @@ Running a simulation</h1>
 </ul>
 <p>A scaffold for a standalone simulation program is generated in <code>main.cpp</code> in the model source directory. This program shows how to use the above-mentioned classes and how to obtain the simulation results.</p>
 <p>For running simulations for multiple experimental conditions (multiple <code><a class="el" href="classamici_1_1_exp_data.html" title="ExpData carries all information about experimental or condition-specific data.">amici::ExpData</a></code> instances), <code>amici::runAmiciSimulations(...)</code> provides an alternative entry point. If AMICI (and your application) have been compiled with OpenMP support (see installation guide), this allows for running those simulations in parallel.</p>
-<h1><a class="anchor" id="autotoc_md69"></a>
+<h1><a class="anchor" id="autotoc_md78"></a>
 Parameter estimation for AMICI models in high-performance computing environments</h1>
 <p>To perform parameter estimation for large or otherwise computationally demanding AMICI models from C++ in a high-performance computing environment, you may find the <a href="https://github.com/ICB-DCM/parPE/">parPE</a> library helpful. parPE allows for the private or shared memory parallel evaluation of a cost function requiring multiple simulations of the same model with different inputs. It provides interfaces to different optimizers, such as Ipopt. </p>
 </div></div><!-- contents -->
@@ -128,7 +128,7 @@ Parameter estimation for AMICI models in high-performance computing environments
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Fri Aug 7 2020 23:28:14 for AMICI by
+    <li class="footer">Generated on Thu Aug 20 2020 12:44:47 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>

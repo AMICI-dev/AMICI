@@ -10,9 +10,9 @@ A\+M\+I\+CI uses a continuous integration pipeline running on \href{https://trav
 
 More details are provided in the sections below.
 
-The CI scripts and tests can be found in {\ttfamily tests/} and {\ttfamily scripts/}. Some of the tests are integrated with C\+Make, see {\ttfamily make help} in the build directory.\hypertarget{md_documentation__c_i_autotoc_md89}{}\doxysubsection{C++ unit and integration tests}\label{md_documentation__c_i_autotoc_md89}
-To run C++ tests, build A\+M\+I\+CI with {\ttfamily make} or {\ttfamily scripts/build\+All.\+sh}, then run {\ttfamily scripts/run-\/cpputest.\+sh}.\hypertarget{md_documentation__c_i_autotoc_md90}{}\doxysubsection{Python unit and integration tests}\label{md_documentation__c_i_autotoc_md90}
-To run Python tests, run {\ttfamily ../scripts/run-\/python-\/tests.sh} from anywhere (assumes build directory is {\ttfamily build/}) or run {\ttfamily make python-\/tests} in your build directory.\hypertarget{md_documentation__c_i_autotoc_md91}{}\doxysubsubsection{S\+B\+M\+L Test Suite}\label{md_documentation__c_i_autotoc_md91}
+The CI scripts and tests can be found in {\ttfamily tests/} and {\ttfamily scripts/}. Some of the tests are integrated with C\+Make, see {\ttfamily make help} in the build directory.\hypertarget{md_documentation__c_i_autotoc_md98}{}\doxysubsection{C++ unit and integration tests}\label{md_documentation__c_i_autotoc_md98}
+To run C++ tests, build A\+M\+I\+CI with {\ttfamily make} or {\ttfamily scripts/build\+All.\+sh}, then run {\ttfamily scripts/run-\/cpputest.\+sh}.\hypertarget{md_documentation__c_i_autotoc_md99}{}\doxysubsection{Python unit and integration tests}\label{md_documentation__c_i_autotoc_md99}
+To run Python tests, run {\ttfamily ../scripts/run-\/python-\/tests.sh} from anywhere (assumes build directory is {\ttfamily build/}) or run {\ttfamily make python-\/tests} in your build directory.\hypertarget{md_documentation__c_i_autotoc_md100}{}\doxysubsubsection{S\+B\+M\+L Test Suite}\label{md_documentation__c_i_autotoc_md100}
 We test Python-\/\+A\+M\+I\+CI S\+B\+ML support using the test cases from the semantic \href{https://github.com/sbmlteam/sbml-test-suite/}{\texttt{ S\+B\+ML Test Suite}}. When making changes to the model import functions, make sure to run these tests.
 
 To run the S\+B\+ML Test Suite test cases, the easiest way is\+:
@@ -23,19 +23,19 @@ To run the S\+B\+ML Test Suite test cases, the easiest way is\+:
 \item Running {\ttfamily scripts/run-\/\+S\+B\+M\+L\+Testsuite.\+sh}. This will download the test cases if necessary and run them all. A subset of test cases can be selected with an optional argument (e.\+g. {\ttfamily scripts/run-\/\+S\+B\+M\+L\+Testsuite.\+sh 1,3-\/6,8}, to run cases 1, 3, 4, 5, 6 and 8).
 
 Once the test cases are available locally, for debugging it might be easier to directly use {\ttfamily pytest} with {\ttfamily tests/test\+S\+B\+M\+L\+Suite.\+py}.
-\end{DoxyEnumerate}\hypertarget{md_documentation__c_i_autotoc_md92}{}\doxysubsection{Matlab tests (not included in C\+I pipeline)}\label{md_documentation__c_i_autotoc_md92}
-To execute the Matlab test suite, run {\ttfamily tests/test\+Models.\+m}.\hypertarget{md_documentation__c_i_autotoc_md93}{}\doxysubsection{Model simulation integration tests}\label{md_documentation__c_i_autotoc_md93}
+\end{DoxyEnumerate}\hypertarget{md_documentation__c_i_autotoc_md101}{}\doxysubsection{Matlab tests (not included in C\+I pipeline)}\label{md_documentation__c_i_autotoc_md101}
+To execute the Matlab test suite, run {\ttfamily tests/test\+Models.\+m}.\hypertarget{md_documentation__c_i_autotoc_md102}{}\doxysubsection{Model simulation integration tests}\label{md_documentation__c_i_autotoc_md102}
 Many of our integration tests are model simulations. The simulation results obtained from the Python and C++ are compared to results saved in an H\+D\+F5 file ({\ttfamily tests/cpputest/expected\+Results.\+h5}). Settings and data for the test simulations are also specified in this file.
 
-{\bfseries{Note\+:}} The C++ code for the models is included in the repository under {\ttfamily models/}. This code is to be updated whenever {\ttfamily \mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}}} changes.\hypertarget{md_documentation__c_i_autotoc_md94}{}\doxysubsubsection{Regenerating C++ code of the test models}\label{md_documentation__c_i_autotoc_md94}
+{\bfseries{Note\+:}} The C++ code for the models is included in the repository under {\ttfamily models/}. This code is to be updated whenever {\ttfamily \mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}}} changes.\hypertarget{md_documentation__c_i_autotoc_md103}{}\doxysubsubsection{Regenerating C++ code of the test models}\label{md_documentation__c_i_autotoc_md103}
 Regeneration of the model code must done whenever {\ttfamily \mbox{\hyperlink{classamici_1_1_model}{amici\+::\+Model}}} or the Matlab model import routines change.
 
 This is done with \begin{DoxyVerb}tests/cpputest/wrapTestModels.m
 \end{DoxyVerb}
 
 
-{\bfseries{Note\+:}} This is currently only possible from Matlab $<$ R2018a. This should change as soon as 1) all second-\/order sensitivity code is ported to C++/\+Python, 2) a non-\/\+S\+B\+ML import exists for Python and 3) support for events has been added for Python.\hypertarget{md_documentation__c_i_autotoc_md95}{}\doxysubsubsection{Regenerating expected results}\label{md_documentation__c_i_autotoc_md95}
+{\bfseries{Note\+:}} This is currently only possible from Matlab $<$ R2018a. This should change as soon as 1) all second-\/order sensitivity code is ported to C++/\+Python, 2) a non-\/\+S\+B\+ML import exists for Python and 3) support for events has been added for Python.\hypertarget{md_documentation__c_i_autotoc_md104}{}\doxysubsubsection{Regenerating expected results}\label{md_documentation__c_i_autotoc_md104}
 To update test results, run {\ttfamily make test} in the build directory, replace {\ttfamily tests/cpputest/expected\+Results.\+h5} by {\ttfamily tests/cpputest/write\+Results.\+h5.\+bak} \mbox{[}O\+N\+LY DO T\+H\+IS A\+F\+T\+ER T\+R\+I\+P\+LE C\+H\+E\+C\+K\+I\+NG C\+O\+R\+R\+E\+C\+T\+N\+E\+SS OF R\+E\+S\+U\+L\+TS\mbox{]} Before replacing the test results, confirm that only expected datasets have changed, e.\+g. using \begin{DoxyVerb}h5diff -v -r 1e-8 tests/cpputest/expectedResults.h5 tests/cpputest/writeResults.h5.bak | less
 \end{DoxyVerb}
-\hypertarget{md_documentation__c_i_autotoc_md96}{}\doxysubsection{Adding/\+Updating tests}\label{md_documentation__c_i_autotoc_md96}
+\hypertarget{md_documentation__c_i_autotoc_md105}{}\doxysubsection{Adding/\+Updating tests}\label{md_documentation__c_i_autotoc_md105}
 To add new tests add a new corresponding python script (see, e.\+g., {\ttfamily ./tests/generate\+Test\+Config/example\+\_\+dirac.py}) and add it to and run {\ttfamily tests/generate\+Test\+Configuration\+For\+Examples.\+sh}. Then regenerate the expected test results (see above). 

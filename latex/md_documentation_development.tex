@@ -1,10 +1,10 @@
-This document contains information for A\+M\+I\+CI developers, not too relevant to regular users.\hypertarget{md_documentation_development_autotoc_md80}{}\doxysubsection{Branches / releases}\label{md_documentation_development_autotoc_md80}
+This document contains information for A\+M\+I\+CI developers, not too relevant to regular users.\hypertarget{md_documentation_development_autotoc_md89}{}\doxysubsection{Branches / releases}\label{md_documentation_development_autotoc_md89}
 A\+M\+I\+CI roughly follows the \href{https://nvie.com/posts/a-successful-git-branching-model/}{\texttt{ Git\+Flow}}. All new contributions are merged into {\ttfamily develop}. These changes are regularly merged into {\ttfamily master} as new releases. For release versioning we are trying to follow \href{https://semver.org/}{\texttt{ semantic versioning}}. New releases are created on Github and are automatically deployed to \href{https://zenodo.org/record/3362453\#.XVwJ9vyxVMA}{\texttt{ Zenodo}} for archiving and to obtain a digital object identifier (D\+OI) to make them citable. Furthermore, our \mbox{\hyperlink{md_documentation__c_i}{CI pipeline}} will automatically create and deploy a new release on \href{https://pypi.org/project/amici/}{\texttt{ Py\+PI}}.
 
-We try to keep a clean git history. Therefore, feature pull requests are squash-\/merged to {\ttfamily develop}. Merging of release branches to master is done via merge commits.\hypertarget{md_documentation_development_autotoc_md81}{}\doxysubsection{When starting to work on some issue}\label{md_documentation_development_autotoc_md81}
+We try to keep a clean git history. Therefore, feature pull requests are squash-\/merged to {\ttfamily develop}. Merging of release branches to master is done via merge commits.\hypertarget{md_documentation_development_autotoc_md90}{}\doxysubsection{When starting to work on some issue}\label{md_documentation_development_autotoc_md90}
 When starting to work on some Github issue, please assign yourself to let other developers know that you are working on it to avoid duplicate work. If the respective issue is not completely clear, it is generally a good idea to ask for clarification before starting to work on it.
 
-If you want to work on something new, please create a Github issue first.\hypertarget{md_documentation_development_autotoc_md82}{}\doxysubsection{Code contributions}\label{md_documentation_development_autotoc_md82}
+If you want to work on something new, please create a Github issue first.\hypertarget{md_documentation_development_autotoc_md91}{}\doxysubsection{Code contributions}\label{md_documentation_development_autotoc_md91}
 When making code contributions, please follow our style guide and the process described below\+:
 
 
@@ -28,13 +28,13 @@ When making code contributions, please follow our style guide and the process de
 \end{DoxyItemize}
 \item When all tests are passing and you think your code is ready to merge, request a code review (see also our \mbox{\hyperlink{md_documentation_code_review_guide}{code review guideline}})
 \item Wait for feedback. If you do not receive feedback to your pull request within a week, please give us a friendly reminder.
-\end{DoxyItemize}\hypertarget{md_documentation_development_autotoc_md83}{}\doxysubsubsection{Style guide}\label{md_documentation_development_autotoc_md83}
-\hypertarget{md_documentation_development_autotoc_md84}{}\doxyparagraph{General}\label{md_documentation_development_autotoc_md84}
+\end{DoxyItemize}\hypertarget{md_documentation_development_autotoc_md92}{}\doxysubsubsection{Style guide}\label{md_documentation_development_autotoc_md92}
+\hypertarget{md_documentation_development_autotoc_md93}{}\doxyparagraph{General}\label{md_documentation_development_autotoc_md93}
 
 \begin{DoxyItemize}
 \item All files and functions should come with file-\/level and function-\/level documentation.
 \item All new functionality should be covered by unit or integration tests. Runtime of those tests should be kept as short as possible.
-\end{DoxyItemize}\hypertarget{md_documentation_development_autotoc_md85}{}\doxyparagraph{Python}\label{md_documentation_development_autotoc_md85}
+\end{DoxyItemize}\hypertarget{md_documentation_development_autotoc_md94}{}\doxyparagraph{Python}\label{md_documentation_development_autotoc_md94}
 
 \begin{DoxyItemize}
 \item We want to be compatible with Python 3.\+6
@@ -61,12 +61,12 @@ For function docstrings, follow this format\+:
 \DoxyCodeLine{        SomeError in case of some error.}
 \DoxyCodeLine{"""}
 \end{DoxyCode}
-\hypertarget{md_documentation_development_autotoc_md86}{}\doxyparagraph{C++}\label{md_documentation_development_autotoc_md86}
+\hypertarget{md_documentation_development_autotoc_md95}{}\doxyparagraph{C++}\label{md_documentation_development_autotoc_md95}
 
 \begin{DoxyItemize}
 \item We follow C++11
 \item We want to maintain compatibility with g++, clang and the Intel C++ compiler
 \item For code formatting, we use the settings from {\ttfamily .clang-\/format} in the root directory
 \item {\itshape Details to be defined}
-\end{DoxyItemize}\hypertarget{md_documentation_development_autotoc_md87}{}\doxyparagraph{Matlab}\label{md_documentation_development_autotoc_md87}
+\end{DoxyItemize}\hypertarget{md_documentation_development_autotoc_md96}{}\doxyparagraph{Matlab}\label{md_documentation_development_autotoc_md96}
 {\itshape To be defined} 

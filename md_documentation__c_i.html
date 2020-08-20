@@ -95,13 +95,13 @@ $(document).ready(function(){initNavTree('md_documentation__c_i.html',''); initR
 </ul>
 <p>More details are provided in the sections below.</p>
 <p>The CI scripts and tests can be found in <code>tests/</code> and <code>scripts/</code>. Some of the tests are integrated with CMake, see <code>make help</code> in the build directory.</p>
-<h1><a class="anchor" id="autotoc_md89"></a>
+<h1><a class="anchor" id="autotoc_md98"></a>
 C++ unit and integration tests</h1>
 <p>To run C++ tests, build AMICI with <code>make</code> or <code>scripts/buildAll.sh</code>, then run <code>scripts/run-cpputest.sh</code>.</p>
-<h1><a class="anchor" id="autotoc_md90"></a>
+<h1><a class="anchor" id="autotoc_md99"></a>
 Python unit and integration tests</h1>
 <p>To run Python tests, run <code>../scripts/run-python-tests.sh</code> from anywhere (assumes build directory is <code>build/</code>) or run <code>make python-tests</code> in your build directory.</p>
-<h2><a class="anchor" id="autotoc_md91"></a>
+<h2><a class="anchor" id="autotoc_md100"></a>
 SBML Test Suite</h2>
 <p>We test Python-AMICI SBML support using the test cases from the semantic <a href="https://github.com/sbmlteam/sbml-test-suite/">SBML Test Suite</a>. When making changes to the model import functions, make sure to run these tests.</p>
 <p>To run the SBML Test Suite test cases, the easiest way is:</p>
@@ -111,22 +111,22 @@ SBML Test Suite</h2>
 <p class="startli">Once the test cases are available locally, for debugging it might be easier to directly use <code>pytest</code> with <code>tests/testSBMLSuite.py</code>.</p>
 </li>
 </ol>
-<h1><a class="anchor" id="autotoc_md92"></a>
+<h1><a class="anchor" id="autotoc_md101"></a>
 Matlab tests (not included in CI pipeline)</h1>
 <p>To execute the Matlab test suite, run <code>tests/testModels.m</code>.</p>
-<h1><a class="anchor" id="autotoc_md93"></a>
+<h1><a class="anchor" id="autotoc_md102"></a>
 Model simulation integration tests</h1>
 <p>Many of our integration tests are model simulations. The simulation results obtained from the Python and C++ are compared to results saved in an HDF5 file (<code>tests/cpputest/expectedResults.h5</code>). Settings and data for the test simulations are also specified in this file.</p>
 <p><b>Note:</b> The C++ code for the models is included in the repository under <code>models/</code>. This code is to be updated whenever <code><a class="el" href="classamici_1_1_model.html" title="The Model class represents an AMICI ODE/DAE model. The model can compute various model related quanti...">amici::Model</a></code> changes.</p>
-<h2><a class="anchor" id="autotoc_md94"></a>
+<h2><a class="anchor" id="autotoc_md103"></a>
 Regenerating C++ code of the test models</h2>
 <p>Regeneration of the model code must done whenever <code><a class="el" href="classamici_1_1_model.html" title="The Model class represents an AMICI ODE/DAE model. The model can compute various model related quanti...">amici::Model</a></code> or the Matlab model import routines change.</p>
 <p>This is done with </p><pre class="fragment">tests/cpputest/wrapTestModels.m
 </pre><p><b>Note:</b> This is currently only possible from Matlab &lt; R2018a. This should change as soon as 1) all second-order sensitivity code is ported to C++/Python, 2) a non-SBML import exists for Python and 3) support for events has been added for Python.</p>
-<h2><a class="anchor" id="autotoc_md95"></a>
+<h2><a class="anchor" id="autotoc_md104"></a>
 Regenerating expected results</h2>
 <p>To update test results, run <code>make test</code> in the build directory, replace <code>tests/cpputest/expectedResults.h5</code> by <code>tests/cpputest/writeResults.h5.bak</code> [ONLY DO THIS AFTER TRIPLE CHECKING CORRECTNESS OF RESULTS] Before replacing the test results, confirm that only expected datasets have changed, e.g. using </p><pre class="fragment">h5diff -v -r 1e-8 tests/cpputest/expectedResults.h5 tests/cpputest/writeResults.h5.bak | less
-</pre><h1><a class="anchor" id="autotoc_md96"></a>
+</pre><h1><a class="anchor" id="autotoc_md105"></a>
 Adding/Updating tests</h1>
 <p>To add new tests add a new corresponding python script (see, e.g., <code>./tests/generateTestConfig/example_dirac.py</code>) and add it to and run <code>tests/generateTestConfigurationForExamples.sh</code>. Then regenerate the expected test results (see above). </p>
 </div></div><!-- contents -->
@@ -135,7 +135,7 @@ Adding/Updating tests</h1>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="footer">Generated on Fri Aug 7 2020 23:28:14 for AMICI by
+    <li class="footer">Generated on Thu Aug 20 2020 12:44:47 for AMICI by
     <a href="http://www.doxygen.org/index.html">
     <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.8.18 </li>
   </ul>
