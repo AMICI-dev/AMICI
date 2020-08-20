@@ -21,11 +21,16 @@ class SplineFunction {
      * @brief constructor
      * @param model Model instance
      */
-    explicit SplineFunction(const Model &model);
+    explicit SplineFunction(std::vector<realtype> nodes, 
+                            std::vector<realtype> node_values,
+                            bool equidistant_spacing,
+                            bool logarithmic_paraterization);
   
     ~SplineFunction(){};
     
-    virtual void computeSpline() = 0;
+    virtual void computeCoefficients() = 0;
+    
+    virtual void computeCoefficientsParamDeriv() = 0;
     
     virtual double getValue(const double t) = 0;
     
@@ -37,14 +42,6 @@ class SplineFunction {
      */
     bool get_equidistant_spacing() {
         return equidistant_spacing_;
-    }
-    
-    /**
-     * @brief Accessor to node_derivative_by_FD_ member
-     * @return node_derivative_by_FD flag
-     */
-    bool get_node_derivative_by_FD() {
-        return node_derivative_by_FD_;
     }
 
     /**
@@ -68,15 +65,6 @@ class SplineFunction {
     void set_equidistant_spacing(bool equidistant_spacing) {
         equidistant_spacing_ = equidistant_spacing;
     }
-    
-    /**
-     * @brief Switch computing of derivatives at spline nodes by 
-     * finite differences on or off 
-     * @param node_derivative_by_FD flag for usage of finite differences
-     */
-    void set_node_derivative_by_FD(bool node_derivative_by_FD) {
-        node_derivative_by_FD_ = node_derivative_by_FD;
-    }
 
     /**
      * @brief Switch enforced positivity by logarithmic parametrization 
@@ -85,31 +73,60 @@ class SplineFunction {
      */
     void set_logarithmic_paraterization(bool logarithmic_paraterization) {
         logarithmic_paraterization_ = logarithmic_paraterization;
-    }    
+    }
+    
+    const int n_nodes() { return n_nodes; }
     
   private:
-    std::vector<realtype> nodes_;
+    std::vector<realtype> nodes;
     
-    std::vector<realtype> node_values_;
+    std::vector<realtype> node_values;
     
-    std::vector<realtype> node_values_derivative_;
+    AmiVector coeffictions;
     
-    AmiVector coeffictions_;
-    
-    AmiVectorArray coeffictions_sensi_;
-    
-    bool node_derivative_by_FD_ = false;
+    AmiVectorArray coeffictions_sensi;
     
     bool equidistant_spacing_ = false;
     
     bool logarithmic_paraterization_ = false;
     
-
+    int n_nodes;
+    
 }; // class SplineFunction
 
 
 
-class HermiteSpline : splineFunction()
+class HermiteSpline : splineFunction() {
+  public:
+    HermiteSpline() = default;
+      
+    HermiteSpline(std::vector<realtype> nodes,
+                  std::vector<realtype> node_values,
+                  std::vector<realtype> node_values_derivative,
+                  SplineBoundaryCondition firstNodeDerivative,
+                  SplineBoundaryCondition lastNodeDerivative,
+                  bool node_derivative_by_FD,
+                  bool equidistant_spacing,
+                  bool logarithmic_paraterization);
+
+    /**
+     * @brief Accessor to node_derivative_by_FD_ member
+     * @return node_derivative_by_FD flag
+     */
+    bool get_node_derivative_by_FD() {
+        return node_derivative_by_FD_;
+    }
+
+  private:
+    std::vector<realtype> node_values_derivative;
+      
+    bool node_derivative_by_FD_ = false;
+    
+    SplineBoundaryCondition firstNodeDerivative = SplineBoundaryCondition::linearFinDiff;
+    
+    SplineBoundaryCondition lastNodeDerivative = SplineBoundaryCondition::constant;
+    
+}; // class HermiteSpline
 
 } // namespace amici
 

@@ -211,6 +211,13 @@ enum class RDataReporting {
     likelihood,
 };
 
+/** extrapolation methods for splines */
+enum class SplineBoundaryCondition {
+    constant      = 0,
+    linearFinDiff = 1,
+    linearNatural = 2,
+};
+
 /**
  * Type for function to process warnings or error messages.
  */
