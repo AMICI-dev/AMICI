@@ -22,7 +22,11 @@ if [[ ! -d ${SWIG_DIR} ]]; then
 fi
 
 cd ${SWIG_DIR}
-./configure --prefix=${PREFIX}
+./configure \
+  --prefix=${PREFIX} \
+  --without-alllang \
+  --with-python
+
 make
 make install
 
