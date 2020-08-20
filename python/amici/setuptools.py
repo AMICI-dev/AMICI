@@ -219,7 +219,7 @@ def add_debug_flags_if_required(cxx_flags: List[str],
         linker_flags.extend(['-g'])
 
 
-def generate_swig_interface_files(with_hdf5: bool = None) -> None:
+def generate_swig_interface_files() -> None:
     """
     Compile the swig python interface to amici
     """
@@ -238,13 +238,6 @@ def generate_swig_interface_files(with_hdf5: bool = None) -> None:
     ]
 
     log.info(f"Found SWIG version {swig_version}")
-
-    # Are HDF5 includes available to generate the wrapper?
-    if with_hdf5 is None:
-        with_hdf5 = get_hdf5_config()['found']
-
-    if not with_hdf5:
-        swig_args.append('-DAMICI_SWIG_WITHOUT_HDF5')
 
     # Do we have -doxygen?
     if swig_version >= (4, 0, 0):
