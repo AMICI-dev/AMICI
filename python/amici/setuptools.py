@@ -224,7 +224,6 @@ def generate_swig_interface_files(with_hdf5: bool = None) -> None:
     Compile the swig python interface to amici
     """
 
-    swig_outdir = os.path.join(os.path.abspath(os.getcwd()), "amici")
     swig_exe = find_swig()
     swig_version = get_swig_version(swig_exe)
 
@@ -252,7 +251,6 @@ def generate_swig_interface_files(with_hdf5: bool = None) -> None:
 
     swig_cmd = [swig_exe,
                 *swig_args,
-                '-outdir', swig_outdir,
                 '-o', os.path.join("amici", "amici_wrap.cxx"),
                 os.path.join("amici", "swig", "amici.i")]
 
