@@ -142,7 +142,9 @@ class AmiciDevelop(develop):
         log.debug("running AmiciDevelop")
 
         if not self.no_clibs:
-            generate_swig_interface_files()
+            generate_swig_interface_files(
+                swig_outdir=os.path.join(os.path.abspath(os.getcwd()),
+                                         "amici"))
             self.get_finalized_command('build_clib').run()
 
         develop.run(self)
@@ -223,7 +225,8 @@ class AmiciBuildExt(build_ext):
                 log.info(f"copying {src} -> {dest}")
                 copyfile(src, dest)
 
-            generate_swig_interface_files()
+            generate_swig_interface_files(
+                swig_outdir=os.path.join(build_dir, 'amici'))
 
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
