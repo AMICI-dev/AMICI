@@ -40,11 +40,6 @@ class AmiciInstall(install):
             self.no_clibs = True
         install.finalize_options(self)
 
-    def run(self):
-        if not self.no_clibs:
-            generate_swig_interface_files()
-        install.run(self)
-
 
 def compile_parallel(self, sources, output_dir=None, macros=None,
                      include_dirs=None, debug=0, extra_preargs=None,
@@ -147,7 +142,9 @@ class AmiciDevelop(develop):
         log.debug("running AmiciDevelop")
 
         if not self.no_clibs:
-            generate_swig_interface_files()
+            generate_swig_interface_files(
+                swig_outdir=os.path.join(os.path.abspath(os.getcwd()),
+                                         "amici"))
             self.get_finalized_command('build_clib').run()
 
         develop.run(self)
@@ -199,9 +196,6 @@ class AmiciBuildExt(build_ext):
         no_clibs |= 'install' in self.distribution.command_obj \
                     and self.get_finalized_command('install').no_clibs
 
-        lib_dir = "" if self.inplace \
-            else self.get_finalized_command('build_py').build_lib
-
         if no_clibs:
             # Nothing to build
             return
@@ -231,6 +225,9 @@ class AmiciBuildExt(build_ext):
                 log.info(f"copying {src} -> {dest}")
                 copyfile(src, dest)
 
+            generate_swig_interface_files(
+                swig_outdir=os.path.join(build_dir, 'amici'))
+
         # Always force recompilation. The way setuptools/distutils check for
         # whether sources require recompilation is not reliable and may lead
         # to crashes or wrong results. We rather compile once too often...
@@ -241,55 +238,34 @@ class AmiciBuildExt(build_ext):
 
 
 class AmiciSDist(sdist):
-    """Custom sdist to run swig and add the interface files to the source
-    distribution
-
-    Could have relied on letting build_ext run swig. However, that would
-    require any user having swig installed during package installation. This
-    way we can postpone that until the  package is used to compile generated
-    models.
-    """
+    """Customized creation of source distribution"""
 
     def run(self):
-        """Setuptools entry-point
-
-        Returns:
-
-        """
+        """Setuptools entry-point"""
 
         log.debug("running AmiciSDist")
 
-        self.run_swig()
-        self.save_git_version()
+        save_git_version()
+
         sdist.run(self)
 
-    def run_swig(self):
-        """Run swig
 
-        Returns:
+def save_git_version():
+    """Create file with extended version string
 
-        """
+    This requires git. We assume that whoever creates the sdist will work
+    inside a valid git repository.
 
-        if not self.dry_run:  # --dry-run
-            # We create two SWIG interfaces, one with HDF5 support, one without
-            generate_swig_interface_files()
+    Returns:
 
-    def save_git_version(self):
-        """Create file with extended version string
-
-        This requires git. We assume that whoever creates the sdist will work
-        inside a valid git repository.
-
-        Returns:
-
-        """
-        with open(os.path.join("amici", "git_version.txt"), "w") as f:
-            try:
-                cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
-                       '--always', '--tags']
-                subprocess.run(cmd, stdout=f)
-            except Exception as e:
-                print(e)
+    """
+    with open(os.path.join("amici", "git_version.txt"), "w") as f:
+        try:
+            cmd = ['git', 'describe', '--abbrev=4', '--dirty=-dirty',
+                   '--always', '--tags']
+            subprocess.run(cmd, stdout=f)
+        except Exception as e:
+            log.warn(e)
 
 
 def set_compiler_specific_library_options(
