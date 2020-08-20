@@ -5,6 +5,8 @@
 #include "amici/vector.h"
 
 namespace amici {
+    
+class Model;
 /**
  * @brief The spline class is an AMICI-own implementation. Instances of this 
  * class are created upon solver setup and the needed splines are set up 
@@ -77,8 +79,12 @@ class SplineFunction {
     std::vector<realtype> node_values;
 
     std::vector<realtype> coefficients;
+    
+    std::vector<realtype> coefficients_extrapolate;
 
-    std::vector<std::vector<realtype>> coefficients_sensi;
+    std::vector<realtype> coefficients_sensi;
+    
+    std::vector<realtype> coefficients_extrapolate_sensi;
 
     const int n_nodes() { return n_nodes; }
     
@@ -110,7 +116,7 @@ class HermiteSpline : splineFunction() {
     
     void computeCoefficients() override;
     
-    void computeCoefficientsSensi() override;
+    void computeCoefficientsSensi(Model *model) override;
     
     double getValue(const double t) override;
     

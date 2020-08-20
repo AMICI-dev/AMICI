@@ -106,7 +106,6 @@ HermiteSpline::computeCoefficients() {
      * with coefficients[4 * i_node + (0, 1, 2, 3)] = (d, c, b, a)
      * */
     realtype len;
-    realtype tmp_coeff[4];
  
     for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
         len = nodes[i_node + 1] - nodes[i_node];
@@ -121,28 +120,24 @@ HermiteSpline::computeCoefficients() {
             - 2 * node_values[i_node + 1
             + len * node_values_derivative[i_node + 1];
     }
+    
+    coefficients_extrapolate[0] = node_values[0]
+        - node_values[0] * node_values_derivative[0];
+    coefficients_extrapolate[1] = node_values_derivative[0];
+    coefficients_extrapolate[2] = node_values[n_nodes() - 1]
+        - node_values[n_nodes() - 1] * node_values_derivative[n_nodes() - 1];
+    coefficients_extrapolate[1] = node_values_derivative[n_nodes() - 1];
 }
 
 HermiteSpline::getValue(const double t) {
     /* Compute the spline value */
     if (t > nodes[n_nodes() - 1]) {
         /* Are we past the last node? Extrapolate! */
-        if (firstNodeDerivative == SplineBoundaryCondition::constant) {
-            return node_values[n_nodes() - 1];
-        } else {
-            return node_values[n_nodes() - 1] + 
-                (t - node_values[n_nodes() - 1]) * 
-                node_values_derivative[n_nodes() - 1];
-        }
+        return coefficients_extrapolate[2] + t * coefficients_extrapolate[3];
 
     } else if (t < nodes[0]) {
         /* Are we before the first node? Extrapolate! */
-        if (firstNodeDerivative == SplineBoundaryCondition::constant) {
-            return node_values[0];
-        } else {
-            return node_values[0] + (t - node_values[0]) * 
-                node_values_derivative[0];
-        }
+        return coefficients_extrapolate[0] + t * coefficients_extrapolate[1];
 
     } else {
         /* Get the spline interval which we need */
@@ -161,6 +156,39 @@ HermiteSpline::getValue(const double t) {
 
         return evaluatePolynomial((t - nodes[i_node]) / len, 
                                   &coefficients[i_node * 4]);
+    }
+    
+}
+
+HermiteSpline::getSensitivity(const double t, const int ip) {
+    /* Compute the parametric derivative of the spline value */
+    if (t > nodes[n_nodes() - 1]) {
+        /* Are we past the last node? Extrapolate! */
+        return coefficients_extrapolate_sensi[4 * ip + 2]
+            + t * coefficients_extrapolate_sensi[4 * ip + 3];
+
+    } else if (t < nodes[0]) {
+        /* Are we before the first node? Extrapolate! */
+        return coefficients_extrapolate_sensi[4 * ip + 0]
+            + t * coefficients_extrapolate_sensi[4 * ip + 1];
+
+    } else {
+        /* Get the spline interval which we need */
+        if (get_equidistant_spacing) {
+            /* equidistant spacing: just compute the interval */
+            realtype len = nodes[1] - nodes[0];
+            int i_node = std::floor((t - nodes[0]) / len);
+        } else {
+            /* no equidistant spacing: we need to iterate */
+            int i_node = 0;
+            while (nodes[i_node + 1] < t)
+                i_node++;
+
+            realtype len = nodes[i_node + 1] - nodes[i_node];
+        }
+
+        return evaluatePolynomial((t - nodes[i_node]) / len, 
+                                  &coefficients_sensi[ip * n_nodes() * 4 + i_node * 4]);
     }
     
 }
