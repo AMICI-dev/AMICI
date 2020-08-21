@@ -72,7 +72,6 @@ def check_finite_difference(x0: Sequence[float],
     model.setParameterList(plist)
 
     # simulation with gradient
-    solver.setSensitivityOrder(SensitivityOrder.first)
     rdata = runAmiciSimulation(model, solver, edata)
     assert_fun(rdata['status'] == AMICI_SUCCESS)
 

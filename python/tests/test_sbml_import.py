@@ -250,8 +250,10 @@ def test_likelihoods(model_test_likelihoods):
     assert np.isclose(rdata['llh'], llh_exp)
 
     # check gradient
+    solver = model.getSolver()
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
     check_derivatives(
-        model, model.getSolver(), edata, assert_fun, atol=1e-2, rtol=1e-2,
+        model, solver, edata, assert_fun, atol=1e-2, rtol=1e-2,
         check_least_squares=False)
 
 
