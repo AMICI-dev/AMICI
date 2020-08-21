@@ -253,7 +253,7 @@ def test_likelihoods(model_test_likelihoods):
     solver = model.getSolver()
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
     check_derivatives(
-        model, solver, edata, assert_fun, atol=1e-2, rtol=1e-2,
+        model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
         check_least_squares=False)
 
 
