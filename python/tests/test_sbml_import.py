@@ -160,35 +160,30 @@ def test_steadystate_simulation(model_steadystate_module):
 
 @pytest.fixture
 def model_test_likelihoods():
-
+    """Test model for various likelihood functions."""
+    # load sbml model
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                              'examples', 'example_steadystate',
                              'model_steadystate_scaled.xml')
     sbml_importer = amici.SbmlImporter(sbml_file)
 
-    observables = amici.assignmentRules2observables(
-        sbml_importer.sbml,
-        filter_function=lambda variable:
-        variable.getId().startswith('observable_') and
-        not variable.getId().endswith('_sigma')
-    )
+    # define observables
+    observables = {
+        'o1': {'formula': 'x1'},
+        'o2': {'formula': '10^x1'},
+        'o3': {'formula': '10^x1'},
+        'o4': {'formula': 'x1'},
+        'o5': {'formula': '10^x1'},
+        'o6': {'formula': '10^x1'},
+        'o7': {'formula': 'x1'}
+    }
 
-    # assign different noise models
-
-    obs_keys = list(observables.keys())
-
-    # exponentiate observable formulas
-    obs1 = observables[obs_keys[1]]
-    obs3 = observables[obs_keys[3]]
-    obs1['formula'] = '10^(' + obs1['formula'] + ')'
-    obs3['formula'] = 'exp(' + obs3['formula'] + ')'
-
-    # customize noise distributions
+    # define different noise models
     noise_distributions = {
-        obs_keys[0]: 'normal',
-        obs_keys[1]: 'log-normal',
-        obs_keys[2]: 'laplace',
-        obs_keys[3]: 'log10-laplace',
+        'o1': 'normal', 'o2': 'log-normal', 'o3': 'log10-normal',
+        'o4': 'laplace', 'o5': 'log-laplace', 'o6': 'log10-laplace',
+        'o7': lambda str_symbol: f'Abs({str_symbol} - m{str_symbol}) '
+                                 f'/ sigma{str_symbol}',
     }
 
     module_name = 'test_likelihoods'
@@ -198,9 +193,7 @@ def model_test_likelihoods():
         output_dir=outdir,
         observables=observables,
         constant_parameters=['k0'],
-        sigmas={'observable_x1withsigma':
-                'observable_x1withsigma_sigma'},
-        noise_distributions=noise_distributions
+        noise_distributions=noise_distributions,
     )
 
     yield amici.import_model_module(module_name=module_name,
@@ -219,26 +212,103 @@ def test_likelihoods(model_test_likelihoods):
 
     # run model once to create an edata
     rdata = amici.runAmiciSimulation(model, solver)
-    edata = [amici.ExpData(rdata, 1, 0)]
+    edata = amici.ExpData(rdata, 1, 0)
 
     # just make all observables positive since some are logarithmic
-    for ed in edata:
-        y = ed.getObservedData()
-        y = tuple([max(val, 1e-4) for val in y])
-        ed.setObservedData(y)
+    y = edata.getObservedData()
+    y = tuple([max(val, 1e-4) for val in y])
+    edata.setObservedData(y)
+
+    # set sigmas
+    sigma = 0.2
+    sigmas = sigma * np.ones(len(y))
+    edata.setObservedDataStdDev(sigmas)
 
     # and now run for real and also compute likelihood values
-    rdata = amici.runAmiciSimulations(model, solver, edata)[0]
+    rdata = amici.runAmiciSimulations(model, solver, [edata])[0]
 
-    # output for easy debugging
-    for key in ['llh', 'sllh']:
-        print(key, rdata[key])
-
-    # it would be good to compute the expected llh+sllh by hand,
-    # here, we only check if they make overall sense
+    # check if the values make overall sense
     assert np.isfinite(rdata['llh'])
     assert np.all(np.isfinite(rdata['sllh']))
     assert np.any(rdata['sllh'])
+
+    rdata_df = amici.getSimulationObservablesAsDataFrame(
+        model, edata, rdata, by_id=True)
+    edata_df = amici.getDataObservablesAsDataFrame(
+        model, edata, by_id=True)
+
+    # check correct likelihood value
+    llh_exp = - sum([
+        normal_nllh(edata_df['o1'], rdata_df['o1'], sigma),
+        log_normal_nllh(edata_df['o2'], rdata_df['o2'], sigma),
+        log10_normal_nllh(edata_df['o3'], rdata_df['o3'], sigma),
+        laplace_nllh(edata_df['o4'], rdata_df['o4'], sigma),
+        log_laplace_nllh(edata_df['o5'], rdata_df['o5'], sigma),
+        log10_laplace_nllh(edata_df['o6'], rdata_df['o6'], sigma),
+        custom_nllh(edata_df['o7'], rdata_df['o7'], sigma),
+    ])
+    assert np.isclose(rdata['llh'], llh_exp)
+
+    # check gradient
+    check_derivatives(
+        model, model.getSolver(), edata, assert_fun, atol=1e-2, rtol=1e-2,
+        check_least_squares=False)
+
+
+def test_likelihoods_error():
+    """Test whether wrong inputs lead to expected errors."""
+    sbml_file = os.path.join(os.path.dirname(__file__), '..',
+                             'examples', 'example_steadystate',
+                             'model_steadystate_scaled.xml')
+    sbml_importer = amici.SbmlImporter(sbml_file)
+
+    # define observables
+    observables = {'o1': {'formula': 'x1'}}
+
+    # define different noise models
+    noise_distributions = {'o1': 'nörmal'}
+
+    module_name = 'test_likelihoods'
+    outdir = 'test_likelihoods'
+    with pytest.raises(ValueError):
+        sbml_importer.sbml2amici(
+            model_name=module_name,
+            output_dir=outdir,
+            observables=observables,
+            constant_parameters=['k0'],
+            noise_distributions=noise_distributions,
+        )
+
+
+def normal_nllh(m, y, sigma):
+    return sum(.5*(np.log(2*np.pi*sigma**2) + ((y-m)/sigma)**2))
+
+
+def log_normal_nllh(m, y, sigma):
+    return sum(.5*(np.log(2*np.pi*sigma**2*m**2)
+                   + ((np.log(y)-np.log(m))/sigma)**2))
+
+
+def log10_normal_nllh(m, y, sigma):
+    return sum(.5*(np.log(2*np.pi*sigma**2*m**2*np.log(10)**2)
+                   + ((np.log10(y) - np.log10(m))/sigma)**2))
+
+
+def laplace_nllh(m, y, sigma):
+    return sum(np.log(2*sigma) + np.abs(y-m)/sigma)
+
+
+def log_laplace_nllh(m, y, sigma):
+    return sum(np.log(2*sigma*m) + np.abs(np.log(y)-np.log(m))/sigma)
+
+
+def log10_laplace_nllh(m, y, sigma):
+    return sum(np.log(2*sigma*m*np.log(10))
+               + np.abs(np.log10(y)-np.log10(m))/sigma)
+
+
+def custom_nllh(m, y, sigma):
+    return sum(np.abs(m-y)/sigma)
 
 
 def _test_set_parameters_by_dict(model_module):

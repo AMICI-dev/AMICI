@@ -5,8 +5,9 @@ This module provides functions to automatically check correctness of amici
 computed sensitivities using finite difference approximations
 """
 
-from . import (runAmiciSimulation, SensitivityOrder_none, AMICI_SUCCESS,
-               SensitivityMethod_forward, Model, Solver, ExpData, ReturnData)
+from . import (
+    runAmiciSimulation, SensitivityOrder, AMICI_SUCCESS, SensitivityMethod,
+    Model, Solver, ExpData, ReturnData)
 import numpy as np
 import copy
 
@@ -69,11 +70,14 @@ def check_finite_difference(x0: Sequence[float],
 
     model.setParameters(p)
     model.setParameterList(plist)
+
+    # simulation with gradient
+    solver.setSensitivityOrder(SensitivityOrder.first)
     rdata = runAmiciSimulation(model, solver, edata)
     assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     # finite difference
-    solver.setSensitivityOrder(SensitivityOrder_none)
+    solver.setSensitivityOrder(SensitivityOrder.none)
 
     # forward:
     p = copy.deepcopy(x0)
@@ -115,7 +119,8 @@ def check_derivatives(model: Model,
                       assert_fun: Callable,
                       atol: Optional[float] = 1e-4,
                       rtol: Optional[float] = 1e-4,
-                      epsilon: Optional[float] = 1e-3) -> None:
+                      epsilon: Optional[float] = 1e-3,
+                      check_least_squares: bool = True) -> None:
     """
     Finite differences check for likelihood gradient.
 
@@ -141,8 +146,14 @@ def check_derivatives(model: Model,
     :param epsilon:
         finite difference step-size
 
+    :param check_least_squares:
+        whether to check least squares related values.
+
     """
     p = np.array(model.getParameters())
+
+    old_sensitivity_order = solver.getSensitivityOrder()
+    solver.setSensitivityOrder(SensitivityOrder.first)
 
     rdata = runAmiciSimulation(model, solver, edata)
     assert_fun(rdata['status'] == AMICI_SUCCESS)
@@ -150,14 +161,14 @@ def check_derivatives(model: Model,
     fields = ['llh']
 
     leastsquares_applicable = \
-        solver.getSensitivityMethod() == SensitivityMethod_forward
+        solver.getSensitivityMethod() == SensitivityMethod.forward
 
     if 'ssigmay' in rdata.keys() \
             and rdata['ssigmay'] is not None \
             and rdata['ssigmay'].any():
         leastsquares_applicable = False
 
-    if leastsquares_applicable:
+    if check_least_squares and leastsquares_applicable:
         fields += ['res', 'x', 'y']
 
         check_results(rdata, 'FIM',
@@ -172,6 +183,8 @@ def check_derivatives(model: Model,
         check_finite_difference(p, model, solver, edata, ip, fields,
                                 assert_fun, atol=atol, rtol=rtol,
                                 epsilon=epsilon)
+
+    solver.setSensitivityOrder(old_sensitivity_order)
 
 
 def check_close(result: np.array,

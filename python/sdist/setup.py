@@ -191,10 +191,6 @@ def main():
         license='BSD',
         libraries=[libamici, libsundials, libsuitesparse],
         ext_modules=[amici_module],
-        py_modules=[
-            # the swig interface
-            'amici/amici',
-        ],
         packages=find_packages(),
         package_dir={'amici': 'amici'},
         entry_points={
@@ -221,7 +217,6 @@ def main():
                       'src/*template*',
                       'swig/*',
                       'libs/*',
-                      'amici.py',
                       'setup.py.template',
                       ],
         },
