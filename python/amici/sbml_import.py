@@ -1849,40 +1849,45 @@ def noise_distribution_to_cost_function(
     """
     if noise_distribution in ['normal', 'lin-normal']:
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2) ' \
-                f'+ 0.5*(({str_symbol} - m{str_symbol}) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'0.5*log(2*pi*{sigma}**2) ' \
+                f'+ 0.5*(({y} - {m}) / {sigma})**2'
     elif noise_distribution == 'log-normal':
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2*m{str_symbol}**2) ' \
-                f'+ 0.5*((log({str_symbol}) - log(m{str_symbol})) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'0.5*log(2*pi*{sigma}**2*{m}**2) ' \
+                f'+ 0.5*((log({y}) - log({m})) / {sigma})**2'
     elif noise_distribution == 'log10-normal':
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2' \
-                f'*m{str_symbol}**2*log(10)**2) ' \
-                f'+ 0.5*((log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
+                f'+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
     elif noise_distribution in ['laplace', 'lin-laplace']:
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}) ' \
-                f'+ Abs({str_symbol} - m{str_symbol}) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
     elif noise_distribution == 'log-laplace':
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}*m{str_symbol}) ' \
-                f'+ Abs(log({str_symbol}) - log(m{str_symbol})) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}'
     elif noise_distribution == 'log10-laplace':
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}*m{str_symbol}*log(10)) ' \
-                f'+ Abs(log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'log(2*{sigma}*{m}*log(10)) ' \
+                f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
     else:
         raise ValueError(
             f"Cost identifier {noise_distribution} not recognized.")
 
     return nllh_y_string
+
+
+def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
+    """Get identifiers for simulation, measurement, and sigma."""
+    y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+    return y, m, sigma
+
+
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
     """Prints a SymPy expression to a MathML expression parsable by libSBML.
@@ -1905,6 +1910,7 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">' + mathml + '</math>'
         mathml = mathml.replace(f'<ci>time</ci>', '<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>')
         return mathml
+
 
 def mathml(expr, **settings):
     return MathMLSbmlPrinter(settings).doprint(expr)

@@ -2324,6 +2324,7 @@ class ODEExporter:
             '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
         ])
+
         # if not body is None:
         with open(os.path.join(
                 self.model_path, f'{self.model_name}_{function}.cpp'), 'w'
