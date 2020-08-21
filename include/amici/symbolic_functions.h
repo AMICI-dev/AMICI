@@ -144,7 +144,7 @@ double splineFunction(SplineFunction *splineFun, const realtype t);
  * @param ip model parameter for which derivative is requested
  * @return derivative w.r.t. parameter ip of splineFun at time t 
  */
-double splineFunctionD(SplineFunction *splineFun, const realtype t, const int ip);
+double splineFunctionSensi(SplineFunction *splineFun, const realtype t, const int ip);
 
 
 

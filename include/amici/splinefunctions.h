@@ -29,7 +29,8 @@ class SplineFunction {
     
     virtual void computeCoefficients() = 0;
     
-    virtual void computeCoefficientsSensi() = 0;
+    virtual void computeCoefficientsSensi(int nplist, realtype *dnodesdp, 
+                                          realtype *dslopesdp) = 0;
     
     virtual double getValue(const double t) = 0;
     
@@ -86,20 +87,20 @@ class SplineFunction {
     
     std::vector<realtype> coefficients_extrapolate_sensi;
 
-    const int n_nodes() { return n_nodes; }
+    const int n_nodes() { return n_nodes_; }
     
   private:
     bool equidistant_spacing_ = false;
     
     bool logarithmic_paraterization_ = false;
     
-    int n_nodes;
+    int n_nodes_;
     
 }; // class SplineFunction
 
 
 
-class HermiteSpline : splineFunction() {
+class HermiteSpline : SplineFunction {
   public:
     HermiteSpline() = default;
       
@@ -116,7 +117,8 @@ class HermiteSpline : splineFunction() {
     
     void computeCoefficients() override;
     
-    void computeCoefficientsSensi(Model *model) override;
+    void computeCoefficientsSensi(int nplist, realtype *dnodesdp, 
+                                  realtype *dslopesdp) override;
     
     double getValue(const double t) override;
     
@@ -132,17 +134,17 @@ class HermiteSpline : splineFunction() {
 
   private:
     void getCoeffsSensiLowlevel(int ip, int i_node, int offset, 
-                                realtype len, realtype, len_m, realtype len_p,
+                                realtype len, realtype len_m, realtype len_p,
                                 realtype *dnodesdp, realtype *dslopesdp,
                                 realtype *coeffs, realtype *coeffs_extrapol);
 
     std::vector<realtype> node_values_derivative;
-      
-    bool node_derivative_by_FD_ = false;
-    
+
     SplineBoundaryCondition firstNodeDerivative = SplineBoundaryCondition::linearFinDiff;
     
     SplineBoundaryCondition lastNodeDerivative = SplineBoundaryCondition::constant;
+
+    bool node_derivative_by_FD_ = false;
     
 }; // class HermiteSpline
 
