@@ -1873,7 +1873,7 @@ def noise_distribution_to_cost_function(
         def nllh_y_string(str_symbol):
             y, m, sigma = _get_str_symbol_identifiers(str_symbol)
             return f'log(2*{sigma}*{m}*log(10)) ' \
-                   f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
+                f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
     elif noise_distribution in ['binomial', 'lin-binomial']:
         def nllh_y_string(str_symbol):
             """Binomial noise model parameterized via success probability p,"""

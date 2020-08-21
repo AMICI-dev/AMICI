@@ -314,7 +314,7 @@ def custom_nllh(m, y, sigma):
 
 @pytest.fixture
 def model_special_likelihoods():
-    """Test model for various likelihood functions."""
+    """Test model for special likelihood functions."""
     # load sbml model
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                              'examples', 'example_steadystate',
