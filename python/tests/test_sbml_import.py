@@ -237,6 +237,7 @@ def test_likelihoods(model_test_likelihoods):
     edata_df = amici.getDataObservablesAsDataFrame(
         model, edata, by_id=True)
 
+    # check correct likelihood value
     llh_exp = - sum([
         normal_nllh(edata_df['o1'], rdata_df['o1'], sigma),
         log_normal_nllh(edata_df['o2'], rdata_df['o2'], sigma),
@@ -247,6 +248,13 @@ def test_likelihoods(model_test_likelihoods):
         custom_nllh(edata_df['o7'], rdata_df['o7'], sigma),
     ])
     assert np.isclose(rdata['llh'], llh_exp)
+
+    # check gradient
+    solver = model.getSolver()
+    solver.setSensitivityOrder(amici.SensitivityOrder.first)
+    check_derivatives(
+        model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
+        check_least_squares=False)
 
 
 def test_likelihoods_error():

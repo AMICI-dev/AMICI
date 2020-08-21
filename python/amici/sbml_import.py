@@ -2,7 +2,7 @@
 SBML Import
 -----------
 This module provides all necessary functionality to import a model specified
-in the System Biology Markup Language (SBML)
+in the System Biology Markup Language (SBML).
 """
 
 
