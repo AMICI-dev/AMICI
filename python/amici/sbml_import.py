@@ -191,7 +191,7 @@ class SbmlImporter:
                    observables: Dict[str, Dict[str, str]] = None,
                    constant_parameters: List[str] = None,
                    sigmas: Dict[str, Union[str, float]] = None,
-                   noise_distributions: Dict[str, str] = None,
+                   noise_distributions: Dict[str, Union[str, Callable]] = None,
                    verbose: Union[int, bool] = logging.ERROR,
                    assume_pow_positivity: bool = False,
                    compiler: str = None,
@@ -231,7 +231,8 @@ class SbmlImporter:
         :param noise_distributions:
             dictionary(observableId: noise type).
             If nothing is passed for some observable id, a normal model is
-            assumed as default.
+            assumed as default. Either pass a noise type identifier, or a
+            callable generating a custom noise string.
 
         :param verbose:
             verbosity level for logging, True/False default to
@@ -1873,6 +1874,8 @@ def noise_distribution_to_cost_function(
             y, m, sigma = _get_str_symbol_identifiers(str_symbol)
             return f'log(2*{sigma}*{m}*log(10)) ' \
                 f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
+    elif isinstance(noise_distribution, Callable):
+        return noise_distribution
     else:
         raise ValueError(
             f"Cost identifier {noise_distribution} not recognized.")
