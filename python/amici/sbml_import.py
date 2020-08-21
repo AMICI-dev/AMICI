@@ -1876,10 +1876,19 @@ def noise_distribution_to_cost_function(
                    f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
     elif noise_distribution in ['binomial', 'lin-binomial']:
         def nllh_y_string(str_symbol):
+            """Binomial noise model parameterized via success probability p,"""
             y, m, sigma = _get_str_symbol_identifiers(str_symbol)
-            return f'Max(({m}-{y})*oo,0.) ' \
+            return f'- log(Heaviside({y}-{m})) ' \
                 f'- loggamma({y}+1) + loggamma({m}+1) + loggamma({y}-{m}+1) ' \
                 f'- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
+    elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
+        def nllh_y_string(str_symbol):
+            """Negative binomial noise model with mean = y, parameterized via
+            success probability p."""
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            r = f'{y} * (1-{sigma}) / {sigma}'
+            return f'- loggamma({m}+{r}) + loggamma({m}+1) + loggamma({r}) ' \
+                f'- {m} * log(1-{sigma}) - {r} * log({sigma})'
     elif isinstance(noise_distribution, Callable):
         return noise_distribution
     else:
