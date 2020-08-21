@@ -6,7 +6,7 @@ computed sensitivities using finite difference approximations
 """
 
 from . import (
-    runAmiciSimulation, SensitivityOrder_none, SensitivityOrder_first,
+    runAmiciSimulation, SensitivityOrder,
     AMICI_SUCCESS, SensitivityMethod_forward, Model, Solver, ExpData,
     ReturnData)
 import numpy as np
