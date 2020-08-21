@@ -250,6 +250,7 @@ def test_likelihoods(model_test_likelihoods):
 
 
 def test_likelihoods_error():
+    """Test whether wrong inputs lead to expected errors."""
     sbml_file = os.path.join(os.path.dirname(__file__), '..',
                              'examples', 'example_steadystate',
                              'model_steadystate_scaled.xml')
