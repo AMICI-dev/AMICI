@@ -154,7 +154,7 @@ def check_derivatives(model: Model,
     p = np.array(model.getParameters())
 
     old_sensitivity_order = solver.getSensitivityOrder()
-    solver.setSensitivityOrder(SensitivityOrder_first)
+    solver.setSensitivityOrder(SensitivityOrder.first)
 
     rdata = runAmiciSimulation(model, solver, edata)
     assert_fun(rdata['status'] == AMICI_SUCCESS)
