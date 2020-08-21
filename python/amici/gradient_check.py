@@ -152,9 +152,6 @@ def check_derivatives(model: Model,
     """
     p = np.array(model.getParameters())
 
-    old_sensitivity_order = solver.getSensitivityOrder()
-    solver.setSensitivityOrder(SensitivityOrder.first)
-
     rdata = runAmiciSimulation(model, solver, edata)
     assert_fun(rdata['status'] == AMICI_SUCCESS)
 
@@ -183,8 +180,6 @@ def check_derivatives(model: Model,
         check_finite_difference(p, model, solver, edata, ip, fields,
                                 assert_fun, atol=atol, rtol=rtol,
                                 epsilon=epsilon)
-
-    solver.setSensitivityOrder(old_sensitivity_order)
 
 
 def check_close(result: np.array,
