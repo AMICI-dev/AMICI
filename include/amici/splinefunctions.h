@@ -131,6 +131,11 @@ class HermiteSpline : splineFunction() {
     }
 
   private:
+    void getCoeffsSensiLowlevel(int ip, int i_node, int offset, 
+                                realtype len, realtype, len_m, realtype len_p,
+                                realtype *dnodesdp, realtype *dslopesdp,
+                                realtype *coeffs, realtype *coeffs_extrapol);
+
     std::vector<realtype> node_values_derivative;
       
     bool node_derivative_by_FD_ = false;
