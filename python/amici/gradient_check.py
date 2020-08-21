@@ -6,9 +6,8 @@ computed sensitivities using finite difference approximations
 """
 
 from . import (
-    runAmiciSimulation, SensitivityOrder,
-    AMICI_SUCCESS, SensitivityMethod, Model, Solver, ExpData,
-    ReturnData)
+    runAmiciSimulation, SensitivityOrder, AMICI_SUCCESS, SensitivityMethod,
+    Model, Solver, ExpData, ReturnData)
 import numpy as np
 import copy
 
@@ -78,7 +77,7 @@ def check_finite_difference(x0: Sequence[float],
     assert_fun(rdata['status'] == AMICI_SUCCESS)
 
     # finite difference
-    solver.setSensitivityOrder(SensitivityOrder_none)
+    solver.setSensitivityOrder(SensitivityOrder.none)
 
     # forward:
     p = copy.deepcopy(x0)
@@ -162,7 +161,7 @@ def check_derivatives(model: Model,
     fields = ['llh']
 
     leastsquares_applicable = \
-        solver.getSensitivityMethod() == SensitivityMethod_forward
+        solver.getSensitivityMethod() == SensitivityMethod.forward
 
     if 'ssigmay' in rdata.keys() \
             and rdata['ssigmay'] is not None \
