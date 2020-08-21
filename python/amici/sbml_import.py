@@ -1812,8 +1812,6 @@ def assignmentRules2observables(sbml_model,
         'formula': formulaString
         })
     """
-    warnings.warn("This function will be removed in future releases.",
-                  DeprecationWarning)
     observables = {}
     for p in sbml_model.getListOfParameters():
         parameter_id = p.getId()
