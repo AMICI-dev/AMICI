@@ -332,8 +332,8 @@ def model_special_likelihoods():
         'o1': 'binomial', 'o2': 'negative-binomial',
     }
 
-    module_name = 'test_likelihoods'
-    outdir = 'test_likelihoods'
+    module_name = 'test_special_likelihoods'
+    outdir = 'test_special_likelihoods'
     sbml_importer.sbml2amici(
         model_name=module_name,
         output_dir=outdir,
@@ -345,7 +345,7 @@ def model_special_likelihoods():
     yield amici.import_model_module(module_name=module_name,
                                     module_path=outdir)
 
-    #shutil.rmtree(outdir, ignore_errors=True)
+    shutil.rmtree(outdir, ignore_errors=True)
 
 
 def test_special_likelihoods(model_special_likelihoods):

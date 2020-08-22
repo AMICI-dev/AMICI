@@ -43,7 +43,7 @@ jobs:
           swig \
           libatlas-base-dev \
           libhdf5-serial-dev \
-          libboost-all-dev
+          libboost-dev
     - name: pip
       run: |
         pip3 install --upgrade --user wheel \
