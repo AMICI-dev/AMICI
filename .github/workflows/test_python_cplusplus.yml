@@ -49,7 +49,8 @@ jobs:
             libhdf5-serial-dev \
             python3-venv \
             swig \
-            lcov
+            lcov \
+            libboost-all-dev
 
     - name: Build AMICI dependencies
       run: |
