@@ -1,3 +1,9 @@
+"""Test functions that require special treatment in amici.sbml_import.
+
+In particular, some of the functions tested here require an installation of
+boost.
+"""
+
 import os
 import shutil
 

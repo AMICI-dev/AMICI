@@ -7,7 +7,6 @@ from tempfile import TemporaryDirectory
 import amici
 import libsbml
 import numpy as np
-from scipy.special import loggamma
 import pytest
 from amici.gradient_check import check_derivatives
 from amici.sbml_import import SbmlImporter
@@ -16,7 +15,6 @@ from amici.sbml_import import SbmlImporter
 @pytest.fixture
 def simple_sbml_model():
     """Some testmodel"""
-
     document = libsbml.SBMLDocument(3, 1)
     model = document.createModel()
     model.setTimeUnits("second")
@@ -35,7 +33,6 @@ def simple_sbml_model():
 
 def test_sbml2amici_no_observables(simple_sbml_model):
     """Test model generation works for model without observables"""
-
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
@@ -83,7 +80,6 @@ def model_steadystate_module():
 
 def test_presimulation(sbml_example_presimulation_module):
     """Test 'presimulation' test model"""
-
     model = sbml_example_presimulation_module.getModel()
     solver = model.getSolver()
     solver.setNewtonMaxSteps(0)
@@ -315,7 +311,6 @@ def custom_nllh(m, y, sigma):
 
 def _test_set_parameters_by_dict(model_module):
     """Test setting parameter via id/name => value dicts"""
-
     model = model_module.getModel()
     old_parameter_values = model.getParameters()
     parameter_ids = model.getParameterIds()
