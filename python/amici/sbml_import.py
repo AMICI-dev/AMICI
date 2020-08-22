@@ -13,6 +13,7 @@ import math
 import itertools as itt
 import warnings
 import logging
+import xml.etree.ElementTree as ET
 from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel
@@ -306,6 +307,7 @@ class SbmlImporter:
 
         self._reset_symbols()
         self._process_sbml(constant_parameters)
+        self._process_splines()
         self._process_observables(observables, sigmas, noise_distributions)
 
         self._process_time()
@@ -492,6 +494,11 @@ class SbmlImporter:
         self.species_has_only_substance_units = [
             specie.getHasOnlySubstanceUnits() for specie in species
         ]
+
+        self.spline_species = [specie for specie in species if
+            specie.annotation_string.find("<amici:spline") != -1]
+        self.splines_species_syms = [sp.sympify(specie.getName())
+                                     for specie in self.spline_species]
 
         concentrations = [spec.getInitialConcentration() for spec in species]
         amounts = [spec.getInitialAmount() for spec in species]
@@ -984,6 +991,8 @@ class SbmlImporter:
                 continue
             variable = sp.sympify(rule.getVariable(),
                                   locals=self.local_symbols)
+            if variable in self.splines_species_syms:
+                continue
             # avoid incorrect parsing of pow(x, -1) in symengine
             formula = sp.sympify(_parse_logical_operators(
                 sbml.formulaToL3String(rule.getMath())),
@@ -1085,6 +1094,56 @@ class SbmlImporter:
         self.amici_time_symbol = amici_time_symbol
 
         self._replace_in_all_expressions(sbml_time_symbol, amici_time_symbol)
+
+    @log_execution_time('processing splines from SBML annotations', logger)
+    def _process_splines(self) -> None:
+        # collect all splines in one list
+        splines = []
+        namespaces = {'amici': 'http://github.com/AMICI-dev/AMICI',
+                      'mathML': 'http://www.w3.org/1998/Math/MathML'}
+
+        def _parse_spline(annotation, species_name):
+            # parse the spline parameter, most likely time
+            spline_parameter = annotation.find('amici:spline_parameter', namespaces)
+            mathML = spline_parameter.find('mathML:math', namespaces)
+            parameter_symbol = sp.sympify(mathML.getchildren()[0].text)
+
+            spline_nodes = annotation.find('amici:spline_nodes', namespaces)
+            mathMLs = spline_nodes.findall('mathML:math', namespaces)
+            #TODO: I didn't get around to properly parse mathML here...
+            # Sorry, needs to be done.
+            nodes_symbols = ['missing' for mathML in mathMLs]
+
+            spline_values = annotation.find('amici:spline_values', namespaces)
+            mathMLs = spline_values.findall('mathML:math', namespaces)
+            values_symbols = [sp.sympify(mathML.getchildren()[0].text)
+                              for mathML in mathMLs]
+
+            spline_dict = {'species': sp.sympify(species_name),
+                           'parameter': parameter_symbol,
+                           'nodes': nodes_symbols,
+                           'values': values_symbols}
+            for key, value in annotation.attrib.items():
+                spline_dict[key] = value
+
+            return spline_dict
+
+            #TODO: Currently, a dict is returned. However, I would greatly
+            # prefer passing an actual spline object, taken from .splines.
+            # Unfortunately, we cannot import .splines here, as this imports in
+            # turn SBMLImporter, causing a circular dependence.
+            # Not sure what the best solution of this would be.
+            # However, ideally the C++ class and the python class for splines
+            # would be identical, which would make things more consistent
+
+        # iterate over all species which we're recognized as splines
+        for spline_specie in self.spline_species:
+            annotations = ET.fromstring(spline_specie.annotation_string)
+            splines.append(_parse_spline(annotations.find(
+                'amici:spline', namespaces), spline_specie.getName()))
+
+        # add the list of parsed splines to the model
+        self.splines = splines
 
     @log_execution_time('processing SBML observables', logger)
     def _process_observables(self,
