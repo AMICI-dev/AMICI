@@ -98,11 +98,14 @@ def test_special_likelihoods(model_special_likelihoods):
     assert np.isclose(rdata['llh'], llh_exp)
 
     # check gradient
-    solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    check_derivatives(
-        model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
-        check_least_squares=False)
+    for sensi_method in [amici.SensitivityMethod.forward,
+                         amici.SensitivityMethod.adjoint]:
+        solver = model.getSolver()
+        solver.setSensitivityMethod(sensi_method)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        check_derivatives(
+            model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
+            check_least_squares=False)
 
     """Test for m > y, i.e. in region with 0 density"""
 
