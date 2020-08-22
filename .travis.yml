@@ -28,7 +28,6 @@ matrix:
         # as installation from sdist fails because of reasons...
         - choco install python --version 3.7.5
         - choco install -y swig --version=4.0.1
-        - choco install boost-msvc-14.1
         - python -m pip install --upgrade pip
         - git clone -c core.symlinks=true https://github.com/AMICI-dev/AMICI.git && cd AMICI
         - if [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then git checkout -qf $TRAVIS_COMMIT; elif [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then git fetch --update-head-ok origin pull/$TRAVIS_PULL_REQUEST/head:$TRAVIS_BRANCH && git checkout $TRAVIS_BRANCH; fi
@@ -47,4 +46,4 @@ script:
     - cd $BASE_DIR
     - export AMICI_SKIP_CMAKE_TESTS=TRUE
     - pip install pytest petab
-    - python -m pytest --ignore-glob=*petab* ./python/tests
+    - python -m pytest --ignore-glob=*petab* --ignore-glob=*special* ./python/tests
