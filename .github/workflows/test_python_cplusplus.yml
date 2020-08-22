@@ -135,7 +135,7 @@ jobs:
     # install amici dependencies
     - name: homebrew
       run: |
-        brew install hdf5 swig gcc cppcheck libomp
+        brew install hdf5 swig gcc cppcheck libomp boost
 
     - name: Build AMICI
       run: |
