@@ -39,6 +39,7 @@ from . import (
     sbml_import
 )
 from .logging import get_logger, log_execution_time, set_log_level
+from .splines import spline_user_functions
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -1950,7 +1951,11 @@ def _print_with_exception(math: sp.Basic) -> str:
         C++ code for the specified expression
     """
     try:
-        ret = cxxcode(math, standard='c++11')
+        ret = cxxcode(
+            math,
+            standard='c++11',
+            user_functions=spline_user_functions(self._get_index('p'))
+        )
         ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
         return ret
     except TypeError as e:
@@ -2228,6 +2233,26 @@ class ODEExporter:
         with open(compile_script, 'w') as fileout:
             fileout.write('\n'.join(lines))
 
+    def _get_index(self, name: str) -> Dict[sp.Symbol, int]:
+        """
+        Compute indices for a symbolic array.
+
+        :param name:
+            key in self.model._syms for which to obtain the index.
+
+        :return:
+            a dictionary of symbol/index pairs.
+        """
+        if name in self.model.sym_names():
+            if name in sparse_functions:
+                symbols = self.model.sparsesym(name)
+            else:
+                symbols = self.model.sym(name).T
+        else:
+            raise ValueError(f'Unknown symbolic array: {name}')
+
+        return {symbol : index for index, symbol in enumerate(symbols)}
+
     def _write_index_files(self, name: str) -> None:
         """
         Write index file for a symbolic array.
@@ -2238,15 +2263,8 @@ class ODEExporter:
 
         """
         lines = []
-        if name in self.model.sym_names():
-            if name in sparse_functions:
-                symbols = self.model.sparsesym(name)
-            else:
-                symbols = self.model.sym(name).T
-        else:
-            raise ValueError(f'Unknown symbolic array: {name}')
 
-        for index, symbol in enumerate(symbols):
+        for symbol, index in self._get_index(name).items():
             symbol_name = strip_pysb(symbol)
             if str(symbol) == '0':
                 continue

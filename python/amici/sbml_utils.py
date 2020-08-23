@@ -4,11 +4,15 @@ SBML Utilities
 This module provides helper functions for SBML files.
 """
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .sbml_import import SbmlImporter
+    from typing import Optional, Union
 
 import libsbml
 import sympy as sp
 
-from typing import Optional, Union
 from sympy.printing.mathml import MathMLContentPrinter
 from sympy.core.parameters import evaluate
 
@@ -18,6 +22,9 @@ from sympy.core.parameters import evaluate
 
 sbml_time_symbol = sp.Symbol('time', real=True)
 amici_time_symbol = sp.Symbol('t', real=True)
+
+
+annotation_namespace = 'http://github.com/AMICI-dev/AMICI'
 
 
 ################################################################################
@@ -492,3 +499,20 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
             'expression:\n{expr}\n'
             'MathML:\n{mathml}'
         )
+
+
+def mathml2sympy(mathml, *, locals=None, formulaType=None):
+    ast = readMathMLFromString(mathml)
+    if ast is None:
+        raise ...
+    # TODO move _parse_special_functions and _check_unsupported_functions here
+    sym_math = sp.sympify(_parse_logical_operators(
+        sbml.formulaToL3String(ast)),
+        locals=locals
+    )
+    if sym_math is None:
+        raise ... # needed?
+    sym_math = _parse_special_functions(sym_math)
+    if formulaType is not None:
+        _check_unsupported_functions(sym_math, formulaType)
+    return sym_math
