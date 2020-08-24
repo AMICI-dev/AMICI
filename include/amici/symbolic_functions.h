@@ -133,7 +133,7 @@ double sign(double x);
  * @param t time at which spline should be evaulated
  * @return value of splineFun at time t
  */
-double splineFunction(SplineFunction *splineFun, const realtype t);
+double splineFunction(AbstractSpline *splineFun, const realtype t);
 
 
 /**
@@ -144,7 +144,7 @@ double splineFunction(SplineFunction *splineFun, const realtype t);
  * @param ip model parameter for which derivative is requested
  * @return derivative w.r.t. parameter ip of splineFun at time t 
  */
-double splineFunctionSensi(SplineFunction *splineFun, const realtype t, const int ip);
+double splineFunctionSensi(AbstractSpline *splineFun, const realtype t, const int ip);
 
 
 

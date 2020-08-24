@@ -708,10 +708,11 @@ class AbstractModel {
      * @param k constants vector
      * @param h heavyside vector
      * @param tcl total abundances for conservations laws
+     * @param spl spline value vector
      */
     virtual void fw(realtype *w, const realtype t, const realtype *x,
                     const realtype *p, const realtype *k, const realtype *h,
-                    const realtype *tcl);
+                    const realtype *tcl, const realtype *spl);
 
     /**
      * @brief Model specific sparse implementation of dwdp
@@ -724,6 +725,8 @@ class AbstractModel {
      * @param w vector with helper variables
      * @param tcl total abundances for conservations laws
      * @param stcl sensitivities of total abundances for conservations laws
+     * @param spl spline value vector
+     * @param sspl sensitivities of spline values vector
      */
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
@@ -758,7 +761,8 @@ class AbstractModel {
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
-                       const realtype *stcl, int ip);
+                       const realtype *stcl, const realtype *spl, 
+                       const realtype *sspl, int ip);
 
     /**
      * @brief Model specific implementation of dwdx, data part
@@ -770,10 +774,12 @@ class AbstractModel {
      * @param h heavyside vector
      * @param w vector with helper variables
      * @param tcl total abundances for conservations laws
+     * @param spl spline value vector
      */
     virtual void fdwdx(realtype *dwdx, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
-                       const realtype *w, const realtype *tcl);
+                       const realtype *w, const realtype *tcl, 
+                       const realtype *spl);
 
     /**
      * @brief Model specific implementation for dwdx, column pointers

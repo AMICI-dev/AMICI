@@ -190,8 +190,10 @@ bool operator==(const Model &a, const Model &b) {
 void Model::initialize(AmiVector &x, AmiVector &dx, AmiVectorArray &sx,
                        AmiVectorArray & /*sdx*/, bool computeSensitivities) {
     initializeStates(x);
+    initializeSplines();
     if (computeSensitivities)
         initializeStateSensitivities(sx, x);
+        initializeSplineSensitivities();
 
     fdx0(x, dx);
     if (computeSensitivities)
@@ -219,6 +221,20 @@ void Model::initializeStates(AmiVector &x) {
         std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
     }
 }
+
+void Model::initializeSplines() {
+    fspline_constructor(splines_);
+    spl_.resize();
+    if (x0data_.empty()) {
+        fx0(x);
+    } else {
+        std::vector<realtype> x0_solver(nx_solver, 0.0);
+        ftotal_cl(state_.total_cl.data(), x0data_.data());
+        fx_solver(x0_solver.data(), x0data_.data());
+        std::copy(x0_solver.cbegin(), x0_solver.cend(), x.data());
+    }
+}
+
 
 void Model::initializeStateSensitivities(AmiVectorArray &sx,
                                          AmiVector const &x) {
@@ -1797,10 +1813,34 @@ void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
     }
 }
 
+void Model::fspl(const realtype t) {
+    for (int ispl = 0; ispl < nspl; ispl++) {
+        if (splines_[ispl]->get_logarithmic_paraterization()) {
+            spl_[ispl] = std::exp(splines_[ispl]->getValue(t));
+        } else {
+            spl_[ispl] = splines_[ispl]->getValue(t);
+        }
+    }
+}
+
+void Model::fsspl(const realtype t) {
+    for (int ispl = 0; ispl < nspl; ispl++) {
+        for (int ip = 0; ip < nplist(); ip++) {
+            if (splines_[ispl]->get_logarithmic_paraterization()) {
+                sspl_[ispl, ip] = spl_[ispl] * splines_[ispl]->getSensitivity(t, ip);
+            } else {
+                sspl_[ispl, ip] = splines_[ispl]->getSensitivity(t, ip);
+            }
+        }
+    }
+}
+
 void Model::fw(const realtype t, const realtype *x) {
     std::fill(w_.begin(), w_.end(), 0.0);
+    fspl(t);
     fw(w_.data(), t, x, state_.unscaledParameters.data(),
-       state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data());
+       state_.fixedParameters.data(), state_.h.data(), state_.total_cl.data(),
+       spl.data();
 
     if (always_check_finite_) {
         app->checkFinite(w_, "w");
@@ -1809,6 +1849,7 @@ void Model::fw(const realtype t, const realtype *x) {
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
+    fsspl(t);
     if (pythonGenerated) {
         dwdp_.reset();
 
@@ -1842,7 +1883,7 @@ void Model::fdwdx(const realtype t, const realtype *x) {
     fdwdx_rowvals(dwdx_.indexvals());
     fdwdx(dwdx_.data(), t, x, state_.unscaledParameters.data(),
           state_.fixedParameters.data(), state_.h.data(), w_.data(),
-          state_.total_cl.data());
+          state_.total_cl.data(), spl.data();
 
     if (always_check_finite_) {
         app->checkFinite(gsl::make_span(dwdx_.get()), "dwdx");

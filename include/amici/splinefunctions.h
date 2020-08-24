@@ -2,7 +2,6 @@
 #define AMICI_SPLINEFUNCTION_H
 
 #include "amici/defines.h"
-#include "amici/vector.h"
 
 namespace amici {
     
@@ -14,18 +13,18 @@ class Model;
  * Upon call to a spline fuction, only the evaluation of the spline polynomial
  * is carried out.
  */
-class SplineFunction {
+class AbstractSpline {
   public:
     /**
      * @brief constructor
      * @param model Model instance
      */
-    explicit SplineFunction(std::vector<realtype> nodes, 
+    explicit AbstractSpline(std::vector<realtype> nodes, 
                             std::vector<realtype> node_values,
                             bool equidistant_spacing,
                             bool logarithmic_paraterization);
   
-    ~SplineFunction(){};
+    ~AbstractSpline(){};
     
     virtual void computeCoefficients() = 0;
     
@@ -100,7 +99,7 @@ class SplineFunction {
 
 
 
-class HermiteSpline : SplineFunction {
+class HermiteSpline : AbstractSpline {
   public:
     HermiteSpline() = default;
       

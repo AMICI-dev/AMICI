@@ -103,13 +103,13 @@ double pos_pow(double base, double exponent) {
 
 
 // new spline implementation in C++ */
-double splineFunction(SplineFunction *splineFun, const realtype t) {
+double splineFunction(AbstractSpline *splineFun, const realtype t) {
     if (splineFun->get_logarithmic_paraterization())
         return std::exp(splineFun->getValue(t));
     return splineFun->getValue(t);
 }
 
-double splineFunctionSensi(SplineFunction *splineFun, const realtype t, 
+double splineFunctionSensi(AbstractSpline *splineFun, const realtype t, 
                            const int ip) {
     if (splineFun->get_logarithmic_paraterization())
         return std::exp(splineFun->getValue(t)) * 

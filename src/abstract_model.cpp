@@ -496,7 +496,8 @@ AbstractModel::fw(realtype* /*w*/,
                   const realtype* /*p*/,
                   const realtype* /*k*/,
                   const realtype* /*h*/,
-                  const realtype* /*tcl*/)
+                  const realtype* /*tcl*/,
+                  const realtype* /*spl*/)
 {
     // no-op default implementation
 }
@@ -510,7 +511,9 @@ AbstractModel::fdwdp(realtype* /*dwdp*/,
                      const realtype* /*h*/,
                      const realtype* /*w*/,
                      const realtype* /*tcl*/,
-                     const realtype* /*stcl*/)
+                     const realtype* /*stcl*/,
+                     const realtype* /*spl*/
+                     const realtype* /*sspl*/)
 {
     // no-op default implementation
 }
@@ -550,7 +553,8 @@ AbstractModel::fdwdx(realtype* /*dwdx*/,
                      const realtype* /*k*/,
                      const realtype* /*h*/,
                      const realtype* /*w*/,
-                     const realtype* /*tcl*/)
+                     const realtype* /*tcl*/,
+                     const realtype* /*spl*/)
 {
     // no-op default implementation
 }

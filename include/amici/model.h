@@ -230,6 +230,13 @@ class Model : public AbstractModel {
     void initializeStateSensitivities(AmiVectorArray &sx, const AmiVector &x);
 
     /**
+     * @brief Initialization of spline functions
+     */
+    void initializeSplines();
+    
+    void initializeSplineSensitivities();
+
+    /**
      * @brief Initialises the heaviside variables h at the intial time t0
      * heaviside variables activate/deactivate on event occurences
      * @param x pointer to state variables
@@ -1574,6 +1581,18 @@ class Model : public AbstractModel {
                      const AmiVector &x, const ExpData &edata);
 
     /**
+     * @brief Spline functions
+     * @param t timepoint
+     */
+    void fspl(realtype t);
+
+    /**
+     * @brief Parametric derivatives of splines functions
+     * @param t timepoint
+     */
+    void fsspl(realtype t);
+
+    /**
      * @brief Recurring terms in xdot
      * @param t timepoint
      * @param x array with the states
@@ -1783,6 +1802,21 @@ class Model : public AbstractModel {
 
     /** tempory storage for sx_rdata slice (dimension: nx_rdata) */
     mutable std::vector<realtype> sx_rdata_;
+
+    /** temporary storage for splines */
+    mutable std::vector<realtype> spl_;
+    
+    /** temporary storage for sensitivities of splines */
+    mutable std::vector<realtype> sspl_;
+
+    /** temporary storage for sensitivities of spline values */
+    mutable std::vector<realtype> dspl_valuesdp_;
+
+    /** temporary storage for sensitivities of spline slopes */
+    mutable std::vector<realtype> dspl_slopesdp_;
+
+    /** temporary storage for splines in the model */
+    mutable std::vector<AbstractSpline*> splines_;
 
     /** temporary storage for time-resolved observable (dimension: ny) */
     mutable std::vector<realtype> y_;

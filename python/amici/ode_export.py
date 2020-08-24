@@ -124,14 +124,16 @@ functions = {
         'signature':
             '(realtype *dwdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl, const realtype *dtcldp)',
+            'const realtype *w, const realtype *tcl, const realtype *dtcldp,'
+            'const AbstractSpline *spl)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
     'dwdx': {
         'signature':
             '(realtype *dwdx, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
-            'const realtype *w, const realtype *tcl)',
+            'const realtype *w, const realtype *tcl, '
+            'const AbstractSpline *spl)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
     'dxdotdw': {
@@ -182,7 +184,8 @@ functions = {
         'signature':
             '(realtype *w, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, '
-            'const realtype *h, const realtype *tcl)',
+            'const realtype *h, const realtype *tcl, '
+            'const realtype *spl)',
         'flags': ['assume_pow_positivity']
     },
     'x0': {

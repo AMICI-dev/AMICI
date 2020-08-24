@@ -5,6 +5,7 @@
 
 #include "amici/model_ode.h"
 #include "amici/solver_cvodes.h"
+#include "amici/splinefunctions.h"
 
 #include "sundials/sundials_types.h"
 
@@ -81,6 +82,9 @@ extern void dsigmaydp_TPL_MODELNAME(realtype *dsigmaydp, const realtype t,
                                     const int ip);
 extern void sigmay_TPL_MODELNAME(realtype *sigmay, const realtype t,
                                  const realtype *p, const realtype *k);
+TPL_SPL_DEF
+TPL_SSPLNODES_DEF
+TPL_SSPLSLOPES_DEF
 TPL_W_DEF
 extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p,
                              const realtype *k);
@@ -669,6 +673,12 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                      const realtype *h, const realtype *sx,
                      const int ip) override {}
 
+    TPL_SPL_DEF
+
+    TPL_SSPLNODES_DEF
+
+    TPL_SSPLSLOPES_DEF
+
     TPL_W_IMPL
 
     /** model specific implementation of fx0
@@ -741,6 +751,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_X_SOLVER_IMPL
 
     TPL_TOTAL_CL_IMPL
+
 
     std::string getName() const override {
         return "TPL_MODELNAME";

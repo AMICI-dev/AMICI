@@ -16,7 +16,7 @@ static realtype evaluatePolynomial(realtype x, realtype *coeff) {
     return coeff[0] + x * (coeff[1] + x * (coeff[2] + x * coeff[3]));
 }
     
-SplineFunction::SplineFunction(std::vector<realtype> nodes, 
+AbstractSpline::AbstractSpline(std::vector<realtype> nodes, 
                                std::vector<realtype> node_values,
                                bool equidistant_spacing,
                                bool logarithmic_paraterization) 
@@ -48,7 +48,7 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                              bool node_derivative_by_FD,
                              bool equidistant_spacing,
                              bool logarithmic_paraterization) 
-    : SplineFunction(nodes, node_values, equidistant_spacing,
+    : AbstractSpline(nodes, node_values, equidistant_spacing,
                      logarithmic_paraterization),
     node_values_derivative(node_values_derivative),
     firstNodeDerivative(firstNodeDerivative), 
@@ -142,8 +142,8 @@ void HermiteSpline::computeCoefficients() {
     coefficients_extrapolate[3] = node_values_derivative[n_nodes() - 1];
 }
 
-void HermiteSpline::computeCoefficientsSensi(int nplist, realtype *dnodesdp, 
-                                             realtype *dslopesdp) {
+void HermiteSpline::computeCoefficientsSensi(int nplist, realtype *dspline_valuesdp, 
+                                             realtype *dspline_slopesdp) {
     /* Allocate space for the coefficients *
      * They are stored in the vector as 
      * [ D[d_0, p0], D[c_0, p0], D[b_0, p0], D[a_0, p0], D[d_1, p0],  
@@ -173,7 +173,8 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, realtype *dnodesdp,
         /* As computing the coefficient is a mess, it's in another function */
         for (int ip = 0; ip < nplist; ip++)
             getCoeffsSensiLowlevel(ip, i_node, offset, len, len_m, len_p, 
-                                   dnodesdp, dslopesdp, coefficients_sensi.data(),
+                                   dspline_valuesdp, dspline_slopesdp, 
+                                   coefficients_sensi.data(),
                                    coefficients_extrapolate_sensi.data());
     }
 
