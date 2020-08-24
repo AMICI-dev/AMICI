@@ -232,14 +232,17 @@ void Model::initializeSplines() {
 }
 
 void Model::initializeSplineSensitivities() {
-    sspl_.resize(nspl * nplist(), 0.0);
-    std::vector<realtype> dspline_valuesdp;
-    std::vector<realtype> dspline_slopesdp;
+    int allnodes = 0;
     for (int ispl = 0; ispl < nspl; ispl++) {
-        dspline_valuesdp.resize(splines_[ispl]->n_nodes() * nplist(), 0.0);
-        if (splines_[ispl]->get_node_derivative_by_FD())
-            dspline_slopesdp.resize(splines_[ispl]->n_nodes() * nplist(), 0.0);
-
+        allnodes += splines_[ispl]->n_nodes();
+        
+    sspl_.resize(nspl * nplist(), 0.0);
+    std::vector<realtype> dspline_valuesdp (allnodes * nplist(), 0.0);
+    std::vector<realtype> dspline_slopesdp (allnodes * nplist(), 0.0);
+    fdspline_valuesdp(dspline_valuesdp.data(), p, k);
+    fdspline_slopesdp(dspline_slopesdp.data(), p, k);
+    for (int ispl = 0; ispl < nspl; ispl++) {
+        // TODO: Offset missing
         splines_[ispl]->computeCoefficientsSensi(nplist(), 
             dspline_valuesdp.data(), dspline_slopesdp.data());
     }       
