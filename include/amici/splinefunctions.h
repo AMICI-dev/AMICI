@@ -1,7 +1,8 @@
-#ifndef AMICI_SPLINEFUNCTION_H
-#define AMICI_SPLINEFUNCTION_H
+#ifndef AMICI_SPLINEFUNCTIONS_H
+#define AMICI_SPLINEFUNCTIONS_H
 
 #include "amici/defines.h"
+#include <vector>
 
 namespace amici {
     
@@ -15,14 +16,17 @@ class Model;
  */
 class AbstractSpline {
   public:
+    /** default constructor */
+    AbstractSpline() = default;
+
     /**
      * @brief constructor
      * @param model Model instance
      */
-    explicit AbstractSpline(std::vector<realtype> nodes, 
-                            std::vector<realtype> node_values,
-                            bool equidistant_spacing,
-                            bool logarithmic_paraterization);
+    AbstractSpline(std::vector<realtype> nodes, 
+                   std::vector<realtype> node_values,
+                   bool equidistant_spacing,
+                   bool logarithmic_paraterization);
   
     ~AbstractSpline(){};
     

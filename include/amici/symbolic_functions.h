@@ -1,6 +1,5 @@
 #ifndef amici_symbolic_functions_h
 #define amici_symbolic_functions_h
-#include "amici/splinefunctions.h"
 
 namespace amici {
 
@@ -122,29 +121,6 @@ double getNaN();
  *
  */
 double sign(double x);
-
-
-
-/* splines (new C++ implementation) */
-
-/**
- * @brief Convenience wrapper for evaluating a spline function object
- * @param splineFun pointer to the requested instance of SplineFunction
- * @param t time at which spline should be evaulated
- * @return value of splineFun at time t
- */
-double splineFunction(AbstractSpline *splineFun, const realtype t);
-
-
-/**
- * @brief Convenience wrapper for evaluating the parametric derivative 
- * of a spline function object
- * @param splineFun pointer to the requested instance of SplineFunction
- * @param t time at which parametric spline derivative should be evaulated
- * @param ip model parameter for which derivative is requested
- * @return derivative w.r.t. parameter ip of splineFun at time t 
- */
-double splineFunctionSensi(AbstractSpline *splineFun, const realtype t, const int ip);
 
 
 
