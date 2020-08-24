@@ -18,7 +18,13 @@ from typing import Dict, Union, List, Callable, Any, Iterable
 
 from .ode_export import ODEExporter, ODEModel
 from .logging import get_logger, log_execution_time, set_log_level
-from .sbml_utils import setSbmlMath, annotation_namespace
+from .sbml_utils import (
+    setSbmlMath,
+    annotation_namespace,
+    _check_unsupported_functions,
+    _parse_special_functions,
+    _parse_logical_operators,
+)
 from . import has_clibs
 
 from sympy.logic.boolalg import BooleanTrue as spTrue
@@ -351,7 +357,8 @@ class SbmlImporter:
         if constant_parameters is None:
             constant_parameters = []
 
-        self._process_annotations()
+        if not self._discard_annotations:
+            self._process_annotations()
         self.check_support()
         self._gather_locals()
         self._process_parameters(constant_parameters)
@@ -1711,134 +1718,6 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
         raise SBMLException(
             'SBML Document failed to load (see error messages above)'
         )
-
-
-def _check_unsupported_functions(sym: sp.Basic,
-                                 expression_type: str,
-                                 full_sym: sp.Basic = None):
-    """
-    Recursively checks the symbolic expression for unsupported symbolic
-    functions
-
-    :param sym:
-        symbolic expressions
-
-    :param expression_type:
-        type of expression, only used when throwing errors
-    """
-    if full_sym is None:
-        full_sym = sym
-
-    unsupported_functions = [
-        sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
-        sp.function.UndefinedFunction
-    ]
-
-    unsupp_fun_type = next(
-        (
-            fun_type
-            for fun_type in unsupported_functions
-            if isinstance(sym.func, fun_type)
-        ),
-        None
-    )
-    if unsupp_fun_type:
-        raise SBMLException(f'Encountered unsupported expression '
-                            f'"{sym.func}" of type '
-                            f'"{unsupp_fun_type}" as part of a '
-                            f'{expression_type}: "{full_sym}"!')
-    for fun in list(sym._args) + [sym]:
-        unsupp_fun_type = next(
-            (
-                fun_type
-                for fun_type in unsupported_functions
-                if isinstance(fun, fun_type)
-            ),
-            None
-        )
-        if unsupp_fun_type:
-            raise SBMLException(f'Encountered unsupported expression '
-                                f'"{fun}" of type '
-                                f'"{unsupp_fun_type}" as part of a '
-                                f'{expression_type}: "{full_sym}"!')
-        if fun is not sym:
-            _check_unsupported_functions(fun, expression_type)
-
-
-def _parse_special_functions(sym: sp.Basic, toplevel: bool = True) -> sp.Basic:
-    """
-    Recursively checks the symbolic expression for functions which have be
-    to parsed in a special way, such as piecewise functions
-
-    :param sym:
-        symbolic expressions
-
-    :param toplevel:
-        as this is called recursively, are we in the top level expression?
-    """
-    args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
-
-    if sym.__class__.__name__ == 'abs':
-        return sp.Abs(sym._args[0])
-    elif sym.__class__.__name__ == 'xor':
-        return sp.Xor(*sym.args)
-    elif sym.__class__.__name__ == 'piecewise':
-        # how many condition-expression pairs will we have?
-        return sp.Piecewise(*grouper(args, 2, True))
-    elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
-        sym._args = args
-    elif toplevel:
-        # Replace boolean constants by numbers so they can be differentiated
-        #  must not replace in Piecewise function. Therefore, we only replace
-        #  it the complete expression consists only of a Boolean value.
-        if isinstance(sym, spTrue):
-            sym = sp.Float(1.0)
-        elif isinstance(sym, spFalse):
-            sym = sp.Float(0.0)
-
-    return sym
-
-
-def _parse_logical_operators(math_str: str) -> Union[str, None]:
-    """
-    Parses a math string in order to replace logical operators by a form
-    parsable for sympy
-
-    :param math_str:
-        str with mathematical expression
-    :param math_str:
-        parsed math_str
-    """
-    if math_str is None:
-        return None
-
-    if ' xor(' in math_str or ' Xor(' in math_str:
-        raise SBMLException('Xor is currently not supported as logical '
-                            'operation.')
-
-    return (math_str.replace('&&', '&')).replace('||', '|')
-
-
-def grouper(iterable: Iterable, n: int,
-            fillvalue: Any = None) -> Iterable[Iterable]:
-    """
-    Collect data into fixed-length chunks or blocks
-
-    grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
-
-    :param iterable:
-        any iterable
-
-    :param n:
-        chunk length
-
-    :param fillvalue:
-        padding for last chunk if length < n
-
-    :return: itertools.zip_longest of requested chunks
-    """
-    args = [iter(iterable)] * n
-    return itt.zip_longest(*args, fillvalue=fillvalue)
 
 
 def assignmentRules2observables(sbml_model,

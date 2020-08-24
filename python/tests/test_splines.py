@@ -1,18 +1,25 @@
-import pandas as pd
+import os
 from scipy.integrate import quad
+import sympy as sp
+import pandas as pd
+
 import petab
 
-def create_spline_test_petab(yy_true: Sequence, spline_dt=2.5, measure_dt=0.5, sigma=1.0, T=None, extrapolate=True, periodic=True):
+from amici.sbml_utils import amici_time_symbol
+from amici.splines import CubicHermiteSpline, UniformGrid
+
+
+def create_spline_test_petab(yy_true, spline_dt=2.5, measure_dt=0.5, sigma=1.0, T=None, extrapolate=None, bc=None, folder=None):
     spline_dt = sp.nsimplify(spline_dt)
     tmax = (len(yy_true) - 1)*spline_dt
     yy = list(sp.symbols(f'y0:{len(yy_true)}'))
-    spline = CatmullRomSpline_Piecewise(
+    spline = CubicHermiteSpline(
         'y',
-        AMICI_TIME,
+        amici_time_symbol,
         UniformGrid(0, tmax, spline_dt),
         yy,
-        extrapolate=extrapolate,
-        periodic=periodic
+        bc=bc,
+        extrapolate=extrapolate
     )
 
     # Create SBML document
@@ -109,25 +116,22 @@ def create_spline_test_petab(yy_true: Sequence, spline_dt=2.5, measure_dt=0.5, s
     if petab.lint_problem(problem):
         raise Exception('PEtab lint failed')
 
+    if folder is None:
+        folder = os.path.abspath(folder)
+        os.makedirs(folder, exist_ok=True)
+        problem.to_files(
+            sbml_file=os.path.join(folder, 'spline_test.xml'),
+            condition_file=os.path.join(folder, 'spline_test_conditions.tsv'),
+            measurement_file=os.path.join(folder, 'spline_test_measurements.tsv'),
+            parameter_file=os.path.join(folder, 'spline_test_parameters.tsv'),
+            observable_file=os.path.join(folder, 'spline_test_observables.tsv'),
+            yaml_file=os.path.join(folder, 'spline_test.yaml')
+        )
+
     return problem
 
-problem = create_spline_test_petab(
-    [0.0, 2.0, 3.0, 4.0, 1.0, -0.5, -1, -1.5, 0.5, 0.0],
-    spline_dt=2.5,
-    measure_dt=0.5,
-    sigma=1.0,
-    extrapolate=True,
-    periodic=False
-)
-
-import os
-root = ''
-os.makedirs(root, exist_ok=True)
-problem.to_files(
-    sbml_file=os.path.join(root, 'spline_test.xml'),
-    condition_file=os.path.join(root, 'spline_test_conditions.tsv'),
-    measurement_file=os.path.join(root, 'spline_test_measurements.tsv'),
-    parameter_file=os.path.join(root, 'spline_test_parameters.tsv'),
-    observable_file=os.path.join(root, 'spline_test_observables.tsv'),
-    yaml_file=os.path.join(root, 'spline_test.yaml')
-)
+if __name__ == "__main__":
+    import sys
+    folder = sys.argv[1] if len(sys.argv) > 1 else '.'
+    yy_true = [0.0, 2.0, 3.0, 4.0, 1.0, -0.5, -1, -1.5, 0.5, 0.0],
+    create_spline_test_petab(yy_true, folder=folder)

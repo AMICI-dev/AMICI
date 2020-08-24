@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from .sbml_import import SbmlImporter
     from typing import Optional, Union
 
+import xml.dom.minidom
 import libsbml
 import sympy as sp
 
@@ -25,6 +26,11 @@ amici_time_symbol = sp.Symbol('t', real=True)
 
 
 annotation_namespace = 'http://github.com/AMICI-dev/AMICI'
+
+
+class SbmlException(Exception):
+    "Exception class for SBML-related errors."
+    pass
 
 
 ################################################################################
@@ -412,11 +418,12 @@ def getSbmlUnits(model: libsbml.Model, x) -> Union[None, str]:
 
 
 ################################################################################
+# SymPy to SBML MathML/AST conversion
 
 
-class SbmlException(Exception):
-    "Exception class for SBML-related errors."
-    pass
+def pretty_mathml(mathml: str):
+    dom = xml.dom.minidom.parseString(mathml)
+    return dom.toprettyxml()
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
@@ -429,7 +436,7 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
         ci = self.dom.createElement(self.mathml_tag(sym))
         ci.appendChild(self.dom.createTextNode(sym.name))
         return ci
-    def doprint(self, expr):
+    def doprint(self, expr, *, pretty: bool = False):
         mathml = '<math xmlns="http://www.w3.org/1998/Math/MathML">'
         mathml += super().doprint(expr)
         mathml += '</math>'
@@ -437,10 +444,10 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
             f'<ci>time</ci>',
             '<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>'
         )
-        return mathml
+        return pretty_mathml(mathml) if pretty else mathml
 
 
-def sbmlMathML(expr, *, replace_time: bool = False, **settings) -> str:
+def sbmlMathML(expr, *, replace_time: bool = False, pretty: bool = False, **settings) -> str:
     """
     Prints a SymPy expression to a MathML expression parsable by libSBML.
 
@@ -449,12 +456,15 @@ def sbmlMathML(expr, *, replace_time: bool = False, **settings) -> str:
 
         :param replace_time:
             replace the AMICI time symbol with the SBML time symbol.
+
+        :param pretty:
+            prettify the resulting MathML.
     """
     with evaluate(False):
         expr = sp.sympify(expr)
         if replace_time:
             expr = expr.subs(amici_time_symbol, sbml_time_symbol)
-    return MathMLSbmlPrinter(settings).doprint(expr)
+    return MathMLSbmlPrinter(settings).doprint(expr, pretty=pretty)
 
 
 def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
@@ -467,13 +477,13 @@ def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
         :param kwargs:
             extra options for MathML conversion.
     """
-    _mathml = sbmlMathML(expr, **kwargs)
-    ast = libsbml.readMathMLFromString(_mathml)
+    mathml = sbmlMathML(expr, **kwargs)
+    ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
         raise SbmlException(
             f'error while converting the following expression to SBML AST.\n'
             'expression:\n{expr}\n'
-            'MathML:\n{_mathml}'
+            'MathML:\n{pretty_mathml(mathml)}'
         )
     return ast
 
@@ -497,22 +507,160 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
         raise SbmlException(
             f'Could not set math attribute of SBML object {obj}\n'
             'expression:\n{expr}\n'
-            'MathML:\n{mathml}'
+            'MathML:\n{pretty_mathml(mathml)}'
         )
 
 
-def mathml2sympy(mathml, *, locals=None, formulaType=None):
-    ast = readMathMLFromString(mathml)
+################################################################################
+# MathML to Sympy conversion
+
+
+def mathml2sympy(mathml: str, *, evaluate: bool = False, locals=None, expression_type=None):
+    ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
-        raise ...
-    # TODO move _parse_special_functions and _check_unsupported_functions here
-    sym_math = sp.sympify(_parse_logical_operators(
-        sbml.formulaToL3String(ast)),
-        locals=locals
+        raise ValueError(
+            f'libSBML could not parse MathML string:\n{pretty_mathml(mathml)}'
+        )
+
+    formula = _parse_logical_operators(libsbml.formulaToL3String(ast))
+
+    if evaluate:
+        expr = sp.sympify(formula, locals=locals)
+    else:
+        with evaluate(False):
+            expr = sp.sympify(formula, locals=locals)
+
+    expr = _parse_special_functions(expr)
+
+    if expression_type is not None:
+        _check_unsupported_functions(expr, expression_type)
+
+    return expr
+
+
+def _check_unsupported_functions(sym: sp.Basic,
+                                 expression_type: str,
+                                 full_sym: sp.Basic = None):
+    """
+    Recursively checks the symbolic expression for unsupported symbolic
+    functions
+
+    :param sym:
+        symbolic expressions
+
+    :param expression_type:
+        type of expression, only used when throwing errors
+    """
+    if full_sym is None:
+        full_sym = sym
+
+    unsupported_functions = [
+        sp.functions.factorial, sp.functions.ceiling, sp.functions.floor,
+        sp.function.UndefinedFunction
+    ]
+
+    unsupp_fun_type = next(
+        (
+            fun_type
+            for fun_type in unsupported_functions
+            if isinstance(sym.func, fun_type)
+        ),
+        None
     )
-    if sym_math is None:
-        raise ... # needed?
-    sym_math = _parse_special_functions(sym_math)
-    if formulaType is not None:
-        _check_unsupported_functions(sym_math, formulaType)
-    return sym_math
+    if unsupp_fun_type:
+        raise SBMLException(f'Encountered unsupported expression '
+                            f'"{sym.func}" of type '
+                            f'"{unsupp_fun_type}" as part of a '
+                            f'{expression_type}: "{full_sym}"!')
+    for fun in list(sym._args) + [sym]:
+        unsupp_fun_type = next(
+            (
+                fun_type
+                for fun_type in unsupported_functions
+                if isinstance(fun, fun_type)
+            ),
+            None
+        )
+        if unsupp_fun_type:
+            raise SBMLException(f'Encountered unsupported expression '
+                                f'"{fun}" of type '
+                                f'"{unsupp_fun_type}" as part of a '
+                                f'{expression_type}: "{full_sym}"!')
+        if fun is not sym:
+            _check_unsupported_functions(fun, expression_type)
+
+
+def _parse_special_functions(sym: sp.Basic, toplevel: bool = True) -> sp.Basic:
+    """
+    Recursively checks the symbolic expression for functions which have be
+    to parsed in a special way, such as piecewise functions
+
+    :param sym:
+        symbolic expressions
+
+    :param toplevel:
+        as this is called recursively, are we in the top level expression?
+    """
+    args = tuple(_parse_special_functions(arg, False) for arg in sym._args)
+
+    if sym.__class__.__name__ == 'abs':
+        return sp.Abs(sym._args[0])
+    elif sym.__class__.__name__ == 'xor':
+        return sp.Xor(*sym.args)
+    elif sym.__class__.__name__ == 'piecewise':
+        # how many condition-expression pairs will we have?
+        return sp.Piecewise(*grouper(args, 2, True))
+    elif isinstance(sym, (sp.Function, sp.Mul, sp.Add)):
+        sym._args = args
+    elif toplevel:
+        # Replace boolean constants by numbers so they can be differentiated
+        #  must not replace in Piecewise function. Therefore, we only replace
+        #  it the complete expression consists only of a Boolean value.
+        if isinstance(sym, spTrue):
+            sym = sp.Float(1.0)
+        elif isinstance(sym, spFalse):
+            sym = sp.Float(0.0)
+
+    return sym
+
+
+def _parse_logical_operators(math_str: str) -> Union[str, None]:
+    """
+    Parses a math string in order to replace logical operators by a form
+    parsable for sympy
+
+    :param math_str:
+        str with mathematical expression
+    :param math_str:
+        parsed math_str
+    """
+    if math_str is None:
+        return None
+
+    if ' xor(' in math_str or ' Xor(' in math_str:
+        raise SBMLException('Xor is currently not supported as logical '
+                            'operation.')
+
+    return (math_str.replace('&&', '&')).replace('||', '|')
+
+
+def grouper(iterable: Iterable, n: int,
+            fillvalue: Any = None) -> Iterable[Iterable]:
+    """
+    Collect data into fixed-length chunks or blocks
+
+    grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+
+    :param iterable:
+        any iterable
+
+    :param n:
+        chunk length
+
+    :param fillvalue:
+        padding for last chunk if length < n
+
+    :return: itertools.zip_longest of requested chunks
+    """
+    args = [iter(iterable)] * n
+    return itt.zip_longest(*args, fillvalue=fillvalue)
