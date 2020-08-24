@@ -573,16 +573,18 @@ AbstractModel::fdwdx_rowvals(sunindextype* /*indexvals*/)
     // no-op default implementation
 }
 
-void fdspline_valuesdp(realtype *dspline_valuesdp,
-                       const realtype* /*p*/,
-                       const realtype* /*k*/)
+void 
+AbstractModel::fdspline_valuesdp(realtype *dspline_valuesdp,
+                                 const realtype* /*p*/,
+                                 const realtype* /*k*/)
 {
     // no-op default implementation
 }
 
-void fdspline_slopesdp(realtype *dspline_slopesdp,
-                       const realtype* /*p*/,
-                       const realtype* /*k*/)
+void 
+AbstractModel::fdspline_slopesdp(realtype *dspline_slopesdp,
+                                 const realtype* /*p*/,
+                                 const realtype* /*k*/)
 {
     // no-op default implementation
 }
