@@ -35,6 +35,8 @@ class AbstractSpline {
     
     virtual double getSensitivity(const double t, const int ip) = 0;
 
+    virtual bool get_node_derivative_by_FD() = 0;
+
     /**
      * @brief Accessor to equidistant_spacing_ member
      * @return equidistant_spacing flag
@@ -50,6 +52,8 @@ class AbstractSpline {
     bool get_logarithmic_paraterization() {
         return logarithmic_paraterization_;
     }
+
+    const int n_nodes() { return n_nodes_; }
 
   protected: 
   /*
@@ -85,8 +89,6 @@ class AbstractSpline {
     std::vector<realtype> coefficients_sensi;
     
     std::vector<realtype> coefficients_extrapolate_sensi;
-
-    const int n_nodes() { return n_nodes_; }
     
   private:
     bool equidistant_spacing_ = false;
@@ -127,7 +129,7 @@ class HermiteSpline : AbstractSpline {
      * @brief Accessor to node_derivative_by_FD_ member
      * @return node_derivative_by_FD flag
      */
-    bool get_node_derivative_by_FD() {
+    bool get_node_derivative_by_FD() override {
         return node_derivative_by_FD_;
     }
 

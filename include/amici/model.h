@@ -5,6 +5,7 @@
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
+#include "amici/splinefunctions.h"
 
 #include <map>
 #include <memory>
@@ -1195,6 +1196,9 @@ class Model : public AbstractModel {
 
     /** number of solver states subject to reinitialization */
     int nx_solver_reinit{0};
+    
+    /** numer of spline functions in the model */
+    int nspl = 0;
 
     /** number of observables */
     int ny{0};
@@ -1808,12 +1812,6 @@ class Model : public AbstractModel {
     
     /** temporary storage for sensitivities of splines */
     mutable std::vector<realtype> sspl_;
-
-    /** temporary storage for sensitivities of spline values */
-    mutable std::vector<realtype> dspl_valuesdp_;
-
-    /** temporary storage for sensitivities of spline slopes */
-    mutable std::vector<realtype> dspl_slopesdp_;
 
     /** temporary storage for splines in the model */
     mutable std::vector<AbstractSpline*> splines_;
