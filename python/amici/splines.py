@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
 import collections
 
-import xml.dom.minidom
 import xml.etree.ElementTree as ET
 import numpy as np
 import sympy as sp
@@ -31,12 +30,19 @@ import libsbml
 from abc import abstractmethod, ABC
 from itertools import count
 from sympy.core.parameters import evaluate
+from sympy import cxxcode
 
 from .sbml_utils import (
     sbml_time_symbol,
     amici_time_symbol,
+    pretty_xml,
+    mathml2sympy,
     sbmlMathML,
     annotation_namespace,
+    getSbmlUnits,
+    hasParameter,
+    addParameter,
+    addAssignmentRule,
 )
 
 
@@ -145,7 +151,7 @@ class AbstractSpline(ABC):
                 None, str,
                 Tuple[Union[None, str], Union[None, str]]
             ] = None,
-            logarithmic_paraterization: bool = True
+            logarithmic_paraterization: bool = False
         ):
         """
         Base constructor for `AbstractSpline` objects.
@@ -198,6 +204,9 @@ class AbstractSpline(ABC):
             )
 
         x = sympify_noeval(x)
+        if not isinstance(x, sp.Basic):
+            # It may still be e.g. a list!
+            raise ValueError(f'Invalid x = {x}')
 
         if not isinstance(xx, UniformGrid):
             xx = np.asarray([sympify_noeval(x) for x in xx])
@@ -493,8 +502,7 @@ class AbstractSpline(ABC):
         annotation += '</amici:spline>'
 
         # Check XML and prettify
-        dom = xml.dom.minidom.parseString(annotation)
-        return dom.toprettyxml()
+        return pretty_xml(annotation)
 
     def _annotation_attributes(self) -> Dict[str, Any]:
         attributes = {}
@@ -584,14 +592,14 @@ class AbstractSpline(ABC):
 
         # Try to autodetermine units
         if x_units is None:
-            x_units = getUnits(model, x)
+            x_units = getSbmlUnits(model, x)
             for _x in self.xx:
                 if x_units is not None:
                     break
-                x_units = getUnits(model, _x)
+                x_units = getSbmlUnits(model, _x)
         if y_units is None:
             for _y in self.yy:
-                y_units = getUnits(model, _y)
+                y_units = getSbmlUnits(model, _y)
                 if y_units is not None:
                     break
 
@@ -647,7 +655,7 @@ class AbstractSpline(ABC):
             addAssignmentRule(model, parameterId, formula)
 
     def _replace_in_all_expressions(self, old: sp.Symbol, new: sp.Symbol):
-        x = x.subs(old, new)
+        self._x = self.x.subs(old, new)
         if not isinstance(self.xx, UniformGrid):
             self._xx = [x.subs(old, new) for x in self.xx]
         self._yy = [y.subs(old, new) for y in self.yy]
@@ -700,9 +708,14 @@ class AbstractSpline(ABC):
                 raise ValueError(
                     f'unexpected node {child.tag} inside spline annotation'
                 )
-            key = child[len(annotation_namespace)+2:]
+            key = child.tag[len(annotation_namespace)+2:]
             value = [
-                mathml2sympy(gc, evaluate=False, locals=locals, expression_type='Rule')
+                mathml2sympy(
+                    ET.tostring(gc).decode(),
+                    evaluate=False,
+                    locals=locals,
+                    expression_type='Rule'
+                )
                 for gc in child.getchildren()
             ]
             children[key] = value
@@ -748,13 +761,19 @@ class AbstractSpline(ABC):
         kwargs['extrapolate'] = extr
 
         kwargs['logarithmic_paraterization'] = \
-            attributes.pop('spline_logarithmic_paraterization')
+            attributes.pop('spline_logarithmic_paraterization', False)
 
-        if 'x' not in children.keys():
+        if 'spline_parameter' not in children.keys():
             raise ValueError(
                 "required spline annotation 'spline_parameter' missing"
             )
-        kwargs['x'] = children.pop('spline_parameter')
+        x = children.pop('spline_parameter')
+        if len(x) != 1:
+            raise ValueError(
+                "Ill-formatted spline annotation 'spline_parameter' " +
+                "(more than one children is present)"
+            )
+        kwargs['x'] = x[0]
 
         if 'spline_uniform_grid' in children.keys():
             start, stop, step = children.pop('spline_uniform_grid')
@@ -857,7 +876,7 @@ class AbstractSpline(ABC):
             def _eval_is_real(self):
                 return True
 
-        return AmiciSpline(self.sbmlId, self.x, *self.parameters)
+        return AmiciSpline(self.sbmlId, self.x, *parameters)
 
 
 def spline_user_functions(p_index: Dict[sp.Symbol, int], **cxxcode_kwargs):
@@ -888,7 +907,7 @@ class CubicHermiteSpline(AbstractSpline):
                 None, str,
                 Tuple[Union[None, str], Union[None, str]]
             ] = None,
-            logarithmic_paraterization: bool = True
+            logarithmic_paraterization: bool = False
         ):
         """
         Constructor for `CubicHermiteSpline` objects.
@@ -940,7 +959,8 @@ class CubicHermiteSpline(AbstractSpline):
             Interpolation is done in log scale.
         """
 
-        xx = np.asarray([sympify_noeval(x) for x in xx])
+        if not isinstance(xx, UniformGrid):
+            xx = np.asarray([sympify_noeval(x) for x in xx])
         yy = np.asarray([sympify_noeval(y) for y in yy])
 
         if bc not in ('periodic', None):

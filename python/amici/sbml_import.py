@@ -10,7 +10,6 @@ import sympy as sp
 import libsbml as sbml
 import re
 import math
-import itertools as itt
 import warnings
 import logging
 import xml.etree.ElementTree as ET
@@ -25,10 +24,8 @@ from .sbml_utils import (
     _parse_special_functions,
     _parse_logical_operators,
 )
+from .splines import AbstractSpline
 from . import has_clibs
-
-from sympy.logic.boolalg import BooleanTrue as spTrue
-from sympy.logic.boolalg import BooleanFalse as spFalse
 
 
 class SBMLException(Exception):
@@ -365,7 +362,6 @@ class SbmlImporter:
         self._process_compartments()
         self._process_species()
         self._process_reactions()
-        self._mark_splines()
         self._process_rules()
         self._process_volume_conversion()
 
@@ -779,14 +775,17 @@ class SbmlImporter:
         # Remove all parameters (and corresponding rules)
         # for which amici:discard is set
         for p in self.sbml.getListOfParameters():
-            annotation = ET.fromstring(rule.getAnnotationString())
-            for child in annotation.getchildren():
-                if child.tag == f'{{{annotation_namespace}}}discard':
-                    pId = p.getIdAttribute()
-                    # Remove corresponding rules
-                    self.sbml.removeRuleByVariable(pId)
-                    # Remove parameter
-                    self.sbml.removeParameter(pId)
+            annotation = p.getAnnotationString()
+            assert isinstance(annotation, str)
+            if len(annotation) != 0:
+                annotation = ET.fromstring(annotation)
+                for child in annotation.getchildren():
+                    if child.tag == f'{{{annotation_namespace}}}discard':
+                        pId = p.getIdAttribute()
+                        # Remove corresponding rules
+                        self.sbml.removeRuleByVariable(pId)
+                        # Remove parameter
+                        self.sbml.removeParameter(pId)
 
     @log_execution_time('processing SBML parameters', logger)
     def _process_parameters(self,
@@ -1121,7 +1120,7 @@ class SbmlImporter:
         for (idx, spline) in enumerate(self.splines):
             self._replace_in_all_expressions(
                 spline.sbmlId,
-                spline.odeModelSymbol(self, idx)
+                spline.odeModelSymbol(self)
             )
 
     def _process_volume_conversion(self) -> None:

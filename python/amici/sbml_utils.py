@@ -10,12 +10,16 @@ if TYPE_CHECKING:
     from .sbml_import import SbmlImporter
     from typing import Optional, Union
 
+import itertools as itt
 import xml.dom.minidom
 import libsbml
 import sympy as sp
 
 from sympy.printing.mathml import MathMLContentPrinter
 from sympy.core.parameters import evaluate
+
+from sympy.logic.boolalg import BooleanTrue as spTrue
+from sympy.logic.boolalg import BooleanFalse as spFalse
 
 
 ################################################################################
@@ -316,7 +320,7 @@ def addAssignmentRule(
         raise SbmlException(
             f'A rule for parameter {variableId} has already been defined.'
         )
-    if hasRuleWithId(mode, ruleId):
+    if hasRuleWithId(model, ruleId):
         raise SbmlException(
             f'A rule with SBML ID {ruleId} has already been defined.'
         )
@@ -421,9 +425,11 @@ def getSbmlUnits(model: libsbml.Model, x) -> Union[None, str]:
 # SymPy to SBML MathML/AST conversion
 
 
-def pretty_mathml(mathml: str):
-    dom = xml.dom.minidom.parseString(mathml)
-    return dom.toprettyxml()
+def pretty_xml(ugly_xml: str):
+    dom = xml.dom.minidom.parseString(ugly_xml)
+    pretty_xml = dom.toprettyxml()
+    # We must delete the first line (xml header)
+    return pretty_xml[pretty_xml.index('\n')+1:]
 
 
 class MathMLSbmlPrinter(MathMLContentPrinter):
@@ -444,7 +450,7 @@ class MathMLSbmlPrinter(MathMLContentPrinter):
             f'<ci>time</ci>',
             '<csymbol encoding="text" definitionURL="http://www.sbml.org/sbml/symbols/time"> time </csymbol>'
         )
-        return pretty_mathml(mathml) if pretty else mathml
+        return pretty_xml(mathml) if pretty else mathml
 
 
 def sbmlMathML(expr, *, replace_time: bool = False, pretty: bool = False, **settings) -> str:
@@ -483,7 +489,7 @@ def sbmlMathAST(expr, **kwargs) -> libsbml.ASTNode:
         raise SbmlException(
             f'error while converting the following expression to SBML AST.\n'
             'expression:\n{expr}\n'
-            'MathML:\n{pretty_mathml(mathml)}'
+            'MathML:\n{pretty_xml(mathml)}'
         )
     return ast
 
@@ -507,7 +513,7 @@ def setSbmlMath(obj: libsbml.SBase, expr, **kwargs) -> None:
         raise SbmlException(
             f'Could not set math attribute of SBML object {obj}\n'
             'expression:\n{expr}\n'
-            'MathML:\n{pretty_mathml(mathml)}'
+            'MathML:\n{pretty_xml(mathml)}'
         )
 
 
@@ -519,7 +525,7 @@ def mathml2sympy(mathml: str, *, evaluate: bool = False, locals=None, expression
     ast = libsbml.readMathMLFromString(mathml)
     if ast is None:
         raise ValueError(
-            f'libSBML could not parse MathML string:\n{pretty_mathml(mathml)}'
+            f'libSBML could not parse MathML string:\n{pretty_xml(mathml)}'
         )
 
     formula = _parse_logical_operators(libsbml.formulaToL3String(ast))
@@ -527,7 +533,7 @@ def mathml2sympy(mathml: str, *, evaluate: bool = False, locals=None, expression
     if evaluate:
         expr = sp.sympify(formula, locals=locals)
     else:
-        with evaluate(False):
+        with sp.core.parameters.evaluate(False):
             expr = sp.sympify(formula, locals=locals)
 
     expr = _parse_special_functions(expr)
