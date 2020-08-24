@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
 import collections
 
-import xml.dom.minidom
 import xml.etree.ElementTree as ET
 import numpy as np
 import sympy as sp
@@ -31,12 +30,19 @@ import libsbml
 from abc import abstractmethod, ABC
 from itertools import count
 from sympy.core.parameters import evaluate
+from sympy import cxxcode
 
 from .sbml_utils import (
     sbml_time_symbol,
     amici_time_symbol,
+    pretty_xml,
+    mathml2sympy,
     sbmlMathML,
     annotation_namespace,
+    getSbmlUnits,
+    hasParameter,
+    addParameter,
+    addAssignmentRule,
 )
 
 
@@ -145,7 +151,7 @@ class AbstractSpline(ABC):
                 None, str,
                 Tuple[Union[None, str], Union[None, str]]
             ] = None,
-            logarithmic_paraterization: bool = True
+            logarithmic_paraterization: bool = False
         ):
         """
         Base constructor for `AbstractSpline` objects.
@@ -198,6 +204,9 @@ class AbstractSpline(ABC):
             )
 
         x = sympify_noeval(x)
+        if not isinstance(x, sp.Basic):
+            # It may still be e.g. a list!
+            raise ValueError(f'Invalid x = {x}')
 
         if not isinstance(xx, UniformGrid):
             xx = np.asarray([sympify_noeval(x) for x in xx])
@@ -493,8 +502,7 @@ class AbstractSpline(ABC):
         annotation += '</amici:spline>'
 
         # Check XML and prettify
-        dom = xml.dom.minidom.parseString(annotation)
-        return dom.toprettyxml()
+        return pretty_xml(annotation)
 
     def _annotation_attributes(self) -> Dict[str, Any]:
         attributes = {}
@@ -584,14 +592,14 @@ class AbstractSpline(ABC):
 
         # Try to autodetermine units
         if x_units is None:
-            x_units = getUnits(model, x)
+            x_units = getSbmlUnits(model, x)
             for _x in self.xx:
                 if x_units is not None:
                     break
-                x_units = getUnits(model, _x)
+                x_units = getSbmlUnits(model, _x)
         if y_units is None:
             for _y in self.yy:
-                y_units = getUnits(model, _y)
+                y_units = getSbmlUnits(model, _y)
                 if y_units is not None:
                     break
 
@@ -647,7 +655,7 @@ class AbstractSpline(ABC):
             addAssignmentRule(model, parameterId, formula)
 
     def _replace_in_all_expressions(self, old: sp.Symbol, new: sp.Symbol):
-        x = x.subs(old, new)
+        self._x = self.x.subs(old, new)
         if not isinstance(self.xx, UniformGrid):
             self._xx = [x.subs(old, new) for x in self.xx]
         self._yy = [y.subs(old, new) for y in self.yy]
@@ -670,72 +678,121 @@ class AbstractSpline(ABC):
                     return child
         return None
 
-    @classmethod
-    def fromAnnotation(cls, sbmlId: sp.Symbol, annotation, *, locals):
+    @staticmethod
+    def fromAnnotation(sbmlId: sp.Symbol, annotation: ET.Element, *, locals):
         """
         Create a spline object from a SBML annotation.
         """
-        if annotation.tag == f'{{{annotation_namespace}}}spline':
+
+        if annotation.tag != f'{{{annotation_namespace}}}spline':
             raise ValueError(
                 'The given annotation is not an AMICI SBML annotation.'
             )
-        attributes = {} # TODO fill attributes, converting when possible
-        children = {} # TODO fill children, converting from MathML
-                      # how to convert from mathml: use sbml_utils.mathml2sympy
+
+        attributes = {}
+        for key, value in annotation.items():
+            if not key.startswith(f'{{{annotation_namespace}}}'):
+                raise ValueError(
+                    f'unexpected attribute {key} inside spline annotation'
+                )
+            key = key[len(annotation_namespace)+2:]
+            if value == 'true':
+                value = True
+            elif value == 'false':
+                value = False
+            attributes[key] = value
+
+        children = {}
+        for child in annotation.getchildren():
+            if not child.tag.startswith(f'{{{annotation_namespace}}}'):
+                raise ValueError(
+                    f'unexpected node {child.tag} inside spline annotation'
+                )
+            key = child.tag[len(annotation_namespace)+2:]
+            value = [
+                mathml2sympy(
+                    ET.tostring(gc).decode(),
+                    evaluate=False,
+                    locals=locals,
+                    expression_type='Rule'
+                )
+                for gc in child.getchildren()
+            ]
+            children[key] = value
+
         if attributes['spline_method'] == 'cubic_hermite':
-            return CubicHermiteSpline._fromAnnotation(attributes, childre)
+            cls = CubicHermiteSpline
         else:
             raise ValueError(
-                f"unknown spline method {attributes['spline_method']}""
+                f"unknown spline method {attributes['spline_method']}"
             )
 
-        # # collect all splines in one list
-        # splines = []
-        # namespaces = {'amici': 'http://github.com/AMICI-dev/AMICI',
-        #               'mathML': 'http://www.w3.org/1998/Math/MathML'}
-        #
-        # def _parse_spline(annotation, species_name):
-        #     # parse the spline parameter, most likely time
-        #     spline_parameter = annotation.find('amici:spline_parameter', namespaces)
-        #     mathML = spline_parameter.find('mathML:math', namespaces)
-        #     parameter_symbol = sp.sympify(mathML.getchildren()[0].text)
-        #
-        #     spline_nodes = annotation.find('amici:spline_nodes', namespaces)
-        #     mathMLs = spline_nodes.findall('mathML:math', namespaces)
-        #     #TODO: I didn't get around to properly parse mathML here...
-        #     # Sorry, needs to be done.
-        #     nodes_symbols = ['missing' for mathML in mathMLs]
-        #
-        #     spline_values = annotation.find('amici:spline_values', namespaces)
-        #     mathMLs = spline_values.findall('mathML:math', namespaces)
-        #     values_symbols = [sp.sympify(mathML.getchildren()[0].text)
-        #                       for mathML in mathMLs]
-        #
-        #     spline_dict = {'species': sp.sympify(species_name),
-        #                    'parameter': parameter_symbol,
-        #                    'nodes': nodes_symbols,
-        #                    'values': values_symbols}
-        #     for key, value in annotation.attrib.items():
-        #         spline_dict[key] = value
-        #
-        #     return spline_dict
-        #
-        #     #TODO: Currently, a dict is returned. However, I would greatly
-        #     # prefer passing an actual spline object, taken from .splines.
-        #     # Unfortunately, we cannot import .splines here, as this imports in
-        #     # turn SBMLImporter, causing a circular dependence.
-        #     # Not sure what the best solution of this would be.
-        #     # However, ideally the C++ class and the python class for splines
-        #     # would be identical, which would make things more consistent
-        #
-        # # iterate over all species which we're recognized as splines
-        # for spline_specie in self.spline_species:
-        #     annotations = ET.fromstring(spline_specie.annotation_string)
-        #     splines.append(_parse_spline(annotations.find(
-        #         'amici:spline', namespaces), spline_specie.getName()))
-        #
-        # # add the list of parsed splines to the model
-        # self.splines = splines
+        del attributes['spline_method']
+        kwargs = cls._fromAnnotation(attributes, children)
+
+        if len(attributes) != 0:
+            raise ValueError(
+                'Unprocessed attributes in spline annotation:\n' +
+                str(attributes)
+            )
+
+        if len(children) != 0:
+            raise ValueError(
+                'Unprocessed children in spline annotation:\n' +
+                str(children)
+            )
+
+        return cls(sbmlId, **kwargs)
+
+    @classmethod
+    def _fromAnnotation(cls, attributes, children):
+        kwargs = {}
+
+        kwargs['bc'] = attributes.pop('spline_bc', None)
+
+        extr = attributes.pop('spline_extrapolate', None)
+        if isinstance(extr, str) and extr.startswith('('):
+            if not extr.endswith(')'):
+                raise ValueError(f'Ill-formatted extrapolation {extr}')
+            extr_cmps = extr[1:-1].split(',')
+            if len(extr_cmps) != 2:
+                raise ValueError(f'Ill-formatted extrapolation {extr}')
+            extr = (extr_cmps[0].strip(), extr_cmps[1].strip())
+        kwargs['extrapolate'] = extr
+
+        kwargs['logarithmic_paraterization'] = \
+            attributes.pop('spline_logarithmic_paraterization', False)
+
+        if 'spline_parameter' not in children.keys():
+            raise ValueError(
+                "required spline annotation 'spline_parameter' missing"
+            )
+        x = children.pop('spline_parameter')
+        if len(x) != 1:
+            raise ValueError(
+                "Ill-formatted spline annotation 'spline_parameter' " +
+                "(more than one children is present)"
+            )
+        kwargs['x'] = x[0]
+
+        if 'spline_uniform_grid' in children.keys():
+            start, stop, step = children.pop('spline_uniform_grid')
+            kwargs['xx'] = UniformGrid(start, stop, step)
+        elif 'spline_grid' in children.keys():
+            kwargs['xx'] = children.pop('spline_grid')
+        else:
+            raise ValueError(
+                "spline annotation requires either "
+                "'spline_grid' or 'spline_uniform_grid' to be specified."
+            )
+
+        if 'spline_values' not in children.keys():
+            raise ValueError(
+                "required spline annotation 'spline_values' missing"
+            )
+        kwargs['yy'] = children.pop('spline_values')
+
+        return kwargs
 
     def parameters(self, importer: SbmlImporter):
         return self._parameters().intersection(
@@ -748,11 +805,11 @@ class AbstractSpline(ABC):
             parameters.update(y.free_symbols)
         return parameters
 
-    def odeModelSymbol(self, importer: SbmlImporter, index: int):
+    def odeModelSymbol(self, importer: SbmlImporter):
         parameters = self.parameters(importer)
 
         class AmiciSpline(sp.Function):
-            # AmiciSpline(index, x, *parameters)
+            # AmiciSpline(splineId, x, *parameters)
             nargs = (len(parameters) + 2, )
 
             @classmethod
@@ -761,16 +818,15 @@ class AbstractSpline(ABC):
 
             def fdiff(self, argindex=1):
                 if argindex == 1:
-                    # derivative with respect to the spline index
-                    # Since the spline index should always be a constant,
-                    # this can be anything
-                    assert self.args[0].is_Integer
+                    # Derivative with respect to the spline SBML ID
+                    # Since the SBML ID is not a real function parameter
+                    # (more like a subscript), the derivative will be zero
                     return sp.Integer(0)
 
                 elif argindex == 2:
                     class AmiciSplineDerivative(sp.Function):
-                        # derivative with respect to spline parameter
-                        # AmiciSplineDerivative(index, x, *parameters)
+                        # Spline derivative
+                        # AmiciSplineDerivative(splineId, x, *parameters)
                         nargs = (len(parameters) + 2, )
 
                         @classmethod
@@ -792,18 +848,10 @@ class AbstractSpline(ABC):
                     pindex = argindex - 3
                     assert 0 <= argindex < len(parameters)
 
-                    class AmiciSplineParameterDerivative(sp.Function):
-                        # derivative with respect to a parameter q
-                        # AmiciSplineParameterDerivative(index, x, q, *parameters)
+                    class AmiciSplineSensitivity(sp.Function):
+                        # Derivative with respect to a parameter paramId
+                        # AmiciSplineSensitivity(splineId, x, paramId, *parameters)
                         nargs = (len(parameters) + 3, )
-
-                        @property
-                        def _amici_spline(self):
-                            return thisSpline
-
-                        @property
-                        def _amici_derivation_parameter(self):
-                            return parameters[pindex]
 
                         @classmethod
                         def eval(cls, *args):
@@ -818,7 +866,7 @@ class AbstractSpline(ABC):
                         def _eval_is_real(self):
                             return True
 
-                    return AmiciSplineParameterDerivative(
+                    return AmiciSplineSensitivity(
                         self.args[0],
                         self.args[1],
                         parameters[pindex],
@@ -828,19 +876,19 @@ class AbstractSpline(ABC):
             def _eval_is_real(self):
                 return True
 
-        return AmiciSpline(index, self.x, *self.parameters)
+        return AmiciSpline(self.sbmlId, self.x, *parameters)
 
 
-def spline_user_functions(p_index: Dict[sp.Symbol, int]):
+def spline_user_functions(p_index: Dict[sp.Symbol, int], **cxxcode_kwargs):
     return {
         'AmiciSpline' : [ (lambda *args : True,
-            lambda idx, x, *p : f"AmiciSpline({idx}, {cxxcode(x, standard='c++11')})"
+            lambda splineId, x, *p : f"spline_{splineId}({cxxcode(x, **cxxcode_kwargs)})"
         )],
         'AmiciSplineDerivative' : [ (lambda *args : True,
-            lambda idx, x, *p : f"AmiciSplineDerivative({idx}, {cxxcode(x, standard='c++11')})"
+            lambda splineId, x, *p : f"d_spline_{splineId}({cxxcode(x, **cxxcode_kwargs)})"
         )],
-        'AmiciSplineParameterDerivative' : [ (lambda *args : True,
-            lambda idx, x, q, *p : f"AmiciSplineParameterDerivative({idx}, {cxxcode(x, standard='c++11')}, {p_index[q]})"
+        'AmiciSplineSensitivity' : [ (lambda *args : True,
+            lambda splineId, x, paramId, *p : f"s_spline_{splineId}({cxxcode(x, **cxxcode_kwargs)}, {p_index[q]})"
         )],
     }
 
@@ -859,7 +907,7 @@ class CubicHermiteSpline(AbstractSpline):
                 None, str,
                 Tuple[Union[None, str], Union[None, str]]
             ] = None,
-            logarithmic_paraterization: bool = True
+            logarithmic_paraterization: bool = False
         ):
         """
         Constructor for `CubicHermiteSpline` objects.
@@ -911,10 +959,11 @@ class CubicHermiteSpline(AbstractSpline):
             Interpolation is done in log scale.
         """
 
-        xx = np.asarray([sympify_noeval(x) for x in xx])
+        if not isinstance(xx, UniformGrid):
+            xx = np.asarray([sympify_noeval(x) for x in xx])
         yy = np.asarray([sympify_noeval(y) for y in yy])
 
-        if bc is not in ('periodic', None):
+        if bc not in ('periodic', None):
             raise ValueError(
                 f'unsupported bc {bc} for CubicHermiteSplines'
             )
@@ -1022,6 +1071,15 @@ class CubicHermiteSpline(AbstractSpline):
     def _replace_in_all_expressions(self, old: sp.Symbol, new: sp.Symbol):
         super()._replace_in_all_expressions(old, new)
         self._dd = [d.subs(old, new) for d in self.dd]
+
+    @classmethod
+    def _fromAnnotation(cls, attributes, children):
+        kwargs = super()._fromAnnotation(attributes, children)
+
+        if 'spline_derivatives' in children.keys():
+            kwargs['dd'] = children.pop('spline_derivatives')
+
+        return kwargs
 
 
 def finite_differences(xx, yy, extrapolate, bc):

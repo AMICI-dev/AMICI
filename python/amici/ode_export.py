@@ -1943,58 +1943,6 @@ class ODEModel:
         return n_species > 1
 
 
-def _print_with_exception(math: sp.Basic) -> str:
-    """
-    Generate C++ code for a symbolic expression
-
-    :param math:
-        symbolic expression
-
-    :return:
-        C++ code for the specified expression
-    """
-    try:
-        ret = cxxcode(
-            math,
-            standard='c++11',
-            user_functions=spline_user_functions(self._get_index('p'))
-        )
-        ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
-        return ret
-    except TypeError as e:
-        raise ValueError(
-            f'Encountered unsupported function in expression "{math}": '
-            f'{e}!'
-        )
-
-
-def _get_sym_lines(symbols: sp.Matrix,
-                   variable: str,
-                   indent_level: int) -> List[str]:
-    """
-    Generate C++ code for assigning symbolic terms in symbols to C++ array
-    `variable`.
-
-    :param symbols:
-        vectors of symbolic terms
-
-    :param variable:
-        name of the C++ array to assign to
-
-    :param indent_level:
-        indentation level (number of leading blanks)
-
-    :return:
-        C++ code as list of lines
-
-    """
-
-    return [' ' * indent_level + f'{variable}[{index}] = '
-                                 f'{_print_with_exception(math)};'
-            for index, math in enumerate(symbols)
-            if not (math == 0 or math == 0.0)]
-
-
 class ODEExporter:
     """
     The ODEExporter class generates AMICI C++ files for ODE model as
@@ -2475,7 +2423,7 @@ class ODEExporter:
                         symbol[:, ipar]
                 ):
                     expressions.append(f'{function}[{index}] = '
-                                       f'{_print_with_exception(formula)};')
+                                       f'{self._print_with_exception(formula)};')
                 cases[ipar] = expressions
             lines.extend(get_switch_statement('ip', cases, 1))
 
@@ -2485,27 +2433,27 @@ class ODEExporter:
                     symbol
             ):
                 lines.append(f'{function}[{index}] = '
-                             f'{_print_with_exception(formula)};')
+                             f'{self._print_with_exception(formula)};')
 
         elif function in sensi_functions:
-            cases = {ipar: _get_sym_lines(symbol[:, ipar], function, 0)
+            cases = {ipar: self._get_sym_lines(symbol[:, ipar], function, 0)
                      for ipar in range(self.model.np())
                      if not smart_is_zero_matrix(symbol[:, ipar])}
             lines.extend(get_switch_statement('ip', cases, 1))
 
         elif function in multiobs_functions:
             if function == 'dJydy':
-                cases = {iobs: _get_sym_lines(symbol[iobs], function, 0)
+                cases = {iobs: self._get_sym_lines(symbol[iobs], function, 0)
                          for iobs in range(self.model.ny())
                          if not smart_is_zero_matrix(symbol[iobs])}
             else:
-                cases = {iobs: _get_sym_lines(symbol[:, iobs], function, 0)
+                cases = {iobs: self._get_sym_lines(symbol[:, iobs], function, 0)
                          for iobs in range(self.model.ny())
                          if not smart_is_zero_matrix(symbol[:, iobs])}
             lines.extend(get_switch_statement('iy', cases, 1))
 
         else:
-            lines += _get_sym_lines(symbol, function, 4)
+            lines += self._get_sym_lines(symbol, function, 4)
 
         return [line for line in lines if line]
 
@@ -2763,6 +2711,57 @@ class ODEExporter:
                 "digits and underscores, and must not start with a digit.")
 
         self.model_name = model_name
+
+    def _print_with_exception(self, math: sp.Basic) -> str:
+        """
+        Generate C++ code for a symbolic expression
+
+        :param math:
+            symbolic expression
+
+        :return:
+            C++ code for the specified expression
+        """
+        cxxcode_kwargs = dict(standard='c++11')
+        try:
+            user_functions = spline_user_functions(
+                self._get_index('p'), **cxxcode_kwargs
+            )
+            ret = cxxcode(math, user_functions=user_functions, **cxxcode_kwargs)
+            ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
+            return ret
+        except TypeError as e:
+            raise ValueError(
+                f'Encountered unsupported function in expression "{math}": '
+                f'{e}!'
+            )
+
+    def _get_sym_lines(self,
+                       symbols: sp.Matrix,
+                       variable: str,
+                       indent_level: int) -> List[str]:
+        """
+        Generate C++ code for assigning symbolic terms in symbols to C++ array
+        `variable`.
+
+        :param symbols:
+            vectors of symbolic terms
+
+        :param variable:
+            name of the C++ array to assign to
+
+        :param indent_level:
+            indentation level (number of leading blanks)
+
+        :return:
+            C++ code as list of lines
+
+        """
+
+        return [' ' * indent_level + f'{variable}[{index}] = '
+                                     f'{self._print_with_exception(math)};'
+                for index, math in enumerate(symbols)
+                if not (math == 0 or math == 0.0)]
 
 
 def get_symbolic_diagonal(matrix: sp.Matrix) -> sp.Matrix:
