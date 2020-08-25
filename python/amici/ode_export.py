@@ -2540,17 +2540,17 @@ class ODEExporter:
                 constr += 'SplineBoundaryCondition::constant, '
                 constr += 'SplineBoundaryCondition::constant, '
             if spline._derivatives_by_fd:
-                constr += ', true'
+                constr += 'true, '
             else:
-                constr += ', false'
+                constr += 'false, '
             if str(type(spline.xx)) == "<class 'amici.splines.UniformGrid'>":
-                constr += ', true'
+                constr += 'true, '
             else:
-                constr += ', false'
+                constr += 'false, '
             if spline.logarithmic_paraterization:
-                constr += ', true);'
+                constr += 'true);'
             else:
-                constr += ', false);'
+                constr += 'false);'
             body.append(constr)
             body.append(f'\tsplines[{ispl}] = &spline{ispl};')
             body.append('')
