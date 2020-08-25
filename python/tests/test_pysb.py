@@ -11,10 +11,14 @@ pysb = pytest.importorskip("pysb")
 
 import amici
 import numpy as np
-import pysb.examples
 import pytest
 from amici.pysb_import import pysb2amici
 from pysb.simulator import ScipyOdeSimulator
+
+from amici.gradient_check import check_derivatives
+
+def assert_fun(x):
+    assert x
 
 
 def test_compare_to_sbml_import(pysb_example_presimulation_module,
@@ -170,6 +174,9 @@ def test_compare_to_pysb_simulation(example):
 
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
+
+            edata = amici.ExpData(rdata, 1.0, 1.0)
+            check_derivatives(model_pysb, solver, edata, assert_fun)
 
             shutil.rmtree(outdir, ignore_errors=True)
 
