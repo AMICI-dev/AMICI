@@ -50,7 +50,8 @@ jobs:
             python3-venv \
             swig \
             lcov \
-            libboost-dev
+            libboost-dev \
+            libboost-math-dev
 
     - name: Build AMICI dependencies
       run: |
