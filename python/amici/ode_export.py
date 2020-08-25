@@ -1138,7 +1138,7 @@ class ODEModel:
         :return:
             number of observable symbols
         """
-        return len(self.sym('y'))
+        return len(self._observables)
 
     def nk(self) -> int:
         """
@@ -1147,7 +1147,7 @@ class ODEModel:
         :return:
             number of constant symbols
         """
-        return len(self.sym('k'))
+        return len(self._constants)
 
     def np(self) -> int:
         """
@@ -1156,7 +1156,7 @@ class ODEModel:
         :return:
             number of parameter symbols
         """
-        return len(self.sym('p'))
+        return len(self._parameters)
 
     def sym(self,
             name: str,
@@ -1659,14 +1659,14 @@ class ODEModel:
 
         # partial derivative
         if eq == 'Jy':
-            eq = self.eq(eq).transpose()
+            sym_eq = self.eq(eq).transpose()
         else:
-            eq = self.eq(eq)
+            sym_eq = self.eq(eq)
 
         if pysb is not None and needs_stripped_symbols:
             needs_stripped_symbols = not any(
                 isinstance(sym, pysb.Component)
-                for sym in eq.free_symbols
+                for sym in sym_eq.free_symbols
             )
 
         # now check whether we are working with energy_modeling branch
@@ -1675,7 +1675,25 @@ class ODEModel:
         #  branch
         sym_var = self.sym(var, needs_stripped_symbols)
 
-        self._eqs[name] = smart_jacobian(eq, sym_var)
+        derivative = smart_jacobian(sym_eq, sym_var)
+
+        self._eqs[name] = derivative
+
+        # w can be self-dependent and we need to perform all chain
+        # derivatives of dwdw. This can be implemented as infinite sum
+        # sum{k=0} dwdw^k * dwd{var}.
+        # As long as w has no cyclic dependencies (guaranteed by bngl),
+        # dwdw must be nilpotent, so we can just compute powers of dwdw
+        # until we obtain a zero matrix.
+
+        if eq == 'w' and var != 'w':  # avoid infinite loops
+            # no need to check for self-dependency here since
+            # smart_jacobian will do that for us anyways.
+            self_deriv = self.eq('dwdw')  # store for other derivatives
+            h = self_deriv  # h = dwdw^k (k=0)
+            while not smart_is_zero_matrix(h):
+                self._eqs[name] += smart_multiply(h, derivative)
+                h = smart_multiply(h, self_deriv)  # h = dwdw^(k+1)
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,

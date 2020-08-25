@@ -54,8 +54,8 @@ def pysb2amici(model: pysb.Model,
         see :meth:`amici.ode_export.ODEExporter.set_paths`
 
     :param observables:
-        list of :class:`pysb.core.Expression` names that should be mapped to
-        observables
+        list of :class:`pysb.core.Expression` or :class:`pysb.core.Observable`
+        names in the provided model that should be mapped to observables
 
     :param sigmas:
         dict of :class:`pysb.core.Expression` names that should be mapped to
@@ -254,76 +254,96 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
                               observables: List[str],
                               sigmas: Dict[str, str]) -> None:
     """
-    Converts pysb expressions into Observables (with corresponding standard
-    deviation SigmaY and LogLikelihood) or Expressions and adds them
-    to the ODEModel instance
+    Converts pysb expressions/observables into Observables (with
+    corresponding standard deviation SigmaY and LogLikelihood) or
+    Expressions and adds them to the ODEModel instance
 
     :param pysb_model:
         pysb model
 
     :param observables:
-        list of names of Expressions that are to be mapped to observables
+        list of names of pysb.Expressions or pysb.Observables that are to be
+        mapped to ODEModel observables
 
     :param sigmas:
-        dict with names of observable Expressions as keys and names of sigma
-        Expressions as value sigma
+        dict with names of observable pysb.Expressions/pysb.Observables
+        names as keys and names of sigma pysb.Expressions as values
 
     :param ode_model:
         ODEModel instance
     """
-    required_symbols = ode_model.free_symbols()
-    for exp in pysb_model.expressions:
-        # we can skip some expressions that are no longer necessary after
-        # full expansion of expressions
-        if exp.name not in observables and exp not in required_symbols and \
-                sp.Symbol(exp.name) not in required_symbols:
-            continue
+    # we no longer expand expressions here. pysb/bng guarantees that
+    # they are ordered according to their dependency and we can
+    # evaluate them sequentially without reordering. Important to make
+    # sure that observables are processed first though.
+    for obs in pysb_model.observables:
+        _add_expression(obs, obs.name, obs.expand_obs(),
+                        pysb_model, ode_model, observables, sigmas)
 
-        ode_model.add_component(
-            Expression(
-                exp,
-                f'{exp.name}',
-                exp.expand_expr(expand_observables=True))
+    for expr in pysb_model.expressions:
+        _add_expression(expr, expr.name, expr.expr,
+                        pysb_model, ode_model, observables, sigmas)
+
+
+def _add_expression(
+    sym: sp.Symbol,
+    name: str,
+    expr: sp.Basic,
+    pysb_model: pysb.Model,
+    ode_model: ODEModel,
+    observables: List[str],
+    sigmas: Dict[str, str]
+):
+    """
+    Adds expressions to the ODE model given and adds observables/sigmas if
+    appropriate
+
+    :param sym:
+        symbol how the expression is referenced in the model
+
+    :param name:
+        name of the expression
+
+    :param expr:
+        symbolic expression that the symbol refers to
+
+    :param pysb_model:
+        see :py:func:`_process_pysb_expressions`
+
+    :param observables:
+        see :py:func:`_process_pysb_expressions`
+
+    :param sigmas:
+        see :py:func:`_process_pysb_expressions`
+
+    :param ode_model:
+        see :py:func:`_process_pysb_expressions`
+    """
+    ode_model.add_component(
+        Expression(sym, name, expr)
+    )
+
+    if name in observables:
+        y = sp.Symbol(f'y{ode_model.ny()}')
+        ode_model.add_component(Observable(y, name, sym))
+
+        sigma_name, sigma_value = _get_sigma_name_and_value(
+            pysb_model, name, sigmas
         )
-        if exp.name in observables:
-            # here we do not define a new Expression from the
-            # pysb.Expression but define an observable, so we do not need
-            # to expand observables as these can be defined as Expressions
-            y = exp
-            ode_model.add_component(
-                Observable(
-                    y,
-                    f'{exp.name}',
-                    exp
-                )
-            )
 
-            sigma_name, sigma_value = _get_sigma_name_and_value(
-                pysb_model, exp.name, sigmas
-            )
+        sigma = sp.Symbol(sigma_name)
+        ode_model.add_component(SigmaY(sigma, f'{sigma_name}', sigma_value))
 
-            sy = sp.Symbol(sigma_name)
-            ode_model.add_component(
-                SigmaY(
-                    sy,
-                    f'{sigma_name}',
-                    sigma_value
-                )
+        my = sp.Symbol(f'm{name}')
+        pi = sp.sympify('pi')
+        ode_model.add_component(
+            LogLikelihood(
+                sp.Symbol(f'llh_{name}'),
+                f'llh_{name}',
+                0.5 * sp.log(2 * pi * sigma ** 2) +
+                0.5 * ((y - my) / sigma) ** 2
             )
-
-            my = sp.Symbol(f'm{exp.name}')
-            pi = sp.sympify('pi')
-            ode_model.add_component(
-                LogLikelihood(
-                    sp.Symbol(f'llh_{exp.name}'),
-                    f'llh_{exp.name}',
-                    0.5 * sp.log(2 * pi * sy ** 2) + 0.5 * ((y - my) / sy) ** 2
-                )
-            )
-
-        elif exp.name in sigmas.values():
-            # do nothing
-            pass
+        )
 
 
 def _get_sigma_name_and_value(
