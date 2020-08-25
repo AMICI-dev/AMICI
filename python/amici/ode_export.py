@@ -2202,7 +2202,10 @@ class ODEExporter:
         else:
             raise ValueError(f'Unknown symbolic array: {name}')
 
-        return {symbol : index for index, symbol in enumerate(symbols)}
+        return {
+            strip_pysb(symbol) : index
+            for index, symbol in enumerate(symbols)
+        }
 
     def _write_index_files(self, name: str) -> None:
         """
@@ -2214,8 +2217,15 @@ class ODEExporter:
 
         """
         lines = []
+        if name in self.model.sym_names():
+            if name in sparse_functions:
+                symbols = self.model.sparsesym(name)
+            else:
+                symbols = self.model.sym(name).T
+        else:
+            raise ValueError(f'Unknown symbolic array: {name}')
 
-        for symbol, index in self._get_index(name).items():
+        for index, symbol in enumerate(symbols):
             symbol_name = strip_pysb(symbol)
             if str(symbol) == '0':
                 continue
