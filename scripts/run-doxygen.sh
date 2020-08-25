@@ -1,6 +1,7 @@
 #!/bin/bash
 # generate code documentation via doxygen
 set -euo pipefail
+set -x
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
