@@ -11,6 +11,7 @@ pysb = pytest.importorskip("pysb")
 
 import amici
 import numpy as np
+import pysb.examples
 import pytest
 from amici.pysb_import import pysb2amici
 from pysb.simulator import ScipyOdeSimulator
