@@ -331,7 +331,7 @@ def _add_expression(
         sigma = sp.Symbol(sigma_name)
         ode_model.add_component(SigmaY(sigma, f'{sigma_name}', sigma_value))
 
-        my = get_measurement_symbol(obs)
+        my = get_measurement_symbol(obs.get_id())
         pi = sp.pi
         ode_model.add_component(
             LogLikelihood(
