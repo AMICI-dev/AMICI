@@ -177,8 +177,8 @@ def ode_model_from_pysb_importer(
     _process_pysb_parameters(model, ode, constant_parameters)
     if compute_conservation_laws:
         _process_pysb_conservation_laws(model, ode)
+    _process_pysb_observables(model, ode, observables, sigmas)
     _process_pysb_expressions(model, ode, observables, sigmas)
-    _process_pysb_observables(model, ode)
 
     ode.generate_basic_variables()
 
@@ -276,10 +276,6 @@ def _process_pysb_expressions(pysb_model: pysb.Model,
     # they are ordered according to their dependency and we can
     # evaluate them sequentially without reordering. Important to make
     # sure that observables are processed first though.
-    for obs in pysb_model.observables:
-        _add_expression(obs, obs.name, obs.expand_obs(),
-                        pysb_model, ode_model, observables, sigmas)
-
     for expr in pysb_model.expressions:
         _add_expression(expr, expr.name, expr.expr,
                         pysb_model, ode_model, observables, sigmas)
@@ -388,7 +384,9 @@ def _get_sigma_name_and_value(
 
 @log_execution_time('processing PySB observables', logger)
 def _process_pysb_observables(pysb_model: pysb.Model,
-                              ode_model: ODEModel) -> None:
+                              ode_model: ODEModel,
+                              observables: List[str],
+                              sigmas: Dict[str, str]) -> None:
     """
     Converts :class:`pysb.core.Observable` into
     :class:`ODEModel.Expressions` and adds them to the ODEModel instance
@@ -398,18 +396,20 @@ def _process_pysb_observables(pysb_model: pysb.Model,
 
     :param ode_model:
         ODEModel instance
+
+    :param observables:
+        list of names of pysb.Expressions or pysb.Observables that are to be
+        mapped to ODEModel observables
+
+    :param sigmas:
+        dict with names of observable pysb.Expressions/pysb.Observables
+        names as keys and names of sigma pysb.Expressions as values
     """
     # only add those pysb observables that occur in the added
     # Observables as expressions
     for obs in pysb_model.observables:
-        if obs in ode_model.eq('y').free_symbols:
-            ode_model.add_component(
-                Expression(
-                    obs,
-                    f'{obs.name}',
-                    obs.expand_obs()
-                )
-            )
+        _add_expression(obs, obs.name, obs.expand_obs(),
+                        pysb_model, ode_model, observables, sigmas)
 
 
 @log_execution_time('computing PySB conservation laws', logger)

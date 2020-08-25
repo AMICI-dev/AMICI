@@ -155,7 +155,8 @@ def test_compare_to_pysb_simulation(example):
                 pysb_model,
                 outdir,
                 verbose=logging.INFO,
-                compute_conservation_laws=compute_conservation_laws
+                compute_conservation_laws=compute_conservation_laws,
+                observables=list(pysb_model.observables.keys())
             )
             sys.path.insert(0, outdir)
 
@@ -176,8 +177,13 @@ def test_compare_to_pysb_simulation(example):
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
 
-            edata = amici.ExpData(rdata, 1.0, 1.0)
-            check_derivatives(model_pysb, solver, edata, assert_fun)
+
+            solver.setAbsoluteTolerance(1e-12)
+            solver.setRelativeTolerance(1e-12)
+            # add 50% noise
+            edata = amici.ExpData(rdata, rdata['y'].max(axis=0)/2, [])
+            check_derivatives(model_pysb, solver, edata, assert_fun,
+                              rtol=1e-2)
 
             shutil.rmtree(outdir, ignore_errors=True)
 

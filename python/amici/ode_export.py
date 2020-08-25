@@ -1835,11 +1835,6 @@ class ODEModel:
         self._eqs[name] = sp.Matrix(
             [comp.get_val() for comp in getattr(self, component)]
         )
-        # flatten conservation laws in expressions
-        if name == 'w':
-            self._eqs[name] = self._eqs[name].subs(
-                self.get_conservation_laws()
-            )
 
     def get_conservation_laws(self) -> List[Tuple[sp.Symbol, sp.Basic]]:
         """ Returns a list of states with conservation law set
