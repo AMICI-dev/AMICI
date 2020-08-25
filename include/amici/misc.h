@@ -84,8 +84,8 @@ void writeSlice(const gsl::span<const T> slice, gsl::span<T> buffer) {
 
 /**
  * @brief local helper function to write computed slice to provided buffer (vector)
- * @param slice computed value
- * @param buffer buffer to which values are to be written
+ * @param s computed value
+ * @param b buffer to which values are to be written
  */
 template <class T>
 void writeSlice(const std::vector<T> &s, std::vector<T> &b) {
@@ -95,8 +95,8 @@ void writeSlice(const std::vector<T> &s, std::vector<T> &b) {
 
 /**
  * @brief local helper function to write computed slice to provided buffer (vector/span)
- * @param slice computed value
- * @param buffer buffer to which values are to be written
+ * @param s computed value
+ * @param b buffer to which values are to be written
  */
 template <class T>
 void writeSlice(const std::vector<T> &s, gsl::span<T> b) {
@@ -105,8 +105,8 @@ void writeSlice(const std::vector<T> &s, gsl::span<T> b) {
 
 /**
  * @brief local helper function to write computed slice to provided buffer (AmiVector/span)
- * @param slice computed value
- * @param buffer buffer to which values are to be written
+ * @param s computed value
+ * @param b buffer to which values are to be written
  */
 void writeSlice(const AmiVector &s, gsl::span<realtype> b);
 
