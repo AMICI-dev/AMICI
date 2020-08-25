@@ -2,7 +2,7 @@
 SBML Import
 -----------
 This module provides all necessary functionality to import a model specified
-in the System Biology Markup Language (SBML).
+in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
 
 
@@ -52,7 +52,7 @@ class SbmlImporter:
     Class to generate AMICI C++ files for a model provided in the Systems
     Biology Markup Language (SBML).
 
-    :ivar show_sbml_warnings: bool
+    :ivar show_sbml_warnings:
         indicates whether libSBML warnings should be
         displayed
 
@@ -60,20 +60,25 @@ class SbmlImporter:
         dict carrying symbolic definitions
 
     :ivar sbml_reader:
-        the libSBML sbml reader [!not storing this will result
-        in a segfault!]
+
+        The libSBML sbml reader
+
+        .. warning::
+           Not storing this may result in a segfault.
 
     :ivar sbml_doc:
-        document carrying the sbml definition [!not storing this
-        will result in a segfault!]
+        document carrying the sbml definition
+
+        .. warning::
+           Not storing this may result in a segfault.
 
     :ivar sbml:
-        sbml definition [!not storing this will result in a segfault!]
+        SBML model to import
 
     :ivar species_index:
         maps species names to indices
 
-    :ivar species_compartment: sympy.Matrix
+    :ivar species_compartment: :py:class:`sympy.Matrix`
         compartment for each species
 
     :ivar constant_species:
@@ -127,32 +132,32 @@ class SbmlImporter:
             string
         """
         if isinstance(sbml_source, sbml.Model):
-            self.sbml_doc = sbml_source.getSBMLDocument()
+            self.sbml_doc: sbml.Document = sbml_source.getSBMLDocument()
         else:
-            self.sbml_reader = sbml.SBMLReader()
+            self.sbml_reader: sbml.SBMLReader = sbml.SBMLReader()
             if from_file:
                 sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
             else:
                 sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
             self.sbml_doc = sbml_doc
 
-        self.show_sbml_warnings : bool = show_sbml_warnings
+        self.show_sbml_warnings: bool = show_sbml_warnings
 
         # process document
         self._process_document()
 
-        self.sbml = self.sbml_doc.getModel()
+        self.sbml: sbml.Model = self.sbml_doc.getModel()
 
         # Long and short names for model components
-        self.symbols = dict()
+        self.symbols: Dict = dict()
         self._reset_symbols()
 
-        self.local_symbols : dict = {}
+        self.local_symbols: Dict = dict()
 
-        self.compartment_rate_rules : dict = {}
-        self.species_rate_rules : dict = {}
-        self.compartment_assignment_rules : dict = {}
-        self.species_assignment_rules : dict = {}
+        self.compartment_rate_rules: dict = {}
+        self.species_rate_rules: dict = {}
+        self.compartment_assignment_rules: dict = {}
+        self.species_assignment_rules: dict = {}
 
     def _process_document(self) -> None:
         """
@@ -1576,17 +1581,17 @@ def get_rule_vars(rules: List[sbml.Rule],
 
 def replaceLogAB(x: str) -> str:
     """
-    Replace log(a, b) in the given string by ln(b)/ln(a).
+    Replace ``log(a, b)`` in the given string by ``ln(b)/ln(a)``.
 
     Works for nested parentheses and nested 'log's. This can be used to
-    circumvent the incompatible argument order between symengine (log(x,
-    basis)) and libsbml (log(basis, x)).
+    circumvent the incompatible argument order between sympy (``log(x,
+    basis)``) and libsbml (``log(basis, x)``).
 
     :param x:
         string to replace
 
     :return:
-        string with replaced 'log's
+        string with replaced ``log`` s
     """
 
     match = re.search(r'(^|\W)log\(', x)
@@ -1794,18 +1799,18 @@ def grouper(iterable: Iterable, n: int,
     return itt.zip_longest(*args, fillvalue=fillvalue)
 
 
-def assignmentRules2observables(sbml_model,
-                                filter_function=lambda *_: True):
+def assignmentRules2observables(sbml_model: sbml.Model,
+                                filter_function: Callable = lambda *_: True):
     """
     Turn assignment rules into observables.
 
     :param sbml_model:
-        an sbml Model instance
+        Model to operate on
 
     :param filter_function:
-        callback function taking assignment variable as input and returning
-        True/False to indicate if the respective rule should be
-        turned into an observable
+        Callback function taking assignment variable as input and returning
+        ``True``/``False`` to indicate if the respective rule should be
+        turned into an observable.
 
     :return:
         A dictionary(observableId:{
