@@ -62,23 +62,19 @@ rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
 cd ${AMICI_PATH}/doc/latex
 
-# pdflatex may exit with 1 without error message even if the pdf has apparently
-#  been generated successfully
-set +e
 make
-set -e
 
 cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 # suppress doxygen warnings about status badges
-grep -v "warning: Unexpected html tag <img> found within <a href=...> context" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+grep -v "warning: Unexpected html tag <img> found within <a href=...> context" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp || [[ $? == 1 ]]
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
 # suppress doxygen warning about unresolved external links (problem unclear)
-grep -v "warning: unable to resolve reference to \`https" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+grep -v "warning: unable to resolve reference to \`https" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp || [[ $? == 1 ]]
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
-grep -v "error: Problem running ghostscript gs -q -g146x60 -r384x384x -sDEVICE=ppmraw -sOutputFile=_form0.pnm -dNOPAUSE -dBATCH -- _form0.ps. Check your installation!" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+grep -v "error: Problem running ghostscript gs -q -g146x60 -r384x384x -sDEVICE=ppmraw -sOutputFile=_form0.pnm -dNOPAUSE -dBATCH -- _form0.ps. Check your installation!" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp || [[ $? == 1 ]]
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
 # check if warnings log was created
