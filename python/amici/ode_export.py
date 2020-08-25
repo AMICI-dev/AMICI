@@ -40,6 +40,7 @@ from . import (
 )
 from .logging import get_logger, log_execution_time, set_log_level
 from .splines import spline_user_functions
+from .sbml_utils import sbml_time_symbol, amici_time_symbol
 
 # Template for model simulation main.cpp file
 CXX_MAIN_TEMPLATE_FILE = os.path.join(amiciSrcPath, 'main.template.cpp')
@@ -949,12 +950,11 @@ class ODEModel:
             ))
             fluxes.append(flux_id)
         nr = len(fluxes)
-        for ispl, spl in enumerate(si.splines):
-            spline_id = sp.Symbol(f'spl[{ispl}]', real=True)
+        for spl in si.splines:
             self.add_component(Expression(
                 identifier=spl.sbmlId,
-                name=str(spline_id),
-                value=spline_id
+                name=str(spl.sbmlId),
+                value=spl.odeModelSymbol(si)
             ))
         self.splines = si.splines
         # correct time derivatives for compartment changes
@@ -2246,7 +2246,7 @@ class ODEExporter:
             raise ValueError(f'Unknown symbolic array: {name}')
 
         return {
-            strip_pysb(symbol) : index
+            strip_pysb(symbol).name : index
             for index, symbol in enumerate(symbols)
         }
 
@@ -2822,12 +2822,15 @@ class ODEExporter:
         :return:
             C++ code for the specified expression
         """
-        cxxcode_kwargs = dict(standard='c++11')
         try:
-            user_functions = spline_user_functions(
-                self._get_index('p'), **cxxcode_kwargs
+            ret = cxxcode(
+                math,
+                standard='c++11',
+                user_functions=spline_user_functions(
+                    self.model.splines,
+                    self._get_index('p')
+                )
             )
-            ret = cxxcode(math, user_functions=user_functions, **cxxcode_kwargs)
             ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
             return ret
         except TypeError as e:

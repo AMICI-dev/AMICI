@@ -1117,11 +1117,11 @@ class SbmlImporter:
         # Now formulas inside spline objects have been fully expanded
         # and we can determine which parameters each spline depends on
         # It is time to substitute splines with derivable symbolic expressions
-        for (idx, spline) in enumerate(self.splines):
-            self._replace_in_all_expressions(
-                spline.sbmlId,
-                spline.odeModelSymbol(self)
-            )
+        # for spline in self.splines:
+        #     self._replace_in_all_expressions(
+        #         spline.sbmlId,
+        #         spline.odeModelSymbol(self)
+        #     )
 
     def _process_volume_conversion(self) -> None:
         """
@@ -1537,6 +1537,9 @@ class SbmlImporter:
                     self.symbols[symbol]['identifier'] = \
                         self.symbols[symbol]['identifier'].subs(old_symbol,
                                                                 new_symbol)
+            for spline in self.splines:
+                if spline.sbmlId == old_symbol:
+                    spline._sbmlId = new_symbol
 
     def _replace_special_constants(self) -> None:
         """
