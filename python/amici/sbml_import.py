@@ -311,6 +311,7 @@ class SbmlImporter:
         self._reset_symbols()
         self._process_sbml(constant_parameters)
         self._process_observables(observables, sigmas, noise_distributions)
+        self._replace_compartments_with_volumes()
 
         self._process_time()
         self._clean_reserved_symbols()
@@ -1067,11 +1068,6 @@ class SbmlImporter:
                 sp.Symbol(variable, real=True),
                 assignments[variable]
             )
-        for comp, vol in zip(self.compartment_symbols,
-                             self.compartment_volume):
-            self._replace_in_all_expressions(
-                comp, vol
-            )
 
     def _process_volume_conversion(self) -> None:
         """
@@ -1399,6 +1395,18 @@ class SbmlImporter:
                        if ix in species_solver]
 
         return volume_updates_solver
+
+
+    def _replace_compartments_with_volumes(self):
+        """
+        Replaces compartment symbols in expressions with their respective
+        (possibly variable) volumes.
+        """
+        for comp, vol in zip(self.compartment_symbols,
+                             self.compartment_volume):
+            self._replace_in_all_expressions(
+                comp, vol
+            )
 
 
     def _replace_in_all_expressions(self,
