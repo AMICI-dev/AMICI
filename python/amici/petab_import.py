@@ -369,6 +369,7 @@ def import_model_sbml(sbml_model: Union[str, 'libsbml.Model'],
                  model_output_dir: Optional[str] = None,
                  verbose: Optional[Union[bool, int]] = True,
                  allow_reinit_fixpar_initcond: bool = True,
+                 discard_annotations: bool = False,
                  **kwargs) -> None:
     """
     Create AMICI model from PEtab problem
@@ -402,6 +403,9 @@ def import_model_sbml(sbml_model: Union[str, 'libsbml.Model'],
     :param allow_reinit_fixpar_initcond:
         See :class:`amici.ode_export.ODEExporter`. Must be enabled if initial
         states are to be reset after preequilibration.
+
+    :param discard_annotations:
+        Discard information contained in AMICI SBML annotations (debug).
 
     :param kwargs:
         Additional keyword arguments to be passed to

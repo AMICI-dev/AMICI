@@ -553,7 +553,7 @@ class AbstractSpline(ABC):
             self,
             model: libsbml.Model,
             *,
-            auto_add: bool = True,
+            auto_add: bool = False,
             x_nominal: Sequence[float] = None,
             y_nominal: Optional[Union[Sequence[float], float]] = None,
             y_units: Optional[str] = None,
@@ -653,6 +653,11 @@ class AbstractSpline(ABC):
                 f'<amici:discard xmlns:amici="{annotation_namespace}">'
             )
             addAssignmentRule(model, parameterId, formula)
+
+    # def _replace_sbml_time_with_amici_time(self):
+    #     self._replace_in_all_expressions(
+    #         sbml_time_symbol, amici_time_symbol
+    #     )
 
     def _replace_in_all_expressions(self, old: sp.Symbol, new: sp.Symbol):
         self._x = self.x.subs(old, new)
@@ -806,7 +811,7 @@ class AbstractSpline(ABC):
         return parameters
 
     def odeModelSymbol(self, importer: SbmlImporter):
-        parameters = self.parameters(importer)
+        parameters = list(self.parameters(importer))
 
         class AmiciSpline(sp.Function):
             # AmiciSpline(splineId, x, *parameters)
@@ -846,7 +851,7 @@ class AbstractSpline(ABC):
 
                 else:
                     pindex = argindex - 3
-                    assert 0 <= argindex < len(parameters)
+                    assert 0 <= pindex < len(parameters)
 
                     class AmiciSplineSensitivity(sp.Function):
                         # Derivative with respect to a parameter paramId
@@ -879,16 +884,17 @@ class AbstractSpline(ABC):
         return AmiciSpline(self.sbmlId, self.x, *parameters)
 
 
-def spline_user_functions(p_index: Dict[sp.Symbol, int], **cxxcode_kwargs):
+def spline_user_functions(splines: List[AbstractSpline], p_index: Dict[sp.Symbol, int]):
+    splineIds = [spline.sbmlId.name for spline in splines]
     return {
         'AmiciSpline' : [ (lambda *args : True,
-            lambda splineId, x, *p : f"spline_{splineId}({cxxcode(x, **cxxcode_kwargs)})"
+            lambda splineId, x, *p : f"spl_{splineIds.index(splineId)}"
         )],
         'AmiciSplineDerivative' : [ (lambda *args : True,
-            lambda splineId, x, *p : f"d_spline_{splineId}({cxxcode(x, **cxxcode_kwargs)})"
+            lambda splineId, x, *p : f"dspl_{splineIds.index(splineId)}"
         )],
         'AmiciSplineSensitivity' : [ (lambda *args : True,
-            lambda splineId, x, paramId, *p : f"s_spline_{splineId}({cxxcode(x, **cxxcode_kwargs)}, {p_index[q]})"
+            lambda splineId, x, paramId, *p : f"sspl_{splineIds.index(splineId)}_{p_index[paramId]}"
         )],
     }
 
