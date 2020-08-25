@@ -14,6 +14,7 @@ import numpy as np
 import pysb.examples
 import pytest
 from amici.pysb_import import pysb2amici
+from amici import ParameterScaling, parameterScalingFromIntVector
 from pysb.simulator import ScipyOdeSimulator
 
 from amici.gradient_check import check_derivatives
@@ -178,12 +179,17 @@ def test_compare_to_pysb_simulation(example):
                               pysb_simres.species, 1e-4, 1e-4).all()
 
 
-            solver.setAbsoluteTolerance(1e-12)
-            solver.setRelativeTolerance(1e-12)
+            solver.setAbsoluteTolerance(1e-14)
+            solver.setRelativeTolerance(1e-14)
+            model_pysb.setParameterScale(parameterScalingFromIntVector([
+                ParameterScaling.log10 if p > 0 else ParameterScaling.none
+                for p in model_pysb.getParameters()
+            ]))
             # add 50% noise
             edata = amici.ExpData(rdata, rdata['y'].max(axis=0)/2, [])
             check_derivatives(model_pysb, solver, edata, assert_fun,
-                              rtol=1e-2)
+                              epsilon=1e-4, rtol=1e-2, atol=1e-2,
+                              skip_zero_pars=True)
 
             shutil.rmtree(outdir, ignore_errors=True)
 

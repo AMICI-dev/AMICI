@@ -7,7 +7,7 @@ computed sensitivities using finite difference approximations
 
 from . import (
     runAmiciSimulation, SensitivityOrder, AMICI_SUCCESS, SensitivityMethod,
-    Model, Solver, ExpData, ReturnData)
+    Model, Solver, ExpData, ReturnData, ParameterScaling)
 import numpy as np
 import copy
 
@@ -60,9 +60,10 @@ def check_finite_difference(x0: Sequence[float],
         finite difference step-size
 
     """
-    old_sensitivity_order = solver.getSensitivityOrder()
-    old_parameters = model.getParameters()
-    old_plist = model.getParameterList()
+    og_sensitivity_order = solver.getSensitivityOrder()
+    og_parameters = model.getParameters()
+    og_plist = model.getParameterList()
+
 
     # sensitivity
     p = copy.deepcopy(x0)
@@ -79,23 +80,29 @@ def check_finite_difference(x0: Sequence[float],
     # finite difference
     solver.setSensitivityOrder(SensitivityOrder.none)
 
+    pf = copy.deepcopy(x0)
+    pb = copy.deepcopy(x0)
+    pscale = model.getParameterScale()[ip]
+    if x0[ip] == 0 or pscale is not int(ParameterScaling.none):
+        pf[ip] += epsilon / 2
+        pb[ip] -= epsilon / 2
+    else:
+        pf[ip] *= 1 + epsilon / 2
+        pb[ip] /= 1 + epsilon / 2
+
     # forward:
-    p = copy.deepcopy(x0)
-    p[ip] += epsilon/2
-    model.setParameters(p)
+    model.setParameters(pf)
     rdataf = runAmiciSimulation(model, solver, edata)
-    assert_fun(rdata['status'] == AMICI_SUCCESS)
+    assert_fun(rdataf['status'] == AMICI_SUCCESS)
 
     # backward:
-    p = copy.deepcopy(x0)
-    p[ip] -= epsilon/2
-    model.setParameters(p)
+    model.setParameters(pb)
     rdatab = runAmiciSimulation(model, solver, edata)
-    assert_fun(rdata['status'] == AMICI_SUCCESS)
+    assert_fun(rdatab['status'] == AMICI_SUCCESS)
 
     for field in fields:
         sensi_raw = rdata[f's{field}']
-        fd = (rdataf[field]-rdatab[field])/epsilon
+        fd = (rdataf[field]-rdatab[field])/(pf[ip] - pb[ip])
         if len(sensi_raw.shape) == 1:
             sensi = sensi_raw[0]
         elif len(sensi_raw.shape) == 2:
@@ -108,9 +115,9 @@ def check_finite_difference(x0: Sequence[float],
 
         check_close(sensi, fd, assert_fun, atol, rtol, field, ip=ip)
 
-    solver.setSensitivityOrder(old_sensitivity_order)
-    model.setParameters(old_parameters)
-    model.setParameterList(old_plist)
+    solver.setSensitivityOrder(og_sensitivity_order)
+    model.setParameters(og_parameters)
+    model.setParameterList(og_plist)
 
 
 def check_derivatives(model: Model,
@@ -120,7 +127,8 @@ def check_derivatives(model: Model,
                       atol: Optional[float] = 1e-4,
                       rtol: Optional[float] = 1e-4,
                       epsilon: Optional[float] = 1e-3,
-                      check_least_squares: bool = True) -> None:
+                      check_least_squares: bool = True,
+                      skip_zero_pars: bool = False) -> None:
     """
     Finite differences check for likelihood gradient.
 
@@ -181,7 +189,9 @@ def check_derivatives(model: Model,
                       -np.dot(rdata['res'].transpose(), rdata['sres']),
                       assert_fun,
                       1e-8, 1e-4)
-    for ip in range(len(p)):
+    for ip, pval in enumerate(p):
+        if pval == 0.0 and skip_zero_pars:
+            continue
         check_finite_difference(p, model, solver, edata, ip, fields,
                                 assert_fun, atol=atol, rtol=rtol,
                                 epsilon=epsilon)
