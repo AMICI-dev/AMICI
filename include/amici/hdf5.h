@@ -50,7 +50,7 @@ void readSolverSettingsFromHDF5(const H5::H5File &file, Solver &solver,
 
 /**
  * @brief Write solver options from HDF5 file
- * @param hdf5Filenamehdf5 Name of HDF5 file
+ * @param hdf5Filename Name of HDF5 file
  * @param solver solver to write options from
  * @param hdf5Location Path inside the HDF5 file
  */
@@ -88,7 +88,7 @@ void readModelDataFromHDF5(std::string const &hdffile, Model &model,
 
 /**
  * @brief Read model data from HDF5 file
- * @param fileId hdf5 file handle to read from
+ * @param file hdf5 file handle to read from
  * @param model model to set data on
  * @param datasetPath Path inside the HDF5 file
  */
@@ -98,8 +98,8 @@ void readModelDataFromHDF5(H5::H5File const &file, Model &model,
 /**
  * @brief Write ReturnData struct to HDF5 dataset
  * @param rdata Data to write
- * @param hdffile Filename of HDF5 file
- * @param datasetPath Full dataset path inside the HDF5 file (will be created)
+ * @param file Filename of HDF5 file
+ * @param hdf5Location Full dataset path inside the HDF5 file (will be created)
  */
 
 void writeReturnData(const ReturnData &rdata, H5::H5File const &file,
@@ -138,8 +138,8 @@ std::unique_ptr<ExpData> readSimulationExpData(const std::string &hdf5Filename,
  * @brief writeSimulationExpData writes AMICI experimental data to attributes in
  * HDF5 file.
  * @param edata The experimental data which is to be written
- * @param hdf5Filename Name of HDF5 file
- * @param hdf5Root Path inside the HDF5 file to object having ExpData as
+ * @param file Name of HDF5 file
+ * @param hdf5Location Path inside the HDF5 file to object having ExpData as
  * attributes
  */
 
@@ -149,8 +149,8 @@ void writeSimulationExpData(const ExpData &edata, H5::H5File const &file,
 /**
  * @brief attributeExists Check whether an attribute with the given name exists
  * on the given dataset
- * @param fileId The HDF5 file object
- * @param datasetPath Dataset of which attributes should be checked
+ * @param file The HDF5 file object
+ * @param optionsObject Dataset of which attributes should be checked
  * @param attributeName Name of the attribute of interest
  * @return
  */

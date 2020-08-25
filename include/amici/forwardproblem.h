@@ -289,9 +289,10 @@ class ForwardProblem {
      * @brief Execute everything necessary for the handling of events
      *
      * @param tlastroot pointer to the timepoint of the last event
+     * @param seflag Secondary event flag
      */
 
-    void handleEvent(realtype *tlastroot_,bool seflag);
+    void handleEvent(realtype *tlastroot,bool seflag);
 
     /**
      * @brief Extract output information for events
@@ -303,7 +304,7 @@ class ForwardProblem {
      *
      * @param it index of data point
      */
-    void handleDataPoint(int it_);
+    void handleDataPoint(int it);
 
     /**
      * @brief Applies the event bolus to the current state
