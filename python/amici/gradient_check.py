@@ -233,7 +233,11 @@ def check_close(result: np.array,
         parameter index
 
     """
-    close = np.isclose(result, expected, atol=atol, rtol=rtol, equal_nan=True)
+    close = (
+        np.isclose(result, expected, atol=atol, rtol=np.inf, equal_nan=True)
+        |
+        np.isclose(result, expected, atol=np.inf, rtol=rtol, equal_nan=True)
+    )
 
     if not close.all():
         if ip is None:
