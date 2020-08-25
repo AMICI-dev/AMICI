@@ -475,7 +475,7 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     virtual void fdspline_slopesdp(realtype *dspline_slopesdp,
                                    const realtype *p, 
                                    const realtype *k) override {
-        dspline_valuesdp_TPL_MODELNAME(dspline_slopesdp, p, k));
+        dspline_valuesdp_TPL_MODELNAME(dspline_slopesdp, p, k);
     }
 
     TPL_DWDP_IMPL
