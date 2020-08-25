@@ -144,7 +144,8 @@ void HermiteSpline::computeCoefficients() {
     coefficients_extrapolate[3] = node_values_derivative[n_nodes() - 1];
 }
 
-void HermiteSpline::computeCoefficientsSensi(int nplist, realtype *dspline_valuesdp, 
+void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
+                                             realtype *dspline_valuesdp, 
                                              realtype *dspline_slopesdp) {
     /* Allocate space for the coefficients *
      * They are stored in the vector as 
@@ -154,8 +155,8 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, realtype *dspline_value
      *   D[d_0, p1], D[c_0, p1], ...
      *   ..., D[b_{n_nodes-1}, p{nplist-1}, D[a_{n_nodes-1}, p{nplist-1}]
      * ] */
-    int offset = 4 * (n_nodes() - 1);
-    coefficients_sensi.resize(offset * nplist, 0.0);
+    int n_spline_coefficients = 4 * (n_nodes() - 1);
+    coefficients_sensi.resize(n_spline_coefficients * nplist, 0.0);
     /* Beyond the spline nodes, we need to extrapolate using a * t + b. 
      * Those coefficients are stored as 
      * [ D[b_first, p0], D[a_first, p0], D[b_last, p0], D[a_last, p0],
@@ -174,7 +175,8 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, realtype *dspline_value
 
         /* As computing the coefficient is a mess, it's in another function */
         for (int ip = 0; ip < nplist; ip++)
-            getCoeffsSensiLowlevel(ip, i_node, offset, len, len_m, len_p, 
+            getCoeffsSensiLowlevel(ip, i_node, n_spline_coefficients, 
+                                   spline_offset, len, len_m, len_p, 
                                    dspline_valuesdp, dspline_slopesdp, 
                                    coefficients_sensi.data(),
                                    coefficients_extrapolate_sensi.data());
@@ -223,11 +225,12 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, realtype *dspline_value
     }
 }
 
-void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int offset, 
-                                           realtype len, realtype len_m, realtype len_p,
-                                           realtype *dnodesdp, realtype *dslopesdp,
-                                           realtype *coeffs, realtype *coeffs_extrapol) {
-    int node_offset = n_nodes() * ip;
+void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coefficients, 
+                                           int spline_offset, realtype len, realtype len_m, 
+                                           realtype len_p, realtype *dnodesdp, 
+                                           realtype *dslopesdp, realtype *coeffs, 
+                                           realtype *coeffs_extrapol) {
+    int node_offset = spline_offset + n_nodes() * ip;
     double spk = dnodesdp[node_offset + i_node];
     double spk1 = dnodesdp[node_offset + i_node + 1];
     double smk;
@@ -267,15 +270,15 @@ void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int offset,
         }
     } else {
         /* The slopes are explicitly given, easiest case... */
-        smk = dnodesdp[node_offset + i_node];
-        smk1 = dnodesdp[node_offset + i_node + 1];
+        smk = dslopesdp[node_offset + i_node];
+        smk1 = dslopesdp[node_offset + i_node + 1];
     }
 
     /* Compute the actual coefficients */
-    coeffs[ip * offset + 4 * i_node] = spk;
-    coeffs[ip * offset + 4 * i_node + 1] = len * smk;;
-    coeffs[ip * offset + 4 * i_node + 2] = 3 * (spk1  - spk) - len * (2 * smk + smk1);
-    coeffs[ip * offset + 4 * i_node + 3] = 2 * (spk - spk1) + len * (smk + smk1);
+    coeffs[ip * n_spline_coefficients + 4 * i_node] = spk;
+    coeffs[ip * n_spline_coefficients + 4 * i_node + 1] = len * smk;;
+    coeffs[ip * n_spline_coefficients + 4 * i_node + 2] = 3 * (spk1  - spk) - len * (2 * smk + smk1);
+    coeffs[ip * n_spline_coefficients + 4 * i_node + 3] = 2 * (spk - spk1) + len * (smk + smk1);
 }
 
 realtype HermiteSpline::getValue(const double t) {

@@ -32,7 +32,8 @@ class AbstractSpline {
     
     virtual void computeCoefficients() = 0;
     
-    virtual void computeCoefficientsSensi(int nplist, realtype *dnodesdp, 
+    virtual void computeCoefficientsSensi(int nplist, int spline_offset, 
+                                          realtype *dnodesdp, 
                                           realtype *dslopesdp) = 0;
     
     virtual double getValue(const double t) = 0;
@@ -138,9 +139,9 @@ class HermiteSpline : AbstractSpline {
     }
 
   private:
-    void getCoeffsSensiLowlevel(int ip, int i_node, int offset, 
-                                realtype len, realtype len_m, realtype len_p,
-                                realtype *dnodesdp, realtype *dslopesdp,
+    void getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coefficients, 
+                                int spline_offset, realtype len, realtype len_m, 
+                                realtype len_p, realtype *dnodesdp, realtype *dslopesdp,
                                 realtype *coeffs, realtype *coeffs_extrapol);
 
     std::vector<realtype> node_values_derivative;

@@ -1811,7 +1811,7 @@ class Model : public AbstractModel {
     mutable std::vector<realtype> spl_;
     
     /** temporary storage for sensitivities of splines */
-    mutable std::vector<realtype> sspl_;
+    mutable SUNMatrixWrapper sspl_;
 
     /** temporary storage for splines in the model */
     mutable std::vector<AbstractSpline*> splines_;

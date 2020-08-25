@@ -232,7 +232,7 @@ void Model::initializeSplines() {
 }
 
 void Model::initializeSplineSensitivities() {
-    sspl_.resize(nspl * nplist(), 0.0);
+    sspl_ = SUNMatrixWrapper(nspl, nplist());
     int allnodes = 0;
     for (int ispl = 0; ispl < nspl; ispl++)
         allnodes += splines_[ispl]->n_nodes();
