@@ -123,7 +123,8 @@ class HermiteSpline : AbstractSpline {
     
     void computeCoefficients() override;
     
-    void computeCoefficientsSensi(int nplist, realtype *dnodesdp, 
+    void computeCoefficientsSensi(int nplist, int spline_offset, 
+                                  realtype *dnodesdp,
                                   realtype *dslopesdp) override;
     
     double getValue(const double t) override;

@@ -233,6 +233,7 @@ void Model::initializeSplines() {
 
 void Model::initializeSplineSensitivities() {
     sspl_ = SUNMatrixWrapper(nspl, nplist());
+    int spline_offset = 0;
     int allnodes = 0;
     for (int ispl = 0; ispl < nspl; ispl++)
         allnodes += splines_[ispl]->n_nodes();
@@ -245,9 +246,9 @@ void Model::initializeSplineSensitivities() {
                       state_.fixedParameters.data());
 
     for (int ispl = 0; ispl < nspl; ispl++) {
-        // TODO: Offset missing
-        splines_[ispl]->computeCoefficientsSensi(nplist(), 
+        splines_[ispl]->computeCoefficientsSensi(nplist(), spline_offset,
             dspline_valuesdp.data(), dspline_slopesdp.data());
+        spline_offset += splines_[ispl]->n_nodes();
     }       
 }
 
@@ -1840,12 +1841,13 @@ void Model::fspl(const realtype t) {
 }
 
 void Model::fsspl(const realtype t) {
+    realtype *sspl_data = sspl_.data();
     for (int ispl = 0; ispl < nspl; ispl++) {
         for (int ip = 0; ip < nplist(); ip++) {
             if (splines_[ispl]->get_logarithmic_paraterization()) {
-                sspl_[ispl + nspl * ip] = spl_[ispl] * splines_[ispl]->getSensitivity(t, ip);
+                sspl_data[ispl + nspl * ip] = spl_[ispl] * splines_[ispl]->getSensitivity(t, ip);
             } else {
-                sspl_[ispl + nspl * ip] = splines_[ispl]->getSensitivity(t, ip);
+                sspl_data[ispl + nspl * ip] = splines_[ispl]->getSensitivity(t, ip);
             }
         }
     }

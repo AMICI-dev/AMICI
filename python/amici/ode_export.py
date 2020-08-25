@@ -136,6 +136,12 @@ functions = {
             'const realtype *spl)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
+    'spline_constructors': {
+        'signature':
+            '(std::vector<AbstractSpline*> splines, '
+            'const realtype *p, const realtype *k)',
+        'flags': ['dont_generate_body']
+    },
     'spline_values': {
         'signature':
             '(const realtype *p, const realtype *k)',
@@ -1614,7 +1620,6 @@ class ODEModel:
             self._eqs[name] = self.sym(name)
 
         elif name == 'dxdotdp_explicit':
-            # force symbols
             self._derivative('xdot', 'p', name=name)
 
         elif name == 'spline_values':
@@ -2120,6 +2125,8 @@ class ODEExporter:
             if function in sparse_functions:
                 self._write_function_index(function, 'colptrs')
                 self._write_function_index(function, 'rowvals')
+            if function == 'spline_constructors':
+                self._write_function_file(function)
 
         for name in self.model.sym_names():
             self._write_index_files(name)
@@ -2289,6 +2296,8 @@ class ODEExporter:
                 and function == 'sx0_fixedParameters':
             # Not required. Will create empty function body.
             symbol = sp.Matrix()
+        elif function == 'spline_constructors':
+            pass
         else:
             symbol = self.model.eq(function)
 
@@ -2322,7 +2331,10 @@ class ODEExporter:
         lines.append(f'void {function}_{self.model_name}{signature}{{')
 
         # function body
-        body = self._get_function_body(function, symbol)
+        if function == 'spline_constructors':
+            body = self._get_spline_constructors_body()
+        else:
+            body = self._get_function_body(function, symbol)
         if self.assume_pow_positivity and 'assume_pow_positivity' \
                 in self.functions[function].get('flags', []):
             body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
@@ -2502,6 +2514,48 @@ class ODEExporter:
             lines += self._get_sym_lines(symbol, function, 4)
 
         return [line for line in lines if line]
+
+    def _get_spline_constructors_body(self):
+        body = [f'\tsplines.resize({len(self.model.splines)});', '']
+        for ispl, spline in enumerate(self.model.splines):
+            # create the vector with the node locations
+            nodes = f'\tstd::vector<realtype> nodes{ispl} {{'
+            if str(type(spline.xx)) == "<class 'amici.splines.UniformGrid'>":
+                nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '}};'
+            body.append(nodes)
+            # create the vector with the node values
+            vals = f'\tstd::vector<realtype> values{ispl} {{' + str(spline.yy[0])
+            for iyy in spline.yy[1:]:
+                vals += ', ' + str(iyy)
+            vals += '};'
+            body.append(vals)
+            # create the vector with the slopes
+            body.append(f'\tstd::vector<realtype> slopes{ispl};')
+            constr = f'\tstatic HermiteSpline spline{ispl} = HermiteSpline('
+            constr += f'nodes{ispl}, values{ispl}, slopes{ispl}, '
+            if spline.bc is None:
+                constr += 'SplineBoundaryCondition::linearFinDiff, '
+                constr += 'SplineBoundaryCondition::linearFinDiff, '
+            else:
+                constr += 'SplineBoundaryCondition::constant, '
+                constr += 'SplineBoundaryCondition::constant, '
+            if spline._derivatives_by_fd:
+                constr += ', true'
+            else:
+                constr += ', false'
+            if str(type(spline.xx)) == "<class 'amici.splines.UniformGrid'>":
+                constr += ', true'
+            else:
+                constr += ', false'
+            if spline.logarithmic_paraterization:
+                constr += ', true);'
+            else:
+                constr += ', false);'
+            body.append(constr)
+            body.append(f'\tsplines[{ispl}] = &spline{ispl};')
+            body.append('')
+
+        return body
 
     def _write_wrapfunctions_cpp(self) -> None:
         """
