@@ -7,7 +7,6 @@
 
 #include "amici/symbolic_functions.h"
 #include "amici/spline.h"
-#include "amici/splinefunctions.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -100,23 +99,6 @@ double pos_pow(double base, double exponent) {
     return pow(std::max(base, 0.0),exponent);
 }
 
-
-
-// new spline implementation in C++ */
-double splineFunction(AbstractSpline *splineFun, const realtype t) {
-    if (splineFun->get_logarithmic_paraterization())
-        return std::exp(splineFun->getValue(t));
-    return splineFun->getValue(t);
-}
-
-double splineFunctionSensi(AbstractSpline *splineFun, const realtype t, 
-                           const int ip) {
-    if (splineFun->get_logarithmic_paraterization())
-        return std::exp(splineFun->getValue(t)) * 
-            splineFun->getSensitivity(t, ip);
-    return splineFun->getSensitivity(t, ip);
-}
-                       
 
 
 // Legacy spline implementation in C (MATLAB only)

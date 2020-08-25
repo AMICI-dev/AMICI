@@ -1,7 +1,8 @@
-#ifndef AMICI_SPLINEFUNCTION_H
-#define AMICI_SPLINEFUNCTION_H
+#ifndef AMICI_SPLINEFUNCTIONS_H
+#define AMICI_SPLINEFUNCTIONS_H
 
 #include "amici/defines.h"
+#include <vector>
 
 namespace amici {
     
@@ -15,14 +16,17 @@ class Model;
  */
 class AbstractSpline {
   public:
+    /** default constructor */
+    AbstractSpline() = default;
+
     /**
      * @brief constructor
      * @param model Model instance
      */
-    explicit AbstractSpline(std::vector<realtype> nodes, 
-                            std::vector<realtype> node_values,
-                            bool equidistant_spacing,
-                            bool logarithmic_paraterization);
+    AbstractSpline(std::vector<realtype> nodes, 
+                   std::vector<realtype> node_values,
+                   bool equidistant_spacing,
+                   bool logarithmic_paraterization);
   
     ~AbstractSpline(){};
     
@@ -34,6 +38,8 @@ class AbstractSpline {
     virtual double getValue(const double t) = 0;
     
     virtual double getSensitivity(const double t, const int ip) = 0;
+
+    virtual bool get_node_derivative_by_FD() = 0;
 
     /**
      * @brief Accessor to equidistant_spacing_ member
@@ -50,6 +56,8 @@ class AbstractSpline {
     bool get_logarithmic_paraterization() {
         return logarithmic_paraterization_;
     }
+
+    const int n_nodes() { return n_nodes_; }
 
   protected: 
   /*
@@ -85,8 +93,6 @@ class AbstractSpline {
     std::vector<realtype> coefficients_sensi;
     
     std::vector<realtype> coefficients_extrapolate_sensi;
-
-    const int n_nodes() { return n_nodes_; }
     
   private:
     bool equidistant_spacing_ = false;
@@ -127,7 +133,7 @@ class HermiteSpline : AbstractSpline {
      * @brief Accessor to node_derivative_by_FD_ member
      * @return node_derivative_by_FD flag
      */
-    bool get_node_derivative_by_FD() {
+    bool get_node_derivative_by_FD() override {
         return node_derivative_by_FD_;
     }
 

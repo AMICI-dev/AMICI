@@ -3,6 +3,8 @@
 #include "amici/vector.h"
 #include "amici/amici.h"
 #include "amici/exception.h"
+#include <vector>
+
 
 namespace amici {
 
@@ -20,7 +22,7 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
                                std::vector<realtype> node_values,
                                bool equidistant_spacing,
                                bool logarithmic_paraterization) 
-    : nodes(nodes), node_values(node_values), 
+    : nodes(std::move(nodes)), node_values(std::move(node_values)), 
     equidistant_spacing_(equidistant_spacing),
     logarithmic_paraterization_(logarithmic_paraterization) {
     
@@ -50,7 +52,7 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                              bool logarithmic_paraterization) 
     : AbstractSpline(nodes, node_values, equidistant_spacing,
                      logarithmic_paraterization),
-    node_values_derivative(node_values_derivative),
+    node_values_derivative(std::move(node_values_derivative)),
     firstNodeDerivative(firstNodeDerivative), 
     lastNodeDerivative(lastNodeDerivative),
     node_derivative_by_FD_(node_derivative_by_FD) {
@@ -181,36 +183,36 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, realtype *dspline_value
     /* We need the coefficients for extrapolating beyond the spline domain */
     for (int ip = 0; ip < nplist; ip++) {
         /* Before node[0] */
-        realtype sp0 = dnodesdp[n_nodes() * ip];
+        realtype sp0 = dspline_valuesdp[n_nodes() * ip];
         realtype sm0;
         if (get_node_derivative_by_FD()) {
             if (firstNodeDerivative == SplineBoundaryCondition::constant) {
                 sm0 = 0;
             } else if (firstNodeDerivative == SplineBoundaryCondition::linearFinDiff) {
-                sm0 = (dnodesdp[ip] - sp0) / (nodes[1] - nodes[0]);
+                sm0 = (dspline_valuesdp[ip] - sp0) / (nodes[1] - nodes[0]);
             } else {
                 throw AmiException("Natural boundary condition for Hermite splines "
                                    "is not yet implemented.");
             }
         } else {
-            sm0 = dslopesdp[n_nodes() * ip];
+            sm0 = dspline_slopesdp[n_nodes() * ip];
         }
 
         /* After node[n_nodes() - 1] */
-        realtype sp_end = dnodesdp[n_nodes() * (ip + 1) - 1];
+        realtype sp_end = dspline_valuesdp[n_nodes() * (ip + 1) - 1];
         realtype sm_end;
         if (get_node_derivative_by_FD()) {
             if (firstNodeDerivative == SplineBoundaryCondition::constant) {
                 sm_end = 0;
             } else if (firstNodeDerivative == SplineBoundaryCondition::linearFinDiff) {
-                sm_end = (sp_end - dnodesdp[n_nodes() * (ip + 1) - 1]) 
+                sm_end = (sp_end - dspline_valuesdp[n_nodes() * (ip + 1) - 1]) 
                     / (nodes[n_nodes() - 1] - nodes[n_nodes() - 2]);
             } else {
                 throw AmiException("Natural boundary condition for Hermite splines "
                                    "is not yet implemented.");
             }
         } else {
-            sm_end = dslopesdp[n_nodes() * (ip + 1) - 1];
+            sm_end = dspline_slopesdp[n_nodes() * (ip + 1) - 1];
         }
 
         /* Write them to the vector */

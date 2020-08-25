@@ -512,7 +512,7 @@ AbstractModel::fdwdp(realtype* /*dwdp*/,
                      const realtype* /*w*/,
                      const realtype* /*tcl*/,
                      const realtype* /*stcl*/,
-                     const realtype* /*spl*/
+                     const realtype* /*spl*/,
                      const realtype* /*sspl*/)
 {
     // no-op default implementation
@@ -540,6 +540,8 @@ AbstractModel::fdwdp(realtype* /*dwdp*/,
                      const realtype* /*w*/,
                      const realtype* /*tcl*/,
                      const realtype* /*stcl*/,
+                     const realtype* /*spl*/,
+                     const realtype* /*sspl*/,
                      const int /*ip*/)
 {
     // no-op default implementation
@@ -567,6 +569,22 @@ AbstractModel::fdwdx_colptrs(sunindextype* /*indexptrs*/)
 
 void
 AbstractModel::fdwdx_rowvals(sunindextype* /*indexvals*/)
+{
+    // no-op default implementation
+}
+
+void 
+AbstractModel::fdspline_valuesdp(realtype *dspline_valuesdp,
+                                 const realtype* /*p*/,
+                                 const realtype* /*k*/)
+{
+    // no-op default implementation
+}
+
+void 
+AbstractModel::fdspline_slopesdp(realtype *dspline_slopesdp,
+                                 const realtype* /*p*/,
+                                 const realtype* /*k*/)
 {
     // no-op default implementation
 }

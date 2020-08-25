@@ -125,7 +125,7 @@ functions = {
             '(realtype *dwdp, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *tcl, const realtype *dtcldp,'
-            'const AbstractSpline *spl)',
+            'const realtype *spl, const realtype *sspl)',
         'flags': ['assume_pow_positivity', 'sparse']
     },
     'dwdx': {
@@ -133,8 +133,26 @@ functions = {
             '(realtype *dwdx, const realtype t, const realtype *x, '
             'const realtype *p, const realtype *k, const realtype *h, '
             'const realtype *w, const realtype *tcl, '
-            'const AbstractSpline *spl)',
+            'const realtype *spl)',
         'flags': ['assume_pow_positivity', 'sparse']
+    },
+    'spline_values': {
+        'signature':
+            '(const realtype *p, const realtype *k)',
+        'flags': ['dont_generate_body']
+    },
+    'spline_slopes': {
+        'signature':
+            '(const realtype *p, const realtype *k)',
+        'flags': ['dont_generate_body']
+    },
+    'dspline_valuesdp': {
+        'signature':
+            '(realtype *dspline_valuesdp, const realtype *p, const realtype *k)'
+    },
+    'dspline_slopesdp': {
+        'signature':
+            '(realtype *dspline_slopesdp, const realtype *p, const realtype *k)'
     },
     'dxdotdw': {
         'signature':
@@ -925,7 +943,14 @@ class ODEModel:
             ))
             fluxes.append(flux_id)
         nr = len(fluxes)
-
+        for ispl, spl in enumerate(si.splines):
+            spline_id = sp.Symbol(f'spl[{ispl}]', real=True)
+            self.add_component(Expression(
+                identifier=spl.sbmlId,
+                name=str(spline_id),
+                value=spline_id
+            ))
+        self.splines = si.splines
         # correct time derivatives for compartment changes
 
         dxdotdw_updates = []
@@ -1591,6 +1616,17 @@ class ODEModel:
         elif name == 'dxdotdp_explicit':
             # force symbols
             self._derivative('xdot', 'p', name=name)
+
+        elif name == 'spline_values':
+            # force symbols
+            self._eqs[name] = sp.Matrix([
+                yy for spline in self.splines
+                for yy in spline.yy
+            ])
+
+        elif name == 'spline_slopes':
+            # force symbols
+            self._eqs[name] = sp.zeros(0, 0)
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))

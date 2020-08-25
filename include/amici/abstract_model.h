@@ -731,7 +731,8 @@ class AbstractModel {
     virtual void fdwdp(realtype *dwdp, const realtype t, const realtype *x,
                        const realtype *p, const realtype *k, const realtype *h,
                        const realtype *w, const realtype *tcl,
-                       const realtype *stcl);
+                       const realtype *stcl, const realtype *spl, 
+                       const realtype *sspl);
 
     /**
      * @brief Model specific implementation for dwdp, column pointers
@@ -792,6 +793,12 @@ class AbstractModel {
      * @param indexvals row values
      */
     virtual void fdwdx_rowvals(sunindextype *indexvals);
+    
+    virtual void fdspline_valuesdp(realtype *dspline_valuesdp,
+                                   const realtype *p, const realtype *k);
+
+    virtual void fdspline_slopesdp(realtype *dspline_slopesdp,
+                                   const realtype *p, const realtype *k);
 };
 
 } // namespace amici

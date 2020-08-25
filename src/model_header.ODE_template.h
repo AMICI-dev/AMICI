@@ -82,9 +82,11 @@ extern void dsigmaydp_TPL_MODELNAME(realtype *dsigmaydp, const realtype t,
                                     const int ip);
 extern void sigmay_TPL_MODELNAME(realtype *sigmay, const realtype t,
                                  const realtype *p, const realtype *k);
-TPL_SPL_DEF
-TPL_SSPLNODES_DEF
-TPL_SSPLSLOPES_DEF
+extern void dspline_valuesdp_TPL_MODELNAME(realtype *dspline_valuesdp,
+                                           const realtype *p, const realtype *k);
+extern void dspline_slopesdp_TPL_MODELNAME(realtype *dspline_slopesdp,
+                                           const realtype *p, const realtype *k);
+
 TPL_W_DEF
 extern void x0_TPL_MODELNAME(realtype *x0, const realtype t, const realtype *p,
                              const realtype *k);
@@ -465,6 +467,17 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DJYDY_COLPTRS_IMPL
     TPL_DJYDY_ROWVALS_IMPL
 
+    virtual void fdspline_valuesdp(realtype *dspline_valuesdp,
+                                   const realtype *p,
+                                   const realtype *k) override {
+        dspline_valuesdp_TPL_MODELNAME(dspline_valuesdp, p, k);
+    }
+    virtual void fdspline_slopesdp(realtype *dspline_slopesdp,
+                                   const realtype *p, 
+                                   const realtype *k) override {
+        dspline_valuesdp_TPL_MODELNAME(dspline_slopesdp, p, k));
+    }
+
     TPL_DWDP_IMPL
 
     TPL_DWDP_COLPTRS_IMPL
@@ -672,12 +685,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
                      const realtype *x, const realtype *p, const realtype *k,
                      const realtype *h, const realtype *sx,
                      const int ip) override {}
-
-    TPL_SPL_DEF
-
-    TPL_SSPLNODES_DEF
-
-    TPL_SSPLSLOPES_DEF
 
     TPL_W_IMPL
 
