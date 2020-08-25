@@ -1342,7 +1342,7 @@ class ODEModel:
             ])
             if name == 'y':
                 self._syms['my'] = sp.Matrix([
-                    sp.Symbol(f'm{strip_pysb(comp.get_id())}', real=True)
+                    get_measurement_symbol(comp.get_id())
                     for comp in getattr(self, component)
                 ])
             return
@@ -3088,17 +3088,31 @@ def csc_matrix(matrix: sp.Matrix,
 
 
 def is_valid_identifier(x: str) -> bool:
-    """Check whether `x` is a valid identifier
-
+    """
     Check whether `x` is a valid identifier for conditions, parameters,
     observables... . Identifiers may only contain upper and lower case letters,
     digits and underscores, and must not start with a digit.
 
-    Arguments:
-        x: string to check
+    :param x:
+        string to check
 
-    Returns:
+    :return:
         ``True`` if valid, ``False`` otherwise
     """
 
     return re.match(r'^[a-zA-Z_]\w*$', x) is not None
+
+
+def get_measurement_symbol(observable_id: Union[str, sp.Symbol]):
+    """
+    Generates the appropriate measurement symbol for the provided observable
+
+    :param observable_id:
+        symbol (or string representation) of the observable
+
+    :return:
+        symbol for the corresponding measurement
+    """
+    if not isinstance(observable_id, str):
+        observable_id = strip_pysb(observable_id)
+    return sp.Symbol(f'm{observable_id}', real=True)

@@ -15,7 +15,7 @@ import warnings
 import logging
 from typing import Dict, Union, List, Callable, Any, Iterable
 
-from .ode_export import ODEExporter, ODEModel
+from .ode_export import ODEExporter, ODEModel, get_measurement_symbol
 from .logging import get_logger, log_execution_time, set_log_level
 from . import has_clibs
 
@@ -1252,7 +1252,7 @@ class SbmlImporter:
                 sigma_y_values[iy] = replace_assignments(sigmas[obs_name])
 
         measurement_y_syms = sp.Matrix(
-            [sp.symbols(f'm{symbol}', real=True) for symbol in observable_syms]
+            [get_measurement_symbol(obs_id) for obs_id in observable_ids]
         )
         measurement_y_values = sp.Matrix(
             [0.0] * len(observable_syms)
