@@ -324,7 +324,7 @@ def _add_expression(
     )
 
     if name in observables:
-        y = sp.Symbol(f'y{ode_model.ny()}')
+        y = sp.Symbol(f'y{name}')
         ode_model.add_component(Observable(y, name, sym))
 
         sigma_name, sigma_value = _get_sigma_name_and_value(
@@ -334,7 +334,7 @@ def _add_expression(
         sigma = sp.Symbol(sigma_name)
         ode_model.add_component(SigmaY(sigma, f'{sigma_name}', sigma_value))
 
-        my = sp.Symbol(f'm{name}')
+        my = sp.Symbol(f'my{name}')
         pi = sp.sympify('pi')
         ode_model.add_component(
             LogLikelihood(

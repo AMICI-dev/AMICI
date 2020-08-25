@@ -2312,7 +2312,7 @@ class ODEExporter:
             # added '[0]*' for initial conditions
             if re.search(
                     fr'const (realtype|double) \*{sym}[0]*[,)]+', signature
-            ):
+            ) or function == 'w' and sym == 'w':
                 lines.append(f'#include "{sym}.h"')
 
         lines.extend([
