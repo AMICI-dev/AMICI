@@ -1138,7 +1138,7 @@ class ODEModel:
         :return:
             number of observable symbols
         """
-        return len(self._observables)
+        return len(self.sym('y'))
 
     def nk(self) -> int:
         """
@@ -1147,7 +1147,7 @@ class ODEModel:
         :return:
             number of constant symbols
         """
-        return len(self._constants)
+        return len(self.sym('k'))
 
     def np(self) -> int:
         """
@@ -1156,7 +1156,7 @@ class ODEModel:
         :return:
             number of parameter symbols
         """
-        return len(self._parameters)
+        return len(self.sym('p'))
 
     def sym(self,
             name: str,

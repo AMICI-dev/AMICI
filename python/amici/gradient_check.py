@@ -73,7 +73,8 @@ def check_finite_difference(x0: Sequence[float],
     model.setParameterList(plist)
 
     # simulation with gradient
-    solver.setSensitivityOrder(SensitivityOrder.first)
+    if int(og_sensitivity_order) < int(SensitivityOrder.first):
+        solver.setSensitivityOrder(SensitivityOrder.first)
     rdata = runAmiciSimulation(model, solver, edata)
     assert_fun(rdata['status'] == AMICI_SUCCESS)
 
@@ -162,7 +163,8 @@ def check_derivatives(model: Model,
 
     og_sens_order = solver.getSensitivityOrder()
 
-    solver.setSensitivityOrder(SensitivityOrder.first)
+    if int(og_sens_order) < int(SensitivityOrder.first):
+        solver.setSensitivityOrder(SensitivityOrder.first)
     rdata = runAmiciSimulation(model, solver, edata)
     solver.setSensitivityOrder(og_sens_order)
 
