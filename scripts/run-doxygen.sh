@@ -62,7 +62,11 @@ rm ${MTOC_CONFIG_PATH}/mtocpp_filter.sh
 
 cd ${AMICI_PATH}/doc/latex
 
+# pdflatex may exit with 1 without error message even if the pdf has apparently
+#  been generated successfully
+set +e
 make
+set -e
 
 cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
