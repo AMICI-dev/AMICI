@@ -956,6 +956,7 @@ class ODEModel:
                 name=str(spl.sbmlId),
                 value=spl.odeModelSymbol(si)
             ))
+        nspl = len(si.splines)
         self.splines = si.splines
         # correct time derivatives for compartment changes
 
@@ -1048,11 +1049,12 @@ class ODEModel:
         # _process_conservation_laws is called after the fluxes are added as
         # expressions, if this ordering needs to be changed, this will have
         # to be adapted.
-        self._eqs['dxdotdw'] = si.stoichiometric_matrix.row_join(
-            sp.zeros(nx_solver, nw-nr)
-        )
-        for ix, iw, val in dxdotdw_updates:
-            self._eqs['dxdotdw'][ix, iw] = val
+        if nspl == 0:
+            self._eqs['dxdotdw'] = si.stoichiometric_matrix.row_join(
+                sp.zeros(nx_solver, nw-nr)
+            )
+            for ix, iw, val in dxdotdw_updates:
+                self._eqs['dxdotdw'][ix, iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables()
