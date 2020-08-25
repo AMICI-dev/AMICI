@@ -1012,6 +1012,10 @@ class CubicHermiteSpline(AbstractSpline):
         "Spline method (cubic Hermite spline)"
         return 'cubic_hermite'
 
+    @property
+    def derivatives_by_fd(self):
+        return self.__derivatives_by_fd
+
     def check_if_valid(self, importer: SbmlImporter):
         """
         Check if the spline described by this object can be correctly
@@ -1080,6 +1084,21 @@ class CubicHermiteSpline(AbstractSpline):
             kwargs['dd'] = children.pop('spline_derivatives')
 
         return kwargs
+
+    def __str__(self):
+        s = f'HermiteCubicSpline on ({self.xx[0]}, {self.xx[-1]}) with {len(self.xx)} points'
+        cmps = []
+        if self.bc is not None:
+            assert self.bc == 'periodic'
+            cmps.append('periodic')
+        if self.derivatives_by_fd:
+            cmps.append('finite differences')
+        if self.extrapolate != (None, None):
+            cmps.append(f'extrapolate = {self.extrapolate}')
+        if len(cmps) != 0:
+            return s + ' [' + ', '.join(cmps) + ']'
+        else:
+            return s
 
 
 def finite_differences(xx, yy, extrapolate, bc):
