@@ -4,6 +4,7 @@
 #include "amici/defines.h"
 #include "amici/sundials_matrix_wrapper.h"
 #include "amici/vector.h"
+#include "amici/splinefunctions.h"
 
 #include <sunmatrix/sunmatrix_band.h>
 #include <sunmatrix/sunmatrix_dense.h>
@@ -794,6 +795,9 @@ class AbstractModel {
      */
     virtual void fdwdx_rowvals(sunindextype *indexvals);
     
+    virtual void fspline_constructors(std::vector<AbstractSpline*> splines,
+                                      const realtype *p, const realtype *k);
+
     virtual void fdspline_valuesdp(realtype *dspline_valuesdp,
                                    const realtype *p, const realtype *k);
 

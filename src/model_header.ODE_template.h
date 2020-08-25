@@ -82,6 +82,8 @@ extern void dsigmaydp_TPL_MODELNAME(realtype *dsigmaydp, const realtype t,
                                     const int ip);
 extern void sigmay_TPL_MODELNAME(realtype *sigmay, const realtype t,
                                  const realtype *p, const realtype *k);
+extern void spline_constructors(AbstractSpline *splines, const realtype *p,
+                                const realtype *k);
 extern void dspline_valuesdp_TPL_MODELNAME(realtype *dspline_valuesdp,
                                            const realtype *p, const realtype *k);
 extern void dspline_slopesdp_TPL_MODELNAME(realtype *dspline_slopesdp,
@@ -466,6 +468,12 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DJYDY_IMPL
     TPL_DJYDY_COLPTRS_IMPL
     TPL_DJYDY_ROWVALS_IMPL
+    
+    virtual void fspline_constructors(std::vector<AbstractSpline*> splines,
+                                      const realtype *p,
+                                      const realtype *k) {
+        spline_constructors(splines, p, k);
+    }
 
     virtual void fdspline_valuesdp(realtype *dspline_valuesdp,
                                    const realtype *p,
