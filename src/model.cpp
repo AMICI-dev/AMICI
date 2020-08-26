@@ -11,6 +11,7 @@
 #include <regex>
 #include <typeinfo>
 #include <utility>
+#include <iostream>
 
 namespace amici {
 
@@ -228,8 +229,11 @@ void Model::initializeSplines() {
                          state_.fixedParameters.data());
     nspl = splines_.size();
     spl_.resize(nspl, 0.0);
+    std::cout << "Came until L231, size of spl_" << splines_.size() << std::endl;
     for (int ispl = 0; ispl < nspl; ispl++)
         splines_[ispl]->computeCoefficients();
+        
+    std::cout << "Came until L235" << std::endl;
 }
 
 void Model::initializeSplineSensitivities() {

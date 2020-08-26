@@ -139,7 +139,7 @@ functions = {
     },
     'spline_constructors': {
         'signature':
-            '(std::vector<AbstractSpline*> splines, '
+            '(std::vector<AbstractSpline*> &splines, '
             'const realtype *p, const realtype *k)',
         'flags': ['dont_generate_body']
     },
@@ -2569,7 +2569,7 @@ class ODEExporter:
         return [line for line in lines if line]
 
     def _get_spline_constructors_body(self):
-        body = [f'\tsplines.resize({len(self.model.splines)});', '']
+        body = ['']
         for ispl, spline in enumerate(self.model.splines):
             # create the vector with the node locations
             nodes = f'\tstd::vector<realtype> nodes{ispl} {{'
@@ -2584,7 +2584,7 @@ class ODEExporter:
             body.append(vals)
             # create the vector with the slopes
             body.append(f'\tstd::vector<realtype> slopes{ispl};')
-            constr = f'\tstatic HermiteSpline spline{ispl} = HermiteSpline('
+            constr = f'\t HermiteSpline *spline{ispl} = new HermiteSpline('
             constr += f'nodes{ispl}, values{ispl}, slopes{ispl}, '
             if spline.bc is None:
                 constr += 'SplineBoundaryCondition::linearFinDiff, '
@@ -2605,7 +2605,7 @@ class ODEExporter:
             else:
                 constr += 'false);'
             body.append(constr)
-            body.append(f'\tsplines[{ispl}] = dynamic_cast<AbstractSpline*>(&spline{ispl});')
+            body.append(f'\tsplines.push_back(dynamic_cast<AbstractSpline*>(spline{ispl}));')
             body.append('')
 
         return body

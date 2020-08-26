@@ -22,7 +22,7 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
                                std::vector<realtype> node_values,
                                bool equidistant_spacing,
                                bool logarithmic_paraterization) 
-    : nodes(std::move(nodes)), node_values(std::move(node_values)), 
+    : nodes(nodes), node_values(node_values), 
     equidistant_spacing_(equidistant_spacing),
     logarithmic_paraterization_(logarithmic_paraterization) {
     
