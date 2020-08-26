@@ -215,7 +215,12 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
                     b.data(), 1, 1.0, c.data(), 1);
         break;
     case SUNMATRIX_SPARSE:
-
+        if(!SM_NNZ_S(matrix_)) {
+            /* empty matrix, nothing to multiply, return to avoid out-of-bounds
+             * access of pointer access below
+             */
+            return;
+        }
         switch (sparsetype()) {
         case CSC_MAT:
             for (sunindextype i = 0; i < ncols; ++i) {
