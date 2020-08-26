@@ -107,13 +107,13 @@ class IDASolver : public Solver {
   protected:
     /**
      * @brief Postprocessing of the solver memory after a discontinuity
-     * @param ami_mem
-     * @param t
-     * @param yout
-     * @param ypout
-     * @param tout
+     * @param ida_mem pointer to IDAS solver memory object
+     * @param t pointer to integration time
+     * @param yout new state vector
+     * @param ypout new state derivative vector
+     * @param tout anticipated next integration timepoint.
      */
-    void reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
+    void reInitPostProcess(void *ida_mem, realtype *t, AmiVector *yout,
                            AmiVector *ypout, realtype tout) const;
 
     void allocateSolver() const override;
@@ -147,10 +147,10 @@ class IDASolver : public Solver {
     void setSuppressAlg(bool flag) const override;
 
     /**
-     * @brief resetState
-     * @param ida_mem
-     * @param yy0
-     * @param yp0
+     * @brief resetState reset the IDAS solver to restart integration after a rhs discontinuity.
+     * @param ida_mem pointer to IDAS solver memory object
+     * @param yy0 new state vector
+     * @param yp0 new state derivative vector
      */
     void resetState(void *ida_mem, const_N_Vector yy0,
                     const_N_Vector yp0) const;

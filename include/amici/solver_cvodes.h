@@ -111,12 +111,12 @@ class CVodeSolver : public Solver {
 
     /**
      * @brief Postprocessing of the solver memory after a discontinuity
-     * @param ami_mem
-     * @param t
-     * @param yout
-     * @param tout
+     * @param cv_mem pointer to CVODES solver memory object
+     * @param t pointer to integration time
+     * @param yout  new state vector
+     * @param tout  anticipated next integration timepoint.
      */
-    void reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
+    void reInitPostProcess(void *cv_mem, realtype *t, AmiVector *yout,
                            realtype tout) const;
 
     void allocateSolver() const override;
@@ -149,9 +149,9 @@ class CVodeSolver : public Solver {
     void setSuppressAlg(bool flag) const override;
 
     /**
-     * @brief resetState
-     * @param cv_mem
-     * @param y0
+     * @brief resetState reset the CVODES solver to restart integration after a rhs discontinuity.
+     * @param cv_mem pointer to CVODES solver memory object
+     * @param y0 new state vector
      */
     void resetState(void *cv_mem, const_N_Vector y0) const;
 
