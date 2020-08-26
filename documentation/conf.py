@@ -118,6 +118,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
+    'sphinx.ext.viewcode',
     'nbsphinx',
     'recommonmark',
     'sphinx_autodoc_typehints',
