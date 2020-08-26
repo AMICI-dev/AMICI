@@ -27,6 +27,7 @@ Welcome to AMICI's documentation!
    PYTHON
    CPP
    FAQ
+   glossary
 
 
 .. toctree::
