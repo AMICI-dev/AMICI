@@ -172,6 +172,7 @@ set_type_checking_flag = True
 
 # hoverxref
 hoverxref_auto_ref = True
+hoverxref_roles = ['term']
 
 # -- Options for HTML output -------------------------------------------------
 
