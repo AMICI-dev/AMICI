@@ -22,6 +22,9 @@ void serialize(Archive &ar, amici::IDASolver &s, unsigned int version);
 
 namespace amici {
 
+/**
+ * @brief The IDASolver class is a wrapper around the SUNDIALS IDAS solver.
+ */
 class IDASolver : public Solver {
   public:
     ~IDASolver() override = default;
@@ -102,6 +105,14 @@ class IDASolver : public Solver {
     void setNonLinearSolverB(int which) const override;
 
   protected:
+    /**
+     * @brief Postprocessing of the solver memory after a discontinuity
+     * @param ami_mem
+     * @param t
+     * @param yout
+     * @param ypout
+     * @param tout
+     */
     void reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
                            AmiVector *ypout, realtype tout) const;
 
@@ -135,6 +146,12 @@ class IDASolver : public Solver {
 
     void setSuppressAlg(bool flag) const override;
 
+    /**
+     * @brief resetState
+     * @param ida_mem
+     * @param yy0
+     * @param yp0
+     */
     void resetState(void *ida_mem, const_N_Vector yy0,
                     const_N_Vector yp0) const;
 
