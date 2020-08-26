@@ -6,6 +6,7 @@ AMICI
 .. autosummary::
    :toctree: generated
 
+   amici
    amici.amici
    amici.sbml_import
    amici.pysb_import
