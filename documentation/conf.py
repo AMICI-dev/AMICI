@@ -192,7 +192,7 @@ exhale_args = {
     "exhaleExecutesDoxygen": True,
     "exhaleDoxygenStdin":    "INPUT = ../include",
     "afterTitleDescription":
-        "AMICI C++ and Python library functions",
+        "AMICI C++ library functions",
     "verboseBuild": False,
 }
 
