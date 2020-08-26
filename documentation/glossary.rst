@@ -1,0 +1,33 @@
+********
+Glossary
+********
+
+.. glossary::
+    :sorted:
+
+    fixed parameters
+        In AMICI, *fixed parameters* are parameters with respect to which no
+        sensitivities are computed. They usually correspond to experimental
+        conditions. For fixed parameters, different values can be set for
+        :term:`preequilibration`, :term:`presimulation` and simulation.
+
+    preequilibration
+        Simulating or solving the dynamical system for the steadystate.
+
+    presimulation
+        Simulation for a fixed time before the regular simulation. Can be used
+        to specify pretreatments.
+
+    PEtab
+        `PEtab <https://github.com/PEtab-dev/PEtab>`_ is a format for
+        specifying parameter estimation problems. It is based on an
+        :term:`SBML` model and tab-separated value files specifying the
+        observation model and experimental conditions.
+
+    PySB
+        `PySB <http://pysb.org/>`_ is a tool for specifying rule-based systems
+        biology models as Python code.
+
+    SBML
+        `SBML <http://sbml.org/>`_ is a commonly used format for specifying
+        systems biology models.
