@@ -116,6 +116,7 @@ add_custom_target(
 # Library source files
 set(AMICI_SRC_LIST
     ${CMAKE_SOURCE_DIR}/src/symbolic_functions.cpp
+    ${CMAKE_SOURCE_DIR}/src/splinefunctions.cpp
     ${CMAKE_SOURCE_DIR}/src/cblas.cpp
     ${CMAKE_SOURCE_DIR}/src/amici.cpp
     ${CMAKE_SOURCE_DIR}/src/misc.cpp
