@@ -883,7 +883,10 @@ INPUT                  = "_SourceDir_/README.md" \
                          "_SourceDir_/documentation/development.md" \
                          "_SourceDir_/documentation/CI.md" \
                          "_SourceDir_/documentation/README.md" \
-                         "_SourceDir_"
+                         "_SourceDir_/documentation/code_review_guide.md" \
+                         "_SourceDir_/include" \
+                         "_SourceDir_/matlab"
+
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1814,7 +1817,7 @@ COMPACT_LATEX          = YES
 # The default value is: a4.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-PAPER_TYPE             = a4wide
+PAPER_TYPE             = a4
 
 # The EXTRA_PACKAGES tag can be used to specify one or more LaTeX package names
 # that should be included in the LaTeX output. The package can be specified just
