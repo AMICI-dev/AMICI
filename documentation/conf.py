@@ -121,6 +121,7 @@ extensions = [
     'nbsphinx',
     'recommonmark',
     'sphinx_autodoc_typehints',
+    'hoverxref.extension',
 ]
 
 intersphinx_mapping = {
@@ -168,6 +169,8 @@ typehints_fully_qualified = True
 typehints_document_rtype = True
 set_type_checking_flag = True
 
+# hoverxref
+hoverxref_auto_ref = True
 
 # -- Options for HTML output -------------------------------------------------
 
