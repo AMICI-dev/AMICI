@@ -9,3 +9,6 @@ recommonmark>=0.6.0
 sphinx_rtd_theme>=0.4.3
 petab>=0.1.5
 sphinx-autodoc-typehints>=1.10.3
+# Newer versions cause trouble with including notebooks:
+# sphinx.errors.SphinxParallelError: ImportError: cannot import name 'Application' from partially initialized module 'prompt_toolkit.application.application' (most likely due to a circular import)
+prompt-toolkit<=3.0.0

@@ -71,6 +71,11 @@ previously defined model specifications::
                              constant_parameters=constant_parameters,
                              sigmas=sigmas)
 
+Full example
+^^^^^^^^^^^^
+
+See `here <ExampleSteadystate.ipynb>`_ for a full example.
+
 PySB import
 -----------
 
@@ -84,9 +89,9 @@ PySB.
 PEtab import
 ------------
 
-AMICI can import :term:`PEtab`-based model definitions and run simulations for the
-specified simulations conditions. For usage, see
-`python/examples/example_petab/petab.ipynb <https://github.com/AMICI-dev/AMICI/blob/develop/python/examples/example_petab/petab.ipynb>`_.
+AMICI can import :term:`PEtab`-based model definitions and run simulations for
+the specified simulations conditions. For usage, see
+`python/examples/example_petab/petab.ipynb <petab.ipynb>`_.
 
 Importing plain ODEs
 --------------------

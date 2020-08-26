@@ -29,7 +29,6 @@ Welcome to AMICI's documentation!
    FAQ
    glossary
 
-
 .. toctree::
    :maxdepth: 2
    :caption: AMICI internals
