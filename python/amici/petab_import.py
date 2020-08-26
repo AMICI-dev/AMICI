@@ -451,7 +451,9 @@ def import_model_sbml(sbml_model: Union[str, 'libsbml.Model'],
 
     show_model_info(sbml_model)
 
-    sbml_importer = amici.SbmlImporter(sbml_model)
+    sbml_importer = amici.SbmlImporter(
+        sbml_model, discard_annotations=discard_annotations
+    )
     sbml_model = sbml_importer.sbml
 
     if observable_df is not None:

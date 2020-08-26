@@ -116,12 +116,23 @@ def hasRule(model: libsbml.Model, variableId) -> bool:
 
 def hasRuleWithId(model: libsbml.Model, ruleId) -> bool:
     """
-    Check whether a rule with SBML ID `variableId` is present in the
+    Check whether a rule with SBML ID `ruleId` is present in the
     SBML model `model`.
     """
     ruleId = str(ruleId)
     for rule in model.getListOfRules():
         if rule.getIdAttribute() == ruleId:
+            return True
+    return False
+
+def hasReaction(model: libsbml.Model, reactionId) -> bool:
+    """
+    Check whether a reaction with SBML ID `reactionId` is present in the
+    SBML model `model`.
+    """
+    reactionId = str(reactionId)
+    for r in model.getListOfReactions():
+        if r.getIdAttribute() == reactionId:
             return True
     return False
 
@@ -173,6 +184,7 @@ def addSpecies(
         speciesId,
         *,
         compartmentId: Optional[str] = None,
+        name: Union[bool, str, None] = None,
         initial_amount: float = 0.0,
         units: Optional[str] = None
     ) -> libsbml.Species:
@@ -199,6 +211,8 @@ def addSpecies(
         the new species as a `libsbml.Species` object.
     """
     speciesId = str(speciesId)
+    if name is True:
+        name = speciesId
 
     # Check whether a species with the same ID already exists
     # TODO the resulting SBML may still be invalid
@@ -228,6 +242,8 @@ def addSpecies(
     sp.setInitialAmount(float(initial_amount))
     if units is not None:
         sp.setUnits(str(units))
+    if isinstance(name, str):
+        sp.setName(name)
 
     return sp
 
@@ -236,6 +252,7 @@ def addParameter(
         model,
         parameterId,
         *,
+        name: Union[bool, str, None] = None,
         value: Optional[float] = None,
         units: Optional[str] = None,
         constant: Optional[bool] = None
@@ -262,6 +279,8 @@ def addParameter(
         the new parameter as a `libsbml.Parameter` object.
     """
     parameterId = str(parameterId)
+    if name is True:
+        name = parameterId
 
     # Check whether a parameter with the same ID already exists
     # TODO the resulting SBML may still be invalid
@@ -280,6 +299,8 @@ def addParameter(
         par.setConstant(bool(constant))
     if value is not None:
         par.setValue(float(value))
+    if isinstance(name, str):
+        par.setName(name)
 
     return par
 
@@ -371,7 +392,7 @@ def addRateRule(
         raise SbmlException(
             f'A rule for parameter {variableId} has already been defined.'
         )
-    if hasRuleWithId(mode, ruleId):
+    if hasRuleWithId(model, ruleId):
         raise SbmlException(
             f'A rule with SBML ID {ruleId} has already been defined.'
         )
@@ -384,6 +405,31 @@ def addRateRule(
     setSbmlMath(rule, formula)
 
     return rule
+
+
+def addInflow(model, speciesId, rate, *, reactionId: Optional[str] = None, reversible: bool = False):
+    speciesId = str(speciesId)
+    if reactionId is None:
+        reactionId = f'inflow_of_{speciesId}'
+
+    if hasReaction(model, reactionId):
+        raise SbmlException(
+            f'A reaction with SBML ID {reactionId} has already been defined.'
+        )
+
+    reaction = model.createReaction()
+    if reaction.setId(reactionId) != libsbml.LIBSBML_OPERATION_SUCCESS:
+        raise SbmlException(f'{reactionId} is not a valid SBML ID')
+    reaction.setReversible(reversible)
+
+    spr = reaction.createProduct()
+    spr.setSpecies(speciesId)
+
+    kl = reaction.createKineticLaw()
+    compartmentId = model.getSpecies(speciesId).getCompartment()
+    setSbmlMath(kl, sp.Symbol(compartmentId) * rate)
+
+    return reaction
 
 
 ################################################################################

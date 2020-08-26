@@ -244,6 +244,8 @@ class AbstractSpline(ABC):
         self._extrapolate = extrapolate
         self._logarithmic_paraterization = logarithmic_paraterization
 
+        self._formula_cache = {}
+
     @staticmethod
     def _normalize_extrapolate(extrapolate, bc):
         """
@@ -365,7 +367,7 @@ class AbstractSpline(ABC):
         if not np.all(np.diff(xx) >= 0):
             raise ValueError('xx should be stricly increasing')
 
-    def poly(self, i: int) -> sp.Basic:
+    def poly(self, i: int, *, x=None) -> sp.Basic:
         """
         Get the polynomial interpolant on the `(xx[i], xx[i+1])` interval
         in Horner form.
@@ -375,7 +377,10 @@ class AbstractSpline(ABC):
 
         assert 0 <= i < len(self.xx) - 1
 
-        poly = sp.poly(self._poly(self.x, i), wrt=self.x)
+        if x is None:
+            x = self.x
+
+        poly = sp.poly(self._poly(x, i), wrt=x)
         return sp.horner(poly)
 
     @abstractmethod
@@ -386,8 +391,10 @@ class AbstractSpline(ABC):
         """
         return NotImplemented
 
-    def segment_formula(self, i: int) -> sp.Basic:
-        poly = self.poly(i)
+    def segment_formula(self, i: int, *, x=None) -> sp.Basic:
+        if x is None:
+            x = self.x
+        poly = self.poly(i, x=x)
         if self.logarithmic_paraterization:
             return sp.exp(poly)
         else:
@@ -407,6 +414,9 @@ class AbstractSpline(ABC):
         of the interval `(xx[0], xx[-1])`.
         A value of `None` means that no extrapolation is required.
         """
+        return self._extrapolation_formulas(self.x)
+
+    def _extrapolation_formulas(self, x):
         extrLeft, extrRight = self.extrapolate
 
         if extrLeft == 'constant':
@@ -437,11 +447,26 @@ class AbstractSpline(ABC):
         """
         return self._formula(sbml=True)
 
-    def _formula(self, *, sbml: bool = False) -> sp.Piecewise:
-        x = self.x
+    def _formula(self, *, x=None, sbml=False, **kwargs) -> sp.Piecewise:
+        if 'extrapolate' in kwargs.keys():
+            key = (x, sbml, kwargs['extrapolate'])
+        else:
+            key = (x, sbml)
+        if key in self._formula_cache.keys():
+            return self._formula_cache[key]
+
+        if x is None:
+            x = self.x
+        if 'extrapolate' in kwargs.keys():
+            extrapolate = AbstractSpline._normalize_extrapolate(
+                kwargs['extrapolate'], self.bc
+            )
+        else:
+            extrapolate = self.extrapolate
+
         pieces = []
 
-        if self.extrapolate[0] == 'periodic' or self.extrapolate[1] == 'periodic':
+        if extrapolate[0] == 'periodic' or extrapolate[1] == 'periodic':
             if sbml:
                 # NB mod is not supported in SBML
                 x = sympy.Symbol(self.sbmlId + '_x_in_fundamental_period')
@@ -450,22 +475,22 @@ class AbstractSpline(ABC):
                 #    and sympy handles Piecewises inside other Piecewises
                 #    really badly.
             else:
-                x = self.xx[0] + sp.Mod(x - self.xx[0], self.xx[-1] - self.xx[0])
+                x = self._to_base_interval(x)
             extrLeft, extrRight = None, None
         else:
-            extrLeft, extrRight = self.extrapolation_formulas
+            extrLeft, extrRight = self._extrapolation_formulas(x)
 
         if extrLeft is not None:
             pieces.append((extrLeft, x < self.xx[0]))
 
         for i in range(len(self.xx) - 2):
-            pieces.append((self.segment_formula(i), x < self.xx[i+1]))
+            pieces.append((self.segment_formula(i, x=x), x < self.xx[i+1]))
 
         if extrRight is not None:
-            pieces.append((self.segment_formula(-1), x < self.xx[-1]))
+            pieces.append((self.segment_formula(-1, x=x), x < self.xx[-1]))
             pieces.append((extrRight, sp.sympify(True)))
         else:
-            pieces.append((self.segment_formula(-1), sp.sympify(True)))
+            pieces.append((self.segment_formula(-1, x=x), sp.sympify(True)))
 
         with evaluate(False):
             if sbml:
@@ -476,7 +501,59 @@ class AbstractSpline(ABC):
                     )
                     for (p, c) in pieces
                 ]
-            return sp.Piecewise(*pieces)
+            formula = sp.Piecewise(*pieces)
+
+        self._formula_cache[key] = formula
+        return formula
+
+    @property
+    def period(self):
+        return self.xx[-1] - self.xx[0] if bc == 'periodic' else None
+
+    def _to_base_interval(self, x):
+        if bc != 'periodic':
+            raise ValueError(
+                '_to_base_interval makes no sense with non-periodic bc'
+            )
+        return self.xx[0] + sp.Mod(x - self.xx[0], self.period)
+
+    def integrate(self, x0, x1):
+        x = sp.Dummy('x')
+        x0, x1 = sp.sympify((x0, x1))
+
+        if self.extrapolate != ('periodic', 'periodic'):
+            return self._formula(x=x).integrate((x, x0, x1))
+
+        else:
+            formula = self._formula(x=x, extrapolate=None)
+
+            x00 = _to_base_interval(x0)
+            x11 = _to_base_interval(x1)
+
+            assert self.xx[0] <= x00 <= self.xx[-1]
+            assert self.xx[0] <= x11 <= self.xx[-1]
+
+            x01 = self.xx[-1] + x0 - x00
+            x10 = self.xx[0] + x1 - x11
+
+            if x1 <= x01:
+                assert x10 < x01
+                return formula.integrate((x, x00, x11))
+
+            else:
+                assert x01 <= x10
+
+                if x01 == x10:
+                    return formula.integrate((x, x00, self.xx[-1])) + \
+                           formula.integrate((x, self.xx[0], x11))
+
+                else:
+                    n = (x10 - x01) / self.period
+                    assert n.is_Integer
+                    assert n > 0
+                    return formula.integrate((x, x00, self.xx[-1])) + \
+                           n*formula.integrate((x, self.xx[0], self.xx[-1])) + \
+                           formula.integrate((x, self.xx[0], x11))
 
     @property
     def amiciAnnotation(self) -> str:
@@ -968,6 +1045,15 @@ class CubicHermiteSpline(AbstractSpline):
         if not isinstance(xx, UniformGrid):
             xx = np.asarray([sympify_noeval(x) for x in xx])
         yy = np.asarray([sympify_noeval(y) for y in yy])
+
+        if len(xx) != len(yy):
+            # NB this would be checked in AbstractSpline.__init__()
+            #    however, we check it now so that an informative message
+            #    can be printed (otherwise finite difference computation fails)
+            raise ValueError(
+                'length of xx and yy must be the same '
+                f'(instead len(xx) = {len(xx)} and len(yy) = {len(yy)})'
+            )
 
         if bc not in ('periodic', None):
             raise ValueError(
