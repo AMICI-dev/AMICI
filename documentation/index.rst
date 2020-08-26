@@ -32,11 +32,12 @@ Welcome to AMICI's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Developer's guide
+   :caption: AMICI internals
 
    CONTRIBUTING
-   README
+   Code of conduct <CODE_OF_CONDUCT>
    development
+   Documentation organization <README>
    code_review_guide
    CI
 
