@@ -737,6 +737,8 @@ class AbstractSpline(ABC):
     #     )
 
     def _replace_in_all_expressions(self, old: sp.Symbol, new: sp.Symbol):
+        if self.sbmlId == old:
+            self._sbmlId = new
         self._x = self.x.subs(old, new)
         if not isinstance(self.xx, UniformGrid):
             self._xx = [x.subs(old, new) for x in self.xx]

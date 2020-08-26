@@ -1530,16 +1530,13 @@ class SbmlImporter:
         reserved_symbols = ['k', 'p', 'y', 'w']
         for sym in reserved_symbols:
             old_symbol = sp.Symbol(sym, real=True)
-            new_symbol = sp.Symbol('amici_' + sym)
+            new_symbol = sp.Symbol('amici_' + sym, real=True)
             self._replace_in_all_expressions(old_symbol, new_symbol)
             for symbol in self.symbols.keys():
                 if 'identifier' in self.symbols[symbol].keys():
                     self.symbols[symbol]['identifier'] = \
                         self.symbols[symbol]['identifier'].subs(old_symbol,
                                                                 new_symbol)
-            for spline in self.splines:
-                if spline.sbmlId == old_symbol:
-                    spline._sbmlId = new_symbol
 
     def _replace_special_constants(self) -> None:
         """

@@ -944,12 +944,35 @@ class ODEModel:
             imported SBML model
         """
 
+        # HACK remove real=True assumptions from spline symbols
+        #   must be done as the first thing because it modifies the SbmlImporter
+        for spl in si.splines:
+            old_sbmlId = spl.sbmlId
+            new_sbmlId = sp.Symbol(spl.sbmlId.name)
+            si._replace_in_all_expressions(old_sbmlId, new_sbmlId)
+
         # get symbolic expression from SBML importers
         symbols = copy.copy(si.symbols)
+
+        # add splines as expressions to the model
+        spline_subs = {}  # saved for later substituting into the fluxes
+        for spl in si.splines:
+            spline_expr = spl.odeModelSymbol(si)
+            spline_subs[spl.sbmlId] = spline_expr
+            self.add_component(Expression(
+                identifier=spl.sbmlId,
+                name=str(spl.sbmlId),
+                value=spline_expr
+            ))
+        nspl = len(si.splines)
+        self.splines = si.splines
 
         # assemble fluxes and add them as expressions to the model
         fluxes = []
         for ir, flux in enumerate(si.flux_vector):
+            # replace splines inside fluxes
+            flux = flux.subs(spline_subs)
+            # add flux to expressions
             flux_id = sp.Symbol(f'flux_r{ir}', real=True)
             self.add_component(Expression(
                 identifier=flux_id,
@@ -958,14 +981,7 @@ class ODEModel:
             ))
             fluxes.append(flux_id)
         nr = len(fluxes)
-        for spl in si.splines:
-            self.add_component(Expression(
-                identifier=spl.sbmlId,
-                name=str(spl.sbmlId),
-                value=spl.odeModelSymbol(si)
-            ))
-        nspl = len(si.splines)
-        self.splines = si.splines
+
         # correct time derivatives for compartment changes
 
         dxdotdw_updates = []
