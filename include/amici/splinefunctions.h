@@ -106,7 +106,7 @@ class AbstractSpline {
 
 
 
-class HermiteSpline : AbstractSpline {
+class HermiteSpline : public AbstractSpline {
   public:
     HermiteSpline() = default;
       

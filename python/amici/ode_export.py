@@ -143,6 +143,14 @@ functions = {
             'const realtype *p, const realtype *k)',
         'flags': ['dont_generate_body']
     },
+    'spl': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
+    'sspl': {
+        'signature': '()',
+        'flags': ['dont_generate_body']
+    },
     'spline_values': {
         'signature':
             '(const realtype *p, const realtype *k)',
@@ -1416,6 +1424,19 @@ class ODEModel:
             length = self._symboldim_funs[name]()
         elif name in sensi_functions:
             length = self.eq(name).shape[0]
+        elif name == 'spl':
+            # placeholders for the numeric spline values. Need to create symbols
+            self._syms[name] = sp.Matrix([
+                [f'spl_{isp}' for isp in range(len(self.splines))]
+            ])
+            return
+        elif name == 'sspl':
+            # placeholders for spline sensitivities. Need to create symbols
+            self._syms[name] = sp.Matrix([
+                [f'sspl_{isp}_{ip}' for ip in range(len(self._syms['p']))]
+                for isp in range(len(self.splines))
+            ])
+            return
         else:
             length = len(self.eq(name))
 
@@ -1431,6 +1452,9 @@ class ODEModel:
         for var in self._variable_prototype:
             if var not in self._syms:
                 self._generate_symbol(var)
+        # symbols for spline values need to be created in addition
+        for var in ['spl', 'sspl']:
+            self._generate_symbol(var)
 
     def get_appearance_counts(self, idxs: List[int]) -> List[int]:
         """
@@ -1618,6 +1642,14 @@ class ODEModel:
             self._eqs[name] = sp.zeros(self.ncl(), self.nx_solver())
 
         elif name == 'dtcldp':
+            # force symbols
+            self._eqs[name] = self.sym(name)
+
+        elif name == 'spl':
+            # force symbols
+            self._eqs[name] = self.sym(name)
+
+        elif name == 'sspl':
             # force symbols
             self._eqs[name] = self.sym(name)
 
@@ -2309,6 +2341,9 @@ class ODEExporter:
             '#include "amici/defines.h"',
             '#include "sundials/sundials_types.h"',
         ]
+        if function == 'spline_constructors':
+            lines += ['#include "amici/splinefunctions.h"',
+                      '#include <vector>']
 
         # function signature
         signature = self.functions[function]['signature']
@@ -2523,7 +2558,7 @@ class ODEExporter:
             # create the vector with the node locations
             nodes = f'\tstd::vector<realtype> nodes{ispl} {{'
             if str(type(spline.xx)) == "<class 'amici.splines.UniformGrid'>":
-                nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '}};'
+                nodes += str(spline.xx.start) + ', ' + str(spline.xx.stop) + '};'
             body.append(nodes)
             # create the vector with the node values
             vals = f'\tstd::vector<realtype> values{ispl} {{' + str(spline.yy[0])
@@ -2554,7 +2589,7 @@ class ODEExporter:
             else:
                 constr += 'false);'
             body.append(constr)
-            body.append(f'\tsplines[{ispl}] = &spline{ispl};')
+            body.append(f'\tsplines[{ispl}] = dynamic_cast<AbstractSpline*>(&spline{ispl});')
             body.append('')
 
         return body
