@@ -118,9 +118,11 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
+    'sphinx.ext.viewcode',
     'nbsphinx',
     'recommonmark',
     'sphinx_autodoc_typehints',
+    'hoverxref.extension',
     'breathe',
     'exhale',
 ]
@@ -169,6 +171,11 @@ todo_include_todos = False
 typehints_fully_qualified = True
 typehints_document_rtype = True
 set_type_checking_flag = True
+
+# hoverxref
+hoverxref_auto_ref = True
+hoverxref_roles = ['term']
+hoverxref_domains = ['py']
 
 # breathe settings
 breathe_projects = {

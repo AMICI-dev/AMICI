@@ -9,5 +9,6 @@ recommonmark>=0.6.0
 sphinx_rtd_theme>=0.4.3
 petab>=0.1.5
 sphinx-autodoc-typehints>=1.10.3
+git+https://github.com/readthedocs/sphinx-hoverxref@master
 breathe>=4.20.0
 exhale>=0.2.3
