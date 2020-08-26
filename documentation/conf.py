@@ -121,6 +121,8 @@ extensions = [
     'nbsphinx',
     'recommonmark',
     'sphinx_autodoc_typehints',
+    'breathe',
+    'exhale',
 ]
 
 intersphinx_mapping = {
@@ -168,6 +170,31 @@ typehints_fully_qualified = True
 typehints_document_rtype = True
 set_type_checking_flag = True
 
+# breathe settings
+breathe_projects = {
+    "AMICI": "./_doxyoutput/xml",
+}
+
+breathe_default_project = "AMICI"
+
+# exhale settings
+
+exhale_args = {
+    # These arguments are required
+    "containmentFolder": "./_exhale_cpp_api",
+    "rootFileName": "library_root.rst",
+    "rootFileTitle": "AMICI C++ API",
+    "doxygenStripFromPath": "..",
+    # Suggested optional arguments
+    "createTreeView": True,
+    # TIP: if using the sphinx-bootstrap-theme, you need
+    # "treeViewIsBootstrap": True,
+    "exhaleExecutesDoxygen": True,
+    "exhaleDoxygenStdin":    "INPUT = ../include",
+    "afterTitleDescription":
+        "AMICI C++ and Python library functions",
+    "verboseBuild": False,
+}
 
 # -- Options for HTML output -------------------------------------------------
 

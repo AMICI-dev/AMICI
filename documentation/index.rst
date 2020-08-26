@@ -44,7 +44,8 @@ Welcome to AMICI's documentation!
    :maxdepth: 2
    :caption: API reference
 
-   modules
+   python_modules
+   _exhale_cpp_api/library_root
 
 
 .. toctree::
