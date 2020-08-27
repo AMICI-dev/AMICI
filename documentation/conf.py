@@ -175,7 +175,13 @@ set_type_checking_flag = True
 hoverxref_auto_ref = True
 hoverxref_roles = ['term']
 hoverxref_domains = ['py']
-
+hoverxref_role_types = {
+    'hoverxref': 'tooltip',
+    'ref': 'tooltip',
+    'func': 'tooltip',
+    'mod': 'tooltip',
+    'class': 'tooltip',
+}
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
