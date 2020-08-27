@@ -177,8 +177,11 @@ def test_compare_to_pysb_simulation(example):
 
             if example not in ['fricker_2010_apoptosis', 'fixed_initial',
                                'bngwiki_egfr_simple_deletemolecules']:
-                if example in ['tyson_oscillator', 'bax_pore',
-                               'kinase_cascade']:
+                if example in ['tyson_oscillator', 'bax_pore_sequential',
+                               'bax_pore', 'kinase_cascade',
+                               'bngwiki_egfr_simple',
+                               'bngwiki_enzymatic_cycle_mm',
+                               'bngwiki_simple']:
                     solver.setAbsoluteTolerance(1e-14)
                     solver.setRelativeTolerance(1e-14)
                     epsilon = 1e-4
