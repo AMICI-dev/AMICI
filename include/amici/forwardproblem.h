@@ -56,7 +56,7 @@ class ForwardProblem {
     ~ForwardProblem() = default;
 
     /** allow FinalStateStorer to access private members and functions */
-    friend FinalStateStorer;
+    friend amici::FinalStateStorer;
 
     /**
      * @brief Solve the forward problem.
