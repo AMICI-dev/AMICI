@@ -1825,3 +1825,9 @@ def noise_distribution_to_cost_function(
             f"Cost identifier {noise_distribution} not recognized.")
 
     return nllh_y_string
+
+
+def _get_str_symbol_identifiers(str_symbol: str) -> tuple:
+    """Get identifiers for simulation, measurement, and sigma."""
+    y, m, sigma = f"{str_symbol}", f"m{str_symbol}", f"sigma{str_symbol}"
+    return y, m, sigma
