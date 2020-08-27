@@ -1,11 +1,11 @@
 ****************
-Python Interface
+Python interface
 ****************
 
 In the following we will give a detailed overview how to specify models in
 Python and how to call the generated simulation files.
 
-Model Definition
+Model definition
 ================
 
 This guide will guide the user on how to specify models to import and simulate
@@ -51,7 +51,7 @@ function, e.g.::
     observables = amici.assignmentRules2observables(sbml, filter_function=lambda variable:
                                                     variable.getId().startswith('observable_') and not variable.getId().endswith('_sigma'))
 
-Standard Deviations
+Standard deviations
 ^^^^^^^^^^^^^^^^^^^
 
 Standard deviations can be specified as dictionaries, such as::
@@ -59,7 +59,7 @@ Standard deviations can be specified as dictionaries, such as::
     sigmas = {'observable_x1withsigma': 'observable_x1withsigma_sigma'}
 
 
-Model Compilation
+Model compilation
 ^^^^^^^^^^^^^^^^^
 
 To generate a Python module from the SBML model, call the method
@@ -103,7 +103,7 @@ handy, as it facilitates generating SBML models from a YAML-based specification
 of an ODE model. Besides the SBML model it can also create
 `PEtab <https://github.com/PEtab-dev/PEtab>`_ files.
 
-Model Simulation
+Model simulation
 ================
 
 AMICI model import creates a Python module for simulation of the respective
