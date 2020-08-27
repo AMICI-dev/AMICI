@@ -1,4 +1,4 @@
-# Code review
+# Code review guide
 
 A guide for reviewing code and having your code reviewed by others.
 

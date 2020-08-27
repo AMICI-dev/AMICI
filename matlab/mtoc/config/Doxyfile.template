@@ -875,15 +875,10 @@ WARN_LOGFILE           =
 
 INPUT                  = "_SourceDir_/README.md" \
                          "_SourceDir_/LICENSE.md" \
-                         "_SourceDir_/CONTRIBUTING.md" \
                          "_SourceDir_/INSTALL.md" \
                          "_SourceDir_/documentation/MATLAB.md" \
                          "_SourceDir_/documentation/CPP.md" \
                          "_SourceDir_/documentation/FAQ.md" \
-                         "_SourceDir_/documentation/development.md" \
-                         "_SourceDir_/documentation/CI.md" \
-                         "_SourceDir_/documentation/README.md" \
-                         "_SourceDir_/documentation/code_review_guide.md" \
                          "_SourceDir_/include" \
                          "_SourceDir_/matlab"
 
