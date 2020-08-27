@@ -120,6 +120,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
     'nbsphinx',
+    'IPython.sphinxext.ipython_console_highlighting',
     'recommonmark',
     'sphinx_autodoc_typehints',
     'hoverxref.extension',
