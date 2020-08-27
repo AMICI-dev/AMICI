@@ -181,7 +181,8 @@ def check_derivatives(model: Model,
     if edata is not None:
         fields.append('llh')
 
-    if solver.getSensitivityMethod() == SensitivityMethod.forward:
+    if solver.getSensitivityMethod() == SensitivityMethod.forward and \
+            solver.getSensitivityOrder() <= SensitivityOrder.first:
         fields.append('x')
 
     leastsquares_applicable = \

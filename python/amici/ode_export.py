@@ -1693,7 +1693,10 @@ class ODEModel:
             # terms of those (bngl orders them according to their
             # dependency, which guarantees that we will be able to evaluate
             # the final expression as dwdw will be lower triangular. for sbml
-            # there shouldn't be any hierarchical dependency for now)
+            # there shouldn't be any hierarchical dependency for now).
+            # In order for this to work successfully, naming of symbols must
+            # only depend on absolute matrix location and not on relative
+            # location to other symbols
             need_clear_symbols = False
             if var in ['p', 'x']:
                 self_sym = self.sym(name)
