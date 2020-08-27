@@ -24,6 +24,10 @@ void serialize(Archive &ar, amici::CVodeSolver &s, unsigned int version);
 
 namespace amici {
 
+/**
+ * @brief The CVodeSolver class is a wrapper around the SUNDIALS CVODES solver.
+ */
+
 class CVodeSolver : public Solver {
   public:
     ~CVodeSolver() override = default;
@@ -105,7 +109,14 @@ class CVodeSolver : public Solver {
 
     void reInitPostProcessB(realtype tnext) const override;
 
-    void reInitPostProcess(void *ami_mem, realtype *t, AmiVector *yout,
+    /**
+     * @brief Postprocessing of the solver memory after a discontinuity
+     * @param cv_mem pointer to CVODES solver memory object
+     * @param t pointer to integration time
+     * @param yout  new state vector
+     * @param tout  anticipated next integration timepoint.
+     */
+    void reInitPostProcess(void *cv_mem, realtype *t, AmiVector *yout,
                            realtype tout) const;
 
     void allocateSolver() const override;
@@ -137,6 +148,11 @@ class CVodeSolver : public Solver {
 
     void setSuppressAlg(bool flag) const override;
 
+    /**
+     * @brief resetState reset the CVODES solver to restart integration after a rhs discontinuity.
+     * @param cv_mem pointer to CVODES solver memory object
+     * @param y0 new state vector
+     */
     void resetState(void *cv_mem, const_N_Vector y0) const;
 
     void setSensParams(const realtype *p, const realtype *pbar,
@@ -178,10 +194,21 @@ class CVodeSolver : public Solver {
 
     void *getAdjBmem(void *ami_mem, int which) const override;
 
+    /**
+     * @brief Serialize amici::CVodeSolver to boost archive
+     * @param ar Archive
+     * @param s Solver instance to serialize
+     */
     template <class Archive>
     friend void boost::serialization::serialize(Archive &ar, CVodeSolver &s,
-                                                unsigned int version);
+                                                unsigned int /*version*/);
 
+    /**
+     * @brief Equality operatator
+     * @param a
+     * @param b
+     * @return Whether a and b are equal
+     */
     friend bool operator==(const CVodeSolver &a, const CVodeSolver &b);
 
     void init(realtype t0, const AmiVector &x0,

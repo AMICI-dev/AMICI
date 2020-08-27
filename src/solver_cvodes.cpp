@@ -797,7 +797,7 @@ const Model *CVodeSolver::getModel() const {
  * @param x Vector with the states
  * @param xdot Vector with the right hand side
  * @param J Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -820,7 +820,7 @@ static int fJ(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
  * @param xB Vector with the adjoint states
  * @param xBdot Vector with the adjoint right hand side
  * @param JB Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp1B temporary storage vector
  * @param tmp2B temporary storage vector
  * @param tmp3B temporary storage vector
@@ -841,7 +841,7 @@ static int fJB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param x Vector with the states
  * @param xdot Vector with the right hand side
  * @param J Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -863,7 +863,7 @@ static int fJSparse(realtype t, N_Vector x, N_Vector /*xdot*/,
  * @param xB Vector with the adjoint states
  * @param xBdot Vector with the adjoint right hand side
  * @param JB Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp1B temporary storage vector
  * @param tmp2B temporary storage vector
  * @param tmp3B temporary storage vector
@@ -887,7 +887,7 @@ static int fJSparseB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param x Vector with the states
  * @param xdot Vector with the right hand side
  * @param J Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -909,7 +909,7 @@ static int fJBand(realtype t, N_Vector x, N_Vector xdot, SUNMatrix J,
  * @param xB Vector with the adjoint states
  * @param xBdot Vector with the adjoint right hand side
  * @param JB Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp1B temporary storage vector
  * @param tmp2B temporary storage vector
  * @param tmp3B temporary storage vector
@@ -930,7 +930,7 @@ static int fJBandB(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
  * @param v Vector with which the Jacobian is multiplied
  * @param Jv Vector to which the Jacobian vector product will be
  *written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp temporary storage vector
  * @return status flag indicating successful execution
  **/
@@ -951,7 +951,7 @@ static int fJv(N_Vector v, N_Vector Jv, realtype t, N_Vector x,
  * @param vB Vector with which the Jacobian is multiplied
  * @param JvB Vector to which the Jacobian vector product will be
  *written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmpB temporary storage vector
  * @return status flag indicating successful execution
  **/
@@ -969,7 +969,7 @@ static int fJvB(N_Vector vB, N_Vector JvB, realtype t, N_Vector x,
  * @param t timepoint
  * @param x Vector with the states
  * @param root array with root function values
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @return status flag indicating successful execution
  */
 static int froot(realtype t, N_Vector x, realtype *root,
@@ -986,7 +986,7 @@ static int froot(realtype t, N_Vector x, realtype *root,
  * @param t timepoint
  * @param x Vector with the states
  * @param xdot Vector with the right hand side
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @return status flag indicating successful execution
  */
 static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
@@ -1011,7 +1011,7 @@ static int fxdot(realtype t, N_Vector x, N_Vector xdot, void *user_data) {
  * @param x Vector with the states
  * @param xB Vector with the adjoint states
  * @param xBdot Vector with the adjoint right hand side
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @return status flag indicating successful execution
  */
 static int fxBdot(realtype t, N_Vector x, N_Vector xB, N_Vector xBdot,
@@ -1045,7 +1045,7 @@ static int fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot,
  * @param t timepoint
  * @param xB Vector with the adjoint states
  * @param xBdot Vector with the adjoint right hand side
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @return status flag indicating successful execution
  */
 static int fxBdot_ss(realtype t, N_Vector xB, N_Vector xBdot,
@@ -1078,7 +1078,7 @@ static int fqBdot_ss(realtype t, N_Vector xB, N_Vector qBdot,
  * @param x Vector with the states
  * @param xBdot Vector with the adjoint right hand side
  * @param JB Matrix to which the Jacobian will be written
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp1B temporary storage vector
  * @param tmp2B temporary storage vector
  * @param tmp3B temporary storage vector
@@ -1102,7 +1102,7 @@ static int fJSparseB_ss(realtype /*t*/, N_Vector /*x*/, N_Vector xBdot,
  * @param ip parameter index
  * @param sx Vector with the state sensitivities
  * @param sxdot Vector with the sensitivity right hand side
- * @param user_data object with user input @type Model_ODE
+ * @param user_data object with user input
  * @param tmp1 temporary storage vector
  * @param tmp2 temporary storage vector
  * @param tmp3 temporary storage vector
@@ -1115,7 +1115,6 @@ static int fsxdot(int /*Ns*/, realtype t, N_Vector x, N_Vector /*xdot*/,
     model->fsxdot(t, x, ip, sx, sxdot);
     return model->checkFinite(gsl::make_span(sxdot), "sxdot");
 }
-
 
 bool operator==(const CVodeSolver &a, const CVodeSolver &b) {
     return static_cast<Solver const &>(a) == static_cast<Solver const &>(b);
