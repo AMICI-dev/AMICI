@@ -19,7 +19,7 @@ class ReturnDataMatlab;
 
 /**
  * @brief setModelData sets data from the matlab call to the model object
- * @param prhs: pointer to the array of input arguments @type mxArray
+ * @param prhs: pointer to the array of input arguments
  * @param nrhs: number of elements in prhs
  * @param model: model to update
  */
@@ -28,7 +28,7 @@ void setModelData(const mxArray *prhs[], int nrhs, Model& model);
 /**
  * @brief setSolverOptions solver options from the matlab call to a solver
  * object
- * @param prhs: pointer to the array of input arguments @type mxArray
+ * @param prhs: pointer to the array of input arguments
  * @param nrhs: number of elements in prhs
  * @param solver: solver to update
  */
@@ -36,9 +36,9 @@ void setSolverOptions(const mxArray *prhs[], int nrhs, Solver& solver);
 
 /**
  * @brief setupReturnData initialises the return data struct
- * @param plhs user input @type mxArray
- * @param nlhs number of elements in plhs @type mxArray
- * @return rdata: return data struct @type *ReturnData
+ * @param plhs user input
+ * @param nlhs number of elements in plhs
+ * @return rdata: return data struct
  */
 ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs);
 
@@ -49,8 +49,8 @@ ReturnDataMatlab *setupReturnData(mxArray *plhs[], int nlhs);
  *
  * @param prhs pointer to the array of input arguments
  * @param model pointer to the model object, this is necessary to perform
- * dimension checks @type *mxArray
- * @return edata pointer to experimental data object @type *ExpData
+ * dimension checks
+ * @return edata pointer to experimental data object
  */
 std::unique_ptr<ExpData> expDataFromMatlabCall(const mxArray *prhs[],
                                                const Model &model);
