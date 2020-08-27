@@ -1,4 +1,4 @@
-# How to contribute
+# Contributing to AMICI
 
 We are happy about contributions to AMICI in any form, be it new functionality,
 documentation, bug reports, or anything else.

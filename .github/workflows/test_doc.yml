@@ -66,6 +66,7 @@ jobs:
               g++ \
               libatlas-base-dev \
               libboost-serialization-dev \
+              pandoc \
               python3-venv \
 
       - name: Build swig
