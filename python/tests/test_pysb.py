@@ -175,15 +175,23 @@ def test_compare_to_pysb_simulation(example):
             assert np.isclose(rdata['x'],
                               pysb_simres.species, 1e-4, 1e-4).all()
 
-            if example not in ['fricker_2010_apoptosis']:
-                solver.setAbsoluteTolerance(1e-14)
-                solver.setRelativeTolerance(1e-14)
+            if example not in ['fricker_2010_apoptosis', 'fixed_initial',
+                               'bngwiki_egfr_simple_deletemolecules']:
+                if example in ['tyson_oscillator', 'bax_pore',
+                               'kinase_cascade']:
+                    solver.setAbsoluteTolerance(1e-14)
+                    solver.setRelativeTolerance(1e-14)
+                    epsilon = 1e-4
+                else:
+                    solver.setAbsoluteTolerance(1e-10)
+                    solver.setRelativeTolerance(1e-10)
+                    epsilon = 1e-3
                 model_pysb.setParameterScale(parameterScalingFromIntVector([
                     ParameterScaling.log10 if p > 0 else ParameterScaling.none
                     for p in model_pysb.getParameters()
                 ]))
                 check_derivatives(model_pysb, solver,
-                                  epsilon=1e-4,
+                                  epsilon=epsilon,
                                   rtol=1e-2,
                                   atol=1e-2,
                                   skip_zero_pars=True)

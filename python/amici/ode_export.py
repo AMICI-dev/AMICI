@@ -1682,18 +1682,40 @@ class ODEModel:
         # w can be self-dependent and we need to perform all chain
         # derivatives of dwdw. This can be implemented as infinite sum
         # sum{k=0} dwdw^k * dwd{var}.
-        # As long as w has no cyclic dependencies (guaranteed by bngl),
-        # dwdw must be nilpotent, so we can just compute powers of dwdw
-        # until we obtain a zero matrix.
+        # As long as w has no cyclic dependencies (guaranteed by bngl and
+        # sbml (?)), dwdw must be nilpotent, so we can just compute powers
+        # of dwdw until we obtain a zero matrix.
 
         if eq == 'w' and var != 'w':  # avoid infinite loops
-            # no need to check for self-dependency here since
-            # smart_jacobian will do that for us anyways.
-            self_deriv = self.eq('dwdw')  # store for other derivatives
-            h = self_deriv  # h = dwdw^k (k=0)
+            dwdw = self.eq('dwdw')
+            # temporarily generate sparse symbols, this will use the eq
+            # generated above, everything down below will be expressed in
+            # terms of those (bngl orders them according to their
+            # dependency, which guarantees that we will be able to evaluate
+            # the final expression as dwdw will be lower triangular. for sbml
+            # there shouldn't be any hierarchical dependency for now)
+            need_clear_symbols = False
+            if var in ['x', 'p']:
+                self_sym = self.sym(name)
+                need_clear_symbols = True
+            else:
+                self_sym = derivative
+
+            h = smart_multiply(dwdw, self_sym)  # h = dwdw^k*dwd{var} (k=0)
             while not smart_is_zero_matrix(h):
-                self._eqs[name] += smart_multiply(h, derivative)
-                h = smart_multiply(h, self_deriv)  # h = dwdw^(k+1)
+                self._eqs[name] += h
+                # dwdw^(k+1)*dwd{var} = dwdw * dwdw^(k)*dwd{var}
+                h = smart_multiply(dwdw, h)
+
+            # clear temp sparse symbols
+            if need_clear_symbols:
+                if name in sparse_functions:
+                    self._colptrs.pop(name)
+                    self._rowvals.pop(name)
+                    self._sparseeqs.pop(name)
+                    self._sparsesyms.pop(name)
+                self._syms.pop(name)
+
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
@@ -2307,7 +2329,8 @@ class ODEExporter:
             # added '[0]*' for initial conditions
             if re.search(
                     fr'const (realtype|double) \*{sym}[0]*[,)]+', signature
-            ) or function == 'w' and sym == 'w':
+            ) or (function, sym) in [('w', 'w'), ('dwdx', 'dwdx'),
+                                     ('dwdp', 'dwdp')]:
                 lines.append(f'#include "{sym}.h"')
 
         lines.extend([
