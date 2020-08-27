@@ -641,6 +641,7 @@ symbol_to_type = {
 }
 
 
+@log_execution_time('running smart_jacobian', logger)
 def smart_jacobian(eq: sp.MutableDenseMatrix,
                    sym_var: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
     """
@@ -662,6 +663,7 @@ def smart_jacobian(eq: sp.MutableDenseMatrix,
     return sp.zeros(eq.shape[0], sym_var.shape[0])
 
 
+@log_execution_time('running smart_multiply', logger)
 def smart_multiply(x: sp.MutableDenseMatrix,
                    y: sp.MutableDenseMatrix) -> sp.MutableDenseMatrix:
     """
