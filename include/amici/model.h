@@ -138,7 +138,7 @@ class Model : public AbstractModel {
     /**
      * @brief Serialize Model (see boost::serialization::serialize)
      * @param ar Archive to serialize to
-     * @param s Data to serialize
+     * @param m Data to serialize
      * @param version Version number
      */
     template <class Archive>

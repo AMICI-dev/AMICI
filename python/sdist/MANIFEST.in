@@ -5,6 +5,10 @@ recursive-include amici/include *.h
 recursive-include amici/swig *.i *.h
 include amici/*
 include amici/src/*template*
+include amici/src/hdf5.cpp
 include amici/swig/CMakeLists_model.cmake
 include setup_clibs.py
 include version.txt
+exclude amici/*.so
+exclude amici/*.dll
+

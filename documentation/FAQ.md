@@ -71,4 +71,4 @@ __Q__: Importing my model fails with something like
 
 __A__: You probably installed the AMICI package with OpenMP support, but did not
 have the relevant compiler/linker flags set when importing/building the model.
-See [Python-AMICI guide](PYTHON.md#model-compilation).
+See [Python-AMICI guide](PYTHON.rst#model-compilation).
