@@ -23,6 +23,7 @@ Welcome to AMICI's documentation!
    :maxdepth: 2
    :caption: User's guide
 
+   about
    INSTALL
    PYTHON
    CPP
