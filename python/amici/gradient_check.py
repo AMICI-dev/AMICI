@@ -14,6 +14,10 @@ import copy
 from typing import Callable, Optional, List, Sequence
 
 
+def assert_fun(x):
+    assert x
+
+
 def check_finite_difference(x0: Sequence[float],
                             model: Model,
                             solver: Solver,
@@ -123,8 +127,8 @@ def check_finite_difference(x0: Sequence[float],
 
 def check_derivatives(model: Model,
                       solver: Solver,
-                      edata: ExpData,
-                      assert_fun: Callable,
+                      edata: Optional[ExpData] = None,
+                      assert_fun: Optional[Callable] = assert_fun,
                       atol: Optional[float] = 1e-4,
                       rtol: Optional[float] = 1e-4,
                       epsilon: Optional[float] = 1e-3,
@@ -158,6 +162,9 @@ def check_derivatives(model: Model,
     :param check_least_squares:
         whether to check least squares related values.
 
+    :param skip_zero_pars:
+        whether to perform FD checks for paramameters that are zero
+
     """
     p = np.array(model.getParameters())
 
@@ -170,10 +177,16 @@ def check_derivatives(model: Model,
 
     assert_fun(rdata['status'] == AMICI_SUCCESS)
 
-    fields = ['llh']
+    fields = []
+    if edata is not None:
+        fields.append('llh')
+
+    if solver.getSensitivityMethod() == SensitivityMethod.forward:
+        fields.append('x')
 
     leastsquares_applicable = \
-        solver.getSensitivityMethod() == SensitivityMethod.forward
+        solver.getSensitivityMethod() == SensitivityMethod.forward \
+        and edata is not None
 
     if 'ssigmay' in rdata.keys() \
             and rdata['ssigmay'] is not None \
@@ -181,7 +194,7 @@ def check_derivatives(model: Model,
         leastsquares_applicable = False
 
     if check_least_squares and leastsquares_applicable:
-        fields += ['res', 'x', 'y']
+        fields += ['res', 'y']
 
         check_results(rdata, 'FIM',
                       np.dot(rdata['sres'].transpose(), rdata['sres']),
@@ -233,11 +246,7 @@ def check_close(result: np.array,
         parameter index
 
     """
-    close = (
-        np.isclose(result, expected, atol=atol, rtol=np.inf, equal_nan=True)
-        |
-        np.isclose(result, expected, atol=np.inf, rtol=rtol, equal_nan=True)
-    )
+    close = np.isclose(result, expected, atol=atol, rtol=rtol, equal_nan=True)
 
     if not close.all():
         if ip is None:
