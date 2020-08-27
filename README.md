@@ -33,10 +33,10 @@ constrained optimization problems.
 
 <a href="https://badge.fury.io/py/amici" alt="PyPI version">
   <img src="https://badge.fury.io/py/amici.svg"></a>
-<a href="https://travis-ci.com/ICB-DCM/AMICI" alt="Build Status">
-  <img src="https://travis-ci.com/ICB-DCM/AMICI.svg?branch=master"></a>
-<a href="https://codecov.io/gh/ICB-DCM/AMICI" alt="CodeCov">
-  <img src="https://codecov.io/gh/ICB-DCM/AMICI/branch/master/graph/badge.svg"></a>
+<a href="https://travis-ci.com/AMICI-dev/AMICI" alt="Build Status">
+  <img src="https://travis-ci.com/AMICI-dev/AMICI.svg?branch=master"></a>
+<a href="https://codecov.io/gh/AMICI-dev/AMICI" alt="CodeCov">
+  <img src="https://codecov.io/gh/AMICI-dev/AMICI/branch/master/graph/badge.svg"></a>
 <a href="https://sonarcloud.io/dashboard?id=ICB-DCM_AMICI&branch=master" alt="SonarCloud">
   <img src="https://sonarcloud.io/api/project_badges/measure?branch=master&project=ICB-DCM_AMICI&metric=sqale_index"></a>
 <a href="https://zenodo.org/badge/latestdoi/43677177" alt="Zenodo">
@@ -67,8 +67,9 @@ constrained optimization problems.
 ## Interfaces & workflow
 
 The AMICI workflow starts with importing a model from either
-[SBML](http://sbml.org/) (Matlab, Python) or a Matlab definition of the
-model (Matlab-only). From this input, all equations for model simulation
+[SBML](http://sbml.org/) (Matlab, Python), [PySB](http://pysb.org/) (Python),
+or a Matlab definition of the model (Matlab-only). From this input,
+all equations for model simulation
 are derived symbolically and C++ code is generated. This code is then
 compiled into a C++ library, a Python module, or a Matlab `.mex` file and
 is then used for model simulation.
@@ -101,12 +102,26 @@ In case of questions or problems with using AMICI, feel free to post an
 [issue](https://github.com/AMICI-dev/AMICI/issues) on Github. We are trying to
 get back to you quickly.
 
+## Projects using AMICI
+
+There are several tools for parameter estimation offering good integration
+with AMICI:
+
+* [pyPESTO](https://github.com/ICB-DCM/pyPESTO): Python library for
+  optimization, sampling and uncertainty analysis
+* [pyABC](https://github.com/ICB-DCM/pyABC): Python library for
+  parallel and scalable ABC-SMC (Approximate Bayesian Computation - Sequential
+  Monte Carlo)
+* [parPE](https://github.com/ICB-DCM/parPE): C++ library for parameter
+  estimation of ODE models offering distributed memory parallelism with focus
+  on problems with many simulation conditions.
+
 ## Publications
 
 **Citeable DOI for the latest AMICI release:**
 [![DOI](https://zenodo.org/badge/43677177.svg)](https://zenodo.org/badge/latestdoi/43677177)
 
-There is a list of [publications using AMICI](documentation/references.md).
+There is a list of [publications using AMICI](https://amici.readthedocs.io/en/latest/references.html).
 If you used AMICI in your work, we are happy to include
 your project, please let us know via a Github issue.
 

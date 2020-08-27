@@ -2,7 +2,7 @@
 SBML Import
 -----------
 This module provides all necessary functionality to import a model specified
-in the System Biology Markup Language (SBML)
+in the `Systems Biology Markup Language (SBML) <http://sbml.org/Main_Page>`_.
 """
 
 
@@ -53,7 +53,7 @@ class SbmlImporter:
     Class to generate AMICI C++ files for a model provided in the Systems
     Biology Markup Language (SBML).
 
-    :ivar show_sbml_warnings: bool
+    :ivar show_sbml_warnings:
         indicates whether libSBML warnings should be
         displayed
 
@@ -61,20 +61,25 @@ class SbmlImporter:
         dict carrying symbolic definitions
 
     :ivar sbml_reader:
-        the libSBML sbml reader [!not storing this will result
-        in a segfault!]
+
+        The libSBML sbml reader
+
+        .. warning::
+           Not storing this may result in a segfault.
 
     :ivar sbml_doc:
-        document carrying the sbml definition [!not storing this
-        will result in a segfault!]
+        document carrying the sbml definition
+
+        .. warning::
+           Not storing this may result in a segfault.
 
     :ivar sbml:
-        sbml definition [!not storing this will result in a segfault!]
+        SBML model to import
 
     :ivar species_index:
         maps species names to indices
 
-    :ivar species_compartment: sympy.Matrix
+    :ivar species_compartment: :py:class:`sympy.Matrix`
         compartment for each species
 
     :ivar constant_species:
@@ -90,7 +95,7 @@ class SbmlImporter:
     :ivar species_conversion_factor:
         conversion factors for every species
 
-    :ivar compartment_symbols
+    :ivar compartment_symbols:
         compartment ids
 
     :ivar compartment_volume:
@@ -132,32 +137,32 @@ class SbmlImporter:
             discard information contained in AMICI SBML annotations (debug).
         """
         if isinstance(sbml_source, sbml.Model):
-            self.sbml_doc = sbml_source.getSBMLDocument()
+            self.sbml_doc: sbml.Document = sbml_source.getSBMLDocument()
         else:
-            self.sbml_reader = sbml.SBMLReader()
+            self.sbml_reader: sbml.SBMLReader = sbml.SBMLReader()
             if from_file:
                 sbml_doc = self.sbml_reader.readSBMLFromFile(sbml_source)
             else:
                 sbml_doc = self.sbml_reader.readSBMLFromString(sbml_source)
             self.sbml_doc = sbml_doc
 
-        self.show_sbml_warnings : bool = show_sbml_warnings
+        self.show_sbml_warnings: bool = show_sbml_warnings
 
         # process document
         self._process_document()
 
-        self.sbml = self.sbml_doc.getModel()
+        self.sbml: sbml.Model = self.sbml_doc.getModel()
 
         # Long and short names for model components
-        self.symbols = dict()
+        self.symbols: Dict = dict()
         self._reset_symbols()
 
-        self.local_symbols : dict = {}
+        self.local_symbols: Dict = dict()
 
-        self.compartment_rate_rules : dict = {}
-        self.species_rate_rules : dict = {}
-        self.compartment_assignment_rules : dict = {}
-        self.species_assignment_rules : dict = {}
+        self.compartment_rate_rules: dict = {}
+        self.species_rate_rules: dict = {}
+        self.compartment_assignment_rules: dict = {}
+        self.species_assignment_rules: dict = {}
 
         self._discard_annotations : bool = discard_annotations
 
@@ -198,7 +203,7 @@ class SbmlImporter:
                    observables: Dict[str, Dict[str, str]] = None,
                    constant_parameters: List[str] = None,
                    sigmas: Dict[str, Union[str, float]] = None,
-                   noise_distributions: Dict[str, str] = None,
+                   noise_distributions: Dict[str, Union[str, Callable]] = None,
                    verbose: Union[int, bool] = logging.ERROR,
                    assume_pow_positivity: bool = False,
                    compiler: str = None,
@@ -238,7 +243,8 @@ class SbmlImporter:
         :param noise_distributions:
             dictionary(observableId: noise type).
             If nothing is passed for some observable id, a normal model is
-            assumed as default.
+            assumed as default. Either pass a noise type identifier, or a
+            callable generating a custom noise string.
 
         :param verbose:
             verbosity level for logging, True/False default to
@@ -317,6 +323,7 @@ class SbmlImporter:
         self._reset_symbols()
         self._process_sbml(constant_parameters)
         self._process_observables(observables, sigmas, noise_distributions)
+        self._replace_compartments_with_volumes()
 
         self._process_time()
         self._clean_reserved_symbols()
@@ -486,7 +493,10 @@ class SbmlImporter:
         self.symbols['species']['identifier'] = sp.Matrix(
             [sp.Symbol(spec.getId(), real=True) for spec in species]
         )
-        self.symbols['species']['name'] = [spec.getName() for spec in species]
+        self.symbols['species']['name'] = [
+            spec.getName() if len(spec.getName()) != 0 else spec.getId()
+            for spec in species
+        ]
 
         self.species_compartment = sp.Matrix(
             [sp.Symbol(spec.getCompartment(), real=True) for spec in species]
@@ -844,7 +854,8 @@ class SbmlImporter:
                 [sp.Symbol(par.getId(), real=True) for par in settings['var']]
             )
             self.symbols[partype]['name'] = [
-                par.getName() for par in settings['var']
+                par.getName() if len(par.getName()) != 0 else par.getId()
+                for par in settings['var']
             ]
             self.symbols[partype]['value'] = [
                 par.getValue() for par in settings['var']
@@ -1107,11 +1118,6 @@ class SbmlImporter:
             self._replace_in_all_expressions(
                 sp.Symbol(variable, real=True),
                 assignments[variable]
-            )
-        for comp, vol in zip(self.compartment_symbols,
-                             self.compartment_volume):
-            self._replace_in_all_expressions(
-                comp, vol
             )
 
         # Now formulas inside spline objects have been fully expanded
@@ -1451,6 +1457,18 @@ class SbmlImporter:
         return volume_updates_solver
 
 
+    def _replace_compartments_with_volumes(self):
+        """
+        Replaces compartment symbols in expressions with their respective
+        (possibly variable) volumes.
+        """
+        for comp, vol in zip(self.compartment_symbols,
+                             self.compartment_volume):
+            self._replace_in_all_expressions(
+                comp, vol
+            )
+
+
     def _replace_in_all_expressions(self,
                                     old: sp.Symbol,
                                     new: sp.Symbol) -> None:
@@ -1621,7 +1639,8 @@ def get_rule_vars(rules: List[sbml.Rule],
         Tuple of free symbolic variables in the formulas all provided rules
     """
     return sp.Matrix(
-        [sp.sympify(sbml.formulaToL3String(rule.getMath()),
+        [sp.sympify(_parse_logical_operators(
+                    sbml.formulaToL3String(rule.getMath())),
                     locals=local_symbols)
          for rule in rules if rule.getFormula() != '']
     ).free_symbols
@@ -1629,17 +1648,17 @@ def get_rule_vars(rules: List[sbml.Rule],
 
 def replaceLogAB(x: str) -> str:
     """
-    Replace log(a, b) in the given string by ln(b)/ln(a).
+    Replace ``log(a, b)`` in the given string by ``ln(b)/ln(a)``.
 
     Works for nested parentheses and nested 'log's. This can be used to
-    circumvent the incompatible argument order between symengine (log(x,
-    basis)) and libsbml (log(basis, x)).
+    circumvent the incompatible argument order between sympy (``log(x,
+    basis)``) and libsbml (``log(basis, x)``).
 
     :param x:
         string to replace
 
     :return:
-        string with replaced 'log's
+        string with replaced ``log`` s
     """
 
     match = re.search(r'(^|\W)log\(', x)
@@ -1719,18 +1738,18 @@ def _check_lib_sbml_errors(sbml_doc: sbml.SBMLDocument,
         )
 
 
-def assignmentRules2observables(sbml_model,
-                                filter_function=lambda *_: True):
+def assignmentRules2observables(sbml_model: sbml.Model,
+                                filter_function: Callable = lambda *_: True):
     """
     Turn assignment rules into observables.
 
     :param sbml_model:
-        an sbml Model instance
+        Model to operate on
 
     :param filter_function:
-        callback function taking assignment variable as input and returning
-        True/False to indicate if the respective rule should be
-        turned into an observable
+        Callback function taking assignment variable as input and returning
+        ``True``/``False`` to indicate if the respective rule should be
+        turned into an observable.
 
     :return:
         A dictionary(observableId:{
@@ -1738,14 +1757,12 @@ def assignmentRules2observables(sbml_model,
         'formula': formulaString
         })
     """
-    warnings.warn("This function will be removed in future releases.",
-                  DeprecationWarning)
     observables = {}
     for p in sbml_model.getListOfParameters():
         parameter_id = p.getId()
         if filter_function(p):
             observables[parameter_id] = {
-                'name': p.getName(),
+                'name': p.getName() if len(p.getName()) != 0 else p.getId(),
                 'formula': sbml_model.getAssignmentRuleByVariable(
                     parameter_id
                 ).getFormula()
@@ -1775,35 +1792,34 @@ def noise_distribution_to_cost_function(
     """
     if noise_distribution in ['normal', 'lin-normal']:
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2) ' \
-                f'+ 0.5*(({str_symbol} - m{str_symbol}) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'0.5*log(2*pi*{sigma}**2) ' \
+                f'+ 0.5*(({y} - {m}) / {sigma})**2'
     elif noise_distribution == 'log-normal':
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2*m{str_symbol}**2) ' \
-                f'+ 0.5*((log({str_symbol}) - log(m{str_symbol})) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'0.5*log(2*pi*{sigma}**2*{m}**2) ' \
+                f'+ 0.5*((log({y}) - log({m})) / {sigma})**2'
     elif noise_distribution == 'log10-normal':
         def nllh_y_string(str_symbol):
-            return f'0.5*log(2*pi*sigma{str_symbol}**2' \
-                f'*m{str_symbol}**2*log(10)**2) ' \
-                f'+ 0.5*((log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
-                f'/ sigma{str_symbol})**2'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'0.5*log(2*pi*{sigma}**2*{m}**2*log(10)**2) ' \
+                f'+ 0.5*((log({y}, 10) - log({m}, 10)) / {sigma})**2'
     elif noise_distribution in ['laplace', 'lin-laplace']:
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}) ' \
-                f'+ Abs({str_symbol} - m{str_symbol}) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'log(2*{sigma}) + Abs({y} - {m}) / {sigma}'
     elif noise_distribution == 'log-laplace':
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}*m{str_symbol}) ' \
-                f'+ Abs(log({str_symbol}) - log(m{str_symbol})) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'log(2*{sigma}*{m}) + Abs(log({y}) - log({m})) / {sigma}'
     elif noise_distribution == 'log10-laplace':
         def nllh_y_string(str_symbol):
-            return f'log(2*sigma{str_symbol}*m{str_symbol}*log(10)) ' \
-                f'+ Abs(log({str_symbol}, 10) - log(m{str_symbol}, 10)) ' \
-                f'/ sigma{str_symbol}'
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'log(2*{sigma}*{m}*log(10)) ' \
+                f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
+    elif isinstance(noise_distribution, Callable):
+        return noise_distribution
     else:
         raise ValueError(
             f"Cost identifier {noise_distribution} not recognized.")

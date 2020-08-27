@@ -19,8 +19,6 @@ jobs:
     - uses: actions/checkout@master
     - run: git fetch --prune --unshallow
 
-    - run: echo "::set-env name=AMICI_DIR::$(pwd)"
-
     - name: apt
       run: |
         sudo apt-get update \
@@ -47,6 +45,15 @@ jobs:
       - uses: actions/checkout@master
       - run: git fetch --prune --unshallow
       
+      - run: echo "::set-env name=AMICI_DIR::$(pwd)"
+      - run: echo "::set-env name=SWIG::${AMICI_DIR}/ThirdParty/swig-4.0.1/install/bin/swig"
+      
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          # Semantic version range syntax or exact version of a Python version
+          python-version: '3.8'
+      
       # install amici dependencies
       - name: apt
         run: |
@@ -55,13 +62,15 @@ jobs:
               g++ \
               libatlas-base-dev \
               libboost-serialization-dev \
-              libhdf5-serial-dev \
               python3-venv \
-              swig \
-      
-      - name: Install python package
+
+      - name: Build swig
         run: |
-          scripts/installAmiciSource.sh
+          sudo scripts/downloadAndBuildSwig.sh
+              
+      - name: pip
+        run: |
+          pip3 install setuptools
       
       - name: sphinx
         run: |
