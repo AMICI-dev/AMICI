@@ -62,7 +62,7 @@ class UniformGrid(collections.abc.Sequence):
     (conversion to float can be specified with `dtype=float`).
     """
 
-    def __init__(self, start, stop, step):
+    def __init__(self, start, stop, step=None, length: Optional[int] = None):
         """
         Create a new `UniformGrid`.
         The `stop` attribute of the resulting object will be larger
@@ -71,7 +71,18 @@ class UniformGrid(collections.abc.Sequence):
         """
         start = sp.nsimplify(sp.sympify(start))
         stop = sp.nsimplify(sp.sympify(stop))
-        step = sp.nsimplify(sp.sympify(step))
+        if step is None:
+            if length is None:
+                raise ValueError("one of step/length must be specified")
+            elif not isinstance(length, int):
+                raise TypeError("length must be an integer")
+            elif length < 2:
+                raise ValueError("length must be at least 2")
+            step = (stop - start) / (length - 1)
+        elif length is not None:
+            raise ValueError("only one of step/length can be specified")
+        else:
+            step = sp.nsimplify(sp.sympify(step))
 
         if start > stop:
             raise ValueError(
@@ -516,6 +527,10 @@ class AbstractSpline(ABC):
                 '_to_base_interval makes no sense with non-periodic bc'
             )
         return self.xx[0] + sp.Mod(x - self.xx[0], self.period)
+
+    def evaluate(self, x):
+        _x = sp.Dummy('x')
+        return self._formula(x=_x).subs(_x, x)
 
     def integrate(self, x0, x1):
         x = sp.Dummy('x')

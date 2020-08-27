@@ -31,7 +31,7 @@ from amici.sbml_utils import (
     addInflow,
     setSbmlMath,
 )
-from amici.splines import CubicHermiteSpline, UniformGrid
+from amici.splines import AbstractSpline, CubicHermiteSpline, UniformGrid
 
 
 # @contextmanager
@@ -47,8 +47,15 @@ def assert_fun(x):
     assert x
 
 
-def integrate_spline(spline, params, tt):
-    return np.asarray([spline.integrate(0, t).subs(params) for t in tt])
+def evaluate_spline(spline, params, tt, **kwargs):
+    return np.asarray([spline.evaluate(t).subs(params) for t in tt], **kwargs)
+
+
+def integrate_spline(spline, params, tt, initial_value=0, **kwargs):
+    ispline = [initial_value + spline.integrate(0, t) for t in tt]
+    if params is not None:
+        ispline = [x.subs(params) for x in ispline]
+    return np.asarray(ispline, **kwargs)
 
 
 def create_condition_table():
@@ -97,6 +104,11 @@ def observable(i):
     return f'{species(i)}_obs'
 
 
+def species_to_index(name):
+    assert name[0] == 'z'
+    return int(name[1:])
+
+
 def create_petab_problem(splines,
                          params_true,
                          initial_values,
@@ -143,7 +155,10 @@ def create_petab_problem(splines,
     dt /= measure_upsample
     n_obs = math.ceil(T / dt) + 1
     tt_obs = np.linspace(0, float(T), n_obs)
-    zz_true = [initial_values[i] + integrate_spline(splines[i], params_true, tt_obs) for i in range(len(splines))]
+    zz_true = [
+        integrate_spline(spline, params_true, tt_obs, iv, dtype=float)
+        for (spline, iv) in zip(splines, initial_values)
+    ]
     zz_obs = [zz + sigma * np.random.randn(len(zz)) for zz in zz_true]
 
     # Create PEtab tables
@@ -208,10 +223,14 @@ def simulate_splines(*args, folder=None, keep_temporary=False, **kwargs):
             return _simulate_splines(folder, *args, **kwargs)
 
 
+def _default_initial_values(nsplines: int):
+    return np.zeros(nsplines)
+
+
 def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, **kwargs):
     # Default initial values
     if initial_values is None:
-        initial_values = np.zeros(len(splines))
+        initial_values = _default_initial_values(len(splines))
 
     # Create PEtab problem
     path, T = create_petab_problem(
@@ -242,52 +261,183 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol
     # Simulate PEtab problem
     params_str = {p.name : v for p, v in params_true.items()}
     res = simulate_petab(problem, model, solver, params_str)
-    llh, sslh, rdatas = res[LLH], res[SLLH], res[RDATAS]
+    llh, sllh, rdatas = res[LLH], res[SLLH], res[RDATAS]
     assert len(rdatas) == 1
     rdata = rdatas[0]
 
-    return llh, sslh, rdata
+    # Return state/parameter ordering
+    state_ids = model.getStateIds()
+    param_ids = model.getParameterIds()
+
+    return llh, sllh, rdata, state_ids, param_ids
 
 
-# def check_splines(splines, params_true, initial_values=None, *, discard_annotations=False, sim_atol=1e-12, sim_rtol=1e-12, check_atol=1e-12, check_rtol=1e-12, sensi_atol=1e-12, fd_atol=1e-12, fd_rtol=1e-12, fd_epsilon=1e-4, **kwargs):
-#
-#
-#         # Set time points for detailed grid
-#
-#
-#
-#         # Check that simulation result is correct
-#         tt = rdata['ts']
-#         for i in range(len(splines)):
-#             zz = initial_values[i] + integrate_spline(splines[i], params_true, tt)
-#             check_results(rdata, species(i), zz, assert_fun, check_atol, check_rtol)
-#
-#         # Check that likelihood sensitivities are small near the true parameters
-#         # NB they are not zero, not even in exact arithmetic, because the data is finite
-#         # TODO check exactly if sigma=zero
-#         check_close(sslh, np.zeros_like(), assert_fun, sensi_atol, 0.0, 'sensitivities')
-#
-#         # Check state/observable sensitivities
-#
-#         # Check derivatives in a point nearby the true values
-#         #params_perturbed = ...
-#         edatas = create_parameterized_edatas(model, problem, params_perturbed)
-#         assert len(edatas) == 1
-#         edata = edatas[0]
-#         check_derivatives(model, solver, edata, assert_fun, fd_atol, fd_rtol, fd_epsilon)
+def check_splines(splines,
+                  params_true,
+                  initial_values=None,
+                  *,
+                  discard_annotations=False,
+                  print_errors=False,
+                  llh_rtol=1e-8,
+                  sllh_atol=1e-9,
+                  x_rtol=1e-11,
+                  x_atol=1e-11,
+                  w_rtol=1e-11,
+                  w_atol=1e-11,
+                  sx_rtol=1e-10,
+                  sx_atol=1e-10,
+                  **kwargs
+    ):
 
-#     spline_dt = sp.nsimplify(spline_dt)
-#     tmax = (len(yy_true) - 1)*spline_dt
-#     xx = UniformGrid(0, tmax, spline_dt)
-#     yy = list(sp.symbols(f'y0:{len(yy_true)}'))
-#
-#     spline = CubicHermiteSpline(
-#         'y', amici_time_symbol, xx, yy,
-#         bc=bc, extrapolate=extrapolate
-#     )
-#
-# if __name__ == "__main__":
-#     import sys
-#     folder = sys.argv[1] if len(sys.argv) > 1 else '.'
-#     yy_true = [0.0, 2.0, 3.0, 4.0, 1.0, -0.5, -1, -1.5, 0.5, 0.0]
-#     create_spline_test_petab(yy_true, folder=folder)
+    if isinstance(splines, AbstractSpline):
+        splines = [splines]
+
+    # Default initial values
+    if initial_values is None:
+        initial_values = _default_initial_values(len(splines))
+
+    # Simulate PEtab problem
+    llh, sllh, rdata, state_ids, param_ids = simulate_splines(
+        splines, params_true, initial_values,
+        discard_annotations=discard_annotations, **kwargs
+    )
+
+    tt = rdata['ts']
+
+    # Sort splines/ics/parameters as in the AMICI model
+    splines = [splines[species_to_index(name)] for name in state_ids]
+    initial_values = [initial_values[species_to_index(name)] for name in state_ids]
+    def param_by_name(id):
+        for p in params_true.keys():
+            if p.name == id:
+                return p
+        assert False
+    params_sorted = [param_by_name(id) for id in param_ids]
+
+    # Check states
+    x_true_sym = sp.Matrix([
+        integrate_spline(spline, None, tt, iv)
+        for (spline, iv) in zip(splines, initial_values)
+    ]).transpose()
+    x_true = np.asarray(x_true_sym.subs(params_true), dtype=float)
+    if print_errors:
+        x_err_abs = abs(rdata['x'] - x_true)
+        x_err_rel = np.where(
+            x_err_abs == 0,
+            0,
+            x_err_abs / abs(x_true)
+        )
+        print("x_err_abs:")
+        print(np.squeeze(x_err_abs))
+        print("x_err_rel:")
+        print(np.squeeze(x_err_rel))
+    else:
+        check_results(rdata, 'x', x_true, assert_fun, x_atol, x_rtol)
+
+    # Check spline evaluations
+    # TODO can we know how the splines are ordered inside w?
+    if not discard_annotations and len(splines) == 1:
+        assert rdata['nw'] == 1
+        w_true = np.column_stack([
+            evaluate_spline(spline, params_true, tt, dtype=float)
+            for spline in splines
+        ])
+        if print_errors:
+            w_err_abs = abs(rdata['w'] - w_true)
+            w_err_rel = np.where(
+                w_err_abs == 0,
+                0,
+                w_err_abs / abs(w_true)
+            )
+            print("w_err_abs:")
+            print(np.squeeze(w_err_abs))
+            print("w_err_rel:")
+            print(np.squeeze(w_err_rel))
+        else:
+            check_results(rdata, 'w', w_true, assert_fun, w_atol, w_rtol)
+
+    # Check sensitivities
+    sx_by_state = [
+        x_true_sym[:, i].jacobian(params_sorted).subs(params_true)
+        for i in range(x_true_sym.shape[1])
+    ]
+    sx_by_state = [np.asarray(sx, dtype=float) for sx in sx_by_state]
+    sx_true = np.concatenate([
+        sx[:, :, np.newaxis] for sx in sx_by_state
+    ], axis=2)
+    if print_errors:
+        sx_err_abs = abs(rdata['sx'] - sx_true)
+        sx_err_rel = np.where(
+            sx_err_abs == 0,
+            0,
+            sx_err_abs / abs(sx_true)
+        )
+        print("sx_err_abs:")
+        print(np.squeeze(sx_err_abs))
+        print("sx_err_rel:")
+        print(np.squeeze(sx_err_rel))
+    else:
+        check_results(rdata, 'sx', sx_true, assert_fun, sx_atol, sx_rtol)
+
+    # Check log-likelihood
+    llh_expected = - 0.5 * len(rdata['y']) * np.log(2*np.pi)
+    llh_error_rel = abs(llh - llh_expected) / abs(llh_expected)
+    if print_errors:
+        print(f'llh_error_rel = {llh_error_rel}')
+    else:
+        assert llh_error_rel <= llh_rtol
+
+    # Check log-likelihood sensitivities
+    # (should be all zero, since we simulated with the true parameters)
+    if sllh_atol is None:
+        sllh_atol = np.finfo(float).eps
+    sllh = np.asarray([s for s in sllh.values()])
+    sllh_err_abs = abs(sllh).max()
+    if print_errors:
+        print(f'sllh_err_abs = {sllh_err_abs}')
+    else:
+        assert sllh_err_abs <= sllh_atol
+
+
+def example_spline_1():
+    yy_true = [0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0]
+    xx = UniformGrid(0, 25, length=len(yy_true))
+    yy = list(sp.symbols(f'y0:{len(yy_true)}'))
+    params = dict(zip(yy, yy_true))
+    spline = CubicHermiteSpline(
+        'y', amici_time_symbol,
+        xx, yy,
+        bc=None, extrapolate=None
+    )
+    tols = dict(llh_rtol=1e-15)
+    return spline, params, tols
+
+
+def example_spline_2():
+    yy_true = [0.0, 2.0, 3.0, 4.0, 1.0, -0.5, -1, -1.5, 0.5, 0.0]
+    xx = UniformGrid(0, 25, length=len(yy_true))
+    yy = list(sp.symbols(f'y0:{len(yy_true) - 1}'))
+    yy.append(yy[0])
+    params = dict(zip(yy, yy_true))
+    spline = CubicHermiteSpline(
+        'y', amici_time_symbol,
+        xx, yy,
+        bc='periodic', extrapolate=None
+    )
+    tols = {}
+    return spline, params, tols
+
+
+def test_CubicHermiteSpline():
+
+    spline, params, tols = example_spline_1()
+    check_splines(spline, params, **tols, discard_annotations=True)
+    check_splines(spline, params, **tols, discard_annotations=False)
+
+    spline, params, tols = example_spline_2()
+    check_splines(spline, params, **tols, discard_annotations=True)
+    check_splines(spline, params, **tols, discard_annotations=False)
+
+
+def test_multiple_splines():
+    pass
