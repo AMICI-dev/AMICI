@@ -494,7 +494,7 @@ class SbmlImporter:
             [sp.Symbol(spec.getId(), real=True) for spec in species]
         )
         self.symbols['species']['name'] = [
-            spec.getName() if len(spec.getName()) != 0 else spec.getId()
+            spec.getName() if spec.isSetName() else spec.getId()
             for spec in species
         ]
 
@@ -854,7 +854,7 @@ class SbmlImporter:
                 [sp.Symbol(par.getId(), real=True) for par in settings['var']]
             )
             self.symbols[partype]['name'] = [
-                par.getName() if len(par.getName()) != 0 else par.getId()
+                par.getName() if par.isSetName() else par.getId()
                 for par in settings['var']
             ]
             self.symbols[partype]['value'] = [
@@ -1762,7 +1762,7 @@ def assignmentRules2observables(sbml_model: sbml.Model,
         parameter_id = p.getId()
         if filter_function(p):
             observables[parameter_id] = {
-                'name': p.getName() if len(p.getName()) != 0 else p.getId(),
+                'name': p.getName() if p.isSetName() else p.getId(),
                 'formula': sbml_model.getAssignmentRuleByVariable(
                     parameter_id
                 ).getFormula()
