@@ -100,6 +100,7 @@ def observable(i):
 def create_petab_problem(splines,
                          params_true,
                          initial_values,
+                         use_reactions=False,
                          measure_upsample=3,
                          sigma=1.0,
                          Textrapolate=0.25,
@@ -117,8 +118,10 @@ def create_petab_problem(splines,
     for i in range(len(splines)):
         splines[i].addToSbmlModel(model)
         addSpecies(model, species(i), initial_amount=initial_values[i])
-        #addRateRule(model, species(i), splines[i].sbmlId)
-        addInflow(model, species(i), splines[i].sbmlId)
+        if use_reactions:
+            addInflow(model, species(i), splines[i].sbmlId)
+        else:
+            addRateRule(model, species(i), splines[i].sbmlId)
     for (parId, value) in params_true.items():
         addParameter(model, parId, value=value, constant=True)
     for spline in splines:
@@ -194,73 +197,84 @@ def create_petab_problem(splines,
         return problem, T
 
 
-def simulate_splines(splines, params_true, initial_values=None, *, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, **kwargs):
-    with tempfile.TemporaryDirectory() as folder:
-        # Default initial values
-        if initial_values is None:
-            initial_values = np.zeros(len(splines))
-
-        # Create PEtab problem
-        path, T = create_petab_problem(
-            splines, params_true, initial_values,
-            sigma=0.0, folder=folder, **kwargs
-        )
-        problem = petab.Problem.from_yaml(path)
-
-        # Create and compile AMICI model
-        model = import_petab_problem(
-            problem,
-            discard_annotations=discard_annotations,
-            model_output_dir=os.path.join(folder, 'amici_models')
-        )
-
-        # Set solver options
-        solver = model.getSolver()
-        solver.setRelativeTolerance(rtol)
-        solver.setAbsoluteTolerance(atol)
-        solver.setSensitivityOrder(amici.SensitivityOrder_first)
-        solver.setSensitivityMethod(amici.SensitivityMethod_forward)
-
-        # Compute and set timepoints
-        n = max(len(spline.xx) for spline in splines) * simulate_upsample
-        tt = np.linspace(0, float(T), n)
-        model.setTimepoints(tt)
-
-        # Simulate PEtab problem
-        params_str = {p.name : v for p, v in params_true.items()}
-        res = simulate_petab(problem, model, solver, params_str)
-        llh, sslh, rdatas = res[LLH], res[SLLH], res[RDATAS]
-        assert len(rdatas) == 1
-        rdata = rdatas[0]
-
-        return llh, sslh, rdata
-
-def check_splines(splines, params_true, initial_values=None, *, discard_annotations=False, sim_atol=1e-12, sim_rtol=1e-12, check_atol=1e-12, check_rtol=1e-12, sensi_atol=1e-12, fd_atol=1e-12, fd_rtol=1e-12, fd_epsilon=1e-4, **kwargs):
+def simulate_splines(*args, folder=None, keep_temporary=False, **kwargs):
+    if folder is not None:
+        return _simulate_splines(folder, *args, **kwargs)
+    elif keep_temporary:
+        folder = tempfile.TemporaryDirectory().name
+        return _simulate_splines(folder, *args, **kwargs)
+    else:
+        with tempfile.TemporaryDirectory() as folder:
+            return _simulate_splines(folder, *args, **kwargs)
 
 
-        # Set time points for detailed grid
+def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, **kwargs):
+    # Default initial values
+    if initial_values is None:
+        initial_values = np.zeros(len(splines))
+
+    # Create PEtab problem
+    path, T = create_petab_problem(
+        splines, params_true, initial_values,
+        sigma=0.0, folder=folder, **kwargs
+    )
+    problem = petab.Problem.from_yaml(path)
+
+    # Create and compile AMICI model
+    model = import_petab_problem(
+        problem,
+        #discard_annotations=discard_annotations,
+        model_output_dir=os.path.join(folder, 'amici_models')
+    )
+
+    # Set solver options
+    solver = model.getSolver()
+    solver.setRelativeTolerance(rtol)
+    solver.setAbsoluteTolerance(atol)
+    solver.setSensitivityOrder(amici.SensitivityOrder_first)
+    solver.setSensitivityMethod(amici.SensitivityMethod_forward)
+
+    # Compute and set timepoints
+    n = max(len(spline.xx) for spline in splines) * simulate_upsample
+    tt = np.linspace(0, float(T), n)
+    model.setTimepoints(tt)
+
+    # Simulate PEtab problem
+    params_str = {p.name : v for p, v in params_true.items()}
+    res = simulate_petab(problem, model, solver, params_str)
+    llh, sslh, rdatas = res[LLH], res[SLLH], res[RDATAS]
+    assert len(rdatas) == 1
+    rdata = rdatas[0]
+
+    return llh, sslh, rdata
 
 
-
-        # Check that simulation result is correct
-        tt = rdata['ts']
-        for i in range(len(splines)):
-            zz = initial_values[i] + integrate_spline(splines[i], params_true, tt)
-            check_results(rdata, species(i), zz, assert_fun, check_atol, check_rtol)
-
-        # Check that likelihood sensitivities are small near the true parameters
-        # NB they are not zero, not even in exact arithmetic, because the data is finite
-        # TODO check exactly if sigma=zero
-        check_close(sslh, np.zeros_like(), assert_fun, sensi_atol, 0.0, 'sensitivities')
-
-        # Check state/observable sensitivities
-
-        # Check derivatives in a point nearby the true values
-        #params_perturbed = ...
-        edatas = create_parameterized_edatas(model, problem, params_perturbed)
-        assert len(edatas) == 1
-        edata = edatas[0]
-        check_derivatives(model, solver, edata, assert_fun, fd_atol, fd_rtol, fd_epsilon)
+# def check_splines(splines, params_true, initial_values=None, *, discard_annotations=False, sim_atol=1e-12, sim_rtol=1e-12, check_atol=1e-12, check_rtol=1e-12, sensi_atol=1e-12, fd_atol=1e-12, fd_rtol=1e-12, fd_epsilon=1e-4, **kwargs):
+#
+#
+#         # Set time points for detailed grid
+#
+#
+#
+#         # Check that simulation result is correct
+#         tt = rdata['ts']
+#         for i in range(len(splines)):
+#             zz = initial_values[i] + integrate_spline(splines[i], params_true, tt)
+#             check_results(rdata, species(i), zz, assert_fun, check_atol, check_rtol)
+#
+#         # Check that likelihood sensitivities are small near the true parameters
+#         # NB they are not zero, not even in exact arithmetic, because the data is finite
+#         # TODO check exactly if sigma=zero
+#         check_close(sslh, np.zeros_like(), assert_fun, sensi_atol, 0.0, 'sensitivities')
+#
+#         # Check state/observable sensitivities
+#
+#         # Check derivatives in a point nearby the true values
+#         #params_perturbed = ...
+#         edatas = create_parameterized_edatas(model, problem, params_perturbed)
+#         assert len(edatas) == 1
+#         edata = edatas[0]
+#         check_derivatives(model, solver, edata, assert_fun, fd_atol, fd_rtol, fd_epsilon)
 
 #     spline_dt = sp.nsimplify(spline_dt)
 #     tmax = (len(yy_true) - 1)*spline_dt
