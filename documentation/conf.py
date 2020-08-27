@@ -119,6 +119,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
+    'sphinx.ext.mathjax',
     'nbsphinx',
     'IPython.sphinxext.ipython_console_highlighting',
     'recommonmark',
