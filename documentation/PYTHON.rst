@@ -140,6 +140,18 @@ The model simulation can now be carried out using
     rdata = amici.runAmiciSimulation(model, solver)
 
 
+Examples
+========
+
+.. toctree::
+   :maxdepth: 1
+
+   ExampleSteadystate.ipynb
+   petab.ipynb
+   model_presimulation.ipynb
+   ExampleEquilibrationLogic.ipynb
+
+
 Miscellaneous
 =============
 
