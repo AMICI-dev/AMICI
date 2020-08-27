@@ -1450,12 +1450,10 @@ class ODEModel:
             self._sparseeqs[name] = []
             self._sparsesyms[name] = []
             self._syms[name] = []
-            base_index = 0
             for iy in range(self.ny()):
                 symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
                     sparse_matrix = csc_matrix(matrix[iy, :], name,
-                                               base_index=base_index)
-                base_index += len(symbol_list)
+                                               identifier=iy)
                 self._colptrs[name].append(symbol_col_ptrs)
                 self._rowvals[name].append(symbol_row_vals)
                 self._sparseeqs[name].append(sparse_list)
@@ -1695,7 +1693,7 @@ class ODEModel:
             # the final expression as dwdw will be lower triangular. for sbml
             # there shouldn't be any hierarchical dependency for now)
             need_clear_symbols = False
-            if var in ['x', 'p']:
+            if var in ['p', 'x']:
                 self_sym = self.sym(name)
                 need_clear_symbols = True
             else:
@@ -3041,7 +3039,7 @@ def get_switch_statement(condition: str, cases: Dict[int, List[str]],
 
 def csc_matrix(matrix: sp.Matrix,
                name: str,
-               base_index: Optional[int] = 0,
+               identifier: Optional[int] = 0,
                pattern_only: Optional[bool] = False) -> Tuple[
     List[int], List[int], sp.Matrix, List[str], sp.Matrix
 ]:
@@ -3056,8 +3054,9 @@ def csc_matrix(matrix: sp.Matrix,
     :param name:
         name of the symbolic variable
 
-    :param base_index:
-        index for first symbol name, defaults to 0
+    :param identifier:
+        additional identifier that gets appended to symbol names to
+        ensure their uniqueness in outer loops
 
     :param pattern_only:
         flag for computing sparsity pattern without whole matrix
@@ -3068,7 +3067,6 @@ def csc_matrix(matrix: sp.Matrix,
 
     """
     idx = 0
-    symbol_name_idx = base_index
 
     nrows, ncols = matrix.shape
 
@@ -3087,9 +3085,8 @@ def csc_matrix(matrix: sp.Matrix,
 
             symbol_row_vals.append(row)
             idx += 1
-            symbol_name = f'{name}{symbol_name_idx}'
+            symbol_name = f'{name}_{row}_{col}_{identifier}'
             symbol_list.append(symbol_name)
-            symbol_name_idx += 1
             if pattern_only:
                 continue
 
