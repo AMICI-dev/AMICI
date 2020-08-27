@@ -1814,7 +1814,7 @@ class Model : public AbstractModel {
     mutable SUNMatrixWrapper sspl_;
 
     /** temporary storage for splines in the model */
-    mutable std::vector<AbstractSpline*> splines_;
+    mutable std::vector<HermiteSpline> splines_;
 
     /** temporary storage for time-resolved observable (dimension: ny) */
     mutable std::vector<realtype> y_;

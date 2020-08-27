@@ -60,6 +60,14 @@ class AbstractSpline {
 
     const int n_nodes() { return n_nodes_; }
 
+    std::vector<realtype> coefficients;
+    
+    std::vector<realtype> coefficients_extrapolate;
+
+    std::vector<realtype> coefficients_sensi;
+    
+    std::vector<realtype> coefficients_extrapolate_sensi;
+
   protected: 
   /*
    * In order to have the main data members private, we need protected 
@@ -83,17 +91,9 @@ class AbstractSpline {
         logarithmic_paraterization_ = logarithmic_paraterization;
     }
 
-    std::vector<realtype> nodes;
+    std::vector<realtype> nodes_;
 
-    std::vector<realtype> node_values;
-
-    std::vector<realtype> coefficients;
-    
-    std::vector<realtype> coefficients_extrapolate;
-
-    std::vector<realtype> coefficients_sensi;
-    
-    std::vector<realtype> coefficients_extrapolate_sensi;
+    std::vector<realtype> node_values_;
     
   private:
     bool equidistant_spacing_ = false;
@@ -145,7 +145,7 @@ class HermiteSpline : public AbstractSpline {
                                 realtype len_p, realtype *dnodesdp, realtype *dslopesdp,
                                 realtype *coeffs, realtype *coeffs_extrapol);
 
-    std::vector<realtype> node_values_derivative;
+    std::vector<realtype> node_values_derivative_;
 
     SplineBoundaryCondition firstNodeDerivative = SplineBoundaryCondition::linearFinDiff;
     

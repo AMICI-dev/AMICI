@@ -4,6 +4,7 @@
 #include "amici/amici.h"
 #include "amici/exception.h"
 #include <vector>
+#include <iostream>
 
 
 namespace amici {
@@ -22,7 +23,7 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
                                std::vector<realtype> node_values,
                                bool equidistant_spacing,
                                bool logarithmic_paraterization) 
-    : nodes(nodes), node_values(node_values), 
+    : nodes_(nodes), node_values_(node_values), 
     equidistant_spacing_(equidistant_spacing),
     logarithmic_paraterization_(logarithmic_paraterization) {
     
@@ -36,9 +37,9 @@ AbstractSpline::AbstractSpline(std::vector<realtype> nodes,
                                "vector with two elements (first/last node).");
         realtype node_start = nodes[0];
         realtype node_step = (nodes[1] - nodes[0]) / (n_nodes_ - 1);
-        nodes.resize(n_nodes_);
+        nodes_.resize(n_nodes_);
         for (int i_node = 0; i_node < n_nodes(); i_node++)
-            nodes[i_node] = node_start + i_node * node_step;
+            nodes_[i_node] = node_start + i_node * node_step;
     }
 }
 
@@ -52,29 +53,50 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                              bool logarithmic_paraterization) 
     : AbstractSpline(nodes, node_values, equidistant_spacing,
                      logarithmic_paraterization),
-    node_values_derivative(std::move(node_values_derivative)),
+    node_values_derivative_(node_values_derivative),
     firstNodeDerivative(firstNodeDerivative), 
     lastNodeDerivative(lastNodeDerivative),
     node_derivative_by_FD_(node_derivative_by_FD) {
-    
+
+    std::cout << "n_nodes() " << n_nodes() << std::endl;
+    std::cout << "node_derivative_by_FD_ " << node_derivative_by_FD_ << std::endl;
+
+    std::cout << " " << std::endl;
+    std::cout << "Data in nodes_:";
+    for (int i = 0; i < nodes_.size(); i++)
+        std::cout << " :: " << nodes_[i];
+    std::cout << " |" << std::endl;
+    std::cout << " " << std::endl;
+    std::cout << "Data in node_values_:";
+    for (int i = 0; i < node_values_.size(); i++)
+        std::cout << " :: " << node_values_[i];
+    std::cout << " |" << std::endl;
+    std::cout << " " << std::endl;
+    std::cout << "Data in node_values_derivative_:";
+    for (int i = 0; i < node_values_derivative_.size(); i++)
+        std::cout << " :: " << node_values_derivative_[i];
+    std::cout << " |" << std::endl;
+    std::cout << " " << std::endl;
+
     /* If values of the derivative at the nodes are to be computed by finite 
      * differences, we have to fill up node_values_derivative_ */
     if (node_derivative_by_FD_) {
-        node_values_derivative.resize(n_nodes(), 0.0);
+        node_values_derivative_.resize(n_nodes(), 0.0);
+        std::cout << "node_values_derivative size " << node_values_derivative_.size() << std::endl;
         for (int i_node = 1; i_node < n_nodes() - 2; i_node++)
-            node_values_derivative[i_node] = 
-                (node_values[i_node + 1] - node_values[i_node - 1]) /
-                (nodes[i_node + 1] - nodes[i_node - 1]);
+            node_values_derivative_[i_node] = 
+                (node_values_[i_node + 1] - node_values_[i_node - 1]) /
+                (nodes_[i_node + 1] - nodes_[i_node - 1]);
 
         /* We have to take care of the first node (1-sided FD)... */
         switch (firstNodeDerivative) {
             case SplineBoundaryCondition::constant:
-                node_values_derivative[0] = 0;
+                node_values_derivative_[0] = 0;
                 break;
 
             case SplineBoundaryCondition::linearFinDiff:
-                node_values_derivative[0] =
-                    (node_values[1] - node_values[0]) / (nodes[1] - nodes[0]);
+                node_values_derivative_[0] =
+                    (node_values_[1] - node_values_[0]) / (nodes_[1] - nodes_[0]);
                 break;
             
             case SplineBoundaryCondition::linearNatural:
@@ -84,13 +106,13 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
         /* ...and the last node (1-sided FD). */
         switch (lastNodeDerivative) {
             case SplineBoundaryCondition::constant:
-                node_values_derivative[n_nodes() - 1] = 0;
+                node_values_derivative_[n_nodes() - 1] = 0;
                 break;
 
             case SplineBoundaryCondition::linearFinDiff:
-                node_values_derivative[n_nodes() - 1] =
-                    (node_values[n_nodes() - 1] - node_values[n_nodes() - 2]) / 
-                    (nodes[n_nodes() - 1] - nodes[n_nodes() - 2]);
+                node_values_derivative_[n_nodes() - 1] =
+                    (node_values_[n_nodes() - 1] - node_values_[n_nodes() - 2]) / 
+                    (nodes_[n_nodes() - 1] - nodes_[n_nodes() - 2]);
                 break;
             
             case SplineBoundaryCondition::linearNatural:
@@ -98,6 +120,12 @@ HermiteSpline::HermiteSpline(std::vector<realtype> nodes,
                                    "is not yet implemented.");
         }
     }
+    
+    std::cout << "Data in node_values_derivative_:";
+    for (int i = 0; i < node_values_derivative_.size(); i++)
+        std::cout << " :: " << node_values_derivative_[i];
+    std::cout << " |" << std::endl;
+    std::cout << " " << std::endl;
     
 }
 
@@ -116,32 +144,45 @@ void HermiteSpline::computeCoefficients() {
      *           = d + t * (c + t * (b + t * a))
      * with coefficients[4 * i_node + (0, 1, 2, 3)] = (d, c, b, a)
      * */ 
+    std::cout << "just before assignments" << std::endl;
+    std::cout << "len nodes values" << node_values_.size() << std::endl;
+    std::cout << "len slopes values" << node_values_derivative_.size() << std::endl;
+    std::cout << "len coefficients values" << coefficients.size() << std::endl;
+    std::cout << "len coefficients_extrapolate values" << coefficients_extrapolate.size() << std::endl;
+
     for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
         /* Get the length of the interval. Yes, we could save computation time
          * by exploiting equidistant spacing, but we're talking about <1k FLOPs 
          * for sure, no matter what model. Screw it. */
-        len = nodes[i_node + 1] - nodes[i_node];
+        len = nodes_[i_node + 1] - nodes_[i_node];
         
         /* Coefficients for cubic Hermite polynomials */
-        coefficients[4 * i_node] = node_values[i_node];
-        coefficients[4 * i_node + 1] = len*node_values_derivative[i_node];
-        coefficients[4 * i_node + 2] = - 3 * node_values[i_node]
-            - 2 * len * node_values_derivative[i_node]
-            + 3 * node_values[i_node + 1] 
-            - len * node_values_derivative[i_node + 1];
-        coefficients[4 * i_node + 3] = 2 * node_values[i_node]
-            + len * node_values_derivative[i_node]
-            - 2 * node_values[i_node + 1]
-            + len * node_values_derivative[i_node + 1];
+        coefficients[4 * i_node] = node_values_[i_node];
+        coefficients[4 * i_node + 1] = len*node_values_derivative_[i_node];
+        coefficients[4 * i_node + 2] = - 3 * node_values_[i_node]
+            - 2 * len * node_values_derivative_[i_node]
+            + 3 * node_values_[i_node + 1] 
+            - len * node_values_derivative_[i_node + 1];
+        coefficients[4 * i_node + 3] = 2 * node_values_[i_node]
+            + len * node_values_derivative_[i_node]
+            - 2 * node_values_[i_node + 1]
+            + len * node_values_derivative_[i_node + 1];
     }
-    
+    std::cout << "just before extrapolate assignments" << std::endl;
     /* Coefficients for affine functions for extrapolation */
-    coefficients_extrapolate[0] = node_values[0]
-        - node_values[0] * node_values_derivative[0];
-    coefficients_extrapolate[1] = node_values_derivative[0];
-    coefficients_extrapolate[2] = node_values[n_nodes() - 1]
-        - node_values[n_nodes() - 1] * node_values_derivative[n_nodes() - 1];
-    coefficients_extrapolate[3] = node_values_derivative[n_nodes() - 1];
+    coefficients_extrapolate[0] = node_values_[0]
+        - node_values_[0] * node_values_derivative_[0];
+    coefficients_extrapolate[1] = node_values_derivative_[0];
+    coefficients_extrapolate[2] = node_values_[n_nodes() - 1]
+        - node_values_[n_nodes() - 1] * node_values_derivative_[n_nodes() - 1];
+    coefficients_extrapolate[3] = node_values_derivative_[n_nodes() - 1];
+    std::cout << "just after extrapolate assignments" << std::endl;
+    
+    
+    std::cout << "Computed coefficients";
+    for (int i = 0; i < coefficients.size(); i++)
+        std::cout << " :: " << coefficients[i];
+    std::cout << " |" << std::endl;
 }
 
 void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
@@ -169,9 +210,9 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
      * We compute the coefficients for those polynomials now. */    
     for (int i_node = 0; i_node < n_nodes() - 2; i_node++) {
         /* Get the length of the interval. */
-        len = nodes[i_node + 1] - nodes[i_node];
-        len_m = (i_node > 0) ? nodes[i_node + 1] - nodes[i_node - 1] : len;
-        len_p = (i_node < n_nodes() - 1) ? nodes[i_node + 2] - nodes[i_node] : len;
+        len = nodes_[i_node + 1] - nodes_[i_node];
+        len_m = (i_node > 0) ? nodes_[i_node + 1] - nodes_[i_node - 1] : len;
+        len_p = (i_node < n_nodes() - 1) ? nodes_[i_node + 2] - nodes_[i_node] : len;
 
         /* As computing the coefficient is a mess, it's in another function */
         for (int ip = 0; ip < nplist; ip++)
@@ -191,7 +232,7 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
             if (firstNodeDerivative == SplineBoundaryCondition::constant) {
                 sm0 = 0;
             } else if (firstNodeDerivative == SplineBoundaryCondition::linearFinDiff) {
-                sm0 = (dspline_valuesdp[ip] - sp0) / (nodes[1] - nodes[0]);
+                sm0 = (dspline_valuesdp[ip] - sp0) / (nodes_[1] - nodes_[0]);
             } else {
                 throw AmiException("Natural boundary condition for Hermite splines "
                                    "is not yet implemented.");
@@ -208,7 +249,7 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
                 sm_end = 0;
             } else if (firstNodeDerivative == SplineBoundaryCondition::linearFinDiff) {
                 sm_end = (sp_end - dspline_valuesdp[n_nodes() * (ip + 1) - 1]) 
-                    / (nodes[n_nodes() - 1] - nodes[n_nodes() - 2]);
+                    / (nodes_[n_nodes() - 1] - nodes_[n_nodes() - 2]);
             } else {
                 throw AmiException("Natural boundary condition for Hermite splines "
                                    "is not yet implemented.");
@@ -218,9 +259,9 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
         }
 
         /* Write them to the vector */
-        coefficients_extrapolate_sensi[4 * ip] = sp0 - sm0 * nodes[0];
+        coefficients_extrapolate_sensi[4 * ip] = sp0 - sm0 * nodes_[0];
         coefficients_extrapolate_sensi[4 * ip + 1] = sm0;
-        coefficients_extrapolate_sensi[4 * ip + 2] = sp_end - sm_end * nodes[n_nodes() - 1];
+        coefficients_extrapolate_sensi[4 * ip + 2] = sp_end - sm_end * nodes_[n_nodes() - 1];
         coefficients_extrapolate_sensi[4 * ip + 3] = sm_end;
     }
 }
@@ -284,41 +325,41 @@ void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coef
 realtype HermiteSpline::getValue(const double t) {
     /* Compute the spline value */
     int i_node = 0;
-    realtype len = nodes[1] - nodes[0];
+    realtype len = nodes_[1] - nodes_[0];
     
     /* Are we past the last node? Extrapolate! */
-    if (t > nodes[n_nodes() - 1])
+    if (t > nodes_[n_nodes() - 1])
         return coefficients_extrapolate[2] + t * coefficients_extrapolate[3];
 
     /* Are we before the first node? Extrapolate! */
-    if (t < nodes[0])
+    if (t < nodes_[0])
         return coefficients_extrapolate[0] + t * coefficients_extrapolate[1];
 
     /* Get the spline interval which we need */
     if (get_equidistant_spacing()) {
         /* equidistant spacing: just compute the interval */
-        i_node = std::floor((t - nodes[0]) / len);
+        i_node = std::floor((t - nodes_[0]) / len);
     } else {
         /* no equidistant spacing: we need to iterate */
-        while (nodes[i_node + 1] < t) {
+        while (nodes_[i_node + 1] < t) {
             i_node++;
         }
-        len = nodes[i_node + 1] - nodes[i_node];
+        len = nodes_[i_node + 1] - nodes_[i_node];
     }
 
     /* Evaluate the interpolation polynomial */
-    return evaluatePolynomial((t - nodes[i_node]) / len, 
+    return evaluatePolynomial((t - nodes_[i_node]) / len, 
                               &(coefficients[i_node * 4]));
 }
 
 realtype HermiteSpline::getSensitivity(const double t, const int ip) {
     /* Compute the parametric derivative of the spline value */
-    if (t > nodes[n_nodes() - 1]) {
+    if (t > nodes_[n_nodes() - 1]) {
         /* Are we past the last node? Extrapolate! */
         return coefficients_extrapolate_sensi[4 * ip + 2]
             + t * coefficients_extrapolate_sensi[4 * ip + 3];
 
-    } else if (t < nodes[0]) {
+    } else if (t < nodes_[0]) {
         /* Are we before the first node? Extrapolate! */
         return coefficients_extrapolate_sensi[4 * ip + 0]
             + t * coefficients_extrapolate_sensi[4 * ip + 1];
@@ -329,17 +370,17 @@ realtype HermiteSpline::getSensitivity(const double t, const int ip) {
         int i_node = 0;
         if (get_equidistant_spacing()) {
             /* equidistant spacing: just compute the interval */
-            len = nodes[1] - nodes[0];
-            i_node = std::floor((t - nodes[0]) / len);
+            len = nodes_[1] - nodes_[0];
+            i_node = std::floor((t - nodes_[0]) / len);
         } else {
             /* no equidistant spacing: we need to iterate */
-            while (nodes[i_node + 1] < t)
+            while (nodes_[i_node + 1] < t)
                 i_node++;
 
-            len = nodes[i_node + 1] - nodes[i_node];
+            len = nodes_[i_node + 1] - nodes_[i_node];
         }
 
-        return evaluatePolynomial((t - nodes[i_node]) / len, 
+        return evaluatePolynomial((t - nodes_[i_node]) / len, 
                                   &coefficients_sensi[ip * n_nodes() * 4 + i_node * 4]);
     }
     

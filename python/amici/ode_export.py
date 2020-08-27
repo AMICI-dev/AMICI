@@ -139,8 +139,7 @@ functions = {
     },
     'spline_constructors': {
         'signature':
-            '(std::vector<AbstractSpline*> &splines, '
-            'const realtype *p, const realtype *k)',
+            '(const realtype *p, const realtype *k)',
         'flags': ['dont_generate_body']
     },
     'spl': {
@@ -2381,7 +2380,10 @@ class ODEExporter:
             '',
         ])
 
-        lines.append(f'void {function}_{self.model_name}{signature}{{')
+        if function == 'spline_constructors':
+            lines.append(f'std::vector<HermiteSpline> {function}_{self.model_name}{signature}{{')
+        else:
+            lines.append(f'void {function}_{self.model_name}{signature}{{')
 
         # function body
         if function == 'spline_constructors':
@@ -2569,7 +2571,7 @@ class ODEExporter:
         return [line for line in lines if line]
 
     def _get_spline_constructors_body(self):
-        body = ['']
+        body = [f'\tstd::vector<HermiteSpline> splines;', '']
         for ispl, spline in enumerate(self.model.splines):
             # create the vector with the node locations
             nodes = f'\tstd::vector<realtype> nodes{ispl} {{'
@@ -2584,7 +2586,7 @@ class ODEExporter:
             body.append(vals)
             # create the vector with the slopes
             body.append(f'\tstd::vector<realtype> slopes{ispl};')
-            constr = f'\t HermiteSpline *spline{ispl} = new HermiteSpline('
+            constr = f'\tstatic HermiteSpline spline{ispl} = HermiteSpline('
             constr += f'nodes{ispl}, values{ispl}, slopes{ispl}, '
             if spline.bc is None:
                 constr += 'SplineBoundaryCondition::linearFinDiff, '
@@ -2605,9 +2607,10 @@ class ODEExporter:
             else:
                 constr += 'false);'
             body.append(constr)
-            body.append(f'\tsplines.push_back(dynamic_cast<AbstractSpline*>(spline{ispl}));')
+            body.append(f'\tsplines.push_back(spline{ispl});')
             body.append('')
 
+        body.append('return splines;')
         return body
 
     def _write_wrapfunctions_cpp(self) -> None:

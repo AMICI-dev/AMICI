@@ -573,9 +573,8 @@ AbstractModel::fdwdx_rowvals(sunindextype* /*indexvals*/)
     // no-op default implementation
 }
 
-void 
-AbstractModel::fspline_constructors(std::vector<AbstractSpline*> splines,
-                                    const realtype *p,
+std::vector<HermiteSpline> 
+AbstractModel::fspline_constructors(const realtype *p,
                                     const realtype *k) {
     // no-op default implementation
 }
