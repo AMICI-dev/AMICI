@@ -3087,8 +3087,13 @@ def csc_matrix(matrix: sp.Matrix,
     :param matrix:
         dense matrix to be sparsified
 
-    :param name:
-        name of the symbolic variable
+    :param rownames:
+        ids of the variable of which the derivative is computed (assuming
+        matrix is the jacobian)
+
+    :param colnames:
+        ids of the variable with respect to which the derivative is computed
+        (assuming matrix is the jacobian)
 
     :param identifier:
         additional identifier that gets appended to symbol names to
