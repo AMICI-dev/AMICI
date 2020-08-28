@@ -491,7 +491,7 @@ installed.
 
 #### SuperLU_MT
 
-A "a general purpose library for the direct solution of large,
+"A general purpose library for the direct solution of large,
 sparse, nonsymmetric systems of linear equations"
 (https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu_mt).
 SuperLU_MT is optional and is so far only available from the C++ interface.
