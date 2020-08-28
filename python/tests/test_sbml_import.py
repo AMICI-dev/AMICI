@@ -15,7 +15,6 @@ from amici.sbml_import import SbmlImporter
 @pytest.fixture
 def simple_sbml_model():
     """Some testmodel"""
-
     document = libsbml.SBMLDocument(3, 1)
     model = document.createModel()
     model.setTimeUnits("second")
@@ -34,7 +33,6 @@ def simple_sbml_model():
 
 def test_sbml2amici_no_observables(simple_sbml_model):
     """Test model generation works for model without observables"""
-
     sbml_doc, sbml_model = simple_sbml_model
     sbml_importer = SbmlImporter(sbml_source=sbml_model,
                                  from_file=False)
@@ -82,7 +80,6 @@ def model_steadystate_module():
 
 def test_presimulation(sbml_example_presimulation_module):
     """Test 'presimulation' test model"""
-
     model = sbml_example_presimulation_module.getModel()
     solver = model.getSolver()
     solver.setNewtonMaxSteps(0)
@@ -204,7 +201,6 @@ def model_test_likelihoods():
 
 def test_likelihoods(model_test_likelihoods):
     """Test the custom noise distributions used to define cost functions."""
-
     model = model_test_likelihoods.getModel()
     model.setTimepoints(np.linspace(0, 60, 60))
     solver = model.getSolver()
@@ -250,11 +246,14 @@ def test_likelihoods(model_test_likelihoods):
     assert np.isclose(rdata['llh'], llh_exp)
 
     # check gradient
-    solver = model.getSolver()
-    solver.setSensitivityOrder(amici.SensitivityOrder.first)
-    check_derivatives(
-        model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
-        check_least_squares=False)
+    for sensi_method in [amici.SensitivityMethod.forward,
+                         amici.SensitivityMethod.adjoint]:
+        solver = model.getSolver()
+        solver.setSensitivityMethod(sensi_method)
+        solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        check_derivatives(
+            model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
+            check_least_squares=False)
 
 
 def test_likelihoods_error():
@@ -315,7 +314,6 @@ def custom_nllh(m, y, sigma):
 
 def _test_set_parameters_by_dict(model_module):
     """Test setting parameter via id/name => value dicts"""
-
     model = model_module.getModel()
     old_parameter_values = model.getParameters()
     parameter_ids = model.getParameterIds()

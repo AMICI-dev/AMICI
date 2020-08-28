@@ -42,7 +42,8 @@ jobs:
           && sudo apt-get install -y \
           swig \
           libatlas-base-dev \
-          libhdf5-serial-dev
+          libhdf5-serial-dev \
+          libboost-math-dev
     - name: pip
       run: |
         pip3 install --upgrade --user wheel \
