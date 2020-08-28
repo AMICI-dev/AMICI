@@ -1,5 +1,7 @@
 #!/bin/bash
 # generate code documentation via doxygen
+set -euo pipefail
+set -x
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd $SCRIPT_PATH/.. && pwd)
@@ -30,6 +32,7 @@ DOXYFILE=${MTOC_CONFIG_PATH}/Doxyfile
 cp ${MTOC_CONFIG_PATH}/Doxyfile.template ${DOXYFILE}
 DOXY_WARNING_FILE=${AMICI_PATH}/matlab/mtoc/warnings.log
 
+# Replace some template values
 sed -i -e "s#_OutputDir_#$AMICI_PATH/doc#g" ${DOXYFILE}
 sed -i -e "s#_SourceDir_#$AMICI_PATH#g" ${DOXYFILE}
 sed -i -e "s#_ConfDir_#${MTOC_CONFIG_PATH}#g" ${DOXYFILE}
@@ -41,7 +44,8 @@ sed -i -e "s#_MTOCFILTER_#${MTOC_CONFIG_PATH}/mtocpp_filter.sh#g" ${DOXYFILE}
 sed -i -e "s#_LatexExtras_#${MTOC_CONFIG_PATH}/latexextras#g" ${DOXYFILE}
 sed -i -e "s#_GenLatex_#YES#g" ${DOXYFILE}
 sed -i -e "s#_HaveDot_#YES#g" ${DOXYFILE}
-sed -i -e "s#WARN_LOGFILE      =#WARN_LOGFILE      =${DOXY_WARNING_FILE}#g" ${DOXYFILE}
+# Fail if no replace was made
+sed -i -re "/WARN_LOGFILE(\s*)=.*/{s##WARN_LOGFILE\1= ${DOXY_WARNING_FILE}#g;h};\${x;/./{x;q0};x;q1}" ${DOXYFILE}
 
 # generate latexextras
 
@@ -64,14 +68,14 @@ make
 cp ./refman.pdf ${AMICI_PATH}/AMICI_guide.pdf
 
 # suppress doxygen warnings about status badges
-grep -v "warning: Unexpected html tag <img> found within <a href=...> context" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+grep -v "warning: Unexpected html tag <img> found within <a href=...> context" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp || [[ $? == 1 ]]
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
 # suppress doxygen warning about unresolved external links (problem unclear)
-grep -v "warning: unable to resolve reference to \`https" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+grep -v "warning: unable to resolve reference to \`https" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp || [[ $? == 1 ]]
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
-grep -v "error: Problem running ghostscript gs -q -g146x60 -r384x384x -sDEVICE=ppmraw -sOutputFile=_form0.pnm -dNOPAUSE -dBATCH -- _form0.ps. Check your installation!" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp
+grep -v "error: Problem running ghostscript gs -q -g146x60 -r384x384x -sDEVICE=ppmraw -sOutputFile=_form0.pnm -dNOPAUSE -dBATCH -- _form0.ps. Check your installation!" ${DOXY_WARNING_FILE} > ${DOXY_WARNING_FILE}_tmp || [[ $? == 1 ]]
 mv ${DOXY_WARNING_FILE}_tmp ${DOXY_WARNING_FILE}
 
 # check if warnings log was created

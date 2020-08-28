@@ -98,7 +98,7 @@ private:
      * @brief Execute everything necessary for the handling of data
      * points for the backward problems
      *
-     * @param it index of data point @type int
+     * @param it index of data point
      */
     void handleDataPointB(int it);
 
@@ -109,8 +109,8 @@ private:
      * This is the maximum of tdata and troot but also takes into account if
      * it<0 or iroot<0 where these expressions do not necessarily make sense.
      *
-     * @param it index of next data point @type int
-     * @return tnext next timepoint @type realtype
+     * @param it index of next data point
+     * @return tnext next timepoint
      */
     realtype getTnext(int it);
 

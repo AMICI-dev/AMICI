@@ -118,9 +118,13 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.mathjax',
     'nbsphinx',
+    'IPython.sphinxext.ipython_console_highlighting',
     'recommonmark',
     'sphinx_autodoc_typehints',
+    'hoverxref.extension',
 ]
 
 intersphinx_mapping = {
@@ -168,7 +172,17 @@ typehints_fully_qualified = True
 typehints_document_rtype = True
 set_type_checking_flag = True
 
-
+# hoverxref
+hoverxref_auto_ref = True
+hoverxref_roles = ['term']
+hoverxref_domains = ['py']
+hoverxref_role_types = {
+    'hoverxref': 'tooltip',
+    'ref': 'tooltip',
+    'func': 'tooltip',
+    'mod': 'tooltip',
+    'class': 'tooltip',
+}
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

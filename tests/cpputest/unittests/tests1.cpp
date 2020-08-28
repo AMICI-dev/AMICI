@@ -837,6 +837,20 @@ TEST(sunmatrixwrapper, sparse_multiply)
     checkEqualArray(d, c, TEST_ATOL, TEST_RTOL, "multiply");
 }
 
+TEST(sunmatrixwrapper, sparse_multiply_empty)
+{
+    // Ensure empty Matrix vector multiplication succeeds
+    auto A_sparse = SUNMatrixWrapper(1, 1, 0, CSR_MAT);
+    std::vector<double> b {0.1};
+    std::vector<double> c {0.1};
+    A_sparse.multiply(c, b);
+    CHECK_TRUE(c[0] == 0.1);
+
+    A_sparse = SUNMatrixWrapper(1, 1, 0, CSC_MAT);
+    A_sparse.multiply(c, b);
+    CHECK_TRUE(c[0] == 0.1);
+}
+
 TEST(sunmatrixwrapper, dense_multiply)
 {
     auto c(a); //copy c

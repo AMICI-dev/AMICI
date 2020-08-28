@@ -46,4 +46,4 @@ script:
     - cd $BASE_DIR
     - export AMICI_SKIP_CMAKE_TESTS=TRUE
     - pip install pytest petab
-    - python -m pytest --ignore-glob=*petab* ./python/tests
+    - python -m pytest --ignore-glob=*petab* --ignore-glob=*special* ./python/tests
