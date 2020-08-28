@@ -1028,19 +1028,29 @@ class ODEModel:
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables()
 
-    def add_component(self, component: ModelQuantity) -> None:
+    def add_component(self, component: ModelQuantity,
+                      insert_first: Optional[bool] = False) -> \
+        None:
         """
         Adds a new ModelQuantity to the model.
 
         :param component:
             model quantity to be added
+
+        :param insert_first:
+            whether to add quantity first or last, relevant when components
+            may refer to other components of the same type.
         """
         for comp_type in [Observable, Expression, Parameter, Constant, State,
                           LogLikelihood, SigmaY, ConservationLaw]:
             if isinstance(component, comp_type):
-                getattr(self, f'_{type(component).__name__.lower()}s').append(
-                    component
+                component_list = getattr(
+                    self, f'_{type(component).__name__.lower()}s'
                 )
+                if insert_first:
+                    component_list.insert(0, component)
+                else:
+                    component_list.append(component)
                 return
 
         raise ValueError(f'Invalid component type {type(component)}')
@@ -1085,7 +1095,8 @@ class ODEModel:
         state_id = self._states[ix].get_id()
 
         self.add_component(
-            Expression(state_id, str(state_id), state_expr)
+            Expression(state_id, str(state_id), state_expr),
+            insert_first=True
         )
 
         self.add_component(
