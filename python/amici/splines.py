@@ -150,6 +150,9 @@ class AbstractSpline(ABC):
     file is used together with AMICI).
     """
 
+    # TODO can we take away the evaluation point x (not really part of the spline per se)
+    #      and move only to the functions which read/write the spline
+
     def __init__(
             self,
             sbmlId: Union[str, sp.Symbol],
@@ -386,19 +389,41 @@ class AbstractSpline(ABC):
         if i < 0:
             i += len(self.xx) - 1
 
-        assert 0 <= i < len(self.xx) - 1
+        if not 0 <= i < len(self.xx) - 1:
+            raise ValueError(f'interval index {i} is out of bounds')
 
         if x is None:
             x = self.x
 
-        poly = sp.poly(self._poly(x, i), wrt=x)
-        return sp.horner(poly)
+        # Compute polynomial in Horner form for the scaled variable
+        t = sp.Dummy('t')
+        poly = sp.poly(self._poly(t, i), wrt=t)
+        poly = sp.horner(poly)
+
+        # Replace scaled variable with its value,
+        # without changing the expression form
+        t_value = self._scaled_variable(x, i)
+        with evaluate(False):
+            return poly.subs(t, t_value)
+
+    def scaled_variable(self, x, i) -> sp.Basic:
+        """
+        Given an evaluation point return the scaled variable on the `i`-th
+        interval.
+        """
+        if not 0 <= i < len(self.xx) - 1:
+            raise ValueError(f'interval index {i} is out of bounds')
+        return self._scaled_variable(x, i)
 
     @abstractmethod
-    def _poly(self, x, i) -> sp.Basic:
+    def _scaled_variable(self, x, i) -> sp.Basic:
+        return NotImplemented
+
+    @abstractmethod
+    def _poly(self, t, i) -> sp.Basic:
         """
-        Return the symbolic expression for polynomial interpolant
-        on the `(xx[i], xx[i+1])` interval using `x` as the spline parameter.
+        Return the symbolic expression for the spline restricted to the `i`-th
+        interval as polynomial in the scaled variable `t`.
         """
         return NotImplemented
 
@@ -459,6 +484,7 @@ class AbstractSpline(ABC):
         return self._formula(sbml=True)
 
     def _formula(self, *, x=None, sbml=False, **kwargs) -> sp.Piecewise:
+        # Cache formulas in the case they are reused
         if 'extrapolate' in kwargs.keys():
             key = (x, sbml, kwargs['extrapolate'])
         else:
@@ -1123,7 +1149,7 @@ class CubicHermiteSpline(AbstractSpline):
 
     @property
     def derivatives_by_fd(self):
-        return self.__derivatives_by_fd
+        return self._derivatives_by_fd
 
     def check_if_valid(self, importer: SbmlImporter):
         """
@@ -1146,15 +1172,20 @@ class CubicHermiteSpline(AbstractSpline):
         else:
             return self.dd[i]
 
-    def _poly(self, x, i) -> sp.Basic:
+    def _scaled_variable(self, x, i) -> sp.Basic:
+        assert 0 <= i < len(self.xx) - 1
+        dx = self.xx[i+1] - self.xx[i]
+        with evaluate(False):
+            return (x - self.xx[i]) / dx
+
+    def _poly(self, t, i) -> sp.Basic:
         """
-        Return the symbolic expression for polynomial interpolant
-        on the `(xx[i], xx[i+1])` interval using `x` as the spline parameter.
+        Return the symbolic expression for the spline restricted to the `i`-th
+        interval as polynomial in the scaled variable `t`.
         """
         assert 0 <= i < len(self.xx) - 1
 
         dx = self.xx[i+1] - self.xx[i]
-        t = (x - self.xx[i]) / dx
 
         h00 = 2*t**3 - 3*t**2 + 1
         h10 = t**3 - 2*t**2 + t
