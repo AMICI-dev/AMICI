@@ -1857,13 +1857,14 @@ def noise_distribution_to_cost_function(
 
     :param noise_distribution: An identifier specifying a noise model.
         Possible values are
-        {'normal', 'lin-normal', 'log-normal', 'log10-normal',
-         'laplace', 'lin-laplace', 'log-laplace', 'log10-laplace',
-         'binomial', 'lin-binomial',
-         'negative-binomial', 'lin-negative-binomial'}
 
-    Details on the distributions and their parameterization can be
-    found in the function.
+        {'normal', 'lin-normal', 'log-normal', 'log10-normal',
+        'laplace', 'lin-laplace', 'log-laplace', 'log10-laplace',
+        'binomial', 'lin-binomial',
+        'negative-binomial', 'lin-negative-binomial'}
+
+        Details on the distributions and their parameterization can be
+        found in the function.
 
     :return: A function that takes a strSymbol and then creates a cost
         function string (negative log-likelihood) from it, which can be
