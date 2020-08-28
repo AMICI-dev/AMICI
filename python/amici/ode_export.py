@@ -1478,8 +1478,8 @@ class ODEModel:
         matrix = self.eq(name)
         match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
         if match_deriv:
-            rownames = self.sym(match_deriv.group(1), stripped=True)
-            colnames = self.sym(match_deriv.group(2), stripped=True)
+            rownames = self.sym(match_deriv.group(1))
+            colnames = self.sym(match_deriv.group(2))
         elif name in ['JSparse', 'JSparseB']:
             rownames = self.sym('xdot')
             colnames = self.sym('x')
@@ -3120,8 +3120,8 @@ def get_switch_statement(condition: str, cases: Dict[int, List[str]],
 
 
 def csc_matrix(matrix: sp.Matrix,
-               rownames: List[str],
-               colnames: List[str],
+               rownames: List[sp.Symbol],
+               colnames: List[sp.Symbol],
                identifier: Optional[int] = 0,
                pattern_only: Optional[bool] = False) -> Tuple[
     List[int], List[int], sp.Matrix, List[str], sp.Matrix
@@ -3173,7 +3173,8 @@ def csc_matrix(matrix: sp.Matrix,
 
             symbol_row_vals.append(row)
             idx += 1
-            symbol_name = f'd{rownames[row]}d{colnames[col]}'
+            symbol_name = f'd{_print_with_exception(rownames[row])}' \
+                          f'_d{_print_with_exception(colnames[col])}'
             if identifier:
                 symbol_name += f'_{identifier}'
             symbol_list.append(symbol_name)
