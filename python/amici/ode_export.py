@@ -1017,13 +1017,14 @@ class ODEModel:
         nw = len(self._expressions)
         # append zero rows for conservation law `w`s, note that
         # _process_conservation_laws is called after the fluxes are added as
-        # expressions, if this ordering needs to be changed, this will have
-        # to be adapted.
-        self._eqs['dxdotdw'] = si.stoichiometric_matrix.row_join(
-            sp.zeros(nx_solver, nw-nr)
+        # expressions, but conservation law expressions are inserted before
+        # flux expressions. If this ordering is to be changed, the following
+        # code will have to be adapted.
+        self._eqs['dxdotdw'] = sp.zeros(nx_solver, nw - nr).row_join(
+            si.stoichiometric_matrix
         )
         for ix, iw, val in dxdotdw_updates:
-            self._eqs['dxdotdw'][ix, iw] = val
+            self._eqs['dxdotdw'][ix, nw - nr + iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables()
@@ -1463,7 +1464,8 @@ class ODEModel:
             rownames = self.sym(match_deriv.group(1), stripped=True)
             colnames = self.sym(match_deriv.group(2), stripped=True)
         elif name in ['JSparse', 'JSparseB']:
-            rownames = colnames = self.sym('x')
+            rownames = self.sym('xdot')
+            colnames = self.sym('x')
 
         if name == 'dJydy':
             # One entry per y-slice
