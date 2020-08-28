@@ -1033,11 +1033,12 @@ class ODEModel:
         # expressions, but conservation law expressions are inserted before
         # flux expressions. If this ordering is to be changed, the following
         # code will have to be adapted.
-        self._eqs['dxdotdw'] = sp.zeros(nx_solver, nw - nr).row_join(
+        ncl = nw - nr
+        self._eqs['dxdotdw'] = sp.zeros(nx_solver, ncl).row_join(
             si.stoichiometric_matrix
         )
         for ix, iw, val in dxdotdw_updates:
-            self._eqs['dxdotdw'][ix, nw - nr + iw] = val
+            self._eqs['dxdotdw'][ix, ncl + iw] = val
 
         # fill in 'self._sym' based on prototypes and components in ode_model
         self.generate_basic_variables(from_sbml=True)
