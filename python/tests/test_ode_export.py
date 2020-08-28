@@ -14,8 +14,8 @@ def test_csc_matrix():
     assert symbol_col_ptrs == [0, 2, 3]
     assert symbol_row_vals == [0, 1, 1]
     assert sparse_list == sp.Matrix([[1], [2], [3]])
-    assert symbol_list == ['da1db1', 'da2db1', 'da2db2']
-    assert str(sparse_matrix) == 'Matrix([[da1db1, 0], [da2db1, da2db2]])'
+    assert symbol_list == ['da1_db1', 'da2_db1', 'da2_db2']
+    assert str(sparse_matrix) == 'Matrix([[da1_db1, 0], [da2_db1, da2_db2]])'
 
 
 def test_csc_matrix_empty():
@@ -36,23 +36,26 @@ def test_csc_matrix_vector():
 
     matrix = sp.Matrix([[1, 0], [2, 3]])
     symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix \
-        = amici.ode_export.csc_matrix(matrix[:, 0], colnames=['b'],
-                                      rownames=['a1', 'a2'])
+        = amici.ode_export.csc_matrix(
+            matrix[:, 0], colnames=[sp.Symbol('b')],
+            rownames=[sp.Symbol('a1'),  sp.Symbol('a2')]
+        )
 
     assert symbol_col_ptrs == [0, 2]
     assert symbol_row_vals == [0, 1]
     assert sparse_list == sp.Matrix([[1], [2]])
-    assert symbol_list == ['da1db', 'da2db']
-    assert str(sparse_matrix) == 'Matrix([[da1db], [da2db]])'
+    assert symbol_list == ['da1_db', 'da2_db']
+    assert str(sparse_matrix) == 'Matrix([[da1_db], [da2_db]])'
 
     # Test continuation of numbering of symbols
     symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, sparse_matrix \
-        = amici.ode_export.csc_matrix(matrix[:, 1], colnames=['b'],
-                                      rownames=['a1', 'a2'],
-                                      identifier=1)
+        = amici.ode_export.csc_matrix(
+            matrix[:, 1], colnames=[sp.Symbol('b')],
+            rownames=[sp.Symbol('a1'), sp.Symbol('a2')], identifier=1
+        )
 
     assert symbol_col_ptrs == [0, 1]
     assert symbol_row_vals == [1]
     assert sparse_list == sp.Matrix([[3]])
-    assert symbol_list == ['da2db_1']
-    assert str(sparse_matrix) == 'Matrix([[0], [da2db_1]])'
+    assert symbol_list == ['da2_db_1']
+    assert str(sparse_matrix) == 'Matrix([[0], [da2_db_1]])'
