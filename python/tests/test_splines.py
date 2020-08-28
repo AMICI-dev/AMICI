@@ -227,6 +227,15 @@ def _default_initial_values(nsplines: int):
     return np.zeros(nsplines)
 
 
+def random_suffix(n):
+    chars = 'abcdefghijklmnopqrstuvwxyz'
+    chars += chars.upper()
+    chars += '0123456789'
+    chars = np.asarray(list(chars))
+    chars = chars[np.random.randint(0, len(chars), n)]
+    return ''.join(chars)
+
+
 def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, **kwargs):
     # Default initial values
     if initial_values is None:
@@ -242,8 +251,10 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol
     # Create and compile AMICI model
     model = import_petab_problem(
         problem,
-        #discard_annotations=discard_annotations,
-        model_output_dir=os.path.join(folder, 'amici_models')
+        discard_annotations=discard_annotations,
+        model_output_dir=os.path.join(folder, 'amici_models'),
+        model_name='splinetest_' + random_suffix(6)
+                                   # to prevent module collisions
     )
 
     # Set solver options
@@ -277,7 +288,7 @@ def check_splines(splines,
                   initial_values=None,
                   *,
                   discard_annotations=False,
-                  print_errors=False,
+                  debug=False,
                   llh_rtol=1e-8,
                   sllh_atol=1e-9,
                   x_rtol=1e-11,
@@ -320,7 +331,9 @@ def check_splines(splines,
         for (spline, iv) in zip(splines, initial_values)
     ]).transpose()
     x_true = np.asarray(x_true_sym.subs(params_true), dtype=float)
-    if print_errors:
+    if not debug:
+        check_results(rdata, 'x', x_true, assert_fun, x_atol, x_rtol)
+    elif debug == 'print':
         x_err_abs = abs(rdata['x'] - x_true)
         x_err_rel = np.where(
             x_err_abs == 0,
@@ -331,18 +344,18 @@ def check_splines(splines,
         print(np.squeeze(x_err_abs))
         print("x_err_rel:")
         print(np.squeeze(x_err_rel))
-    else:
-        check_results(rdata, 'x', x_true, assert_fun, x_atol, x_rtol)
 
     # Check spline evaluations
     # TODO can we know how the splines are ordered inside w?
-    if not discard_annotations and len(splines) == 1:
-        assert rdata['nw'] == 1
+    if False and discard_annotations and len(splines) == 1:
+        assert rdata['w'].shape[1] == 1
         w_true = np.column_stack([
             evaluate_spline(spline, params_true, tt, dtype=float)
             for spline in splines
         ])
-        if print_errors:
+        if not debug:
+            check_results(rdata, 'w', w_true, assert_fun, w_atol, w_rtol)
+        elif debug == 'print':
             w_err_abs = abs(rdata['w'] - w_true)
             w_err_rel = np.where(
                 w_err_abs == 0,
@@ -353,8 +366,8 @@ def check_splines(splines,
             print(np.squeeze(w_err_abs))
             print("w_err_rel:")
             print(np.squeeze(w_err_rel))
-        else:
-            check_results(rdata, 'w', w_true, assert_fun, w_atol, w_rtol)
+    else:
+        w_true = None
 
     # Check sensitivities
     sx_by_state = [
@@ -365,7 +378,9 @@ def check_splines(splines,
     sx_true = np.concatenate([
         sx[:, :, np.newaxis] for sx in sx_by_state
     ], axis=2)
-    if print_errors:
+    if not debug:
+        check_results(rdata, 'sx', sx_true, assert_fun, sx_atol, sx_rtol)
+    elif debug == 'print':
         sx_err_abs = abs(rdata['sx'] - sx_true)
         sx_err_rel = np.where(
             sx_err_abs == 0,
@@ -376,16 +391,14 @@ def check_splines(splines,
         print(np.squeeze(sx_err_abs))
         print("sx_err_rel:")
         print(np.squeeze(sx_err_rel))
-    else:
-        check_results(rdata, 'sx', sx_true, assert_fun, sx_atol, sx_rtol)
 
     # Check log-likelihood
-    llh_expected = - 0.5 * len(rdata['y']) * np.log(2*np.pi)
-    llh_error_rel = abs(llh - llh_expected) / abs(llh_expected)
-    if print_errors:
-        print(f'llh_error_rel = {llh_error_rel}')
-    else:
+    llh_true = - 0.5 * len(rdata['y']) * np.log(2*np.pi)
+    llh_error_rel = abs(llh - llh_true) / abs(llh_true)
+    if not debug:
         assert llh_error_rel <= llh_rtol
+    elif debug == 'print':
+        print(f'llh_error_rel = {llh_error_rel}')
 
     # Check log-likelihood sensitivities
     # (should be all zero, since we simulated with the true parameters)
@@ -393,10 +406,23 @@ def check_splines(splines,
         sllh_atol = np.finfo(float).eps
     sllh = np.asarray([s for s in sllh.values()])
     sllh_err_abs = abs(sllh).max()
-    if print_errors:
-        print(f'sllh_err_abs = {sllh_err_abs}')
-    else:
+    if not debug:
         assert sllh_err_abs <= sllh_atol
+    elif debug == 'print':
+        print(f'sllh_err_abs = {sllh_err_abs}')
+
+    if debug:
+        return dict(
+            rdata=rdata,
+            splines=splines,
+            initial_values=initial_values,
+            params_true=params_true,
+            params_sorted=params_sorted,
+            x_true=x_true,
+            w_true=w_true,
+            sx_true=sx_true,
+            llh_true=llh_true
+        )
 
 
 def example_spline_1():
