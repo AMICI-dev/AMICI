@@ -43,7 +43,6 @@ jobs:
           swig \
           libatlas-base-dev \
           libhdf5-serial-dev \
-          libboost-dev \
           libboost-math-dev
     - name: pip
       run: |

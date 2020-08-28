@@ -171,8 +171,7 @@ class SteadystateProblem {
      * @brief Runs the Newton solver iterations and checks for convergence
      * to steady state
      * @param model pointer to the model object
-     * @param newtonSolver pointer to the NewtonSolver object @type
-     * NewtonSolver
+     * @param newtonSolver pointer to the NewtonSolver object
      * @param newton_retry flag indicating if Newton solver is rerun
      */
     void applyNewtonsMethod(Model *model, NewtonSolver *newtonSolver,

@@ -7,7 +7,6 @@
 4. [C++ only](#cpp)
 5. [Dependencies](#dependencies)
 
-
 <a name="availability"></a>
 ## Availability
 
@@ -34,7 +33,6 @@ and a direct clone is possible via
 
     git clone https://github.com/AMICI-dev/AMICI.git AMICI
 
-
 <a name="python"></a>
 ## Python
 
@@ -51,7 +49,6 @@ For cases where this installation fails, check below for special setups
 and custom installations.
 For Python-AMICI usage see 
 [https://github.com/AMICI-dev/AMICI/blob/master/documentation/PYTHON.md](https://github.com/AMICI-dev/AMICI/blob/master/documentation/PYTHON.md).
-
 
 ### Installation of development versions
 
@@ -137,7 +134,6 @@ on. This can be done by inserting the following code before calling
 
 (For further discussion see https://github.com/AMICI-dev/AMICI/issues/357)
 
-
 ### Windows using GCC (mingw)
 
 To install AMICI on Windows using python, you can proceed as follows:
@@ -208,12 +204,14 @@ Possible sources of errors:
 ### Windows using MSVC (Visual Studio)
 
 #### Visual Studio
+
 We assume that Visual Studio (not to be confused with Visual Studio Code) is already installed. Using Visual Studio Installer, the following components need to be included:
 
 * Microsoft Visual C++ (MSVC). This is part of multiple packages, including Desktop Development with C++.
 * Windows Universal C Runtime. This is an individual component and installs some DLLs that we need.
 
 #### openBLAS
+
 To install open BLAS, download the following scripts from AMICI:
 
 https://github.com/AMICI-dev/AMICI/blob/master/scripts/installOpenBLAS.ps1
@@ -295,7 +293,6 @@ environment variables:
 |`ENABLE_AMICI_DEBUGGING`| Set to build AMICI with debugging symbols | `ENABLE_AMICI_DEBUGGING=TRUE`| 
 |`AMICI_PARALLEL_COMPILE`| Set to the number of parallel processes to be used for C(++) file compilation (defaults to 1)| `AMICI_PARALLEL_COMPILE=4`|
 
-
 <a name="matlab"></a>
 ## MATLAB
 
@@ -320,7 +317,6 @@ For a list of supported compilers we refer to the mathworks
 documentation: 
 [mathworks.com](http://mathworks.com/support/compilers/R2018b/index.html)
 Note that Microsoft Visual Studio compilers are currently not supported.
-
 
 <a name="cpp"></a>
 ## C++ only
@@ -355,7 +351,6 @@ To build AMICI with SuperLU_MT support, run
     cd build/
     cmake -DSUNDIALS_SUPERLUMT_ENABLE=ON ..
     make
-
 
 <a name="dependencies"></a>
 ## Dependencies
@@ -453,7 +448,6 @@ AMICI repository (not included in the PyPI package). The binary
 directory has to be added to the `PATH` environment variable, or `SWIG`
 has to be set as described in the following section.
 
-
 ##### Using a non-default SWIG executable
 
 We note here that some linux package managers may provide swig
@@ -477,7 +471,6 @@ The Symbolic Toolbox requirement can be circumvented by performing model
 import using the Python interface. The result code can then be used from
 Matlab. 
 
-
 ### Python
 
 The python interface requires python 3.6 or newer and a cblas-compatible
@@ -494,10 +487,28 @@ They are automatically installed when installing the python package.
 The C++ interface requires `cmake` and a cblas-compatible BLAS to be
 installed.
 
-
 ### Optional
 
-__SuperLU_MT__, "a general purpose library for the direct solution of large,
+#### SuperLU_MT
+
+A "a general purpose library for the direct solution of large,
 sparse, nonsymmetric systems of linear equations"
 (https://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu_mt).
 SuperLU_MT is optional and is so far only available from the C++ interface.
+
+
+## Boost
+
+[Boost](https://www.boost.org/) is an optional C++ dependency only required for
+special functions (including e.g. gamma derivatives) in the python interface.
+It can be installed via package managers via
+
+    apt-get install libboost-math-dev
+
+or
+
+    brew install boost
+
+As only headers are required, also a
+[source code](https://www.boost.org/doc/libs/1_66_0/more/getting_started/unix-variants.html)
+download suffices. The compiler must be able to find the module in the search path.

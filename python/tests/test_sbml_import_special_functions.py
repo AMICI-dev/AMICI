@@ -61,7 +61,7 @@ def test_special_likelihoods(model_special_likelihoods):
     solver = model.getSolver()
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
 
-    """Test in region with positive density"""
+    # Test in region with positive density
 
     # run model once to create an edata
     rdata = amici.runAmiciSimulation(model, solver)
@@ -107,7 +107,7 @@ def test_special_likelihoods(model_special_likelihoods):
             model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
             check_least_squares=False)
 
-    """Test for m > y, i.e. in region with 0 density"""
+    # Test for m > y, i.e. in region with 0 density
 
     rdata = amici.runAmiciSimulation(model, solver)
     edata = amici.ExpData(rdata, 0.001, 0)

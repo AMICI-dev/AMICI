@@ -1,6 +1,7 @@
 # C++ Interface
 
-The @ref python_interface and @ref matlab_interface can translate the model
+The [Python interface](https://amici.readthedocs.io/en/latest/PYTHON.html)
+and @ref matlab_interface can translate the model
 definition into C++ code, which is then compiled into a `.mex` file or a Python
 module. Advanced users can also use this code within stand-alone C/C++
 application for use in other environments (e.g. on high performance computing

@@ -121,7 +121,7 @@ with AMICI:
 **Citeable DOI for the latest AMICI release:**
 [![DOI](https://zenodo.org/badge/43677177.svg)](https://zenodo.org/badge/latestdoi/43677177)
 
-There is a list of [publications using AMICI](documentation/references.md).
+There is a list of [publications using AMICI](https://amici.readthedocs.io/en/latest/references.html).
 If you used AMICI in your work, we are happy to include
 your project, please let us know via a Github issue.
 

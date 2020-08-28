@@ -221,8 +221,8 @@ class SUNMatrixWrapper {
 namespace gsl {
 /**
  * @brief Create span from SUNMatrix
- * @param nv
- * @return
+ * @param m SUNMatrix
+ * @return Created span
  */
 inline span<realtype> make_span(SUNMatrix m)
 {
