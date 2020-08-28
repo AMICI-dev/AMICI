@@ -253,6 +253,10 @@ multiobs_functions = [
     function for function in functions
     if 'const int iy' in functions[function]['signature']
 ]
+# list of equations that have ids which may not be unique
+non_unique_id_symbols = [
+    'x_rdata', 'y'
+]
 
 # python log manager
 logger = get_logger(__name__, logging.ERROR)
@@ -1179,10 +1183,7 @@ class ODEModel:
         if name not in self._syms:
             self._generate_symbol(name)
 
-        if stripped:
-            if name not in self._variable_prototype:
-                raise ValueError('Stripped symbols only available for '
-                                 'variables from variable prototypes')
+        if stripped and name in self._variable_prototype:
             return self._strippedsyms[name]
         else:
             return self._syms[name]
@@ -1339,7 +1340,8 @@ class ODEModel:
             # correctness of derivatives, the same assumptions as in pysb
             # have to be used (currently no assumptions)
             self._strippedsyms[name] = sp.Matrix([
-                sp.Symbol(comp.get_name())
+                comp.get_id() if not hasattr(comp.get_id(), 'name')
+                else comp.get_id().name
                 for comp in getattr(self, component)
             ])
             if name == 'y':
@@ -1444,6 +1446,12 @@ class ODEModel:
 
         """
         matrix = self.eq(name)
+        match_deriv = re.match(r'd([\w]+)d([a-z]+)', name)
+        if match_deriv:
+            rownames = self.sym(match_deriv.group(1), stripped=True)
+            colnames = self.sym(match_deriv.group(2), stripped=True)
+        elif name in ['JSparse', 'JSparseB']:
+            rownames = colnames = self.sym('x')
 
         if name == 'dJydy':
             # One entry per y-slice
@@ -1454,7 +1462,9 @@ class ODEModel:
             self._syms[name] = []
             for iy in range(self.ny()):
                 symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
-                    sparse_matrix = csc_matrix(matrix[iy, :], name,
+                    sparse_matrix = csc_matrix(matrix[iy, :],
+                                               rownames=rownames,
+                                               colnames=colnames,
                                                identifier=iy)
                 self._colptrs[name].append(symbol_col_ptrs)
                 self._rowvals[name].append(symbol_row_vals)
@@ -1464,7 +1474,8 @@ class ODEModel:
         else:
             symbol_col_ptrs, symbol_row_vals, sparse_list, symbol_list, \
                 sparse_matrix = csc_matrix(
-                    matrix, name, pattern_only=name in nobody_functions
+                    matrix, rownames=rownames, colnames=colnames,
+                    pattern_only=name in nobody_functions
                 )
 
             self._colptrs[name] = symbol_col_ptrs
@@ -1685,40 +1696,14 @@ class ODEModel:
         # As long as w has no cyclic dependencies (guaranteed by bngl and
         # sbml (?)), dwdw must be nilpotent, so we can just compute powers
         # of dwdw until we obtain a zero matrix.
-
         if eq == 'w' and var != 'w':  # avoid infinite loops
             dwdw = self.eq('dwdw')
-            # temporarily generate sparse symbols, this will use the eq
-            # generated above, everything down below will be expressed in
-            # terms of those (bngl orders them according to their
-            # dependency, which guarantees that we will be able to evaluate
-            # the final expression as dwdw will be lower triangular. for sbml
-            # there shouldn't be any hierarchical dependency for now).
-            # In order for this to work successfully, naming of symbols must
-            # only depend on absolute matrix location and not on relative
-            # location to other symbols
-            need_clear_symbols = False
-            if var in ['p', 'x']:
-                self_sym = self.sym(name)
-                need_clear_symbols = True
-            else:
-                self_sym = derivative
-
-            h = smart_multiply(dwdw, self_sym)  # h = dwdw^k*dwd{var} (k=0)
+            # h(k) = dwdw^k*dwd{var} (k=0)
+            h = smart_multiply(dwdw, derivative)
             while not smart_is_zero_matrix(h):
                 self._eqs[name] += h
-                # dwdw^(k+1)*dwd{var} = dwdw * dwdw^(k)*dwd{var}
+                # h(k+1) = dwdw^(k+1)*dwd{var} = dwdw*dwdw^(k)*dwd{var}
                 h = smart_multiply(dwdw, h)
-
-            # clear temp sparse symbols
-            if need_clear_symbols:
-                if name in sparse_functions:
-                    self._colptrs.pop(name)
-                    self._rowvals.pop(name)
-                    self._sparseeqs.pop(name)
-                    self._sparsesyms.pop(name)
-                self._syms.pop(name)
-
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
@@ -1998,15 +1983,15 @@ def _print_with_exception(math: sp.Basic) -> str:
         )
 
 
-def _get_sym_lines(symbols: sp.Matrix,
-                   variable: str,
-                   indent_level: int) -> List[str]:
+def _get_sym_lines_array(equations: sp.Matrix,
+                         variable: str,
+                         indent_level: int) -> List[str]:
     """
     Generate C++ code for assigning symbolic terms in symbols to C++ array
     `variable`.
 
-    :param symbols:
-        vectors of symbolic terms
+    :param equations:
+        vectors of symbolic expressions
 
     :param variable:
         name of the C++ array to assign to
@@ -2021,7 +2006,33 @@ def _get_sym_lines(symbols: sp.Matrix,
 
     return [' ' * indent_level + f'{variable}[{index}] = '
                                  f'{_print_with_exception(math)};'
-            for index, math in enumerate(symbols)
+            for index, math in enumerate(equations)
+            if not (math == 0 or math == 0.0)]
+
+
+def _get_sym_lines_symbols(symbols: sp.Matrix,
+                           equations: sp.Matrix,
+                           indent_level: int) -> List[str]:
+    """
+    Generate C++ code for where array elements are directly replaced with
+    their corresponding macro symbol
+
+    :param symbols:
+        vectors of symbols that equations are assigned to
+
+    :param equations:
+        vectors of expressions
+
+    :param indent_level:
+        indentation level (number of leading blanks)
+
+    :return:
+        C++ code as list of lines
+
+    """
+
+    return [' ' * indent_level + f'{sym} = {_print_with_exception(math)};'
+            for sym, math in zip(symbols, equations)
             if not (math == 0 or math == 0.0)]
 
 
@@ -2281,6 +2292,9 @@ class ODEExporter:
                 symbols = self.model.sparsesym(name)
             else:
                 symbols = self.model.sym(name).T
+            # flatten multiobs
+            if isinstance(next(iter(symbols), None), list):
+                symbols = [symbol for obs in symbols for symbol in obs]
         else:
             raise ValueError(f'Unknown symbolic array: {name}')
 
@@ -2307,13 +2321,13 @@ class ODEExporter:
         # first generate the equations to make sure we have everything we
         # need in subsequent steps
         if function in sparse_functions:
-            symbol = self.model.sparseeq(function)
+            equations = self.model.sparseeq(function)
         elif not self.allow_reinit_fixpar_initcond \
                 and function == 'sx0_fixedParameters':
             # Not required. Will create empty function body.
-            symbol = sp.Matrix()
+            equations = sp.Matrix()
         else:
-            symbol = self.model.eq(function)
+            equations = self.model.eq(function)
 
         # function header
         lines = [
@@ -2332,8 +2346,7 @@ class ODEExporter:
             # added '[0]*' for initial conditions
             if re.search(
                     fr'const (realtype|double) \*{sym}[0]*[,)]+', signature
-            ) or (function, sym) in [('w', 'w'), ('dwdx', 'dwdx'),
-                                     ('dwdp', 'dwdp')]:
+            ) or (function == sym and function not in non_unique_id_symbols):
                 lines.append(f'#include "{sym}.h"')
 
         lines.extend([
@@ -2346,7 +2359,7 @@ class ODEExporter:
         lines.append(f'void {function}_{self.model_name}{signature}{{')
 
         # function body
-        body = self._get_function_body(function, symbol)
+        body = self._get_function_body(function, equations)
         if self.assume_pow_positivity and 'assume_pow_positivity' \
                 in self.functions[function].get('flags', []):
             body = [re.sub(r'(^|\W)pow\(', r'\1amici::pos_pow(', line)
@@ -2456,15 +2469,15 @@ class ODEExporter:
 
     def _get_function_body(self,
                            function: str,
-                           symbol: sp.Matrix) -> List[str]:
+                           equations: sp.Matrix) -> List[str]:
         """
         Generate C++ code for body of function `function`.
 
         :param function:
             name of the function to be written (see self.functions)
 
-        :param symbol:
-            symbolic defintion of the function body
+        :param equations:
+            symbolic definition of the function body
 
         :return:
             generated C++ code
@@ -2473,9 +2486,9 @@ class ODEExporter:
 
         lines = []
 
-        if len(symbol) == 0 or (isinstance(symbol, (sp.Matrix,
-                                                    sp.ImmutableDenseMatrix))
-                                and min(symbol.shape) == 0):
+        if len(equations) == 0 or (isinstance(equations, (sp.Matrix,
+                                                          sp.ImmutableDenseMatrix))
+                                   and min(equations.shape) == 0):
             # dJydy is a list
             return lines
 
@@ -2491,7 +2504,7 @@ class ODEExporter:
                 expressions = []
                 for index, formula in zip(
                         self.model._x0_fixedParameters_idx,
-                        symbol[:, ipar]
+                        equations[:, ipar]
                 ):
                     expressions.append(f'{function}[{index}] = '
                                        f'{_print_with_exception(formula)};')
@@ -2501,30 +2514,41 @@ class ODEExporter:
         elif function == 'x0_fixedParameters':
             for index, formula in zip(
                     self.model._x0_fixedParameters_idx,
-                    symbol
+                    equations
             ):
                 lines.append(f'{function}[{index}] = '
                              f'{_print_with_exception(formula)};')
 
         elif function in sensi_functions:
-            cases = {ipar: _get_sym_lines(symbol[:, ipar], function, 0)
+            cases = {ipar: _get_sym_lines_array(equations[:, ipar], function,
+                                                0)
                      for ipar in range(self.model.np())
-                     if not smart_is_zero_matrix(symbol[:, ipar])}
+                     if not smart_is_zero_matrix(equations[:, ipar])}
             lines.extend(get_switch_statement('ip', cases, 1))
 
         elif function in multiobs_functions:
             if function == 'dJydy':
-                cases = {iobs: _get_sym_lines(symbol[iobs], function, 0)
+                cases = {iobs: _get_sym_lines_array(equations[iobs], function,
+                                                    0)
                          for iobs in range(self.model.ny())
-                         if not smart_is_zero_matrix(symbol[iobs])}
+                         if not smart_is_zero_matrix(equations[iobs])}
             else:
-                cases = {iobs: _get_sym_lines(symbol[:, iobs], function, 0)
+                cases = {iobs: _get_sym_lines_array(equations[:, iobs], function,
+                                                    0)
                          for iobs in range(self.model.ny())
-                         if not smart_is_zero_matrix(symbol[:, iobs])}
+                         if not smart_is_zero_matrix(equations[:, iobs])}
             lines.extend(get_switch_statement('iy', cases, 1))
 
+        elif function in self.model.sym_names() \
+                and function not in non_unique_id_symbols:
+            if function in sparse_functions:
+                symbols = self.model.sparsesym(function)
+            else:
+                symbols = self.model.sym(function, stripped=True)
+            lines += _get_sym_lines_symbols(symbols, equations, 4)
+
         else:
-            lines += _get_sym_lines(symbol, function, 4)
+            lines += _get_sym_lines_array(equations, function, 4)
 
         return [line for line in lines if line]
 
@@ -3043,7 +3067,8 @@ def get_switch_statement(condition: str, cases: Dict[int, List[str]],
 
 
 def csc_matrix(matrix: sp.Matrix,
-               name: str,
+               rownames: List[str],
+               colnames: List[str],
                identifier: Optional[int] = 0,
                pattern_only: Optional[bool] = False) -> Tuple[
     List[int], List[int], sp.Matrix, List[str], sp.Matrix
@@ -3090,7 +3115,9 @@ def csc_matrix(matrix: sp.Matrix,
 
             symbol_row_vals.append(row)
             idx += 1
-            symbol_name = f'{name}_{row}_{col}_{identifier}'
+            symbol_name = f'd{rownames[row]}d{colnames[col]}'
+            if identifier:
+                symbol_name += f'_{identifier}'
             symbol_list.append(symbol_name)
             if pattern_only:
                 continue
