@@ -254,6 +254,19 @@ multiobs_functions = [
     if 'const int iy' in functions[function]['signature']
 ]
 
+# custom c++ function replacements
+CUSTOM_FUNCTIONS = [
+    {'sympy': 'polygamma',
+     'c++': 'boost::math::polygamma',
+     'include': '#include <boost/math/special_functions/polygamma.hpp>',
+     'build_hint': 'Using polygamma requires libboost-math header files.'
+     },
+    {'sympy': 'Heaviside',
+     'c++': 'amici::heaviside'},
+    {'sympy': 'DiracDelta',
+     'c++': 'amici::dirac'}
+]
+
 # python log manager
 logger = get_logger(__name__, logging.ERROR)
 
@@ -1955,8 +1968,11 @@ def _print_with_exception(math: sp.Basic) -> str:
     :return:
         C++ code for the specified expression
     """
+    # get list of custom replacements
+    user_functions = {fun['sympy']: fun['c++'] for fun in CUSTOM_FUNCTIONS}
+
     try:
-        ret = cxxcode(math, standard='c++11')
+        ret = cxxcode(math, standard='c++11', user_functions=user_functions)
         ret = re.sub(r'(^|\W)M_PI(\W|$)', r'\1amici::pi\2', ret)
         return ret
     except TypeError as e:
@@ -2031,6 +2047,9 @@ class ODEExporter:
         indicates whether reinitialization of
         initial states depending on fixedParameters is allowed for this model
 
+    :ivar _build_hints:
+        If the given model uses special functions, this set contains hints for
+        model building.
     """
 
     def __init__(
@@ -2065,7 +2084,6 @@ class ODEExporter:
 
         :param allow_reinit_fixpar_initcond:
             see :class:`amici.ode_export.ODEExporter`
-
         """
         set_log_level(logger, verbose)
 
@@ -2090,6 +2108,7 @@ class ODEExporter:
             copy.deepcopy(functions)
 
         self.allow_reinit_fixpar_initcond: bool = allow_reinit_fixpar_initcond
+        self._build_hints = set()
 
     @log_execution_time('generating cpp code', logger)
     def generate_model_code(self) -> None:
@@ -2187,6 +2206,10 @@ class ODEExporter:
                                     check=True)
         except subprocess.CalledProcessError as e:
             print(e.output.decode('utf-8'))
+            print("Failed building the model extension.")
+            if self._build_hints:
+                print("Note:")
+                print('\n'.join(self._build_hints))
             raise
 
         if verbose:
@@ -2330,6 +2353,13 @@ class ODEExporter:
             '} // namespace amici',
             f'}} // namespace model_{self.model_name}',
         ])
+
+        # check custom functions
+        for fun in CUSTOM_FUNCTIONS:
+            if 'include' in fun and any(fun['c++'] in line for line in lines):
+                if 'build_hint' in fun:
+                    self._build_hints.add(fun['build_hint'])
+                lines.insert(0, fun['include'])
 
         # if not body is None:
         with open(os.path.join(
