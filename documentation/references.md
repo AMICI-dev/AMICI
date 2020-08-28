@@ -25,16 +25,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Gregg, Robert W, Saumendra N Sarkar, and Jason E Shoemaker. 2019. “Mathematical Modeling of the cGAS Pathway Reveals Robustness of Dna Sensing to Trex1 Feedback.” <em>Journal of Theoretical Biology</em> 462 (February): 148–57. <a href="https://doi.org/10.1016/j.jtbi.2018.11.001">https://doi.org/10.1016/j.jtbi.2018.11.001</a>.</p>
 </div>
 <div id="ref-KapferSta2019">
-<p>Kapfer, Eva-Maria, Paul Stapor, and Jan Hasenauer. 2019. “Challenges in the Calibration of Large-Scale Ordinary Differential Equation Models.” <em>IFAC-PapersOnLine</em> 52 (26): 58–64. <a href="https://doi.org/https://doi.org/10.1016/j.ifacol.2019.12.236">https://doi.org/https://doi.org/10.1016/j.ifacol.2019.12.236</a>.</p>
-</div>
-<div id="ref-LinesPas2019">
-<p>Lines, Glenn Terje, Lukasz Paszkowski, Leonard Schmiester, Daniel Weindl, Paul Stapor, and Jan Hasenauer. 2019. “Efficient Computation of Steady States in Large-Scale Ode Models of Biochemical Reaction Networks.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
+<p>Kapfer, Eva-Maria, Paul Stapor, and Jan Hasenauer. 2019. “Challenges in the Calibration of Large-Scale Ordinary Differential Equation Models.” <em>IFAC-PapersOnLine</em> 52 (26): 58–64. <a href="https://doi.org/10.1016/j.ifacol.2019.12.236">https://doi.org/10.1016/j.ifacol.2019.12.236</a>.</p>
 </div>
 <div id="ref-NousiainenInt2019">
-<p>Nousiainen, Kari, Jukka Intosalmi, and Harri Lähdesmäki. 2019. “A Mathematical Model for Enhancer Activation Kinetics During Cell Differentiation.” In <em>Algorithms for Computational Biology</em>, edited by Ian Holmes, Carlos Martı́n-Vide, and Miguel A. Vega-Rodrı́guez, 191–202. Cham: Springer International Publishing.</p>
+<p>Nousiainen, Kari, Jukka Intosalmi, and Harri Lähdesmäki. 2019. “A Mathematical Model for Enhancer Activation Kinetics During Cell Differentiation.” In <em>Algorithms for Computational Biology</em>, edited by Ian Holmes, Carlos Martı́n-Vide, and Miguel A. Vega-Rodrı́guez, 191–202. Cham: Springer International Publishing. <a href="https://doi.org/10.1007/978-3-030-18174-1_14">https://doi.org/10.1007/978-3-030-18174-1_14</a>.</p>
 </div>
 <div id="ref-PedretscherKal2019">
-<p>Pedretscher, B., B. Kaltenbacher, and O. Pfeiler. 2019. “Parameter Identification and Uncertainty Quantification in Stochastic State Space Models and Its Application to Texture Analysis.” <em>Applied Numerical Mathematics</em> 146: 38–54. <a href="https://doi.org/https://doi.org/10.1016/j.apnum.2019.06.020">https://doi.org/https://doi.org/10.1016/j.apnum.2019.06.020</a>.</p>
+<p>Pedretscher, B., B. Kaltenbacher, and O. Pfeiler. 2019. “Parameter Identification and Uncertainty Quantification in Stochastic State Space Models and Its Application to Texture Analysis.” <em>Applied Numerical Mathematics</em> 146: 38–54. <a href="https://doi.org/10.1016/j.apnum.2019.06.020">https://doi.org/10.1016/j.apnum.2019.06.020</a>.</p>
 </div>
 <div id="ref-PittBan2019">
 <p>Pitt, Jake Alan, and Julio R Banga. 2019. “Parameter Estimation in Models of Biological Oscillators: An Automated Regularised Estimation Approach.” <em>BMC Bioinformatics</em> 20 (1): 82. <a href="https://doi.org/10.1186/s12859-019-2630-y">https://doi.org/10.1186/s12859-019-2630-y</a>.</p>
@@ -45,11 +42,14 @@ If you applied AMICI in your work and your publication is missing, please let us
 <div id="ref-StaporSch2019">
 <p>Stapor, Paul, Leonard Schmiester, Christoph Wierling, Bodo Lange, Daniel Weindl, and Jan Hasenauer. 2019. “Mini-Batch Optimization Enables Training of Ode Models on Large-Scale Datasets.” <em>bioRxiv</em>. <a href="https://doi.org/10.1101/859884">https://doi.org/10.1101/859884</a>.</p>
 </div>
+<div id="ref-LinesPas2019">
+<p>Terje Lines, Glenn, Łukasz Paszkowski, Leonard Schmiester, Daniel Weindl, Paul Stapor, and Jan Hasenauer. 2019. “Efficient Computation of Steady States in Large-Scale Ode Models of Biochemical Reaction Networks.” <em>IFAC-PapersOnLine</em> 52 (26): 32–37. <a href="https://doi.org/10.1016/j.ifacol.2019.12.232">https://doi.org/10.1016/j.ifacol.2019.12.232</a>.</p>
+</div>
 <div id="ref-VillaverdeRai2019">
-<p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2019. “A Comparison of Methods for Quantifying Prediction Uncertainty in Systems Biology.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
+<p>Villaverde, Alejandro F., Elba Raimúndez, Jan Hasenauer, and Julio R. Banga. 2019. “A Comparison of Methods for Quantifying Prediction Uncertainty in Systems Biology⁎⁎This Research Has Received Funding from the European Unions Horizon 2020 Research and Innovation Program Under Grant Agreement No 686282 (Canpathpro) and the German Ministry of Education and Research (Bmbf) Under the Grant Agreement No 01ZX1310B (Sys-Stomach) and No 01ZX1705A (Income).” <em>IFAC-PapersOnLine</em> 52 (26): 45–51. <a href="https://doi.org/10.1016/j.ifacol.2019.12.234">https://doi.org/10.1016/j.ifacol.2019.12.234</a>.</p>
 </div>
 <div id="ref-WangSta2019">
-<p>Wang, Dantong, Paul Stapor, and Jan Hasenauer. 2019. “Dirac Mixture Distributions for the Approximation of Mixed Effects Models.” <em>Accepted for Publication in Proc. Of the Foundations of Syst. Biol. In Engin. (FOSBE)</em>.</p>
+<p>Wang, Dantong, Paul Stapor, and Jan Hasenauer. 2019. “Dirac Mixture Distributions for the Approximation of Mixed Effects Models⁎⁎We Acknowledge Financial Support by the China Scholarship Council (201706060200) and the German Ministry for Education and Research (Bmbf) in the Fitmulticell Project (Grant Number 031L0159A).” <em>IFAC-PapersOnLine</em> 52 (26): 200–206. <a href="https://doi.org/10.1016/j.ifacol.2019.12.258">https://doi.org/10.1016/j.ifacol.2019.12.258</a>.</p>
 </div>
 </div>
 <h1 id="section" class="unnumbered">2018</h1>
@@ -58,7 +58,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Ballnus, Benjamin, Steffen Schaper, Fabian J Theis, and Jan Hasenauer. 2018. “Bayesian Parameter Estimation for Biochemical Reaction Networks Using Region-Based Adaptive Parallel Tempering.” <em>Bioinformatics</em> 34 (13): i494–i501. <a href="https://doi.org/10.1093/bioinformatics/bty229">https://doi.org/10.1093/bioinformatics/bty229</a>.</p>
 </div>
 <div id="ref-BastCal2018">
-<p>Bast, Lisa, Filippo Calzolari, Michael Strasser, Jan Hasenauer, Fabian J. Theis, Jovica Ninkovic, and Carsten Marr. 2018. “Subtle Changes in Clonal Dynamics Underlie the Age-Related Decline in Neurogenesis.” <em>Cell Reports</em>.</p>
+<p>Bast, Lisa, Filippo Calzolari, Michael Strasser, Jan Hasenauer, Fabian J. Theis, Jovica Ninkovic, and Carsten Marr. 2018. “Subtle Changes in Clonal Dynamics Underlie the Age-Related Decline in Neurogenesis.” <em>Cell Reports</em>. <a href="https://doi.org/10.1016/j.celrep.2018.11.088">https://doi.org/10.1016/j.celrep.2018.11.088</a>.</p>
 </div>
 <div id="ref-FroehlichKes2018">
 <p>Fröhlich, Fabian, Thomas Kessler, Daniel Weindl, Alexey Shadrin, Leonard Schmiester, Hendrik Hache, Artur Muradyan, et al. 2018. “Efficient Parameter Estimation Enables the Prediction of Drug Response Using a Mechanistic Pan-Cancer Pathway Model.” <em>Cell Systems</em> 7 (6): 567–579.e6. <a href="https://doi.org/10.1016/j.cels.2018.10.013">https://doi.org/10.1016/j.cels.2018.10.013</a>.</p>
@@ -67,7 +67,7 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Fröhlich, Fabian, Anita Reiser, Laura Fink, Daniel Woschée, Thomas Ligon, Fabian Joachim Theis, Joachim Oskar Rädler, and Jan Hasenauer. 2018. “Multi-Experiment Nonlinear Mixed Effect Modeling of Single-Cell Translation Kinetics After Transfection.” <em>Npj Systems Biology and Applications</em> 5 (1): 1. <a href="https://doi.org/10.1038/s41540-018-0079-7">https://doi.org/10.1038/s41540-018-0079-7</a>.</p>
 </div>
 <div id="ref-KaltenbacherPed2018">
-<p>Kaltenbacher, Barbara, and Barbara Pedretscher. 2018. “Parameter Estimation in Sdes via the Fokker–Planck Equation: Likelihood Function and Adjoint Based Gradient Computation.” <em>Journal of Mathematical Analysis and Applications</em> 465 (2): 872–84. <a href="https://doi.org/https://doi.org/10.1016/j.jmaa.2018.05.048">https://doi.org/https://doi.org/10.1016/j.jmaa.2018.05.048</a>.</p>
+<p>Kaltenbacher, Barbara, and Barbara Pedretscher. 2018. “Parameter Estimation in Sdes via the Fokker–Planck Equation: Likelihood Function and Adjoint Based Gradient Computation.” <em>Journal of Mathematical Analysis and Applications</em> 465 (2): 872–84. <a href="https://doi.org/10.1016/j.jmaa.2018.05.048">https://doi.org/10.1016/j.jmaa.2018.05.048</a>.</p>
 </div>
 <div id="ref-LoosKra2018">
 <p>Loos, Carolin, Sabrina Krause, and Jan Hasenauer. 2018. “Hierarchical Optimization for the Efficient Parametrization of ODE Models.” <em>Bioinformatics</em> 34 (24): 4266–73. <a href="https://doi.org/10.1093/bioinformatics/bty514">https://doi.org/10.1093/bioinformatics/bty514</a>.</p>
@@ -76,13 +76,13 @@ If you applied AMICI in your work and your publication is missing, please let us
 <p>Loos, Carolin, Katharina Moeller, Fabian Fröhlich, Tim Hucho, and Jan Hasenauer. 2018. “A Hierarchical, Data-Driven Approach to Modeling Single-Cell Populations Predicts Latent Causes of Cell-to-Cell Variability.” <em>Cell Systems</em> 6 (5): 593–603. <a href="https://doi.org/10.1016/j.cels.2018.04.008">https://doi.org/10.1016/j.cels.2018.04.008</a>.</p>
 </div>
 <div id="ref-SchaelteSta2018">
-<p>Schälte, Y., P. Stapor, and J. Hasenauer. 2018. “Evaluation of Derivative-Free Optimizers for Parameter Estimation in Systems Biology.” <em>FAC-PapersOnLine</em> 51 (19): 98–101.</p>
+<p>Schälte, Y., P. Stapor, and J. Hasenauer. 2018. “Evaluation of Derivative-Free Optimizers for Parameter Estimation in Systems Biology.” <em>FAC-PapersOnLine</em> 51 (19): 98–101. <a href="https://doi.org/10.1016/j.ifacol.2018.09.025">https://doi.org/10.1016/j.ifacol.2018.09.025</a>.</p>
 </div>
 <div id="ref-StaporFro2018">
-<p>Stapor, Paul, Fabian Fröhlich, and Jan Hasenauer. 2018. “Optimization and Profile Calculation of ODE Models Using Second Order Adjoint Sensitivity Analysis.” <em>Bioinformatics</em> 34 (13): i151–i159.</p>
+<p>Stapor, Paul, Fabian Fröhlich, and Jan Hasenauer. 2018. “Optimization and Profile Calculation of ODE Models Using Second Order Adjoint Sensitivity Analysis.” <em>Bioinformatics</em> 34 (13): i151–i159. <a href="https://doi.org/10.1093/bioinformatics/bty230">https://doi.org/10.1093/bioinformatics/bty230</a>.</p>
 </div>
-<div id="ref-VillaverdeFro2018">
-<p>Villaverde, Alejandro F., Fabian Froehlich, Daniel Weindl, Jan Hasenauer, and Julio R Banga. 2018. “Benchmarking Optimization Methods for Parameter Estimation in Large Kinetic Models.” <em>Bioinformatics</em>, bty736.</p>
+<div id="ref-VillaverdeFroe2018">
+<p>Villaverde, Alejandro F, Fabian Fröhlich, Daniel Weindl, Jan Hasenauer, and Julio R Banga. 2018. “Benchmarking optimization methods for parameter estimation in large kinetic models.” <em>Bioinformatics</em> 35 (5): 830–38. <a href="https://doi.org/10.1093/bioinformatics/bty736">https://doi.org/10.1093/bioinformatics/bty736</a>.</p>
 </div>
 </div>
 <h1 id="section" class="unnumbered">2017</h1>
@@ -127,6 +127,6 @@ If you applied AMICI in your work and your publication is missing, please let us
 <h1 id="section" class="unnumbered">2015</h1>
 <div id="refs" class="references">
 <div id="ref-LoosMar2015">
-<p>Loos, C., C. Marr, F. J. Theis, and J. Hasenauer. 2015. “Computational Methods in Systems Biology.” In, edited by O. Roux and J. Bourdon, 9308:52–63. Lecture Notes in Computer Science. Springer International Publishing.</p>
+<p>Loos, C., C. Marr, F. J. Theis, and J. Hasenauer. 2015. “Computational Methods in Systems Biology.” In, edited by O. Roux and J. Bourdon, 9308:52–63. Lecture Notes in Computer Science. Springer International Publishing. <a href="https://doi.org/10.1007/978-3-319-23401-4_6">https://doi.org/10.1007/978-3-319-23401-4_6</a>.</p>
 </div>
 </div>
