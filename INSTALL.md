@@ -497,7 +497,7 @@ sparse, nonsymmetric systems of linear equations"
 SuperLU_MT is optional and is so far only available from the C++ interface.
 
 
-## Boost
+#### Boost
 
 [Boost](https://www.boost.org/) is an optional C++ dependency only required for
 special functions (including e.g. gamma derivatives) in the python interface.
