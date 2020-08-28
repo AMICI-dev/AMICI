@@ -1686,7 +1686,10 @@ class ODEModel:
 
         elif name == 'spline_slopes':
             # force symbols
-            self._eqs[name] = sp.zeros(0, 0)
+            self._eqs[name] = sp.Matrix([
+                sp.zeros(len(spline.dd)) if spline.derivatives_by_fd else spline.dd
+                for spline in self.splines
+            ])
 
         elif match_deriv:
             self._derivative(match_deriv.group(1), match_deriv.group(2))

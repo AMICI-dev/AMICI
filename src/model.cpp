@@ -232,9 +232,9 @@ void Model::initializeSplines() {
     std::cout << "Came until L231, size of spl_" << splines_.size() << std::endl;
     for (int ispl = 0; ispl < nspl; ispl++)
         splines_[ispl].computeCoefficients();
-        
+
     std::cout << "Came until L235" << std::endl;
-    
+
     std::cout << "Computed coefficients outside of spline class";
     for (int i = 0; i < splines_[0].coefficients.size(); i++)
         std::cout << " :: " << splines_[0].coefficients[i];
@@ -255,11 +255,13 @@ void Model::initializeSplineSensitivities() {
     fdspline_slopesdp(dspline_slopesdp.data(), state_.unscaledParameters.data(),
                       state_.fixedParameters.data());
 
+    // QUESTION is it possible for plist != range(nplist) ?
+    //          would that break computeCoefficientsSensi or not?
     for (int ispl = 0; ispl < nspl; ispl++) {
         splines_[ispl].computeCoefficientsSensi(nplist(), spline_offset,
             dspline_valuesdp.data(), dspline_slopesdp.data());
-        spline_offset += splines_[ispl].n_nodes();
-    }       
+        spline_offset += splines_[ispl].n_nodes() * nplist();
+    }
 }
 
 
@@ -1855,8 +1857,8 @@ void Model::fspl(const realtype t) {
 
 void Model::fsspl(const realtype t) {
     realtype *sspl_data = sspl_.data();
-    for (int ispl = 0; ispl < nspl; ispl++) {
-        for (int ip = 0; ip < nplist(); ip++) {
+    for (int ip = 0; ip < nplist(); ip++) {
+        for (int ispl = 0; ispl < nspl; ispl++) {
             if (splines_[ispl].get_logarithmic_paraterization()) {
                 sspl_data[ispl + nspl * ip] = spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
             } else {
@@ -1869,7 +1871,7 @@ void Model::fsspl(const realtype t) {
 void Model::fw(const realtype t, const realtype *x) {
     static int counter = 0;
     counter++;
-    std::cout << "Call to fw number " << counter << std::endl; 
+    std::cout << "Call to fw number " << counter << std::endl;
     std::fill(w_.begin(), w_.end(), 0.0);
     fspl(t);
     fw(w_.data(), t, x, state_.unscaledParameters.data(),

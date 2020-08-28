@@ -208,11 +208,11 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
 
     /* Parametric derivatives of splines are splines again.
      * We compute the coefficients for those polynomials now. */
-    for (int i_node = 0; i_node < n_nodes() - 2; i_node++) {
+    for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
         /* Get the length of the interval. */
         len = nodes_[i_node + 1] - nodes_[i_node];
         len_m = (i_node > 0) ? nodes_[i_node + 1] - nodes_[i_node - 1] : len;
-        len_p = (i_node < n_nodes() - 1) ? nodes_[i_node + 2] - nodes_[i_node] : len;
+        len_p = (i_node < n_nodes() - 2) ? nodes_[i_node + 2] - nodes_[i_node] : len;
 
         /* As computing the coefficient is a mess, it's in another function */
         for (int ip = 0; ip < nplist; ip++)
@@ -264,6 +264,20 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
         coefficients_extrapolate_sensi[4 * ip + 2] = sp_end - sm_end * nodes_[n_nodes() - 1];
         coefficients_extrapolate_sensi[4 * ip + 3] = sm_end;
     }
+
+    for (int ip = 0; ip < nplist; ip++) {
+        std::cout << "ip = " << ip << " :: ";
+        for (int i_node = 0; i_node < n_nodes() - 1; i_node++) {
+            int offset = ip * n_spline_coefficients + 4 * i_node;
+            std::cout << "(";
+            std::cout << coefficients_sensi[offset] << ", ";
+            std::cout << coefficients_sensi[offset + 1] << ", ";
+            std::cout << coefficients_sensi[offset + 2] << ", ";
+            std::cout << coefficients_sensi[offset + 3] << ")";
+            std::cout << " :: ";
+        }
+        std::cout << std::endl;
+    }
 }
 
 void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coefficients,
@@ -292,7 +306,7 @@ void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coef
             }
             smk1 = (dnodesdp[node_offset + i_node + 2] - spk) / len_p;
 
-        } else if (i_node == n_nodes() - 1) {
+        } else if (i_node == n_nodes() - 2) {
             /* Are we at the last node? What's the boundary condition? */
             smk = (spk1 - dnodesdp[node_offset + i_node - 1]) / len_m;
             if (lastNodeDerivative == SplineBoundaryCondition::constant) {
@@ -317,7 +331,7 @@ void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coef
 
     /* Compute the actual coefficients */
     coeffs[ip * n_spline_coefficients + 4 * i_node] = spk;
-    coeffs[ip * n_spline_coefficients + 4 * i_node + 1] = len * smk;;
+    coeffs[ip * n_spline_coefficients + 4 * i_node + 1] = len * smk;
     coeffs[ip * n_spline_coefficients + 4 * i_node + 2] = 3 * (spk1  - spk) - len * (2 * smk + smk1);
     coeffs[ip * n_spline_coefficients + 4 * i_node + 3] = 2 * (spk - spk1) + len * (smk + smk1);
 }
