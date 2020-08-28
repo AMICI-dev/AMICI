@@ -1340,8 +1340,9 @@ class ODEModel:
             # correctness of derivatives, the same assumptions as in pysb
             # have to be used (currently no assumptions)
             self._strippedsyms[name] = sp.Matrix([
-                comp.get_id() if not hasattr(comp.get_id(), 'name')
-                else comp.get_id().name
+                comp.get_id() if not hasattr(comp.get_id(), 'model')
+                else sp.Symbol(comp.get_id().name,
+                               **comp.get_id().assumptions0)
                 for comp in getattr(self, component)
             ])
             if name == 'y':
@@ -2012,6 +2013,7 @@ def _get_sym_lines_array(equations: sp.Matrix,
 
 def _get_sym_lines_symbols(symbols: sp.Matrix,
                            equations: sp.Matrix,
+                           variable: str,
                            indent_level: int) -> List[str]:
     """
     Generate C++ code for where array elements are directly replaced with
@@ -2023,6 +2025,9 @@ def _get_sym_lines_symbols(symbols: sp.Matrix,
     :param equations:
         vectors of expressions
 
+    :param variable:
+        name of the C++ array to assign to, only used in comments
+
     :param indent_level:
         indentation level (number of leading blanks)
 
@@ -2031,8 +2036,9 @@ def _get_sym_lines_symbols(symbols: sp.Matrix,
 
     """
 
-    return [' ' * indent_level + f'{sym} = {_print_with_exception(math)};'
-            for sym, math in zip(symbols, equations)
+    return [' ' * indent_level + f'{sym} = {_print_with_exception(math)};' \
+                                 f'  // {variable}[{index}]'
+            for index, (sym, math) in enumerate(zip(symbols, equations))
             if not (math == 0 or math == 0.0)]
 
 
@@ -2545,7 +2551,7 @@ class ODEExporter:
                 symbols = self.model.sparsesym(function)
             else:
                 symbols = self.model.sym(function, stripped=True)
-            lines += _get_sym_lines_symbols(symbols, equations, 4)
+            lines += _get_sym_lines_symbols(symbols, equations, function, 4)
 
         else:
             lines += _get_sym_lines_array(equations, function, 4)
