@@ -115,7 +115,7 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),
                 state_.h.data(), w_.data());
         }
-        if (nw > 0 && ndxdotdp_implicit > 0) {
+        if (nw > 0) {
             /* Sparse matrix multiplication
              dxdotdp_implicit += dxdotdw * dwdp */
             dxdotdw_.sparse_multiply(&dxdotdp_implicit, &dwdp_);
