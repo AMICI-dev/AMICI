@@ -91,6 +91,18 @@ class SUNMatrixWrapper {
      * @return
      */
     SUNMatrixWrapper &operator=(SUNMatrixWrapper &&other);
+    
+    /**
+     * @brief Reallocate space for sparse matrix according to specified nnz
+     * @param nnz new number of nonzero entries
+     */
+    void reallocate(int nnz);
+    
+    /**
+     * @brief Reallocate space for sparse matrix to used space according to last entry in indexptrs
+     */
+    void realloc();
+    
 
     /**
      * @brief Access raw data
@@ -190,14 +202,28 @@ class SUNMatrixWrapper {
                   bool transpose) const;
 
     /**
-     * @brief Perform matrix matrix multiplication
-              C[:, :] += A * B
+     * @brief Perform matrix matrix multiplication A * B
               for sparse A, B, C
-     * @param C output matrix, may already contain values
+     * @param C output matrix, may not contain values but may be preallocated
      * @param B multiplication matrix
      */
     void sparse_multiply(SUNMatrixWrapper *C,
                          SUNMatrixWrapper *B) const;
+    
+    /**
+     * @brief x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and construct the pattern
+     * for C(:,icol)
+     * @param j column index
+     * @param beta scaling factor
+     * @param w temporary index workspace, this keeps track of the sparsity pattern in C
+     * @param x temporary data workspace, this keeps track of the data in C
+     * @param mark marker for w to indicate nonzero pattern
+     * @param C  output matrix
+     * @param nz number of nonzero
+     */
+    sunindextype scatter(const sunindextype j, const realtype beta,
+                         sunindextype *w, realtype *x, const sunindextype mark,
+                         SUNMatrixWrapper *C, sunindextype nz) const;
 
     /**
      * @brief Set to 0.0

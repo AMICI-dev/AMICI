@@ -106,7 +106,6 @@ class Model : public AbstractModel {
      * @param z2event mapping of event outputs to events
      * @param pythonGenerated flag indicating matlab or python wrapping
      * @param ndxdotdp_explicit number of nonzero elements dxdotdp_explicit
-     * @param ndxdotdp_implicit number of nonzero elements dxdotdp_implicit
      */
     Model(int nx_rdata, int nxtrue_rdata, int nx_solver, int nxtrue_solver,
           int nx_solver_reinit, int ny, int nytrue, int nz, int nztrue, int ne,
@@ -116,7 +115,7 @@ class Model : public AbstractModel {
           const std::vector<amici::realtype> &p, std::vector<amici::realtype> k,
           const std::vector<int> &plist, std::vector<amici::realtype> idlist,
           std::vector<int> z2event, bool pythonGenerated = false,
-          int ndxdotdp_explicit = 0, int ndxdotdp_implicit = 0);
+          int ndxdotdp_explicit = 0);
 
     /** destructor */
     ~Model() override = default;
@@ -1234,7 +1233,7 @@ class Model : public AbstractModel {
     bool pythonGenerated;
 
     /** number of nonzero entries in ndxdotdp_explicit */
-    int ndxdotdp_explicit{0};
+    int guess_ndxdotdp_explicit{0};
 
     /** number of nonzero entries in ndxdotdp_implicit */
     int ndxdotdp_implicit{0};

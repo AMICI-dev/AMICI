@@ -103,13 +103,13 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
              const std::vector<realtype> &p, std::vector<realtype> k,
              const std::vector<int> &plist, std::vector<realtype> idlist,
              std::vector<int> z2event, const bool pythonGenerated,
-             const int ndxdotdp_explicit, const int ndxdotdp_implicit)
+             const int ndxdotdp_implicit)
     : nx_rdata(nx_rdata), nxtrue_rdata(nxtrue_rdata), nx_solver(nx_solver),
       nxtrue_solver(nxtrue_solver), nx_solver_reinit(nx_solver_reinit), ny(ny),
       nytrue(nytrue), nz(nz), nztrue(nztrue), ne(ne), nw(nw), ndwdx(ndwdx),
       ndwdp(ndwdp), ndxdotdw(ndxdotdw), ndJydy(std::move(ndJydy)), nnz(nnz),
       nJ(nJ), ubw(ubw), lbw(lbw), pythonGenerated(pythonGenerated),
-      ndxdotdp_explicit(ndxdotdp_explicit),
+      guess_ndxdotdp_explicit(ndwdp + ndxdotdw),
       ndxdotdp_implicit(ndxdotdp_implicit), o2mode(o2mode),
       idlist(std::move(idlist)), J_(nx_solver, nx_solver, nnz, CSC_MAT),
       dxdotdw_(nx_solver, nw, ndxdotdw, CSC_MAT),
@@ -133,7 +133,7 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
     if (pythonGenerated) {
         dxdotdp_explicit =
             SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             ndxdotdp_explicit, CSC_MAT);
+                             guess_ndxdotdp_explicit, CSC_MAT);
         dxdotdp_implicit =
             SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
                              ndxdotdp_implicit, CSC_MAT);
@@ -159,7 +159,7 @@ bool operator==(const Model &a, const Model &b) {
 
     bool bool_dxdotdp = true;
     if (a.pythonGenerated && b.pythonGenerated)
-        bool_dxdotdp = (a.ndxdotdp_explicit == b.ndxdotdp_explicit) &&
+        bool_dxdotdp = (a.guess_ndxdotdp_explicit == b.guess_ndxdotdp_explicit) &&
             (a.ndxdotdp_implicit == b.ndxdotdp_implicit);
     if (a.pythonGenerated != b.pythonGenerated)
         bool_dxdotdp = false;

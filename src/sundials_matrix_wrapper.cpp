@@ -100,6 +100,29 @@ operator=(SUNMatrixWrapper &&other) {
     return *this;
 }
 
+void SUNMatrixWrapper::reallocate(int NNZ) {
+    if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
+        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
+                                    "CSR_MAT");
+    
+    if (SUNSparseMatrix_Reallocate(matrix_, NNZ) != AMICI_SUCCESS);
+        throw std::bad_alloc();
+    
+    if ((NNZ && !matrix_) | (NNZ != nonzeros()))
+        throw std::bad_alloc();
+}
+
+void SUNMatrixWrapper::realloc() {
+    if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
+        throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
+                                    "CSR_MAT");
+    if (SUNSparseMatrix_Realloc(matrix_) != AMICI_SUCCESS)
+        throw std::bad_alloc();
+        
+    if (nonzeros() && !matrix_)
+        throw std::bad_alloc();
+}
+
 realtype *SUNMatrixWrapper::data() const {
     return data_ptr_;
 }
@@ -349,37 +372,83 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
 
     if (C->rows() != nrows)
         throw std::invalid_argument("Dimension mismatch between number of rows "
-                                    "in A (" + std::to_string(nrows) + ") and "
-                                    "number of rows in C ("
+                                    "in A (" + std::to_string(nrows)
+                                    + ") and number of rows in C ("
                                     + std::to_string((int)C->rows()) + ")");
+    
+    if (C->columns() != B->columns())
+        throw std::invalid_argument("Dimension mismatch between number of cols "
+                                    "in B (" + std::to_string(B->columns())
+                                    + ") and  number of cols in C ("
+                                    + std::to_string((int)C->columns()) + ")");
 
     if (B->rows() != ncols)
-        throw std::invalid_argument("Dimension mismatch between number of rows "
+        throw std::invalid_argument("Dimension mismatch between number of cols "
                                     "in A (" + std::to_string(ncols)
-                                    + ") and number of cols in B ("
+                                    + ") and number of rows in B ("
                                     + std::to_string((int)B->rows()) + ")");
+    
+    if (ncols == 0 || nrows == 0 || B->columns() == 0)
+        return;
+    
 
-    /* Carry out actual multiplication */
-    sunindextype iC_data = 0;
-    for (sunindextype iC_col = 0; iC_col < C->columns(); ++iC_col) {
-        for(sunindextype iC_row = C->indexptrs_ptr_[iC_col];
-            iC_row < C->indexptrs_ptr_[iC_col + 1]; ++iC_row) {
-            // Current entry in C: (C.indexvals[iC_row], iC_col)
-            for(sunindextype iB_row = B->indexptrs_ptr_[iC_col];
-                iB_row < B->indexptrs_ptr_[iC_col + 1]; ++iB_row) {
-                // Loop over column iC_col in B
-                sunindextype iA_col = B->indexvals_ptr_[iB_row];
-                for (sunindextype iA_row = indexptrs_ptr_[iA_col];
-                     iA_row < indexptrs_ptr_[iA_col + 1]; ++iA_row)
-                    // loop over entries in column col_in_A
-                    // if two entries match together, carry out multiplication
-                    if (indexvals_ptr_[iA_row] == C->indexvals_ptr_[iC_row])
-                        C->data_ptr_[iC_data] +=
-                            data_ptr_[iA_row] * B->data_ptr_[iB_row];
-            }
-            iC_data++;
+    /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_multiply.c
+     * modified such that we don't need to use CSparse memory structure and can
+     * work with preallocated C. This should minimize number of necessary
+     * reallocations as we can assume that C doesn't change size too often and
+     * we kee
+     */
+    
+    sunindextype nz = 0; // this keeps track of the nonzero index in C
+    auto Bp = B->indexptrs();
+    auto Bx = B->data();
+    auto Bi = B->indexvals();
+    
+    sunindextype *Ci, j, p;
+    realtype *Cx;
+    auto Cp = C->indexptrs();
+    
+    auto w = std::vector<sunindextype>(nrows);
+    auto x = std::vector<realtype>(nrows);
+    
+    for (j = 0; j < nrows; j++)
+    {
+        if (nz + ncols > C->nonzeros())
+            C->reallocate(2*C->nonzeros()+ncols);
+        Cx = C->data(); Ci = C->indexvals(); /* Ci and Cx may be reallocated */
+        Cp[j] = nz;                          /* column j of C starts here */
+        for (p = Bp[j]; p < Bp[j+1]; p++) {
+            nz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nz);
         }
+        for (p = Cp[j]; p < nz; p++)
+            Cx[p] = x.at(Ci[p]); // copy data to C
+        Cp[nrows] = nz; // store index ptrs
     }
+    C->realloc();
+}
+
+sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
+                                       const realtype beta,
+                                       sunindextype *w, realtype *x,
+                                       const sunindextype mark,
+                                       SUNMatrixWrapper *C,
+                                       sunindextype nz) const {
+    /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_scatter.c */
+    
+    auto Ci = C->indexvals();
+    auto Ap = indexptrs();
+    auto Ai = indexvals();
+    for (sunindextype p = Ap[j]; p < Ap[j+1]; p++)
+    {
+        auto irow = Ai[p];                /* A(irow,j) is nonzero */
+        if (w[irow] < mark) {
+            w[irow] = mark;               /* irow is new entry in column j */
+            Ci[nz++] = j;                 /* add irow to pattern of C(:,j) */
+            x[irow] = beta * data()[j];   /* x(irow) = beta*A(irow,j) */
+        }
+        else x[irow] += beta * data()[j]; /* i exists in C(:,j) already */
+    }
+    return nz;
 }
 
 void SUNMatrixWrapper::zero()

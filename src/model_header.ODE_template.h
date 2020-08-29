@@ -64,8 +64,6 @@ TPL_DXDOTDW_ROWVALS_DEF
 TPL_DXDOTDP_EXPLICIT_DEF
 TPL_DXDOTDP_EXPLICIT_COLPTRS_DEF
 TPL_DXDOTDP_EXPLICIT_ROWVALS_DEF
-TPL_DXDOTDP_IMPLICIT_COLPTRS_DEF
-TPL_DXDOTDP_IMPLICIT_ROWVALS_DEF
 
 extern void dydx_TPL_MODELNAME(realtype *dydx, const realtype t,
                                const realtype *x, const realtype *p,
@@ -142,7 +140,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
               std::vector<int>{},                          // z2event
               true,                                        // pythonGenerated
               TPL_NDXDOTDP_EXPLICIT,                       // ndxdotdp_explicit
-              TPL_NDXDOTDP_IMPLICIT                        // ndxdotdp_implicit
           ) {}
 
     /**
@@ -482,10 +479,6 @@ class Model_TPL_MODELNAME : public amici::Model_ODE {
     TPL_DXDOTDP_EXPLICIT_COLPTRS_IMPL
 
     TPL_DXDOTDP_EXPLICIT_ROWVALS_IMPL
-
-    TPL_DXDOTDP_IMPLICIT_COLPTRS_IMPL
-
-    TPL_DXDOTDP_IMPLICIT_ROWVALS_IMPL
 
     /** model specific implementation of fdydx
      * @param dydx partial derivative of observables y w.r.t. model states x
