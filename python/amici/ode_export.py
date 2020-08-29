@@ -1190,6 +1190,15 @@ class ODEModel:
         """
         return len(self.sym('p'))
 
+    def nw(self) -> int:
+        """
+        Number of Expressions.
+
+        :return:
+            number of expression symbols
+        """
+        return len(self.sym('w'))
+
     def sym(self,
             name: str,
             stripped: Optional[bool] = False) -> sp.Matrix:
@@ -1644,7 +1653,8 @@ class ODEModel:
                 self._eqs[name] = self._eqs[name].transpose()
 
         if self._simplify:
-            self._eqs[name] = self._eqs[name].applyfunc(self._simplify)
+            dec = log_execution_time(f'simplifying {name}', logger)
+            self._eqs[name] = dec(self._eqs[name].applyfunc)(self._simplify)
 
     def sym_names(self) -> List[str]:
         """
@@ -1730,12 +1740,25 @@ class ODEModel:
         # of dwdw until we obtain a zero matrix.
         if eq == 'w' and var != 'w':  # avoid infinite loops
             dwdw = self.eq('dwdw')
-            # h(k) = dwdw^k*dwd{var} (k=0)
-            h = smart_multiply(dwdw, derivative)
-            while not smart_is_zero_matrix(h):
-                self._eqs[name] += h
-                # h(k+1) = dwdw^(k+1)*dwd{var} = dwdw*dwdw^(k)*dwd{var}
-                h = smart_multiply(dwdw, h)
+
+            # splitting this in two smart_multiply is empirically faster for
+            # certain models, I here assuming this is due to sizes of w and
+            # p, which was not empircally tested. If things seem overly
+            # slow, either variant here should be tested.
+            if self.nw() < self.np():
+                # h(k) = dwdw^k (k=1)
+                h = smart_multiply(dwdw, dwdw)
+                while not smart_is_zero_matrix(h):
+                    self._eqs[name] += smart_multiply(h, derivative)
+                    # h(k+1) = dwdw^(k+1) = dwdw*dwdw^(k)
+                    h = smart_multiply(dwdw, h)
+            else:
+                # h(k) = dwdw^k*dwd{var} (k=1)
+                h = smart_multiply(dwdw, derivative)
+                while not smart_is_zero_matrix(h):
+                    self._eqs[name] += h
+                    # h(k+1) = dwdw^(k+1)*dwd{var} = dwdw*dwdw^(k)*dwd{var}
+                    h = smart_multiply(dwdw, h)
 
     def _total_derivative(self, name: str, eq: str, chainvars: List[str],
                           var: str, dydx_name: str = None,
