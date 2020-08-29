@@ -1747,7 +1747,7 @@ class ODEModel:
             # slow, either variant here should be tested.
             if self.nw() < self.np():
                 # h(k) = dwdw^k (k=1)
-                h = smart_multiply(dwdw, dwdw)
+                h = dwdw
                 while not smart_is_zero_matrix(h):
                     self._eqs[name] += smart_multiply(h, derivative)
                     # h(k+1) = dwdw^(k+1) = dwdw*dwdw^(k)
