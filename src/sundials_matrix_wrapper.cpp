@@ -105,7 +105,7 @@ void SUNMatrixWrapper::reallocate(int NNZ) {
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
                                     "CSR_MAT");
     
-    if (SUNSparseMatrix_Reallocate(matrix_, NNZ) != AMICI_SUCCESS);
+    if (SUNSparseMatrix_Reallocate(matrix_, NNZ) != AMICI_SUCCESS)
         throw std::bad_alloc();
     
     if ((NNZ && !matrix_) | (NNZ != nonzeros()))

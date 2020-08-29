@@ -370,7 +370,7 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
         /* call multiplication */
         if (dxdotdp_explicit.nonzeros() > 0)
             dxdotdp_explicit.multiply(qBdot, xB, state_.plist, true);
-        if (ndxdotdp_implicit.nonzeros() > 0)
+        if (dxdotdp_implicit.nonzeros() > 0)
             dxdotdp_implicit.multiply(qBdot, xB, state_.plist, true);
         N_VScale(-1.0, qBdot, qBdot);
     } else {

@@ -100,7 +100,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
             N_VConst(0.0, sx.getNVector(ip));
 
             // copy explicit version
-            if (model_->ndxdotdp_explicit > 0) {
+            if (model_->dxdotdp_explicit.nonzeros() > 0) {
                 auto col = model_->dxdotdp_explicit.indexptrs();
                 auto row = model_->dxdotdp_explicit.indexvals();
                 auto data_ptr = model_->dxdotdp_explicit.data();
@@ -110,7 +110,7 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
             }
 
             // copy implicit version
-            if (model_->ndxdotdp_implicit > 0) {
+            if (model_->dxdotdp_implicit.nonzeros() > 0) {
                 auto col = model_->dxdotdp_implicit.indexptrs();
                 auto row = model_->dxdotdp_implicit.indexvals();
                 auto data_ptr = model_->dxdotdp_implicit.data();
