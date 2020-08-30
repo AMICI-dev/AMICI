@@ -125,6 +125,8 @@ extensions = [
     'recommonmark',
     'sphinx_autodoc_typehints',
     'hoverxref.extension',
+    'breathe',
+    'exhale',
 ]
 
 intersphinx_mapping = {
@@ -183,6 +185,36 @@ hoverxref_role_types = {
     'mod': 'tooltip',
     'class': 'tooltip',
 }
+
+# breathe settings
+breathe_projects = {
+    "AMICI": "./_doxyoutput/xml",
+}
+
+breathe_default_project = "AMICI"
+
+# exhale settings
+
+exhale_args = {
+    # These arguments are required
+    "containmentFolder": "./_exhale_cpp_api",
+    "rootFileName": "library_root.rst",
+    "rootFileTitle": "AMICI C++ API",
+    "doxygenStripFromPath": "..",
+    # Suggested optional arguments
+    "createTreeView": True,
+    # TIP: if using the sphinx-bootstrap-theme, you need
+    # "treeViewIsBootstrap": True,
+    "exhaleExecutesDoxygen": True,
+    "exhaleDoxygenStdin": "\n".join([
+        "INPUT = ../include",
+        "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
+    ]),
+    "afterTitleDescription":
+        "AMICI C++ library functions",
+    "verboseBuild": False,
+}
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
