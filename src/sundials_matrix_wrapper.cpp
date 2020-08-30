@@ -441,6 +441,11 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
         Cp[j] = nz;                          /* column j of C starts here */
         if ((Bp[j+1] > Bp[j]) && (nz + m > C->nonzero_space()))
         {
+            /*
+             * if memory usage becomes a concern, remove the factor two here,
+             * as it effectively trades memory efficiency against less
+             * reallocations
+             */
             C->reallocate(2*C->nonzero_space() + m);
             Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
         }
@@ -452,7 +457,10 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
             Cx[p] = x.at(Ci[p]); // copy data to C
     }
     Cp[n] = nz;
-    C->realloc();
+    /*
+     * do not reallocate here since we rather keep a matrix that is a bit
+     * bigger than repeatedly resizing this matrix.
+     */
 }
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
