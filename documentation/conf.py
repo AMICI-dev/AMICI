@@ -13,6 +13,15 @@ import subprocess
 import mock
 
 from sphinx.transforms.post_transforms import ReferencesResolver
+import exhale_multiproject_monkeypatch
+
+exhale_multiproject_monkeypatch  # to avoid removal of unused import
+
+
+def install_mtocpp():
+    """Install mtocpp (Matlab doxygen filter)"""
+    cmd = os.path.join('scripts', 'downloadAndBuildMtocpp.sh')
+    subprocess.run(cmd, shell=True, check=True)
 
 
 def install_amici_deps_rtd():
@@ -188,18 +197,24 @@ hoverxref_role_types = {
 
 # breathe settings
 breathe_projects = {
-    "AMICI": "./_doxyoutput/xml",
+    "AMICI_Matlab": "./_doxyoutput_amici_matlab/xml",
+    "AMICI_CPP": "./_doxyoutput_amici_cpp/xml",
 }
 
-breathe_default_project = "AMICI"
+breathe_default_project = "AMICI_CPP"
+
+#breathe_projects_source = {
+#    "AMICI_CPP": "../",
+#    "AMICI_Matlab": "../",
+#}
 
 # exhale settings
 
 exhale_args = {
     # These arguments are required
-    "containmentFolder": "./_exhale_cpp_api",
+    #"containmentFolder": "./_exhale_cpp_api",
     "rootFileName": "library_root.rst",
-    "rootFileTitle": "AMICI C++ API",
+    #"rootFileTitle": "AMICI C++ API",
     "doxygenStripFromPath": "..",
     # Suggested optional arguments
     "createTreeView": True,
@@ -207,14 +222,38 @@ exhale_args = {
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
     "exhaleDoxygenStdin": "\n".join([
-        "INPUT = ../include",
+        # "INPUT = ../include",
         "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
     ]),
     "afterTitleDescription":
         "AMICI C++ library functions",
-    "verboseBuild": False,
+    "verboseBuild": True,
 }
 
+mtocpp_filter = os.path.join(amici_dir, 'matlab', 'mtoc',
+                             'config', 'mtocpp_filter.sh')
+exhale_projects_args = {
+    "AMICI_CPP": {
+        "exhaleDoxygenStdin":   "INPUT = ../include",
+        "containmentFolder":    "_exhale_cpp_api",
+        "rootFileTitle":        "AMICI C++ API",
+    },
+    # Third Party Project Includes
+    "AMICI_Matlab": {
+        "exhaleDoxygenStdin":   "\n".join([
+            "INPUT = ../matlab",
+            "FILTER_PATTERNS = "
+            f"*.m={mtocpp_filter}",
+            "EXCLUDE += ../matlab/examples",
+            "EXCLUDE += ../matlab/mtoc",
+            "EXCLUDE += ../matlab/SBMLimporter",
+            "EXCLUDE += ../matlab/auxiliary",
+
+        ]),
+        "containmentFolder":    "_exhale_matlab_api",
+        "rootFileTitle":        "AMICI Matlab API",
+    },
+}
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

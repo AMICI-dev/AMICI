@@ -961,7 +961,7 @@ EXCLUDE_PATTERNS       = "_SourceDir_/models/*" \
                          "_SourceDir_/matlab/examples/*" \
                          "_SourceDir_/matlab/mtoc/*" \
                          "_SourceDir_/matlab/auxiliary/*" \
-                         "_SourceDir_/matlab/SBMLImporter/*" \
+                         "_SourceDir_/matlab/SBMLimporter/*" \
                          "_SourceDir_/matlab/tests/*" \
                          "_SourceDir_/python/tests/*" \
                          "_SourceDir_/python/sdist/*" \

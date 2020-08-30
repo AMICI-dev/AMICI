@@ -49,6 +49,7 @@ Welcome to AMICI's documentation!
 
    python_modules
    _exhale_cpp_api/library_root
+   _exhale_matlab_api/library_root
 
 
 .. toctree::

@@ -15,7 +15,9 @@ images/*
 stylesheets/*
 documentation/_build/*
 documentation/_exhale_cpp_api/*
-documentation/_doxyoutput/*
+documentation/_exhale_matlab_api/*
+documentation/_doxyoutput_amici_cpp/*
+documentation/_doxyoutput_amici_matlab/*
 sed-ml/*
 
 models/*

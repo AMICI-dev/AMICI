@@ -3,9 +3,9 @@
 % @brief definition of amioption class
 %
 classdef amioption < matlab.mixin.CustomDisplay
-    %AMIOPTION provides an option container to pass simulation parameters to the
-    %simulation routine.
-    
+    % AMIOPTION provides an option container to pass simulation parameters to the
+    % simulation routine.
+
     properties
         % absolute integration tolerace
         atol = 1e-16;
@@ -72,10 +72,10 @@ classdef amioption < matlab.mixin.CustomDisplay
         % Mode for for computing sensitivities ({0: Newton}, 1: Simulation)
         steadyStateSensitivityMode = 0;
     end
-    
+
     methods
         function obj = amioption(varargin)
-            %amioptions Construct a new amioptions object
+            % amioptions Construct a new amioptions object
             %   OPTS = amioption() creates a set of options with each option set to its
             %   default value.
             %
@@ -258,18 +258,21 @@ classdef amioption < matlab.mixin.CustomDisplay
             this.newton_preeq = value;
         end
     end
-end
 
-function pscaleInt = getIntegerPScale(pscaleString)
-    switch (pscaleString)
-        case 'lin'
-            pscaleInt = 0;
-        case 'log'
-            pscaleInt = 1;
-        case 'log10'
-            pscaleInt = 2;
-        otherwise
-            assert(0, ...
-                'No valid parametrisation chosen! Valid string options are "log", "log10" and "lin".')
+    methods(Static)
+        function pscaleInt = getIntegerPScale(pscaleString)
+            switch (pscaleString)
+                case 'lin'
+                    pscaleInt = 0;
+                case 'log'
+                    pscaleInt = 1;
+                case 'log10'
+                    pscaleInt = 2;
+                otherwise
+                    assert(0, ...
+                        'No valid parametrisation chosen! Valid string options are "log", "log10" and "lin".')
+            end
+        end
     end
+
 end
