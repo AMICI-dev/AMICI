@@ -487,7 +487,7 @@ class Model : public AbstractModel {
      * @brief Report whether the model has parameter names set.
      *
      * @return Boolean indicating whether parameter names were set. Also returns
-     * `true`if the number of corresponding variables is just zero.
+     * `true` if the number of corresponding variables is just zero.
      */
     virtual bool hasParameterNames() const;
 
@@ -1955,7 +1955,7 @@ class Model : public AbstractModel {
     /** starting time */
     realtype tstart_ {0.0};
 
-    /** flag indicating whether steadystate sensivities are to be computed
+    /** flag indicating whether steadystate sensitivities are to be computed
      *  via FSA when steadyStateSimulation is used
      */
     SteadyStateSensitivityMode steadystate_sensitivity_mode_ {SteadyStateSensitivityMode::newtonOnly};
