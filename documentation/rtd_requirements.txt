@@ -14,7 +14,7 @@ prompt-toolkit<=3.0.0
 ipython>=7.17.0
 breathe>=4.20.0
 #exhale>=0.2.3
-git+https://github.com/dweindl/exhale@b50c6fe8e80e76edb60bb01afb134a272cdfa1d3#egg=exhale
+git+https://github.com/dweindl/exhale@ea77a313777c1382a7830ce9ee6c405ce47f5f3b#egg=exhale
 # Newer versions cause trouble with including notebooks:
 # sphinx.errors.SphinxParallelError: ImportError: cannot import name 'Application' from partially initialized module 'prompt_toolkit.application.application' (most likely due to a circular import)
 # https://github.com/svenevs/exhale/issues/27 https://github.com/mithro/sphinx-contrib-mithro/tree/master/sphinx-contrib-exhale-multiproject
