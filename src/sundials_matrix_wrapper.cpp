@@ -5,7 +5,7 @@
 #include <new> // bad_alloc
 #include <utility>
 #include <stdexcept> // invalid_argument and domain_error
-#include <gsl/gsl-lite.hpp>
+#include <assert.h>
 
 namespace amici {
 
