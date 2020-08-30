@@ -110,6 +110,7 @@ void SUNMatrixWrapper::reallocate(int NNZ) {
     
     if ((NNZ && !matrix_) | (NNZ != nonzeros()))
         throw std::bad_alloc();
+    update_ptrs();
 }
 
 void SUNMatrixWrapper::realloc() {
@@ -121,6 +122,7 @@ void SUNMatrixWrapper::realloc() {
         
     if (nonzeros() && !matrix_)
         throw std::bad_alloc();
+    update_ptrs();
 }
 
 realtype *SUNMatrixWrapper::data() const {
@@ -395,8 +397,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_multiply.c
      * modified such that we don't need to use CSparse memory structure and can
      * work with preallocated C. This should minimize number of necessary
-     * reallocations as we can assume that C doesn't change size too often and
-     * we kee
+     * reallocations as we can assume that C doesn't change size too often.
      */
     
     sunindextype nz = 0; // this keeps track of the nonzero index in C
@@ -404,25 +405,28 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     auto Bx = B->data();
     auto Bi = B->indexvals();
     
-    sunindextype *Ci, j, p;
+    sunindextype *Ci, *Cp, j, p;
     realtype *Cx;
-    auto Cp = C->indexptrs();
     
-    auto w = std::vector<sunindextype>(nrows);
-    auto x = std::vector<realtype>(nrows);
+    sunindextype m = nrows;
+    sunindextype n = B->columns();
     
-    for (j = 0; j < nrows; j++)
+    auto w = std::vector<sunindextype>(m);
+    auto x = std::vector<realtype>(m);
+    
+    for (j = 0; j < n; j++)
     {
-        if (nz + ncols > C->nonzeros())
-            C->reallocate(2*C->nonzeros()+ncols);
-        Cx = C->data(); Ci = C->indexvals(); /* Ci and Cx may be reallocated */
+        if (nz + m > C->nonzeros())
+            C->reallocate(2*C->nonzeros()+m);
+        /* update in case of reallocation */
+        Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
         Cp[j] = nz;                          /* column j of C starts here */
         for (p = Bp[j]; p < Bp[j+1]; p++) {
             nz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nz);
         }
         for (p = Cp[j]; p < nz; p++)
             Cx[p] = x.at(Ci[p]); // copy data to C
-        Cp[nrows] = nz; // store index ptrs
+        Cp[n] = nz; // store index ptrs
     }
     C->realloc();
 }
@@ -433,20 +437,28 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
                                        const sunindextype mark,
                                        SUNMatrixWrapper *C,
                                        sunindextype nz) const {
+    if (sparsetype() != CSC_MAT)
+        throw std::invalid_argument("Matrix A not of type CSC_MAT");
+    
+    if (C->sparsetype() != CSC_MAT)
+        throw std::invalid_argument("Matrix C not of type CSC_MAT");
+    
+    
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_scatter.c */
     
     auto Ci = C->indexvals();
     auto Ap = indexptrs();
     auto Ai = indexvals();
+    auto Ax = data();
     for (sunindextype p = Ap[j]; p < Ap[j+1]; p++)
     {
-        auto irow = Ai[p];                /* A(irow,j) is nonzero */
-        if (w[irow] < mark) {
-            w[irow] = mark;               /* irow is new entry in column j */
-            Ci[nz++] = j;                 /* add irow to pattern of C(:,j) */
-            x[irow] = beta * data()[j];   /* x(irow) = beta*A(irow,j) */
+        auto i = Ai[p];                   /* A(i,j) is nonzero */
+        if (w[i] < mark) {
+            w[i] = mark;                  /* i is new entry in column j */
+            Ci[nz++] = i;                 /* add i to pattern of C(:,j) */
+            x[i] = beta * Ax[j];          /* x(i) = beta*A(i,j) */
         }
-        else x[irow] += beta * data()[j]; /* i exists in C(:,j) already */
+        else x[i] += beta * Ax[j];        /* i exists in C(:,j) already */
     }
     return nz;
 }

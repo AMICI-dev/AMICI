@@ -110,6 +110,9 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
     if (pythonGenerated) {
         // python generated
         if (dxdotdp_explicit.nonzeros() > 0) {
+            dxdotdp.reset();
+            fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
+            fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
             fdxdotdp_explicit(
                 dxdotdp_explicit.data(), t, N_VGetArrayPointer(x_pos),
                 state_.unscaledParameters.data(), state_.fixedParameters.data(),

@@ -1232,12 +1232,6 @@ class Model : public AbstractModel {
     /** flag indicating Matlab or python based model generation */
     bool pythonGenerated;
 
-    /** number of nonzero entries in ndxdotdp_explicit */
-    int guess_ndxdotdp_explicit{0};
-
-    /** number of nonzero entries in ndxdotdp_implicit */
-    int ndxdotdp_implicit{0};
-
     /**
      * flag indicating whether for sensi == AMICI_SENSI_ORDER_SECOND
      * directional or full second order derivative will be computed
@@ -1249,7 +1243,7 @@ class Model : public AbstractModel {
 
     /**
      * temporary storage of dxdotdp data across functions, Python only
-     * (dimension: nplist x nx_solver, nnz: ndxdotdp_explicit, type CSC_MAT)
+     * (dimension: nplist x nx_solver, nnz: dynamic, type CSC_MAT)
      */
     mutable SUNMatrixWrapper dxdotdp_explicit;
 
