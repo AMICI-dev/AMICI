@@ -405,8 +405,6 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     auto Bi = B->indexvals();
     auto Bp = B->indexptrs();
     
-    
-    
     sunindextype j, p;
     auto Cx = C->data();
     auto Ci = C->indexvals();
@@ -420,8 +418,6 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     
     for (j = 0; j < n; j++)
     {
-        /* update in case of reallocation */
-        
         Cp[j] = nz;                          /* column j of C starts here */
         for (p = Bp[j]; p < Bp[j+1]; p++) {
             nz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nz);
