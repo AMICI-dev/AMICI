@@ -108,10 +108,10 @@ void SUNMatrixWrapper::reallocate(int NNZ) {
     
     if (SUNSparseMatrix_Reallocate(matrix_, NNZ) != AMICI_SUCCESS)
         throw std::bad_alloc();
-    
-    if ((NNZ && !matrix_) | (NNZ != nonzero_space()))
-        throw std::bad_alloc();
+
     update_ptrs();
+    assert(NNZ ^ !matrix_);
+    assert(NNZ == capacity());
 }
 
 void SUNMatrixWrapper::realloc() {
@@ -120,13 +120,10 @@ void SUNMatrixWrapper::realloc() {
                                     "CSR_MAT");
     if (SUNSparseMatrix_Realloc(matrix_) != AMICI_SUCCESS)
         throw std::bad_alloc();
-        
-    if (nonzero_space() && !matrix_)
-        throw std::bad_alloc();
     
-    if (nonzero_space() != nonzeros())
-        throw std::bad_alloc();
     update_ptrs();
+    assert(capacity() ^ !matrix_);
+    assert(capacity() == num_nonzeros());
 }
 
 realtype *SUNMatrixWrapper::data() const {
@@ -171,7 +168,7 @@ sunindextype SUNMatrixWrapper::columns() const {
     }
 }
 
-sunindextype SUNMatrixWrapper::nonzero_space() const {
+sunindextype SUNMatrixWrapper::capacity() const {
     if (!matrix_)
         return 0;
 
@@ -184,7 +181,7 @@ sunindextype SUNMatrixWrapper::nonzero_space() const {
     }
 }
 
-sunindextype SUNMatrixWrapper::nonzeros() const {
+sunindextype SUNMatrixWrapper::num_nonzeros() const {
     if (!matrix_)
         return 0;
     
@@ -218,7 +215,7 @@ void SUNMatrixWrapper::reset() {
 
 void SUNMatrixWrapper::scale(realtype a) {
     if (matrix_) {
-        int nonzeros_ = static_cast<int>(nonzeros());
+        int nonzeros_ = static_cast<int>(num_nonzeros());
         for (int i = 0; i < nonzeros_; ++i)
             data_ptr_[i] *= a;
     }
@@ -410,7 +407,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     if (ncols == 0 || nrows == 0 || B->columns() == 0)
         return; // matrix will also have zero size
     
-    if (nonzeros() == 0 || B->nonzeros() == 0)
+    if (num_nonzeros() == 0 || B->num_nonzeros() == 0)
         return; // nothing to multiply
     
 
@@ -420,7 +417,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
      * reallocations as we can assume that C doesn't change size.
      */
     
-    sunindextype nz = 0; // this keeps track of the nonzero index in C
+    sunindextype nnz = 0; // this keeps track of the nonzero index in C
     auto Bx = B->data();
     auto Bi = B->indexvals();
     auto Bp = B->indexptrs();
@@ -438,25 +435,29 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     
     for (j = 0; j < n; j++)
     {
-        Cp[j] = nz;                          /* column j of C starts here */
-        if ((Bp[j+1] > Bp[j]) && (nz + m > C->nonzero_space()))
+        Cp[j] = nnz;                          /* column j of C starts here */
+        if ((Bp[j+1] > Bp[j]) && (nnz + m > C->capacity()))
         {
             /*
              * if memory usage becomes a concern, remove the factor two here,
              * as it effectively trades memory efficiency against less
              * reallocations
              */
-            C->reallocate(2*C->nonzero_space() + m);
-            Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
+            C->reallocate(2*C->capacity() + m);
+            // all pointers will change after reallocation
+            Cx = C->data();
+            Ci = C->indexvals();
+            Cp = C->indexptrs();
         }
         for (p = Bp[j]; p < Bp[j+1]; p++)
         {
-            nz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nz);
+            nnz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nnz);
+            assert(nnz < m);
         }
-        for (p = Cp[j]; p < nz; p++)
-            Cx[p] = x.at(Ci[p]); // copy data to C
+        for (p = Cp[j]; p < nnz; p++)
+            Cx[p] = x[Ci[p]]; // copy data to C
     }
-    Cp[n] = nz;
+    Cp[n] = nnz;
     /*
      * do not reallocate here since we rather keep a matrix that is a bit
      * bigger than repeatedly resizing this matrix.
@@ -468,7 +469,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
                                        sunindextype *w, realtype *x,
                                        const sunindextype mark,
                                        SUNMatrixWrapper *C,
-                                       sunindextype nz) const {
+                                       sunindextype nnz) const {
     if (sparsetype() != CSC_MAT)
         throw std::invalid_argument("Matrix A not of type CSC_MAT");
     
@@ -486,12 +487,12 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
         auto i = Ai[p];                   /* A(i,j) is nonzero */
         if (w[i] < mark) {
             w[i] = mark;                  /* i is new entry in column j */
-            Ci[nz++] = i;                 /* add i to pattern of C(:,j) */
+            Ci[nnz++] = i;                 /* add i to pattern of C(:,j) */
             x[i] = beta * Ax[p];          /* x(i) = beta*A(i,j) */
         }
         else x[i] += beta * Ax[p];        /* i exists in C(:,j) already */
     }
-    return nz;
+    return nnz;
 }
 
 void SUNMatrixWrapper::zero()

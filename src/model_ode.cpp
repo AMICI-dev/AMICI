@@ -109,7 +109,7 @@ void Model_ODE::fdxdotdp(const realtype t, const N_Vector x) {
 
     if (pythonGenerated) {
         // python generated
-        if (dxdotdp_explicit.nonzero_space()) {
+        if (dxdotdp_explicit.capacity()) {
             dxdotdp_explicit.reset();
             fdxdotdp_explicit_colptrs(dxdotdp_explicit.indexptrs());
             fdxdotdp_explicit_rowvals(dxdotdp_explicit.indexvals());
@@ -372,9 +372,9 @@ void Model_ODE::fqBdot(realtype t, N_Vector x, N_Vector xB, N_Vector qBdot) {
 
     if (pythonGenerated) {
         /* call multiplication */
-        if (dxdotdp_explicit.nonzeros() > 0)
+        if (dxdotdp_explicit.num_nonzeros() > 0)
             dxdotdp_explicit.multiply(qBdot, xB, state_.plist, true);
-        if (dxdotdp_implicit.nonzeros() > 0)
+        if (dxdotdp_implicit.num_nonzeros() > 0)
             dxdotdp_implicit.multiply(qBdot, xB, state_.plist, true);
         N_VScale(-1.0, qBdot, qBdot);
     } else {
@@ -450,7 +450,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
 
         // copy explicit version
-        if (dxdotdp_explicit.nonzeros() > 0) {
+        if (dxdotdp_explicit.num_nonzeros() > 0) {
             auto col_exp = dxdotdp_explicit.indexptrs();
             auto row_exp = dxdotdp_explicit.indexvals();
             auto data_exp_ptr = dxdotdp_explicit.data();
@@ -459,7 +459,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         }
 
         // copy implicit version
-        if (dxdotdp_implicit.nonzeros() > 0) {
+        if (dxdotdp_implicit.num_nonzeros() > 0) {
             auto col_imp = dxdotdp_implicit.indexptrs();
             auto row_imp = dxdotdp_implicit.indexvals();
             auto data_imp_ptr = dxdotdp_implicit.data();
