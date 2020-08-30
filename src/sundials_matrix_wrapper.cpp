@@ -397,7 +397,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_multiply.c
      * modified such that we don't need to use CSparse memory structure and can
      * work with preallocated C. This should minimize number of necessary
-     * reallocations as we can assume that C doesn't change size too often.
+     * reallocations as we can assume that C doesn't change size.
      */
     
     sunindextype nz = 0; // this keeps track of the nonzero index in C
