@@ -401,12 +401,16 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
      */
     
     sunindextype nz = 0; // this keeps track of the nonzero index in C
-    auto Bp = B->indexptrs();
     auto Bx = B->data();
     auto Bi = B->indexvals();
+    auto Bp = B->indexptrs();
     
-    sunindextype *Ci, *Cp, j, p;
-    realtype *Cx;
+    
+    
+    sunindextype j, p;
+    auto Cx = C->data();
+    auto Ci = C->indexvals();
+    auto Cp = C->indexptrs();
     
     sunindextype m = nrows;
     sunindextype n = B->columns();
@@ -416,18 +420,22 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     
     for (j = 0; j < n; j++)
     {
-        if (nz + m > C->nonzeros())
-            C->reallocate(2*C->nonzeros()+m);
         /* update in case of reallocation */
-        Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
+        
         Cp[j] = nz;                          /* column j of C starts here */
         for (p = Bp[j]; p < Bp[j+1]; p++) {
             nz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nz);
+            if (!Cx) { // scatter reallocated
+                Cx = C->data();
+                Ci = C->indexvals();
+                Cp = C->indexptrs();
+            }
         }
         for (p = Cp[j]; p < nz; p++)
             Cx[p] = x.at(Ci[p]); // copy data to C
-        Cp[n] = nz; // store index ptrs
     }
+    Cp[n] = nz;
+    C->realloc();
 }
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
@@ -453,6 +461,11 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     {
         auto i = Ai[p];                   /* A(i,j) is nonzero */
         if (w[i] < mark) {
+            if (nz + 1 > C->nonzeros())
+            {
+                C->reallocate(2*C->nonzeros()+1);
+                Ci = C->indexvals();
+            }
             w[i] = mark;                  /* i is new entry in column j */
             Ci[nz++] = i;                 /* add i to pattern of C(:,j) */
             x[i] = beta * Ax[j];          /* x(i) = beta*A(i,j) */
