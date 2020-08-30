@@ -108,7 +108,7 @@ void SUNMatrixWrapper::reallocate(int NNZ) {
     if (SUNSparseMatrix_Reallocate(matrix_, NNZ) != AMICI_SUCCESS)
         throw std::bad_alloc();
     
-    if ((NNZ && !matrix_) | (NNZ != nonzeros()))
+    if ((NNZ && !matrix_) | (NNZ != nonzero_space()))
         throw std::bad_alloc();
     update_ptrs();
 }
@@ -120,7 +120,7 @@ void SUNMatrixWrapper::realloc() {
     if (SUNSparseMatrix_Realloc(matrix_) != AMICI_SUCCESS)
         throw std::bad_alloc();
         
-    if (nonzeros() && !matrix_)
+    if (nonzero_space() && !matrix_)
         throw std::bad_alloc();
     update_ptrs();
 }
@@ -167,13 +167,26 @@ sunindextype SUNMatrixWrapper::columns() const {
     }
 }
 
-sunindextype SUNMatrixWrapper::nonzeros() const {
+sunindextype SUNMatrixWrapper::nonzero_space() const {
     if (!matrix_)
         return 0;
 
     switch (SUNMatGetID(matrix_)) {
     case SUNMATRIX_SPARSE:
         return SM_NNZ_S(matrix_);
+    default:
+        throw std::domain_error("Non-zeros property only available for "
+                                "sparse matrices");
+    }
+}
+
+sunindextype SUNMatrixWrapper::nonzeros() const {
+    if (!matrix_)
+        return 0;
+
+    switch (SUNMatGetID(matrix_)) {
+    case SUNMATRIX_SPARSE:
+        return SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)];
     default:
         throw std::domain_error("Non-zeros property only available for "
                                 "sparse matrices");
@@ -425,10 +438,10 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
         // CSparse reallocation happend when it _might_ have been necessary.
         // We are a little bit more conservative here as we allow more
         // reallocations on the first call but try to avoid them on later calls.
-        sunindextype max_nz_diff = indexptrs()[j+1] - indexptrs()[j];
-        if (nz + max_nz_diff > C->nonzeros())
+
+        if ((Bp[j+1] > Bp[j]) && (nz + m > C->nonzero_space()))
         {
-            C->reallocate(2*C->nonzeros() + max_nz_diff);
+            C->reallocate(2*C->nonzero_space() + m);
             Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
         }
         for (p = Bp[j]; p < Bp[j+1]; p++) {
@@ -438,7 +451,6 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
             Cx[p] = x.at(Ci[p]); // copy data to C
     }
     Cp[n] = nz;
-    C->realloc();
 }
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
