@@ -75,10 +75,11 @@ class CVodeSolver : public Solver {
 
     const Model *getModel() const override;
 
+#if !defined(EXHALE_DOXYGEN_SHOULD_SKIP_THIS)
     using Solver::setLinearSolver;
 
     using Solver::setLinearSolverB;
-
+#endif
     void setLinearSolver() const override;
 
     void setLinearSolverB(int which) const override;
