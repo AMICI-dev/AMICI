@@ -428,7 +428,6 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
             Cx[p] = x.at(Ci[p]); // copy data to C
         Cp[n] = nz; // store index ptrs
     }
-    C->realloc();
 }
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
