@@ -422,13 +422,17 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     for (j = 0; j < n; j++)
     {
         Cp[j] = nz;                          /* column j of C starts here */
-        // CSparse reallocation happend when it _might_ have been necessary,
-        // which could happe in every call to mulitply_sparse, even though
-        // allocated space was actually sufficient.
+        // CSparse reallocation happend when it _might_ have been necessary.
+        // We are a little bit more conservative here as we allow more
+        // reallocations on the first call but try to avoid them on later calls.
+        sunindextype max_nz_diff = indexptrs()[j+1] - indexptrs()[j];
+        if (nz + max_nz_diff > C->nonzeros())
+        {
+            C->reallocate(2*C->nonzeros() + max_nz_diff);
+            Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
+        }
         for (p = Bp[j]; p < Bp[j+1]; p++) {
             nz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nz);
-            // in case of reallocation of C in scatter
-            Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
         }
         for (p = Cp[j]; p < nz; p++)
             Cx[p] = x.at(Ci[p]); // copy data to C
@@ -459,13 +463,6 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     {
         auto i = Ai[p];                   /* A(i,j) is nonzero */
         if (w[i] < mark) {
-            if (nz + 1 > C->nonzeros())
-            {
-                // move reallocation here since we can explicitely only call
-                // this when space in C is actually not sufficient.
-                C->reallocate(2*C->nonzeros()+1);
-                Ci = C->indexvals();
-            }
             w[i] = mark;                  /* i is new entry in column j */
             Ci[nz++] = i;                 /* add i to pattern of C(:,j) */
             x[i] = beta * Ax[p];          /* x(i) = beta*A(i,j) */
