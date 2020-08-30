@@ -419,13 +419,13 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     for (j = 0; j < n; j++)
     {
         Cp[j] = nz;                          /* column j of C starts here */
+        // CSparse reallocation happend when it _might_ have been necessary,
+        // which could happe in every call to mulitply_sparse, even though
+        // allocated space was actually sufficient.
         for (p = Bp[j]; p < Bp[j+1]; p++) {
             nz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nz);
-            if (!Cx) { // scatter reallocated
-                Cx = C->data();
-                Ci = C->indexvals();
-                Cp = C->indexptrs();
-            }
+            // in case of reallocation of C in scatter
+            Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
         }
         for (p = Cp[j]; p < nz; p++)
             Cx[p] = x.at(Ci[p]); // copy data to C
@@ -446,7 +446,6 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     if (C->sparsetype() != CSC_MAT)
         throw std::invalid_argument("Matrix C not of type CSC_MAT");
     
-    
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_scatter.c */
     
     auto Ci = C->indexvals();
@@ -459,6 +458,8 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
         if (w[i] < mark) {
             if (nz + 1 > C->nonzeros())
             {
+                // move reallocation here since we can explicitely only call
+                // this when space in C is actually not sufficient.
                 C->reallocate(2*C->nonzeros()+1);
                 Ci = C->indexvals();
             }
