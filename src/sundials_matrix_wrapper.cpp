@@ -391,7 +391,10 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
                                     + std::to_string((int)B->rows()) + ")");
     
     if (ncols == 0 || nrows == 0 || B->columns() == 0)
-        return;
+        return; // matrix will also have zero size
+    
+    if (nonzeros() == 0 || B->nonzeros() == 0)
+        return; //  nothing to multiply
     
 
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_multiply.c
