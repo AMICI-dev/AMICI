@@ -136,8 +136,6 @@ void serialize(Archive &ar, amici::Model &m, const unsigned int /*version*/) {
     ar &m.tstart_;
     ar &m.state_is_non_negative_;
     ar &m.pythonGenerated;
-    ar &m.ndxdotdp_explicit;
-    ar &m.ndxdotdp_implicit;
 }
 
 /**

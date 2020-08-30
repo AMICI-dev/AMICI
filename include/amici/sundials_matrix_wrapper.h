@@ -219,7 +219,8 @@ class SUNMatrixWrapper {
      * @param x temporary data workspace, this keeps track of the data in C
      * @param mark marker for w to indicate nonzero pattern
      * @param C  output matrix
-     * @param nz number of nonzero
+     * @param nz number of nonzeros
+     * @return updated number of nonzeros
      */
     sunindextype scatter(const sunindextype j, const realtype beta,
                          sunindextype *w, realtype *x, const sunindextype mark,
