@@ -194,6 +194,7 @@ hoverxref_role_types = {
     'obj': 'tooltip',
     'func': 'tooltip',
     'mod': 'tooltip',
+    'meth': 'tooltip',
     'class': 'tooltip',
 }
 
