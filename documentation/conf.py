@@ -190,6 +190,8 @@ hoverxref_domains = ['py']
 hoverxref_role_types = {
     'hoverxref': 'tooltip',
     'ref': 'tooltip',
+    'term': 'tooltip',
+    'obj': 'tooltip',
     'func': 'tooltip',
     'mod': 'tooltip',
     'class': 'tooltip',
