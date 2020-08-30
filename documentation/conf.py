@@ -250,7 +250,9 @@ exhale_projects_args = {
             "EXCLUDE += ../matlab/mtoc",
             "EXCLUDE += ../matlab/SBMLimporter",
             "EXCLUDE += ../matlab/auxiliary",
-
+            "EXCLUDE += ../matlab/tests",
+            "EXCLUDE += ../matlab/@amimodel",
+            "EXCLUDE += ../matlab/@amifun",
         ]),
         "containmentFolder":    "_exhale_matlab_api",
         "rootFileTitle":        "AMICI Matlab API",
