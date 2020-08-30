@@ -5,6 +5,7 @@
 #include <new> // bad_alloc
 #include <utility>
 #include <stdexcept> // invalid_argument and domain_error
+#include <gsl/gsl-lite.hpp>
 
 namespace amici {
 
@@ -122,6 +123,9 @@ void SUNMatrixWrapper::realloc() {
         
     if (nonzero_space() && !matrix_)
         throw std::bad_alloc();
+    
+    if (nonzero_space() != nonzeros())
+        throw std::bad_alloc();
     update_ptrs();
 }
 
@@ -183,7 +187,7 @@ sunindextype SUNMatrixWrapper::nonzero_space() const {
 sunindextype SUNMatrixWrapper::nonzeros() const {
     if (!matrix_)
         return 0;
-
+    
     switch (SUNMatGetID(matrix_)) {
     case SUNMATRIX_SPARSE:
         return SM_INDEXPTRS_S(matrix_)[SM_NP_S(matrix_)];
@@ -407,7 +411,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
         return; // matrix will also have zero size
     
     if (nonzeros() == 0 || B->nonzeros() == 0)
-        return; //  nothing to multiply
+        return; // nothing to multiply
     
 
     /* see https://github.com/DrTimothyAldenDavis/SuiteSparse/blob/master/CSparse/Source/cs_multiply.c
@@ -435,22 +439,20 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     for (j = 0; j < n; j++)
     {
         Cp[j] = nz;                          /* column j of C starts here */
-        // CSparse reallocation happend when it _might_ have been necessary.
-        // We are a little bit more conservative here as we allow more
-        // reallocations on the first call but try to avoid them on later calls.
-
         if ((Bp[j+1] > Bp[j]) && (nz + m > C->nonzero_space()))
         {
             C->reallocate(2*C->nonzero_space() + m);
             Cx = C->data(); Ci = C->indexvals(); Cp = C->indexptrs();
         }
-        for (p = Bp[j]; p < Bp[j+1]; p++) {
+        for (p = Bp[j]; p < Bp[j+1]; p++)
+        {
             nz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nz);
         }
         for (p = Cp[j]; p < nz; p++)
             Cx[p] = x.at(Ci[p]); // copy data to C
     }
     Cp[n] = nz;
+    C->realloc();
 }
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
