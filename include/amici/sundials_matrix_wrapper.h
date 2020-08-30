@@ -202,13 +202,24 @@ class SUNMatrixWrapper {
                   bool transpose) const;
 
     /**
-     * @brief Perform matrix matrix multiplication A * B
+     * @brief Perform matrix matrix multiplication C = A * B
               for sparse A, B, C
-     * @param C output matrix, may not contain values but may be preallocated
+     * @param C output matrix, must not contain values but may be preallocated
      * @param B multiplication matrix
      */
     void sparse_multiply(SUNMatrixWrapper *C,
                          SUNMatrixWrapper *B) const;
+    
+    /**
+     * @brief Perform matrix matrix addition C = alpha * A +  beta * B
+              for sparse A, B, C. C must not contain values but may be preallocated
+     * @param A addition matrix
+     * @param alpha scalar A
+     * @param B addition matrix
+     * @param beta scalar B
+     */
+    void sparse_add(SUNMatrixWrapper *A, realtype alpha,
+                    SUNMatrixWrapper *B, realtype beta);
     
     /**
      * @brief x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and construct the pattern
@@ -230,6 +241,11 @@ class SUNMatrixWrapper {
      * @brief Set to 0.0
      */
     void zero();
+    
+    /**
+     * @brief Get matrix id
+     */
+    SUNMatrix_ID matrix_id() const {return SUNMatGetID(matrix_);};
 
   private:
     void update_ptrs();
