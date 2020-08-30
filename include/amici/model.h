@@ -758,7 +758,7 @@ class Model : public AbstractModel {
     /**
      * @brief Get whether initial states depending on fixedParmeters are to be
      * reinitialized after preequilibration and presimulation
-     * @return flag `true`/`false`
+     * @return flag `true` / `false`
      */
     bool getReinitializeFixedParameterInitialStates() const;
 
@@ -1208,7 +1208,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Compute sensitivity of derivative initial states sensitivities
-     * `sdx0`
+     * `sdx0`.
      *
      * Only necessary for DAEs.
      */
@@ -1274,10 +1274,10 @@ class Model : public AbstractModel {
     /** Number of derivatives of common expressions wrt `p` */
     int ndwdp{0};
 
-    /** Number of nonzero entries in amici::Model::dxdotdw_ */
+    /** Number of nonzero entries in `amici::Model::dxdotdw_` */
     int ndxdotdw{0};
 
-    /** Number of nonzero entries in amici::Model::dJydy_ */
+    /** Number of nonzero entries in `amici::Model::dJydy_` */
     std::vector<int> ndJydy;
 
     /** Number of nonzero entries in Jacobian */
@@ -1303,7 +1303,7 @@ class Model : public AbstractModel {
 
     /**
      * Flag indicating whether for
-     * amici::Solver::sensi_ == amici::SensitivityOrder::second
+     * `amici::Solver::sensi_` == amici::SensitivityOrder::second
      * directional or full second order derivative will be computed
      */
     SecondOrderMode o2mode{SecondOrderMode::none};
