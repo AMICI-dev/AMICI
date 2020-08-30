@@ -468,9 +468,9 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
             }
             w[i] = mark;                  /* i is new entry in column j */
             Ci[nz++] = i;                 /* add i to pattern of C(:,j) */
-            x[i] = beta * Ax[j];          /* x(i) = beta*A(i,j) */
+            x[i] = beta * Ax[p];          /* x(i) = beta*A(i,j) */
         }
-        else x[i] += beta * Ax[j];        /* i exists in C(:,j) already */
+        else x[i] += beta * Ax[p];        /* i exists in C(:,j) already */
     }
     return nz;
 }
