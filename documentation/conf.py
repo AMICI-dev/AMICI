@@ -76,6 +76,8 @@ amici_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS']:
     install_amici_deps_rtd()
 
+install_mtocpp()
+
 # Install AMICI if not already present
 try:
     import amici
@@ -228,8 +230,6 @@ exhale_args = {
         # "INPUT = ../include",
         "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
     ]),
-    "afterTitleDescription":
-        "AMICI C++ library functions",
     "verboseBuild": True,
 }
 
@@ -240,6 +240,8 @@ exhale_projects_args = {
         "exhaleDoxygenStdin":   "INPUT = ../include",
         "containmentFolder":    "_exhale_cpp_api",
         "rootFileTitle":        "AMICI C++ API",
+        "afterTitleDescription":
+            "AMICI C++ library functions",
     },
     # Third Party Project Includes
     "AMICI_Matlab": {
@@ -257,6 +259,8 @@ exhale_projects_args = {
         ]),
         "containmentFolder":    "_exhale_matlab_api",
         "rootFileTitle":        "AMICI Matlab API",
+        "afterTitleDescription":
+            "AMICI Matlab library functions",
     },
 }
 # -- Options for HTML output -------------------------------------------------
