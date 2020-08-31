@@ -1135,7 +1135,7 @@ class Model : public AbstractModel {
                                          const AmiVector &xdot_old);
 
     /**
-     * @brief Update the Heaviside variables \f$h\f$ on event occurences.
+     * @brief Update the Heaviside variables `h` on event occurences.
      *
      * @param rootsfound Provides the direction of the zero-crossing, so adding
      * it will give the right update to the heaviside variables (zero if no root
@@ -1144,7 +1144,7 @@ class Model : public AbstractModel {
     void updateHeaviside(const std::vector<int> &rootsfound);
 
     /**
-     * @brief Updates the Heaviside variables \f$h\f$ on event occurences in the
+     * @brief Updates the Heaviside variables `h` on event occurences in the
      * backward problem.
      * @param rootsfound Provides the direction of the zero-crossing, so adding
      * it will give the right update to the heaviside variables (zero if no root
