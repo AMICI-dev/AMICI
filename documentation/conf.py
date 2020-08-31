@@ -21,7 +21,10 @@ exhale_multiproject_monkeypatch  # to avoid removal of unused import
 def install_mtocpp():
     """Install mtocpp (Matlab doxygen filter)"""
     cmd = os.path.join(amici_dir, 'scripts', 'downloadAndBuildMtocpp.sh')
-    subprocess.run(cmd, shell=True, check=True, capture_output=True)
+    ret = subprocess.run(cmd, shell=True, capture_output=True)
+    if ret.returncode != 0:
+        print(ret.stdout, ret.stderr)
+        raise RuntimeError('downloadAndBuildMtocpp.sh failed')
 
 
 def install_amici_deps_rtd():
