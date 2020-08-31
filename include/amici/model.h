@@ -1159,8 +1159,8 @@ class Model : public AbstractModel {
      * @param array Array to check
      * @param fun Name of the function that generated the values (for more
      * informative messages).
-     * @return amici::AMICI_RECOVERABLE_ERROR if a NaN/Inf value was found,
-     * amici::AMICI_SUCCESS otherwise
+     * @return `amici::AMICI_RECOVERABLE_ERROR` if a NaN/Inf value was found,
+     * `amici::AMICI_SUCCESS` otherwise
      */
     int checkFinite(gsl::span<const realtype> array, const char *fun) const;
 
@@ -1745,8 +1745,8 @@ class Model : public AbstractModel {
      * Compute non-negative state vector according to stateIsNonNegative.
      * If anyStateNonNegative is set to `false`, i.e., all entries in
      * stateIsNonNegative are `false`, this function directly returns `x`,
-     * otherwise all entries of x are copied in to amici::Model::x_pos_tmp and
-     * negative values are replaced by `0` where applicable.
+     * otherwise all entries of x are copied in to `amici::Model::x_pos_tmp_`
+     * and negative values are replaced by `0` where applicable.
      *
      * @param x State vector possibly containing negative values
      * @return State vector with negative values replaced by `0` according to
