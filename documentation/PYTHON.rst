@@ -58,6 +58,16 @@ Standard deviations can be specified as dictionaries, such as::
 
     sigmas = {'observable_x1withsigma': 'observable_x1withsigma_sigma'}
 
+Noise distributions
+^^^^^^^^^^^^^^^^^^^
+
+Various noise distributions including normal and Laplace and discrete
+distributions, and scale transformations including linear, log and log10
+are supported::
+
+    noise_distributions = {'observable_x1withsigma': 'log-normal'}
+
+Find details in :py:func:`amici.sbml_import.noise_distribution_to_cost_function`.
 
 Model compilation
 ^^^^^^^^^^^^^^^^^
