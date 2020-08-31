@@ -247,6 +247,7 @@ exhale_projects_args = {
     "AMICI_Matlab": {
         "exhaleDoxygenStdin":   "\n".join([
             "INPUT = ../matlab",
+            "EXTENSION_MAPPING      = .m=C++",
             "FILTER_PATTERNS = "
             f"*.m={mtocpp_filter}",
             "EXCLUDE += ../matlab/examples",
