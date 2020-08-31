@@ -9,10 +9,25 @@ AMICI_PATH=$(cd "$SCRIPT_PATH/.." && pwd)
 
 MTOC_CONFIG_PATH=${AMICI_PATH}/matlab/mtoc/config
 
-cd ${AMICI_PATH}/ThirdParty
+cd "${AMICI_PATH}/ThirdParty"
 
 # download mtocpp?
 if [ ! -d "mtocpp-master" ]; then
+    # mtocpp requires ragel
+    if ! command -v ragel &> /dev/null; then
+      echo "ragel not found"
+
+      if [ ! -d "ragel-6.10" ]; then
+        if [ ! -e "ragel-6.10.tar.gz" ]; then
+            echo "Downloading ragel ..."
+            wget -O ragel-6.10.tar.gz http://www.colm.net/files/ragel/ragel-6.10.tar.gz
+        fi
+        # build ragel?
+        tar -xzf ragel-6.10.tar.gz
+        (cd ragel-6.10 && ./configure && make && make install)
+      fi
+    fi
+
     if [ ! -e "mtocpp-master.zip" ]; then
         echo "Downloading mtocpp ..."
         wget -O mtocpp-master.zip https://github.com/mdrohmann/mtocpp/archive/master.zip
