@@ -240,6 +240,7 @@ class SUNMatrixWrapper {
      * @param C output matrix
      * @param nnz number of nonzeros that were already written to C
      * @return updated number of nonzeros in C
+     * @note this function can be used to copy sparse columns of A to dense vectors x by not passing w and C
      */
     sunindextype scatter(const sunindextype j, const realtype beta,
                          sunindextype *w, realtype *x, const sunindextype mark,
@@ -252,6 +253,7 @@ class SUNMatrixWrapper {
     
     /**
      * @brief Get matrix id
+     * @return SUNMatrix_ID
      */
     SUNMatrix_ID matrix_id() const {return SUNMatGetID(matrix_);};
 
