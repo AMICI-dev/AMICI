@@ -2596,7 +2596,7 @@ class ODEExporter:
             body.append(vals)
             # create the vector with the slopes
             body.append(f'\tstd::vector<realtype> slopes{ispl};')
-            constr = f'\tstatic HermiteSpline spline{ispl} = HermiteSpline('
+            constr = f'\tHermiteSpline spline{ispl} = HermiteSpline('
             constr += f'nodes{ispl}, values{ispl}, slopes{ispl}, '
             if spline.bc is None:
                 constr += 'SplineBoundaryCondition::linearFinDiff, '

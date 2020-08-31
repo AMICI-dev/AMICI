@@ -395,7 +395,7 @@ realtype HermiteSpline::getSensitivity(const double t, const int ip) {
         }
 
         return evaluatePolynomial((t - nodes_[i_node]) / len,
-                                  &coefficients_sensi[ip * n_nodes() * 4 + i_node * 4]);
+                                  &(coefficients_sensi[ip * (n_nodes() - 1) * 4 + i_node * 4]));
     }
 
 }

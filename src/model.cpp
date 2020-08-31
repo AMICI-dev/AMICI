@@ -229,16 +229,8 @@ void Model::initializeSplines() {
                                     state_.fixedParameters.data());
     nspl = splines_.size();
     spl_.resize(nspl, 0.0);
-    std::cout << "Came until L231, size of spl_" << splines_.size() << std::endl;
     for (int ispl = 0; ispl < nspl; ispl++)
         splines_[ispl].computeCoefficients();
-
-    std::cout << "Came until L235" << std::endl;
-
-    std::cout << "Computed coefficients outside of spline class";
-    for (int i = 0; i < splines_[0].coefficients.size(); i++)
-        std::cout << " :: " << splines_[0].coefficients[i];
-    std::cout << " |" << std::endl;
 }
 
 void Model::initializeSplineSensitivities() {
@@ -790,6 +782,7 @@ void Model::getObservableSensitivity(gsl::span<realtype> sy, const realtype t,
         return;
 
     fdydx(t, x);
+    fsspl(t);
     fdydp(t, x);
 
     sx_.resize(nx_solver * nplist());
@@ -1295,6 +1288,7 @@ void Model::fy(const realtype t, const AmiVector &x) {
     y_.assign(ny, 0.0);
 
     fw(t, x.data());
+    std::cout << "Spl is " << spl_[0] << std::endl;
     fy(y_.data(), t, x.data(), state_.unscaledParameters.data(),
        state_.fixedParameters.data(),
        state_.h.data(), w_.data());
@@ -1308,9 +1302,14 @@ void Model::fdydp(const realtype t, const AmiVector &x) {
     if (!ny)
         return;
 
+    realtype *sspl_data = sspl_.data();
     dydp_.assign(ny * nplist(), 0.0);
     fw(t, x.data());
     fdwdp(t, x.data());
+    std::cout << "Sspl is " << sspl_data[0];
+    for (int i = 1; i < nplist(); i++)
+        std::cout << ", " << sspl_data[i];
+    std::cout << "|" << std::endl;
 
     /* get dydp slice (ny) for current time and parameter */
     for (int ip = 0; ip < nplist(); ip++)
@@ -1843,8 +1842,6 @@ void Model::fdJrzdsigma(const int ie, const int nroots, const realtype t,
 }
 
 void Model::fspl(const realtype t) {
-    static int counter2 = 0;
-    std::cout << "Call to fspl number " << counter2 << std::endl;
     for (int ispl = 0; ispl < nspl; ispl++) {
         if (splines_[ispl].get_logarithmic_paraterization()) {
             spl_[ispl] = std::exp(splines_[ispl].getValue(t));
@@ -1852,26 +1849,23 @@ void Model::fspl(const realtype t) {
             spl_[ispl] = splines_[ispl].getValue(t);
         }
     }
-    std::cout << "Value of spl: " << spl_[0] << std::endl;
 }
 
 void Model::fsspl(const realtype t) {
+    sspl_.reset();
     realtype *sspl_data = sspl_.data();
     for (int ip = 0; ip < nplist(); ip++) {
         for (int ispl = 0; ispl < nspl; ispl++) {
             if (splines_[ispl].get_logarithmic_paraterization()) {
-                sspl_data[ispl + nspl * ip] = spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
+                sspl_data[ispl * nplist() + ip] = spl_[ispl] * splines_[ispl].getSensitivity(t, ip);
             } else {
-                sspl_data[ispl + nspl * ip] = splines_[ispl].getSensitivity(t, ip);
+                sspl_data[ispl * nplist() + ip] = splines_[ispl].getSensitivity(t, ip);
             }
         }
     }
 }
 
 void Model::fw(const realtype t, const realtype *x) {
-    static int counter = 0;
-    counter++;
-    std::cout << "Call to fw number " << counter << std::endl;
     std::fill(w_.begin(), w_.end(), 0.0);
     fspl(t);
     fw(w_.data(), t, x, state_.unscaledParameters.data(),
@@ -1885,9 +1879,9 @@ void Model::fw(const realtype t, const realtype *x) {
 
 void Model::fdwdp(const realtype t, const realtype *x) {
     fw(t, x);
-    fsspl(t);
     if (pythonGenerated) {
         dwdp_.reset();
+        fsspl(t);
 
         // avoid bad memory access when slicing
         if (!nw)
