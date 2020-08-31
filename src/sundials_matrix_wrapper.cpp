@@ -1,4 +1,5 @@
 #include <amici/sundials_matrix_wrapper.h>
+#include <sundials/sundials_matrix.h> // return codes
 
 #include <amici/cblas.h>
 
@@ -104,10 +105,11 @@ operator=(SUNMatrixWrapper &&other) {
 void SUNMatrixWrapper::reallocate(int NNZ) {
     if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
-                                    "CSR_MAT");
+                                    "CSR_MAT.");
     
-    if (!SUNSparseMatrix_Reallocate(matrix_, NNZ))
-        throw std::bad_alloc();
+    if (int ret = SUNSparseMatrix_Reallocate(matrix_, NNZ) != SUNMAT_SUCCESS)
+        throw std::runtime_error("SUNSparseMatrix_Reallocate failed with "
+                                 "error code " + std::to_string(ret) + ".");
 
     update_ptrs();
     assert((NNZ && columns()*rows()) ^ !matrix_);
@@ -117,9 +119,10 @@ void SUNMatrixWrapper::reallocate(int NNZ) {
 void SUNMatrixWrapper::realloc() {
     if (sparsetype() != CSC_MAT && sparsetype() != CSR_MAT)
         throw std::invalid_argument("Invalid sparsetype. Must be CSC_MAT or "
-                                    "CSR_MAT");
-    if (!SUNSparseMatrix_Realloc(matrix_))
-        throw std::bad_alloc();
+                                    "CSR_MAT.");
+    if (int ret = SUNSparseMatrix_Realloc(matrix_) != SUNMAT_SUCCESS)
+        throw std::runtime_error("SUNSparseMatrix_Realloc failed with "
+                                 "error code " + std::to_string(ret) + ".");
     
     update_ptrs();
     assert(capacity() ^ !matrix_);
@@ -451,7 +454,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
         for (p = Bp[j]; p < Bp[j+1]; p++)
         {
             nnz = scatter(Bi[p], Bx[p], w.data(), x.data(), j+1, C, nnz);
-            assert(nnz < m);
+            assert(nnz - Cp[j] <= m);
         }
         for (p = Cp[j]; p < nnz; p++)
             Cx[p] = x[Ci[p]]; // copy data to C
