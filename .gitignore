@@ -14,7 +14,8 @@ fonts/*
 images/*
 stylesheets/*
 documentation/_build/*
-
+documentation/_exhale_cpp_api/*
+documentation/_doxyoutput/*
 sed-ml/*
 
 models/*
