@@ -95,9 +95,9 @@ class Model : public AbstractModel {
      * @param ne Number of events
      * @param nJ Number of objective functions
      * @param nw Number of repeating elements
-     * @param ndwdx Number of nonzero elements in the \f$x\f$ derivative of the
+     * @param ndwdx Number of nonzero elements in the `x` derivative of the
      * repeating elements
-     * @param ndwdp Number of nonzero elements in the \f$p\f$ derivative of the
+     * @param ndwdp Number of nonzero elements in the `p` derivative of the
      * repeating elements
      * @param ndxdotdw Number of nonzero elements in the \f$w\f$ derivative of
      * \f$xdot\f$
@@ -907,7 +907,7 @@ class Model : public AbstractModel {
                              const AmiVectorArray &sx);
 
     /**
-     * @brief Get sensitivity of \f$z\f$ at final timepoint.
+     * @brief Get sensitivity of `z` at final timepoint.
      *
      * Ignores sensitivity of timepoint. Total derivative.
      *
@@ -1390,7 +1390,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Compute partial derivative of observables \f$y\f$ w.r.t. model
-     * parameters \f$p\f$.
+     * parameters `p`.
      * @param t Current timepoint
      * @param x Current state
      */
@@ -1398,7 +1398,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Compute partial derivative of observables \f$y\f$ w.r.t. state
-     * variables \f$x\f$.
+     * variables `x`.
      * @param t Current timepoint
      * @param x Current state
      */
@@ -1488,8 +1488,8 @@ class Model : public AbstractModel {
     void fz(int ie, realtype t, const AmiVector &x);
 
     /**
-     * @brief Compute partial derivative of event-resolved output \f$z\f$ w.r.t.
-     * model parameters \f$p\f$
+     * @brief Compute partial derivative of event-resolved output `z` w.r.t.
+     * model parameters `p`
      * @param ie event index
      * @param t current timepoint
      * @param x current state
@@ -1497,8 +1497,8 @@ class Model : public AbstractModel {
     void fdzdp(int ie, realtype t, const AmiVector &x);
 
     /**
-     * @brief Compute partial derivative of event-resolved output \f$z\f$ w.r.t.
-     * model states \f$x\f$.
+     * @brief Compute partial derivative of event-resolved output `z` w.r.t.
+     * model states `x`.
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
@@ -1518,7 +1518,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Compute sensitivity of event-resolved root output w.r.t. model
-     * parameters \f$p\f$.
+     * parameters `p`.
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
@@ -1527,7 +1527,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Compute sensitivity of event-resolved measurements \f$rz\f$ w.r.t.
-     * model states \f$x\f$.
+     * model states `x`.
      * @param ie Event index
      * @param t Current timepoint
      * @param x Current state
@@ -1546,7 +1546,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Compute sensitivity of standard deviation of events measurements
-     * w.r.t. model parameters \f$p\f$.
+     * w.r.t. model parameters `p`.
      * @param ie Event index
      * @param nroots Event occurence
      * @param t Current timepoint
@@ -1556,7 +1556,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Compute negative log-likelihood of event-resolved measurements
-     * \f$z\f$.
+     * `z`.
      * @param Jz Variable to which llh will be added
      * @param nroots Event index
      * @param z Simulated event
