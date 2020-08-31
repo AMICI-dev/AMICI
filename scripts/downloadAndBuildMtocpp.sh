@@ -2,6 +2,7 @@
 # Download and build mtocpp (Doxygen filter for Matlab)
 
 set -euo pipefail
+set -x
 
 SCRIPT_PATH=$(dirname $BASH_SOURCE)
 AMICI_PATH=$(cd "$SCRIPT_PATH/.." && pwd)
