@@ -39,7 +39,7 @@ from . import (
     sbml_import
 )
 from .logging import get_logger, log_execution_time, set_log_level
-from .splines import spline_user_functions
+from .splines import spline_user_functions, UniformGrid
 from .sbml_utils import sbml_time_symbol, amici_time_symbol
 
 # Template for model simulation main.cpp file
@@ -2643,7 +2643,7 @@ class ODEExporter:
                 constr += 'true, '
             else:
                 constr += 'false, '
-            if str(type(spline.xx)) == "<class 'amici.splines.UniformGrid'>":
+            if isinstance(spline.xx, UniformGrid):
                 constr += 'true, '
             else:
                 constr += 'false, '
