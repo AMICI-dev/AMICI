@@ -268,7 +268,7 @@ class Model : public AbstractModel {
     /**
      * @brief Get number of conservation laws.
      * @return Number of conservation laws (i.e., difference between `nx_rdata`
-     * and `nx_solver`.
+     * and `nx_solver`).
      */
     int ncl() const;
 
@@ -598,13 +598,13 @@ class Model : public AbstractModel {
     /**
      * @brief Get simulation timepoint for time index `it`.
      * @param it Time index
-     * @return t Timepoint
+     * @return Timepoint
      */
     realtype getTimepoint(int it) const;
 
     /**
      * @brief Set the timepoint vector.
-     * @param ts Timepoint vector
+     * @param ts New timepoint vector
      */
     void setTimepoints(std::vector<realtype> const &ts);
 
@@ -757,7 +757,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Get whether initial states depending on fixedParmeters are to be
-     * reinitialized after preequilibration and presimulation
+     * reinitialized after preequilibration and presimulation.
      * @return flag `true` / `false`
      */
     bool getReinitializeFixedParameterInitialStates() const;
@@ -792,7 +792,7 @@ class Model : public AbstractModel {
      *
      * Total derivative \f$sy = dydx * sx + dydp\f$
      * (only for forward sensitivities).
-     * @param sy buffer (dimension: `ny x nplist`, row-major)
+     * @param sy buffer (dimension: `ny` x `nplist`, row-major)
      * @param t Timpoint
      * @param x State variables
      * @param sx State sensitivities
@@ -815,7 +815,7 @@ class Model : public AbstractModel {
      *
      * Total derivative (can be used with both adjoint and forward sensitivity).
      *
-     * @param ssigmay Buffer (dimension: `ny x nplist`, row-major)
+     * @param ssigmay Buffer (dimension: `ny` x `nplist`, row-major)
      * @param it Timepoint index
      * @param edata Pointer to experimental data instance (optional, pass
      * `nullptr` to ignore)
@@ -838,7 +838,7 @@ class Model : public AbstractModel {
      * \f$Jy\f$.
      *
      * @param sllh First-order buffer (dimension: `nplist`)
-     * @param s2llh Second-order buffer (dimension: `nJ-1 x nplist`, row-major)
+     * @param s2llh Second-order buffer (dimension: `nJ - 1` x `nplist`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param sx State sensitivities
@@ -854,11 +854,11 @@ class Model : public AbstractModel {
      * @brief Add sensitivity of time-resolved measurement negative
      * log-likelihood \f$Jy\f$.
      *
-     * Partial derivative (to be used with adjoint senstivities)
+     * Partial derivative (to be used with adjoint senstivities).
      *
      * @param sllh First order output buffer (dimension: `nplist`)
      * @param s2llh Second order output buffer
-     * (dimension: `nJ-1 x nplist`, row-major)
+     * (dimension: `nJ - 1` x `nplist`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param edata Experimental data
@@ -870,9 +870,10 @@ class Model : public AbstractModel {
                                                   const ExpData &edata);
 
     /**
-     * @brief Get State sensitivity of the negative loglikelihood Jy, partial
-     * derivative (to be used with adjoint senstivities)
-     * @param dJydx Output buffer (dimension: `nJ x nx_solver`, row-major)
+     * @brief Get state sensitivity of the negative loglikelihood \f$Jy\f$,
+     * partial derivative (to be used with adjoint senstivities).
+     *
+     * @param dJydx Output buffer (dimension: `nJ` x `nx_solver`, row-major)
      * @param it Timepoint index
      * @param x State variables
      * @param edata Experimental data instance
