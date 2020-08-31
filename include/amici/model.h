@@ -1303,7 +1303,7 @@ class Model : public AbstractModel {
 
     /**
      * Flag indicating whether for
-     * `amici::Solver::sensi_` == amici::SensitivityOrder::second
+     * `amici::Solver::sensi_` == `amici::SensitivityOrder::second`
      * directional or full second order derivative will be computed
      */
     SecondOrderMode o2mode{SecondOrderMode::none};
