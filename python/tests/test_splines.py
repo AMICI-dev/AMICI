@@ -236,7 +236,7 @@ def random_suffix(n):
     return ''.join(chars)
 
 
-def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, skip_sensitivity=False, **kwargs):
+def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol=1e-12, atol=1e-12, simulate_upsample=10, discard_annotations=False, use_adjoint=False, skip_sensitivity=False, **kwargs):
     # Default initial values
     if initial_values is None:
         initial_values = _default_initial_values(len(splines))
@@ -263,7 +263,10 @@ def _simulate_splines(folder, splines, params_true, initial_values=None, *, rtol
     solver.setAbsoluteTolerance(atol)
     if not skip_sensitivity:
         solver.setSensitivityOrder(amici.SensitivityOrder_first)
-        solver.setSensitivityMethod(amici.SensitivityMethod_forward)
+        if use_adjoint:
+            solver.setSensitivityMethod(amici.SensitivityMethod_adjoint)
+        else:
+            solver.setSensitivityMethod(amici.SensitivityMethod_forward)
 
     # Compute and set timepoints
     n = max(len(spline.xx) for spline in splines) * simulate_upsample
@@ -289,10 +292,11 @@ def check_splines(splines,
                   initial_values=None,
                   *,
                   discard_annotations=False,
+                  use_adjoint=False,
                   skip_sensitivity=False,
                   debug=False,
                   llh_rtol=1e-8,
-                  sllh_atol=1e-9,
+                  sllh_atol=1e-8,
                   x_rtol=1e-11,
                   x_atol=1e-11,
                   w_rtol=1e-11,
@@ -314,6 +318,7 @@ def check_splines(splines,
         splines, params_true, initial_values,
         discard_annotations=discard_annotations,
         skip_sensitivity=skip_sensitivity,
+        use_adjoint=use_adjoint,
         **kwargs
     )
 
@@ -382,7 +387,7 @@ def check_splines(splines,
     sx_true = np.concatenate([
         sx[:, :, np.newaxis] for sx in sx_by_state
     ], axis=2)
-    if skip_sensitivity:
+    if skip_sensitivity or use_adjoint:
         pass
     elif not debug:
         check_results(rdata, 'sx', sx_true, assert_fun, sx_atol, sx_rtol)
@@ -432,19 +437,43 @@ def check_splines(splines,
         )
 
 
-def example_spline_1(idx: int = 0, offset = 0, scale = 1):
+def check_splines_full(*args, **kwargs):
+    check_splines(*args, **kwargs, discard_annotations=True, use_adjoint=False)
+    check_splines(*args, **kwargs, discard_annotations=False, use_adjoint=False)
+    check_splines(*args, **kwargs, discard_annotations=False, use_adjoint=True)
+
+
+def example_spline_1(idx: int = 0, offset: float = 0, scale: float = 1, num_nodes: int = 9, fixed_values=None):
     "A simple spline with no extrapolation."
-    yy_true = np.asarray([0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0])
+
+    yy_true = np.asarray([0.0, 2.0, 5.0, 6.0, 5.0, 4.0, 2.0, 3.0, 4.0, 6.0, 7.0, 7.5, 6.5, 4.0])
+    if num_nodes is not None:
+        assert 1 < num_nodes <= len(yy_true)
+        yy_true = yy_true[:num_nodes]
     yy_true = scale * yy_true + offset
+
     xx = UniformGrid(0, 25, length=len(yy_true))
+
     yy = list(sp.symbols(f'y{idx}_0:{len(yy_true)}'))
-    params = dict(zip(yy, yy_true))
+
+    if fixed_values is None:
+        params = dict(zip(yy, yy_true))
+    else:
+        params = {}
+        for i in range(len(yy_true)):
+            if i in fixed_values:
+                yy[i] = yy_true[i]
+            else:
+                params[yy[i]] = yy_true[i]
+
     spline = CubicHermiteSpline(
         f'y{idx}', amici_time_symbol,
         xx, yy,
         bc=None, extrapolate=None
     )
+
     tols = dict(llh_rtol=1e-15)
+
     return spline, params, tols
 
 
@@ -480,9 +509,9 @@ def example_spline_3(idx: int = 0):
 
 
 def example_splines_1():
-    spline0, params0, tols0 = example_spline_1(0)
-    spline1, params1, tols1 = example_spline_1(1, scale=1.5, offset=5)
-    spline2, params2, tols2 = example_spline_1(2, scale=0.5, offset=-5)
+    spline0, params0, tols0 = example_spline_1(0, num_nodes=9, fixed_values=[0, 2])
+    spline1, params1, tols1 = example_spline_1(1, num_nodes=14, scale=1.5, offset=5)
+    spline2, params2, tols2 = example_spline_1(2, num_nodes=5,  scale=0.5, offset=-5)
 
     splines = [spline0, spline1, spline2]
 
@@ -503,20 +532,20 @@ def example_splines_1():
 
 
 def test_CubicHermiteSpline():
-
     spline, params, tols = example_spline_1()
-    check_splines(spline, params, **tols, discard_annotations=True)
-    check_splines(spline, params, **tols, discard_annotations=False)
+    check_splines_full(spline, params, **tols)
+
+    # same as above, but with some fixed values
+    spline, params, tols = example_spline_1(fixed_values=[0, 2])
+    check_splines_full(spline, params, **tols)
 
     spline, params, tols = example_spline_2()
-    check_splines(spline, params, **tols, discard_annotations=True)
-    check_splines(spline, params, **tols, discard_annotations=False)
+    check_splines_full(spline, params, **tols)
 
 
 def test_multiple_splines():
     splines, params, tols = example_splines_1()
-    check_splines(splines, params, **tols, discard_annotations=True)
-    check_splines(splines, params, **tols, discard_annotations=False)
+    check_splines_full(splines, params, **tols)
 
 
 def test_splines_evaluated_at_formula():
