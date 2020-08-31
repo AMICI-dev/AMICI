@@ -410,8 +410,8 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
     sunindextype m = nrows;
     sunindextype n = B->columns();
     
-    auto w = std::vector<sunindextype>(m);
-    auto x = std::vector<realtype>(m);
+    auto w = std::vector<sunindextype>(m); // sparsity of C(:,j)
+    auto x = std::vector<realtype>(m); // entries in C(:,j)
     
     for (j = 0; j < n; j++)
     {
@@ -448,7 +448,8 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
 
 void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
                                   SUNMatrixWrapper *B, realtype beta) {
-    if (!matrix_ || !A->matrix_ || !B->matrix_)
+    // matrix_ == nullptr is allowed on the first call
+    if (!A->matrix_ || !B->matrix_)
         return;
 
     sunindextype nrows = rows();
@@ -478,7 +479,9 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
     
     sunindextype j;
     sunindextype p;
-    reallocate(A->num_nonzeros() + B->num_nonzeros());
+    // first call, make sure that matrix is initialized with no capacity
+    if(!capacity())
+        reallocate(A->num_nonzeros() + B->num_nonzeros());
     auto Cx = data();
     auto Ci = indexvals();
     auto Cp = indexptrs();
@@ -497,7 +500,8 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
     }
     Cp[ncols] = nnz;
     assert(nnz <= capacity());
-    realloc();
+    if (capacity() == A->num_nonzeros() + B->num_nonzeros())
+        realloc(); // resize if necessary, will have correct size in future calls
 }
 
 sunindextype SUNMatrixWrapper::scatter(const sunindextype j,

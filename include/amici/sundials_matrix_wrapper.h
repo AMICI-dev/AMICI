@@ -213,34 +213,40 @@ class SUNMatrixWrapper {
               for sparse A, B, C
      * @param C output matrix,
      * @param B multiplication matrix
-     * @note will overwrite existing data, indexptrs, indexvals, but will use preallocated space for these vars
+     * @note will overwrite existing data, indexptrs, indexvals for C, but will use preallocated space for these vars
      */
     void sparse_multiply(SUNMatrixWrapper *C,
                          SUNMatrixWrapper *B) const;
     
     /**
      * @brief Perform matrix matrix addition C = alpha * A +  beta * B
-              for sparse A, B, C. C must not contain values but may be preallocated
      * @param A addition matrix
      * @param alpha scalar A
      * @param B addition matrix
      * @param beta scalar B
+     * @note will overwrite existing data, indexptrs, indexvals for C, but will use preallocated space for these vars
      */
     void sparse_add(SUNMatrixWrapper *A, realtype alpha,
                     SUNMatrixWrapper *B, realtype beta);
     
     /**
-     * @brief x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and construct the pattern
-     * for C(:,j)
+     * @brief x = x + beta * A(:,j), where x is a dense vector and A(:,j) is sparse, and constructs the
+     * sparsity pattern for C(:,j)
+     *
+     * This function currently has two purposes:
+     *   - perform parts of sparse matrix-matrix multiplication C(:,j)=A(:,j)*B(j,k)
+     *    enabled by passing beta=B(j,k), x=C(:,j), C=C, w=sparsity of C(:,j) from B(j,0...k-1), nnz=nnz(C(:,0...j-1)
+     *   - add the jth column of the sparse matrix A to the dense vector x.
+     *    enabled by passing beta=1.0, x=x, C=nullptr, w=nullptr, nnz=0
+     *
      * @param j column index
      * @param beta scaling factor
-     * @param w temporary index workspace, this keeps track of the sparsity pattern in C
+     * @param w index workspace, (w[i]<mark) indicates non-zeroness of C(i,j)
      * @param x dense output vector
      * @param mark marker for w to indicate nonzero pattern
      * @param C sparse output matrix
      * @param nnz number of nonzeros that were already written to C
      * @return updated number of nonzeros in C
-     * @note this function can be used to copy sparse columns of A to dense vectors x by not passing w and C
      */
     sunindextype scatter(const sunindextype j, const realtype beta,
                          sunindextype *w, gsl::span<realtype> x,

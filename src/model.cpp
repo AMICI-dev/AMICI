@@ -135,10 +135,10 @@ Model::Model(const int nx_rdata, const int nxtrue_rdata, const int nx_solver,
                              ndxdotdp_explicit, CSC_MAT);
         dxdotdp_implicit =
             SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             ndwdp + ndxdotdw, CSC_MAT);
+                             ndwdp + ndxdotdw, CSC_MAT); // guess size
         dxdotdp_full =
             SUNMatrixWrapper(nx_solver, static_cast<int>(p.size()),
-                             ndwdp + ndxdotdw + ndxdotdp_explicit, CSC_MAT);
+                             0, CSC_MAT); // dynamically allocate on first call
 
         // also dJydy depends on the way of wrapping
         if (static_cast<unsigned>(nytrue) != this->ndJydy.size())
