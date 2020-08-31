@@ -98,15 +98,8 @@ void NewtonSolver::computeNewtonSensis(AmiVectorArray &sx) {
     if (model_->pythonGenerated) {
         for (int ip = 0; ip < model_->nplist(); ip++) {
             N_VConst(0.0, sx.getNVector(ip));
-
-            if (model_->dxdotdp_full.num_nonzeros() > 0) {
-                auto col = model_->dxdotdp_full.indexptrs();
-                auto row = model_->dxdotdp_full.indexvals();
-                auto data_ptr = model_->dxdotdp_full.data();
-                for (sunindextype iCol = col[model_->plist(ip)];
-                     iCol < col[model_->plist(ip) + 1]; ++iCol)
-                    sx.at(static_cast<int>(row[iCol]), ip) -= data_ptr[iCol];
-            }
+            model_->dxdotdp_full.scatter(model_->plist(ip), 1.0, nullptr,
+                                         sx.data(ip), 0, nullptr, 0);
 
             solveLinearSystem(sx[ip]);
         }

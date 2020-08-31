@@ -267,18 +267,6 @@ void Model_ODE::fdxdotdp_explicit_rowvals(sunindextype * /*indexvals*/) {
                        __func__); // not implemented
 }
 
-void Model_ODE::fdxdotdp_implicit_colptrs(sunindextype * /*indexptrs*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
-void Model_ODE::fdxdotdp_implicit_rowvals(sunindextype * /*indexvals*/) {
-    throw AmiException("Requested functionality is not supported as %s "
-                       "is not implemented for this model!",
-                       __func__); // not implemented
-}
-
 void Model_ODE::fdxdotdw(realtype * /*dxdotdw*/, const realtype /*t*/,
                          const realtype * /*x*/, const realtype * /*p*/,
                          const realtype * /*k*/, const realtype * /*h*/,
@@ -447,15 +435,7 @@ void Model_ODE::fsxdot(realtype t, N_Vector x, int ip, N_Vector sx,
         N_VConst(0.0, sxdot);
         realtype *sxdot_tmp = N_VGetArrayPointer(sxdot);
 
-        // dxdotdp_full.scatter(plist(ip), 1.0, nullptr, sxdot_tmp, 0, nullptr, 0);
-        
-        if (dxdotdp_full.num_nonzeros() > 0) {
-            auto col_exp = dxdotdp_full.indexptrs();
-            auto row_exp = dxdotdp_full.indexvals();
-            auto data_exp_ptr = dxdotdp_full.data();
-            for (sunindextype i = col_exp[plist(ip)]; i < col_exp[plist(ip) + 1]; ++i)
-                sxdot_tmp[row_exp[i]] += data_exp_ptr[i];
-        }
+        dxdotdp_full.scatter(plist(ip), 1.0, nullptr, sxdot_tmp, 0, nullptr, 0);
 
     } else {
         /* copy dxdotdp over */
