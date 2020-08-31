@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-      - feature_sparse_addition
   pull_request:
     branches:
       - master
