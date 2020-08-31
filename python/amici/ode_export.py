@@ -2629,13 +2629,17 @@ class ODEExporter:
             body.append(f'\tstd::vector<realtype> slopes{ispl};')
             constr = f'\tHermiteSpline spline{ispl} = HermiteSpline('
             constr += f'nodes{ispl}, values{ispl}, slopes{ispl}, '
-            if spline.bc is None:
+            if spline.bc == (None, None) and (spline.extrapolate == ('linear', 'linear') or spline.extrapolate == (None, None)):
                 constr += 'SplineBoundaryCondition::linearFinDiff, '
                 constr += 'SplineBoundaryCondition::linearFinDiff, '
+            elif spline.bc == ('zeroderivative', 'zeroderivative') and (spline.extrapolate == ('constant', 'constant') or spline.extrapolate == (None, None)):
+                constr += 'SplineBoundaryCondition::constant, '
+                constr += 'SplineBoundaryCondition::constant, '
             else:
-                constr += 'SplineBoundaryCondition::constant, '
-                constr += 'SplineBoundaryCondition::constant, '
-            if spline._derivatives_by_fd:
+                raise NotImplementedError(
+                    'CubicHermiteSpline with bc = {spline.bc} and extrapolate = {spline.extrapolate} not supported yet in ODEExporter.'
+                )
+            if spline.derivatives_by_fd:
                 constr += 'true, '
             else:
                 constr += 'false, '
