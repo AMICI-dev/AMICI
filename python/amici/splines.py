@@ -19,6 +19,10 @@ if TYPE_CHECKING:
         Any,
         List,
     )
+    BClike = Union[
+        None, str,
+        Tuple[Union[None, str], Union[None, str]]
+    ]
 
 import collections
 
@@ -150,9 +154,6 @@ class AbstractSpline(ABC):
     file is used together with AMICI).
     """
 
-    # TODO can we take away the evaluation point x (not really part of the spline per se)
-    #      and move only to the functions which read/write the spline
-
     def __init__(
             self,
             sbmlId: Union[str, sp.Symbol],
@@ -160,11 +161,8 @@ class AbstractSpline(ABC):
             xx: Sequence,
             yy: Sequence,
             *,
-            bc: Optional[str] = None,
-            extrapolate: Union[
-                None, str,
-                Tuple[Union[None, str], Union[None, str]]
-            ] = None,
+            bc: BClike = None,
+            extrapolate: BClike = None,
             logarithmic_paraterization: bool = False
         ):
         """
@@ -175,7 +173,7 @@ class AbstractSpline(ABC):
             a SymPy symbol.
 
             :param x:
-            The symbolic argument at which the spline is evaluated.
+            The point at which the spline is evaluated.
             It will be sympified.
 
             :param xx:
@@ -190,20 +188,44 @@ class AbstractSpline(ABC):
             It will be sympified.
 
             :param bc:
-            Applied boundary conditions.
-            `None` if the boundary condition are not needed for the spline object.
+            Tuple of applied boundary conditions,
+            one for each side of the spline domain.
+            If a single bc is given it will be applied to both sides.
+            Possible boundary conditions
+            (allowed values depend on the `AbstractSpline` subclass):
+            * `None` or `'no_bc'`: boundary conditions are not needed
+              for this spline object;
+            * `'zeroderivative'`: first derivative set to zero;
+            * `'natural'`: second derivative set to zero;
+            * `'zeroderivative+natural'`: first and second derivatives
+              set to zero;
+            * `'periodic'`: periodic bc.
 
             :param extrapolate:
             Whether to extrapolate the spline outside the base interval
             defined by `(xx[0], xx[-1])`.
             It is a tuple of extrapolation methods, one for each side of the
             base interval.
-            `None` or `'no_extrapolation'`
-            means no extrapolation is to be performed
-            (evaluating the spline outside the base interval is not guaranteed
-            to work).
             If it is not a tuple, then the same extrapolation will be applied
             on both sides.
+            Extrapolation methods supported:
+            * `None` or `'no_extrapolation'`: no extrapolation should be
+              performed. An exception will be raise in the C++ code
+              if the spline is evaluated outside the base interval.
+              In the fallback SBML symbolic expression
+              `'polynomial'` extrapolation will be used.
+            * `'polynomial'`: the cubic polynomial used in the nearest
+              spline segment will be used.
+            * `'constant'`: constant extrapolation will be used.
+              Requires `'zeroderivative'` boundary condition.
+              For splines which are continuous up to the second derivative,
+              it requires the stricter `'zeroderivative+natural'`
+              boundary condition.
+            * `'linear'`: linear extrapolation will be used.
+              For splines which are continuous up to the second derivative,
+              this requires the `'natural'` boundary condition.
+            * `'periodic'`: periodic extrapolation.
+              Requires `'periodic'` boundary conditions.
 
             :param logarithmic_paraterization:
             Interpolation is done in log scale.
@@ -232,12 +254,6 @@ class AbstractSpline(ABC):
                 f'(instead len(xx) = {len(xx)} and len(yy) = {len(yy)})'
             )
 
-        if bc == 'periodic' and yy[0] != yy[-1]:
-            raise ValueError(
-                'if the spline is to be periodic, '
-                'the first and last elements of yy must be equal'
-            )
-
         if all(x.is_Number for x in xx) and not np.all(np.diff(xx) >= 0):
             raise ValueError('xx should be stricly increasing')
 
@@ -248,7 +264,12 @@ class AbstractSpline(ABC):
                     'yy should be stricly positive'
                 )
 
-        extrapolate = AbstractSpline._normalize_extrapolate(extrapolate, bc)
+        bc, extrapolate = AbstractSpline._normalize_bc_and_extrapolate(bc, extrapolate)
+        if bc == ('periodic', 'periodic') and yy[0] != yy[-1]:
+            raise ValueError(
+                'if the spline is to be periodic, '
+                'the first and last elements of yy must be equal'
+            )
 
         self._sbmlId = sbmlId
         self._x = x
@@ -261,7 +282,50 @@ class AbstractSpline(ABC):
         self._formula_cache = {}
 
     @staticmethod
-    def _normalize_extrapolate(extrapolate, bc):
+    def _normalize_bc_and_extrapolate(bc, extrapolate):
+        bc = AbstractSpline._normalize_bc(bc)
+        return AbstractSpline._normalize_extrapolate(bc, extrapolate)
+
+    @staticmethod
+    def _normalize_bc(bc):
+        """
+        Preprocess `bc` to a standard form.
+        """
+        if not isinstance(bc, tuple):
+            bc = (bc, bc)
+        elif len(bc) != 2:
+            raise TypeError(f'bc should be a 2-tuple, gor {bc} instead')
+
+        valid_bc = (
+            'periodic',
+            'zeroderivative',
+            'zeroderivative+natural',
+            'natural',
+            'no_bc',
+            'auto',
+            None
+        )
+
+        for i in (0, 1):
+            if bc[i] not in valid_bc:
+                raise ValueError(
+                    'currently the supported bc methods are: ' +
+                    str(valid_bc) +
+                    f' (got {bc[i]} instead)'
+                )
+            elif bc[i] == 'no_bc':
+                bc[i] = None
+
+        if (bc[0] == 'periodic' or bc[1] == 'periodic') and bc[0] != bc[1]:
+            raise ValueError(
+                'if the bc on one side is periodic, '
+                'then the bc on the other side must be periodic too.'
+            )
+
+        return bc
+
+    @staticmethod
+    def _normalize_extrapolate(bc, extrapolate):
         """
         Preprocess `extrapolate` to a standard form
         and perform consistency checks
@@ -273,8 +337,10 @@ class AbstractSpline(ABC):
                 f'extrapolate should be a 2-tuple, gor {extrapolate} instead'
             )
         valid_extrapolate = (
-            'constant',
             'no_extrapolation',
+            'constant',
+            'linear',
+            'polynomial',
             'periodic',
             None
         )
@@ -285,13 +351,55 @@ class AbstractSpline(ABC):
                     str(valid_extrapolate) +
                     f' (got {extrapolate[i]} instead)'
                 )
+
             if extrapolate[i] == 'no_extrapolation':
                 extrapolate[i] = None
-            if extrapolate[i] == 'periodic' and bc != 'periodic':
-                raise ValueError(
-                    'The spline must be satisfy periodic boundary conditions '
-                    'in order for periodic extrapolation to be used.'
-                )
+
+            if extrapolate[i] == 'periodic':
+                if bc[0] == 'auto':
+                    bc[0] = 'periodic'
+                if bc[1] == 'auto':
+                    bc[1] = 'periodic'
+                if not (bc[0] == bc[1] == 'periodic'):
+                    raise ValueError(
+                        'The spline must be satisfy periodic boundary conditions '
+                        'on both sides of the base interval '
+                        'in order for periodic extrapolation to be used.'
+                    )
+
+            elif extrapolate[i] == 'constant':
+                assert self.smoothness > 0
+                if self.smoothness == 1:
+                    if bc[i] == 'auto':
+                        bc[i] = 'zeroderivative'
+                    elif bc[i] != 'zeroderivative':
+                        raise ValueError(
+                            'The spline must be satisfy zero-derivative bc '
+                            'in order for constant extrapolation to be used.'
+                        )
+                elif bc[i] == 'auto':
+                    bc[i] = 'zeroderivative+natural'
+                elif bc[i] != 'zeroderivative+natural':
+                    raise ValueError(
+                        'The spline must be satisfy zero-derivative and natural'
+                        ' bc in order for constant extrapolation to be used.'
+                    )
+
+            elif extrapolate[i] == 'linear':
+                assert self.smoothness > 0
+                if self.smoothness > 1:
+                    if bc[i] == 'auto':
+                        bc[i] = 'natural'
+                    elif bc[i] != 'natural':
+                        raise ValueError(
+                            'The spline must be satisfy natural bc '
+                            'in order for linear extrapolation to be used.'
+                        )
+                elif bc[i] == 'auto':
+                    bc[i] = None
+
+            elif bc[i] == 'auto':
+                bc[i] = None
 
         if (extrapolate[0] == 'periodic' or extrapolate[1] == 'periodic') and \
                 extrapolate[0] != extrapolate[1] and \
@@ -303,7 +411,7 @@ class AbstractSpline(ABC):
                 '(in which case it will be periodic anyway).'
             )
 
-        return extrapolate
+        return bc, extrapolate
 
     @property
     def sbmlImporter(self) -> sp.Symbol:
@@ -331,12 +439,8 @@ class AbstractSpline(ABC):
 
     @property
     def bc(self) -> Union[str, None]:
-        """
-        Return the boundary conditions applied to this spline.
-        A value of `None` means that the spline type does not require
-        to explicitly define boundary conditions.
-        """
-        return None
+        "Boundary conditions applied to this spline."
+        return self._bc
 
     @property
     def extrapolate(self) -> Tuple[Union[None, str], Union[None, str]]:
@@ -347,6 +451,12 @@ class AbstractSpline(ABC):
     def logarithmic_paraterization(self) -> bool:
         "Whether interpolation is done in log-scale."
         return self._logarithmic_paraterization
+
+    @property
+    @abstractmethod
+    def smoothness(self) -> str:
+        "Smoothness of this spline."
+        return NotImplemented
 
     @property
     @abstractmethod
@@ -402,21 +512,21 @@ class AbstractSpline(ABC):
 
         # Replace scaled variable with its value,
         # without changing the expression form
-        t_value = self._scaled_variable(x, i)
+        t_value = self._poly_variable(x, i)
         with evaluate(False):
             return poly.subs(t, t_value)
 
-    def scaled_variable(self, x, i) -> sp.Basic:
+    def poly_variable(self, x, i) -> sp.Basic:
         """
-        Given an evaluation point return the scaled variable on the `i`-th
-        interval.
+        Given an evaluation point, return the value of the variable
+        in which the polynomial on the `i`-th interval is expressed.
         """
         if not 0 <= i < len(self.xx) - 1:
             raise ValueError(f'interval index {i} is out of bounds')
-        return self._scaled_variable(x, i)
+        return self._poly_variable(x, i)
 
     @abstractmethod
-    def _scaled_variable(self, x, i) -> sp.Basic:
+    def _poly_variable(self, x, i) -> sp.Basic:
         return NotImplemented
 
     @abstractmethod
@@ -457,13 +567,21 @@ class AbstractSpline(ABC):
 
         if extrLeft == 'constant':
             extrLeft = self.yy[0]
-        elif extrLeft is not None:
-            raise ValueError(f'unsupported extrapolation method {extrLeft}')
+        elif extrLeft == 'linear':
+            extrLeft = self.yy[0] + self.derivative(self.xx[0]) * (x - self.xx[0])
+        elif extrLeft == 'polynomial':
+            extrLeft = None
+        else:
+            assert extrLeft is None
 
         if extrRight == 'constant':
             extrRight = self.yy[-1]
-        elif extrRight is not None:
-            raise ValueError(f'unsupported extrapolation method {extrRight}')
+        elif extrRight == 'linear':
+            extrRight = self.yy[-1] + self.derivative(self.xx[-1]) * (x - self.xx[-1])
+        elif extrRight == 'polynomial':
+            extrRight = None
+        else:
+            assert extrRight is None
 
         return (extrLeft, extrRight)
 
@@ -558,6 +676,14 @@ class AbstractSpline(ABC):
         _x = sp.Dummy('x')
         return self._formula(x=_x).subs(_x, x)
 
+    def derivative(self, x):
+        _x = sp.Dummy('x')
+        return self._formula(x=_x).diff(_x).subs(_x, x)
+
+    def second_derivative(self, x):
+        _x = sp.Dummy('x')
+        return self._formula(x=_x).diff(_x).diff(_x).subs(_x, x)
+
     def integrate(self, x0, x1):
         x = sp.Dummy('x')
         x0, x1 = sp.sympify((x0, x1))
@@ -627,8 +753,14 @@ class AbstractSpline(ABC):
 
         attributes['spline_method'] = self.method
 
-        if self.bc is not None:
-            attributes['spline_bc'] = self.bc
+        if self.bc[0] == self.bc[1]:
+            if self.bc[0] is not None:
+                attributes['spline_bc'] = self.bc[0]
+        else:
+            bc1, bc2 = self.bc
+            bc1 = 'no_bc' if bc1 is None else bc1
+            bc2 = 'no_bc' if bc2 is None else bc2
+            attributes['spline_bc'] = f'({bc1}, {bc2})'
 
         if self.extrapolate[0] == self.extrapolate[1]:
             extr = None if self.extrapolate is None else self.extrapolate[0]
@@ -650,7 +782,7 @@ class AbstractSpline(ABC):
 
         with evaluate(False):
             x = self.x.subs(amici_time_symbol, sbml_time_symbol)
-        children['spline_parameter'] = sbmlMathML(x)
+        children['spline_evaluation_point'] = sbmlMathML(x)
 
         if isinstance(self.xx, UniformGrid):
             children['spline_uniform_grid'] = [
@@ -873,7 +1005,15 @@ class AbstractSpline(ABC):
     def _fromAnnotation(cls, attributes, children):
         kwargs = {}
 
-        kwargs['bc'] = attributes.pop('spline_bc', None)
+        bc = attributes.pop('spline_bc', None)
+        if isinstance(bc, str) and bc.startswith('('):
+            if not bc.endswith(')'):
+                raise ValueError(f'Ill-formatted bc {bc}')
+            bc_cmps = bc[1:-1].split(',')
+            if len(bc_cmps) != 2:
+                raise ValueError(f'Ill-formatted bc {bc}')
+            bc = (bc_cmps[0].strip(), bc_cmps[1].strip())
+        kwargs['bc'] = bc
 
         extr = attributes.pop('spline_extrapolate', None)
         if isinstance(extr, str) and extr.startswith('('):
@@ -888,14 +1028,14 @@ class AbstractSpline(ABC):
         kwargs['logarithmic_paraterization'] = \
             attributes.pop('spline_logarithmic_paraterization', False)
 
-        if 'spline_parameter' not in children.keys():
+        if 'spline_evaluation_point' not in children.keys():
             raise ValueError(
-                "required spline annotation 'spline_parameter' missing"
+                "required spline annotation 'spline_evaluation_point' missing"
             )
-        x = children.pop('spline_parameter')
+        x = children.pop('spline_evaluation_point')
         if len(x) != 1:
             raise ValueError(
-                "Ill-formatted spline annotation 'spline_parameter' " +
+                "Ill-formatted spline annotation 'spline_evaluation_point' " +
                 "(more than one children is present)"
             )
         kwargs['x'] = x[0]
@@ -1028,11 +1168,8 @@ class CubicHermiteSpline(AbstractSpline):
             yy: Sequence,
             dd: Sequence = None,
             *,
-            bc: Optional[str] = None,
-            extrapolate: Union[
-                None, str,
-                Tuple[Union[None, str], Union[None, str]]
-            ] = None,
+            bc: BClike = 'auto',
+            extrapolate: BClike = None,
             logarithmic_paraterization: bool = False
         ):
         """
@@ -1043,7 +1180,7 @@ class CubicHermiteSpline(AbstractSpline):
             a SymPy symbol.
 
             :param x:
-            The symbolic argument at which the spline is evaluated.
+            The point at which the spline is evaluated.
             It will be sympified.
 
             :param xx:
@@ -1064,22 +1201,14 @@ class CubicHermiteSpline(AbstractSpline):
             If not specified, it will be computed by finite differences.
 
             :param bc:
-            Applied boundary conditions. Can only be `'periodic'` or
-            `None` if the boundary condition are not needed.
-            However, if the values/derivative would lead to a spline satisfying
-            periodic boundary conditions, bc is automatically set to `'periodic'`.
+            Applied boundary conditions
+            (see `AbstractSpline` documentation).
+            If `'auto'` (the default), the boundary conditions will be
+            automatically setted depending on the extrapolation methods.
 
             :param extrapolate:
-            Whether to extrapolate the spline outside the base interval
-            defined by `(xx[0], xx[-1])`.
-            It is a tuple of extrapolation methods, one for each side of the
-            base interval.
-            `None` or `'no_extrapolation'`
-            means no extrapolation is to be performed
-            (evaluating the spline outside the base interval is not guaranteed
-            to work).
-            If it is not a tuple, then the same extrapolation will be applied
-            on both sides.
+            Extrapolation method
+            (see `AbstractSpline` documentation).
 
             :param logarithmic_paraterization:
             Interpolation is done in log scale.
@@ -1098,15 +1227,14 @@ class CubicHermiteSpline(AbstractSpline):
                 f'(instead len(xx) = {len(xx)} and len(yy) = {len(yy)})'
             )
 
-        if bc not in ('periodic', None):
+        bc, extrapolate = AbstractSpline._normalize_bc_and_extrapolate(bc, extrapolate)
+        if bc[0] == 'zeroderivative+natural' or bc[1] == 'zeroderivative+natural':
             raise ValueError(
-                f'unsupported bc {bc} for CubicHermiteSplines'
+                'zeroderivative+natural bc not supported by CubicHermiteSplines'
             )
 
-        extrapolate = AbstractSpline._normalize_extrapolate(extrapolate, bc)
-
         if dd is None:
-            dd = finite_differences(xx, yy, extrapolate, bc)
+            dd = finite_differences(xx, yy, bc)
             self._derivatives_by_fd = True
         else:
             dd = np.asarray([sympify_noeval(d) for d in dd])
@@ -1118,10 +1246,7 @@ class CubicHermiteSpline(AbstractSpline):
                 f'(instead len(xx) = {len(xx)} and len(dd) = {len(dd)})'
             )
 
-        if bc is None:
-            if yy[0] == yy[-1] and dd[0] == dd[-1]:
-                bc = 'periodic'
-        elif bc == 'periodic':
+        if bc == ('periodic', 'periodic'):
             if yy[0] != yy[-1] or dd[0] != dd[-1]:
                 raise ValueError(
                     'bc=periodic but given yy and dd do not satisfy '
@@ -1141,6 +1266,14 @@ class CubicHermiteSpline(AbstractSpline):
     def dd(self) -> np.ndarray:
         "The spline derivatives at each of the points in `xx`."
         return self._dd
+
+    @property
+    def smoothness(self) -> str:
+        """
+        Smoothness of this spline (equal to 1 for cubic Hermite splines
+        since they are continuous up to the first derivative).
+        """
+        return 1
 
     @property
     def method(self) -> str:
@@ -1172,7 +1305,7 @@ class CubicHermiteSpline(AbstractSpline):
         else:
             return self.dd[i]
 
-    def _scaled_variable(self, x, i) -> sp.Basic:
+    def _poly_variable(self, x, i) -> sp.Basic:
         assert 0 <= i < len(self.xx) - 1
         dx = self.xx[i+1] - self.xx[i]
         with evaluate(False):
@@ -1228,9 +1361,11 @@ class CubicHermiteSpline(AbstractSpline):
     def __str__(self):
         s = f'HermiteCubicSpline on ({self.xx[0]}, {self.xx[-1]}) with {len(self.xx)} points'
         cmps = []
-        if self.bc is not None:
-            assert self.bc == 'periodic'
-            cmps.append('periodic')
+        if self.bc != (None, None):
+            if self.bc == ('periodic', 'periodic'):
+                cmps.append('periodic')
+            else:
+                cmps.append(f'bc = {self.bc}')
         if self.derivatives_by_fd:
             cmps.append('finite differences')
         if self.extrapolate != (None, None):
@@ -1241,13 +1376,20 @@ class CubicHermiteSpline(AbstractSpline):
             return s
 
 
-def finite_differences(xx, yy, extrapolate, bc):
+def finite_differences(xx, yy, bc):
     dd = []
 
-    if bc == 'periodic':
+    if bc[0] == 'periodic':
         fd = centeredFD(yy[-2], yy[0], yy[1], xx[-1] - xx[-2], xx[1] - xx[0])
-    elif extrapolate[0] == 'constant':
+    elif bc[0] == 'zeroderivative':
         fd = sp.Integer(0)
+    elif bc[0] == 'natural':
+        if len(xx) < 3:
+            raise ValueError(
+                'at least 3 nodes are needed '
+                'for computing finite differences with natural bc'
+            )
+        fd = naturalFD(yy[0], xx[1] - xx[0], yy[1], xx[2] - xx[1], yy[2])
     else:
         fd = onesidedFD(yy[0], yy[1], xx[1] - xx[0])
     dd.append(fd)
@@ -1257,10 +1399,17 @@ def finite_differences(xx, yy, extrapolate, bc):
             centeredFD(yy[i-1], yy[i], yy[i+1], xx[i] - xx[i-1], xx[i+1] - xx[i])
         )
 
-    if bc == 'periodic':
+    if bc[1] == 'periodic':
         fd = dd[0]
-    elif extrapolate[1] == 'constant':
+    elif bc[1] == 'zeroderivative':
         fd = sp.Integer(0)
+    elif bc[1] == 'natural':
+        if len(xx) < 3:
+            raise ValueError(
+                'at least 3 nodes are needed '
+                'for computing finite differences with natural bc'
+            )
+        fd = naturalFD(yy[-1], xx[-2] - xx[-1], yy[-2], xx[-3] - xx[-2], yy[-3])
     else:
         fd = onesidedFD(yy[-2], yy[-1], xx[-1] - xx[-2])
     dd.append(fd)
@@ -1277,3 +1426,16 @@ def centeredFD(ym1, y0, yp1, hm, hp):
         return sp.Mul(1 / (2 * hm), yp1 - ym1, evaluate=False)
     else:
         return ((yp1 - y0) / hp + (y0 - ym1) / hm) / 2
+
+
+def naturalFD(y0, dx1, y1, dx2, y2):
+    if dx1 == dx2:
+        den = 4 * dx1
+        with evaluate(False):
+            return (6 * y1 - 5 * y0 - y2) / den
+    else:
+        with evaluate(False):
+            return ((y1 - y2) / dx2 - 5 * (y0 - y1) / dx1) / 4
+    # Another formula, which depends on
+    # y0, dx1 = x1 - x0, y1 and dy1 (derivative at x1)
+    # (-dx1*dy1 - 3*y0 + 3*y1)/(2*dx1)
