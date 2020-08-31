@@ -226,7 +226,7 @@ class SUNMatrixWrapper {
      * @param w temporary index workspace, this keeps track of the sparsity pattern in C
      * @param x temporary data workspace, this keeps track of the data in C
      * @param mark marker for w to indicate nonzero pattern
-     * @param C  output matrix
+     * @param C output matrix
      * @param nnz number of nonzeros that were already written to C
      * @return updated number of nonzeros in C
      */
