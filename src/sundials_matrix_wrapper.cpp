@@ -19,6 +19,11 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int N, int NNZ, int sparsetype)
 
     if (NNZ && M && N && !matrix_)
         throw std::bad_alloc();
+        
+    assert(num_nonzeros() == 0);
+    assert(NNZ == capacity());
+    assert(M == rows());
+    assert(N == columns());
 
     update_ptrs();
 }
@@ -27,6 +32,9 @@ SUNMatrixWrapper::SUNMatrixWrapper(int M, int N)
     : matrix_(SUNDenseMatrix(M, N)) {
     if (M && N && !matrix_)
         throw std::bad_alloc();
+        
+    assert(M == rows());
+    assert(N == columns());
 
     update_ptrs();
 }
@@ -112,7 +120,7 @@ void SUNMatrixWrapper::reallocate(int NNZ) {
                                  "error code " + std::to_string(ret) + ".");
 
     update_ptrs();
-    assert((NNZ && columns()*rows()) ^ !matrix_);
+    assert((NNZ && columns() && rows()) ^ !matrix_);
     assert(NNZ == capacity());
 }
 
@@ -331,7 +339,7 @@ void SUNMatrixWrapper::multiply(gsl::span<realtype> c,
     sunindextype ncols = columns();
 
     if (transpose) {
-        check_dim(ncols, c.size(), "columns", "elements", "A", "b");
+        check_dim(ncols, c.size(), "columns", "elements", "A", "c");
         check_dim(nrows, b.size(), "rows", "elements", "A", "b");
     } else {
         check_dim(nrows, c.size(), "rows", "elements", "A", "c");
@@ -430,6 +438,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
             Cx[p] = x[Ci[p]]; // copy data to C
     }
     Cp[n] = nnz;
+    assert(nnz < C->capacity());
     /*
      * do not reallocate here since we rather keep a matrix that is a bit
      * bigger than repeatedly resizing this matrix.
@@ -454,7 +463,7 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
     check_dim(ncols, B->columns(), "columns", "columns", "C", "B");
     
     if (ncols == 0 || nrows == 0 ||
-        (A->num_nonzeros() == 0 && B->num_nonzeros() == 0))
+        (A->num_nonzeros() + B->num_nonzeros() == 0))
         return; // nothing to do
     
 
@@ -464,30 +473,29 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
      * reallocations as we can assume that C doesn't change size.
      */
     
-    sunindextype nz = 0; // this keeps track of the nonzero index in C
+    sunindextype nnz = 0; // this keeps track of the nonzero index in C
     
-    sunindextype j, p;
+    sunindextype j;
+    sunindextype p;
     reallocate(A->num_nonzeros() + B->num_nonzeros());
     auto Cx = data();
     auto Ci = indexvals();
     auto Cp = indexptrs();
     
-    sunindextype m = nrows;
-    sunindextype n = B->columns();
+    auto w = std::vector<sunindextype>(nrows);
+    auto x = std::vector<realtype>(nrows);
     
-    auto w = std::vector<sunindextype>(m);
-    auto x = std::vector<realtype>(m);
-    
-    for (j = 0; j < n; j++)
+    for (j = 0; j < ncols; j++)
     {
-        Cp[j] = nz;                          /* column j of C starts here */
-        nz = A->scatter(j, alpha, w.data(), gsl::make_span(x), j+1, this, nz);
-        nz = B->scatter(j, beta, w.data(), gsl::make_span(x), j+1, this, nz);
+        Cp[j] = nnz;                          /* column j of C starts here */
+        nnz = A->scatter(j, alpha, w.data(), gsl::make_span(x), j+1, this, nnz);
+        nnz = B->scatter(j, beta, w.data(), gsl::make_span(x), j+1, this, nnz);
         // no reallocation should happen here
-        for (p = Cp[j]; p < nz; p++)
-            Cx[p] = x.at(Ci[p]); // copy data to C
+        for (p = Cp[j]; p < nnz; p++)
+            Cx[p] = x[Ci[p]]; // copy data to C
     }
-    Cp[n] = nz;
+    Cp[ncols] = nnz;
+    assert(nnz < capacity());
     realloc();
 }
 
@@ -519,6 +527,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     for (sunindextype p = Ap[j]; p < Ap[j+1]; p++)
     {
         auto i = Ai[p];                   /* A(i,j) is nonzero */
+        assert(i < static_cast<sunindextype>(x.size()));
         if (w && w[i] < mark) {
             w[i] = mark;                  /* i is new entry in column j */
             if (C)
