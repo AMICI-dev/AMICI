@@ -1,5 +1,5 @@
-AMICI
-=============
+AMICI Python API
+================
 
 .. rubric:: Modules
 

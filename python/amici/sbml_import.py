@@ -1783,8 +1783,15 @@ def noise_distribution_to_cost_function(
     work with.
 
     :param noise_distribution: An identifier specifying a noise model.
-        Possible values are {'normal', 'log-normal', 'log10-normal', 'laplace',
-        'log-laplace', 'log10-laplace'}
+        Possible values are
+
+        {'normal', 'lin-normal', 'log-normal', 'log10-normal',
+        'laplace', 'lin-laplace', 'log-laplace', 'log10-laplace',
+        'binomial', 'lin-binomial',
+        'negative-binomial', 'lin-negative-binomial'}
+
+        Details on the distributions and their parameterization can be
+        found in the function.
 
     :return: A function that takes a strSymbol and then creates a cost
         function string (negative log-likelihood) from it, which can be
@@ -1818,6 +1825,21 @@ def noise_distribution_to_cost_function(
             y, m, sigma = _get_str_symbol_identifiers(str_symbol)
             return f'log(2*{sigma}*{m}*log(10)) ' \
                 f'+ Abs(log({y}, 10) - log({m}, 10)) / {sigma}'
+    elif noise_distribution in ['binomial', 'lin-binomial']:
+        def nllh_y_string(str_symbol):
+            """Binomial noise model parameterized via success probability p,"""
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            return f'- log(Heaviside({y}-{m})) ' \
+                f'- loggamma({y}+1) + loggamma({m}+1) + loggamma({y}-{m}+1) ' \
+                f'- {m} * log({sigma}) - ({y} - {m}) * log(1-{sigma})'
+    elif noise_distribution in ['negative-binomial', 'lin-negative-binomial']:
+        def nllh_y_string(str_symbol):
+            """Negative binomial noise model with mean = y, parameterized via
+            success probability p."""
+            y, m, sigma = _get_str_symbol_identifiers(str_symbol)
+            r = f'{y} * (1-{sigma}) / {sigma}'
+            return f'- loggamma({m}+{r}) + loggamma({m}+1) + loggamma({r}) ' \
+                f'- {m} * log(1-{sigma}) - {r} * log({sigma})'
     elif isinstance(noise_distribution, Callable):
         return noise_distribution
     else:

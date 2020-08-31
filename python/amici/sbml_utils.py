@@ -287,7 +287,7 @@ def addParameter(
     #      if other types of objects (e.g., species) have the same ID
     if hasParameter(model, parameterId):
         raise SbmlException(
-            f'A parameter with ID {parameterID} has already been defined'
+            f'A parameter with ID {parameterId} has already been defined'
         )
 
     par = model.createParameter()
