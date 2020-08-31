@@ -130,7 +130,7 @@ class SUNMatrixWrapper {
 
     /**
      * @brief Get the number of specified non-zero elements (sparse matrices only)
-     * @note values will be unininitialized before indexptrs are set.
+     * @note value will be 0 before indexptrs are set.
      * @return number
      */
     sunindextype num_nonzeros() const;

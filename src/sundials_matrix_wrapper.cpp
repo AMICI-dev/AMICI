@@ -524,6 +524,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
         Ci = C->indexvals();
     else
         Ci = nullptr;
+
     auto Ap = indexptrs();
     auto Ai = indexvals();
     auto Ax = data();
@@ -539,8 +540,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
         } else
             x[i] += beta * Ax[p];         /* i exists in C(:,j) already */
     }
-    if (C)
-        assert(nnz <= C->capacity());
+    assert(!C || nnz <= C->capacity());
     return nnz;
 }
 
