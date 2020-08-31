@@ -578,7 +578,7 @@ class Model : public AbstractModel {
 
     /**
      * @brief Report whether the model has observable IDs set.
-     * @return Boolean indicating whether observale ids were set. Also returns
+     * @return Boolean indicating whether observable ids were set. Also returns
      * `true` if the number of corresponding variables is just zero.
      */
     virtual bool hasObservableIds() const;
