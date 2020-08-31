@@ -207,18 +207,13 @@ def test_likelihoods(model_test_likelihoods):
     solver.setSensitivityOrder(amici.SensitivityOrder.first)
 
     # run model once to create an edata
+
     rdata = amici.runAmiciSimulation(model, solver)
-    edata = amici.ExpData(rdata, 1, 0)
-
+    sigmas = rdata['y'].max(axis=0) * 0.05
+    edata = amici.ExpData(rdata, sigmas, [])
     # just make all observables positive since some are logarithmic
-    y = edata.getObservedData()
-    y = tuple([max(val, 1e-4) for val in y])
-    edata.setObservedData(y)
-
-    # set sigmas
-    sigma = 0.2
-    sigmas = sigma * np.ones(len(y))
-    edata.setObservedDataStdDev(sigmas)
+    while min(edata.getObservedData()) < 0:
+        edata = amici.ExpData(rdata, sigmas, [])
 
     # and now run for real and also compute likelihood values
     rdata = amici.runAmiciSimulations(model, solver, [edata])[0]
@@ -235,13 +230,13 @@ def test_likelihoods(model_test_likelihoods):
 
     # check correct likelihood value
     llh_exp = - sum([
-        normal_nllh(edata_df['o1'], rdata_df['o1'], sigma),
-        log_normal_nllh(edata_df['o2'], rdata_df['o2'], sigma),
-        log10_normal_nllh(edata_df['o3'], rdata_df['o3'], sigma),
-        laplace_nllh(edata_df['o4'], rdata_df['o4'], sigma),
-        log_laplace_nllh(edata_df['o5'], rdata_df['o5'], sigma),
-        log10_laplace_nllh(edata_df['o6'], rdata_df['o6'], sigma),
-        custom_nllh(edata_df['o7'], rdata_df['o7'], sigma),
+        normal_nllh(edata_df['o1'], rdata_df['o1'], sigmas[0]),
+        log_normal_nllh(edata_df['o2'], rdata_df['o2'], sigmas[1]),
+        log10_normal_nllh(edata_df['o3'], rdata_df['o3'], sigmas[2]),
+        laplace_nllh(edata_df['o4'], rdata_df['o4'], sigmas[3]),
+        log_laplace_nllh(edata_df['o5'], rdata_df['o5'], sigmas[4]),
+        log10_laplace_nllh(edata_df['o6'], rdata_df['o6'], sigmas[5]),
+        custom_nllh(edata_df['o7'], rdata_df['o7'], sigmas[6]),
     ])
     assert np.isclose(rdata['llh'], llh_exp)
 
@@ -251,9 +246,12 @@ def test_likelihoods(model_test_likelihoods):
         solver = model.getSolver()
         solver.setSensitivityMethod(sensi_method)
         solver.setSensitivityOrder(amici.SensitivityOrder.first)
+        solver.setRelativeTolerance(1e-10)
+        solver.setAbsoluteTolerance(1e-10)
         check_derivatives(
-            model, solver, edata, assert_fun, atol=1e-1, rtol=1e-1,
-            check_least_squares=False)
+            model, solver, edata, assert_fun, atol=1e-2, rtol=1e-2,
+            epsilon=1e-5, check_least_squares=False
+        )
 
 
 def test_likelihoods_error():
