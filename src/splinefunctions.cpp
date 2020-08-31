@@ -216,7 +216,7 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
 
         /* As computing the coefficient is a mess, it's in another function */
         for (int ip = 0; ip < nplist; ip++)
-            getCoeffsSensiLowlevel(ip, i_node, n_spline_coefficients,
+            getCoeffsSensiLowlevel(ip, i_node, nplist, n_spline_coefficients,
                                    spline_offset, len, len_m, len_p,
                                    dspline_valuesdp, dspline_slopesdp,
                                    coefficients_sensi.data(),
@@ -241,7 +241,7 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
             sm0 = dspline_slopesdp[n_nodes() * ip];
         }
 
-        /* After node[n_nodes() - 1] */
+        /* After node [n_nodes() - 1] */
         realtype sp_end = dspline_valuesdp[n_nodes() * (ip + 1) - 1];
         realtype sm_end;
         if (get_node_derivative_by_FD()) {
@@ -280,14 +280,18 @@ void HermiteSpline::computeCoefficientsSensi(int nplist, int spline_offset,
     }
 }
 
-void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coefficients,
+void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int nplist, int n_spline_coefficients,
                                            int spline_offset, realtype len, realtype len_m,
                                            realtype len_p, realtype *dnodesdp,
                                            realtype *dslopesdp, realtype *coeffs,
                                            realtype *coeffs_extrapol) {
-    int node_offset = spline_offset + n_nodes() * ip;
+    /** int node_offset = spline_offset + n_nodes() * ip;
     double spk = dnodesdp[node_offset + i_node];
-    double spk1 = dnodesdp[node_offset + i_node + 1];
+    double spk1 = dnodesdp[node_offset + i_node + 1]; */
+    //int node_offset = spline_offset + n_nodes() * ip;
+    int node_offset = spline_offset + ip;
+    double spk = dnodesdp[node_offset + i_node * nplist];
+    double spk1 = dnodesdp[node_offset + (i_node + 1) * nplist];
     double smk;
     double smk1;
 
@@ -304,11 +308,13 @@ void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coef
                 throw AmiException("Natural boundary condition for Hermite splines "
                                    "is not yet implemented.");
             }
-            smk1 = (dnodesdp[node_offset + i_node + 2] - spk) / len_p;
+            //smk1 = (dnodesdp[node_offset + i_node + 2] - spk) / len_p;
+            smk1 = (dnodesdp[node_offset + (i_node + 2) * nplist] - spk) / len_p;
 
         } else if (i_node == n_nodes() - 2) {
             /* Are we at the last node? What's the boundary condition? */
-            smk = (spk1 - dnodesdp[node_offset + i_node - 1]) / len_m;
+            //smk = (spk1 - dnodesdp[node_offset + i_node - 1]) / len_m;
+            smk = (spk1 - dnodesdp[node_offset + (i_node - 1) * nplist]) / len_m;
             if (lastNodeDerivative == SplineBoundaryCondition::constant) {
                 smk1 = 0;
             } else if (lastNodeDerivative == SplineBoundaryCondition::linearFinDiff) {
@@ -320,13 +326,17 @@ void HermiteSpline::getCoeffsSensiLowlevel(int ip, int i_node, int n_spline_coef
 
         } else {
             /* We're somewhere in between. That's fine. */
-            smk = (spk1 - dnodesdp[node_offset + i_node - 1]) / len_m;
-            smk1 = (dnodesdp[node_offset + i_node + 2] - spk) / len_p;
+            //smk = (spk1 - dnodesdp[node_offset + i_node - 1]) / len_m;
+            //smk1 = (dnodesdp[node_offset + i_node + 2] - spk) / len_p;
+            smk = (spk1 - dnodesdp[node_offset + (i_node - 1) * nplist]) / len_m;
+            smk1 = (dnodesdp[node_offset + (i_node + 2) * nplist] - spk) / len_p;
         }
     } else {
         /* The slopes are explicitly given, easiest case... */
-        smk = dslopesdp[node_offset + i_node];
-        smk1 = dslopesdp[node_offset + i_node + 1];
+        //smk = dslopesdp[node_offset + i_node];
+        //smk1 = dslopesdp[node_offset + i_node + 1];
+        smk = dslopesdp[node_offset + i_node * nplist];
+        smk1 = dslopesdp[node_offset + (i_node + 1) * nplist];
     }
 
     /* Compute the actual coefficients */
