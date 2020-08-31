@@ -226,10 +226,6 @@ exhale_args = {
     # TIP: if using the sphinx-bootstrap-theme, you need
     # "treeViewIsBootstrap": True,
     "exhaleExecutesDoxygen": True,
-    "exhaleDoxygenStdin": "\n".join([
-        # "INPUT = ../include",
-        "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
-    ]),
     "verboseBuild": True,
 }
 
@@ -237,7 +233,11 @@ mtocpp_filter = os.path.join(amici_dir, 'matlab', 'mtoc',
                              'config', 'mtocpp_filter.sh')
 exhale_projects_args = {
     "AMICI_CPP": {
-        "exhaleDoxygenStdin":   "INPUT = ../include",
+        "exhaleDoxygenStdin": "\n".join([
+            "INPUT = ../include",
+            "BUILTIN_STL_SUPPORT    = YES",
+            "PREDEFINED            += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
+        ]),
         "containmentFolder":    "_exhale_cpp_api",
         "rootFileTitle":        "AMICI C++ API",
         "afterTitleDescription":
@@ -257,7 +257,8 @@ exhale_projects_args = {
             "EXCLUDE += ../matlab/tests",
             "EXCLUDE += ../matlab/@amimodel",
             "EXCLUDE += ../matlab/@amifun",
-            "PREDEFINED += EXHALE_DOXYGEN_SHOULD_SKIP_THIS"
+            "PREDEFINED += EXHALE_DOXYGEN_SHOULD_SKIP_THIS",
+            "BUILTIN_STL_SUPPORT    = YES",
         ]),
         "containmentFolder":    "_exhale_matlab_api",
         "rootFileTitle":        "AMICI Matlab API",
