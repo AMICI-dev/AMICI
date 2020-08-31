@@ -1855,16 +1855,92 @@ def noise_distribution_to_cost_function(
     Parse noise distribution string to a cost function definition amici can
     work with.
 
+    The noise distributions listed in the following are supported. :math:`m`
+    denotes the measurement, :math:`y` the simulation, and :math:`\\sigma` a
+    distribution scale parameter
+    (currently, AMICI only supports a single distribution parameter).
+
+    - 'normal', 'lin-normal': A normal distribution:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma}\\exp\\left(-\\frac{(m-y)^2}{2\\sigma^2}\\right)
+
+    - 'log-normal': A log-normal distribution (i.e. log(m) is
+      normally distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m}\\exp\\left(-\\frac{(\\log m - \\log y)^2}{2\\sigma^2}\\right)
+
+    - 'log10-normal': A log10-normal distribution (i.e. log10(m) is
+      normally distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{\\sqrt{2\\pi}\\sigma m \\log(10)}\\exp\\left(-\\frac{(\\log_{10} m - \\log_{10} y)^2}{2\\sigma^2}\\right)
+
+    - 'laplace', 'lin-laplace': A laplace distribution:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma}\\exp\\left(-\\frac{|m-y|}{\\sigma}\\right)
+
+    - 'log-laplace': A log-Laplace distribution (i.e. log(m) is Laplace distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m}\\exp\\left(-\\frac{|\\log m - \\log y|}{\\sigma}\\right)
+
+    - 'log10-laplace': A log10-Laplace distribution (i.e. log10(m) is Laplace distributed):
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\frac{1}{2\\sigma m \\log(10)}\\exp\\left(-\\frac{|\\log_{10} m - \\log_{10} y|}{\\sigma}\\right)
+
+    - 'binomial', 'lin-binomial': A (continuation of a discrete) binomial
+      distribution, parameterized via the success probability
+      :math:`p=\\sigma`:
+
+      .. math::
+         \\pi(m|y,\\sigma) = \\operatorname{Heaviside}(y-m) \\cdot
+                \\frac{\\Gamma(y+1)}{\\Gamma(m+1) \\Gamma(y-m+1)}
+                \\sigma^m (1-\\sigma)^{(y-m)}
+
+    - 'negative-binomial', 'lin-negative-binomial': A (continuation of a
+      discrete) negative binomial distribution, with with `mean = y`,
+      parameterized via success probability `p`:
+
+      .. math::
+         
+         \\pi(m|y,\\sigma) = \\frac{\\Gamma(m+r)}{\\Gamma(m+1) \\Gamma(r)}
+            (1-\\sigma)^m \\sigma^r
+
+      where
+
+      .. math::
+         r = \\frac{1-\\sigma}{\\sigma} y
+
+    The distributions above are for a single data point.
+    For a collection :math:`D=\\{m_i\\}_i` of data points and corresponding
+    simulations :math:`Y=\\{y_i\\}_i` and noise parameters
+    :math:`\\Sigma=\\{\\sigma_i\\}_i`, AMICI assumes independence,
+    i.e. the full distributions is
+
+    .. math::
+       \\pi(D|Y,\\Sigma) = \\prod_i\\pi(m_i|y_i,\\sigma_i)
+
+    AMICI uses the logarithm :math:`\\log(\\pi(m|y,\\sigma)`.
+
+    In addition to the above mentioned distributions, it is also possible to
+    pass a function taking a symbol string and returning a log-distribution
+    string with variables '{str_symbol}', 'm{str_symbol}', 'sigma{str_symbol}'
+    for y, m, sigma, respectively.
+
     :param noise_distribution: An identifier specifying a noise model.
         Possible values are
 
         {'normal', 'lin-normal', 'log-normal', 'log10-normal',
         'laplace', 'lin-laplace', 'log-laplace', 'log10-laplace',
         'binomial', 'lin-binomial',
-        'negative-binomial', 'lin-negative-binomial'}
+        'negative-binomial', 'lin-negative-binomial',
+        <Callable>}
 
-        Details on the distributions and their parameterization can be
-        found in the function.
+        For the meaning of the values see above.
 
     :return: A function that takes a strSymbol and then creates a cost
         function string (negative log-likelihood) from it, which can be
