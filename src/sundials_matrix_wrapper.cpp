@@ -516,7 +516,7 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     auto Ap = indexptrs();
     auto Ai = indexvals();
     auto Ax = data();
-    assert(x.size() >= Ai[Ap[j+1]]);
+    assert(static_cast<sunindextype>(x.size()) >= Ai[Ap[j+1]]);
     for (sunindextype p = Ap[j]; p < Ap[j+1]; p++)
     {
         auto i = Ai[p];                   /* A(i,j) is nonzero */
