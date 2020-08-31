@@ -438,7 +438,7 @@ void SUNMatrixWrapper::sparse_multiply(SUNMatrixWrapper *C,
             Cx[p] = x[Ci[p]]; // copy data to C
     }
     Cp[n] = nnz;
-    assert(nnz < C->capacity());
+    assert(nnz <= C->capacity());
     /*
      * do not reallocate here since we rather keep a matrix that is a bit
      * bigger than repeatedly resizing this matrix.
@@ -495,7 +495,7 @@ void SUNMatrixWrapper::sparse_add(SUNMatrixWrapper *A, realtype alpha,
             Cx[p] = x[Ci[p]]; // copy data to C
     }
     Cp[ncols] = nnz;
-    assert(nnz < capacity());
+    assert(nnz <= capacity());
     realloc();
 }
 
@@ -520,7 +520,9 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
     
     sunindextype *Ci;
     if (C)
-        Ci = C->indexptrs_ptr_;
+        Ci = C->indexvals();
+    else
+        Ci = nullptr;
     auto Ap = indexptrs();
     auto Ai = indexvals();
     auto Ax = data();
@@ -530,12 +532,14 @@ sunindextype SUNMatrixWrapper::scatter(const sunindextype j,
         assert(i < static_cast<sunindextype>(x.size()));
         if (w && w[i] < mark) {
             w[i] = mark;                  /* i is new entry in column j */
-            if (C)
+            if (Ci)
                 Ci[nnz++] = i;            /* add i to pattern of C(:,j) */
             x[i] = beta * Ax[p];          /* x(i) = beta*A(i,j) */
         } else
             x[i] += beta * Ax[p];         /* i exists in C(:,j) already */
     }
+    if (C)
+        assert(nnz <= C->capacity());
     return nnz;
 }
 
