@@ -17,3 +17,8 @@ for MODEL in $(ctest -N | grep "Test[ ]*#" | grep -v unittests | sed --regexp-ex
     do cd ${AMICI_PATH}/build/tests/cpputest/${MODEL}/ && valgrind ${VALGRIND_OPTS} ./model_${MODEL}_test
 done
 cd ${AMICI_PATH}/build/tests/cpputest/unittests/ && valgrind ${VALGRIND_OPTS} ./unittests
+
+cd ${AMICI_PATH}
+
+source ./build/venv/bin/activate
+valgrind ${VALGRIND_OPTS} --suppressions=./scripts/valgrind-python.supp python -m pytest --ignore-glob=*petab* ${AMICI_DIR}/python/tests

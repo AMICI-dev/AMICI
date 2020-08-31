@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - feature_sparse_addition
   pull_request:
     branches:
       - master
@@ -34,6 +35,15 @@ jobs:
     - name: Build AMICI
       run: |
         scripts/buildAll.sh
+        
+    - name: Install python package
+      run: |
+        scripts/installAmiciSource.sh
+    
+    - name: Prepare python tests
+      run: |
+        source build/venv/bin/activate \
+        && pip install pytest
 
     - name: C++ tests / Valgrind
       run: |
