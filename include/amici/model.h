@@ -721,8 +721,8 @@ class Model : public AbstractModel {
     void setInitialStateSensitivities(std::vector<realtype> const &sx0);
 
     /**
-     * @brief Return whether custom initial state sensitivitiess have been set.
-     * @return `true` if has custom initial state sensitivitiess, otherwise
+     * @brief Return whether custom initial state sensitivities have been set.
+     * @return `true` if has custom initial state sensitivities, otherwise
      * `false`.
      */
     bool hasCustomInitialStateSensitivities() const;
@@ -1095,7 +1095,7 @@ class Model : public AbstractModel {
      * @param xdot Current residual function values
      * @param xdot_old Value of residual function before event
      * @param stau Timepoint sensitivity, to be computed with
-     * Model::getEventTimeSensitivity
+     * `Model::getEventTimeSensitivity`
      */
     void addStateSensitivityEventUpdate(AmiVectorArray &sx, const int ie,
                                         const realtype t,
@@ -1155,7 +1155,7 @@ class Model : public AbstractModel {
     /**
      * @brief Check if the given array has only finite elements.
      *
-     * If not try to give hints by which other fields this could be caused.
+     * If not, try to give hints by which other fields this could be caused.
      *
      * @param array Array to check
      * @param fun Name of the function that generated the values (for more
@@ -1437,7 +1437,7 @@ class Model : public AbstractModel {
     virtual void fdJydy_colptrs(sunindextype *indexptrs, int index);
 
     /**
-     * @brief Fill model-specific row vals for sparse `fdJydy`
+     * @brief Fill model-specific row vals for sparse `fdJydy`.
      * @param indexptrs Row val pointers
      * @param index `ytrue` index
      */
@@ -1508,7 +1508,7 @@ class Model : public AbstractModel {
     /**
      * @brief Compute event root function of events.
      *
-     * Equal to froot but does not include non-output events.
+     * Equal to `Model::froot` but does not include non-output events.
      *
      * @param ie Event index
      * @param t Current timepoint
